@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../../config/config.php';
-require_once __DIR__ . '/../../config/security.php';
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/security.php';
 
 Security::requireAuthentication();
 ?>
@@ -31,9 +31,10 @@ Security::requireAuthentication();
 <body>
     <div class="container-main">
         <div class="title-page">
-            <span class="title">Cartas Expedidas</span>
-            <span class="info-title">Página dedicada a acompanhar o percurso das cartas precatórias, assegurando que o pedido jurisdicional tenha início, trânsito e retorno.</span>
+            <span class="title">Editais</span>
+            <span class="info-title">Espaço destinado a garantir que o edital foi publicado, o prazo correu, a certificação foi lançada e, sobretudo, que ninguém alegue desconhecimento post factum</span>
         </div>
     </div>
 </body>
 </html>
+

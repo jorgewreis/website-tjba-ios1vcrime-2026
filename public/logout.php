@@ -14,6 +14,11 @@ try {
 } catch (Throwable $e) {
     error_log('Erro no logout: ' . $e->getMessage());
 } finally {
+    // Destruir sessão
+    $_SESSION = [];
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_destroy();
+    }
     header('Location: /index.php');
     exit;
 }

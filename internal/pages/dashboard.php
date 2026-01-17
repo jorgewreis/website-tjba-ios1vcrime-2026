@@ -14,25 +14,19 @@ Security::requireAuthentication();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Primeira Vara Crime de Ilhéus - Sistema de Gestão</title>
 
-    <!-- Reset CSS (Fundação) -->
+    <!-- Reset CSS -->
     <link rel="stylesheet" href="/css/reset.css">
+
+    <!-- Styles CSS -->
     <link rel="stylesheet" href="/css/color.css">
-
-    <!-- Layout e Navegação -->
-    <link rel="stylesheet" href="/css/layout.css">
-    <link rel="stylesheet" href="/css/menu-style.css">
-
-    <!-- Componentes Reutilizáveis -->
-    <link rel="stylesheet" href="/css/components.css">
-
-    <!-- Páginas Internas -->
     <link rel="stylesheet" href="/css/pages.css">
+    <link rel="stylesheet" href="/css/form.css">
 </head>
 <body>
     <div class="container-main">
         <div class="title-page">
-            <span class="title">Produtividade</span>
-            <span class="info-title">Espaço onde o trabalho diário deixa de ser invisível e passa a constar, porque a rotina do cartório também produz prova.</span>
+            <span class="title">Dashboard</span>
+            <span class="info-title">Tudo o que você precisa saber (em um só lugar)</span>
         </div>
     </div>
 </body>

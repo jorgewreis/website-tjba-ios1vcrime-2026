@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../../config/config.php';
-require_once __DIR__ . '/../../config/security.php';
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/security.php';
 
 Security::requireAuthentication();
 ?>
@@ -31,8 +31,8 @@ Security::requireAuthentication();
 <body>
     <div class="container-main">
         <div class="title-page">
-            <span class="title">Guias</span>
-            <span class="info-title">Página dedicada ao controle dos atos formais que conduzem o sentenciado da decisão ao cumprimento, garantindo que cada passo da execução esteja documentado ad solemnitatem.</span>
+            <span class="title">Cartas Recebidas</span>
+            <span class="info-title">Espaço onde a jurisdição alheia é recebida, organizada e cumprida, para que o pedido não fique sem resposta.</span>
         </div>
     </div>
 </body>

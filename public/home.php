@@ -254,6 +254,7 @@ $userProfile = Security::getUserProfile() ?? '';
     </div>    
 
     <script src="/js/common.js" defer></script>
+    <script src="/js/menu-access.js" defer></script>
     
     <script type="module">
         import { initMenu, initMenuActive, setupMenuLayout } from '/js/menu.js';
@@ -266,6 +267,11 @@ $userProfile = Security::getUserProfile() ?? '';
 
             if (menuController) {
                 window.menuController = menuController;
+            }
+
+            // Inicializar controle de acesso ao menu
+            if (window.initMenuAccess) {
+                window.initMenuAccess();
             }
         });
     </script>

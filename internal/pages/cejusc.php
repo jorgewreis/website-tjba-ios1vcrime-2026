@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../../config/config.php';
-require_once __DIR__ . '/../../config/security.php';
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/security.php';
 
 Security::requireAuthentication();
 ?>
@@ -31,9 +31,10 @@ Security::requireAuthentication();
 <body>
     <div class="container-main">
         <div class="title-page">
-            <span class="title">Ofícios (Cartório)</span>
-            <span class="info-title">Ambiente destinado a assegurar que cada ofício exista, seja único e ocupe seu lugar na cronologia cartorária, porque até a burocracia precisa de método.</span>
+            <span class="title">Cejusc</span>
+            <span class="info-title">Espaço reservado ao controle do inevitável: a decisão foi proferida, o mandado expedido, o cadastro feito — agora só falta avisar o CEJUSC para que o mundo jurídico siga em ordem.</span>
         </div>
     </div>
 </body>
 </html>
+

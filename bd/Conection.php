@@ -47,7 +47,7 @@ final class Conection
 
     private function __clone(): void {}
 
-    private function __wakeup(): void
+    public function __wakeup(): void
     {
         throw new RuntimeException('Não é permitido desserializar esta classe.');
     }

@@ -7,26 +7,43 @@ require_once __DIR__ . '/../../bd/Usuario.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-$token = Security::getToken();
-
-if (empty($token)) {
+// Verificar se usuário está autenticado
+if (!Security::isAuthenticated()) {
     http_response_code(401);
-    echo json_encode(['valid' => false, 'message' => 'Token não fornecido.']);
+    echo json_encode(['success' => false, 'message' => 'Não autenticado']);
     exit;
 }
 
-$usuario = new Usuario();
-$user = $usuario->validarToken($token);
-
-if ($user) {
+try {
+    $token = $_SESSION['token'] ?? null;
+    $userId = Security::getUserId();
+    
+    if (!$token || !$userId) {
+        http_response_code(401);
+        echo json_encode(['success' => false, 'message' => 'Token inválido']);
+        exit;
+    }
+    
+    // Validar token com usuário
+    $usuario = new Usuario();
+    $user = $usuario->validarToken($token);
+    
+    if (!$user) {
+        http_response_code(401);
+        echo json_encode(['success' => false, 'message' => 'Token expirado ou inválido']);
+        exit;
+    }
+    
+    http_response_code(200);
     echo json_encode([
-        'valid' => true,
-        'user' => [
-            'id_usuario' => $user['id_usuario'],
-            'nome' => $user['nome']
-        ]
+        'success' => true,
+        'message' => 'Token válido',
+        'user' => $user
     ]);
-} else {
-    http_response_code(401);
-    echo json_encode(['valid' => false, 'message' => 'Token inválido ou expirado.']);
+    
+} catch (Exception $e) {
+    error_log('Erro ao verificar token: ' . $e->getMessage());
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Erro interno do servidor']);
+    exit;
 }

@@ -132,6 +132,37 @@ Usuario::validarToken()
 5. **Email**: Função `sendEmail()` em PasswordResetService - suporta SMTP (Microsoft 365) ou LOG fallback
 6. **Recuperação de senha** ([public/recupera_senha.php](public/recupera_senha.php)): resposta neutra por segurança (não diz se usuário existe)
 
+## Controle de Acesso baseado em Perfis (Menu + Páginas)
+
+**Novo sistema implementado (veja [MENU_ACCESS_CONTROL.md](MENU_ACCESS_CONTROL.md) para documentação completa)**
+
+### Perfis
+- `ESTUDANTE`: Acesso apenas a "Estudantes" no menu
+- `SERVIDOR`: Acesso a "Cartório", "Gabinete", "Sala de Audiências"
+- `ADMIN`: Acesso a tudo (inclui "Estudantes" e "Admin")
+
+### Dois Níveis de Proteção
+1. **Client-side (Visual)**: [public/js/menu-access.js](public/js/menu-access.js) filtra menu por perfil
+   - Chama API [admin/api/getPerfis.php](admin/api/getPerfis.php) para obter perfis do usuário
+   - Aplica mapa `PERFIL_MENU_MAP` para mostrar/ocultar seções
+   
+2. **Server-side (Acesso)**: [public/frame.php](public/frame.php) valida autorização
+   - Função `getUserPerfils($userId)` busca perfis no BD
+   - Função `hasAccessToSection($userPerfils, $requiredSection)` valida acesso
+   - Retorna 403 se perfil não tem permissão
+   - Sempre usar mapa `$page_to_section` ao adicionar páginas
+
+### Banco de Dados
+- Tabela `usuario_perfil`: relaciona usuários a perfis
+- Campos: `id_usu_perfil`, `usuario` (FK), `perfil` (VARCHAR)
+- Um usuário pode ter múltiplos perfis (union logic para permissões)
+
+### Adicionando Nova Página com Acesso Controlado
+1. Criar arquivo em `admin/cadastros/novapage.php`
+2. Adicionar ao whitelist em `frame.php`: `'novapage' => __DIR__ . '/../admin/cadastros/novapage.php'`
+3. Mapear à seção em `frame.php`: `'novapage' => 'Cartório'` (ou seção apropriada)
+4. Adicionar item ao menu em `public/home.php`: `<div class="menu-item" onclick="carregarPagina('novapage')">Nova Página</div>`
+
 ## Licença & Restrições
 
 Projeto restritivo - código proprietário. Qualquer fork/distribuição requer autorização explícita de `jorgew.reis@outlook.com`.

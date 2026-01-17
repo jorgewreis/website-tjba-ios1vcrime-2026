@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../../config/config.php';
-require_once __DIR__ . '/../../config/security.php';
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/security.php';
 
 Security::requireAuthentication();
 ?>
@@ -31,8 +31,8 @@ Security::requireAuthentication();
 <body>
     <div class="container-main">
         <div class="title-page">
-            <span class="title">Cartas Recebidas</span>
-            <span class="info-title">Espaço onde a jurisdição alheia é recebida, organizada e cumprida, para que o pedido não fique sem resposta.</span>
+            <span class="title">Produtividade</span>
+            <span class="info-title">Espaço onde o trabalho diário deixa de ser invisível e passa a constar, porque a rotina do cartório também produz prova.</span>
         </div>
     </div>
 </body>
