@@ -7,15 +7,14 @@ require_once __DIR__ . '/../../bd/Usuario.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-// Verificar se usuário está autenticado
-if (!Security::isAuthenticated()) {
-    http_response_code(401);
-    echo json_encode(['success' => false, 'message' => 'Não autenticado']);
-    exit;
-}
-
 try {
-    $token = $_SESSION['token'] ?? null;
+    if (!Security::isAuthenticated()) {
+        http_response_code(401);
+        echo json_encode(['success' => false, 'message' => 'Não autenticado']);
+        exit;
+    }
+
+    $token = Security::getToken();
     $userId = Security::getUserId();
     
     if (!$token || !$userId) {
@@ -24,7 +23,6 @@ try {
         exit;
     }
     
-    // Validar token com usuário
     $usuario = new Usuario();
     $user = $usuario->validarToken($token);
     
@@ -45,5 +43,4 @@ try {
     error_log('Erro ao verificar token: ' . $e->getMessage());
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => 'Erro interno do servidor']);
-    exit;
 }

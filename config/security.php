@@ -30,6 +30,14 @@ final class Security
         }
     }
 
+    public static function getPerfilRank(string $perfil): int
+    {
+        return self::PERFIS_RANK[strtoupper($perfil)] ?? 0;
+    }
+
+    /**
+     * @deprecated Padrão antigo. Use /admin/api/getPerfis.php + frame.php::hasAccessToSection()
+     */
     public static function checkAccess(string $requiredProfile): bool
     {
         if (!self::isAuthenticated()) {
@@ -37,8 +45,8 @@ final class Security
         }
 
         $userProfile = $_SESSION[self::SESSION_PROFILE] ?? null;
-        $userLevel   = self::PERFIS_RANK[$userProfile] ?? 0;
-        $needLevel   = self::PERFIS_RANK[$requiredProfile] ?? PHP_INT_MAX;
+        $userLevel   = self::getPerfilRank($userProfile);
+        $needLevel   = self::getPerfilRank($requiredProfile);
 
         return $userLevel >= $needLevel;
     }
@@ -134,8 +142,13 @@ final class Security
         return $_SESSION[self::SESSION_TOKEN_KEY] ?? null;
     }
 
+    /**
+     * @deprecated Use /admin/api/getPerfis.php para múltiplos perfis (padrão novo).
+     * Esta função mantida para retrocompatibilidade mas retorna apenas um perfil.
+     */
     public static function getUserProfile(): ?string
     {
         return $_SESSION[self::SESSION_PROFILE] ?? null;
     }
 }
+

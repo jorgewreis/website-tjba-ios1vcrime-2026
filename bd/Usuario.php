@@ -8,12 +8,6 @@ final class Usuario
 {
     private PDO $pdo;
 
-    private const PERFIS_RANK = [
-        'ESTUDANTE' => 1,
-        'SERVIDOR'  => 2,
-        'ADMIN'     => 3,
-    ];
-
     public function __construct()
     {
         $this->pdo = Conection::getInstance()->getConnection();
@@ -136,7 +130,7 @@ final class Usuario
         $maiorRank    = 0;
 
         foreach ($perfis as $perfil) {
-            $rank = self::PERFIS_RANK[$perfil] ?? 0;
+            $rank = Security::getPerfilRank($perfil);
             if ($rank > $maiorRank) {
                 $maiorRank    = $rank;
                 $melhorPerfil = $perfil;
@@ -175,23 +169,6 @@ final class Usuario
             LIMIT 1
         ");
         $stmt->execute([$token]);
-
-        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
-    }
-
-    /* ======================================================
-       CONSULTAS
-       ====================================================== */
-
-    public function buscarPorId(string $idUsuario): ?array
-    {
-        $stmt = $this->pdo->prepare("
-            SELECT id_usuario, nome, cpf, email
-            FROM usuarios
-            WHERE id_usuario = ?
-            LIMIT 1
-        ");
-        $stmt->execute([$idUsuario]);
 
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
