@@ -1,0 +1,126 @@
+@media (min-width: 390px){
+
+    .form-line{
+        width: 100%;
+
+        display: flex;
+        flex-direction: row;
+        align-items: baseline;
+        justify-content: flex-start;
+
+        margin-bottom: 20px;
+    }
+    .form-block{
+        width: fit-content;
+
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: baseline;
+    }
+
+    label{
+        margin-bottom: 3px;
+
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 400;
+        font-size: 12px;
+        color: #727272;
+    }
+
+    input{
+        height: 50px;
+
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+
+        border: 1px solid #a5a5a5;
+        border-radius: 7px;
+
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 400;
+        font-size: 14px;
+        color: #202020;
+        padding: 0 20px;
+    }
+    
+
+    .size-b{
+        width: 150px;
+    }
+
+    .size-c{
+        width: 200px;    
+    }
+
+    .size-full{
+        width: 100%;
+    }
+
+    button{
+        height: 50px;
+
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 7px;
+        box-shadow: 1px 1px 10px #72727272;
+        padding: 0 30px;
+
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 500;
+        font-size: 16px;        
+    }
+
+    button.bg-primary{
+        background-color: #5F61E6;
+        color: white;
+    }
+    button.bg-primary:hover{
+        background-color: #5053ca;        
+    }
+
+    button:hover{
+        transform: translateY(-1px);
+    }
+    button:active{
+        box-shadow: none;
+    }
+
+    /* TEXT */
+    .text-login{
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 400;
+        font-size: 14px;
+    }
+    .link-login{
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 500;
+        font-size: 14px;
+        color: #5053ca;
+        text-decoration: none;
+    }
+}
+
+@media (min-width: 768px){
+   
+}
+
+@media (min-width: 1080px){
+    input, button{
+        height: 40px;
+    }
+
+}
+
+@media (min-width: 1440px){
+
+}
+
+@media (min-width: 1920px){
+
+}

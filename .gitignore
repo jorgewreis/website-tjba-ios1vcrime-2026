@@ -1,0 +1,96 @@
+# =========================
+# Environment / Secrets
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# OS / Editor
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# =========================
+# Logs / Debug
+# =========================
+logs/
+*.log
+*.err
+*.out
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# =========================
+# Node / Frontend tooling (se existir)
+# =========================
+node_modules/
+dist/
+build/
+.cache/
+.parcel-cache/
+.vite/
+.eslintcache
+
+# =========================
+# PHP / Composer
+# =========================
+vendor/
+composer.phar
+
+# PHPUnit / Test artifacts
+.phpunit.result.cache
+coverage/
+*.cache
+
+# =========================
+# Server / Runtime
+# =========================
+tmp/
+temp/
+*.tmp
+
+# Apache / Nginx
+.htaccess.bak
+*.htpasswd
+
+# =========================
+# Uploads / User-generated content (ajuste conforme seu projeto)
+# =========================
+uploads/
+storage/
+public/uploads/
+public/storage/
+
+# =========================
+# Database / SQL dumps
+# =========================
+*.sql
+*.sqlite
+*.sqlite3
+*.db
+dump/
+backups/
+database/backup/
+
+# =========================
+# Generated / Minified
+# =========================
+*.min.js
+*.min.css
+*.map
+
+# =========================
+# Optional: Local config overrides
+# =========================
+config.local.php
+config.local.json
