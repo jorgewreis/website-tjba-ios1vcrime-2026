@@ -1,0 +1,376 @@
+/* ========================================
+   components.css - Componentes reutilizáveis
+   Responsável por: botões, formulários, alertas, cards
+   1ª Vara Crime de Ilhéus
+   ======================================== */
+
+/* ========================================
+   FORM LAYOUT
+   ======================================== */
+
+.form-line {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: flex-start;
+    margin-bottom: 20px;
+}
+
+.form-block {
+    width: fit-content;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+}
+
+.form-login {
+    width: calc(100% - 40px);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    margin: 40px 20px 20px 20px;
+}
+
+/* ========================================
+   FORM CONTROLS (INPUT, TEXTAREA, SELECT)
+   ======================================== */
+
+label {
+    margin-bottom: 3px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    color: #727272;
+    display: block;
+}
+
+input,
+textarea,
+select {
+    height: 50px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    border: 1px solid #a5a5a5;
+    border-radius: 7px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    color: #202020;
+    padding: 0 20px;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: #5F61E6;
+    box-shadow: 0 0 0 3px rgba(95, 97, 230, 0.1);
+}
+
+input::placeholder {
+    color: #a5a5a5;
+}
+
+textarea {
+    height: auto;
+    min-height: 100px;
+    padding: 15px 20px;
+    resize: vertical;
+}
+
+/* ========================================
+   FORM SIZES
+   ======================================== */
+
+.size-b {
+    width: 150px;
+}
+
+.size-c {
+    width: 200px;
+}
+
+.size-full {
+    width: 100%;
+}
+
+/* ========================================
+   BUTTONS
+   ======================================== */
+
+button,
+.button {
+    height: 50px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 7px;
+    box-shadow: 1px 1px 10px rgba(114, 114, 114, 0.45);
+    padding: 0 30px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+button:hover,
+.button:hover {
+    transform: translateY(-1px);
+    box-shadow: 1px 3px 15px rgba(114, 114, 114, 0.6);
+}
+
+button:active,
+.button:active {
+    box-shadow: none;
+    transform: translateY(0);
+}
+
+button:disabled,
+.button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Button primary variant */
+button.bg-primary,
+.button.bg-primary {
+    background-color: #5F61E6;
+    color: white;
+}
+
+button.bg-primary:hover,
+.button.bg-primary:hover {
+    background-color: #5053ca;
+}
+
+/* ========================================
+   TEXT STYLES
+   ======================================== */
+
+.text-login {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    color: #384551;
+}
+
+.link-login,
+a.link-login {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    color: #5053ca;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.link-login:hover {
+    color: #5F61E6;
+    text-decoration: underline;
+}
+
+.title-page {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    margin-left: 20px;
+    margin-bottom: 20px;
+}
+
+.title-page .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 20px;
+    color: #384551;
+}
+
+.title-page .info-title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    color: #384551;
+    margin-top: 5px;
+}
+
+/* ========================================
+   ALERT / NOTIFICATION BOXES
+   ======================================== */
+
+.alert-heading {
+    min-width: 300px;
+    height: fit-content;
+    display: none;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    border: none;
+    border-radius: 7px;
+    margin: 10px 0;
+    padding: 15px;
+    animation: slideIn 0.3s ease;
+}
+
+.alert-heading.primary {
+    background-color: var(--bg-primary);
+    color: var(--bs-primary);
+}
+
+.alert-heading.danger {
+    background-color: var(--bg-danger);
+    color: var(--bs-danger);
+}
+
+.alert-heading.success {
+    background-color: var(--bg-success);
+    color: var(--bs-success);
+}
+
+.alert-heading.warning {
+    background-color: var(--bg-warning);
+    color: var(--bs-warning);
+}
+
+.alert-heading.info {
+    background-color: var(--bg-info);
+    color: var(--bs-info);
+}
+
+.alert-heading .alert-header {
+    width: 100%;
+    min-height: 30px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.alert-heading .alert-header .text {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+}
+
+.alert-heading .alert-header .close-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+    color: inherit;
+}
+
+.alert-heading .alert-text {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+/* ========================================
+   CARD
+   ======================================== */
+
+.card-login {
+    max-width: 500px;
+    width: 90vw;
+    height: fit-content;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    background-color: white;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px 0 rgba(34, 48, 62, 0.1);
+    padding: 48px 5vw;
+}
+
+.card {
+    background-color: white;
+    border: 1px solid #e4e6e8;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--bs-box-shadow-xs);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: var(--bs-box-shadow-sm);
+}
+
+/* ========================================
+   ANIMATIONS
+   ======================================== */
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* ========================================
+   RESPONSIVE ADJUSTMENTS
+   ======================================== */
+
+@media (min-width: 768px) {
+    .card-login {
+        width: 500px;
+        padding: 48px;
+    }
+
+    input,
+    textarea,
+    select {
+        font-size: 13px;
+    }
+}
+
+@media (min-width: 1080px) {
+    input,
+    button,
+    textarea,
+    select {
+        height: 40px;
+    }
+
+    button.bg-primary {
+        padding: 0 25px;
+    }
+}
+
+@media (min-width: 1440px) {
+    /* Large desktop adjustments */
+}
+
+@media (min-width: 1920px) {
+    /* Extra large desktop adjustments */
+}
