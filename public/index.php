@@ -5,7 +5,7 @@ require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/security.php';
 
 if (Security::isAuthenticated()) {
-    header('Location: /admin/home.php');
+    header('Location: /public/home.php');
     exit;
 }
 

@@ -1,3 +1,11 @@
+<?php
+declare(strict_types=1);
+
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/security.php';
+
+$csrfToken = Security::generateCSRFToken();
+?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -29,7 +37,7 @@
             </div>
 
             <form class="form-login" id="resetForm">
-                <input type="hidden" name="csrf_token" id="csrf_token">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
 
                 <div class="form-line">
                     <div class="form-block">
@@ -78,11 +86,6 @@
 document.addEventListener("DOMContentLoaded", async () => {
 
     await initCPF("#cpf");
-
-    // CSRF vindo do backend (ex.: window.CSRF_TOKEN)
-    if (window.CSRF_TOKEN) {
-        document.querySelector("#csrf_token").value = window.CSRF_TOKEN;
-    }
 
     await initRecuperaSenha("#resetForm");
 });
