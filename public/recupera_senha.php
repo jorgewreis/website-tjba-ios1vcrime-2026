@@ -79,15 +79,15 @@ $csrfToken = Security::generateCSRFToken();
     </div>
 </div>
 
-<script src="/js/common.js" defer></script>
-<script src="/js/login.js" defer></script>
+<script src="/js/cpf.js" defer></script>
+<script src="/js/auth.js" defer></script>
 
 <script defer>
 document.addEventListener("DOMContentLoaded", async () => {
 
     await initCPF("#cpf");
 
-    await initRecuperaSenha("#resetForm");
+    await initRecuperaSenha("#resetForm", "#cpf", "#email", "/envia_mail.php");
 });
 </script>
 

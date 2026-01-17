@@ -104,7 +104,8 @@ $csrfToken = Security::generateCSRFToken();
         
     </div>
 
-    <script src="/js/common.js" defer></script>
+    <script src="/js/cpf.js" defer></script>
+    <script src="/js/auth.js" defer></script>
     <script defer>
         document.addEventListener("DOMContentLoaded", async () => {
             document.querySelector("#cpf").addEventListener("click", function(){

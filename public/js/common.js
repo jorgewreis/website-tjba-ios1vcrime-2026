@@ -1,116 +1,103 @@
-function cpfSomenteDigitos(v) {
-  return (v || "").replace(/\D+/g, "");
-}
+/**
+ * common.js - Funções comuns para páginas internas (protegidas)
+ * Responsável por utilitários usados em páginas autenticadas
+ * Não deve conter código de autenticação (login/recuperação de senha)
+ * 
+ * NOTA: CPF utilities estão em cpf.js
+ * NOTA: Login e password reset estão em auth.js
+ */
 
-function cpfFormatar(digitos) {
-  // "12345678901" -> "123.456.789-01"
-  return digitos.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
-}
-
-// Máscara "viva" (enquanto digita) sem travar o usuário
-function cpfAplicarMascaraParcial(valor) {
-  const d = cpfSomenteDigitos(valor).slice(0, 11);
-
-  // monta parcial: 123.456.789-01 (conforme vai tendo dígitos)
-  const p1 = d.slice(0, 3);
-  const p2 = d.slice(3, 6);
-  const p3 = d.slice(6, 9);
-  const p4 = d.slice(9, 11);
-
-  let out = p1;
-  if (p2) out += "." + p2;
-  if (p3) out += "." + p3;
-  if (p4) out += "-" + p4;
-
-  return out;
-}
-
-function cpfValido(digitos11) {
-  if (!/^\d{11}$/.test(digitos11)) return false;
-  if (/^(\d)\1{10}$/.test(digitos11)) return false;
-
-  const calcDV = (base) => {
-    let soma = 0;
-    for (let i = 0; i < base.length; i++) {
-      soma += Number(base[i]) * (base.length + 1 - i);
-    }
-    const resto = soma % 11;
-    return resto < 2 ? 0 : 11 - resto;
-  };
-
-  const dv1 = calcDV(digitos11.slice(0, 9));
-  const dv2 = calcDV(digitos11.slice(0, 9) + dv1);
-
-  return dv1 === Number(digitos11[9]) && dv2 === Number(digitos11[10]);
-}
-
-// Valida no "change/blur" e, se válido, deixa COM máscara no input
-async function verificaCPF(selector = "#cpf") {
-  const input = document.querySelector(selector);
-  if (!input) return false;
-
-  const digitos = cpfSomenteDigitos(input.value);
-
-  if (!digitos || digitos.length !== 11 || !cpfValido(digitos)) {
-    input.value = "";
+/**
+ * Valida token de sessão via API
+ * @param {string} endpoint - URL do endpoint de validação de token
+ * @returns {Promise<boolean>} - true se token válido
+ */
+async function validateSessionToken(endpoint = "/admin/api/checkToken.php") {
+  try {
+    const response = await fetch(endpoint);
+    const result = await response.json();
+    return result.valid === true;
+  } catch (err) {
+    console.error("Erro ao validar token:", err);
     return false;
   }
-
-  input.value = cpfFormatar(digitos); // armazena com máscara no input
-  return true;
 }
 
-// Inicializa eventos do CPF
-async function initCPF(selector = "#cpf") {
-  const input = document.querySelector(selector);
-  if (!input) return;
-
-  // Máscara enquanto digita
-  input.addEventListener("input", function () {
-    const masked = cpfAplicarMascaraParcial(this.value);
-    this.value = masked;
-  });
-
-  // Validação ao sair/trocar
-  input.addEventListener("change", async () => {
-    await verificaCPF(selector);
-  });
-
-  input.addEventListener("blur", async () => {
-    await verificaCPF(selector);
-  });
-}
-
-// Inicializa submit do login
-async function initLogin(formSelector = "#loginForm", endpoint = "login.php", erroId = "erro", alertId = "alert-login") {
-  const form = document.querySelector(formSelector);
-  if (!form) return;
-
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const formData = new FormData(form);
-
-    const response = await fetch(endpoint, {
-      method: "POST",
-      body: formData,
-    });
-
+/**
+ * Realiza logout via API
+ * @param {string} endpoint - URL do endpoint de logout
+ */
+async function performLogout(endpoint = "/admin/api/logout.php") {
+  try {
+    const response = await fetch(endpoint, { method: "POST" });
     const result = await response.json();
-
+    
     if (result.success) {
-      window.location.href = endpoint;
-    } else {
-      const erro = document.getElementById(erroId);
-      if (erro) erro.textContent = result.message;
+      window.location.href = "/index.php";
+    }
+  } catch (err) {
+    console.error("Erro ao fazer logout:", err);
+    window.location.href = "/index.php";
+  }
+}
 
-      const alertBox = document.getElementById(alertId);
-      if (alertBox) alertBox.style.display = "flex";
+/**
+ * Mostra mensagem de notificação temporária
+ * @param {string} message - Mensagem a exibir
+ * @param {string} type - Tipo: 'success', 'error', 'info', 'warning'
+ * @param {number} duration - Duração em milissegundos (0 = permanente)
+ */
+function showNotification(message, type = "info", duration = 3000) {
+  const notificationId = "notification-" + Date.now();
+  const notificationHTML = `
+    <div id="${notificationId}" class="notification notification-${type}">
+      <span>${message}</span>
+      <button class="close-btn">×</button>
+    </div>
+  `;
+
+  const container = document.getElementById("notifications-container") || 
+                   (() => {
+                     const div = document.createElement("div");
+                     div.id = "notifications-container";
+                     div.style.cssText = "position: fixed; top: 20px; right: 20px; z-index: 9999;";
+                     document.body.appendChild(div);
+                     return div;
+                   })();
+
+  container.insertAdjacentHTML("beforeend", notificationHTML);
+
+  const notificationEl = document.getElementById(notificationId);
+  const closeBtn = notificationEl.querySelector(".close-btn");
+
+  closeBtn.addEventListener("click", () => {
+    notificationEl.remove();
+  });
+
+  if (duration > 0) {
+    setTimeout(() => {
+      notificationEl.remove();
+    }, duration);
+  }
+}
+
+/**
+ * Confirma ação com modal/diálogo
+ * @param {string} message - Mensagem de confirmação
+ * @returns {Promise<boolean>} - true se confirmado
+ */
+async function confirmAction(message) {
+  return new Promise((resolve) => {
+    if (confirm(message)) {
+      resolve(true);
+    } else {
+      resolve(false);
     }
   });
 }
 
-// expõe só o que o index.php precisa chamar
-window.initCPF = initCPF;
-window.initLogin = initLogin;
-window.verificaCPF = verificaCPF; // se você quiser chamar manualmente também
+// Expõe funções públicas
+window.validateSessionToken = validateSessionToken;
+window.performLogout = performLogout;
+window.showNotification = showNotification;
+window.confirmAction = confirmAction;

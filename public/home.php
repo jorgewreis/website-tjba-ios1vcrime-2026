@@ -247,6 +247,8 @@ $userProfile = Security::getUserProfile() ?? '';
         
     </div>    
 
+    <script src="/js/common.js" defer></script>
+    
     <script type="module">
         import { initMenu, initMenuActive, setupMenuLayout } from '/js/menu.js';
 
@@ -265,12 +267,25 @@ $userProfile = Security::getUserProfile() ?? '';
     <script>
         const frame = document.getElementById('frame');
 
+        // Lista de páginas permitidas
+        const allowedPages = new Set([
+            'dashboard', 'cejusc', 'editais', 'guias', 'medidasprotetivas',
+            'oficioscartorio', 'oficiosgabinete', 'cartasexpedidas', 
+            'cartasrecebidas', 'produtividade'
+        ]);
+
         document.querySelectorAll('[data-target]').forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            const page = link.getAttribute('data-target');
-            frame.src = '/frame.php?page=' + encodeURIComponent(page);
-        });
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const page = link.getAttribute('data-target');
+                
+                // Validação de segurança: só permite páginas listadas
+                if (allowedPages.has(page)) {
+                    frame.src = '/frame.php?page=' + encodeURIComponent(page);
+                } else {
+                    console.warn('Tentativa de acesso a página não permitida:', page);
+                }
+            });
         });
     </script>
 
