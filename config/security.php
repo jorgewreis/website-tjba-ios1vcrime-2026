@@ -10,8 +10,11 @@ final class Security
 
     private const PERFIS_RANK = [
         'ESTUDANTE' => 1,
-        'SERVIDOR'  => 2,
-        'ADMIN'     => 3,
+        'CONSULTOR' => 2, 
+        'CARTORIO'  => 3,
+        'AUDIENCIA' => 4,
+        'GABINETE'  => 5,
+        'ADMIN'     => 6,
     ];
 
     public static function isAuthenticated(): bool

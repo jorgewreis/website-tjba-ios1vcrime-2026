@@ -1,63 +1,27 @@
 <?php
+// Dependências base do sistema (configuração, segurança e acesso a dados).
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/security.php';
 require_once __DIR__ . '/../bd/Usuario.php';
 require_once __DIR__ . '/../bd/Conection.php';
 
+// Garante que a sessão esteja ativa antes de acessar dados do usuário.
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
-if (empty($_SESSION['token'])) {
-    http_response_code(401);
-    die('Acesso negado');
-}
-
-$usuario = new Usuario();
-$user = $usuario->validarToken($_SESSION['token']);
-
-if (!$user) {
-    $_SESSION = [];
-    session_destroy();
-    http_response_code(401);
-    die('Sessão expirada');
-}
-
+// Página solicitada (padrão: dashboard).
 $page = $_GET['page'] ?? 'dashboard';
 
-/*
-  userId é VARCHAR.
-  Preferência: id vindo do validarToken (mais confiável).
-  Fallback: id_usuario da sessão.
-*/
+// Extrai o ID do usuário do retorno do validarToken.
 $userId = null;
 
-if (is_array($user)) {
-    $userId = $user['id_usuario'] ?? ($user['id'] ?? null);
-} elseif (is_object($user)) {
-    $userId = $user->id_usuario ?? ($user->id ?? null);
-}
-
-if ($userId === null) {
-    $userId = $_SESSION['id_usuario'] ?? null;
-}
-
-$userId = is_scalar($userId) ? trim((string)$userId) : '';
-
-if ($userId === '') {
-    http_response_code(401);
-    die('Sessão inválida');
-}
-
-if (!preg_match('/^[A-Za-z0-9_-]{1,80}$/', $userId)) {
-    error_log('Sessão inválida: userId com formato inesperado: ' . var_export($userId, true));
-    http_response_code(401);
-    die('Sessão inválida');
-}
-
+// Diretórios base para resolução de páginas internas.
 $BASE  = realpath(__DIR__ . '/..');
 $PAGES = $BASE . '/internal/pages';
+$ERRORS = $BASE . '/internal/errors';
 
+// Lista de páginas permitidas e seus caminhos.
 $allowed_pages = [
     'dashboard'         => $PAGES . '/dashboard.php',
     'cejusc'            => $PAGES . '/cejusc.php',
@@ -69,9 +33,15 @@ $allowed_pages = [
     'cartasexpedidas'   => $PAGES . '/cartasexpedidas.php',
     'cartasrecebidas'   => $PAGES . '/cartasrecebidas.php',
     'produtividade'     => $PAGES . '/produtividade.php',
+
+    '401'=> $ERRORS . '/401.php',
+    '403'=> $ERRORS . '/403.php',
+    '404'=> $ERRORS . '/404.php',
+    '500'=> $ERRORS . '/500.php'
 ];
 
 
+// Mapeia páginas para suas seções, usadas no controle de acesso.
 $page_to_section = [
     'dashboard'         => 'All',
     'cartasexpedidas'   => 'Cartório',
@@ -83,25 +53,30 @@ $page_to_section = [
     'oficioscartorio'   => 'Cartório',
     'oficiosgabinete'   => 'Gabinete',
     'produtividade'     => 'Cartório',
+    'reuspresos'        => 'Gabinete'
 ];
 
+// Verifica se o usuário possui perfil compatível com a seção exigida.
 function hasAccessToSection(array $userPerfils, ?string $requiredSection): bool
 {
     if ($requiredSection === null) {
         return true;
     }
 
+    // Mapeamento de seções para perfis permitidos.
     $sectionMap = [
-        'All' => ['ESTUDANTE', 'SERVIDOR', 'ADMIN'],
-        'Cartório' => ['SERVIDOR', 'ADMIN'],
-        'Gabinete' => ['SERVIDOR', 'ADMIN'],
-        'Sala de Audiências' => ['SERVIDOR', 'ADMIN'],
+        'All' => ['ESTUDANTE', 'CONSULTOR', 'CARTORIO', 'AUDIENCIA', 'GABINETE', 'ADMIN'],
+        'Cartório' => ['CARTORIO', 'AUDIENCIA', 'GABINETE', 'ADMIN'],
+        'Gabinete' => ['GABINETE', 'ADMIN'],
+        'Sala de Audiências' => ['AUDIENCIA', 'GABINETE', 'ADMIN'],
         'Estudantes' => ['ESTUDANTE', 'ADMIN'],
-        'Admin' => ['ADMIN'],
+        'Consultor'  => ['CONSULTOR', 'ADMIN'],
+        'Admin' => ['ADMIN']
     ];
 
     $requiredPerfils = $sectionMap[$requiredSection] ?? [];
 
+    // Se algum perfil do usuário está na lista permitida, libera acesso.
     foreach ($userPerfils as $userPerfil) {
         if (in_array($userPerfil, $requiredPerfils, true)) {
             return true;
@@ -111,33 +86,102 @@ function hasAccessToSection(array $userPerfils, ?string $requiredSection): bool
     return false;
 }
 
-if (!isset($allowed_pages[$page])) {
-    http_response_code(404);
-    die('Página não encontrada');
+// Responde com página de erro correspondente ao status HTTP.
+function respondWithError(int $status, string $message, string $errorsDir): void
+{
+    http_response_code($status);
+    $errorPage = $errorsDir . '/' . $status . '.php';
+
+    if (is_file($errorPage)) {
+        require $errorPage;
+        exit;
+    }
+
+    echo $message;
+    exit;
 }
 
-$userPerfils = $usuario->listarPerfisUsuario($userId);
+// Bloco centralizado de validações para sessão, usuário, página e acesso.
+$usuario = new Usuario();
+$user = null;
+$userPerfils = [];
+$pagePath = null;
+$resolved = null;
+$validationStatus = null;
+$validationMessage = '';
 
-$requiredSection = $page_to_section[$page] ?? null;
+do {
+    if (empty($_SESSION['token'])) {
+        $validationStatus = 401;
+        $validationMessage = 'Acesso negado';
+        break;
+    }
 
-if (!hasAccessToSection($userPerfils, $requiredSection)) {
-    http_response_code(403);
-    error_log('Acesso negado: userId=' . $userId . ' perfis=' . implode(',', $userPerfils) . ' page=' . $page);
-    die('Acesso negado. Seu perfil não tem permissão para acessar este conteúdo.');
+    $user = $usuario->validarToken($_SESSION['token']);
+
+    if (!$user) {
+        $_SESSION = [];
+        session_destroy();
+        $validationStatus = 401;
+        $validationMessage = 'Sessão expirada';
+        break;
+    }
+
+    if (is_array($user)) {
+        $userId = $user['id_usuario'] ?? ($user['id'] ?? null);
+    } elseif (is_object($user)) {
+        $userId = $user->id_usuario ?? ($user->id ?? null);
+    }
+
+    if ($userId === null) {
+        $userId = $_SESSION['id_usuario'] ?? null;
+    }
+
+    $userId = is_scalar($userId) ? trim((string)$userId) : '';
+
+    if ($userId === '') {
+        $validationStatus = 401;
+        $validationMessage = 'Sessão inválida';
+        break;
+    }
+
+    if (!preg_match('/^[A-Za-z0-9_-]{1,80}$/', $userId)) {
+        error_log('Sessão inválida: userId com formato inesperado: ' . var_export($userId, true));
+        $validationStatus = 401;
+        $validationMessage = 'Sessão inválida';
+        break;
+    }
+
+    if (!isset($allowed_pages[$page])) {
+        $validationStatus = 404;
+        $validationMessage = 'Página não encontrada';
+        break;
+    }
+
+    $userPerfils = $usuario->listarPerfisUsuario($userId);
+    $requiredSection = $page_to_section[$page] ?? null;
+
+    if (!hasAccessToSection($userPerfils, $requiredSection)) {
+        error_log('Acesso negado: userId=' . $userId . ' perfis=' . implode(',', $userPerfils) . ' page=' . $page);
+        $validationStatus = 403;
+        $validationMessage = 'Acesso negado. Seu perfil não tem permissão para acessar este conteúdo.';
+        break;
+    }
+
+    $pagePath = $allowed_pages[$page];
+    $resolved = realpath($pagePath);
+
+    if ($resolved === false || !is_file($resolved)) {
+        error_log('Arquivo de página não encontrado. page=' . $page . ' path=' . $pagePath . ' base=' . var_export($BASE, true));
+        $validationStatus = 500;
+        $validationMessage = 'Erro interno: página não localizada no servidor.';
+        break;
+    }
+} while (false);
+
+if ($validationStatus !== null) {
+    respondWithError($validationStatus, $validationMessage, $ERRORS);
 }
 
-if (!isset($allowed_pages[$page])) {
-    http_response_code(404);
-    die('Página não encontrada');
-}
-
-$pagePath = $allowed_pages[$page];
-$resolved = realpath($pagePath);
-
-if ($resolved === false || !is_file($resolved)) {
-    error_log('Arquivo de página não encontrado. page=' . $page . ' path=' . $pagePath . ' base=' . var_export($BASE, true));
-    http_response_code(500);
-    die('Erro interno: página não localizada no servidor.');
-}
-
+// Inclui a página solicitada.
 require $resolved;
