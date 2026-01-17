@@ -29,7 +29,7 @@ async function initLogin(formSelector = "#loginForm", endpoint = "login.php", er
       const result = await response.json();
 
       if (result.success) {
-        window.location.href = "/public/home.php";
+        window.location.href = "/home.php";
       } else {
         const erro = document.getElementById(erroId);
         if (erro) erro.textContent = result.message;

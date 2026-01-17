@@ -133,7 +133,7 @@ final class Security
     /* ==================== SESSION GETTERS ==================== */
 
     public static function getUserId(): ?string
-    {
+    {        
         return $_SESSION[self::SESSION_USER_ID] ?? null;
     }
 

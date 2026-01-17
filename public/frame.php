@@ -4,13 +4,18 @@ require_once __DIR__ . '/../config/security.php';
 require_once __DIR__ . '/../bd/Usuario.php';
 require_once __DIR__ . '/../bd/Conection.php';
 
-if (empty($_SESSION['id_usuario']) || empty($_SESSION['token'])) {
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+
+if (empty($_SESSION['token'])) {
     http_response_code(401);
     die('Acesso negado');
 }
 
 $usuario = new Usuario();
 $user = $usuario->validarToken($_SESSION['token']);
+
 if (!$user) {
     $_SESSION = [];
     session_destroy();
@@ -18,25 +23,57 @@ if (!$user) {
     die('Sessão expirada');
 }
 
-$userId = Security::getUserId();
-$page   = $_GET['page'] ?? 'dashboard';
+$page = $_GET['page'] ?? 'dashboard';
+
+/*
+  userId é VARCHAR.
+  Preferência: id vindo do validarToken (mais confiável).
+  Fallback: id_usuario da sessão.
+*/
+$userId = null;
+
+if (is_array($user)) {
+    $userId = $user['id_usuario'] ?? ($user['id'] ?? null);
+} elseif (is_object($user)) {
+    $userId = $user->id_usuario ?? ($user->id ?? null);
+}
+
+if ($userId === null) {
+    $userId = $_SESSION['id_usuario'] ?? null;
+}
+
+$userId = is_scalar($userId) ? trim((string)$userId) : '';
+
+if ($userId === '') {
+    http_response_code(401);
+    die('Sessão inválida');
+}
+
+if (!preg_match('/^[A-Za-z0-9_-]{1,80}$/', $userId)) {
+    error_log('Sessão inválida: userId com formato inesperado: ' . var_export($userId, true));
+    http_response_code(401);
+    die('Sessão inválida');
+}
+
+$BASE  = realpath(__DIR__ . '/..');
+$PAGES = $BASE . '/internal/pages';
 
 $allowed_pages = [
-    'dashboard'         => __DIR__ . '/../internal/pages/dashboard.php',
-    'cejusc'            => __DIR__ . '/../internal/pages/cejusc.php',
-    'editais'           => __DIR__ . '/../internal/pages/editais.php',
-    'guias'             => __DIR__ . '/../internal/pages/guias.php',
-    'medidasprotetivas' => __DIR__ . '/../internal/pages/medidasprotetivas.php',
-    'oficioscartorio'   => __DIR__ . '/../internal/pages/oficioscartorio.php',
-    'oficiosgabinete'   => __DIR__ . '/../internal/pages/oficiosgabinete.php',
-    'cartasexpedidas'   => __DIR__ . '/../internal/pages/cartasexpedidas.php',
-    'cartasrecebidas'   => __DIR__ . '/../internal/pages/cartasrecebidas.php',
-    'produtividade'     => __DIR__ . '/../internal/pages/produtividade.php',
+    'dashboard'         => $PAGES . '/dashboard.php',
+    'cejusc'            => $PAGES . '/cejusc.php',
+    'editais'           => $PAGES . '/editais.php',
+    'guias'             => $PAGES . '/guias.php',
+    'medidasprotetivas' => $PAGES . '/medidasprotetivas.php',
+    'oficioscartorio'   => $PAGES . '/oficioscartorio.php',
+    'oficiosgabinete'   => $PAGES . '/oficiosgabinete.php',
+    'cartasexpedidas'   => $PAGES . '/cartasexpedidas.php',
+    'cartasrecebidas'   => $PAGES . '/cartasrecebidas.php',
+    'produtividade'     => $PAGES . '/produtividade.php',
 ];
 
-// Mapa de páginas para seções de menu (controle de acesso)
+
 $page_to_section = [
-    'dashboard'         => null, // Sempre acessível
+    'dashboard'         => 'All',
     'cartasexpedidas'   => 'Cartório',
     'cartasrecebidas'   => 'Cartório',
     'cejusc'            => 'Cartório',
@@ -48,52 +85,23 @@ $page_to_section = [
     'produtividade'     => 'Cartório',
 ];
 
-/**
- * Busca os perfis do usuário
- * @param int $userId ID do usuário
- * @return array Array com perfis do usuário
- */
-function getUserPerfils(int $userId): array {
-    try {
-        $pdo = Conection::getInstance()->getConnection();
-        $stmt = $pdo->prepare("
-            SELECT DISTINCT perfil 
-            FROM usuario_perfil 
-            WHERE usuario = ? 
-            ORDER BY perfil ASC
-        ");
-        $stmt->execute([$userId]);
-        return $stmt->fetchAll(PDO::FETCH_COLUMN);
-    } catch (Exception $e) {
-        error_log("Erro ao buscar perfis do usuário {$userId}: " . $e->getMessage());
-        return [];
-    }
-}
-
-/**
- * Verifica se o usuário tem acesso à seção
- * @param array $userPerfils Perfis do usuário
- * @param string|null $requiredSection Seção requerida
- * @return bool True se tem acesso
- */
-function hasAccessToSection(array $userPerfils, ?string $requiredSection): bool {
-    // Dashboard sempre acessível
+function hasAccessToSection(array $userPerfils, ?string $requiredSection): bool
+{
     if ($requiredSection === null) {
         return true;
     }
 
-    // Verificar contra o mapa de perfis
     $sectionMap = [
+        'All' => ['ESTUDANTE', 'SERVIDOR', 'ADMIN'],
         'Cartório' => ['SERVIDOR', 'ADMIN'],
         'Gabinete' => ['SERVIDOR', 'ADMIN'],
         'Sala de Audiências' => ['SERVIDOR', 'ADMIN'],
         'Estudantes' => ['ESTUDANTE', 'ADMIN'],
-        'Admin' => ['ADMIN']
+        'Admin' => ['ADMIN'],
     ];
 
     $requiredPerfils = $sectionMap[$requiredSection] ?? [];
-    
-    // Verificar se usuário tem algum dos perfis requeridos
+
     foreach ($userPerfils as $userPerfil) {
         if (in_array($userPerfil, $requiredPerfils, true)) {
             return true;
@@ -103,20 +111,33 @@ function hasAccessToSection(array $userPerfils, ?string $requiredSection): bool 
     return false;
 }
 
-// Validar se página existe
 if (!isset($allowed_pages[$page])) {
     http_response_code(404);
-    die("Página não encontrada");
+    die('Página não encontrada');
 }
 
-// Validar acesso à seção
+$userPerfils = $usuario->listarPerfisUsuario($userId);
+
 $requiredSection = $page_to_section[$page] ?? null;
-$userPerfils = getUserPerfils($userId);
 
 if (!hasAccessToSection($userPerfils, $requiredSection)) {
     http_response_code(403);
+    error_log('Acesso negado: userId=' . $userId . ' perfis=' . implode(',', $userPerfils) . ' page=' . $page);
     die('Acesso negado. Seu perfil não tem permissão para acessar este conteúdo.');
 }
 
-// Carregar a página dentro do iframe
-require $allowed_pages[$page];
+if (!isset($allowed_pages[$page])) {
+    http_response_code(404);
+    die('Página não encontrada');
+}
+
+$pagePath = $allowed_pages[$page];
+$resolved = realpath($pagePath);
+
+if ($resolved === false || !is_file($resolved)) {
+    error_log('Arquivo de página não encontrado. page=' . $page . ' path=' . $pagePath . ' base=' . var_export($BASE, true));
+    http_response_code(500);
+    die('Erro interno: página não localizada no servidor.');
+}
+
+require $resolved;

@@ -140,6 +140,18 @@ final class Usuario
         return $melhorPerfil;
     }
 
+    public function listarPerfisUsuario(string $idUsuario): array
+    {
+        $idUsuario = trim($idUsuario);
+
+        if ($idUsuario === '') {
+            return [];
+        }
+
+        return $this->getPerfisUsuario($idUsuario);
+    }
+
+
     /* ======================================================
        TOKEN (persistência)
        ====================================================== */
