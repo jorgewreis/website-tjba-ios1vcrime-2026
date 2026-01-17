@@ -25,13 +25,13 @@ final class Usuario
 
     public function autenticar(string $cpf, string $senha): array
     {
-        $cpfNumerico = $this->normalizeCPF($cpf);
+        $cpfNumerico = Security::normalizeCPF($cpf);
 
-        if (!$this->validarCPF($cpfNumerico) || $senha === '') {
+        if (!Security::validarCPF($cpfNumerico) || $senha === '') {
             return ['success' => false];
         }
 
-        $cpfFormatado = $this->formatCPF($cpfNumerico);
+        $cpfFormatado = Security::formatCPF($cpfNumerico);
 
         $stmt = $this->pdo->prepare("
             SELECT id_usuario, nome, senha_hash
@@ -194,46 +194,5 @@ final class Usuario
         $stmt->execute([$idUsuario]);
 
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
-    }
-
-    /* ======================================================
-       CPF – IDENTIDADE DO DOMÍNIO
-       ====================================================== */
-
-    private function normalizeCPF(string $cpf): string
-    {
-        return preg_replace('/\D+/', '', $cpf) ?? '';
-    }
-
-    private function validarCPF(string $cpf): bool
-    {
-        if (strlen($cpf) !== 11) {
-            return false;
-        }
-
-        if (preg_match('/^(\d)\1{10}$/', $cpf)) {
-            return false;
-        }
-
-        for ($t = 9; $t < 11; $t++) {
-            $soma = 0;
-            for ($c = 0; $c < $t; $c++) {
-                $soma += (int)$cpf[$c] * (($t + 1) - $c);
-            }
-            $digito = ((10 * $soma) % 11) % 10;
-            if ((int)$cpf[$t] !== $digito) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private function formatCPF(string $cpf): string
-    {
-        return substr($cpf, 0, 3) . '.' .
-               substr($cpf, 3, 3) . '.' .
-               substr($cpf, 6, 3) . '-' .
-               substr($cpf, 9, 2);
     }
 }

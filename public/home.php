@@ -22,7 +22,7 @@ if (!$user) {
 }
 
 $userName = $_SESSION['nome'] ?? ($user['nome'] ?? '');
-$userProfile = $_SESSION['perfil'] ?? '';
+$userProfile = Security::getUserProfile() ?? '';
 ?>
 
 <!DOCTYPE html>

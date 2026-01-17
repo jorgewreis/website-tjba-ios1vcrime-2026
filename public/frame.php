@@ -17,7 +17,7 @@ if (!$user) {
     die('Sessão expirada');
 }
 
-$perfil = $_SESSION['perfil'] ?? '';
+$perfil = Security::getUserProfile() ?? '';
 $page   = $_GET['page'] ?? 'dashboard';
 
 $allowed_pages = [
