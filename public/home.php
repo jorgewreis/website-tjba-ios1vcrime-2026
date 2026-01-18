@@ -86,8 +86,8 @@ $userProfile = Security::getUserProfile() ?? '';
                     </div>
                     <div class="navbar-nav-right">
                         <ul class="navbar-nav">
-                            <li class="nav-item">
-                                <a class="nav-link disabled">
+                            <li class="nav-item" data-target="dashboard">
+                                <a class="nav-link">
                                     <i class="fi fi-br-layout-fluid"></i>
                                 </a>
                             </li>
@@ -101,8 +101,8 @@ $userProfile = Security::getUserProfile() ?? '';
                                     <i class="fi fi-rs-bell"></i>
                                 </a>
                             </li>                        
-                            <li class="nav-item">
-                                <a class="nav-link disabled">
+                            <li class="nav-item" data-target="settingsuser">
+                                <a class="nav-link">
                                     <i class="fi fi-rs-settings"></i>
                                 </a>
                             </li>
@@ -133,7 +133,7 @@ $userProfile = Security::getUserProfile() ?? '';
     <script src="/js/common.js" defer></script>
 
     <script type="module">
-        import { initMenu, initMenuActive, setupMenuLayout } from '/js/menu.js';
+        import { initMenu, initMenuActive, setupMenuLayout} from '/js/menu.js';
 
         const PERFIL_MENU_MAP = {
             'ESTUDANTE': ['Estudantes'],
@@ -375,7 +375,13 @@ $userProfile = Security::getUserProfile() ?? '';
             }
 
             frame.src = '/frame.php?page=' + encodeURIComponent(page);
-        });
+            const layoutWrapper = document.querySelector('.view.layout-wraper');
+            const isDesktop = layoutWrapper?.classList.contains('menu-fixed');
+
+            if (!isDesktop) {
+                window.menuController?.close?.();
+            }
+        });        
     </script>
     
 </body>
