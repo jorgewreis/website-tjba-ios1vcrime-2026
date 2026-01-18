@@ -2,13 +2,14 @@ name: Auto Version (YY.MM.PPPP)
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 permissions:
   contents: write
 
 jobs:
   bump:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
