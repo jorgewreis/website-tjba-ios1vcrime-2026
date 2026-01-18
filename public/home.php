@@ -22,7 +22,7 @@ if (!$user) {
 }
 
 $userName = $_SESSION['nome'] ?? ($user['nome'] ?? '');
-$userProfile = $_SESSION['perfil'] ?? '';
+$userProfile = Security::getUserProfile() ?? '';
 ?>
 
 <!DOCTYPE html>
@@ -32,13 +32,19 @@ $userProfile = $_SESSION['perfil'] ?? '';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Primeira Vara Crime de Ilhéus - Sistema de Gestão</title>
 
-    <!-- Reset CSS -->
+    <!-- Reset CSS (Fundação) -->
     <link rel="stylesheet" href="/css/reset.css">
-
-    <!-- Styles CSS -->
     <link rel="stylesheet" href="/css/color.css">
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="/css/form.css">
+
+    <!-- Layout e Navegação -->
+    <link rel="stylesheet" href="/css/layout.css">
+    <link rel="stylesheet" href="/css/menu-style.css">
+
+    <!-- Componentes Reutilizáveis -->
+    <link rel="stylesheet" href="/css/components.css">
+
+    <!-- Páginas Internas -->
+    <link rel="stylesheet" href="/css/pages.css">
 </head>
 <body>
     
@@ -66,130 +72,7 @@ $userProfile = $_SESSION['perfil'] ?? '';
                             <i class="fi fi-rs-home"></i>
                             <span class="text">Dashboard</span>
                         </a>
-                    </li>
-                    <li class="menu-header">
-                        <span class="menu-header-text">Cartório</span>
-                    </li>
-                    <li class="menu-item">
-                        <a class="menu-link menu-toggle">
-                            <i class="fi fi-rs-envelope-open-text"></i>
-                            <span class="text">Cartas Precatórias</span>
-                        </a>
-                        <ul class="menu-sub">
-                            <li class="menu-item active">
-                                <a class="menu-link" data-target="cartasexpedidas">
-                                    <span class="text">Cartas Expedidas</span>
-                                </a>    
-                            </li>
-                            <li class="menu-item">
-                                <a class="menu-link" data-target="cartasrecebidas">
-                                    <span class="text">Cartas Recebidas</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                    <li class="menu-item ">
-                        <a class="menu-link" data-target="cejusc">
-                            <i class="fi fi-rs-money-check-edit"></i>
-                            <span class="text">Cejusc</span>
-                        </a>
-                    </li>
-                    <li class="menu-item ">
-                        <a class="menu-link" data-target="editais">                            
-                            <i class="fi fi-rs-document"></i>
-                            <span class="text">Editais</span>
-                        </a>
-                    </li>
-                    <li class="menu-item ">
-                        <a class="menu-link" data-target="guias">                            
-                            <i class="fi fi-rs-blog-text"></i>
-                            <span class="text">Guias</span>
-                        </a>
-                    </li>
-                    <li class="menu-item ">
-                        <a class="menu-link" data-target="medidasprotetivas">                            
-                            <i class="fi fi-rs-user-shield"></i>
-                            <span class="text">Medidas protetivas</span>
-                        </a>
-                    </li>
-                    <li class="menu-item ">
-                        <a class="menu-link" data-target="oficioscartorio">                            
-                            <i class="fi fi-rs-license"></i>
-                            <span class="text">Ofícios</span>
-                        </a>
-                    </li>
-                    <li class="menu-item ">
-                        <a class="menu-link" data-target="produtividade">                            
-                            <i class="fi fi-rs-clock-up-arrow"></i>
-                            <span class="text">Produtividade</span>
-                        </a>
-                    </li>
-                    <li class="menu-header">
-                        <span class="menu-header-text">Gabinete</span>
-                    </li>
-                    <li class="menu-item ">
-                        <a class="menu-link" data-target="oficiosgabinete">                            
-                            <i class="fi fi-ss-license"></i>
-                            <span class="text">Ofícios</span>
-                        </a>
-                    </li>
-                    <li class="menu-item ">
-                        <a class="menu-link" data-target="reuspresos">                            
-                            <i class="fi fi-rs-court-order"></i>
-                            <span class="text">Réus Presos</span>
-                        </a>
-                    </li>
-                    <li class="menu-header">
-                        <span class="menu-header-text">Sala de Audiências</span>
-                    </li>
-                    <li class="menu-item ">
-                        <a class="menu-link">                            
-                            <i class="fi fi-rs-users-alt"></i>
-                            <span class="text">Partes</span>
-                        </a>
-                    </li>
-                    <li class="menu-item ">
-                        <a class="menu-link">                            
-                            <i class="fi fi-rs-clipboard-list-check"></i>
-                            <span class="text">Pauta</span>
-                        </a>
-                    </li>
-                    <li class="menu-item ">
-                        <a class="menu-link">                            
-                            <i class="fi fi-rs-screen"></i>
-                            <span class="text">Painel</span>
-                        </a>
-                    </li>
-                    <li class="menu-header">
-                        <span class="menu-header-text">Estudantes</span>
-                    </li>
-                    <li class="menu-item ">
-                        <a class="menu-link">                            
-                            <i class="fi fi-rs-clipboard-list-check"></i>
-                            <span class="text">Pauta de Audiências</span>
-                        </a>
-                    </li>
-                    <li class="menu-item ">
-                        <a class="menu-link">                            
-                            <i class="fi fi-rs-document"></i>
-                            <span class="text">Atas</span>
-                        </a>
-                    </li>
-                    <li class="menu-item ">
-                        <a class="menu-link">                            
-                            <i class="fi fi-rs-screen"></i>
-                            <span class="text">Painel em tempo real</span>
-                        </a>
-                    </li>
-                    <li class="menu-header">
-                        <span class="menu-header-text">Admin</span>
-                    </li>
-                    <li class="menu-item ">
-                        <a class="menu-link">                            
-                            <i class="fi fi-rs-id-badge"></i>
-                            <span class="text">Servidores</span>
-                        </a>
-                    </li>
+                    </li>                    
                 </ul>
             </div>
 
@@ -247,10 +130,222 @@ $userProfile = $_SESSION['perfil'] ?? '';
         
     </div>    
 
+    <script src="/js/common.js" defer></script>
+
     <script type="module">
         import { initMenu, initMenuActive, setupMenuLayout } from '/js/menu.js';
 
-        document.addEventListener("DOMContentLoaded", function() {
+        const PERFIL_MENU_MAP = {
+            'ESTUDANTE': ['Estudantes'],
+            'CONSULTOR': ['Consultas'],
+            'AUDIENCIA': ['Cartório', 'Sala de Audiências', 'Consultas'],
+            'CARTORIO': ['Cartório', 'Consultas'],
+            'GABINETE': ['Cartório', 'Sala de Audiências', 'Gabinete', 'Consultas'],
+            'ADMIN': ['Cartório', 'Gabinete', 'Sala de Audiências', 'Estudantes', 'Consultas', 'Audiências', 'Admin']
+        };
+
+        const MENU_SECTIONS = [
+            {
+                section: 'Cartório',
+                items: [
+                    {
+                        type: 'submenu',
+                        icon: 'fi fi-rs-envelope-open-text',
+                        label: 'Cartas Precatórias',
+                        children: [
+                            { label: 'Cartas Expedidas', target: 'cartasexpedidas' },
+                            { label: 'Cartas Recebidas', target: 'cartasrecebidas' }
+                        ]
+                    },
+                    { icon: 'fi fi-rs-money-check-edit', label: 'Cejusc', target: 'cejusc' },
+                    { icon: 'fi fi-rs-document', label: 'Editais', target: 'editais' },
+                    { icon: 'fi fi-rs-blog-text', label: 'Guias', target: 'guias' },
+                    { icon: 'fi fi-rs-user-shield', label: 'Medidas protetivas', target: 'medidasprotetivas' },
+                    { icon: 'fi fi-rs-license', label: 'Ofícios', target: 'oficioscartorio' },
+                    { icon: 'fi fi-rs-clock-up-arrow', label: 'Produtividade', target: 'produtividade' }
+                ]
+            },
+            {
+                section: 'Gabinete',
+                items: [
+                    { icon: 'fi fi-ss-license', label: 'Ofícios', target: 'oficiosgabinete' },
+                    { icon: 'fi fi-rs-lock', label: 'Réus Presos', target: 'reuspresos' }
+                ]
+            },
+            {
+                section: 'Sala de Audiências',
+                items: [                    
+                    { icon: 'fi fi-rs-clipboard-list-check', label: 'Pauta', target: 'salapauta' },
+                    { icon: 'fi fi-rs-document', label: 'Atas', target: 'salaata' },
+                    { icon: 'fi fi-rs-screen', label: 'Painel', target: 'salapainel' }
+                ]
+            },
+            {
+                section: 'Estudantes',
+                items: [
+                    { icon: 'fi fi-rs-clipboard-list-check', label: 'Pauta de Audiências', target: 'estudapauta' },
+                    { icon: 'fi fi-rs-document', label: 'Atas', target: 'estudaata' },
+                    { icon: 'fi fi-rs-screen', label: 'Painel em tempo real', target: 'estudapainel' }
+                ]
+            },
+            {
+                section: 'Consultas',
+                items: [
+                    { icon: 'fi fi-rs-users-alt', label: 'Partes', target: 'consultaparte' },
+                    { icon: 'fi fi-rs-marker', label: 'CEP', target: 'consultacep' }
+                ]
+            },
+            {
+                section: 'Audiências',
+                items: [
+                    { icon: 'fi fi-rs-clipboard-list-check', label: 'Pauta de Audiências', target: 'pauta' },
+                    { icon: 'fi fi-rs-document', label: 'Atas', target: 'atas' },
+                    { icon: 'fi fi-rs-screen', label: 'Painel em tempo real', target: 'painel' }
+                ]
+            },
+            {
+                section: 'Admin',
+                items: [
+                    { icon: 'fi fi-rs-id-badge', label: 'Servidores', target: 'admservidores' }
+                ]
+            }
+        ];
+
+        const FALLBACK_PERFIS = <?php echo json_encode($userProfile ? [$userProfile] : []); ?>;
+
+        async function fetchUserPerfis() {
+            try {
+                const response = await fetch('/admin/api/getPerfis.php');
+
+                if (!response.ok) {
+                    return FALLBACK_PERFIS;
+                }
+
+                const result = await response.json();
+
+                if (result.success && Array.isArray(result.perfis) && result.perfis.length > 0) {
+                    return result.perfis;
+                }
+
+                return FALLBACK_PERFIS;
+            } catch (error) {
+                return FALLBACK_PERFIS;
+            }
+        }
+
+        function getPermittedSections(perfis) {
+            const permittedSections = new Set();
+
+            perfis.forEach(perfil => {
+                const sections = PERFIL_MENU_MAP[perfil];
+
+                if (sections && Array.isArray(sections)) {
+                    sections.forEach(section => {
+                        permittedSections.add(section);
+                    });
+                }
+            });
+
+            return permittedSections;
+        }
+
+        function createMenuLink({ icon, label, target }) {
+            const link = document.createElement('a');
+            link.className = 'menu-link';
+
+            if (target) {
+                link.dataset.target = target;
+            }
+
+            if (icon) {
+                const iconElement = document.createElement('i');
+                iconElement.className = icon;
+                link.appendChild(iconElement);
+            }
+
+            const text = document.createElement('span');
+            text.className = 'text';
+            text.textContent = label;
+            link.appendChild(text);
+
+            return link;
+        }
+
+        function createMenuItem(item) {
+            const menuItem = document.createElement('li');
+            menuItem.className = 'menu-item';
+
+            if (item.type === 'submenu') {
+                const link = document.createElement('a');
+                link.className = 'menu-link menu-toggle';
+
+                if (item.icon) {
+                    const iconElement = document.createElement('i');
+                    iconElement.className = item.icon;
+                    link.appendChild(iconElement);
+                }
+
+                const text = document.createElement('span');
+                text.className = 'text';
+                text.textContent = item.label;
+                link.appendChild(text);
+
+                menuItem.appendChild(link);
+
+                const submenu = document.createElement('ul');
+                submenu.className = 'menu-sub';
+
+                item.children.forEach(child => {
+                    const childItem = document.createElement('li');
+                    childItem.className = 'menu-item';
+                    childItem.appendChild(createMenuLink(child));
+                    submenu.appendChild(childItem);
+                });
+
+                menuItem.appendChild(submenu);
+                return menuItem;
+            }
+
+            menuItem.appendChild(createMenuLink(item));
+            return menuItem;
+        }
+
+        function buildMenuForSections(permittedSections) {
+            const menuRoot = document.querySelector('.menu-inner');
+
+            if (!menuRoot) {
+                return;
+            }
+
+            MENU_SECTIONS.forEach(section => {
+                if (!permittedSections.has(section.section)) {
+                    return;
+                }
+
+                const header = document.createElement('li');
+                header.className = 'menu-header';
+
+                const headerText = document.createElement('span');
+                headerText.className = 'menu-header-text';
+                headerText.textContent = section.section;
+                header.appendChild(headerText);
+
+                menuRoot.appendChild(header);
+
+                section.items.forEach(item => {
+                    menuRoot.appendChild(createMenuItem(item));
+                });
+            });
+        }
+
+        async function initDynamicMenu() {
+            const perfis = await fetchUserPerfis();
+            const permittedSections = getPermittedSections(perfis);
+            buildMenuForSections(permittedSections);
+        }
+
+        document.addEventListener("DOMContentLoaded", async function() {
+            await initDynamicMenu();
             initMenu();
             initMenuActive();
 
@@ -265,15 +360,24 @@ $userProfile = $_SESSION['perfil'] ?? '';
     <script>
         const frame = document.getElementById('frame');
 
-        document.querySelectorAll('[data-target]').forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
+        document.addEventListener('click', (event) => {
+            const link = event.target.closest('[data-target]');
+
+            if (!link) {
+                return;
+            }
+
+            event.preventDefault();
             const page = link.getAttribute('data-target');
+
+            if (!page) {
+                return;
+            }
+
             frame.src = '/frame.php?page=' + encodeURIComponent(page);
         });
-        });
     </script>
-
-
+    
 </body>
+
 </html>

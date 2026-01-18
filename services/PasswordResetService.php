@@ -15,14 +15,14 @@ final class PasswordResetService
 
     public function process(string $cpf, string $email): void
     {
-        $cpf = $this->normalizeCPF($cpf);
+        $cpf = Security::normalizeCPF($cpf);
         $email = strtolower(trim($email));
 
-        if (!$this->validarCPF($cpf) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        if (!Security::validarCPF($cpf) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return; // resposta sempre neutra
         }
 
-        $cpfFormatado = $this->formatCPF($cpf);
+        $cpfFormatado = Security::formatCPF($cpf);
 
         $stmt = $this->pdo->prepare("
             SELECT id_usuario, nome, email
@@ -38,7 +38,7 @@ final class PasswordResetService
             return;
         }
 
-        $senhaTemp = $this->generateTempPassword();
+        $senhaTemp = Security::generateTempPassword();
         $senhaHash = Security::hashPassword($senhaTemp);
 
         $this->pdo->beginTransaction();
@@ -67,48 +67,6 @@ final class PasswordResetService
     }
 
     /* ================= UTILITÁRIOS ================= */
-
-    private function normalizeCPF(string $cpf): string
-    {
-        return preg_replace('/\D+/', '', $cpf) ?? '';
-    }
-
-    private function validarCPF(string $cpf): bool
-    {
-        if (strlen($cpf) !== 11 || preg_match('/^(\d)\1{10}$/', $cpf)) {
-            return false;
-        }
-
-        for ($t = 9; $t < 11; $t++) {
-            $soma = 0;
-            for ($c = 0; $c < $t; $c++) {
-                $soma += (int)$cpf[$c] * (($t + 1) - $c);
-            }
-            $dig = ((10 * $soma) % 11) % 10;
-            if ((int)$cpf[$t] !== $dig) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private function formatCPF(string $cpf): string
-    {
-        return substr($cpf, 0, 3) . '.' .
-               substr($cpf, 3, 3) . '.' .
-               substr($cpf, 6, 3) . '-' .
-               substr($cpf, 9, 2);
-    }
-
-    private function generateTempPassword(int $len = 8): string
-    {
-        $chars = 'ABCDEFGHJKLMNPQRSTUVWXY23456789';
-        $out = '';
-        for ($i = 0; $i < $len; $i++) {
-            $out .= $chars[random_int(0, strlen($chars) - 1)];
-        }
-        return $out;
-    }
 
     private function sendEmail(string $to, string $nome, string $senhaTemp): bool
     {

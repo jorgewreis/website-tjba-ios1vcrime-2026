@@ -8,12 +8,6 @@ final class Usuario
 {
     private PDO $pdo;
 
-    private const PERFIS_RANK = [
-        'ESTUDANTE' => 1,
-        'SERVIDOR'  => 2,
-        'ADMIN'     => 3,
-    ];
-
     public function __construct()
     {
         $this->pdo = Conection::getInstance()->getConnection();
@@ -25,13 +19,13 @@ final class Usuario
 
     public function autenticar(string $cpf, string $senha): array
     {
-        $cpfNumerico = $this->normalizeCPF($cpf);
+        $cpfNumerico = Security::normalizeCPF($cpf);
 
-        if (!$this->validarCPF($cpfNumerico) || $senha === '') {
+        if (!Security::validarCPF($cpfNumerico) || $senha === '') {
             return ['success' => false];
         }
 
-        $cpfFormatado = $this->formatCPF($cpfNumerico);
+        $cpfFormatado = Security::formatCPF($cpfNumerico);
 
         $stmt = $this->pdo->prepare("
             SELECT id_usuario, nome, senha_hash
@@ -136,7 +130,7 @@ final class Usuario
         $maiorRank    = 0;
 
         foreach ($perfis as $perfil) {
-            $rank = self::PERFIS_RANK[$perfil] ?? 0;
+            $rank = Security::getPerfilRank($perfil);
             if ($rank > $maiorRank) {
                 $maiorRank    = $rank;
                 $melhorPerfil = $perfil;
@@ -145,6 +139,18 @@ final class Usuario
 
         return $melhorPerfil;
     }
+
+    public function listarPerfisUsuario(string $idUsuario): array
+    {
+        $idUsuario = trim($idUsuario);
+
+        if ($idUsuario === '') {
+            return [];
+        }
+
+        return $this->getPerfisUsuario($idUsuario);
+    }
+
 
     /* ======================================================
        TOKEN (persistência)
@@ -177,63 +183,5 @@ final class Usuario
         $stmt->execute([$token]);
 
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
-    }
-
-    /* ======================================================
-       CONSULTAS
-       ====================================================== */
-
-    public function buscarPorId(string $idUsuario): ?array
-    {
-        $stmt = $this->pdo->prepare("
-            SELECT id_usuario, nome, cpf, email
-            FROM usuarios
-            WHERE id_usuario = ?
-            LIMIT 1
-        ");
-        $stmt->execute([$idUsuario]);
-
-        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
-    }
-
-    /* ======================================================
-       CPF – IDENTIDADE DO DOMÍNIO
-       ====================================================== */
-
-    private function normalizeCPF(string $cpf): string
-    {
-        return preg_replace('/\D+/', '', $cpf) ?? '';
-    }
-
-    private function validarCPF(string $cpf): bool
-    {
-        if (strlen($cpf) !== 11) {
-            return false;
-        }
-
-        if (preg_match('/^(\d)\1{10}$/', $cpf)) {
-            return false;
-        }
-
-        for ($t = 9; $t < 11; $t++) {
-            $soma = 0;
-            for ($c = 0; $c < $t; $c++) {
-                $soma += (int)$cpf[$c] * (($t + 1) - $c);
-            }
-            $digito = ((10 * $soma) % 11) % 10;
-            if ((int)$cpf[$t] !== $digito) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private function formatCPF(string $cpf): string
-    {
-        return substr($cpf, 0, 3) . '.' .
-               substr($cpf, 3, 3) . '.' .
-               substr($cpf, 6, 3) . '-' .
-               substr($cpf, 9, 2);
     }
 }

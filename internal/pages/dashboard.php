@@ -1,11 +1,14 @@
 <?php
-if (!isset($_SESSION['id_usuario'])) {
-    die("Acesso negado");
-}
+declare(strict_types=1);
+
+require_once __DIR__ . '/../../config/config.php';
+require_once __DIR__ . '/../../config/security.php';
+
+Security::requireAuthentication();
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,10 +25,9 @@ if (!isset($_SESSION['id_usuario'])) {
 <body>
     <div class="container-main">
         <div class="title-page">
-            <span class="title">Editais</span>
-            <span class="info-title">Espaço destinado a garantir que o edital foi publicado, o prazo correu, a certificação foi lançada e, sobretudo, que ninguém alegue desconhecimento post factum</span>
+            <span class="title">Dashboard</span>
+            <span class="info-title">Tudo o que você precisa saber (em um só lugar)</span>
         </div>
     </div>
 </body>
 </html>
-

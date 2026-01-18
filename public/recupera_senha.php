@@ -1,3 +1,11 @@
+<?php
+declare(strict_types=1);
+
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/security.php';
+
+$csrfToken = Security::generateCSRFToken();
+?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -5,11 +13,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Primeira Vara Crime de Ilhéus - Sistema de Gestão</title>
 
+    <!-- Reset CSS (Fundação) -->
     <link rel="stylesheet" href="css/reset.css">
     <link rel="stylesheet" href="css/color.css">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/pages.css">
-    <link rel="stylesheet" href="css/form.css">
+
+    <!-- Componentes Reutilizáveis -->
+    <link rel="stylesheet" href="css/components.css">
+
+    <!-- Específico para formulários de login -->
+    <link rel="stylesheet" href="css/login.css">
 </head>
 
 <body style="background-color: #f5f5f9;">
@@ -29,7 +41,7 @@
             </div>
 
             <form class="form-login" id="resetForm">
-                <input type="hidden" name="csrf_token" id="csrf_token">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
 
                 <div class="form-line">
                     <div class="form-block">
@@ -71,20 +83,15 @@
     </div>
 </div>
 
-<script src="/js/common.js" defer></script>
-<script src="/js/login.js" defer></script>
+<script src="/js/cpf.js" defer></script>
+<script src="/js/auth.js" defer></script>
 
 <script defer>
 document.addEventListener("DOMContentLoaded", async () => {
 
     await initCPF("#cpf");
 
-    // CSRF vindo do backend (ex.: window.CSRF_TOKEN)
-    if (window.CSRF_TOKEN) {
-        document.querySelector("#csrf_token").value = window.CSRF_TOKEN;
-    }
-
-    await initRecuperaSenha("#resetForm");
+    await initRecuperaSenha("#resetForm", "#cpf", "#email", "/envia_mail.php");
 });
 </script>
 

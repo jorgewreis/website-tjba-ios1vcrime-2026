@@ -5,7 +5,7 @@ require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/security.php';
 
 if (Security::isAuthenticated()) {
-    header('Location: /admin/home.php');
+    header('Location: /home.php');
     exit;
 }
 
@@ -19,13 +19,15 @@ $csrfToken = Security::generateCSRFToken();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Primeira Vara Crime de Ilhéus - Sistema de Gestão</title>
 
-    <!-- Reset CSS -->
+    <!-- Reset CSS (Fundação) -->
     <link rel="stylesheet" href="/css/reset.css">
-
-    <!-- Styles CSS -->
     <link rel="stylesheet" href="/css/color.css">
+
+    <!-- Específico para Login -->
     <link rel="stylesheet" href="/css/login.css">
-    <link rel="stylesheet" href="/css/form.css">
+
+    <!-- Componentes Reutilizáveis -->
+    <link rel="stylesheet" href="/css/components.css">
 </head>
 <body>
     
@@ -104,7 +106,8 @@ $csrfToken = Security::generateCSRFToken();
         
     </div>
 
-    <script src="/js/common.js" defer></script>
+    <script src="/js/cpf.js" defer></script>
+    <script src="/js/auth.js" defer></script>
     <script defer>
         document.addEventListener("DOMContentLoaded", async () => {
             document.querySelector("#cpf").addEventListener("click", function(){
