@@ -19,6 +19,8 @@
         align-items: flex-start;
         justify-content: flex-start;
         margin-left: 20px;
+        min-width: 300px;
+        max-width: 80%;
     }
 
         .title-page .title{
@@ -129,6 +131,9 @@
     .card-login{
         width: 500px;
         padding: 48px;
+    }
+    .title-page{        
+        min-width: 600px;
     }
 }
 

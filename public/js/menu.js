@@ -152,8 +152,6 @@ export function setupMenuLayout() {
 
         // Armazena estado no sessionStorage
         sessionStorage.setItem('menuState', 'visible');
-
-        console.log('Menu aberto (VISÍVEL)');
     }
 
     /**
@@ -170,8 +168,6 @@ export function setupMenuLayout() {
 
         // Atualiza estado no sessionStorage
         sessionStorage.setItem('menuState', 'hidden');
-
-        console.log('Menu fechado (OCULTO)');
     }
 
     /**
@@ -185,8 +181,6 @@ export function setupMenuLayout() {
 
         // Restaura scroll do body
         document.body.style.overflow = '';
-
-        console.log('Menu fixado (FIXO)');
     }
 
     /**
@@ -292,8 +286,6 @@ export function setupMenuLayout() {
 
     // Inicialização
     adjustMenuLayout();
-
-    console.log('Menu inicializado com 3 modos: OCULTO, VISÍVEL e FIXO');
 
     // Retorna métodos públicos para uso externo
     return {
