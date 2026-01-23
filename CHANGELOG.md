@@ -6,3 +6,6 @@ Ajustes
 ## 26.00.0004 — 2026-01-18
 Merge branch 'develop' into main
 
+## 26.00.0005 — 2026-01-23
+Create README.md
+
