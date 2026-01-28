@@ -39,3 +39,8 @@ Quando o bump for MINOR (manual ou pela regra de mais de 100 arquivos), o proces
 1. Gerar `docs/releases/vX.YY.md` com base no conteúdo do `_draft_minor.md`.
 1. Reiniciar o `_draft_minor.md` para o próximo ciclo.
 1. Adicionar o link da nova versão no `CHANGELOG.md`.
+
+## Agrupamento de patches (para reduzir repeticao)
+
+Quando houver textos iguais dentro da mesma secao (mesmo tipo + escopo + descricao), o processo de automacao
+consolida em uma unica entrada, adicionando varios commits no mesmo item (ex.: `commits abc123, def456`).

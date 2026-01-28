@@ -1,4 +1,4 @@
-param(
+﻿param(
   [string]$DraftPath = "docs/releases/_draft_minor.md",
   [string]$CommitHash = "",
   [string]$CommitMessage = "",
@@ -12,13 +12,35 @@ function Write-Utf8NoBomFile([string]$Path, [string]$Content) {
   [System.IO.File]::WriteAllText($Path, $normalized, $utf8NoBom)
 }
 
+function Normalize-Desc([string]$Text) {
+  $t = $Text
+  if ($null -eq $t) { $t = "" }
+  $t = $t.Trim()
+  $t = [regex]::Replace($t, "\s+", " ")
+  $t = $t.TrimEnd(".", "!", "?")
+  return $t.ToLowerInvariant()
+}
+
+function Impact-Rank([string]$Impact) {
+  $i = $Impact
+  if ($null -eq $i) { $i = "" }
+  switch ($i.ToLowerInvariant()) {
+    "nenhum" { return 0 }
+    "baixo" { return 1 }
+    "médio" { return 2 }
+    "medio" { return 2 }
+    "alto" { return 3 }
+    default { return 1 }
+  }
+}
+
 function Get-Impact([string]$LowerMsg, [string]$CommitType) {
   $m = [regex]::Match($LowerMsg, "\[impact:(nenhum|baixo|medio|m[eé]dio|alto)\]")
   if ($m.Success) {
     $val = $m.Groups[1].Value
-    if ($val -eq "médio") { return "Médio" }
     if ($val -eq "medio") { return "Médio" }
-    return ($val.Substring(0,1).ToUpperInvariant() + $val.Substring(1))
+    if ($val -eq "médio") { return "Médio" }
+    return ($val.Substring(0, 1).ToUpperInvariant() + $val.Substring(1))
   }
 
   switch ($CommitType) {
@@ -98,6 +120,8 @@ $section = Get-Section -CommitType $commitType -LowerMsg $lowerMsg -Bump $Bump
 $scope = Get-Scope -CommitType $commitType -ParsedScope $scopeFromMsg
 $impact = Get-Impact -LowerMsg $lowerMsg -CommitType $commitType
 
+$descKey = Normalize-Desc $desc
+
 $entry = "[{0}][{1}] {2} (commit {3}) Impacto: {4}" -f $section, $scope, $desc, $CommitHash, $impact
 
 $content = [System.IO.File]::ReadAllText($DraftPath)
@@ -110,6 +134,7 @@ $header = "## $section"
 $out = New-Object System.Collections.Generic.List[string]
 $inserted = $false
 $skipNextBlank = $false
+$didGroup = $false
 
 for ($i = 0; $i -lt $lines.Length; $i++) {
   $line = $lines[$i].TrimEnd("`r")
@@ -117,6 +142,57 @@ for ($i = 0; $i -lt $lines.Length; $i++) {
   if ($skipNextBlank -and $line -eq "") {
     $skipNextBlank = $false
     continue
+  }
+
+  # Group identical entries (same section + scope + description) to reduce repetition.
+  if (-not $didGroup -and $line -match '^- \[([^\]]+)\]\[([^\]]+)\]\s*') {
+    $secInLine = $Matches[1]
+    $scopeInLine = $Matches[2]
+
+    if ($secInLine -eq $section -and $scopeInLine -eq $scope) {
+      $prefixLen = $Matches[0].Length
+      $impactIdx = $line.LastIndexOf(" Impacto:")
+      if ($impactIdx -gt 0) {
+        $commitIdx = $line.LastIndexOf(" (commit ")
+        if ($commitIdx -lt 0) {
+          $commitIdx = $line.LastIndexOf(" (commits ")
+        }
+
+        if ($commitIdx -gt $prefixLen) {
+          $descInLine = $line.Substring($prefixLen, $commitIdx - $prefixLen).Trim()
+          if ((Normalize-Desc $descInLine) -eq $descKey) {
+            $endParen = $line.IndexOf(")", $commitIdx)
+            if ($endParen -gt $commitIdx) {
+              $commitsRaw = $line.Substring($commitIdx, $endParen - $commitIdx)
+              $commitsRaw = $commitsRaw -replace " \((commit|commits)\s+", ""
+
+              $existing = @()
+              foreach ($c in ($commitsRaw -split ",")) {
+                $v = $c.Trim()
+                if ($v) { $existing += $v }
+              }
+
+              if (-not ($existing -contains $CommitHash)) {
+                $existing += $CommitHash
+              }
+
+              $existingImpact = $line.Substring($impactIdx + " Impacto:".Length).Trim()
+              $finalImpact = $impact
+              if ((Impact-Rank $existingImpact) -ge (Impact-Rank $finalImpact)) {
+                $finalImpact = $existingImpact
+              }
+
+              $commitPart = " (commits " + ($existing -join ", ") + ")"
+              $newLine = "- [{0}][{1}] {2}{3} Impacto: {4}" -f $section, $scope, $descInLine, $commitPart, $finalImpact
+
+              $out.Add($newLine)
+              $didGroup = $true
+              continue
+            }
+          }
+        }
+      }
+    }
   }
 
   $out.Add($line)
