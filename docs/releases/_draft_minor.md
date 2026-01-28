@@ -6,6 +6,7 @@
 
 ## Changed
 
+- [Changed][Geral] fix version file encoding and draft formatting. (commit 64afe6d) Impacto: Nenhum
 - [Changed][Geral] fix versioning hooks to avoid amend. (commit 1761001) Impacto: Nenhum
 
 - [Changed][Docs] update license for Sistema de Gestao do Cartorio. (commit 7774b87) Impacto: Nenhum
