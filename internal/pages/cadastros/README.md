@@ -1,4 +1,4 @@
-﻿# Pasta: internal/pages/cadastros/
+# Pasta: internal/pages/cadastros/
 
 ## 📝 Propósito
 

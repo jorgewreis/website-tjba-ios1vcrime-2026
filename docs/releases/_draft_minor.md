@@ -1,6 +1,6 @@
-﻿# Draft da proxima minor
+# Draft da próxima minor
 
-> Este arquivo e cumulativo e recebe entradas de patch enquanto a proxima MINOR esta em desenvolvimento.
+> Este arquivo é cumulativo e recebe entradas de patch enquanto a próxima MINOR está em desenvolvimento.
 
 ## Added
 
@@ -14,6 +14,6 @@
 
 ## Removed
 
-## Bugs conhecidos (para versao futura)
+## Bugs conhecidos (para versão futura)
 
-## Proximas implementacoes (sugestoes)
+## Próximas implementações (sugestões)

@@ -1,4 +1,4 @@
-﻿# CSS Files Organization
+# CSS Files Organization
 
 Organização dos arquivos CSS seguindo **separação de responsabilidades**, similar ao padrão usado em JavaScript.
 

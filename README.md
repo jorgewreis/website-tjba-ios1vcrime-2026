@@ -1,4 +1,4 @@
-﻿# Sistema de Gestão do Cartório ⚖️
+# Sistema de Gestão do Cartório ⚖️
 
 ## Primeira Vara Crime da Comarca de Ilhéus
 
@@ -12,30 +12,30 @@ Sistema web interno para centralizar rotinas do **Cartório**, **Gabinete** e **
 
 ## Sumário
 
-- [Visão geral](#visao-geral)
-- [Área externa (pública)](#area-externa-publica)
-- [Áreas internas (módulos)](#areas-internas-modulos)
-  - [Cartório](#cartorio)
+- [Visão geral](#visão-geral)
+- [Área externa (pública)](#área-externa-pública)
+- [Áreas internas (módulos)](#áreas-internas-módulos)
+  - [Cartório](#cartório)
   - [Gabinete](#gabinete)
-  - [Audiências](#audiencias)
+  - [Audiências](#audiências)
   - [Estudantes](#estudantes)
   - [Settings](#settings)
 - [Perfis de acesso (resumo)](#perfis-de-acesso-resumo)
-- [Fluxo de navegação](#fluxo-de-navegacao)
-- [Padrões de dados e validações](#padroes-de-dados-e-validacoes)
+- [Fluxo de navegação](#fluxo-de-navegação)
+- [Padrões de dados e validações](#padrões-de-dados-e-validações)
 - [UI: paleta de cores](#ui-paleta-de-cores)
-- [UI: padrão de componentes](#ui-padrao-de-componentes)
-- [Segurança (boas práticas)](#seguranca-boas-praticas)
+- [UI: padrão de componentes](#ui-padrão-de-componentes)
+- [Segurança (boas práticas)](#segurança-boas-práticas)
 - [Logs e auditoria](#logs-e-auditoria)
-- [Estrutura do projeto (referência)](#estrutura-do-projeto-referencia)
-- [Licença e uso](#licenca-e-uso)
-- [Créditos](#creditos)
+- [Estrutura do projeto (referência)](#estrutura-do-projeto-referência)
+- [Licença e uso](#licença-e-uso)
+- [Créditos](#créditos)
 
 ---
 
 ## Visão geral
 
-O **Sistema de Gestão do Cartório** foi desenvolvido para apoiar atividades internas da ## Primeira Vara Crime da Comarca de Ilhéus, oferecendo um ambiente web organizado por módulos, com funcionalidades de cadastro, consulta, acompanhamento e documentação de rotinas.
+O **Sistema de Gestão do Cartório** foi desenvolvido para apoiar atividades internas da Primeira Vara Crime da Comarca de Ilhéus, oferecendo um ambiente web organizado por módulos, com funcionalidades de cadastro, consulta, acompanhamento e documentação de rotinas.
 
 ---
 
@@ -94,7 +94,7 @@ Organização e gestão das audiências.
 
 ---
 
-### Estudantes 🎓
+### Estudantes
 
 Área dedicada ao perfil **ESTUDANTE**, com acesso restrito e orientado ao acompanhamento do fluxo de audiências.
 
@@ -128,7 +128,7 @@ Configurações do sistema e do usuário.
 A autorização é baseada em perfil, garantindo que cada usuário visualize e execute apenas o que for permitido.
 
 | Perfil | Acesso principal |
-|------:|------------------|
+| ---: | --- |
 | **ADMIN** | Acesso total aos módulos e ações administrativas (conforme regras internas). |
 | **SERVIDOR** | Rotinas operacionais de Cartório, Gabinete e Audiências conforme permissões definidas. |
 | **ESTUDANTE** | Acesso restrito ao módulo **Estudantes** (e demais consultas permitidas). |
@@ -163,37 +163,37 @@ Padrão de navegação do sistema:
 
 ---
 
-## UI: paleta de cores 🎨
+## UI: paleta de cores
 
 Diretrizes práticas para manter consistência visual.
 
 ### Neutras e base
 
 | Uso | Cor |
-|---|---|
-| Branco (superfícies / cards) | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#ffffff;border:1px solid #00000020;"></span> |
-| Branco translúcido (níveis) | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:rgba(255,255,255,0.56);border:1px solid #00000020;"></span> <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:rgba(255,255,255,0.38);border:1px solid #00000020;margin-left:4px;"></span> <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:rgba(255,255,255,0.19);border:1px solid #00000020;margin-left:4px;"></span> <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:rgba(255,255,255,0.06);border:1px solid #00000020;margin-left:4px;"></span> |
-| Fundo da aplicação | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#f5f5f9;border:1px solid #00000020;"></span> |
-| Texto (body) | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#646e78;border:1px solid #00000020;"></span> |
-| Preto / cinza escuro (contraste) | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#000000;border:1px solid #00000020;"></span> <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#202020;border:1px solid #00000020;margin-left:4px;"></span> |
+| --- | --- |
+| Branco (superfícies / cards) | `#ffffff` |
+| Branco translúcido (níveis) | `rgba(255,255,255,0.56)`, `rgba(255,255,255,0.38)`, `rgba(255,255,255,0.19)`, `rgba(255,255,255,0.06)` |
+| Fundo da aplicação | `#f5f5f9` |
+| Texto (body) | `#646e78` |
+| Preto / cinza escuro (contraste) | `#000000`, `#202020` |
 
 ### Azuis (interface)
 
 | Grupo | Cores |
-|---|---|
-| Tons claros (fundos/realces) | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#f5f5f9;border:1px solid #00000020;"></span> <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#e2edf1;border:1px solid #00000020;margin-left:4px;"></span> <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#cce2eb;border:1px solid #00000020;margin-left:4px;"></span> |
-| Tons médios (bordas/apoio) | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#aaccda;border:1px solid #00000020;"></span> <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#aac6d1;border:1px solid #00000020;margin-left:4px;"></span> |
-| Tons fortes (ações/destaques) | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#2a8ab1;border:1px solid #00000020;"></span> <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#196481;border:1px solid #00000020;margin-left:4px;"></span> <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#0e455a;border:1px solid #00000020;margin-left:4px;"></span> <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#05202b;border:1px solid #00000020;margin-left:4px;"></span> |
+| --- | --- |
+| Tons claros (fundos/realces) | `#f5f5f9`, `#e2edf1`, `#cce2eb` |
+| Tons médios (bordas/apoio) | `#aaccda`, `#aac6d1` |
+| Tons fortes (ações/destaques) | `#2a8ab1`, `#196481`, `#0e455a`, `#05202b` |
 
 ### Semânticas (feedback)
 
 | Tipo | Cor (texto/ícone) | Cor (fundo) |
-|---|---|---|
-| Sucesso | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#71dd37;border:1px solid #00000020;"></span> | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#e8fadf;border:1px solid #00000020;"></span> |
-| Perigo | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#FF3E1D;border:1px solid #00000020;"></span> | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#ffe0db;border:1px solid #00000020;"></span> |
-| Atenção | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#ffab00;border:1px solid #00000020;"></span> | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#fff2d6;border:1px solid #00000020;"></span> |
-| Info | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#03c3ec;border:1px solid #00000020;"></span> | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#d7f5fc;border:1px solid #00000020;"></span> |
-| Primária (framework) | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#696cff;border:1px solid #00000020;"></span> | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#e7e7ff;border:1px solid #00000020;"></span> |
+| --- | --- | --- |
+| Sucesso | `#71dd37` | `#e8fadf` |
+| Perigo | `#FF3E1D` | `#ffe0db` |
+| Atenção | `#ffab00` | `#fff2d6` |
+| Info | `#03c3ec` | `#d7f5fc` |
+| Primária (framework) | `#696cff` | `#e7e7ff` |
 
 ---
 
@@ -280,7 +280,7 @@ Pastas principais no repositório:
 
 ## Licença e uso
 
-Sistema de uso institucional da ## Primeira Vara Crime da Comarca de Ilhéus.
+Sistema de uso institucional da Primeira Vara Crime da Comarca de Ilhéus.
 Reprodução, redistribuição ou reutilização dependem de autorização institucional.
 
 ---
