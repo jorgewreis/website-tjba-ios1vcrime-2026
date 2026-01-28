@@ -5,6 +5,7 @@
 ## Added
 
 ## Changed
+- [Changed][Docs] normalize license. (commit 79aae95) Impacto: Nenhum
 
 - [Changed][Docs] add SAD and normalize markdown. (commit aa543d1) Impacto: Nenhum
 
