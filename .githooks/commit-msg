@@ -1,0 +1,12 @@
+#!/bin/sh
+
+MSG_FILE="$1"
+if [ -z "$MSG_FILE" ] || [ ! -f "$MSG_FILE" ]; then
+  echo "commit-msg: missing commit message file" >&2
+  exit 1
+fi
+
+COMMIT_MSG="$(cat "$MSG_FILE")"
+
+pwsh -NoProfile -File scripts/bump-version.ps1 -CommitMessage "$COMMIT_MSG"
+git add VERSION
