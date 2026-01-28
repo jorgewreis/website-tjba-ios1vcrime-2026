@@ -8,5 +8,5 @@ fi
 
 COMMIT_MSG="$(cat "$MSG_FILE")"
 
-pwsh -NoProfile -File scripts/bump-version.ps1 -CommitMessage "$COMMIT_MSG"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/bump-version.ps1 -CommitMessage "$COMMIT_MSG"
 git add VERSION
