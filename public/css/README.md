@@ -6,7 +6,7 @@ Organização dos arquivos CSS seguindo **separação de responsabilidades**, si
 
 ### Arquivos CSS Refatorados
 
-```
+```text
 public/css/
 
 Fundações:
@@ -32,12 +32,14 @@ Utilitários:
 ## 🎯 Propósito de Cada Arquivo
 
 ### **reset.css** (Fundação)
+
 - Normalização de estilos padrão do navegador
 - Remove margens e paddings padrão
 - Configurações globais (box-sizing, fonts)
 - **Sempre carregado primeiro**
 
 ### **color.css** (Variáveis)
+
 - CSS custom properties (variáveis)
 - Paleta de cores
 - Box shadows padrão
@@ -45,6 +47,7 @@ Utilitários:
 - **Sempre carregado depois do reset.css**
 
 ### **layout.css** (Estrutura)
+
 - Wrappers e containers
 - Flexbox/Grid layout
 - Navbar
@@ -53,6 +56,7 @@ Utilitários:
 - Responsividade (media queries)
 
 ### **menu-style.css** (Menu e Navegação)
+
 - Estilos de items de menu
 - Links e submenu
 - Animações de expansão/colapso
@@ -60,6 +64,7 @@ Utilitários:
 - Separado de layout.css para melhor manutenção
 
 ### **components.css** (Reutilizáveis)
+
 - Forms e inputs
 - Botões (todos os estados)
 - Alertas e notificações
@@ -68,6 +73,7 @@ Utilitários:
 - **Concentra todo UI reutilizável**
 
 ### **login.css** (Página de Login)
+
 - Layout específico da página de login
 - Estilos da seção esquerda (imagem de fundo)
 - Estilos da seção direita (formulário)
@@ -75,6 +81,7 @@ Utilitários:
 - **Apenas para index.php**
 
 ### **pages.css** (Páginas Internas)
+
 - Estrutura de páginas internas (admin, cadastros)
 - Container-main, title-page
 - Layout específico de páginas protegidas
@@ -84,6 +91,7 @@ Utilitários:
 ## 📊 Mapa de Carregamento por Página
 
 ### **index.php** (Login - Pública)
+
 ```html
 <!-- Fundação -->
 <link rel="stylesheet" href="/css/reset.css">
@@ -97,6 +105,7 @@ Utilitários:
 ```
 
 ### **recupera_senha.php** (Password Reset - Pública)
+
 ```html
 <!-- Fundação -->
 <link rel="stylesheet" href="/css/reset.css">
@@ -110,6 +119,7 @@ Utilitários:
 ```
 
 ### **home.php** (Dashboard - Interna)
+
 ```html
 <!-- Fundação -->
 <link rel="stylesheet" href="/css/reset.css">
@@ -127,6 +137,7 @@ Utilitários:
 ```
 
 ### **admin/dashboard.php** (Admin - Interna)
+
 ```html
 <!-- Fundação -->
 <link rel="stylesheet" href="/css/reset.css">
@@ -144,6 +155,7 @@ Utilitários:
 ```
 
 ### **admin/cadastros/*.php** (Cadastros - Interna)
+
 ```html
 <!-- Fundação -->
 <link rel="stylesheet" href="/css/reset.css">
@@ -163,6 +175,7 @@ Utilitários:
 ## 🔄 Histórico de Reorganização
 
 ### Arquivos Refatorados
+
 - ✅ **style.css** → Dividido em `layout.css` + `menu-style.css`
 - ✅ **form.css** → Movido para `components.css` (mantido por compatibilidade)
 - ✅ **login.css** → Mantido (apenas página de login)
@@ -171,6 +184,7 @@ Utilitários:
 - ✅ **color.css** → Mantido (variáveis)
 
 ### Novos Arquivos Criados
+
 - ✅ **layout.css** - Estrutura e layout de página
 - ✅ **menu-style.css** - Estilos de menu e navegação
 - ✅ **components.css** - Componentes reutilizáveis
@@ -178,6 +192,7 @@ Utilitários:
 ## 📋 Convenções
 
 ### Nomes de Classes
+
 - `.layout-*` - Estrutura de página
 - `.form-*` - Formulários
 - `.button`, `.btn-*` - Botões
@@ -189,6 +204,7 @@ Utilitários:
 - `.container-main` - Container principal
 
 ### Responsividade
+
 - **Mobile**: < 390px (hidden com `.noview`)
 - **Tablet**: 390px - 767px
 - **Desktop**: 768px - 1079px
@@ -197,7 +213,9 @@ Utilitários:
 - **XXL**: 1920px+
 
 ### Variáveis CSS
+
 Definidas em `color.css`:
+
 - `--color-white-*` - Branco com opacidade
 - `--color-blue-*` - Tons de azul
 - `--color-black-*` - Preto e tons
@@ -236,7 +254,7 @@ Definidas em `color.css`:
 - [BEM Methodology](https://en.bem.info/)
 - [SMACSS](https://smacss.com/)
 
-## 🔗 Próximas Melhorias (Opcional)
+## 🔜 Próximas Melhorias (Opcional)
 
 1. Implementar SCSS/SASS para variáveis mais poderosas
 2. Adicionar CSS preprocessor para aninhamento

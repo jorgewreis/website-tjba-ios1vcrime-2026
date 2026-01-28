@@ -3,6 +3,7 @@
 ## 📝 Propósito
 
 Esta pasta é **reservada para futuras demandas PHP**, especialmente:
+
 - Requisições de cadastros (APIs)
 - Endpoints de processamento
 - Serviços auxiliares
@@ -12,7 +13,7 @@ Esta pasta é **reservada para futuras demandas PHP**, especialmente:
 
 Os arquivos de **exibição de páginas** foram movidos para `internal/pages/`:
 
-```
+```text
 internal/pages/
 ├── cartasexpedidas.php
 ├── cartasrecebidas.php
@@ -30,6 +31,7 @@ internal/pages/
 ## 🎯 Uso Futuro
 
 Quando precisar adicionar funcionalidades de cadastro como:
+
 - Requisição AJAX para salvar cartas
 - API para importação de dados
 - Script de validação de formulários

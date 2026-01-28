@@ -1,11 +1,8 @@
 # Changelog
 
-## 26.00.0003 — 2026-01-18
-Ajustes
+Indice de releases (ver notas em `docs/releases/`).
 
-## 26.00.0004 — 2026-01-18
-Merge branch 'develop' into main
-
-## 26.00.0005 — 2026-01-23
-Create README.md
-
+- [_Draft da proxima minor_](docs/releases/_draft_minor.md)
+- [Notas do diretorio de releases](docs/releases/README.md)
+- [Bugs conhecidos](docs/releases/KNOWN_ISSUES.md)
+- [Versão 1.00.0000](docs/releases/v1.00.md)

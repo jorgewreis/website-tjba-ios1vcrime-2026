@@ -1,5 +1,6 @@
 # Sistema de Gestão do Cartório ⚖️
-**Primeira Vara Crime da Comarca de Ilhéus**
+
+## Primeira Vara Crime da Comarca de Ilhéus
 
 Sistema web interno para centralizar rotinas do **Cartório**, **Gabinete** e **Audiências**, além de um módulo dedicado a **Estudantes**, com controle de acesso por perfil e foco em organização, produtividade e rastreabilidade.
 
@@ -10,6 +11,7 @@ Sistema web interno para centralizar rotinas do **Cartório**, **Gabinete** e **
 ---
 
 ## Sumário
+
 - [Visão geral](#visão-geral)
 - [Área externa (pública)](#área-externa-pública)
 - [Áreas internas (módulos)](#áreas-internas-módulos)
@@ -32,11 +34,13 @@ Sistema web interno para centralizar rotinas do **Cartório**, **Gabinete** e **
 ---
 
 ## Visão geral
-O **Sistema de Gestão do Cartório** foi desenvolvido para apoiar atividades internas da **Primeira Vara Crime da Comarca de Ilhéus**, oferecendo um ambiente web organizado por módulos, com funcionalidades de cadastro, consulta, acompanhamento e documentação de rotinas.
+
+O **Sistema de Gestão do Cartório** foi desenvolvido para apoiar atividades internas da Primeira Vara Crime da Comarca de Ilhéus, oferecendo um ambiente web organizado por módulos, com funcionalidades de cadastro, consulta, acompanhamento e documentação de rotinas.
 
 ---
 
 ## Área externa (pública)
+
 Área acessível antes do login, voltada ao acesso e manutenção de conta:
 
 - **Login** (entrada principal: `index.php`)
@@ -48,9 +52,11 @@ O **Sistema de Gestão do Cartório** foi desenvolvido para apoiar atividades in
 ## Áreas internas (módulos)
 
 ### Cartório
+
 Rotinas cartorárias e acompanhamento de expedientes.
 
 **Subáreas:**
+
 - **Cartas Precatórias**
   - **Recebidas**
   - **Enviadas**
@@ -63,9 +69,11 @@ Rotinas cartorárias e acompanhamento de expedientes.
 ---
 
 ### Gabinete
+
 Apoio ao gabinete e controles específicos.
 
 **Subáreas:**
+
 - **Réus presos**
 - **Ofícios**
 - **Monitoramento eletrônico**
@@ -73,9 +81,11 @@ Apoio ao gabinete e controles específicos.
 ---
 
 ### Audiências
+
 Organização e gestão das audiências.
 
 **Subáreas:**
+
 - **Pauta**
 - **Atas**
 - **Painel**
@@ -84,10 +94,12 @@ Organização e gestão das audiências.
 
 ---
 
-### Estudantes 🎓
+### Estudantes
+
 Área dedicada ao perfil **ESTUDANTE**, com acesso restrito e orientado ao acompanhamento do fluxo de audiências.
 
 **Subáreas:**
+
 - **Pauta**
   - **do dia**
   - **do mês**
@@ -101,19 +113,22 @@ Organização e gestão das audiências.
 ---
 
 ### Settings
+
 Configurações do sistema e do usuário.
 
 **Subáreas:**
+
 - **Segurança**
 - **Perfil**
 
 ---
 
 ## Perfis de acesso (resumo)
+
 A autorização é baseada em perfil, garantindo que cada usuário visualize e execute apenas o que for permitido.
 
 | Perfil | Acesso principal |
-|------:|------------------|
+| ---: | --- |
 | **ADMIN** | Acesso total aos módulos e ações administrativas (conforme regras internas). |
 | **SERVIDOR** | Rotinas operacionais de Cartório, Gabinete e Audiências conforme permissões definidas. |
 | **ESTUDANTE** | Acesso restrito ao módulo **Estudantes** (e demais consultas permitidas). |
@@ -123,6 +138,7 @@ A autorização é baseada em perfil, garantindo que cada usuário visualize e e
 ---
 
 ## Fluxo de navegação
+
 Padrão de navegação do sistema:
 
 - **Login:** `index.php`
@@ -136,77 +152,88 @@ Padrão de navegação do sistema:
 ## Padrões de dados e validações
 
 ### CPF
+
 - **Armazenamento:** CPF salvo **com máscara** em `VARCHAR` (ex.: `000.000.000-00`)
 - **Exibição:** sempre com máscara
 - **Validação:** validar usando **apenas dígitos** (remover `.` e `-` antes de validar)
 
 ### Usuários
+
 - **Chave primária:** `id_usuario`
 
 ---
 
-## UI: paleta de cores 🎨
+## UI: paleta de cores
+
 Diretrizes práticas para manter consistência visual.
 
 ### Neutras e base
+
 | Uso | Cor |
-|---|---|
-| Branco (superfícies / cards) | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#ffffff;border:1px solid #00000020;"></span> |
-| Branco translúcido (níveis) | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:rgba(255,255,255,0.56);border:1px solid #00000020;"></span> <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:rgba(255,255,255,0.38);border:1px solid #00000020;margin-left:4px;"></span> <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:rgba(255,255,255,0.19);border:1px solid #00000020;margin-left:4px;"></span> <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:rgba(255,255,255,0.06);border:1px solid #00000020;margin-left:4px;"></span> |
-| Fundo da aplicação | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#f5f5f9;border:1px solid #00000020;"></span> |
-| Texto (body) | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#646e78;border:1px solid #00000020;"></span> |
-| Preto / cinza escuro (contraste) | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#000000;border:1px solid #00000020;"></span> <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#202020;border:1px solid #00000020;margin-left:4px;"></span> |
+| --- | --- |
+| Branco (superfícies / cards) | `#ffffff` |
+| Branco translúcido (níveis) | `rgba(255,255,255,0.56)`, `rgba(255,255,255,0.38)`, `rgba(255,255,255,0.19)`, `rgba(255,255,255,0.06)` |
+| Fundo da aplicação | `#f5f5f9` |
+| Texto (body) | `#646e78` |
+| Preto / cinza escuro (contraste) | `#000000`, `#202020` |
 
 ### Azuis (interface)
+
 | Grupo | Cores |
-|---|---|
-| Tons claros (fundos/realces) | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#f5f5f9;border:1px solid #00000020;"></span> <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#e2edf1;border:1px solid #00000020;margin-left:4px;"></span> <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#cce2eb;border:1px solid #00000020;margin-left:4px;"></span> |
-| Tons médios (bordas/apoio) | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#aaccda;border:1px solid #00000020;"></span> <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#aac6d1;border:1px solid #00000020;margin-left:4px;"></span> |
-| Tons fortes (ações/destaques) | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#2a8ab1;border:1px solid #00000020;"></span> <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#196481;border:1px solid #00000020;margin-left:4px;"></span> <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#0e455a;border:1px solid #00000020;margin-left:4px;"></span> <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#05202b;border:1px solid #00000020;margin-left:4px;"></span> |
+| --- | --- |
+| Tons claros (fundos/realces) | `#f5f5f9`, `#e2edf1`, `#cce2eb` |
+| Tons médios (bordas/apoio) | `#aaccda`, `#aac6d1` |
+| Tons fortes (ações/destaques) | `#2a8ab1`, `#196481`, `#0e455a`, `#05202b` |
 
 ### Semânticas (feedback)
+
 | Tipo | Cor (texto/ícone) | Cor (fundo) |
-|---|---|---|
-| Sucesso | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#71dd37;border:1px solid #00000020;"></span> | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#e8fadf;border:1px solid #00000020;"></span> |
-| Perigo | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#FF3E1D;border:1px solid #00000020;"></span> | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#ffe0db;border:1px solid #00000020;"></span> |
-| Atenção | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#ffab00;border:1px solid #00000020;"></span> | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#fff2d6;border:1px solid #00000020;"></span> |
-| Info | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#03c3ec;border:1px solid #00000020;"></span> | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#d7f5fc;border:1px solid #00000020;"></span> |
-| Primária (framework) | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#696cff;border:1px solid #00000020;"></span> | <span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#e7e7ff;border:1px solid #00000020;"></span> |
+| --- | --- | --- |
+| Sucesso | `#71dd37` | `#e8fadf` |
+| Perigo | `#FF3E1D` | `#ffe0db` |
+| Atenção | `#ffab00` | `#fff2d6` |
+| Info | `#03c3ec` | `#d7f5fc` |
+| Primária (framework) | `#696cff` | `#e7e7ff` |
 
 ---
 
 ## UI: padrão de componentes
+
 Diretrizes práticas para manter consistência visual (com base na paleta acima).
 
 ### Layout e superfícies
-- **Fundo geral:** usar o **azul bem claro** (grupo “Tons claros”).
+
+- **Fundo geral:** usar o **azul bem claro** (grupo "Tons claros").
 - **Cards/containers:** usar **branco**.
 - **Bordas/divisórias:** usar **tons médios** (azuis médios), evitando contraste pesado.
 - **Texto:** padrão em **cinza do body**; títulos podem usar **azul bem escuro** (tons fortes).
 
 ### Navegação e estado ativo
-- **Item ativo / destaque:** usar **azul forte** (grupo “Tons fortes”).
-- **Hover:** usar o próximo tom mais escuro (ainda no grupo “Tons fortes”).
+
+- **Item ativo / destaque:** usar **azul forte** (grupo "Tons fortes").
+- **Hover:** usar o próximo tom mais escuro (ainda no grupo "Tons fortes").
 - **Navbar/Sidebar escura (quando houver):** usar **azul bem escuro** com texto **branco**.
 
 ### Botões
+
 - **Primário:** azul forte (tons fortes) + texto branco.
 - **Secundário:** fundo em tons claros + borda em tom médio + texto em azul escuro.
 - **Perigo (ação destrutiva):** usar a cor **Perigo** + texto branco.
 
 ### Alerts / mensagens
+
 - Use sempre o par **(cor do tipo) + (fundo do tipo)**:
   - **Sucesso**, **Perigo**, **Atenção**, **Info**.
 
 ### Inputs (formulários)
+
 - Fundo branco, borda em tom médio.
 - No foco, borda em azul forte e (se usar) sombra bem discreta.
 
 ---
 
----
-
 ## Segurança (boas práticas)
+
 - Controle de acesso por perfil (autorização por módulo/ação)
 - Validação e sanitização **server-side** em formulários e endpoints
 - Uso de **prepared statements** para reduzir risco de SQL Injection
@@ -217,13 +244,16 @@ Diretrizes práticas para manter consistência visual (com base na paleta acima)
 ---
 
 ## Logs e auditoria
+
 Quando aplicável, registrar eventos como:
+
 - login/logout
 - criação/edição/exclusão de registros
 - downloads (ex.: atas)
 - alterações em configurações/segurança
 
 Campos sugeridos:
+
 - `id_usuario` (autor)
 - ação
 - data/hora
@@ -232,11 +262,29 @@ Campos sugeridos:
 
 ---
 
+## Estrutura do projeto (referência)
+
+Pastas principais no repositório:
+
+- `admin/`
+- `bd/`
+- `config/`
+- `internal/`
+- `public/`
+- `scripts/`
+- `services/`
+- `sql/`
+- `vendor/`
+
+---
+
 ## Licença e uso
-Sistema de uso institucional da **Primeira Vara Crime da Comarca de Ilhéus**.  
+
+Sistema de uso institucional da Primeira Vara Crime da Comarca de Ilhéus.
 Reprodução, redistribuição ou reutilização dependem de autorização institucional.
 
 ---
 
 ## Créditos
+
 Desenvolvido integralmente por **Jorge Reis** (Desenvolvedor Fullstack).

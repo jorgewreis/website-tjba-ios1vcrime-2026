@@ -1,0 +1,51 @@
+name: Auto Version Bump
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  bump-version:
+    if: >
+      github.actor != 'github-actions[bot]' &&
+      !contains(github.event.head_commit.message, '[skip version]') &&
+      !contains(github.event.head_commit.message, '[skip-version]')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Skip if VERSION already changed in commit
+        id: version_check
+        run: |
+          if git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" | grep -q "^VERSION$"; then
+            echo "VERSION already updated in commit. Skipping bump."
+            echo "skip_bump=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip_bump=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Bump VERSION
+        env:
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        if: steps.version_check.outputs.skip_bump != 'true'
+        run: |
+          pwsh scripts/bump-version.ps1 -CommitMessage "$env:COMMIT_MESSAGE"
+
+      - name: Commit and push
+        run: |
+          if git diff --quiet; then
+            echo "No version change to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          VERSION_VALUE="$(cat VERSION | tr -d '\r\n')"
+          git add VERSION
+          git commit -m "chore(version): ${VERSION_VALUE} [skip version]"
+          git push
