@@ -5,6 +5,7 @@
 ## Added
 
 ## Changed
+- [Changed][Geral] fix versioning hooks to avoid amend. (commit 1761001) Impacto: Nenhum
 
 - [Changed][Docs] update license for Sistema de Gestao do Cartorio. (commit 7774b87) Impacto: Nenhum
 
