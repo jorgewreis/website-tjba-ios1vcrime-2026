@@ -6,6 +6,7 @@
 
 ## Changed
 
+- [Changed][Geral] group duplicate patch notes (ultimo commit do dia). (commit 0ba7d05) Impacto: Nenhum
 - [Changed][Geral] fix version file encoding and draft formatting. (commit 64afe6d) Impacto: Nenhum
 - [Changed][Geral] fix versioning hooks to avoid amend. (commit 1761001) Impacto: Nenhum
 
