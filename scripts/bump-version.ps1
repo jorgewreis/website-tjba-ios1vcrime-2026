@@ -15,6 +15,12 @@ if (-not $match.Success) {
   throw "Invalid VERSION format. Expected: 'V 1.00.0000'. Found: '$raw'"
 }
 
+function Write-Utf8NoBomFile([string]$OutPath, [string]$Content) {
+  $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+  $normalized = [regex]::Replace($Content, "\s+\z", "") + "`n"
+  [System.IO.File]::WriteAllText($OutPath, $normalized, $utf8NoBom)
+}
+
 $major = [int]$match.Groups[1].Value
 $minor = [int]$match.Groups[2].Value
 $patch = [int]$match.Groups[3].Value
@@ -79,7 +85,7 @@ if ($patch -gt 9999) {
 }
 
 $newVersion = "V {0}.{1:00}.{2:0000}" -f $major, $minor, $patch
-Set-Content -Encoding utf8 -Path $Path -Value ($newVersion + "`n")
+Write-Utf8NoBomFile -OutPath $Path -Content $newVersion
 Write-Host $newVersion
 
 if ($resolvedBump -eq "minor") {

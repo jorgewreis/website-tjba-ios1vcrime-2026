@@ -109,22 +109,28 @@ $lines = $content -split "`n", -1
 $header = "## $section"
 $out = New-Object System.Collections.Generic.List[string]
 $inserted = $false
+$skipNextBlank = $false
 
 for ($i = 0; $i -lt $lines.Length; $i++) {
   $line = $lines[$i].TrimEnd("`r")
+
+  if ($skipNextBlank -and $line -eq "") {
+    $skipNextBlank = $false
+    continue
+  }
+
   $out.Add($line)
 
   if (-not $inserted -and $line -eq $header) {
-    # Ensure there is a blank line after the header, then insert entry at top of section.
+    # Insert the entry at the top of the section, ensuring a single blank line after the header.
+    $out.Add("")
+    $out.Add("- $entry")
     if ($i + 1 -lt $lines.Length) {
       $next = $lines[$i + 1].TrimEnd("`r")
-      if ($next -ne "") {
-        $out.Add("")
+      if ($next -eq "") {
+        $skipNextBlank = $true
       }
-    } else {
-      $out.Add("")
     }
-    $out.Add("- $entry")
     $inserted = $true
   }
 }
