@@ -12,7 +12,30 @@ if [ ! -f "$flag" ]; then
   exit 0
 fi
 
+version=""
+bump=""
+skip_draft="0"
+while IFS='=' read -r k v; do
+  case "$k" in
+    version) version="$v" ;;
+    bump) bump="$v" ;;
+    skip_draft) skip_draft="$v" ;;
+  esac
+done < "$flag"
+
 rm -f "$flag"
+
+# Update draft release notes automatically for patch-like bumps.
+case "$bump" in
+  patch|patch2000|patch8000)
+    if [ "$skip_draft" != "1" ] && [ -f "docs/releases/_draft_minor.md" ]; then
+      commit_hash="$(git rev-parse --short HEAD)"
+      commit_msg="$(git log -1 --pretty=%B)"
+      powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/update-draft-minor.ps1 -CommitHash "$commit_hash" -CommitMessage "$commit_msg" -Bump "$bump" || true
+      git add docs/releases/_draft_minor.md >/dev/null 2>&1 || true
+    fi
+    ;;
+esac
 
 git add VERSION >/dev/null 2>&1 || true
 SKIP_VERSION_BUMP=1 git commit --amend --no-edit --no-verify >/dev/null 2>&1 || true

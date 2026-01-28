@@ -127,4 +127,13 @@ fi
 printf "%s\n" "$new_version" > "$version_file"
 
 git_dir="$(git rev-parse --git-path .)"
-printf "%s\n" "$new_version" > "$git_dir/version-bump"
+skip_draft="0"
+case "$commit_msg_lower" in
+  *"[skip draft]"*|*"[skip-draft]"*|*"[skip release-notes]"*) skip_draft="1" ;;
+esac
+
+{
+  printf "version=%s\n" "$new_version"
+  printf "bump=%s\n" "$bump"
+  printf "skip_draft=%s\n" "$skip_draft"
+} > "$git_dir/version-bump"

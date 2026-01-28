@@ -6,6 +6,8 @@
 
 ## Changed
 
+- [Changed][Docs] add SAD and normalize markdown. (commit aa543d1) Impacto: Nenhum
+
 ## Fixed
 
 ## Security
@@ -17,3 +19,6 @@
 ## Bugs conhecidos (para versão futura)
 
 ## Próximas implementações (sugestões)
+
+- Criação de documentação completa.
+- Normalização e padronização da nomenclatura de pastas e arquivos do projeto.
