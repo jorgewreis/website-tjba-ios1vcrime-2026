@@ -5,9 +5,10 @@
 ## Added
 
 ## Changed
-- [Changed][Docs] update license for Sistema de Gestao do Cartorio. (commit 12e3b7b) Impacto: Nenhum
 
-- [Changed][Docs] normalize license. (commit 79aae95) Impacto: Nenhum
+- [Changed][Docs] update license for Sistema de Gestao do Cartorio. (commit 7774b87) Impacto: Nenhum
+
+- [Changed][Docs] normalize license. (commit 8c2da2b) Impacto: Nenhum
 
 - [Changed][Docs] add SAD and normalize markdown. (commit aa543d1) Impacto: Nenhum
 

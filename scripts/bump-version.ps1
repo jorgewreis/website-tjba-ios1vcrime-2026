@@ -1,6 +1,8 @@
 param(
   [string]$Path = "VERSION",
-  [string]$CommitMessage = ""
+  [string]$CommitMessage = "",
+  [string]$Bump = "",
+  [int]$FileCount = 0
 )
 
 if (-not (Test-Path -Path $Path)) {
@@ -31,39 +33,41 @@ if ($typeMatch.Success) {
   $commitType = $typeMatch.Groups[1].Value.ToLowerInvariant()
 }
 
-$stagedCount = 0
-try {
-  $staged = git diff --cached --name-only 2>$null
-  if ($staged) {
-    $stagedCount = ($staged | Measure-Object).Count
+$forceMinor = ($FileCount -gt 100)
+
+$resolvedBump = $Bump
+if (-not $resolvedBump) {
+  if ($bumpMajor -or $commitType -eq "release") {
+    $resolvedBump = "major"
+  } elseif ($bumpMinor -or $forceMinor -or ($commitType -in @("feat", "ux", "refactor", "perf"))) {
+    $resolvedBump = "minor"
+  } elseif ($bumpPatch8000) {
+    $resolvedBump = "patch8000"
+  } elseif ($bumpPatch2000) {
+    $resolvedBump = "patch2000"
+  } else {
+    $resolvedBump = "patch"
   }
-} catch {
-  $stagedCount = 0
 }
 
-$forceMinor = ($stagedCount -gt 100)
-
-if ($bumpMajor -or $commitType -eq "release") {
-  $major += 1
-  $minor = 0
-  $patch = 0
-} elseif ($bumpMinor -or $forceMinor -or ($commitType -in @("feat", "ux", "refactor", "perf"))) {
-  $minor += 1
-  $patch = 0
-} else {
-  $rangeStart = 1
-  if ($bumpPatch8000) {
-    $rangeStart = 8000
-  } elseif ($bumpPatch2000) {
-    $rangeStart = 2000
-  } elseif ($bumpPatch) {
-    $rangeStart = 1
+switch ($resolvedBump) {
+  "major" {
+    $major += 1
+    $minor = 0
+    $patch = 0
   }
-
-  if ($patch -lt $rangeStart) {
-    $patch = $rangeStart
-  } else {
-    $patch += 1
+  "minor" {
+    $minor += 1
+    $patch = 0
+  }
+  "patch2000" {
+    if ($patch -lt 2000) { $patch = 2000 } else { $patch += 1 }
+  }
+  "patch8000" {
+    if ($patch -lt 8000) { $patch = 8000 } else { $patch += 1 }
+  }
+  default {
+    if ($patch -lt 1) { $patch = 1 } else { $patch += 1 }
   }
 }
 
@@ -78,7 +82,7 @@ $newVersion = "V {0}.{1:00}.{2:0000}" -f $major, $minor, $patch
 Set-Content -Encoding utf8 -Path $Path -Value ($newVersion + "`n")
 Write-Host $newVersion
 
-if ($forceMinor -and -not $bumpMajor) {
+if ($resolvedBump -eq "minor") {
   $releaseDir = "docs/releases"
   if (-not (Test-Path -Path $releaseDir)) {
     New-Item -ItemType Directory -Force -Path $releaseDir | Out-Null
