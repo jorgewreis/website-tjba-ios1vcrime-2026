@@ -35,5 +35,53 @@ Security::requireAuthentication();
             <span class="info-title">Página dedicada a acompanhar o percurso das cartas precatórias, assegurando que o pedido jurisdicional tenha início, trânsito e retorno.</span>
         </div>
     </div>
+
+    <!-- BARRA DE BOTÕES - NOVO CADASTRO -->
+    <div class="page-header-actions">
+        <button class="btn-primary">
+            <i class="fi fi-rr-plus"></i>
+            Nova Carta Expedida
+        </button>
+    </div>
+
+    <!-- BARRA DE 4 CARDS INFORMATIVOS -->
+    <div class="info-cards-row">
+        <div class="info-card">
+            <span class="card-title">Total de Cartas Expedidas</span>
+            <span class="card-value">150</span>
+        </div>
+        <div class="info-card">
+            <span class="card-title">Cartas aguardando envio</span>
+            <span class="card-value">5</span>
+        </div>
+        <div class="info-card">
+            <span class="card-title">Cartas aguardando cumprimento</span>
+            <span class="card-value">50</span>
+        </div>
+        <div class="info-card">
+            <span class="card-title">Cartas devolvidas</span>
+            <span class="card-value">25</span>
+        </div>
+    </div>
+
+    <!-- TABELA COM LISTA DE CARTAS EXPEDIDAS -->
+    <!-- colunas: Processo, Finalidade, Prazo, Comarca destino, Usuário, Menu Rápido -->
+    <div class="table-card">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Processo</th>
+                    <th>Finalidade</th>
+                    <th>Prazo</th>
+                    <th>Comarca destino</th>
+                    <th>Usuário</th>
+                    <th>Menu Rápido</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Dados das cartas expedidas serão inseridos aqui dinamicamente -->
+            </tbody>
+        </table>
+    </div>
 </body>
 </html>
