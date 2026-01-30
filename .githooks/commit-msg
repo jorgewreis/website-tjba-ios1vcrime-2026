@@ -1,31 +1,5 @@
 #!/bin/sh
 set -eu
 
-# Ensure VERSION is always updated as part of the user's commit.
-# Draft release notes are still handled in post-commit (needs commit hash).
-
-msg_file="${1:-}"
-if [ -z "$msg_file" ] || [ ! -f "$msg_file" ]; then
-  exit 0
-fi
-
-commit_msg="$(cat "$msg_file")"
-first_line="$(printf "%s" "$commit_msg" | sed -n '1p' | tr -d '\r')"
-commit_msg_lower="$(printf "%s" "$commit_msg" | tr '[:upper:]' '[:lower:]')"
-
-case "$first_line" in
-  Merge*) exit 0 ;;
-esac
-
-case "$commit_msg_lower" in
-  *"[skip version]"*|*"[skip-version]"*) exit 0 ;;
-esac
-
-# Count files staged by the user (exclude hook-managed files).
-file_count="$(git diff --cached --name-only | sed '/^$/d' | grep -Ev '^(VERSION|CHANGELOG\.md|docs/releases/)' | wc -l | tr -d ' ')"
-file_count="${file_count:-0}"
-
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/bump-version.ps1 -CommitMessage "$commit_msg" -FileCount "$file_count" >/dev/null 2>&1 || true
-
-# Stage files that bump-version.ps1 may touch.
-git add VERSION CHANGELOG.md docs/releases/_draft_minor.md docs/releases/v*.md >/dev/null 2>&1 || true
+# Version bump is handled in prepare-commit-msg.
+exit 0

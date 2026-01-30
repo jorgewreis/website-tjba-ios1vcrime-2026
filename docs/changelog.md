@@ -51,9 +51,9 @@ O arquivo `VERSION` guarda apenas a versão base (sem sufixos). Sufixos são usa
 
 ## Automação local (hooks)
 
-Para garantir bump a cada commit local, o hook `commit-msg` em `.githooks/commit-msg` atualiza o `VERSION`
-e inclui a mudança no commit do usuário. O hook `post-commit` atualiza `docs/releases/_draft_minor.md`
-em um commit separado (precisa do hash do commit original). O repo está configurado com
+Para garantir bump a cada commit local, o hook `prepare-commit-msg` em `.githooks/prepare-commit-msg`
+atualiza o `VERSION` e inclui a mudança no commit do usuário. O hook `post-commit` atualiza
+`docs/releases/_draft_minor.md` em um commit separado (precisa do hash do commit original). O repo está configurado com
 `core.hooksPath=.githooks`.
 
 ## Processo de release (tag + changelog + nota de versão)
