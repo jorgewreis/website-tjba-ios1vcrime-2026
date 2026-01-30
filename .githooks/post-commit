@@ -1,9 +1,9 @@
 #!/bin/sh
 set -eu
 
-# After every user commit, create a follow-up commit that updates VERSION and
-# docs/releases/_draft_minor.md. This avoids amending the user's commit and keeps
-# the commit hash referenced in the draft stable.
+# After every user commit, create a follow-up commit that updates
+# docs/releases/_draft_minor.md (needs the commit hash). VERSION is updated in
+# commit-msg so it lands in the user's commit.
 
 if [ "${SKIP_VERSION_BUMP:-}" = "1" ]; then
   exit 0
@@ -25,7 +25,9 @@ esac
 type="$(printf "%s" "$first_line" | sed -nE 's/^([a-z]+)(\([^)]+\))?:.*/\1/p')"
 [ -n "$type" ] || type="patch"
 
-file_count="$(git diff-tree --no-commit-id --name-only -r HEAD | sed '/^$/d' | wc -l | tr -d ' ')"
+# Count files in the commit excluding hook-managed files (VERSION + release docs),
+# so bump logic matches what bump-version.ps1 saw in commit-msg.
+file_count="$(git diff-tree --no-commit-id --name-only -r HEAD | sed '/^$/d' | grep -Ev '^(VERSION|CHANGELOG\.md|docs/releases/)' | wc -l | tr -d ' ')"
 file_count="${file_count:-0}"
 
 # Resolve bump kind (priority: explicit tags).
@@ -55,13 +57,11 @@ if [ "${SKIP_DRAFT_UPDATE:-}" != "1" ] && [ -f "docs/releases/_draft_minor.md" ]
   powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/update-draft-minor.ps1 -CommitHash "$commit_hash" -CommitMessage "$commit_msg" -Bump "$bump" >/dev/null 2>&1 || true
 fi
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/bump-version.ps1 -CommitMessage "$commit_msg" -Bump "$bump" -FileCount "$file_count" >/dev/null 2>&1 || true
-
-git add VERSION docs/releases/_draft_minor.md CHANGELOG.md docs/releases/v*.md >/dev/null 2>&1 || true
+git add docs/releases/_draft_minor.md >/dev/null 2>&1 || true
 
 version_value="$(tr -d '\r' < VERSION 2>/dev/null || true)"
 if git diff --cached --quiet; then
   exit 0
 fi
 
-SKIP_VERSION_BUMP=1 SKIP_DRAFT_UPDATE=1 git commit -m "chore(version): ${version_value} (for ${commit_hash}) [skip version] [skip draft]" --no-verify >/dev/null 2>&1 || true
+SKIP_VERSION_BUMP=1 SKIP_DRAFT_UPDATE=1 git commit -m "chore(release-notes): atualizar draft (for ${commit_hash}) [skip version] [skip draft]" --no-verify >/dev/null 2>&1 || true
