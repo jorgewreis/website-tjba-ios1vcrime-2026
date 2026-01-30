@@ -8,6 +8,11 @@ if [ "${SKIP_VERSION_BUMP:-}" = "1" ]; then
   exit 0
 fi
 
+git_dir="$(git rev-parse --git-dir 2>/dev/null || echo ".git")"
+if [ -f "${git_dir}/.skip-version-bump" ]; then
+  exit 0
+fi
+
 msg_file="${1:-}"
 if [ -z "$msg_file" ] || [ ! -f "$msg_file" ]; then
   exit 0

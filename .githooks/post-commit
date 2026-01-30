@@ -22,6 +22,10 @@ case "$commit_msg_lower" in
   *"[skip version]"*|*"[skip-version]"*) exit 0 ;;
 esac
 
+case "$commit_msg_lower" in
+  *"[skip draft]"*|*"[skip-draft]"*|*"[skip release-notes]"*) exit 0 ;;
+esac
+
 type="$(printf "%s" "$first_line" | sed -nE 's/^([a-z]+)(\([^)]+\))?:.*/\1/p')"
 [ -n "$type" ] || type="patch"
 
@@ -65,4 +69,7 @@ fi
 
 # Disable custom hooks for this automation commit, otherwise the version-bump
 # hook would run again.
+git_dir="$(git rev-parse --git-dir 2>/dev/null || echo ".git")"
+: > "${git_dir}/.skip-version-bump" 2>/dev/null || true
 git -c core.hooksPath=.git/hooks commit -m "chore(release-notes): atualizar draft (for ${commit_hash}) [skip version] [skip draft]" --no-verify >/dev/null 2>&1 || true
+rm -f "${git_dir}/.skip-version-bump" >/dev/null 2>&1 || true
