@@ -5,6 +5,7 @@
 ## Added
 
 ## Changed
+- [Changed][Geral] Update. (commit 5c7642f) Impacto: Baixo
 
 - [Changed][Docs] add SAD and normalize markdown. (commit aa543d1) Impacto: Nenhum
 
