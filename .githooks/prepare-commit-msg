@@ -4,6 +4,10 @@ set -eu
 # Ensure VERSION is updated as part of the user's commit.
 # Draft release notes are handled in post-commit (needs the commit hash).
 
+if [ "${SKIP_VERSION_BUMP:-}" = "1" ]; then
+  exit 0
+fi
+
 msg_file="${1:-}"
 if [ -z "$msg_file" ] || [ ! -f "$msg_file" ]; then
   exit 0
