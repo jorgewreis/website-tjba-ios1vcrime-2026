@@ -1,5 +1,5 @@
 #!/bin/sh
 set -eu
 
-# Version bump is handled in pre-commit so it is included in the user's commit.
+# Version bump is handled in post-commit.
 exit 0

@@ -1,5 +1,5 @@
 #!/bin/sh
 set -eu
 
-# Version bump is handled in prepare-commit-msg.
+# Version bump is handled in post-commit.
 exit 0

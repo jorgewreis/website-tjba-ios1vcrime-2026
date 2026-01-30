@@ -33,27 +33,23 @@ e reinicia o rascunho para o próximo ciclo.
 - **2000-7999** = melhorias internas/refatoração (sem feature nova)
 - **8000-9999** = hotfix crítico/emergência
 
-## Automação no GitHub (a cada commit)
+## Automação no GitHub
 
-O workflow em `.github/workflows/version-bump.yml` incrementa o `VERSION` automaticamente em cada commit.
-Por padrão, ele incrementa o PATCH/BUILD na faixa de correções.
-
-Opcional: use palavras-chave no commit para controlar o bump:
-
-- `[major]` => MAJOR++
-- `[minor]` => MINOR++
-- `[patch]` => PATCH/BUILD na faixa 0001-1999
-- `[patch2000]` ou `[refactor]` => PATCH/BUILD na faixa 2000-7999
-- `[patch8000]` ou `[hotfix]` => PATCH/BUILD na faixa 8000-9999
-- `[skip version]` => não atualiza a versão naquele commit
-
-O arquivo `VERSION` guarda apenas a versão base (sem sufixos). Sufixos são usados nas tags.
+O workflow em `.github/workflows/version-bump.yml` incrementa o `VERSION` automaticamente em push para `main`/`master`,
+exceto quando o commit contém `[skip version]` / `[skip-version]`.
 
 ## Automação local (hooks)
 
-Para garantir bump a cada commit local, o hook `pre-commit` em `.githooks/pre-commit` atualiza o `VERSION`
-e inclui a mudança no commit do usuário. O hook `post-commit` atualiza `docs/releases/_draft_minor.md` em um commit separado
-(precisa do hash do commit original). O repo está configurado com `core.hooksPath=.githooks`.
+O repo está configurado com `core.hooksPath=.githooks`.
+
+- O hook `post-commit` em `.githooks/post-commit` faz o bump do `VERSION` e executa `git commit --amend` para incluir
+  a mudança no commit do usuário (ou seja, o hash do commit muda).
+- Em seguida, ele atualiza `docs/releases/_draft_minor.md` em um commit separado, referenciando o hash final do commit.
+
+Para pular automações:
+
+- `[skip version]` => não atualiza versão nem draft
+- `[skip draft]` / `[skip-draft]` / `[skip release-notes]` => não atualiza o draft
 
 ## Processo de release (tag + changelog + nota de versão)
 
@@ -86,3 +82,4 @@ O arquivo final de MINOR deve conter:
 - `v1.08.0000-beta.2`
 - `v1.08.0000-rc.1`
 - `v1.08.0000` (estável)
+

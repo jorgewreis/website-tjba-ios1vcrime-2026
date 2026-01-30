@@ -1,15 +1,14 @@
 #!/bin/sh
 set -eu
 
-# After every user commit, create a follow-up commit that updates
-# docs/releases/_draft_minor.md. This avoids amending the user's commit and keeps
-# the commit hash referenced in the draft stable.
+# After every user commit:
+# 1) bump VERSION and amend the user's commit so VERSION is included
+# 2) update docs/releases/_draft_minor.md in a separate follow-up commit (needs the final hash)
 
 if [ "${SKIP_VERSION_BUMP:-}" = "1" ]; then
   exit 0
 fi
 
-commit_hash="$(git rev-parse --short HEAD)"
 commit_msg="$(git log -1 --pretty=%B)"
 first_line="$(printf "%s" "$commit_msg" | sed -n '1p' | tr -d '\r')"
 commit_msg_lower="$(printf "%s" "$commit_msg" | tr '[:upper:]' '[:lower:]')"
@@ -20,10 +19,6 @@ esac
 
 case "$commit_msg_lower" in
   *"[skip version]"*|*"[skip-version]"*) exit 0 ;;
-esac
-
-case "$commit_msg_lower" in
-  *"[skip draft]"*|*"[skip-draft]"*|*"[skip release-notes]"*) exit 0 ;;
 esac
 
 type="$(printf "%s" "$first_line" | sed -nE 's/^([a-z]+)(\([^)]+\))?:.*/\1/p')"
@@ -57,6 +52,24 @@ if [ -z "$bump" ]; then
   fi
 fi
 
+#
+# 1) Bump VERSION and amend user's commit so VERSION is included.
+#
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/bump-version.ps1 -CommitMessage "$commit_msg" -Bump "$bump" -FileCount "$file_count" >/dev/null 2>&1 || true
+git add VERSION CHANGELOG.md docs/releases/v*.md docs/releases/_draft_minor.md >/dev/null 2>&1 || true
+if ! git diff --cached --quiet; then
+  git -c core.hooksPath=.git/hooks commit --amend --no-edit --no-verify >/dev/null 2>&1 || true
+fi
+
+commit_hash="$(git rev-parse --short HEAD)"
+
+#
+# 2) Update draft release notes in a follow-up commit.
+#
+case "$commit_msg_lower" in
+  *"[skip draft]"*|*"[skip-draft]"*|*"[skip release-notes]"*) exit 0 ;;
+esac
+
 if [ "${SKIP_DRAFT_UPDATE:-}" != "1" ] && [ -f "docs/releases/_draft_minor.md" ]; then
   powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/update-draft-minor.ps1 -CommitHash "$commit_hash" -CommitMessage "$commit_msg" -Bump "$bump" >/dev/null 2>&1 || true
 fi
@@ -67,9 +80,4 @@ if git diff --cached --quiet; then
   exit 0
 fi
 
-# Disable custom hooks for this automation commit, otherwise the version-bump
-# hook would run again.
-git_dir="$(git rev-parse --git-dir 2>/dev/null || echo ".git")"
-: > "${git_dir}/.skip-version-bump" 2>/dev/null || true
 git -c core.hooksPath=.git/hooks commit -m "chore(release-notes): atualizar draft (for ${commit_hash}) [skip version] [skip draft]" --no-verify >/dev/null 2>&1 || true
-rm -f "${git_dir}/.skip-version-bump" >/dev/null 2>&1 || true
