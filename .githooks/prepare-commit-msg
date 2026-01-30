@@ -1,5 +1,5 @@
 #!/bin/sh
 set -eu
 
-# Version bump handled in commit-msg + post-commit to ensure VERSION is included.
+# Version bump is handled in post-commit.
 exit 0
