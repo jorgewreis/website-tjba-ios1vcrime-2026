@@ -78,6 +78,7 @@ public/storage/
 *.sqlite
 *.sqlite3
 *.db
+**/bd/data.txt
 dump/
 backups/
 database/backup/
@@ -94,4 +95,4 @@ database/backup/
 # =========================
 config.local.php
 config.local.json
-CHANGELOG.MD
+

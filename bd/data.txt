@@ -1,6 +1,0 @@
-A | ios1vcrime.com.br |	72.60.250.46 (191.101.71.90)
-CNAME | www | ios1vcrime.com.br
-
-API MAILGUN "5efe2a8285367b746fd3b90e8845c626-f6d80573-07e32db3"
-
-TOKEN GITLAB "glpat-Bke7r6bvLCDgPEbnB7EGCG86MQp1OmpvZHJjCw.01.121f9r047";
