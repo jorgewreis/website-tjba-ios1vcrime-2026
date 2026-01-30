@@ -1,13 +1,15 @@
 #!/bin/sh
 set -eu
 
-# After every user commit, bump VERSION and amend the commit so VERSION (and any
-# generated release files) are part of the same commit.
+# After every user commit, create a follow-up commit that updates
+# docs/releases/_draft_minor.md. This avoids amending the user's commit and keeps
+# the commit hash referenced in the draft stable.
 
 if [ "${SKIP_VERSION_BUMP:-}" = "1" ]; then
   exit 0
 fi
 
+commit_hash="$(git rev-parse --short HEAD)"
 commit_msg="$(git log -1 --pretty=%B)"
 first_line="$(printf "%s" "$commit_msg" | sed -n '1p' | tr -d '\r')"
 commit_msg_lower="$(printf "%s" "$commit_msg" | tr '[:upper:]' '[:lower:]')"
@@ -51,13 +53,14 @@ if [ -z "$bump" ]; then
   fi
 fi
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/bump-version.ps1 -CommitMessage "$commit_msg" -Bump "$bump" -FileCount "$file_count" >/dev/null 2>&1 || true
+if [ "${SKIP_DRAFT_UPDATE:-}" != "1" ] && [ -f "docs/releases/_draft_minor.md" ]; then
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/update-draft-minor.ps1 -CommitHash "$commit_hash" -CommitMessage "$commit_msg" -Bump "$bump" >/dev/null 2>&1 || true
+fi
 
-git add VERSION CHANGELOG.md docs/releases/_draft_minor.md docs/releases/v*.md >/dev/null 2>&1 || true
+git add docs/releases/_draft_minor.md >/dev/null 2>&1 || true
 
 if git diff --cached --quiet; then
   exit 0
 fi
 
-# Keep VERSION changes in the same commit (rewrites hash).
-SKIP_VERSION_BUMP=1 SKIP_DRAFT_UPDATE=1 git commit --amend --no-edit --no-verify >/dev/null 2>&1 || true
+SKIP_VERSION_BUMP=1 SKIP_DRAFT_UPDATE=1 git commit -m "chore(release-notes): atualizar draft (for ${commit_hash}) [skip version] [skip draft]" --no-verify >/dev/null 2>&1 || true
