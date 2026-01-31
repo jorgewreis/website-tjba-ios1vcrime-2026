@@ -5,6 +5,9 @@
 ## Added
 
 ## Changed
+- [Changed][Config] alteração e criação de pastas da documentação. (commit 026f364) Impacto: Nenhum
+
+- [Changed][Docs] novo documento de planejamento criado. (commit 9e22f6e) Impacto: Nenhum
 - [Changed][Geral] Update. (commit 5c7642f) Impacto: Baixo
 
 - [Changed][Docs] add SAD and normalize markdown. (commit aa543d1) Impacto: Nenhum
