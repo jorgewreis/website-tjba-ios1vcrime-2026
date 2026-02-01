@@ -5,11 +5,52 @@ param(
   [string]$Bump = ""
 )
 
+# -----------------------------
+# Helpers
+# -----------------------------
 function Write-Utf8NoBomFile([string]$Path, [string]$Content) {
   $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
   # Trim trailing whitespace/blank lines and ensure exactly one trailing newline.
   $normalized = [regex]::Replace($Content, "\s+\z", "") + "`n"
   [System.IO.File]::WriteAllText($Path, $normalized, $utf8NoBom)
+}
+
+function Ensure-DraftTemplate([string]$Path) {
+  if (Test-Path -LiteralPath $Path) { return }
+
+  $dir = Split-Path -Parent $Path
+  if ($dir -and -not (Test-Path -LiteralPath $dir)) {
+    New-Item -ItemType Directory -Force -Path $dir | Out-Null
+  }
+
+  $template = @"
+# Draft da próxima minor
+
+> Este arquivo é cumulativo e recebe entradas de patch enquanto a próxima MINOR está em desenvolvimento.
+
+## Added
+
+## Changed
+
+## Fixed
+
+## Security
+
+## Deprecated
+
+## Removed
+
+## Bugs conhecidos (para versão futura)
+
+## Próximas implementações (sugestões)
+
+"@
+  Write-Utf8NoBomFile -Path $Path -Content $template
+}
+
+function Normalize-Bump([string]$b) {
+  if ([string]::IsNullOrWhiteSpace($b)) { return "" }
+  return $b.Trim().ToLowerInvariant()
 }
 
 function Get-Impact([string]$LowerMsg, [string]$CommitType) {
@@ -33,13 +74,14 @@ function Get-Impact([string]$LowerMsg, [string]$CommitType) {
   }
 }
 
-function Get-Section([string]$CommitType, [string]$LowerMsg, [string]$Bump) {
+function Get-Section([string]$CommitType, [string]$LowerMsg, [string]$BumpKind) {
   if ($LowerMsg -match "\[security\]") { return "Security" }
   if ($LowerMsg -match "\[deprecated\]") { return "Deprecated" }
   if ($LowerMsg -match "\[removed\]") { return "Removed" }
 
-  if ($Bump -eq "patch8000") { return "Fixed" }
-  if ($Bump -eq "patch2000") { return "Changed" }
+  # bump-based routing
+  if ($BumpKind -eq "patch8000") { return "Fixed" }
+  if ($BumpKind -eq "patch2000") { return "Changed" }
 
   switch ($CommitType) {
     "feat" { return "Added" }
@@ -63,10 +105,55 @@ function Get-Scope([string]$CommitType, [string]$ParsedScope) {
   }
 }
 
-if (-not (Test-Path -Path $DraftPath)) {
-  throw "Draft file not found: $DraftPath"
+function Get-OrderedSections() {
+  return @(
+    "Added",
+    "Changed",
+    "Fixed",
+    "Security",
+    "Deprecated",
+    "Removed",
+    "Bugs conhecidos (para versão futura)",
+    "Próximas implementações (sugestões)"
+  )
 }
 
+function Ensure-SectionExists([string]$DraftContent, [string]$Section) {
+  $header = "## $Section"
+  if ($DraftContent -match ("(?m)^\Q$header\E\s*$")) {
+    return $DraftContent
+  }
+
+  $sections = Get-OrderedSections
+  # Insert in correct order:
+  # find next section that exists; insert before it.
+  $insertBeforeIndex = -1
+  for ($i = 0; $i -lt $sections.Count; $i++) {
+    if ($sections[$i] -eq $Section) {
+      for ($j = $i + 1; $j -lt $sections.Count; $j++) {
+        $nextHeader = "## " + $sections[$j]
+        $m = [regex]::Match($DraftContent, "(?m)^\Q$nextHeader\E\s*$")
+        if ($m.Success) {
+          $insertBeforeIndex = $m.Index
+          break
+        }
+      }
+      break
+    }
+  }
+
+  $block = "`n$header`n`n"
+  if ($insertBeforeIndex -ge 0) {
+    return $DraftContent.Insert($insertBeforeIndex, $block)
+  }
+
+  # If no later section exists, append at end
+  return ($DraftContent.TrimEnd() + $block + "`n")
+}
+
+# -----------------------------
+# Main
+# -----------------------------
 if (-not $CommitHash) {
   throw "CommitHash is required"
 }
@@ -74,63 +161,84 @@ if (-not $CommitHash) {
 $msgSafe = $CommitMessage
 if ($null -eq $msgSafe) { $msgSafe = "" }
 $lowerMsg = $msgSafe.ToLowerInvariant()
-if ($lowerMsg -match "\[skip draft\]" -or $lowerMsg -match "\[skip-draft\]" -or $lowerMsg -match "\[skip release-notes\]") {
+
+# Skip draft tags
+if ($lowerMsg -match "\[skip draft\]" -or
+    $lowerMsg -match "\[skip-draft\]" -or
+    $lowerMsg -match "\[skip release-notes\]") {
   exit 0
 }
 
+# Respect your flow: do not write to draft when bump is minor/major/release
+$bumpKind = Normalize-Bump $Bump
+if ($bumpKind -in @("minor", "major", "release")) {
+  exit 0
+}
+
+# Ensure draft exists (create if missing)
+Ensure-DraftTemplate -Path $DraftPath
+
+# Parse commit first line
 $firstLine = ($CommitMessage -split "`r?`n", 2)[0]
 $m = [regex]::Match($firstLine, "^([a-z]+)(?:\(([^)]+)\))?:\s*(.+)$")
+
 $commitType = "patch"
 $scopeFromMsg = ""
 $desc = $firstLine
+
 if ($m.Success) {
   $commitType = $m.Groups[1].Value.ToLowerInvariant()
   $scopeFromMsg = $m.Groups[2].Value
   $desc = $m.Groups[3].Value
 }
 
-# Remove bracket-tags from the description to keep it clean in release notes.
+# Clean description: remove [tags] in-line
 $desc = [regex]::Replace($desc, "\[[^\]]+\]", "").Trim()
 if (-not $desc) { $desc = $firstLine.Trim() }
 if ($desc -notmatch "[\.\!\?]$") { $desc = $desc + "." }
 
-$section = Get-Section -CommitType $commitType -LowerMsg $lowerMsg -Bump $Bump
+$section = Get-Section -CommitType $commitType -LowerMsg $lowerMsg -BumpKind $bumpKind
 $scope = Get-Scope -CommitType $commitType -ParsedScope $scopeFromMsg
 $impact = Get-Impact -LowerMsg $lowerMsg -CommitType $commitType
 
 $entry = "[{0}][{1}] {2} (commit {3}) Impacto: {4}" -f $section, $scope, $desc, $CommitHash, $impact
 
 $content = [System.IO.File]::ReadAllText($DraftPath)
+
+# Avoid duplicates by commit hash
 if ($content -match [regex]::Escape("(commit $CommitHash)")) {
   exit 0
 }
 
+# Ensure the section exists (create if missing)
+$content = Ensure-SectionExists -DraftContent $content -Section $section
+
 $lines = $content -split "`n", -1
 $header = "## $section"
 $out = New-Object System.Collections.Generic.List[string]
-$inserted = $false
 
-for ($i = 0; $i -lt $lines.Length; $i++) {
+$inserted = $false
+for ($i=0; $i -lt $lines.Length; $i++) {
   $line = $lines[$i].TrimEnd("`r")
-  $out.Add($line)
+  $out.Add($line) | Out-Null
 
   if (-not $inserted -and $line -eq $header) {
-    # Ensure there is a blank line after the header, then insert entry at top of section.
+    # Ensure blank line after header, then insert entry at top of section.
     if ($i + 1 -lt $lines.Length) {
       $next = $lines[$i + 1].TrimEnd("`r")
       if ($next -ne "") {
-        $out.Add("")
+        $out.Add("") | Out-Null
       }
     } else {
-      $out.Add("")
+      $out.Add("") | Out-Null
     }
-    $out.Add("- $entry")
+    $out.Add("- $entry") | Out-Null
     $inserted = $true
   }
 }
 
 if (-not $inserted) {
-  throw "Section header not found in draft: $header"
+  throw "Section header not found in draft (unexpected): $header"
 }
 
 Write-Utf8NoBomFile -Path $DraftPath -Content ($out -join "`n")

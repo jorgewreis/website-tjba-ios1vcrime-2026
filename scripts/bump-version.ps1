@@ -1,170 +1,233 @@
 param(
   [string]$Path = "VERSION",
-  [string]$CommitMessage = ""
+  [string]$CommitMessage = "",
+
+  # Compatibility with post-commit:
+  # major | release | minor | patch | patch2000 | patch8000
+  [string]$Bump = "",
+  [int]$FileCount = 0,
+
+  # Paths (can be overridden if repo layout changes)
+  [string]$ChangelogPath = "CHANGELOG.md",
+  [string]$ReleaseRoot = "docs/90-releases/notes"
 )
 
-if (-not (Test-Path -Path $Path)) {
-  throw "VERSION file not found at: $Path"
-}
+# -----------------------------
+# Version parsing / formatting
+# -----------------------------
+# Accepted inputs:
+#   V. 1.0
+#   V. 1.04
+#   V. 1.04.0123
+# Also accepts legacy:
+#   V 1.00.0000
+#   V 1.04.0000
+# And "V" without dot: "V 1.04"
+function Parse-Version([string]$raw) {
+  $raw = ($raw ?? "").Trim()
 
-$raw = (Get-Content -Raw -Path $Path).Trim()
-$match = [regex]::Match($raw, '^V\s+(\d+)\.(\d{2})\.(\d{4})$')
-if (-not $match.Success) {
-  throw "Invalid VERSION format. Expected: 'V 1.00.0000'. Found: '$raw'"
-}
+  # Normalize any multiple spaces
+  $raw = ($raw -replace '\s+', ' ')
 
-$major = [int]$match.Groups[1].Value
-$minor = [int]$match.Groups[2].Value
-$patch = [int]$match.Groups[3].Value
-
-$commit = $CommitMessage.ToLowerInvariant()
-$bumpMajor = $commit -match '\[major\]'
-$bumpMinor = $commit -match '\[minor\]'
-$bumpPatch2000 = $commit -match '\[patch2000\]' -or $commit -match '\[refactor\]'
-$bumpPatch8000 = $commit -match '\[patch8000\]' -or $commit -match '\[hotfix\]'
-$bumpPatch = $commit -match '\[patch\]'
-
-$firstLine = ($CommitMessage -split "`r?`n", 2)[0]
-$typeMatch = [regex]::Match($firstLine, '^([a-z]+)(\([^)]+\))?:')
-$commitType = ""
-if ($typeMatch.Success) {
-  $commitType = $typeMatch.Groups[1].Value.ToLowerInvariant()
-}
-
-$stagedCount = 0
-try {
-  $staged = git diff --cached --name-only 2>$null
-  if ($staged) {
-    $stagedCount = ($staged | Measure-Object).Count
+  # Regex:
+  # V or V. then whitespace
+  # major: digits
+  # dot
+  # minor: 1-2 digits (we'll store as int; formatting will enforce 2 digits when minor>0)
+  # optional: dot + patch (1-4 digits)
+  if ($raw -notmatch '^V\.?\s+(\d+)\.(\d{1,2})(?:\.(\d{1,4}))?$') {
+    throw "VERSION inválida: '$raw'. Esperado: 'V. X.YY.ZZZZ' (ou variações: 'V. X.0', 'V. X.YY', 'V X.YY.ZZZZ')."
   }
-} catch {
-  $stagedCount = 0
+
+  $major = [int]$Matches[1]
+  $minor = [int]$Matches[2]
+  $patch = 0
+  if ($Matches[3]) { $patch = [int]$Matches[3] }
+
+  return [pscustomobject]@{
+    Major = $major
+    Minor = $minor
+    Patch = $patch
+  }
 }
 
-$forceMinor = ($stagedCount -gt 100)
+# Output rules:
+# - release new: V. {major}.0  (minor=0, patch=0)
+# - patch zero:  V. {major}.{minor:00} (patch=0, minor>0)
+# - patch > 0:   V. {major}.{minor:00}.{patch:0000}
+function Format-Version([int]$major, [int]$minor, [int]$patch) {
+  if ($minor -eq 0 -and $patch -eq 0) {
+    return ("V. {0}.0" -f $major)
+  }
+  if ($patch -eq 0) {
+    return ("V. {0}.{1:00}" -f $major, $minor)
+  }
+  return ("V. {0}.{1:00}.{2:0000}" -f $major, $minor, $patch)
+}
 
-if ($bumpMajor -or $commitType -eq "release") {
+function Read-Version([string]$path) {
+  if (-not (Test-Path -LiteralPath $path)) {
+    # Default new repo version
+    return "V. 1.0"
+  }
+  return (Get-Content -LiteralPath $path -Raw).Trim()
+}
+
+function Write-Version([string]$path, [string]$value) {
+  Set-Content -Encoding ascii -LiteralPath $path -Value $value
+}
+
+function Ensure-Exists([string]$path) {
+  $dir = Split-Path -Parent $path
+  if ($dir -and -not (Test-Path -LiteralPath $dir)) {
+    New-Item -ItemType Directory -Force -Path $dir | Out-Null
+  }
+}
+
+# -----------------------------
+# Commit parsing / bump resolve
+# -----------------------------
+function Get-CommitType([string]$msg) {
+  if ([string]::IsNullOrWhiteSpace($msg)) { return "patch" }
+  $first = ($msg -split "`n")[0].Trim()
+  if ($first -match '^([a-z]+)(\([^)]+\))?:') { return $Matches[1].ToLowerInvariant() }
+  return "patch"
+}
+
+function Has-Tag([string]$msg, [string]$tag) {
+  if ([string]::IsNullOrWhiteSpace($msg)) { return $false }
+  return ($msg.ToLowerInvariant().Contains("[$tag]"))
+}
+
+function Normalize-Bump([string]$b) {
+  if ([string]::IsNullOrWhiteSpace($b)) { return "" }
+  return $b.Trim().ToLowerInvariant()
+}
+
+function Next-PatchInRange([int]$currentPatch, [string]$kind) {
+  # Ranges:
+  # patch      => 0001-1999
+  # patch2000  => 2000-7999
+  # patch8000  => 8000-9999
+  switch ($kind) {
+    "patch2000" {
+      if ($currentPatch -lt 2000) { return 2000 }
+      if ($currentPatch -ge 7999) { return 2000 }
+      return ($currentPatch + 1)
+    }
+    "patch8000" {
+      if ($currentPatch -lt 8000) { return 8000 }
+      if ($currentPatch -ge 9999) { return 8000 }
+      return ($currentPatch + 1)
+    }
+    default {
+      if ($currentPatch -lt 1) { return 1 }
+      if ($currentPatch -ge 1999) { return 1 }
+      return ($currentPatch + 1)
+    }
+  }
+}
+
+# CHANGELOG should index notes (only for MINOR and MAJOR)
+function Update-ChangelogLink([string]$changelogPath, [string]$releaseRoot, [string]$versionText) {
+  if (-not (Test-Path -LiteralPath $changelogPath)) { return }
+
+  # Convert "V. 1.04" -> "v1.04"
+  # Convert "V. 1.0"  -> "v1.0"
+  $verSlug = $versionText.Trim()
+  $verSlug = ($verSlug -replace '^V\.?\s+', 'v')
+
+  $line = "- [Versão $verSlug]($releaseRoot/$verSlug.md)"
+
+  $changelog = Get-Content -LiteralPath $changelogPath -Raw
+  if ($changelog -notmatch [regex]::Escape($line)) {
+    $changelog = $changelog.TrimEnd() + "`n" + $line + "`n"
+    Set-Content -Encoding utf8 -LiteralPath $changelogPath -Value $changelog
+  }
+}
+
+# -----------------------------
+# Main
+# -----------------------------
+$path = $Path
+Ensure-Exists $path
+
+$currentRaw = Read-Version $path
+$current = Parse-Version $currentRaw
+
+$commitType = Get-CommitType $CommitMessage
+$lowerMsg = ($CommitMessage ?? "").ToLowerInvariant()
+
+# Resolve bump:
+# - If -Bump provided => take precedence (post-commit already resolved it).
+# - Else resolve from tags and heuristics.
+$bumpResolved = Normalize-Bump $Bump
+
+if ([string]::IsNullOrWhiteSpace($bumpResolved)) {
+  # Tags first
+  if (Has-Tag $lowerMsg "major" -or Has-Tag $lowerMsg "release") { $bumpResolved = "major" }
+  elseif (Has-Tag $lowerMsg "minor") { $bumpResolved = "minor" }
+  elseif (Has-Tag $lowerMsg "patch2000" -or Has-Tag $lowerMsg "refactor") { $bumpResolved = "patch2000" }
+  elseif (Has-Tag $lowerMsg "patch8000" -or Has-Tag $lowerMsg "hotfix") { $bumpResolved = "patch8000" }
+  elseif (Has-Tag $lowerMsg "patch") { $bumpResolved = "patch" }
+  else {
+    # Heuristics
+    if ($commitType -in @("feat","ux","refactor","perf")) { $bumpResolved = "minor" }
+    elseif ($commitType -eq "release") { $bumpResolved = "major" }
+    else { $bumpResolved = "patch" }
+  }
+}
+
+# Normalize bump: treat "release" as major as per your rule
+if ($bumpResolved -eq "release") { $bumpResolved = "major" }
+
+# Force MINOR if huge change and bump isn't explicitly major/minor
+if ($bumpResolved -in @("patch","patch2000","patch8000")) {
+  $fc = 0
+  if ($FileCount -gt 0) { $fc = $FileCount }
+  else {
+    # fallback: staged files count (best effort)
+    try {
+      $staged = (git diff --cached --name-only 2>$null)
+      if ($staged) {
+        $fc = ($staged | Where-Object { $_ -and $_.Trim() -ne "" } | Measure-Object).Count
+      }
+    } catch { $fc = 0 }
+  }
+
+  if ($fc -gt 100) {
+    $bumpResolved = "minor"
+  }
+}
+
+# Apply bump
+$major = $current.Major
+$minor = $current.Minor
+$patch = $current.Patch
+
+$didMajor = $false
+$didMinor = $false
+
+if ($bumpResolved -eq "major") {
+  # MAJOR only when explicitly major/release resolved upstream
   $major += 1
   $minor = 0
   $patch = 0
-} elseif ($bumpMinor -or $forceMinor -or ($commitType -in @("feat", "ux", "refactor", "perf"))) {
+  $didMajor = $true
+}
+elseif ($bumpResolved -eq "minor") {
   $minor += 1
   $patch = 0
-} else {
-  $rangeStart = 1
-  if ($bumpPatch8000) {
-    $rangeStart = 8000
-  } elseif ($bumpPatch2000) {
-    $rangeStart = 2000
-  } elseif ($bumpPatch) {
-    $rangeStart = 1
-  }
-
-  if ($patch -lt $rangeStart) {
-    $patch = $rangeStart
-  } else {
-    $patch += 1
-  }
+  $didMinor = $true
+}
+else {
+  $patch = Next-PatchInRange $patch $bumpResolved
 }
 
-if ($minor -gt 99) {
-  throw "MINOR overflow: $minor"
-}
-if ($patch -gt 9999) {
-  throw "PATCH/BUILD overflow: $patch"
-}
+$newVersion = Format-Version $major $minor $patch
+Write-Version $path $newVersion
 
-$newVersion = "V {0}.{1:00}.{2:0000}" -f $major, $minor, $patch
-Set-Content -Encoding utf8 -Path $Path -Value ($newVersion + "`n")
-Write-Host $newVersion
-
-if ($forceMinor -and -not $bumpMajor) {
-  $releaseDir = "docs/90-releases"
-  if (-not (Test-Path -Path $releaseDir)) {
-    New-Item -ItemType Directory -Force -Path $releaseDir | Out-Null
-  }
-
-  $draftPath = Join-Path $releaseDir "_draft_minor.md"
-  $releaseFile = Join-Path $releaseDir ("v{0}.{1:00}.md" -f $major, $minor)
-  $today = Get-Date -Format "yyyy-MM-dd"
-
-  $draftContent = ""
-  if (Test-Path -Path $draftPath) {
-    $draftContent = Get-Content -Raw -Path $draftPath
-  }
-
-  $sectionsStart = $draftContent.IndexOf("## Added")
-  if ($sectionsStart -ge 0) {
-    $sections = $draftContent.Substring($sectionsStart).Trim()
-  } else {
-    $sections = @"
-## Added
-
-## Changed
-
-## Fixed
-
-## Security
-
-## Deprecated
-
-## Removed
-
-## Bugs conhecidos (para versão futura)
-
-## Próximas implementações (sugestões)
-"@.Trim()
-  }
-
-  if ($sections -notmatch "(?m)^## Notas de compatibilidade") {
-    $sections = $sections + "`n`n## Notas de compatibilidade`n"
-  }
-  if ($sections -notmatch "(?m)^## Notas de migração") {
-    $sections = $sections + "`n`n## Notas de migração`n"
-  }
-
-  $releaseContent = @"
-# Versão {0}.{1:00}.0000 - {2}
-
-## Resumo
-
-- (preencher)
-
-{3}
-"@ -f $major, $minor, $today, $sections
-
-  Set-Content -Encoding utf8 -Path $releaseFile -Value $releaseContent
-
-  $draftTemplate = @"
-# Draft da próxima minor
-
-> Este arquivo e cumulativo e recebe entradas de patch enquanto a próxima MINOR esta em desenvolvimento.
-
-## Added
-
-## Changed
-
-## Fixed
-
-## Security
-
-## Deprecated
-
-## Removed
-
-## Bugs conhecidos (para versão futura)
-
-## Próximas implementações (sugestões)
-"@
-  Set-Content -Encoding utf8 -Path $draftPath -Value $draftTemplate
-
-  $changelogPath = "CHANGELOG.md"
-  if (Test-Path -Path $changelogPath) {
-    $changelog = Get-Content -Raw -Path $changelogPath
-    $entry = "- [Versão {0}.{1:00}.0000](docs/90-releases/v{0}.{1:00}.md)" -f $major, $minor
-    if ($changelog -notmatch [regex]::Escape($entry)) {
-      $changelog = $changelog.TrimEnd() + "`n" + $entry + "`n"
-      Set-Content -Encoding utf8 -Path $changelogPath -Value $changelog
-    }
-  }
+# Update CHANGELOG link only for MINOR/MAJOR (notes live in ReleaseRoot)
+if (($didMajor -or $didMinor) -and (Test-Path -LiteralPath $ChangelogPath)) {
+  Update-ChangelogLink $ChangelogPath $ReleaseRoot $newVersion
 }

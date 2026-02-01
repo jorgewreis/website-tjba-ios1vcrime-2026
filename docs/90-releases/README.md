@@ -36,7 +36,7 @@ Dentro de cada seção, manter ordenação por escopo (alfabético) ou por data 
 
 Quando o bump for MINOR (manual ou pela regra de mais de 100 arquivos), o processo deve:
 
-1. Gerar `docs/releases/vX.YY.md` com base no conteúdo do `_draft_minor.md`.
+1. Gerar `docs/90-releases/vX.YY.md` com base no conteúdo do `_draft_minor.md`.
 1. Reiniciar o `_draft_minor.md` para o proximo ciclo.
 1. Adicionar o link da nova versão no `CHANGELOG.md`.
 

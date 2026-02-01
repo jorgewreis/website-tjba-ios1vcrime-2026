@@ -1,5 +1,70 @@
 #!/bin/sh
 set -eu
 
-# Version bump is handled in post-commit.
+# prepare-commit-msg hook
+# Objetivo: auxiliar padronização de mensagens e reforçar tags de bump
+# sem bloquear o commit.
+
+MSG_FILE="${1:-}"
+COMMIT_SOURCE="${2:-}"
+SHA1="${3:-}"
+
+[ -n "$MSG_FILE" ] || exit 0
+[ -f "$MSG_FILE" ] || exit 0
+
+# Não interferir em merges/rebases (deixe o Git gerenciar)
+case "${COMMIT_SOURCE:-}" in
+  merge|squash|commit|template|message|rebase) : ;;
+esac
+
+msg="$(cat "$MSG_FILE" 2>/dev/null || true)"
+first_line="$(printf "%s" "$msg" | sed -n '1p' | tr -d '\r')"
+lower="$(printf "%s" "$msg" | tr '[:upper:]' '[:lower:]')"
+
+# Não mexer em merges explícitos
+case "$first_line" in
+  Merge*) exit 0 ;;
+esac
+
+# Não mexer em commits automáticos / instruções explícitas
+case "$lower" in
+  *"[skip version]"*|*"[skip-version]"*) exit 0 ;;
+esac
+
+# Se vazio (ou só espaços), preenche com template mínimo
+trimmed="$(printf "%s" "$msg" | tr -d '\r' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+if [ -z "$trimmed" ]; then
+  {
+    echo "chore: descreva a mudança [patch]"
+    echo
+    echo "# Tipos: feat|fix|refactor|docs|style|perf|test|chore|build|ci|config|release"
+    echo "# Tags: [patch] [patch2000]/[refactor] [patch8000]/[hotfix] [minor] [major]/[release] [skip version]"
+    echo "# Impacto opcional: [impact:nenhum|baixo|medio|alto]"
+  } > "$MSG_FILE"
+  exit 0
+fi
+
+# Se for release e não tiver tag [major] ou [release], adiciona [release]
+# Padrões aceitos:
+#   release: ...
+#   release(scope): ...
+is_release_type="$(printf "%s" "$first_line" | sed -nE 's/^([a-z]+)(\([^)]+\))?:.*/\1/p' | tr '[:upper:]' '[:lower:]')"
+if [ "$is_release_type" = "release" ]; then
+  has_major_tag=0
+  printf "%s" "$lower" | grep -q "\[major\]" && has_major_tag=1 || true
+  printf "%s" "$lower" | grep -q "\[release\]" && has_major_tag=1 || true
+
+  if [ "$has_major_tag" -eq 0 ]; then
+    # adiciona apenas na primeira linha
+    new_first="$(printf "%s" "$first_line" | sed 's/[[:space:]]*$//') [release]"
+    # reescreve arquivo preservando o restante
+    rest="$(printf "%s" "$msg" | sed '1d')"
+    if [ -n "$rest" ]; then
+      printf "%s\n%s\n" "$new_first" "$rest" > "$MSG_FILE"
+    else
+      printf "%s\n" "$new_first" > "$MSG_FILE"
+    fi
+  fi
+fi
+
 exit 0

@@ -1,8 +1,8 @@
 # Changelog
 
-Índice de releases (ver notas em `docs/releases/`).
+Índice de releases (ver notas em `docs/90-releases/`).
 
-- [_Draft da próxima minor_](docs/releases/_draft_minor.md)
-- [Notas do diretório de releases](docs/releases/README.md)
-- [Bugs conhecidos](docs/releases/KNOWN_ISSUES.md)
-- [Versão 1.00.0000](docs/releases/v1.00.md)
+- [_Draft da próxima minor_](docs/90-releases/_draft_minor.md)
+- [Notas do diretório de releases](docs/90-releases/README.md)
+- [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
+- [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)

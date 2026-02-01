@@ -5,6 +5,7 @@
 ## Added
 
 ## Changed
+
 - [Changed][Geral] relocação de arquivos. (commit 7e09946) Impacto: Baixo
 
 - [Changed][Config] alteração de pastas e nomenclaturas close #29. (commit cf108c4) Impacto: Nenhum

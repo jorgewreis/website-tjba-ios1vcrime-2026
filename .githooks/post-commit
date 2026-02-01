@@ -3,11 +3,48 @@ set -eu
 
 # After every user commit:
 # 1) bump VERSION and amend the user's commit so VERSION is included
-# 2) update docs/releases/_draft_minor.md in a separate follow-up commit (needs the final hash)
+# 2) update docs/90-releases/_draft_minor.md in a separate follow-up commit (needs the final hash)
 
 if [ "${SKIP_VERSION_BUMP:-}" = "1" ]; then
   exit 0
 fi
+
+repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+log_file="$repo_root/.git/version-bump.log"
+
+bump_ps1="$repo_root/scripts/bump-version.ps1"
+draft_ps1="$repo_root/scripts/update-draft-minor.ps1"
+
+# Optional fallbacks (in case scripts are relocated)
+[ -f "$bump_ps1" ] || bump_ps1="$repo_root/bump-version.ps1"
+[ -f "$draft_ps1" ] || draft_ps1="$repo_root/update-draft-minor.ps1"
+
+log_ps_error() {
+  # $1 = label, $2 = tmpfile
+  {
+    printf "\n[%s] %s\n" "$(date '+%Y-%m-%d %H:%M:%S')" "$1"
+    if [ -f "$2" ]; then
+      cat "$2"
+      printf "\n"
+    fi
+  } >> "$log_file"
+}
+
+run_powershell_logged() {
+  # $1 = label, $2.. = args
+  label="$1"
+  shift
+
+  tmp="$(mktemp 2>/dev/null || printf '%s' "$repo_root/.git/.tmp-version-bump.$$")"
+  # shellcheck disable=SC2068
+  powershell.exe -NoProfile -ExecutionPolicy Bypass $@ >"$tmp" 2>&1
+  rc=$?
+  if [ "$rc" -ne 0 ]; then
+    log_ps_error "$label (exit=$rc)" "$tmp"
+  fi
+  rm -f "$tmp" 2>/dev/null || true
+  return 0
+}
 
 commit_msg="$(git log -1 --pretty=%B)"
 first_line="$(printf "%s" "$commit_msg" | sed -n '1p' | tr -d '\r')"
@@ -26,13 +63,16 @@ type="$(printf "%s" "$first_line" | sed -nE 's/^([a-z]+)(\([^)]+\))?:.*/\1/p')"
 
 # Count files in the commit excluding hook-managed files (VERSION + release docs)
 # so bump logic isn't skewed by the automation itself.
-file_count="$(git diff-tree --no-commit-id --name-only -r HEAD | sed '/^$/d' | grep -Ev '^(VERSION|CHANGELOG\.md|docs/90-releases/)' | wc -l | tr -d ' ')"
+file_count="$(git diff-tree --no-commit-id --name-only -r HEAD \
+  | sed '/^$/d' \
+  | grep -Ev '^(VERSION|CHANGELOG\.md|docs/90-releases/)' \
+  | wc -l | tr -d ' ')"
 file_count="${file_count:-0}"
 
 # Resolve bump kind (priority: explicit tags).
 bump=""
 case "$commit_msg_lower" in
-  *"[major]"*) bump="major" ;;
+  *"[major]"*|*"[release]"*) bump="major" ;;
   *"[minor]"*) bump="minor" ;;
   *"[patch2000]"*|*"[refactor]"*) bump="patch2000" ;;
   *"[patch8000]"*|*"[hotfix]"*) bump="patch8000" ;;
@@ -55,8 +95,18 @@ fi
 #
 # 1) Bump VERSION and amend user's commit so VERSION is included.
 #
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/bump-version.ps1 -CommitMessage "$commit_msg" -Bump "$bump" -FileCount "$file_count" >/dev/null 2>&1 || true
-git add VERSION CHANGELOG.md docs/90-releases/v*.md docs/90-releases/_draft_minor.md >/dev/null 2>&1 || true
+if [ -f "$bump_ps1" ]; then
+  run_powershell_logged "bump-version.ps1 failed" \
+    -File "$bump_ps1" -CommitMessage "$commit_msg" -Bump "$bump" -FileCount "$file_count"
+else
+  # Log missing script (do not break commit)
+  log_ps_error "bump-version.ps1 not found at: $bump_ps1" "/dev/null"
+fi
+
+# Add managed files (notes moved to docs/90-releases/notes/)
+git add VERSION CHANGELOG.md docs/90-releases/_draft_minor.md >/dev/null 2>&1 || true
+git add docs/90-releases/notes/*.md >/dev/null 2>&1 || true
+
 if ! git diff --cached --quiet; then
   git -c core.hooksPath=.git/hooks commit --amend --no-edit --no-verify >/dev/null 2>&1 || true
 fi
@@ -70,8 +120,13 @@ case "$commit_msg_lower" in
   *"[skip draft]"*|*"[skip-draft]"*|*"[skip release-notes]"*) exit 0 ;;
 esac
 
-if [ "${SKIP_DRAFT_UPDATE:-}" != "1" ] && [ -f "docs/90-releases/_draft_minor.md" ]; then
-  powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/update-draft-minor.ps1 -CommitHash "$commit_hash" -CommitMessage "$commit_msg" -Bump "$bump" >/dev/null 2>&1 || true
+if [ "${SKIP_DRAFT_UPDATE:-}" != "1" ] && [ -f "$repo_root/docs/90-releases/_draft_minor.md" ]; then
+  if [ -f "$draft_ps1" ]; then
+    run_powershell_logged "update-draft-minor.ps1 failed" \
+      -File "$draft_ps1" -CommitHash "$commit_hash" -CommitMessage "$commit_msg" -Bump "$bump"
+  else
+    log_ps_error "update-draft-minor.ps1 not found at: $draft_ps1" "/dev/null"
+  fi
 fi
 
 git add docs/90-releases/_draft_minor.md >/dev/null 2>&1 || true
