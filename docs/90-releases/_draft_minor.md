@@ -5,6 +5,8 @@
 ## Added
 
 ## Changed
+
+- [Changed][Config] alteração de pastas e nomenclaturas close #29. (commit cf108c4) Impacto: Nenhum
 - [Changed][Docs] criação de documentação close #39. (commit b3c1aaf) Impacto: Nenhum
 
 - [Changed][Config] alteração e criação de pastas da documentação. (commit 026f364) Impacto: Nenhum
