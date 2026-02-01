@@ -14,6 +14,7 @@
 - [Changed][Docs] add SAD and normalize markdown. (commit aa543d1) Impacto: Nenhum
 
 ## Fixed
+- [Fixed][Geral] erros de acentuação corrigidos. (commit 7ded18a) Impacto: Baixo
 
 ## Security
 
