@@ -1,10 +1,6 @@
 #!/bin/sh
 set -eu
 
-# After every user commit:
-# 1) bump VERSION and amend the user's commit so VERSION is included
-# 2) update docs/90-releases/_draft_minor.md in a separate follow-up commit (needs the final hash)
-
 if [ "${SKIP_VERSION_BUMP:-}" = "1" ]; then
   exit 0
 fi
@@ -15,12 +11,10 @@ log_file="$repo_root/.git/version-bump.log"
 bump_ps1="$repo_root/scripts/bump-version.ps1"
 draft_ps1="$repo_root/scripts/update-draft-minor.ps1"
 
-# Optional fallbacks (in case scripts are relocated)
 [ -f "$bump_ps1" ] || bump_ps1="$repo_root/bump-version.ps1"
 [ -f "$draft_ps1" ] || draft_ps1="$repo_root/update-draft-minor.ps1"
 
 log_ps_error() {
-  # $1 = label, $2 = tmpfile
   {
     printf "\n[%s] %s\n" "$(date '+%Y-%m-%d %H:%M:%S')" "$1"
     if [ -f "$2" ]; then
@@ -31,7 +25,6 @@ log_ps_error() {
 }
 
 run_powershell_logged() {
-  # $1 = label, $2.. = args
   label="$1"
   shift
 
@@ -58,18 +51,57 @@ case "$commit_msg_lower" in
   *"[skip version]"*|*"[skip-version]"*) exit 0 ;;
 esac
 
-type="$(printf "%s" "$first_line" | sed -nE 's/^([a-z]+)(\([^)]+\))?:.*/\1/p')"
+commit_hash="$(git rev-parse --short HEAD)"
+commit_date="$(date '+%Y-%m-%d %H:%M:%S')"
+
+type="$(printf "%s" "$first_line" | sed -nE 's/^([a-z]+)(\([^)]+\))?:.*/\1/p' | tr '[:upper:]' '[:lower:]')"
 [ -n "$type" ] || type="patch"
 
-# Count files in the commit excluding hook-managed files (VERSION + release docs)
-# so bump logic isn't skewed by the automation itself.
+# --- métricas do commit ---
 file_count="$(git diff-tree --no-commit-id --name-only -r HEAD \
   | sed '/^$/d' \
-  | grep -Ev '^(VERSION|CHANGELOG\.md|docs/90-releases/)' \
+  | grep -Ev '^(VERSION|CHANGELOG\.md|docs/90-releases/notes/)' \
   | wc -l | tr -d ' ')"
 file_count="${file_count:-0}"
 
-# Resolve bump kind (priority: explicit tags).
+# insertions/deletions (aprox)
+stats_line="$(git show --shortstat --format= HEAD | tail -n 1 | tr -d '\r')"
+ins="$(printf "%s" "$stats_line" | sed -nE 's/.* ([0-9]+) insertions?\(\+\).*/\1/p')"
+del="$(printf "%s" "$stats_line" | sed -nE 's/.* ([0-9]+) deletions?\(-\).*/\1/p')"
+[ -n "$ins" ] || ins="0"
+[ -n "$del" ] || del="0"
+
+# checar áreas sensíveis (para impacto)
+changed_paths="$(git diff-tree --no-commit-id --name-only -r HEAD | tr -d '\r')"
+
+touch_security="0"
+printf "%s" "$changed_paths" | grep -Eq '^(config/|docs/30-security/|app/middlewares/|app/controllers/|database/|scripts/)' && touch_security="1"
+only_docs="0"
+printf "%s" "$changed_paths" | grep -Eq '^[^d]' >/dev/null 2>&1 || true
+# "only docs" se todos os arquivos começam com docs/
+if printf "%s" "$changed_paths" | sed '/^$/d' | grep -Eqv '^docs/'; then
+  only_docs="0"
+else
+  only_docs="1"
+fi
+
+# --- impacto automático ---
+impact="baixo"
+# nenhum: só docs e alterações pequenas
+if [ "$only_docs" = "1" ] && [ "$file_count" -le 5 ] && [ "$ins" -le 80 ] && [ "$del" -le 80 ]; then
+  impact="nenhum"
+# alto: grandes mudanças, ou áreas sensíveis e grandes mudanças
+elif [ "$file_count" -ge 40 ] || [ "$ins" -ge 800 ] || [ "$del" -ge 400 ]; then
+  impact="alto"
+elif [ "$touch_security" = "1" ] && ( [ "$file_count" -ge 15 ] || [ "$ins" -ge 300 ] || [ "$del" -ge 150 ] ); then
+  impact="alto"
+# médio
+elif [ "$file_count" -ge 15 ] || [ "$ins" -ge 300 ] || [ "$del" -ge 150 ] || [ "$touch_security" = "1" ]; then
+  impact="medio"
+fi
+
+# --- bump automático ---
+# prioridade: tags explícitas
 bump=""
 case "$commit_msg_lower" in
   *"[major]"*|*"[release]"*) bump="major" ;;
@@ -79,60 +111,72 @@ case "$commit_msg_lower" in
   *"[patch]"*) bump="patch" ;;
 esac
 
+# se não tem tag, decide por tipo + impacto
 if [ -z "$bump" ]; then
   if [ "$type" = "release" ]; then
     bump="major"
-  elif [ "$file_count" -gt 100 ] 2>/dev/null; then
-    bump="minor"
   else
-    case "$type" in
-      feat|ux|refactor|perf) bump="minor" ;;
-      *) bump="patch" ;;
-    esac
+    # regra: impacto médio/alto ou tipos "feat/ux/refactor/perf" => minor; senão patch
+    if [ "$impact" = "medio" ] || [ "$impact" = "médio" ] || [ "$impact" = "alto" ]; then
+      bump="minor"
+    else
+      case "$type" in
+        feat|ux|refactor|perf) bump="minor" ;;
+        *) bump="patch" ;;
+      esac
+    fi
   fi
 fi
 
 #
-# 1) Bump VERSION and amend user's commit so VERSION is included.
+# 1) Atualiza VERSION/CHANGELOG via bump-version.ps1 e amenda o commit.
 #
 if [ -f "$bump_ps1" ]; then
   run_powershell_logged "bump-version.ps1 failed" \
     -File "$bump_ps1" -CommitMessage "$commit_msg" -Bump "$bump" -FileCount "$file_count"
 else
-  # Log missing script (do not break commit)
   log_ps_error "bump-version.ps1 not found at: $bump_ps1" "/dev/null"
 fi
 
-# Add managed files (notes moved to docs/90-releases/notes/)
-git add VERSION CHANGELOG.md docs/90-releases/_draft_minor.md >/dev/null 2>&1 || true
+# Stage arquivos gerenciados (inclui drafts e notes quando existirem)
+git add VERSION CHANGELOG.md >/dev/null 2>&1 || true
+git add docs/90-releases/_draft_minor.md docs/90-releases/_draft_major.md >/dev/null 2>&1 || true
 git add docs/90-releases/notes/*.md >/dev/null 2>&1 || true
 
+# Amend commit para incluir VERSION/CHANGELOG e eventuais artefatos gerados
 if ! git diff --cached --quiet; then
   git -c core.hooksPath=.git/hooks commit --amend --no-edit --no-verify >/dev/null 2>&1 || true
 fi
 
+# Recalcula hash após amend
 commit_hash="$(git rev-parse --short HEAD)"
 
 #
-# 2) Update draft release notes in a follow-up commit.
+# 2) Atualiza drafts e gera notes conforme bump
 #
 case "$commit_msg_lower" in
   *"[skip draft]"*|*"[skip-draft]"*|*"[skip release-notes]"*) exit 0 ;;
 esac
 
-if [ "${SKIP_DRAFT_UPDATE:-}" != "1" ] && [ -f "$repo_root/docs/90-releases/_draft_minor.md" ]; then
-  if [ -f "$draft_ps1" ]; then
-    run_powershell_logged "update-draft-minor.ps1 failed" \
-      -File "$draft_ps1" -CommitHash "$commit_hash" -CommitMessage "$commit_msg" -Bump "$bump"
-  else
-    log_ps_error "update-draft-minor.ps1 not found at: $draft_ps1" "/dev/null"
-  fi
+if [ -f "$draft_ps1" ]; then
+  run_powershell_logged "update-draft-minor.ps1 failed" \
+    -File "$draft_ps1" \
+    -RepoRoot "$repo_root" \
+    -CommitHash "$commit_hash" \
+    -CommitMessage "$commit_msg" \
+    -Bump "$bump" \
+    -Impact "$impact"
+else
+  log_ps_error "update-draft-minor.ps1 not found at: $draft_ps1" "/dev/null"
 fi
 
-git add docs/90-releases/_draft_minor.md >/dev/null 2>&1 || true
+# Stage drafts/notes gerados pelo script
+git add docs/90-releases/_draft_minor.md docs/90-releases/_draft_major.md >/dev/null 2>&1 || true
+git add docs/90-releases/notes/*.md >/dev/null 2>&1 || true
 
+# Commit separado só se tiver algo novo a registrar (evita ruído)
 if git diff --cached --quiet; then
   exit 0
 fi
 
-git -c core.hooksPath=.git/hooks commit -m "chore(release-notes): atualizar draft (for ${commit_hash}) [skip version] [skip draft]" --no-verify >/dev/null 2>&1 || true
+git -c core.hooksPath=.git/hooks commit -m "chore(release-notes): atualizar drafts/notes ($commit_hash $commit_date) [skip version] [skip draft]" --no-verify >/dev/null 2>&1 || true

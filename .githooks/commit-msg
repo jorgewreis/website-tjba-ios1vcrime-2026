@@ -20,8 +20,20 @@ case "$lower" in
 esac
 
 # Parse type: type(scope): desc OR type: desc
-type="$(printf "%s" "$first_line" | sed -nE 's/^([a-z]+)(\([^)]+\))?:.*/\1/p' | tr '[:upper:]' '[:lower:]')"
-[ -n "$type" ] || type="patch"
+# Supports optional "!" before ":" (ex.: feat!:, fix(scope)!:)
+type="$(
+  printf "%s" "$first_line" \
+  | sed -nE 's/^([a-z]+)(\([^)]+\))?(!)?:.*/\1/p' \
+  | tr '[:upper:]' '[:lower:]'
+)"
+
+# If you prefer lenient behavior, comment the block below and keep type="patch".
+if [ -z "$type" ]; then
+  echo "ERRO: padrão de commit inválido. Use 'type: descrição' ou 'type(scope): descrição'." >&2
+  echo "Ex.: fix(auth): corrigir sessão expirada" >&2
+  echo "Se quiser ignorar versionamento, use [skip version]." >&2
+  exit 1
+fi
 
 # 1) release requires explicit [release] or [major]
 if [ "$type" = "release" ]; then
@@ -35,7 +47,13 @@ fi
 # 2) block very generic messages (unless skip version)
 # Keep this list short and truly low-signal.
 generic_re='^(update|upd|wip|teste|test|fix|ajustes|mudanças|alterações|commit)$'
-desc="$(printf "%s" "$first_line" | sed -nE 's/^[a-z]+(\([^)]+\))?:[[:space:]]*(.*)$/\2/p' | tr -d '\r')"
+
+# Extract description after "type(scope)!: " or "type!: " or "type: "
+desc="$(
+  printf "%s" "$first_line" \
+  | sed -nE 's/^[a-z]+(\([^)]+\))?(!)?:[[:space:]]*(.*)$/\2/p' \
+  | tr -d '\r'
+)"
 desc_lc="$(printf "%s" "$desc" | tr '[:upper:]' '[:lower:]' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
 
 if printf "%s" "$desc_lc" | grep -Eq "$generic_re"; then
@@ -54,12 +72,14 @@ fi
 #  - impact:nenhum|baixo|medio|médio|alto
 allowed_tag_re='^\[(major|release|minor|patch|patch2000|patch8000|hotfix|refactor|skip version|skip-version|skip draft|skip-draft|skip release-notes|security|deprecated|removed|impact:(nenhum|baixo|medio|m[eé]dio|alto))\]$'
 
-# shell-only extraction
-# Iterate all [..] tokens
+# Extract all [..] tokens from the full message
+# Note: grep -o is widely available (GNU grep / Git Bash). If your env lacks -o, tell me.
 tags="$(printf "%s" "$msg" | tr '\r' '\n' | grep -o '\[[^]]\+\]' 2>/dev/null || true)"
 
+# IMPORTANT: do NOT validate tags using a pipeline "echo | while" (subshell exit won't propagate).
 if [ -n "$tags" ]; then
-  echo "$tags" | while IFS= read -r t; do
+  while IFS= read -r t; do
+    [ -n "$t" ] || continue
     tl="$(printf "%s" "$t" | tr '[:upper:]' '[:lower:]')"
     printf "%s" "$tl" | grep -Eq "$allowed_tag_re" || {
       echo "ERRO: tag inválida detectada: $t" >&2
@@ -67,7 +87,9 @@ if [ -n "$tags" ]; then
       echo "Controle: [skip version] [skip draft] [skip release-notes] e [impact:...]" >&2
       exit 1
     }
-  done
+  done <<EOF
+$tags
+EOF
 fi
 
 exit 0
