@@ -6,7 +6,8 @@ if [ "${SKIP_VERSION_BUMP:-}" = "1" ]; then
 fi
 
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-log_file="$repo_root/.git/version-bump.log"
+git_dir="$(git rev-parse --git-dir 2>/dev/null || echo "$repo_root/.git")"
+log_file="$git_dir/version-bump.log"
 
 bump_ps1="$repo_root/scripts/bump-version.ps1"
 draft_ps1="$repo_root/scripts/update-draft-minor.ps1"
