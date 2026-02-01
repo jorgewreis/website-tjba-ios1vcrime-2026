@@ -1,5 +1,5 @@
 param(
-  [string]$DraftPath = "docs/releases/_draft_minor.md",
+  [string]$DraftPath = "docs/90-releases/_draft_minor.md",
   [string]$CommitHash = "",
   [string]$CommitMessage = "",
   [string]$Bump = ""

@@ -26,7 +26,7 @@ type="$(printf "%s" "$first_line" | sed -nE 's/^([a-z]+)(\([^)]+\))?:.*/\1/p')"
 
 # Count files in the commit excluding hook-managed files (VERSION + release docs)
 # so bump logic isn't skewed by the automation itself.
-file_count="$(git diff-tree --no-commit-id --name-only -r HEAD | sed '/^$/d' | grep -Ev '^(VERSION|CHANGELOG\.md|docs/releases/)' | wc -l | tr -d ' ')"
+file_count="$(git diff-tree --no-commit-id --name-only -r HEAD | sed '/^$/d' | grep -Ev '^(VERSION|CHANGELOG\.md|docs/90-releases/)' | wc -l | tr -d ' ')"
 file_count="${file_count:-0}"
 
 # Resolve bump kind (priority: explicit tags).
@@ -56,7 +56,7 @@ fi
 # 1) Bump VERSION and amend user's commit so VERSION is included.
 #
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/bump-version.ps1 -CommitMessage "$commit_msg" -Bump "$bump" -FileCount "$file_count" >/dev/null 2>&1 || true
-git add VERSION CHANGELOG.md docs/releases/v*.md docs/releases/_draft_minor.md >/dev/null 2>&1 || true
+git add VERSION CHANGELOG.md docs/90-releases/v*.md docs/90-releases/_draft_minor.md >/dev/null 2>&1 || true
 if ! git diff --cached --quiet; then
   git -c core.hooksPath=.git/hooks commit --amend --no-edit --no-verify >/dev/null 2>&1 || true
 fi
@@ -70,11 +70,11 @@ case "$commit_msg_lower" in
   *"[skip draft]"*|*"[skip-draft]"*|*"[skip release-notes]"*) exit 0 ;;
 esac
 
-if [ "${SKIP_DRAFT_UPDATE:-}" != "1" ] && [ -f "docs/releases/_draft_minor.md" ]; then
+if [ "${SKIP_DRAFT_UPDATE:-}" != "1" ] && [ -f "docs/90-releases/_draft_minor.md" ]; then
   powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/update-draft-minor.ps1 -CommitHash "$commit_hash" -CommitMessage "$commit_msg" -Bump "$bump" >/dev/null 2>&1 || true
 fi
 
-git add docs/releases/_draft_minor.md >/dev/null 2>&1 || true
+git add docs/90-releases/_draft_minor.md >/dev/null 2>&1 || true
 
 if git diff --cached --quiet; then
   exit 0

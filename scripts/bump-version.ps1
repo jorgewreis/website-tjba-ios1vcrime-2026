@@ -79,7 +79,7 @@ Set-Content -Encoding utf8 -Path $Path -Value ($newVersion + "`n")
 Write-Host $newVersion
 
 if ($forceMinor -and -not $bumpMajor) {
-  $releaseDir = "docs/releases"
+  $releaseDir = "docs/90-releases"
   if (-not (Test-Path -Path $releaseDir)) {
     New-Item -ItemType Directory -Force -Path $releaseDir | Out-Null
   }
@@ -110,21 +110,21 @@ if ($forceMinor -and -not $bumpMajor) {
 
 ## Removed
 
-## Bugs conhecidos (para versao futura)
+## Bugs conhecidos (para versão futura)
 
-## Proximas implementacoes (sugestoes)
+## Próximas implementações (sugestões)
 "@.Trim()
   }
 
   if ($sections -notmatch "(?m)^## Notas de compatibilidade") {
     $sections = $sections + "`n`n## Notas de compatibilidade`n"
   }
-  if ($sections -notmatch "(?m)^## Notas de migracao") {
-    $sections = $sections + "`n`n## Notas de migracao`n"
+  if ($sections -notmatch "(?m)^## Notas de migração") {
+    $sections = $sections + "`n`n## Notas de migração`n"
   }
 
   $releaseContent = @"
-# Versao {0}.{1:00}.0000 - {2}
+# Versão {0}.{1:00}.0000 - {2}
 
 ## Resumo
 
@@ -136,9 +136,9 @@ if ($forceMinor -and -not $bumpMajor) {
   Set-Content -Encoding utf8 -Path $releaseFile -Value $releaseContent
 
   $draftTemplate = @"
-# Draft da proxima minor
+# Draft da próxima minor
 
-> Este arquivo e cumulativo e recebe entradas de patch enquanto a proxima MINOR esta em desenvolvimento.
+> Este arquivo e cumulativo e recebe entradas de patch enquanto a próxima MINOR esta em desenvolvimento.
 
 ## Added
 
@@ -152,16 +152,16 @@ if ($forceMinor -and -not $bumpMajor) {
 
 ## Removed
 
-## Bugs conhecidos (para versao futura)
+## Bugs conhecidos (para versão futura)
 
-## Proximas implementacoes (sugestoes)
+## Próximas implementações (sugestões)
 "@
   Set-Content -Encoding utf8 -Path $draftPath -Value $draftTemplate
 
   $changelogPath = "CHANGELOG.md"
   if (Test-Path -Path $changelogPath) {
     $changelog = Get-Content -Raw -Path $changelogPath
-    $entry = "- [Versao {0}.{1:00}.0000](docs/releases/v{0}.{1:00}.md)" -f $major, $minor
+    $entry = "- [Versão {0}.{1:00}.0000](docs/90-releases/v{0}.{1:00}.md)" -f $major, $minor
     if ($changelog -notmatch [regex]::Escape($entry)) {
       $changelog = $changelog.TrimEnd() + "`n" + $entry + "`n"
       Set-Content -Encoding utf8 -Path $changelogPath -Value $changelog
