@@ -82,4 +82,3 @@ O arquivo final de MINOR deve conter:
 - `v1.08.0000-beta.2`
 - `v1.08.0000-rc.1`
 - `v1.08.0000` (estável)
-
