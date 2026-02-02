@@ -241,3 +241,28 @@
 -  4 files changed, 192 insertions(+), 1 deletion(-)
 
 ---
+## V. 1.01.8003
+
+- **bump**: patch
+- **impacto**: medio
+- **tipo**: docs
+- **hash**: `c47d593`
+- **data**: 2026-02-02 13:19:20
+- **mensagem**: docs: criação de documentação de escopo - close (#34)
+
+### Arquivos (name-status)
+
+- M	CHANGELOG.md
+- M	VERSION
+- A	docs/00-foundation/glossary/escopo-produto.md
+- A	docs/00-foundation/glossary/escopo-projeto.md
+
+### Estatisticas
+
+-  CHANGELOG.md                                  |   5 +
+-  VERSION                                       |   2 +-
+-  docs/00-foundation/glossary/escopo-produto.md | 240 ++++++++++++++++++++++++++
+-  docs/00-foundation/glossary/escopo-projeto.md | 142 +++++++++++++++
+-  4 files changed, 388 insertions(+), 1 deletion(-)
+
+---
