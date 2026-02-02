@@ -320,3 +320,32 @@
 -  6 files changed, 161 insertions(+), 6 deletions(-)
 
 ---
+## V. 1.01.8006
+
+- **bump**: patch
+- **impacto**: medio
+- **tipo**: change
+- **hash**: `1a42547`
+- **data**: 2026-02-02 20:54:24
+- **mensagem**: config: alteração nos registros de versionamento
+
+### Arquivos (name-status)
+
+- M	.githooks/commit-msg
+- M	.githooks/post-commit
+- M	CHANGELOG.md
+- M	VERSION
+- M	scripts/bump-version.ps1
+- M	scripts/update-draft-minor.ps1
+
+### Estatisticas
+
+-  .githooks/commit-msg           |  4 ++--
+-  .githooks/post-commit          |  4 ++--
+-  CHANGELOG.md                   |  5 +++++
+-  VERSION                        |  2 +-
+-  scripts/bump-version.ps1       | 18 +++---------------
+-  scripts/update-draft-minor.ps1 |  5 +++--
+-  6 files changed, 16 insertions(+), 22 deletions(-)
+
+---
