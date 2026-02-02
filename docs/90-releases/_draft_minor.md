@@ -30,3 +30,27 @@
 
 ---
 
+
+## V. 1.00.0028
+
+- **bump**: patch
+- **impacto**: medio
+- **tipo**: bugfix
+- **hash**: `1dadf1c`
+- **data**: 2026-02-01 21:20:34
+- **mensagem**: fix: correção de erros de acentuação
+
+### Arquivos (name-status)
+
+- M	CHANGELOG.md
+- M	VERSION
+- M	scripts/update-draft-minor.ps1
+
+### Estatisticas
+
+-  CHANGELOG.md                   |  5 +++++
+-  VERSION                        |  2 +-
+-  scripts/update-draft-minor.ps1 | 35 +++++++++++++++++++----------------
+-  3 files changed, 25 insertions(+), 17 deletions(-)
+
+---
