@@ -1,5 +1,9 @@
 ﻿# Changelog
 
+## V. 1.01.8004
+
+- docs: novo documento de arquitetura criado - close (#55)
+
 ## V. 1.01.8003
 
 - docs: criação de documentação de escopo - close (#34)
@@ -50,6 +54,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
