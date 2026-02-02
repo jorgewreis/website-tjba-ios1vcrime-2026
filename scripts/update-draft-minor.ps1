@@ -23,7 +23,7 @@ function Ensure-FileTemplate {
       $stream.Close()
     }
     catch {
-      Write-Warning "Erro ao escrever template no arquivo $Path: $($Error[0].Exception.Message)"
+      Write-Warning "Erro ao escrever template no arquivo ${Path}: $($Error[0].Exception.Message)"
     }
   }
 }
@@ -175,7 +175,7 @@ function Append-DraftMinorEntry {
         $stream.Close()
     }
     catch {
-        Write-Warning "Erro ao escrever no arquivo $DraftMinorPath: $($Error[0].Exception.Message)"
+        Write-Warning "Erro ao escrever no arquivo ${DraftMinorPath}: $($Error[0].Exception.Message)"
     }
 }
 
@@ -222,7 +222,7 @@ function Append-DraftMajorSummary {
     $stream.Close()
   }
   catch {
-    Write-Warning "Erro ao escrever no arquivo $DraftMajorPath: $($Error[0].Exception.Message)"
+    Write-Warning "Erro ao escrever no arquivo ${DraftMajorPath}: $($Error[0].Exception.Message)"
   }
 }
 
@@ -243,7 +243,7 @@ function Reset-DraftMinor {
     $stream.Close()
   }
   catch {
-    Write-Warning "Erro ao resetar arquivo $Path: $($Error[0].Exception.Message)"
+    Write-Warning "Erro ao resetar arquivo ${Path}: $($Error[0].Exception.Message)"
   }
 }
 
@@ -264,7 +264,7 @@ function Reset-DraftMajor {
     $stream.Close()
   }
   catch {
-    Write-Warning "Erro ao resetar arquivo $Path: $($Error[0].Exception.Message)"
+    Write-Warning "Erro ao resetar arquivo ${Path}: $($Error[0].Exception.Message)"
   }
 }
 
@@ -290,7 +290,7 @@ function Write-ReleaseNotesFromDraft {
     $stream.Close()
   }
   catch {
-    Write-Warning "Erro ao escrever notas de release em $outFile: $($Error[0].Exception.Message)"
+    Write-Warning "Erro ao escrever notas de release em ${outFile}: $($Error[0].Exception.Message)"
   }
 }
 

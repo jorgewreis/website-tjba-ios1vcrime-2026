@@ -143,3 +143,25 @@
 - (sem estatisticas)
 
 ---
+
+## V. 1.01.0002
+
+- **bump**: patch
+- **impacto**: medio
+- **tipo**: tests
+- **hash**: `633d08f`
+- **data**: 2026-02-02 12:31:22
+- **mensagem**: test: hook
+
+### Arquivos (name-status)
+
+- M	CHANGELOG.md
+- M	VERSION
+
+### Estatisticas
+
+-  CHANGELOG.md | 5 +++++
+-  VERSION      | 2 +-
+-  2 files changed, 6 insertions(+), 1 deletion(-)
+
+---
