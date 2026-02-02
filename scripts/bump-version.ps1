@@ -40,10 +40,13 @@ function Parse-Version {
     return @{ maj = 1; min = 0; pat = 0 }
   }
 
-  $maj = [int]$Matches.maj
-  $min = [int]$Matches.min
+  $maj = [int]$Matches['maj']
+  $min = [int]$Matches['min']
+
   $pat = 0
-  if ($Matches.pat) { $pat = [int]$Matches.pat }
+  if ($Matches.ContainsKey('pat') -and $Matches['pat']) {
+    $pat = [int]$Matches['pat']
+  }
 
   return @{ maj = $maj; min = $min; pat = $pat }
 }
@@ -52,9 +55,9 @@ function Format-Version {
   param([int]$maj, [int]$min, [int]$pat, [string]$kind)
 
   switch ($kind) {
-    "major" { return ("V. {0}.{1}" -f $maj, $min) }              # V. 2.0
-    "minor" { return ("V. {0}.{1:D2}" -f $maj, $min) }           # V. 1.02
-    default { return ("V. {0}.{1:D2}.{2:D4}" -f $maj, $min, $pat) } # V. 1.02.0003
+    "major" { return ("V. {0}.{1}" -f $maj, $min) }                  # V. 2.0
+    "minor" { return ("V. {0}.{1:D2}" -f $maj, $min) }               # V. 1.02
+    default { return ("V. {0}.{1:D2}.{2:D4}" -f $maj, $min, $pat) }  # V. 1.02.0003
   }
 }
 
@@ -167,7 +170,6 @@ function Update-Changelog {
     if ($i -gt 0 -and $out[$i] -match '^\s*$') { $insertAt = $i + 1; break }
   }
 
-  # CORREÇÃO: garantir IEnumerable[string]
   $out.InsertRange($insertAt, [string[]]$entry)
 
   Set-Content -LiteralPath $ChangelogPath -Value ($out -join "`n") -Encoding UTF8

@@ -1,5 +1,9 @@
 ﻿# Changelog
 
+## V. 1.00.0026
+
+- fix(version): versionamento corrigido
+
 ## V. 1.03
 
 - feat(teste): minor via tag [minor]
@@ -26,6 +30,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

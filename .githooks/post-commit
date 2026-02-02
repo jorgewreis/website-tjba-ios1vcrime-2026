@@ -3,25 +3,46 @@ set -eu
 
 # After every user commit:
 # 1) bump VERSION and amend the user's commit so VERSION is included
-# 2) update docs/90-releases drafts in a separate follow-up commit
+# 2) update docs/90-releases/_draft_minor.md in a separate follow-up commit (needs the final hash)
 
 if [ "${SKIP_VERSION_BUMP:-}" = "1" ]; then
   exit 0
 fi
 
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-log_file="$repo_root/.git/version-bump.log"
+git_dir="$(git rev-parse --git-dir 2>/dev/null || echo ".git")"
+log_file="$repo_root/$git_dir/version-bump.log"
+
+# garante que o diretório existe e que o log é criado
+log_dir="$(dirname "$log_file")"
+mkdir -p "$log_dir" 2>/dev/null || true
+touch "$log_file" 2>/dev/null || true
 
 bump_ps1="$repo_root/scripts/bump-version.ps1"
 draft_ps1="$repo_root/scripts/update-draft-minor.ps1"
 
+PSH="powershell.exe"
+if ! command -v "$PSH" >/dev/null 2>&1; then
+  if command -v pwsh >/dev/null 2>&1; then
+    PSH="pwsh"
+  elif command -v powershell >/dev/null 2>&1; then
+    PSH="powershell"
+  fi
+fi
+
+
+# Optional fallbacks (in case scripts are relocated)
 [ -f "$bump_ps1" ] || bump_ps1="$repo_root/bump-version.ps1"
 [ -f "$draft_ps1" ] || draft_ps1="$repo_root/update-draft-minor.ps1"
 
 log_ps_error() {
+  # $1 = label, $2 = tmpfile, $3 = cmdline (optional)
   {
     printf "\n[%s] %s\n" "$(date '+%Y-%m-%d %H:%M:%S')" "$1"
-    if [ -f "${2:-}" ]; then
+    if [ -n "${3:-}" ]; then
+      printf "cmd: %s\n" "$3"
+    fi
+    if [ -f "$2" ]; then
       cat "$2"
       printf "\n"
     fi
@@ -29,18 +50,40 @@ log_ps_error() {
 }
 
 run_powershell_logged() {
+  # $1 = label, $2.. = args
   label="$1"
   shift
 
-  tmp="$(mktemp 2>/dev/null || printf '%s' "$repo_root/.git/.tmp-version-bump.$$")"
-  powershell.exe -NoProfile -ExecutionPolicy Bypass "$@" >"$tmp" 2>&1
-  rc=$?
-  if [ "$rc" -ne 0 ]; then
-    log_ps_error "$label (exit=$rc)" "$tmp"
+  if ! command -v "$PSH" >/dev/null 2>&1; then
+    log_ps_error "$label (powershell not found: $PSH)" "/dev/null" "$PSH"
+    return 0
   fi
+
+  tmp="$(mktemp 2>/dev/null || printf '%s' "$repo_root/$git_dir/.tmp-version-bump.$$")"
+
+  # monta cmdline só para log (sem quebrar argumentos reais)
+  cmdline="$PSH -NoProfile -ExecutionPolicy Bypass"
+  for a in "$@"; do
+    case "$a" in
+      *" "*) cmdline="$cmdline \"$a\"" ;;
+      *)     cmdline="$cmdline $a" ;;
+    esac
+  done
+
+  # executa UMA vez e captura rc sem morrer por set -e
+  set +e
+  "$PSH" -NoProfile -ExecutionPolicy Bypass "$@" >"$tmp" 2>&1
+  rc=$?
+  set -e
+
+  if [ "$rc" -ne 0 ]; then
+    log_ps_error "$label (exit=$rc)" "$tmp" "$cmdline"
+  fi
+
   rm -f "$tmp" 2>/dev/null || true
   return 0
 }
+
 
 commit_msg="$(git log -1 --pretty=%B)"
 first_line="$(printf "%s" "$commit_msg" | sed -n '1p' | tr -d '\r')"
@@ -57,13 +100,14 @@ esac
 type="$(printf "%s" "$first_line" | sed -nE 's/^([a-z]+)(\([^)]+\))?:.*/\1/p')"
 [ -n "$type" ] || type="patch"
 
+# Count files in the commit excluding hook-managed files (VERSION + release docs)
 file_count="$(git diff-tree --no-commit-id --name-only -r HEAD \
   | sed '/^$/d' \
   | grep -Ev '^(VERSION|CHANGELOG\.md|docs/90-releases/)' \
   | wc -l | tr -d ' ')"
 file_count="${file_count:-0}"
 
-# Resolve bump kind (priority: explicit tags).
+# Resolve bump kind (priority: explicit tags)
 bump=""
 case "$commit_msg_lower" in
   *"[major]"*|*"[release]"*) bump="major" ;;
@@ -86,34 +130,21 @@ if [ -z "$bump" ]; then
   fi
 fi
 
-# Resolve impact (priority: explicit [impact:...], then heuristic by file_count)
-impact=""
-case "$commit_msg_lower" in
-  *"[impact:alto]"*) impact="alto" ;;
-  *"[impact:médio]"*|*"[impact:medio]"*) impact="medio" ;;
-  *"[impact:baixo]"*) impact="baixo" ;;
-  *"[impact:nenhum]"*) impact="nenhum" ;;
-esac
-
-if [ -z "$impact" ]; then
-  if [ "$file_count" -ge 80 ] 2>/dev/null; then impact="alto"
-  elif [ "$file_count" -ge 30 ] 2>/dev/null; then impact="medio"
-  elif [ "$file_count" -ge 5 ] 2>/dev/null; then impact="baixo"
-  else impact="nenhum"
-  fi
-fi
-
 #
-# 1) Bump VERSION and amend user's commit so VERSION is included.
+# 1) Bump VERSION and amend user's commit so VERSION is included
 #
 if [ -f "$bump_ps1" ]; then
   run_powershell_logged "bump-version.ps1 failed" \
-    -File "$bump_ps1" -CommitMessage "$commit_msg" -Bump "$bump" -FileCount "$file_count"
+    -File "$bump_ps1" \
+    -CommitMessage "$commit_msg" \
+    -Bump "$bump" \
+    -FileCount "$file_count"
 else
-  log_ps_error "bump-version.ps1 not found at: $bump_ps1" "/dev/null"
+  log_ps_error "bump-version.ps1 not found at: $bump_ps1" "/dev/null" ""
 fi
 
-git add VERSION CHANGELOG.md >/dev/null 2>&1 || true
+git add VERSION CHANGELOG.md docs/90-releases/_draft_minor.md >/dev/null 2>&1 || true
+git add docs/90-releases/notes/*.md >/dev/null 2>&1 || true
 
 if ! git diff --cached --quiet; then
   git -c core.hooksPath=.git/hooks commit --amend --no-edit --no-verify >/dev/null 2>&1 || true
@@ -122,26 +153,39 @@ fi
 commit_hash="$(git rev-parse --short HEAD)"
 
 #
-# 2) Update drafts/release notes in a follow-up commit.
+# 2) Update draft release notes in a follow-up commit
 #
 case "$commit_msg_lower" in
   *"[skip draft]"*|*"[skip-draft]"*|*"[skip release-notes]"*) exit 0 ;;
 esac
 
-if [ "${SKIP_DRAFT_UPDATE:-}" != "1" ]; then
+if [ "${SKIP_DRAFT_UPDATE:-}" != "1" ] && [ -f "$repo_root/docs/90-releases/_draft_minor.md" ]; then
   if [ -f "$draft_ps1" ]; then
+    # Impact: tenta extrair do commit, senão "medio"
+    impact="medio"
+    case "$commit_msg_lower" in
+      *"[impact:nenhum]"*) impact="nenhum" ;;
+      *"[impact:baixo]"*)  impact="baixo" ;;
+      *"[impact:medio]"*|*"[impact:médio]"*) impact="medio" ;;
+      *"[impact:alto]"*)   impact="alto" ;;
+    esac
+
     run_powershell_logged "update-draft-minor.ps1 failed" \
-      -File "$draft_ps1" -CommitHash "$commit_hash" -CommitMessage "$commit_msg" -Bump "$bump" -Impact "$impact" -RepoRoot "$repo_root"
+      -File "$draft_ps1" \
+      -CommitHash "$commit_hash" \
+      -CommitMessage "$commit_msg" \
+      -Bump "$bump" \
+      -Impact "$impact" \
+      -RepoRoot "$repo_root"
   else
-    log_ps_error "update-draft-minor.ps1 not found at: $draft_ps1" "/dev/null"
+    log_ps_error "update-draft-minor.ps1 not found at: $draft_ps1" "/dev/null" ""
   fi
 fi
 
 git add docs/90-releases/_draft_minor.md docs/90-releases/_draft_major.md >/dev/null 2>&1 || true
-git add docs/90-releases/notes/*.md >/dev/null 2>&1 || true
 
 if git diff --cached --quiet; then
   exit 0
 fi
 
-git -c core.hooksPath=.git/hooks commit -m "chore(release-notes): atualizar drafts ($commit_hash) [skip version] [skip draft]" --no-verify >/dev/null 2>&1 || true
+git -c core.hooksPath=.git/hooks commit -m "chore(release-notes): atualizar draft (for ${commit_hash}) [skip version] [skip draft]" --no-verify >/dev/null 2>&1 || true
