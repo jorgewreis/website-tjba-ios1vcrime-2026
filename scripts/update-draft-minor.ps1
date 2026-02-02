@@ -124,16 +124,17 @@ function Append-DraftMinorEntry {
   )
 
   Ensure-FileTemplate -Path $DraftMinorPath -TemplateLines @(
-    "# Draft Minor (acumulado para a próxima versão MINOR)",
+    "# Draft Minor (acumulado para a proxima versao MINOR)",
     "",
     "> Gerado automaticamente.",
-    "> Contém entradas detalhadas por commit (hash, data, tipo, impacto, arquivos).",
+    "> Contem entradas detalhadas por commit (hash, data, tipo, impacto, arquivos).",
     "",
     "---",
     ""
   )
 
   $block = New-Object System.Collections.Generic.List[string]
+  $block.Add('')
   $block.Add('## ' + $Version)
   $block.Add('')
   $block.Add('- **bump**: ' + $Bump)
@@ -144,14 +145,16 @@ function Append-DraftMinorEntry {
   $block.Add('- **mensagem**: ' + $Message)
   $block.Add('')
   $block.Add('### Arquivos (name-status)')
+  $block.Add('')
 
   foreach ($l in $NameStatusLines) { $block.Add('- ' + $l) }
 
   $block.Add('')
-  $block.Add('### Estatísticas')
+  $block.Add('### Estatisticas')
+  $block.Add('')
 
   if ([string]::IsNullOrWhiteSpace($StatsText)) {
-    $block.Add('- (sem estatísticas)')
+    $block.Add('- (sem estatisticas)')
   } else {
     foreach ($s in ($StatsText -split "`r?`n")) {
       if ($s.Trim() -ne '') { $block.Add('- ' + $s) }
@@ -160,8 +163,7 @@ function Append-DraftMinorEntry {
 
   $block.Add('')
   $block.Add('---')
-  $block.Add('')
-
+  
   Add-Content -LiteralPath $DraftMinorPath -Value ($block -join "`n") -Encoding UTF8
 }
 
@@ -177,16 +179,17 @@ function Append-DraftMajorSummary {
   )
 
   Ensure-FileTemplate -Path $DraftMajorPath -TemplateLines @(
-    "# Draft Major (acumulado para a próxima versão MAJOR)",
+    "# Draft Major (acumulado para a proxima versao MAJOR)",
     "",
     "> Gerado automaticamente.",
-    "> Contém resumos compactos (agrupados por tipo) e lista de hashes.",
+    "> Contem resumos compactos (agrupados por tipo) e lista de hashes.",
     "",
     "---",
     ""
   )
 
   $lines = New-Object System.Collections.Generic.List[string]
+  $lines.Add('')
   $lines.Add('## ' + $Version)
   $lines.Add('')
   $lines.Add('- **impacto**: ' + $Impact)
@@ -194,7 +197,8 @@ function Append-DraftMajorSummary {
   $lines.Add('- **hash**: `' + $CommitHash + '`')
   $lines.Add('- **data**: ' + $Date)
   $lines.Add('')
-  $lines.Add('### Resumo por área')
+  $lines.Add('### Resumo por area')
+  $lines.Add('')
 
   foreach ($k in $Buckets.Keys) {
     $lines.Add('- **' + $k + '**: ' + $Buckets[$k])
@@ -202,18 +206,17 @@ function Append-DraftMajorSummary {
 
   $lines.Add('')
   $lines.Add('---')
-  $lines.Add('')
-
+  
   Add-Content -LiteralPath $DraftMajorPath -Value ($lines -join "`n") -Encoding UTF8
 }
 
 function Reset-DraftMinor {
   param([string]$Path)
   Set-Content -LiteralPath $Path -Value @(
-    "# Draft Minor (acumulado para a próxima versão MINOR)",
+    "# Draft Minor (acumulado para a proxima versao MINOR)",
     "",
     "> Gerado automaticamente.",
-    "> Contém entradas detalhadas por commit (hash, data, tipo, impacto, arquivos).",
+    "> Contem entradas detalhadas por commit (hash, data, tipo, impacto, arquivos).",
     "",
     "---",
     ""
@@ -223,10 +226,10 @@ function Reset-DraftMinor {
 function Reset-DraftMajor {
   param([string]$Path)
   Set-Content -LiteralPath $Path -Value @(
-    "# Draft Major (acumulado para a próxima versão MAJOR)",
+    "# Draft Major (acumulado para a proxima versao MAJOR)",
     "",
     "> Gerado automaticamente.",
-    "> Contém resumos compactos (agrupados por tipo) e lista de hashes.",
+    "> Contem resumos compactos (agrupados por tipo) e lista de hashes.",
     "",
     "---",
     ""
@@ -248,7 +251,7 @@ function Write-ReleaseNotesFromDraft {
   $header = @(
     "# Release Notes - " + $Version,
     "",
-    "> Gerado automaticamente a partir do draft.",
+    "> Gerado automaticamente.",
     ""
   ) -join "`n"
 
