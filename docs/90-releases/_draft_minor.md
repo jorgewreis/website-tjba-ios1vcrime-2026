@@ -216,3 +216,28 @@
 -  4 files changed, 9 insertions(+), 1 deletion(-)
 
 ---
+## V. 1.01.8002
+
+- **bump**: patch
+- **impacto**: medio
+- **tipo**: docs
+- **hash**: `bc03528`
+- **data**: 2026-02-02 12:59:05
+- **mensagem**: docs: novo documento de arquitetura - close (#42)
+
+### Arquivos (name-status)
+
+- M	CHANGELOG.md
+- M	VERSION
+- R100	docs/10-architecture/charter/documento-arquitetura-woftware.md	docs/10-architecture/charter/documento-arquitetura-software.md
+- A	docs/10-architecture/charter/documento-integracoes-api.md
+
+### Estatisticas
+
+-  CHANGELOG.md                                       |   5 +
+-  VERSION                                            |   2 +-
+-  ...ftware.md => documento-arquitetura-software.md} |   0
+-  .../charter/documento-integracoes-api.md           | 186 +++++++++++++++++++++
+-  4 files changed, 192 insertions(+), 1 deletion(-)
+
+---
