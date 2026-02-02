@@ -1,4 +1,4 @@
-param(
+﻿param(
   [string]$CommitMessage,
   [ValidateSet("major","minor","patch","patch2000","patch8000")]
   [string]$Bump = "",
