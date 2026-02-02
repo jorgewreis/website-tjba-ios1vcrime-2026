@@ -191,3 +191,28 @@
 -  4 files changed, 34 insertions(+), 7 deletions(-)
 
 ---
+## V. 1.01.8001
+
+- **bump**: patch
+- **impacto**: medio
+- **tipo**: change
+- **hash**: `4b469ed`
+- **data**: 2026-02-02 12:44:49
+- **mensagem**: config: configurações internas de regramento md
+
+### Arquivos (name-status)
+
+- M	.markdownlint.json
+- M	CHANGELOG.md
+- M	VERSION
+- M	docs/90-releases/_draft_minor.md
+
+### Estatisticas
+
+-  .markdownlint.json               | 2 ++
+-  CHANGELOG.md                     | 5 +++++
+-  VERSION                          | 2 +-
+-  docs/90-releases/_draft_minor.md | 1 +
+-  4 files changed, 9 insertions(+), 1 deletion(-)
+
+---
