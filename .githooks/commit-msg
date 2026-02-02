@@ -66,11 +66,11 @@ fi
 # 3) validate bracket-tags (bump + control tags)
 # Extract tags like [xxx] from entire message
 # Allowed:
-#  - major, release, minor, patch, patch2000, patch8000, hotfix, refactor
+#  - major, release, minor, patch, hotfix, refactor
 #  - skip version, skip-version, skip draft, skip-draft, skip release-notes
 #  - security, deprecated, removed
 #  - impact:nenhum|baixo|medio|médio|alto
-allowed_tag_re='^\[(major|release|minor|patch|patch2000|patch8000|hotfix|refactor|skip version|skip-version|skip draft|skip-draft|skip release-notes|security|deprecated|removed|impact:(nenhum|baixo|medio|m[eé]dio|alto))\]$'
+allowed_tag_re='^\[(major|release|minor|patch|hotfix|refactor|skip version|skip-version|skip draft|skip-draft|skip release-notes|security|deprecated|removed|impact:(nenhum|baixo|medio|m[eé]dio|alto))\]$'
 
 # Extract all [..] tokens from the full message
 # Note: grep -o is widely available (GNU grep / Git Bash). If your env lacks -o, tell me.

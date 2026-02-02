@@ -112,8 +112,8 @@ bump=""
 case "$commit_msg_lower" in
   *"[major]"*|*"[release]"*) bump="major" ;;
   *"[minor]"*) bump="minor" ;;
-  *"[patch2000]"*|*"[refactor]"*) bump="patch2000" ;;
-  *"[patch8000]"*|*"[hotfix]"*) bump="patch8000" ;;
+  *"[refactor]"*) bump="patch" ;;
+  *"[hotfix]"*) bump="patch" ;;
   *"[patch]"*) bump="patch" ;;
 esac
 

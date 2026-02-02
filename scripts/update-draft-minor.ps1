@@ -1,7 +1,7 @@
 ﻿param(
   [Parameter(Mandatory=$true)][string]$CommitHash,
   [Parameter(Mandatory=$true)][string]$CommitMessage,
-  [Parameter(Mandatory=$true)][ValidateSet("major","minor","patch","patch2000","patch8000")][string]$Bump,
+  [Parameter(Mandatory=$true)][ValidateSet("major","minor","patch")][string]$Bump,
   [Parameter(Mandatory=$true)][ValidateSet("nenhum","baixo","medio","médio","alto")][string]$Impact,
   [string]$RepoRoot = ".",
   [string]$VersionFile = "VERSION",
@@ -168,6 +168,7 @@ function Append-DraftMinorEntry {
     }
     $block.Add('')
     $block.Add('---')
+    $block.Add('')
     # Usar StreamWriter em vez de Add-Content
     try {
         $stream = [System.IO.StreamWriter]::new($DraftMinorPath, $true, [System.Text.UTF8Encoding]::new($false))
@@ -307,7 +308,7 @@ $stats = Get-Stats -Hash $CommitHash
 $buckets = Summarize-ByType -NameStatusLines $nameStatus
 
 # PATCH: registra detalhado no _draft_minor
-if ($Bump -in @("patch","patch2000","patch8000")) {
+if ($Bump -in @("patch")) {
   Append-DraftMinorEntry `
     -DraftMinorPath $DraftMinorPath `
     -Version $version `

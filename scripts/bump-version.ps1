@@ -1,6 +1,6 @@
 ﻿param(
   [string]$CommitMessage,
-  [ValidateSet("major","minor","patch","patch2000","patch8000")]
+  [ValidateSet("major","minor","patch")]
   [string]$Bump = "",
   [int]$FileCount = 0,
   [string]$VersionFile = "VERSION",
@@ -70,8 +70,8 @@ function Detect-BumpFromMessage {
   # Tags explícitas
   if ($m -match '\[(major|release)\]') { return "major" }
   if ($m -match '\[minor\]') { return "minor" }
-  if ($m -match '\[(patch2000|refactor)\]') { return "patch2000" }
-  if ($m -match '\[(patch8000|hotfix)\]') { return "patch8000" }
+  if ($m -match '\[refactor\]') { return "patch" }
+  if ($m -match '\[hotfix\]') { return "patch" }
   if ($m -match '\[patch\]') { return "patch" }
 
   # Tipo do conventional commit
@@ -104,18 +104,6 @@ function Get-NextVersionParts {
 
     "patch" {
       $pat += 1
-    }
-
-    "patch2000" {
-      # entra no range 2000-2999 e incrementa dentro do range
-      if ($pat -ge 2000 -and $pat -lt 2999) { $pat += 1 }
-      else { $pat = 2000 }
-    }
-
-    "patch8000" {
-      # entra no range 8000-8999 e incrementa dentro do range
-      if ($pat -ge 8000 -and $pat -lt 8999) { $pat += 1 }
-      else { $pat = 8000 }
     }
 
     default {
