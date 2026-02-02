@@ -1,5 +1,9 @@
 ﻿# Changelog
 
+## V. 1.01.8005
+
+- docs: novo documento de segurança criado - close (#56)
+
 ## V. 1.01.8004
 
 - docs: novo documento de arquitetura criado - close (#55)
@@ -54,6 +58,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

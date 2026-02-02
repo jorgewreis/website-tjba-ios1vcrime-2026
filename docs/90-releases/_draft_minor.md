@@ -1,9 +1,10 @@
-﻿# Draft Minor (acumulado para a prÃ³xima versÃ£o MINOR)
+﻿# Draft Minor (acumulado para a proxima versao MINOR)
 
 > Gerado automaticamente.
-> ContÃ©m entradas detalhadas por commit (hash, data, tipo, impacto, arquivos).
+> Contem entradas detalhadas por commit (hash, data, tipo, impacto, arquivos).
 
 ---
+
 ## V. 1.00.0027
 
 - **bump**: patch
@@ -14,13 +15,15 @@
 - **mensagem**: fix: limpeza de arquivos utilizados em testes
 
 ### Arquivos (name-status)
+
 - M	CHANGELOG.md
 - M	VERSION
 - M	docs/90-releases/_draft_major.md
 - M	docs/90-releases/_draft_minor.md
 - D	docs/90-releases/notes/V.1.03.md
 
-### EstatÃ­sticas
+### Estatisticas
+
 -  CHANGELOG.md                     |  5 +++
 -  VERSION                          |  2 +-
 -  docs/90-releases/_draft_major.md | 18 ---------
@@ -29,7 +32,6 @@
 -  5 files changed, 6 insertions(+), 132 deletions(-)
 
 ---
-
 
 ## V. 1.00.0028
 
