@@ -349,3 +349,27 @@
 -  6 files changed, 16 insertions(+), 22 deletions(-)
 
 ---
+
+## V. 1.01.8007
+
+- **bump**: patch
+- **impacto**: medio
+- **tipo**: docs
+- **hash**: `eb3415d`
+- **data**: 2026-02-02 20:55:33
+- **mensagem**: docs: novo documento de segurança criado - close (#237)
+
+### Arquivos (name-status)
+
+- M	CHANGELOG.md
+- M	VERSION
+- A	"docs/30-security/rbac/politicas-governan\303\247a.md"
+
+### Estatisticas
+
+-  CHANGELOG.md                                       |  5 ++
+-  VERSION                                            |  2 +-
+-  .../rbac/politicas-governan\303\247a.md"           | 75 ++++++++++++++++++++++
+-  3 files changed, 81 insertions(+), 1 deletion(-)
+
+---
