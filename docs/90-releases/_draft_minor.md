@@ -165,3 +165,28 @@
 -  2 files changed, 6 insertions(+), 1 deletion(-)
 
 ---
+## V. 1.01.8000
+
+- **bump**: patch8000
+- **impacto**: medio
+- **tipo**: bugfix
+- **hash**: `5e50c91`
+- **data**: 2026-02-02 12:34:23
+- **mensagem**: fix: erros de versionamento corrigidos [hotfix] close (#58)
+
+### Arquivos (name-status)
+
+- M	CHANGELOG.md
+- M	VERSION
+- M	docs/90-releases/_draft_minor.md
+- M	scripts/update-draft-minor.ps1
+
+### Estatisticas
+
+-  CHANGELOG.md                     |  5 +++++
+-  VERSION                          |  2 +-
+-  docs/90-releases/_draft_minor.md | 22 ++++++++++++++++++++++
+-  scripts/update-draft-minor.ps1   | 12 ++++++------
+-  4 files changed, 34 insertions(+), 7 deletions(-)
+
+---
