@@ -266,3 +266,26 @@
 -  4 files changed, 388 insertions(+), 1 deletion(-)
 
 ---
+## V. 1.01.8004
+
+- **bump**: patch
+- **impacto**: medio
+- **tipo**: docs
+- **hash**: `be1eb23`
+- **data**: 2026-02-02 13:24:07
+- **mensagem**: docs: novo documento de arquitetura criado - close (#55)
+
+### Arquivos (name-status)
+
+- M	CHANGELOG.md
+- M	VERSION
+- A	docs/00-foundation/overview/documento-regras-exclusao.md
+
+### Estatisticas
+
+-  CHANGELOG.md                                       |   5 +
+-  VERSION                                            |   2 +-
+-  .../overview/documento-regras-exclusao.md          | 299 +++++++++++++++++++++
+-  3 files changed, 305 insertions(+), 1 deletion(-)
+
+---
