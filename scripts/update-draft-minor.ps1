@@ -38,14 +38,32 @@ function Now-Iso {
 }
 
 function Invoke-Git {
-  param([Parameter(Mandatory=$true)][string[]]$Args)
+    param([Parameter(Mandatory=$true)][string[]]$Args)
 
-  # chama o executável, não uma função
-  $out = & git.exe @Args 2>$null
-  if ($LASTEXITCODE -ne 0) { return "" }
-  if ($null -eq $out) { return "" }
-  return ($out | Out-String).TrimEnd()
+    # Verifica se git.exe está disponível
+    if (-not (Get-Command git.exe -ErrorAction SilentlyContinue)) {
+        Write-Warning "Git não está disponível no PATH"
+        return ""
+    }
+
+    try {
+        # Redireciona stderr para stdout para capturar todos os outputs
+        $output = & git.exe @Args 2>&1
+
+        # Verifica se o comando foi bem-sucedido
+        if ($LASTEXITCODE -eq 0) {
+            return $output | Out-String
+        } else {
+            Write-Warning "Comando Git falhou com código $LASTEXITCODE"
+            return ""
+        }
+    }
+    catch {
+        Write-Warning "Erro ao executar Git: $_"
+        return ""
+    }
 }
+
 
 
 function Get-NameStatus {
