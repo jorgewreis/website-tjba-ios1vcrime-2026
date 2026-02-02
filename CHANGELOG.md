@@ -1,5 +1,9 @@
 ﻿# Changelog
 
+## V. 1.03
+
+- feat(teste): minor via tag [minor]
+
 ## V. 1.02.0002
 
 - test(hook): executar post-commit [patch]
@@ -22,6 +26,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
