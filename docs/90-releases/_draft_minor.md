@@ -291,3 +291,32 @@
 -  3 files changed, 305 insertions(+), 1 deletion(-)
 
 ---
+## V. 1.01.8005
+
+- **bump**: patch
+- **impacto**: medio
+- **tipo**: docs
+- **hash**: `2e81152`
+- **data**: 2026-02-02 20:35:52
+- **mensagem**: docs: novo documento de segurança criado - close (#56)
+
+### Arquivos (name-status)
+
+- M	CHANGELOG.md
+- M	VERSION
+- R100	docs/40-security/authentication_password_policy.md	docs/30-security/auth/authentication_password_policy.md
+- A	docs/30-security/rbac/politicas-acesso-setor.md
+- M	docs/90-releases/_draft_major.md
+- M	docs/90-releases/_draft_minor.md
+
+### Estatisticas
+
+-  CHANGELOG.md                                       |   5 +
+-  VERSION                                            |   2 +-
+-  .../auth}/authentication_password_policy.md        |   0
+-  docs/30-security/rbac/politicas-acesso-setor.md    | 148 +++++++++++++++++++++
+-  docs/90-releases/_draft_major.md                   |   2 +-
+-  docs/90-releases/_draft_minor.md                   |  10 +-
+-  6 files changed, 161 insertions(+), 6 deletions(-)
+
+---
