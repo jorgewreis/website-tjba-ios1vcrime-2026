@@ -1,5 +1,9 @@
 ﻿# Changelog
 
+## V. 1.01.8007
+
+- docs: novo documento de segurança criado - close (#237)
+
 ## V. 1.01.8006
 
 - config: alteração nos registros de versionamento
@@ -62,6 +66,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
