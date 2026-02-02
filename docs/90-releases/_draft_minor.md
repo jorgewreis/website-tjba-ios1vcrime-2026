@@ -373,3 +373,27 @@
 -  3 files changed, 81 insertions(+), 1 deletion(-)
 
 ---
+
+## V. 1.01.8008
+
+- **bump**: patch
+- **impacto**: medio
+- **tipo**: bugfix
+- **hash**: `b61561b`
+- **data**: 2026-02-02 20:57:40
+- **mensagem**: fix: correção de nomenclatura
+
+### Arquivos (name-status)
+
+- M	CHANGELOG.md
+- M	VERSION
+- R100	"docs/30-security/rbac/politicas-governan\303\247a.md"	docs/30-security/rbac/politicas-governanca.md
+
+### Estatisticas
+
+-  CHANGELOG.md                                                         | 5 +++++
+-  VERSION                                                              | 2 +-
+-  .../30-security/rbac/politicas-governanca.md                         | 0
+-  3 files changed, 6 insertions(+), 1 deletion(-)
+
+---
