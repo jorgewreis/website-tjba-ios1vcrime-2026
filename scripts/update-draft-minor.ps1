@@ -143,7 +143,7 @@ $CategoryOrder = @(
 #>
 function Write-Debug-Message {
     param([string]$Message)
-    if ($PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent) {
+    if ($VerbosePreference -eq 'Continue') {
         Write-Host "[DEBUG] $Message" -ForegroundColor Cyan
     }
 }

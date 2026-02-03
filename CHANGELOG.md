@@ -1,5 +1,11 @@
 ﻿# Changelog
 
+## V. 1.03.0001
+
+**Data:** 2026-02-03 18:22:05 | **Commit:** `b375167` | **Tipo:** `patch`
+
+- fix(scripts): corrigir verificacao Verbose para PS 5.1 [patch]
+
 ## V. 1.03
 
 - docs: Documentação do sprint 1 concluída [minor]
@@ -126,6 +132,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
