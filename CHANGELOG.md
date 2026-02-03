@@ -1,5 +1,9 @@
 ﻿# Changelog
 
+## V. 1.02.0010
+
+- docs: novo documento criado - closes #62, closes #54
+
 ## V. 1.02.0009
 
 - config: correção de modelo do  versionamento
@@ -118,6 +122,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
