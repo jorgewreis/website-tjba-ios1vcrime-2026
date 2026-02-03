@@ -397,3 +397,27 @@
 -  3 files changed, 6 insertions(+), 1 deletion(-)
 
 ---
+
+## V. 1.00.0001
+
+- **bump**: patch
+- **impacto**: medio
+- **tipo**: docs
+- **hash**: `474c99d`
+- **data**: 2026-02-02 21:21:31
+- **mensagem**: docs: novo documento de segurança criado
+
+### Arquivos (name-status)
+
+- M	CHANGELOG.md
+- M	VERSION
+- A	docs/30-security/sources/security-requirements.md
+
+### Estatisticas
+
+-  CHANGELOG.md                                      |   5 ++
+-  VERSION                                           |   7 +-
+-  docs/30-security/sources/security-requirements.md | 104 ++++++++++++++++++++++
+-  3 files changed, 110 insertions(+), 6 deletions(-)
+
+---
