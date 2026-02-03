@@ -392,52 +392,52 @@ function Get-ChangeType {
     Write-Debug-Message "Classificando tipo de commit: $normalized"
 
     # Conventional commits
-    if ($normalized -match '^\s*(feat|feature)(|$[^)]+$|)?(!)?:') {
+    if ($normalized -match '^\s*(feat|feature)(\([^)]+\))?(!)?:') {
         Write-Debug-Message "Tipo detectado: Feature"
         return "Feature"
     }
 
-    if ($normalized -match '^\s*(fix|bugfix)(|$[^)]+$|)?(!)?:') {
+    if ($normalized -match '^\s*(fix|bugfix)(\([^)]+\))?(!)?:') {
         Write-Debug-Message "Tipo detectado: Correção"
         return "Correção"
     }
 
-    if ($normalized -match '^\s*refactor(|$[^)]+$|)?(!)?:') {
+    if ($normalized -match '^\s*refactor(\([^)]+\))?(!)?:') {
         Write-Debug-Message "Tipo detectado: Refatoração"
         return "Refatoração"
     }
 
-    if ($normalized -match '^\s*perf(|$[^)]+$|)?(!)?:') {
+    if ($normalized -match '^\s*perf(\([^)]+\))?(!)?:') {
         Write-Debug-Message "Tipo detectado: Performance"
         return "Performance"
     }
 
-    if ($normalized -match '^\s*(security|sec)(|$[^)]+$|)?(!)?:') {
+    if ($normalized -match '^\s*(security|sec)(\([^)]+\))?(!)?:') {
         Write-Debug-Message "Tipo detectado: Segurança"
         return "Segurança"
     }
 
-    if ($normalized -match '^\s*docs(|$[^)]+$|)?(!)?:') {
+    if ($normalized -match '^\s*docs(\([^)]+\))?(!)?:') {
         Write-Debug-Message "Tipo detectado: Documentação"
         return "Documentação"
     }
 
-    if ($normalized -match '^\s*test(|$[^)]+$|)?(!)?:') {
+    if ($normalized -match '^\s*test(\([^)]+\))?(!)?:') {
         Write-Debug-Message "Tipo detectado: Testes"
         return "Testes"
     }
 
-    if ($normalized -match '^\s*build(|$[^)]+$|)?(!)?:') {
+    if ($normalized -match '^\s*build(\([^)]+\))?(!)?:') {
         Write-Debug-Message "Tipo detectado: Build"
         return "Build"
     }
 
-    if ($normalized -match '^\s*(ci|cd)(|$[^)]+$|)?(!)?:') {
+    if ($normalized -match '^\s*(ci|cd)(\([^)]+\))?(!)?:') {
         Write-Debug-Message "Tipo detectado: CI/CD"
         return "CI/CD"
     }
 
-    if ($normalized -match '^\s*chore(|$[^)]+$|)?(!)?:') {
+    if ($normalized -match '^\s*chore(\([^)]+\))?(!)?:') {
         Write-Debug-Message "Tipo detectado: Manutenção"
         return "Manutenção"
     }

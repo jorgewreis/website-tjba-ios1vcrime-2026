@@ -144,11 +144,11 @@ run_powershell_logged() {
     return 0
   fi
 
-  # Cria arquivo temporário para capturar saída
+  # ✅ CORREÇÃO: Cria arquivo temporário ANTES de usar no trap
   local tmp
   tmp="$(mktemp 2>/dev/null || printf '%s' "$repo_root/$git_dir/.tmp-version-bump.$$")"
 
-  # Garante que arquivo temporário seja deletado ao sair
+  # ✅ CORREÇÃO: Agora trap é definido DEPOIS de $tmp existir
   trap 'rm -f "$tmp" 2>/dev/null || true' EXIT INT TERM
 
   # Monta linha de comando para log (sem quebrar argumentos reais)
@@ -165,12 +165,10 @@ run_powershell_logged() {
   # Executa PowerShell com timeout (se disponível)
   local rc=0
   set +e
-
   if command -v timeout >/dev/null 2>&1; then
     # Linux/Mac com GNU timeout
     timeout "$PS_TIMEOUT" "$PSH" -NoProfile -ExecutionPolicy Bypass "$@" >"$tmp" 2>&1
     rc=$?
-
     if [ "$rc" -eq 124 ]; then
       error "$label (timeout após ${PS_TIMEOUT}s)"
       log_ps_error "$label (timeout)" "$tmp" "$cmdline"
@@ -182,7 +180,6 @@ run_powershell_logged() {
     "$PSH" -NoProfile -ExecutionPolicy Bypass "$@" >"$tmp" 2>&1
     rc=$?
   fi
-
   set -e
 
   # Registra erro se houver
@@ -195,9 +192,9 @@ run_powershell_logged() {
 
   # Remove arquivo temporário
   rm -f "$tmp" 2>/dev/null || true
-
   return 0
 }
+
 
 # Valida se o repositório está em estado limpo para amend
 validate_repo_state() {
@@ -233,7 +230,7 @@ detect_breaking_change() {
   msg_lower="$(printf "%s" "$msg" | tr '[:upper:]' '[:lower:]')"
 
   # Verifica se há "!" no tipo (ex: feat!:, fix(api)!:)
-  if printf "%s" "$first_line" | grep -qE '^[a-z]+(|$[^)]+$|)?!:'; then
+  if printf "%s" "$first_line" | grep -qE '^[a-z]+(\([^)]+\))?!:'; then
     debug "Breaking change detectado via '!'"
     return 0
   fi
@@ -333,6 +330,10 @@ if [ -z "$commit_msg" ]; then
   exit 0
 fi
 
+# Captura hash do commit (necessário para scripts PowerShell)
+commit_hash="$(git rev-parse --short HEAD 2>/dev/null || echo 'unknown')"
+debug "Hash do commit: $commit_hash"
+
 debug "Mensagem do commit capturada (${#commit_msg} caracteres)"
 
 # Extrai primeira linha (título do commit)
@@ -368,7 +369,7 @@ esac
 
 # ✅ CORRIGIDO: Agora captura tipo mesmo com "!" (breaking change)
 # Regex: type(scope)!: desc OU type!: desc OU type: desc
-type="$(printf "%s" "$first_line" | sed -nE 's/^([a-z]+)(|$[^)]+$|)?(!)?:.*/\1/p')"
+type="$(printf "%s" "$first_line" | sed -nE 's/^([a-z]+)(\([^)]+\))?(!)?:.*/\1/p')"
 
 # Se não conseguiu extrair tipo, assume "patch"
 [ -n "$type" ] || type="patch"
@@ -418,15 +419,15 @@ if [ "$has_breaking_change" -eq 1 ]; then
   bump="major"
 
 # Prioridade 2: Tags explícitas na mensagem de commit
-elif printf "%s" "$commit_msg_lower" | grep -qE '|$(major|release)$|'; then
+elif printf "%s" "$commit_msg_lower" | grep -qE '\[(major|release)\]'; then
   bump="major"
   debug "Bump MAJOR via tag [major] ou [release]"
 
-elif printf "%s" "$commit_msg_lower" | grep -q '|$minor$|'; then
+elif printf "%s" "$commit_msg_lower" | grep -q '\[minor\]'; then
   bump="minor"
   debug "Bump MINOR via tag [minor]"
 
-elif printf "%s" "$commit_msg_lower" | grep -qE '|$(refactor|hotfix|patch)$|'; then
+elif printf "%s" "$commit_msg_lower" | grep -qE '\[(refactor|hotfix|patch)\]'; then
   bump="patch"
   debug "Bump PATCH via tag [refactor], [hotfix] ou [patch]"
 fi
@@ -496,10 +497,6 @@ if ! git diff --cached --quiet; then
 else
   debug "Nenhuma alteração para incluir no commit"
 fi
-
-# Captura hash do commit final (ANTES de usar)
-commit_hash="$(git rev-parse --short HEAD 2>/dev/null || echo 'unknown')"
-debug "Hash do commit: $commit_hash"
 
 # -----------------------------------------------------------------------------
 # ETAPA 2: ATUALIZAÇÃO DE DRAFT DE RELEASE NOTES

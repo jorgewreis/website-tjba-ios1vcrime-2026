@@ -335,7 +335,7 @@ function Test-BreakingChange {
     $normalized = $Message.ToLowerInvariant()
 
     # Verifica "!" no título: feat!:, fix(scope)!:
-    if ($Message -match '^\s*[a-z]+(|$[^)]+$|)?!:') {
+    if ($Message -match '^\s*[a-z]+(\([^)]+\))?!:') {
         Write-Debug-Message "Breaking change detectado via '!'"
         return $true
     }
@@ -383,23 +383,23 @@ function Detect-BumpFromMessage {
     }
 
     # ✅ PRIORIDADE 2: Tags explícitas na mensagem
-    if ($normalized -match '|$(major|release)$|') {
+    if ($normalized -match '\[(major|release)\]') {
         Write-Debug-Message "Bump detectado: MAJOR (tag explícita)"
         return "major"
     }
 
-    if ($normalized -match '|$minor$|') {
+    if ($normalized -match '\[minor\]') {
         Write-Debug-Message "Bump detectado: MINOR (tag explícita)"
         return "minor"
     }
 
-    if ($normalized -match '|$(refactor|hotfix|patch)$|') {
+    if ($normalized -match '\[(refactor|hotfix|patch)\]') {
         Write-Debug-Message "Bump detectado: PATCH (tag explícita)"
         return "patch"
     }
 
     # ✅ PRIORIDADE 3: Tipo de commit "release" → MAJOR
-    if ($normalized -match '^\s*release(|$[^)]+$|)?:') {
+    if ($normalized -match '^\s*release(\([^)]+\))?:') {
         Write-Debug-Message "Bump detectado: MAJOR (tipo 'release')"
         return "major"
     }
@@ -417,7 +417,7 @@ function Detect-BumpFromMessage {
     }
 
     # ✅ PRIORIDADE 6: Tipo de commit que geralmente é MINOR
-    if ($normalized -match '^\s*(feat|ux|refactor|perf)(|$[^)]+$|)?:') {
+    if ($normalized -match '^\s*(feat|ux|refactor|perf)(\([^)]+\))?:') {
         Write-Debug-Message "Bump detectado: MINOR (tipo de commit)"
         return "minor"
     }
