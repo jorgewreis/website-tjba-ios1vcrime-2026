@@ -421,3 +421,35 @@
 -  3 files changed, 110 insertions(+), 6 deletions(-)
 
 ---
+
+## V. 1.00.0002
+
+- **bump**: patch
+- **impacto**: medio
+- **tipo**: docs
+- **hash**: `c76105c`
+- **data**: 2026-02-02 21:41:44
+- **mensagem**: docs: novos documentos de security, operations e foundation criados
+
+### Arquivos (name-status)
+
+- M	CHANGELOG.md
+- M	VERSION
+- A	docs/00-foundation/scope/accessibility-requirements.md
+- A	docs/00-foundation/scope/technical-assumptions-constraints.md
+- M	docs/30-security/sources/security-requirements.md
+- A	docs/40-operations/access/performance-requirements.md
+- A	docs/40-operations/monitoring/audit-traceability-requirements.md
+
+### Estatisticas
+
+-  CHANGELOG.md                                       |   5 +
+-  VERSION                                            |   2 +-
+-  .../scope/accessibility-requirements.md            |  68 ++++++++++++
+-  .../scope/technical-assumptions-constraints.md     |  52 +++++++++
+-  docs/30-security/sources/security-requirements.md  | 122 ++++++++-------------
+-  .../access/performance-requirements.md             |  47 ++++++++
+-  .../monitoring/audit-traceability-requirements.md  |  59 ++++++++++
+-  7 files changed, 275 insertions(+), 80 deletions(-)
+
+---
