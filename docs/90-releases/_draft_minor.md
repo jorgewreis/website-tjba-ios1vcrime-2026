@@ -53,3 +53,4 @@
 
 ---
 1. **[Geral]** config: atualização do código para melhorias na geração de notas de release (Ref: $97a45e5)
+1. **[Documentação]** docs: nova documentação de security e modules criada (Ref: $0fcdb93)
