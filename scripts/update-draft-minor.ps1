@@ -9,13 +9,17 @@
   [string]$DraftMajorPath = "docs/90-releases/_draft_major.md",
   [string]$NotesDir = "docs/90-releases/notes"
 )
+
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+# --- Funções Utilitárias ---
 
 function Ensure-FileTemplate {
   param([string]$Path, [string[]]$TemplateLines)
   $dir = Split-Path -Parent $Path
   if ($dir -and !(Test-Path -LiteralPath $dir)) { New-Item -ItemType Directory -Force -Path $dir | Out-Null }
+
   if (!(Test-Path -LiteralPath $Path)) {
     try {
       $stream = [System.IO.StreamWriter]::new($Path, $false, [System.Text.UTF8Encoding]::new($false))
@@ -40,29 +44,24 @@ function Get-VersionText {
 }
 
 function Now-Iso {
-  return (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
+  return (Get-Date).ToString("yyyy-MM-dd")
 }
 
 function Invoke-Git {
     param([Parameter(Mandatory=$true)][string[]]$Args)
-    # Verifica se git.exe está disponível
     if (-not (Get-Command git.exe -ErrorAction SilentlyContinue)) {
         Write-Warning "Git não está disponível no PATH"
         return ""
     }
     try {
-        # Redireciona stderr para stdout para capturar todos os outputs
         $output = & git.exe @Args 2>&1
-        # Verifica se o comando foi bem-sucedido
         if ($LASTEXITCODE -eq 0) {
             return $output | Out-String
         } else {
-            Write-Warning "Comando Git falhou com código $LASTEXITCODE"
             return ""
         }
     }
     catch {
-        Write-Warning "Erro ao executar Git: $($Error[0].Exception.Message)"
         return ""
     }
 }
@@ -74,109 +73,75 @@ function Get-NameStatus {
   return $raw -split "`r?`n" | Where-Object { $_.Trim() -ne "" }
 }
 
-function Get-Stats {
-  param([string]$Hash)
-  return Invoke-Git @("show","--stat","--format=",$Hash)
-}
-
 function Classify-ChangeType {
   param([string]$FirstLine)
   if ($null -eq $FirstLine) { $FirstLine = "" }
   $m = $FirstLine.Trim().ToLowerInvariant()
-  if ($m -match '^\s*(feat|feature)(|$[^)]+$|)?:') { return "feature" }
-  if ($m -match '^\s*(fix)(|$[^)]+$|)?:') { return "bugfix" }
-  if ($m -match '^\s*(refactor)(|$[^)]+$|)?:') { return "refactor" }
-  if ($m -match '^\s*(perf)(|$[^)]+$|)?:') { return "performance" }
-  if ($m -match '^\s*(security)(|$[^)]+$|)?:') { return "security" }
-  if ($m -match '^\s*(docs)(|$[^)]+$|)?:') { return "docs" }
-  if ($m -match '^\s*(chore|ci|build)(|$[^)]+$|)?:') { return "maintenance" }
-  if ($m -match '^\s*(test)(|$[^)]+$|)?:') { return "tests" }
-  return "change"
+
+  if ($m -match '^\s*(feat|feature)') { return "Feature" }
+  if ($m -match '^\s*(fix|bugfix)')   { return "Correção" }
+  if ($m -match '^\s*(refactor)')     { return "Refatoração" }
+  if ($m -match '^\s*(perf)')         { return "Performance" }
+  if ($m -match '^\s*(security)')     { return "Segurança" }
+  if ($m -match '^\s*(docs)')         { return "Documentação" }
+  if ($m -match '^\s*(chore|ci)')     { return "Manutenção" }
+  return "Geral"
 }
 
 function Summarize-ByType {
   param([string[]]$NameStatusLines)
   $buckets = [ordered]@{
-    "app"       = 0
-    "public"    = 0
-    "database"  = 0
-    "config"    = 0
-    "scripts"   = 0
-    "docs"      = 0
-    "other"     = 0
+    "App/Core"  = 0
+    "Public"    = 0
+    "Database"  = 0
+    "Config"    = 0
+    "Docs"      = 0
+    "Outros"    = 0
   }
   foreach ($l in $NameStatusLines) {
     $parts = $l -split "`t"
     if ($parts.Count -lt 2) { continue }
     $path = $parts[-1]
-    if ($path -match '^(app|bootstrap)/') { $buckets["app"]++; continue }
-    if ($path -match '^public/')          { $buckets["public"]++; continue }
-    if ($path -match '^(database|sql)/')  { $buckets["database"]++; continue }
-    if ($path -match '^config/')          { $buckets["config"]++; continue }
-    if ($path -match '^scripts/')         { $buckets["scripts"]++; continue }
-    if ($path -match '^docs/')            { $buckets["docs"]++; continue }
-    $buckets["other"]++
+
+    if ($path -match '^(app|bootstrap|src)/') { $buckets["App/Core"]++; continue }
+    if ($path -match '^public/')              { $buckets["Public"]++; continue }
+    if ($path -match '^(database|sql|bd)/')   { $buckets["Database"]++; continue }
+    if ($path -match '^config/')              { $buckets["Config"]++; continue }
+    if ($path -match '^docs/')                { $buckets["Docs"]++; continue }
+    $buckets["Outros"]++
   }
   return $buckets
 }
 
+# --- Funções de Escrita nos Drafts ---
+
 function Append-DraftMinorEntry {
     param(
         [string]$DraftMinorPath,
-        [string]$Version,
-        [string]$Bump,
-        [string]$Impact,
-        [string]$CommitHash,
-        [string]$Date,
         [string]$ChangeType,
         [string]$Message,
-        [string[]]$NameStatusLines,
-        [string]$StatsText
+        [string]$CommitHash
     )
+    # Garante cabeçalho se arquivo for novo
     Ensure-FileTemplate -Path $DraftMinorPath -TemplateLines @(
-        "# Draft Minor (acumulado para a proxima versao MINOR)",
+        "### Histórico de Patches e Alterações",
         "",
-        "> Gerado automaticamente.",
-        "> Contem entradas detalhadas por commit (hash, data, tipo, impacto, arquivos).",
-        "",
-        "---",
+        "Lista acumulada de alterações para a próxima versão MINOR.",
         ""
     )
-    $block = New-Object System.Collections.Generic.List[string]
-    $block.Add('')
-    $block.Add('## ' + $Version)
-    $block.Add('')
-    $block.Add('- **bump**: ' + $Bump)
-    $block.Add('- **impacto**: ' + $Impact)
-    $block.Add('- **tipo**: ' + $ChangeType)
-    $block.Add('- **hash**: `' + $CommitHash + '`')
-    $block.Add('- **data**: ' + $Date)
-    $block.Add('- **mensagem**: ' + $Message)
-    $block.Add('')
-    $block.Add('### Arquivos (name-status)')
-    $block.Add('')
-    foreach ($l in $NameStatusLines) { $block.Add('- ' + $l) }
-    $block.Add('')
-    $block.Add('### Estatisticas')
-    $block.Add('')
-    if ([string]::IsNullOrWhiteSpace($StatsText)) {
-        $block.Add('- (sem estatisticas)')
-    } else {
-        foreach ($s in ($StatsText -split "`r?`n")) {
-            if ($s.Trim() -ne '') { $block.Add('- ' + $s) }
-        }
-    }
-    $block.Add('')
-    $block.Add('---')
-    $block.Add('')
-    # Usar StreamWriter em vez de Add-Content
+
+    # Formato: 1. **[Tipo]** Mensagem (hash curto)
+    # O Markdown renderiza "1." repetido como uma lista sequencial correta (1, 2, 3...)
+    $shortHash = $CommitHash.Substring(0, [System.Math]::Min(7, $CommitHash.Length))
+    $line = "1. **[$ChangeType]** $Message (Ref: `$${shortHash}`)"
+
     try {
         $stream = [System.IO.StreamWriter]::new($DraftMinorPath, $true, [System.Text.UTF8Encoding]::new($false))
-        $stream.Write(($block -join "`n"))
+        $stream.WriteLine($line)
         $stream.Close()
     }
     catch {
-        Write-Warning "Erro ao escrever no arquivo ${DraftMinorPath}: $($Error[0].Exception.Message)"
+        Write-Warning "Erro ao escrever no draft minor: $($Error[0].Exception.Message)"
     }
 }
 
@@ -185,62 +150,47 @@ function Append-DraftMajorSummary {
     [string]$DraftMajorPath,
     [string]$Version,
     [string]$Impact,
-    [string]$CommitHash,
     [string]$Date,
     [string]$ChangeType,
     [hashtable]$Buckets
   )
+
   Ensure-FileTemplate -Path $DraftMajorPath -TemplateLines @(
-    "# Draft Major (acumulado para a proxima versao MAJOR)",
+    "### Evolução do Ciclo (Estatísticas)",
     "",
-    "> Gerado automaticamente.",
-    "> Contem resumos compactos (agrupados por tipo) e lista de hashes.",
-    "",
-    "---",
+    "Resumo estatístico das versões MINOR para a próxima versão MAJOR.",
     ""
   )
+
   $lines = New-Object System.Collections.Generic.List[string]
   $lines.Add('')
-  $lines.Add('## ' + $Version)
-  $lines.Add('')
-  $lines.Add('- **impacto**: ' + $Impact)
-  $lines.Add('- **tipo**: ' + $ChangeType)
-  $lines.Add('- **hash**: `' + $CommitHash + '`')
-  $lines.Add('- **data**: ' + $Date)
-  $lines.Add('')
-  $lines.Add('### Resumo por area')
-  $lines.Add('')
-  foreach ($k in $Buckets.Keys) {
-    $lines.Add('- **' + $k + '**: ' + $Buckets[$k])
-  }
-  $lines.Add('')
-  $lines.Add('---')
+  $lines.Add("#### $Version ($Date)")
+  $lines.Add("- **Foco Principal**: $ChangeType")
+  $lines.Add("- **Impacto**: $Impact")
+  $lines.Add("- **Arquivos Afetados (Estatística):**")
 
-  # Usar StreamWriter em vez de Add-Content
+  # Filtra apenas buckets que tiveram alteração para não poluir
+  foreach ($k in $Buckets.Keys) {
+    if ($Buckets[$k] -gt 0) {
+        $lines.Add("    - **$k**: $($Buckets[$k]) arquivos")
+    }
+  }
+
   try {
     $stream = [System.IO.StreamWriter]::new($DraftMajorPath, $true, [System.Text.UTF8Encoding]::new($false))
     $stream.Write(($lines -join "`n"))
     $stream.Close()
   }
   catch {
-    Write-Warning "Erro ao escrever no arquivo ${DraftMajorPath}: $($Error[0].Exception.Message)"
+    Write-Warning "Erro ao escrever no draft major: $($Error[0].Exception.Message)"
   }
 }
 
-function Reset-DraftMinor {
-  param([string]$Path)
+function Reset-File {
+  param([string]$Path, [string[]]$Header)
   try {
-    $content = @(
-      "# Draft Minor (acumulado para a proxima versao MINOR)",
-      "",
-      "> Gerado automaticamente.",
-      "> Contem entradas detalhadas por commit (hash, data, tipo, impacto, arquivos).",
-      "",
-      "---",
-      ""
-    )
     $stream = [System.IO.StreamWriter]::new($Path, $false, [System.Text.UTF8Encoding]::new($false))
-    $stream.Write(($content -join "`n"))
+    $stream.Write(($Header -join "`n"))
     $stream.Close()
   }
   catch {
@@ -248,124 +198,136 @@ function Reset-DraftMinor {
   }
 }
 
-function Reset-DraftMajor {
-  param([string]$Path)
-  try {
-    $content = @(
-      "# Draft Major (acumulado para a proxima versao MAJOR)",
-      "",
-      "> Gerado automaticamente.",
-      "> Contem resumos compactos (agrupados por tipo) e lista de hashes.",
-      "",
-      "---",
-      ""
-    )
-    $stream = [System.IO.StreamWriter]::new($Path, $false, [System.Text.UTF8Encoding]::new($false))
-    $stream.Write(($content -join "`n"))
-    $stream.Close()
-  }
-  catch {
-    Write-Warning "Erro ao resetar arquivo ${Path}: $($Error[0].Exception.Message)"
-  }
-}
-
-function Write-ReleaseNotesFromDraft {
-  param([string]$NotesDir, [string]$Version, [string]$DraftPath)
+function Write-ReleaseNotes {
+  param([string]$NotesDir, [string]$Version, [string]$DraftPath, [string]$Title)
   Ensure-Dir $NotesDir
   $safe = $Version.Replace(" ", "").Replace("/", "-").Replace(":", "-")
   $outFile = Join-Path $NotesDir ($safe + ".md")
-  $draft = ""
+
+  $draftContent = ""
   if (Test-Path -LiteralPath $DraftPath) {
-    $draft = Get-Content -Raw -LiteralPath $DraftPath -Encoding UTF8
+    $draftContent = Get-Content -Raw -LiteralPath $DraftPath -Encoding UTF8
   }
+
   $header = @(
-    "# Release Notes - " + $Version,
+    "# Release Notes - $Version",
     "",
-    "> Gerado automaticamente.",
+    "> **$Title**",
+    "> Gerado em: $(Now-Iso)",
+    "",
+    "---",
     ""
   ) -join "`n"
 
   try {
     $stream = [System.IO.StreamWriter]::new($outFile, $false, [System.Text.UTF8Encoding]::new($false))
-    $stream.Write($header + $draft)
+    $stream.Write($header + $draftContent)
     $stream.Close()
+    Write-Host "Release Notes gerado em: $outFile"
   }
   catch {
-    Write-Warning "Erro ao escrever notas de release em ${outFile}: $($Error[0].Exception.Message)"
+    Write-Warning "Erro ao salvar Release Notes: $($Error[0].Exception.Message)"
   }
 }
 
-# --- main ---
+# --- Fluxo Principal ---
+
 Push-Location $RepoRoot
+
 $version = Get-VersionText -Path $VersionFile
-if ([string]::IsNullOrWhiteSpace($version)) { $version = "(sem versão)" }
+if ([string]::IsNullOrWhiteSpace($version)) { $version = "v0.0.0" }
 $date = Now-Iso
-if ($null -eq $CommitMessage) { $CommitMessage = "" }
+
+if ($null -eq $CommitMessage) { $CommitMessage = "Sem mensagem" }
 $firstLine = ($CommitMessage -split "`r?`n")[0]
 $changeType = Classify-ChangeType -FirstLine $firstLine
 $nameStatus = Get-NameStatus -Hash $CommitHash
-$stats = Get-Stats -Hash $CommitHash
 $buckets = Summarize-ByType -NameStatusLines $nameStatus
 
-# PATCH: registra detalhado no _draft_minor
-if ($Bump -in @("patch")) {
+# 1. PATCH: Apenas adiciona uma linha resumida no Draft Minor
+if ($Bump -eq "patch") {
   Append-DraftMinorEntry `
     -DraftMinorPath $DraftMinorPath `
-    -Version $version `
-    -Bump $Bump `
-    -Impact $Impact `
-    -CommitHash $CommitHash `
-    -Date $date `
     -ChangeType $changeType `
     -Message $firstLine `
-    -NameStatusLines $nameStatus `
-    -StatsText $stats
+    -CommitHash $CommitHash
+
+  Write-Host "Patch registrado no draft minor."
   Pop-Location
   exit 0
 }
 
-# MINOR: inclui o commit atual no draft minor, gera notes, reseta draft minor,
-# e também alimenta draft major de forma compacta
+# 2. MINOR: Gera Notes com a lista de patches, e salva estatísticas no Draft Major
 if ($Bump -eq "minor") {
+  # Primeiro, adiciona o próprio commit de bump na lista (opcional, mas bom para registro)
   Append-DraftMinorEntry `
     -DraftMinorPath $DraftMinorPath `
-    -Version $version `
-    -Bump $Bump `
-    -Impact $Impact `
-    -CommitHash $CommitHash `
-    -Date $date `
     -ChangeType $changeType `
     -Message $firstLine `
-    -NameStatusLines $nameStatus `
-    -StatsText $stats
-  Write-ReleaseNotesFromDraft -NotesDir $NotesDir -Version $version -DraftPath $DraftMinorPath
-  Reset-DraftMinor -Path $DraftMinorPath
+    -CommitHash $CommitHash
+
+  # Gera o Release Note final da versão MINOR (contendo a lista detalhada)
+  Write-ReleaseNotes `
+    -NotesDir $NotesDir `
+    -Version $version `
+    -DraftPath $DraftMinorPath `
+    -Title "Atualização Minor (Funcionalidades e Correções)"
+
+  # Reseta o Draft Minor para o próximo ciclo
+  Reset-File -Path $DraftMinorPath -Header @(
+    "### Histórico de Patches e Alterações",
+    "",
+    "Lista acumulada de alterações para a próxima versão MINOR.",
+    ""
+  )
+
+  # Alimenta o Draft Major com as estatísticas desta versão
   Append-DraftMajorSummary `
     -DraftMajorPath $DraftMajorPath `
     -Version $version `
     -Impact $Impact `
-    -CommitHash $CommitHash `
     -Date $date `
     -ChangeType $changeType `
     -Buckets $buckets
+
+  Write-Host "Versão Minor processada."
   Pop-Location
   exit 0
 }
 
-# MAJOR: atualiza draft major com o commit atual e gera notes a partir dele.
-# Depois reseta ambos.
+# 3. MAJOR: Gera Notes com estatísticas acumuladas, e reseta tudo
 if ($Bump -eq "major") {
+  # Adiciona a estatística deste commit final de Major
   Append-DraftMajorSummary `
     -DraftMajorPath $DraftMajorPath `
     -Version $version `
     -Impact $Impact `
-    -CommitHash $CommitHash `
     -Date $date `
     -ChangeType $changeType `
     -Buckets $buckets
-  Write-ReleaseNotesFromDraft -NotesDir $NotesDir -Version $version -DraftPath $DraftMajorPath
-  Reset-DraftMinor -Path $DraftMinorPath
-  Reset-DraftMajor -Path $DraftMajorPath
+
+  # Gera o Release Note final da versão MAJOR (contendo apenas estatísticas)
+  Write-ReleaseNotes `
+    -NotesDir $NotesDir `
+    -Version $version `
+    -DraftPath $DraftMajorPath `
+    -Title "Versão Major (Mudanças Estruturais e Estatísticas)"
+
+  # Reseta ambos os drafts
+  Reset-File -Path $DraftMinorPath -Header @(
+    "### Histórico de Patches e Alterações",
+    "",
+    "Lista acumulada de alterações para a próxima versão MINOR.",
+    ""
+  )
+  Reset-File -Path $DraftMajorPath -Header @(
+    "### Evolução do Ciclo (Estatísticas)",
+    "",
+    "Resumo estatístico das versões MINOR para a próxima versão MAJOR.",
+    ""
+  )
+
+  Write-Host "Versão Major processada."
   Pop-Location
   exit 0
 }

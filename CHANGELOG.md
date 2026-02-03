@@ -1,5 +1,9 @@
 ﻿# Changelog
 
+## V. 1.02.0003
+
+- config: atualização do código para melhorias na geração de notas de release
+
 ## V. 1.02.0002
 
 - docs: correções de espaçamento
@@ -90,6 +94,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
