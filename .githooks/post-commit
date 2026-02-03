@@ -497,8 +497,8 @@ else
   debug "Nenhuma alteração para incluir no commit"
 fi
 
-# Captura hash do commit final
-commit_hash="$(git rev-parse --short HEAD)"
+# Captura hash do commit final (ANTES de usar)
+commit_hash="$(git rev-parse --short HEAD 2>/dev/null || echo 'unknown')"
 debug "Hash do commit: $commit_hash"
 
 # -----------------------------------------------------------------------------

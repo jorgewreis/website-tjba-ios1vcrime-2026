@@ -12,24 +12,38 @@ Sistema web interno para centralizar rotinas do **Cartório**, **Gabinete** e **
 
 ## Sumário
 
-- [Visão geral](#visão-geral)
-- [Área externa (pública)](#área-externa-pública)
-- [Áreas internas (módulos)](#áreas-internas-módulos)
-  - [Cartório](#cartório)
-  - [Gabinete](#gabinete)
-  - [Audiências](#audiências)
-  - [Estudantes](#estudantes)
-  - [Settings](#settings)
-- [Perfis de acesso (resumo)](#perfis-de-acesso-resumo)
-- [Fluxo de navegação](#fluxo-de-navegação)
-- [Padrões de dados e validações](#padrões-de-dados-e-validações)
-- [UI: paleta de cores](#ui-paleta-de-cores)
-- [UI: padrão de componentes](#ui-padrão-de-componentes)
-- [Segurança (boas práticas)](#segurança-boas-práticas)
-- [Logs e auditoria](#logs-e-auditoria)
-- [Estrutura do projeto (referência)](#estrutura-do-projeto-referência)
-- [Licença e uso](#licença-e-uso)
-- [Créditos](#créditos)
+- [Sistema de Gestão do Cartório ⚖️](#sistema-de-gestão-do-cartório-️)
+  - [Primeira Vara Crime da Comarca de Ilhéus](#primeira-vara-crime-da-comarca-de-ilhéus)
+  - [Sumário](#sumário)
+  - [Visão geral](#visão-geral)
+  - [Área externa (pública)](#área-externa-pública)
+  - [Áreas internas (módulos)](#áreas-internas-módulos)
+    - [Cartório](#cartório)
+    - [Gabinete](#gabinete)
+    - [Audiências](#audiências)
+    - [Estudantes](#estudantes)
+    - [Settings](#settings)
+  - [Perfis de acesso (resumo)](#perfis-de-acesso-resumo)
+  - [Fluxo de navegação](#fluxo-de-navegação)
+  - [Padrões de dados e validações](#padrões-de-dados-e-validações)
+    - [CPF](#cpf)
+    - [Usuários](#usuários)
+  - [UI: paleta de cores](#ui-paleta-de-cores)
+    - [Neutras e base](#neutras-e-base)
+    - [Azuis (interface)](#azuis-interface)
+    - [Semânticas (feedback)](#semânticas-feedback)
+  - [UI: padrão de componentes](#ui-padrão-de-componentes)
+    - [Layout e superfícies](#layout-e-superfícies)
+    - [Navegação e estado ativo](#navegação-e-estado-ativo)
+    - [Botões](#botões)
+    - [Alerts / mensagens](#alerts--mensagens)
+    - [Inputs (formulários)](#inputs-formulários)
+  - [Segurança (boas práticas)](#segurança-boas-práticas)
+  - [Logs e auditoria](#logs-e-auditoria)
+  - [Estrutura do projeto (referência)](#estrutura-do-projeto-referência)
+  - [Configuração Inicial](#configuração-inicial)
+  - [Licença e uso](#licença-e-uso)
+  - [Créditos](#créditos)
 
 ---
 
@@ -277,6 +291,12 @@ Pastas principais no repositório:
 - `vendor/`
 
 ---
+
+## Configuração Inicial
+
+Após clonar o repositório, configure os hooks:
+
+- git config core.hooksPath .githooks
 
 ## Licença e uso
 
