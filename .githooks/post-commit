@@ -296,12 +296,16 @@ debug "Script draft: $draft_ps1"
 # DETECÇÃO DO POWERSHELL
 # -----------------------------------------------------------------------------
 
-PSH="powershell.exe"
+# Prioriza PowerShell 7 (pwsh) se disponível
+PSH="pwsh.exe"
 
 if ! command -v "$PSH" >/dev/null 2>&1; then
   if command -v pwsh >/dev/null 2>&1; then
     PSH="pwsh"  # PowerShell Core (Linux/Mac)
     debug "Usando PowerShell Core (pwsh)"
+  elif command -v powershell.exe >/dev/null 2>&1; then
+    PSH="powershell.exe"  # PowerShell 5.1 (Windows)
+    debug "Usando PowerShell 5.1 (powershell.exe)"
   elif command -v powershell >/dev/null 2>&1; then
     PSH="powershell"  # PowerShell tradicional
     debug "Usando PowerShell tradicional"
@@ -310,7 +314,7 @@ if ! command -v "$PSH" >/dev/null 2>&1; then
     exit 0
   fi
 else
-  debug "Usando PowerShell.exe (Windows)"
+  debug "Usando PowerShell 7 (pwsh.exe)"
 fi
 
 # -----------------------------------------------------------------------------

@@ -1,4 +1,16 @@
-﻿# Changelog
+# Changelog
+
+## V. 1.05
+
+**Data:** 2026-02-03 18:24:26 | **Commit:** `test123` | **Tipo:** `minor`
+
+- feat: teste de minor bump
+
+## V. 1.04
+
+**Data:** 2026-02-03 18:24:09 | **Commit:** `556495a` | **Tipo:** `minor`
+
+- feat(hooks): usar PowerShell 7 (pwsh) quando disponivel [minor]
 
 ## V. 1.03.0001
 
@@ -132,6 +144,8 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
+
 
 
 
