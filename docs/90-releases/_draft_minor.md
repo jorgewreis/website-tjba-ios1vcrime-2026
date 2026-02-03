@@ -28,3 +28,27 @@
 -  3 files changed, 483 insertions(+), 1 deletion(-)
 
 ---
+
+## V. 1.02.0002
+
+- **bump**: patch
+- **impacto**: medio
+- **tipo**: docs
+- **hash**: `820f4f3`
+- **data**: 2026-02-02 21:48:09
+- **mensagem**: docs: correções de espaçamento
+
+### Arquivos (name-status)
+
+- M	CHANGELOG.md
+- M	VERSION
+- M	docs/90-releases/notes/V.1.02.md
+
+### Estatisticas
+
+-  CHANGELOG.md                     |  5 +++
+-  VERSION                          |  2 +-
+-  docs/90-releases/notes/V.1.02.md | 73 +++++-----------------------------------
+-  3 files changed, 14 insertions(+), 66 deletions(-)
+
+---
