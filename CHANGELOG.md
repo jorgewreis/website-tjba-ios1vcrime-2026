@@ -1,5 +1,9 @@
 ﻿# Changelog
 
+## V. 1.02.0006
+
+- fix: corrige nomenclatura de label - close #29
+
 ## V. 1.02.0005
 
 - chore: atualização em workflows e configuração de banco de dados - close #29, close #78
@@ -102,6 +106,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

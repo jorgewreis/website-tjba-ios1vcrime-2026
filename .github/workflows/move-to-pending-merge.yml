@@ -1,4 +1,4 @@
-﻿name: Mover para Aguardando Merge
+﻿name: Mover para Em homologação
 on:
   push:
     branches:
