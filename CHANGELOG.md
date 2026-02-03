@@ -1,5 +1,9 @@
 ﻿# Changelog
 
+## V. 1.02.0007
+
+- docs: novo documento workflow
+
 ## V. 1.02.0006
 
 - fix: corrige nomenclatura de label - close #29
@@ -106,6 +110,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
