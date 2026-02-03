@@ -1,9 +1,9 @@
 # =========================
 # Environment / Secrets
 # =========================
-.env
-.env.*
-!.env.example
+#.env
+#.env.*
+#!.env.example
 
 # =========================
 # OS / Editor
@@ -22,7 +22,7 @@ desktop.ini
 # =========================
 # Logs / Debug
 # =========================
-logs/
+#logs/
 *.log
 *.err
 *.out
@@ -39,7 +39,7 @@ build/
 .cache/
 .parcel-cache/
 .vite/
-.eslintcache
+#.eslintcache
 
 # =========================
 # PHP / Composer
@@ -60,28 +60,28 @@ temp/
 *.tmp
 
 # Apache / Nginx
-.htaccess.bak
-*.htpasswd
+#.htaccess.bak
+#*.htpasswd
 
 # =========================
 # Uploads / User-generated content (ajuste conforme seu projeto)
 # =========================
-uploads/
-storage/
-public/uploads/
-public/storage/
+#uploads/
+#storage/
+#public/uploads/
+#public/storage/
 
 # =========================
 # Database / SQL dumps
 # =========================
-*.sql
-*.sqlite
-*.sqlite3
-*.db
-**/bd/data.txt
-dump/
-backups/
-database/backup/
+#*.sql
+#*.sqlite
+#*.sqlite3
+#*.db
+#**/bd/data.txt
+#dump/
+#backups/
+#database/backup/
 
 # =========================
 # Generated / Minified
@@ -93,8 +93,8 @@ database/backup/
 # =========================
 # Optional: Local config overrides
 # =========================
-config.local.php
-config.local.json
+#config.local.php
+#config.local.json
 
 
-.config/
+#.config/

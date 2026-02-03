@@ -1,0 +1,40 @@
+﻿<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # --- 1. Forçar HTTPS (Segurança Básica) ---
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # --- 2. Proteção de Arquivos Sensíveis ---
+    # Bloqueia acesso direto ao .env, .git, composer.json, etc.
+    <FilesMatch "^\.env|^\.git|composer\.(json|lock)|package\.json">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+
+    # --- 3. Proteção da Pasta de Banco de Dados (/bd) ---
+    # Impede que alguém acesse domain.com/bd/conexao.php diretamente
+    RewriteRule ^bd/ - [F,L]
+
+    # --- 4. Ocultar Extensão .php (URLs Amigáveis) ---
+    # Transforma domain.com/login.php em domain.com/login
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME}.php -f
+    RewriteRule ^(.*)$ $1.php [L]
+
+    # --- 5. Segurança de Diretórios ---
+    # Impede a listagem de arquivos se não houver index.php na pasta
+    Options -Indexes
+</IfModule>
+
+<IfModule mod_headers.c>
+    # --- 6. Cabeçalhos de Segurança ---
+
+    # CRÍTICO: Permite o uso de Iframes apenas dentro do próprio domínio
+    # Necessário para o seu admin/home.php funcionar corretamente
+    Header set X-Frame-Options "SAMEORIGIN"
+
+    # Proteção contra XSS e Sniffing
+    Header set X-XSS-Protection "1; mode=block"
+    Header set X-Content-Type-Options "nosniff"
+</IfModule>

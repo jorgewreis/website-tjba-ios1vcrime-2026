@@ -1,0 +1,40 @@
+﻿name: Auto-atribuição ao Iniciar
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  assign-user:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Atribuir usuário atual
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            const issue = context.payload.issue;
+            const labelName = context.payload.label.name;
+            const user = context.actor; // Quem disparou a ação (quem colocou a label)
+
+            const LABEL_IN_PROGRESS = 'Em progresso';
+
+            // Verifica se a label é a correta
+            if (labelName === LABEL_IN_PROGRESS) {
+
+              // Verifica se a issue já tem alguém atribuído para não sobrescrever
+              if (issue.assignees.length === 0) {
+                console.log(`Issue #${issue.number} movida para '${LABEL_IN_PROGRESS}'. Atribuindo a @${user}...`);
+
+                await github.rest.issues.addAssignees({
+                  owner,
+                  repo,
+                  issue_number: issue.number,
+                  assignees: [user]
+                });
+              } else {
+                console.log(`Issue #${issue.number} já possui responsáveis. Nenhuma ação tomada.`);
+              }
+            }

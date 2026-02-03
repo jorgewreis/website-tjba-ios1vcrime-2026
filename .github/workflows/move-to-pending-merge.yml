@@ -1,0 +1,73 @@
+﻿name: Mover para Aguardando Merge
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  tag-pending-merge:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Etiquetar Issues Referenciadas
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            const commits = context.payload.commits;
+
+            // Label que representa a "Fila de Espera"
+            const LABEL_PENDING = 'Em homologação';
+            const LABEL_IN_PROGRESS = 'Em progresso';
+
+            // Regex para encontrar "Closes #123", "Fixes #45", etc.
+            const regex = /(?:close|fix|resolve)s?\s+#(\d+)/gi;
+
+            const issuesToUpdate = new Set();
+
+            // 1. Varre todos os commits do push em busca de referências
+            for (const commit of commits) {
+              let match;
+              while ((match = regex.exec(commit.message)) !== null) {
+                // match[1] é o número da issue
+                issuesToUpdate.add(parseInt(match[1]));
+              }
+            }
+
+            if (issuesToUpdate.size === 0) {
+              console.log('Nenhuma referência de fechamento encontrada nos commits.');
+              return;
+            }
+
+            console.log(`Issues encontradas para atualização: ${Array.from(issuesToUpdate).join(', ')}`);
+
+            // 2. Atualiza cada issue encontrada
+            for (const issueNumber of issuesToUpdate) {
+              try {
+                // Adiciona a label "Em homologação"
+                await github.rest.issues.addLabels({
+                  owner,
+                  repo,
+                  issue_number: issueNumber,
+                  labels: [LABEL_PENDING]
+                });
+
+                // (Opcional) Remove a label "Em progresso" para limpar o quadro
+                try {
+                  await github.rest.issues.removeLabel({
+                    owner,
+                    repo,
+                    issue_number: issueNumber,
+                    name: LABEL_IN_PROGRESS
+                  });
+                } catch (e) {
+                  // Ignora erro se a label não existir
+                }
+
+                console.log(`Issue #${issueNumber} movida para '${LABEL_PENDING}'.`);
+              } catch (error) {
+                console.error(`Erro ao atualizar issue #${issueNumber}: ${error.message}`);
+              }
+            }
