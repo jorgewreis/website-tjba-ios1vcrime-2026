@@ -150,9 +150,9 @@ run_powershell_logged() {
   
   # Garante que arquivo existe
   touch "$tmp" 2>/dev/null || true
-
+  
   # ✅ CORREÇÃO: Agora trap é definido DEPOIS de $tmp existir
-  trap 'rm -f "$tmp" 2>/dev/null || true' EXIT INT TERM
+  trap 'rm -f "${tmp:-}" 2>/dev/null || true' EXIT INT TERM
 
   # Monta linha de comando para log (sem quebrar argumentos reais)
   local cmdline="$PSH -NoProfile -ExecutionPolicy Bypass"
