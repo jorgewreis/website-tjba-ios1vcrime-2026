@@ -1,5 +1,233 @@
 # Changelog
 
+## V. 1.05.0038
+
+**Data:** 2026-02-03 18:31:20 | **Commit:** `fd5e12e` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0037
+
+**Data:** 2026-02-03 18:31:17 | **Commit:** `877812f` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0036
+
+**Data:** 2026-02-03 18:31:14 | **Commit:** `df1b464` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0035
+
+**Data:** 2026-02-03 18:31:11 | **Commit:** `52344a1` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0034
+
+**Data:** 2026-02-03 18:31:08 | **Commit:** `2308987` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0033
+
+**Data:** 2026-02-03 18:31:05 | **Commit:** `6f44773` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0032
+
+**Data:** 2026-02-03 18:31:03 | **Commit:** `4096bd9` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0031
+
+**Data:** 2026-02-03 18:31:01 | **Commit:** `f568af8` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0030
+
+**Data:** 2026-02-03 18:30:59 | **Commit:** `5b9f78b` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0029
+
+**Data:** 2026-02-03 18:30:54 | **Commit:** `8df84c4` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0028
+
+**Data:** 2026-02-03 18:30:51 | **Commit:** `b8fdce6` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0027
+
+**Data:** 2026-02-03 18:30:49 | **Commit:** `1a7e6a7` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0026
+
+**Data:** 2026-02-03 18:30:47 | **Commit:** `80c55f6` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0025
+
+**Data:** 2026-02-03 18:30:45 | **Commit:** `f3b480e` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0024
+
+**Data:** 2026-02-03 18:30:42 | **Commit:** `01d14e6` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0023
+
+**Data:** 2026-02-03 18:30:39 | **Commit:** `9289419` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0022
+
+**Data:** 2026-02-03 18:30:36 | **Commit:** `992e033` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0021
+
+**Data:** 2026-02-03 18:30:34 | **Commit:** `5493872` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0020
+
+**Data:** 2026-02-03 18:30:31 | **Commit:** `30940d8` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0019
+
+**Data:** 2026-02-03 18:30:31 | **Commit:** `a058ed0` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0018
+
+**Data:** 2026-02-03 18:30:28 | **Commit:** `d5e0de2` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0017
+
+**Data:** 2026-02-03 18:30:25 | **Commit:** `98a812c` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0016
+
+**Data:** 2026-02-03 18:30:21 | **Commit:** `ad9fbdc` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0015
+
+**Data:** 2026-02-03 18:29:47 | **Commit:** `c1ea3f0` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0014
+
+**Data:** 2026-02-03 18:29:35 | **Commit:** `43cd9d7` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0013
+
+**Data:** 2026-02-03 18:29:30 | **Commit:** `c25cada` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0012
+
+**Data:** 2026-02-03 18:29:28 | **Commit:** `78a55c6` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0011
+
+**Data:** 2026-02-03 18:29:26 | **Commit:** `3b7e604` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0010
+
+**Data:** 2026-02-03 18:29:24 | **Commit:** `15ab4a0` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0009
+
+**Data:** 2026-02-03 18:29:22 | **Commit:** `547c648` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0008
+
+**Data:** 2026-02-03 18:29:20 | **Commit:** `09c6255` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0007
+
+**Data:** 2026-02-03 18:29:18 | **Commit:** `b7c1b13` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0006
+
+**Data:** 2026-02-03 18:29:16 | **Commit:** `9e92480` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0005
+
+**Data:** 2026-02-03 18:29:13 | **Commit:** `a8b0c2f` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0004
+
+**Data:** 2026-02-03 18:29:11 | **Commit:** `8a332bf` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0003
+
+**Data:** 2026-02-03 18:29:09 | **Commit:** `46a1445` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0002
+
+**Data:** 2026-02-03 18:29:06 | **Commit:** `757fc2f` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
+## V. 1.05.0001
+
+**Data:** 2026-02-03 18:25:12 | **Commit:** `94ee6b5` | **Tipo:** `patch`
+
+- test(hooks): validar sistema completo com PowerShell 7 [patch]
+
 ## V. 1.05
 
 **Data:** 2026-02-03 18:24:26 | **Commit:** `test123` | **Tipo:** `minor`
@@ -144,6 +372,44 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

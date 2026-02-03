@@ -524,7 +524,7 @@ function Get-FilesSummaryByModule {
     # Log resumo
     foreach ($module in $summary.Keys) {
         if ($summary[$module] -gt 0) {
-            Write-Debug-Message "  $module: $($summary[$module]) arquivos"
+            Write-Debug-Message "  ${module}: $($summary[$module]) arquivos"
         }
     }
 
