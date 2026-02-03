@@ -3,8 +3,7 @@ name: Auto Version Bump
 on:
   push:
     branches:
-      - main
-      - master
+      - develop
 
 jobs:
   bump-version:
@@ -13,10 +12,9 @@ jobs:
       !contains(github.event.head_commit.message, '[skip version]') &&
       !contains(github.event.head_commit.message, '[skip-version]')
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.1
         with:
           fetch-depth: 0
 
@@ -43,9 +41,16 @@ jobs:
             echo "No version change to commit."
             exit 0
           fi
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          VERSION_VALUE="$(cat VERSION | tr -d '\r\n')"
-          git add VERSION
-          git commit -m "chore(version): ${VERSION_VALUE} [skip version]"
-          git push
+
+          if [ -f VERSION ]; then
+            VERSION_VALUE="$(cat VERSION | tr -d '\r\n')"
+            git add VERSION
+            git commit -m "chore(version): ${VERSION_VALUE} [skip version]"
+            git push
+          else
+            echo "VERSION file not found. Skipping commit."
+            exit 1
+          fi

@@ -96,3 +96,5 @@ database/backup/
 config.local.php
 config.local.json
 
+
+.config/

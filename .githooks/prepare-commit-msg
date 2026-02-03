@@ -1,5 +1,18 @@
 #!/bin/sh
 set -eu
 
-# Version bump is handled in post-commit.
+# Auto-prefix commit message with [patch]/[minor]/[major] suggestion when user provides empty msg
+# This hook should be lenient and NEVER block a commit.
+
+MSG_FILE="${1:-}"
+[ -n "$MSG_FILE" ] || exit 0
+[ -f "$MSG_FILE" ] || exit 0
+
+# If user already provided a message, do nothing.
+if [ -s "$MSG_FILE" ]; then
+  exit 0
+fi
+
+# Default suggestion
+printf "%s\n" "patch: " > "$MSG_FILE"
 exit 0
