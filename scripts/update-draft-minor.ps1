@@ -84,10 +84,7 @@ param(
 
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
-    [string]$NotesDir = "docs/90-releases/notes",
-
-    [Parameter(Mandatory=$false)]
-    [switch]$Verbose
+    [string]$NotesDir = "docs/90-releases/notes"
 )
 
 # =============================================================================
@@ -146,7 +143,7 @@ $CategoryOrder = @(
 #>
 function Write-Debug-Message {
     param([string]$Message)
-    if ($Verbose) {
+    if ($PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent) {
         Write-Host "[DEBUG] $Message" -ForegroundColor Cyan
     }
 }

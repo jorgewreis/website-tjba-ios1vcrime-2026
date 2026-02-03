@@ -68,10 +68,7 @@ param(
     [string]$ChangelogPath = "CHANGELOG.md",
 
     [Parameter(Mandatory=$false)]
-    [string]$CommitHash = "",
-
-    [Parameter(Mandatory=$false)]
-    [switch]$Verbose
+    [string]$CommitHash = ""
 )
 
 # =============================================================================
@@ -98,7 +95,7 @@ $MAJOR_THRESHOLD = 100
 #>
 function Write-Debug-Message {
     param([string]$Message)
-    if ($Verbose) {
+    if ($PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent) {
         Write-Host "[DEBUG] $Message" -ForegroundColor Cyan
     }
 }
