@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.05.0039
+
+**Data:** 2026-02-03 18:31:23 | **Commit:** `79450bc` | **Tipo:** `patch`
+
+- fix(scripts): corrigir erro de sintaxe em variavel module [patch]
+
 ## V. 1.05.0038
 
 **Data:** 2026-02-03 18:31:20 | **Commit:** `fd5e12e` | **Tipo:** `patch`
@@ -372,6 +378,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
