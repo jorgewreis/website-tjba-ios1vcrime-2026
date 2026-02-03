@@ -145,8 +145,11 @@ run_powershell_logged() {
   fi
 
   # ✅ CORREÇÃO: Cria arquivo temporário ANTES de usar no trap
-  local tmp
-  tmp="$(mktemp 2>/dev/null || printf '%s' "$repo_root/$git_dir/.tmp-version-bump.$$")"
+  local tmp=""
+  tmp="$(mktemp 2>/dev/null || echo "/tmp/.tmp-version-bump.$$")"
+  
+  # Garante que arquivo existe
+  touch "$tmp" 2>/dev/null || true
 
   # ✅ CORREÇÃO: Agora trap é definido DEPOIS de $tmp existir
   trap 'rm -f "$tmp" 2>/dev/null || true' EXIT INT TERM
