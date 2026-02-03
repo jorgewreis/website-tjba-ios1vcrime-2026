@@ -1,5 +1,9 @@
 ﻿# Changelog
 
+## V. 1.03
+
+- docs: Documentação do sprint 1 concluída [minor]
+
 ## V. 1.02.0010
 
 - docs: novo documento criado - closes #62, closes #54
@@ -122,6 +126,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

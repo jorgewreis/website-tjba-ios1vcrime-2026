@@ -1,68 +1,158 @@
 #!/bin/sh
+# =============================================================================
+# GIT HOOK: post-commit
+# =============================================================================
+# Automatiza versionamento semântico e documentação de releases
+# 
+# Fluxo:
+# 1. Analisa mensagem do commit recém-criado
+# 2. Determina tipo de bump (major/minor/patch)
+# 3. Executa bump-version.ps1 para atualizar VERSION
+# 4. Faz amend no commit incluindo VERSION/CHANGELOG
+# 5. Executa update-draft-minor.ps1 para documentação
+# 6. Cria commit adicional com draft atualizado
+#
+# Tags suportadas:
+#   [major] [release] [minor] [patch] [hotfix] [refactor]
+#   [skip version] [skip-version] [skip draft] [skip-draft]
+#   [impact:nenhum|baixo|medio|alto]
+# =============================================================================
+
 set -eu
 
-# After every user commit:
-# 1) bump VERSION and amend the user's commit so VERSION is included
-# 2) update docs/90-releases/_draft_minor.md in a separate follow-up commit (needs the final hash)
+# -----------------------------------------------------------------------------
+# CONFIGURAÇÕES
+# -----------------------------------------------------------------------------
 
-if [ "${SKIP_VERSION_BUMP:-}" = "1" ]; then
-  exit 0
+# Tamanho máximo do log em bytes (1MB)
+MAX_LOG_SIZE=1048576
+
+# Timeout para execução de scripts PowerShell (segundos)
+PS_TIMEOUT=30
+
+# Ativar modo debug: export DEBUG=1
+DEBUG="${DEBUG:-0}"
+
+# Cores para output (se terminal suportar)
+if [ -t 1 ]; then
+  RED='\033[0;31m'
+  GREEN='\033[0;32m'
+  YELLOW='\033[1;33m'
+  BLUE='\033[0;34m'
+  CYAN='\033[0;36m'
+  NC='\033[0m' # No Color
+else
+  RED=''
+  GREEN=''
+  YELLOW=''
+  BLUE=''
+  CYAN=''
+  NC=''
 fi
 
-repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-git_dir="$(git rev-parse --git-dir 2>/dev/null || echo ".git")"
-log_file="$repo_root/$git_dir/version-bump.log"
+# -----------------------------------------------------------------------------
+# FUNÇÕES AUXILIARES
+# -----------------------------------------------------------------------------
 
-# garante que o diretório existe e que o log é criado
-log_dir="$(dirname "$log_file")"
-mkdir -p "$log_dir" 2>/dev/null || true
-touch "$log_file" 2>/dev/null || true
-
-bump_ps1="$repo_root/scripts/bump-version.ps1"
-draft_ps1="$repo_root/scripts/update-draft-minor.ps1"
-
-PSH="powershell.exe"
-if ! command -v "$PSH" >/dev/null 2>&1; then
-  if command -v pwsh >/dev/null 2>&1; then
-    PSH="pwsh"
-  elif command -v powershell >/dev/null 2>&1; then
-    PSH="powershell"
-  fi
-fi
-
-
-# Optional fallbacks (in case scripts are relocated)
-[ -f "$bump_ps1" ] || bump_ps1="$repo_root/bump-version.ps1"
-[ -f "$draft_ps1" ] || draft_ps1="$repo_root/update-draft-minor.ps1"
-
-log_ps_error() {
-  # $1 = label, $2 = tmpfile, $3 = cmdline (optional)
-  {
-    printf "\n[%s] %s\n" "$(date '+%Y-%m-%d %H:%M:%S')" "$1"
-    if [ -n "${3:-}" ]; then
-      printf "cmd: %s\n" "$3"
-    fi
-    if [ -f "$2" ]; then
-      cat "$2"
-      printf "\n"
-    fi
-  } >> "$log_file"
+# Exibe mensagem de sucesso em verde
+success() {
+  printf "${GREEN}✅ %s${NC}\n" "$1" >&2
 }
 
-run_powershell_logged() {
-  # $1 = label, $2.. = args
-  label="$1"
-  shift
+# Exibe aviso em amarelo
+warn() {
+  printf "${YELLOW}⚠️  AVISO:${NC} %s\n" "$1" >&2
+}
 
-  if ! command -v "$PSH" >/dev/null 2>&1; then
-    log_ps_error "$label (powershell not found: $PSH)" "/dev/null" "$PSH"
+# Exibe erro em vermelho
+error() {
+  printf "${RED}❌ ERRO:${NC} %s\n" "$1" >&2
+}
+
+# Exibe informação em azul
+info() {
+  printf "${BLUE}ℹ️  INFO:${NC} %s\n" "$1" >&2
+}
+
+# Exibe informação de debug (apenas se DEBUG=1)
+debug() {
+  [ "$DEBUG" = "1" ] && printf "${CYAN}🔍 DEBUG:${NC} %s\n" "$1" >&2 || true
+}
+
+# Rotaciona arquivo de log se exceder tamanho máximo
+rotate_log() {
+  local log="$1"
+
+  if [ ! -f "$log" ]; then
     return 0
   fi
 
+  # Obtém tamanho do arquivo em bytes
+  local size
+  if command -v stat >/dev/null 2>&1; then
+    # Linux/Mac compatível
+    size="$(stat -f%z "$log" 2>/dev/null || stat -c%s "$log" 2>/dev/null || echo "0")"
+  else
+    size="$(wc -c < "$log" 2>/dev/null | tr -d ' ' || echo "0")"
+  fi
+
+  debug "Tamanho do log: $size bytes (máximo: $MAX_LOG_SIZE)"
+
+  # Se exceder tamanho máximo, cria backup e trunca
+  if [ "$size" -gt "$MAX_LOG_SIZE" ] 2>/dev/null; then
+    debug "Rotacionando log..."
+    mv "$log" "${log}.old" 2>/dev/null || true
+    touch "$log" 2>/dev/null || true
+    info "Log rotacionado (backup salvo em ${log}.old)"
+  fi
+}
+
+# Registra erro no arquivo de log
+log_ps_error() {
+  # $1 = label, $2 = tmpfile, $3 = cmdline (opcional)
+  local label="$1"
+  local tmpfile="$2"
+  local cmdline="${3:-}"
+
+  {
+    printf "\n[%s] %s\n" "$(date '+%Y-%m-%d %H:%M:%S')" "$label"
+
+    if [ -n "$cmdline" ]; then
+      printf "cmd: %s\n" "$cmdline"
+    fi
+
+    if [ -f "$tmpfile" ]; then
+      cat "$tmpfile"
+      printf "\n"
+    fi
+  } >> "$log_file"
+
+  # Rotaciona log após escrever
+  rotate_log "$log_file"
+}
+
+# Executa script PowerShell com logging e timeout
+run_powershell_logged() {
+  # $1 = label, $2.. = args
+  local label="$1"
+  shift
+
+  # Verifica se PowerShell está disponível
+  if ! command -v "$PSH" >/dev/null 2>&1; then
+    log_ps_error "$label (PowerShell não encontrado: $PSH)" "/dev/null" "$PSH"
+    warn "PowerShell não encontrado. Versionamento manual pode ser necessário."
+    return 0
+  fi
+
+  # Cria arquivo temporário para capturar saída
+  local tmp
   tmp="$(mktemp 2>/dev/null || printf '%s' "$repo_root/$git_dir/.tmp-version-bump.$$")"
 
-  # monta cmdline só para log (sem quebrar argumentos reais)
-  cmdline="$PSH -NoProfile -ExecutionPolicy Bypass"
+  # Garante que arquivo temporário seja deletado ao sair
+  trap 'rm -f "$tmp" 2>/dev/null || true' EXIT INT TERM
+
+  # Monta linha de comando para log (sem quebrar argumentos reais)
+  local cmdline="$PSH -NoProfile -ExecutionPolicy Bypass"
   for a in "$@"; do
     case "$a" in
       *" "*) cmdline="$cmdline \"$a\"" ;;
@@ -70,122 +160,419 @@ run_powershell_logged() {
     esac
   done
 
-  # executa UMA vez e captura rc sem morrer por set -e
-  set +e
-  "$PSH" -NoProfile -ExecutionPolicy Bypass "$@" >"$tmp" 2>&1
-  rc=$?
-  set -e
+  debug "Executando: $cmdline"
 
-  if [ "$rc" -ne 0 ]; then
-    log_ps_error "$label (exit=$rc)" "$tmp" "$cmdline"
+  # Executa PowerShell com timeout (se disponível)
+  local rc=0
+  set +e
+
+  if command -v timeout >/dev/null 2>&1; then
+    # Linux/Mac com GNU timeout
+    timeout "$PS_TIMEOUT" "$PSH" -NoProfile -ExecutionPolicy Bypass "$@" >"$tmp" 2>&1
+    rc=$?
+
+    if [ "$rc" -eq 124 ]; then
+      error "$label (timeout após ${PS_TIMEOUT}s)"
+      log_ps_error "$label (timeout)" "$tmp" "$cmdline"
+      set -e
+      return 0
+    fi
+  else
+    # Sem timeout disponível, executa normalmente
+    "$PSH" -NoProfile -ExecutionPolicy Bypass "$@" >"$tmp" 2>&1
+    rc=$?
   fi
 
+  set -e
+
+  # Registra erro se houver
+  if [ "$rc" -ne 0 ]; then
+    error "$label (exit=$rc)"
+    log_ps_error "$label (exit=$rc)" "$tmp" "$cmdline"
+  else
+    debug "$label executado com sucesso"
+  fi
+
+  # Remove arquivo temporário
   rm -f "$tmp" 2>/dev/null || true
+
   return 0
 }
 
+# Valida se o repositório está em estado limpo para amend
+validate_repo_state() {
+  debug "Validando estado do repositório..."
 
-commit_msg="$(git log -1 --pretty=%B)"
-first_line="$(printf "%s" "$commit_msg" | sed -n '1p' | tr -d '\r')"
-commit_msg_lower="$(printf "%s" "$commit_msg" | tr '[:upper:]' '[:lower:]')"
-
-case "$first_line" in
-  Merge*) exit 0 ;;
-esac
-
-case "$commit_msg_lower" in
-  *"[skip version]"*|*"[skip-version]"*) exit 0 ;;
-esac
-
-type="$(printf "%s" "$first_line" | sed -nE 's/^([a-z]+)(\([^)]+\))?:.*/\1/p')"
-[ -n "$type" ] || type="patch"
-
-# Count files in the commit excluding hook-managed files (VERSION + release docs)
-file_count="$(git diff-tree --no-commit-id --name-only -r HEAD \
-  | sed '/^$/d' \
-  | grep -Ev '^(VERSION|CHANGELOG\.md|docs/90-releases/)' \
-  | wc -l | tr -d ' ')"
-file_count="${file_count:-0}"
-
-# Resolve bump kind (priority: explicit tags)
-bump=""
-case "$commit_msg_lower" in
-  *"[major]"*|*"[release]"*) bump="major" ;;
-  *"[minor]"*) bump="minor" ;;
-  *"[refactor]"*) bump="patch" ;;
-  *"[hotfix]"*) bump="patch" ;;
-  *"[patch]"*) bump="patch" ;;
-esac
-
-if [ -z "$bump" ]; then
-  if [ "$type" = "release" ]; then
-    bump="major"
-  elif [ "$file_count" -gt 100 ] 2>/dev/null; then
-    bump="minor"
-  else
-    case "$type" in
-      feat|ux|refactor|perf) bump="minor" ;;
-      *) bump="patch" ;;
-    esac
+  # Verifica se está em meio a rebase
+  if [ -d "$git_dir/rebase-merge" ] || [ -d "$git_dir/rebase-apply" ]; then
+    warn "Repositório em rebase. Pulando versionamento automático."
+    return 1
   fi
-fi
 
-#
-# 1) Bump VERSION and amend user's commit so VERSION is included
-#
-if [ -f "$bump_ps1" ]; then
-  run_powershell_logged "bump-version.ps1 failed" \
-    -File "$bump_ps1" \
-    -CommitMessage "$commit_msg" \
-    -Bump "$bump" \
-    -FileCount "$file_count"
-else
-  log_ps_error "bump-version.ps1 not found at: $bump_ps1" "/dev/null" ""
-fi
-
-git add VERSION CHANGELOG.md docs/90-releases/_draft_minor.md >/dev/null 2>&1 || true
-git add docs/90-releases/notes/*.md >/dev/null 2>&1 || true
-
-if ! git diff --cached --quiet; then
-  git -c core.hooksPath=.git/hooks commit --amend --no-edit --no-verify >/dev/null 2>&1 || true
-fi
-
-commit_hash="$(git rev-parse --short HEAD)"
-
-#
-# 2) Update draft release notes in a follow-up commit
-#
-case "$commit_msg_lower" in
-  *"[skip draft]"*|*"[skip-draft]"*|*"[skip release-notes]"*) exit 0 ;;
-esac
-
-if [ "${SKIP_DRAFT_UPDATE:-}" != "1" ] && [ -f "$repo_root/docs/90-releases/_draft_minor.md" ]; then
-  if [ -f "$draft_ps1" ]; then
-    # Impact: tenta extrair do commit, senão "medio"
-    impact="medio"
-    case "$commit_msg_lower" in
-      *"[impact:nenhum]"*) impact="nenhum" ;;
-      *"[impact:baixo]"*)  impact="baixo" ;;
-      *"[impact:medio]"*|*"[impact:médio]"*) impact="medio" ;;
-      *"[impact:alto]"*)   impact="alto" ;;
-    esac
-
-    run_powershell_logged "update-draft-minor.ps1 failed" \
-      -File "$draft_ps1" \
-      -CommitHash "$commit_hash" \
-      -CommitMessage "$commit_msg" \
-      -Bump "$bump" \
-      -Impact "$impact" \
-      -RepoRoot "$repo_root"
-  else
-    log_ps_error "update-draft-minor.ps1 not found at: $draft_ps1" "/dev/null" ""
+  # Verifica se está em meio a merge
+  if [ -f "$git_dir/MERGE_HEAD" ]; then
+    warn "Repositório em merge. Pulando versionamento automático."
+    return 1
   fi
-fi
 
-git add docs/90-releases/_draft_minor.md docs/90-releases/_draft_major.md >/dev/null 2>&1 || true
+  # Verifica se está em meio a cherry-pick
+  if [ -f "$git_dir/CHERRY_PICK_HEAD" ]; then
+    warn "Repositório em cherry-pick. Pulando versionamento automático."
+    return 1
+  fi
 
-if git diff --cached --quiet; then
+  debug "Estado do repositório: OK"
+  return 0
+}
+
+# Detecta breaking changes na mensagem de commit
+detect_breaking_change() {
+  local msg="$1"
+  local first_line="$2"
+  local msg_lower
+  msg_lower="$(printf "%s" "$msg" | tr '[:upper:]' '[:lower:]')"
+
+  # Verifica se há "!" no tipo (ex: feat!:, fix(api)!:)
+  if printf "%s" "$first_line" | grep -qE '^[a-z]+(|$[^)]+$|)?!:'; then
+    debug "Breaking change detectado via '!'"
+    return 0
+  fi
+
+  # Verifica se há "BREAKING CHANGE:" no footer
+  if printf "%s" "$msg_lower" | grep -qE '(^|\n)breaking[- ]change:'; then
+    debug "Breaking change detectado via footer 'BREAKING CHANGE:'"
+    return 0
+  fi
+
+  return 1
+}
+
+# -----------------------------------------------------------------------------
+# INÍCIO DO SCRIPT
+# -----------------------------------------------------------------------------
+
+info "Iniciando versionamento automático..."
+
+# Permite pular versionamento via variável de ambiente
+if [ "${SKIP_VERSION_BUMP:-}" = "1" ]; then
+  info "Versionamento desabilitado via SKIP_VERSION_BUMP=1"
   exit 0
 fi
 
-git -c core.hooksPath=.git/hooks commit -m "chore(release-notes): atualizar draft (for ${commit_hash}) [skip version] [skip draft]" --no-verify >/dev/null 2>&1 || true
+# -----------------------------------------------------------------------------
+# CONFIGURAÇÃO DE CAMINHOS
+# -----------------------------------------------------------------------------
+
+# Obtém raiz do repositório e diretório .git
+repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+git_dir="$(git rev-parse --git-dir 2>/dev/null || echo ".git")"
+
+debug "Repositório: $repo_root"
+debug "Git dir: $git_dir"
+
+# Define arquivo de log
+log_file="$repo_root/$git_dir/version-bump.log"
+
+# Garante que o diretório existe e que o log pode ser criado
+log_dir="$(dirname "$log_file")"
+mkdir -p "$log_dir" 2>/dev/null || true
+touch "$log_file" 2>/dev/null || true
+
+# Rotaciona log se necessário
+rotate_log "$log_file"
+
+# Define caminhos dos scripts PowerShell
+bump_ps1="$repo_root/scripts/bump-version.ps1"
+draft_ps1="$repo_root/scripts/update-draft-minor.ps1"
+
+# Fallbacks para scripts relocados
+[ -f "$bump_ps1" ] || bump_ps1="$repo_root/bump-version.ps1"
+[ -f "$draft_ps1" ] || draft_ps1="$repo_root/update-draft-minor.ps1"
+
+debug "Script bump: $bump_ps1"
+debug "Script draft: $draft_ps1"
+
+# -----------------------------------------------------------------------------
+# DETECÇÃO DO POWERSHELL
+# -----------------------------------------------------------------------------
+
+PSH="powershell.exe"
+
+if ! command -v "$PSH" >/dev/null 2>&1; then
+  if command -v pwsh >/dev/null 2>&1; then
+    PSH="pwsh"  # PowerShell Core (Linux/Mac)
+    debug "Usando PowerShell Core (pwsh)"
+  elif command -v powershell >/dev/null 2>&1; then
+    PSH="powershell"  # PowerShell tradicional
+    debug "Usando PowerShell tradicional"
+  else
+    warn "PowerShell não encontrado. Versionamento manual será necessário."
+    exit 0
+  fi
+else
+  debug "Usando PowerShell.exe (Windows)"
+fi
+
+# -----------------------------------------------------------------------------
+# VALIDAÇÃO DO ESTADO DO REPOSITÓRIO
+# -----------------------------------------------------------------------------
+
+if ! validate_repo_state; then
+  exit 0
+fi
+
+# -----------------------------------------------------------------------------
+# CAPTURA DA MENSAGEM DE COMMIT
+# -----------------------------------------------------------------------------
+
+# Obtém mensagem completa do último commit
+commit_msg="$(git log -1 --pretty=%B 2>/dev/null || echo "")"
+
+if [ -z "$commit_msg" ]; then
+  error "Não foi possível obter mensagem do commit"
+  exit 0
+fi
+
+debug "Mensagem do commit capturada (${#commit_msg} caracteres)"
+
+# Extrai primeira linha (título do commit)
+first_line="$(printf "%s" "$commit_msg" | sed -n '1p' | tr -d '\r')"
+debug "Primeira linha: $first_line"
+
+# Converte mensagem para minúsculas (verificações case-insensitive)
+commit_msg_lower="$(printf "%s" "$commit_msg" | tr '[:upper:]' '[:lower:]')"
+
+# -----------------------------------------------------------------------------
+# EXCEÇÕES: Commits que Pulam Versionamento
+# -----------------------------------------------------------------------------
+
+# 1. Commits de merge são ignorados
+case "$first_line" in
+  Merge*)
+    info "Commit de merge detectado - pulando versionamento"
+    exit 0
+    ;;
+esac
+
+# 2. Tags [skip version] ou [skip-version] são respeitadas
+case "$commit_msg_lower" in
+  *"[skip version]"*|*"[skip-version]"*)
+    info "Versionamento ignorado por [skip version]"
+    exit 0
+    ;;
+esac
+
+# -----------------------------------------------------------------------------
+# EXTRAÇÃO DO TIPO DE COMMIT
+# -----------------------------------------------------------------------------
+
+# ✅ CORRIGIDO: Agora captura tipo mesmo com "!" (breaking change)
+# Regex: type(scope)!: desc OU type!: desc OU type: desc
+type="$(printf "%s" "$first_line" | sed -nE 's/^([a-z]+)(|$[^)]+$|)?(!)?:.*/\1/p')"
+
+# Se não conseguiu extrair tipo, assume "patch"
+[ -n "$type" ] || type="patch"
+
+debug "Tipo extraído: '$type'"
+
+# -----------------------------------------------------------------------------
+# CONTAGEM DE ARQUIVOS ALTERADOS
+# -----------------------------------------------------------------------------
+
+# Conta arquivos alterados no commit, excluindo:
+# - VERSION (gerenciado pelo hook)
+# - CHANGELOG.md (gerenciado pelo hook)
+# - docs/90-releases/ (gerenciado pelo hook)
+file_count=0
+
+if git diff-tree --no-commit-id --name-only -r HEAD >/dev/null 2>&1; then
+  file_count="$(git diff-tree --no-commit-id --name-only -r HEAD \
+    | sed '/^$/d' \
+    | grep -Ev '^(VERSION|CHANGELOG\.md|docs/90-releases/)' \
+    | wc -l | tr -d ' ')"
+  file_count="${file_count:-0}"
+
+  debug "Arquivos alterados (excluindo gerenciados): $file_count"
+else
+  warn "Não foi possível contar arquivos alterados"
+fi
+
+# -----------------------------------------------------------------------------
+# DETECÇÃO DE BREAKING CHANGES
+# -----------------------------------------------------------------------------
+
+has_breaking_change=0
+if detect_breaking_change "$commit_msg" "$first_line"; then
+  has_breaking_change=1
+  info "Breaking change detectado - forçando bump MAJOR"
+fi
+
+# -----------------------------------------------------------------------------
+# DETERMINAÇÃO DO TIPO DE BUMP
+# -----------------------------------------------------------------------------
+
+bump=""
+
+# Prioridade 1: Breaking changes sempre resultam em MAJOR
+if [ "$has_breaking_change" -eq 1 ]; then
+  bump="major"
+
+# Prioridade 2: Tags explícitas na mensagem de commit
+elif printf "%s" "$commit_msg_lower" | grep -qE '|$(major|release)$|'; then
+  bump="major"
+  debug "Bump MAJOR via tag [major] ou [release]"
+
+elif printf "%s" "$commit_msg_lower" | grep -q '|$minor$|'; then
+  bump="minor"
+  debug "Bump MINOR via tag [minor]"
+
+elif printf "%s" "$commit_msg_lower" | grep -qE '|$(refactor|hotfix|patch)$|'; then
+  bump="patch"
+  debug "Bump PATCH via tag [refactor], [hotfix] ou [patch]"
+fi
+
+# Prioridade 3: Inferência baseada em tipo de commit e magnitude
+if [ -z "$bump" ]; then
+  if [ "$type" = "release" ]; then
+    bump="major"
+    debug "Bump MAJOR via tipo 'release'"
+
+  # Mudanças grandes (>100 arquivos) resultam em MINOR
+  elif [ "$file_count" -gt 100 ] 2>/dev/null; then
+    bump="minor"
+    debug "Bump MINOR via quantidade de arquivos ($file_count > 100)"
+
+  else
+    # Tipos que resultam em MINOR
+    case "$type" in
+      feat|ux|refactor|perf)
+        bump="minor"
+        debug "Bump MINOR via tipo '$type'"
+        ;;
+      *)
+        bump="patch"
+        debug "Bump PATCH (padrão para tipo '$type')"
+        ;;
+    esac
+  fi
+fi
+
+info "Tipo de bump determinado: ${bump} (tipo: $type, arquivos: $file_count, breaking: $has_breaking_change)"
+
+# -----------------------------------------------------------------------------
+# ETAPA 1: BUMP DE VERSÃO
+# -----------------------------------------------------------------------------
+
+info "Executando bump-version.ps1..."
+
+if [ -f "$bump_ps1" ]; then
+  run_powershell_logged "bump-version.ps1" \
+    -File "$bump_ps1" \
+    -CommitMessage "$commit_msg" \
+    -Bump "$bump" \
+    -FileCount "$file_count" \
+    -CommitHash "$commit_hash"
+else
+  error "Script não encontrado: $bump_ps1"
+  log_ps_error "bump-version.ps1 not found at: $bump_ps1" "/dev/null" ""
+  warn "Versionamento manual será necessário"
+fi
+
+# Adiciona arquivos gerenciados pelo hook ao staging
+debug "Adicionando arquivos gerenciados ao staging..."
+git add VERSION CHANGELOG.md docs/90-releases/_draft_minor.md >/dev/null 2>&1 || true
+git add docs/90-releases/notes/*.md >/dev/null 2>&1 || true
+
+# Se há alterações no staging, faz amend no commit do usuário
+if ! git diff --cached --quiet; then
+  info "Fazendo amend no commit para incluir VERSION e CHANGELOG..."
+
+  # Usa core.hooksPath para evitar loop infinito
+  git -c core.hooksPath=.git/hooks commit --amend --no-edit --no-verify >/dev/null 2>&1 || {
+    warn "Não foi possível fazer amend no commit"
+  }
+
+  success "Commit atualizado com VERSION e CHANGELOG"
+else
+  debug "Nenhuma alteração para incluir no commit"
+fi
+
+# Captura hash do commit final
+commit_hash="$(git rev-parse --short HEAD)"
+debug "Hash do commit: $commit_hash"
+
+# -----------------------------------------------------------------------------
+# ETAPA 2: ATUALIZAÇÃO DE DRAFT DE RELEASE NOTES
+# -----------------------------------------------------------------------------
+
+# Permite pular atualização de draft via tags
+case "$commit_msg_lower" in
+  *"[skip draft]"*|*"[skip-draft]"*|*"[skip release-notes]"*)
+    info "Atualização de draft ignorada por tag [skip draft]"
+    exit 0
+    ;;
+esac
+
+# Verifica se deve atualizar draft
+if [ "${SKIP_DRAFT_UPDATE:-}" = "1" ]; then
+  info "Atualização de draft desabilitada via SKIP_DRAFT_UPDATE=1"
+  exit 0
+fi
+
+if [ ! -f "$repo_root/docs/90-releases/_draft_minor.md" ]; then
+  debug "Arquivo _draft_minor.md não existe - pulando atualização"
+  exit 0
+fi
+
+info "Atualizando draft de release notes..."
+
+if [ -f "$draft_ps1" ]; then
+  # Extrai impacto da mensagem de commit (padrão: medio)
+  impact="medio"
+
+  case "$commit_msg_lower" in
+    *"[impact:nenhum]"*) impact="nenhum" ;;
+    *"[impact:baixo]"*)  impact="baixo" ;;
+    *"[impact:medio]"*|*"[impact:médio]"*) impact="medio" ;;
+    *"[impact:alto]"*)   impact="alto" ;;
+  esac
+
+  debug "Impacto detectado: $impact"
+
+  # Executa script de atualização de draft
+  run_powershell_logged "update-draft-minor.ps1" \
+    -File "$draft_ps1" \
+    -CommitHash "$commit_hash" \
+    -CommitMessage "$commit_msg" \
+    -Bump "$bump" \
+    -Impact "$impact" \
+    -RepoRoot "$repo_root"
+else
+  error "Script não encontrado: $draft_ps1"
+  log_ps_error "update-draft-minor.ps1 not found at: $draft_ps1" "/dev/null" ""
+  warn "Atualização manual de release notes será necessária"
+fi
+
+# Adiciona drafts atualizados ao staging
+debug "Adicionando drafts atualizados ao staging..."
+git add docs/90-releases/_draft_minor.md docs/90-releases/_draft_major.md >/dev/null 2>&1 || true
+
+# Se há alterações, cria commit separado para os drafts
+if git diff --cached --quiet; then
+  debug "Nenhuma alteração em drafts para commitar"
+  exit 0
+fi
+
+info "Criando commit para atualização de draft..."
+
+# Cria commit com tags [skip version] e [skip draft] para evitar loop
+git -c core.hooksPath=.git/hooks commit \
+  -m "chore(release-notes): atualizar draft (for ${commit_hash}) [skip version] [skip draft]" \
+  --no-verify >/dev/null 2>&1 || {
+  warn "Não foi possível criar commit de draft"
+}
+
+success "Versionamento automático concluído! 🚀"
+success "Versão atualizada e documentação gerada para commit $commit_hash"
+
+exit 0

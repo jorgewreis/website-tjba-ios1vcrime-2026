@@ -1,95 +1,255 @@
 #!/bin/sh
+# =============================================================================
+# GIT HOOK: commit-msg
+# =============================================================================
+# Valida mensagens de commit seguindo Conventional Commits
+# Formato: type(scope): description [tags]
+# Exemplo: feat(auth): adicionar login OAuth [minor]
+# =============================================================================
+
 set -eu
 
+# -----------------------------------------------------------------------------
+# CONFIGURAÇÕES
+# -----------------------------------------------------------------------------
+
+# Lista de tipos de commit permitidos (Conventional Commits)
+ALLOWED_TYPES="feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert|release"
+
+# Tamanho mínimo da descrição do commit (caracteres)
+MIN_DESC_LENGTH=10
+
+# Ativar modo debug: export DEBUG=1
+DEBUG="${DEBUG:-0}"
+
+# Cores para output (se terminal suportar)
+if [ -t 1 ]; then
+  RED='\033[0;31m'
+  GREEN='\033[0;32m'
+  YELLOW='\033[1;33m'
+  NC='\033[0m' # No Color
+else
+  RED=''
+  GREEN=''
+  YELLOW=''
+  NC=''
+fi
+
+# -----------------------------------------------------------------------------
+# FUNÇÕES AUXILIARES
+# -----------------------------------------------------------------------------
+
+# Exibe mensagem de erro em vermelho e sai com código 1
+error() {
+  printf "${RED}❌ ERRO:${NC} %s\n" "$1" >&2
+  exit 1
+}
+
+# Exibe aviso em amarelo
+warn() {
+  printf "${YELLOW}⚠️  AVISO:${NC} %s\n" "$1" >&2
+}
+
+# Exibe informação de debug (apenas se DEBUG=1)
+debug() {
+  [ "$DEBUG" = "1" ] && printf "${GREEN}🔍 DEBUG:${NC} %s\n" "$1" >&2 || true
+}
+
+# -----------------------------------------------------------------------------
+# INÍCIO DA VALIDAÇÃO
+# -----------------------------------------------------------------------------
+
+# Obtém o arquivo com a mensagem de commit
 MSG_FILE="${1:-}"
+
+# Verifica se o arquivo foi passado como argumento
 [ -n "$MSG_FILE" ] || exit 0
+debug "Arquivo de mensagem: $MSG_FILE"
+
+# Verifica se o arquivo existe
 [ -f "$MSG_FILE" ] || exit 0
 
+# Lê o conteúdo da mensagem de commit
 msg="$(cat "$MSG_FILE" 2>/dev/null || true)"
+[ -n "$msg" ] || error "Mensagem de commit vazia."
+
+debug "Mensagem original:\n$msg"
+
+# Extrai a primeira linha (título do commit)
 first_line="$(printf "%s" "$msg" | sed -n '1p' | tr -d '\r')"
+debug "Primeira linha: $first_line"
+
+# Converte mensagem inteira para minúsculas (para verificações case-insensitive)
 lower="$(printf "%s" "$msg" | tr '[:upper:]' '[:lower:]')"
 
-# Allow merge commits
+# -----------------------------------------------------------------------------
+# EXCEÇÕES: Commits que pulam validação
+# -----------------------------------------------------------------------------
+
+# 1. Permite commits de merge automaticamente
 case "$first_line" in
-  Merge*) exit 0 ;;
+  Merge*)
+    debug "Commit de merge detectado - pulando validação"
+    exit 0
+    ;;
 esac
 
-# Skip validation if user explicitly opts out
+# 2. Permite pular validação se usuário usar tag [skip version] ou [skip-version]
 case "$lower" in
-  *"[skip version]"*|*"[skip-version]"*) exit 0 ;;
+  *"[skip version]"*|*"[skip-version]"*)
+    warn "Validação ignorada por [skip version]"
+    exit 0
+    ;;
 esac
 
-# Parse type: type(scope): desc OR type: desc
-# Supports optional "!" before ":" (ex.: feat!:, fix(scope)!:)
+# -----------------------------------------------------------------------------
+# EXTRAÇÃO E VALIDAÇÃO DO TIPO DE COMMIT
+# -----------------------------------------------------------------------------
+
+# Extrai o tipo usando regex: type(scope)!: desc OU type!: desc OU type: desc
+# Grupos da regex:
+#   \1 = tipo (obrigatório)
+#   \2 = (scope) opcional
+#   \3 = ! opcional (breaking change)
+#   \4 = descrição (após ":")
 type="$(
   printf "%s" "$first_line" \
-  | sed -nE 's/^([a-z]+)(\([^)]+\))?(!)?:.*/\1/p' \
+  | sed -nE 's/^([a-z]+)(|$[^)]+$|)?(!)?:.*/\1/p' \
   | tr '[:upper:]' '[:lower:]'
 )"
 
-# If you prefer lenient behavior, comment the block below and keep type="patch".
+debug "Tipo extraído: '$type'"
+
+# Se não conseguiu extrair tipo, formato é inválido
 if [ -z "$type" ]; then
-  echo "ERRO: padrão de commit inválido. Use 'type: descrição' ou 'type(scope): descrição'." >&2
-  echo "Ex.: fix(auth): corrigir sessão expirada" >&2
-  echo "Se quiser ignorar versionamento, use [skip version]." >&2
-  exit 1
+  error "Padrão de commit inválido. Use: tipo(escopo): descrição
+
+Exemplos válidos:
+  feat(auth): adicionar login OAuth
+  fix: corrigir validação de CPF
+  docs(readme): atualizar instruções
+
+Se quiser ignorar versionamento, use [skip version].
+Guia: https://www.conventionalcommits.org/"
 fi
 
-# 1) release requires explicit [release] or [major]
+# Valida se o tipo está na lista de tipos permitidos
+if ! printf "%s" "$type" | grep -Eq "^($ALLOWED_TYPES)$"; then
+  error "Tipo de commit '$type' não é permitido.
+
+Tipos válidos: ${ALLOWED_TYPES}
+
+Exemplo: feat(api): adicionar endpoint de usuários"
+fi
+
+# -----------------------------------------------------------------------------
+# VALIDAÇÃO ESPECIAL: Tipo 'release'
+# -----------------------------------------------------------------------------
+
+# Commits do tipo 'release' DEVEM conter a tag [release] ou [major]
 if [ "$type" = "release" ]; then
-  echo "$lower" | grep -q "\[release\]\|\[major\]" || {
-    echo "ERRO: commits do tipo 'release' exigem tag [release] ou [major]." >&2
-    echo "Ex.: release: preparar versão X [release]" >&2
-    exit 1
-  }
+  debug "Validando commit do tipo 'release'..."
+
+  if ! echo "$lower" | grep -q "|$release$|\||$major$|"; then
+    error "Commits do tipo 'release' exigem tag [release] ou [major].
+
+Exemplo: release: preparar versão 2.0.0 [major]"
+  fi
 fi
 
-# 2) block very generic messages (unless skip version)
-# Keep this list short and truly low-signal.
-generic_re='^(update|upd|wip|teste|test|fix|ajustes|mudanças|alterações|commit)$'
+# -----------------------------------------------------------------------------
+# VALIDAÇÃO DE MENSAGENS GENÉRICAS
+# -----------------------------------------------------------------------------
 
-# Extract description after "type(scope)!: " or "type!: " or "type: "
+# Expressão regular para mensagens muito vagas/genéricas
+# Bloqueia apenas descrições QUE SÃO EXATAMENTE essas palavras
+generic_re='^(update|upd|wip|teste|test|fix|ajustes|mudanças|alterações|commit|changes|update code|fix bug)$'
+
+# Extrai a descrição após "tipo(escopo)!:" ou "tipo!:" ou "tipo:"
+# ✅ CORRIGIDO: Agora captura o grupo \3 (descrição) ao invés de \2 (exclamação)
 desc="$(
   printf "%s" "$first_line" \
-  | sed -nE 's/^[a-z]+(\([^)]+\))?(!)?:[[:space:]]*(.*)$/\2/p' \
+  | sed -nE 's/^[a-z]+(|$[^)]+$|)?(!)?:[[:space:]]*(.*)$/\3/p' \
   | tr -d '\r'
 )"
+
+debug "Descrição extraída: '$desc'"
+
+# Normaliza descrição (remove espaços, converte para minúsculas)
 desc_lc="$(printf "%s" "$desc" | tr '[:upper:]' '[:lower:]' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
 
+# Verifica se a descrição é muito genérica
 if printf "%s" "$desc_lc" | grep -Eq "$generic_re"; then
-  echo "ERRO: mensagem muito genérica ('$desc')." >&2
-  echo "Use algo descritivo, ex.: 'fix: corrigir validação do formulário'." >&2
-  echo "Se for intencional, adicione [skip version]." >&2
-  exit 1
+  error "Mensagem muito genérica: '$desc'
+
+Use algo descritivo, como:
+  fix: corrigir validação do formulário de login
+  feat: adicionar busca por nome no relatório
+
+Se for intencional, adicione [skip version]."
 fi
 
-# 3) validate bracket-tags (bump + control tags)
-# Extract tags like [xxx] from entire message
-# Allowed:
-#  - major, release, minor, patch, hotfix, refactor
-#  - skip version, skip-version, skip draft, skip-draft, skip release-notes
-#  - security, deprecated, removed
-#  - impact:nenhum|baixo|medio|médio|alto
-allowed_tag_re='^\[(major|release|minor|patch|hotfix|refactor|skip version|skip-version|skip draft|skip-draft|skip release-notes|security|deprecated|removed|impact:(nenhum|baixo|medio|m[eé]dio|alto))\]$'
+# ✅ MELHORIA: Valida tamanho mínimo da descrição
+desc_len="${#desc}"
+if [ "$desc_len" -lt "$MIN_DESC_LENGTH" ]; then
+  error "Descrição muito curta ($desc_len caracteres). Mínimo: $MIN_DESC_LENGTH.
 
-# Extract all [..] tokens from the full message
-# Note: grep -o is widely available (GNU grep / Git Bash). If your env lacks -o, tell me.
-tags="$(printf "%s" "$msg" | tr '\r' '\n' | grep -o '\[[^]]\+\]' 2>/dev/null || true)"
+Descrição atual: '$desc'
 
-# IMPORTANT: do NOT validate tags using a pipeline "echo | while" (subshell exit won't propagate).
+Use uma descrição mais detalhada do que foi alterado."
+fi
+
+# -----------------------------------------------------------------------------
+# VALIDAÇÃO DE TAGS [xxx]
+# -----------------------------------------------------------------------------
+
+# Tags permitidas (versionamento, controle e impacto)
+# ✅ CORRIGIDO: Adicionado suporte para [patch2000], [patch8000], etc
+allowed_tag_re='^|$(major|release|minor|patch[0-9]*|hotfix|refactor|skip version|skip-version|skip draft|skip-draft|skip release-notes|security|deprecated|removed|impact:(nenhum|baixo|medio|m[eé]dio|alto))$|$'
+
+# Extrai todas as tags [xxx] da mensagem completa
+tags="$(printf "%s" "$msg" | tr '\r' '\n' | grep -o '|$[^]]\+$|' 2>/dev/null || true)"
+
+debug "Tags encontradas: $tags"
+
+# Se encontrou tags, valida cada uma
 if [ -n "$tags" ]; then
+  # Usa heredoc para evitar problemas com subshell em pipelines
   while IFS= read -r t; do
+    # Ignora linhas vazias
     [ -n "$t" ] || continue
+
+    # Converte tag para minúsculas para comparação
     tl="$(printf "%s" "$t" | tr '[:upper:]' '[:lower:]')"
-    printf "%s" "$tl" | grep -Eq "$allowed_tag_re" || {
-      echo "ERRO: tag inválida detectada: $t" >&2
-      echo "Tags permitidas: [major] [release] [minor] [patch] [patch2000] [patch8000] [hotfix] [refactor]" >&2
-      echo "Controle: [skip version] [skip draft] [skip release-notes] e [impact:...]" >&2
-      exit 1
-    }
+
+    debug "Validando tag: $tl"
+
+    # Verifica se a tag está na lista de permitidas
+    if ! printf "%s" "$tl" | grep -Eq "$allowed_tag_re"; then
+      error "Tag inválida detectada: $t
+
+Tags de versionamento permitidas:
+  [major] [release] [minor] [patch] [patch2000] [patch8000] [hotfix] [refactor]
+
+Tags de controle:
+  [skip version] [skip-version] [skip draft] [skip-draft] [skip release-notes]
+
+Tags especiais:
+  [security] [deprecated] [removed]
+
+Tags de impacto:
+  [impact:nenhum] [impact:baixo] [impact:medio] [impact:médio] [impact:alto]"
+    fi
   done <<EOF
 $tags
 EOF
 fi
 
+# -----------------------------------------------------------------------------
+# VALIDAÇÃO CONCLUÍDA COM SUCESSO
+# -----------------------------------------------------------------------------
+
+debug "✅ Mensagem de commit validada com sucesso!"
+
+# Retorna código 0 (sucesso) - commit será aceito
 exit 0
