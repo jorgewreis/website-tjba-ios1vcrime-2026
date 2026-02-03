@@ -1,5 +1,743 @@
 # Changelog
 
+## V. 1.05.0162
+
+**Data:** 2026-02-03 21:00:31 | **Commit:** `60a3a96` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0161
+
+**Data:** 2026-02-03 21:00:25 | **Commit:** `46d3421` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0160
+
+**Data:** 2026-02-03 21:00:19 | **Commit:** `d5fd45a` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0159
+
+**Data:** 2026-02-03 21:00:15 | **Commit:** `82026eb` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0158
+
+**Data:** 2026-02-03 21:00:10 | **Commit:** `b9af972` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0157
+
+**Data:** 2026-02-03 21:00:05 | **Commit:** `e63b6c7` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0156
+
+**Data:** 2026-02-03 21:00:00 | **Commit:** `08878d9` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0155
+
+**Data:** 2026-02-03 20:59:55 | **Commit:** `61a3d4c` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0154
+
+**Data:** 2026-02-03 20:59:50 | **Commit:** `454a8d1` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0153
+
+**Data:** 2026-02-03 20:59:45 | **Commit:** `74b5f24` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0152
+
+**Data:** 2026-02-03 20:59:39 | **Commit:** `421a76e` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0151
+
+**Data:** 2026-02-03 20:59:35 | **Commit:** `5515a39` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0150
+
+**Data:** 2026-02-03 20:59:31 | **Commit:** `e9dcae5` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0149
+
+**Data:** 2026-02-03 20:59:27 | **Commit:** `0b8bdaf` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0148
+
+**Data:** 2026-02-03 20:59:23 | **Commit:** `9896f0e` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0147
+
+**Data:** 2026-02-03 20:59:18 | **Commit:** `b11cbfc` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0146
+
+**Data:** 2026-02-03 20:59:14 | **Commit:** `1d619af` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0145
+
+**Data:** 2026-02-03 20:59:09 | **Commit:** `f41a4b8` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0144
+
+**Data:** 2026-02-03 20:59:05 | **Commit:** `cb02346` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0143
+
+**Data:** 2026-02-03 20:59:00 | **Commit:** `eec7c17` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0142
+
+**Data:** 2026-02-03 20:58:56 | **Commit:** `ee58555` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0141
+
+**Data:** 2026-02-03 20:58:50 | **Commit:** `a1aa5ed` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0140
+
+**Data:** 2026-02-03 20:58:46 | **Commit:** `230d58b` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0139
+
+**Data:** 2026-02-03 20:58:41 | **Commit:** `679e3c2` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0138
+
+**Data:** 2026-02-03 20:58:37 | **Commit:** `85ef18f` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0137
+
+**Data:** 2026-02-03 20:58:33 | **Commit:** `985b3bb` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0136
+
+**Data:** 2026-02-03 20:58:29 | **Commit:** `ec33e58` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0135
+
+**Data:** 2026-02-03 20:58:24 | **Commit:** `846488f` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0134
+
+**Data:** 2026-02-03 20:58:19 | **Commit:** `d3a71c6` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0133
+
+**Data:** 2026-02-03 20:58:15 | **Commit:** `19ea96f` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0132
+
+**Data:** 2026-02-03 20:58:11 | **Commit:** `9f3519e` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0131
+
+**Data:** 2026-02-03 20:58:07 | **Commit:** `8a68161` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0130
+
+**Data:** 2026-02-03 20:58:02 | **Commit:** `2eb5bd0` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0129
+
+**Data:** 2026-02-03 20:57:58 | **Commit:** `148c744` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0128
+
+**Data:** 2026-02-03 20:57:54 | **Commit:** `9de2649` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0127
+
+**Data:** 2026-02-03 20:57:50 | **Commit:** `ff27168` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0126
+
+**Data:** 2026-02-03 20:57:46 | **Commit:** `64f52f8` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0125
+
+**Data:** 2026-02-03 20:57:42 | **Commit:** `7308898` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0124
+
+**Data:** 2026-02-03 20:57:36 | **Commit:** `023ecd3` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0123
+
+**Data:** 2026-02-03 20:57:30 | **Commit:** `3c038c0` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0122
+
+**Data:** 2026-02-03 20:57:26 | **Commit:** `1070b23` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0121
+
+**Data:** 2026-02-03 20:57:23 | **Commit:** `79ecc8e` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0120
+
+**Data:** 2026-02-03 20:57:21 | **Commit:** `290f74c` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0119
+
+**Data:** 2026-02-03 20:57:17 | **Commit:** `6b659da` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0118
+
+**Data:** 2026-02-03 20:57:14 | **Commit:** `c286370` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0117
+
+**Data:** 2026-02-03 20:57:11 | **Commit:** `d95f2f6` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0116
+
+**Data:** 2026-02-03 20:57:08 | **Commit:** `8f1a7f6` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0115
+
+**Data:** 2026-02-03 20:57:05 | **Commit:** `c76bd7b` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0114
+
+**Data:** 2026-02-03 20:57:00 | **Commit:** `88618f0` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0113
+
+**Data:** 2026-02-03 20:56:55 | **Commit:** `34eb72d` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0112
+
+**Data:** 2026-02-03 20:56:51 | **Commit:** `dcf4adf` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0111
+
+**Data:** 2026-02-03 20:56:48 | **Commit:** `e840ca9` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0110
+
+**Data:** 2026-02-03 20:56:45 | **Commit:** `835210e` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0109
+
+**Data:** 2026-02-03 20:56:42 | **Commit:** `7a2f2b0` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0108
+
+**Data:** 2026-02-03 20:56:39 | **Commit:** `edc7b35` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0107
+
+**Data:** 2026-02-03 20:56:36 | **Commit:** `eb09f7f` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0106
+
+**Data:** 2026-02-03 20:56:33 | **Commit:** `a3ac563` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0105
+
+**Data:** 2026-02-03 20:56:28 | **Commit:** `67047fa` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0104
+
+**Data:** 2026-02-03 20:56:25 | **Commit:** `dbb6ed7` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0103
+
+**Data:** 2026-02-03 20:56:22 | **Commit:** `cd0c464` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0102
+
+**Data:** 2026-02-03 20:56:20 | **Commit:** `9424d98` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0101
+
+**Data:** 2026-02-03 20:56:17 | **Commit:** `52eb46b` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0100
+
+**Data:** 2026-02-03 20:56:12 | **Commit:** `617068b` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0099
+
+**Data:** 2026-02-03 20:56:07 | **Commit:** `61af504` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0098
+
+**Data:** 2026-02-03 20:56:03 | **Commit:** `6eb5c87` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0097
+
+**Data:** 2026-02-03 20:55:58 | **Commit:** `44fef09` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0096
+
+**Data:** 2026-02-03 20:55:54 | **Commit:** `50b3316` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0095
+
+**Data:** 2026-02-03 20:55:49 | **Commit:** `f107bd6` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0094
+
+**Data:** 2026-02-03 20:55:46 | **Commit:** `08ff1cd` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0093
+
+**Data:** 2026-02-03 20:55:44 | **Commit:** `b2ffe15` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0092
+
+**Data:** 2026-02-03 20:55:41 | **Commit:** `77b9eaf` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0091
+
+**Data:** 2026-02-03 20:55:38 | **Commit:** `20326b2` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0090
+
+**Data:** 2026-02-03 20:55:36 | **Commit:** `4668c76` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0089
+
+**Data:** 2026-02-03 20:55:33 | **Commit:** `35a61d5` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0088
+
+**Data:** 2026-02-03 20:55:31 | **Commit:** `ba8de97` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0087
+
+**Data:** 2026-02-03 20:55:28 | **Commit:** `a3151db` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0086
+
+**Data:** 2026-02-03 20:55:26 | **Commit:** `fd61ac9` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0085
+
+**Data:** 2026-02-03 20:55:23 | **Commit:** `b6b1262` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0084
+
+**Data:** 2026-02-03 20:55:21 | **Commit:** `cd93799` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0083
+
+**Data:** 2026-02-03 20:55:18 | **Commit:** `1d97f90` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0082
+
+**Data:** 2026-02-03 20:55:16 | **Commit:** `afff601` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0081
+
+**Data:** 2026-02-03 20:55:13 | **Commit:** `fec470b` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0080
+
+**Data:** 2026-02-03 20:55:11 | **Commit:** `d155f7a` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0079
+
+**Data:** 2026-02-03 20:55:08 | **Commit:** `3dec3f2` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0078
+
+**Data:** 2026-02-03 20:55:06 | **Commit:** `acd05bd` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0077
+
+**Data:** 2026-02-03 20:55:03 | **Commit:** `b36ca37` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0076
+
+**Data:** 2026-02-03 20:55:01 | **Commit:** `0a8df4c` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0075
+
+**Data:** 2026-02-03 20:54:58 | **Commit:** `e38fd0e` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0074
+
+**Data:** 2026-02-03 20:54:56 | **Commit:** `6c6e5dd` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0073
+
+**Data:** 2026-02-03 20:54:54 | **Commit:** `62ed2b8` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0072
+
+**Data:** 2026-02-03 20:54:51 | **Commit:** `98d6390` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0071
+
+**Data:** 2026-02-03 20:54:48 | **Commit:** `48fbc2f` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0070
+
+**Data:** 2026-02-03 20:54:45 | **Commit:** `bc2c0db` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0069
+
+**Data:** 2026-02-03 20:54:43 | **Commit:** `73c001a` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0068
+
+**Data:** 2026-02-03 20:54:41 | **Commit:** `49cb982` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0067
+
+**Data:** 2026-02-03 20:54:39 | **Commit:** `7ad33a4` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0066
+
+**Data:** 2026-02-03 20:54:37 | **Commit:** `e93bab8` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0065
+
+**Data:** 2026-02-03 20:54:35 | **Commit:** `1830f66` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0064
+
+**Data:** 2026-02-03 20:54:33 | **Commit:** `1f77935` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0063
+
+**Data:** 2026-02-03 20:54:31 | **Commit:** `bdaf1a8` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0062
+
+**Data:** 2026-02-03 20:54:29 | **Commit:** `e456799` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0061
+
+**Data:** 2026-02-03 20:54:26 | **Commit:** `419e80b` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0060
+
+**Data:** 2026-02-03 20:54:24 | **Commit:** `624d4f1` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0059
+
+**Data:** 2026-02-03 20:54:22 | **Commit:** `74b2258` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0058
+
+**Data:** 2026-02-03 20:54:19 | **Commit:** `baa10b8` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0057
+
+**Data:** 2026-02-03 20:54:15 | **Commit:** `10ca79f` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0056
+
+**Data:** 2026-02-03 20:54:13 | **Commit:** `0dfc7ee` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0055
+
+**Data:** 2026-02-03 20:54:10 | **Commit:** `8c4824a` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0054
+
+**Data:** 2026-02-03 20:54:08 | **Commit:** `7493716` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0053
+
+**Data:** 2026-02-03 20:54:07 | **Commit:** `d60da5d` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0052
+
+**Data:** 2026-02-03 20:54:05 | **Commit:** `198ed33` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0051
+
+**Data:** 2026-02-03 20:54:03 | **Commit:** `40bcbbd` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0050
+
+**Data:** 2026-02-03 20:54:00 | **Commit:** `bc71fc0` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0049
+
+**Data:** 2026-02-03 20:53:58 | **Commit:** `e51cd99` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0048
+
+**Data:** 2026-02-03 20:53:56 | **Commit:** `78f0620` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0047
+
+**Data:** 2026-02-03 20:53:54 | **Commit:** `41ac7e7` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0046
+
+**Data:** 2026-02-03 20:53:52 | **Commit:** `259e6dd` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0045
+
+**Data:** 2026-02-03 20:53:50 | **Commit:** `954df47` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0044
+
+**Data:** 2026-02-03 20:53:48 | **Commit:** `de38029` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0043
+
+**Data:** 2026-02-03 20:53:46 | **Commit:** `ba83a53` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0042
+
+**Data:** 2026-02-03 20:53:45 | **Commit:** `87d1ce0` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0041
+
+**Data:** 2026-02-03 20:53:42 | **Commit:** `d4e7659` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
+## V. 1.05.0040
+
+**Data:** 2026-02-03 20:53:41 | **Commit:** `ccf7f28` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
 ## V. 1.05.0039
 
 **Data:** 2026-02-03 18:31:23 | **Commit:** `79450bc` | **Tipo:** `patch`
@@ -378,6 +1116,129 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
