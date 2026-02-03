@@ -56,3 +56,4 @@
 1. **[Documentação]** docs: nova documentação de security e modules criada (Ref: $0fcdb93)
 1. **[Manutenção]** chore: atualização em workflows e configuração de banco de dados - close #29, close #78 (Ref: $7198fe8)
 1. **[Correção]** fix: corrige nomenclatura de label - close #29 (Ref: $9f13a34)
+1. **[Documentação]** docs: novo documento workflow (Ref: $761fc09)
