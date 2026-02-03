@@ -488,7 +488,7 @@ if ! git diff --cached --quiet; then
   info "Fazendo amend no commit para incluir VERSION e CHANGELOG..."
 
   # Usa core.hooksPath para evitar loop infinito
-  git -c core.hooksPath=.git/hooks commit --amend --no-edit --no-verify >/dev/null 2>&1 || {
+  git -c core.hooksPath=.githooks commit --amend --no-edit --no-verify >/dev/null 2>&1 || {
     warn "Não foi possível fazer amend no commit"
   }
 
@@ -566,7 +566,7 @@ fi
 info "Criando commit para atualização de draft..."
 
 # Cria commit com tags [skip version] e [skip draft] para evitar loop
-git -c core.hooksPath=.git/hooks commit \
+git -c core.hooksPath=.githooks commit \
   -m "chore(release-notes): atualizar draft (for ${commit_hash}) [skip version] [skip draft]" \
   --no-verify >/dev/null 2>&1 || {
   warn "Não foi possível criar commit de draft"

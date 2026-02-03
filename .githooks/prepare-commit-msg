@@ -171,7 +171,7 @@ analyze_commit_type() {
 
     # Scripts, hooks, ferramentas
     case "$file" in
-      scripts/*|tools/*|.git/hooks/*|*.sh)
+      scripts/*|tools/*|.githooks/*|*.sh)
         score_chore=$((score_chore + 1))
         debug "  → chore (+1)"
         ;;
