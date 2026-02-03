@@ -1,5 +1,9 @@
 ﻿# Changelog
 
+## V. 1.00.0002
+
+- docs: novos documentos de security, operations e foundation criados
+
 ## V. 1.00.0001
 
 - docs: novo documento de segurança criado
@@ -74,6 +78,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
