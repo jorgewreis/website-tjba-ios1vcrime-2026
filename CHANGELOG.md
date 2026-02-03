@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.05.0163
+
+**Data:** 2026-02-03 21:00:47 | **Commit:** `23f855f` | **Tipo:** `patch`
+
+- build: inicio da configuração do banco de dados
+
 ## V. 1.05.0162
 
 **Data:** 2026-02-03 21:00:31 | **Commit:** `60a3a96` | **Tipo:** `patch`
@@ -1116,6 +1122,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
