@@ -52,3 +52,4 @@
 -  3 files changed, 14 insertions(+), 66 deletions(-)
 
 ---
+1. **[Geral]** config: atualização do código para melhorias na geração de notas de release (Ref: $97a45e5)
