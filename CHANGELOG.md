@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 7.0
+
+**Data:** 2026-02-03 21:43:22 | **Commit:** `7437701` | **Tipo:** `major`
+
+- fix: corrigir bug
+
 ## V. 6.0
 
 **Data:** 2026-02-03 21:43:04 | **Commit:** `5fc23a7` | **Tipo:** `major`
@@ -1152,6 +1158,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
