@@ -1,1 +1,0 @@
-Geral|config: correção de modelo do versionamento|6839816
