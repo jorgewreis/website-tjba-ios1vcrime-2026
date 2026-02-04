@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 8.01
+
+**Data:** 2026-02-03 21:47:26 | **Commit:** `0c2b177` | **Tipo:** `minor`
+
+- feat: nova funcionalidade
+
 ## V. 8.00.0002
 
 **Data:** 2026-02-03 21:47:00 | **Commit:** `01510aa` | **Tipo:** `patch`
@@ -1176,6 +1182,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
