@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 2.0
+
+**Data:** 2026-02-03 21:15:56 | **Commit:** `28b4c07` | **Tipo:** `major`
+
+- test: verificar correção de loop
+
 ## V. 1.05.0163
 
 **Data:** 2026-02-03 21:00:47 | **Commit:** `23f855f` | **Tipo:** `patch`
@@ -1122,6 +1128,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
