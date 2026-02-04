@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 4.0
+
+**Data:** 2026-02-03 21:22:55 | **Commit:** `eec0d82` | **Tipo:** `major`
+
+- test: verificar correção do script PowerShell
+
 ## V. 3.0
 
 **Data:** 2026-02-03 21:21:11 | **Commit:** `34c6808` | **Tipo:** `major`
@@ -1134,6 +1140,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

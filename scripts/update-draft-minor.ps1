@@ -274,6 +274,10 @@ function Get-BufferEntries {
 # GERAÇÃO DE RELEASE NOTES
 # =============================================================================
 
+# =============================================================================
+# GERAÇÃO DE RELEASE NOTES
+# =============================================================================
+
 function New-SimpleReleaseNote {
     param(
         [string]$OutputPath,
@@ -297,7 +301,9 @@ function New-SimpleReleaseNote {
     $badgeColor = if ($BadgeType -eq "MAJOR") { "critical" } else { "blue" }
     $dateStr = Get-HumanDate
 
-    $content += "![Badge](https://img.shields.io/badge/$BadgeType-$badgeColor?style=for-the-badge)"
+    # ✅ CORREÇÃO: Usa string literal para evitar expansão de variáveis
+    $badgeUrl = "https://img.shields.io/badge/$BadgeType-$badgeColor" + "?style=for-the-badge"
+    $content += "![Badge]($badgeUrl)"
     $content += ""
     $content += "**Data de Lançamento:** $dateStr"
     $content += ""
@@ -356,6 +362,7 @@ function New-SimpleReleaseNote {
         return $false
     }
 }
+
 
 # =============================================================================
 # SCRIPT PRINCIPAL
