@@ -404,64 +404,55 @@ fi
 # DETERMINAÇÃO DO TIPO DE BUMP
 # -----------------------------------------------------------------------------
 
+# -----------------------------------------------------------------------------
+# DETERMINAÇÃO DO TIPO DE BUMP
+# -----------------------------------------------------------------------------
+
 bump=""
 
 # Prioridade 1: Breaking changes sempre resultam em MAJOR
 if [ "$has_breaking_change" -eq 1 ]; then
   bump="major"
-  # Prioridade 2: Tags explícitas na mensagem de commit
-  elif printf "%s" "$commit_msg_lower" | grep -qE '|$(major|release)$|'; then
-    bump="major"
-    info "Bump MAJOR via tag [major] ou [release]"  # ✅ ADICIONE
-
-  elif printf "%s" "$commit_msg_lower" | grep -q '|$minor$|'; then
-    bump="minor"
-    info "Bump MINOR via tag [minor]"  # ✅ ADICIONE
-
-  elif printf "%s" "$commit_msg_lower" | grep -qE '|$(refactor|hotfix|patch)$|'; then
-    bump="patch"
-    info "Bump PATCH via tag [refactor], [hotfix] ou [patch]"  # ✅ ADICIONE
-  fi
+  info "Bump MAJOR via breaking change"
 
 # Prioridade 2: Tags explícitas na mensagem de commit
 elif printf "%s" "$commit_msg_lower" | grep -qE '|$(major|release)$|'; then
   bump="major"
-  debug "Bump MAJOR via tag [major] ou [release]"
+  info "Bump MAJOR via tag [major] ou [release]"
 
 elif printf "%s" "$commit_msg_lower" | grep -q '|$minor$|'; then
   bump="minor"
-  debug "Bump MINOR via tag [minor]"
+  info "Bump MINOR via tag [minor]"
 
 elif printf "%s" "$commit_msg_lower" | grep -qE '|$(refactor|hotfix|patch)$|'; then
   bump="patch"
-  debug "Bump PATCH via tag [refactor], [hotfix] ou [patch]"
-fi
+  info "Bump PATCH via tag [refactor], [hotfix] ou [patch]"
 
 # Prioridade 3: Inferência baseada em tipo de commit e magnitude
-if [ -z "$bump" ]; then
-  if [ "$type" = "release" ]; then
-    bump="major"
-    debug "Bump MAJOR via tipo 'release'"
+elif [ "$type" = "release" ]; then
+  bump="major"
+  info "Bump MAJOR via tipo 'release'"
 
-  elif [ "$file_count" -gt 100 ] 2>/dev/null; then
-    bump="minor"
-    debug "Bump MINOR via quantidade de arquivos ($file_count > 100)"
+elif [ "$file_count" -gt 100 ] 2>/dev/null; then
+  bump="minor"
+  info "Bump MINOR via quantidade de arquivos ($file_count > 100)"
 
-  else
-    case "$type" in
-      feat|ux|refactor|perf)
-        bump="minor"
-        debug "Bump MINOR via tipo '$type'"
-        ;;
-      *)
-        bump="patch"
-        debug "Bump PATCH (padrão para tipo '$type')"
-        ;;
-    esac
-  fi
+else
+  # Tipos que resultam em MINOR
+  case "$type" in
+    feat|ux|refactor|perf)
+      bump="minor"
+      info "Bump MINOR via tipo '$type'"
+      ;;
+    *)
+      bump="patch"
+      info "Bump PATCH (padrão para tipo '$type')"
+      ;;
+  esac
 fi
 
 info "Tipo de bump determinado: ${bump} (tipo: $type, arquivos: $file_count, breaking: $has_breaking_change)"
+
 
 # -----------------------------------------------------------------------------
 # ETAPA 1: BUMP DE VERSÃO
