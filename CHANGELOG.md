@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 8.00.0002
+
+**Data:** 2026-02-03 21:47:00 | **Commit:** `01510aa` | **Tipo:** `patch`
+
+- test: verificar correção
+
 ## V. 8.00.0001
 
 **Data:** 2026-02-03 21:46:39 | **Commit:** `f3ead02` | **Tipo:** `patch`
@@ -1170,6 +1176,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
