@@ -399,6 +399,7 @@ if detect_breaking_change "$commit_msg" "$first_line"; then
   has_breaking_change=1
   info "Breaking change detectado - forçando bump MAJOR"
 fi
+
 # -----------------------------------------------------------------------------
 # DETERMINAÇÃO DO TIPO DE BUMP
 # -----------------------------------------------------------------------------
