@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 9.0
+
+**Data:** 2026-02-03 21:47:54 | **Commit:** `0efaa5b` | **Tipo:** `major`
+
+- fix: grande mudança [major]
+
 ## V. 8.01
 
 **Data:** 2026-02-03 21:47:26 | **Commit:** `0c2b177` | **Tipo:** `minor`
@@ -1182,6 +1188,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
