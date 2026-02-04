@@ -399,11 +399,6 @@ if detect_breaking_change "$commit_msg" "$first_line"; then
   has_breaking_change=1
   info "Breaking change detectado - forçando bump MAJOR"
 fi
-
-# -----------------------------------------------------------------------------
-# DETERMINAÇÃO DO TIPO DE BUMP
-# -----------------------------------------------------------------------------
-
 # -----------------------------------------------------------------------------
 # DETERMINAÇÃO DO TIPO DE BUMP
 # -----------------------------------------------------------------------------
@@ -424,21 +419,22 @@ elif printf "%s" "$commit_msg_lower" | grep -qE '|$minor$|'; then
   bump="minor"
   info "Bump MINOR via tag [minor]"
 
-elif printf "%s" "$commit_msg_lower" | grep -qE '|$patch$|||$hotfix$|||$refactor$|'; then
+elif printf "%s" "$commit_msg_lower" | grep -qE '|$patch$|||$hotfix$|'; then
   bump="patch"
-  info "Bump PATCH via tag [patch], [hotfix] ou [refactor]"
+  info "Bump PATCH via tag [patch] ou [hotfix]"
 
-# Prioridade 3: Inferência baseada em tipo de commit
+# Prioridade 3: Tipo de commit "release" sempre é MAJOR
 elif [ "$type" = "release" ]; then
   bump="major"
   info "Bump MAJOR via tipo 'release'"
 
+# Prioridade 4: Muitos arquivos alterados (>100) resultam em MINOR
 elif [ "$file_count" -gt 100 ] 2>/dev/null; then
   bump="minor"
   info "Bump MINOR via quantidade de arquivos ($file_count > 100)"
 
+# Prioridade 5: Inferência baseada no tipo de commit
 else
-  # Tipos que resultam em MINOR
   case "$type" in
     feat|ux|perf)
       bump="minor"
@@ -447,6 +443,10 @@ else
     refactor)
       bump="minor"
       info "Bump MINOR via tipo 'refactor'"
+      ;;
+    fix|docs|style|test|build|ci|chore)
+      bump="patch"
+      info "Bump PATCH via tipo '$type'"
       ;;
     *)
       bump="patch"

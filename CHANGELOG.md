@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 5.0
+
+**Data:** 2026-02-03 21:39:50 | **Commit:** `956931e` | **Tipo:** `major`
+
+- fix: corrigir detecção de tags de versionamento
+
 ## V. 4.0
 
 **Data:** 2026-02-03 21:22:55 | **Commit:** `eec0d82` | **Tipo:** `major`
@@ -1140,6 +1146,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
