@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 8.00.0001
+
+**Data:** 2026-02-03 21:46:39 | **Commit:** `f3ead02` | **Tipo:** `patch`
+
+- fix: corrigir detecção de tags usando grep -F
+
 ## V. 8.0
 
 **Data:** 2026-02-03 21:44:35 | **Commit:** `f0d504b` | **Tipo:** `major`
@@ -1164,6 +1170,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

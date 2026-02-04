@@ -409,29 +409,45 @@ bump=""
 # Prioridade 1: Breaking changes sempre resultam em MAJOR
 if [ "$has_breaking_change" -eq 1 ]; then
   bump="major"
+  debug "Breaking change detectado"
   info "Bump MAJOR via breaking change"
 
-# Prioridade 2: Tags explícitas na mensagem de commit
-elif printf "%s" "$commit_msg_lower" | grep -qE '|$major$|||$release$|'; then
+# Prioridade 2: Tags explícitas na mensagem de commit (usando pattern matching)
+elif echo "$commit_msg_lower" | grep -qF '[major]'; then
   bump="major"
-  info "Bump MAJOR via tag [major] ou [release]"
+  debug "Tag [major] encontrada na mensagem"
+  info "Bump MAJOR via tag [major]"
 
-elif printf "%s" "$commit_msg_lower" | grep -qE '|$minor$|'; then
+elif echo "$commit_msg_lower" | grep -qF '[release]'; then
+  bump="major"
+  debug "Tag [release] encontrada na mensagem"
+  info "Bump MAJOR via tag [release]"
+
+elif echo "$commit_msg_lower" | grep -qF '[minor]'; then
   bump="minor"
+  debug "Tag [minor] encontrada na mensagem"
   info "Bump MINOR via tag [minor]"
 
-elif printf "%s" "$commit_msg_lower" | grep -qE '|$patch$|||$hotfix$|'; then
+elif echo "$commit_msg_lower" | grep -qF '[patch]'; then
   bump="patch"
-  info "Bump PATCH via tag [patch] ou [hotfix]"
+  debug "Tag [patch] encontrada na mensagem"
+  info "Bump PATCH via tag [patch]"
+
+elif echo "$commit_msg_lower" | grep -qF '[hotfix]'; then
+  bump="patch"
+  debug "Tag [hotfix] encontrada na mensagem"
+  info "Bump PATCH via tag [hotfix]"
 
 # Prioridade 3: Tipo de commit "release" sempre é MAJOR
 elif [ "$type" = "release" ]; then
   bump="major"
+  debug "Tipo de commit: release"
   info "Bump MAJOR via tipo 'release'"
 
 # Prioridade 4: Muitos arquivos alterados (>100) resultam em MINOR
 elif [ "$file_count" -gt 100 ] 2>/dev/null; then
   bump="minor"
+  debug "Muitos arquivos alterados: $file_count"
   info "Bump MINOR via quantidade de arquivos ($file_count > 100)"
 
 # Prioridade 5: Inferência baseada no tipo de commit
@@ -439,24 +455,29 @@ else
   case "$type" in
     feat|ux|perf)
       bump="minor"
+      debug "Tipo de commit: $type (MINOR)"
       info "Bump MINOR via tipo '$type'"
       ;;
     refactor)
       bump="minor"
+      debug "Tipo de commit: refactor (MINOR)"
       info "Bump MINOR via tipo 'refactor'"
       ;;
     fix|docs|style|test|build|ci|chore)
       bump="patch"
+      debug "Tipo de commit: $type (PATCH)"
       info "Bump PATCH via tipo '$type'"
       ;;
     *)
       bump="patch"
+      debug "Tipo de commit desconhecido: $type (PATCH padrão)"
       info "Bump PATCH (padrão para tipo '$type')"
       ;;
   esac
 fi
 
 info "Tipo de bump determinado: ${bump} (tipo: $type, arquivos: $file_count, breaking: $has_breaking_change)"
+
 
 # -----------------------------------------------------------------------------
 # ETAPA 1: BUMP DE VERSÃO
