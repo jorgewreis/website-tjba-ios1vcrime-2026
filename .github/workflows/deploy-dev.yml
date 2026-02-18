@@ -3,6 +3,7 @@ name: Deploy DEV (develop -> dev.ios1vcrime.com.br)
 on:
   push:
     branches: ["develop"]
+  workflow_dispatch:
 
 jobs:
   deploy:

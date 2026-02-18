@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0021
+
+**Data:** 2026-02-18 20:06:44 | **Commit:** `92315e7` | **Tipo:** `patch`
+
+- Fix: tentativa 7
+
 ## V. 1.02.0020
 
 **Data:** 2026-02-18 19:59:33 | **Commit:** `985b60d` | **Tipo:** `patch`
@@ -1236,6 +1242,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
