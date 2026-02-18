@@ -38,9 +38,10 @@ jobs:
 
       - name: Sync files to server (DEV)
         run: |
-          rsync -az --delete \
+          rsync -az \
             --no-times --omit-dir-times \
             --no-perms --no-owner --no-group \
+            --inplace \
             --exclude ".git/" \
             --exclude ".github/" \
             --exclude ".env" \
@@ -53,6 +54,7 @@ jobs:
             --exclude ".config/" \
             --exclude ".githooks/" \
             ./ "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEV_PATH }}/"
+
 
       - name: Post-deploy (DEV)
         run: |
