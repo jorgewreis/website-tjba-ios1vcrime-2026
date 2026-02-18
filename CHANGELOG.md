@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0015
+
+**Data:** 2026-02-18 18:36:07 | **Commit:** `3472e5d` | **Tipo:** `patch`
+
+- Refactor: alteração de nomenclaturas e pastas
+
 ## V. 1.02.0014
 
 **Data:** 2026-02-03 21:53:03 | **Commit:** `a6649db` | **Tipo:** `patch`
@@ -1200,6 +1206,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -3,6 +3,25 @@
 Este documento define **nomes de arquivos padrão** e **exemplos de conteúdo** para cada pasta do repositório.
 Objetivo: padronizar a organização, facilitar manutenção, revisão e automação (CI/CD, versões, release notes).
 
+## 1. Objetivo e fundamentos
+
+Além de servir como referência para pastas e arquivos, este guia deve ser consultado em conjunto com o `Documento Canônico do Projeto` (`docs/00-foundation/project-canonical-document.md`), que concentra decisões já tomadas e diretrizes de stack, arquitetura e versionamento. Qualquer alteração na estrutura aqui descrita precisa ser refletida nesse documento canônico e, quando aplicável, nos canônicos do domínio (governança e arquitetura).
+
+## 2. Referências canônicas obrigatórias
+
+- `docs/00-foundation/project-canonical-document.md`: decisão central do projeto (stack, arquitetura, restrições e versionamento).
+- `docs/00-foundation/guia-estrutura-docs.md`: recomendações de organização da pasta `docs/`, nomenclaturas e formatos.
+- `docs/00-foundation/technical-assumptions-constraints.md`: premissas, stack híbrido (Next.js + PHP/MySQL) e limites técnicos que condicionam esta estrutura.
+- `docs/90-releases/README.md`: operação de releases (Patch/Minor/Major) e seus artefatos (`VERSION`, `CHANGELOG`, `_draft_minor.md`).
+
+## 3. Regras gerais transversais
+
+A nomenclatura principal segue `kebab-case` para arquivos Markdown e pastas (`docs/architecture/adr/session-policy.md`), `PascalCase` para classes PHP (controllers, models, helpers) e `snake_case` ou `kebab-case` para views e assets, conforme o contexto. Identificadores persistidos usam prefixo semântico (ex.: `USR-`, `PER-`) para facilitar auditoria e logs.
+
+O controle de versão usa o trio `VERSION` (fonte única para scripts), `CHANGELOG.md` (registro cumulativo) e `docs/90-releases/` (draft e notas). Branches principais (`main`, `release`) são protegidas; quando houver branches temáticas, documente escopo, ticket e área impactada antes de qualquer merge (ver `docs/00-foundation/escopo-projeto.md`).
+
+---
+
 > Regra-mãe:
 > - `app/` = lógica e camadas do sistema
 > - `public/` = tudo que é entregue ao navegador
@@ -181,6 +200,31 @@ Arquivos de exemplo:
   **Por quê:** sanitização para evitar XSS/injeções.
 - `app/helpers/DateHelper.php`  
   **Por quê:** manipulação consistente de datas e timezone.
+- `app/helpers/Helper.php`  
+  **Por quê:** utilitários de domínio (IDs únicos, iniciais, transformações).
+- `app/helpers/AuditLogger.php`  
+  **Por quê:** registrar auditoria completa com fallback para `error_log`.
+- `app/helpers/ToastHelper.php`  
+  **Por quê:** ponte entre o backend PHP e o sistema de toasts em `public/assets/js`.
+- `app/helpers/autoload.php`  
+  **Por quê:** autoload simples que carrega helpers e serviços via convenção de nome.
+- `app/helpers/bootstrap.php`  
+  **Por quê:** arranca sessão, autoload e conexão usada por entrypoints públicos (ex.: `public/index.php`).
+
+### app/services/
+
+- `app/services/ClasseManager.php`  
+  **Por quê:** encapsula operações com `classes`, prepara IDs via `Helper`.
+- `app/services/ProcessoManager.php`  
+  **Por quê:** centraliza busca, cadastro e prioridades dos processos jurídicos.
+- `app/services/ReuManager.php`  
+  **Por quê:** gerencia réus, CPF e vínculos com processos (`processoReus`).
+- `app/services/Produtividade.php`  
+  **Por quê:** registra pontuações e eventos de produtividade no sistema.
+- `app/services/Guias.php`  
+  **Por quê:** orquestra cadastro de guias, serviços dependentes e auditoria (AuditLogger).
+
+Esses serviços devem ser consumidos por controllers e middlewares, mantendo a conexão com o banco por `app/helpers/Conexao.php`.
 
 ### app/views/
 
@@ -283,14 +327,19 @@ Parciais recomendadas:
 ### public/index.php
 - **Por quê:** front controller (entra tudo por aqui), aplica bootstrap e roteamento.
 
-### public/assets/css/
-- `public/assets/css/reset.css`
-- `public/assets/css/color.css`
-- `public/assets/css/pages.css`
-- `public/assets/css/form.css`
-- `public/assets/css/components.css` (recomendado)
-- `public/assets/css/layout.css` (recomendado)
-- `public/assets/css/login.css` (separar estilos de login)
+- ### public/assets/css/
+- #### Arquivos compartilhados
+- - `public/assets/css/shared/reset.css` — redefinição e reset global.
+- - `public/assets/css/shared/base.css` — tipografia, corpo e blocos principais.
+- - `public/assets/css/shared/variables.css` — constantes de cor, espaçamento, tipografia.
+- - `public/assets/css/shared/themes.css` — variações de tema (claro, escuro, feedback).
+- - `public/assets/css/shared/components.css` — componentes reutilizáveis.
+- - `public/assets/css/shared/forms.css` — formulários, inputs, mascaramento e helpers visuais.
+- - `public/assets/css/shared/responsive.css` — regras adaptativas por breakpoint.
+- - `public/assets/css/shared/toast.css` — estilos dos toasts flutuantes.
+- - `public/assets/css/shared/utilities.css` — helpers utilitários (mostrar/ocultar, espaçamentos).
+- #### Estilos por módulo
+- Cada módulo que precise de estilos específicos (por exemplo, `public/assets/css/modules/guias/create.css`) deve viver em `public/assets/css/modules/<nome-do-modulo>/` para evitar poluição global. Essa organização ajuda a manter apenas o necessário carregado nas páginas específicas de cada área.
 
 **Por quê:** manter CSS modular por responsabilidade (base, layout, componentes, páginas).
 
@@ -417,7 +466,7 @@ Ideal:
 
 ## Observações de padronização
 
-1) `resourses/` deve ser renomeada para `resources/` para evitar dívida técnica.  
+1) Renomeie `resourses/` para `resources/` e use esta última para depósitos de fontes externas quando houver PDF original, mantendo a convenção única de nomes.  
 2) Rotas internas devem mapear 1:1 com controllers e views:
    - Ex.: `GET /internal/cartas-expedidas` → `CartasExpedidasController` → `app/views/internal/cartas_expedidas.php`  
 3) Módulos sensíveis (medidas protetivas, produtividade, auditoria) devem gerar eventos em `LogEvento.php` e `storage/logs/security/`.

@@ -1,0 +1,53 @@
+name: Deploy DEV (develop -> dev.ios1vcrime.com.br)
+
+on:
+  push:
+    branches: ["develop"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Sync files to server (DEV)
+        run: |
+          rsync -az --delete \
+            --exclude ".git/" \
+            --exclude ".github/" \
+            --exclude ".env" \
+            --exclude "storage/" \
+            ./ ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEV_PATH }}/
+
+      - name: Post-deploy (DEV)
+        run: |
+          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
+            set -e
+            cd "${{ secrets.DEV_PATH }}"
+
+            # Se existir Node build (assets)
+            if [ -f package.json ]; then
+              npm ci
+              npm run build
+            fi
+
+            # Se existir Composer
+            if [ -f composer.json ]; then
+              composer install --no-dev --optimize-autoloader
+            fi
+
+            # Recarrega serviços (se o usuário tiver permissão; senão, ignora)
+            sudo systemctl reload nginx 2>/dev/null || true
+            sudo systemctl reload php8.2-fpm 2>/dev/null || true
+            sudo systemctl reload php8.1-fpm 2>/dev/null || true
+            sudo systemctl reload php8.0-fpm 2>/dev/null || true
+          EOF

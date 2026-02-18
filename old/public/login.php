@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/security.php';
+require_once __DIR__ . '/../app/helpers/bootstrap.php';
 
 if (Security::isAuthenticated()) {
     header('Location: /home.php');
@@ -16,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 header('Content-Type: application/json; charset=utf-8');
 
-require_once __DIR__ . '/../bd/Usuario.php';
+require_once __DIR__ . '/../old/bd/Usuario.php';
 
 $cpf   = $_POST['cpf'] ?? '';
 $senha = $_POST['senha'] ?? '';

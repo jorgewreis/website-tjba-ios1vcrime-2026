@@ -3,7 +3,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/security.php';
-require_once __DIR__ . '/../bd/Usuario.php';
+require_once __DIR__ . '/../app/helpers/bootstrap.php';
+require_once __DIR__ . '/../old/bd/Usuario.php';
 
 try {
     if (Security::isAuthenticated()) {

@@ -2,8 +2,9 @@
 // Dependências base do sistema (configuração, segurança e acesso a dados).
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/security.php';
-require_once __DIR__ . '/../bd/Usuario.php';
-require_once __DIR__ . '/../bd/Conection.php';
+require_once __DIR__ . '/../app/helpers/bootstrap.php';
+require_once __DIR__ . '/../old/bd/Usuario.php';
+require_once __DIR__ . '/../old/bd/Conection.php';
 
 // Garante que a sessão esteja ativa antes de acessar dados do usuário.
 if (session_status() !== PHP_SESSION_ACTIVE) {

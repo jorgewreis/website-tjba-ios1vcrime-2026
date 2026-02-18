@@ -1,0 +1,204 @@
+/* base.css - base layout, typography and core components */
+@charset "utf-8";
+
+html
+{
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+}
+
+body
+{
+    /* sizing */
+    min-height: 100vh;
+
+    /* box / layout */
+    /* none */
+
+    /* spacing */
+    /* none */
+
+    /* display / flow */
+    /* none */
+
+    /* rendering / typography */
+    line-height: 1.5;
+    text-rendering: optimizeSpeed;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-family: var(--v-card-font);
+
+    /* color / background */
+    background-color: var(--color-bg);
+    color: var(--color-text);
+}
+
+/* Accessibility skip link */
+.skip-to-main
+{
+    /* position */
+    position: absolute;
+    top: -40px;
+    left: 0;
+
+    /* sizing */
+    /* none */
+
+    /* spacing */
+    padding: 8px;
+
+    /* display / flow */
+    /* none */
+
+    /* flex / alignment */
+    /* none */
+
+    /* border / shadow */
+    /* none */
+
+    /* typography */
+    text-decoration: none;
+
+    /* color / background */
+    background: var(--color-card);
+    color: var(--color-accent);
+
+    z-index: 100;
+}
+
+.skip-to-main:focus
+{
+    /* position */
+    top: 0;
+}
+
+/* Layout utils used by the app */
+.no-view
+{
+    /* display / flow */
+    display: none;
+}
+
+.view
+{
+    /* display / flow */
+    display: block;
+
+    /* sizing */
+    width: 100vw;
+    min-height: 100vh;
+}
+
+.row
+{
+    /* display / flow */
+    display: flex;
+
+    /* flex */
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+
+    /* sizing */
+    width: 100%;
+}
+
+.col
+{
+    /* display / flow */
+    display: flex;
+
+    /* flex */
+    flex-direction: column;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.d-flex
+{
+    /* display / flow */
+    display: flex;
+}
+
+.right
+{
+    /* display / flow */
+    display: flex;
+
+    /* flex */
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.card
+{
+    /* position */
+    /* none */
+
+    /* sizing */
+    /* none */
+
+    /* spacing */
+    margin: 1.5rem;
+    padding: 1.5rem;
+
+    /* display / flow */
+    box-sizing: border-box;
+
+    /* border / shadow */
+    border-radius: var(--radius-md);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    border: 1px solid var(--color-border);
+
+    /* color / background */
+    background: var(--color-card);
+}
+
+/* Basic typography */
+.header-text
+{
+    /* typography */
+    font-family: var(--v-card-font);
+    font-size: 12px;
+    font-weight: 400;
+    text-transform: uppercase;
+
+    /* color / background */
+    color: var(--color-text);
+}
+
+.info-text
+{
+    /* typography */
+    font-family: var(--v-card-font);
+    font-size: 12px;
+    font-weight: 400;
+
+    /* color / background */
+    color: var(--color-text);
+}
+
+.content-text
+{
+    /* typography */
+    font-family: var(--v-card-font);
+    font-size: 13px;
+    font-weight: 500;
+
+    /* color / background */
+    color: var(--color-text);
+}
+
+img,
+picture,
+video,
+canvas,
+svg
+{
+    /* display / sizing */
+    display: block;
+    max-width: 100%;
+    height: auto;
+}

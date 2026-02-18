@@ -1,5 +1,5 @@
 ﻿<?php
-require_once __DIR__ . '/../vendor/autoload.php'; // Se usar biblioteca JWT
+require_once __DIR__ . '/../../vendor/autoload.php'; // Se usar biblioteca JWT
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 

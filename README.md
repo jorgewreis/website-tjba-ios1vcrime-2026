@@ -42,6 +42,7 @@ Sistema web interno para centralizar rotinas do **Cartório**, **Gabinete** e **
   - [Logs e auditoria](#logs-e-auditoria)
   - [Estrutura do projeto (referência)](#estrutura-do-projeto-referência)
   - [Configuração Inicial](#configuração-inicial)
+  - [Contexto Ativo (estado atual)](#contexto-ativo-estado-atual)
   - [Licença e uso](#licença-e-uso)
   - [Créditos](#créditos)
 
@@ -297,6 +298,10 @@ Pastas principais no repositório:
 Após clonar o repositório, configure os hooks:
 
 - git config core.hooksPath .githooks
+
+## Contexto Ativo (estado atual)
+
+O documento [`docs/00-foundation/contexto-ativo.md`](docs/00-foundation/contexto-ativo.md) reúne o status atual das atividades de documentação e reorganização, os problemas presentes, o que já foi validado manualmente e os arquivos que sofreram impacto direto. Consulte esse arquivo antes de iniciar qualquer alteração estrutural ou de processo para garantir alinhamento com o estado acordado.
 
 ## Licença e uso
 
