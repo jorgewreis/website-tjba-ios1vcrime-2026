@@ -2,6 +2,8 @@
 # Release Drafts (não versionar rascunhos)
 docs/90-releases/_buffer_minor.txt
 docs/90-releases/_draft_minor.md
+docs/90-releases/_buffer_major.txt
+docs/90-releases/_draft_major.md
 # =========================
 # Environment / Secrets
 # =========================
