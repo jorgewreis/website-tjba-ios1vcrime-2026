@@ -1,5 +1,17 @@
 # Changelog
 
+## V. 1.02.0033
+
+**Data:** 2026-02-19 10:52:17 | **Commit:** `3620bbf` | **Tipo:** `patch`
+
+- fix(css): import jetbrains mono
+
+## V. 1.02.0032
+
+**Data:** 2026-02-19 10:51:41 | **Commit:** `4fb2255` | **Tipo:** `patch`
+
+- fix(css): import jetbrains mono
+
 ## V. 1.02.0031
 
 **Data:** 2026-02-19 10:31:57 | **Commit:** `7126911` | **Tipo:** `patch`
@@ -1302,6 +1314,8 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
+
 
 
 
