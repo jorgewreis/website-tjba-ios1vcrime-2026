@@ -54,7 +54,7 @@ body {
         align-items: flex-start;
         justify-content: center;
 
-        background-image: url("./../img/Fundo_001.png");
+        background-image: url("/assets/img/backgrounds/Fundo_001.png");
         background-position: right;
         background-repeat: no-repeat;
         background-size: cover;
