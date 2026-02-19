@@ -2786,3 +2786,751 @@
 .proposal-closed-row.is-locked .proposal-closed-toggle i {
     visibility: hidden;
 }
+
+
+/* legacy component content from components.css */
+/* ========================================
+   components.css - Componentes reutilizáveis
+   Responsável por: botões, formulários, alertas, cards
+   1ª Vara Crime de Ilhéus
+   ======================================== */
+
+/* ========================================
+   FORM LAYOUT
+   ======================================== */
+
+.form-line {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: flex-start;
+    margin-bottom: 20px;
+}
+
+.form-block {
+    width: fit-content;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+}
+
+.form-login {
+    width: calc(100% - 40px);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    margin: 40px 20px 20px 20px;
+}
+
+/* ========================================
+   FORM CONTROLS (INPUT, TEXTAREA, SELECT)
+   ======================================== */
+
+label {
+    margin-bottom: 3px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    color: #727272;
+    display: block;
+}
+
+input,
+textarea,
+select {
+    height: 50px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    border: 1px solid #a5a5a5;
+    border-radius: 7px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    color: #202020;
+    padding: 0 20px;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: #5F61E6;
+    box-shadow: 0 0 0 3px rgba(95, 97, 230, 0.1);
+}
+
+input::placeholder {
+    color: #a5a5a5;
+}
+
+textarea {
+    height: auto;
+    min-height: 100px;
+    padding: 15px 20px;
+    resize: vertical;
+}
+
+/* ========================================
+   FORM SIZES
+   ======================================== */
+
+.size-b {
+    width: 150px;
+}
+
+.size-c {
+    width: 200px;
+}
+
+.size-full {
+    width: 100%;
+}
+
+/* ========================================
+   BUTTONS
+   ======================================== */
+
+button,
+.button {
+    height: 50px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 7px;
+    box-shadow: 1px 1px 10px rgba(114, 114, 114, 0.45);
+    padding: 0 30px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+button:hover,
+.button:hover {
+    transform: translateY(-1px);
+    box-shadow: 1px 3px 15px rgba(114, 114, 114, 0.6);
+}
+
+button:active,
+.button:active {
+    box-shadow: none;
+    transform: translateY(0);
+}
+
+button:disabled,
+.button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Button primary variant */
+button.bg-primary,
+.button.bg-primary {
+    background-color: #5F61E6;
+    color: white;
+}
+
+button.bg-primary:hover,
+.button.bg-primary:hover {
+    background-color: #5053ca;
+}
+
+/* ========================================
+   TEXT STYLES
+   ======================================== */
+
+.text-login {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    color: #384551;
+}
+
+.link-login,
+a.link-login {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    color: #5053ca;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.link-login:hover {
+    color: #5F61E6;
+    text-decoration: underline;
+}
+
+.title-page {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    margin-left: 20px;
+    margin-bottom: 20px;
+}
+
+.title-page .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 20px;
+    color: #384551;
+}
+
+.title-page .info-title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    color: #384551;
+    margin-top: 5px;
+}
+
+/* ========================================
+   ALERT / NOTIFICATION BOXES
+   ======================================== */
+
+.alert-heading {
+    min-width: 300px;
+    height: fit-content;
+    display: none;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    border: none;
+    border-radius: 7px;
+    margin: 10px 0;
+    padding: 15px;
+    animation: slideIn 0.3s ease;
+}
+
+.alert-heading.primary {
+    background-color: var(--bg-primary);
+    color: var(--bs-primary);
+}
+
+.alert-heading.danger {
+    background-color: var(--bg-danger);
+    color: var(--bs-danger);
+}
+
+.alert-heading.success {
+    background-color: var(--bg-success);
+    color: var(--bs-success);
+}
+
+.alert-heading.warning {
+    background-color: var(--bg-warning);
+    color: var(--bs-warning);
+}
+
+.alert-heading.info {
+    background-color: var(--bg-info);
+    color: var(--bs-info);
+}
+
+.alert-heading .alert-header {
+    width: 100%;
+    min-height: 30px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.alert-heading .alert-header .text {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+}
+
+.alert-heading .alert-header .close-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+    color: inherit;
+}
+
+.alert-heading .alert-text {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+/* ========================================
+   CARD
+   ======================================== */
+
+.card-login {
+    max-width: 500px;
+    width: 90vw;
+    height: fit-content;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    background-color: white;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px 0 rgba(34, 48, 62, 0.1);
+    padding: 48px 5vw;
+}
+
+.card {
+    background-color: white;
+    border: 1px solid #e4e6e8;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--bs-box-shadow-xs);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: var(--bs-box-shadow-sm);
+}
+
+/* ========================================
+   ANIMATIONS
+   ======================================== */
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* ========================================
+   RESPONSIVE ADJUSTMENTS
+   ======================================== */
+
+@media (min-width: 768px) {
+    .card-login {
+        width: 500px;
+        padding: 48px;
+    }
+
+    input,
+    textarea,
+    select {
+        font-size: 13px;
+    }
+}
+
+@media (min-width: 1080px) {
+    input,
+    button,
+    textarea,
+    select {
+        height: 40px;
+    }
+
+    button.bg-primary {
+        padding: 0 25px;
+    }
+}
+
+@media (min-width: 1440px) {
+    /* Large desktop adjustments */
+}
+
+@media (min-width: 1920px) {
+    /* Extra large desktop adjustments */
+}
+
+
+/* legacy component content from menu-style.css */
+/* ========================================
+   menu.css - Estilos do menu sidebar
+   Responsável por: navegação, menu items, submenu
+   1ª Vara Crime de Ilhéus
+   ======================================== */
+
+/* ========================================
+   BRAND NAME / LOGO
+   ======================================== */
+
+.brand-name {
+    position: relative;
+    width: 260px;
+    height: 64px;
+    margin-top: 24px;
+}
+
+.brand-name-link {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    margin: 0 28px;
+}
+
+.brand-name-link .name-primary {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    color: #414d58;
+}
+
+.brand-name-link .name-secondary {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    color: #414d58;
+}
+
+.brand-name .layout-menu-toggle {
+    position: absolute;
+    width: 36px;
+    height: 36px;
+    top: 4px;
+    right: -18px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    border-radius: 100%;
+    background-color: white;
+    cursor: pointer;
+}
+
+.brand-name .layout-menu-toggle i {
+    margin-top: 5px;
+}
+
+/* ========================================
+   MENU INNER / SCROLLABLE AREA
+   ======================================== */
+
+.menu-inner {
+    width: 260px;
+    height: calc(100vh - 100px);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    touch-action: auto;
+    overflow-anchor: none;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.menu-inner::-webkit-scrollbar {
+    display: none;
+}
+
+/* ========================================
+   MENU ITEMS
+   ======================================== */
+
+.menu-inner .menu-item {
+    position: relative;
+    width: 260px;
+    padding: 4px 0 0;
+    box-sizing: border-box;
+    list-style: none;
+    cursor: pointer;
+}
+
+.menu-inner > .menu-item:not(.active) .menu-link:not(.open):hover {
+    background-color: #f2f3f3;
+}
+
+.menu-inner .menu-item.active {
+    position: relative;
+}
+
+/* Active indicator bar */
+.menu-inner > .menu-item.active::before {
+    position: absolute;
+    background-color: #696cff;
+    content: "";
+    inline-size: .25rem;
+    inset-inline-end: 0;
+    border-start-start-radius: .375rem;
+    border-end-start-radius: .375rem;
+    width: 5px;
+    height: 42px;
+    right: -1px;
+}
+
+/* ========================================
+   MENU LINK / ITEM TEXT
+   ======================================== */
+
+.menu-item .menu-link {
+    position: relative;
+    height: 42px;
+    border-radius: 5px;
+    padding: 5px 40px 5px 15px;
+    margin: 0 16px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    cursor: pointer;
+}
+
+.menu-item .menu-link i {
+    width: 22px;
+    height: 22px;
+    margin: 10px 8px 10px 0;
+}
+
+.menu-link .text {
+    font-family: 'Montserrat';
+    font-weight: 500;
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ========================================
+   MENU LINK STATES
+   ======================================== */
+
+.menu-inner .menu-item .menu-link {
+    background-color: #ffffff;
+    color: #5f5f5f;
+    transition: all 0.3s ease;
+}
+
+.menu-inner .menu-item.active .menu-link {
+    background-color: #e7e7ff;
+    color: #696cff;
+    font-weight: 600;
+}
+
+.menu-item.active .menu-sub .menu-item .menu-link {
+    background-color: #ffffff;
+    color: #5f5f5f;
+}
+
+.menu-item.active .menu-sub .menu-item:not(.active) .menu-link:hover {
+    background-color: #f2f3f3;
+}
+
+/* ========================================
+   SUBMENU / NESTED ITEMS
+   ======================================== */
+
+.menu-sub {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.menu-item.open .menu-sub {
+    max-height: 500px;
+}
+
+/* Submenu item padding */
+.menu-sub .menu-item .menu-link {
+    position: relative;
+    padding-left: 34px;
+}
+
+/* Submenu bullet point */
+.menu-sub .menu-item > .menu-link::before {
+    position: absolute;
+    border-radius: 50%;
+    background-color: #a7acbd;
+    block-size: 5px;
+    content: "";
+    inline-size: 5px;
+    inset-inline-start: 20px;
+}
+
+/* Active submenu bullet */
+.menu-item.active:not(.open) > .menu-link:not(.menu-toggle)::before {
+    width: 5px;
+    height: 5px;
+    background-color: #696cff;
+    block-size: 8px;
+    box-shadow: 0 0 0 3px #e7e7ff;
+    inline-size: 8px;
+    inset-inline-start: 19px;
+}
+
+/* ========================================
+   MENU HEADER / SECTION LABELS
+   ======================================== */
+
+.menu-header {
+    position: relative;
+    opacity: 1;
+    padding: 16px 0 8px 0;
+}
+
+.menu-header::before {
+    position: absolute;
+    background-color: #e4e6e8;
+    block-size: 1px;
+    content: "";
+    inline-size: 1rem;
+    inset-block-start: 50%;
+    inset-inline-start: 0;
+    transition: all .3s ease-in-out;
+}
+
+.menu-header-text {
+    margin-left: 30px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 11px;
+    color: #a7acb2;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+/* ========================================
+   MENU TOGGLE / EXPAND ARROW
+   ======================================== */
+
+.menu-item .menu-toggle::after {
+    inset-inline-end: 20px;
+    transition: transform .3s;
+}
+
+.menu-toggle::after {
+    position: absolute;
+    display: block;
+    border: 2px solid;
+    block-size: .45em;
+    border-block-end: 0;
+    border-inline-start: 0;
+    content: "";
+    inline-size: .45em;
+    inset-block-start: 49%;
+    transform: translateY(-50%) rotate(45deg);
+    border-color: currentColor;
+}
+
+.menu-item.open .menu-toggle::after {
+    transform: translateY(-50%) rotate(135deg);
+}
+
+/* ========================================
+   NAVBAR ITEMS (TOP NAV)
+   ======================================== */
+
+.nav-item {
+    position: relative;
+    margin-right: 10px;
+}
+
+.nav-link {
+    display: block;
+    padding-top: 8px;
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+}
+
+.nav-link.disabled {
+    opacity: 0.2;
+    filter: grayscale(1);
+    pointer-events: none;
+}
+
+.nav-link i {
+    width: 22px;
+    height: 22px;
+}
+
+.nav-item .new-message::after {
+    content: '';
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    top: 8px;
+    right: 1px;
+    border-radius: 100%;
+    box-shadow: 0 0 0 2px white;
+    background-color: var(--bs-danger);
+}
+
+/* ========================================
+   AVATAR
+   ======================================== */
+
+.nav-link .avatar {
+    position: relative;
+    width: 38px;
+    height: 38px;
+    margin-top: -6px;
+    border-radius: 50%;
+    cursor: pointer;
+    background-color: #38455131;
+    color: #384551;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-link .avatar img {
+    border-radius: 100%;
+    box-sizing: border-box;
+    border: 1px solid #d3d3d310;
+    width: 100%;
+    height: 100%;
+}
+
+.nav-link .avatar-online::after {
+    content: '';
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    bottom: 0px;
+    right: 0px;
+    border-radius: 100%;
+    box-shadow: 0 0 0 2px white;
+    background-color: var(--bs-success);
+}
+
+/* ========================================
+   TARGET PAGE / FRAME
+   ======================================== */
+
+.target-page {
+    width: 100%;
+    height: calc(100vh - 100px);
+    display: flex;
+    flex-direction: column;
+    border: none;
+    border-style: hidden;
+}

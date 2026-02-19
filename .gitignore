@@ -1,9 +1,12 @@
 # =========================
 # Environment / Secrets
 # =========================
-#.env
-#.env.*
-#!.env.example
+.env
+.env.*
+!.env.example
+
+# Personal/virtual envs
+.venv/
 
 # =========================
 # OS / Editor
@@ -31,7 +34,13 @@ yarn-debug.log*
 yarn-error.log*
 *.md.bak
 *.bak
-*.txt
+/*.txt
+__pycache__/
+.mypy_cache/
+.pytest_cache/
+.coverage
+.cache/
+/*.py
 
 # =========================
 # Node / Frontend tooling (se existir)
@@ -42,7 +51,7 @@ build/
 .cache/
 .parcel-cache/
 .vite/
-#.eslintcache
+.eslintcache
 
 # =========================
 # PHP / Composer
@@ -63,8 +72,8 @@ temp/
 *.tmp
 
 # Apache / Nginx
-#.htaccess.bak
-#*.htpasswd
+.htaccess.bak
+*.htpasswd
 
 # =========================
 # Uploads / User-generated content (ajuste conforme seu projeto)
@@ -77,14 +86,14 @@ temp/
 # =========================
 # Database / SQL dumps
 # =========================
-#*.sql
-#*.sqlite
-#*.sqlite3
-#*.db
-#**/bd/data.txt
-#dump/
-#backups/
-#database/backup/
+*.sql
+*.sqlite
+*.sqlite3
+*.db
+**/bd/data.txt
+dump/
+backups/
+database/backup/
 
 # =========================
 # Generated / Minified
@@ -96,8 +105,6 @@ temp/
 # =========================
 # Optional: Local config overrides
 # =========================
-#config.local.php
-#config.local.json
-
-
-#.config/
+config.local.php
+config.local.json
+.config/

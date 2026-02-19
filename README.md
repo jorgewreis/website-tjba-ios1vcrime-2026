@@ -277,18 +277,16 @@ Campos sugeridos:
 
 ---
 
-## Estrutura do projeto (referência)
-
+-## Estrutura do projeto (referência)
+-
 Pastas principais no repositório:
-
-- `admin/`
-- `bd/`
-- `config/`
-- `internal/`
-- `public/`
-- `scripts/`
-- `services/`
-- `sql/`
+-
+- `app/` — modelos, services, helpers, middlewares e views divididos entre `public` e `internal`.
+- `bootstrap/`, `config/` e `database/` — inicialização, parâmetros de conexão e migrações/exportações SQL.
+- `public/` — entrypoints (`index.php`, `home.php`, `frame.php`, APIs em `admin/api/`) e a pasta `assets/` com CSS/JS/template compartilhados, imagens e ícones.
+- `scripts/` — automações (versionamento, drafts, bump) utilizadas pelos hooks do repositório.
+- `storage/` — runtime (logs, uploads, backups) e **não versiona** o conteúdo (apenas `.gitkeep`).
+- `tools/` — auxiliares de IA e modelos de prompt (usados apenas em contexto de desenvolvimento/documentação).
 - `vendor/`
 
 ---
@@ -298,6 +296,11 @@ Pastas principais no repositório:
 Após clonar o repositório, configure os hooks:
 
 - git config core.hooksPath .githooks
+
+## Deploy automático para dev.ios1vcrime.com.br
+
+O branch `develop` é conectado ao workflow `.github/workflows/deploy-dev.yml`.
+Cada push aprovado nesse branch dispara a sincronização automatizada com o subdomínio `dev.ios1vcrime.com.br`, que consome o conteúdo vivo da pasta `public/`. Garanta que só arquivos públicos (HTML, CSS, JS, assets) estejam sob `public/`, pois qualquer script ou arquivo sensível deve ficar em `app/`, `config/`, `storage/` ou em `tools/`.
 
 ## Contexto Ativo (estado atual)
 

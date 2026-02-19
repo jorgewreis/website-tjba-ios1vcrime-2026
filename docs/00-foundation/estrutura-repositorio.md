@@ -59,6 +59,12 @@ O controle de versão usa o trio `VERSION` (fonte única para scripts), `CHANGEL
 - `.markdownlint.json` / `.markdownlintignore`  
   **Por quê:** consistência de documentação em markdown (docs/ mais previsíveis).
 
+### `tools/`
+- `tools/ai/` — scripts Python (`config.py`, `query.py`, `rag.py`, `ingest.py`) e `requirements.txt` relacionados à análise/elaboração de prompts ou automações.
+- `tools/prompts/` — modelos de prompt (`modelo_prompt_*`) usados para interação com assistentes; mantê-los versionados aqui, não na raiz.
+
+**Regra:** tudo que não é parte do deploy (front/back) deve ser organizado em `tools/`, mantendo a raiz enxuta.
+
 
 ---
 
@@ -451,15 +457,9 @@ Recomendados:
 
 ---
 
-## old/  (legado)
+## Legado e decisões de migração
 
-Se você mantiver:
-- `old/README.md`  
-  **Por quê:** declarar explicitamente: "não usar no código novo", finalidade e data de congelamento.
-
-Ideal:
-- mover `old/` para branch `legacy/` e retirar do trunk (`main/develop`),
-  evitando confusão e duplicidade de lógica/arquivos.
+Não existe mais a pasta `old/` no trunk: todo código ativo está nas pastas canônicas (`app/`, `public/`, `docs/`, `storage/`). Qualquer artefato legado deve ser migrado para branches específicos (`legacy/`) ou arquivado fora do repositório antes de ser removido, para evitar duplicação e DNS incorreto (-`old/`).
 
 
 ---

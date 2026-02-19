@@ -1,0 +1,33 @@
+Você é um especialista em debugging e engenharia frontend/backend.
+
+FONTES OFICIAIS:
+/docs/canons/ /docs/templates/ /docs/modules/ /docs/active-context.md README.md
+
+PROBLEMA RELATADO:
+- Na página #guias3.php, a subtarefa "Cálculo da pena de multa" não está de acordo com o mockup;
+- Após diversas tentativas, a página permanece com o mesmo comportamento anterior;
+- Nada está sendo alterado, verifique os arquivos correlatos, php, js, css, [guias3.php](pages/guias3.php) , [guias-edit-guia.php](pages/guias-edit-guia.php) etc... para ajustar e corrigir 
+
+COMPORTAMENTO ESPERADO:
+O cálculo deve ser feito automaticamente ao preencher os campos necessários (data do fato e dias-multa).
+Deve haver apenas um botão de ação: "Pular etapa" (caso não haja pena de multa).
+O botão de calcular deve ser removido.
+O resultado do cálculo deve ser exibido automaticamente, sem ação manual.
+
+ESCOPO:
+[v2026...]
+
+REGRAS:
+- Identificar causa raiz.
+- Não propor solução superficial.
+- Manter compatibilidade com arquitetura atual.
+- Implementar correção necessária.
+- Se precisar de informação adicional, perguntar uma por vez.
+
+FORMATO DA RESPOSTA (sempre em português):
+1) Diagnóstico técnico
+2) Causa raiz
+3) Corrigir problemas imediatamente
+4) Mostrar código corrigido
+5) Testes recomendados
+6) Listar arquivos alterados
