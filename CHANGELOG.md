@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0023
+
+**Data:** 2026-02-19 08:29:13 | **Commit:** `4b74b95` | **Tipo:** `patch`
+
+- fix: ajuste de caminhos e favicon, teste de commit manual
+
 ## V. 1.02.0022
 
 **Data:** 2026-02-18 20:10:55 | **Commit:** `07bd80c` | **Tipo:** `patch`
@@ -1248,6 +1254,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

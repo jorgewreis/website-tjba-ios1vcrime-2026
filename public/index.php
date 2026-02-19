@@ -26,6 +26,7 @@ $csrfToken = Security::generateCSRFToken();
     <link rel="stylesheet" href="/assets/css/shared/components.css">
     <link rel="stylesheet" href="/assets/css/shared/forms.css">
     <link rel="stylesheet" href="/assets/css/modules/public/login.css">
+    <link rel="icon" type="image/x-icon" href="/assets/img/favicon.ico">
 </head>
 <body>
     

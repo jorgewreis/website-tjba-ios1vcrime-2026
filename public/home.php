@@ -38,6 +38,7 @@ $userProfile = Security::getUserProfile() ?? '';
     <link rel="stylesheet" href="/assets/css/shared/base.css">
     <link rel="stylesheet" href="/assets/css/shared/components.css">
     <link rel="stylesheet" href="/assets/css/shared/forms.css">
+    <link rel="icon" type="image/x-icon" href="/assets/img/favicon.ico">
 </head>
 <body>
     
