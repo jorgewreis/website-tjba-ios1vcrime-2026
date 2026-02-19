@@ -2,9 +2,9 @@
 // Dependências base do sistema (configuração, segurança e acesso a dados).
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/security.php';
-require_once __DIR__ . '/../app/helpers/bootstrap.php';
+require_once __DIR__ . '/../app/helpers/BootstrapHelper.php';
 require_once __DIR__ . '/../app/models/Usuario.php';
-require_once __DIR__ . '/../app/helpers/Conection.php';
+require_once __DIR__ . '/../app/helpers/Conexao.php';
 
 // Garante que a sessão esteja ativa antes de acessar dados do usuário.
 if (session_status() !== PHP_SESSION_ACTIVE) {
@@ -23,37 +23,38 @@ $ERRORS = $PAGES . '/errors';
 
 // Lista de páginas permitidas e seus caminhos.
 $allowed_pages = [
-    'dashboard'         => $PAGES . '/dashboard.php',
-    'cejusc'            => $PAGES . '/cejusc.php',
-    'editais'           => $PAGES . '/editais.php',
-    'guias'             => $PAGES . '/guias.php',
-    'medidasprotetivas' => $PAGES . '/medidasprotetivas.php',
-    'oficioscartorio'   => $PAGES . '/oficioscartorio.php',
-    'oficiosgabinete'   => $PAGES . '/oficiosgabinete.php',
-    'cartasexpedidas'   => $PAGES . '/cartasexpedidas.php',
-    'cartasrecebidas'   => $PAGES . '/cartasrecebidas.php',
-    'produtividade'     => $PAGES . '/produtividade.php',
+    'dashboard'          => $PAGES . '/dashboard.php',
+    'cejusc'             => $PAGES . '/cejusc.php',
+    'editais'            => $PAGES . '/editais.php',
+    'guias'              => $PAGES . '/guias.php',
+    'medidas_protetivas' => $PAGES . '/medidas_protetivas.php',
+    'oficios_cartorio'   => $PAGES . '/oficios_cartorio.php',
+    'oficios_gabinete'   => $PAGES . '/oficios_gabinete.php',
+    'cartas_expedidas'   => $PAGES . '/cartas_expedidas.php',
+    'cartas_recebidas'   => $PAGES . '/cartas_recebidas.php',
+    'produtividade'      => $PAGES . '/produtividade.php',
+    'reus_presos'        => $PAGES . '/reus_presos.php',
 
-    '401'=> $ERRORS . '/401.php',
-    '403'=> $ERRORS . '/403.php',
-    '404'=> $ERRORS . '/404.php',
-    '500'=> $ERRORS . '/500.php'
+    '401' => $ERRORS . '/401.php',
+    '403' => $ERRORS . '/403.php',
+    '404' => $ERRORS . '/404.php',
+    '500' => $ERRORS . '/500.php',
 ];
 
 
 // Mapeia páginas para suas seções, usadas no controle de acesso.
 $page_to_section = [
-    'dashboard'         => 'All',
-    'cartasexpedidas'   => 'Cartório',
-    'cartasrecebidas'   => 'Cartório',
-    'cejusc'            => 'Cartório',
-    'editais'           => 'Cartório',
-    'guias'             => 'Cartório',
-    'medidasprotetivas' => 'Cartório',
-    'oficioscartorio'   => 'Cartório',
-    'oficiosgabinete'   => 'Gabinete',
-    'produtividade'     => 'Cartório',
-    'reuspresos'        => 'Gabinete'
+    'dashboard'             => 'All',
+    'cartas_expedidas'      => 'Cartório',
+    'cartas_recebidas'      => 'Cartório',
+    'cejusc'                => 'Cartório',
+    'editais'               => 'Cartório',
+    'guias'                 => 'Cartório',
+    'medidas_protetivas'    => 'Cartório',
+    'oficios_cartorio'      => 'Cartório',
+    'oficios_gabinete'      => 'Gabinete',
+    'produtividade'         => 'Cartório',
+    'reus_presos'           => 'Gabinete',
 ];
 
 // Verifica se o usuário possui perfil compatível com a seção exigida.

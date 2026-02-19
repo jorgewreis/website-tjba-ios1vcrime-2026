@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../../config/config.php';
 require_once __DIR__ . '/../../../config/security.php';
-require_once __DIR__ . '/../../../app/helpers/Conection.php';
+require_once __DIR__ . '/../../../app/helpers/Conexao.php';
 
 header('Content-Type: application/json; charset=utf-8');
 

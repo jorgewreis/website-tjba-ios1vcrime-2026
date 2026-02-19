@@ -18,7 +18,7 @@ class ProcessoManager
     public function buscarProcesso(string $numero): ?array
     {
         $sql = "SELECT id_proc, numero, classe, data_cadastro FROM processos WHERE numero = ? LIMIT 1";
-        $stmt = $this->connection->prepare($sql);
+        require_once __DIR__ . '/../helpers/BootstrapHelper.php';
 
         if (!$stmt) {
             return null;

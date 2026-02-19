@@ -18,7 +18,7 @@ class ReuManager
     public function buscarReu(string $nome): ?array
     {
         $sql = "SELECT id_reu, nome, cpf, statusPrisao FROM reus WHERE nome = ? LIMIT 1";
-        $stmt = $this->connection->prepare($sql);
+        require_once __DIR__ . '/../helpers/BootstrapHelper.php';
 
         if (!$stmt) {
             return null;

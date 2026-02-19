@@ -18,7 +18,7 @@ class ClasseManager
     public function listarClasses(): array
     {
         $sql = "SELECT cod, descricao FROM classes ORDER BY descricao ASC";
-        $stmt = $this->connection->prepare($sql);
+        require_once __DIR__ . '/../helpers/BootstrapHelper.php';
 
         if (!$stmt) {
             return [];

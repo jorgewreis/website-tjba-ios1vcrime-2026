@@ -15,3 +15,7 @@ Manutenção|chore: adiciona arquivos de rascunho de release ao .gitignore|dd3d8
 Correção|Fix: correção do gitignore|8b96c0e|Unknown|2026-02-19 08:36:35
 Correção|Fix: correção de erro css|18f5d4b|Unknown|2026-02-19 08:43:33
 Correção|fix: expõe corretamente initAccess no App.Menu para eliminar ReferenceError|f79a10c|Unknown|2026-02-19 09:43:58
+Correção|Fix: Correção de locais de arquivos|585c71b|Unknown|2026-02-19 09:48:15
+Geral|fix(guias): update helper includes|7126911|Unknown|2026-02-19 10:31:59
+Geral|fix(css): import jetbrains mono|4fb2255|Unknown|2026-02-19 10:51:43
+Geral|fix(css): import jetbrains mono|3620bbf|Unknown|2026-02-19 10:52:18

@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/security.php';
-require_once __DIR__ . '/../app/helpers/bootstrap.php';
+require_once __DIR__ . '/../app/helpers/BootstrapHelper.php';
 require_once __DIR__ . '/../app/models/Usuario.php';
 
 if (empty($_SESSION['token']) || empty($_SESSION['id_usuario'])) {
@@ -147,23 +147,23 @@ $userProfile = Security::getUserProfile() ?? '';
                         icon: 'fi fi-rs-envelope-open-text',
                         label: 'Cartas Precatórias',
                         children: [
-                            { label: 'Cartas Expedidas', target: 'cartasexpedidas' },
-                            { label: 'Cartas Recebidas', target: 'cartasrecebidas' }
+                            { label: 'Cartas Expedidas', target: 'cartas_expedidas' },
+                            { label: 'Cartas Recebidas', target: 'cartas_recebidas' }
                         ]
                     },
                     { icon: 'fi fi-rs-money-check-edit', label: 'Cejusc', target: 'cejusc' },
                     { icon: 'fi fi-rs-document', label: 'Editais', target: 'editais' },
                     { icon: 'fi fi-rs-blog-text', label: 'Guias', target: 'guias' },
-                    { icon: 'fi fi-rs-user-shield', label: 'Medidas protetivas', target: 'medidasprotetivas' },
-                    { icon: 'fi fi-rs-license', label: 'Ofícios', target: 'oficioscartorio' },
+                    { icon: 'fi fi-rs-user-shield', label: 'Medidas protetivas', target: 'medidas_protetivas' },
+                    { icon: 'fi fi-rs-license', label: 'Ofícios', target: 'oficios_cartorio' },
                     { icon: 'fi fi-rs-clock-up-arrow', label: 'Produtividade', target: 'produtividade' }
                 ]
             },
             {
                 section: 'Gabinete',
                 items: [
-                    { icon: 'fi fi-ss-license', label: 'Ofícios', target: 'oficiosgabinete' },
-                    { icon: 'fi fi-rs-lock', label: 'Réus Presos', target: 'reuspresos' }
+                    { icon: 'fi fi-ss-license', label: 'Ofícios', target: 'oficios_gabinete' },
+                    { icon: 'fi fi-rs-lock', label: 'Réus Presos', target: 'reus_presos' }
                 ]
             },
             {
