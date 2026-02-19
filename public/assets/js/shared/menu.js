@@ -252,7 +252,7 @@
     initLayout: initMenuLayout,
     initMenu: initMenuToggles,
     initActive: initMenuActive,
-    initAccess,
+    initAccess: initMenuAccess,
     fetchUserPerfis,
     open: () => {
       const elements = getElements();

@@ -265,7 +265,6 @@ body {
         display: flex;
         flex: 1 1 auto;
         align-items: stretch;
-        padding-top: 74px;
     }
 
     .layout-page::before {

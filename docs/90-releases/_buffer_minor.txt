@@ -13,3 +13,4 @@ Manutenção|Chore: atualização minor|cefc325|Unknown|2026-02-19 08:30:50
 Manutenção|chore: inclui _draft_minor.md no fluxo de versionamento|7038d58|Unknown|2026-02-19 08:32:45
 Manutenção|chore: adiciona arquivos de rascunho de release ao .gitignore|dd3d841|Unknown|2026-02-19 08:34:28
 Correção|Fix: correção do gitignore|8b96c0e|Unknown|2026-02-19 08:36:35
+Correção|Fix: correção de erro css|18f5d4b|Unknown|2026-02-19 08:43:33
