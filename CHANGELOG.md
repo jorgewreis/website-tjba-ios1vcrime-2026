@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0035
+
+**Data:** 2026-02-19 10:55:26 | **Commit:** `9f4c53d` | **Tipo:** `patch`
+
+- chore(release): remove buffer minor from index
+
 ## V. 1.02.0034
 
 **Data:** 2026-02-19 10:53:31 | **Commit:** `861942c` | **Tipo:** `patch`
@@ -1320,6 +1326,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
