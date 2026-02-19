@@ -10,3 +10,4 @@ Correção|Fix: tentativa 7|92315e7|Unknown|2026-02-18 20:06:45
 Correção|Fix: tentativa 8|07bd80c|Unknown|2026-02-18 20:10:56
 Correção|fix: ajuste de caminhos e favicon, teste de commit manual|4b74b95|Unknown|2026-02-19 08:29:14
 Manutenção|Chore: atualização minor|cefc325|Unknown|2026-02-19 08:30:50
+Manutenção|chore: inclui _draft_minor.md no fluxo de versionamento|7038d58|Unknown|2026-02-19 08:32:45

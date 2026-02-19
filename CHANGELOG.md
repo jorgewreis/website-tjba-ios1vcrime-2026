@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0026
+
+**Data:** 2026-02-19 08:34:27 | **Commit:** `dd3d841` | **Tipo:** `patch`
+
+- chore: adiciona arquivos de rascunho de release ao .gitignore
+
 ## V. 1.02.0025
 
 **Data:** 2026-02-19 08:32:44 | **Commit:** `7038d58` | **Tipo:** `patch`
@@ -1266,6 +1272,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -1,4 +1,8 @@
 # =========================
+# Release Drafts (não versionar rascunhos)
+docs/90-releases/_buffer_minor.txt
+docs/90-releases/_draft_minor.md
+# =========================
 # Environment / Secrets
 # =========================
 .env
