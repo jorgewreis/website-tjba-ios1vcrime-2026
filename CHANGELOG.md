@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0025
+
+**Data:** 2026-02-19 08:32:44 | **Commit:** `7038d58` | **Tipo:** `patch`
+
+- chore: inclui _draft_minor.md no fluxo de versionamento
+
 ## V. 1.02.0024
 
 **Data:** 2026-02-19 08:30:48 | **Commit:** `cefc325` | **Tipo:** `patch`
@@ -1260,6 +1266,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

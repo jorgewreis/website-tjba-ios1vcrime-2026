@@ -54,6 +54,12 @@ fi
 
 printf "## %s — %s\n%s\n\n" "$new" "$today" "$subject" >> "$CHANGELOG_FILE"
 
+
+# Adiciona também o draft minor se existir
+DRAFT_MINOR="docs/90-releases/_draft_minor.md"
+if [[ -f "$DRAFT_MINOR" ]]; then
+  git add "$DRAFT_MINOR"
+fi
 git add "$VERSION_FILE" "$CHANGELOG_FILE"
 
 if git diff --cached --quiet; then
