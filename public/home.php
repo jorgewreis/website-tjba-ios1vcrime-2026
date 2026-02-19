@@ -127,7 +127,7 @@ $userProfile = Security::getUserProfile() ?? '';
     <script src="/assets/js/shared/common.js" defer></script>
     <script src="/assets/js/shared/menu.js" defer></script>
 
-    <script defer>
+    <script>
 
         const PERFIL_MENU_MAP = {
             'ESTUDANTE': ['Estudantes'],

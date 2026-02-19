@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0030
+
+**Data:** 2026-02-19 09:48:13 | **Commit:** `585c71b` | **Tipo:** `patch`
+
+- Fix: Correção de locais de arquivos
+
 ## V. 1.02.0029
 
 **Data:** 2026-02-19 09:43:57 | **Commit:** `f79a10c` | **Tipo:** `patch`
@@ -1290,6 +1296,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
