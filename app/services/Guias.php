@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../helpers/Helper.php';
-require_once __DIR__ . '/../helpers/AuditLogger.php';
+require_once __DIR__ . '/../helpers/HelperUtils.php';
+require_once __DIR__ . '/../helpers/AuditLoggerHelper.php';
 require_once __DIR__ . '/ClasseManager.php';
 require_once __DIR__ . '/ProcessoManager.php';
 require_once __DIR__ . '/ReuManager.php';
