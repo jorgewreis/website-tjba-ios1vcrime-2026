@@ -1,0 +1,242 @@
+/* ========================================
+   layout.css - Layout e estrutura de página
+   Responsável por: wrapper, containers, grid, flexbox
+   1ª Vara Crime de Ilhéus
+   ======================================== */
+
+/* ========================================
+   IMPORTS - FONTS & ICONS
+   ======================================== */
+
+/* Icons */
+@import url('https://cdn-uicons.flaticon.com/3.0.0/uicons-bold-rounded/css/uicons-bold-rounded.css');
+@import url('https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-straight/css/uicons-regular-straight.css');
+@import url('https://cdn-uicons.flaticon.com/3.0.0/uicons-solid-straight/css/uicons-solid-straight.css');
+
+/* Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
+
+/* ========================================
+   GLOBAL BODY
+   ======================================== */
+
+body {
+    width: 100vw;
+    min-height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background-color: var(--background-color);
+}
+
+/* ========================================
+   LAYOUT WRAPPER & PAGE
+   ======================================== */
+
+@media (min-width: 390px) {
+    .layout-wraper {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        width: 100%;
+        min-height: 100vh;
+    }
+
+    .layout-container {
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .layout-page {
+        display: flex;
+        flex: 1 1 auto;
+        align-items: stretch;        
+    }
+
+    .layout-page::before {
+        position: fixed; 
+        z-index: 10;
+        backdrop-filter: saturate(200%) blur(10px);
+        background: linear-gradient(180deg,rgba(0, 0, 0, 0.1) 0%, rgba(245, 245, 249, 0.29) 35%, rgba(245, 245, 249, 0) 100%);
+        block-size: 4.75rem;
+        content: "";
+        inline-size: 100%;
+        inset-block-start: 0;
+        mask: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1) 25%, transparent 100%);
+    }
+
+    /* ========================================
+       NAVBAR LAYOUT
+       ======================================== */
+
+    .layout-navbar {
+        width: calc(100vw - 32px);
+        height: 64px;
+        position: fixed;
+        inset-block-start: 0;
+        inset-inline: 0;
+        display: flex;
+        flex-wrap: nowrap;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        margin: 16px 16px 0;
+        padding: 0 24px;
+        border-radius: .375rem;
+        box-shadow: var(--bs-box-shadow-sm);
+        background-color: var(--bs-paper-bg);
+        color: var(--bs-body-color);
+        z-index: 700;
+    }
+
+    .layout-navbar .layout-menu-toggle {
+        height: 40px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 0;
+        margin-right: 18px;
+    }
+
+    .layout-nav-right {
+        height: 43px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-end;
+    }
+
+    .navbar-nav {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-end;
+    }
+
+    /* ========================================
+       OVERLAY & DRAG TARGET
+       ======================================== */
+
+    .layout-overlay {
+        position: fixed;        
+        width: 100vw;
+        height: 100vh;
+        inset-block-start: 0;
+        inset-inline: 0;
+        background-color: #22303e;
+        opacity: 0.5;
+        z-index: 990;
+        display: none;
+    }
+
+    .view.layout-wraper.menu-open .layout-overlay {
+        display: block;
+    }
+
+    .drag-target {
+        position: fixed;
+        z-index: 1036;
+        block-size: 100%;
+        inline-size: 40px;
+        inset-block-start: 0;
+        inset-inline-start: 0;
+    }
+
+    /* ========================================
+       LAYOUT MENU
+       ======================================== */
+
+    .layout-menu {
+        position: absolute;
+        width: 260px;
+        height: 100vh;        
+        left: -300px;
+        margin-inline: 0 !important;
+        display: flex;
+        flex-direction: column;
+        background-color: white;
+        z-index: 1100;
+        transition: left 0.7s ease-in-out;
+    }
+
+    .view.layout-wraper.menu-visible .layout-menu {
+        left: 0px;
+        transition: left 0.7s ease-in-out;
+    }
+
+    .view.layout-wraper.menu-fixed .layout-menu {
+        left: 0px;
+        transition: left 0.7s ease-in-out;
+    }
+
+    .view.layout-wraper.menu-fixed .brand-name .layout-menu-toggle,
+    .view.layout-wraper.menu-fixed .layout-page .layout-menu-toggle {
+        visibility: hidden;
+    }
+
+    .view.layout-wraper.menu-fixed .layout-navbar {
+        margin-left: 280px;
+        width: calc(100vw - 300px);
+    }
+
+    .view.layout-wraper .content-wrapper {
+        margin-top: -74px;
+        margin-left: 0px;
+        width: 100vw;
+        height: 100vh;
+    }
+
+    .view.layout-wraper.menu-fixed .content-wrapper {
+        margin-top: -74px;
+        margin-left: 260px;
+        width: calc(100vw - 260px);
+        height: 100vh;
+    }
+
+    /* ========================================
+       CONTENT LAYOUT
+       ======================================== */
+
+    .container-main {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        margin: 100px 10px 10px 20px;
+    }
+
+    .card-login {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        
+        padding: 40px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: var(--bs-box-shadow-lg);
+        min-width: 400px;
+    }
+}
+
+/* ========================================
+   MOBILE - NO VIEW (max-width: 389px)
+   ======================================== */
+
+@media (max-width: 389px) {
+    .view {
+        display: none;
+    }
+
+    .noview {
+        display: flex;
+    }
+}

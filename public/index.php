@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/security.php';
-require_once __DIR__ . '/../app/helpers/BootstrapHelper.php';
+require_once __DIR__ . '/../app/helpers/bootstrap.php';
 
 if (Security::isAuthenticated()) {
     header('Location: /home.php');
@@ -19,13 +19,18 @@ $csrfToken = Security::generateCSRFToken();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Primeira Vara Crime de Ilhéus - Sistema de Gestão</title>
-
-    <link rel="stylesheet" href="/assets/css/shared/reset.css">
-    <link rel="stylesheet" href="/assets/css/shared/variables.css">
-    <link rel="stylesheet" href="/assets/css/shared/base.css">
-    <link rel="stylesheet" href="/assets/css/shared/components.css">
-    <link rel="stylesheet" href="/assets/css/shared/forms.css">
-    <link rel="stylesheet" href="/assets/css/modules/public/login.css">
+  
+    <link rel="stylesheet" href="/assets/css/legacy/reset.css">
+  	<link rel="stylesheet" href="/assets/css/legacy/color.css">
+    <link rel="stylesheet" href="/assets/css/legacy/components.css">
+    <link rel="stylesheet" href="/assets/css/legacy/form.css">
+    <link rel="stylesheet" href="/assets/css/legacy/layout.css">
+    <link rel="stylesheet" href="/assets/css/legacy/login.css">
+    <link rel="stylesheet" href="/assets/css/legacy/menu-style.css">
+    <link rel="stylesheet" href="/assets/css/legacy/pages.css">
+    <link rel="stylesheet" href="/assets/css/legacy/style.css">
+  
+  
     <link rel="icon" type="image/x-icon" href="/assets/img/favicon.ico">
 </head>
 <body>

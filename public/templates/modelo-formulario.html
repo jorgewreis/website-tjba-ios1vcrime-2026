@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Modelo detalhado de formulários</title>
+    <meta
+      name="description"
+      content="Guia base de inputs, selects, buttons, badges e labels para o projeto TJBA"
+    />
+    <link rel="stylesheet" href="../assets/css/modelo-formulario.css" />
+    <link rel="stylesheet" href="../assets/css/modelo-formulario-layout.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header class="page-header">
+        <div>
+          <p class="lead">
+            Modelo centralizado para componentes de formulários, inputs, selects,
+            buttons, badges e labels. Use como referência visual e de
+            acessibilidade antes de implementar qualquer fluxo.
+          </p>
+          <p class="small muted">
+            Inclui tamanhos, estados e orientações de uso. As cores são baseadas
+            na paleta oficial e os rótulos priorizam clareza para o público
+            judicial.
+          </p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn--ghost" id="themeToggle" aria-pressed="false">
+            Alternar tema
+          </button>
+          <button class="btn btn--primary" id="openModal">Visualizar modal</button>
+        </div>
+      </header>
+
+      <section class="card" aria-labelledby="sec-buttons">
+        <div class="card-header">
+          <div>
+            <h2 id="sec-buttons">Botões</h2>
+            <p class="small muted">
+              Estados simulados com classes utilitárias para evitar interações
+              reais no modelo.
+            </p>
+          </div>
+        </div>
+        <div class="stack">
+          <div class="row align-start gap-12">
+            <strong class="label-col">Primary</strong>
+            <div class="row-center-gap">
+              <button class="btn btn--primary">Normal</button>
+              <button class="btn btn--primary is-hover">Hover</button>
+              <button class="btn btn--primary is-active">Active</button>
+              <button class="btn btn--primary" disabled>Disabled</button>
+              <button class="btn btn--primary" aria-readonly="true">Readonly</button>
+            </div>
+          </div>
+          <div class="row align-start gap-12">
+            <strong class="label-col">Secondary</strong>
+            <div class="row-center-gap">
+              <button class="btn btn--secondary">Normal</button>
+              <button class="btn btn--secondary is-hover">Hover</button>
+              <button class="btn btn--secondary is-active">Active</button>
+              <button class="btn btn--secondary" disabled>Disabled</button>
+            </div>
+          </div>
+          <div class="row align-start gap-12">
+            <strong class="label-col">Outline / Ghost</strong>
+            <div class="row-center-gap">
+              <button class="btn btn--outline">Outline</button>
+              <button class="btn btn--outline is-hover">Hover</button>
+              <button class="btn btn--outline is-active">Active</button>
+              <button class="btn btn--ghost">Ghost</button>
+              <button class="btn btn--ghost is-hover">Hover</button>
+            </div>
+          </div>
+          <div class="row align-start gap-12">
+            <strong class="label-col">Destructive</strong>
+            <div class="row-center-gap">
+              <button class="btn btn--destructive">Normal</button>
+              <button class="btn btn--destructive is-hover">Hover</button>
+              <button class="btn btn--destructive is-active">Active</button>
+              <button class="btn btn--destructive" disabled>Disabled</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="sec-inputs">
+        <div class="card-header">
+          <div>
+            <h2 id="sec-inputs">Inputs e Labels</h2>
+            <p class="small muted">
+              Labels ficam acima do campo (posição padrão) com helper text
+              opcional. Mantenha placeholders claros e evite instruções obrigatórias
+              dentro do placeholder.
+            </p>
+          </div>
+        </div>
+        <div class="stack">
+          <div class="row gap-20">
+            <div class="form-group form-group--flex">
+              <label class="form-label" for="input-nome">Nome completo</label>
+              <div class="form-control-wrapper">
+                <input class="form-control" id="input-nome" placeholder="Digite seu nome completo" />
+              </div>
+              <p class="small muted">
+                Utilize label claro e helper de texto sempre que precisar de reforço contextual.
+              </p>
+            </div>
+            <div class="form-group form-group--flex">
+              <label class="form-label" for="input-email">E-mail</label>
+              <div class="form-control-wrapper">
+                <span class="form-control-icon" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M2 6.5A2.5 2.5 0 0 1 4.5 4h15A2.5 2.5 0 0 1 22 6.5v11A2.5 2.5 0 0 1 19.5 20h-15A2.5 2.5 0 0 1 2 17.5v-11Zm2.5-.5a.5.5 0 0 0-.5.5v.2l8 5.2 8-5.2V6a.5.5 0 0 0-.5-.5h-15Zm15 13a.5.5 0 0 0 .5-.5V8.3l-7.5 4.9a1 1 0 0 1-1 0L4 8.3V17.5a.5.5 0 0 0 .5.5h15Z"/>
+                  </svg>
+                </span>
+                <input class="form-control has-icon" id="input-email" placeholder="usuario@exemplo.com" />
+              </div>
+              <div class="form-info">Nunca compartilharemos seu e-mail.</div>
+            </div>
+          </div>
+          <div class="row gap-20">
+            <div class="form-group form-group--flex">
+              <label class="form-label" for="input-senha">Senha</label>
+              <div class="form-control-wrapper">
+                <span class="form-control-icon" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm6-6V9a6 6 0 1 0-12 0v2a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2Zm-8-2a4 4 0 1 1 8 0v2H6V9Zm10 10H6v-6h12v6Z"/>
+                  </svg>
+                </span>
+                <input class="form-control has-icon" type="password" id="input-senha" placeholder="Digite sua senha" />
+              </div>
+            </div>
+            <div class="form-group form-group--flex">
+              <label class="form-label" for="input-erro">Campo com erro</label>
+              <div class="form-control-wrapper">
+                <input class="form-control" id="input-erro" aria-invalid="true" value="Exemplo: falta informação" />
+              </div>
+              <div class="form-error"><span class="form-error-icon">⚠</span> Este campo é obrigatório</div>
+            </div>
+          </div>
+          <h3 class="small muted section-heading--spaced">Tamanhos e espaçamentos</h3>
+          <div class="row gap-20">
+            <div class="form-group">
+              <label class="form-label">XS (96px)</label>
+              <input class="form-control form-control--sm input-width-xs" placeholder="XS" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">SM (160px)</label>
+              <input class="form-control form-control--sm input-width-sm" placeholder="SM" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">MD (240px)</label>
+              <input class="form-control form-control--md input-width-md" placeholder="MD" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">LG (320px)</label>
+              <input class="form-control form-control--lg input-width-lg" placeholder="LG" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">XL (420px)</label>
+              <input class="form-control form-control--lg input-width-xl" placeholder="XL" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">XXL (540px)</label>
+              <input class="form-control form-control--lg input-width-xxl" placeholder="XXL" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="sec-selects">
+        <div class="card-header">
+          <div>
+            <h2 id="sec-selects">Selects</h2>
+            <p class="small muted">Combinações de cores, tamanho e chevrons personalizados.</p>
+          </div>
+        </div>
+        <div class="stack">
+          <div class="row gap-18">
+            <div class="form-group">
+              <label class="form-label" for="select-md">Select MD</label>
+              <select class="form-control form-select form-select--md" id="select-md">
+                <option>Selecione</option>
+                <option>Penal</option>
+                <option>Cível</option>
+                <option>Ambiental</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="select-disabled">Select desativado</label>
+              <select class="form-control form-select is-disabled" id="select-disabled" disabled>
+                <option>Indisponível</option>
+              </select>
+            </div>
+          </div>
+          <div class="row gap-18">
+            <div class="form-group">
+              <label class="form-label">Tamanhos fixos</label>
+              <div class="row-center-gap row-wrap gap-12">
+                <select class="form-control form-select form-select--sm input-width-xs">
+                  <option>XS</option>
+                  <option>Opção 1</option>
+                </select>
+                <select class="form-control form-select form-select--sm input-width-sm">
+                  <option>SM</option>
+                </select>
+                <select class="form-control form-select form-select--md input-width-md">
+                  <option>MD</option>
+                </select>
+                <select class="form-control form-select form-select--lg input-width-lg">
+                  <option>LG</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="sec-badges">
+        <div class="card-header">
+          <div>
+            <h2 id="sec-badges">Badges de contexto</h2>
+            <p class="small muted">
+              Indicadores rápidos de prioridade processual. Use cores consistentes
+              para diferenciar contexto, urgência e alertas.
+            </p>
+          </div>
+        </div>
+        <div class="flex-wrap-gap">
+          <span class="badge badge--context-cinza">Segredo de Justiça<button class="badge__close" aria-label="Remover" onclick="this.parentElement.remove()">×</button></span>
+          <span class="badge badge--context-vermelho">Réu Preso<button class="badge__close" aria-label="Remover" onclick="this.parentElement.remove()">×</button></span>
+          <span class="badge badge--context-azul">Idoso<button class="badge__close" aria-label="Remover" onclick="this.parentElement.remove()">×</button></span>
+          <span class="badge badge--context-amarelo">Deficiente Físico<button class="badge__close" aria-label="Remover" onclick="this.parentElement.remove()">×</button></span>
+          <span class="badge badge--context-azul">Adolescente<button class="badge__close" aria-label="Remover" onclick="this.parentElement.remove()">×</button></span>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="sec-labels">
+        <div class="card-header">
+          <div>
+            <h2 id="sec-labels">Orientações sobre labels</h2>
+            <p class="small muted">
+              Labels devem refletir exatamente o que será preenchido. Ajuda
+              adicional pode estar abaixo do campo ou em tooltip.
+            </p>
+          </div>
+        </div>
+        <div class="stack">
+          <div class="form-group">
+            <label class="form-label" for="label-exemplo">Label explicativo</label>
+            <input class="form-control" id="label-exemplo" placeholder="Exemplo de label" />
+            <div class="form-info">
+              Use títulos como "Número do processo" e lugares de apoio para manter consistência.
+            </div>
+          </div>
+          <ul class="card-helper">
+            <li>Evite abreviações que não sejam ultracomuns.</li>
+            <li>Coloque helper text apenas quando for ação condicional.</li>
+            <li>Marcadores (asterisco) devem vir acompanhados de nota geral sobre obrigatoriedade.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="sec-tooltips">
+        <div class="card-header">
+          <div>
+            <h2 id="sec-tooltips">Tooltips e auxílio visual</h2>
+            <p class="small muted">
+              Componentes de ajuda devem ser acessíveis e aparecer ao focar/hover.
+            </p>
+          </div>
+        </div>
+        <div class="stack">
+          <div class="row-center-gap row-wrap">
+            <span class="has-tooltip" tabindex="0" data-tooltip="Use tooltips para explicar um botão de ação." data-tooltip-align="center">
+              <button class="btn btn--ghost">Hover/Focus para tooltip</button>
+            </span>
+            <span class="has-tooltip" tabindex="0" data-tooltip="Indicador para campos sensíveis." data-tooltip-align="center">
+              <button class="btn btn--secondary">Campo sensível</button>
+            </span>
+            <button class="btn btn--secondary" id="showToast">Exibir toast</button>
+          </div>
+          <p class="small muted">O demonstrativo abaixo posiciona tooltips próximos às bordas para garantir que eles nunca fiquem fora da tela.</p>
+          <div class="tooltip-demo-row">
+            <span class="has-tooltip tooltip-demo-item" tabindex="0" data-tooltip="Alinha a borda esquerda do tooltip com o botão." data-tooltip-align="start">
+              <button class="btn btn--ghost">Tooltip esquerda</button>
+            </span>
+            <span class="has-tooltip tooltip-demo-item" tabindex="0" data-tooltip="Comportamento central padrão." data-tooltip-align="center">
+              <button class="btn btn--secondary">Tooltip central</button>
+            </span>
+            <span class="has-tooltip tooltip-demo-item" tabindex="0" data-tooltip="Alinha a borda direita do tooltip com o botão." data-tooltip-align="end">
+              <button class="btn btn--ghost">Tooltip direita</button>
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="sec-form">
+        <div class="card-header">
+          <div>
+            <h2 id="sec-form">Exemplo completo de formulário</h2>
+            <p class="small muted">Combinações de inputs, selects, badges e ações.</p>
+          </div>
+        </div>
+        <form class="stack" onsubmit="event.preventDefault(); showToast('Formulário salvo');">
+          <div class="form-group">
+            <label class="form-label" for="form-processo">Processo</label>
+            <input class="form-control mono" id="form-processo" value="0001234-56.2026.8.19.0001" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="form-parte">Nome da parte</label>
+            <input class="form-control" id="form-parte" placeholder="Nome do interessado" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="form-tipo">Tipo</label>
+            <select class="form-control form-select" id="form-tipo">
+              <option value="" disabled selected>Selecione</option>
+              <option value="penal">Penal</option>
+              <option value="civel">Cível</option>
+              <option value="justica">Justiça restaurativa</option>
+            </select>
+          </div>
+          <div class="actions-right">
+            <button class="btn btn--secondary" type="reset">Limpar</button>
+            <button class="btn btn--primary" type="submit">Salvar</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="card" aria-labelledby="sec-palette">
+        <div class="card-header">
+          <div>
+            <h2 id="sec-palette">Paleta de cores</h2>
+            <p class="small muted">Referência para estados primários, informativos e alertas.</p>
+          </div>
+        </div>
+        <div class="palette">
+          <div class="swatch swatch--primary"><div class="swatch-label">Primary</div></div>
+          <div class="swatch swatch--primary-30"><div class="swatch-label">Primary 30%</div></div>
+          <div class="swatch swatch--primary-10"><div class="swatch-label">Primary 10%</div></div>
+          <div class="swatch swatch--info"><div class="swatch-label">Info</div></div>
+          <div class="swatch swatch--success"><div class="swatch-label">Success</div></div>
+          <div class="swatch swatch--warning"><div class="swatch-label">Warning</div></div>
+          <div class="swatch swatch--danger"><div class="swatch-label">Danger</div></div>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="sec-modal">
+        <div class="card-header">
+          <div>
+            <h2 id="sec-modal">Modal fixo para referência</h2>
+            <p class="small muted">
+              Modal estático exibido abaixo após clicar em "Visualizar modal".
+            </p>
+          </div>
+        </div>
+        <div class="card">
+          <p class="small muted">
+            Opcional: use um modal real apenas em momentos críticos e mantenha o botão "Cancelar" à esquerda.
+          </p>
+        </div>
+      </section>
+    </div>
+
+    <div class="modal" id="demoModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal__dialog">
+        <div class="modal__header">
+          <h3 class="modal__title" id="modalTitle">Título do modal</h3>
+          <button class="modal__close" id="closeModal" aria-label="Fechar">×</button>
+        </div>
+        <div class="modal__body">
+          <p>Use o modal para confirmações importantes. Insira instruções curtas para evitar confusão.</p>
+        </div>
+        <div class="modal__footer">
+          <button class="btn btn--secondary" id="cancelModal">Cancelar</button>
+          <button class="btn btn--primary" id="confirmModal">Salvar alterações</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-container" id="toasts"></div>
+
+    <script>
+      const root = document.documentElement;
+      const themeToggle = document.getElementById('themeToggle');
+      const savedTheme = localStorage.getItem('site-theme') || 'light';
+      root.setAttribute('data-theme', savedTheme);
+      if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+          const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+          root.setAttribute('data-theme', next);
+          localStorage.setItem('site-theme', next);
+          themeToggle.setAttribute('aria-pressed', next === 'dark');
+        });
+      }
+
+      function showToast(text) {
+        const container = document.getElementById('toasts');
+        if (!container) return;
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = text;
+        container.appendChild(toast);
+        requestAnimationFrame(() => (toast.style.opacity = '1'));
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          toast.addEventListener('transitionend', () => toast.remove());
+        }, 2600);
+      }
+
+      const tooltipElements = document.querySelectorAll('.has-tooltip[data-tooltip]');
+      const TOOLTIP_MAX_WIDTH = 260;
+      const TOOLTIP_MARGIN = 12;
+
+      function syncTooltipAlignment(element) {
+        if (!element) return;
+        const rect = element.getBoundingClientRect();
+        const viewportWidth = document.documentElement.clientWidth;
+        let align = 'center';
+        const halfTooltip = TOOLTIP_MAX_WIDTH / 2;
+        if (rect.left < TOOLTIP_MARGIN + halfTooltip) {
+          align = 'start';
+        } else if (viewportWidth - rect.right < TOOLTIP_MARGIN + halfTooltip) {
+          align = 'end';
+        }
+        element.setAttribute('data-tooltip-align', align);
+      }
+
+      const refreshTooltipAlignments = () => tooltipElements.forEach(syncTooltipAlignment);
+      tooltipElements.forEach((el) => {
+        const handle = () => syncTooltipAlignment(el);
+        el.addEventListener('mouseenter', handle);
+        el.addEventListener('focus', handle);
+      });
+      window.addEventListener('resize', refreshTooltipAlignments);
+      window.addEventListener('scroll', refreshTooltipAlignments, { passive: true });
+      refreshTooltipAlignments();
+
+      document.getElementById('showToast')?.addEventListener('click', () => showToast('Toasts são indicadores de feedback temporário.'));
+
+      const modal = document.getElementById('demoModal');
+      document.getElementById('openModal')?.addEventListener('click', () => {
+        modal.setAttribute('open', '');
+        modal.style.display = 'flex';
+        modal.focus();
+      });
+      const closeModal = () => {
+        modal.removeAttribute('open');
+        modal.style.display = 'none';
+      };
+      document.getElementById('closeModal')?.addEventListener('click', closeModal);
+      document.getElementById('cancelModal')?.addEventListener('click', closeModal);
+      document.getElementById('confirmModal')?.addEventListener('click', () => {
+        showToast('Alterações salvas');
+        closeModal();
+      });
+    </script>
+  </body>
+</html>

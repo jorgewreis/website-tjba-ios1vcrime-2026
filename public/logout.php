@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/security.php';
-require_once __DIR__ . '/../app/helpers/BootstrapHelper.php';
+require_once __DIR__ . '/../app/helpers/bootstrap.php';
 require_once __DIR__ . '/../app/models/Usuario.php';
 
 try {
