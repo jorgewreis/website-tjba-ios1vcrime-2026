@@ -342,7 +342,10 @@ textarea.form-control {
 /* Select elements */
 .form-select {
   appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
   background: color-mix(in srgb, #eceef2 60%, white 40%);
+  background-image: none;
   border: 1px solid #dce0f7;
   border-radius: var(--radius-sm);
   color: var(--color-text);
@@ -350,10 +353,6 @@ textarea.form-control {
   font-size: 1rem;
   padding: 0.6rem 0.75rem;
   padding-right: 2.5rem;
-  background-image: linear-gradient(45deg, transparent 50%, var(--color-text) 50%), linear-gradient(135deg, var(--color-text) 50%, transparent 50%);
-  background-position: right 0.7rem center, right 0.7rem center;
-  background-size: 0.45em 0.45em, 0.45em 0.45em;
-  background-repeat: no-repeat;
   transition: box-shadow var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
 }
 .form-select:focus {

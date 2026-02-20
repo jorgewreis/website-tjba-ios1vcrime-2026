@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0039
+
+**Data:** 2026-02-20 11:27:02 | **Commit:** `df869b0` | **Tipo:** `patch`
+
+- Chore: criação de mockup para cards
+
 ## V. 1.02.0038
 
 **Data:** 2026-02-20 09:42:02 | **Commit:** `56a2d24` | **Tipo:** `patch`
@@ -1344,6 +1350,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Mockup Visual - Cards, Modals, Toasts e Alerts</title>
     <meta name="description" content="Template visual para definição de cards, modals, toasts e alerts do sistema TJBA" />
+    <link rel="stylesheet" href="../assets/css/shared/forms.css" />
     <link rel="stylesheet" href="../assets/css/shared/mockup-visual.css" />
   </head>
   <body>
@@ -28,24 +29,42 @@
         <!-- Card de Estatísticas -->
         <div class="mockup-subsection">
           <h3>Card de Estatísticas</h3>
-          <div class="card card--stats">
-            <div class="card-body">
-              <div class="stat">
-                <div class="stat-title">Processos</div>
-                <div class="stat-value">1.234</div>
+          <div class="stats-row">
+            <div class="stats-card bg-primary">
+              <div class="stats-card-top">
+                <span class="stats-icon"><i class="fi fi-rr-truck"></i></span>
+                <div class="stats-value">42</div>
               </div>
-              <div class="stat">
-                <div class="stat-title">Audiências</div>
-                <div class="stat-value">56</div>
+              <div class="stats-title">Veículos em rota</div>
+              <div class="stats-diff positive">+18.2%</div>
+              <div class="stats-comparison">em relação à semana passada</div>
+            </div>
+            <div class="stats-card bg-warning">
+              <div class="stats-card-top">
+                <span class="stats-icon"><i class="fi fi-rr-exclamation"></i></span>
+                <div class="stats-value">8</div>
               </div>
-              <div class="stat">
-                <div class="stat-title">Sentenças</div>
-                <div class="stat-value">89</div>
+              <div class="stats-title">Veículos com erro</div>
+              <div class="stats-diff negative">-8.7%</div>
+              <div class="stats-comparison">em relação à semana passada</div>
+            </div>
+            <div class="stats-card bg-danger">
+              <div class="stats-card-top">
+                <span class="stats-icon"><i class="fi fi-rr-network"></i></span>
+                <div class="stats-value">27</div>
               </div>
-              <div class="stat">
-                <div class="stat-title">Prazos</div>
-                <div class="stat-value">12</div>
+              <div class="stats-title">Desviaram da rota</div>
+              <div class="stats-diff positive">+4.3%</div>
+              <div class="stats-comparison">em relação à semana passada</div>
+            </div>
+            <div class="stats-card bg-info">
+              <div class="stats-card-top">
+                <span class="stats-icon"><i class="fi fi-rr-clock-three"></i></span>
+                <div class="stats-value">13</div>
               </div>
+              <div class="stats-title">Veículos atrasados</div>
+              <div class="stats-diff negative">-2.5%</div>
+              <div class="stats-comparison">em relação à semana passada</div>
             </div>
           </div>
         </div>
@@ -59,6 +78,79 @@
             </div>
             <div class="card-body">
               <p>Conteúdo do formulário ou informações de edição/cadastro.</p>
+            </div>
+          </div>
+        </div>
+        <!-- Card de Listas -->
+        <div class="mockup-subsection">
+          <h3>Card de Listas</h3>
+          <div class="card card--sessao card--lista">
+            <div class="card-header">
+              Listagem de Usuários
+              <div class="card-subtitle">Visualize, filtre e gerencie os usuários do sistema.</div>
+            </div>
+            <div class="card-body">
+              <!-- Linha 1: Filtros -->
+              <div class="lista-row lista-row--filtros">
+                <span class="form-select-wrapper input-width-md">
+                  <select class="form-select field-width-md field-height-md">
+                    <option>Filtrar por perfil</option>
+                    <option>Administrador</option>
+                    <option>Servidor</option>
+                    <option>Estudante</option>
+                  </select>
+                </span>
+                <span class="form-select-wrapper input-width-md">
+                  <select class="form-select field-width-md field-height-md">
+                    <option>Filtrar por status</option>
+                    <option>Ativo</option>
+                    <option>Inativo</option>
+                  </select>
+                </span>
+              </div>
+              <div class="lista-divider"></div>
+              <!-- Linha 2: Ações -->
+              <div class="lista-row lista-row--acoes">
+                <span class="form-select-wrapper input-width-sm">
+                  <select class="form-select field-width-sm field-height-md">
+                    <option>Itens por página</option>
+                    <option>10</option>
+                    <option>20</option>
+                    <option>50</option>
+                  </select>
+                </span>
+                <span class="form-select-wrapper input-width-sm">
+                  <select class="form-select field-width-sm field-height-md">
+                    <option>Exportar</option>
+                    <option>PDF</option>
+                    <option>Imprimir</option>
+                  </select>
+                </span>
+                <button class="btn btn--primary lista-btn-cadastro field-height-md">Cadastrar novo</button>
+              </div>
+              <div class="lista-divider"></div>
+              <!-- Linha 3: Lista de itens -->
+              <div class="lista-row lista-row--itens">
+                <div class="lista-item">Usuário 1 - Administrador</div>
+                <div class="lista-item">Usuário 2 - Servidor</div>
+                <div class="lista-item">Usuário 3 - Estudante</div>
+                <div class="lista-item">Usuário 4 - Inativo</div>
+              </div>
+              <div class="lista-divider"></div>
+              <!-- Linha 4: Paginação -->
+              <div class="lista-row lista-row--paginacao">
+                <div class="lista-paginacao-info">Exibindo 1-4 de 24 itens</div>
+                <div class="lista-paginacao-controles">
+                  <button class="lista-btn-pag field-height-sm" disabled><i class="fi fi-rr-angle-small-left"></i></button>
+                  <button class="lista-btn-pag field-height-sm active">1</button>
+                  <button class="lista-btn-pag field-height-sm">2</button>
+                  <button class="lista-btn-pag field-height-sm">3</button>
+                  <button class="lista-btn-pag field-height-sm">4</button>
+                  <span style="display:inline-block;width:18px;text-align:center;color:#bbb;">...</span>
+                  <button class="lista-btn-pag field-height-sm">10</button>
+                  <button class="lista-btn-pag field-height-sm"><i class="fi fi-rr-angle-small-right"></i></button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

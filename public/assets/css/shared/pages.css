@@ -21,6 +21,7 @@
         flex-direction: column;
         align-items: flex-start;
         justify-content: flex-start;
+        margin-top: 100px;
         margin-left: 20px;
         min-width: 300px;
         max-width: 80%;
@@ -28,15 +29,15 @@
 
         .title-page .title{
             font-family: 'Montserrat', sans-serif;
-            font-weight: 500;
-            font-size: 20px;
+            font-weight: 600;
+            font-size: 1.2rem;
             color: #384551;
         }
 
         .title-page .info-title{
             font-family: 'Montserrat', sans-serif;
             font-weight: 400;
-            font-size: 12px;
+            font-size: 0.8rem;
             color: #384551;
         }
 
