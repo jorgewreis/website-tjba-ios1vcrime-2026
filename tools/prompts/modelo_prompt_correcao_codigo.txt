@@ -10,10 +10,10 @@ FONTES OFICIAIS:
 /docs/40-operations;
 
 PROBLEMA RELATADO:
-- CSS não está de acordo com o que estava em uso antes da migração de pastas e arquivos;
+- CSS desorganizado
 
 COMPORTAMENTO ESPERADO:
-- Verifique entre os arquivos CSS se a fonte utilizada está sendo a "Montserrat" e para números a "Jet Brains Mono";
+- crie um arquivo exclusivo de css para componentes de formulário, com base nas definições estabelecidas nos arquivos modelo-formulario.css e modelo-formulario.html, estruturado, orgganizado, separado por blocos de conteúdo comum, com blocos comentados (uma linha de comentário por bloco), com as classes organizadas com um atributo por linha. o arquivo será comum à todas as páginas do projeto, coloque na pasta correta e com nomenclatura correta.
 
 ESCOPO:
 [public/assets/css/];

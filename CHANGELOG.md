@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0037
+
+**Data:** 2026-02-20 09:10:08 | **Commit:** `d3aea1a` | **Tipo:** `patch`
+
+- chore: reorganizar css de formulários compartilhados
+
 ## V. 1.02.0036
 
 **Data:** 2026-02-19 22:35:31 | **Commit:** `ab6f190` | **Tipo:** `patch`
@@ -1332,6 +1338,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
