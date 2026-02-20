@@ -5,11 +5,11 @@ require_once __DIR__ . '/../helpers/Helper.php';
 
 class ClasseManager
 {
-    private mysqli $connection;
+    private PDO $pdo;
 
-    public function __construct(mysqli $connection)
+    public function __construct(PDO $pdo)
     {
-        $this->connection = $connection;
+        $this->pdo = $pdo;
     }
 
     /**
@@ -18,22 +18,10 @@ class ClasseManager
     public function listarClasses(): array
     {
         $sql = "SELECT cod, descricao FROM classes ORDER BY descricao ASC";
-        require_once __DIR__ . '/../helpers/BootstrapHelper.php';
-
-        if (!$stmt) {
-            return [];
-        }
-
+        $stmt = $this->pdo->prepare($sql);
         $stmt->execute();
-        $result = $stmt->get_result();
-        $classes = [];
-
-        while ($row = $result->fetch_assoc()) {
-            $classes[] = $row;
-        }
-
-        $stmt->close();
-        return $classes;
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
@@ -42,24 +30,11 @@ class ClasseManager
     public function buscarClasse(string $codigo): ?array
     {
         $sql = "SELECT id_classe, cod, descricao FROM classes WHERE cod = ? LIMIT 1";
-        $stmt = $this->connection->prepare($sql);
-
-        if (!$stmt) {
-            return null;
-        }
-
-        $stmt->bind_param("s", $codigo);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        if ($result->num_rows === 0) {
-            $stmt->close();
-            return null;
-        }
-
-        $classe = $result->fetch_assoc();
-        $stmt->close();
-        return $classe;
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$codigo]);
+        
+        $classe = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $classe ?: null;
     }
 
     /**
@@ -74,16 +49,8 @@ class ClasseManager
 
         $novoId = Helper::gerarId();
         $sql = "INSERT INTO classes (id_classe, cod, descricao) VALUES (?, ?, ?)";
-        $stmt = $this->connection->prepare($sql);
-
-        if (!$stmt) {
-            return false;
-        }
-
-        $stmt->bind_param("sss", $novoId, $codigo, $descricao);
-        $sucesso = $stmt->execute();
-        $stmt->close();
-
-        return $sucesso;
+        $stmt = $this->pdo->prepare($sql);
+        
+        return $stmt->execute([$novoId, $codigo, $descricao]);
     }
 }
