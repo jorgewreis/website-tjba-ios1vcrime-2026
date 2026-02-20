@@ -1,11 +1,9 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../../config/config.php';
-require_once __DIR__ . '/../../config/security.php';
-
 Security::requireAuthentication();
 ?>
+
 
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -14,19 +12,16 @@ Security::requireAuthentication();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cartas Recebidas - Primeira Vara Crime de Ilhéus</title>
 
-    <link rel= stylesheet href=/assets/css/shared/reset.css>
+    <link rel="stylesheet" href="/assets/css/shared/reset.css">
+    <link rel="stylesheet" href="/assets/css/shared/color.css">
+    <link rel="stylesheet" href="/assets/css/shared/layout.css">
+    <link rel="stylesheet" href="/assets/css/shared/components.css">
+    <link rel="stylesheet" href="/assets/css/shared/forms.css">
+    <link rel="stylesheet" href="/assets/css/shared/pages.css">
+    <link rel="stylesheet" href="/assets/css/shared/style.css">
 
-    <link rel=stylesheet href=/assets/css/shared/variables.css>
-
-    <link rel=stylesheet href=/assets/css/shared/base.css>
-
-    <link rel=stylesheet href=/assets/css/shared/components.css>
-
-    <link rel=stylesheet href=/assets/css/shared/forms.css>
-
-
-    <!-- Flaticon -->
-    <link rel="stylesheet" href__="https://cdn-uicons.flaticon.com/2.6.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+<!-- Flaticon -->
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.6.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
 
     <style>
         /* ===== VARIÁVEIS ===== */
@@ -573,7 +568,7 @@ Security::requireAuthentication();
         <!-- Header com Botão de Cadastro -->
         <div class="page-header-actions">
             <div></div>
-            <a href__="/cartas/cadastrar" class="btn-primary">
+            <a href="/cartas/cadastrar" class="btn-primary">
                 <i class="fi fi-rr-plus"></i>
                 Nova Carta
             </a>
@@ -700,7 +695,7 @@ Security::requireAuthentication();
                     </thead>
                     <tbody>
                         <tr>
-                            <td><a href__="#" class="processo-link">0001234-56.2024.8.05.0103</a></td>
+                            <td><a href="#" class="processo-link">0001234-56.2024.8.05.0103</a></td>
                             <td>Citação</td>
                             <td class="prazo-urgente">15/01/2025</td>
                             <td>Salvador - BA</td>
@@ -723,7 +718,7 @@ Security::requireAuthentication();
                             </td>
                         </tr>
                         <tr>
-                            <td><a href__="#" class="processo-link">0002345-67.2024.8.05.0103</a></td>
+                            <td><a href="#" class="processo-link">0002345-67.2024.8.05.0103</a></td>
                             <td>Intimação</td>
                             <td class="prazo-normal">28/01/2025</td>
                             <td>Itabuna - BA</td>
@@ -746,7 +741,7 @@ Security::requireAuthentication();
                             </td>
                         </tr>
                         <tr>
-                            <td><a href__="#" class="processo-link">0003456-78.2024.8.05.0103</a></td>
+                            <td><a href="#" class="processo-link">0003456-78.2024.8.05.0103</a></td>
                             <td>Penhora</td>
                             <td class="prazo-normal">05/02/2025</td>
                             <td>Feira de Santana - BA</td>
@@ -769,7 +764,7 @@ Security::requireAuthentication();
                             </td>
                         </tr>
                         <tr>
-                            <td><a href__="#" class="processo-link">0004567-89.2024.8.05.0103</a></td>
+                            <td><a href="#" class="processo-link">0004567-89.2024.8.05.0103</a></td>
                             <td>Avaliação</td>
                             <td class="prazo-urgente">10/01/2025</td>
                             <td>Vitória da Conquista - BA</td>
@@ -792,7 +787,7 @@ Security::requireAuthentication();
                             </td>
                         </tr>
                         <tr>
-                            <td><a href__="#" class="processo-link">0005678-90.2024.8.05.0103</a></td>
+                            <td><a href="#" class="processo-link">0005678-90.2024.8.05.0103</a></td>
                             <td>Citação</td>
                             <td class="prazo-normal">20/02/2025</td>
                             <td>Jequié - BA</td>
@@ -815,7 +810,7 @@ Security::requireAuthentication();
                             </td>
                         </tr>
                         <tr>
-                            <td><a href__="#" class="processo-link">0006789-01.2024.8.05.0103</a></td>
+                            <td><a href="#" class="processo-link">0006789-01.2024.8.05.0103</a></td>
                             <td>Intimação</td>
                             <td class="prazo-normal">12/02/2025</td>
                             <td>Camaçari - BA</td>

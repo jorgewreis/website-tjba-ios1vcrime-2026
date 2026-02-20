@@ -1,11 +1,7 @@
 <?php
 declare(strict_types=1);
-
-require_once __DIR__ . '/../../config/config.php';
-require_once __DIR__ . '/../../config/security.php';
-
-Security::requireAuthentication();
 ?>
+
 
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -15,10 +11,13 @@ Security::requireAuthentication();
     <title>Primeira Vara Crime de Ilhéus - Sistema de Gestão</title>
 
     <link rel="stylesheet" href="/assets/css/shared/reset.css">
-    <link rel="stylesheet" href="/assets/css/shared/variables.css">
-    <link rel="stylesheet" href="/assets/css/shared/base.css">
+    <link rel="stylesheet" href="/assets/css/shared/color.css">
+    <link rel="stylesheet" href="/assets/css/shared/layout.css">
     <link rel="stylesheet" href="/assets/css/shared/components.css">
     <link rel="stylesheet" href="/assets/css/shared/forms.css">
+    <link rel="stylesheet" href="/assets/css/shared/pages.css">
+    <link rel="stylesheet" href="/assets/css/shared/style.css">
+
 </head>
 <body>
     <div class="container-main">
