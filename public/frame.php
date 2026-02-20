@@ -5,7 +5,6 @@ require_once __DIR__ . '/../config/security.php';
 require_once __DIR__ . '/../app/helpers/bootstrap.php';
 require_once __DIR__ . '/../app/models/Usuario.php';
 require_once __DIR__ . '/../app/helpers/Conection.php';
-require_once __DIR__ . '/../app/helpers/Conexao.php';
 
 // Garante que a sessão esteja ativa antes de acessar dados do usuário.
 if (session_status() !== PHP_SESSION_ACTIVE) {
