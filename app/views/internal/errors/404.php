@@ -25,7 +25,7 @@ $details = ['timestamp' => date('c'), 'request' => $_SERVER['REQUEST_URI'] ?? ''
         <section>
             <h2 class="fw-semibold mb-3" style="color: var(--bs-danger);">Erro <?php echo htmlspecialchars($code); ?></h2>
             <p><?php echo htmlspecialchars($message); ?></p>
-            <div class="d-flex justify-content-start gap-2 mb-3 error-actions">
+            <div class="d-flex justify-content-start gap-2 mt-4 mb-3 error-actions">
                 <?php foreach ($actions as $a): ?>
                     <a href="<?php echo htmlspecialchars($a['href'] ?? '#'); ?>" class="btn <?php echo htmlspecialchars($a['class'] ?? 'btn-secondary'); ?>">
                         <?php echo htmlspecialchars($a['label'] ?? 'Ação'); ?>
