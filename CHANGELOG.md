@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0067
+
+**Data:** 2026-02-21 16:06:17 | **Commit:** `51000ed` | **Tipo:** `patch`
+
+- fix(api): use PDO by default and fallback to mysqli for getPerfis.php
+
 ## V. 1.02.0066
 
 **Data:** 2026-02-21 16:04:07 | **Commit:** `eccc8de` | **Tipo:** `patch`
@@ -1440,6 +1446,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
