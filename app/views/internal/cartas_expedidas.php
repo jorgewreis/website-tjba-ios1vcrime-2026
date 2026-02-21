@@ -9,7 +9,7 @@ Security::requireAuthentication();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Dashboard - Primeira Vara Crime</title>
+    <title>Cartas Expedidas - Primeira Vara Crime</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/assets/css/custom.css">
@@ -20,6 +20,15 @@ Security::requireAuthentication();
     $description = 'Página dedicada a acompanhar o percurso das cartas precatórias, assegurando que o pedido jurisdicional tenha início, trânsito e retorno.';
     include __DIR__ . '/_page_header.php';
     ?>
-    
+
+    <div class="container-xl py-2">
+        <section>
+            <div class="card">
+
+            </div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

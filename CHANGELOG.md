@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0072
+
+**Data:** 2026-02-21 16:40:00 | **Commit:** `ed3d450` | **Tipo:** `patch`
+
+- Fix: melhorias nas definições
+
 ## V. 1.02.0071
 
 **Data:** 2026-02-21 16:31:03 | **Commit:** `6f98b0f` | **Tipo:** `patch`
@@ -1470,6 +1476,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

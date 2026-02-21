@@ -7,7 +7,7 @@ declare(strict_types=1);
 <header class="container-xl mb-4" style="margin-top: 110px;>
     <div class="d-flex align-items-center gap-3">
         <div>
-            <h2 class="fw-0"><?php echo htmlspecialchars($title); ?></h2>
+            <h2 class="mb-0 text-primary"><?php echo htmlspecialchars($title); ?></h2>
             <p class="text-muted"><?php echo htmlspecialchars($description); ?></p>
         </div>
     </div>
