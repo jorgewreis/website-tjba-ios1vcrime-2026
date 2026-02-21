@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0063
+
+**Data:** 2026-02-21 15:46:55 | **Commit:** `cfb3008` | **Tipo:** `patch`
+
+- Fix: correção de páginas de erro e definição de headers page
+
 ## V. 1.02.0062
 
 **Data:** 2026-02-21 15:21:02 | **Commit:** `09d62e1` | **Tipo:** `patch`
@@ -1416,6 +1422,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
