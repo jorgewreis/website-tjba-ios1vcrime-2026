@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0040
+
+**Data:** 2026-02-21 14:23:21 | **Commit:** `a59d883` | **Tipo:** `patch`
+
+- chore(docs): consolidate canonical docs into docs/canon and add agent/subagent infra
+
 ## V. 1.02.0039
 
 **Data:** 2026-02-20 11:27:02 | **Commit:** `df869b0` | **Tipo:** `patch`
@@ -1350,6 +1356,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

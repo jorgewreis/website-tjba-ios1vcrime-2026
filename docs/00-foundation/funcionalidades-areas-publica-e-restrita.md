@@ -1,4 +1,4 @@
-# SGC - IOS1VCRIME
+ # SGC - IOS1VCRIME
 
 ## DOCUMENTAÇÃO INICIAL
 
@@ -78,6 +78,7 @@ Funcionalidades previstas:
 - consulta de processos (dados públicos e resumidos)  
 - estatísticas gerais agregadas  
 - exibição de marcos institucionais  
+- exibição de marcos institucionais  
 
 Processos sigilosos devem ser bloqueados ou mascarados integralmente.
 
@@ -96,7 +97,7 @@ Funcionalidades:
 Regras obrigatórias:
 
 - audiências sigilosas não permitem inscrição  
-- mascaramento de dados sensíveis  
+- mascaramento de dados sensíveis
 
 ---
 
@@ -142,7 +143,7 @@ Regra crítica:
 - catálogo de tipos de tarefa  
 - sub-tarefas configuráveis  
 - regras de pontuação parametrizadas  
-- exclusão controlada (hard/soft delete)  
+- exclusão controlada (hard/soft delete)
 
 ---
 
@@ -154,7 +155,7 @@ Regra crítica:
 - encerramento automático ou manual com justificativa  
 - atribuição de usuários  
 - pontuação obrigatória  
-- feedback por toast  
+- feedback por toast
 
 #### 4.6.2 Submódulo — Cartas Recebidas
 
@@ -165,7 +166,7 @@ Sub-tarefas padrão:
 - certificação  
 - geração de PDF  
 - devolução à origem  
-- arquivamento  
+- arquivamento
 
 Regra especial para oitiva/interrogatório vinculada à audiência.
 
@@ -177,14 +178,14 @@ Etapas:
 - gerar PDF  
 - enviar  
 - ofício  
-- juntadas  
+- juntadas
 
 #### 4.6.4 Submódulo — Editais
 
 - expedição  
 - publicação  
 - certificação  
-- encerramento  
+- encerramento
 
 #### 4.6.5 Submódulo — Guias (Execução Penal)
 
@@ -193,7 +194,7 @@ Etapas:
 - PDF  
 - envio  
 - juntadas  
-- certificação  
+- certificação
 
 #### 4.6.6 Submódulo — Ofícios do Cartório
 
@@ -206,13 +207,13 @@ Etapas:
 - conferência de partes  
 - mandados para requerido e requerente  
 - ofícios condicionais  
-- integração com CEJUSC  
+- integração com CEJUSC
 
 #### 4.6.8 Submódulo — CEJUSC
 
 - envio de decisão  
 - juntada de comprovantes  
-- encerramento de curso  
+- encerramento de curso
 
 ---
 
@@ -222,7 +223,7 @@ Etapas:
 - filtros  
 - prioridades  
 - marcação de leitura  
-- rastreabilidade  
+- rastreabilidade
 
 ---
 
@@ -231,7 +232,7 @@ Etapas:
 - produtividade individual  
 - metas  
 - estatísticas agregadas  
-- visão administrativa e individual  
+- visão administrativa e individual
 
 ---
 
@@ -240,7 +241,7 @@ Etapas:
 - autenticação  
 - acessos negados  
 - alterações de regras  
-- eventos operacionais  
+- eventos operacionais
 
 Logs são imutáveis e exportáveis.
 
@@ -252,7 +253,7 @@ Logs são imutáveis e exportáveis.
 - metas  
 - tipos  
 - comarcas  
-- notificações  
+- notificações
 
 Governança por admin e chefia, com versionamento.
 
@@ -265,7 +266,7 @@ Submódulos:
 - Réus Presos  
 - Processos Prioritários  
 - Ofícios do Gabinete  
-- Monitoramento Eletrônico  
+- Monitoramento Eletrônico
 
 ---
 
@@ -279,6 +280,6 @@ Diretrizes permanentes:
 - bloqueio total de informações sigilosas  
 - rastreabilidade total  
 - parametrização e versionamento  
-- padronização por tarefas e sub-tarefas  
+- padronização por tarefas e sub-tarefas
 
 **Fim do documento.**

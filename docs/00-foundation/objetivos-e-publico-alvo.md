@@ -78,14 +78,6 @@ Do ponto de vista tecnológico, o webapp tem como objetivo garantir segurança, 
 
 O sistema deve ser robusto o suficiente para suportar o uso diário contínuo, sem comprometer a integridade dos dados ou a experiência do usuário.
 
-A adoção de boas práticas de desenvolvimento e das normas de qualidade assegura que o sistema seja manutenível, auditável e evolutivo. A arquitetura modular facilita ajustes futuros, correções e ampliações, sem necessidade de reestruturações profundas.
-
-Entre os objetivos tecnológicos, destacam-se:
-
-- autenticação segura e controle de acesso por perfil;  
-- proteção de dados pessoais conforme a LGPD;  
-- desempenho adequado em diferentes dispositivos (desktop, tablet e mobile).  
-
 ---
 
 ## 4. Público-Alvo do WebApp
@@ -104,32 +96,6 @@ O público externo é composto por usuários sem vínculo funcional direto com a
 
 Esse acesso é controlado e limitado às informações cuja publicidade é autorizada por lei.
 
-### 5.1 Perfis do Público Externo
-
-O público externo abrange diferentes perfis, tais como:
-
-- cidadãos em geral;  
-- advogados;  
-- defensores públicos;  
-- promotores de justiça;  
-- estudantes de Direito e pesquisadores.  
-
-O sistema poderá permitir, de forma controlada, que outras Varas consultem dados específicos, como estatísticas agregadas ou consulta de partes, sempre sem acesso a informações sigilosas ou sensíveis.
-
----
-
-### 5.2 Justificativa de Atendimento ao Público Externo
-
-O atendimento ao público externo fundamenta-se nos princípios da publicidade, transparência e eficiência, assegurando que a sociedade tenha acesso facilitado às informações públicas da atividade jurisdicional.
-
-Essa transparência contribui para a legitimidade institucional e para a confiança da população no Poder Judiciário.
-
-Exemplos práticos desse atendimento incluem:
-
-- consulta às audiências públicas do dia;  
-- acompanhamento do status das audiências em painéis públicos;  
-- acesso temporário a documentos públicos, quando permitido.  
-
 ---
 
 ## 6. Público-Alvo Interno
@@ -138,37 +104,11 @@ O público interno é formado por usuários vinculados funcionalmente à Primeir
 
 Esses usuários utilizam o sistema como ferramenta de trabalho diário.
 
-### 6.1 Perfis Internos e Responsabilidades Funcionais
-
-Os perfis internos refletem a estrutura funcional da Vara, garantindo que cada usuário tenha acesso apenas às funcionalidades compatíveis com suas atribuições.
-
-Os principais perfis internos incluem:
-
-- chefia e administração do sistema;  
-- servidores do cartório;  
-- servidores do gabinete;  
-- estagiários do cartório;  
-- estagiários do gabinete.  
-
-Cada perfil possui responsabilidades bem definidas, como cadastro, movimentação, validação ou acompanhamento de informações, sempre com níveis de acesso proporcionais às suas funções.
-
 ---
 
 ## 7. Delimitação de Acesso e Segurança
 
 A segurança do sistema baseia-se na separação rígida entre área pública e área restrita, aliada a controles de acesso por perfil e auditoria constante.
-
-Usuários externos não possuem acesso a funcionalidades internas, e informações sigilosas não são permitidas a usuários externos em nenhuma hipótese.
-
-No ambiente interno, o acesso às informações também é controlado de forma proporcional, evitando que usuários visualizem ou alterem dados fora de sua responsabilidade funcional.
-
-Todas as ações relevantes são registradas em logs, garantindo rastreabilidade e possibilidade de auditoria.
-
-Exemplos práticos dessa delimitação incluem:
-
-- ocultação automática de processos sigilosos;  
-- restrição de exclusões ou alterações a perfis específicos;  
-- registro de acessos e operações sensíveis.  
 
 ---
 
@@ -176,15 +116,5 @@ Exemplos práticos dessa delimitação incluem:
 
 Este documento constitui fundamento conceitual e normativo do **Projeto 2026.01**, sendo referência obrigatória para todos os demais documentos e decisões técnicas.
 
-A partir deste documento derivam diretamente:
-
-- Documento de Escopo;  
-- Requisitos Funcionais e Não Funcionais;  
-- Matriz de Perfis e Permissões;  
-- Políticas de Segurança e Auditoria.  
-
-Qualquer evolução futura do webapp deverá respeitar integralmente os princípios e diretrizes aqui estabelecidos.
-
----
-
 **Fim do documento.**
+
