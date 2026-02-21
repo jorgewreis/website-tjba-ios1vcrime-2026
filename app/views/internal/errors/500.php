@@ -104,6 +104,11 @@ $details = [
                     <?php endforeach; ?>
                 </ul>
             </div>
+            <div class="flex-grow-1">
+                <button class="toggle-error-details btn btn-link" aria-expanded="false">Mostrar detalhes técnicos</button>
+                <?php $details = $details; include __DIR__ . '/_error_details.php'; ?>
+            </div>
+            
         </section>
 
         <div class="d-flex action-row justify-content-center flex-wrap gap-3">
@@ -115,10 +120,6 @@ $details = [
             </a>
         </div>
 
-        <div class="text-center toggle-details">
-            <button class="toggle-error-details btn btn-link" aria-expanded="false">Mostrar detalhes técnicos</button>
-        </div>
-        <?php $details = $details; include __DIR__ . '/_error_details.php'; ?>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>

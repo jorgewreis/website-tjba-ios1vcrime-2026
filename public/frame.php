@@ -40,7 +40,7 @@ $allowed_pages = [
 
     '401'=> $ERRORS . '/401.php',
     '403'=> $ERRORS . '/403.php',
-    '404'=> $ERRORS . '/500.php', // testar - original 404
+    '404'=> $ERRORS . '/404.php',
     '500'=> $ERRORS . '/500.php',
     '503'=> $ERRORS . '/503.php'
 ];
