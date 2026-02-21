@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0058
+
+**Data:** 2026-02-21 14:54:00 | **Commit:** `1711dd5` | **Tipo:** `patch`
+
+- feat(users): add basic users API (list, create placeholder)
+
 ## V. 1.02.0057
 
 **Data:** 2026-02-21 14:52:56 | **Commit:** `433bd55` | **Tipo:** `patch`
@@ -1386,6 +1392,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
