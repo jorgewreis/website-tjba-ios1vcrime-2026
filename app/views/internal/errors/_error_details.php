@@ -3,7 +3,7 @@ declare(strict_types=1);
 // expects: $details array (key=>value)
 $details = $details ?? [];
 ?>
-<div class="error-details mt-3 container" id="errorDetails" hidden aria-hidden="true">
+<div class="error-details mt-3 container-xl" id="errorDetails" hidden aria-hidden="true">
     <div class="card border-0 shadow-sm">
         <div class="card-body small">
             <h6>Detalhes técnicos</h6>

@@ -23,7 +23,7 @@ $details = ['timestamp' => date('c'), 'request' => $_SERVER['REQUEST_URI'] ?? ''
 <body class="page-internal">
     <?php include __DIR__ . '/_error_card.php'; ?>
 
-    <div class="container text-center my-3">
+    <div class="container-xl text-center my-3">
         <button class="toggle-error-details btn btn-link" aria-expanded="false">Mostrar detalhes técnicos</button>
     </div>
 

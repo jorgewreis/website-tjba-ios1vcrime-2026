@@ -4,7 +4,7 @@ $code = '403';
 $title = 'Acesso Negado';
 $message = 'Seu perfil não tem permissão para acessar este recurso. Solicite autorização à chefia se necessário.';
 $actions = [
-    ['label' => 'Solicitar Acesso', 'href' => 'mailto:suporte@exemplo.com', 'class' => 'btn-primary'],
+    ['label' => 'Solicitar Acesso', 'href' => 'mailto:jorgew.reis@outlook.com', 'class' => 'btn-primary'],
     ['label' => 'Página Inicial', 'href' => '/frame.php?page=dashboard', 'class' => 'btn-secondary']
 ];
 $suggestions = ['Verifique se está logado com a conta correta.', 'Contate a administração para revisão de permissões.'];
@@ -23,7 +23,7 @@ $details = ['timestamp' => date('c'), 'request' => $_SERVER['REQUEST_URI'] ?? ''
 <body class="page-internal">
     <?php include __DIR__ . '/_error_card.php'; ?>
 
-    <div class="container text-center my-3">
+    <div class="container-xl text-center my-3">
         <button class="toggle-error-details btn btn-link" aria-expanded="false">Mostrar detalhes técnicos</button>
     </div>
 

@@ -5,7 +5,7 @@ $title = 'Erro Interno';
 $message = 'Ocorreu um erro interno no servidor. Tente novamente mais tarde. Se o problema continuar, contate o suporte.';
 $actions = [
     ['label' => 'Voltar', 'href' => 'javascript:history.back()', 'class' => 'btn-secondary'],
-    ['label' => 'Reportar', 'href' => 'mailto:suporte@exemplo.com', 'class' => 'btn-primary']
+    ['label' => 'Reportar', 'href' => 'mailto:jorgew.reis@outlook.com', 'class' => 'btn-primary']
 ];
 $suggestions = ['Tente recarregar a página após alguns minutos.', 'Anote o código de erro e informe ao suporte.'];
 $details = ['timestamp' => date('c'), 'request' => $_SERVER['REQUEST_URI'] ?? '', 'trace_id' => $_SERVER['X_TRACE_ID'] ?? ($_SERVER['HTTP_X_REQUEST_ID'] ?? '')];
@@ -23,7 +23,7 @@ $details = ['timestamp' => date('c'), 'request' => $_SERVER['REQUEST_URI'] ?? ''
 <body class="page-internal">
     <?php include __DIR__ . '/_error_card.php'; ?>
 
-    <div class="container text-center my-3">
+    <div class="container-xl text-center my-3">
         <button class="toggle-error-details btn btn-link" aria-expanded="false">Mostrar detalhes técnicos</button>
     </div>
 

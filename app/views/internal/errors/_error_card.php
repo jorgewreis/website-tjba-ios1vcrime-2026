@@ -7,7 +7,7 @@ $message = $message ?? '';
 $actions = $actions ?? [];
 $suggestions = $suggestions ?? [];
 ?>
-<main role="main" class="container error-page py-5">
+<main role="main" class="container-xl error-page py-5">
     <div class="row justify-content-center">
         <div class="col-12 col-md-8">
             <div class="card error-card shadow-sm">
