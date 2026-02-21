@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0076
+
+**Data:** 2026-02-21 17:23:54 | **Commit:** `eec8bcd` | **Tipo:** `patch`
+
+- feat(ui): atualizar modelos de páginas de erro para novo mockup (card unificado, detalhes técnicos toggle)
+
 ## V. 1.02.0075
 
 **Data:** 2026-02-21 17:03:42 | **Commit:** `4862173` | **Tipo:** `patch`
@@ -1494,6 +1500,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
