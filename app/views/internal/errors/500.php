@@ -48,7 +48,7 @@ $details = [
             color: #5a5f6f;
         }
         .suggestion-panel {
-            border-radius: 1rem;
+            border-radius: 8px;
             border: 1px solid #e1e7ef;
             background: #fff;
             box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.02);
@@ -112,12 +112,12 @@ $details = [
         </section>
 
         <div class="d-flex action-row justify-content-center flex-wrap gap-3">
+            <button type="button" onclick="location.href='/frame.php?page=dashboard.php'" class="btn btn-outline-primary btn-lg">
+                Página inicial
+            </button>    
             <button type="button" onclick="location.reload();" class="btn btn-primary btn-lg">
                 Tentar Novamente
             </button>
-            <a class="btn btn-outline-primary btn-lg" href="/frame.php?page=dashboard">
-                Página Inicial
-            </a>
         </div>
 
     </main>
