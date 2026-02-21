@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0053
+
+**Data:** 2026-02-21 14:35:38 | **Commit:** `46e3e6b` | **Tipo:** `patch`
+
+- merge: resolve VERSION conflict favoring develop version
+
 ## V. 1.02.0040
 
 **Data:** 2026-02-21 14:23:21 | **Commit:** `a59d883` | **Tipo:** `patch`
@@ -1356,6 +1362,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
