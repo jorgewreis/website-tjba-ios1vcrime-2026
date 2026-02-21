@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0062
+
+**Data:** 2026-02-21 15:21:02 | **Commit:** `09d62e1` | **Tipo:** `patch`
+
+- feat(errors): add structured error pages (401,403,404,500,503) with reusable components and styles
+
 ## V. 1.02.0061
 
 **Data:** 2026-02-21 15:06:23 | **Commit:** `e5a4376` | **Tipo:** `patch`
@@ -1410,6 +1416,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

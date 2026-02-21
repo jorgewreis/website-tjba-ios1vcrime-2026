@@ -105,3 +105,17 @@ button.btn-md.readonly{
 .stats-card .card-body {
   padding: 1rem 1.25rem;
 }
+
+/* ========================================
+   Error pages styles
+   ======================================== */
+.error-page { margin-top: 40px; margin-bottom: 40px; }
+.error-card { border-radius: .5rem; padding: 1rem; }
+.error-code { font-size: 5rem; color: #4a6cf7; line-height: 1; }
+.error-actions .btn { min-width: 140px; }
+.error-details code { background: #f8f9fb; padding: .25rem .5rem; display: inline-block; border-radius: 4px; }
+.error-header img { border-radius: 6px; }
+.error-card .text-muted ul { margin-top: .5rem; }
+.toggle-error-details { border: none; background: none; color: #4a6cf7; text-decoration: underline; cursor: pointer; }
+.toggle-error-details:focus { outline: 3px solid rgba(74,108,247,0.15); outline-offset: 2px; }
+
