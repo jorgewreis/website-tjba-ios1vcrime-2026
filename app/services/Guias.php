@@ -10,39 +10,34 @@ require_once __DIR__ . '/Produtividade.php';
 
 class Guias
 {
-    private mysqli $connection;
+    private PDO $pdo;
     private ClasseManager $classeManager;
     private ProcessoManager $processoManager;
     private ReuManager $reuManager;
     private Produtividade $produtividade;
 
-    public function __construct(mysqli $connection)
+    public function __construct(PDO $pdo)
     {
-        $this->connection = $connection;
-        $this->connection->set_charset('utf8mb4');
-        $this->classeManager = new ClasseManager($connection);
-        $this->processoManager = new ProcessoManager($connection);
-        $this->reuManager = new ReuManager($connection);
-        $this->produtividade = new Produtividade($connection);
+        $this->pdo = $pdo;
+        $this->classeManager = new ClasseManager($pdo);
+        $this->processoManager = new ProcessoManager($pdo);
+        $this->reuManager = new ReuManager($pdo);
+        $this->produtividade = new Produtividade($pdo);
     }
 
     private function calcularStatusGuiaPorSubtarefas(string $idGuia): string
     {
         $sql = "SELECT status, started_at, completed_at FROM guia_subtarefas WHERE id_guia = ?";
-        $stmt = $this->connection->prepare($sql);
-        if (!$stmt) {
-            return 'Não iniciada';
-        }
-        $stmt->bind_param('s', $idGuia);
-        $stmt->execute();
-        $res = $stmt->get_result();
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$idGuia]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $temSubtarefa = false;
         $todasConcluidas = true;
         $temAndamento = false;
         $temConcluida = false;
 
-        while ($row = $res->fetch_assoc()) {
+        foreach ($rows as $row) {
             $temSubtarefa = true;
             $statusRaw = trim((string)($row['status'] ?? ''));
             $statusNorm = mb_strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $statusRaw) ?: $statusRaw);
@@ -61,7 +56,6 @@ class Guias
                 || str_contains($statusNorm, 'refazer')
                 || !empty($row['started_at']);
         }
-        $stmt->close();
 
         if (!$temSubtarefa) return 'Não iniciada';
         if ($todasConcluidas) return 'Concluída';
@@ -74,12 +68,8 @@ class Guias
         $novoStatus = $this->calcularStatusGuiaPorSubtarefas($idGuia);
         $agora = (new DateTime('now', new DateTimeZone('America/Bahia')))->format('Y-m-d H:i:s');
 
-        $stmt = $this->connection->prepare("UPDATE guia SET status = ?, data_atualizacao = ? WHERE id_guia = ?");
-        if ($stmt) {
-            $stmt->bind_param('sss', $novoStatus, $agora, $idGuia);
-            $stmt->execute();
-            $stmt->close();
-        }
+        $stmt = $this->pdo->prepare("UPDATE guia SET status = ?, data_atualizacao = ? WHERE id_guia = ?");
+        $stmt->execute([$novoStatus, $agora, $idGuia]);
 
         return $novoStatus;
     }
@@ -172,7 +162,7 @@ class Guias
         $agora = (new DateTime('now', new DateTimeZone('America/Bahia')))->format('Y-m-d H:i:s');
         
         try {
-            $this->connection->begin_transaction();
+            $this->pdo->beginTransaction();
 
             // 1. Cadastra/atualiza a classe
             if (!empty($dados['classe_cod']) && !empty($dados['classe_desc'])) {
@@ -229,19 +219,14 @@ class Guias
                     (id_guia, tipo, processo, denunciado, etapa, status, regime, data_fato, dias_multa, observacoes, data_cadastro, data_atualizacao, user_cadastro) 
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             
-            $stmt = $this->connection->prepare($sql);
-            if (!$stmt) {
-                throw new Exception('Erro ao preparar insert da guia: ' . $this->connection->error);
-            }
-
             // Preparar valores
             $regime = $dados['regime'] ?? '';
             $dataFato = $dados['data_fato'] ?? null;
             $diasMulta = !empty($dados['dias_multa']) ? (int)$dados['dias_multa'] : null;
             $observacoes = $dados['observacoes'] ?? null;
 
-            $stmt->bind_param(
-                "ssssssssissss",
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([
                 $idGuia,
                 $dados['tipo'],
                 $dados['processo'],
@@ -255,12 +240,7 @@ class Guias
                 $agora,
                 $agora,
                 $dados['user_cadastro']
-            );
-            
-            if (!$stmt->execute()) {
-                throw new Exception('Erro ao inserir guia: ' . $stmt->error);
-            }
-            $stmt->close();
+            ]);
 
             // 7. Cadastra alocação de usuários (se aplicável)
             $alocacao = $dados['alocacao'] ?? 'nao-alocar';
@@ -276,16 +256,12 @@ class Guias
                     // INSERT para cada servidor alocado
                     $sqlAloc = "INSERT INTO guiasUsuarios (id_alocacao, id_usuario, id_guia, data_cadastro) 
                                 VALUES (?, ?, ?, ?)";
-                    $stmtAloc = $this->connection->prepare($sqlAloc);
+                    $stmtAloc = $this->pdo->prepare($sqlAloc);
                     
-                    if ($stmtAloc) {
-                        $dataCadastro = (new DateTime('now', new DateTimeZone('America/Bahia')))->format('Y-m-d');
-                        foreach ($servidoresAlocar as $userId) {
-                            $idAlocacao = $this->gerarId();
-                            $stmtAloc->bind_param('ssss', $idAlocacao, $userId, $idGuia, $dataCadastro);
-                            $stmtAloc->execute();
-                        }
-                        $stmtAloc->close();
+                    $dataCadastro = (new DateTime('now', new DateTimeZone('America/Bahia')))->format('Y-m-d');
+                    foreach ($servidoresAlocar as $userId) {
+                        $idAlocacao = $this->gerarId();
+                        $stmtAloc->execute([$idAlocacao, $userId, $idGuia, $dataCadastro]);
                     }
                 }
             }
@@ -348,31 +324,14 @@ class Guias
             if (count($subtarefasOrdenadas) > 0) {
                 // Inserção simplificada - apenas campos básicos
                 $sqlSub = "INSERT INTO guia_subtarefas (id_guia, codigo, titulo, status, created_at) VALUES (?, ?, ?, ?, ?)";
-                $stmtSub = $this->connection->prepare($sqlSub);
-                if (!$stmtSub) {
-                    throw new Exception('Erro ao preparar insert de subtarefas: ' . $this->connection->error);
-                }
+                $stmtSub = $this->pdo->prepare($sqlSub);
 
                 $statusSub = 'A fazer';
                 
                 foreach ($subtarefasOrdenadas as $codigo) {
                     $titulo = $subtaskCatalog[$codigo];
-                    
-                    // Bind com variáveis locais
-                    $bind_id_guia = $idGuia;
-                    $bind_codigo = $codigo;
-                    $bind_titulo = $titulo;
-                    $bind_status = $statusSub;
-                    $bind_created_at = $agora;
-                    
-                    $stmtSub->bind_param('sssss', $bind_id_guia, $bind_codigo, $bind_titulo, $bind_status, $bind_created_at);
-                    
-                    if (!$stmtSub->execute()) {
-                        throw new Exception('Erro ao inserir subtarefa ' . $codigo . ': ' . $stmtSub->error);
-                    }
+                    $stmtSub->execute([$idGuia, $codigo, $titulo, $statusSub, $agora]);
                 }
-
-                $stmtSub->close();
             }
 
             // 8.1 Força atualização do status da guia com base nas subtarefas recém-criadas
@@ -423,11 +382,11 @@ class Guias
                 );
             }
 
-            $this->connection->commit();
+            $this->pdo->commit();
             // Auditoria: registra criação da guia
             try {
                 $userCadastro = (string)($dados['user_cadastro'] ?? 'sistema');
-                AuditLogger::log($this->connection, $userCadastro, 'cadastrar_guia', ['id_guia' => $idGuia, 'processo' => $dados['processo'] ?? '', 'tipo' => $dados['tipo'] ?? '']);
+                AuditLogger::log($this->pdo, $userCadastro, 'cadastrar_guia', ['id_guia' => $idGuia, 'processo' => $dados['processo'] ?? '', 'tipo' => $dados['tipo'] ?? '']);
             } catch (Throwable $e) {
                 error_log('Audit logging failed: ' . $e->getMessage());
             }
@@ -442,7 +401,7 @@ class Guias
             ];
 
         } catch (Throwable $e) {
-            $this->connection->rollback();
+            $this->pdo->rollBack();
             error_log('Erro ao cadastrar guia: ' . $e->getMessage());
             
             return [
@@ -465,7 +424,7 @@ class Guias
         }
 
         try {
-            $this->connection->begin_transaction();
+            $this->pdo->beginTransaction();
 
             // 1. Cadastra/atualiza a classe
             if (!empty($dados['classe_cod']) && !empty($dados['classe_desc'])) {
@@ -517,13 +476,8 @@ class Guias
             $sql = "UPDATE guia
                     SET tipo = ?, processo = ?, denunciado = ?, regime = ?, data_fato = ?, dias_multa = ?, observacoes = ?, data_atualizacao = ?, user_cadastro = ?
                     WHERE id_guia = ?";
-            $stmt = $this->connection->prepare($sql);
-            if (!$stmt) {
-                throw new Exception('Erro ao preparar atualização da guia: ' . $this->connection->error);
-            }
-
-            $stmt->bind_param(
-                "ssssssssss",
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([
                 $dados['tipo'],
                 $dados['processo'],
                 $dados['reu'],
@@ -534,12 +488,7 @@ class Guias
                 $agora,
                 $userCadastro,
                 $idGuia
-            );
-
-            if (!$stmt->execute()) {
-                throw new Exception('Erro ao atualizar guia: ' . $stmt->error);
-            }
-            $stmt->close();
+            ]);
 
             // 6.1 Atualiza consulta SEEU na subtarefa "expedir-guia" (checkbox_reu_provisoria + destino_guia)
             $verificacaoSeeuRaw = trim((string)($dados['verificacao_seeu'] ?? ''));
@@ -556,43 +505,31 @@ class Guias
                 $checkboxReuProvisoria = ($valorVerificacao === '2') ? 1 : 0;
                 $destinoGuia = $checkboxReuProvisoria === 1 ? 'VEP' : 'SEEU';
 
-                $stmtSeeu = $this->connection->prepare("SELECT dados_extra FROM guia_subtarefas WHERE id_guia = ? AND codigo = 'expedir-guia' LIMIT 1");
-                if ($stmtSeeu) {
-                    $stmtSeeu->bind_param('s', $idGuia);
-                    $stmtSeeu->execute();
-                    $resSeeu = $stmtSeeu->get_result();
-                    $rawExtra = '';
-                    if ($row = $resSeeu->fetch_assoc()) {
-                        $rawExtra = (string)($row['dados_extra'] ?? '');
-                    }
-                    $stmtSeeu->close();
+                $stmtSeeu = $this->pdo->prepare("SELECT dados_extra FROM guia_subtarefas WHERE id_guia = ? AND codigo = 'expedir-guia' LIMIT 1");
+                $stmtSeeu->execute([$idGuia]);
+                $row = $stmtSeeu->fetch(PDO::FETCH_ASSOC);
+                $rawExtra = '';
+                if ($row) {
+                    $rawExtra = (string)($row['dados_extra'] ?? '');
+                }
 
-                    $dadosExtra = [];
-                    if ($rawExtra !== '') {
-                        $parsed = json_decode($rawExtra, true);
-                        if (is_array($parsed)) {
-                            $dadosExtra = $parsed;
-                        }
-                    }
-                    $dadosExtra['verificacao_seeu'] = $valorVerificacao;
-                    $jsonExtra = json_encode($dadosExtra, JSON_UNESCAPED_UNICODE);
-
-                    $stmtUpdSeeu = $this->connection->prepare("UPDATE guia_subtarefas SET checkbox_reu_provisoria = ?, destino_guia = ?, dados_extra = ? WHERE id_guia = ? AND codigo = 'expedir-guia'");
-                    if ($stmtUpdSeeu) {
-                        $stmtUpdSeeu->bind_param('isss', $checkboxReuProvisoria, $destinoGuia, $jsonExtra, $idGuia);
-                        $stmtUpdSeeu->execute();
-                        $stmtUpdSeeu->close();
+                $dadosExtra = [];
+                if ($rawExtra !== '') {
+                    $parsed = json_decode($rawExtra, true);
+                    if (is_array($parsed)) {
+                        $dadosExtra = $parsed;
                     }
                 }
+                $dadosExtra['verificacao_seeu'] = $valorVerificacao;
+                $jsonExtra = json_encode($dadosExtra, JSON_UNESCAPED_UNICODE);
+
+                $stmtUpdSeeu = $this->pdo->prepare("UPDATE guia_subtarefas SET checkbox_reu_provisoria = ?, destino_guia = ?, dados_extra = ? WHERE id_guia = ? AND codigo = 'expedir-guia'");
+                $stmtUpdSeeu->execute([$checkboxReuProvisoria, $destinoGuia, $jsonExtra, $idGuia]);
             }
 
             // 7. Atualiza alocação
-            $stmtAlocDelete = $this->connection->prepare('DELETE FROM guiasUsuarios WHERE id_guia = ?');
-            if ($stmtAlocDelete) {
-                $stmtAlocDelete->bind_param('s', $idGuia);
-                $stmtAlocDelete->execute();
-                $stmtAlocDelete->close();
-            }
+            $stmtAlocDelete = $this->pdo->prepare('DELETE FROM guiasUsuarios WHERE id_guia = ?');
+            $stmtAlocDelete->execute([$idGuia]);
 
             $alocacao = $dados['alocacao'] ?? 'nao-alocar';
             $servidoresAlocar = $dados['servidores'] ?? [];
@@ -620,7 +557,7 @@ class Guias
             // 7.1 Força atualização do status da guia com base nas subtarefas atuais
             $this->atualizarStatusGuiaPorSubtarefas($idGuia);
 
-            $this->connection->commit();
+            $this->pdo->commit();
 
             return [
                 'ok' => true,
@@ -629,7 +566,7 @@ class Guias
             ];
 
         } catch (Throwable $e) {
-            $this->connection->rollback();
+            $this->pdo->rollBack();
             error_log('Erro ao atualizar guia: ' . $e->getMessage());
             return [
                 'ok' => false,
@@ -657,16 +594,9 @@ class Guias
                 WHERE g.id_guia = ?
                 LIMIT 1";
 
-        $stmt = $this->connection->prepare($sql);
-        if (!$stmt) {
-            return null;
-        }
-
-        $stmt->bind_param('s', $idGuia);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $row = $result->fetch_assoc();
-        $stmt->close();
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$idGuia]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$row) {
             return null;
@@ -749,32 +679,21 @@ class Guias
 
         // Count total
         $countSql = "SELECT COUNT(*) AS total FROM guia" . $whereSql;
-        $stmt = $this->connection->prepare($countSql);
-        
-        if (!empty($params)) {
-            $stmt->bind_param($types, ...$params);
-        }
-        
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $total = $result->fetch_assoc()['total'];
-        $stmt->close();
+        $stmt = $this->pdo->prepare($countSql);
+        $stmt->execute($params);
+        $total = (int)$stmt->fetchColumn();
 
         // Lista paginada
         $offset = ($page - 1) * $perPage;
         $sql = "SELECT * FROM guia" . $whereSql . " ORDER BY data_cadastro DESC LIMIT ? OFFSET ?";
-        $stmt = $this->connection->prepare($sql);
+        $stmt = $this->pdo->prepare($sql);
         
         $params[] = $perPage;
         $params[] = $offset;
-        $types .= 'ii';
-        
-        $stmt->bind_param($types, ...$params);
-        $stmt->execute();
-        $result = $stmt->get_result();
+        $stmt->execute($params);
         
         $guias = [];
-        while ($row = $result->fetch_assoc()) {
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $idGuia = (string)($row['id_guia'] ?? '');
             if ($idGuia !== '') {
                 $statusCalculado = $this->calcularStatusGuiaPorSubtarefas($idGuia);
@@ -785,7 +704,6 @@ class Guias
             }
             $guias[] = $row;
         }
-        $stmt->close();
 
         return [
             'total' => $total,

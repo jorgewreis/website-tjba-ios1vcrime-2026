@@ -2,14 +2,15 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/AutoloadHelper.php';
-require_once __DIR__ . '/Conexao.php';
+require_once __DIR__ . '/Conection.php';
 
 /**
- * Retorna a conexão compartilhada com o banco.
+ * Retorna a conexão compartilhada com o banco (PDO).
+ * @deprecated Use Conection::getInstance()->getConnection() diretamente
  */
-function getDatabaseConnection(): mysqli
+function getDatabaseConnection(): PDO
 {
-    return Conexao::getConn();
+    return Conection::getInstance()->getConnection();
 }
 
 /**

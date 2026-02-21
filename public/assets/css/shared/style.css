@@ -32,7 +32,7 @@
 
 body {
     width: 100vw;
-    min-height: 100vh;
+    min-height: 98vh;
     overflow-y: auto;
     overflow-x: hidden;
     background-color: var(--background-color);
@@ -498,11 +498,12 @@ body {
 
     .target-page{
         width: 100%;
-        height: calc(100vh - 100px);
+        height: 100vh;
         display: flex;
         flex-direction: column;
         border: none;
         border-style: hidden;
+        margin-top: 74px;
     }
 }
 

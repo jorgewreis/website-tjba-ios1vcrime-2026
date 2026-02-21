@@ -5,11 +5,11 @@ require_once __DIR__ . '/../helpers/Helper.php';
 
 class ProcessoManager
 {
-    private mysqli $connection;
+    private PDO $pdo;
 
-    public function __construct(mysqli $connection)
+    public function __construct(PDO $pdo)
     {
-        $this->connection = $connection;
+        $this->pdo = $pdo;
     }
 
     /**
@@ -18,24 +18,11 @@ class ProcessoManager
     public function buscarProcesso(string $numero): ?array
     {
         $sql = "SELECT id_proc, numero, classe, data_cadastro FROM processos WHERE numero = ? LIMIT 1";
-        require_once __DIR__ . '/../helpers/BootstrapHelper.php';
-
-        if (!$stmt) {
-            return null;
-        }
-
-        $stmt->bind_param("s", $numero);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        if ($result->num_rows === 0) {
-            $stmt->close();
-            return null;
-        }
-
-        $processo = $result->fetch_assoc();
-        $stmt->close();
-        return $processo;
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$numero]);
+        
+        $processo = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $processo ?: null;
     }
 
     /**
@@ -55,17 +42,9 @@ class ProcessoManager
         $agora = (new DateTime('now', new DateTimeZone('America/Bahia')))->format('Y-m-d H:i:s');
 
         $sql = "INSERT INTO processos (id_proc, numero, classe, data_cadastro) VALUES (?, ?, ?, ?)";
-        $stmt = $this->connection->prepare($sql);
-
-        if (!$stmt) {
-            return false;
-        }
-
-        $stmt->bind_param("ssss", $novoId, $numero, $classe, $agora);
-        $sucesso = $stmt->execute();
-        $stmt->close();
-
-        return $sucesso;
+        $stmt = $this->pdo->prepare($sql);
+        
+        return $stmt->execute([$novoId, $numero, $classe, $agora]);
     }
 
     /**
@@ -74,37 +53,27 @@ class ProcessoManager
     public function cadastrarPrioridades(string $numeroProcesso, array $prioridades): bool
     {
         try {
+            $this->pdo->beginTransaction();
+
             $sqlDelete = "DELETE FROM processoPrioridades WHERE numero = ?";
-            $stmtDelete = $this->connection->prepare($sqlDelete);
-            if ($stmtDelete) {
-                $stmtDelete->bind_param("s", $numeroProcesso);
-                $stmtDelete->execute();
-                $stmtDelete->close();
-            } else {
-                return false;
+            $stmtDelete = $this->pdo->prepare($sqlDelete);
+            $stmtDelete->execute([$numeroProcesso]);
+
+            if (!empty($prioridades)) {
+                $sql = "INSERT INTO processoPrioridades (id_proc_prioridade, numero, prioridade) VALUES (?, ?, ?)";
+                $stmt = $this->pdo->prepare($sql);
+
+                foreach ($prioridades as $prioridade) {
+                    $idPrioridade = Helper::gerarId();
+                    $stmt->execute([$idPrioridade, $numeroProcesso, $prioridade]);
+                }
             }
 
-            if (empty($prioridades)) {
-                return true;
-            }
-
-            $sql = "INSERT INTO processoPrioridades (id_proc_prioridade, numero, prioridade) VALUES (?, ?, ?)";
-            $stmt = $this->connection->prepare($sql);
-
-            if (!$stmt) {
-                return false;
-            }
-
-            foreach ($prioridades as $prioridade) {
-                $idPrioridade = Helper::gerarId();
-                $stmt->bind_param("sss", $idPrioridade, $numeroProcesso, $prioridade);
-                $stmt->execute();
-            }
-
-            $stmt->close();
+            $this->pdo->commit();
             return true;
 
         } catch (Throwable $e) {
+            $this->pdo->rollBack();
             error_log('Erro ao cadastrar prioridades: ' . $e->getMessage());
             return false;
         }
@@ -118,25 +87,15 @@ class ProcessoManager
         $prioridades = [];
 
         $sql = "SELECT prioridade FROM processoPrioridades WHERE numero = ? ORDER BY prioridade";
-        $stmt = $this->connection->prepare($sql);
-
-        if (!$stmt) {
-            return $prioridades;
-        }
-
-        $stmt->bind_param('s', $numeroProcesso);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        if ($result) {
-            while ($row = $result->fetch_assoc()) {
-                if (!empty($row['prioridade'])) {
-                    $prioridades[] = $row['prioridade'];
-                }
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$numeroProcesso]);
+        
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($rows as $row) {
+            if (!empty($row['prioridade'])) {
+                $prioridades[] = $row['prioridade'];
             }
         }
-
-        $stmt->close();
 
         return $prioridades;
     }
@@ -147,16 +106,8 @@ class ProcessoManager
     private function atualizarClasseProcesso(string $numero, string $classe): bool
     {
         $sql = "UPDATE processos SET classe = ? WHERE numero = ?";
-        $stmt = $this->connection->prepare($sql);
-
-        if (!$stmt) {
-            return false;
-        }
-
-        $stmt->bind_param("ss", $classe, $numero);
-        $sucesso = $stmt->execute();
-        $stmt->close();
-
-        return $sucesso;
+        $stmt = $this->pdo->prepare($sql);
+        
+        return $stmt->execute([$classe, $numero]);
     }
 }

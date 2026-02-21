@@ -3,12 +3,11 @@ declare(strict_types=1);
 
 class Produtividade
 {
-    private mysqli $connection;
+    private PDO $pdo;
 
-    public function __construct(mysqli $connection)
+    public function __construct(PDO $pdo)
     {
-        $this->connection = $connection;
-        $this->connection->set_charset('utf8mb4');
+        $this->pdo = $pdo;
     }
 
     public function registrar(
@@ -29,13 +28,8 @@ class Produtividade
                 (IdProd, ProcProd, DescProd, PontosProd, DataProd, UserProd, Visible) 
                 VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-        $stmt = $this->connection->prepare($sql);
-        if (!$stmt) {
-            return false;
-        }
-
-        $stmt->bind_param(
-            'sssdssi',
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute([
             $idProd,
             $procProd,
             $descProd,
@@ -43,12 +37,7 @@ class Produtividade
             $dataProd,
             $userProd,
             $visible
-        );
-
-        $ok = $stmt->execute();
-        $stmt->close();
-
-        return $ok;
+        ]);
     }
 
     public function registrarCadastroGuia(
