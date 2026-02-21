@@ -4,77 +4,22 @@ declare(strict_types=1);
 Security::requireAuthentication();
 ?>
 
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Primeira Vara Crime de Ilhéus - Sistema de Gestão</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dashboard - Primeira Vara Crime</title>
 
-    <link rel="stylesheet" href="/assets/css/shared/reset.css">
-    <link rel="stylesheet" href="/assets/css/shared/color.css">
-    <link rel="stylesheet" href="/assets/css/shared/layout.css">
-    <link rel="stylesheet" href="/assets/css/shared/components.css">
-    <link rel="stylesheet" href="/assets/css/shared/forms.css">
-    <link rel="stylesheet" href="/assets/css/shared/pages.css">
-    <link rel="stylesheet" href="/assets/css/shared/style.css">
-
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/css/custom.css">
 </head>
 <body>
-    <div class="container-main">
-        <div class="title-page">
-            <span class="title">Cartas Expedidas</span>
-            <span class="info-title">Página dedicada a acompanhar o percurso das cartas precatórias, assegurando que o pedido jurisdicional tenha início, trânsito e retorno.</span>
-        </div>
-    </div>
-
-    <!-- BARRA DE BOTÕES - NOVO CADASTRO -->
-    <div class="page-header-actions">
-        <button class="btn-primary">
-            <i class="fi fi-rr-plus"></i>
-            Nova Carta Expedida
-        </button>
-    </div>
-
-    <!-- BARRA DE 4 CARDS INFORMATIVOS -->
-    <div class="info-cards-row">
-        <div class="info-card">
-            <span class="card-title">Total de Cartas Expedidas</span>
-            <span class="card-value">150</span>
-        </div>
-        <div class="info-card">
-            <span class="card-title">Cartas aguardando envio</span>
-            <span class="card-value">5</span>
-        </div>
-        <div class="info-card">
-            <span class="card-title">Cartas aguardando cumprimento</span>
-            <span class="card-value">50</span>
-        </div>
-        <div class="info-card">
-            <span class="card-title">Cartas devolvidas</span>
-            <span class="card-value">25</span>
-        </div>
-    </div>
-
-    <!-- TABELA COM LISTA DE CARTAS EXPEDIDAS -->
-    <!-- colunas: Processo, Finalidade, Prazo, Comarca destino, Usuário, Menu Rápido -->
-    <div class="table-card">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Processo</th>
-                    <th>Finalidade</th>
-                    <th>Prazo</th>
-                    <th>Comarca destino</th>
-                    <th>Usuário</th>
-                    <th>Menu Rápido</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Dados das cartas expedidas serão inseridos aqui dinamicamente -->
-            </tbody>
-        </table>
-    </div>
+    <?php
+    $title = 'Cartas Expedidas';
+    $description = 'Página dedicada a acompanhar o percurso das cartas precatórias, assegurando que o pedido jurisdicional tenha início, trânsito e retorno.';
+    include __DIR__ . '/_page_header.php';
+    ?>
+    
 </body>
 </html>

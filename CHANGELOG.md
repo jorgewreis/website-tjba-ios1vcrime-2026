@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0065
+
+**Data:** 2026-02-21 15:58:30 | **Commit:** `370c3a6` | **Tipo:** `patch`
+
+- Chore: melhorias no header page
+
 ## V. 1.02.0064
 
 **Data:** 2026-02-21 15:49:16 | **Commit:** `a790f3c` | **Tipo:** `patch`
@@ -1428,6 +1434,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
