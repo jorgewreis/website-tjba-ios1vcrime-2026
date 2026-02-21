@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0066
+
+**Data:** 2026-02-21 16:04:07 | **Commit:** `eccc8de` | **Tipo:** `patch`
+
+- fix(api): require correct DB helper (Conection) in getPerfis.php
+
 ## V. 1.02.0065
 
 **Data:** 2026-02-21 15:58:30 | **Commit:** `370c3a6` | **Tipo:** `patch`
@@ -1434,6 +1440,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
