@@ -4,57 +4,31 @@ declare(strict_types=1);
 Security::requireAuthentication();
 ?>
 
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Primeira Vara Crime de Ilhéus - Sistema de Gestão</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Réus Presos - Primeira Vara Crime</title>
 
-    <link rel="stylesheet" href="/assets/css/shared/reset.css">
-    <link rel="stylesheet" href="/assets/css/shared/color.css">
-    <link rel="stylesheet" href="/assets/css/shared/layout.css">
-    <link rel="stylesheet" href="/assets/css/shared/components.css">
-    <link rel="stylesheet" href="/assets/css/shared/forms.css">
-    <link rel="stylesheet" href="/assets/css/shared/pages.css">
-    <link rel="stylesheet" href="/assets/css/shared/style.css">
-
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/css/custom.css">
 </head>
 <body>
-    <div class="container-main">
-        <div class="title-page">
-            <span class="title">Réus Presos</span>
-            <span class="info-title">Painel dedicado aos processos com réus presos, acompanhamento das audiências e movimentações urgentes.</span>
-        </div>
+    <?php
+    $title = 'Réus Presos';
+    $description = 'Espaço onde os réus presos são registrados, acompanhados e cumpridos, para que o pedido seja cumprido de forma eficiente e segura.';
+    include __DIR__ . '/_page_header.php';
+    ?>
+
+    <div class="container-xl py-2">
+        <section>
+            <div class="card">
+
+            </div>
+        </section>
     </div>
 
-    <section class="content-section">
-        <div class="info-card">
-            <span class="card-title">Réus em audiência</span>
-            <span class="card-value">12</span>
-        </div>
-        <div class="info-card">
-            <span class="card-title">Réus aguardando custódia</span>
-            <span class="card-value">4</span>
-        </div>
-    </section>
-
-    <div class="table-card">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Processo</th>
-                    <th>Réu</th>
-                    <th>Status</th>
-                    <th>Unidade</th>
-                    <th>Última movimentação</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Linhas de réus presos serão renderizadas dinamicamente -->
-            </tbody>
-        </table>
-    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

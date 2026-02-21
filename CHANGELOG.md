@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0073
+
+**Data:** 2026-02-21 16:48:19 | **Commit:** `8ad48de` | **Tipo:** `patch`
+
+- Feat: Alteração conceitual das páginas internas
+
 ## V. 1.02.0072
 
 **Data:** 2026-02-21 16:40:00 | **Commit:** `ed3d450` | **Tipo:** `patch`
@@ -1476,6 +1482,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
