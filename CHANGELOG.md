@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0056
+
+**Data:** 2026-02-21 14:51:44 | **Commit:** `19d1a85` | **Tipo:** `patch`
+
+- feat(api): add guia API endpoint (create, list) using Guias service
+
 ## V. 1.02.0055
 
 **Data:** 2026-02-21 14:50:58 | **Commit:** `94a3698` | **Tipo:** `patch`
@@ -1374,6 +1380,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
