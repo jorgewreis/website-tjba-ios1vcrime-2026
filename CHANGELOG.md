@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0060
+
+**Data:** 2026-02-21 14:56:40 | **Commit:** `79fb6d9` | **Tipo:** `patch`
+
+- docs(ci): add testing instructions and CI setup guidance
+
 ## V. 1.02.0059
 
 **Data:** 2026-02-21 14:55:02 | **Commit:** `a541b15` | **Tipo:** `patch`
@@ -1398,6 +1404,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
