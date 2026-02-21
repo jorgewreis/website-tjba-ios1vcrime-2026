@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0054
+
+**Data:** 2026-02-21 14:49:57 | **Commit:** `2c25e65` | **Tipo:** `patch`
+
+- chore(security): add login rate-limiting and deployment checklist
+
 ## V. 1.02.0053
 
 **Data:** 2026-02-21 14:35:38 | **Commit:** `46e3e6b` | **Tipo:** `patch`
@@ -1362,6 +1368,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -39,10 +39,33 @@ if (!Security::verifyCSRFToken($csrf)) {
     exit;
 }
 
+// === Rate limiting: evita brute force baseado em sessão ===
+$maxAttempts = 5;
+$lockWindowSeconds = 15 * 60; // 15 minutos
+$attempts = $_SESSION['login_attempts'] ?? [];
+$now = time();
+
+// Remove tentativas antigas
+$attempts = array_filter($attempts, function ($ts) use ($now, $lockWindowSeconds) {
+    return ($now - $ts) <= $lockWindowSeconds;
+});
+
+if (count($attempts) >= $maxAttempts) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Muitas tentativas de login. Tente novamente mais tarde.'
+    ]);
+    exit;
+}
+
 $usuario = new Usuario();
 $resultado = $usuario->autenticar($cpf, $senha);
 
 if (($resultado['success'] ?? false) !== true) {
+    // registra tentativa falha
+    $attempts[] = $now;
+    $_SESSION['login_attempts'] = $attempts;
+
     echo json_encode([
         'success' => false,
         'message' => 'CPF ou senha inválidos.'
@@ -66,6 +89,9 @@ $usuario->atualizarToken(
     $_SESSION['token'],
     TOKEN_EXPIRATION_HOURS
 );
+
+// login bem-sucedido: limpa registros de tentativa
+unset($_SESSION['login_attempts']);
 
 echo json_encode(['success' => true]);
 exit;
