@@ -21,7 +21,7 @@ Security::requireAuthentication();
     include __DIR__ . '/_page_header.php';
     ?>
 
-    <div class="container-xl py-4">
+    <div class="container-xl py-2">
         <section>
             <h2 class="h5 fw-semibold mb-3">Visão geral</h2>
             <div class="card">

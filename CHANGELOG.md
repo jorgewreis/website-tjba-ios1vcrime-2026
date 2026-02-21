@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0069
+
+**Data:** 2026-02-21 16:22:10 | **Commit:** `ada6ea3` | **Tipo:** `patch`
+
+- Fix: Melhoria no codigo de erros
+
 ## V. 1.02.0068
 
 **Data:** 2026-02-21 16:16:53 | **Commit:** `7e76efe` | **Tipo:** `patch`
@@ -1452,6 +1458,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
