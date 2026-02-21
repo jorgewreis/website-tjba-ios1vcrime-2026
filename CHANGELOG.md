@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0057
+
+**Data:** 2026-02-21 14:52:56 | **Commit:** `433bd55` | **Tipo:** `patch`
+
+- feat(notifications): add API endpoint for notifications (list, mark_read)
+
 ## V. 1.02.0056
 
 **Data:** 2026-02-21 14:51:44 | **Commit:** `19d1a85` | **Tipo:** `patch`
@@ -1380,6 +1386,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
