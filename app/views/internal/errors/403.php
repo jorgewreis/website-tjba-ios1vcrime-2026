@@ -5,7 +5,7 @@ $title = 'Acesso Negado';
 $message = 'Seu perfil não tem permissão para acessar este recurso. Solicite autorização à chefia se necessário.';
 $actions = [
     ['label' => 'Solicitar Acesso', 'href' => 'mailto:suporte@exemplo.com', 'class' => 'btn-primary'],
-    ['label' => 'Página Inicial', 'href' => '/dashboard.php', 'class' => 'btn-secondary']
+    ['label' => 'Página Inicial', 'href' => '/frame.php?page=dashboard', 'class' => 'btn-secondary']
 ];
 $suggestions = ['Verifique se está logado com a conta correta.', 'Contate a administração para revisão de permissões.'];
 $details = ['timestamp' => date('c'), 'request' => $_SERVER['REQUEST_URI'] ?? '', 'user_id' => $_SESSION['id_usuario'] ?? ''];

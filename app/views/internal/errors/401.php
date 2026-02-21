@@ -5,7 +5,7 @@ $title = 'Acesso Não Autorizado';
 $message = 'Você não tem permissão para acessar esta página ou sua sessão expirou. Faça login novamente e tente acessar pelo menu do sistema.';
 $actions = [
     ['label' => 'Voltar ao Login', 'href' => '/index.php', 'class' => 'btn-primary'],
-    ['label' => 'Página Inicial', 'href' => '/dashboard.php', 'class' => 'btn-secondary']
+    ['label' => 'Página Inicial', 'href' => '/frame.php?page=dashboard', 'class' => 'btn-secondary']
 ];
 $suggestions = ['Recarregue a página e tente novamente.', 'Se persistir, contate o administrador.'];
 $details = ['timestamp' => date('c'), 'request' => $_SERVER['REQUEST_URI'] ?? '', 'user_id' => $_SESSION['id_usuario'] ?? 'anon'];

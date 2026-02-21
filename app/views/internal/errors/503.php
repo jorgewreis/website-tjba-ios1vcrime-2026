@@ -5,7 +5,7 @@ $title = 'Manutenção';
 $message = 'O sistema encontra-se em manutenção programada. Trabalhamos para restabelecer o serviço o quanto antes.';
 $actions = [
     ['label' => 'Status do Sistema', 'href' => '/status', 'class' => 'btn-primary'],
-    ['label' => 'Voltar', 'href' => '/dashboard.php', 'class' => 'btn-secondary']
+    ['label' => 'Voltar', 'href' => '/frame.php?page=dashboard', 'class' => 'btn-secondary']
 ];
 $suggestions = ['Verifique novamente em alguns minutos.', 'Se necessário, contate o suporte para mais detalhes.'];
 $details = ['timestamp' => date('c'), 'expected_return' => 'Em breve'];

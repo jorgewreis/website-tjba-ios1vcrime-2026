@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0079
+
+**Data:** 2026-02-21 17:35:56 | **Commit:** `6ee63db` | **Tipo:** `patch`
+
+- fix(error-pages): use /frame.php?page=... for internal navigation to respect frame policy
+
 ## V. 1.02.0078
 
 **Data:** 2026-02-21 17:33:39 | **Commit:** `6851a7e` | **Tipo:** `patch`
@@ -1512,6 +1518,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

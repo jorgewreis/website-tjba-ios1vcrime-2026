@@ -4,7 +4,7 @@ $code = '404';
 $title = 'Página Não Encontrada';
 $message = 'Desculpe, a página que você está procurando não existe ou foi movida.';
 $actions = [
-    ['label' => 'Página Inicial', 'href' => '/dashboard.php', 'class' => 'btn-primary'],
+    ['label' => 'Página Inicial', 'href' => '/frame.php?page=dashboard', 'class' => 'btn-primary'],
     ['label' => 'Voltar', 'href' => 'javascript:history.back()', 'class' => 'btn-outline-primary']
 ];
 $suggestions = ['Verifique se o endereço está correto.', 'Use a navegação para localizar o que procura.'];
