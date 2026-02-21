@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0064
+
+**Data:** 2026-02-21 15:49:16 | **Commit:** `a790f3c` | **Tipo:** `patch`
+
+- fix(ui): integrate _page_header into dashboard (set title/description before include)
+
 ## V. 1.02.0063
 
 **Data:** 2026-02-21 15:46:55 | **Commit:** `cfb3008` | **Tipo:** `patch`
@@ -1422,6 +1428,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
