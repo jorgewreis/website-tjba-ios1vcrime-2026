@@ -33,6 +33,10 @@ $allowed_pages = [
     'cartasexpedidas'   => $PAGES . '/cartasexpedidas.php',
     'cartasrecebidas'   => $PAGES . '/cartasrecebidas.php',
     'produtividade'     => $PAGES . '/produtividade.php',
+    'notificacoes'      => $PAGES . '/notificacoes.php',
+    'usuarios'          => $PAGES . '/usuarios.php',
+    'configuracoes'     => $PAGES . '/configuracoes.php',
+    'documentos'        => $PAGES . '/documentos.php',
 
     '401'=> $ERRORS . '/401.php',
     '403'=> $ERRORS . '/403.php',

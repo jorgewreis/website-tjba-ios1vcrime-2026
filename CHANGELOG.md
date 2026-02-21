@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0055
+
+**Data:** 2026-02-21 14:50:58 | **Commit:** `94a3698` | **Tipo:** `patch`
+
+- feat(ui): scaffold internal pages (notificacoes, usuarios, configuracoes, documentos) and update frame routing
+
 ## V. 1.02.0054
 
 **Data:** 2026-02-21 14:49:57 | **Commit:** `2c25e65` | **Tipo:** `patch`
@@ -1368,6 +1374,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
