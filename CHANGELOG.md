@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0059
+
+**Data:** 2026-02-21 14:55:02 | **Commit:** `a541b15` | **Tipo:** `patch`
+
+- feat(docs): add documents upload API and upload form in documentos page
+
 ## V. 1.02.0058
 
 **Data:** 2026-02-21 14:54:00 | **Commit:** `1711dd5` | **Tipo:** `patch`
@@ -1392,6 +1398,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
