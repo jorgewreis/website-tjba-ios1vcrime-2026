@@ -14,7 +14,7 @@ Security::requireAuthentication();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/assets/css/custom.css">
 </head>
-<body>
+<body class="page-internal">
     <?php
     $title = 'Cartas Expedidas';
     $description = 'Página dedicada a acompanhar o percurso das cartas precatórias, assegurando que o pedido jurisdicional tenha início, trânsito e retorno.';

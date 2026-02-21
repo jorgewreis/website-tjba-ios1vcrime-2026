@@ -14,7 +14,7 @@ Security::requireAuthentication();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/assets/css/custom.css">
 </head>
-<body>
+<body class="page-internal">
     <?php
     $title = 'Cartas Recebidas';
     $description = 'Espaço onde a jurisdição alheia é recebida, organizada e cumprida, para que o pedido não fique sem resposta.';

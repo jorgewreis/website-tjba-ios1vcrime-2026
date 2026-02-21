@@ -14,7 +14,7 @@ Security::requireAuthentication();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/assets/css/custom.css">
 </head>
-<body>
+<body class="page-internal">
     <?php
     $title = 'Ofícios (Gabinete)';
     $description = 'Aqui o Gabinete se manifesta de modo oficial, com numeração própria e registro histórico, para que cada ato tenha existência, contexto e lastro institucional.';

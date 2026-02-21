@@ -12,7 +12,7 @@ Security::requireAuthentication();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/assets/css/custom.css">
 </head>
-<body>
+<body class="page-internal">
 <div class="container py-4">
     <h1 class="h4 mb-3">Documentos / Atas</h1>
     <p class="text-muted">Área para upload e download de atas e documentos oficiais.</p>

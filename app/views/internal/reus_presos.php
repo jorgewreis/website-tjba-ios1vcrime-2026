@@ -14,7 +14,7 @@ Security::requireAuthentication();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/assets/css/custom.css">
 </head>
-<body>
+<body class="page-internal">
     <?php
     $title = 'Réus Presos';
     $description = 'Espaço onde os réus presos são registrados, acompanhados e cumpridos, para que o pedido seja cumprido de forma eficiente e segura.';

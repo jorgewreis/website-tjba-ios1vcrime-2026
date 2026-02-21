@@ -6,6 +6,10 @@ body {
   background-color: #f4f4fd !important;
 }
 
+body.page-internal{
+  padding-top: 100px;
+}
+
 .btn-primary,
 .bg-primary {
   background-color: #696cff !important; /* sua cor personalizada */

@@ -14,7 +14,7 @@ Security::requireAuthentication();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/assets/css/custom.css">
 </head>
-<body>
+<body class="page-internal">
     <?php
     $title = 'Medidas Protetivas';
     $description = 'Espaço onde as medidas protetivas são decididas, acompanhadas e cumpridas, para que o pedido seja cumprido de forma eficiente e segura.';

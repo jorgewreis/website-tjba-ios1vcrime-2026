@@ -20,7 +20,7 @@ $details = ['Código de erro' => "HTTP {$code}", 'URL solicitada' => $_SERVER['R
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/assets/css/custom.css">
 </head>
-<body>
+<body class="page-internal">
     <?php include __DIR__ . '/_error_card.php'; ?>
 
     <div class="container text-center my-3">
