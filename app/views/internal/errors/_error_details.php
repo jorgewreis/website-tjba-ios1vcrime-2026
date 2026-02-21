@@ -28,12 +28,12 @@ document.addEventListener('click', function (e) {
             details.hidden = true;
             details.setAttribute('aria-hidden','true');
             btn.setAttribute('aria-expanded','false');
-            btn.textContent = 'Mostrar detalhes';
+            btn.textContent = 'Mostrar detalhes técnicos';
         } else {
             details.hidden = false;
             details.setAttribute('aria-hidden','false');
             btn.setAttribute('aria-expanded','true');
-            btn.textContent = 'Ocultar detalhes';
+            btn.textContent = 'Ocultar detalhes técnicos';
         }
     }
 });

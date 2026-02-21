@@ -1,14 +1,19 @@
 <?php
 declare(strict_types=1);
 $code = '500';
-$title = 'Erro Interno';
-$message = 'Ocorreu um erro interno no servidor. Tente novamente mais tarde. Se o problema continuar, contate o suporte.';
-$actions = [
-    ['label' => 'Voltar', 'href' => 'javascript:history.back()', 'class' => 'btn-secondary'],
-    ['label' => 'Reportar', 'href' => 'mailto:jorgew.reis@outlook.com', 'class' => 'btn-primary']
+$title = 'Erro Interno do Servidor';
+$message = 'Ocorreu um erro inesperado ao processar sua solicitação. Nossa equipe técnica já foi notificada.';
+$nextSteps = [
+    'Aguarde alguns minutos e tente novamente',
+    'Verifique sua conexão com a internet',
+    'Entre em contato com o suporte técnico se o problema persistir'
 ];
-$suggestions = ['Tente recarregar a página após alguns minutos.', 'Anote o código de erro e informe ao suporte.'];
-$details = ['timestamp' => date('c'), 'request' => $_SERVER['REQUEST_URI'] ?? '', 'trace_id' => $_SERVER['X_TRACE_ID'] ?? ($_SERVER['HTTP_X_REQUEST_ID'] ?? '')];
+$details = [
+    'Código de erro' => "HTTP {$code}",
+    'URL solicitada' => $_SERVER['REQUEST_URI'] ?? '/',
+    'Timestamp' => date('c'),
+    'Trace ID' => $_SERVER['X_TRACE_ID'] ?? ($_SERVER['HTTP_X_REQUEST_ID'] ?? 'não informado')
+];
 ?>
 
 <!DOCTYPE html>
@@ -19,15 +24,102 @@ $details = ['timestamp' => date('c'), 'request' => $_SERVER['REQUEST_URI'] ?? ''
     <title>Erro <?php echo htmlspecialchars($code); ?> - Primeira Vara Crime</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/assets/css/custom.css">
+    <style>
+        body {
+            background: #f6f7fb;
+            min-height: 100vh;
+        }
+        .error-hero {
+            margin-top: 2rem;
+        }
+        .error-code {
+            font-size: 4rem;
+            font-weight: 700;
+            color: #df1b3c;
+            margin-bottom: 0.75rem;
+        }
+        .error-hero h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .error-hero p {
+            font-size: 1rem;
+            color: #5a5f6f;
+        }
+        .suggestion-panel {
+            border-radius: 1rem;
+            border: 1px solid #e1e7ef;
+            background: #fff;
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.02);
+            margin-top: 2rem;
+            padding: 1.5rem;
+            text-align: left;
+        }
+        .suggestion-panel .badge-warning {
+            font-size: 1rem;
+            width: 32px;
+            height: 32px;
+            border-radius: 0.5rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .suggestion-panel h2 {
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+        .suggestion-panel ul {
+            padding-left: 1.25rem;
+        }
+        .action-row {
+            margin-top: 2.25rem;
+        }
+        .action-row .btn {
+            min-width: 180px;
+            font-size: 1rem;
+        }
+        .toggle-details {
+            margin-top: 1.25rem;
+        }
+    </style>
 </head>
 <body class="page-internal">
-    <?php include __DIR__ . '/_error_card.php'; ?>
+    <main class="container">
+        <section class="text-center error-hero">
+            <div class="error-code"><?php echo htmlspecialchars($code); ?></div>
+            <h1><?php echo htmlspecialchars($title); ?></h1>
+            <p><?php echo htmlspecialchars($message); ?></p>
+        </section>
 
-    <div class="container-xl text-center my-3">
-        <button class="toggle-error-details btn btn-link" aria-expanded="false">Mostrar detalhes técnicos</button>
-    </div>
+        <section class="suggestion-panel d-flex gap-3 align-items-start">
+            <span class="badge badge-warning bg-warning text-dark">
+                <span aria-hidden="true">!</span>
+            </span>
+            <div class="flex-grow-1">
+                <h2 class="fw-semibold">O que você pode fazer:</h2>
+                <ul class="mb-0">
+                    <?php foreach ($nextSteps as $step): ?>
+                        <li><?php echo htmlspecialchars($step); ?></li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+        </section>
 
-    <?php $details = $details; include __DIR__ . '/_error_details.php'; ?>
+        <div class="d-flex action-row justify-content-center flex-wrap gap-3">
+            <button type="button" onclick="location.reload();" class="btn btn-primary btn-lg">
+                Tentar Novamente
+            </button>
+            <a class="btn btn-outline-primary btn-lg" href="/frame.php?page=dashboard">
+                Página Inicial
+            </a>
+        </div>
+
+        <div class="text-center toggle-details">
+            <button class="toggle-error-details btn btn-link" aria-expanded="false">Mostrar detalhes técnicos</button>
+        </div>
+        <?php $details = $details; include __DIR__ . '/_error_details.php'; ?>
+    </main>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
