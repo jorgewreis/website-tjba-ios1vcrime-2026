@@ -27,11 +27,11 @@ $allowed_pages = [
     'cejusc'            => $PAGES . '/cejusc.php',
     'editais'           => $PAGES . '/editais.php',
     'guias'             => $PAGES . '/guias.php',
-    'medidasprotetivas' => $PAGES . '/medidasprotetivas.php',
-    'oficioscartorio'   => $PAGES . '/oficioscartorio.php',
-    'oficiosgabinete'   => $PAGES . '/oficiosgabinete.php',
-    'cartasexpedidas'   => $PAGES . '/cartasexpedidas.php',
-    'cartasrecebidas'   => $PAGES . '/cartasrecebidas.php',
+    'medidasprotetivas' => $PAGES . '/medida_protetivas.php',
+    'oficioscartorio'   => $PAGES . '/oficios_cartorio.php',
+    'oficiosgabinete'   => $PAGES . '/oficios_gabinete.php',
+    'cartasexpedidas'   => $PAGES . '/cartas_expedidas.php',
+    'cartasrecebidas'   => $PAGES . '/cartas_recebidas.php',
     'produtividade'     => $PAGES . '/produtividade.php',
     'notificacoes'      => $PAGES . '/notificacoes.php',
     'usuarios'          => $PAGES . '/usuarios.php',
@@ -41,7 +41,8 @@ $allowed_pages = [
     '401'=> $ERRORS . '/401.php',
     '403'=> $ERRORS . '/403.php',
     '404'=> $ERRORS . '/404.php',
-    '500'=> $ERRORS . '/500.php'
+    '500'=> $ERRORS . '/500.php',
+    '503'=> $ERRORS . '/503.php'
 ];
 
 
