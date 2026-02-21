@@ -1,12 +1,10 @@
 <?php
 declare(strict_types=1);
-require_once __DIR__ . '/_error_header.php';
 $code = '404';
 $title = 'Página não encontrada';
 $message = 'A página solicitada não foi encontrada. Verifique a URL ou utilize a navegação do sistema.';
 $actions = [
-    ['label' => 'Ir para Início', 'href' => '/home.php', 'class' => 'btn-primary'],
-    ['label' => 'Buscar', 'href' => '/home.php', 'class' => 'btn-secondary']
+    ['label' => 'Ir para Início', 'href' => '/dashboard.php', 'class' => 'btn-primary']
 ];
 $suggestions = ['Verifique se o endereço está correto.', 'Consulte o menu para localizar a funcionalidade desejada.'];
 $details = ['timestamp' => date('c'), 'request' => $_SERVER['REQUEST_URI'] ?? ''];
@@ -23,12 +21,11 @@ $details = ['timestamp' => date('c'), 'request' => $_SERVER['REQUEST_URI'] ?? ''
     <link rel="stylesheet" href="/assets/css/custom.css">
 </head>
 <body>
-    <?php include __DIR__ . '/_error_header.php'; ?>
-    <div class="container-xl py-2">
+    <div class="container-xl py-2" style="margin-top: 110px;">
         <section>
             <h2 class="fw-semibold mb-3" style="color: var(--bs-danger);">Erro <?php echo htmlspecialchars($code); ?></h2>
             <p><?php echo htmlspecialchars($message); ?></p>
-            <div class="d-flex justify-content-center gap-2 mb-3 error-actions">
+            <div class="d-flex justify-content-start gap-2 mb-3 error-actions">
                 <?php foreach ($actions as $a): ?>
                     <a href="<?php echo htmlspecialchars($a['href'] ?? '#'); ?>" class="btn <?php echo htmlspecialchars($a['class'] ?? 'btn-secondary'); ?>">
                         <?php echo htmlspecialchars($a['label'] ?? 'Ação'); ?>
