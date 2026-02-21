@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0084
+
+**Data:** 2026-02-21 17:56:07 | **Commit:** `8199f49` | **Tipo:** `patch`
+
+- Fix: teste 2 de erros
+
 ## V. 1.02.0083
 
 **Data:** 2026-02-21 17:54:29 | **Commit:** `7395a77` | **Tipo:** `patch`
@@ -1542,6 +1548,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
