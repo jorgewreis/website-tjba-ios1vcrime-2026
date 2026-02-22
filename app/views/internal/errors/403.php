@@ -33,6 +33,8 @@ $details = ['timestamp' => date('c'), 'request' => $_SERVER['REQUEST_URI'] ?? ''
     // Carregar mensagens centralizadas e definir $info_text apenas se não houver sobrescrita
     $error_messages = include __DIR__ . '/error_messages.php';
     $info_text = $info_text ?? ($error_messages[$code] ?? '');
+    // render actions/suggestions partial (se houver)
+    include __DIR__ . '/_error_actions.php';
     $details = $details; include __DIR__ . '/_error_details.php'; ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>

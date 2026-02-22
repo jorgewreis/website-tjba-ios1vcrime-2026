@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0095
+
+**Data:** 2026-02-22 14:54:40 | **Commit:** `832e9ec` | **Tipo:** `patch`
+
+- refactor(errors): centraliza renderização de ações/sugestões em _error_actions.php e organiza páginas
+
 ## V. 1.02.0094
 
 **Data:** 2026-02-22 14:52:29 | **Commit:** `1bac7b3` | **Tipo:** `patch`
@@ -1608,6 +1614,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

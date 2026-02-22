@@ -33,6 +33,7 @@ $details = ['Código de erro' => "HTTP {$code}", 'URL solicitada' => $_SERVER['R
     // Carregar mensagens centralizadas e definir $info_text apenas se não houver sobrescrita
     $error_messages = include __DIR__ . '/error_messages.php';
     $info_text = $info_text ?? ($error_messages[$code] ?? '');
+    include __DIR__ . '/_error_actions.php';
     $details = $details; include __DIR__ . '/_error_details.php'; ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
