@@ -33,7 +33,7 @@ $error_message = isset($error_message) ? $error_message : '-';
             <div class="d-flex flex-row justify-content-center align-items-center">
                 <span class="fs-4 fw-semibold"><?php echo htmlspecialchars($error_title); ?></span>
             </div>
-            <div class="d-flex flex-row justify-content-center align-items-center my-5">
+            <div class="d-flex flex-row justify-content-center align-items-center my-2">
                 <span class="fs-5 fw-normal text-center"><?php echo htmlspecialchars($error_message); ?></span>
             </div>
         </div>

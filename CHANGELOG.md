@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0112
+
+**Data:** 2026-02-22 17:07:36 | **Commit:** `161bd04` | **Tipo:** `patch`
+
+- Fix: redução do texto
+
 ## V. 1.02.0111
 
 **Data:** 2026-02-22 17:01:13 | **Commit:** `d75f9dc` | **Tipo:** `patch`
@@ -1710,6 +1716,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

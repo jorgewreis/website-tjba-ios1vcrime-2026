@@ -1,5 +1,5 @@
     <!-- Detalhes informacionais do erro -->
-    <div class="container-fluid my-4 mx-4">
+    <div class="container-fluid my-2 mx-4">
         <div class="container-sm">
             <span class="fs-6 d-flex flex-row text-center">
                 <?php
@@ -62,8 +62,8 @@
                 <h6 class="mb-3 fw-semibold">Detalhes técnicos</h6>
                 <dl class="row mb-0">
                     <?php foreach ($details as $k => $v): ?>
-                        <dt class="col-sm-2 fw-semibold text-truncate"><?php echo htmlspecialchars((string)$k); ?></dt>
-                        <dd class="col-sm-9"><code class="text-break"><?php echo htmlspecialchars((string)$v); ?></code></dd>
+                        <dt class="col-sm-2 lh-0 fw-semibold text-truncate d-flex align-items-center"><?php echo htmlspecialchars((string)$k); ?></dt>
+                        <dd class="col-sm-9 fs-7 lh-0 d-flex align-items-center"><code class="text-break"><?php echo htmlspecialchars((string)$v); ?></code></dd>
                     <?php endforeach; ?>
                 </dl>
             </div>
