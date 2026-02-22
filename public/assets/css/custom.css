@@ -139,3 +139,11 @@ button.btn-md.readonly{
 .icon-warning {
   filter: invert(80%) sepia(19%) saturate(4244%) hue-rotate(352deg) brightness(104%) contrast(104%);
 }
+
+.icon-danger {
+  filter: invert(30%) sepia(90%) saturate(1464%) hue-rotate(329deg) brightness(87%) contrast(98%);
+}
+
+.icon-info {
+  filter: invert(38%) sepia(85%) saturate(2308%) hue-rotate(224deg) brightness(102%) contrast(101%);
+}

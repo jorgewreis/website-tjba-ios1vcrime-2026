@@ -18,6 +18,8 @@ $details = ['timestamp' => date('c'), 'request' => $_SERVER['REQUEST_URI'] ?? ''
 <body class="page-internal">
     <?php
     // Preparar variáveis para os partials reutilizáveis
+    $error_icon_class = 'icon-warning';
+    $error_text_class = 'text-warning';
     $error_code = $code;
     $error_title = $title;
     $error_message = $message;

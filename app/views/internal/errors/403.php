@@ -18,6 +18,8 @@ $message = 'Seu perfil não tem permissão para acessar este recurso. Solicite a
 <body class="page-internal">
     <?php
     // Preparar variáveis para os partials reutilizáveis
+    $error_icon_class = 'icon-danger';
+    $error_text_class = 'text-danger';
     $error_code = $code;
     $error_title = $title;
     $error_message = $message;

@@ -19,6 +19,7 @@ $error_message = isset($error_message) ? $error_message : 'A página que você e
                 $default_icon = '/assets/icons/Alert-Triangle--Streamline-Ultimate.png';
                 $default_alt = 'Ícone de aviso';
                 $default_class = 'icon-warning';
+                $error_text_class = 'text-warning';
                 $error_icon_path = isset($error_icon_path) ? $error_icon_path : ($error_icons[$error_code]['path'] ?? $default_icon);
                 $error_icon_alt = isset($error_icon_alt) ? $error_icon_alt : ($error_icons[$error_code]['alt'] ?? $default_alt);
                 $error_icon_class = isset($error_icon_class) ? $error_icon_class : ($error_icons[$error_code]['class'] ?? $default_class);
@@ -26,7 +27,7 @@ $error_message = isset($error_message) ? $error_message : 'A página que você e
                 <img class="<?php echo htmlspecialchars($error_icon_class); ?> mt-2" src="<?php echo htmlspecialchars($error_icon_path); ?>" alt="<?php echo htmlspecialchars($error_icon_alt); ?>" width="48" height="48">
             </div>
             <div class="d-flex flex-row justify-content-center align-items-center my-2">            
-                <span class="fw-bold ms-2 text-warning error-code"><?php echo htmlspecialchars($error_code); ?></span>
+                <span class="fw-bold ms-2 <?php echo htmlspecialchars($error_text_class); ?> error-code"><?php echo htmlspecialchars($error_code); ?></span>
             </div>
             <div class="d-flex flex-row justify-content-center align-items-center">
                 <span class="fs-4 fw-semibold"><?php echo htmlspecialchars($error_title); ?></span>

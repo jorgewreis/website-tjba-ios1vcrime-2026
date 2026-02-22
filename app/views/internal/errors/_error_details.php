@@ -56,11 +56,11 @@
 
     <div class="container-fluid my-4 mx-4">
         <div class="container-sm d-flex justify-content-center align-items-center text-center">
-            <div class="m-4 text-start">
+            <div class="mx-4 text-start">
                 <h6 class="mb-3 fw-semibold">Detalhes técnicos</h6>
                 <dl class="row mb-0">
                     <?php foreach ($details as $k => $v): ?>
-                        <dt class="col-sm-3 text-truncate"><?php echo htmlspecialchars((string)$k); ?></dt>
+                        <dt class="col-sm-2 fw-semibold text-truncate"><?php echo htmlspecialchars((string)$k); ?></dt>
                         <dd class="col-sm-9"><code class="text-break"><?php echo htmlspecialchars((string)$v); ?></code></dd>
                     <?php endforeach; ?>
                 </dl>
