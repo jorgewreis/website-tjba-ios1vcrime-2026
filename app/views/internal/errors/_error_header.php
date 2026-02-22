@@ -7,9 +7,21 @@ $error_message = isset($error_message) ? $error_message : 'A página que você e
 
     <!-- Info Error -->
     <div class="container-fluid mx-4">
-        <divc lass="container-sm">
+        <div class="container-sm">
             <div class="d-flex flex-row justify-content-center align-items-center">
-                <img class="icon-warning  mt-2" src="/assets/icons/Alert-Triangle--Streamline-Ultimate.png" alt="Ícone de aviso" width="48" height="48">
+                <?php
+                // Carrega mapa de ícones por código (permite sobrescrever via $error_icon_path / $error_icon_alt)
+                $error_icons = [];
+                $icons_file = __DIR__ . '/error_icons.php';
+                if (is_file($icons_file)) {
+                    $error_icons = include $icons_file;
+                }
+                $default_icon = '/assets/icons/Alert-Triangle--Streamline-Ultimate.png';
+                $default_alt = 'Ícone de aviso';
+                $error_icon_path = isset($error_icon_path) ? $error_icon_path : ($error_icons[$error_code]['path'] ?? $default_icon);
+                $error_icon_alt = isset($error_icon_alt) ? $error_icon_alt : ($error_icons[$error_code]['alt'] ?? $default_alt);
+                ?>
+                <img class="icon-warning mt-2" src="<?php echo htmlspecialchars($error_icon_path); ?>" alt="<?php echo htmlspecialchars($error_icon_alt); ?>" width="48" height="48">
             </div>
             <div class="d-flex flex-row justify-content-center align-items-center my-2">            
                 <span class="fw-bold ms-2 text-warning error-code"><?php echo htmlspecialchars($error_code); ?></span>

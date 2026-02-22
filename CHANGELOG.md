@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0101
+
+**Data:** 2026-02-22 15:42:17 | **Commit:** `feb4306` | **Tipo:** `patch`
+
+- feat(errors): centralizar ícones de erro em error_icons.php e escolher dinamicamente no header
+
 ## V. 1.02.0100
 
 **Data:** 2026-02-22 15:35:03 | **Commit:** `240e66b` | **Tipo:** `patch`
@@ -1644,6 +1650,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
