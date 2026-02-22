@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0103
+
+**Data:** 2026-02-22 15:50:33 | **Commit:** `6579801` | **Tipo:** `patch`
+
+- feat(errors): suportar classe de ícone por código (icon-warning/icon-danger) e centralizar no mapa de ícones
+
 ## V. 1.02.0102
 
 **Data:** 2026-02-22 15:45:52 | **Commit:** `8230d32` | **Tipo:** `patch`
@@ -1656,6 +1662,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
