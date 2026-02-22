@@ -19,38 +19,19 @@
     $current_datetime = $current_datetime ?? date('Y-m-d H:i:s');
 
     // Detalhes adicionais (opcional): aceitar array associativo $details
-    $details = isset($details) && is_array($details) ? $details : [];
-    // Garantir que os campos básicos estejam sempre presentes
-    $details = array_merge([
-        'Código' => $http_code_text,
-        'Endpoint' => $request_fullpath,
-        'Método' => $request_method,
-        'Data/hora' => $current_datetime,
-    ], $details);
-// #region agent log: entry (hypothesis A)
-$logPayload = [
-    'sessionId' => '55c00d',
-    'id' => 'log_' . uniqid(),
-    'timestamp' => round(microtime(true) * 1000),
-    'location' => '_error_details.php:prepared_details',
-    'message' => 'prepared_details',
-    'data' => ['info_text_set' => isset($info_text), 'details_keys' => array_keys($details)],
-    'runId' => 'pre-fix',
-    'hypothesisId' => 'A'
-];
-@file_put_contents(dirname(__DIR__,4) . '/debug-55c00d.log', json_encode($logPayload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . PHP_EOL, FILE_APPEND);
-// #endregion
-    ?>
+    $details = isset($details) && is_array($details) ? $details : [];    
+?>
 
-    <div class="container-fluid my-4 mx-4">
+    <div class="container-md my-4 mx-4">
         <div class="container-md d-flex justify-content-center align-items-start flex-column text-start">
             <div class="error-details">
                 <div class="card border-0 shadow-sm">
                     <div class="card-body small">
-                        <h6>Detalhes técnicos</h6>
+                        <h6 class="mb-2 fw-semibold">Detalhes técnicos</h6>
                         <dl class="row mb-0">
                             <?php foreach ($details as $k => $v): ?>
                                 <dt class="col-sm-3 text-truncate"><?php echo htmlspecialchars((string)$k); ?></dt>
+                                <dd class="col-sm-9"><code class="text-break"><?php echo htmlspecialchars((string)$v); ?></code></dd>
                             <?php endforeach; ?>
                         </dl>
                         <p class="mb-0 text-muted">Compartilhe o conteúdo acima com a equipe de suporte para investigação.</p>
