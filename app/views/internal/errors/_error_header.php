@@ -1,8 +1,8 @@
 <?php
 // Valores padrão (podem ser sobrescritos antes do include)
-$error_code = isset($error_code) ? $error_code : '401';
-$error_title = isset($error_title) ? $error_title : 'Acesso não autorizado';
-$error_message = isset($error_message) ? $error_message : 'A página que você está tentando acessar requer autenticação.';
+$error_code = isset($error_code) ? $error_code : '-';
+$error_title = isset($error_title) ? $error_title : '-';
+$error_message = isset($error_message) ? $error_message : '-';
 ?>
 
     <!-- Info Error -->
@@ -19,10 +19,11 @@ $error_message = isset($error_message) ? $error_message : 'A página que você e
                 $default_icon = '/assets/icons/Alert-Triangle--Streamline-Ultimate.png';
                 $default_alt = 'Ícone de aviso';
                 $default_class = 'icon-warning';
-                $error_text_class = 'text-warning';
+                $default_text_class = 'text-warning';
                 $error_icon_path = isset($error_icon_path) ? $error_icon_path : ($error_icons[$error_code]['path'] ?? $default_icon);
                 $error_icon_alt = isset($error_icon_alt) ? $error_icon_alt : ($error_icons[$error_code]['alt'] ?? $default_alt);
-                $error_icon_class = isset($error_icon_class) ? $error_icon_class : ($error_icons[$error_code]['class'] ?? $default_class);
+                $error_icon_class = isset($error_icon_class) ? $error_icon_class : $default_class;
+                $error_text_class = isset($error_text_class) ? $error_text_class : $default_text_class;
                 ?>
                 <img class="<?php echo htmlspecialchars($error_icon_class); ?> mt-2" src="<?php echo htmlspecialchars($error_icon_path); ?>" alt="<?php echo htmlspecialchars($error_icon_alt); ?>" width="48" height="48">
             </div>
