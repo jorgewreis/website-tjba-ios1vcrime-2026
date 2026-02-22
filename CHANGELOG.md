@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0109
+
+**Data:** 2026-02-22 16:27:11 | **Commit:** `383e3d0` | **Tipo:** `patch`
+
+- Feat: pequena melhoria visual
+
 ## V. 1.02.0108
 
 **Data:** 2026-02-22 16:23:52 | **Commit:** `c305d20` | **Tipo:** `patch`
@@ -1692,6 +1698,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

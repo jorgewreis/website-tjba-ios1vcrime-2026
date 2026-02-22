@@ -13,6 +13,7 @@ $details = ['timestamp' => date('c'), 'expected_return' => 'Em breve'];
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Erro <?php echo htmlspecialchars($code); ?> - Primeira Vara Crime</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/css/shared/reset.css">
     <link rel="stylesheet" href="/assets/css/custom.css">
 </head>
 <body class="page-internal">
