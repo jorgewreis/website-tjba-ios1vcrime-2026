@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0100
+
+**Data:** 2026-02-22 15:35:03 | **Commit:** `240e66b` | **Tipo:** `patch`
+
+- Fix: correção complementar
+
 ## V. 1.02.0099
 
 **Data:** 2026-02-22 15:31:03 | **Commit:** `0bbde46` | **Tipo:** `patch`
@@ -1638,6 +1644,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

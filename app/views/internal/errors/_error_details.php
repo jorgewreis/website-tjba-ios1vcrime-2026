@@ -1,5 +1,5 @@
     <!-- Detalhes informacionais do erro -->
-    <div class="container-full my-4 mx-4">
+    <div class="container-fluid my-4 mx-4">
         <div class="container-sm">
             <span class="fs-7 d-flex flex-row text-center">
                 <?php
@@ -38,32 +38,25 @@
     ];
     $status_label = isset($error_code) && isset($status_texts[(string)$error_code]) ? $status_texts[(string)$error_code] : '';
 
-    // Detalhes adicionais (opcional): aceitar array associativo $details
-    $details = isset($details) && is_array($details) ? $details : [];
-
     // Campos padrão exibidos (serão sobrescritos por chaves em $details se fornecidas)
     $defaults = [
-        'Código' => $http_code_text,
+        'Código' => $protocol . ' - ' . $http_code_text,
         'Status' => $status_label,
-        'Endpoint' => $request_fullpath,
+        'Endpoint' => $host . $request_fullpath,
         'Método' => $request_method,
-        'Host' => $host,
-        'Protocolo' => $protocol,
         'Query string' => $query_string,
         'IP do cliente' => $client_ip,
-        'Referer' => $referer,
-        'Request ID' => $request_id,
         'Usuário' => $user_id,
         'Data/Hora' => $current_datetime,
     ];
 
     // Merge mantendo a prioridade para valores já fornecidos em $details
-    $details = array_merge($defaults, $details);
+    $details = $defaults;
 ?>
 
-    <div class="container-full my-4 mx-4">
-        <div class="d-flex justify-content-center align-items-center text-center">
-            <div class="m-4">
+    <div class="container-fluid my-4 mx-4">
+        <div class="container-sm d-flex justify-content-center align-items-center text-center">
+            <div class="m-4 text-start">
                 <h6 class="mb-3 fw-semibold">Detalhes técnicos</h6>
                 <dl class="row mb-0">
                     <?php foreach ($details as $k => $v): ?>
