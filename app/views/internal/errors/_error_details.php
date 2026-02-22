@@ -1,42 +1,76 @@
     <!-- Detalhes informacionais do erro -->
-    <div class="container-fluid my-4 mx-4">
-        <span class="container-md fs-7 d-flex flex-row text-start">
-            <?php
-            // Texto informacional específico por erro: esperado em $info_text quando necessário.
-            if (isset($info_text)) {
-                echo $info_text;
-            }
-            ?>
-        </span>
+    <div class="container-full my-4 mx-4">
+        <div class="container-sm">
+            <span class="fs-7 d-flex flex-row text-center">
+                <?php
+                // Texto informacional específico por erro: esperado em $info_text quando necessário.
+                if (isset($info_text)) {
+                    echo $info_text;
+                }
+                ?>
+            </span>
+        </div>
     </div>
 
     <!-- Detalhes técnicos do erro -->
     <?php
-    // Valores técnicos reais (podem ser sobrescritos)
     $http_code_text = $http_code_text ?? ('HTTP ' . (isset($error_code) ? $error_code : '0'));
     $request_fullpath = $request_fullpath ?? ($_SERVER['REQUEST_URI'] ?? '');
     $request_method = $request_method ?? ($_SERVER['REQUEST_METHOD'] ?? '');
     $current_datetime = $current_datetime ?? date('Y-m-d H:i:s');
 
+    // Campos utilitários extraídos do ambiente
+    $client_ip = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? ($_SERVER['REMOTE_ADDR'] ?? 'desconhecido');
+    $host = $_SERVER['HTTP_HOST'] ?? ($_SERVER['SERVER_NAME'] ?? '');
+    $protocol = (!empty($_SERVER['REQUEST_SCHEME']) ? $_SERVER['REQUEST_SCHEME'] : (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http'));
+    $query_string = $_SERVER['QUERY_STRING'] ?? '';
+    $referer = $_SERVER['HTTP_REFERER'] ?? '';
+    $request_id = $_SERVER['HTTP_X_REQUEST_ID'] ?? ($_SERVER['HTTP_X_CORRELATION_ID'] ?? '');
+    $user_id = $_SESSION['id_usuario'] ?? ($_SESSION['user_id'] ?? '');
+
+    // Texto curto/legível do status (opcional)
+    $status_texts = [
+        '401' => 'Não autorizado',
+        '403' => 'Proibido',
+        '404' => 'Não encontrado',
+        '500' => 'Erro interno do servidor',
+        '503' => 'Serviço indisponível',
+    ];
+    $status_label = isset($error_code) && isset($status_texts[(string)$error_code]) ? $status_texts[(string)$error_code] : '';
+
     // Detalhes adicionais (opcional): aceitar array associativo $details
-    $details = isset($details) && is_array($details) ? $details : [];    
+    $details = isset($details) && is_array($details) ? $details : [];
+
+    // Campos padrão exibidos (serão sobrescritos por chaves em $details se fornecidas)
+    $defaults = [
+        'Código' => $http_code_text,
+        'Status' => $status_label,
+        'Endpoint' => $request_fullpath,
+        'Método' => $request_method,
+        'Host' => $host,
+        'Protocolo' => $protocol,
+        'Query string' => $query_string,
+        'IP do cliente' => $client_ip,
+        'Referer' => $referer,
+        'Request ID' => $request_id,
+        'Usuário' => $user_id,
+        'Data/Hora' => $current_datetime,
+    ];
+
+    // Merge mantendo a prioridade para valores já fornecidos em $details
+    $details = array_merge($defaults, $details);
 ?>
 
-    <div class="container-md my-4 mx-4">
-        <div class="container-md d-flex justify-content-center align-items-start flex-column text-start">
-            <div class="error-details">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body small">
-                        <h6 class="mb-2 fw-semibold">Detalhes técnicos</h6>
-                        <dl class="row mb-0">
-                            <?php foreach ($details as $k => $v): ?>
-                                <dt class="col-sm-3 text-truncate"><?php echo htmlspecialchars((string)$k); ?></dt>
-                                <dd class="col-sm-9"><code class="text-break"><?php echo htmlspecialchars((string)$v); ?></code></dd>
-                            <?php endforeach; ?>
-                        </dl>
-                        <p class="mb-0 text-muted">Compartilhe o conteúdo acima com a equipe de suporte para investigação.</p>
-                    </div>
-                </div>
+    <div class="container-full my-4 mx-4">
+        <div class="d-flex justify-content-center align-items-center text-center">
+            <div class="m-4">
+                <h6 class="mb-3 fw-semibold">Detalhes técnicos</h6>
+                <dl class="row mb-0">
+                    <?php foreach ($details as $k => $v): ?>
+                        <dt class="col-sm-3 text-truncate"><?php echo htmlspecialchars((string)$k); ?></dt>
+                        <dd class="col-sm-9"><code class="text-break"><?php echo htmlspecialchars((string)$v); ?></code></dd>
+                    <?php endforeach; ?>
+                </dl>
             </div>
         </div>
     </div>

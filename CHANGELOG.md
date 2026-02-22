@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0099
+
+**Data:** 2026-02-22 15:31:03 | **Commit:** `0bbde46` | **Tipo:** `patch`
+
+- feat(errors): melhorar seção de detalhes técnicos com campos relevantes (IP, host, método, request id)
+
 ## V. 1.02.0098
 
 **Data:** 2026-02-22 15:10:51 | **Commit:** `b6c8c7e` | **Tipo:** `patch`
@@ -1632,6 +1638,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
