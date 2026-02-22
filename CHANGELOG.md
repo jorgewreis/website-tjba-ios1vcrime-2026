@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0107
+
+**Data:** 2026-02-22 16:17:53 | **Commit:** `4b59f25` | **Tipo:** `patch`
+
+- Fix: correções pontuais
+
 ## V. 1.02.0106
 
 **Data:** 2026-02-22 16:11:03 | **Commit:** `bb43e60` | **Tipo:** `patch`
@@ -1680,6 +1686,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

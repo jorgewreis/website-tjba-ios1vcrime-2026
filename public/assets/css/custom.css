@@ -151,3 +151,15 @@ button.btn-md.readonly{
 .text-info{
   color: #696cff !important;
 }
+
+.text-danger{
+  color: #e61336 !important;
+}
+
+.text-warning{
+  color: #ffc107 !important;
+}
+
+.text-success{
+  color: #28a745 !important;
+}
