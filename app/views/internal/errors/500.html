@@ -92,23 +92,26 @@ $details = [
             <p><?php echo htmlspecialchars($message); ?></p>
         </section>
 
-        <section class="suggestion-panel d-flex gap-3 align-items-start">
-            <span class="badge badge-warning bg-warning text-dark">
-                <span aria-hidden="true">!</span>
-            </span>
-            <div class="flex-grow-1">
-                <h2 class="fw-semibold">O que você pode fazer:</h2>
-                <ul class="mb-0">
-                    <?php foreach ($nextSteps as $step): ?>
-                        <li><?php echo htmlspecialchars($step); ?></li>
-                    <?php endforeach; ?>
-                </ul>
+        <section class="suggestion-panel flex-column gap-3 align-items-start">            
+            <div class="row">
+                <div class="col-1">
+                    <span class="badge badge-warning bg-warning text-dark">
+                        <span aria-hidden="true">!</span>
+                    </span>
+                </div>
+                <div class="col-6">
+                    <h2 class="fw-semibold">O que você pode fazer:</h2>
+                    <ul class="mb-0">
+                        <?php foreach ($nextSteps as $step): ?>
+                            <li><?php echo htmlspecialchars($step); ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>                
             </div>
-            <div class="flex-grow-1">
+            <div class="row">
                 <button class="toggle-error-details btn btn-link" aria-expanded="false">Mostrar detalhes técnicos</button>
                 <?php $details = $details; include __DIR__ . '/_error_details.php'; ?>
             </div>
-            
         </section>
 
         <div class="d-flex action-row justify-content-center flex-wrap gap-3">

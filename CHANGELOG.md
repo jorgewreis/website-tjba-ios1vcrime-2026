@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0088
+
+**Data:** 2026-02-22 14:19:11 | **Commit:** `f0a7497` | **Tipo:** `patch`
+
+- Fix: criação de modelo para base de página de erros
+
 ## V. 1.02.0087
 
 **Data:** 2026-02-21 18:18:47 | **Commit:** `30d362e` | **Tipo:** `patch`
@@ -1566,6 +1572,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
