@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0090
+
+**Data:** 2026-02-22 14:42:39 | **Commit:** `9df3893` | **Tipo:** `patch`
+
+- feat(errors): refatora páginas de erro para partials reutilizáveis e centraliza mensagens
+
 ## V. 1.02.0089
 
 **Data:** 2026-02-22 14:24:38 | **Commit:** `5392f1f` | **Tipo:** `patch`
@@ -1578,6 +1584,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -2,13 +2,9 @@
     <div class="container-fluid my-4 mx-4">
         <span class="container-md fs-7 d-flex flex-row text-start">
             <?php
-            // Texto informacional padrão (pode ser sobrescrito por $info_text)
+            // Texto informacional específico por erro: esperado em $info_text quando necessário.
             if (isset($info_text)) {
                 echo $info_text;
-            } else {
-            ?>
-            O erro <?php echo isset($error_code) ? htmlspecialchars($error_code) : '401'; ?> significa que o sistema exige identificação válida para permitir o acesso ao conteúdo solicitado. Em regra, ocorre quando a sessão expirou, o usuário não realizou login ou as credenciais informadas não foram reconhecidas. É um mecanismo de proteção, semelhante ao controle de acesso a áreas restritas: é necessário possuir autorização formal para ingressar. Para resolver, realize novo login e verifique se seu perfil está adequado às permissões exigidas. Persistindo o problema, contate o suporte responsável pela gestão de usuários do sistema.
-            <?php
             }
             ?>
         </span>

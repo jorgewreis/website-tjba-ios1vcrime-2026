@@ -29,33 +29,11 @@ $details = ['timestamp' => date('c'), 'request' => $_SERVER['REQUEST_URI'] ?? ''
     include __DIR__ . '/_error_header.php';
     ?>
 
-    <!-- Ações e sugestões específicas desta página de erro (apresentação similar ao card antigo) -->
-    <div class="container-xl text-center my-3">
-        <div class="d-flex justify-content-center gap-2 mb-3">
-            <?php foreach ($actions as $a): ?>
-                <a href="<?php echo htmlspecialchars($a['href'] ?? '#'); ?>" class="btn <?php echo htmlspecialchars($a['class'] ?? 'btn-secondary'); ?>">
-                    <?php echo htmlspecialchars($a['label'] ?? 'Ação'); ?>
-                </a>
-            <?php endforeach; ?>
-        </div>
-
-        <?php if (!empty($suggestions)): ?>
-            <div class="text-start small text-muted container-md">
-                <strong>Sugestões:</strong>
-                <ul class="mb-0">
-                    <?php foreach ($suggestions as $s): ?>
-                        <li><?php echo htmlspecialchars($s); ?></li>
-                    <?php endforeach; ?>
-                </ul>
-            </div>
-        <?php endif; ?>
-
-        <div class="my-3">
-            <button class="toggle-error-details btn btn-link" aria-expanded="false">Mostrar detalhes técnicos</button>
-        </div>
-    </div>
-
-    <?php $details = $details; include __DIR__ . '/_error_details.php'; ?>
+    <?php
+    // Carregar mensagens centralizadas e definir $info_text apenas se não houver sobrescrita
+    $error_messages = include __DIR__ . '/error_messages.php';
+    $info_text = $info_text ?? ($error_messages[$code] ?? '');
+    $details = $details; include __DIR__ . '/_error_details.php'; ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
