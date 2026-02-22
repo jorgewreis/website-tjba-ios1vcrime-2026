@@ -1,7 +1,7 @@
     <!-- Detalhes informacionais do erro -->
     <div class="container-fluid my-4 mx-4">
         <div class="container-sm">
-            <span class="fs-7 d-flex flex-row text-center">
+            <span class="fs-6 d-flex flex-row text-center">
                 <?php
                 // Texto informacional específico por erro: esperado em $info_text quando necessário.
                 if (isset($info_text)) {
@@ -71,7 +71,7 @@
     <!-- Informações do suporte -->
     <div class="container-fluid my-4 mx-4">
         <div class="container-md d-flex justify-content-center align-items-center flex-column text-center">
-            <span class="fs-7 mb-2 mt-4"><?php echo isset($support_text) ? $support_text : 'Se precisar de ajuda, entre em contato com o suporte técnico responsável pela gestão de usuários do sistema. Envie um print dessa tela junto com a descrição do problema.'; ?></span>
+            <span class="fs-6 mb-2 mt-4"><?php echo isset($support_text) ? $support_text : 'Se precisar de ajuda, entre em contato com o suporte técnico responsável pela gestão de usuários do sistema. Envie um print dessa tela junto com a descrição do problema.'; ?></span>
             <span class="fs-7 mb-2">E-mail: <?php echo isset($support_email) ? htmlspecialchars($support_email) : 'jorgew.reis@outlook.com'; ?></span>
             <span class="fs-7 mb-2">Telefone: <?php echo isset($support_phone) ? htmlspecialchars($support_phone) : '(73) 99838-2911'; ?></span>
         </div>

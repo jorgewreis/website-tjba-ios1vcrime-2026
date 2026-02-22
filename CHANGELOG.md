@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0102
+
+**Data:** 2026-02-22 15:45:52 | **Commit:** `8230d32` | **Tipo:** `patch`
+
+- Fix: correção de icones das paginas de erro
+
 ## V. 1.02.0101
 
 **Data:** 2026-02-22 15:42:17 | **Commit:** `feb4306` | **Tipo:** `patch`
@@ -1650,6 +1656,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
