@@ -31,7 +31,7 @@
 
     <div class="container-fluid my-4 mx-4">
         <div class="container-md d-flex justify-content-center align-items-start flex-column text-start">
-            <div id="errorDetails" class="error-details" hidden aria-hidden="true">
+            <div class="error-details">
                 <div class="card border-0 shadow-sm">
                     <div class="card-body small">
                         <h6>Detalhes técnicos</h6>
@@ -57,27 +57,5 @@
         </div>
     </div>
 
-    <script>
-    (function () {
-        document.addEventListener('click', function (e) {
-            if (e.target && e.target.matches && e.target.matches('.toggle-error-details')) {
-                const btn = e.target;
-                const details = document.getElementById('errorDetails');
-                if (!details) return;
-                const expanded = details.getAttribute('aria-hidden') === 'false';
-                if (expanded) {
-                    details.hidden = true;
-                    details.setAttribute('aria-hidden','true');
-                    btn.setAttribute('aria-expanded','false');
-                    btn.textContent = 'Mostrar detalhes técnicos';
-                } else {
-                    details.hidden = false;
-                    details.setAttribute('aria-hidden','false');
-                    btn.setAttribute('aria-expanded','true');
-                    btn.textContent = 'Ocultar detalhes técnicos';
-                }
-            }
-        });
-    })();
-    </script>
+    
  
