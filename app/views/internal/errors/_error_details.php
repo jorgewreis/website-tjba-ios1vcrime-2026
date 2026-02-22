@@ -11,12 +11,40 @@
     </div>
 
     <!-- Detalhes técnicos do erro -->
+    <?php
+    // Valores técnicos reais (podem ser sobrescritos)
+    $http_code_text = $http_code_text ?? ('HTTP ' . (isset($error_code) ? $error_code : '0'));
+    $request_fullpath = $request_fullpath ?? ($_SERVER['REQUEST_URI'] ?? '');
+    $request_method = $request_method ?? ($_SERVER['REQUEST_METHOD'] ?? '');
+    $current_datetime = $current_datetime ?? date('Y-m-d H:i:s');
+
+    // Detalhes adicionais (opcional): aceitar array associativo $details
+    $details = isset($details) && is_array($details) ? $details : [];
+    // Garantir que os campos básicos estejam sempre presentes
+    $details = array_merge([
+        'Código' => $http_code_text,
+        'Endpoint' => $request_fullpath,
+        'Método' => $request_method,
+        'Data/hora' => $current_datetime,
+    ], $details);
+    ?>
+
     <div class="container-fluid my-4 mx-4">
         <div class="container-md d-flex justify-content-center align-items-start flex-column text-start">
-            <span class="fs-7 mb-2 mt-4">Código de erro: <code><?php echo isset($http_code_text) ? htmlspecialchars($http_code_text) : 'HTTP 401 - Unauthorized'; ?></code></span>
-            <span class="fs-7 mb-2">Endpoint: <code><?php echo isset($request_fullpath) ? htmlspecialchars($request_fullpath) : '<%= request.fullpath %>'; ?></code></span>
-            <span class="fs-7 mb-2">Método HTTP: <code><?php echo isset($request_method) ? htmlspecialchars($request_method) : '<%= request.method %>'; ?></code></span>
-            <span class="fs-7 mb-2">Data/hora: <code><?php echo isset($current_datetime) ? htmlspecialchars($current_datetime) : '<%= Time.current.strftime("%Y-%m-%d %H:%M:%S") %>'; ?></code></span>
+            <div id="errorDetails" class="error-details" hidden aria-hidden="true">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body small">
+                        <h6>Detalhes técnicos</h6>
+                        <dl class="row mb-0">
+                            <?php foreach ($details as $k => $v): ?>
+                                <dt class="col-sm-3 text-truncate"><?php echo htmlspecialchars((string)$k); ?></dt>
+                                <dd class="col-sm-9"><code class="text-break"><?php echo htmlspecialchars((string)$v); ?></code></dd>
+                            <?php endforeach; ?>
+                        </dl>
+                        <p class="mb-0 text-muted">Compartilhe o conteúdo acima com a equipe de suporte para investigação.</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -28,4 +56,28 @@
             <span class="fs-7 mb-2">Telefone: <?php echo isset($support_phone) ? htmlspecialchars($support_phone) : '(73) 99838-2911'; ?></span>
         </div>
     </div>
+
+    <script>
+    (function () {
+        document.addEventListener('click', function (e) {
+            if (e.target && e.target.matches && e.target.matches('.toggle-error-details')) {
+                const btn = e.target;
+                const details = document.getElementById('errorDetails');
+                if (!details) return;
+                const expanded = details.getAttribute('aria-hidden') === 'false';
+                if (expanded) {
+                    details.hidden = true;
+                    details.setAttribute('aria-hidden','true');
+                    btn.setAttribute('aria-expanded','false');
+                    btn.textContent = 'Mostrar detalhes técnicos';
+                } else {
+                    details.hidden = false;
+                    details.setAttribute('aria-hidden','false');
+                    btn.setAttribute('aria-expanded','true');
+                    btn.textContent = 'Ocultar detalhes técnicos';
+                }
+            }
+        });
+    })();
+    </script>
  

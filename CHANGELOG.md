@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0093
+
+**Data:** 2026-02-22 14:51:16 | **Commit:** `b261b76` | **Tipo:** `patch`
+
+- fix(errors): exibir detalhes técnicos reais (endpoint, método, datetime) e toggle
+
 ## V. 1.02.0092
 
 **Data:** 2026-02-22 14:49:25 | **Commit:** `cfb2bca` | **Tipo:** `patch`
@@ -1596,6 +1602,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
