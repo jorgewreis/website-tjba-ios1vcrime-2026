@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0089
+
+**Data:** 2026-02-22 14:24:38 | **Commit:** `5392f1f` | **Tipo:** `patch`
+
+- Feat: Páginas de erro atualizadas
+
 ## V. 1.02.0088
 
 **Data:** 2026-02-22 14:19:11 | **Commit:** `f0a7497` | **Tipo:** `patch`
@@ -1572,6 +1578,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

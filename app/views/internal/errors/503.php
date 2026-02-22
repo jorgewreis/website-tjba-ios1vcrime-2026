@@ -21,10 +21,37 @@ $details = ['timestamp' => date('c'), 'expected_return' => 'Em breve'];
     <link rel="stylesheet" href="/assets/css/custom.css">
 </head>
 <body class="page-internal">
-    <?php include __DIR__ . '/_error_card.php'; ?>
+    <?php
+    // Preparar variáveis para os partials reutilizáveis
+    $error_code = $code;
+    $error_title = $title;
+    $error_message = $message;
+    include __DIR__ . '/_error_header.php';
+    ?>
 
     <div class="container-xl text-center my-3">
-        <button class="toggle-error-details btn btn-link" aria-expanded="false">Mostrar detalhes técnicos</button>
+        <div class="d-flex justify-content-center gap-2 mb-3">
+            <?php foreach ($actions as $a): ?>
+                <a href="<?php echo htmlspecialchars($a['href'] ?? '#'); ?>" class="btn <?php echo htmlspecialchars($a['class'] ?? 'btn-secondary'); ?>">
+                    <?php echo htmlspecialchars($a['label'] ?? 'Ação'); ?>
+                </a>
+            <?php endforeach; ?>
+        </div>
+
+        <?php if (!empty($suggestions)): ?>
+            <div class="text-start small text-muted container-md">
+                <strong>Sugestões:</strong>
+                <ul class="mb-0">
+                    <?php foreach ($suggestions as $s): ?>
+                        <li><?php echo htmlspecialchars($s); ?></li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+        <?php endif; ?>
+
+        <div class="my-3">
+            <button class="toggle-error-details btn btn-link" aria-expanded="false">Mostrar detalhes técnicos</button>
+        </div>
     </div>
 
     <?php $details = $details; include __DIR__ . '/_error_details.php'; ?>

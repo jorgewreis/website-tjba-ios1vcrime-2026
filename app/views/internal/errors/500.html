@@ -85,13 +85,15 @@ $details = [
     </style>
 </head>
 <body class="page-internal">
-    <main class="container">
-        <section class="text-center error-hero">
-            <div class="error-code"><?php echo htmlspecialchars($code); ?></div>
-            <h1><?php echo htmlspecialchars($title); ?></h1>
-            <p><?php echo htmlspecialchars($message); ?></p>
-        </section>
+    <?php
+    // Preparar variáveis para os partials reutilizáveis
+    $error_code = $code;
+    $error_title = $title;
+    $error_message = $message;
+    include __DIR__ . '/_error_header.php';
+    ?>
 
+    <main class="container">
         <section class="suggestion-panel flex-column gap-3 align-items-start">            
             <div class="row">
                 <div class="col-1">
