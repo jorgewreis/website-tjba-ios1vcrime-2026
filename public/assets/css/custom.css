@@ -147,3 +147,7 @@ button.btn-md.readonly{
 .icon-info {
   filter: invert(38%) sepia(85%) saturate(2308%) hue-rotate(224deg) brightness(102%) contrast(101%);
 }
+
+.text-info{
+  color: #696cff !important;
+}

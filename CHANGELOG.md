@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0105
+
+**Data:** 2026-02-22 16:07:30 | **Commit:** `341c2dc` | **Tipo:** `patch`
+
+- Fix: pequenos erros corrigidos
+
 ## V. 1.02.0104
 
 **Data:** 2026-02-22 16:02:18 | **Commit:** `00b7e92` | **Tipo:** `patch`
@@ -1668,6 +1674,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
