@@ -11,13 +11,13 @@ Este documento descreve o padrão visual e comportamental das páginas de erro i
 
 Componentes
 
-- `_error_header.php` — header reutilizável com logo e link para home.
-- `_error_card.php` — card principal com código, título, mensagem, ações e sugestões.
-- `_error_details.php` — bloco ocultável que apresenta metadados (timestamp, request, trace_id).
+-- `_error_header.php` — header reutilizável com logo e link para home.
+-- `_error_card.php` — card principal com código, título, mensagem, ações e sugestões.
+-- `_error_details.php` — bloco ocultável que apresenta metadados (timestamp, request, trace_id).
 
 Estilos
 
-- Todas as classes específicas estão em `public/assets/css/custom.css` (seção \"Error pages styles\"). Não adicionar novas bibliotecas CSS.
+-- Todas as classes específicas estão em `/assets/css/custom.css` (seção \"Error pages styles\"). Não adicionar novas bibliotecas CSS.
 
 Como editar uma página de erro
 

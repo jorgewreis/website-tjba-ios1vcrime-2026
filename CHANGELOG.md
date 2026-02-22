@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0092
+
+**Data:** 2026-02-22 14:49:25 | **Commit:** `cfb2bca` | **Tipo:** `patch`
+
+- fix(docs): corrigir paths para /assets em model e guidelines
+
 ## V. 1.02.0091
 
 **Data:** 2026-02-22 14:47:32 | **Commit:** `c430efd` | **Tipo:** `patch`
@@ -1590,6 +1596,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
