@@ -35,7 +35,7 @@ body {
     min-height: 100vh;
     overflow-y: auto;
     overflow-x: hidden;
-    background-color: var(--background-color);
+    background-color: #f4f4fd;
 }
 
 /* ========================================
@@ -158,8 +158,8 @@ body {
         bottom: 0px;
         right: 0px;
         border-radius: 100%;
-        box-shadow: 0 0 0 2px white;
-        background-color: var(--bs-sucess);
+        box-shadow: 0 0 3px 2px #14ff267a;
+        background-color: lime;
     }
 
     /* Nav Right */

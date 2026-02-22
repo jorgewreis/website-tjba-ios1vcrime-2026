@@ -14,7 +14,7 @@
 
     <!-- Detalhes técnicos do erro -->
     <?php
-    $http_code_text = $http_code_text ?? ('HTTP ' . (isset($error_code) ? $error_code : '0'));
+    $http_code_text = $http_code_text ?? ((isset($error_code) ? $error_code : '0'));
     $request_fullpath = $request_fullpath ?? ($_SERVER['REQUEST_URI'] ?? '');
     $request_method = $request_method ?? ($_SERVER['REQUEST_METHOD'] ?? '');
     $current_datetime = $current_datetime ?? date('Y-m-d H:i:s');
@@ -23,6 +23,8 @@
     $client_ip = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? ($_SERVER['REMOTE_ADDR'] ?? 'desconhecido');
     $host = $_SERVER['HTTP_HOST'] ?? ($_SERVER['SERVER_NAME'] ?? '');
     $protocol = (!empty($_SERVER['REQUEST_SCHEME']) ? $_SERVER['REQUEST_SCHEME'] : (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http'));
+    $protocol = strtoupper($protocol);
+    $protocol = ($protocol) ?? 'HTTP';
     $query_string = $_SERVER['QUERY_STRING'] ?? '';
     $referer = $_SERVER['HTTP_REFERER'] ?? '';
     $request_id = $_SERVER['HTTP_X_REQUEST_ID'] ?? ($_SERVER['HTTP_X_CORRELATION_ID'] ?? '');
@@ -40,8 +42,8 @@
 
     // Campos padrão exibidos (serão sobrescritos por chaves em $details se fornecidas)
     $defaults = [
-        'Código' => $protocol . ' - ' . $http_code_text,
-        'Status' => $status_label,
+        'Código' => $protocol . ' ' . $http_code_text,
+        'Status' => $status_label,  
         'Endpoint' => $host . $request_fullpath,
         'Método' => $request_method,
         'Query string' => $query_string,
