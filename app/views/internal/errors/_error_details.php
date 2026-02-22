@@ -27,6 +27,19 @@
         'Método' => $request_method,
         'Data/hora' => $current_datetime,
     ], $details);
+// #region agent log: entry (hypothesis A)
+$logPayload = [
+    'sessionId' => '55c00d',
+    'id' => 'log_' . uniqid(),
+    'timestamp' => round(microtime(true) * 1000),
+    'location' => '_error_details.php:prepared_details',
+    'message' => 'prepared_details',
+    'data' => ['info_text_set' => isset($info_text), 'details_keys' => array_keys($details)],
+    'runId' => 'pre-fix',
+    'hypothesisId' => 'A'
+];
+@file_put_contents(dirname(__DIR__,4) . '/debug-55c00d.log', json_encode($logPayload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . PHP_EOL, FILE_APPEND);
+// #endregion
     ?>
 
     <div class="container-fluid my-4 mx-4">
@@ -38,7 +51,6 @@
                         <dl class="row mb-0">
                             <?php foreach ($details as $k => $v): ?>
                                 <dt class="col-sm-3 text-truncate"><?php echo htmlspecialchars((string)$k); ?></dt>
-                                <dd class="col-sm-9"><code class="text-break"><?php echo htmlspecialchars((string)$v); ?></code></dd>
                             <?php endforeach; ?>
                         </dl>
                         <p class="mb-0 text-muted">Compartilhe o conteúdo acima com a equipe de suporte para investigação.</p>
