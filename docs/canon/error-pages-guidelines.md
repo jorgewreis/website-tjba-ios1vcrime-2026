@@ -11,19 +11,19 @@ Este documento descreve o padrão visual e comportamental das páginas de erro i
 
 Componentes
 
--- `_error_header.php` — header reutilizável com logo e link para home.
--- `_error_card.php` — card principal com código, título, mensagem, ações e sugestões.
--- `_error_details.php` — bloco ocultável que apresenta metadados (timestamp, request, trace_id).
+- `_error_header.php` — header reutilizável com logo e título/descrição curta.
+- `_error_details.php` — seção que apresenta texto informacional específico e detalhes técnicos (endpoint, método, datetime e outros metadados).
+- `error_messages.php` — arquivo centralizado com mensagens informacionais por código de erro (401,403,404,500,503).
 
 Estilos
 
--- Todas as classes específicas estão em `/assets/css/custom.css` (seção \"Error pages styles\"). Não adicionar novas bibliotecas CSS.
+- Todas as classes específicas estão em `/assets/css/custom.css` (seção "Error pages styles"). Não adicionar novas bibliotecas CSS.
 
 Como editar uma página de erro
 
 1. Abra `app/views/internal/errors/<code>.php`.  
-2. Ajuste as variáveis `$code`, `$title`, `$message`, `$actions`, `$suggestions` conforme o contexto.  
-3. Use o DetailsToggle para expor `trace_id` ou `timestamp` quando útil para suporte — não exponha stack traces.
+2. Ajuste as variáveis `$code`, `$title`, `$message`. Use `$info_text` para fornecer um texto informacional detalhado específico do erro quando necessário.  
+3. Os detalhes técnicos são exibidos por padrão (endpoint, método, datetime e metadados adicionais em `$details`). Não exponha stack traces em produção.
 
 Testes
 

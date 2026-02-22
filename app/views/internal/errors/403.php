@@ -3,12 +3,7 @@ declare(strict_types=1);
 $code = '403';
 $title = 'Acesso Negado';
 $message = 'Seu perfil não tem permissão para acessar este recurso. Solicite autorização à chefia se necessário.';
-$actions = [
-    ['label' => 'Solicitar Acesso', 'href' => 'mailto:jorgew.reis@outlook.com', 'class' => 'btn-primary'],
-    ['label' => 'Página Inicial', 'href' => '/frame.php?page=dashboard', 'class' => 'btn-secondary']
-];
-$suggestions = ['Verifique se está logado com a conta correta.', 'Contate a administração para revisão de permissões.'];
-$details = ['timestamp' => date('c'), 'request' => $_SERVER['REQUEST_URI'] ?? '', 'user_id' => $_SESSION['id_usuario'] ?? ''];
+ $details = ['timestamp' => date('c'), 'request' => $_SERVER['REQUEST_URI'] ?? '', 'user_id' => $_SESSION['id_usuario'] ?? ''];
 ?>
 
 <!DOCTYPE html>
@@ -33,8 +28,6 @@ $details = ['timestamp' => date('c'), 'request' => $_SERVER['REQUEST_URI'] ?? ''
     // Carregar mensagens centralizadas e definir $info_text apenas se não houver sobrescrita
     $error_messages = include __DIR__ . '/error_messages.php';
     $info_text = $info_text ?? ($error_messages[$code] ?? '');
-    // render actions/suggestions partial (se houver)
-    include __DIR__ . '/_error_actions.php';
     $details = $details; include __DIR__ . '/_error_details.php'; ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>

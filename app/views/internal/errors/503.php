@@ -3,11 +3,6 @@ declare(strict_types=1);
 $code = '503';
 $title = 'Manutenção';
 $message = 'O sistema encontra-se em manutenção programada. Trabalhamos para restabelecer o serviço o quanto antes.';
-$actions = [
-    ['label' => 'Status do Sistema', 'href' => '/status', 'class' => 'btn-primary'],
-    ['label' => 'Voltar', 'href' => '/frame.php?page=dashboard', 'class' => 'btn-secondary']
-];
-$suggestions = ['Verifique novamente em alguns minutos.', 'Se necessário, contate o suporte para mais detalhes.'];
 $details = ['timestamp' => date('c'), 'expected_return' => 'Em breve'];
 ?>
 
@@ -33,7 +28,6 @@ $details = ['timestamp' => date('c'), 'expected_return' => 'Em breve'];
     // Carregar mensagens centralizadas e definir $info_text apenas se não houver sobrescrita
     $error_messages = include __DIR__ . '/error_messages.php';
     $info_text = $info_text ?? ($error_messages[$code] ?? '');
-    include __DIR__ . '/_error_actions.php';
     $details = $details; include __DIR__ . '/_error_details.php'; ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>

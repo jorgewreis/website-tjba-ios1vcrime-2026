@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0096
+
+**Data:** 2026-02-22 14:59:20 | **Commit:** `adee4f2` | **Tipo:** `patch`
+
+- fix(docs,errors): remover ações/sugestões das páginas de erro e atualizar guidelines
+
 ## V. 1.02.0095
 
 **Data:** 2026-02-22 14:54:40 | **Commit:** `832e9ec` | **Tipo:** `patch`
@@ -1614,6 +1620,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
