@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0091
+
+**Data:** 2026-02-22 14:47:32 | **Commit:** `c430efd` | **Tipo:** `patch`
+
+- fix(errors): corrigir caminho do ícone em _error_header para uso via public/frame.php
+
 ## V. 1.02.0090
 
 **Data:** 2026-02-22 14:42:39 | **Commit:** `9df3893` | **Tipo:** `patch`
@@ -1584,6 +1590,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

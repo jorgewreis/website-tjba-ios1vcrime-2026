@@ -8,7 +8,7 @@ $error_message = isset($error_message) ? $error_message : 'A página que você e
     <!-- Info Error -->
     <div class="container-fluid mx-4">
         <div class="d-flex flex-row justify-content-center align-items-center">
-            <img class="icon-warning  mt-2" src="./../../../../public/assets/icons/Alert-Triangle--Streamline-Ultimate.png" alt="Ícone de aviso" width="48" height="48">
+            <img class="icon-warning  mt-2" src="/assets/icons/Alert-Triangle--Streamline-Ultimate.png" alt="Ícone de aviso" width="48" height="48">
         </div>
         <div class="d-flex flex-row justify-content-center align-items-center my-2">            
             <span class="fw-bold ms-2 text-warning error-code"><?php echo htmlspecialchars($error_code); ?></span>
