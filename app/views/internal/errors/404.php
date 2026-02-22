@@ -18,7 +18,7 @@ $details = ['Código de erro' => "HTTP {$code}", 'URL solicitada' => $_SERVER['R
 <body class="page-internal">
     <?php
     // Preparar variáveis para os partials reutilizáveis
-    $error_icon_class = 'icon-info';
+    $error_icon_class = 'icon-broken';
     $error_text_class = 'text-info';
     $error_code = $code;
     $error_title = $title;

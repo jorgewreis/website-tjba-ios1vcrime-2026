@@ -18,7 +18,7 @@ $details = ['timestamp' => date('c'), 'expected_return' => 'Em breve'];
 <body class="page-internal">
     <?php
     // Preparar variáveis para os partials reutilizáveis
-    $error_icon_class = 'icon-warning';
+    $error_icon_class = 'icon-maintenance';
     $error_text_class = 'text-warning';
     $error_code = $code;
     $error_title = $title;
