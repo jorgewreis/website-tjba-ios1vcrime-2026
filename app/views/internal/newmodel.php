@@ -26,29 +26,29 @@ Security::requireAuthentication();
     <style>
         /* ===== VARIÁVEIS ===== */
         :root {
-            --primary: #7367F0;
-            --primary-light: #E8E6FC;
-            --success: #28C76F;
-            --success-light: #D4F4E2;
-            --warning: #FF9F43;
-            --warning-light: #FFF0E1;
-            --danger: #EA5455;
-            --danger-light: #FCE5E6;
-            --info: #00CFE8;
-            --info-light: #D9F8FC;
-            --bg-light: #F8F7FA;
-            --text-primary: #5D596C;
-            --text-secondary: #A5A3AE;
-            --border-color: #DBDADE;
-            --white: #FFFFFF;
-            --shadow: 0 2px 6px rgba(47, 43, 61, 0.14);
-            --radius: 8px;
+            --bs-primary: #7367F0;
+            --bs-primary-light: #E8E6FC;
+            --bs-success: #28C76F;
+            --bs-success-light: #D4F4E2;
+            --bs-warning: #FF9F43;
+            --bs-warning-light: #FFF0E1;
+            --bs-danger: #EA5455;
+            --bs-danger-light: #FCE5E6;
+            --bs-info: #00CFE8;
+            --bs-info-light: #D9F8FC;
+            --bs-bg-light: #F8F7FA;
+            --bs-text-primary: #5D596C;
+            --bs-text-secondary: #A5A3AE;
+            --bs-border-color: #DBDADE;
+            --bs-white: #FFFFFF;
+            --bs-shadow: 0 2px 6px rgba(47, 43, 61, 0.14);
+            --bs-radius: 8px;
         }
 
         /* ===== CONTAINER PRINCIPAL ===== */
         .container-main {
             padding: 24px;
-            background: var(--bg-light);
+            background: var(--bs-bg-light);
             min-height: 100vh;
         }
 
@@ -61,14 +61,14 @@ Security::requireAuthentication();
             display: block;
             font-size: 24px;
             font-weight: 600;
-            color: var(--text-primary);
+            color: var(--bs-text-primary);
             margin-bottom: 4px;
         }
 
         .title-page .info-title {
             display: block;
             font-size: 14px;
-            color: var(--text-secondary);
+            color: var(--bs-text-secondary);
             font-style: italic;
         }
 
@@ -86,10 +86,10 @@ Security::requireAuthentication();
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: var(--primary);
-            color: var(--white);
+            background: var(--bs-primary);
+            color: var(--bs-white);
             padding: 10px 20px;
-            border-radius: var(--radius);
+            border-radius: var(--bs-radius);
             font-size: 14px;
             font-weight: 500;
             border: none;
@@ -117,10 +117,10 @@ Security::requireAuthentication();
         }
 
         .stat-card {
-            background: var(--white);
-            border-radius: var(--radius);
+            background: var(--bs-white);
+            border-radius: var(--bs-radius);
             padding: 20px;
-            box-shadow: var(--shadow);
+            box-shadow: var(--bs-shadow);
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
@@ -135,7 +135,7 @@ Security::requireAuthentication();
         .stat-content .stat-label {
             display: block;
             font-size: 13px;
-            color: var(--text-secondary);
+            color: var(--bs-text-secondary);
             margin-bottom: 4px;
         }
 
@@ -143,7 +143,7 @@ Security::requireAuthentication();
             display: block;
             font-size: 24px;
             font-weight: 600;
-            color: var(--text-primary);
+            color: var(--bs-text-primary);
             margin-bottom: 4px;
         }
 
@@ -155,17 +155,17 @@ Security::requireAuthentication();
         }
 
         .stat-info.positive {
-            color: var(--success);
+            color: var(--bs-success);
         }
 
         .stat-info.negative {
-            color: var(--danger);
+            color: var(--bs-danger);
         }
 
         .stat-icon {
             width: 42px;
             height: 42px;
-            border-radius: var(--radius);
+            border-radius: var(--bs-radius);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -176,37 +176,37 @@ Security::requireAuthentication();
         }
 
         .stat-icon.primary {
-            background: var(--primary-light);
-            color: var(--primary);
+            background: var(--bs-primary-light);
+            color: var(--bs-primary);
         }
 
         .stat-icon.success {
-            background: var(--success-light);
-            color: var(--success);
+            background: var(--bs-success-light);
+            color: var(--bs-success);
         }
 
         .stat-icon.warning {
-            background: var(--warning-light);
-            color: var(--warning);
+            background: var(--bs-warning-light);
+            color: var(--bs-warning);
         }
 
         .stat-icon.danger {
-            background: var(--danger-light);
-            color: var(--danger);
+            background: var(--bs-danger-light);
+            color: var(--bs-danger);
         }
 
         /* ===== CARD TABELA ===== */
         .table-card {
-            background: var(--white);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
+            background: var(--bs-white);
+            border-radius: var(--bs-radius);
+            box-shadow: var(--bs-shadow);
             overflow: hidden;
         }
 
         /* ===== FILTROS ===== */
         .filter-section {
             padding: 20px;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--bs-border-color);
         }
 
         .filter-toggle {
@@ -215,7 +215,7 @@ Security::requireAuthentication();
             gap: 8px;
             font-size: 14px;
             font-weight: 500;
-            color: var(--text-primary);
+            color: var(--bs-text-primary);
             cursor: pointer;
             background: none;
             border: none;
@@ -224,7 +224,7 @@ Security::requireAuthentication();
 
         .filter-toggle i {
             font-size: 16px;
-            color: var(--text-secondary);
+            color: var(--bs-text-secondary);
         }
 
         .filter-form {
@@ -233,7 +233,7 @@ Security::requireAuthentication();
             gap: 16px;
             margin-top: 16px;
             padding-top: 16px;
-            border-top: 1px solid var(--border-color);
+            border-top: 1px solid var(--bs-border-color);
         }
 
         .filter-group {
@@ -245,24 +245,24 @@ Security::requireAuthentication();
         .filter-group label {
             font-size: 13px;
             font-weight: 500;
-            color: var(--text-primary);
+            color: var(--bs-text-primary);
         }
 
         .filter-group input,
         .filter-group select {
             padding: 8px 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
+            border: 1px solid var(--bs-border-color);
+            border-radius: var(--bs-radius);
             font-size: 14px;
-            color: var(--text-primary);
-            background: var(--white);
+            color: var(--bs-text-primary);
+            background: var(--bs-white);
             transition: border-color 0.2s ease;
         }
 
         .filter-group input:focus,
         .filter-group select:focus {
             outline: none;
-            border-color: var(--primary);
+            border-color: var(--bs-primary);
         }
 
         .filter-actions {
@@ -273,7 +273,7 @@ Security::requireAuthentication();
 
         .btn-filter {
             padding: 8px 16px;
-            border-radius: 6px;
+            border-radius: var(--bs-radius);
             font-size: 13px;
             font-weight: 500;
             cursor: pointer;
@@ -281,8 +281,8 @@ Security::requireAuthentication();
         }
 
         .btn-filter.primary {
-            background: var(--primary);
-            color: var(--white);
+            background: var(--bs-primary);
+            color: var(--bs-white);
             border: none;
         }
 
@@ -292,12 +292,12 @@ Security::requireAuthentication();
 
         .btn-filter.outline {
             background: transparent;
-            color: var(--text-secondary);
-            border: 1px solid var(--border-color);
+            color: var(--bs-text-secondary);
+            border: 1px solid var(--bs-border-color);
         }
 
         .btn-filter.outline:hover {
-            border-color: var(--text-secondary);
+            border-color: var(--bs-text-secondary);
         }
 
         /* ===== TABELA ===== */
@@ -311,7 +311,7 @@ Security::requireAuthentication();
         }
 
         .data-table thead {
-            background: var(--bg-light);
+            background: var(--bs-bg-light);
         }
 
         .data-table th {
@@ -319,7 +319,7 @@ Security::requireAuthentication();
             text-align: left;
             font-size: 12px;
             font-weight: 600;
-            color: var(--text-secondary);
+            color: var(--bs-text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.5px;
             white-space: nowrap;
@@ -328,8 +328,8 @@ Security::requireAuthentication();
         .data-table td {
             padding: 14px 16px;
             font-size: 14px;
-            color: var(--text-primary);
-            border-bottom: 1px solid var(--border-color);
+            color: var(--bs-text-primary);
+            border-bottom: 1px solid var(--bs-border-color);
             vertical-align: middle;
         }
 
@@ -338,7 +338,7 @@ Security::requireAuthentication();
         }
 
         .data-table tbody tr:hover {
-            background: var(--bg-light);
+            background: var(--bs-bg-light);
         }
 
         .data-table tbody tr:last-child td {
@@ -347,7 +347,7 @@ Security::requireAuthentication();
 
         /* Processo */
         .processo-link {
-            color: var(--primary);
+            color: var(--bs-primary);
             font-weight: 500;
             text-decoration: none;
             transition: color 0.2s ease;

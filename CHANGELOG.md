@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0114
+
+**Data:** 2026-02-23 09:40:20 | **Commit:** `6871a10` | **Tipo:** `patch`
+
+- Feat: novo modelo de pagina interna
+
 ## V. 1.02.0113
 
 **Data:** 2026-02-22 17:12:51 | **Commit:** `778fb6a` | **Tipo:** `patch`
@@ -1722,6 +1728,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
