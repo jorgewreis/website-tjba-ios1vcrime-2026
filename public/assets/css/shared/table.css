@@ -1,0 +1,82 @@
+/* TABLE COMPONENTS */
+.line-table {
+    width: 100%;
+    min-height: 50px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;    
+    padding: 0;
+    border-bottom: 1px solid var(--color-gray-300);
+    box-sizing: border-box;
+}
+.line-table:last-child {
+    border-bottom: 1px solid var(--color-gray-700);
+}
+
+.line-table.header {
+    min-height: 60px;
+    border-bottom: 1px solid var(--color-gray-700);
+    background-color: var(--color-gray-000);
+    padding: 0 0 0 20px;
+}
+
+/* TABLE CELLS */
+.minor-info {
+    margin: 0 0 3px 20px;
+    font-size: 12px;
+    color: var(--color-gray-600);
+    display: block;
+}
+.major-info {
+    margin: 0 10px 0 20px;
+    font-size: 14px;
+    color: var(--color-gray-900);
+    display: block;
+}
+
+/* TAMANHOS PADRONIZADOS */
+.process-info {
+    width: 220px;
+    cursor: pointer;
+}
+.comarca-info {
+    display: none;
+}
+.detalhes-info {
+    display: none;    
+}
+.process-select {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;    
+}
+
+.status-task {
+    display: flex;
+    align-items: flex-end;
+    min-width: 150px;
+    padding-right: 10px;
+    margin-left: 20px;
+}
+
+@media (min-width: 768px) {
+    .process-info {
+        width: 250px;
+    }
+    .comarca-info {
+        display: flex;
+        width: 240px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .detalhes-info {
+        display: flex;
+        width: 260px;
+    }
+}

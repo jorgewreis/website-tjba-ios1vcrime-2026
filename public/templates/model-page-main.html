@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta lang="pt-BR">
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Template Model - Components - Buttons</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="./../assets/css/shared/reset.css">
+        <link rel="stylesheet" href="./../assets/css/shared/variables.css">
+        <link rel="stylesheet" href="./../assets/css/shared/page.css">
+        <link rel="stylesheet" href="./../assets/css/shared/form.css">
+        <link rel="stylesheet" href="./../assets/css/shared/table.css">
+        
+    </head>
+<body class="page-internal">
+
+    <div class="card-page">
+
+        <!-- Filtros -->
+        <div class="line-filter">
+            <div class="block-cell">
+                <label for="filter-tipo">Filtrar por tipo</label>
+                <select class="width-md height-md" id="filter-tipo">
+                    <option value="" selected>Mostrar todos</option>
+                    <option value="Tipo 1">Tipo 1</option>
+                    <option value="Tipo 2">Tipo 2</option>
+                </select>
+            </div>
+            <div class="block-cell">
+                <label for="filter-status">Filtrar por status</label>
+                <select class="width-sm height-md" id="filter-status">
+                    <option value="" selected>Mostrar todos</option>
+                    <option value="Pendente">Pendente</option>
+                    <option value="Em andamento">Em andamento</option>
+                    <option value="Cancelada">Cancelada</option>
+                    <option value="Concluída">Concluída</option>
+                </select>
+            </div>
+            <div class="block-cell">
+                <label for="items-per-page">Docs</label>
+                <select class="width-ssm height-md" id="items-per-page">
+                    <option value="10">10</option>
+                    <option value="25" selected>25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Ações -->
+        <div class="line-buttons">
+            <select class="width-sm height-md" id="export-type">
+                <option value="" selected>Exportar lista</option>
+                <option value="pdf">Gerar PDF</option>
+                <option value="csv">Gerar CSV</option>
+                <option value="print">Imprimir</option>
+            </select>
+            <button class="btn btn-primary">Novo cadastro</button>
+        </div>
+
+        <!-- Tabela -->
+        <div class="line-table header">Lista de Documentos</div>
+        <div class="line-table">
+            <div class="block-line">
+                <div class="block-cell process-select">
+                    <label class="radio-custom">
+                        <input type="radio" name="open-subtask" />
+                        <span class="radio-mark"></span>
+                    </label>                
+                </div>
+                <div class="block-cell process-info" title="clique para copiar">
+                    <span class="minor-info">Classe</span>
+                    <span class="major-info">08002343-11.2026.8.05.0103</span>
+                </div>
+            </div>
+            <div class="block-cell">
+                <span class="minor-info">Tipo de documento</span>
+                <span class="major-info">Descrição</span>
+            </div>
+            <div class="block-cell">
+                <span class="minor-info">Tipo de documento</span>
+                <span class="major-info">Descrição</span>
+            </div>
+            <div class="block-cell status-task">
+                <div class="width-sm status status-pending">Pendente</div>
+            </div>
+        </div>
+
+        <!-- Paginação -->
+        <div class="line-pagination">
+            <span class="pagination-info">Mostrando 1-25 de 100 documentos</span>
+            <div class="pagination-controls">
+                <div class="pagination-symbol disabled">
+                    <img src="./../assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior">
+                </div>
+                <div class="pagination-number active">1</div>
+                <div class="pagination-number">2</div>
+                <div class="pagination-symbol">
+                    <img src="./../assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página">
+                </div>
+            </div>
+        </div> 
+
+    </div>
+
+</body>
+</html>
