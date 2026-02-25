@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0117
+
+**Data:** 2026-02-25 09:52:04 | **Commit:** `e73ee3e` | **Tipo:** `patch`
+
+- Fix: Correção de arquivos old
+
 ## V. 1.02.0116
 
 **Data:** 2026-02-25 09:34:56 | **Commit:** `a4f8ac3` | **Tipo:** `patch`
@@ -1740,6 +1746,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
