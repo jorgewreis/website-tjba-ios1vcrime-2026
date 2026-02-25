@@ -532,6 +532,7 @@ select {
     color: var(--color-gray-700);
     font-size: 12px;
     font-family: "Poppins", sans-serif;
+    line-height: 20px;
 
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -555,7 +556,7 @@ label {
     font-size: 12px;
     font-family: "Poppins", sans-serif;
     color: var(--color-gray-700);
-    margin: 10px 0 0 10px;
+    margin: 10px 0 0 13px;
 }
 
 /* INPUT RADIO */

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0116
+
+**Data:** 2026-02-25 09:34:56 | **Commit:** `a4f8ac3` | **Tipo:** `patch`
+
+- Feat: Alteração de modelos de páginas
+
 ## V. 1.02.0115
 
 **Data:** 2026-02-24 20:41:33 | **Commit:** `3dbada2` | **Tipo:** `patch`
@@ -1734,6 +1740,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
