@@ -7,11 +7,11 @@
         <title>Template Model - Components - Buttons</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="./../assets/css/shared/reset.css">
-        <link rel="stylesheet" href="./../assets/css/shared/variables.css">
-        <link rel="stylesheet" href="./../assets/css/shared/page.css">
-        <link rel="stylesheet" href="./../assets/css/shared/form.css">
-        <link rel="stylesheet" href="./../assets/css/shared/table.css">
+        <link rel="stylesheet" href="./../assets/css/reset.css">
+        <link rel="stylesheet" href="./../assets/css/variables.css">
+        <link rel="stylesheet" href="./../assets/css/page.css">
+        <link rel="stylesheet" href="./../assets/css/form.css">
+        <link rel="stylesheet" href="./../assets/css/table.css">
         
     </head>
 <body class="page-internal">
@@ -38,70 +38,105 @@
     </div>
 
     <div class="card-page">       
-
-        <!-- Filtros -->
+        <div class="line-table header">Informações obrigatórias</div>
         <div class="line-filter">
             <div class="block-cell">
-                <label for="filter-tipo">Filtrar por tipo</label>
-                <select class="width-md height-md" id="filter-tipo">
-                    <option value="" selected>Mostrar todos</option>
-                    <option value="Tipo 1">Tipo 1</option>
-                    <option value="Tipo 2">Tipo 2</option>
+                <label for="filter-processo">Processo</label>
+                <input type="text" class="width-md height-md" id="filter-processo" placeholder="Digite o número do processo" required>
+            </div>
+            <div class="block-cell">
+                <label for="filter-classe">Classe</label>
+                <select class="width-md height-md" id="filter-classe" disabled>
+                    <option value="Carta de Ordem">Carta de Ordem</option>
+                    <option value="Carta Precatória" selected>Carta Precatória</option>
+                    <option value="Carta Rogatória">Carta Rogatória</option>
                 </select>
             </div>
             <div class="block-cell">
-                <label for="filter-status">Filtrar por status</label>
-                <select class="width-sm height-md" id="filter-status">
-                    <option value="" selected>Mostrar todos</option>
-                    <option value="Pendente">Pendente</option>
-                    <option value="Em andamento">Em andamento</option>
-                    <option value="Cancelada">Cancelada</option>
-                    <option value="Concluída">Concluída</option>
+                <label for="filter-tipo">Finalidade</label>
+                <select class="width-md height-md" id="filter-tipo" required>
+                    <option value="" selected disabled>Selecione aqui</option>
+                    <option value="Intimação para Audiência">Intimação para Audiência</option>
+                    <option value="Intimação de Decisão Interlocutória">Intimação de Decisão</option>
+                    <option value="Intimação da Sentença">Intimação da Sentença</option>
+                    <option value="Citação para apresentar Defesa">Citação para apresentar Defesa</option>                    
+                    <option value="Citação para apresentar Alegações Finais">Citação para apresentar Alegações Finais</option>
+                    <option value="Suspensão Condicional">Suspensão Condicional</option>
+                    <option value="Outra">Outra não listada</option>
                 </select>
             </div>
             <div class="block-cell">
-                <label for="items-per-page">Docs</label>
-                <select class="width-ssm height-md" id="items-per-page">
-                    <option value="10">10</option>
-                    <option value="25" selected>25</option>
-                    <option value="50">50</option>
-                    <option value="100">100</option>
+                <label for="filter-prazo">Prazo cumprimento</label>
+                <select class="width-sm height-md" id="filter-prazo" required>
+                    <option value="5 dias">5 dias</option>
+                    <option value="10 dias">10 dias</option>
+                    <option value="15 dias">15 dias</option>
+                    <option value="30 dias" selected>30 dias</option>
+                    <option value="60 dias">60 dias</option>
+                    <option value="90 dias">90 dias</option>
                 </select>
+            </div>
+        </div>
+        <div class="line-filter">
+            <div class="block-cell">
+                <label for="filter-estado">Estado</label>
+                <select class="width-md height-md" id="filter-estado" required>
+                    <option value="AC">Acre</option>
+                    <option value="AL">Alagoas</option>
+                    <option value="AP">Amapá</option>
+                    <option value="AM">Amazonas</option>
+                    <option value="BA" selected>Bahia</option>
+                    <option value="CE">Ceará</option>
+                    <option value="DF">Distrito Federal</option>
+                    <option value="ES">Espírito Santo</option>
+                    <option value="GO">Goiás</option>
+                    <option value="MA">Maranhão</option> 
+                    <option value="MT">Mato Grosso</option>
+                    <option value="MS">Mato Grosso do Sul</option>
+                    <option value="MG">Minas Gerais</option>
+                    <option value="PA">Pará</option>
+                    <option value="PB">Paraíba</option>
+                    <option value="PR">Paraná</option>
+                    <option value="PE">Pernambuco</option>
+                    <option value="PI">Piauí</option>
+                    <option value="RJ">Rio de Janeiro</option>
+                    <option value="RN">Rio Grande do Norte</option>
+                    <option value="RS">Rio Grande do Sul</option>
+                    <option value="RO">Rondônia</option>
+                    <option value="RR">Roraima</option>
+                    <option value="SC">Santa Catarina</option>
+                    <option value="SP">São Paulo</option>
+                    <option value="SE">Sergipe</option>
+                    <option value="TO">Tocantins</option>
+                </select>
+            </div>
+            <div class="block-cell">
+                <label for="filter-cidade">Cidade</label>
+                <input type="text" class="width-md height-md" id="filter-cidade" placeholder="Digite o nome da cidade" required> 
+            </div>            
+        </div>
+        <div class="line-filter">
+            <div class="block-cell">
+                <label class="status status-warning-light">*Conforme regra de divisão de tarefas, todas as Cartas Expedidas deverão ser enviadas por <strong style="margin-left: 3px">Mário Bastos</strong></label>                
+                <label class="status status-primary-light">**As tarefas serão automaticamente alocadas para este usuário</label>
             </div>
         </div>
 
         <!-- Ações -->
         <div class="line-buttons">
-            <select class="width-sm height-md" id="export-type">
-                <option value="" selected>Exportar lista</option>
-                <option value="pdf">Gerar PDF</option>
-                <option value="csv">Gerar CSV</option>
-                <option value="print">Imprimir</option>
-            </select>
-            <button class="btn btn-primary">Novo cadastro</button>
+            <button class="btn btn-primary-outline">Alterar regra de envio</button> <!-- visível apenas para usuários com permissão de administrador -->
+            <button class="btn btn-secondary">Voltar</button>
+            <button class="btn btn-primary">Cadastrar</button>
         </div>
-
-        <!-- Tabela -->
-        <div class="line-table header">Lista de Documentos</div>
-        <div class="line-table">
-            
+    </div>
+        
+    <!-- Develop Info -->
+    <div class="footer-page">
+        <div class="location">
+            <span class="all">Aplicativo web desenvolvido integralmente por </span>
+            <span class="specific">Jorge Reis Develop</span>
+            <span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span>
         </div>
-
-        <!-- Paginação -->
-        <div class="line-pagination">
-            <span class="pagination-info">Mostrando 1-25 de 100 documentos</span>
-            <div class="pagination-controls">
-                <div class="pagination-symbol disabled">
-                    <img src="./../assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior">
-                </div>
-                <div class="pagination-number active">1</div>
-                <div class="pagination-number">2</div>
-                <div class="pagination-symbol">
-                    <img src="./../assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página">
-                </div>
-            </div>
-        </div> 
-
     </div>
 
 </body>

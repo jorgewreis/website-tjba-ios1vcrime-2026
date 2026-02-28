@@ -31,69 +31,6 @@ function sleep(qtd, tipo) {
  * @param {string} numeroProcesso - Número do processo (com ou sem formatação)
  * @returns {boolean} - True se o dígito verificador está correto
  */
-function validarDigitoVerificadorCNJ(numeroProcesso) {
-    // Remove caracteres não numéricos
-    const apenasNumeros = numeroProcesso.replace(/\D/g, '');
-    
-    // Verifica se tem 20 dígitos
-    if (apenasNumeros.length !== 20) {
-        return false;
-    }
-    
-    // Extrai as partes do número
-    // Formato: NNNNNNN-DD.AAAA.J.TT.OOOO
-    const nnnnnnn = apenasNumeros.substring(0, 7);  // Número sequencial
-    const dd = apenasNumeros.substring(7, 9);       // Dígito verificador
-    const aaaa = apenasNumeros.substring(9, 13);    // Ano
-    const j = apenasNumeros.substring(13, 14);      // Segmento da Justiça
-    const tt = apenasNumeros.substring(14, 16);     // Tribunal
-    const oooo = apenasNumeros.substring(16, 20);   // Origem
-    
-    // Conforme Resolução CNJ 65/2008, Anexo VIII:
-    // 1. Desloca DD para o final e substitui por 00
-    // 2. Monta: NNNNNNNAAAAJTROOOO00
-    const numeroParaCalculo = nnnnnnn + aaaa + j + tt + oooo + '00';
-    
-    // 3. Calcula: DD = 98 - (número módulo 97)
-    const resto = BigInt(numeroParaCalculo) % 97n;
-    
-    // Calcula o dígito verificador esperado
-    const dvCalculado = 98n - resto;
-    
-    // Formata o DV com 2 dígitos
-    const dvEsperado = dvCalculado.toString().padStart(2, '0');
-    
-    // Compara com o DV informado
-    return dd === dvEsperado;
-}
-
-/**
- * Formata o número do processo CNJ com autocomplete para TJBA
- * @param {string} valor - Número do processo sem formatação
- * @param {boolean} autoComplete - Se deve autocompletar com .8.05.0103
- * @returns {string} - Número formatado NNNNNNN-DD.AAAA.J.TT.OOOO
- */
-function formatarNumeroProcessoCNJ(valor, autoComplete = false) {
-    const apenasNumeros = valor.replace(/\D/g, '');
-    
-    if (apenasNumeros.length === 0) return '';
-    if (apenasNumeros.length <= 7) return apenasNumeros;
-    if (apenasNumeros.length <= 9) return `${apenasNumeros.substring(0, 7)}-${apenasNumeros.substring(7)}`;
-    if (apenasNumeros.length <= 13) {
-        const formatted = `${apenasNumeros.substring(0, 7)}-${apenasNumeros.substring(7, 9)}.${apenasNumeros.substring(9)}`;
-        
-        // Se digitou até o ano completo (13 dígitos) e autocomplete está ativo
-        if (apenasNumeros.length === 13 && autoComplete) {
-            return formatted + '.8.05.0103';
-        }
-        return formatted;
-    }
-    if (apenasNumeros.length <= 14) return `${apenasNumeros.substring(0, 7)}-${apenasNumeros.substring(7, 9)}.${apenasNumeros.substring(9, 13)}.${apenasNumeros.substring(13)}`;
-    if (apenasNumeros.length <= 16) return `${apenasNumeros.substring(0, 7)}-${apenasNumeros.substring(7, 9)}.${apenasNumeros.substring(9, 13)}.${apenasNumeros.substring(13, 14)}.${apenasNumeros.substring(14)}`;
-    
-    return `${apenasNumeros.substring(0, 7)}-${apenasNumeros.substring(7, 9)}.${apenasNumeros.substring(9, 13)}.${apenasNumeros.substring(13, 14)}.${apenasNumeros.substring(14, 16)}.${apenasNumeros.substring(16, 20)}`;
-}
-
 /**
  * Regras de validação por ID do campo
  */
@@ -102,7 +39,12 @@ const validationRules = {
         maxLength: 25,
         required: true,
         pattern: /^\d{7}-\d{2}\.\d{4}\.\d{1}\.\d{2}\.\d{4}$/,
-        customValidation: validarDigitoVerificadorCNJ,
+        customValidation(value) {
+            if (typeof validarDigitoVerificadorCNJ === 'function') {
+                return validarDigitoVerificadorCNJ(value);
+            }
+            return true;
+        },
         errorMessages: {
             required: 'O número do processo é obrigatório',
             pattern: 'Formato inválido. Use: NNNNNNN-DD.AAAA.J.TT.OOOO',
@@ -203,63 +145,6 @@ function initFormValidation() {
         const input = document.getElementById(inputId);
         
         if (!input) return;
-        
-        // Formatação automática para campos de processo
-        if (inputId.includes('processo') || inputId.includes('process')) {
-            let lastValue = '';
-            
-            input.addEventListener('input', function(e) {
-                const cursorPosition = (typeof this.selectionStart === 'number') ? this.selectionStart : this.value.length;
-                const oldValue = lastValue;
-                const newValue = this.value;
-                
-                // Detecta se o usuário digitou um ponto após o ano (13 dígitos numéricos)
-                const apenasNumeros = newValue.replace(/\D/g, '');
-                const shouldAutoComplete = apenasNumeros.length === 13 && !oldValue.endsWith('.8.05.0103');
-                
-                if (shouldAutoComplete) {
-                    // Autocompleta com TJBA
-                    this.value = formatarNumeroProcessoCNJ(newValue, true);
-                    
-                    // Posiciona cursor no final (seguro para ambientes sem API de seleção)
-                    try { if (typeof this.setSelectionRange === 'function') this.setSelectionRange(this.value.length, this.value.length); } catch (err) { /* ignore */ }
-                    
-                    // Valida imediatamente após autocomplete
-                    setTimeout(() => {
-                        const result = validateInput(this);
-                        applyValidationFeedback(this, result);
-                    }, 100);
-                } else {
-                    // Formatação normal
-                    const oldLength = this.value.length;
-                    this.value = formatarNumeroProcessoCNJ(this.value, false);
-                    
-                    // Ajusta a posição do cursor (protege caso setSelectionRange não esteja disponível)
-                    const newLength = this.value.length;
-                    const diff = newLength - oldLength;
-                    try { if (typeof this.setSelectionRange === 'function') this.setSelectionRange(cursorPosition + diff, cursorPosition + diff); } catch (err) { /* ignore */ }
-                }
-                
-                lastValue = this.value;
-            });
-            
-            // Adiciona evento de tecla para detectar ponto
-            input.addEventListener('keydown', function(e) {
-                const apenasNumeros = this.value.replace(/\D/g, '');
-                
-                // Se digitou ponto e tem exatamente 13 dígitos, autocompleta
-                if (e.key === '.' && apenasNumeros.length === 13) {
-                    e.preventDefault();
-                    this.value = formatarNumeroProcessoCNJ(this.value + '.', true);
-                    
-                    // Valida imediatamente
-                    setTimeout(() => {
-                        const result = validateInput(this);
-                        applyValidationFeedback(this, result);
-                    }, 100);
-                }
-            });
-        }
         
         // Validação em tempo real (ao sair do campo)
         input.addEventListener('blur', function() {
@@ -411,8 +296,6 @@ flushToastQueue();
 
 window.FormUtils = {
   sleep,
-  validarDigitoVerificadorCNJ,
-  formatarNumeroProcessoCNJ,
   validateInput,
   applyValidationFeedback,
   initFormValidation,

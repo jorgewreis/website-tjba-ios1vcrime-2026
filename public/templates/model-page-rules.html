@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta lang="pt-BR">
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Template Model - Components - Buttons</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="./../assets/css/reset.css">
+        <link rel="stylesheet" href="./../assets/css/variables.css">
+        <link rel="stylesheet" href="./../assets/css/page.css">
+        <link rel="stylesheet" href="./../assets/css/form.css">
+        <link rel="stylesheet" href="./../assets/css/table.css">
+        
+    </head>
+<body class="page-internal">
+
+    <!-- SPACING -->
+    <div class="spacing-top-page"></div>
+
+    <div class="header-page">
+        <!-- Mapa de navegação do site -->
+        <div class="location">
+            <span class="all">Internal - Cartório - Cartas Expedidas -</span>
+            <span class="specific">Regras</span>
+        </div>
+
+        <!-- Título e descrição da página -->
+        <h1 class="title-page">Regras de Alocação de Carta Expedida</h1>
+        <p class="description-page">Caso tenha alguma dificuldade no preenchimento das regras, verifique os arquivos abaixo para obter ajuda.</p>
+        
+        <!-- Badges de arquivos para download -->
+        <div class="badge file">
+            <img src="./../assets/icons/Office-File-Pdf-1--Streamline-Ultimate.png" alt="Ícone de arquivo PDF">
+            <span>Guia Completo - Divisão de Tarefas</span>
+        </div>
+    </div>
+
+    <div class="card-page">       
+        <div class="line-table header">Regra de alocação automática - Envio</div>
+        <div class="line-filter">
+            <div class="block-cell">
+                <label for="filter-processo">Servidor</label>
+                <select class="width-md height-md" id="filter-processo">
+                    <!-- buscar servidores no bd -->
+                    <option value="Mário Bastos" selected>Mário Bastos</option>
+                </select>
+            </div>            
+        </div>        
+        <div class="line-filter">
+            <div class="block-cell">                
+                <label class="status status-primary-light">*As tarefas de envio de Carta Expedida serão alocadas automaticamente para este usuário</label>
+            </div>
+        </div>
+
+        <!-- Ações -->
+        <div class="line-buttons">
+            <button class="btn btn-secondary">Voltar</button>
+            <button class="btn btn-primary">Salvar</button>
+            <!-- registrar na tabela "rules", a regra como "allocate-cartasexpedidas-send" e o usuário selecionado -->
+        </div>
+    </div>
+        
+    <!-- Develop Info -->
+    <div class="footer-page">
+        <div class="location">
+            <span class="all">Aplicativo web desenvolvido integralmente por </span>
+            <span class="specific">Jorge Reis Develop</span>
+            <span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span>
+        </div>
+    </div>
+
+</body>
+</html>

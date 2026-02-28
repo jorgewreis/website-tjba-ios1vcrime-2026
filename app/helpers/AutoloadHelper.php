@@ -9,6 +9,8 @@ spl_autoload_register(static function (string $class): void {
     $directories = [
         __DIR__ . '/',
         __DIR__ . '/../services/',
+        __DIR__ . '/../repositories/',
+        __DIR__ . '/../rules/',
     ];
 
     $file = str_replace('\\', '/', $class) . '.php';
