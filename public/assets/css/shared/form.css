@@ -520,6 +520,15 @@ input[type="number"] {
     font-family: "Poppins", sans-serif;
 }
 
+input[type="text"].readonly{
+    background-color: var(--color-gray-100);
+    color: var(--primary-color-active);
+    font-weight: 600;
+    box-shadow: none;
+    border: none;
+    pointer-events: none;
+}
+
 /* LABEL */
 label {
     font-size: 12px;

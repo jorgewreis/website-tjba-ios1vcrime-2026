@@ -193,17 +193,17 @@ $stateOptions = [
             <div class="row filter">
                 <div class="col filter">
                     <label for="filter-processo">Processo</label>
-                    <input type="text" id="filter-processo" class="width-md height-md" value="<?php echo htmlspecialchars($processoNumero, ENT_QUOTES); ?>" readonly>
+                    <input type="text" id="filter-processo" class="width-md height-md readonly" value="<?php echo htmlspecialchars($processoNumero, ENT_QUOTES); ?>" readonly>
                 </div>
                 <div class="col filter">
                     <label for="filter-classe">Classe</label>
-                    <input type="text" id="filter-classe" class="width-lg height-md" value="<?php echo htmlspecialchars($classeCodigo !== '' ? ($classeCodigo . ' - ' . $classeNome) : $classeNome, ENT_QUOTES); ?>" readonly>
+                    <input type="text" id="filter-classe" class="width-lg height-md readonly" value="<?php echo htmlspecialchars($classeCodigo !== '' ? ($classeCodigo . ' - ' . $classeNome) : $classeNome, ENT_QUOTES); ?>" readonly>
                 </div>
             </div>
             <div class="row filter">
                 <div class="col filter">
                     <label for="filter-tipo">Finalidade</label>
-                    <select class="width-md height-md" id="filter-tipo" required>
+                    <select class="width-md height-lg" id="filter-tipo" required>
                         <option value="" disabled>Selecione aqui</option>
                         <?php foreach ($finalidadeOptions as $option): ?>
                             <option value="<?php echo htmlspecialchars($option, ENT_QUOTES); ?>"<?php echo $finalidadeValue === $option ? ' selected' : ''; ?>><?php echo htmlspecialchars($option); ?></option>
@@ -373,30 +373,27 @@ $stateOptions = [
 
                 const fetchCidadeInfo = () => {
                     const cidade = cidadeInput.value.trim();
-                    if (cidade.length < 2) {
-                        return;
-                    }
+                    if (cidade.length < 2) return;
                     fetch('/api/cartorio-cartas-expedidas/buscar-cidade.php?cidade=' + encodeURIComponent(cidade))
                         .then((response) => response.json())
                         .then((data) => {
-                            if (!data || !data.found) {
-                                hiddenComarcaInput.value = '';
-                                showFeedback('Não foi possível encontrar a comarca informada.', 'error');
-                                return;
-                            }
+                            if (!data || !data.found) return;
                             if (data.uf && estadoSelect) {
                                 estadoSelect.value = data.uf;
                             }
-                            if (data.nome) {
-                                cidadeInput.value = formatCidade(data.nome);
-                            }
-                            if (data.id) {
-                                hiddenComarcaInput.value = data.id;
+                            const status = (data.status_cidade || '').trim();
+                            if (status.toUpperCase() === 'CCM') {
+                                alert('Comarca com Central de Mandados');
+                                cidadeInput.value = '';
+                                if (hiddenComarcaInput) hiddenComarcaInput.value = '';
+                            } else {
+                                if (status.toLowerCase() === 'agregada' && data.nome) {
+                                    cidadeInput.value = formatCidade(data.nome);
+                                }
+                                if (data.id && hiddenComarcaInput) hiddenComarcaInput.value = data.id;
                             }
                         })
-                        .catch(() => {
-                            showFeedback('Erro ao buscar a comarca da cidade informada.', 'error');
-                        });
+                        .catch(() => {});
                 };
 
                 cidadeInput.addEventListener('blur', () => {
@@ -410,6 +407,9 @@ $stateOptions = [
                     const payloadState = getCurrentState();
                     if (payloadState.finalidade === '' || payloadState.cidade === '' || payloadState.estado === '') {
                         return showFeedback('Finalidade, cidade e estado são obrigatórios.', 'error');
+                    }
+                    if (normalizeCidadeForCompare(payloadState.cidade) === 'ilheus') {
+                        return showFeedback('O cadastro não é permitido para a cidade de Ilhéus (comarca de origem).', 'error');
                     }
                     if (!hiddenComarcaInput.value.trim()) {
                         return showFeedback('Selecione uma cidade válida para que a comarca seja identificada.', 'error');
