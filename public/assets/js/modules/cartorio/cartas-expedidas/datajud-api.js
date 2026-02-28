@@ -67,6 +67,8 @@
                 }
                 console.error('Pesquisa DataJud falhou', error);
                 handleClasseFallback();
+                setStatusMessage('Classe');
+                if (statusElement) statusElement.style.color = 'var(--color-gray-700)';
             })
             .finally(() => {
                 activeController = null;
@@ -76,7 +78,7 @@
     function prepareConsultingState() {
         setClasseField('Aguarde...', false, 'var(--warning-color-active)', 'var(--warning-color-bg-light)');
         setStatusMessage('Consultando o DataJud...');
-        statusElement.style.color = 'var(--warning-color-active)';
+        if (statusElement) statusElement.style.color = 'var(--warning-color-active)';
         toggleInputs(true);
     }
 
@@ -86,11 +88,11 @@
             if (classe?.codigo || classe?.descricao) {
                 applyClasseResult(classe);
                 setStatusMessage('*Classe obtida via DataJud');
-                statusElement.style.color = 'var(--success-color)';
+                if (statusElement) statusElement.style.color = 'var(--success-color)';
             } else {
                 handleClasseFallback();
                 setStatusMessage('Classe');
-                statusElement.style.color = 'var(--color-gray-700)';
+                if (statusElement) statusElement.style.color = 'var(--color-gray-700)';
             }
         }, 2000);
     }
