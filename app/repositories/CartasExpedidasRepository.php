@@ -8,6 +8,9 @@ final class CartasExpedidasRepository
     private PDO $connection;
     private string $table;
 
+    /** Collation única para evitar "Illegal mix of collations" em JOINs entre tabelas. */
+    private const COLLATION = 'utf8mb4_unicode_ci';
+
     private const STATUS_ORDER = [
         'aguardando assinatura',
         'aguardando envio',
@@ -27,8 +30,10 @@ final class CartasExpedidasRepository
     {
         [$whereClause, $params] = $this->buildFilterClause($filters, 'ce');
 
+        $coll = self::COLLATION;
         $orderField = sprintf(
-            "FIELD(ce.`status`, %s)",
+            "FIELD(ce.`status` COLLATE %s, %s)",
+            $coll,
             implode(
                 ', ',
                 array_map(
@@ -38,10 +43,7 @@ final class CartasExpedidasRepository
             )
         );
 
-        $fromClause = sprintf(
-            '`%s` ce LEFT JOIN `processos` p ON p.`id` = ce.`processo_origem_id` LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id`',
-            $this->table
-        );
+        $fromClause = $this->buildFromClause();
 
         $sql = sprintf(
             'SELECT ce.`id` AS `IdCarta`, ce.`numero_processo_origem` AS `Processo`, ce.`finalidade` AS `Finalidade`, ce.`prazo_dias` AS `Prazo`, ce.`cidade_destino` AS `Comarca`, ce.`uf_destino` AS `Estado`, ce.`status` AS `Status`, ce.`created_at` AS `Data`, COALESCE(cl.`nome`, \'Classe não informada\') AS `ClasseNome` FROM %s %s ORDER BY %s, ce.`created_at` DESC LIMIT :limit OFFSET :offset',
@@ -64,10 +66,7 @@ final class CartasExpedidasRepository
     public function count(array $filters): int
     {
         [$whereClause, $params] = $this->buildFilterClause($filters, 'ce');
-        $fromClause = sprintf(
-            '`%s` ce LEFT JOIN `processos` p ON p.`id` = ce.`processo_origem_id` LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id`',
-            $this->table
-        );
+        $fromClause = $this->buildFromClause();
         $sql = sprintf('SELECT COUNT(*) AS total FROM %s %s', $fromClause, $whereClause ? 'WHERE ' . $whereClause : '');
         $statement = $this->connection->prepare($sql);
         foreach ($params as $name => $value) {
@@ -81,10 +80,7 @@ final class CartasExpedidasRepository
     public function countByStatus(array $filters): array
     {
         [$whereClause, $params] = $this->buildFilterClause($filters, 'ce');
-        $fromClause = sprintf(
-            '`%s` ce LEFT JOIN `processos` p ON p.`id` = ce.`processo_origem_id` LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id`',
-            $this->table
-        );
+        $fromClause = $this->buildFromClause();
         $sql = sprintf(
             'SELECT ce.`status` AS `Status`, COUNT(*) AS total FROM %s %s GROUP BY ce.`status`',
             $fromClause,
@@ -111,10 +107,7 @@ final class CartasExpedidasRepository
     public function countByClasse(array $filters): array
     {
         [$whereClause, $params] = $this->buildFilterClause($filters, 'ce');
-        $fromClause = sprintf(
-            '`%s` ce LEFT JOIN `processos` p ON p.`id` = ce.`processo_origem_id` LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id`',
-            $this->table
-        );
+        $fromClause = $this->buildFromClause();
         $sql = sprintf(
             'SELECT COALESCE(cl.`nome`, \'Classe não informada\') AS `Classe`, COUNT(*) AS total FROM %s %s GROUP BY cl.`id`',
             $fromClause,
@@ -227,19 +220,33 @@ final class CartasExpedidasRepository
         return $this->table;
     }
 
+    private function buildFromClause(): string
+    {
+        $coll = self::COLLATION;
+        return sprintf(
+            '`%s` ce LEFT JOIN `processos` p ON p.`id` COLLATE %s = ce.`processo_origem_id` COLLATE %s LEFT JOIN `classes` cl ON cl.`id` COLLATE %s = p.`classe_id` COLLATE %s',
+            $this->table,
+            $coll,
+            $coll,
+            $coll,
+            $coll
+        );
+    }
+
     private function buildFilterClause(array $filters, string $alias = ''): array
     {
         $clauses = [];
         $params = [];
         $prefix = $alias !== '' ? $alias . '.' : '';
 
+        $coll = self::COLLATION;
         if (isset($filters['classe']) && $filters['classe'] !== '') {
-            $clauses[] = '(cl.`codigo` = :classe OR cl.`nome` = :classe)';
+            $clauses[] = "(cl.`codigo` COLLATE {$coll} = :classe OR cl.`nome` COLLATE {$coll} = :classe)";
             $params[':classe'] = trim($filters['classe']);
         }
 
         if (isset($filters['status']) && $filters['status'] !== '') {
-            $clauses[] = $prefix . '`status` = :status';
+            $clauses[] = $prefix . "`status` COLLATE {$coll} = :status";
             $params[':status'] = trim($filters['status']);
         }
 

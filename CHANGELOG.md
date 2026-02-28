@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0122
+
+**Data:** 2026-02-28 12:17:26 | **Commit:** `f9c489e` | **Tipo:** `patch`
+
+- Fix: alterações no collation
+
 ## V. 1.02.0121
 
 **Data:** 2026-02-28 12:14:33 | **Commit:** `2e18821` | **Tipo:** `patch`
@@ -1770,6 +1776,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
