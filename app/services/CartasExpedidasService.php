@@ -74,8 +74,8 @@ final class CartasExpedidasService
         if ($this->dataJudService !== null) {
             try {
                 $dataJud = $this->dataJudService->searchProcesso($digits);
-                $classeCodigo = $dataJud['classe']['codigo'] ?? $classeCodigo;
-                $classeNome = $dataJud['classe']['descricao'] ?? $classeNome;
+                $classeCodigo = trim((string) ($dataJud['classe']['codigo'] ?? $classeCodigo));
+                $classeNome = trim((string) ($dataJud['classe']['descricao'] ?? $classeNome));
                 $dataFato = $this->parseDate($dataJud['data_ajuizamento'] ?? null) ?? $dataFato;
 
                 $tribunalSigla = $this->normalizeTribunalSigla($dataJud['tribunal'] ?? 'TJBA');
@@ -110,7 +110,7 @@ final class CartasExpedidasService
             $varaOrigemId = $this->varasRepository->ensureVara($comarcaOrigemId, '1ª Vara', null);
         }
 
-        $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeNome !== '' ? TextFormatter::formatProperName($classeNome, 200) : $classeCodigo);
+        $classeId = $this->classesRepository->ensureClass((string) $classeCodigo, $classeNome !== '' ? TextFormatter::formatProperName((string) $classeNome, 200) : (string) $classeCodigo);
         $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, $dataFato, $sigiloso);
 
         $ufDestino = strtoupper(trim((string) ($payload['estado'] ?? $payload['uf'] ?? '')));
