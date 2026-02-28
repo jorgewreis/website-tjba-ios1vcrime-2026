@@ -313,6 +313,7 @@ try {
                             const status = (data.status_cidade || '').trim();
                             if (status.toUpperCase() === 'CCM') {
                                 alert('Comarca com Central de Mandados');
+                                cidadeInput.value = '';
                             } else if (status.toLowerCase() === 'agregada' && data.nome) {
                                 cidadeInput.value = formatCidade(data.nome);
                             }

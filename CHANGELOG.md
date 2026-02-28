@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0135
+
+**Data:** 2026-02-28 14:15:37 | **Commit:** `e465eb9` | **Tipo:** `patch`
+
+- Fix: correção na criação de carta
+
 ## V. 1.02.0134
 
 **Data:** 2026-02-28 13:59:50 | **Commit:** `ccd53d6` | **Tipo:** `patch`
@@ -1848,6 +1854,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
