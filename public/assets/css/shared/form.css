@@ -530,9 +530,9 @@ input[type="text"].readonly{
 }
 
 input[type="text"].status-finished {
-    background-color: var(--success-color-bg-light);
-    color: var(--success-color-active);
-    pointer-events: none;
+    background-color: var(--success-color-bg-light) !important;
+    color: var(--success-color-active) !important;
+    pointer-events: none !important;
 }
 
 /* LABEL */

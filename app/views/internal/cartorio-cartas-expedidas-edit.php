@@ -241,15 +241,7 @@ $stateOptions = [
                         <?php endforeach; ?>
                     </select>
                 </div>
-            </div>
-            <div class="row filter">
-                <div class="col">
-                    <label class="status status-primary-light">*Conforme regra de divisão de tarefas, todas as Cartas Expedidas serão alocadas automaticamente e deverão ser remetidas por <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></label>
-                </div>
-                <div class="col">
-                    <label id="cadastro-feedback" class="status-placeholder" aria-live="polite"></label>
-                </div>
-            </div>
+            </div>            
             <div class="row filter">
                 <div class="col filter">
                     <label for="filter-observacoes">Observações</label>
