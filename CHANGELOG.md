@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0140
+
+**Data:** 2026-02-28 15:10:00 | **Commit:** `7823fc1` | **Tipo:** `patch`
+
+- Fix: alteração do tamanho do select
+
 ## V. 1.02.0139
 
 **Data:** 2026-02-28 15:03:23 | **Commit:** `b90fcfb` | **Tipo:** `patch`
@@ -1878,6 +1884,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

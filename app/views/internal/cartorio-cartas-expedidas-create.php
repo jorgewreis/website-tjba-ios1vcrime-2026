@@ -149,7 +149,7 @@ try {
             </div>
             <div class="col filter">
                 <label for="filter-tipo">Finalidade</label>
-                <select class="width-md height-md" id="filter-tipo" required>
+                <select class="width-lg height-md" id="filter-tipo" required>
                     <option value="" selected disabled>Selecione aqui</option>
                     <option value="Intimação para Audiência">Intimação para Audiência</option>
                     <option value="Intimação de Decisão Interlocutória">Intimação de Decisão</option>

@@ -529,6 +529,12 @@ input[type="text"].readonly{
     pointer-events: none;
 }
 
+input[type="text"].status-finished {
+    background-color: var(--success-color-bg-light);
+    color: var(--success-color-active);
+    pointer-events: none;
+}
+
 /* LABEL */
 label {
     font-size: 12px;
