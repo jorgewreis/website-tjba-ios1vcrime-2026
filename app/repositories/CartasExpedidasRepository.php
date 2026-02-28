@@ -131,7 +131,7 @@ final class CartasExpedidasRepository
     {
         $required = [
             'id', 'processo_origem_id', 'numero_processo_origem', 'finalidade', 'prazo_dias',
-            'comarca_destino_id', 'cidade_destino', 'uf_destino', 'vara_destino_id', 'vara_destino_nome', 'status',
+            'comarca_destino_id', 'cidade_destino', 'uf_destino', 'status',
         ];
         foreach ($required as $key) {
             if (!array_key_exists($key, $row) || (string) $row[$key] === '') {
@@ -154,8 +154,8 @@ final class CartasExpedidasRepository
         $statement->bindValue(':cidade_destino', $row['cidade_destino']);
         $statement->bindValue(':uf_destino', $row['uf_destino']);
         $statement->bindValue(':numero_processo_destino', $row['numero_processo_destino'] ?? null);
-        $statement->bindValue(':vara_destino_id', $row['vara_destino_id']);
-        $statement->bindValue(':vara_destino_nome', $row['vara_destino_nome']);
+        $statement->bindValue(':vara_destino_id', $row['vara_destino_id'] ?? null);
+        $statement->bindValue(':vara_destino_nome', $row['vara_destino_nome'] ?? null);
         $statement->bindValue(':status', $row['status']);
         $statement->bindValue(':observacoes', $row['observacoes'] ?? null);
         $statement->execute();

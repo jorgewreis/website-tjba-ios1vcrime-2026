@@ -36,7 +36,6 @@ final class ProcessosRepository
             30
         );
 
-        $dataFatoVal = $dataFato ?? date('Y-m-d');
         $statement = $this->connection->prepare(
             sprintf(
                 'INSERT INTO `%s` (`id`, `numero_processo`, `classe_id`, `data_fato`, `sigiloso`, `created_at`, `updated_at`) VALUES (:id, :numero_processo, :classe_id, :data_fato, :sigiloso, NOW(), NOW())',
@@ -46,7 +45,7 @@ final class ProcessosRepository
         $statement->bindValue(':id', $id);
         $statement->bindValue(':numero_processo', $numeroProcesso);
         $statement->bindValue(':classe_id', $classeId);
-        $statement->bindValue(':data_fato', $dataFatoVal);
+        $statement->bindValue(':data_fato', $dataFato);
         $statement->bindValue(':sigiloso', $sigiloso ? 1 : 0, PDO::PARAM_INT);
         $statement->execute();
 

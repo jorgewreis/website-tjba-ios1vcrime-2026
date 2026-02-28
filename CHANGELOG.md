@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0133
+
+**Data:** 2026-02-28 13:38:46 | **Commit:** `856c0e7` | **Tipo:** `patch`
+
+- Fix: correção de cadastro de cartas expedidas
+
 ## V. 1.02.0132
 
 **Data:** 2026-02-28 13:25:35 | **Commit:** `5f5d1c3` | **Tipo:** `patch`
@@ -1836,6 +1842,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

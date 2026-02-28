@@ -225,7 +225,7 @@ if ($totalPages > 0) {
                     </div>
                 </div>
                 <div class="col filter comarca-info">
-                    <span class="minor-info">Comarca de origem</span>
+                    <span class="minor-info">Comarca de destino</span>
                     <span class="major-info"><?php echo htmlspecialchars($row['Comarca'] . ' - ' . $row['Estado']); ?></span>
                 </div>
                 <div class="col filter detalhes-info">

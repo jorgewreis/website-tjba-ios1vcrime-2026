@@ -68,7 +68,6 @@ final class CartasExpedidasService
 
         $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
         $classeNome = trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? ''));
-        $dataFato = isset($payload['data_ajuizamento']) ? $this->parseDate($payload['data_ajuizamento']) : null;
         $sigiloso = !empty($payload['nivel_sigilo']);
 
         if ($this->dataJudService !== null) {
@@ -76,14 +75,13 @@ final class CartasExpedidasService
                 $dataJud = $this->dataJudService->searchProcesso($digits);
                 $classeCodigo = trim((string) ($dataJud['classe']['codigo'] ?? $classeCodigo));
                 $classeNome = trim((string) ($dataJud['classe']['descricao'] ?? $classeNome));
-                $dataFato = $this->parseDate($dataJud['data_ajuizamento'] ?? null) ?? $dataFato;
 
                 $tribunalSigla = $this->normalizeTribunalSigla($dataJud['tribunal'] ?? 'TJBA');
                 $ufOrigem = $this->tribunalSiglaToUf($tribunalSigla);
 
                 $tribunalId = $this->tribunaisRepository->ensureTribunal($tribunalSigla, 'Tribunal de Justiça - ' . $tribunalSigla);
                 $comarcaOrigemNome = 'Comarca origem';
-                $comarcaOrigemId = $this->comarcasRepository->ensureComarca($tribunalId, $ufOrigem, $comarcaOrigemNome, 0, 0);
+                $comarcaOrigemId = $this->comarcasRepository->ensureComarca($tribunalId, $ufOrigem, $comarcaOrigemNome);
 
                 $orgao = $dataJud['orgao_julgador'] ?? [];
                 $varaNome = $orgao['nome'] ?? '1ª Vara';
@@ -96,7 +94,7 @@ final class CartasExpedidasService
                 $tribunalSigla = 'TJBA';
                 $ufOrigem = 'BA';
                 $tribunalId = $this->tribunaisRepository->ensureTribunal($tribunalSigla, 'Tribunal de Justiça da Bahia');
-                $comarcaOrigemId = $this->comarcasRepository->ensureComarca($tribunalId, $ufOrigem, 'Comarca origem', 0, 0);
+                $comarcaOrigemId = $this->comarcasRepository->ensureComarca($tribunalId, $ufOrigem, 'Comarca origem');
                 $varaOrigemId = $this->varasRepository->ensureVara($comarcaOrigemId, '1ª Vara', null);
             }
         } else {
@@ -106,12 +104,12 @@ final class CartasExpedidasService
             $tribunalSigla = 'TJBA';
             $ufOrigem = 'BA';
             $tribunalId = $this->tribunaisRepository->ensureTribunal($tribunalSigla, 'Tribunal de Justiça da Bahia');
-            $comarcaOrigemId = $this->comarcasRepository->ensureComarca($tribunalId, $ufOrigem, 'Comarca origem', 0, 0);
+            $comarcaOrigemId = $this->comarcasRepository->ensureComarca($tribunalId, $ufOrigem, 'Comarca origem');
             $varaOrigemId = $this->varasRepository->ensureVara($comarcaOrigemId, '1ª Vara', null);
         }
 
         $classeId = $this->classesRepository->ensureClass((string) $classeCodigo, $classeNome !== '' ? TextFormatter::formatProperName((string) $classeNome, 200) : (string) $classeCodigo);
-        $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, $dataFato, $sigiloso);
+        $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, $sigiloso);
 
         $ufDestino = strtoupper(trim((string) ($payload['estado'] ?? $payload['uf'] ?? '')));
         if (strlen($ufDestino) !== 2) {
@@ -130,17 +128,7 @@ final class CartasExpedidasService
         if ($comarcaDestino !== null) {
             $comarcaDestinoId = (string) $comarcaDestino['id'];
         } else {
-            $comarcaDestinoId = $this->comarcasRepository->ensureComarca($tribunalDestinoId, $ufDestino, $cidadeDestino, 0, 0);
-        }
-
-        $varaDestino = $this->varasRepository->findFirstByComarca($comarcaDestinoId);
-        if ($varaDestino !== null) {
-            $varaDestinoId = (string) $varaDestino['id'];
-            $varaDestinoNome = (string) $varaDestino['nome'];
-        } else {
-            $varaDestinoId = $this->varasRepository->ensureVara($comarcaDestinoId, $cidadeDestino . ' - 1ª Vara', null);
-            $varaDestino = $this->varasRepository->findFirstByComarca($comarcaDestinoId);
-            $varaDestinoNome = $varaDestino !== null ? (string) $varaDestino['nome'] : $cidadeDestino . ' - 1ª Vara';
+            $comarcaDestinoId = $this->comarcasRepository->ensureComarca($tribunalDestinoId, $ufDestino, $cidadeDestino);
         }
 
         $finalidade = trim((string) ($payload['finalidade'] ?? ''));
@@ -171,8 +159,8 @@ final class CartasExpedidasService
             'cidade_destino' => $cidadeDestino,
             'uf_destino' => $ufDestino,
             'numero_processo_destino' => null,
-            'vara_destino_id' => $varaDestinoId,
-            'vara_destino_nome' => $varaDestinoNome,
+            'vara_destino_id' => null,
+            'vara_destino_nome' => null,
             'status' => $status,
             'observacoes' => trim((string) ($payload['observacoes'] ?? '')),
         ];

@@ -60,8 +60,8 @@ final class ComarcasRepository
         return $result === false ? null : $result;
     }
 
-    /** Retorna o id da comarca (existente ou recém-criada). cidade e status_cidade são int. */
-    public function ensureComarca(string $tribunalId, string $uf, string $nome, int $cidade = 0, int $statusCidade = 0): string
+    /** Retorna o id da comarca (existente ou recém-criada). cidade = nome da comarca quando null; status_cidade = 'Ativa'. */
+    public function ensureComarca(string $tribunalId, string $uf, string $nome, ?string $cidade = null, string $statusCidade = 'Ativa'): string
     {
         $uf = strtoupper(trim($uf));
         $nome = trim($nome);
@@ -73,6 +73,8 @@ final class ComarcasRepository
         if ($existing !== null) {
             return (string) $existing['id'];
         }
+
+        $cidadeVal = $cidade !== null && trim($cidade) !== '' ? trim($cidade) : $nome;
 
         $id = IdGenerator::generateUniquePrefixedId(
             $this->connection,
@@ -92,8 +94,8 @@ final class ComarcasRepository
         $statement->bindValue(':tribunal_id', $tribunalId);
         $statement->bindValue(':uf', $uf);
         $statement->bindValue(':nome', $nome);
-        $statement->bindValue(':cidade', $cidade, PDO::PARAM_INT);
-        $statement->bindValue(':status_cidade', $statusCidade, PDO::PARAM_INT);
+        $statement->bindValue(':cidade', $cidadeVal);
+        $statement->bindValue(':status_cidade', $statusCidade);
         $statement->execute();
 
         return $id;
