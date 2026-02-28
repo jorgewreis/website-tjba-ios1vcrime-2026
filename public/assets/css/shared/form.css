@@ -534,6 +534,16 @@ input[type="text"].status-finished {
     color: var(--success-color-active) !important;
     pointer-events: none !important;
 }
+input[type="text"].status-warning {
+    background-color: var(--warning-color-bg-light) !important;
+    color: var(--warning-color-active) !important;
+    pointer-events: none !important;
+}
+input[type="text"].status-error {
+    background-color: var(--danger-color-bg-light) !important;
+    color: var(--danger-color-active) !important;
+    pointer-events: none !important;
+}
 
 /* LABEL */
 label {

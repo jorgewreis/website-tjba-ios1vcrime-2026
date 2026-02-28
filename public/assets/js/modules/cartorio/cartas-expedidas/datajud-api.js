@@ -76,6 +76,7 @@
     });
 
     function prepareConsultingState() {
+        classeInput.classList.remove('status-finished');
         setClasseField('Aguarde...', false, 'var(--warning-color-active)', 'var(--warning-color-bg-light)');
         setStatusMessage('Consultando o DataJud...');
         if (statusElement) statusElement.style.color = 'var(--warning-color-active)';
@@ -100,7 +101,7 @@
     function applyClasseResult(classe) {
         const representation = classe.descricao || classe.codigo || 'Classe';
         setClasseField(representation, true, '', '');
-        classeInput.classList.add('status-finished');        
+        classeInput.classList.add('status-finished');
         classeInput.readOnly = true;
         toggleInputs(false);
         if (classeCodigoField) {
@@ -113,6 +114,7 @@
 
     function handleClasseFallback() {
         clearClasseTimeout();
+        classeInput.classList.remove('status-finished');
         setClasseField('Classe não informada', false, '', '');
         classeInput.readOnly = false;
         toggleInputs(false);
