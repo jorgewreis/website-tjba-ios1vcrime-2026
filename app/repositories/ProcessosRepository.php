@@ -72,6 +72,26 @@ final class ProcessosRepository
         return $result === false ? null : $result;
     }
 
+    public function findById(string $id): ?array
+    {
+        $id = trim((string) $id);
+        if ($id === '') {
+            return null;
+        }
+
+        $statement = $this->connection->prepare(
+            sprintf(
+                'SELECT `id`, `numero_processo`, `classe_id`, `data_fato`, `sigiloso`, `created_at`, `updated_at` FROM `%s` WHERE `id` = :id LIMIT 1',
+                $this->table
+            )
+        );
+        $statement->bindValue(':id', $id);
+        $statement->execute();
+
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+        return $result === false ? null : $result;
+    }
+
     private function updateIfNeeded(string $id, ?string $classeId, ?string $dataFato, bool $sigiloso): void
     {
         $statement = $this->connection->prepare(

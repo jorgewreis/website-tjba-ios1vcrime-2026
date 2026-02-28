@@ -72,4 +72,24 @@ final class ClassesRepository
         $result = $statement->fetch(PDO::FETCH_ASSOC);
         return $result === false ? null : $result;
     }
+
+    public function findById(string $id): ?array
+    {
+        $id = trim((string) $id);
+        if ($id === '') {
+            return null;
+        }
+
+        $statement = $this->connection->prepare(
+            sprintf(
+                'SELECT `id`, `codigo`, `nome`, `created_at`, `updated_at` FROM `%s` WHERE `id` = :id LIMIT 1',
+                $this->table
+            )
+        );
+        $statement->bindValue(':id', $id);
+        $statement->execute();
+
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+        return $result === false ? null : $result;
+    }
 }

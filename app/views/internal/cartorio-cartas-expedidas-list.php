@@ -233,7 +233,7 @@ if ($totalPages > 0) {
                     <span class="major-info"><?php echo htmlspecialchars($row['Prazo'] . ' dias'); ?></span>
                 </div>
                 <div class="row">
-                    <div class="col button-table" title="Editar">
+                    <div class="col button-table button-edit" data-carta-id="<?php echo htmlspecialchars($row['IdCarta'], ENT_QUOTES); ?>" title="Editar">
                         <i class="fi fi-rr-file-edit"></i>
                     </div>
                     <div class="col status-task" title="<?php echo $row['Status'] ?>">
@@ -382,6 +382,15 @@ if ($totalPages > 0) {
                         document.execCommand('copy');
                         document.body.removeChild(tempInput);
                     }
+                });
+            });
+            document.querySelectorAll('.button-edit').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    const cartaId = button.dataset.cartaId;
+                    if (!cartaId) {
+                        return;
+                    }
+                    window.location.href = '/frame.php?page=cartasexpedidasedit&id=' + encodeURIComponent(cartaId);
                 });
             });
         })();

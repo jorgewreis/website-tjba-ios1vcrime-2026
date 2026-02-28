@@ -31,4 +31,5 @@ echo json_encode([
     'nome' => (string) ($row['nome'] ?? ''),
     'cidade' => (string) ($row['cidade'] ?? $row['nome'] ?? ''),
     'status_cidade' => (string) ($row['status_cidade'] ?? ''),
+    'id' => (string) ($row['id'] ?? ''),
 ], JSON_UNESCAPED_UNICODE);
