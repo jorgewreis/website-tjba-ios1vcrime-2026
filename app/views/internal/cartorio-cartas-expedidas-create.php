@@ -59,6 +59,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+$currentUserName = '';
+$currentUserId = $_SESSION['id_usuario'] ?? null;
+if ($currentUserId !== null && $currentUserId !== '') {
+    $stmtU = $connection->prepare('SELECT `nome`, `sobrenome` FROM `usuarios` WHERE `id_usuario` = ? LIMIT 1');
+    $stmtU->execute([$currentUserId]);
+    $u = $stmtU->fetch(PDO::FETCH_ASSOC);
+    if ($u !== false) {
+        $n = trim((string) ($u['nome'] ?? ''));
+        $s = trim((string) ($u['sobrenome'] ?? ''));
+        $currentUserName = $s !== '' ? $n . ' ' . $s : $n;
+    }
+}
+
 $ruleServidor = '?';
 $ruleName = 'ALLOCATE-CARTASEXPEDIDAS';
 try {
@@ -249,6 +262,9 @@ try {
     <script src="/assets/js/modules/cartorio/cartas-expedidas/user.js"></script>
     <script src="/assets/js/modules/cartorio/cartas-expedidas/text-formatter.js"></script>
     <script>
+        window.__currentUserName = <?php echo json_encode($currentUserName, JSON_UNESCAPED_UNICODE); ?>;
+    </script>
+    <script>
         (() => {
             const btn = document.getElementById('cadastrar-btn');
             const feedback = document.getElementById('cadastro-feedback');
@@ -327,7 +343,9 @@ try {
                     return;
                 }
 
-                const usuarioAtual = typeof getCurrentUserName === 'function' ? getCurrentUserName() : null;
+                const usuarioAtual = (typeof window.__currentUserName === 'string' && window.__currentUserName.trim() !== '')
+                    ? window.__currentUserName.trim()
+                    : (typeof getCurrentUserName === 'function' ? getCurrentUserName() : null);
                 if (!usuarioAtual) {
                     return showFeedback('Não foi possível identificar o usuário logado.', 'error');
                 }
