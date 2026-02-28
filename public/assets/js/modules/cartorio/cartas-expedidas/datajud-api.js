@@ -1,5 +1,7 @@
 (function () {
-    const API_ENDPOINT = '../../api/datajud/search-processo.php';
+    const API_ENDPOINT = (typeof window.CARTAS_EXPEDIDAS_DATAJUD_ENDPOINT !== 'undefined' && window.CARTAS_EXPEDIDAS_DATAJUD_ENDPOINT)
+        ? window.CARTAS_EXPEDIDAS_DATAJUD_ENDPOINT
+        : '/api/datajud/search-processo.php';
     const classeInput = document.getElementById('filter-classe');
     const processoInput = document.getElementById('filter-processo');
     const classeCodigoField = document.getElementById('hidden-classe-codigo');
@@ -31,17 +33,29 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ numero: rawDigits }),
             signal: activeController.signal,
+            credentials: 'same-origin',
         })
-            .then((response) =>
-                response.json().then((body) => ({
-                    status: response.status,
-                    body,
-                })))
-            .then(({ status, body }) => {
-                if (status >= 400 || body.error) {
-                    throw new Error(body.error || 'Erro ao consultar o DataJud.');
+            .then(function (response) {
+                const contentType = (response.headers.get('Content-Type') || '').toLowerCase();
+                if (contentType.indexOf('application/json') !== -1) {
+                    return response.json().then(function (body) {
+                        return { status: response.status, body: body };
+                    });
                 }
-                const processo = body.data;
+                return response.text().then(function (text) {
+                    if (response.ok) {
+                        throw new Error('Resposta inválida do servidor.');
+                    }
+                    throw new Error('Serviço de consulta ao DataJud indisponível. Tente mais tarde.');
+                });
+            })
+            .then(function (result) {
+                const status = result.status;
+                const body = result.body;
+                if (status >= 400 || (body && body.error)) {
+                    throw new Error((body && body.error) || 'Erro ao consultar o DataJud.');
+                }
+                const processo = body && body.data;
                 if (!processo) {
                     throw new Error('Dados do processo ausentes no DataJud.');
                 }
