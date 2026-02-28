@@ -37,6 +37,48 @@ final class ComarcasRepository
         return $result === false ? null : $result;
     }
 
+    /**
+     * Busca a primeira comarca cujo nome ou cidade coincida com o termo (normalizado, sem acento).
+     * Retorna ['id', 'uf', 'nome', 'cidade'] ou null.
+     */
+    public function findFirstByNomeOuCidade(string $nomeOuCidade): ?array
+    {
+        $term = $this->normalizeNomeCidade($nomeOuCidade);
+        if ($term === '') {
+            return null;
+        }
+
+        $statement = $this->connection->prepare(
+            sprintf(
+                'SELECT `id`, `tribunal_id`, `uf`, `nome`, `cidade`, `status_cidade`, `created_at`, `updated_at` FROM `%s`',
+                $this->table
+            )
+        );
+        $statement->execute();
+
+        while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+            $nomeNorm = $this->normalizeNomeCidade((string) ($row['nome'] ?? ''));
+            $cidadeNorm = $this->normalizeNomeCidade((string) ($row['cidade'] ?? ''));
+            if ($nomeNorm === $term || $cidadeNorm === $term) {
+                return $row;
+            }
+        }
+        return null;
+    }
+
+    private function normalizeNomeCidade(string $s): string
+    {
+        $s = trim($s);
+        $s = mb_strtolower($s, 'UTF-8');
+        $s = preg_replace('/[àáâãäå]/u', 'a', $s);
+        $s = preg_replace('/[èéêë]/u', 'e', $s);
+        $s = preg_replace('/[ìíîï]/u', 'i', $s);
+        $s = preg_replace('/[òóôõö]/u', 'o', $s);
+        $s = preg_replace('/[ùúûü]/u', 'u', $s);
+        $s = preg_replace('/[ç]/u', 'c', $s);
+        return $s;
+    }
+
     /** Busca por UF e nome da comarca (cidade), sem tribunal. Útil quando há um tribunal padrão por UF. */
     public function findByUfNome(string $uf, string $nome): ?array
     {

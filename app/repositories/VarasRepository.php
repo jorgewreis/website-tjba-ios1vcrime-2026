@@ -55,6 +55,27 @@ final class VarasRepository
         return $result === false ? null : $result;
     }
 
+    /** Retorna vara pela comarca e nome (evita duplicar vara com mesmo nome na mesma comarca). */
+    public function findByComarcaAndNome(string $comarcaId, string $nome): ?array
+    {
+        if ($comarcaId === '' || trim($nome) === '') {
+            return null;
+        }
+
+        $statement = $this->connection->prepare(
+            sprintf(
+                'SELECT `id`, `comarca_id`, `codigo`, `nome`, `email`, `telefone`, `created_at`, `updated_at` FROM `%s` WHERE `comarca_id` = :comarca_id AND `nome` = :nome LIMIT 1',
+                $this->table
+            )
+        );
+        $statement->bindValue(':comarca_id', $comarcaId);
+        $statement->bindValue(':nome', trim($nome));
+        $statement->execute();
+
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+        return $result === false ? null : $result;
+    }
+
     /** Retorna o id da vara (existente ou recém-criada). codigo, email, telefone opcionais. */
     public function ensureVara(string $comarcaId, string $nome, ?string $codigo = null, ?string $email = null, ?string $telefone = null): string
     {
@@ -74,8 +95,8 @@ final class VarasRepository
             }
         }
 
-        $existing = $this->findFirstByComarca($comarcaId);
-        if ($existing !== null && ($codigo === null || $codigo === '')) {
+        $existing = $this->findByComarcaAndNome($comarcaId, $nome);
+        if ($existing !== null) {
             return (string) $existing['id'];
         }
 

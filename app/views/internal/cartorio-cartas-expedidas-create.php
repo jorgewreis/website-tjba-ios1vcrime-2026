@@ -181,6 +181,10 @@ try {
         <?php endif; ?>
         <div class="row filter">
             <div class="col filter">
+                <label for="filter-cidade">Cidade</label>
+                <input type="text" class="width-lg height-md" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="50" required>
+            </div>
+            <div class="col filter">
                 <label for="filter-estado">Estado</label>
                 <select class="width-md height-md" id="filter-estado" required>
                     <option value="AC">Acre</option>
@@ -211,11 +215,7 @@ try {
                     <option value="SE">Sergipe</option>
                     <option value="TO">Tocantins</option>
                 </select>
-            </div>
-            <div class="col filter">
-                <label for="filter-cidade">Cidade</label>
-                <input type="text" class="width-lg height-md" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="50" required>
-            </div>
+            </div>            
         </div>
         <div class="row filter">
             <div class="col">
@@ -290,11 +290,34 @@ try {
                 }
                 return value;
             };
+            const normalizeCidadeForCompare = (value) => {
+                return (value || '').trim().toLowerCase()
+                    .normalize('NFD').replace(/\p{M}/gu, '')
+                    .replace(/ç/g, 'c');
+            };
             const cidadeInput = document.getElementById('filter-cidade');
+            const estadoSelect = document.getElementById('filter-estado');
             if (cidadeInput) {
                 cidadeInput.setAttribute('maxlength', '50');
                 cidadeInput.addEventListener('blur', () => {
                     cidadeInput.value = formatCidade(cidadeInput.value);
+                    const cidade = cidadeInput.value.trim();
+                    if (cidade.length < 2) return;
+                    fetch('/api/cartorio-cartas-expedidas/buscar-cidade.php?cidade=' + encodeURIComponent(cidade))
+                        .then(r => r.json())
+                        .then(data => {
+                            if (!data.found) return;
+                            if (data.uf && estadoSelect) {
+                                estadoSelect.value = data.uf;
+                            }
+                            const status = (data.status_cidade || '').trim();
+                            if (status.toUpperCase() === 'CCM') {
+                                alert('Comarca com Central de Mandados');
+                            } else if (status.toLowerCase() === 'agregada' && data.nome) {
+                                cidadeInput.value = formatCidade(data.nome);
+                            }
+                        })
+                        .catch(() => {});
                 });
             }
             const endpoint = '/api/cartorio-cartas-expedidas/create.php';
@@ -341,6 +364,10 @@ try {
                 }
                 if (!validateRequiredFields()) {
                     return;
+                }
+                const cidadeDestino = formatCidade(getValue('filter-cidade'));
+                if (normalizeCidadeForCompare(cidadeDestino) === 'ilheus') {
+                    return showFeedback('O cadastro não é permitido para a cidade de Ilhéus (comarca de origem).', 'error');
                 }
 
                 const usuarioAtual = (typeof window.__currentUserName === 'string' && window.__currentUserName.trim() !== '')

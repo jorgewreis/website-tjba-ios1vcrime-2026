@@ -75,38 +75,23 @@ final class CartasExpedidasService
                 $dataJud = $this->dataJudService->searchProcesso($digits);
                 $classeCodigo = trim((string) ($dataJud['classe']['codigo'] ?? $classeCodigo));
                 $classeNome = trim((string) ($dataJud['classe']['descricao'] ?? $classeNome));
-
-                $tribunalSigla = $this->normalizeTribunalSigla($dataJud['tribunal'] ?? 'TJBA');
-                $ufOrigem = $this->tribunalSiglaToUf($tribunalSigla);
-
-                $tribunalId = $this->tribunaisRepository->ensureTribunal($tribunalSigla, 'Tribunal de Justiça - ' . $tribunalSigla);
-                $comarcaOrigemNome = 'Comarca origem';
-                $comarcaOrigemId = $this->comarcasRepository->ensureComarca($tribunalId, $ufOrigem, $comarcaOrigemNome);
-
-                $orgao = $dataJud['orgao_julgador'] ?? [];
-                $varaNome = $orgao['nome'] ?? '1ª Vara';
-                $varaCodigo = $orgao['codigo'] ?? null;
-                $varaOrigemId = $this->varasRepository->ensureVara($comarcaOrigemId, $varaNome, $varaCodigo);
             } catch (Throwable $e) {
-                if ($classeCodigo === '' || $classeNome === '') {
-                    throw new InvalidArgumentException('Não foi possível obter dados do DataJud e a classe processual é obrigatória.');
-                }
-                $tribunalSigla = 'TJBA';
-                $ufOrigem = 'BA';
-                $tribunalId = $this->tribunaisRepository->ensureTribunal($tribunalSigla, 'Tribunal de Justiça da Bahia');
-                $comarcaOrigemId = $this->comarcasRepository->ensureComarca($tribunalId, $ufOrigem, 'Comarca origem');
-                $varaOrigemId = $this->varasRepository->ensureVara($comarcaOrigemId, '1ª Vara', null);
+                // Mantém classe do formulário em caso de falha no DataJud
             }
-        } else {
-            if ($classeCodigo === '' || $classeNome === '') {
-                throw new InvalidArgumentException('A classe processual é obrigatória.');
-            }
-            $tribunalSigla = 'TJBA';
-            $ufOrigem = 'BA';
-            $tribunalId = $this->tribunaisRepository->ensureTribunal($tribunalSigla, 'Tribunal de Justiça da Bahia');
-            $comarcaOrigemId = $this->comarcasRepository->ensureComarca($tribunalId, $ufOrigem, 'Comarca origem');
-            $varaOrigemId = $this->varasRepository->ensureVara($comarcaOrigemId, '1ª Vara', null);
         }
+
+        if ($classeCodigo === '' || $classeNome === '') {
+            throw new InvalidArgumentException('A classe processual é obrigatória.');
+        }
+
+        $tribunalSigla = 'TJBA';
+        $ufOrigem = 'BA';
+        $comarcaOrigemNome = 'Ilhéus';
+        $varaOrigemNome = 'Primeira Vara Crime da Comarca de Ilhéus';
+
+        $tribunalId = $this->tribunaisRepository->ensureTribunal($tribunalSigla, 'Tribunal de Justiça da Bahia');
+        $comarcaOrigemId = $this->comarcasRepository->ensureComarca($tribunalId, $ufOrigem, $comarcaOrigemNome);
+        $varaOrigemId = $this->varasRepository->ensureVara($comarcaOrigemId, $varaOrigemNome, null);
 
         $classeId = $this->classesRepository->ensureClass((string) $classeCodigo, $classeNome !== '' ? TextFormatter::formatProperName((string) $classeNome, 200) : (string) $classeCodigo);
         $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, $sigiloso);
@@ -121,6 +106,11 @@ final class CartasExpedidasService
             throw new InvalidArgumentException('A cidade de destino é obrigatória.');
         }
         $cidadeDestino = TextFormatter::formatProperName($cidadeDestino, 120);
+
+        $cidadeDestinoNormalizada = $this->normalizeNomeCidade($cidadeDestino);
+        if ($cidadeDestinoNormalizada === 'ilheus') {
+            throw new InvalidArgumentException('O cadastro de carta expedida não é permitido para a cidade de Ilhéus (comarca de origem).');
+        }
 
         $tribunalDestinoSigla = 'TJ' . $ufDestino;
         $tribunalDestinoId = $this->tribunaisRepository->ensureTribunal($tribunalDestinoSigla, 'Tribunal de Justiça do Estado');
@@ -213,6 +203,19 @@ final class CartasExpedidasService
     {
         $y = (int) substr($ymd, 0, 4);
         return $y >= 1900 && $y <= 2100;
+    }
+
+    private function normalizeNomeCidade(string $nome): string
+    {
+        $n = trim($nome);
+        $n = mb_strtolower($n, 'UTF-8');
+        $n = preg_replace('/[àáâãäå]/u', 'a', $n);
+        $n = preg_replace('/[èéêë]/u', 'e', $n);
+        $n = preg_replace('/[ìíîï]/u', 'i', $n);
+        $n = preg_replace('/[òóôõö]/u', 'o', $n);
+        $n = preg_replace('/[ùúûü]/u', 'u', $n);
+        $n = preg_replace('/[ç]/u', 'c', $n);
+        return $n;
     }
 
     private function sanitizePrazo(string $valor): string
