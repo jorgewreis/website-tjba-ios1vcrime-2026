@@ -98,7 +98,7 @@
     function applyClasseResult(classe) {
         const representation = classe.descricao || classe.codigo || 'Classe';
         setClasseField(representation, true, '', '');
-        classeInput.classList.add('status-finished');
+        classeInput.classList.add('status-finished');        
         classeInput.readOnly = true;
         toggleInputs(false);
         if (classeCodigoField) {

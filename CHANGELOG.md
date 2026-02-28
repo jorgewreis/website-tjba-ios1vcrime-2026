@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0141
+
+**Data:** 2026-02-28 15:16:46 | **Commit:** `e0c1791` | **Tipo:** `patch`
+
+- Fix: tentativa de correção de api classe
+
 ## V. 1.02.0140
 
 **Data:** 2026-02-28 15:10:00 | **Commit:** `7823fc1` | **Tipo:** `patch`
@@ -1884,6 +1890,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
