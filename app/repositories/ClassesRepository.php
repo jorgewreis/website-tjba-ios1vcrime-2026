@@ -15,51 +15,58 @@ final class ClassesRepository
         $this->table = $table;
     }
 
-    public function ensureClass(string $cod, string $descricao): void
+    /** Retorna o id da classe (existente ou recém-criada). */
+    public function ensureClass(string $codigo, string $nome): string
     {
-        $cod = strtoupper(preg_replace('/[^A-Za-z0-9]+/', '', $cod));
-        if ($cod === '') {
-            return;
+        $codigo = strtoupper(preg_replace('/[^A-Za-z0-9]+/', '', $codigo));
+        if ($codigo === '') {
+            throw new InvalidArgumentException('Código da classe não pode ser vazio.');
         }
 
-        if ($this->findByCode($cod) !== null) {
-            return;
+        $existing = $this->findByCodigo($codigo);
+        if ($existing !== null) {
+            return (string) $existing['id'];
         }
 
-        $descricao = trim($descricao);
-        $descricao = $descricao === '' ? $cod : TextFormatter::formatProperName($descricao, 150);
-        if ($descricao === '') {
-            $descricao = $cod;
+        $nome = trim($nome);
+        $nome = $nome === '' ? $codigo : TextFormatter::formatProperName($nome, 200);
+        if ($nome === '') {
+            $nome = $codigo;
         }
 
-        $idClasse = IdGenerator::generateUniquePrefixedId(
+        $id = IdGenerator::generateUniquePrefixedId(
             $this->connection,
             $this->table,
-            'id_classe',
-            'CLS',
+            'id',
+            'CLA',
             30
         );
 
         $statement = $this->connection->prepare(
-            sprintf('INSERT INTO `%s` (`id_classe`, `cod`, `descricao`) VALUES (:id_classe, :cod, :descricao)', $this->table)
+            sprintf(
+                'INSERT INTO `%s` (`id`, `codigo`, `nome`, `created_at`, `updated_at`) VALUES (:id, :codigo, :nome, NOW(), NOW())',
+                $this->table
+            )
         );
-        $statement->bindValue(':id_classe', $idClasse);
-        $statement->bindValue(':cod', $cod);
-        $statement->bindValue(':descricao', $descricao);
+        $statement->bindValue(':id', $id);
+        $statement->bindValue(':codigo', $codigo);
+        $statement->bindValue(':nome', $nome);
         $statement->execute();
+
+        return $id;
     }
 
-    public function findByCode(string $cod): ?array
+    public function findByCodigo(string $codigo): ?array
     {
-        $codigo = strtoupper(preg_replace('/[^A-Za-z0-9]+/', '', $cod));
+        $codigo = strtoupper(preg_replace('/[^A-Za-z0-9]+/', '', $codigo));
         if ($codigo === '') {
             return null;
         }
 
         $statement = $this->connection->prepare(
-            sprintf('SELECT `id_classe`, `cod`, `descricao` FROM `%s` WHERE `cod` = :cod LIMIT 1', $this->table)
+            sprintf('SELECT `id`, `codigo`, `nome`, `created_at`, `updated_at` FROM `%s` WHERE `codigo` = :codigo LIMIT 1', $this->table)
         );
-        $statement->bindValue(':cod', $codigo);
+        $statement->bindValue(':codigo', $codigo);
         $statement->execute();
 
         $result = $statement->fetch(PDO::FETCH_ASSOC);

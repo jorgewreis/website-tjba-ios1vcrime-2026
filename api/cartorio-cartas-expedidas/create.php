@@ -5,9 +5,12 @@ header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
+require_once $basePath . '/app/services/DataJudService.php';
 require_once $basePath . '/app/services/CartasExpedidasService.php';
 
 $connection = Conection::getInstance()->getConnection();
+$dataJudConfig = require $basePath . '/api/datajud/config.php';
+$dataJudService = new DataJudService($dataJudConfig);
 
 $payload = file_get_contents('php://input') ?: '';
 $parsed = json_decode($payload, true);
@@ -16,7 +19,7 @@ if (!is_array($parsed)) {
 }
 
 try {
-    $service = new CartasExpedidasService($connection);
+    $service = new CartasExpedidasService($connection, $dataJudService);
     $newId = $service->create($parsed);
     http_response_code(201);
     echo json_encode(['id' => $newId], JSON_UNESCAPED_UNICODE);

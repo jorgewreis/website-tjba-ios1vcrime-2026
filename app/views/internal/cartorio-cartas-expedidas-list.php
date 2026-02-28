@@ -53,7 +53,7 @@ $endItem = $displayedCount > 0 ? $offset + $displayedCount : 0;
 $statusOptions = [
     'aguardando assinatura',
     'aguardando envio',
-    'aguardando juntada d2 termo',
+    'aguardando juntada do termo',
     'aguardando cumprimento',
 ];
 $classOptions = [

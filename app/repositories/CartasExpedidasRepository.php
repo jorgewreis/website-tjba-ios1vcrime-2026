@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/../helpers/IdGenerator.php';
+
 final class CartasExpedidasRepository
 {
     private PDO $connection;
@@ -10,29 +12,12 @@ final class CartasExpedidasRepository
         'aguardando assinatura',
         'aguardando envio',
         'aguardando juntada do termo',
-        'aguardando cumprimento',        
+        'aguardando cumprimento',
         'concluída',
         'cancelada',
     ];
 
-    private const FIELD_MAP = [
-        'processo' => 'Processo',
-        'numero_processo' => 'Processo',
-        'carta_numero' => 'CartaNumero',
-        'carta_vara' => 'CartaVara',
-        'classe' => 'Classe',
-        'finalidade' => 'Finalidade',
-        'prazo' => 'Prazo',
-        'prazo_cumprimento' => 'Prazo',
-        'estado' => 'Estado',
-        'cidade' => 'Comarca',
-        'comarca' => 'Comarca',
-        'status' => 'Status',
-        'usuario' => 'Usuario',
-        'idcarta' => 'IdCarta',
-    ];
-
-    public function __construct(PDO $connection, string $table = 'CartasExpedidas')
+    public function __construct(PDO $connection, string $table = 'cartas_expedidas')
     {
         $this->connection = $connection;
         $this->table = $table;
@@ -41,10 +26,9 @@ final class CartasExpedidasRepository
     public function fetchList(array $filters, int $limit, int $offset): array
     {
         [$whereClause, $params] = $this->buildFilterClause($filters, 'ce');
-    
-        // UM único FIELD() com todos os status
+
         $orderField = sprintf(
-            "FIELD(ce.`Status`, %s)",
+            "FIELD(ce.`status`, %s)",
             implode(
                 ', ',
                 array_map(
@@ -53,19 +37,19 @@ final class CartasExpedidasRepository
                 )
             )
         );
-    
+
         $fromClause = sprintf(
-            '`%s` ce LEFT JOIN `processos` p ON REPLACE(REPLACE(p.`numero`, \'-\', \'\'), \'.\', \'\') = REPLACE(REPLACE(ce.`Processo`, \'-\', \'\'), \'.\', \'\') LEFT JOIN `classes` cl ON cl.`cod` = p.`classe`',
+            '`%s` ce LEFT JOIN `processos` p ON p.`id` = ce.`processo_origem_id` LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id`',
             $this->table
         );
-    
+
         $sql = sprintf(
-            'SELECT ce.`IdCarta`, ce.`Processo`, ce.`CartaNumero`, ce.`CartaVara`, ce.`Classe`, ce.`Finalidade`, ce.`Prazo`, ce.`Comarca`, ce.`Estado`, ce.`Status`, ce.`Data`, ce.`Usuario`, COALESCE(cl.`descricao`, \'Classe não informada\') AS `ClasseNome` FROM %s %s ORDER BY %s, ce.`Data` DESC LIMIT :limit OFFSET :offset',
+            'SELECT ce.`id` AS `IdCarta`, ce.`numero_processo_origem` AS `Processo`, ce.`finalidade` AS `Finalidade`, ce.`prazo_dias` AS `Prazo`, ce.`cidade_destino` AS `Comarca`, ce.`uf_destino` AS `Estado`, ce.`status` AS `Status`, ce.`created_at` AS `Data`, COALESCE(cl.`nome`, \'Classe não informada\') AS `ClasseNome` FROM %s %s ORDER BY %s, ce.`created_at` DESC LIMIT :limit OFFSET :offset',
             $fromClause,
             $whereClause ? 'WHERE ' . $whereClause : '',
             $orderField
         );
-    
+
         $statement = $this->connection->prepare($sql);
         foreach ($params as $name => $value) {
             $statement->bindValue($name, $value);
@@ -73,15 +57,18 @@ final class CartasExpedidasRepository
         $statement->bindValue(':limit', $limit, PDO::PARAM_INT);
         $statement->bindValue(':offset', $offset, PDO::PARAM_INT);
         $statement->execute();
-    
+
         return $statement->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function count(array $filters): int
     {
-        // Adicionar o alias 'ce' aqui para consistência
         [$whereClause, $params] = $this->buildFilterClause($filters, 'ce');
-        $sql = sprintf('SELECT COUNT(*) AS total FROM `%s` ce %s', $this->table, $whereClause ? 'WHERE ' . $whereClause : '');
+        $fromClause = sprintf(
+            '`%s` ce LEFT JOIN `processos` p ON p.`id` = ce.`processo_origem_id` LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id`',
+            $this->table
+        );
+        $sql = sprintf('SELECT COUNT(*) AS total FROM %s %s', $fromClause, $whereClause ? 'WHERE ' . $whereClause : '');
         $statement = $this->connection->prepare($sql);
         foreach ($params as $name => $value) {
             $statement->bindValue($name, $value);
@@ -93,11 +80,14 @@ final class CartasExpedidasRepository
 
     public function countByStatus(array $filters): array
     {
-        // Adicionar o alias 'ce' aqui para consistência
         [$whereClause, $params] = $this->buildFilterClause($filters, 'ce');
+        $fromClause = sprintf(
+            '`%s` ce LEFT JOIN `processos` p ON p.`id` = ce.`processo_origem_id` LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id`',
+            $this->table
+        );
         $sql = sprintf(
-            'SELECT ce.`Status`, COUNT(*) AS total FROM `%s` ce %s GROUP BY ce.`Status`',
-            $this->table,
+            'SELECT ce.`status` AS `Status`, COUNT(*) AS total FROM %s %s GROUP BY ce.`status`',
+            $fromClause,
             $whereClause ? 'WHERE ' . $whereClause : ''
         );
         $statement = $this->connection->prepare($sql);
@@ -120,11 +110,14 @@ final class CartasExpedidasRepository
 
     public function countByClasse(array $filters): array
     {
-        // Adicionar o alias 'ce' aqui para consistência
         [$whereClause, $params] = $this->buildFilterClause($filters, 'ce');
+        $fromClause = sprintf(
+            '`%s` ce LEFT JOIN `processos` p ON p.`id` = ce.`processo_origem_id` LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id`',
+            $this->table
+        );
         $sql = sprintf(
-            'SELECT ce.`Classe`, COUNT(*) AS total FROM `%s` ce %s GROUP BY ce.`Classe`',
-            $this->table,
+            'SELECT COALESCE(cl.`nome`, \'Classe não informada\') AS `Classe`, COUNT(*) AS total FROM %s %s GROUP BY cl.`id`',
+            $fromClause,
             $whereClause ? 'WHERE ' . $whereClause : ''
         );
         $statement = $this->connection->prepare($sql);
@@ -141,60 +134,67 @@ final class CartasExpedidasRepository
         return $summary;
     }
 
-    public function insert(array $payload): string
+    public function insert(array $row): string
     {
-        $data = $this->mapPayloadToColumns($payload);
-        if (empty($data)) {
-            throw new RuntimeException('Nenhum campo válido foi fornecido para criação.');
+        $required = [
+            'id', 'processo_origem_id', 'numero_processo_origem', 'finalidade', 'prazo_dias',
+            'comarca_destino_id', 'cidade_destino', 'uf_destino', 'vara_destino_id', 'vara_destino_nome', 'status',
+        ];
+        foreach ($required as $key) {
+            if (!array_key_exists($key, $row) || (string) $row[$key] === '') {
+                throw new InvalidArgumentException("Campo obrigatório ausente ou vazio: {$key}");
+            }
         }
 
-        $columns = array_keys($data);
-        $columnList = implode(', ', array_map(fn (string $column) => sprintf('`%s`', $column), $columns));
-        $placeholders = implode(', ', array_map(fn (string $column) => ':' . $column, $columns));
-        $sql = sprintf(
-            'INSERT INTO `%s` (%s, `Data`) VALUES (%s, NOW())',
-            $this->table,
-            $columnList,
-            $placeholders
+        $statement = $this->connection->prepare(
+            sprintf(
+                'INSERT INTO `%s` (`id`, `processo_origem_id`, `numero_processo_origem`, `finalidade`, `prazo_dias`, `comarca_destino_id`, `cidade_destino`, `uf_destino`, `numero_processo_destino`, `vara_destino_id`, `vara_destino_nome`, `status`, `observacoes`, `created_at`, `updated_at`) VALUES (:id, :processo_origem_id, :numero_processo_origem, :finalidade, :prazo_dias, :comarca_destino_id, :cidade_destino, :uf_destino, :numero_processo_destino, :vara_destino_id, :vara_destino_nome, :status, :observacoes, NOW(), NOW())',
+                $this->table
+            )
         );
-
-        $statement = $this->connection->prepare($sql);
-        foreach ($data as $column => $value) {
-            $statement->bindValue(':' . $column, $value);
-        }
+        $statement->bindValue(':id', $row['id']);
+        $statement->bindValue(':processo_origem_id', $row['processo_origem_id']);
+        $statement->bindValue(':numero_processo_origem', $row['numero_processo_origem']);
+        $statement->bindValue(':finalidade', $row['finalidade']);
+        $statement->bindValue(':prazo_dias', (int) $row['prazo_dias'], PDO::PARAM_INT);
+        $statement->bindValue(':comarca_destino_id', $row['comarca_destino_id']);
+        $statement->bindValue(':cidade_destino', $row['cidade_destino']);
+        $statement->bindValue(':uf_destino', $row['uf_destino']);
+        $statement->bindValue(':numero_processo_destino', $row['numero_processo_destino'] ?? null);
+        $statement->bindValue(':vara_destino_id', $row['vara_destino_id']);
+        $statement->bindValue(':vara_destino_nome', $row['vara_destino_nome']);
+        $statement->bindValue(':status', $row['status']);
+        $statement->bindValue(':observacoes', $row['observacoes'] ?? null);
         $statement->execute();
 
-        if (isset($data['IdCarta']) && $data['IdCarta'] !== '') {
-            return (string) $data['IdCarta'];
-        }
-
-        return (string) $this->connection->lastInsertId();
+        return (string) $row['id'];
     }
 
     public function update(string $id, array $payload): bool
     {
-        $data = $this->mapPayloadToColumns($payload);
-        if (empty($data)) {
-            throw new RuntimeException('Nenhum campo válido foi fornecido para atualização.');
+        $allowed = [
+            'finalidade', 'prazo_dias', 'comarca_destino_id', 'cidade_destino', 'uf_destino',
+            'numero_processo_destino', 'vara_destino_id', 'vara_destino_nome', 'status', 'observacoes',
+        ];
+        $set = [];
+        $params = [':id' => $id];
+        foreach ($allowed as $col) {
+            if (!array_key_exists($col, $payload)) {
+                continue;
+            }
+            $set[] = "`{$col}` = :{$col}";
+            $params[":{$col}"] = $payload[$col];
         }
-
-        $setClauses = [];
-        foreach ($data as $column => $value) {
-            $setClauses[] = sprintf('`%s` = :%s', $column, $column);
+        if (empty($set)) {
+            return false;
         }
+        $set[] = '`updated_at` = NOW()';
 
-        $sql = sprintf(
-            'UPDATE `%s` SET %s WHERE `IdCarta` = :id LIMIT 1',
-            $this->table,
-            implode(', ', $setClauses)
-        );
-
+        $sql = sprintf('UPDATE `%s` SET %s WHERE `id` = :id LIMIT 1', $this->table, implode(', ', $set));
         $statement = $this->connection->prepare($sql);
-        foreach ($data as $column => $value) {
-            $statement->bindValue(':' . $column, $value);
+        foreach ($params as $k => $v) {
+            $statement->bindValue($k, $v);
         }
-        $statement->bindValue(':id', $id);
-
         $statement->execute();
 
         return $statement->rowCount() > 0;
@@ -202,7 +202,7 @@ final class CartasExpedidasRepository
 
     public function delete(string $id): bool
     {
-        $sql = sprintf('DELETE FROM `%s` WHERE `IdCarta` = :id LIMIT 1', $this->table);
+        $sql = sprintf('DELETE FROM `%s` WHERE `id` = :id LIMIT 1', $this->table);
         $statement = $this->connection->prepare($sql);
         $statement->bindValue(':id', $id);
         $statement->execute();
@@ -212,7 +212,7 @@ final class CartasExpedidasRepository
 
     public function find(string $id): ?array
     {
-        $sql = sprintf('SELECT * FROM `%s` WHERE `IdCarta` = :id LIMIT 1', $this->table);
+        $sql = sprintf('SELECT * FROM `%s` WHERE `id` = :id LIMIT 1', $this->table);
         $statement = $this->connection->prepare($sql);
         $statement->bindValue(':id', $id);
         $statement->execute();
@@ -234,31 +234,15 @@ final class CartasExpedidasRepository
         $prefix = $alias !== '' ? $alias . '.' : '';
 
         if (isset($filters['classe']) && $filters['classe'] !== '') {
-            $clauses[] = $prefix . '`Classe` = :classe';
+            $clauses[] = '(cl.`codigo` = :classe OR cl.`nome` = :classe)';
             $params[':classe'] = trim($filters['classe']);
         }
 
         if (isset($filters['status']) && $filters['status'] !== '') {
-            $clauses[] = $prefix . '`Status` = :status';
+            $clauses[] = $prefix . '`status` = :status';
             $params[':status'] = trim($filters['status']);
         }
 
         return [implode(' AND ', $clauses), $params];
-    }
-
-    private function mapPayloadToColumns(array $payload): array
-    {
-        $mapped = [];
-
-        foreach ($payload as $key => $value) {
-            $normalized = strtolower((string) $key);
-            if (!isset(self::FIELD_MAP[$normalized])) {
-                continue;
-            }
-
-            $mapped[self::FIELD_MAP[$normalized]] = $value;
-        }
-
-        return $mapped;
     }
 }
