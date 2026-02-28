@@ -1,5 +1,5 @@
 (function () {
-    const API_ENDPOINT = '../../v2026/api/datajud/search-processo.php';
+    const API_ENDPOINT = '../../api/datajud/search-processo.php';
     const classeInput = document.getElementById('filter-classe');
     const processoInput = document.getElementById('filter-processo');
     const classeCodigoField = document.getElementById('hidden-classe-codigo');
