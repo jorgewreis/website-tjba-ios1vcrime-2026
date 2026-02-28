@@ -7,7 +7,6 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
-require_once __DIR__ . '/../../rules/RulesAllocator.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -32,10 +31,20 @@ $selectedUserId = '1';
 $ruleRow = null;
 
 try {
-    $allocator = new RulesAllocator($connection);
-    $usersList = $allocator->getUsers();
+    $usersList = [];
+    $stmtUsers = $connection->prepare('SELECT `id_usuario`, `nome`, `sobrenome` FROM `usuarios` ORDER BY `nome`, `sobrenome`');
+    $stmtUsers->execute();
+    while (($row = $stmtUsers->fetch(PDO::FETCH_ASSOC)) !== false) {
+        $id = trim((string) ($row['id_usuario'] ?? ''));
+        $nome = trim((string) ($row['nome'] ?? ''));
+        $sobrenome = trim((string) ($row['sobrenome'] ?? ''));
+        $name = $sobrenome !== '' ? $nome . ' ' . $sobrenome : $nome;
+        if ($id !== '' && $name !== '') {
+            $usersList[] = ['id' => $id, 'name' => $name];
+        }
+    }
     if (empty($usersList)) {
-        $errors[] = 'Nenhum servidor foi encontrado na tabela Usuarios.';
+        $errors[] = 'Nenhum usuário foi encontrado na tabela usuarios.';
     }
 
     $regrasRepo = new AlocacoesRegrasRepository($connection);

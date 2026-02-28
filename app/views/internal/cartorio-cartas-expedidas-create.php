@@ -2,7 +2,6 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
-require_once __DIR__ . '/../../rules/RulesAllocator.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -67,12 +66,15 @@ try {
     $ruleRow = $regrasRepo->findByRegra($ruleName);
     $allocatedUserId = $ruleRow['usuario_id'] ?? null;
     if ($allocatedUserId !== null && $allocatedUserId !== '') {
-        $allocator = new RulesAllocator($connection);
-        $usersList = $allocator->getUsers();
-        foreach ($usersList as $user) {
-            if ((string) $user['id'] === (string) $allocatedUserId) {
-                $ruleServidor = $user['name'];
-                break;
+        $stmt = $connection->prepare('SELECT `nome`, `sobrenome` FROM `usuarios` WHERE `id_usuario` = ? LIMIT 1');
+        $stmt->execute([$allocatedUserId]);
+        $u = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($u !== false) {
+            $nome = trim((string) ($u['nome'] ?? ''));
+            $sobrenome = trim((string) ($u['sobrenome'] ?? ''));
+            $ruleServidor = $sobrenome !== '' ? $nome . ' ' . $sobrenome : $nome;
+            if ($ruleServidor === '') {
+                $ruleServidor = '?';
             }
         }
     }
