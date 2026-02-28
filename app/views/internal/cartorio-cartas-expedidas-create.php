@@ -1,10 +1,9 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../class/Connect-New.php';
-require_once __DIR__ . '/../class/Cartorio/CartasExpedidas/Rules/RulesAllocator.php';
+require_once __DIR__ . '/../../rules/RulesAllocator.php';
 
-use App\Cartorio\CartasExpedidas\Rules\RulesAllocator;
+$connection = Conection::getInstance()->getConnection();
 
 function onlyDigits(string $value): string
 {
@@ -81,11 +80,11 @@ try {
         <title>Template Model - Components - Buttons</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="./../v2026/public/assets/css/shared/reset.css">
-        <link rel="stylesheet" href="./../v2026/public/assets/css/shared/variables.css">
-        <link rel="stylesheet" href="./../v2026/public/assets/css/shared/page.css">
-        <link rel="stylesheet" href="./../v2026/public/assets/css/shared/form.css">
-        <link rel="stylesheet" href="./../v2026/public/assets/css/shared/table.css">
+        <link rel="stylesheet" href="/assets/css/shared/reset.css">
+        <link rel="stylesheet" href="/assets/css/shared/variables.css">
+        <link rel="stylesheet" href="/assets/css/shared/page.css">
+        <link rel="stylesheet" href="/assets/css/shared/form.css">
+        <link rel="stylesheet" href="/assets/css/shared/table.css">
         
     </head>
 <body class="page-internal">
@@ -105,9 +104,9 @@ try {
         <p class="description-page">Caso tenha alguma dificuldade no preenchimento do cadastro, verifique os arquivos abaixo para obter ajuda.</p>
         
         <!-- Badges de arquivos para download -->
-        <a href="./../docs/documents/pdf/PJBA - 1VCR - POP - Expedição e Envio de Cartas Precatórias.pdf" target="_blank" rel="noopener noreferrer">
+        <a href="/documents/pdf/PJBA - 1VCR - POP - Expedição e Envio de Cartas Precatórias.pdf" target="_blank" rel="noopener noreferrer">
             <div class="badge file">
-                <img src="./../v2026/public/assets/icons/Office-File-Pdf-1--Streamline-Ultimate.png" alt="Ícone de arquivo PDF">
+                <img src="/assets/icons/Office-File-Pdf-1--Streamline-Ultimate.png" alt="Ícone de arquivo PDF">
                 <span>Passo a passo - Expedição de Cartas Precatórias</span>
             </div>
         </a>
@@ -229,15 +228,15 @@ try {
             if (btn) {
                 btn.addEventListener('click', (event) => {
                     event.preventDefault();
-                    window.location.href = 'cartorio-cartas-expedidas-list.php';
+                    window.location.href = '/frame.php?page=cartasexpedidas';
                 }, { capture: true });
             }
         })();
     </script>
-    <script src="../v2026/public/assets/js/modules/cartorio/cartas-expedidas/cnj.js"></script>
-    <script src="../v2026/public/assets/js/modules/cartorio/cartas-expedidas/datajud-api.js"></script>
-    <script src="../v2026/public/assets/js/modules/cartorio/cartas-expedidas/user.js"></script>
-    <script src="../v2026/public/assets/js/modules/cartorio/cartas-expedidas/text-formatter.js"></script>
+    <script src="/assets/js/modules/cartorio/cartas-expedidas/cnj.js"></script>
+    <script src="/assets/js/modules/cartorio/cartas-expedidas/datajud-api.js"></script>
+    <script src="/assets/js/modules/cartorio/cartas-expedidas/user.js"></script>
+    <script src="/assets/js/modules/cartorio/cartas-expedidas/text-formatter.js"></script>
     <script>
         (() => {
             const btn = document.getElementById('cadastrar-btn');
@@ -271,7 +270,7 @@ try {
                     cidadeInput.value = formatCidade(cidadeInput.value);
                 });
             }
-            const endpoint = '../v2026/api/cartorio-cartas-expedidas/create.php';
+            const endpoint = '/api/cartorio-cartas-expedidas/create.php';
 
             if (!btn) {
                 return;
@@ -354,7 +353,7 @@ try {
                         throw new Error(data.error || 'Falha ao salvar a carta expedida.');
                     }
 
-                    window.location.href = 'cartorio-cartas-expedidas-list.php';
+                    window.location.href = '/frame.php?page=cartasexpedidas';
                 } catch (error) {
                     showFeedback(error.message || 'Não foi possível cadastrar a carta expedida.', 'error');
                     btn.disabled = false;

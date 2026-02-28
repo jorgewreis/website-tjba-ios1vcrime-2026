@@ -4,10 +4,10 @@ declare(strict_types=1);
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
-require_once $basePath . '/class/Connect-New.php';
-require_once $basePath . '/class/Cartorio/CartasExpedidas/CartasExpedidasService.php';
+require_once $basePath . '/app/helpers/Conection.php';
+require_once $basePath . '/app/services/CartasExpedidasService.php';
 
-use App\Cartorio\CartasExpedidas\CartasExpedidasService;
+$connection = Conection::getInstance()->getConnection();
 
 $payload = file_get_contents('php://input') ?: '';
 $parsed = json_decode($payload, true);

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0120
+
+**Data:** 2026-02-28 11:34:09 | **Commit:** `f059f81` | **Tipo:** `patch`
+
+- Feat: Reconfiguração de classes
+
 ## V. 1.02.0119
 
 **Data:** 2026-02-28 11:17:30 | **Commit:** `5b33023` | **Tipo:** `patch`
@@ -1758,6 +1764,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

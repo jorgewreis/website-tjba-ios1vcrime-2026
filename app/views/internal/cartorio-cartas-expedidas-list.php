@@ -6,12 +6,9 @@ if (function_exists('mb_internal_encoding')) {
     mb_internal_encoding('UTF-8');
 }
 
-require_once __DIR__ . '/../class/Connect-New.php'; // Linha 14
-require_once __DIR__ . '/../class/Cartorio/CartasExpedidas/CartasExpedidasService.php';
+require_once __DIR__ . '/../../services/CartasExpedidasService.php';
 
-use App\Cartorio\CartasExpedidas\CartasExpedidasService;
-
-$connection = $GLOBALS['connection'];
+$connection = Conection::getInstance()->getConnection();
 
 $classeFilter = trim($_GET['classe'] ?? '');
 $statusFilter = trim($_GET['status'] ?? '');
@@ -108,11 +105,11 @@ if ($totalPages > 0) {
         <title>Cartas Expedidas - Primeira Vara Crime de Ilhéus</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="./../v2026/public/assets/css/shared/reset.css">
-        <link rel="stylesheet" href="./../v2026/public/assets/css/shared/variables.css">
-        <link rel="stylesheet" href="./../v2026/public/assets/css/shared/page.css">
-        <link rel="stylesheet" href="./../v2026/public/assets/css/shared/form.css">
-        <link rel="stylesheet" href="./../v2026/public/assets/css/shared/table.css">
+        <link rel="stylesheet" href="/assets/css/shared/reset.css">
+        <link rel="stylesheet" href="/assets/css/shared/variables.css">
+        <link rel="stylesheet" href="/assets/css/shared/page.css">
+        <link rel="stylesheet" href="/assets/css/shared/form.css">
+        <link rel="stylesheet" href="/assets/css/shared/table.css">
                 
         <!-- IMPORT - FLATICON -->
         <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
@@ -135,9 +132,9 @@ if ($totalPages > 0) {
         <p class="description-page">Controle de cartas precatórias, rogatórias e de ordem expedidas pelo cartório.</p>
          
         <!-- Badges de arquivos para download -->
-        <a href="./../docs/documents/pdf/PJBA - 1VCR - POP - Expedição e Envio de Cartas Precatórias.pdf" target="_blank" rel="noopener noreferrer">
+        <a href="/documents/pdf/PJBA - 1VCR - POP - Expedição e Envio de Cartas Precatórias.pdf" target="_blank" rel="noopener noreferrer">
             <div class="badge file">
-                <img src="./../v2026/public/assets/icons/Office-File-Pdf-1--Streamline-Ultimate.png" alt="Ícone de arquivo PDF">
+                <img src="/assets/icons/Office-File-Pdf-1--Streamline-Ultimate.png" alt="Ícone de arquivo PDF">
                 <span>Passo a passo - Expedição de Cartas Precatórias</span>
             </div>
         </a>
@@ -288,7 +285,7 @@ if ($totalPages > 0) {
                     ?>
                     <a class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>"
                        <?php if ($currentPage > 1): ?>href="<?php echo htmlspecialchars($prevHref); ?>"<?php else: ?>aria-disabled="true"<?php endif; ?>>
-                        <img src="./../v2026/public/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior">
+                        <img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior">
                     </a>
                     <?php foreach ($paginationButtons as $page): ?>
                         <?php
@@ -301,7 +298,7 @@ if ($totalPages > 0) {
                     <?php endforeach; ?>
                     <?php if ($paginationEllipsis && !empty($trailingPages)): ?>
                         <a class="pagination-symbol pagination-ellipsis" aria-hidden="true">
-                            <img src="./../v2026/public/assets/icons/Navigation-Menu-Horizontal--Streamline-Ultimate.png" alt="Mais páginas">
+                            <img src="/assets/icons/Navigation-Menu-Horizontal--Streamline-Ultimate.png" alt="Mais páginas">
                         </a>
                         <?php foreach ($trailingPages as $page): ?>
                             <?php
@@ -315,7 +312,7 @@ if ($totalPages > 0) {
                     <?php endif; ?>
                     <a class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>"
                        <?php if ($currentPage < $totalPages): ?>href="<?php echo htmlspecialchars($nextHref); ?>"<?php else: ?>aria-disabled="true"<?php endif; ?>>
-                        <img src="./../v2026/public/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página">
+                        <img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página">
                     </a>
                 </div>
             <?php endif; ?>
@@ -366,7 +363,7 @@ if ($totalPages > 0) {
 
             if (novoCadastroBtn) {
                 novoCadastroBtn.addEventListener('click', function () {
-                    window.location.href = 'cartorio-cartas-expedidas-create.php';
+                    window.location.href = '/frame.php?page=cartasexpedidascreate';
                 });
             }
 

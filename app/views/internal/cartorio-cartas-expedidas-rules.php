@@ -6,15 +6,9 @@ if (function_exists('mb_internal_encoding')) {
     mb_internal_encoding('UTF-8');
 }
 
-// Apenas inclui o arquivo. Ele irá definir $GLOBALS['connection'].
-// Não atribua o retorno do require_once a $connection, pois ele retorna 1.
-require_once __DIR__ . '/../class/Connect-New.php'; // Esta linha está correta como está
-require_once __DIR__ . '/../class/Cartorio/CartasExpedidas/Rules/RulesAllocator.php';
+require_once __DIR__ . '/../../rules/RulesAllocator.php';
 
-use App\Cartorio\CartasExpedidas\Rules\RulesAllocator;
-
-// Acessa a conexão PDO que foi definida globalmente pelo Connect-New.php
-$connection = $GLOBALS['connection']; // <--- ESTA É A LINHA QUE PRECISA SER ADICIONADA/AJUSTADA
+$connection = Conection::getInstance()->getConnection();
 
 $ruleName = 'ALLOCATE-CARTASEXPEDIDAS';
 $errors = [];
@@ -67,11 +61,11 @@ try {
         <title>Template Model - Components - Buttons</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="./../v2026/public/assets/css/shared/reset.css">
-        <link rel="stylesheet" href="./../v2026/public/assets/css/shared/variables.css">
-        <link rel="stylesheet" href="./../v2026/public/assets/css/shared/page.css">
-        <link rel="stylesheet" href="./../v2026/public/assets/css/shared/form.css">
-        <link rel="stylesheet" href="./../v2026/public/assets/css/shared/table.css">
+        <link rel="stylesheet" href="/assets/css/shared/reset.css">
+        <link rel="stylesheet" href="/assets/css/shared/variables.css">
+        <link rel="stylesheet" href="/assets/css/shared/page.css">
+        <link rel="stylesheet" href="/assets/css/shared/form.css">
+        <link rel="stylesheet" href="/assets/css/shared/table.css">
 
     </head>
 <body class="page-internal">
@@ -92,7 +86,7 @@ try {
 
         <!-- Badges de arquivos para download -->
         <div class="badge file">
-            <img src="./../v2026/public/assets/icons/Office-File-Pdf-1--Streamline-Ultimate.png" alt="Ícone de arquivo PDF">
+            <img src="/assets/icons/Office-File-Pdf-1--Streamline-Ultimate.png" alt="Ícone de arquivo PDF">
             <span>Guia Completo - Divisão de Tarefas</span>
         </div>
     </div>
