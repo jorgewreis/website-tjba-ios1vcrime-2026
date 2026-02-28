@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0132
+
+**Data:** 2026-02-28 13:25:35 | **Commit:** `5f5d1c3` | **Tipo:** `patch`
+
+- Fix: correção de data ao cadastrar processo
+
 ## V. 1.02.0131
 
 **Data:** 2026-02-28 13:22:27 | **Commit:** `354ba40` | **Tipo:** `patch`
@@ -1830,6 +1836,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

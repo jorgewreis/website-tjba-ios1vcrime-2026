@@ -203,15 +203,28 @@ final class CartasExpedidasService
             return null;
         }
         if (is_numeric($value)) {
-            $date = date('Y-m-d', (int) $value);
-            return $date !== false ? $date : null;
+            $ts = (int) $value;
+            if ($ts > 1e12) {
+                $ts = (int) floor($ts / 1000);
+            }
+            if ($ts > 2147483647 || $ts < -2147483648) {
+                return null;
+            }
+            $date = date('Y-m-d', $ts);
+            return $date !== false && $this->isValidDateYear($date) ? $date : null;
         }
         $ts = strtotime((string) $value);
         if ($ts === false) {
             return null;
         }
         $date = date('Y-m-d', $ts);
-        return $date !== false ? $date : null;
+        return $date !== false && $this->isValidDateYear($date) ? $date : null;
+    }
+
+    private function isValidDateYear(string $ymd): bool
+    {
+        $y = (int) substr($ymd, 0, 4);
+        return $y >= 1900 && $y <= 2100;
     }
 
     private function sanitizePrazo(string $valor): string
