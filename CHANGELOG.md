@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0139
+
+**Data:** 2026-02-28 15:03:23 | **Commit:** `b90fcfb` | **Tipo:** `patch`
+
+- Fix: correção de input
+
 ## V. 1.02.0138
 
 **Data:** 2026-02-28 15:00:05 | **Commit:** `9f9d673` | **Tipo:** `patch`
@@ -1872,6 +1878,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

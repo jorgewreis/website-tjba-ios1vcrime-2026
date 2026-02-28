@@ -203,7 +203,7 @@ $stateOptions = [
             <div class="row filter">
                 <div class="col filter">
                     <label for="filter-tipo">Finalidade</label>
-                    <select class="width-md height-lg" id="filter-tipo" required>
+                    <select class="width-lg height-md" id="filter-tipo" required>
                         <option value="" disabled>Selecione aqui</option>
                         <?php foreach ($finalidadeOptions as $option): ?>
                             <option value="<?php echo htmlspecialchars($option, ENT_QUOTES); ?>"<?php echo $finalidadeValue === $option ? ' selected' : ''; ?>><?php echo htmlspecialchars($option); ?></option>
