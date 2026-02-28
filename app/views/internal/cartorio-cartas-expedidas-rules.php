@@ -6,11 +6,25 @@ if (function_exists('mb_internal_encoding')) {
     mb_internal_encoding('UTF-8');
 }
 
+require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
 require_once __DIR__ . '/../../rules/RulesAllocator.php';
 
 $connection = Conection::getInstance()->getConnection();
 
+/** Perfis que podem alterar a regra de alocação (tabela usuario_perfil). */
+$perfisAlterarRegra = ['ADMIN', 'DIRETORA', 'MAGISTRADA'];
+
+$userPerfis = [];
+$userId = $_SESSION['id_usuario'] ?? null;
+if ($userId !== null && $userId !== '') {
+    $stmt = $connection->prepare('SELECT DISTINCT UPPER(TRIM(perfil)) AS perfil FROM usuario_perfil WHERE usuario = ? AND perfil IS NOT NULL');
+    $stmt->execute([$userId]);
+    $userPerfis = $stmt->fetchAll(PDO::FETCH_COLUMN);
+}
+$podeAlterarRegra = count(array_intersect($userPerfis, $perfisAlterarRegra)) > 0;
+
 $ruleName = 'ALLOCATE-CARTASEXPEDIDAS';
+$ruleDescription = 'Alocação automática - Envio de Cartas Expedidas';
 $errors = [];
 $successMessage = '';
 $usersList = [];
@@ -18,29 +32,33 @@ $selectedUserId = '1';
 $ruleRow = null;
 
 try {
-    // Agora $connection conterá o objeto PDO corretamente
-    $allocator = new RulesAllocator($connection); // Linha 22
+    $allocator = new RulesAllocator($connection);
     $usersList = $allocator->getUsers();
     if (empty($usersList)) {
         $errors[] = 'Nenhum servidor foi encontrado na tabela Usuarios.';
     }
 
-    $ruleRow = $allocator->getRule($ruleName);
-    $selectedUserId = (string) ($ruleRow['id_user'] ?? $selectedUserId);
+    $regrasRepo = new AlocacoesRegrasRepository($connection);
+    $ruleRow = $regrasRepo->findByRegra($ruleName);
+    $selectedUserId = (string) ($ruleRow['usuario_id'] ?? $selectedUserId);
     if ($selectedUserId === '' && !empty($usersList)) {
         $selectedUserId = $usersList[0]['id'];
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $postedUserId = trim((string) ($_POST['id_user'] ?? ''));
-        if ($postedUserId === '') {
+        if (!$podeAlterarRegra) {
+            $errors[] = 'Seu perfil não tem permissão para alterar esta regra. Apenas admin, diretora ou magistrada podem alterar.';
+        } elseif (($postedUserId = trim((string) ($_POST['id_user'] ?? ''))) === '') {
             $errors[] = 'Selecione um servidor antes de salvar.';
         } else {
             try {
-                $updatedRule = $allocator->assignServer($ruleName, $postedUserId);
-                $successMessage = 'Regra atualizada com ID ' . ($updatedRule['id_rule'] ?? 'sem ID') . '.';
-                $ruleRow = $updatedRule;
-                $selectedUserId = (string) ($updatedRule['id_user'] ?? $postedUserId);
+                $usuarioAtualizaId = null;
+                if (isset($_SESSION['id_usuario'])) {
+                    $usuarioAtualizaId = trim((string) $_SESSION['id_usuario']);
+                }
+                $ruleRow = $regrasRepo->save($ruleName, $ruleDescription, $postedUserId, $usuarioAtualizaId !== '' ? $usuarioAtualizaId : null);
+                $successMessage = 'Regra atualizada com ID ' . ($ruleRow['id'] ?? 'sem ID') . '.';
+                $selectedUserId = (string) ($ruleRow['usuario_id'] ?? $postedUserId);
             } catch (\InvalidArgumentException | \RuntimeException $exception) {
                 $errors[] = $exception->getMessage();
             } catch (\Throwable $exception) {
@@ -94,10 +112,17 @@ try {
     <div class="card-page">
         <form method="post" class="rule-form" style="width: 100%">
             <div class="row table header">Regra de alocação automática - Envio</div>
+            <?php if (!$podeAlterarRegra): ?>
+                <div class="row filter">
+                    <div class="col">
+                        <label class="status status-primary-light">Apenas perfis admin, diretora ou magistrada podem alterar esta regra. Você pode visualizar a configuração atual.</label>
+                    </div>
+                </div>
+            <?php endif; ?>
             <div class="row filter">
                 <div class="col filter">
                     <label for="filter-processo">Servidor</label>
-                    <select class="width-md height-md" id="filter-processo" name="id_user" required>
+                    <select class="width-md height-md" id="filter-processo" name="id_user" <?php echo $podeAlterarRegra ? '' : 'disabled'; ?> required>
                         <option value="" disabled<?php echo $selectedUserId === '' ? ' selected' : ''; ?>>Selecione um servidor</option>
                         <?php foreach ($usersList as $user): ?>
                             <option value="<?php echo htmlspecialchars($user['id'], ENT_QUOTES); ?>"<?php echo $selectedUserId === $user['id'] ? ' selected' : ''; ?>>
@@ -123,11 +148,11 @@ try {
                     </div>
                 </div>
             <?php endif; ?>
-            <?php if (!empty($ruleRow['id_rule'] ?? '')): ?>
+            <?php if (!empty($ruleRow['id'] ?? '')): ?>
                 <div class="row filter">
                     <div class="col filter">
                         <label class="minor-info">Regra atual</label>
-                        <span class="major-info"><?php echo htmlspecialchars($ruleRow['id_rule'] ?? ''); ?></span>
+                        <span class="major-info"><?php echo htmlspecialchars($ruleRow['id'] ?? ''); ?></span>
                     </div>
                 </div>
             <?php endif; ?>
@@ -140,7 +165,9 @@ try {
             <!-- Ações -->
             <div class="row buttons">
                 <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
-                <button type="submit" class="btn btn-primary">Salvar</button>
+                <?php if ($podeAlterarRegra): ?>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                <?php endif; ?>
             </div>
         </form>
     </div>
@@ -159,7 +186,7 @@ try {
             if (btn) {
                 btn.addEventListener('click', (event) => {
                     event.preventDefault();
-                    window.location.href = 'cartorio-cartas-expedidas-create.php';
+                    window.location.href = '/frame.php?page=cartasexpedidascreate';
                 }, { capture: true });
             }
         })();

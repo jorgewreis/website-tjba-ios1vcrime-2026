@@ -1,37 +1,56 @@
 // user.js
-// Funções relacionadas ao usuário e permissões
+// Funções relacionadas ao usuário e permissões.
+// Perfis para alterar regra de alocação: obtidos da tabela usuario_perfil via /admin/api/getPerfis.php
 
+var PERFIS_ALTERAR_REGRA = ['ADMIN', 'DIRETORA', 'MAGISTRADA'];
 
-function hasPermission() {
-    // Recupera array de usuários do sessionStorage
-    const userData = sessionStorage.getItem('UserLogin');
-    if (!userData) return false;
-    let users = [];
-    try {
-        users = JSON.parse(userData);
-    } catch (e) {
-        return false;
-    }
-    const allowed = ['admin', 'diretora', 'magistrada'];
-    // Verifica se algum usuário tem nucleo permitido
-    return users.some(user => {
-        if (!user.nucleo) return false;
-        return allowed.some(perfil => user.nucleo.toLowerCase().includes(perfil));
+function hasPermissionToChangeRule(perfis) {
+    if (!Array.isArray(perfis) || perfis.length === 0) return false;
+    const allowed = PERFIS_ALTERAR_REGRA.map(function (p) { return p.toUpperCase(); });
+    return perfis.some(function (perfil) {
+        var p = (perfil && String(perfil)).toUpperCase().trim();
+        return allowed.indexOf(p) !== -1;
     });
 }
 
-function showRuleButton(btnId) {
-    const btn = document.getElementById(btnId);
-    if (btn) {
-        if (!hasPermission()) {
-            btn.style.display = 'none';
-        } else {
-            btn.style.display = '';
-            btn.addEventListener('click', function () {
-                window.location.href = 'cartorio-cartas-expedidas-rules.php';
-            });
-        }
+function hasPermission() {
+    // Retrocompatibilidade: se já houver perfis em memória, usa.
+    if (window.__userPerfisCartorio && hasPermissionToChangeRule(window.__userPerfisCartorio)) {
+        return true;
     }
+    return false;
+}
+
+function showRuleButton(btnId) {
+    var btn = document.getElementById(btnId);
+    if (!btn) return;
+
+    var endpoint = typeof window.CARTAS_EXPEDIDAS_PERFIS_ENDPOINT !== 'undefined'
+        ? window.CARTAS_EXPEDIDAS_PERFIS_ENDPOINT
+        : '/admin/api/getPerfis.php';
+
+    fetch(endpoint, { credentials: 'same-origin' })
+        .then(function (response) {
+            if (!response.ok) throw new Error('getPerfis');
+            return response.json();
+        })
+        .then(function (data) {
+            var perfis = (data && data.perfis) ? data.perfis : [];
+            if (typeof window.__userPerfisCartorio === 'undefined') {
+                window.__userPerfisCartorio = perfis;
+            }
+            if (hasPermissionToChangeRule(perfis)) {
+                btn.style.display = '';
+                btn.addEventListener('click', function () {
+                    window.location.href = '/frame.php?page=cartasexpedidasrules';
+                });
+            } else {
+                btn.style.display = 'none';
+            }
+        })
+        .catch(function () {
+            btn.style.display = 'none';
+        });
 }
 
 // Inicialização automática

@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
 require_once __DIR__ . '/../../rules/RulesAllocator.php';
 
 $connection = Conection::getInstance()->getConnection();
@@ -62,10 +63,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $ruleServidor = '?';
 $ruleName = 'ALLOCATE-CARTASEXPEDIDAS';
 try {
-    $allocator = new RulesAllocator($connection);
-    $allocatedName = $allocator->getAssignedUserName($ruleName);
-    if ($allocatedName !== null) {
-        $ruleServidor = $allocatedName;
+    $regrasRepo = new AlocacoesRegrasRepository($connection);
+    $ruleRow = $regrasRepo->findByRegra($ruleName);
+    $allocatedUserId = $ruleRow['usuario_id'] ?? null;
+    if ($allocatedUserId !== null && $allocatedUserId !== '') {
+        $allocator = new RulesAllocator($connection);
+        $usersList = $allocator->getUsers();
+        foreach ($usersList as $user) {
+            if ((string) $user['id'] === (string) $allocatedUserId) {
+                $ruleServidor = $user['name'];
+                break;
+            }
+        }
     }
 } catch (\Throwable $exception) {
     // Mantém o valor padrão se houver erro na leitura do banco.
