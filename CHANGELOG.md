@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0124
+
+**Data:** 2026-02-28 12:32:34 | **Commit:** `9346a5c` | **Tipo:** `patch`
+
+- Fix: correção de fontes
+
 ## V. 1.02.0123
 
 **Data:** 2026-02-28 12:25:08 | **Commit:** `b7caa8a` | **Tipo:** `patch`
@@ -1782,6 +1788,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
