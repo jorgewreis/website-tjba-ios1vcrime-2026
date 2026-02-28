@@ -80,8 +80,14 @@ final class CartasExpedidasService
             }
         }
 
-        if ($classeCodigo === '' || $classeNome === '') {
-            throw new InvalidArgumentException('A classe processual é obrigatória.');
+        $classeInformada = $classeCodigo !== '' || $classeNome !== '';
+        $classeNaoInformada = !$classeInformada
+            || $this->normalizeClasseLabel($classeNome) === 'classe nao informada'
+            || $this->normalizeClasseLabel($classeCodigo) === 'classe nao informada';
+
+        // Quando a API não retorna a classe (ex.: processo sigiloso), permite cadastro e marca o processo como sigiloso
+        if ($classeNaoInformada) {
+            $sigiloso = true;
         }
 
         $tribunalSigla = 'TJBA';
@@ -93,7 +99,10 @@ final class CartasExpedidasService
         $comarcaOrigemId = $this->comarcasRepository->ensureComarca($tribunalId, $ufOrigem, $comarcaOrigemNome);
         $varaOrigemId = $this->varasRepository->ensureVara($comarcaOrigemId, $varaOrigemNome, null);
 
-        $classeId = $this->classesRepository->ensureClass((string) $classeCodigo, $classeNome !== '' ? TextFormatter::formatProperName((string) $classeNome, 200) : (string) $classeCodigo);
+        $classeId = null;
+        if (!$classeNaoInformada && $classeCodigo !== '') {
+            $classeId = $this->classesRepository->ensureClass((string) $classeCodigo, $classeNome !== '' ? TextFormatter::formatProperName((string) $classeNome, 200) : (string) $classeCodigo);
+        }
         $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, $sigiloso);
 
         $ufDestino = strtoupper(trim((string) ($payload['estado'] ?? $payload['uf'] ?? '')));
@@ -216,6 +225,11 @@ final class CartasExpedidasService
         $n = preg_replace('/[ùúûü]/u', 'u', $n);
         $n = preg_replace('/[ç]/u', 'c', $n);
         return $n;
+    }
+
+    private function normalizeClasseLabel(string $valor): string
+    {
+        return $this->normalizeNomeCidade($valor);
     }
 
     private function sanitizePrazo(string $valor): string

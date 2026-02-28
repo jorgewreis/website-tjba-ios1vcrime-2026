@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0136
+
+**Data:** 2026-02-28 14:28:59 | **Commit:** `40fcc16` | **Tipo:** `patch`
+
+- Fix: correção no cadastro de processo e carta
+
 ## V. 1.02.0135
 
 **Data:** 2026-02-28 14:15:37 | **Commit:** `e465eb9` | **Tipo:** `patch`
@@ -1854,6 +1860,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

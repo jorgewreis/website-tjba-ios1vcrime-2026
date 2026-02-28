@@ -14,12 +14,12 @@ final class ProcessosRepository
         $this->table = $table;
     }
 
-    /** Retorna o id do processo (existente ou recém-criado). numero_processo formatado (ex. CNJ); classe_id FK; data_fato e sigiloso opcionais. */
-    public function ensureProcess(string $numeroProcesso, string $classeId, ?string $dataFato = null, bool $sigiloso = false): string
+    /** Retorna o id do processo (existente ou recém-criado). numero_processo formatado (ex. CNJ); classe_id opcional (null = classe não informada); data_fato e sigiloso opcionais. */
+    public function ensureProcess(string $numeroProcesso, ?string $classeId = null, ?string $dataFato = null, bool $sigiloso = false): string
     {
         $digits = $this->normalizeNumber($numeroProcesso);
-        if ($digits === '' || $classeId === '') {
-            throw new InvalidArgumentException('Número do processo e classe_id são obrigatórios.');
+        if ($digits === '') {
+            throw new InvalidArgumentException('Número do processo é obrigatório.');
         }
 
         $existing = $this->findByNumero($numeroProcesso);
@@ -44,7 +44,7 @@ final class ProcessosRepository
         );
         $statement->bindValue(':id', $id);
         $statement->bindValue(':numero_processo', $numeroProcesso);
-        $statement->bindValue(':classe_id', $classeId);
+        $statement->bindValue(':classe_id', $classeId !== null && $classeId !== '' ? $classeId : null);
         $statement->bindValue(':data_fato', $dataFato);
         $statement->bindValue(':sigiloso', $sigiloso ? 1 : 0, PDO::PARAM_INT);
         $statement->execute();
@@ -72,7 +72,7 @@ final class ProcessosRepository
         return $result === false ? null : $result;
     }
 
-    private function updateIfNeeded(string $id, string $classeId, ?string $dataFato, bool $sigiloso): void
+    private function updateIfNeeded(string $id, ?string $classeId, ?string $dataFato, bool $sigiloso): void
     {
         $statement = $this->connection->prepare(
             sprintf(
@@ -81,7 +81,7 @@ final class ProcessosRepository
             )
         );
         $statement->bindValue(':id', $id);
-        $statement->bindValue(':classe_id', $classeId);
+        $statement->bindValue(':classe_id', $classeId !== null && $classeId !== '' ? $classeId : null);
         $statement->bindValue(':data_fato', $dataFato);
         $statement->bindValue(':sigiloso', $sigiloso ? 1 : 0, PDO::PARAM_INT);
         $statement->execute();
