@@ -12,24 +12,39 @@ Sistema web interno para centralizar rotinas do **Cartório**, **Gabinete** e **
 
 ## Sumário
 
-- [Visão geral](#visão-geral)
-- [Área externa (pública)](#área-externa-pública)
-- [Áreas internas (módulos)](#áreas-internas-módulos)
-  - [Cartório](#cartório)
-  - [Gabinete](#gabinete)
-  - [Audiências](#audiências)
-  - [Estudantes](#estudantes)
-  - [Settings](#settings)
-- [Perfis de acesso (resumo)](#perfis-de-acesso-resumo)
-- [Fluxo de navegação](#fluxo-de-navegação)
-- [Padrões de dados e validações](#padrões-de-dados-e-validações)
-- [UI: paleta de cores](#ui-paleta-de-cores)
-- [UI: padrão de componentes](#ui-padrão-de-componentes)
-- [Segurança (boas práticas)](#segurança-boas-práticas)
-- [Logs e auditoria](#logs-e-auditoria)
-- [Estrutura do projeto (referência)](#estrutura-do-projeto-referência)
-- [Licença e uso](#licença-e-uso)
-- [Créditos](#créditos)
+- [Sistema de Gestão do Cartório ⚖️](#sistema-de-gestão-do-cartório-️)
+  - [Primeira Vara Crime da Comarca de Ilhéus](#primeira-vara-crime-da-comarca-de-ilhéus)
+  - [Sumário](#sumário)
+  - [Visão geral](#visão-geral)
+  - [Área externa (pública)](#área-externa-pública)
+  - [Áreas internas (módulos)](#áreas-internas-módulos)
+    - [Cartório](#cartório)
+    - [Gabinete](#gabinete)
+    - [Audiências](#audiências)
+    - [Estudantes](#estudantes)
+    - [Settings](#settings)
+  - [Perfis de acesso (resumo)](#perfis-de-acesso-resumo)
+  - [Fluxo de navegação](#fluxo-de-navegação)
+  - [Padrões de dados e validações](#padrões-de-dados-e-validações)
+    - [CPF](#cpf)
+    - [Usuários](#usuários)
+  - [UI: paleta de cores](#ui-paleta-de-cores)
+    - [Neutras e base](#neutras-e-base)
+    - [Azuis (interface)](#azuis-interface)
+    - [Semânticas (feedback)](#semânticas-feedback)
+  - [UI: padrão de componentes](#ui-padrão-de-componentes)
+    - [Layout e superfícies](#layout-e-superfícies)
+    - [Navegação e estado ativo](#navegação-e-estado-ativo)
+    - [Botões](#botões)
+    - [Alerts / mensagens](#alerts--mensagens)
+    - [Inputs (formulários)](#inputs-formulários)
+  - [Segurança (boas práticas)](#segurança-boas-práticas)
+  - [Logs e auditoria](#logs-e-auditoria)
+  - [Estrutura do projeto (referência)](#estrutura-do-projeto-referência)
+  - [Configuração Inicial](#configuração-inicial)
+  - [Contexto Ativo (estado atual)](#contexto-ativo-estado-atual)
+  - [Licença e uso](#licença-e-uso)
+  - [Créditos](#créditos)
 
 ---
 
@@ -262,21 +277,34 @@ Campos sugeridos:
 
 ---
 
-## Estrutura do projeto (referência)
-
+-## Estrutura do projeto (referência)
+-
 Pastas principais no repositório:
-
-- `admin/`
-- `bd/`
-- `config/`
-- `internal/`
-- `public/`
-- `scripts/`
-- `services/`
-- `sql/`
+-
+- `app/` — modelos, services, helpers, middlewares e views divididos entre `public` e `internal`.
+- `bootstrap/`, `config/` e `database/` — inicialização, parâmetros de conexão e migrações/exportações SQL.
+- `public/` — entrypoints (`index.php`, `home.php`, `frame.php`, APIs em `admin/api/`) e a pasta `assets/` com CSS/JS/template compartilhados, imagens e ícones.
+- `scripts/` — automações (versionamento, drafts, bump) utilizadas pelos hooks do repositório.
+- `storage/` — runtime (logs, uploads, backups) e **não versiona** o conteúdo (apenas `.gitkeep`).
+- `tools/` — auxiliares de IA e modelos de prompt (usados apenas em contexto de desenvolvimento/documentação).
 - `vendor/`
 
 ---
+
+## Configuração Inicial
+
+Após clonar o repositório, configure os hooks:
+
+- git config core.hooksPath .githooks
+
+## Deploy automático para dev.ios1vcrime.com.br
+
+O branch `develop` é conectado ao workflow `.github/workflows/deploy-dev.yml`.
+Cada push aprovado nesse branch dispara a sincronização automatizada com o subdomínio `dev.ios1vcrime.com.br`, que consome o conteúdo vivo da pasta `public/`. Garanta que só arquivos públicos (HTML, CSS, JS, assets) estejam sob `public/`, pois qualquer script ou arquivo sensível deve ficar em `app/`, `config/`, `storage/` ou em `tools/`.
+
+## Contexto Ativo (estado atual)
+
+O documento [`docs/00-foundation/contexto-ativo.md`](docs/00-foundation/contexto-ativo.md) reúne o status atual das atividades de documentação e reorganização, os problemas presentes, o que já foi validado manualmente e os arquivos que sofreram impacto direto. Consulte esse arquivo antes de iniciar qualquer alteração estrutural ou de processo para garantir alinhamento com o estado acordado.
 
 ## Licença e uso
 

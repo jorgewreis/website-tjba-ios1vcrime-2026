@@ -1,0 +1,54 @@
+/* FONTES */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+/* VARIÁVEIS */
+:root{
+    /* CORES */
+    --primary-color: #686bfb;
+    --primary-color-hover: #5a5efb;
+    --primary-color-active: #4d52fb;
+    --primary-color-disabled: #c0c0c0;
+    --primary-color-bg-light: #e0e0ff;
+    --primary-color-bg-light-2: #f6f6ff;
+    --primary-bg: #F4F4FD;
+
+    --secondary-color: #6c757d;
+    --secondary-color-hover: #5a6268;
+    --secondary-color-active: #4e555b;
+    --secondary-color-disabled: #c0c0c0;
+
+    --danger-color: #dc3545;
+    --danger-color-hover: #c82333;
+    --danger-color-active: #bd2130;
+    --danger-color-disabled: #c0c0c0;
+    --danger-color-bg-light: #f8d7da;
+
+    --warning-color: #ffc107;
+    --warning-color-hover: #e0a800;
+    --warning-color-active: #d39e00;
+    --warning-color-disabled: #c0c0c0;
+    --warning-color-bg-light: #fff9d3;
+
+    --info-color: #11ceeb;
+    --info-color-hover: #0eb8d9;
+    --info-color-active: #0ab1c6;
+    --info-color-disabled: #c0c0c0;
+    --info-color-bg-light: #d1ecf1;
+
+    --success-color: #2cca80;
+    --success-color-hover: #27ac6e; 
+    --success-color-active: #20915c;
+    --success-color-disabled: #c0c0c0;
+    --success-color-bg-light: #e3fff4;
+
+    --color-gray-000: #ffffff;
+    --color-gray-100: #f8f9fa;
+    --color-gray-200: #e9ecef;
+    --color-gray-300: #dee2e6;
+    --color-gray-400: #ced4da;
+    --color-gray-500: #adb5bd;
+    --color-gray-600: #6c757d;
+    --color-gray-700: #495057;
+    --color-gray-800: #343a40;
+    --color-gray-900: #212529;   
+}

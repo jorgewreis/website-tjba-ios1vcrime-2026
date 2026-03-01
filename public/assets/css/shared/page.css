@@ -1,0 +1,95 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+/* PAGE */
+body{
+    background-color: var(--primary-bg);
+}
+
+/* SPACING */
+.spacing-top-page {
+    height: 100px;
+}
+
+.header-page {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    flex-wrap: wrap;
+
+    min-width: 320px;
+    max-width: 80%;
+
+    margin: 10px 40px;    
+}
+
+.footer-page {
+    display: none;
+}
+
+.title-page {
+    font-family: 'Poppins', sans-serif;
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--color-gray-700);
+    margin-bottom: 10px;
+}
+
+.description-page {
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    color: var(--color-gray-500);
+    line-height: 1.5;
+    margin-bottom: 10px;
+}
+
+.card-page {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    flex-wrap: wrap;
+
+    width: calc(100% - 40px);
+
+    background-color: var(--color-gray-000);
+    border: 1px solid var(--color-gray-400);
+    box-shadow: 1px 2px 10px 1px rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    padding: 20px 0;
+    margin: 20px;
+    box-sizing: border-box;
+}
+
+@media (min-width: 1280px) {
+    .footer-page {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+
+        min-width: 400px;
+
+        margin: 10px 0;    
+    }
+    .location {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+
+        margin-bottom: 30px;
+    }
+        .location .all {
+            font-family: 'Poppins', sans-serif;
+            font-size: 10px;
+            color: var(--color-gray-500);
+        }
+        .location .specific {
+            font-family: 'Poppins', sans-serif;
+            font-size: 10px;
+            color: var(--color-gray-700);
+            margin: 0 3px;
+        }
+
+}

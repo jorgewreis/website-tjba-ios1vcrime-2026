@@ -1,0 +1,81 @@
+name: Deploy DEV (develop -> dev.ios1vcrime.com.br)
+
+on:
+  push:
+    branches: ["develop"]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup SSH (from base64 key)
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s' "${{ secrets.DEPLOY_KEY_B64 }}" | base64 -d > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Fingerprint of key used by Actions (safe)
+        run: |
+          ssh-keygen -lf ~/.ssh/id_ed25519
+
+      - name: SSH sanity check
+        run: |
+          ssh -i ~/.ssh/id_ed25519 \
+            -o IdentitiesOnly=yes \
+            -o PreferredAuthentications=publickey \
+            -o PubkeyAuthentication=yes \
+            -o PasswordAuthentication=no \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "echo SSH_OK && whoami && pwd"
+
+      - name: Sync files to server (DEV)
+        run: |
+          rsync -az \
+            --no-times --omit-dir-times \
+            --no-perms --no-owner --no-group \
+            --inplace \
+            --exclude ".git/" \
+            --exclude ".github/" \
+            --exclude ".env" \
+            --exclude "storage/" \
+            --exclude "docs/" \
+            --exclude "old/" \
+            --exclude ".venv/" \
+            --exclude ".vscode/" \
+            --exclude "scripts/" \
+            --exclude ".config/" \
+            --exclude ".githooks/" \
+            ./ "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEV_PATH }}/"
+
+
+      - name: Post-deploy (DEV)
+        run: |
+          ssh -i ~/.ssh/id_ed25519 \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" << 'EOF'
+            set -e
+            cd "${{ secrets.DEV_PATH }}"
+
+            if [ -f package.json ]; then
+              npm ci
+              npm run build
+            fi
+
+            if [ -f composer.json ]; then
+              composer install --no-dev --optimize-autoloader
+            fi
+
+            sudo systemctl reload nginx 2>/dev/null || true
+            sudo systemctl reload php8.2-fpm 2>/dev/null || true
+            sudo systemctl reload php8.1-fpm 2>/dev/null || true
+            sudo systemctl reload php8.0-fpm 2>/dev/null || true
+          EOF

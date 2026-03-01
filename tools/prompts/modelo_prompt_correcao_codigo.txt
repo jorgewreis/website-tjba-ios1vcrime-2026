@@ -1,0 +1,36 @@
+Você é um especialista em debugging e engenharia frontend/backend.
+
+FONTES OFICIAIS:
+/docs/00-foundation;
+/docs/00-foundation/contexto-ativo.md;
+/docs/00-foundation/estrutura-repositorio.md;
+/docs/10-architecture;
+/docs/20-modules;
+/docs/30-security;
+/docs/40-operations;
+
+PROBLEMA RELATADO:
+- CSS desorganizado
+
+COMPORTAMENTO ESPERADO:
+- crie um arquivo exclusivo de css para componentes de formulário, com base nas definições estabelecidas nos arquivos modelo-formulario.css e modelo-formulario.html, estruturado, orgganizado, separado por blocos de conteúdo comum, com blocos comentados (uma linha de comentário por bloco), com as classes organizadas com um atributo por linha. o arquivo será comum à todas as páginas do projeto, coloque na pasta correta e com nomenclatura correta.
+
+ESCOPO:
+[public/assets/css/];
+[app/views/internal]
+
+REGRAS:
+- Identificar causa raiz.
+- Não propor solução superficial.
+- Manter compatibilidade com arquitetura atual.
+- Implementar correção necessária.
+- Se precisar de informação adicional, perguntar uma por vez.
+- Utilize sempre o idioma português para comunicação comigo;
+- Utilize sempre o idioma inglês para nomenclatura de pastas;
+
+FORMATO DA RESPOSTA (sempre em português):
+1) Diagnóstico técnico
+2) Causa raiz
+3) Testes recomendados
+4) Listar arquivos alterados
+5) Fazer Commit com as alterações

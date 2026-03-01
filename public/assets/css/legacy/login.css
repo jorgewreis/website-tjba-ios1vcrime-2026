@@ -1,0 +1,246 @@
+/* ========================================
+   IMPORTS - FONTS
+   ======================================== */
+
+/* Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+/* ========================================
+   MOBILE - NO VIEW (max-width: 389px)
+   ======================================== */
+
+@media (max-width: 389px) {
+    .view {
+        display: none;
+    }
+
+    .noview {
+        display: flex;
+    }
+}
+
+body {
+    width: 100vw;
+    min-height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background-color: var(--background-color);
+}
+
+
+@media (min-width: 390px) {   
+
+    /* LAYOUT */
+    .layout-page{
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+    }
+    
+    /* LEFT */
+    .page-left{
+        min-width: 10vw;
+        width: calc(100% - 500px);
+        height: 100%;
+
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+
+        background-image: url("./../../img/backgrounds/Fundo_001.png");
+        background-position: right;
+        background-repeat: no-repeat;
+        background-size: cover;
+    }
+        .page-left .title-system{
+            display: none;
+        }
+
+    /* PAGE RIGHT */
+    .page-right{        
+        max-width: 500px;
+        width: 90vw;
+        height: 100%;
+
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+    }
+
+    .title-page{
+        width: calc(100% - 40px);
+
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+
+        margin-left: 20px;
+    }
+
+        .title-page .title{
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            font-size: 20px;
+            color: #384551;
+        }
+
+        .title-page .info-title{
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 400;
+            font-size: 12px;
+            color: #384551;
+        }
+
+    .form-login{
+        width: calc(100% - 40px);
+
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        
+        margin: 40px 20px 20px 20px;
+    }
+
+    .alert-heading{
+        min-width: 300px;
+        height: fit-content;
+
+        display: none;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+
+        border: none;
+        border-radius: 7px;
+
+        margin: 10px 0;
+        padding: 15px;
+    }
+
+        .alert-heading.primary{
+            background-color: var(--bg-primary);
+            color: var(--bs-primary);
+        }    
+        .alert-heading.danger{
+            background-color: var(--bg-danger);
+            color: var(--bs-danger);
+        }
+        .alert-heading.success{
+            background-color: var(--bg-success);
+            color: var(--bs-success);
+        }
+
+        .alert-heading .alert-header{
+            width: 100%;
+            min-height: 30px;
+
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+        }
+            .alert-heading .alert-header .text{
+                font-family: 'Montserrat', sans-serif;
+                font-weight: 500;
+                font-size: 16px;
+            }
+        .alert-heading .alert-text{
+            font-family: 'Montserrat', sans-serif;
+                font-weight: 400;
+                font-size: 13px;
+        }
+}
+
+@media (min-width: 768px) {
+    /* Tablet styles */
+
+    /* LAYOUT */
+
+    /* LEFT */
+    
+    /* RIGHT */
+    .title-page{
+        width: calc(100% - 140px);
+
+        margin: 0 70px;
+    }
+    .form-login{
+        width: calc(100% - 140px);
+        
+        margin: 40px 70px 40px 70px;
+    }
+}
+
+@media (min-width: 1080px) {
+    /* Desktop styles */
+    
+    /* LAYOUT */
+
+    /* LEFT */    
+    .page-left .title-system{
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+
+        margin-left: 10vw;
+        transition: margin 0.7s ease-in-out;
+    }        
+        .page-left .title-system .title{
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            font-size: 45px;
+            color: #161B31;
+        }
+        .page-left .title-system .info-title{
+            margin-top: -30px;
+            margin-left: -3px;
+
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 72px;
+            color: #161B3199;
+        }
+
+        .page-left .title-system .text{
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 400;
+            font-size: 20px;
+            color: #161B31;
+        }
+
+    /* RIGHT */
+}
+
+@media (min-width: 1440px) {
+    /* Large desktop styles */
+    
+    /* LAYOUT */
+
+    /* LEFT */
+    .page-left .title-system{
+        margin-left: 20vw;
+    }  
+
+    /* RIGHT */
+}
+
+@media (min-width: 1920px) {
+    /* Extra large desktop styles */
+    
+    /* LAYOUT */
+
+    /* LEFT */
+
+    /* RIGHT */
+}

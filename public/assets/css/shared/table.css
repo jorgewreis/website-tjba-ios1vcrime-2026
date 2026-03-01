@@ -1,0 +1,171 @@
+/* TABLE COMPONENTS */
+.row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+
+    box-sizing: border-box;    
+}
+
+.row.filter {    
+    width: 100%;
+    min-height: 60px;
+    padding: 0 10px;
+    align-items: flex-end;    
+    border-bottom: 1px solid var(--color-gray-300);
+}
+
+.row.buttons {
+    width: 100%;
+    min-height: 60px;
+    margin-top: 20px;
+    padding: 0 10px;
+    justify-content: flex-end;
+    border-bottom: 1px solid var(--color-gray-300);
+    background-color: var(--color-gray-100);
+}
+
+.row.table {
+    width: 100%;
+    min-height: 50px;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--color-gray-300);
+}
+
+.row.table.header {
+    width: 100%;
+    margin-top: 20px;
+    padding: 0 10px;
+    border-bottom: 1px solid var(--color-gray-500);
+}
+
+.row.pagination {
+    width: 100%;
+    min-height: 60px;
+    padding: 0 10px;
+    border-top: 1px solid var(--color-gray-500);
+    justify-content: space-between;
+}
+.row.info{
+    width: 100%;
+    min-height: 50px;
+    margin-top: 20px;
+    padding: 0 10px;
+    justify-content: flex-start;
+    background-color: var(--primary-color-bg-light-2);
+    color: var(--primary-color-active);
+    border-bottom: 1px solid var(--primary-color);
+}
+.row.success{
+    width: 100%;
+    min-height: 50px;
+    margin-top: 20px;
+    padding: 0 10px;
+    justify-content: flex-start;
+    background-color: var(--success-color-bg-light);
+    color: var(--success-color-active);
+    border-bottom: 1px solid var(--success-color);
+}
+
+.row.info span,
+.row.success span{
+    font-size: 12px;
+}
+
+.button-edit{
+    visibility: hidden;
+}
+
+.col {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;    
+}
+
+.col.filter{
+    margin: 5px 0;
+}
+
+/* TABLE CELLS */
+.minor-info {
+    width: fit-content;
+    margin: 0 0 3px 20px;
+    font-size: 12px;
+    color: var(--color-gray-700);
+    display: block;
+}
+.major-info {
+    margin: 0 10px 0 20px;
+    font-size: 13px;
+    color: var(--color-gray-900);
+    display: block;
+}
+.major-info.important {
+    color: var(--primary-color);
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* TAMANHOS PADRONIZADOS */
+.process-info {
+    width: 220px;
+    cursor: pointer;
+}
+.comarca-info {
+    display: none;
+}
+.detalhes-info {
+    display: none;    
+}
+.process-select {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: 25px;
+    height: 40px;    
+}
+
+.status-task {
+    display: flex;
+    align-items: flex-end;
+    min-width: 150px;
+    padding-right: 10px;
+    margin-left: 20px;
+}
+
+@media (min-width: 768px) {    
+    .comarca-info {
+        display: flex;
+        width: 180px;
+    }    
+}
+
+@media (min-width: 1024px) {
+    .detalhes-info {
+        display: flex;
+        width: 240px;
+    }
+    .button-edit {
+        visibility: visible;
+    }
+}
+
+@media (min-width: 1280px) {
+    .row.filter{
+        justify-content: space-between;
+        padding-right: calc(100% - 960px);
+    }
+    .process-info {
+        width: 300px;
+    }
+    .comarca-info {
+        width: 20%;
+    }
+    .detalhes-info {
+        width: 25%;
+    }    
+}

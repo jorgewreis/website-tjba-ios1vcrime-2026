@@ -1,18 +1,511 @@
 #!/bin/sh
+# =============================================================================
+# GIT HOOK: prepare-commit-msg
+# =============================================================================
+# Pré-preenche mensagem de commit com sugestões inteligentes baseadas em:
+# - Arquivos alterados (tipo: feat/fix/docs/test)
+# - Diretórios modificados (escopo: auth/api/ui)
+# - Quantidade de mudanças (tags: [patch]/[minor]/[major])
+# - Magnitude do impacto (impact: baixo/medio/alto)
+#
+# Este hook é executado ANTES do editor abrir e NUNCA bloqueia commits.
+# =============================================================================
+
 set -eu
 
-# Auto-prefix commit message with [patch]/[minor]/[major] suggestion when user provides empty msg
-# This hook should be lenient and NEVER block a commit.
+# -----------------------------------------------------------------------------
+# CONFIGURAÇÕES
+# -----------------------------------------------------------------------------
 
+# Limites para sugestão de bump
+MINOR_FILE_THRESHOLD=20    # 10+ arquivos → sugere [minor]
+MAJOR_FILE_THRESHOLD=60    # 50+ arquivos → sugere [major]
+
+# Ativar modo debug: export DEBUG=1
+DEBUG="${DEBUG:-0}"
+
+# Cores para output (se terminal suportar)
+if [ -t 2 ]; then
+  GREEN='\033[0;32m'
+  CYAN='\033[0;36m'
+  NC='\033[0m'
+else
+  GREEN=''
+  CYAN=''
+  NC=''
+fi
+
+# -----------------------------------------------------------------------------
+# FUNÇÕES AUXILIARES
+# -----------------------------------------------------------------------------
+
+# Exibe informação de debug (apenas se DEBUG=1)
+debug() {
+  [ "$DEBUG" = "1" ] && printf "${CYAN}🔍 [prepare-commit-msg]${NC} %s\n" "$1" >&2 || true
+}
+
+# Conta linhas de um input (compatível com sistemas sem wc)
+count_lines() {
+  local count=0
+  while IFS= read -r line; do
+    [ -n "$line" ] && count=$((count + 1))
+  done
+  printf "%s" "$count"
+}
+
+# Obtém primeira palavra de uma lista (separada por espaço)
+first_word() {
+  printf "%s" "$1" | sed 's/ .*//'
+}
+
+# Remove duplicatas mantendo ordem
+unique_lines() {
+  awk '!seen[$0]++'
+}
+
+# Trunca string para tamanho máximo
+truncate_string() {
+  local str="$1"
+  local max="${2:-30}"
+
+  if [ "${#str}" -le "$max" ]; then
+    printf "%s" "$str"
+  else
+    printf "%s..." "$(printf "%s" "$str" | cut -c1-$((max - 3)))"
+  fi
+}
+
+# -----------------------------------------------------------------------------
+# ANÁLISE DE ARQUIVOS ALTERADOS
+# -----------------------------------------------------------------------------
+
+# Analisa arquivos staged e retorna tipo de commit sugerido
+analyze_commit_type() {
+  local files="$1"
+  local score_feat=0
+  local score_fix=0
+  local score_docs=0
+  local score_test=0
+  local score_style=0
+  local score_refactor=0
+  local score_perf=0
+  local score_build=0
+  local score_ci=0
+  local score_chore=0
+
+  # Analisa cada arquivo para determinar tipo
+  while IFS= read -r file; do
+    [ -z "$file" ] && continue
+
+    debug "Analisando arquivo: $file"
+
+    # Documentação
+    case "$file" in
+      README*|CHANGELOG*|LICENSE*|*.md|docs/*|documentation/*)
+        score_docs=$((score_docs + 3))
+        debug "  → docs (+3)"
+        ;;
+    esac
+
+    # Testes
+    case "$file" in
+      *test*/*|*tests/*|*__tests__/*|*.test.*|*.spec.*|*_test.*)
+        score_test=$((score_test + 3))
+        debug "  → test (+3)"
+        ;;
+    esac
+
+    # Build/Configuração
+    case "$file" in
+      package.json|package-lock.json|composer.json|composer.lock|pom.xml|build.gradle|Makefile|Dockerfile|*.config.*|tsconfig.json|webpack.config.*)
+        score_build=$((score_build + 2))
+        debug "  → build (+2)"
+        ;;
+    esac
+
+    # CI/CD
+    case "$file" in
+      .github/*|.gitlab-ci.yml|.travis.yml|Jenkinsfile|azure-pipelines.yml|bitbucket-pipelines.yml)
+        score_ci=$((score_ci + 3))
+        debug "  → ci (+3)"
+        ;;
+    esac
+
+    # Estilo (CSS, formatação)
+    case "$file" in
+      *.css|*.scss|*.sass|*.less|*.styl|.prettierrc*|.eslintrc*|.editorconfig)
+        score_style=$((score_style + 2))
+        debug "  → style (+2)"
+        ;;
+    esac
+
+    # Performance (otimizações óbvias)
+    case "$file" in
+      *performance*|*perf*|*optimization*|*cache*)
+        score_perf=$((score_perf + 2))
+        debug "  → perf (+2)"
+        ;;
+    esac
+
+    # Código fonte (feat vs fix vs refactor - análise básica por nome)
+    case "$file" in
+      *.js|*.jsx|*.ts|*.tsx|*.php|*.py|*.java|*.go|*.rs|*.c|*.cpp|*.cs|*.rb|*.swift|*.kt)
+        # Se contém "fix", "bug", "hotfix" no caminho
+        case "$file" in
+          *fix*|*bug*|*hotfix*|*patch*)
+            score_fix=$((score_fix + 2))
+            debug "  → fix (+2)"
+            ;;
+          *refactor*|*restructure*|*reorganize*)
+            score_refactor=$((score_refactor + 2))
+            debug "  → refactor (+2)"
+            ;;
+          *)
+            # Código novo ou modificado sem indicação clara
+            score_feat=$((score_feat + 1))
+            debug "  → feat (+1)"
+            ;;
+        esac
+        ;;
+    esac
+
+    # Scripts, hooks, ferramentas
+    case "$file" in
+      scripts/*|tools/*|.githooks/*|*.sh)
+        score_chore=$((score_chore + 1))
+        debug "  → chore (+1)"
+        ;;
+    esac
+
+  done <<EOF
+$files
+EOF
+
+  debug "Pontuação final:"
+  debug "  feat=$score_feat fix=$score_fix docs=$score_docs test=$score_test"
+  debug "  style=$score_style refactor=$score_refactor perf=$score_perf"
+  debug "  build=$score_build ci=$score_ci chore=$score_chore"
+
+  # Determina tipo com maior pontuação
+  local max_score=0
+  local suggested_type="feat"
+
+  # Verifica cada tipo
+  if [ "$score_docs" -gt "$max_score" ]; then
+    max_score=$score_docs
+    suggested_type="docs"
+  fi
+
+  if [ "$score_test" -gt "$max_score" ]; then
+    max_score=$score_test
+    suggested_type="test"
+  fi
+
+  if [ "$score_ci" -gt "$max_score" ]; then
+    max_score=$score_ci
+    suggested_type="ci"
+  fi
+
+  if [ "$score_build" -gt "$max_score" ]; then
+    max_score=$score_build
+    suggested_type="build"
+  fi
+
+  if [ "$score_style" -gt "$max_score" ]; then
+    max_score=$score_style
+    suggested_type="style"
+  fi
+
+  if [ "$score_perf" -gt "$max_score" ]; then
+    max_score=$score_perf
+    suggested_type="perf"
+  fi
+
+  if [ "$score_refactor" -gt "$max_score" ]; then
+    max_score=$score_refactor
+    suggested_type="refactor"
+  fi
+
+  if [ "$score_fix" -gt "$max_score" ]; then
+    max_score=$score_fix
+    suggested_type="fix"
+  fi
+
+  if [ "$score_chore" -gt "$max_score" ] && [ "$score_feat" -eq 0 ] && [ "$score_fix" -eq 0 ]; then
+    max_score=$score_chore
+    suggested_type="chore"
+  fi
+
+  if [ "$score_feat" -gt "$max_score" ]; then
+    suggested_type="feat"
+  fi
+
+  # Se pontuação muito baixa, assume feat (padrão para código novo)
+  if [ "$max_score" -eq 0 ]; then
+    suggested_type="feat"
+  fi
+
+  debug "Tipo sugerido: $suggested_type (score: $max_score)"
+  printf "%s" "$suggested_type"
+}
+
+# Extrai escopo sugerido baseado em diretórios comuns
+analyze_scope() {
+  local files="$1"
+  local scopes=""
+
+  # Extrai diretórios principais dos arquivos
+  while IFS= read -r file; do
+    [ -z "$file" ] && continue
+
+    # Pega primeiro diretório significativo
+    case "$file" in
+      src/*|app/*|lib/*|packages/*)
+        # Extrai segundo nível: src/auth/login.js → auth
+        scope="$(printf "%s" "$file" | cut -d'/' -f2)"
+        [ -n "$scope" ] && scopes="${scopes}${scope}"$'\n'
+        ;;
+      api/*|backend/*|server/*)
+        # API: api/users/controller.js → users
+        scope="$(printf "%s" "$file" | cut -d'/' -f2)"
+        [ -n "$scope" ] && scopes="${scopes}${scope}"$'\n'
+        ;;
+      components/*|views/*|pages/*)
+        # Frontend: components/Header/index.js → Header
+        scope="$(printf "%s" "$file" | cut -d'/' -f2)"
+        [ -n "$scope" ] && scopes="${scopes}${scope}"$'\n'
+        ;;
+      docs/*)
+        # Docs: docs/api/endpoints.md → api
+        scope="$(printf "%s" "$file" | cut -d'/' -f2)"
+        [ -n "$scope" ] && [ "$scope" != "docs" ] && scopes="${scopes}${scope}"$'\n'
+        ;;
+    esac
+  done <<EOF
+$files
+EOF
+
+  # Remove duplicatas e pega o mais comum
+  if [ -n "$scopes" ]; then
+    # Conta ocorrências e pega o mais frequente
+    scope="$(printf "%s" "$scopes" | sort | uniq -c | sort -rn | head -n1 | awk '{print $2}')"
+
+    # Limita tamanho do escopo
+    scope="$(truncate_string "$scope" 15)"
+
+    # Remove caracteres especiais
+    scope="$(printf "%s" "$scope" | tr -cd '[:alnum:]-_' | tr '[:upper:]' '[:lower:]')"
+
+    [ -n "$scope" ] && debug "Escopo sugerido: $scope"
+    printf "%s" "$scope"
+  fi
+}
+
+# Sugere tag de versionamento baseada na quantidade de arquivos
+suggest_version_tag() {
+  local file_count="$1"
+  local commit_type="$2"
+
+  debug "Analisando versionamento: $file_count arquivos, tipo: $commit_type"
+
+  # Major: mudanças muito grandes
+  if [ "$file_count" -ge "$MAJOR_FILE_THRESHOLD" ] 2>/dev/null; then
+    debug "Sugerindo [major] (≥${MAJOR_FILE_THRESHOLD} arquivos)"
+    printf "[major]"
+    return
+  fi
+
+  # Minor: mudanças médias OU tipos que geralmente são minor
+  if [ "$file_count" -ge "$MINOR_FILE_THRESHOLD" ] 2>/dev/null; then
+    debug "Sugerindo [minor] (≥${MINOR_FILE_THRESHOLD} arquivos)"
+    printf "[minor]"
+    return
+  fi
+
+  # Minor: feat, refactor, perf sempre são minor por padrão
+  case "$commit_type" in
+    feat|refactor|perf)
+      debug "Sugerindo [minor] (tipo: $commit_type)"
+      printf "[minor]"
+      return
+      ;;
+  esac
+
+  # Patch: demais casos
+  debug "Sugerindo [patch] (padrão)"
+  printf "[patch]"
+}
+
+# Sugere nível de impacto baseado na quantidade de arquivos e tipo
+suggest_impact() {
+  local file_count="$1"
+  local commit_type="$2"
+
+  # Alto: muitos arquivos ou refatorações grandes
+  if [ "$file_count" -ge 30 ] 2>/dev/null; then
+    printf "[impact:alto]"
+    return
+  fi
+
+  # Alto: tipos críticos
+  case "$commit_type" in
+    perf|refactor)
+      printf "[impact:medio]"
+      return
+      ;;
+  esac
+
+  # Médio: quantidade moderada
+  if [ "$file_count" -ge 10 ] 2>/dev/null; then
+    printf "[impact:medio]"
+    return
+  fi
+
+  # Baixo: poucos arquivos ou tipos não críticos
+  case "$commit_type" in
+    docs|style|test)
+      printf "[impact:baixo]"
+      return
+      ;;
+  esac
+
+  # Padrão: baixo
+  printf "[impact:baixo]"
+}
+
+# -----------------------------------------------------------------------------
+# INÍCIO DO SCRIPT
+# -----------------------------------------------------------------------------
+
+debug "Hook prepare-commit-msg iniciado"
+
+# Obtém argumentos
 MSG_FILE="${1:-}"
+COMMIT_SOURCE="${2:-}"
+SHA1="${3:-}"
+
+debug "MSG_FILE=$MSG_FILE, SOURCE=$COMMIT_SOURCE, SHA1=$SHA1"
+
+# Valida argumentos
 [ -n "$MSG_FILE" ] || exit 0
 [ -f "$MSG_FILE" ] || exit 0
 
-# If user already provided a message, do nothing.
+# Se mensagem já foi fornecida (ex: git commit -m), não faz nada
 if [ -s "$MSG_FILE" ]; then
+  debug "Mensagem já fornecida - pulando sugestão"
   exit 0
 fi
 
-# Default suggestion
-printf "%s\n" "patch: " > "$MSG_FILE"
+# Se é amend, merge, squash, não modifica
+case "$COMMIT_SOURCE" in
+  merge|squash|commit)
+    debug "Fonte: $COMMIT_SOURCE - pulando sugestão"
+    exit 0
+    ;;
+esac
+
+# -----------------------------------------------------------------------------
+# ANÁLISE DOS ARQUIVOS STAGED
+# -----------------------------------------------------------------------------
+
+debug "Analisando arquivos staged..."
+
+# Obtém lista de arquivos staged (apenas nomes, sem status)
+staged_files="$(git diff --cached --name-only --diff-filter=d 2>/dev/null || true)"
+
+if [ -z "$staged_files" ]; then
+  debug "Nenhum arquivo staged - usando sugestão padrão"
+  printf "%s\n" "feat: " > "$MSG_FILE"
+  exit 0
+fi
+
+# Conta arquivos
+file_count="$(printf "%s" "$staged_files" | count_lines)"
+debug "Arquivos staged: $file_count"
+
+# Analisa tipo de commit
+commit_type="$(analyze_commit_type "$staged_files")"
+debug "Tipo determinado: $commit_type"
+
+# Analisa escopo
+scope="$(analyze_scope "$staged_files")"
+if [ -n "$scope" ]; then
+  debug "Escopo determinado: $scope"
+fi
+
+# Sugere tag de versionamento
+version_tag="$(suggest_version_tag "$file_count" "$commit_type")"
+debug "Tag de versão: $version_tag"
+
+# Sugere nível de impacto
+impact_tag="$(suggest_impact "$file_count" "$commit_type")"
+debug "Tag de impacto: $impact_tag"
+
+# -----------------------------------------------------------------------------
+# CONSTRUÇÃO DA MENSAGEM SUGERIDA
+# -----------------------------------------------------------------------------
+
+# Monta primeira linha
+if [ -n "$scope" ]; then
+  first_line="${commit_type}(${scope}): "
+else
+  first_line="${commit_type}: "
+fi
+
+debug "Primeira linha: $first_line"
+
+# Cria template completo
+{
+  printf "%s\n" "$first_line"
+  printf "\n"
+  printf "# Arquivos alterados: %s\n" "$file_count"
+  printf "# Sugestão de versionamento: %s\n" "$version_tag"
+  printf "# Sugestão de impacto: %s\n" "$impact_tag"
+  printf "#\n"
+  printf "# Tags disponíveis:\n"
+  printf "#   Versionamento: [major] [minor] [patch] [hotfix]\n"
+  printf "#   Impacto: [impact:nenhum] [impact:baixo] [impact:medio] [impact:alto]\n"
+  printf "#   Controle: [skip version] [skip draft]\n"
+  printf "#\n"
+  printf "# Tipos de commit:\n"
+  printf "#   feat:     Nova funcionalidade\n"
+  printf "#   fix:      Correção de bug\n"
+  printf "#   docs:     Documentação\n"
+  printf "#   style:    Formatação/estilo\n"
+  printf "#   refactor: Refatoração\n"
+  printf "#   perf:     Otimização\n"
+  printf "#   test:     Testes\n"
+  printf "#   build:    Build/dependências\n"
+  printf "#   ci:       CI/CD\n"
+  printf "#   chore:    Manutenção\n"
+  printf "#\n"
+  printf "# Breaking changes:\n"
+  printf "#   Use '!' antes de ':' (ex: feat!: mudança incompatível)\n"
+  printf "#   Ou adicione 'BREAKING CHANGE:' no footer\n"
+  printf "#\n"
+  printf "# Arquivos staged:\n"
+
+  # Lista até 10 arquivos
+  count=0
+  while IFS= read -r file; do
+    [ -z "$file" ] && continue
+    count=$((count + 1))
+    [ "$count" -gt 10 ] && break
+    printf "#   - %s\n" "$file"
+  done <<EOF
+$staged_files
+EOF
+
+  if [ "$file_count" -gt 10 ]; then
+    printf "#   ... e mais %s arquivo(s)\n" "$((file_count - 10))"
+  fi
+
+} > "$MSG_FILE"
+
+debug "Template criado com sucesso"
+
+# Exibe feedback visual no terminal
+printf "${GREEN}✅ Mensagem sugerida:${NC} %s${version_tag} ${impact_tag}\n" "$first_line" >&2
+printf "${CYAN}ℹ️  Edite a mensagem no editor que abrirá${NC}\n" >&2
+
 exit 0

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta lang="pt-BR">
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Template Model - Components - Buttons</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="./../assets/css/shared/reset.css">
+        <link rel="stylesheet" href="./../assets/css/shared/variables.css">
+        <link rel="stylesheet" href="./../assets/css/shared/form.css">
+    </head>
+    <body>
+        <div class="form-line">
+            <button class="btn btn-large">Button</button><button class="btn">Button</button><button class="btn  btn-small">Button</button>
+        </div>
+        <hr>
+        <div class="form-line">
+            <button class="btn btn-primary">Primary</button><button class="btn btn-primary-outline">Primary</button><button class="btn btn-primary" disabled>Primary</button>
+        </div>
+        <div class="form-line">
+            <button class="btn btn-secondary">Secondary</button><button class="btn btn-secondary-outline">Secondary</button><button class="btn btn-secondary" disabled>Secondary</button>
+        </div>
+        <div class="form-line">
+            <button class="btn btn-success">Success</button><button class="btn btn-success-outline">Success</button><button class="btn btn-success" disabled>Success</button>
+        </div>
+        <div class="form-line">
+            <button class="btn btn-danger">Danger</button><button class="btn btn-danger-outline">Danger</button><button class="btn btn-danger" disabled>Danger</button>
+        </div>
+        <div class="form-line">
+            <button class="btn btn-warning">Warning</button><button class="btn btn-warning-outline">Warning</button><button class="btn btn-warning" disabled>Warning</button>
+        </div>
+        <div class="form-line">
+            <button class="btn btn-info">Info</button><button class="btn btn-info-outline">Info</button><button class="btn btn-info" disabled>Info</button>
+        </div>
+        <hr>
+        <div class="form-line">
+            <div class="status status-pending">Pendente</div>
+            <div class="status status-current">Aguardando expedição</div>
+            <div class="status status-current">Aguardando envio</div>
+            <div class="status status-current">Aguardando juntada de termo</div>
+            <div class="status status-cancelled">Cancelada</div>
+            <div class="status status-finished">Concluída</div>
+        </div>
+        <hr>
+        <div class="form-line">
+            <div class="status status-small status-pending">Pendente</div>
+            <div class="status status-small status-current">Em andamento</div>
+            <div class="status status-small status-cancelled">Cancelada</div>
+            <div class="status status-small status-finished">Concluída</div>
+        </div>
+        <hr>
+        <div class="form-line">
+            <div class="badge btn-primary">Badge</div>
+            <div class="badge btn-warning">Alerta</div>
+            <div class="badge btn-danger">Urgente</div>
+        </div>
+        <div class="line-filter">
+            <div class="block-cell">
+                <label for="filter-tipo">Filtrar por tipo</label>
+                <select class="width-md height-md" id="filter-tipo">
+                    <option value="" selected>Mostrar todos</option>
+                    <option value="Tipo 1">Tipo 1</option>
+                    <option value="Tipo 2">Tipo 2</option>
+                </select>
+            </div>
+            <div class="block-cell">
+                <label for="filter-status">Filtrar por status</label>
+                <select class="width-sm height-md" id="filter-status">
+                    <option value="" selected>Mostrar todos</option>
+                    <option value="Pendente">Pendente</option>
+                    <option value="Em andamento">Em andamento</option>
+                    <option value="Cancelada">Cancelada</option>
+                    <option value="Concluída">Concluída</option>
+                </select>
+            </div>
+            <div class="block-cell">
+                <label for="items-per-page">Docs</label>
+                <select class="width-ssm height-md" id="items-per-page">
+                    <option value="10">10</option>
+                    <option value="25" selected>25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+        </div>
+        <div class="line-buttons">
+            <select class="width-sm height-md" id="export-type">
+                <option value="" selected>Exportar lista</option>
+                <option value="pdf">Gerar PDF</option>
+                <option value="csv">Gerar CSV</option>
+                <option value="print">Imprimir</option>
+            </select>
+            <button class="btn btn-secondary-outline">Cancelar</button><button class="btn btn-primary">Salvar</button>
+        </div>
+    </body>
+</html>

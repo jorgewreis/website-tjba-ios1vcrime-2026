@@ -1,0 +1,121 @@
+﻿name: Mover para Em Homologação (Project V2)
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  update-project-status:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Atualizar Status no Projeto
+        uses: actions/github-script@v6
+        with:
+          # IMPORTANTE: Use um PAT (Personal Access Token) salvo nos secrets
+          # O token padrão GITHUB_TOKEN geralmente não tem escopo para editar Projetos V2
+          github-token: ${{ secrets.PROJECT_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            const commits = context.payload.commits;
+
+            // CONFIGURAÇÃO: Nome exato do Status no seu Projeto
+            const TARGET_STATUS = 'Em homologação';
+
+            // Regex para encontrar issues (ex: "Closes #123")
+            const regex = /(?:close|fix|resolve)s?\s+#(\d+)/gi;
+            const issuesToUpdate = new Set();
+
+            // 1. Extrair números das issues dos commits
+            for (const commit of commits) {
+              let match;
+              while ((match = regex.exec(commit.message)) !== null) {
+                issuesToUpdate.add(parseInt(match[1]));
+              }
+            }
+
+            if (issuesToUpdate.size === 0) {
+              console.log('Nenhuma issue referenciada nos commits.');
+              return;
+            }
+
+            // 2. Processar cada issue encontrada
+            for (const issueNumber of issuesToUpdate) {
+              console.log(`Processando Issue #${issueNumber}...`);
+
+              // A. Buscar o ID do Node da Issue e os Projetos vinculados
+              const queryFindIssue = `
+                query($owner: String!, $repo: String!, $number: Int!) {
+                  repository(owner: $owner, name: $repo) {
+                    issue(number: $number) {
+                      id
+                      projectItems(first: 1) {
+                        nodes {
+                          id
+                          project {
+                            id
+                            field(name: "Status") {
+                              ... on ProjectV2SingleSelectField {
+                                id
+                                options {
+                                  id
+                                  name
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              `;
+
+              const data = await github.graphql(queryFindIssue, { owner, repo, number: issueNumber });
+              const projectItems = data.repository.issue.projectItems.nodes;
+
+              if (projectItems.length === 0) {
+                console.log(`Issue #${issueNumber} não está vinculada a nenhum Projeto V2.`);
+                continue;
+              }
+
+              // B. Encontrar os IDs necessários para a mutação
+              const item = projectItems[0]; // Assume o primeiro projeto vinculado
+              const projectId = item.project.id;
+              const itemId = item.id;
+              const statusField = item.project.field;
+
+              // Encontrar o ID da opção "Em homologação"
+              const targetOption = statusField.options.find(opt => opt.name === TARGET_STATUS);
+
+              if (!targetOption) {
+                console.log(`Status '${TARGET_STATUS}' não encontrado no projeto.`);
+                continue;
+              }
+
+              // C. Executar a Mutação para alterar o Status
+              const mutationUpdate = `
+                mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+                  updateProjectV2ItemFieldValue(
+                    input: {
+                      projectId: $projectId
+                      itemId: $itemId
+                      fieldId: $fieldId
+                      value: { singleSelectOptionId: $optionId }
+                    }
+                  ) {
+                    projectV2Item {
+                      id
+                    }
+                  }
+                }
+              `;
+
+              await github.graphql(mutationUpdate, {
+                projectId: projectId,
+                itemId: itemId,
+                fieldId: statusField.id,
+                optionId: targetOption.id
+              });
+
+              console.log(`Sucesso! Issue #${issueNumber} movida para '${TARGET_STATUS}'.`);
+            }

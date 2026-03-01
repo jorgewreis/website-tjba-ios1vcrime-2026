@@ -1,373 +1,553 @@
-﻿param(
-  [Parameter(Mandatory=$true)][string]$CommitHash,
-  [Parameter(Mandatory=$true)][string]$CommitMessage,
-  [Parameter(Mandatory=$true)][ValidateSet("major","minor","patch")][string]$Bump,
-  [Parameter(Mandatory=$true)][ValidateSet("nenhum","baixo","medio","médio","alto")][string]$Impact,
-  [string]$RepoRoot = ".",
-  [string]$VersionFile = "VERSION",
-  [string]$DraftMinorPath = "docs/90-releases/_draft_minor.md",
-  [string]$DraftMajorPath = "docs/90-releases/_draft_major.md",
-  [string]$NotesDir = "docs/90-releases/notes"
+﻿<#
+.SYNOPSIS
+    Gera Release Notes estilizados automaticamente para cada versão.
+
+.DESCRIPTION
+    Este script automatiza a criação de documentação de release baseado em:
+    - PATCH: Acumula commits em buffer (_buffer_minor.txt)
+    - MINOR: Compila buffer em documento Markdown categorizado e formatado
+    - MAJOR: Gera documento com estatísticas estruturais detalhadas
+
+    Integra com sistema de versionamento automático via hooks Git.
+
+.PARAMETER CommitHash
+    Hash curto do commit (ex: a1b2c3d)
+
+.PARAMETER CommitMessage
+    Mensagem completa do commit (título + corpo)
+
+.PARAMETER Bump
+    Tipo de bump: major, minor ou patch
+
+.PARAMETER Impact
+    Nível de impacto: nenhum, baixo, medio, alto
+
+.PARAMETER RepoRoot
+    Raiz do repositório (padrão: diretório atual)
+
+.EXAMPLE
+    .\update-draft-minor.ps1 -CommitHash "a1b2c3d" -CommitMessage "feat: nova funcionalidade" -Bump "minor" -Impact "baixo"
+#>
+
+param(
+    [Parameter(Mandatory=$true)]
+    [ValidateNotNullOrEmpty()]
+    [string]$CommitHash,
+
+    [Parameter(Mandatory=$true)]
+    [ValidateNotNullOrEmpty()]
+    [string]$CommitMessage,
+
+    [Parameter(Mandatory=$true)]
+    [ValidateSet("major", "minor", "patch")]
+    [string]$Bump,
+
+    [Parameter(Mandatory=$true)]
+    [ValidateSet("nenhum", "baixo", "medio", "alto")]
+    [string]$Impact,
+
+    [Parameter(Mandatory=$false)]
+    [string]$RepoRoot = ".",
+
+    [Parameter(Mandatory=$false)]
+    [string]$VersionFile = "VERSION",
+
+    [Parameter(Mandatory=$false)]
+    [string]$BufferMinorPath = "docs/90-releases/_buffer_minor.txt",
+
+    [Parameter(Mandatory=$false)]
+    [string]$NotesDir = "docs/90-releases/notes"
 )
+
+# =============================================================================
+# CONFIGURAÇÕES
+# =============================================================================
+
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-function Ensure-FileTemplate {
-  param([string]$Path, [string[]]$TemplateLines)
-  $dir = Split-Path -Parent $Path
-  if ($dir -and !(Test-Path -LiteralPath $dir)) { New-Item -ItemType Directory -Force -Path $dir | Out-Null }
-  if (!(Test-Path -LiteralPath $Path)) {
-    try {
-      $stream = [System.IO.StreamWriter]::new($Path, $false, [System.Text.UTF8Encoding]::new($false))
-      $stream.Write(($TemplateLines -join "`n"))
-      $stream.Close()
-    }
-    catch {
-      Write-Warning "Erro ao escrever template no arquivo ${Path}: $($Error[0].Exception.Message)"
-    }
-  }
+# Timeout para operações de arquivo (segundos)
+$FILE_LOCK_TIMEOUT = 10
+
+# =============================================================================
+# FUNÇÕES DE LOG
+# =============================================================================
+
+function Write-Info {
+    param([string]$Message)
+    Write-Host "[INFO] $Message" -ForegroundColor Green
 }
 
-function Ensure-Dir {
-  param([string]$Path)
-  if (!(Test-Path -LiteralPath $Path)) { New-Item -ItemType Directory -Force -Path $Path | Out-Null }
+function Write-Warn {
+    param([string]$Message)
+    Write-Host "[WARN] $Message" -ForegroundColor Yellow
+}
+
+function Write-Err {
+    param([string]$Message)
+    Write-Host "[ERROR] $Message" -ForegroundColor Red
+}
+
+function Write-Debug-Custom {
+    param([string]$Message)
+    if ($VerbosePreference -eq 'Continue') {
+        Write-Host "[DEBUG] $Message" -ForegroundColor Cyan
+    }
+}
+
+# =============================================================================
+# FUNÇÕES UTILITÁRIAS
+# =============================================================================
+
+function Ensure-Directory {
+    param([string]$Path)
+
+    if ([string]::IsNullOrWhiteSpace($Path)) {
+        Write-Warn "Caminho de diretório vazio"
+        return
+    }
+
+    try {
+        if (!(Test-Path -LiteralPath $Path -PathType Container)) {
+            Write-Debug-Custom "Criando diretório: $Path"
+            New-Item -ItemType Directory -Force -Path $Path | Out-Null
+            Write-Info "Diretório criado: $Path"
+        }
+    }
+    catch {
+        Write-Err "Erro ao criar diretório ${Path}: $_"
+        throw
+    }
 }
 
 function Get-VersionText {
-  param([string]$Path)
-  if (!(Test-Path -LiteralPath $Path)) { return "" }
-  return (Get-Content -Raw -LiteralPath $Path -Encoding UTF8).Trim()
-}
+    param([string]$Path)
 
-function Now-Iso {
-  return (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
-}
+    Write-Debug-Custom "Lendo versão de: $Path"
 
-function Invoke-Git {
-    param([Parameter(Mandatory=$true)][string[]]$Args)
-    # Verifica se git.exe está disponível
-    if (-not (Get-Command git.exe -ErrorAction SilentlyContinue)) {
-        Write-Warning "Git não está disponível no PATH"
-        return ""
+    if (!(Test-Path -LiteralPath $Path)) {
+        Write-Warn "Arquivo VERSION não encontrado em: $Path"
+        Write-Warn "Usando versão padrão: V. 1.0.0"
+        return "V. 1.0.0"
     }
+
     try {
-        # Redireciona stderr para stdout para capturar todos os outputs
-        $output = & git.exe @Args 2>&1
-        # Verifica se o comando foi bem-sucedido
-        if ($LASTEXITCODE -eq 0) {
-            return $output | Out-String
-        } else {
-            Write-Warning "Comando Git falhou com código $LASTEXITCODE"
-            return ""
+        $content = Get-Content -Raw -LiteralPath $Path -Encoding UTF8 -ErrorAction Stop
+        $version = $content.Trim()
+
+        if ([string]::IsNullOrWhiteSpace($version)) {
+            Write-Warn "Arquivo VERSION vazio, usando padrão: V. 1.0.0"
+            return "V. 1.0.0"
         }
+
+        Write-Debug-Custom "Versão lida: $version"
+        return $version
     }
     catch {
-        Write-Warning "Erro ao executar Git: $($Error[0].Exception.Message)"
-        return ""
+        Write-Warn "Erro ao ler VERSION: $_"
+        return "V. 1.0.0"
     }
 }
 
-function Get-NameStatus {
-  param([string]$Hash)
-  $raw = Invoke-Git @("show","--name-status","--format=",$Hash)
-  if ([string]::IsNullOrWhiteSpace($raw)) { return @() }
-  return $raw -split "`r?`n" | Where-Object { $_.Trim() -ne "" }
+function Get-IsoDate {
+    return (Get-Date).ToString("yyyy-MM-dd")
 }
 
-function Get-Stats {
-  param([string]$Hash)
-  return Invoke-Git @("show","--stat","--format=",$Hash)
+function Get-HumanDate {
+    $date = Get-Date
+    $culture = [System.Globalization.CultureInfo]::CreateSpecificCulture("pt-BR")
+    return $date.ToString("dd 'de' MMMM 'de' yyyy", $culture)
 }
 
-function Classify-ChangeType {
-  param([string]$FirstLine)
-  if ($null -eq $FirstLine) { $FirstLine = "" }
-  $m = $FirstLine.Trim().ToLowerInvariant()
-  if ($m -match '^\s*(feat|feature)(|$[^)]+$|)?:') { return "feature" }
-  if ($m -match '^\s*(fix)(|$[^)]+$|)?:') { return "bugfix" }
-  if ($m -match '^\s*(refactor)(|$[^)]+$|)?:') { return "refactor" }
-  if ($m -match '^\s*(perf)(|$[^)]+$|)?:') { return "performance" }
-  if ($m -match '^\s*(security)(|$[^)]+$|)?:') { return "security" }
-  if ($m -match '^\s*(docs)(|$[^)]+$|)?:') { return "docs" }
-  if ($m -match '^\s*(chore|ci|build)(|$[^)]+$|)?:') { return "maintenance" }
-  if ($m -match '^\s*(test)(|$[^)]+$|)?:') { return "tests" }
-  return "change"
+function Get-Timestamp {
+    return (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
 }
 
-function Summarize-ByType {
-  param([string[]]$NameStatusLines)
-  $buckets = [ordered]@{
-    "app"       = 0
-    "public"    = 0
-    "database"  = 0
-    "config"    = 0
-    "scripts"   = 0
-    "docs"      = 0
-    "other"     = 0
-  }
-  foreach ($l in $NameStatusLines) {
-    $parts = $l -split "`t"
-    if ($parts.Count -lt 2) { continue }
-    $path = $parts[-1]
-    if ($path -match '^(app|bootstrap)/') { $buckets["app"]++; continue }
-    if ($path -match '^public/')          { $buckets["public"]++; continue }
-    if ($path -match '^(database|sql)/')  { $buckets["database"]++; continue }
-    if ($path -match '^config/')          { $buckets["config"]++; continue }
-    if ($path -match '^scripts/')         { $buckets["scripts"]++; continue }
-    if ($path -match '^docs/')            { $buckets["docs"]++; continue }
-    $buckets["other"]++
-  }
-  return $buckets
+# =============================================================================
+# CLASSIFICAÇÃO DE COMMITS
+# =============================================================================
+
+function Get-ChangeType {
+    param([string]$FirstLine)
+
+    if ([string]::IsNullOrWhiteSpace($FirstLine)) {
+        return "Geral"
+    }
+
+    $normalized = $FirstLine.Trim().ToLowerInvariant()
+
+    # Conventional commits
+    if ($normalized -match '^\s*(feat|feature)(|$[^)]+$|)?(!)?:') { return "Feature" }
+    if ($normalized -match '^\s*(fix|bugfix)(|$[^)]+$|)?(!)?:') { return "Correção" }
+    if ($normalized -match '^\s*refactor(|$[^)]+$|)?(!)?:') { return "Refatoração" }
+    if ($normalized -match '^\s*perf(|$[^)]+$|)?(!)?:') { return "Performance" }
+    if ($normalized -match '^\s*(security|sec)(|$[^)]+$|)?(!)?:') { return "Segurança" }
+    if ($normalized -match '^\s*docs(|$[^)]+$|)?(!)?:') { return "Documentação" }
+    if ($normalized -match '^\s*test(|$[^)]+$|)?(!)?:') { return "Testes" }
+    if ($normalized -match '^\s*build(|$[^)]+$|)?(!)?:') { return "Build" }
+    if ($normalized -match '^\s*(ci|cd)(|$[^)]+$|)?(!)?:') { return "CI/CD" }
+    if ($normalized -match '^\s*chore(|$[^)]+$|)?(!)?:') { return "Manutenção" }
+
+    return "Geral"
 }
 
-function Append-DraftMinorEntry {
+# =============================================================================
+# GERENCIAMENTO DE BUFFER
+# =============================================================================
+
+function Add-BufferEntry {
     param(
-        [string]$DraftMinorPath,
-        [string]$Version,
-        [string]$Bump,
-        [string]$Impact,
-        [string]$CommitHash,
-        [string]$Date,
+        [string]$BufferPath,
         [string]$ChangeType,
         [string]$Message,
-        [string[]]$NameStatusLines,
-        [string]$StatsText
+        [string]$CommitHash,
+        [string]$Author = ""
     )
-    Ensure-FileTemplate -Path $DraftMinorPath -TemplateLines @(
-        "# Draft Minor (acumulado para a proxima versao MINOR)",
-        "",
-        "> Gerado automaticamente.",
-        "> Contem entradas detalhadas por commit (hash, data, tipo, impacto, arquivos).",
-        "",
-        "---",
-        ""
-    )
-    $block = New-Object System.Collections.Generic.List[string]
-    $block.Add('')
-    $block.Add('## ' + $Version)
-    $block.Add('')
-    $block.Add('- **bump**: ' + $Bump)
-    $block.Add('- **impacto**: ' + $Impact)
-    $block.Add('- **tipo**: ' + $ChangeType)
-    $block.Add('- **hash**: `' + $CommitHash + '`')
-    $block.Add('- **data**: ' + $Date)
-    $block.Add('- **mensagem**: ' + $Message)
-    $block.Add('')
-    $block.Add('### Arquivos (name-status)')
-    $block.Add('')
-    foreach ($l in $NameStatusLines) { $block.Add('- ' + $l) }
-    $block.Add('')
-    $block.Add('### Estatisticas')
-    $block.Add('')
-    if ([string]::IsNullOrWhiteSpace($StatsText)) {
-        $block.Add('- (sem estatisticas)')
-    } else {
-        foreach ($s in ($StatsText -split "`r?`n")) {
-            if ($s.Trim() -ne '') { $block.Add('- ' + $s) }
-        }
-    }
-    $block.Add('')
-    $block.Add('---')
-    $block.Add('')
-    # Usar StreamWriter em vez de Add-Content
+
+    Write-Debug-Custom "Adicionando entrada ao buffer: $BufferPath"
+
+    # Garante que diretório existe
+    $directory = Split-Path -Path $BufferPath -Parent
+    Ensure-Directory -Path $directory
+
+    # Remove pipes da mensagem
+    $safeMessage = $Message.Replace("|", "¦")
+
+    # Formato: TYPE|MESSAGE|HASH|AUTHOR|TIMESTAMP
+    $timestamp = Get-Timestamp
+    $line = "$ChangeType|$safeMessage|$CommitHash|$Author|$timestamp"
+
     try {
-        $stream = [System.IO.StreamWriter]::new($DraftMinorPath, $true, [System.Text.UTF8Encoding]::new($false))
-        $stream.Write(($block -join "`n"))
-        $stream.Close()
+        # Escreve no arquivo com encoding UTF8 sem BOM
+        Add-Content -LiteralPath $BufferPath -Value $line -Encoding UTF8 -ErrorAction Stop
+        Write-Info "Entrada adicionada ao buffer: $ChangeType"
     }
     catch {
-        Write-Warning "Erro ao escrever no arquivo ${DraftMinorPath}: $($Error[0].Exception.Message)"
+        Write-Err "Erro ao escrever no buffer: $_"
+        throw
     }
 }
 
-function Append-DraftMajorSummary {
-  param(
-    [string]$DraftMajorPath,
-    [string]$Version,
-    [string]$Impact,
-    [string]$CommitHash,
-    [string]$Date,
-    [string]$ChangeType,
-    [hashtable]$Buckets
-  )
-  Ensure-FileTemplate -Path $DraftMajorPath -TemplateLines @(
-    "# Draft Major (acumulado para a proxima versao MAJOR)",
-    "",
-    "> Gerado automaticamente.",
-    "> Contem resumos compactos (agrupados por tipo) e lista de hashes.",
-    "",
-    "---",
-    ""
-  )
-  $lines = New-Object System.Collections.Generic.List[string]
-  $lines.Add('')
-  $lines.Add('## ' + $Version)
-  $lines.Add('')
-  $lines.Add('- **impacto**: ' + $Impact)
-  $lines.Add('- **tipo**: ' + $ChangeType)
-  $lines.Add('- **hash**: `' + $CommitHash + '`')
-  $lines.Add('- **data**: ' + $Date)
-  $lines.Add('')
-  $lines.Add('### Resumo por area')
-  $lines.Add('')
-  foreach ($k in $Buckets.Keys) {
-    $lines.Add('- **' + $k + '**: ' + $Buckets[$k])
-  }
-  $lines.Add('')
-  $lines.Add('---')
+function Get-BufferEntries {
+    param([string]$BufferPath)
 
-  # Usar StreamWriter em vez de Add-Content
-  try {
-    $stream = [System.IO.StreamWriter]::new($DraftMajorPath, $true, [System.Text.UTF8Encoding]::new($false))
-    $stream.Write(($lines -join "`n"))
-    $stream.Close()
-  }
-  catch {
-    Write-Warning "Erro ao escrever no arquivo ${DraftMajorPath}: $($Error[0].Exception.Message)"
-  }
+    Write-Debug-Custom "Lendo buffer: $BufferPath"
+
+    if (!(Test-Path -LiteralPath $BufferPath)) {
+        Write-Debug-Custom "Buffer não existe, retornando array vazio"
+        return @()
+    }
+
+    try {
+        $lines = Get-Content -LiteralPath $BufferPath -Encoding UTF8 -ErrorAction Stop
+        $entries = @()
+
+        foreach ($line in $lines) {
+            if ([string]::IsNullOrWhiteSpace($line)) {
+                continue
+            }
+
+            # Parse: TYPE|MESSAGE|HASH|AUTHOR|TIMESTAMP
+            $parts = $line -split "\|"
+            if ($parts.Count -ge 3) {
+                $entry = [PSCustomObject]@{
+                    Type      = $parts[0].Trim()
+                    Message   = $parts[1].Trim()
+                    Hash      = $parts[2].Trim()
+                    Author    = if ($parts.Count -ge 4) { $parts[3].Trim() } else { "" }
+                    Timestamp = if ($parts.Count -ge 5) { $parts[4].Trim() } else { "" }
+                }
+                $entries += $entry
+            }
+        }
+
+        Write-Debug-Custom "Buffer lido: $($entries.Count) entradas"
+        return $entries
+    }
+    catch {
+        Write-Err "Erro ao ler buffer: $_"
+        return @()
+    }
 }
 
-function Reset-DraftMinor {
-  param([string]$Path)
-  try {
-    $content = @(
-      "# Draft Minor (acumulado para a proxima versao MINOR)",
-      "",
-      "> Gerado automaticamente.",
-      "> Contem entradas detalhadas por commit (hash, data, tipo, impacto, arquivos).",
-      "",
-      "---",
-      ""
+# =============================================================================
+# GERAÇÃO DE RELEASE NOTES
+# =============================================================================
+
+# =============================================================================
+# GERAÇÃO DE RELEASE NOTES
+# =============================================================================
+
+function New-SimpleReleaseNote {
+    param(
+        [string]$OutputPath,
+        [string]$Version,
+        [string]$Title,
+        [string]$BadgeType,
+        [PSCustomObject[]]$Entries,
+        [string]$ImpactLevel = ""
     )
-    $stream = [System.IO.StreamWriter]::new($Path, $false, [System.Text.UTF8Encoding]::new($false))
-    $stream.Write(($content -join "`n"))
-    $stream.Close()
-  }
-  catch {
-    Write-Warning "Erro ao resetar arquivo ${Path}: $($Error[0].Exception.Message)"
-  }
+
+    Write-Debug-Custom "Gerando release note: $OutputPath"
+
+    # Garante que diretório existe
+    $directory = Split-Path -Path $OutputPath -Parent
+    Ensure-Directory -Path $directory
+
+    # Inicia construção do documento
+    $content = @()
+
+    # Cabeçalho
+    $badgeColor = if ($BadgeType -eq "MAJOR") { "critical" } else { "blue" }
+    $dateStr = Get-HumanDate
+
+    # ✅ CORREÇÃO: Usa string literal para evitar expansão de variáveis
+    $badgeUrl = "https://img.shields.io/badge/$BadgeType-$badgeColor" + "?style=for-the-badge"
+    $content += "![Badge]($badgeUrl)"
+    $content += ""
+    $content += "**Data de Lançamento:** $dateStr"
+    $content += ""
+
+    # Título
+    $content += "# $Version"
+    $content += ""
+
+    if (![string]::IsNullOrWhiteSpace($Title)) {
+        $content += "> $Title"
+        $content += ""
+    }
+
+    # Impacto
+    if (![string]::IsNullOrWhiteSpace($ImpactLevel)) {
+        $impactEmoji = switch ($ImpactLevel) {
+            "alto"   { "🔴" }
+            "medio"  { "🟡" }
+            "baixo"  { "🟢" }
+            default  { "⚪" }
+        }
+        $content += "## Nível de Impacto"
+        $content += ""
+        $content += "$impactEmoji **$($ImpactLevel.ToUpper())**"
+        $content += ""
+    }
+
+    # Entradas
+    if ($Entries.Count -gt 0) {
+        $content += "## Alterações"
+        $content += ""
+
+        foreach ($item in $Entries) {
+            $line = "- **$($item.Message)**"
+            if (![string]::IsNullOrWhiteSpace($item.Hash)) {
+                $line += " ``[$($item.Hash)]``"
+            }
+            $content += $line
+        }
+        $content += ""
+    }
+
+    # Rodapé
+    $content += "---"
+    $content += ""
+    $content += "*Documento gerado automaticamente pelo sistema de versionamento.*"
+
+    # Salva arquivo
+    try {
+        $content | Out-File -LiteralPath $OutputPath -Encoding UTF8 -Force -ErrorAction Stop
+        Write-Info "Release note gerado: $OutputPath"
+        return $true
+    }
+    catch {
+        Write-Err "Erro ao salvar release note: $_"
+        return $false
+    }
 }
 
-function Reset-DraftMajor {
-  param([string]$Path)
-  try {
-    $content = @(
-      "# Draft Major (acumulado para a proxima versao MAJOR)",
-      "",
-      "> Gerado automaticamente.",
-      "> Contem resumos compactos (agrupados por tipo) e lista de hashes.",
-      "",
-      "---",
-      ""
-    )
-    $stream = [System.IO.StreamWriter]::new($Path, $false, [System.Text.UTF8Encoding]::new($false))
-    $stream.Write(($content -join "`n"))
-    $stream.Close()
-  }
-  catch {
-    Write-Warning "Erro ao resetar arquivo ${Path}: $($Error[0].Exception.Message)"
-  }
+
+# =============================================================================
+# SCRIPT PRINCIPAL
+# =============================================================================
+
+try {
+    Write-Info "========================================="
+    Write-Info "update-draft-minor.ps1 iniciado"
+    Write-Info "========================================="
+    Write-Info "Parâmetros:"
+    Write-Info "  CommitHash: $CommitHash"
+    Write-Info "  Bump: $Bump"
+    Write-Info "  Impact: $Impact"
+    Write-Info "  RepoRoot: $RepoRoot"
+    Write-Info "========================================="
+
+    # Muda para diretório raiz
+    Push-Location $RepoRoot
+
+    # Lê versão
+    $versionPath = Join-Path $RepoRoot $VersionFile
+    $version = Get-VersionText -Path $versionPath
+    Write-Info "Versão atual: $version"
+
+    # Normaliza Impact
+    $Impact = $Impact.ToLowerInvariant().Replace("é", "e")
+    Write-Debug-Custom "Impact normalizado: $Impact"
+
+    # Extrai primeira linha
+    $firstLine = ($CommitMessage -split "`r?`n")[0].Trim()
+    Write-Info "Título do commit: $firstLine"
+
+    # Classifica tipo
+    $changeType = Get-ChangeType -FirstLine $firstLine
+    Write-Info "Tipo de mudança: $changeType"
+
+    # Define caminhos absolutos
+    $bufferPath = Join-Path $RepoRoot $BufferMinorPath
+    $notesPath = Join-Path $RepoRoot $NotesDir
+
+    Write-Debug-Custom "Buffer path: $bufferPath"
+    Write-Debug-Custom "Notes path: $notesPath"
+
+    # Processa baseado no bump
+    switch ($Bump) {
+        "patch" {
+            Write-Info "Processando PATCH - acumulando no buffer..."
+
+            Add-BufferEntry `
+                -BufferPath $bufferPath `
+                -ChangeType $changeType `
+                -Message $firstLine `
+                -CommitHash $CommitHash `
+                -Author "Unknown"
+
+            Write-Host ""
+            Write-Host "✅ PATCH REGISTRADO NO BUFFER" -ForegroundColor Green
+            Write-Host "Tipo:    $changeType" -ForegroundColor White
+            Write-Host "Commit:  $CommitHash" -ForegroundColor Cyan
+            Write-Host ""
+
+            Pop-Location
+            exit 0
+        }
+
+        "minor" {
+            Write-Info "Processando MINOR - compilando buffer..."
+
+            # Adiciona commit atual
+            Add-BufferEntry `
+                -BufferPath $bufferPath `
+                -ChangeType $changeType `
+                -Message $firstLine `
+                -CommitHash $CommitHash `
+                -Author "Unknown"
+
+            # Lê buffer
+            $entries = Get-BufferEntries -BufferPath $bufferPath
+
+            if ($entries.Count -eq 0) {
+                Write-Warn "Buffer vazio - gerando documento apenas com commit atual"
+                $entries = @(
+                    [PSCustomObject]@{
+                        Type      = $changeType
+                        Message   = $firstLine
+                        Hash      = $CommitHash
+                        Author    = "Unknown"
+                        Timestamp = Get-Timestamp
+                    }
+                )
+            }
+
+            Write-Info "Total de entradas: $($entries.Count)"
+
+            # Define arquivo de saída
+            $safeVersion = $version -replace '\s+', '' -replace '/', '-'
+            $outputFile = Join-Path $notesPath "release-$safeVersion.md"
+
+            Write-Info "Arquivo de saída: $outputFile"
+
+            # Gera documento
+            $success = New-SimpleReleaseNote `
+                -OutputPath $outputFile `
+                -Version $version `
+                -Title $firstLine `
+                -BadgeType "MINOR" `
+                -Entries $entries `
+                -ImpactLevel $Impact
+
+            # Limpa buffer se sucesso
+            if ($success -and (Test-Path -LiteralPath $outputFile)) {
+                Write-Info "Limpando buffer..."
+                Remove-Item -LiteralPath $bufferPath -Force -ErrorAction SilentlyContinue
+
+                Write-Host ""
+                Write-Host "✅ VERSÃO MINOR PROCESSADA" -ForegroundColor Green
+                Write-Host "Versão:   $version" -ForegroundColor Cyan
+                Write-Host "Documento: $outputFile" -ForegroundColor White
+                Write-Host "Entradas: $($entries.Count) commits" -ForegroundColor White
+                Write-Host ""
+            }
+            else {
+                Write-Warn "Documento não foi criado - mantendo buffer"
+            }
+
+            Pop-Location
+            exit 0
+        }
+
+        "major" {
+            Write-Info "Processando MAJOR - gerando documento..."
+
+            # Cria entrada
+            $entries = @(
+                [PSCustomObject]@{
+                    Type      = $changeType
+                    Message   = $firstLine
+                    Hash      = $CommitHash
+                    Author    = "Unknown"
+                    Timestamp = Get-Timestamp
+                }
+            )
+
+            # Define arquivo de saída
+            $safeVersion = $version -replace '\s+', '' -replace '/', '-'
+            $outputFile = Join-Path $notesPath "release-$safeVersion.md"
+
+            Write-Info "Arquivo de saída: $outputFile"
+
+            # Gera documento
+            $success = New-SimpleReleaseNote `
+                -OutputPath $outputFile `
+                -Version $version `
+                -Title $firstLine `
+                -BadgeType "MAJOR" `
+                -Entries $entries `
+                -ImpactLevel $Impact
+
+            # Limpa buffers
+            if ($success -and (Test-Path -LiteralPath $outputFile)) {
+                Write-Info "Limpando buffers..."
+                Remove-Item -LiteralPath $bufferPath -Force -ErrorAction SilentlyContinue
+
+                Write-Host ""
+                Write-Host "✅ VERSÃO MAJOR PROCESSADA" -ForegroundColor Red
+                Write-Host "Versão:   $version" -ForegroundColor Cyan
+                Write-Host "Documento: $outputFile" -ForegroundColor White
+                Write-Host "Impacto:  $($Impact.ToUpper())" -ForegroundColor Yellow
+                Write-Host ""
+            }
+
+            Pop-Location
+            exit 0
+        }
+    }
+
+    Pop-Location
+    exit 0
 }
-
-function Write-ReleaseNotesFromDraft {
-  param([string]$NotesDir, [string]$Version, [string]$DraftPath)
-  Ensure-Dir $NotesDir
-  $safe = $Version.Replace(" ", "").Replace("/", "-").Replace(":", "-")
-  $outFile = Join-Path $NotesDir ($safe + ".md")
-  $draft = ""
-  if (Test-Path -LiteralPath $DraftPath) {
-    $draft = Get-Content -Raw -LiteralPath $DraftPath -Encoding UTF8
-  }
-  $header = @(
-    "# Release Notes - " + $Version,
-    "",
-    "> Gerado automaticamente.",
-    ""
-  ) -join "`n"
-
-  try {
-    $stream = [System.IO.StreamWriter]::new($outFile, $false, [System.Text.UTF8Encoding]::new($false))
-    $stream.Write($header + $draft)
-    $stream.Close()
-  }
-  catch {
-    Write-Warning "Erro ao escrever notas de release em ${outFile}: $($Error[0].Exception.Message)"
-  }
+catch {
+    Write-Host ""
+    Write-Host "❌ ERRO NO PROCESSAMENTO" -ForegroundColor Red
+    Write-Err $_.Exception.Message
+    Write-Err "Stack Trace: $($_.ScriptStackTrace)"
+    Write-Host ""
+    Pop-Location
+    exit 1
 }
-
-# --- main ---
-Push-Location $RepoRoot
-$version = Get-VersionText -Path $VersionFile
-if ([string]::IsNullOrWhiteSpace($version)) { $version = "(sem versão)" }
-$date = Now-Iso
-if ($null -eq $CommitMessage) { $CommitMessage = "" }
-$firstLine = ($CommitMessage -split "`r?`n")[0]
-$changeType = Classify-ChangeType -FirstLine $firstLine
-$nameStatus = Get-NameStatus -Hash $CommitHash
-$stats = Get-Stats -Hash $CommitHash
-$buckets = Summarize-ByType -NameStatusLines $nameStatus
-
-# PATCH: registra detalhado no _draft_minor
-if ($Bump -in @("patch")) {
-  Append-DraftMinorEntry `
-    -DraftMinorPath $DraftMinorPath `
-    -Version $version `
-    -Bump $Bump `
-    -Impact $Impact `
-    -CommitHash $CommitHash `
-    -Date $date `
-    -ChangeType $changeType `
-    -Message $firstLine `
-    -NameStatusLines $nameStatus `
-    -StatsText $stats
-  Pop-Location
-  exit 0
-}
-
-# MINOR: inclui o commit atual no draft minor, gera notes, reseta draft minor,
-# e também alimenta draft major de forma compacta
-if ($Bump -eq "minor") {
-  Append-DraftMinorEntry `
-    -DraftMinorPath $DraftMinorPath `
-    -Version $version `
-    -Bump $Bump `
-    -Impact $Impact `
-    -CommitHash $CommitHash `
-    -Date $date `
-    -ChangeType $changeType `
-    -Message $firstLine `
-    -NameStatusLines $nameStatus `
-    -StatsText $stats
-  Write-ReleaseNotesFromDraft -NotesDir $NotesDir -Version $version -DraftPath $DraftMinorPath
-  Reset-DraftMinor -Path $DraftMinorPath
-  Append-DraftMajorSummary `
-    -DraftMajorPath $DraftMajorPath `
-    -Version $version `
-    -Impact $Impact `
-    -CommitHash $CommitHash `
-    -Date $date `
-    -ChangeType $changeType `
-    -Buckets $buckets
-  Pop-Location
-  exit 0
-}
-
-# MAJOR: atualiza draft major com o commit atual e gera notes a partir dele.
-# Depois reseta ambos.
-if ($Bump -eq "major") {
-  Append-DraftMajorSummary `
-    -DraftMajorPath $DraftMajorPath `
-    -Version $version `
-    -Impact $Impact `
-    -CommitHash $CommitHash `
-    -Date $date `
-    -ChangeType $changeType `
-    -Buckets $buckets
-  Write-ReleaseNotesFromDraft -NotesDir $NotesDir -Version $version -DraftPath $DraftMajorPath
-  Reset-DraftMinor -Path $DraftMinorPath
-  Reset-DraftMajor -Path $DraftMajorPath
-  Pop-Location
-  exit 0
-}
-
-Pop-Location

@@ -1,9 +1,18 @@
 # =========================
+# Release Drafts (não versionar rascunhos)
+docs/90-releases/_buffer_minor.txt
+docs/90-releases/_draft_minor.md
+docs/90-releases/_buffer_major.txt
+docs/90-releases/_draft_major.md
+# =========================
 # Environment / Secrets
 # =========================
 .env
 .env.*
 !.env.example
+
+# Personal/virtual envs
+.venv/
 
 # =========================
 # OS / Editor
@@ -22,13 +31,22 @@ desktop.ini
 # =========================
 # Logs / Debug
 # =========================
-logs/
+#logs/
 *.log
 *.err
 *.out
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+*.md.bak
+*.bak
+/*.txt
+__pycache__/
+.mypy_cache/
+.pytest_cache/
+.coverage
+.cache/
+/*.py
 
 # =========================
 # Node / Frontend tooling (se existir)
@@ -66,10 +84,10 @@ temp/
 # =========================
 # Uploads / User-generated content (ajuste conforme seu projeto)
 # =========================
-uploads/
-storage/
-public/uploads/
-public/storage/
+#uploads/
+#storage/
+#public/uploads/
+#public/storage/
 
 # =========================
 # Database / SQL dumps
@@ -95,6 +113,4 @@ database/backup/
 # =========================
 config.local.php
 config.local.json
-
-
 .config/

@@ -1,0 +1,73 @@
+﻿name: Sincronizar Reabertura (Hierarquia)
+on:
+  issues:
+    types: [reopened]
+
+jobs:
+  sync-reopen:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Mover Filho e Pai para Em Revisão
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            const issueNumber = context.payload.issue.number;
+            const LABEL_REVIEW = 'Em revisão';
+
+            console.log(`Issue #${issueNumber} foi reaberta.`);
+
+            // 1. Aplica a label na Issue Filha (Atual)
+            await github.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number: issueNumber,
+              labels: [LABEL_REVIEW]
+            });
+            console.log(`Label '${LABEL_REVIEW}' aplicada na Issue filha #${issueNumber}.`);
+
+            // 2. Busca o Elemento Pai via GraphQL
+            const query = `query($owner: String!, $repo: String!, $number: Int!) {
+              repository(owner: $owner, name: $repo) {
+                issue(number: $number) {
+                  parent {
+                    id
+                    number
+                    state
+                  }
+                }
+              }
+            }`;
+
+            const result = await github.graphql(query, { owner, repo, number: issueNumber });
+            const parentIssue = result.repository.issue.parent;
+
+            // 3. Se existir Pai, atualiza ele também
+            if (parentIssue) {
+              console.log(`Elemento Pai encontrado: #${parentIssue.number} (Status: ${parentIssue.state})`);
+
+              // Se o Pai estiver fechado, reabre ele para fazer sentido estar "Em revisão"
+              if (parentIssue.state === 'CLOSED') {
+                await github.rest.issues.update({
+                  owner,
+                  repo,
+                  issue_number: parentIssue.number,
+                  state: 'open'
+                });
+                console.log(`Pai #${parentIssue.number} foi reaberto automaticamente.`);
+              }
+
+              // Aplica a label no Pai
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number: parentIssue.number,
+                labels: [LABEL_REVIEW]
+              });
+              console.log(`Label '${LABEL_REVIEW}' aplicada no Pai #${parentIssue.number}.`);
+            } else {
+              console.log('Esta issue não possui elemento pai vinculado.');
+            }

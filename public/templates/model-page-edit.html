@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta lang="pt-BR">
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Template Model - Page Internal - Edit</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="./../assets/css/reset.css">
+        <link rel="stylesheet" href="./../assets/css/variables.css">
+        <link rel="stylesheet" href="./../assets/css/page.css">
+        <link rel="stylesheet" href="./../assets/css/form.css">
+        <link rel="stylesheet" href="./../assets/css/table.css">
+        
+    </head>
+<body class="page-internal">
+
+    <!-- SPACING -->
+    <div class="spacing-top-page"></div>
+
+    <div class="header-page">
+        <!-- Mapa de navegação do site -->
+        <div class="location">
+            <span class="all">Internal - Cartório - Cartas Expedidas -</span>
+            <span class="specific">Edição</span>
+        </div>
+
+        <!-- Título e descrição da página -->
+        <h1 class="title-page">Edição de Carta Expedida</h1>
+        <p class="description-page">Caso tenha alguma dificuldade no preenchimento do cadastro, verifique os arquivos abaixo para obter ajuda.</p>
+        
+        <!-- Badges de arquivos para download -->
+        <div class="badge file">
+            <img src="./../assets/icons/Office-File-Pdf-1--Streamline-Ultimate.png" alt="Ícone de arquivo PDF">
+            <span>Passo a passo - Cartas expedidas</span>
+        </div>
+    </div>
+
+    <div class="card-page">               
+        <div class="line-pagination">
+            <div class="block-cell" title="clique para copiar">
+                <span class="minor-info">Ação Penal - Procedimento Ordinário</span>
+                <span class="major-info important">08002343-11.2026.8.05.0103</span>
+            </div>
+            <div class="block-cell status-task">
+                <div class="width-sm status status-pending">Pendente</div>
+            </div>
+        </div>
+        <div class="line-table header">Informações complementares</div>
+        <div class="line-filter">            
+            <div class="block-cell">
+                <label for="filter-tipo">Finalidade</label>
+                <select class="width-md height-md" id="filter-tipo">
+                    <option value="" selected disabled>Selecione aqui</option>
+                    <option value="Intimação para Audiência">Intimação para Audiência</option>
+                    <option value="Intimação de Decisão Interlocutória">Intimação de Decisão</option>
+                    <option value="Intimação da Sentença">Intimação da Sentença</option>
+                    <option value="Citação para apresentar Defesa">Citação para apresentar Defesa</option>                    
+                    <option value="Citação para apresentar Alegações Finais">Citação para apresentar Alegações Finais</option>
+                    <option value="Suspensão Condicional">Suspensão Condicional</option>
+                    <option value="Outra">Outra não listada</option>
+                </select>
+            </div>
+            <div class="block-cell">
+                <label for="filter-prazo">Prazo cumprimento</label>
+                <select class="width-sm height-md" id="filter-prazo">
+                    <option value="5 dias">5 dias</option>
+                    <option value="10 dias">10 dias</option>
+                    <option value="15 dias">15 dias</option>
+                    <option value="30 dias" selected>30 dias</option>
+                    <option value="60 dias">60 dias</option>
+                    <option value="90 dias">90 dias</option>
+                </select>
+            </div>        
+            <div class="block-cell">
+                <label for="filter-estado">Estado</label>
+                <select class="width-md height-md" id="filter-estado">
+                    <option value="AC">Acre</option>
+                    <option value="AL">Alagoas</option>
+                    <option value="AP">Amapá</option>
+                    <option value="AM">Amazonas</option>
+                    <option value="BA" selected>Bahia</option>
+                    <option value="CE">Ceará</option>
+                    <option value="DF">Distrito Federal</option>
+                    <option value="ES">Espírito Santo</option>
+                    <option value="GO">Goiás</option>
+                    <option value="MA">Maranhão</option> 
+                    <option value="MT">Mato Grosso</option>
+                    <option value="MS">Mato Grosso do Sul</option>
+                    <option value="MG">Minas Gerais</option>
+                    <option value="PA">Pará</option>
+                    <option value="PB">Paraíba</option>
+                    <option value="PR">Paraná</option>
+                    <option value="PE">Pernambuco</option>
+                    <option value="PI">Piauí</option>
+                    <option value="RJ">Rio de Janeiro</option>
+                    <option value="RN">Rio Grande do Norte</option>
+                    <option value="RS">Rio Grande do Sul</option>
+                    <option value="RO">Rondônia</option>
+                    <option value="RR">Roraima</option>
+                    <option value="SC">Santa Catarina</option>
+                    <option value="SP">São Paulo</option>
+                    <option value="SE">Sergipe</option>
+                    <option value="TO">Tocantins</option>
+                </select>
+            </div>
+            <div class="block-cell">
+                <label for="filter-cidade">Cidade</label>
+                <input type="text" class="width-md height-md" id="filter-cidade" placeholder="Digite o nome da cidade"> 
+            </div>            
+        </div>
+        <div class="line-table header">Juízo deprecado</div>
+        <div class="line-filter">
+            <div class="block-cell">
+                <label for="filter-juizo">Vara</label>
+                <input type="text" class="width-lg height-md" id="filter-juizo" placeholder="Digite o nome do juízo deprecado">
+            </div>
+            <div class="block-cell">
+                <label for="filter-processo">Número da Carta Precatória</label>
+                <input type="text" class="width-md height-md" id="filter-processo" placeholder="Digite o número da Carta Precatória">
+            </div>
+            <div class="block-cell">
+                <label for="filter-status">Status do cumprimento</label>
+                <select class="width-lg height-md" id="filter-status">
+                    <option value="Ag. Expedição" selected>Aguardando expedição de documento</option>
+                    <option value="Ag. Cumprimento">Aguardando cumprimento</option>
+                    <option value="Não cumprida">Não cumprida</option>
+                    <option value="Cumprida positivamente">Cumprida positivamente</option>
+                    <option value="Cumprida negativamente">Cumprida negativamente</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Ações -->
+        <div class="line-buttons">
+            <button class="btn btn-secondary">Voltar</button>
+            <button class="btn btn-primary">Salvar</button>
+        </div>
+    </div>
+
+    <!-- Develop Info -->
+    <div class="footer-page">
+        <div class="location">
+            <span class="all">Aplicativo web desenvolvido integralmente por </span>
+            <span class="specific">Jorge Reis Develop</span>
+            <span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span>
+        </div>
+    </div>
+
+</body>
+</html>
