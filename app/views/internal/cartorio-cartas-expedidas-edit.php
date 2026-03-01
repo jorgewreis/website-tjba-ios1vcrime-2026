@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
+require_once __DIR__ . '/../../repositories/CartasExpedidasSubtarefasRepository.php';
 require_once __DIR__ . '/../../services/CartasExpedidasService.php';
 
 $connection = Conection::getInstance()->getConnection();
@@ -71,6 +72,38 @@ if ($carta !== null) {
     }
     $observacoesValue = trim((string) ($carta['observacoes'] ?? ''));
     $comarcaDestinoId = trim((string) ($carta['comarca_destino_id'] ?? ''));
+
+    $subtarefasRepo = new CartasExpedidasSubtarefasRepository($connection);
+    $subtarefas = $subtarefasRepo->findByCartaId($idCarta);
+    $subtarefasPorOrdem = [];
+    foreach ($subtarefas as $st) {
+        $subtarefasPorOrdem[(int) $st['ordem']] = $st;
+    }
+    $subtarefaLabels = [
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1 => 'Assinar carta expedida',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_2 => 'Gerar PDF da documentação',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_3 => 'Aguardando envio',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_4 => 'Aguardando juntada de termo de envio',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_5 => 'Aguardando informações',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6 => 'Aguardando devolução',
+    ];
+    $ordemParaTipo = [
+        1 => CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1,
+        2 => CartasExpedidasSubtarefasRepository::TIPO_ORDEM_2,
+        3 => CartasExpedidasSubtarefasRepository::TIPO_ORDEM_3,
+        4 => CartasExpedidasSubtarefasRepository::TIPO_ORDEM_4,
+        5 => CartasExpedidasSubtarefasRepository::TIPO_ORDEM_5,
+        6 => CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6,
+    ];
+    $temSubtarefas = count($subtarefas) > 0;
+    $temEmAndamentoOuPendente = false;
+    foreach ($subtarefas as $st) {
+        $s = trim((string) ($st['status'] ?? ''));
+        if ($s === 'em_andamento' || $s === 'pendente') {
+            $temEmAndamentoOuPendente = true;
+            break;
+        }
+    }
 }
 
 $ruleServidor = '?';
@@ -161,6 +194,7 @@ $stateOptions = [
         <link rel="stylesheet" href="/assets/css/shared/page.css">
         <link rel="stylesheet" href="/assets/css/shared/form.css">
         <link rel="stylesheet" href="/assets/css/shared/table.css">
+        <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
     </head>
 <body class="page-internal">
 
@@ -239,6 +273,92 @@ $stateOptions = [
                 </div>
             </div> -->
 
+            <!-- Timeline de subtarefas -->
+            <?php
+            $statusCartaLabel = 'Em andamento';
+            $statusCartaClass = 'status-current';
+            if ($statusAtual === 'concluída') {
+                $statusCartaLabel = 'Finalizada';
+                $statusCartaClass = 'status-finished';
+            } elseif ($statusAtual === 'pendente') {
+                $statusCartaLabel = 'Pendente';
+                $statusCartaClass = 'status-pending';
+            }
+            ?>
+            <div class="row table header">Subtarefas - Timeline</div>
+            <div class="row buttons">
+                <div class="col filter">
+                    <div class="width-sm status <?php echo htmlspecialchars($statusCartaClass, ENT_QUOTES); ?>" style="border: 1px solid var(--color-gray-500);"><?php echo htmlspecialchars($statusCartaLabel, ENT_QUOTES); ?></div>
+                </div>
+                <?php if (!$temSubtarefas): ?>
+                    <div class="col filter">
+                        <button type="button" class="col button-table button-subtask" id="btn-add-subtarefa" title="Adicionar subtarefa" aria-label="Adicionar subtarefa">
+                            <i class="fi fi-rr-add"></i>
+                        </button>
+                    </div>
+                <?php elseif ($temEmAndamentoOuPendente): ?>
+                    <div class="col filter">
+                        <button type="button" class="col button-table button-subtask" id="btn-refresh-subtarefas" title="Atualizar timeline" aria-label="Atualizar timeline">
+                            <i class="fi fi-rr-refresh"></i>
+                        </button>
+                    </div>
+                <?php endif; ?>
+            </div>
+            <?php for ($ordem = 1; $ordem <= 6; $ordem++): ?>
+                <?php
+                $tipo = $ordemParaTipo[$ordem] ?? '';
+                $label = $subtarefaLabels[$tipo] ?? 'Passo ' . $ordem;
+                $st = $subtarefasPorOrdem[$ordem] ?? null;
+                $circleClass = '';
+                $statusTexto = 'Pendente';
+                $dataMovimento = '';
+                if ($st !== null) {
+                    $status = trim((string) ($st['status'] ?? ''));
+                    if ($status === 'concluida') {
+                        $circleClass = 'finished';
+                        $statusTexto = 'Concluída';
+                        $raw = $st['updated_at'] ?? $st['created_at'] ?? '';
+                        if ($raw !== '') {
+                            $dt = \DateTime::createFromFormat('Y-m-d H:i:s', $raw);
+                            $dataMovimento = $dt ? $dt->format('d/m/Y - H:i') : $raw;
+                        }
+                    } elseif ($status === 'em_andamento') {
+                        $circleClass = 'current';
+                        $statusTexto = 'Em andamento';
+                        $raw = $st['created_at'] ?? $st['updated_at'] ?? '';
+                        if ($raw !== '') {
+                            $dt = \DateTime::createFromFormat('Y-m-d H:i:s', $raw);
+                            $dataMovimento = $dt ? $dt->format('d/m/Y - H:i') : $raw;
+                        }
+                    } else {
+                        $statusTexto = 'Pendente';
+                    }
+                }
+                ?>
+                <div class="row timeline">
+                    <div class="row">
+                        <?php if ($circleClass !== ''): ?>
+                            <div class="circle <?php echo htmlspecialchars($circleClass, ENT_QUOTES); ?>"></div>
+                        <?php else: ?>
+                            <div class="circle" style="background-color: var(--color-gray-300);"></div>
+                        <?php endif; ?>
+                        <div class="col filter subtask-status-info">
+                            <span class="minor-info"><?php echo htmlspecialchars($label, ENT_QUOTES); ?></span>
+                            <span class="major-info"><?php echo htmlspecialchars($statusTexto, ENT_QUOTES); ?></span>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="col filter subtask-date">
+                            <?php if ($dataMovimento !== ''): ?>
+                                <span class="minor-info">Movimentação realizada em <strong><?php echo htmlspecialchars($dataMovimento, ENT_QUOTES); ?></strong></span>
+                            <?php else: ?>
+                                <span class="minor-info">—</span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            <?php endfor; ?>
+
             <input type="hidden" id="hidden-carta-id" value="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>">
             <input type="hidden" id="hidden-comarca-id" value="<?php echo htmlspecialchars($comarcaDestinoId, ENT_QUOTES); ?>">
 
@@ -286,7 +406,7 @@ $stateOptions = [
                 const hiddenComarcaInput = document.getElementById('hidden-comarca-id');
                 const initialData = window.__initialCartaData || {};
 
-                if (!salvarBtn || !finalidadeSelect || !prazoSelect || !statusSelect || !cidadeInput || !estadoSelect || !observacoesInput) {
+                if (!salvarBtn || !finalidadeSelect || !prazoSelect || !cidadeInput || !estadoSelect) {
                     return;
                 }
 
@@ -317,14 +437,17 @@ $stateOptions = [
                     return value;
                 };
 
-                const getCurrentState = () => ({
-                    finalidade: (finalidadeSelect.value || '').trim(),
-                    prazo: sanitizePrazo(prazoSelect.value),
-                    cidade: cidadeInput.value.trim(),
-                    estado: (estadoSelect.value || '').trim(),
-                    status: (statusSelect.value || '').trim(),
-                    observacoes: observacoesInput.value.trim(),
-                });
+                const getCurrentState = () => {
+                    const state = {
+                        finalidade: (finalidadeSelect.value || '').trim(),
+                        prazo: sanitizePrazo(prazoSelect.value),
+                        cidade: cidadeInput.value.trim(),
+                        estado: (estadoSelect.value || '').trim(),
+                    };
+                    if (statusSelect) state.status = (statusSelect.value || '').trim();
+                    if (observacoesInput) state.observacoes = observacoesInput.value.trim();
+                    return state;
+                };
 
                 const hasChanges = () => {
                     const current = getCurrentState();
@@ -332,8 +455,8 @@ $stateOptions = [
                     if ((initialData.prazoDias || '0').toString() !== current.prazo) return true;
                     if (normalizeCidadeForCompare(initialData.cidade) !== normalizeCidadeForCompare(current.cidade)) return true;
                     if ((initialData.estado || '') !== current.estado) return true;
-                    if ((initialData.status || '') !== current.status) return true;
-                    if ((initialData.observacoes || '') !== current.observacoes) return true;
+                    if (statusSelect && (initialData.status || '') !== (current.status || '')) return true;
+                    if (observacoesInput && (initialData.observacoes || '') !== (current.observacoes || '')) return true;
                     return false;
                 };
 
@@ -341,11 +464,12 @@ $stateOptions = [
                     salvarBtn.disabled = !hasChanges();
                 };
 
+                const formElements = [finalidadeSelect, prazoSelect, cidadeInput, estadoSelect];
+                if (statusSelect) formElements.push(statusSelect);
+                if (observacoesInput) formElements.push(observacoesInput);
                 ['input', 'change'].forEach((eventName) => {
-                    [finalidadeSelect, prazoSelect, statusSelect, cidadeInput, estadoSelect, observacoesInput].forEach((element) => {
-                        if (element) {
-                            element.addEventListener(eventName, updateButtonState);
-                        }
+                    formElements.forEach((element) => {
+                        if (element) element.addEventListener(eventName, updateButtonState);
                     });
                 });
 
@@ -403,10 +527,10 @@ $stateOptions = [
                         prazo_dias: parseInt(payloadState.prazo, 10) || 0,
                         cidade_destino: formatCidade(payloadState.cidade),
                         uf_destino: payloadState.estado,
-                        status: payloadState.status,
-                        observacoes: payloadState.observacoes,
                         comarca_destino_id: hiddenComarcaInput.value.trim(),
                     };
+                    if (statusSelect) payload.status = payloadState.status || '';
+                    if (observacoesInput) payload.observacoes = payloadState.observacoes || '';
 
                     salvarBtn.disabled = true;
                     showFeedback('Atualizando dados...', 'success');
@@ -429,6 +553,37 @@ $stateOptions = [
                 });
 
                 updateButtonState();
+
+                const btnAddSubtarefa = document.getElementById('btn-add-subtarefa');
+                if (btnAddSubtarefa) {
+                    btnAddSubtarefa.addEventListener('click', async () => {
+                        const cartaId = window.__currentCartaId;
+                        if (!cartaId) return;
+                        btnAddSubtarefa.disabled = true;
+                        try {
+                            const response = await fetch('/api/cartorio-cartas-expedidas/criar-primeira-subtarefa.php', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ carta_id: cartaId }),
+                            });
+                            const data = await response.json();
+                            if (!response.ok || !data.success) {
+                                throw new Error(data.error || 'Falha ao criar subtarefa.');
+                            }
+                            window.location.reload();
+                        } catch (err) {
+                            alert(err.message || 'Erro ao adicionar subtarefa.');
+                            btnAddSubtarefa.disabled = false;
+                        }
+                    });
+                }
+
+                const btnRefreshSubtarefas = document.getElementById('btn-refresh-subtarefas');
+                if (btnRefreshSubtarefas) {
+                    btnRefreshSubtarefas.addEventListener('click', () => {
+                        window.location.reload();
+                    });
+                }
             })();
         </script>
     <?php endif; ?>

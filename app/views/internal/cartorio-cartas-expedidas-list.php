@@ -65,6 +65,7 @@ $pagesLabel = $totalPages === 1 ? 'página' : 'páginas';
 $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
 
 $statusOptions = [
+    'pendente',
     'em_andamento',
     'aguardando assinatura',
     'aguardando envio',
@@ -202,11 +203,14 @@ if ($totalPages > 0) {
                 <label for="filter-status">Filtrar por status</label>
                 <select class="width-md height-md" id="filter-status">
                     <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Mostrar todos</option>
+                    <option value="pendente"<?php echo $statusFilter === 'pendente' ? ' selected' : ''; ?>>
+                        Pendente (<?php echo htmlspecialchars((string) ($statusCounts['pendente'] ?? 0)); ?>)
+                    </option>
                     <option value="em_andamento"<?php echo $statusFilter === 'em_andamento' ? ' selected' : ''; ?>>
                         Em andamento (<?php echo htmlspecialchars((string) ($statusCounts['em_andamento'] ?? 0)); ?>)
                     </option>
                     <option value="concluída"<?php echo $statusFilter === 'concluída' ? ' selected' : ''; ?>>
-                        Concluída (<?php echo htmlspecialchars((string) ($statusCounts['concluída'] ?? 0)); ?>)
+                        Finalizada (<?php echo htmlspecialchars((string) ($statusCounts['concluída'] ?? 0)); ?>)
                     </option>
                     <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>
                         Cancelada (<?php echo htmlspecialchars((string) ($statusCounts['cancelada'] ?? 0)); ?>)
@@ -285,9 +289,11 @@ if ($totalPages > 0) {
                             <?php
                             $st = $row['Status'] ?? '';
                             if ($st === 'concluída') {
-                                echo '<div class="width-sm status status-finished">Concluída</div>';
+                                echo '<div class="width-sm status status-finished">Finalizada</div>';
                             } elseif ($st === 'cancelada') {
                                 echo '<div class="width-sm status status-cancelled">Cancelada</div>';
+                            } elseif ($st === 'pendente') {
+                                echo '<div class="width-sm status status-pending">Pendente</div>';
                             } elseif ($st === 'em_andamento' || $st === 'aguardando assinatura' || $st === 'aguardando envio' || $st === 'aguardando juntada do termo' || $st === 'aguardando cumprimento') {
                                 echo '<div class="width-sm status status-current">Em andamento</div>';
                             } else {

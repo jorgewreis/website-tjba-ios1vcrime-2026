@@ -93,31 +93,41 @@ final class CartasExpedidasSubtarefasRepository
     }
 
     /**
-     * Retorna as subtarefas a exibir na lista: 1 em andamento OU 2 quando for Devolução + Informações pendente.
+     * Retorna as subtarefas a exibir na lista: 1 em andamento OU 2 quando for Informações e/ou Devolução (sempre mostrar ambas juntas quando uma delas estiver pendente/em andamento).
      */
     public function findPendenteOuEmAndamentoByCartaId(string $cartaId): array
     {
         $all = $this->findByCartaId($cartaId);
         $emAndamento = [];
-        $informacoesPendente = null;
-        $devolucaoEmAndamento = null;
+        $ordem5 = null;
+        $ordem6 = null;
 
         foreach ($all as $row) {
             $status = (string) ($row['status'] ?? '');
-            $tipo = (string) ($row['tipo'] ?? '');
-            if ($status === self::STATUS_EM_ANDAMENTO) {
-                $emAndamento[] = $row;
-                if ($tipo === self::TIPO_ORDEM_6) {
-                    $devolucaoEmAndamento = $row;
-                }
+            $ordem = (int) ($row['ordem'] ?? 0);
+            if ($status !== self::STATUS_EM_ANDAMENTO && $status !== self::STATUS_PENDENTE) {
+                continue;
             }
-            if ($tipo === self::TIPO_ORDEM_5 && $status === self::STATUS_PENDENTE) {
-                $informacoesPendente = $row;
+            if ($ordem === 5) {
+                $ordem5 = $row;
+            }
+            if ($ordem === 6) {
+                $ordem6 = $row;
+            }
+            if ($ordem !== 5 && $ordem !== 6) {
+                $emAndamento[] = $row;
             }
         }
 
-        if ($devolucaoEmAndamento !== null && $informacoesPendente !== null) {
-            return [$informacoesPendente, $devolucaoEmAndamento];
+        if ($ordem5 !== null || $ordem6 !== null) {
+            $out = [];
+            if ($ordem5 !== null) {
+                $out[] = $ordem5;
+            }
+            if ($ordem6 !== null) {
+                $out[] = $ordem6;
+            }
+            return $out;
         }
         if (!empty($emAndamento)) {
             return [reset($emAndamento)];

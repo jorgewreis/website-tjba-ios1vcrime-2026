@@ -12,6 +12,7 @@ final class CartasExpedidasRepository
     private const COLLATION = 'utf8mb4_unicode_ci';
 
     private const STATUS_ORDER = [
+        'pendente',
         'em_andamento',
         'aguardando assinatura',
         'aguardando envio',

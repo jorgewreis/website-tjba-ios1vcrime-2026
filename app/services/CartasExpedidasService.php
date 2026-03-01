@@ -168,7 +168,7 @@ final class CartasExpedidasService
             'numero_processo_destino' => null,
             'vara_destino_id' => null,
             'vara_destino_nome' => null,
-            'status' => 'em_andamento',
+            'status' => 'pendente',
             'observacoes' => trim((string) ($payload['observacoes'] ?? '')),
         ];
 
@@ -192,6 +192,22 @@ final class CartasExpedidasService
             throw new InvalidArgumentException('Subtarefa não encontrada.');
         }
 
+        $ordem = (int) ($subtarefa['ordem'] ?? 0);
+        $cartaId = trim((string) ($subtarefa['carta_expedida_id'] ?? ''));
+
+        if ($cartaId === '') {
+            throw new InvalidArgumentException('Carta da subtarefa não identificada.');
+        }
+
+        if ($ordem === 6) {
+            $todas = $this->subtarefasRepository->findByCartaId($cartaId);
+            foreach ($todas as $st) {
+                if ((int) ($st['ordem'] ?? 0) === 5 && trim((string) ($st['status'] ?? '')) !== 'concluida') {
+                    $this->subtarefasRepository->marcarConcluida((string) $st['id']);
+                }
+            }
+        }
+
         $this->subtarefasRepository->marcarConcluida($subtarefaId);
 
         if ($dadosJson !== null && $dadosJson !== '') {
@@ -203,17 +219,12 @@ final class CartasExpedidasService
             $stmt->execute();
         }
 
-        $ordem = (int) ($subtarefa['ordem'] ?? 0);
-        $cartaId = trim((string) ($subtarefa['carta_expedida_id'] ?? ''));
-
-        if ($cartaId === '') {
-            return;
-        }
-
         $proximoTipo = $this->subtarefasRepository->obterProximoTipo($ordem);
         if ($proximoTipo !== null) {
             $proximaOrdem = $ordem + 1;
             $this->subtarefasRepository->create($cartaId, $proximoTipo, $proximaOrdem, 'em_andamento', null);
+            $statusCarta = $proximaOrdem === 6 ? 'pendente' : 'em_andamento';
+            $this->repository->update($cartaId, ['status' => $statusCarta]);
         } else {
             $this->repository->update($cartaId, ['status' => 'concluída']);
         }
@@ -335,5 +346,33 @@ final class CartasExpedidasService
     public function find(string $id): ?array
     {
         return $this->repository->find($id);
+    }
+
+    /**
+     * Cria a primeira subtarefa (ordem 1 - Assinar carta expedida) quando a carta ainda não possui nenhuma.
+     *
+     * @throws InvalidArgumentException Se a carta não existir ou já possuir subtarefas.
+     */
+    public function criarPrimeiraSubtarefa(string $cartaId): void
+    {
+        $cartaId = trim($cartaId);
+        if ($cartaId === '') {
+            throw new InvalidArgumentException('Identificador da carta é obrigatório.');
+        }
+        if ($this->repository->find($cartaId) === null) {
+            throw new InvalidArgumentException('Carta expedida não encontrada.');
+        }
+        $existentes = $this->subtarefasRepository->findByCartaId($cartaId);
+        if (count($existentes) > 0) {
+            throw new InvalidArgumentException('Esta carta já possui subtarefas.');
+        }
+        $this->subtarefasRepository->create(
+            $cartaId,
+            CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1,
+            1,
+            'em_andamento',
+            null
+        );
+        $this->repository->update($cartaId, ['status' => 'pendente']);
     }
 }
