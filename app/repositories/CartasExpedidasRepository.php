@@ -277,9 +277,12 @@ final class CartasExpedidasRepository
             $params[':finalidade'] = trim($filters['finalidade']);
         }
 
-        if (isset($filters['processo']) && $filters['processo'] !== '') {
-            $clauses[] = $prefix . "`numero_processo_origem` LIKE :processo";
-            $params[':processo'] = '%' . $filters['processo'] . '%';
+        if (isset($filters['processo'])) {
+            $processoValue = trim((string) $filters['processo']);
+            if ($processoValue !== '') {
+                $clauses[] = $prefix . "`numero_processo_origem` LIKE :processo";
+                $params[':processo'] = '%' . $processoValue . '%';
+            }
         }
 
         if (isset($filters['status']) && $filters['status'] !== '') {

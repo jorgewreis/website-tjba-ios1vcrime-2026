@@ -1,0 +1,115 @@
+(function (window) {
+    'use strict';
+
+    const defaultConfig = {
+        minSearchDigits: 3,
+        debounceDelay: 1000,
+        routeParamKey: 'page',
+    };
+
+    function normalizeValue(value) {
+        return value === null || value === undefined ? '' : String(value);
+    }
+
+    function setParam(params, key, value) {
+        const trimmed = value.trim();
+        if (trimmed === '') {
+            params.delete(key);
+            return;
+        }
+        params.set(key, trimmed);
+    }
+
+    function initializeProcessSearch(config) {
+        const cfg = Object.assign({}, defaultConfig, config);
+        const input = document.getElementById(cfg.inputId);
+        const itemsSelect = document.getElementById(cfg.itemsPerPageId);
+        if (!input || !itemsSelect) {
+            return null;
+        }
+
+        const filterElements = (cfg.filters ?? [])
+            .map((item) => {
+                if (!item || !item.id || !item.param) {
+                    return null;
+                }
+                const el = document.getElementById(item.id);
+                if (!el) {
+                    return null;
+                }
+                return { element: el, param: item.param };
+            })
+            .filter(Boolean);
+
+        if (filterElements.length === 0) {
+            return null;
+        }
+
+        const searchDelay = Number(cfg.debounceDelay) || defaultConfig.debounceDelay;
+        const minDigits = Math.max(1, Number(cfg.minSearchDigits) || defaultConfig.minSearchDigits);
+        const routeParamKey = cfg.routeParamKey || defaultConfig.routeParamKey;
+        const routeParamValue = new URL(window.location.href).searchParams.get(routeParamKey);
+        const initialValue = normalizeValue(cfg.initialProcessFilter || input.value);
+        let hasActiveProcessFilter = initialValue.trim().length >= minDigits;
+        let searchTimeout = null;
+
+        const applyFilters = function () {
+            const url = new URL(window.location.href);
+            const params = url.searchParams;
+
+            const setFilter = function (key, value) {
+                setParam(params, key, value);
+            };
+
+            if (searchTimeout !== null) {
+                clearTimeout(searchTimeout);
+                searchTimeout = null;
+            }
+
+            filterElements.forEach(({ element, param }) => {
+                setFilter(param, normalizeValue(element.value));
+            });
+
+            const searchValue = normalizeValue(input.value).trim();
+            if (searchValue.length >= minDigits) {
+                params.set('processo', searchValue);
+            } else {
+                params.delete('processo');
+            }
+
+            setParam(params, 'items_per_page', itemsSelect.value);
+            if (routeParamValue) {
+                params.set(routeParamKey, routeParamValue);
+            }
+            params.set('page_number', '1');
+
+            window.location.href = url.toString();
+        };
+
+        filterElements.forEach(({ element }) => {
+            element.addEventListener('change', applyFilters);
+        });
+        itemsSelect.addEventListener('change', applyFilters);
+
+        input.addEventListener('input', function () {
+            const value = normalizeValue(input.value).trim();
+            if (searchTimeout !== null) {
+                clearTimeout(searchTimeout);
+                searchTimeout = null;
+            }
+            const shouldTriggerSearch = value.length >= minDigits || (hasActiveProcessFilter && value.length < minDigits);
+            if (!shouldTriggerSearch) {
+                return;
+            }
+            hasActiveProcessFilter = value.length >= minDigits;
+            searchTimeout = setTimeout(applyFilters, searchDelay);
+        });
+
+        return {
+            applyFilters,
+        };
+    }
+
+    window.CartasExpedidasSearch = window.CartasExpedidasSearch || {};
+    window.CartasExpedidasSearch.initializeProcessSearch = initializeProcessSearch;
+})(window);

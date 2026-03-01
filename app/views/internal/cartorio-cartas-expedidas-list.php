@@ -10,6 +10,7 @@ require_once __DIR__ . '/../../services/CartasExpedidasService.php';
 
 $connection = Conection::getInstance()->getConnection();
 
+$routePage = trim((string) ($_GET['page'] ?? 'cartasexpedidas'));
 $finalidadeFilter = trim($_GET['finalidade'] ?? '');
 $statusFilter = trim($_GET['status'] ?? '');
 $processoFilter = trim($_GET['processo'] ?? '');
@@ -19,7 +20,14 @@ if (!in_array($itemsPerPage, $allowedPerPage, true)) {
     $itemsPerPage = 10;
 }
 
-$currentPage = isset($_GET['page']) ? max(1, (int) $_GET['page']) : 1;
+$pageNumberParam = $_GET['page_number'] ?? null;
+if ($pageNumberParam !== null && $pageNumberParam !== '') {
+    $currentPage = max(1, (int) $pageNumberParam);
+} elseif (isset($_GET['page']) && is_numeric($_GET['page'])) {
+    $currentPage = max(1, (int) $_GET['page']);
+} else {
+    $currentPage = 1;
+}
 $filters = [
     'finalidade' => $finalidadeFilter,
     'status' => $statusFilter,
@@ -82,15 +90,18 @@ foreach ($finalidadeOrder as $term) {
 }
 
 $baseQueryParams = [];
-    if ($finalidadeFilter !== '') {
-        $baseQueryParams['finalidade'] = $finalidadeFilter;
-    }
-    if ($statusFilter !== '') {
-        $baseQueryParams['status'] = $statusFilter;
-    }
-    if ($processoFilter !== '') {
-        $baseQueryParams['processo'] = $processoFilter;
-    }
+if ($routePage !== '') {
+    $baseQueryParams['page'] = $routePage;
+}
+if ($finalidadeFilter !== '') {
+    $baseQueryParams['finalidade'] = $finalidadeFilter;
+}
+if ($statusFilter !== '') {
+    $baseQueryParams['status'] = $statusFilter;
+}
+if ($processoFilter !== '') {
+    $baseQueryParams['processo'] = $processoFilter;
+}
 $baseQueryParams['items_per_page'] = $itemsPerPage;
 
 $paginationButtons = [];
@@ -298,11 +309,11 @@ if ($totalPages > 0) {
                     <?php
                         $prevPage = $currentPage > 1 ? $currentPage - 1 : 1;
                         $prevParams = $baseQueryParams;
-                        $prevParams['page'] = $prevPage;
+                        $prevParams['page_number'] = $prevPage;
                         $prevHref = '?' . http_build_query($prevParams);
                         $nextPage = $currentPage < $totalPages ? $currentPage + 1 : $currentPage;
                         $nextParams = $baseQueryParams;
-                        $nextParams['page'] = $nextPage;
+                        $nextParams['page_number'] = $nextPage;
                         $nextHref = '?' . http_build_query($nextParams);
                     ?>
                     <a class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>"
@@ -312,7 +323,7 @@ if ($totalPages > 0) {
                     <?php foreach ($paginationButtons as $page): ?>
                         <?php
                             $pageParams = $baseQueryParams;
-                            $pageParams['page'] = $page;
+                            $pageParams['page_number'] = $page;
                         ?>
                         <a class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" href="?<?php echo htmlspecialchars(http_build_query($pageParams)); ?>">
                             <?php echo $page; ?>
@@ -325,7 +336,7 @@ if ($totalPages > 0) {
                         <?php foreach ($trailingPages as $page): ?>
                             <?php
                                 $pageParams = $baseQueryParams;
-                                $pageParams['page'] = $page;
+                                $pageParams['page_number'] = $page;
                             ?>
                             <a class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" href="?<?php echo htmlspecialchars(http_build_query($pageParams)); ?>">
                                 <?php echo $page; ?>
@@ -350,73 +361,24 @@ if ($totalPages > 0) {
         </div>
     </div>
 
+    <script src="/assets/js/modules/cartorio/cartas-expedidas/search-list.js"></script>
     <script>
         (function () {
-            const finalidadeSelect = document.getElementById('filter-tipo');
-            const statusSelect = document.getElementById('filter-status');
-            const itemsSelect = document.getElementById('items-per-page');
-            const searchInput = document.getElementById('search-input');
-            const novoCadastroBtn = document.getElementById('novo-cadastro-btn');
-            if (!finalidadeSelect || !statusSelect || !itemsSelect || !searchInput) {
-                return;
+            if (window.CartasExpedidasSearch && typeof window.CartasExpedidasSearch.initializeProcessSearch === 'function') {
+                window.CartasExpedidasSearch.initializeProcessSearch({
+                    inputId: 'search-input',
+                    itemsPerPageId: 'items-per-page',
+                    filters: [
+                        { id: 'filter-tipo', param: 'finalidade' },
+                        { id: 'filter-status', param: 'status' },
+                    ],
+                    minSearchDigits: 3,
+                    debounceDelay: 1000,
+                    initialProcessFilter: <?php echo json_encode($processoFilter, JSON_UNESCAPED_UNICODE); ?>,
+                });
             }
 
-            const minSearchDigits = 3;
-            const searchDebounceDelay = 1000;
-            const initialProcessoFilter = <?php echo json_encode($processoFilter, JSON_UNESCAPED_UNICODE); ?>;
-            let hasActiveProcessFilter = initialProcessoFilter.length >= minSearchDigits;
-            let searchTimeout = null;
-
-            const applyFilters = function () {
-                const url = new URL(window.location.href);
-                const params = url.searchParams;
-                const setFilter = function (key, value) {
-                    if (value.trim() === '') {
-                        params.delete(key);
-                    } else {
-                        params.set(key, value);
-                    }
-                };
-                if (searchTimeout !== null) {
-                    clearTimeout(searchTimeout);
-                    searchTimeout = null;
-                }
-
-                setFilter('finalidade', finalidadeSelect.value);
-                setFilter('status', statusSelect.value);
-                const searchValue = searchInput.value.trim();
-                if (searchValue.length >= minSearchDigits) {
-                    params.set('processo', searchValue);
-                } else {
-                    params.delete('processo');
-                }
-                params.set('items_per_page', itemsSelect.value);
-                params.set('page', '1');
-
-                window.location.href = url.toString();
-            };
-
-            finalidadeSelect.addEventListener('change', applyFilters);
-            statusSelect.addEventListener('change', applyFilters);
-            itemsSelect.addEventListener('change', applyFilters);
-            searchInput.addEventListener('input', function () {
-                const value = searchInput.value.trim();
-                if (searchTimeout !== null) {
-                    clearTimeout(searchTimeout);
-                    searchTimeout = null;
-                }
-                const shouldTriggerSearch = value.length >= minSearchDigits || (hasActiveProcessFilter && value.length < minSearchDigits);
-                if (!shouldTriggerSearch) {
-                    return;
-                }
-                if (value.length >= minSearchDigits) {
-                    hasActiveProcessFilter = true;
-                } else {
-                    hasActiveProcessFilter = false;
-                }
-                searchTimeout = setTimeout(applyFilters, searchDebounceDelay);
-            });
-
+            const novoCadastroBtn = document.getElementById('novo-cadastro-btn');
             if (novoCadastroBtn) {
                 novoCadastroBtn.addEventListener('click', function () {
                     window.location.href = '/frame.php?page=cartasexpedidascreate';
@@ -430,7 +392,6 @@ if ($totalPages > 0) {
                     if (navigator.clipboard) {
                         navigator.clipboard.writeText(text);
                     } else {
-                        // fallback para browsers antigos
                         const tempInput = document.createElement('input');
                         tempInput.value = text;
                         document.body.appendChild(tempInput);
