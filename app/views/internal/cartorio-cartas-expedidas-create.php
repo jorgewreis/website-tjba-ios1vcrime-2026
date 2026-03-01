@@ -159,18 +159,7 @@ try {
                     <option value="Suspensão Condicional">Suspensão Condicional</option>
                     <option value="Outra">Outra não listada</option>
                 </select>
-            </div>
-            <div class="col filter">
-                <label for="filter-prazo">Prazo cumprimento</label>
-                <select class="width-sm height-md" id="filter-prazo" required>
-                    <option value="5 dias">5 dias</option>
-                    <option value="10 dias">10 dias</option>
-                    <option value="15 dias">15 dias</option>
-                    <option value="30 dias" selected>30 dias</option>
-                    <option value="60 dias">60 dias</option>
-                    <option value="90 dias">90 dias</option>
-                </select>
-            </div>
+            </div>            
         </div>
         <?php if ($cnjError): ?>
             <div class="row filter">
@@ -216,14 +205,22 @@ try {
                     <option value="TO">Tocantins</option>
                 </select>
             </div>            
+            <div class="col filter">
+                <label for="filter-prazo">Prazo cumprimento</label>
+                <select class="width-sm height-md" id="filter-prazo" required>
+                    <option value="5 dias">5 dias</option>
+                    <option value="10 dias">10 dias</option>
+                    <option value="15 dias">15 dias</option>
+                    <option value="30 dias" selected>30 dias</option>
+                    <option value="60 dias">60 dias</option>
+                    <option value="90 dias">90 dias</option>
+                </select>
+            </div>
         </div>
-        <div class="row filter">
+        <div class="row info">
             <div class="col">
-                <label class="status status-primary-light">*Conforme regra de divisão de tarefas, todas as Cartas Expedidas serão alocadas automaticamente e deverão ser remetidas por <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></label>
-            </div>
-            <div class="col">
-                <label id="cadastro-feedback" class="status-placeholder" aria-live="polite"></label>
-            </div>
+                <label>*Conforme regra de divisão de tarefas, todas as Cartas Expedidas serão alocadas automaticamente e deverão ser remetidas por <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></label>
+            </div>            
         </div>
 
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
@@ -235,6 +232,13 @@ try {
             <button class="btn btn-secondary" id="voltar-btn">Voltar</button>
             <button class="btn btn-primary" id="cadastrar-btn" type="button">Cadastrar</button>
         </div>        
+
+        <!-- Informações -->
+        <div class="row pagination">
+            <div class="col">
+                <label id="cadastro-feedback" class="status-placeholder" aria-live="polite"></label>
+            </div>
+        </div>
     </div>
         
     <!-- Develop Info -->

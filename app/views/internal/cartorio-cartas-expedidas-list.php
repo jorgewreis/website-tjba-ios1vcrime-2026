@@ -179,7 +179,7 @@ if ($totalPages > 0) {
             </div>
             <div class="col filter">
                 <label for="items-per-page">Itens por página</label>
-                <select class="width-ssm height-md" id="items-per-page">
+                <select class="width-sm height-md" id="items-per-page">
                     <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
                     <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
                     <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
