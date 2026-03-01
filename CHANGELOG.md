@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0169
+
+**Data:** 2026-03-01 19:59:50 | **Commit:** `b70506f` | **Tipo:** `patch`
+
+- Fix: correção de nomes dos tribunais
+
 ## V. 1.02.0168
 
 **Data:** 2026-03-01 19:49:19 | **Commit:** `a1c2ab1` | **Tipo:** `patch`
@@ -2052,6 +2058,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
 require_once __DIR__ . '/../../repositories/CartasExpedidasSubtarefasRepository.php';
+require_once __DIR__ . '/../../repositories/TribunaisRepository.php';
 require_once __DIR__ . '/../../services/CartasExpedidasService.php';
 
 $connection = Conection::getInstance()->getConnection();
@@ -76,6 +77,7 @@ if ($carta !== null) {
     $subtarefasRepo = new CartasExpedidasSubtarefasRepository($connection);
     $subtarefasRepo->ensureInformacoesDevolucaoPair($idCarta);
     $subtarefas = $subtarefasRepo->findByCartaId($idCarta);
+    $tribunaisRepo = new TribunaisRepository($connection);
     $subtarefasPorOrdem = [];
     foreach ($subtarefas as $st) {
         $subtarefasPorOrdem[(int) $st['ordem']] = $st;
@@ -421,13 +423,24 @@ $stateOptions = [
                             $majorTexto = '';
                             $infoLinha = 'Documentos gerados por ' . $nomeExibir . ' em ' . $dataMovimento;
                         } elseif ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ORDEM_3) {
-                            $minorTexto = 'Carta expedida enviada para';
-                            $tribunalDestino = trim((string) ($dadosEspecificos['tribunal_destino'] ?? $dadosEspecificos['tribunal_nome'] ?? ''));
-                            if ($tribunalDestino === '' && isset($carta['uf_destino'])) {
-                                $uf = strtoupper(trim((string) $carta['uf_destino']));
-                                $tribunalDestino = $uf !== '' ? 'Tribunal de Justiça do Estado - ' . $uf : '—';
+                        $minorTexto = 'Carta expedida enviada para';
+                        $tribunalDestino = trim((string) ($dadosEspecificos['tribunal_destino'] ?? $dadosEspecificos['tribunal_nome'] ?? ''));
+                        if ($tribunalDestino === '' && isset($carta['uf_destino'])) {
+                            $uf = strtoupper(trim((string) $carta['uf_destino']));
+                            if ($uf !== '') {
+                                $sigla = $uf === 'DF' ? 'TJDFT' : 'TJ' . $uf;
+                                $tribunalRow = $tribunaisRepo->findBySigla($sigla);
+                                $nomeTribunal = '';
+                                if ($tribunalRow !== null) {
+                                    $nomeTribunal = trim((string) ($tribunalRow['nome'] ?? ''));
+                                }
+                                if ($nomeTribunal === '') {
+                                    $nomeTribunal = 'Tribunal de Justiça do Estado - ' . $uf;
+                                }
+                                $tribunalDestino = $sigla . ' - ' . $nomeTribunal;
                             }
-                            $majorTexto = $tribunalDestino !== '' ? $tribunalDestino : '—';
+                        }
+                        $majorTexto = $tribunalDestino !== '' ? $tribunalDestino : '—';
                             $infoLinha = 'Documento enviado por ' . $nomeExibir . ' em ' . $dataMovimento;
                         } elseif ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ORDEM_4) {
                             $minorTexto = 'Comprovante de termo de envio juntado e liberado nos autos';
