@@ -378,7 +378,7 @@ $stateOptions = [
                 </div>
                 <div class="col">
                     <div class="col filter subtask-date">
-                        <span class="minor-info">Cadastro realizado em <strong><?php echo htmlspecialchars($cartaCreatedFormatted, ENT_QUOTES); ?></strong></span>
+                        <span class="minor-info">Cadastro realizado em <?php echo htmlspecialchars($cartaCreatedFormatted, ENT_QUOTES); ?></span>
                     </div>
                 </div>
             </div>
@@ -407,8 +407,8 @@ $stateOptions = [
                         $circleClass = 'finished';
                         $minorTexto = $timelineMinorConcluido[$tipo] ?? $label;
                         $majorTexto = $nomeResponsavel !== '' ? $nomeResponsavel : (strpos($timelineMinorConcluido[$tipo] ?? '', 'por') !== false ? '—' : '');
-                        if ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ORDEM_2 && isset($dadosEspecificos['qtd_docs'])) {
-                            $qtd = (int) $dadosEspecificos['qtd_docs'];
+                        if ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ORDEM_2 && (isset($dadosEspecificos['qtd_docs']) || isset($dadosEspecificos['qtd_docs_gerados']))) {
+                            $qtd = (int) ($dadosEspecificos['qtd_docs'] ?? $dadosEspecificos['qtd_docs_gerados'] ?? 0);
                             if ($qtd > 0) {
                                 $minorTexto = $qtd . ' ' . ($qtd === 1 ? 'Documento em PDF gerado por' : 'Documentos em PDF gerados por');
                             }
