@@ -328,19 +328,30 @@ $stateOptions = [
                     $progressStatusesEdit[$o - 1] = trim((string) ($subtarefasPorOrdem[$o]['status'] ?? 'pendente'));
                 }
             }
-            $isEmAndamentoEdit = ($statusCartaLabel === 'Em andamento');
+            $mostrarBarraEdit = ($statusCartaLabel === 'Pendente' || $statusCartaLabel === 'Em andamento');
+            $segmentosBarraEdit = [];
+            if ($mostrarBarraEdit) {
+                for ($i = 0; $i < 6; $i++) {
+                    if (($progressStatusesEdit[$i] ?? '') !== 'concluida') {
+                        $segClass = ($progressStatusesEdit[$i] ?? '') === 'em_andamento' ? 'em_andamento' : 'pendente';
+                        $segmentosBarraEdit[] = ['class' => $segClass, 'title' => $subtarefaLabels[$ordemParaTipo[$i + 1] ?? ''] ?? ''];
+                    }
+                }
+            }
             ?>
             <div class="row table header">Subtarefas - Timeline</div>
             <div class="row buttons">
                 <div class="col filter" title="<?php echo htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES); ?>">
-                    <?php if ($isEmAndamentoEdit): ?>
-                        <div class="status-task-em-andamento">
-                            <div class="width-sm status <?php echo htmlspecialchars($statusCartaClass, ENT_QUOTES); ?>" style="border: 1px solid var(--color-gray-500);"><?php echo htmlspecialchars($statusCartaLabel, ENT_QUOTES); ?></div>
-                            <div class="status-task-progress" role="progressbar" aria-valuenow="<?php echo count(array_filter($progressStatusesEdit, fn($x) => $x === 'concluida')); ?>" aria-valuemin="0" aria-valuemax="6" aria-label="Progresso das subtarefas">
-                                <?php for ($i = 0; $i < 6; $i++): $segClass = $progressStatusesEdit[$i] === 'concluida' ? 'concluida' : ($progressStatusesEdit[$i] === 'em_andamento' ? 'em_andamento' : 'pendente'); ?>
-                                    <div class="status-task-progress-segment <?php echo htmlspecialchars($segClass, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($subtarefaLabels[$ordemParaTipo[$i + 1] ?? ''] ?? '', ENT_QUOTES); ?>"></div>
-                                <?php endfor; ?>
-                            </div>
+                    <?php if ($mostrarBarraEdit): ?>
+                        <div class="width-sm status <?php echo htmlspecialchars($statusCartaClass, ENT_QUOTES); ?> status-with-progress" style="border: 1px solid var(--color-gray-500);">
+                            <span class="status-task-label"><?php echo htmlspecialchars($statusCartaLabel, ENT_QUOTES); ?></span>
+                            <?php if (!empty($segmentosBarraEdit)): ?>
+                                <div class="status-task-progress" role="progressbar" aria-valuenow="<?php echo 6 - count($segmentosBarraEdit); ?>" aria-valuemin="0" aria-valuemax="6" aria-label="Progresso das subtarefas">
+                                    <?php foreach ($segmentosBarraEdit as $seg): ?>
+                                        <div class="status-task-progress-segment <?php echo htmlspecialchars($seg['class'], ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($seg['title'], ENT_QUOTES); ?>"></div>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     <?php else: ?>
                         <div class="width-sm status <?php echo htmlspecialchars($statusCartaClass, ENT_QUOTES); ?>" style="border: 1px solid var(--color-gray-500);"><?php echo htmlspecialchars($statusCartaLabel, ENT_QUOTES); ?></div>
@@ -441,7 +452,7 @@ $stateOptions = [
                     $majorTexto = $statusTexto;
                 }
                 ?>
-                <div class="row timeline">
+                <div class="row <?php if ($circleClass === 'current') { echo 'timeline current'; } else if ($circleClass === 'finished') { echo 'timeline finished'; } else { echo 'timeline'; } ?>">
                     <div class="row">
                         <?php if ($circleClass !== ''): ?>
                             <div class="circle <?php echo htmlspecialchars($circleClass, ENT_QUOTES); ?>"></div>

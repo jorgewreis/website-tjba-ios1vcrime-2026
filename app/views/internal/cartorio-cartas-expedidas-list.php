@@ -318,6 +318,16 @@ if ($totalPages > 0) {
                             $currentSubtarefaTitle = $row['Status'] ?? 'Em andamento';
                         }
                         $isEmAndamento = in_array($st, ['em_andamento', 'aguardando assinatura', 'aguardando envio', 'aguardando juntada do termo', 'aguardando juntada de termo', 'aguardando cumprimento'], true);
+                        $mostrarBarraStatus = ($st !== 'concluída' && $st !== 'cancelada');
+                        $segmentosBarra = [];
+                        if ($mostrarBarraStatus) {
+                            for ($i = 0; $i < 6; $i++) {
+                                if (($progressStatuses[$i] ?? '') !== 'concluida') {
+                                    $segClass = ($progressStatuses[$i] ?? '') === 'em_andamento' ? 'em_andamento' : 'pendente';
+                                    $segmentosBarra[] = ['class' => $segClass, 'title' => $ordemLabels[$i + 1] ?? ''];
+                                }
+                            }
+                        }
                         ?>
                         <div class="col status-task" title="<?php echo htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES); ?>">
                             <?php
@@ -325,17 +335,18 @@ if ($totalPages > 0) {
                                 echo '<div class="width-sm status status-finished">Finalizada</div>';
                             } elseif ($st === 'cancelada') {
                                 echo '<div class="width-sm status status-cancelled">Cancelada</div>';
-                            } elseif ($st === 'pendente') {
-                                echo '<div class="width-sm status status-pending">Pendente</div>';
-                            } elseif ($isEmAndamento) {
-                                echo '<div class="status-task-em-andamento">';
-                                echo '<div class="width-sm status status-current">Em andamento</div>';
-                                echo '<div class="status-task-progress" role="progressbar" aria-valuenow="' . count(array_filter($progressStatuses, fn($x) => $x === 'concluida')) . '" aria-valuemin="0" aria-valuemax="6" aria-label="Progresso das subtarefas">';
-                                for ($i = 0; $i < 6; $i++) {
-                                    $segClass = $progressStatuses[$i] === 'concluida' ? 'concluida' : ($progressStatuses[$i] === 'em_andamento' ? 'em_andamento' : 'pendente');
-                                    echo '<div class="status-task-progress-segment ' . htmlspecialchars($segClass, ENT_QUOTES) . '" title="' . htmlspecialchars($ordemLabels[$i + 1] ?? '', ENT_QUOTES) . '"></div>';
+                            } elseif ($mostrarBarraStatus) {
+                                $labelStatus = $isEmAndamento ? 'Em andamento' : 'Pendente';
+                                $classStatus = $isEmAndamento ? 'status-current' : 'status-pending';
+                                echo '<div class="width-sm status ' . $classStatus . ' status-with-progress">';
+                                echo '<span class="status-task-label">' . htmlspecialchars($labelStatus, ENT_QUOTES) . '</span>';
+                                if (!empty($segmentosBarra)) {
+                                    echo '<div class="status-task-progress" role="progressbar" aria-valuenow="' . (6 - count($segmentosBarra)) . '" aria-valuemin="0" aria-valuemax="6" aria-label="Progresso das subtarefas">';
+                                    foreach ($segmentosBarra as $seg) {
+                                        echo '<div class="status-task-progress-segment ' . htmlspecialchars($seg['class'], ENT_QUOTES) . '" title="' . htmlspecialchars($seg['title'], ENT_QUOTES) . '"></div>';
+                                    }
+                                    echo '</div>';
                                 }
-                                echo '</div>';
                                 echo '</div>';
                             } else {
                                 echo '<div class="width-sm status status-pending">Pendente</div>';
