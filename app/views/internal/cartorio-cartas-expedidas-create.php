@@ -171,7 +171,7 @@ try {
         <div class="row filter">
             <div class="col filter">
                 <label for="filter-cidade">Cidade</label>
-                <input type="text" class="width-lg height-md" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="50" required>
+                <input type="text" class="width-xl height-md" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="50" required>
             </div>
             <div class="col filter">
                 <label for="filter-estado">Estado</label>

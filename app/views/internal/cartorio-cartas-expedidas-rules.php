@@ -131,7 +131,7 @@ try {
             <div class="row filter">
                 <div class="col filter">
                     <label for="filter-processo">Servidor</label>
-                    <select class="width-md height-lg" id="filter-processo" name="id_user" <?php echo $podeAlterarRegra ? '' : 'disabled'; ?> required>
+                    <select class="width-lg height-md" id="filter-processo" name="id_user" <?php echo $podeAlterarRegra ? '' : 'disabled'; ?> required>
                         <option value="" disabled<?php echo $selectedUserId === '' ? ' selected' : ''; ?>>Selecione um servidor</option>
                         <?php foreach ($usersList as $user): ?>
                             <option value="<?php echo htmlspecialchars($user['id'], ENT_QUOTES); ?>"<?php echo $selectedUserId === $user['id'] ? ' selected' : ''; ?>>
