@@ -52,8 +52,14 @@
     min-height: 50px;
     padding: 0 10px;
     justify-content: flex-start;
-    border-bottom: 1px solid var(--primary-color-active);
     background-color: var(--primary-color-bg-light-2);
+}
+.row.success{
+    width: 100%;
+    min-height: 50px;
+    padding: 0 10px;
+    justify-content: flex-start;
+    background-color: var(--primary-color-bg-light);
 }
 
 .col {

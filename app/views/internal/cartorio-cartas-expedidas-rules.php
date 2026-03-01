@@ -131,7 +131,7 @@ try {
             <div class="row filter">
                 <div class="col filter">
                     <label for="filter-processo">Servidor</label>
-                    <select class="width-md height-md" id="filter-processo" name="id_user" <?php echo $podeAlterarRegra ? '' : 'disabled'; ?> required>
+                    <select class="width-md height-lg" id="filter-processo" name="id_user" <?php echo $podeAlterarRegra ? '' : 'disabled'; ?> required>
                         <option value="" disabled<?php echo $selectedUserId === '' ? ' selected' : ''; ?>>Selecione um servidor</option>
                         <?php foreach ($usersList as $user): ?>
                             <option value="<?php echo htmlspecialchars($user['id'], ENT_QUOTES); ?>"<?php echo $selectedUserId === $user['id'] ? ' selected' : ''; ?>>
@@ -140,7 +140,25 @@ try {
                         <?php endforeach; ?>
                     </select>
                 </div>
+            </div> 
+            <?php if (!empty($ruleRow['id'] ?? '')): ?>
+                <div class="row success">
+                    <span class="major-info"><?php echo htmlspecialchars('Regra atual: ' . ($ruleRow['id'] . ' - ' . ($ruleRow['nome_usuario'] ?? 'Nenhum usuário definido') ?? 'Nenhuma regra definida')); ?></span>
+                </div>
+            <?php endif; ?>
+            <div class="row info">
+                <label>*As tarefas de envio de Carta Expedida serão alocadas automaticamente para este usuário</label>
             </div>
+
+            <!-- Ações -->
+            <div class="row buttons">
+                <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
+                <?php if ($podeAlterarRegra): ?>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                <?php endif; ?>
+            </div>
+
+            <!-- Informações -->
             <?php if ($successMessage): ?>
                 <div class="row filter">
                     <div class="col">
@@ -157,27 +175,6 @@ try {
                     </div>
                 </div>
             <?php endif; ?>
-            <?php if (!empty($ruleRow['id'] ?? '')): ?>
-                <div class="row filter">
-                    <div class="col filter">
-                        <label class="minor-info">Regra atual</label>
-                        <span class="major-info"><?php echo htmlspecialchars($ruleRow['id'] ?? ''); ?></span>
-                    </div>
-                </div>
-            <?php endif; ?>
-            <div class="row filter">
-                <div class="col">
-                    <label class="status status-primary-light">*As tarefas de envio de Carta Expedida serão alocadas automaticamente para este usurio</label>
-                </div>
-            </div>
-
-            <!-- Ações -->
-            <div class="row buttons">
-                <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
-                <?php if ($podeAlterarRegra): ?>
-                    <button type="submit" class="btn btn-primary">Salvar</button>
-                <?php endif; ?>
-            </div>
         </form>
     </div>
 

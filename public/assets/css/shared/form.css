@@ -208,6 +208,7 @@ hr {
 .btn-primary {
     background-color: var(--primary-color);
     border-color: var(--primary-color);
+    padding: 0 2.5rem;
 }
 .btn-primary:hover {
     background-color: var(--primary-color-hover);
