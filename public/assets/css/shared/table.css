@@ -50,6 +50,7 @@
 .row.info{
     width: 100%;
     min-height: 50px;
+    margin-top: 20px;
     padding: 0 10px;
     justify-content: flex-start;
     background-color: var(--primary-color-bg-light-2);
@@ -59,11 +60,17 @@
 .row.success{
     width: 100%;
     min-height: 50px;
+    margin-top: 20px;
     padding: 0 10px;
     justify-content: flex-start;
     background-color: var(--success-color-bg-light);
     color: var(--success-color-active);
     border-bottom: 1px solid var(--success-color);
+}
+
+.row.info span,
+.row.success span{
+    font-size: 12px;
 }
 
 .col {
