@@ -601,11 +601,13 @@ if ($totalPages > 0) {
                         const numeroDestino = block.querySelector('.subtask-numero-destino');
                         const varaDestino = block.querySelector('.subtask-vara-destino');
                         const resultadoDevolucao = block.querySelector('.subtask-resultado-devolucao');
+                        const metodoEnvio = block.querySelector('.subtask-metodo-envio');
                         const obj = {};
                         if (qtdEl) obj.qtd_docs_gerados = parseInt(qtdEl.value, 10) || 1;
                         if (numeroDestino && numeroDestino.value.trim()) obj.numero_processo_destino = numeroDestino.value.trim();
                         if (varaDestino && varaDestino.value.trim()) obj.vara_destino = varaDestino.value.trim();
                         if (resultadoDevolucao && resultadoDevolucao.value) obj.resultado_devolucao = resultadoDevolucao.value;
+                        if (metodoEnvio && metodoEnvio.value && metodoEnvio.value.trim()) obj.metodo_envio = metodoEnvio.value.trim();
                         if (Object.keys(obj).length > 0) dadosEspecificos = JSON.stringify(obj);
                     }
                     btn.disabled = true;

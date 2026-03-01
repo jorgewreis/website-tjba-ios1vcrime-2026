@@ -389,6 +389,7 @@ $stateOptions = [
                 $dataMovimento = '';
                 $minorTexto = $timelineMinorPendente[$tipo] ?? $label;
                 $majorTexto = '';
+                $metodoEnvioTexto = '';
                 $dateLabel = 'Aguardando movimentação';
                 $dadosEspecificos = [];
                 if ($st !== null && !empty(trim((string) ($st['dados_especificos'] ?? '')))) {
@@ -423,24 +424,30 @@ $stateOptions = [
                             $majorTexto = '';
                             $infoLinha = 'Documentos gerados por ' . $nomeExibir . ' em ' . $dataMovimento;
                         } elseif ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ORDEM_3) {
-                        $minorTexto = 'Carta expedida enviada para';
-                        $tribunalDestino = trim((string) ($dadosEspecificos['tribunal_destino'] ?? $dadosEspecificos['tribunal_nome'] ?? ''));
-                        if ($tribunalDestino === '' && isset($carta['uf_destino'])) {
-                            $uf = strtoupper(trim((string) $carta['uf_destino']));
-                            if ($uf !== '') {
-                                $sigla = $uf === 'DF' ? 'TJDFT' : 'TJ' . $uf;
-                                $tribunalRow = $tribunaisRepo->findBySigla($sigla);
-                                $nomeTribunal = '';
-                                if ($tribunalRow !== null) {
-                                    $nomeTribunal = trim((string) ($tribunalRow['nome'] ?? ''));
+                            $minorTexto = 'Carta expedida enviada para';
+                            $tribunalDestino = trim((string) ($dadosEspecificos['tribunal_destino'] ?? $dadosEspecificos['tribunal_nome'] ?? ''));
+                            if ($tribunalDestino === '' && isset($carta['uf_destino'])) {
+                                $uf = strtoupper(trim((string) $carta['uf_destino']));
+                                if ($uf !== '') {
+                                    $sigla = $uf === 'DF' ? 'TJDFT' : 'TJ' . $uf;
+                                    $tribunalRow = $tribunaisRepo->findBySigla($sigla);
+                                    $nomeTribunal = '';
+                                    if ($tribunalRow !== null) {
+                                        $nomeTribunal = trim((string) ($tribunalRow['nome'] ?? ''));
+                                    }
+                                    if ($nomeTribunal === '') {
+                                        $nomeTribunal = 'Tribunal de Justiça do Estado - ' . $uf;
+                                    }
+                                    $tribunalDestino = $sigla . ' - ' . $nomeTribunal;
                                 }
-                                if ($nomeTribunal === '') {
-                                    $nomeTribunal = 'Tribunal de Justiça do Estado - ' . $uf;
-                                }
-                                $tribunalDestino = $sigla . ' - ' . $nomeTribunal;
                             }
-                        }
-                        $majorTexto = $tribunalDestino !== '' ? $tribunalDestino : '—';
+                            $majorTexto = $tribunalDestino !== '' ? $tribunalDestino : '—';
+                            $metodoEnvio = trim((string) ($dadosEspecificos['metodo_envio'] ?? ''));
+                            if ($metodoEnvio !== '') {
+                                $preposicaoMetodo = strcasecmp($metodoEnvio, 'PJe') === 0 ? 'pelo' : 'por';
+                                $displayMetodo = strcasecmp($metodoEnvio, 'Email') === 0 ? 'email' : $metodoEnvio;
+                                $metodoEnvioTexto = 'Enviado ' . $preposicaoMetodo . ' ' . $displayMetodo;
+                            }
                             $infoLinha = 'Documento enviado por ' . $nomeExibir . ' em ' . $dataMovimento;
                         } elseif ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ORDEM_4) {
                             $minorTexto = 'Comprovante de termo de envio juntado e liberado nos autos';
@@ -505,6 +512,9 @@ $stateOptions = [
                             <span class="minor-info"><?php echo htmlspecialchars($minorTexto, ENT_QUOTES); ?></span>
                             <?php if ($majorTexto !== ''): ?>
                                 <span class="major-info"><?php echo htmlspecialchars($majorTexto, ENT_QUOTES); ?></span>
+                            <?php endif; ?>
+                            <?php if ($metodoEnvioTexto !== ''): ?>
+                                <span class="major-info"><?php echo htmlspecialchars($metodoEnvioTexto, ENT_QUOTES); ?></span>
                             <?php endif; ?>
                         </div>
                     </div>
