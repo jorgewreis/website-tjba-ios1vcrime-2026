@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0173
+
+**Data:** 2026-03-01 20:33:10 | **Commit:** `bc1c165` | **Tipo:** `patch`
+
+- Test: tentativa de correção de informação
+
 ## V. 1.02.0172
 
 **Data:** 2026-03-01 20:17:00 | **Commit:** `f14b2ce` | **Tipo:** `patch`
@@ -2076,6 +2082,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

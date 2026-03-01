@@ -387,10 +387,10 @@ $stateOptions = [
                 $circleClass = '';
                 $statusTexto = 'Pendente';
                 $dataMovimento = '';
-                $minorTexto = $timelineMinorPendente[$tipo] ?? $label;
-                $majorTexto = '';
-                $metodoEnvioTexto = '';
-                $dateLabel = 'Aguardando movimentação';
+            $minorTexto = $timelineMinorPendente[$tipo] ?? $label;
+            $majorTexto = '';
+            $metodoEnvioTexto = '';
+            $dateLabel = 'Aguardando movimentação';
                 $dadosEspecificos = [];
                 if ($st !== null && !empty(trim((string) ($st['dados_especificos'] ?? '')))) {
                     $dadosEspecificos = json_decode((string) $st['dados_especificos'], true);
@@ -441,17 +441,24 @@ $stateOptions = [
                                     $tribunalDestino = $sigla . ' - ' . $nomeTribunal;
                                 }
                             }
-                            $majorTexto = $tribunalDestino !== '' ? $tribunalDestino : '—';                            
+                            $majorTexto = $tribunalDestino !== '' ? $tribunalDestino : '—';
                             $infoLinha = 'Documento enviado por ' . $nomeExibir . ' em ' . $dataMovimento;
                         } elseif ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ORDEM_4) {
-                            $minorTexto = 'Comprovante de termo de envio juntado e liberado nos autos';                            
-                            $metodoEnvio = trim((string) ($dadosEspecificos['metodo_envio'] ?? ''));
-                            if ($metodoEnvio !== '') {
-                                $preposicaoMetodo = strcasecmp($metodoEnvio, 'PJe') === 0 || strcasecmp($metodoEnvio, 'Malote Digital') === 0 ? 'pelo' : 'por';
-                                $displayMetodo = strcasecmp($metodoEnvio, 'Email') === 0 ? 'email' : $metodoEnvio;
-                                $metodoEnvioTexto = 'Carta enviada ' . $preposicaoMetodo . ' ' . $displayMetodo;                                
+                            $minorTexto = 'Comprovante de termo de envio juntado e liberado nos autos';
+                            $majorTexto = '';
+                            $metodoEnvioTexto = '';
+                            $metodoEnvioRegistrado = '';
+                            if (isset($subtarefasPorOrdem[3])) {
+                                $dadosEnvio = json_decode((string) ($subtarefasPorOrdem[3]['dados_especificos'] ?? ''), true);
+                                if (is_array($dadosEnvio)) {
+                                    $metodoEnvioRegistrado = trim((string) ($dadosEnvio['metodo_envio'] ?? ''));
+                                }
                             }
-                            $majorTexto = $metodoEnvioTexto;
+                            if ($metodoEnvioRegistrado !== '') {
+                                $preposicaoMetodo = strcasecmp($metodoEnvioRegistrado, 'PJe') === 0 ? 'pelo' : 'por';
+                                $displayMetodo = strcasecmp($metodoEnvioRegistrado, 'Email') === 0 ? 'email' : $metodoEnvioRegistrado;
+                                $metodoEnvioTexto = 'Enviado ' . $preposicaoMetodo . ' ' . $displayMetodo;
+                            }
                             $infoLinha = 'Documento juntado por ' . $nomeExibir . ' em ' . $dataMovimento;
                         } elseif ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ORDEM_5) {
                             $minorTexto = 'Informações complementares informadas';
