@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0164
+
+**Data:** 2026-03-01 18:52:11 | **Commit:** `63feea8` | **Tipo:** `patch`
+
+- Fix: correções de status de subtarefas
+
 ## V. 1.02.0163
 
 **Data:** 2026-03-01 18:37:47 | **Commit:** `83a2387` | **Tipo:** `patch`
@@ -2022,6 +2028,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

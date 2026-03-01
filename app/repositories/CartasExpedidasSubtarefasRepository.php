@@ -99,33 +99,37 @@ final class CartasExpedidasSubtarefasRepository
     {
         $all = $this->findByCartaId($cartaId);
         $emAndamento = [];
-        $ordem5 = null;
-        $ordem6 = null;
+        $ordem5Row = null;
+        $ordem6Row = null;
+        $faseInformacoesDevolucao = false;
 
         foreach ($all as $row) {
             $status = (string) ($row['status'] ?? '');
             $ordem = (int) ($row['ordem'] ?? 0);
-            if ($status !== self::STATUS_EM_ANDAMENTO && $status !== self::STATUS_PENDENTE) {
-                continue;
-            }
             if ($ordem === 5) {
-                $ordem5 = $row;
+                $ordem5Row = $row;
+                if ($status === self::STATUS_EM_ANDAMENTO || $status === self::STATUS_PENDENTE) {
+                    $faseInformacoesDevolucao = true;
+                }
             }
             if ($ordem === 6) {
-                $ordem6 = $row;
+                $ordem6Row = $row;
+                if ($status === self::STATUS_EM_ANDAMENTO || $status === self::STATUS_PENDENTE) {
+                    $faseInformacoesDevolucao = true;
+                }
             }
-            if ($ordem !== 5 && $ordem !== 6) {
+            if ($ordem !== 5 && $ordem !== 6 && ($status === self::STATUS_EM_ANDAMENTO || $status === self::STATUS_PENDENTE)) {
                 $emAndamento[] = $row;
             }
         }
 
-        if ($ordem5 !== null || $ordem6 !== null) {
+        if ($faseInformacoesDevolucao && ($ordem5Row !== null || $ordem6Row !== null)) {
             $out = [];
-            if ($ordem5 !== null) {
-                $out[] = $ordem5;
+            if ($ordem5Row !== null) {
+                $out[] = $ordem5Row;
             }
-            if ($ordem6 !== null) {
-                $out[] = $ordem6;
+            if ($ordem6Row !== null) {
+                $out[] = $ordem6Row;
             }
             return $out;
         }

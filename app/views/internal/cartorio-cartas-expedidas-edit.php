@@ -331,11 +331,11 @@ $stateOptions = [
             $mostrarBarraEdit = ($statusCartaLabel === 'Pendente' || $statusCartaLabel === 'Em andamento');
             $segmentosBarraEdit = [];
             if ($mostrarBarraEdit) {
+                $segmentosBarraEdit[] = ['class' => 'concluida', 'title' => 'Carta expedida e cadastrada'];
                 for ($i = 0; $i < 6; $i++) {
-                    if (($progressStatusesEdit[$i] ?? '') !== 'concluida') {
-                        $segClass = ($progressStatusesEdit[$i] ?? '') === 'em_andamento' ? 'em_andamento' : 'pendente';
-                        $segmentosBarraEdit[] = ['class' => $segClass, 'title' => $subtarefaLabels[$ordemParaTipo[$i + 1] ?? ''] ?? ''];
-                    }
+                    $statusSeg = $progressStatusesEdit[$i] ?? 'pendente';
+                    $segClass = $statusSeg === 'concluida' ? 'concluida' : ($statusSeg === 'em_andamento' ? 'em_andamento' : 'pendente');
+                    $segmentosBarraEdit[] = ['class' => $segClass, 'title' => $subtarefaLabels[$ordemParaTipo[$i + 1] ?? ''] ?? ''];
                 }
             }
             ?>
@@ -345,13 +345,12 @@ $stateOptions = [
                     <?php if ($mostrarBarraEdit): ?>
                         <div class="width-sm status <?php echo htmlspecialchars($statusCartaClass, ENT_QUOTES); ?> status-with-progress" style="border: 1px solid var(--color-gray-500);">
                             <span class="status-task-label"><?php echo htmlspecialchars($statusCartaLabel, ENT_QUOTES); ?></span>
-                            <?php if (!empty($segmentosBarraEdit)): ?>
-                                <div class="status-task-progress" role="progressbar" aria-valuenow="<?php echo 6 - count($segmentosBarraEdit); ?>" aria-valuemin="0" aria-valuemax="6" aria-label="Progresso das subtarefas">
-                                    <?php foreach ($segmentosBarraEdit as $seg): ?>
-                                        <div class="status-task-progress-segment <?php echo htmlspecialchars($seg['class'], ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($seg['title'], ENT_QUOTES); ?>"></div>
-                                    <?php endforeach; ?>
-                                </div>
-                            <?php endif; ?>
+                            <?php $concluidosBarraEdit = 1 + count(array_filter($progressStatusesEdit, fn($x) => $x === 'concluida')); ?>
+                            <div class="status-task-progress" role="progressbar" aria-valuenow="<?php echo $concluidosBarraEdit; ?>" aria-valuemin="0" aria-valuemax="7" aria-label="Progresso das subtarefas">
+                                <?php foreach ($segmentosBarraEdit as $seg): ?>
+                                    <div class="status-task-progress-segment <?php echo htmlspecialchars($seg['class'], ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($seg['title'], ENT_QUOTES); ?>"></div>
+                                <?php endforeach; ?>
+                            </div>
                         </div>
                     <?php else: ?>
                         <div class="width-sm status <?php echo htmlspecialchars($statusCartaClass, ENT_QUOTES); ?>" style="border: 1px solid var(--color-gray-500);"><?php echo htmlspecialchars($statusCartaLabel, ENT_QUOTES); ?></div>
@@ -379,7 +378,7 @@ $stateOptions = [
                 $cartaCreatedFormatted = $dt0 ? $dt0->format('d/m/Y - H:i') : $cartaCreatedRaw;
             }
             ?>
-            <div class="row timeline">
+            <div class="row timeline finished">
                 <div class="row">
                     <div class="circle finished"></div>
                     <div class="col filter subtask-status-info">
@@ -469,7 +468,7 @@ $stateOptions = [
                     <div class="col">
                         <div class="col filter subtask-date">
                             <?php if ($dataMovimento !== ''): ?>
-                                <span class="minor-info"><?php echo htmlspecialchars($dateLabel, ENT_QUOTES); ?> <strong><?php echo htmlspecialchars($dataMovimento, ENT_QUOTES); ?></strong></span>
+                                <span class="minor-info"><?php echo htmlspecialchars($dateLabel, ENT_QUOTES); ?> <?php echo htmlspecialchars($dataMovimento, ENT_QUOTES); ?></span>
                             <?php else: ?>
                                 <span class="minor-info"><?php echo htmlspecialchars($dateLabel, ENT_QUOTES); ?></span>
                             <?php endif; ?>

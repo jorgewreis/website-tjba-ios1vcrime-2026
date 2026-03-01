@@ -321,11 +321,11 @@ if ($totalPages > 0) {
                         $mostrarBarraStatus = ($st !== 'concluída' && $st !== 'cancelada');
                         $segmentosBarra = [];
                         if ($mostrarBarraStatus) {
+                            $segmentosBarra[] = ['class' => 'concluida', 'title' => 'Carta expedida e cadastrada'];
                             for ($i = 0; $i < 6; $i++) {
-                                if (($progressStatuses[$i] ?? '') !== 'concluida') {
-                                    $segClass = ($progressStatuses[$i] ?? '') === 'em_andamento' ? 'em_andamento' : 'pendente';
-                                    $segmentosBarra[] = ['class' => $segClass, 'title' => $ordemLabels[$i + 1] ?? ''];
-                                }
+                                $statusSeg = $progressStatuses[$i] ?? 'pendente';
+                                $segClass = $statusSeg === 'concluida' ? 'concluida' : ($statusSeg === 'em_andamento' ? 'em_andamento' : 'pendente');
+                                $segmentosBarra[] = ['class' => $segClass, 'title' => $ordemLabels[$i + 1] ?? ''];
                             }
                         }
                         ?>
@@ -340,13 +340,12 @@ if ($totalPages > 0) {
                                 $classStatus = $isEmAndamento ? 'status-current' : 'status-pending';
                                 echo '<div class="width-sm status ' . $classStatus . ' status-with-progress">';
                                 echo '<span class="status-task-label">' . htmlspecialchars($labelStatus, ENT_QUOTES) . '</span>';
-                                if (!empty($segmentosBarra)) {
-                                    echo '<div class="status-task-progress" role="progressbar" aria-valuenow="' . (6 - count($segmentosBarra)) . '" aria-valuemin="0" aria-valuemax="6" aria-label="Progresso das subtarefas">';
-                                    foreach ($segmentosBarra as $seg) {
-                                        echo '<div class="status-task-progress-segment ' . htmlspecialchars($seg['class'], ENT_QUOTES) . '" title="' . htmlspecialchars($seg['title'], ENT_QUOTES) . '"></div>';
-                                    }
-                                    echo '</div>';
+                                $concluidosBarra = 1 + count(array_filter($progressStatuses, fn($x) => $x === 'concluida'));
+                                echo '<div class="status-task-progress" role="progressbar" aria-valuenow="' . $concluidosBarra . '" aria-valuemin="0" aria-valuemax="7" aria-label="Progresso das subtarefas">';
+                                foreach ($segmentosBarra as $seg) {
+                                    echo '<div class="status-task-progress-segment ' . htmlspecialchars($seg['class'], ENT_QUOTES) . '" title="' . htmlspecialchars($seg['title'], ENT_QUOTES) . '"></div>';
                                 }
+                                echo '</div>';
                                 echo '</div>';
                             } else {
                                 echo '<div class="width-sm status status-pending">Pendente</div>';
