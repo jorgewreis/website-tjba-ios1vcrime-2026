@@ -149,7 +149,7 @@ try {
 
     <div class="card-page">
         <form method="post" class="rule-form" style="width: 100%">
-            <div class="row table header">Regra de alocação automática - Envio</div>
+            <div class="row table header">Regras de alocação automática</div>
             <?php if (!$podeAlterarRegra): ?>
                 <div class="row filter">
                     <div class="col">
@@ -172,7 +172,7 @@ try {
             </div> 
             <?php if (!empty($ruleRow['id'] ?? '')): ?>
                 <div class="row <?php if($ruleUsuarioNome === ''){ echo 'info'; } else { echo 'success'; } ?>">
-                    <span><?php echo htmlspecialchars(sprintf('Regra (Envio de Cartas Expedidas): %s - %s', $ruleRow['id'] ?? 'sem ID', $ruleUsuarioNome)); ?></span>
+                    <span><?php echo htmlspecialchars(sprintf('Envio de Cartas Expedidas: %s - %s', $ruleRow['id'] ?? 'sem ID', $ruleUsuarioNome)); ?></span>
                 </div>
             <?php endif; ?>
 
