@@ -468,13 +468,13 @@ $stateOptions = [
                         $minorTexto = $timelineMinorPendente[$tipo] ?? $label;
                         $majorTexto = $statusTexto;
                         if ($dataMovimento !== '') {
-                            $dateLabel = 'Aguardando movimentação em ' . $dataMovimento;
+                            $dateLabel = 'Aguardando movimentação';
                         } else {
                             $raw = $st['created_at'] ?? $st['updated_at'] ?? '';
                             if ($raw !== '') {
                                 $dt = \DateTime::createFromFormat('Y-m-d H:i:s', $raw);
                                 $dataMovimento = $dt ? $dt->format('d/m/Y - H:i:s') : $raw;
-                                $dateLabel = 'Aguardando movimentação em ' . $dataMovimento;
+                                $dateLabel = 'Aguardando movimentação desde ' . $dataMovimento;
                             } else {
                                 $dateLabel = 'Aguardando movimentação';
                             }
