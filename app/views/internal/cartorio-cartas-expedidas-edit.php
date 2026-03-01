@@ -212,7 +212,7 @@ $stateOptions = [
             <div class="row filter">
                 <div class="col filter">
                     <label for="filter-cidade">Cidade</label>
-                    <input type="text" class="width-lg height-md" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="120" value="<?php echo htmlspecialchars($cidadeValue, ENT_QUOTES); ?>" required>
+                    <input type="text" class="width-xl height-md" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="120" value="<?php echo htmlspecialchars($cidadeValue, ENT_QUOTES); ?>" required>
                 </div>
                 <div class="col filter">
                     <label for="filter-estado">Estado</label>
