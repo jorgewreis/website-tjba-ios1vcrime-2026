@@ -105,14 +105,6 @@ if ($carta !== null) {
             break;
         }
     }
-    $timelineMinorConcluido = [
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1 => 'Carta expedida assinada pela magistrada',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_2 => 'Documentos em PDF gerados por',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_3 => 'Carta expedida enviada por',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_4 => 'Termo de envio juntado aos autos por',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_5 => 'Informações registradas por',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6 => 'Carta devolvida e juntada por',
-    ];
     $timelineMinorPendente = [
         CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1 => 'Carta expedida aguardando assinatura',
         CartasExpedidasSubtarefasRepository::TIPO_ORDEM_2 => 'Aguardando geração de PDF da documentação',
@@ -120,14 +112,6 @@ if ($carta !== null) {
         CartasExpedidasSubtarefasRepository::TIPO_ORDEM_4 => 'Aguardando juntada de termo de envio',
         CartasExpedidasSubtarefasRepository::TIPO_ORDEM_5 => 'Aguardando informações complementares',
         CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6 => 'Aguardando devolução da carta',
-    ];
-    $timelineDateConcluido = [
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1 => 'Assinatura realizada em',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_2 => 'Documentos gerados em',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_3 => 'Envio realizado em',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_4 => 'Juntada realizada em',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_5 => 'Registro realizado em',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6 => 'Devolução realizada em',
     ];
 }
 
@@ -376,20 +360,20 @@ $stateOptions = [
             $cartaCreatedFormatted = '';
             if ($cartaCreatedRaw !== '') {
                 $dt0 = \DateTime::createFromFormat('Y-m-d H:i:s', $cartaCreatedRaw);
-                $cartaCreatedFormatted = $dt0 ? $dt0->format('d/m/Y - H:i') : $cartaCreatedRaw;
+                $cartaCreatedFormatted = $dt0 ? $dt0->format('d/m/Y - H:i:s') : $cartaCreatedRaw;
             }
+            $cadastroInfoLinha = 'Documento cadastrado por ' . htmlspecialchars($ruleServidor, ENT_QUOTES) . ' em ' . $cartaCreatedFormatted;
             ?>
             <div class="row timeline finished">
                 <div class="row">
                     <div class="circle finished"></div>
                     <div class="col filter subtask-status-info">
-                        <span class="minor-info">Carta expedida e cadastrada por</span>
-                        <span class="major-info"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></span>
+                        <span class="minor-info">Carta expedida e cadastrada</span>
                     </div>
                 </div>
                 <div class="col">
                     <div class="col filter subtask-date">
-                        <span class="minor-info">Cadastro realizado em <?php echo htmlspecialchars($cartaCreatedFormatted, ENT_QUOTES); ?></span>
+                        <span class="minor-info"><?php echo $cadastroInfoLinha; ?></span>
                     </div>
                 </div>
             </div>
@@ -412,34 +396,75 @@ $stateOptions = [
                     }
                 }
                 $nomeResponsavel = isset($dadosEspecificos['nome']) ? trim((string) $dadosEspecificos['nome']) : (isset($dadosEspecificos['responsavel']) ? trim((string) $dadosEspecificos['responsavel']) : '');
+                $infoLinha = '';
                 if ($st !== null) {
                     $status = trim((string) ($st['status'] ?? ''));
+                    $raw = $st['updated_at'] ?? $st['created_at'] ?? '';
+                    $dataMovimento = '';
+                    if ($raw !== '') {
+                        $dt = \DateTime::createFromFormat('Y-m-d H:i:s', $raw);
+                        $dataMovimento = $dt ? $dt->format('d/m/Y - H:i:s') : $raw;
+                    }
                     if ($status === 'concluida') {
                         $circleClass = 'finished';
-                        $minorTexto = $timelineMinorConcluido[$tipo] ?? $label;
-                        $majorTexto = $nomeResponsavel !== '' ? $nomeResponsavel : (strpos($timelineMinorConcluido[$tipo] ?? '', 'por') !== false ? '—' : '');
-                        if ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ORDEM_2 && (isset($dadosEspecificos['qtd_docs']) || isset($dadosEspecificos['qtd_docs_gerados']))) {
-                            $qtd = (int) ($dadosEspecificos['qtd_docs'] ?? $dadosEspecificos['qtd_docs_gerados'] ?? 0);
-                            if ($qtd > 0) {
-                                $minorTexto = $qtd . ' ' . ($qtd === 1 ? 'Documento em PDF gerado por' : 'Documentos em PDF gerados por');
+                        $nomeExibir = $nomeResponsavel !== '' ? $nomeResponsavel : '—';
+                        if ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1) {
+                            $minorTexto = 'Carta expedida assinada';
+                            $majorTexto = '';
+                            $infoLinha = 'Documento assinado pela Magistrada em ' . $dataMovimento;
+                        } elseif ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ORDEM_2) {
+                            $qtd = (int) ($dadosEspecificos['qtd_docs'] ?? $dadosEspecificos['qtd_docs_gerados'] ?? 1);
+                            if ($qtd < 1) {
+                                $qtd = 1;
                             }
+                            $minorTexto = $qtd === 1 ? '1 documento gerado em PDF' : $qtd . ' documentos gerados em PDF';
+                            $majorTexto = '';
+                            $infoLinha = 'Documentos gerados por ' . $nomeExibir . ' em ' . $dataMovimento;
+                        } elseif ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ORDEM_3) {
+                            $minorTexto = 'Carta expedida enviada para';
+                            $tribunalDestino = trim((string) ($dadosEspecificos['tribunal_destino'] ?? $dadosEspecificos['tribunal_nome'] ?? ''));
+                            if ($tribunalDestino === '' && isset($carta['uf_destino'])) {
+                                $uf = strtoupper(trim((string) $carta['uf_destino']));
+                                $tribunalDestino = $uf !== '' ? 'Tribunal de Justiça do Estado - ' . $uf : '—';
+                            }
+                            $majorTexto = $tribunalDestino !== '' ? $tribunalDestino : '—';
+                            $infoLinha = 'Documento enviado por ' . $nomeExibir . ' em ' . $dataMovimento;
+                        } elseif ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ORDEM_4) {
+                            $minorTexto = 'Comprovante de termo de envio juntado e liberado nos autos';
+                            $majorTexto = '';
+                            $infoLinha = 'Documento juntado por ' . $nomeExibir . ' em ' . $dataMovimento;
+                        } elseif ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ORDEM_5) {
+                            $minorTexto = 'Informações complementares informadas';
+                            $numeroDestino = trim((string) ($dadosEspecificos['numero_processo_destino'] ?? $carta['numero_processo_destino'] ?? ''));
+                            $varaDestino = trim((string) ($dadosEspecificos['vara_destino'] ?? $carta['vara_destino_nome'] ?? ''));
+                            $majorTexto = ($numeroDestino !== '' && $varaDestino !== '') ? $numeroDestino . ' - ' . $varaDestino : ($numeroDestino ?: $varaDestino ?: '—');
+                            $infoLinha = 'Documento juntado por ' . $nomeExibir . ' em ' . $dataMovimento;
+                        } elseif ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6) {
+                            $minorTexto = 'Carta devolvida com status';
+                            $statusDevolucao = trim((string) ($dadosEspecificos['resultado_devolucao'] ?? $dadosEspecificos['status_devolucao'] ?? ''));
+                            $majorTexto = $statusDevolucao !== '' ? $statusDevolucao : '—';
+                            $infoLinha = 'Carta juntada por ' . $nomeExibir . ' em ' . $dataMovimento;
+                        } else {
+                            $minorTexto = $label;
+                            $infoLinha = 'Movimentação realizada em ' . $dataMovimento;
                         }
-                        $dateLabel = $timelineDateConcluido[$tipo] ?? 'Movimentação realizada em';
-                        $raw = $st['updated_at'] ?? $st['created_at'] ?? '';
-                        if ($raw !== '') {
-                            $dt = \DateTime::createFromFormat('Y-m-d H:i:s', $raw);
-                            $dataMovimento = $dt ? $dt->format('d/m/Y - H:i') : $raw;
-                        }
+                        $dateLabel = $infoLinha;
                     } elseif ($status === 'em_andamento') {
                         $circleClass = 'current';
                         $statusTexto = 'Em andamento';
                         $minorTexto = $timelineMinorPendente[$tipo] ?? $label;
                         $majorTexto = $statusTexto;
-                        $dateLabel = 'Aguardando movimentação';
-                        $raw = $st['created_at'] ?? $st['updated_at'] ?? '';
-                        if ($raw !== '') {
-                            $dt = \DateTime::createFromFormat('Y-m-d H:i:s', $raw);
-                            $dataMovimento = $dt ? $dt->format('d/m/Y - H:i') : $raw;
+                        if ($dataMovimento !== '') {
+                            $dateLabel = 'Aguardando movimentação em ' . $dataMovimento;
+                        } else {
+                            $raw = $st['created_at'] ?? $st['updated_at'] ?? '';
+                            if ($raw !== '') {
+                                $dt = \DateTime::createFromFormat('Y-m-d H:i:s', $raw);
+                                $dataMovimento = $dt ? $dt->format('d/m/Y - H:i:s') : $raw;
+                                $dateLabel = 'Aguardando movimentação em ' . $dataMovimento;
+                            } else {
+                                $dateLabel = 'Aguardando movimentação';
+                            }
                         }
                     } else {
                         $statusTexto = 'Pendente';
@@ -450,6 +475,10 @@ $stateOptions = [
                 } else {
                     $minorTexto = $timelineMinorPendente[$tipo] ?? $label;
                     $majorTexto = $statusTexto;
+                    $dateLabel = 'Aguardando conclusão';
+                }
+                if ($infoLinha !== '') {
+                    $dateLabel = $infoLinha;
                 }
                 ?>
                 <div class="row <?php if ($circleClass === 'current') { echo 'timeline current'; } else if ($circleClass === 'finished') { echo 'timeline finished'; } else { echo 'timeline'; } ?>">
@@ -468,11 +497,7 @@ $stateOptions = [
                     </div>
                     <div class="col">
                         <div class="col filter subtask-date">
-                            <?php if ($dataMovimento !== ''): ?>
-                                <span class="minor-info"><?php echo htmlspecialchars($dateLabel, ENT_QUOTES); ?> <?php echo htmlspecialchars($dataMovimento, ENT_QUOTES); ?></span>
-                            <?php else: ?>
-                                <span class="minor-info"><?php echo htmlspecialchars($dateLabel, ENT_QUOTES); ?></span>
-                            <?php endif; ?>
+                            <span class="minor-info"><?php echo htmlspecialchars($dateLabel, ENT_QUOTES); ?></span>
                         </div>
                     </div>
                 </div>

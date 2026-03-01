@@ -386,6 +386,21 @@ if ($totalPages > 0) {
                             </div>
                         </div>
                         <?php endif; ?>
+                        <?php if ($stTipo === 'aguardando_envio'): ?>
+                        <div class="row subtask-info">
+                            <div class="col filter">
+                                <span class="minor-info">Método de envio</span>
+                                <select class="width-md height-md subtask-metodo-envio" style="background-color: var(--color-gray-000);">
+                                    <option value="">Selecione</option>
+                                    <option value="PJe">PJe</option>
+                                    <option value="eSAJ">eSAJ</option>
+                                    <option value="ePROC">ePROC</option>
+                                    <option value="Malote Digital">Malote Digital</option>
+                                    <option value="Email">Email</option>
+                                </select>
+                            </div>
+                        </div>
+                        <?php endif; ?>
                         <?php if ($stTipo === 'aguardando_informacoes'): ?>
                         <div class="row subtask-info" style="justify-content: flex-start;">
                             <div class="col filter">
