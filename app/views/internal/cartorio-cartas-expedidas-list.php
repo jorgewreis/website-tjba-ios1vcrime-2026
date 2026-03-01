@@ -382,27 +382,27 @@ if ($totalPages > 0) {
                         <div class="row subtask-info">
                             <div class="col filter">
                                 <span class="minor-info">Qtd docs gerados</span>
-                                <input type="number" class="width-sm height-md subtask-qtd-docs" value="1" min="1" max="10" />
+                                <input type="number" class="width-sm height-md subtask-qtd-docs" value="1" min="1" max="10" style="background-color: var(--color-gray-000);" />
                             </div>
                         </div>
                         <?php endif; ?>
                         <?php if ($stTipo === 'aguardando_informacoes'): ?>
-                        <div class="row subtask-info">
+                        <div class="row subtask-info" style="justify-content: flex-start;">
                             <div class="col filter">
                                 <span class="minor-info">Número processo destino</span>
-                                <input type="text" class="width-md height-md subtask-numero-destino" placeholder="Número do processo" />
+                                <input type="text" class="width-md height-md subtask-numero-destino" placeholder="Número do processo" style="background-color: var(--color-gray-000);" />
                             </div>
                             <div class="col filter">
                                 <span class="minor-info">Vara destino</span>
-                                <input type="text" class="width-md height-md subtask-vara-destino" placeholder="Vara destino" />
+                                <input type="text" class="width-xl height-md subtask-vara-destino" placeholder="Vara destino" style="background-color: var(--color-gray-000);" />
                             </div>
                         </div>
                         <?php endif; ?>
                         <?php if ($stTipo === 'aguardando_devolucao'): ?>
-                        <div class="row subtask-info">
+                        <div class="row subtask-info" style="border-top: 1px solid var(--color-gray-400);">
                             <div class="col filter">
                                 <span class="minor-info">Resultado</span>
-                                <select class="width-md height-md subtask-resultado-devolucao">
+                                <select class="width-lg height-md subtask-resultado-devolucao">
                                     <option value="">Selecione</option>
                                     <option value="devolvida_sem_cumprimento">Devolvida sem cumprimento</option>
                                     <option value="cumprida_positivamente">Cumprida positivamente</option>
