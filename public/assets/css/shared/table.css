@@ -74,6 +74,10 @@
     font-size: 12px;
 }
 
+.button-edit{
+    visibility: hidden;
+}
+
 .col {
     display: flex;
     flex-direction: column;

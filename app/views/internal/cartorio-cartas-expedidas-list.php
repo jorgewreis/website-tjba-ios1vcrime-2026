@@ -221,7 +221,7 @@ if ($totalPages > 0) {
             <input type="text" class="width-md height-md" id="search-input" placeholder="Pesquisar na lista..." value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
 
             <!-- Exportar -->
-            <select class="width-sm height-md" id="export-type">
+            <select class="width-sm height-md" id="export-type" disabled>
                 <option value="" selected>Exportar lista</option>
                 <option value="pdf">Gerar PDF</option>
                 <option value="csv">Gerar CSV</option>

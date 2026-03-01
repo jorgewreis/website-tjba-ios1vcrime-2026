@@ -120,6 +120,7 @@ hr {
 
 /* PAGINAÇÃO */
 .pagination-info {
+    padding: 10px 0;
     margin-left: 10px;
     font-size: 12px;
     font-family: 'Poppins', sans-serif;
@@ -493,6 +494,15 @@ select {
     background-repeat: no-repeat;
     background-position: right 5px top 8px;
     background-size: 2em;
+}
+select:disabled {
+    background-color: var(--color-gray-100);
+    border-color: var(--color-gray-200);
+    pointer-events: none;
+    box-shadow: none;
+    color: var(--color-gray-500);
+    cursor: not-allowed;
+    opacity: 0.65;
 }
 
 select:focus {
