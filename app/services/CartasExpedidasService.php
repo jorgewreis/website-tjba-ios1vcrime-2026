@@ -42,8 +42,14 @@ final class CartasExpedidasService
         $rows = $this->repository->fetchList($filters, $limit, $offset);
         foreach ($rows as $i => $row) {
             $idCarta = (string) ($row['IdCarta'] ?? '');
-            $rows[$i]['Subtarefas'] = $idCarta !== '' ? $this->subtarefasRepository->findPendenteOuEmAndamentoByCartaId($idCarta) : [];
-            $rows[$i]['SubtarefasAll'] = $idCarta !== '' ? $this->subtarefasRepository->findByCartaId($idCarta) : [];
+            if ($idCarta !== '') {
+                $this->subtarefasRepository->ensureInformacoesDevolucaoPair($idCarta);
+                $rows[$i]['Subtarefas'] = $this->subtarefasRepository->findPendenteOuEmAndamentoByCartaId($idCarta);
+                $rows[$i]['SubtarefasAll'] = $this->subtarefasRepository->findByCartaId($idCarta);
+            } else {
+                $rows[$i]['Subtarefas'] = [];
+                $rows[$i]['SubtarefasAll'] = [];
+            }
         }
         return [
             'rows' => $rows,
@@ -200,6 +206,11 @@ final class CartasExpedidasService
             throw new InvalidArgumentException('Carta da subtarefa não identificada.');
         }
 
+        // Corrige cartas antigas para manter as ordens 5 e 6 sincronizadas.
+        if ($ordem >= 5) {
+            $this->subtarefasRepository->ensureInformacoesDevolucaoPair($cartaId);
+        }
+
         if ($ordem === 6) {
             $todas = $this->subtarefasRepository->findByCartaId($cartaId);
             foreach ($todas as $st) {
@@ -223,7 +234,34 @@ final class CartasExpedidasService
         $proximoTipo = $this->subtarefasRepository->obterProximoTipo($ordem);
         if ($proximoTipo !== null) {
             $proximaOrdem = $ordem + 1;
-            $this->subtarefasRepository->create($cartaId, $proximoTipo, $proximaOrdem, 'em_andamento', null);
+            if ($proximaOrdem === 5) {
+                $ordem5 = $this->subtarefasRepository->findByCartaIdEOrdem($cartaId, 5);
+                if ($ordem5 === null) {
+                    $this->subtarefasRepository->create($cartaId, CartasExpedidasSubtarefasRepository::TIPO_ORDEM_5, 5, 'em_andamento', null);
+                } else {
+                    $status5 = trim((string) ($ordem5['status'] ?? ''));
+                    if ($status5 !== 'concluida') {
+                        $this->subtarefasRepository->atualizarStatus((string) ($ordem5['id'] ?? ''), 'em_andamento');
+                    }
+                }
+
+                $ordem6 = $this->subtarefasRepository->findByCartaIdEOrdem($cartaId, 6);
+                if ($ordem6 === null) {
+                    $this->subtarefasRepository->create($cartaId, CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6, 6, 'pendente', null);
+                }
+            } elseif ($proximaOrdem === 6) {
+                $ordem6 = $this->subtarefasRepository->findByCartaIdEOrdem($cartaId, 6);
+                if ($ordem6 === null) {
+                    $this->subtarefasRepository->create($cartaId, CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6, 6, 'em_andamento', null);
+                } else {
+                    $status6 = trim((string) ($ordem6['status'] ?? ''));
+                    if ($status6 !== 'concluida') {
+                        $this->subtarefasRepository->atualizarStatus((string) ($ordem6['id'] ?? ''), 'em_andamento');
+                    }
+                }
+            } else {
+                $this->subtarefasRepository->create($cartaId, $proximoTipo, $proximaOrdem, 'em_andamento', null);
+            }
             $statusCarta = $proximaOrdem === 6 ? 'pendente' : 'em_andamento';
             $this->repository->update($cartaId, ['status' => $statusCarta]);
         } else {

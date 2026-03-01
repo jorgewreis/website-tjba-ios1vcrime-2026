@@ -74,6 +74,7 @@ if ($carta !== null) {
     $comarcaDestinoId = trim((string) ($carta['comarca_destino_id'] ?? ''));
 
     $subtarefasRepo = new CartasExpedidasSubtarefasRepository($connection);
+    $subtarefasRepo->ensureInformacoesDevolucaoPair($idCarta);
     $subtarefas = $subtarefasRepo->findByCartaId($idCarta);
     $subtarefasPorOrdem = [];
     foreach ($subtarefas as $st) {

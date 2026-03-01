@@ -92,6 +92,31 @@ final class CartasExpedidasSubtarefasRepository
         return $rows;
     }
 
+    public function findByCartaIdEOrdem(string $cartaId, int $ordem): ?array
+    {
+        $cartaId = trim($cartaId);
+        if ($cartaId === '' || $ordem < 1 || $ordem > 6) {
+            return null;
+        }
+
+        $statement = $this->connection->prepare(
+            sprintf(
+                'SELECT `id`, `carta_expedida_id`, `tipo`, `ordem`, `status`, `dados_especificos`, `created_at`, `updated_at`
+                 FROM `%s`
+                 WHERE `carta_expedida_id` = :carta_id AND `ordem` = :ordem
+                 ORDER BY `updated_at` DESC
+                 LIMIT 1',
+                $this->table
+            )
+        );
+        $statement->bindValue(':carta_id', $cartaId);
+        $statement->bindValue(':ordem', $ordem, PDO::PARAM_INT);
+        $statement->execute();
+
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        return $row === false ? null : $row;
+    }
+
     /**
      * Retorna as subtarefas a exibir na lista: 1 em andamento OU 2 quando for Informações e/ou Devolução (sempre mostrar ambas juntas quando uma delas estiver pendente/em andamento).
      */
@@ -155,6 +180,60 @@ final class CartasExpedidasSubtarefasRepository
         $statement->bindValue(':status', self::STATUS_CONCLUIDA);
         $statement->bindValue(':id', $id);
         $statement->execute();
+    }
+
+    public function atualizarStatus(string $id, string $status): void
+    {
+        $id = trim($id);
+        $status = trim($status);
+        if ($id === '') {
+            throw new InvalidArgumentException('ID da subtarefa é obrigatório.');
+        }
+        if (!in_array($status, [self::STATUS_PENDENTE, self::STATUS_EM_ANDAMENTO, self::STATUS_CONCLUIDA], true)) {
+            throw new InvalidArgumentException('Status de subtarefa inválido.');
+        }
+
+        $statement = $this->connection->prepare(
+            sprintf(
+                'UPDATE `%s` SET `status` = :status, `updated_at` = NOW() WHERE `id` = :id LIMIT 1',
+                $this->table
+            )
+        );
+        $statement->bindValue(':status', $status);
+        $statement->bindValue(':id', $id);
+        $statement->execute();
+    }
+
+    /**
+     * Garante que as subtarefas das ordens 5 (informações) e 6 (devolução) existam em conjunto.
+     * Corrige cartas antigas em que uma das duas não foi criada.
+     */
+    public function ensureInformacoesDevolucaoPair(string $cartaId): void
+    {
+        $cartaId = trim($cartaId);
+        if ($cartaId === '') {
+            return;
+        }
+
+        $ordem5 = $this->findByCartaIdEOrdem($cartaId, 5);
+        $ordem6 = $this->findByCartaIdEOrdem($cartaId, 6);
+
+        if ($ordem5 === null && $ordem6 === null) {
+            return;
+        }
+
+        if ($ordem5 !== null && $ordem6 === null) {
+            $status5 = trim((string) ($ordem5['status'] ?? ''));
+            $status6 = $status5 === self::STATUS_CONCLUIDA ? self::STATUS_EM_ANDAMENTO : self::STATUS_PENDENTE;
+            $this->create($cartaId, self::TIPO_ORDEM_6, 6, $status6, null);
+            return;
+        }
+
+        if ($ordem5 === null && $ordem6 !== null) {
+            $status6 = trim((string) ($ordem6['status'] ?? ''));
+            $status5 = $status6 === self::STATUS_CONCLUIDA ? self::STATUS_CONCLUIDA : self::STATUS_PENDENTE;
+            $this->create($cartaId, self::TIPO_ORDEM_5, 5, $status5, null);
+        }
     }
 
     public function findById(string $id): ?array
