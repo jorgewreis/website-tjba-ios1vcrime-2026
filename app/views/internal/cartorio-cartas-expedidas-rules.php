@@ -8,6 +8,29 @@ if (function_exists('mb_internal_encoding')) {
 
 require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
 
+function resolveUsuarioNome(PDO $connection, ?string $usuarioId): string
+{
+    $usuarioId = trim((string) ($usuarioId ?? ''));
+    if ($usuarioId === '') {
+        return 'Nenhum usuário definido';
+    }
+
+    $stmt = $connection->prepare('SELECT `nome`, `sobrenome` FROM `usuarios` WHERE `id_usuario` = :usuario_id LIMIT 1');
+    $stmt->bindValue(':usuario_id', $usuarioId);
+    $stmt->execute();
+
+    $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($usuario === false) {
+        return 'Usuário não encontrado';
+    }
+
+    $nome = trim((string) ($usuario['nome'] ?? ''));
+    $sobrenome = trim((string) ($usuario['sobrenome'] ?? ''));
+    $nomeCompleto = $sobrenome !== '' ? $nome . ' ' . $sobrenome : $nome;
+
+    return $nomeCompleto !== '' ? $nomeCompleto : 'Nome não informado';
+}
+
 $connection = Conection::getInstance()->getConnection();
 
 /** Perfis que podem alterar a regra de alocação (tabela usuario_perfil). */
@@ -29,6 +52,8 @@ $successMessage = '';
 $usersList = [];
 $selectedUserId = '1';
 $ruleRow = null;
+$ruleUsuarioId = '';
+$ruleUsuarioNome = 'Nenhum usuário definido';
 
 try {
     $usersList = [];
@@ -49,6 +74,8 @@ try {
 
     $regrasRepo = new AlocacoesRegrasRepository($connection);
     $ruleRow = $regrasRepo->findByRegra($ruleName);
+    $ruleUsuarioId = (string) ($ruleRow['usuario_id'] ?? '');
+    $ruleUsuarioNome = resolveUsuarioNome($connection, $ruleUsuarioId);
     $selectedUserId = (string) ($ruleRow['usuario_id'] ?? $selectedUserId);
     if ($selectedUserId === '' && !empty($usersList)) {
         $selectedUserId = $usersList[0]['id'];
@@ -66,6 +93,8 @@ try {
                     $usuarioAtualizaId = trim((string) $_SESSION['id_usuario']);
                 }
                 $ruleRow = $regrasRepo->save($ruleName, $ruleDescription, $postedUserId, $usuarioAtualizaId !== '' ? $usuarioAtualizaId : null);
+                $ruleUsuarioId = (string) ($ruleRow['usuario_id'] ?? $postedUserId);
+                $ruleUsuarioNome = resolveUsuarioNome($connection, $ruleUsuarioId);
                 $successMessage = 'Regra atualizada com ID ' . ($ruleRow['id'] ?? 'sem ID') . '.';
                 $selectedUserId = (string) ($ruleRow['usuario_id'] ?? $postedUserId);
             } catch (\InvalidArgumentException | \RuntimeException $exception) {
@@ -101,13 +130,13 @@ try {
     <div class="spacing-top-page"></div>
 
     <div class="header-page">
-        <!-- Mapa de navegaão do site -->
+        <!-- Mapa de navegação do site -->
         <div class="location">
             <span class="all">Internal - Cartório - Cartas Expedidas -</span>
             <span class="specific">Regras</span>
         </div>
 
-        <!-- Título e descriço da página -->
+        <!-- Título e descrição da página -->
         <h1 class="title-page">Regras de Alocação de Carta Expedida</h1>
         <p class="description-page">Caso tenha alguma dificuldade no preenchimento das regras, verifique os arquivos abaixo para obter ajuda.</p>
 
@@ -142,13 +171,10 @@ try {
                 </div>
             </div> 
             <?php if (!empty($ruleRow['id'] ?? '')): ?>
-                <div class="row success">
-                    <span class="major-info"><?php echo htmlspecialchars('Regra atual: ' . ($ruleRow['id'] . ' - ' . ($ruleRow['nome_usuario'] ?? 'Nenhum usuário definido') ?? 'Nenhuma regra definida')); ?></span>
+                <div class="row <?php if($ruleUsuarioNome === ''){ echo 'info'; } else { echo 'success'; } ?>">
+                    <span><?php echo htmlspecialchars(sprintf('Regra (Envio de Cartas Expedidas): %s - %s', $ruleRow['id'] ?? 'sem ID', $ruleUsuarioNome)); ?></span>
                 </div>
             <?php endif; ?>
-            <div class="row info">
-                <label>*As tarefas de envio de Carta Expedida serão alocadas automaticamente para este usuário</label>
-            </div>
 
             <!-- Ações -->
             <div class="row buttons">
