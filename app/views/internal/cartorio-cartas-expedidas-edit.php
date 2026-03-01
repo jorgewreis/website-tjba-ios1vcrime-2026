@@ -199,8 +199,6 @@ $stateOptions = [
                     <label for="filter-classe">Classe</label>
                     <input type="text" id="filter-classe" class="width-lg height-md readonly" value="<?php echo htmlspecialchars($classeCodigo !== '' ? ($classeCodigo . ' - ' . $classeNome) : $classeNome, ENT_QUOTES); ?>" readonly>
                 </div>
-            </div>
-            <div class="row filter">
                 <div class="col filter">
                     <label for="filter-tipo">Finalidade</label>
                     <select class="width-lg height-md" id="filter-tipo" required>
@@ -210,24 +208,7 @@ $stateOptions = [
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="col filter">
-                    <label for="filter-prazo">Prazo cumprimento</label>
-                    <select class="width-sm height-md" id="filter-prazo" required>
-                        <?php foreach ($deadlineOptions as $option): ?>
-                            <?php $digits = preg_replace('/\D+/', '', $option); ?>
-                            <option value="<?php echo htmlspecialchars($option, ENT_QUOTES); ?>"<?php echo (int) $digits === $prazoAtual ? ' selected' : ''; ?>><?php echo htmlspecialchars($option); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="col filter">
-                    <label for="filter-status">Status</label>
-                    <select class="width-md height-md" id="filter-status" required>
-                        <?php foreach ($statusOptions as $value => $label): ?>
-                            <option value="<?php echo htmlspecialchars($value, ENT_QUOTES); ?>"<?php echo $statusAtual === $value ? ' selected' : ''; ?>><?php echo htmlspecialchars($label); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-            </div>
+            </div>            
             <div class="row filter">
                 <div class="col filter">
                     <label for="filter-cidade">Cidade</label>
@@ -241,13 +222,22 @@ $stateOptions = [
                         <?php endforeach; ?>
                     </select>
                 </div>
+                <div class="col filter">
+                    <label for="filter-prazo">Prazo cumprimento</label>
+                    <select class="width-sm height-md" id="filter-prazo" required>
+                        <?php foreach ($deadlineOptions as $option): ?>
+                            <?php $digits = preg_replace('/\D+/', '', $option); ?>
+                            <option value="<?php echo htmlspecialchars($option, ENT_QUOTES); ?>"<?php echo (int) $digits === $prazoAtual ? ' selected' : ''; ?>><?php echo htmlspecialchars($option); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
             </div>            
-            <div class="row filter">
+            <!-- <div class="row filter">
                 <div class="col filter">
                     <label for="filter-observacoes">Observações</label>
                     <textarea id="filter-observacoes" class="width-xl" rows="4"><?php echo htmlspecialchars($observacoesValue, ENT_QUOTES); ?></textarea>
                 </div>
-            </div>
+            </div> -->
 
             <input type="hidden" id="hidden-carta-id" value="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>">
             <input type="hidden" id="hidden-comarca-id" value="<?php echo htmlspecialchars($comarcaDestinoId, ENT_QUOTES); ?>">
