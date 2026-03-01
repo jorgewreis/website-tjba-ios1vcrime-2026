@@ -363,7 +363,7 @@ if ($totalPages > 0) {
                         $stStatus = $st['status'] ?? 'pendente';
                         $statusLabel = $stStatus === 'em_andamento' ? 'Em andamento' : ($stStatus === 'concluida' ? 'Concluída' : 'Aguardando');
                     ?>
-                    <div class="col full-line" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
+                    <div class="col full-line" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>" style="border-top: 1px solid var(--color-gray-400);">
                         <div class="row subtask-info">
                             <div class="col task-info">
                                 <span class="minor-info">Subtarefa</span>
@@ -399,10 +399,10 @@ if ($totalPages > 0) {
                         </div>
                         <?php endif; ?>
                         <?php if ($stTipo === 'aguardando_devolucao'): ?>
-                        <div class="row subtask-info" style="border-top: 1px solid var(--color-gray-400);">
+                        <div class="row subtask-info">
                             <div class="col filter">
                                 <span class="minor-info">Resultado</span>
-                                <select class="width-lg height-md subtask-resultado-devolucao">
+                                <select class="width-lg height-md subtask-resultado-devolucao" style="background-color: var(--color-gray-000);">
                                     <option value="">Selecione</option>
                                     <option value="devolvida_sem_cumprimento">Devolvida sem cumprimento</option>
                                     <option value="cumprida_positivamente">Cumprida positivamente</option>
