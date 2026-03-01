@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../repositories/CartasExpedidasRepository.php';
+require_once __DIR__ . '/../repositories/CartasExpedidasSubtarefasRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../repositories/TribunaisRepository.php';
@@ -15,6 +16,7 @@ final class CartasExpedidasService
 {
     private PDO $connection;
     private CartasExpedidasRepository $repository;
+    private CartasExpedidasSubtarefasRepository $subtarefasRepository;
     private ProcessosRepository $processosRepository;
     private ClassesRepository $classesRepository;
     private TribunaisRepository $tribunaisRepository;
@@ -26,6 +28,7 @@ final class CartasExpedidasService
     {
         $this->connection = $connection;
         $this->repository = new CartasExpedidasRepository($connection);
+        $this->subtarefasRepository = new CartasExpedidasSubtarefasRepository($connection);
         $this->processosRepository = new ProcessosRepository($connection);
         $this->classesRepository = new ClassesRepository($connection);
         $this->tribunaisRepository = new TribunaisRepository($connection);
@@ -36,8 +39,13 @@ final class CartasExpedidasService
 
     public function listCartas(array $filters, int $limit, int $offset): array
     {
+        $rows = $this->repository->fetchList($filters, $limit, $offset);
+        foreach ($rows as $i => $row) {
+            $idCarta = (string) ($row['IdCarta'] ?? '');
+            $rows[$i]['Subtarefas'] = $idCarta !== '' ? $this->subtarefasRepository->findPendenteOuEmAndamentoByCartaId($idCarta) : [];
+        }
         return [
-            'rows' => $this->repository->fetchList($filters, $limit, $offset),
+            'rows' => $rows,
             'total' => $this->repository->count($filters),
         ];
     }
@@ -140,11 +148,6 @@ final class CartasExpedidasService
             throw new InvalidArgumentException('A finalidade é obrigatória.');
         }
         $prazoDias = (int) $this->sanitizePrazo((string) ($payload['prazo'] ?? $payload['prazo_dias'] ?? '30'));
-        $status = trim((string) ($payload['status'] ?? 'aguardando assinatura'));
-        if ($status === '') {
-            $status = 'aguardando assinatura';
-        }
-
         $idCarta = IdGenerator::generateUniquePrefixedId(
             $this->connection,
             $this->repository->getTableName(),
@@ -165,11 +168,55 @@ final class CartasExpedidasService
             'numero_processo_destino' => null,
             'vara_destino_id' => null,
             'vara_destino_nome' => null,
-            'status' => $status,
+            'status' => 'em_andamento',
             'observacoes' => trim((string) ($payload['observacoes'] ?? '')),
         ];
 
-        return $this->repository->insert($row);
+        $this->repository->insert($row);
+
+        $this->subtarefasRepository->create(
+            $idCarta,
+            CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1,
+            1,
+            'em_andamento',
+            null
+        );
+
+        return $idCarta;
+    }
+
+    public function concluirSubtarefa(string $subtarefaId, ?string $dadosJson = null): void
+    {
+        $subtarefa = $this->subtarefasRepository->findById($subtarefaId);
+        if ($subtarefa === null) {
+            throw new InvalidArgumentException('Subtarefa não encontrada.');
+        }
+
+        $this->subtarefasRepository->marcarConcluida($subtarefaId);
+
+        if ($dadosJson !== null && $dadosJson !== '') {
+            $stmt = $this->connection->prepare(
+                'UPDATE `cartas_expedidas_subtarefas` SET `dados_especificos` = :dados, `updated_at` = NOW() WHERE `id` = :id LIMIT 1'
+            );
+            $stmt->bindValue(':dados', $dadosJson);
+            $stmt->bindValue(':id', $subtarefaId);
+            $stmt->execute();
+        }
+
+        $ordem = (int) ($subtarefa['ordem'] ?? 0);
+        $cartaId = trim((string) ($subtarefa['carta_expedida_id'] ?? ''));
+
+        if ($cartaId === '') {
+            return;
+        }
+
+        $proximoTipo = $this->subtarefasRepository->obterProximoTipo($ordem);
+        if ($proximoTipo !== null) {
+            $proximaOrdem = $ordem + 1;
+            $this->subtarefasRepository->create($cartaId, $proximoTipo, $proximaOrdem, 'em_andamento', null);
+        } else {
+            $this->repository->update($cartaId, ['status' => 'concluída']);
+        }
     }
 
     private function normalizeTribunalSigla(string $sigla): string

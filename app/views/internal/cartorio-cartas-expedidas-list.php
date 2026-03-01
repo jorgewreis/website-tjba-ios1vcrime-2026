@@ -65,13 +65,26 @@ $pagesLabel = $totalPages === 1 ? 'página' : 'páginas';
 $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
 
 $statusOptions = [
+    'em_andamento',
     'aguardando assinatura',
     'aguardando envio',
     'aguardando juntada do termo',
     'aguardando cumprimento',
+    'concluída',
+    'cancelada',
 ];
 
 $statusCounts = array_merge(array_fill_keys($statusOptions, 0), $service->getStatusCounts($filters));
+$statusCounts['em_andamento'] = (int) ($statusCounts['em_andamento'] ?? 0) + (int) ($statusCounts['aguardando assinatura'] ?? 0) + (int) ($statusCounts['aguardando envio'] ?? 0) + (int) ($statusCounts['aguardando juntada do termo'] ?? 0) + (int) ($statusCounts['aguardando juntada de termo'] ?? 0) + (int) ($statusCounts['aguardando cumprimento'] ?? 0);
+
+$subtarefaLabels = [
+    'aguardando_assinatura' => 'Assinar carta expedida',
+    'aguardando_gerar_pdf' => 'Gerar PDF da documentação',
+    'aguardando_envio' => 'Aguardando envio',
+    'aguardando_juntada_termo' => 'Aguardando juntada de termo de envio',
+    'aguardando_informacoes' => 'Aguardando informações',
+    'aguardando_devolucao' => 'Aguardando devolução',
+];
 
 $defaultFinalidades = [
     'Intimação para Audiência',
@@ -189,17 +202,14 @@ if ($totalPages > 0) {
                 <label for="filter-status">Filtrar por status</label>
                 <select class="width-md height-md" id="filter-status">
                     <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Mostrar todos</option>
-                    <option value="aguardando assinatura"<?php echo $statusFilter === 'aguardando assinatura' ? ' selected' : ''; ?>>
-                        Aguardando assinatura (<?php echo htmlspecialchars((string) $statusCounts['aguardando assinatura']); ?>)
+                    <option value="em_andamento"<?php echo $statusFilter === 'em_andamento' ? ' selected' : ''; ?>>
+                        Em andamento (<?php echo htmlspecialchars((string) ($statusCounts['em_andamento'] ?? 0)); ?>)
                     </option>
-                    <option value="aguardando envio"<?php echo $statusFilter === 'aguardando envio' ? ' selected' : ''; ?>>
-                        Aguardando envio (<?php echo htmlspecialchars((string) $statusCounts['aguardando envio']); ?>)
+                    <option value="concluída"<?php echo $statusFilter === 'concluída' ? ' selected' : ''; ?>>
+                        Concluída (<?php echo htmlspecialchars((string) ($statusCounts['concluída'] ?? 0)); ?>)
                     </option>
-                    <option value="aguardando juntada do termo"<?php echo $statusFilter === 'aguardando juntada de termo' ? ' selected' : ''; ?>>
-                        Aguardando juntada de termo (<?php echo htmlspecialchars((string) $statusCounts['aguardando juntada de termo']); ?>)
-                    </option>
-                    <option value="aguardando cumprimento"<?php echo $statusFilter === 'aguardando cumprimento' ? ' selected' : ''; ?>>
-                        Aguardando cumprimento (<?php echo htmlspecialchars((string) $statusCounts['aguardando cumprimento']); ?>)
+                    <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>
+                        Cancelada (<?php echo htmlspecialchars((string) ($statusCounts['cancelada'] ?? 0)); ?>)
                     </option>
                 </select>
             </div>
@@ -234,59 +244,141 @@ if ($totalPages > 0) {
 
         <!-- Tabela -->
         <div class="row table header">Lista de Documentos</div>
-        <?php if (!empty($rows)): // Verifica se há dados para exibir ?>
+        <?php if (!empty($rows)): ?>
             <?php foreach ($rows as $row):
                 $processo = $row['Processo'];
+                $idCarta = $row['IdCarta'];
+                $subtarefas = $row['Subtarefas'] ?? [];
             ?>
+            <div class="col full-line register" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>">
+                <div class="row table" id="<?php echo htmlspecialchars($idCarta); ?>">
+                    <div class="row">
+                        <div class="col">
+                            <label class="button-table" title="Expandir detalhes">
+                                <input type="radio" name="open-subtask" value="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" aria-controls="subtask-<?php echo htmlspecialchars($idCarta); ?>" aria-expanded="false" />
+                                <i class="fi fi-rr-angle-small-down"></i>
+                            </label>
+                        </div>
+                        <div class="col filter process-info" title="clique para copiar">
+                            <?php
+                                $classeNome = $row['ClasseNome'] ?? 'Classe não informada';
+                                $classeStyle = $classeNome !== 'Classe não informada' ? 'style="color: var(--primary-color-active); font-weight: 600;"' : '';
+                            ?>
+                            <span class="minor-info" <?php echo $classeStyle; ?>><?php echo htmlspecialchars($classeNome); ?></span>
+                            <span class="major-info"><?php echo htmlspecialchars($row['Processo']); ?></span>
+                        </div>
+                    </div>
+                    <div class="col filter comarca-info">
+                        <span class="minor-info">Comarca de destino</span>
+                        <span class="major-info"><?php echo htmlspecialchars($row['Comarca'] . ' - ' . $row['Estado']); ?></span>
+                    </div>
+                    <div class="col filter detalhes-info">
+                        <span class="minor-info"><?php echo htmlspecialchars($row['Finalidade']); ?></span>
+                        <span class="major-info"><?php echo htmlspecialchars($row['Prazo'] . ' dias'); ?></span>
+                    </div>
+                    <div class="row">
+                        <div class="col button-table button-edit" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" title="Editar">
+                            <i class="fi fi-rr-file-edit"></i>
+                        </div>
+                        <div class="row allocate-users"></div>
+                        <div class="col status-task" title="<?php echo htmlspecialchars($row['Status'] ?? ''); ?>">
+                            <?php
+                            $st = $row['Status'] ?? '';
+                            if ($st === 'concluída') {
+                                echo '<div class="width-sm status status-finished">Concluída</div>';
+                            } elseif ($st === 'cancelada') {
+                                echo '<div class="width-sm status status-cancelled">Cancelada</div>';
+                            } elseif ($st === 'em_andamento' || $st === 'aguardando assinatura' || $st === 'aguardando envio' || $st === 'aguardando juntada do termo' || $st === 'aguardando cumprimento') {
+                                echo '<div class="width-sm status status-current">Em andamento</div>';
+                            } else {
+                                echo '<div class="width-sm status status-pending">Pendente</div>';
+                            }
+                            ?>
+                        </div>
+                    </div>
+                </div>
 
-            <!-- register foreach -->
-            <div class="row table" id="<?php echo htmlspecialchars($row['IdCarta']); ?>">
-                <div class="row">
-                    <div class="col">
-                        <label class="button-table" title="Expandir detalhes">
-                            <input type="radio" name="open-subtask" />
-                            <i class="fi fi-rr-angle-small-down"></i>
-                        </label>                
+                <div class="row subtask subtask-collapsed" id="subtask-<?php echo htmlspecialchars($idCarta); ?>" aria-hidden="true">
+                    <?php foreach ($subtarefas as $st): 
+                        $stId = $st['id'] ?? '';
+                        $stTipo = $st['tipo'] ?? '';
+                        $stLabel = $subtarefaLabels[$stTipo] ?? $stTipo;
+                        $stStatus = $st['status'] ?? 'pendente';
+                        $statusLabel = $stStatus === 'em_andamento' ? 'Em andamento' : ($stStatus === 'concluida' ? 'Concluída' : 'Aguardando');
+                    ?>
+                    <div class="col full-line" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
+                        <div class="row subtask-info">
+                            <div class="col task-info">
+                                <span class="minor-info">Subtarefa</span>
+                                <span class="major-info"><?php echo htmlspecialchars($stLabel); ?></span>
+                            </div>
+                            <div class="row">
+                                <?php if ($stTipo === 'aguardando_gerar_pdf'): ?>
+                                <div class="col button-table button-subtask" title="Reiniciar subtarefa"><i class="fi fi-rr-refresh"></i></div>
+                                <?php endif; ?>
+                                <div class="col task-status">
+                                    <div class="height-sm status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
+                                </div>
+                            </div>
+                        </div>
+                        <?php if ($stTipo === 'aguardando_gerar_pdf'): ?>
+                        <div class="row subtask-info">
+                            <div class="col filter">
+                                <span class="minor-info">Qtd docs gerados</span>
+                                <input type="number" class="width-sm height-md subtask-qtd-docs" value="1" min="1" max="10" />
+                            </div>
+                        </div>
+                        <?php endif; ?>
+                        <?php if ($stTipo === 'aguardando_informacoes'): ?>
+                        <div class="row subtask-info">
+                            <div class="col filter">
+                                <span class="minor-info">Número processo destino</span>
+                                <input type="text" class="width-md height-md subtask-numero-destino" placeholder="Número do processo" />
+                            </div>
+                            <div class="col filter">
+                                <span class="minor-info">Vara destino</span>
+                                <input type="text" class="width-md height-md subtask-vara-destino" placeholder="Vara destino" />
+                            </div>
+                        </div>
+                        <?php endif; ?>
+                        <?php if ($stTipo === 'aguardando_devolucao'): ?>
+                        <div class="row subtask-info">
+                            <div class="col filter">
+                                <span class="minor-info">Resultado</span>
+                                <select class="width-md height-md subtask-resultado-devolucao">
+                                    <option value="">Selecione</option>
+                                    <option value="devolvida_sem_cumprimento">Devolvida sem cumprimento</option>
+                                    <option value="cumprida_positivamente">Cumprida positivamente</option>
+                                    <option value="cumprida_parcialmente">Cumprida parcialmente</option>
+                                    <option value="cumprida_negativamente">Cumprida negativamente</option>
+                                </select>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+                        <div class="row subtask-buttons">
+                            <?php if ($stTipo === 'aguardando_assinatura'): ?>
+                            <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>">Informar assinatura</button>
+                            <?php elseif ($stTipo === 'aguardando_gerar_pdf'): ?>
+                            <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>">Informar PDF's gerados</button>
+                            <?php elseif ($stTipo === 'aguardando_envio'): ?>
+                            <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>">Informar envio realizado</button>
+                            <?php elseif ($stTipo === 'aguardando_juntada_termo'): ?>
+                            <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>">Informar juntada do termo</button>
+                            <?php elseif ($stTipo === 'aguardando_informacoes'): ?>
+                            <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>">Juntar informações</button>
+                            <?php elseif ($stTipo === 'aguardando_devolucao'): ?>
+                            <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>">Juntar Carta Devolvida</button>
+                            <?php endif; ?>
+                        </div>
                     </div>
-                    <div class="col filter process-info" title="clique para copiar">
-                        <?php
-                            $classeNome = $row['ClasseNome'] ?? 'Classe não informada';
-                            $classeStyle = $classeNome !== 'Classe não informada' ? 'style="color: var(--primary-color-active); font-weight: 600;"' : '';
-                        ?>
-                        <span class="minor-info" <?php echo $classeStyle; ?>><?php echo htmlspecialchars($classeNome); ?></span>
-                        <span class="major-info"><?php echo htmlspecialchars($row['Processo']); ?></span>
+                    <?php endforeach; ?>
+                    <?php if (empty($subtarefas)): ?>
+                    <div class="col full-line">
+                        <span class="minor-info">Nenhuma subtarefa pendente.</span>
                     </div>
-                </div>
-                <div class="col filter comarca-info">
-                    <span class="minor-info">Comarca de destino</span>
-                    <span class="major-info"><?php echo htmlspecialchars($row['Comarca'] . ' - ' . $row['Estado']); ?></span>
-                </div>
-                <div class="col filter detalhes-info">
-                    <span class="minor-info"><?php echo htmlspecialchars($row['Finalidade']); ?></span>
-                    <span class="major-info"><?php echo htmlspecialchars($row['Prazo'] . ' dias'); ?></span>
-                </div>
-                <div class="row">
-                    <div class="col button-table button-edit" data-carta-id="<?php echo htmlspecialchars($row['IdCarta'], ENT_QUOTES); ?>" title="Editar">
-                        <i class="fi fi-rr-file-edit"></i>
-                    </div>
-                    <div class="col status-task" title="<?php echo $row['Status'] ?>">
-                        <?php 
-                        if ($row['Status'] == 'aguardando cumprimento') {
-                            echo '<div class="width-sm status status-current">Em andamento</div>';
-                        } elseif ($row['Status'] == 'aguardando assinatura' || $row['Status'] == 'aguardando envio' || $row['Status'] == 'aguardando juntada de termo') {
-                            echo '<div class="width-sm status status-pending">Pendente</div>';
-                        } elseif ($row['Status'] == 'cancelada') {
-                            echo '<div class="width-sm status status-cancelled">Cancelada</div>';
-                        } elseif ($row['Status'] == 'concluída') {
-                            echo '<div class="width-sm status status-finished">Concluída</div>';
-                        } else {
-                            echo '<div class="width-sm status status-pending">Pendente</div>';
-                        }
-                    ?>  
-                    </div>                
+                    <?php endif; ?>
                 </div>
             </div>
-
             <?php endforeach; ?>
         <?php else: // Caso não haja dados para exibir ?>
             <div class="row table">
@@ -404,10 +496,68 @@ if ($totalPages > 0) {
             document.querySelectorAll('.button-edit').forEach(function (button) {
                 button.addEventListener('click', function () {
                     const cartaId = button.dataset.cartaId;
-                    if (!cartaId) {
-                        return;
-                    }
+                    if (!cartaId) return;
                     window.location.href = '/frame.php?page=cartasexpedidasedit&id=' + encodeURIComponent(cartaId);
+                });
+            });
+
+            // Expandir/recolher subtarefa ao selecionar o radio
+            document.querySelectorAll('input[name="open-subtask"]').forEach(function (radio) {
+                radio.addEventListener('change', function () {
+                    const cartaId = this.value;
+                    const targetId = 'subtask-' + cartaId;
+                    document.querySelectorAll('.row.subtask').forEach(function (subtaskRow) {
+                        const isTarget = subtaskRow.id === targetId;
+                        subtaskRow.classList.toggle('subtask-collapsed', !isTarget);
+                        subtaskRow.setAttribute('aria-hidden', isTarget ? 'false' : 'true');
+                    });
+                    document.querySelectorAll('input[name="open-subtask"]').forEach(function (r) {
+                        r.setAttribute('aria-expanded', r.value === cartaId ? 'true' : 'false');
+                    });
+                });
+            });
+
+            // Concluir subtarefa
+            document.querySelectorAll('.btn-concluir-subtarefa').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    const subtarefaId = this.getAttribute('data-subtarefa-id');
+                    if (!subtarefaId) return;
+                    const block = this.closest('.col.full-line[data-subtarefa-id]');
+                    let dadosEspecificos = null;
+                    if (block) {
+                        const qtdEl = block.querySelector('.subtask-qtd-docs');
+                        const numeroDestino = block.querySelector('.subtask-numero-destino');
+                        const varaDestino = block.querySelector('.subtask-vara-destino');
+                        const resultadoDevolucao = block.querySelector('.subtask-resultado-devolucao');
+                        const obj = {};
+                        if (qtdEl) obj.qtd_docs_gerados = parseInt(qtdEl.value, 10) || 1;
+                        if (numeroDestino && numeroDestino.value.trim()) obj.numero_processo_destino = numeroDestino.value.trim();
+                        if (varaDestino && varaDestino.value.trim()) obj.vara_destino = varaDestino.value.trim();
+                        if (resultadoDevolucao && resultadoDevolucao.value) obj.resultado_devolucao = resultadoDevolucao.value;
+                        if (Object.keys(obj).length > 0) dadosEspecificos = JSON.stringify(obj);
+                    }
+                    btn.disabled = true;
+                    fetch('/api/cartorio-cartas-expedidas/concluir-subtarefa.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            subtarefa_id: subtarefaId,
+                            dados_especificos: dadosEspecificos
+                        })
+                    })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        if (data.success) {
+                            window.location.reload();
+                        } else {
+                            alert(data.error || 'Erro ao concluir subtarefa.');
+                            btn.disabled = false;
+                        }
+                    })
+                    .catch(function () {
+                        alert('Erro de conexão.');
+                        btn.disabled = false;
+                    });
                 });
             });
         })();

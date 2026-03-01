@@ -74,8 +74,61 @@
     font-size: 12px;
 }
 
+.col.full-line.register {
+    width: 100%;
+    border-bottom: 1px solid var(--color-gray-400);
+}
+
+.row.subtask {
+    width: 100%;
+    margin-top: -1px;
+    min-height: 40px;
+    padding: 0 10px 0 50px;
+    background-color: var(--color-gray-100);
+    border-top: 1px solid var(--color-gray-000);
+    border-bottom: 1px solid var(--color-gray-300);
+}
+
+.row.subtask.subtask-collapsed {
+    display: none;
+}
+
+.row.subtask:not(.subtask-collapsed) {
+    display: flex;
+    flex-wrap: wrap;
+}
+.row.subtask-info{
+    width: 100%;
+    margin-top: 10px;
+    justify-content: space-between;
+}
+.row.subtask-buttons{
+    width: 100%;
+    margin-bottom: 10px;
+    justify-content: flex-end;
+}
+
+.task-info .major-info {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--primary-color-active);
+}
+
 .button-edit{
     visibility: hidden;
+}
+
+.button-subtask{
+    width: 30px;
+    height: 30px;
+    margin-right: 10px;
+}
+.button-subtask i.fi{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0 0 0 2px;
 }
 
 .col {
@@ -87,6 +140,10 @@
 
 .col.filter{
     margin: 5px 0;
+}
+
+.col.full-line {
+    width: 100%;
 }
 
 /* TABLE CELLS */

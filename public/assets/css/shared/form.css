@@ -438,38 +438,6 @@ hr {
 }
 
 
-/* TAMANHOS DE INPUTS E SELECTS */
-
-.height-sm {
-    height: 28px;
-}
-.height-md {
-    height: 42px;
-}
-.height-lg {
-    height: 54px;
-}
-
-.width-ssm {
-    width: 80px;
-}
-.width-sm {
-    width: 150px;
-}
-.width-md {
-    width: 250px;
-}
-.width-lg {
-    width: 330px;
-}
-.width-xl {
-    width: 450px;
-}
-.width-xxl {
-    width: 550px;
-}
-
-
 /* SELECTS */
 select {
     height: 42px;
@@ -651,4 +619,36 @@ input[type="radio"] {
 .status-warning-light {
     background-color: var(--warning-color-bg-light);
     color: var(--warning-color-active);
+}
+
+
+/* TAMANHOS DE INPUTS E SELECTS */
+
+.height-sm {
+    height: 28px;
+}
+.height-md {
+    height: 42px;
+}
+.height-lg {
+    height: 54px;
+}
+
+.width-ssm {
+    width: 80px;
+}
+.width-sm {
+    width: 150px;
+}
+.width-md {
+    width: 250px;
+}
+.width-lg {
+    width: 330px;
+}
+.width-xl {
+    width: 450px;
+}
+.width-xxl {
+    width: 550px;
 }

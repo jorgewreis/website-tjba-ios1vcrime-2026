@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0158
+
+**Data:** 2026-03-01 16:41:12 | **Commit:** `7c96420` | **Tipo:** `patch`
+
+- Feat: Implementação de subtarefas
+
 ## V. 1.02.0157
 
 **Data:** 2026-03-01 14:40:42 | **Commit:** `aa20605` | **Tipo:** `patch`
@@ -1986,6 +1992,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
