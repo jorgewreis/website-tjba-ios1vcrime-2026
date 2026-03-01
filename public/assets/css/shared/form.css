@@ -522,7 +522,7 @@ input[type="number"] {
 }
 
 input[type="text"].readonly{
-    background-color: var(--color-gray-100);
+    background-color: var(--primary-color-bg-light-2);
     color: var(--primary-color-active);
     font-weight: 600;
     box-shadow: none;

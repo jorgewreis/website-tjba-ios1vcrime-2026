@@ -127,6 +127,33 @@ final class CartasExpedidasRepository
         return $summary;
     }
 
+    public function countByFinalidade(array $filters): array
+    {
+        [$whereClause, $params] = $this->buildFilterClause($filters, 'ce');
+        $fromClause = $this->buildFromClause();
+        $sql = sprintf(
+            'SELECT ce.`finalidade` AS `Finalidade`, COUNT(*) AS total FROM %s %s GROUP BY ce.`finalidade`',
+            $fromClause,
+            $whereClause ? 'WHERE ' . $whereClause : ''
+        );
+        $statement = $this->connection->prepare($sql);
+        foreach ($params as $name => $value) {
+            $statement->bindValue($name, $value);
+        }
+        $statement->execute();
+
+        $summary = [];
+        while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+            $label = trim((string) ($row['Finalidade'] ?? ''));
+            if ($label === '') {
+                $label = 'Finalidade não informada';
+            }
+            $summary[$label] = (int) $row['total'];
+        }
+
+        return $summary;
+    }
+
     public function insert(array $row): string
     {
         $required = [
@@ -243,6 +270,11 @@ final class CartasExpedidasRepository
         if (isset($filters['classe']) && $filters['classe'] !== '') {
             $clauses[] = "(cl.`codigo` COLLATE {$coll} = :classe OR cl.`nome` COLLATE {$coll} = :classe)";
             $params[':classe'] = trim($filters['classe']);
+        }
+
+        if (isset($filters['finalidade']) && $filters['finalidade'] !== '') {
+            $clauses[] = $prefix . "`finalidade` COLLATE {$coll} = :finalidade";
+            $params[':finalidade'] = trim($filters['finalidade']);
         }
 
         if (isset($filters['status']) && $filters['status'] !== '') {

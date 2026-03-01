@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0151
+
+**Data:** 2026-03-01 13:32:07 | **Commit:** `6f6cb0d` | **Tipo:** `patch`
+
+- Fix: alteração de filtros
+
 ## V. 1.02.0150
 
 **Data:** 2026-03-01 13:13:09 | **Commit:** `b056d05` | **Tipo:** `patch`
@@ -1944,6 +1950,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

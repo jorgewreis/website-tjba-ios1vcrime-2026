@@ -9,7 +9,7 @@
     --primary-color-active: #4d52fb;
     --primary-color-disabled: #c0c0c0;
     --primary-color-bg-light: #e0e0ff;
-    --primary-color-bg-light-2: #f0f0ff;
+    --primary-color-bg-light-2: #f6f6ff;
     --primary-bg: #F4F4FD;
 
     --secondary-color: #6c757d;
@@ -39,7 +39,7 @@
     --success-color-hover: #27ac6e; 
     --success-color-active: #20915c;
     --success-color-disabled: #c0c0c0;
-    --success-color-bg-light: #dff1ea;
+    --success-color-bg-light: #e3fff4;
 
     --color-gray-000: #ffffff;
     --color-gray-100: #f8f9fa;

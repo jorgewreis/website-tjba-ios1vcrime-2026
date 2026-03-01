@@ -52,6 +52,11 @@ final class CartasExpedidasService
         return $this->repository->countByClasse($filters);
     }
 
+    public function getFinalidadeCounts(array $filters): array
+    {
+        return $this->repository->countByFinalidade($filters);
+    }
+
     public function create(array $payload): string
     {
         $processo = trim((string) ($payload['processo'] ?? $payload['numero_processo'] ?? ''));

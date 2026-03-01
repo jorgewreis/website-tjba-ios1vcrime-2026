@@ -10,7 +10,7 @@ require_once __DIR__ . '/../../services/CartasExpedidasService.php';
 
 $connection = Conection::getInstance()->getConnection();
 
-$classeFilter = trim($_GET['classe'] ?? '');
+$finalidadeFilter = trim($_GET['finalidade'] ?? '');
 $statusFilter = trim($_GET['status'] ?? '');
 $allowedPerPage = [10, 25, 50, 100];
 $itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 10;
@@ -20,7 +20,7 @@ if (!in_array($itemsPerPage, $allowedPerPage, true)) {
 
 $currentPage = isset($_GET['page']) ? max(1, (int) $_GET['page']) : 1;
 $filters = [
-    'classe' => $classeFilter,
+    'finalidade' => $finalidadeFilter,
     'status' => $statusFilter,
 ];
 $offset = ($currentPage - 1) * $itemsPerPage;
@@ -50,24 +50,38 @@ $displayedCount = count($rows);
 $startItem = $displayedCount > 0 ? $offset + 1 : 0;
 $endItem = $displayedCount > 0 ? $offset + $displayedCount : 0;
 
+$documentsLabel = $totalDocuments === 1 ? 'documento' : 'documentos';
+$pagesLabel = $totalPages === 1 ? 'página' : 'páginas';
+$itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
+
 $statusOptions = [
     'aguardando assinatura',
     'aguardando envio',
     'aguardando juntada do termo',
     'aguardando cumprimento',
 ];
-$classOptions = [
-    'Carta de Ordem',
-    'Carta Precatória',
-    'Carta Rogatória',
-];
 
 $statusCounts = array_merge(array_fill_keys($statusOptions, 0), $service->getStatusCounts($filters));
-$classCounts = array_merge(array_fill_keys($classOptions, 0), $service->getClasseCounts($filters));
+
+$defaultFinalidades = [
+    'Intimação para Audiência',
+    'Intimação de Decisão Interlocutória',
+    'Intimação da Sentença',
+    'Citação para apresentar Defesa',
+    'Citação para apresentar Alegações Finais',
+    'Suspensão Condicional',
+    'Outra',
+];
+$rawFinalidadeCounts = $service->getFinalidadeCounts($filters);
+$finalidadeOrder = array_unique(array_merge($defaultFinalidades, array_keys($rawFinalidadeCounts)));
+$finalidadeCounts = [];
+foreach ($finalidadeOrder as $term) {
+    $finalidadeCounts[$term] = $rawFinalidadeCounts[$term] ?? 0;
+}
 
 $baseQueryParams = [];
-if ($classeFilter !== '') {
-    $baseQueryParams['classe'] = $classeFilter;
+if ($finalidadeFilter !== '') {
+    $baseQueryParams['finalidade'] = $finalidadeFilter;
 }
 if ($statusFilter !== '') {
     $baseQueryParams['status'] = $statusFilter;
@@ -145,18 +159,14 @@ if ($totalPages > 0) {
         <!-- Filtros -->
         <div class="row filter">
             <div class="col filter">
-                <label for="filter-tipo">Filtrar por classe</label>
-                <select class="width-md height-md" id="filter-classe">
-                    <option value=""<?php echo $classeFilter === '' ? ' selected' : ''; ?>>Mostrar todas</option>
-                    <option value="Carta de Ordem"<?php echo $classeFilter === 'Carta de Ordem' ? ' selected' : ''; ?>>
-                        Carta de Ordem (<?php echo htmlspecialchars((string) $classCounts['Carta de Ordem']); ?>)
-                    </option>
-                    <option value="Carta Precatória"<?php echo $classeFilter === 'Carta Precatória' ? ' selected' : ''; ?>>
-                        Carta Precatória (<?php echo htmlspecialchars((string) $classCounts['Carta Precatória']); ?>)
-                    </option>
-                    <option value="Carta Rogatória"<?php echo $classeFilter === 'Carta Rogatória' ? ' selected' : ''; ?>>
-                        Carta Rogatória (<?php echo htmlspecialchars((string) $classCounts['Carta Rogatória']); ?>)
-                    </option>                  
+                <label for="filter-tipo">Filtrar por finalidade</label>
+                <select class="width-md height-md" id="filter-tipo">
+                    <option value=""<?php echo $finalidadeFilter === '' ? ' selected' : ''; ?>>Mostrar todas</option>
+                    <?php foreach ($finalidadeCounts as $finalidade => $count): ?>
+                        <option value="<?php echo htmlspecialchars($finalidade, ENT_QUOTES); ?>"<?php echo $finalidadeFilter === $finalidade ? ' selected' : ''; ?>>
+                            <?php echo htmlspecialchars($finalidade, ENT_QUOTES); ?> (<?php echo htmlspecialchars((string) $count); ?>)
+                        </option>
+                    <?php endforeach; ?>
                 </select>
             </div>
             <div class="col filter">
@@ -268,8 +278,8 @@ if ($totalPages > 0) {
         <!-- Paginação -->
         <div class="row pagination">
             <span class="pagination-info">
-                Mostrando <?php echo htmlspecialchars((string) $startItem); ?>-<?php echo htmlspecialchars((string) $endItem); ?> de <?php echo htmlspecialchars((string) $totalDocuments); ?> documentos
-                (<?php echo htmlspecialchars((string) $totalPages); ?> páginas  <?php echo htmlspecialchars((string) $itemsPerPage); ?> itens por página)
+                Mostrando <?php echo htmlspecialchars((string) $startItem); ?>-<?php echo htmlspecialchars((string) $endItem); ?> de <?php echo htmlspecialchars((string) $totalDocuments); ?> <?php echo htmlspecialchars($documentsLabel); ?>
+                (<?php echo htmlspecialchars((string) $totalPages); ?> <?php echo htmlspecialchars($pagesLabel); ?>, <?php echo htmlspecialchars((string) $itemsPerPage); ?> <?php echo htmlspecialchars($itemsLabel); ?> por página)
             </span>
             <?php if ($totalPages > 0): ?>
                 <div class="pagination-controls">
@@ -330,11 +340,11 @@ if ($totalPages > 0) {
 
     <script>
         (function () {
-            const classeSelect = document.getElementById('filter-classe');
+            const finalidadeSelect = document.getElementById('filter-tipo');
             const statusSelect = document.getElementById('filter-status');
             const itemsSelect = document.getElementById('items-per-page');
             const novoCadastroBtn = document.getElementById('novo-cadastro-btn');
-            if (!classeSelect || !statusSelect || !itemsSelect) {
+            if (!finalidadeSelect || !statusSelect || !itemsSelect) {
                 return;
             }
 
@@ -349,7 +359,7 @@ if ($totalPages > 0) {
                     }
                 };
 
-                setFilter('classe', classeSelect.value);
+                setFilter('finalidade', finalidadeSelect.value);
                 setFilter('status', statusSelect.value);
                 params.set('items_per_page', itemsSelect.value);
                 params.set('page', '1');
@@ -357,7 +367,7 @@ if ($totalPages > 0) {
                 window.location.href = url.toString();
             };
 
-            classeSelect.addEventListener('change', applyFilters);
+            finalidadeSelect.addEventListener('change', applyFilters);
             statusSelect.addEventListener('change', applyFilters);
             itemsSelect.addEventListener('change', applyFilters);
 
