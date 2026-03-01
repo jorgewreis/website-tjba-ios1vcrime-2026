@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0160
+
+**Data:** 2026-03-01 18:07:42 | **Commit:** `64bc844` | **Tipo:** `patch`
+
+- Fix: correção de nomenclaturas e melhorias de status
+
 ## V. 1.02.0159
 
 **Data:** 2026-03-01 17:38:03 | **Commit:** `dd88a60` | **Tipo:** `patch`
@@ -1998,6 +2004,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

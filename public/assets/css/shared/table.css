@@ -156,7 +156,7 @@
     background-color: var(--color-gray-500);
     margin: 0 10px;
 }
-.timeline .circle:not(.current)::after {
+.timeline .circle.finished::after {
     content: '';
     position: absolute;
     top: 38px;
@@ -171,6 +171,46 @@
 }
 .timeline .circle.finished {
     background-color: var(--primary-color);
+}
+
+/* Barra de progresso do status da tarefa principal (6 subtarefas) */
+.status-task-progress {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    min-width: 80px;
+    max-width: 120px;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    background-color: var(--color-gray-300);
+    gap: 1px;
+}
+.status-task-progress-segment {
+    flex: 1;
+    min-width: 4px;
+    background-color: var(--color-gray-300);
+    transition: background-color 0.2s ease;
+}
+.status-task-progress-segment.concluida {
+    background-color: var(--primary-color);
+}
+.status-task-progress-segment.em_andamento {
+    background-color: var(--warning-color);
+}
+.status-task-progress-segment.pendente {
+    background-color: var(--color-gray-400);
+}
+
+.status-task-em-andamento {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+}
+
+.col.status-task {
+    align-items: flex-start;
 }
 
 .button-edit{

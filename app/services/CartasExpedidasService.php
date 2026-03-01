@@ -43,6 +43,7 @@ final class CartasExpedidasService
         foreach ($rows as $i => $row) {
             $idCarta = (string) ($row['IdCarta'] ?? '');
             $rows[$i]['Subtarefas'] = $idCarta !== '' ? $this->subtarefasRepository->findPendenteOuEmAndamentoByCartaId($idCarta) : [];
+            $rows[$i]['SubtarefasAll'] = $idCarta !== '' ? $this->subtarefasRepository->findByCartaId($idCarta) : [];
         }
         return [
             'rows' => $rows,

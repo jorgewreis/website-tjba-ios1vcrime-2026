@@ -86,6 +86,14 @@ $subtarefaLabels = [
     'aguardando_informacoes' => 'Aguardando informações',
     'aguardando_devolucao' => 'Aguardando devolução',
 ];
+$ordemLabels = [
+    1 => $subtarefaLabels['aguardando_assinatura'],
+    2 => $subtarefaLabels['aguardando_gerar_pdf'],
+    3 => $subtarefaLabels['aguardando_envio'],
+    4 => $subtarefaLabels['aguardando_juntada_termo'],
+    5 => $subtarefaLabels['aguardando_informacoes'],
+    6 => $subtarefaLabels['aguardando_devolucao'],
+];
 
 $defaultFinalidades = [
     'Intimação para Audiência',
@@ -285,17 +293,50 @@ if ($totalPages > 0) {
                             <i class="fi fi-rr-file-edit"></i>
                         </div>
                         <div class="row allocate-users"></div>
-                        <div class="col status-task" title="<?php echo htmlspecialchars($row['Status'] ?? ''); ?>">
+                        <?php
+                        $st = $row['Status'] ?? '';
+                        $allSt = $row['SubtarefasAll'] ?? [];
+                        $progressStatuses = ['pendente', 'pendente', 'pendente', 'pendente', 'pendente', 'pendente'];
+                        foreach ($allSt as $s) {
+                            $o = (int) ($s['ordem'] ?? 0);
+                            if ($o >= 1 && $o <= 6) {
+                                $progressStatuses[$o - 1] = (string) ($s['status'] ?? 'pendente');
+                            }
+                        }
+                        $currentSubtarefaTitle = '';
+                        foreach ($allSt as $s) {
+                            if (trim((string) ($s['status'] ?? '')) === 'em_andamento') {
+                                $currentSubtarefaTitle = $subtarefaLabels[$s['tipo'] ?? ''] ?? $s['tipo'] ?? '';
+                                break;
+                            }
+                        }
+                        if ($currentSubtarefaTitle === '' && $st === 'pendente') {
+                            $currentSubtarefaTitle = $ordemLabels[1] ?? 'Assinar carta expedida';
+                        } elseif ($currentSubtarefaTitle === '' && ($st === 'concluída' || $st === 'finalizada')) {
+                            $currentSubtarefaTitle = 'Todas as etapas concluídas';
+                        } elseif ($currentSubtarefaTitle === '') {
+                            $currentSubtarefaTitle = $row['Status'] ?? 'Em andamento';
+                        }
+                        $isEmAndamento = in_array($st, ['em_andamento', 'aguardando assinatura', 'aguardando envio', 'aguardando juntada do termo', 'aguardando juntada de termo', 'aguardando cumprimento'], true);
+                        ?>
+                        <div class="col status-task" title="<?php echo htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES); ?>">
                             <?php
-                            $st = $row['Status'] ?? '';
                             if ($st === 'concluída') {
                                 echo '<div class="width-sm status status-finished">Finalizada</div>';
                             } elseif ($st === 'cancelada') {
                                 echo '<div class="width-sm status status-cancelled">Cancelada</div>';
                             } elseif ($st === 'pendente') {
                                 echo '<div class="width-sm status status-pending">Pendente</div>';
-                            } elseif ($st === 'em_andamento' || $st === 'aguardando assinatura' || $st === 'aguardando envio' || $st === 'aguardando juntada do termo' || $st === 'aguardando cumprimento') {
+                            } elseif ($isEmAndamento) {
+                                echo '<div class="status-task-em-andamento">';
                                 echo '<div class="width-sm status status-current">Em andamento</div>';
+                                echo '<div class="status-task-progress" role="progressbar" aria-valuenow="' . count(array_filter($progressStatuses, fn($x) => $x === 'concluida')) . '" aria-valuemin="0" aria-valuemax="6" aria-label="Progresso das subtarefas">';
+                                for ($i = 0; $i < 6; $i++) {
+                                    $segClass = $progressStatuses[$i] === 'concluida' ? 'concluida' : ($progressStatuses[$i] === 'em_andamento' ? 'em_andamento' : 'pendente');
+                                    echo '<div class="status-task-progress-segment ' . htmlspecialchars($segClass, ENT_QUOTES) . '" title="' . htmlspecialchars($ordemLabels[$i + 1] ?? '', ENT_QUOTES) . '"></div>';
+                                }
+                                echo '</div>';
+                                echo '</div>';
                             } else {
                                 echo '<div class="width-sm status status-pending">Pendente</div>';
                             }

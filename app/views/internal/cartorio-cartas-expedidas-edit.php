@@ -104,6 +104,30 @@ if ($carta !== null) {
             break;
         }
     }
+    $timelineMinorConcluido = [
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1 => 'Carta expedida assinada pela magistrada',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_2 => 'Documentos em PDF gerados por',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_3 => 'Carta expedida enviada por',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_4 => 'Termo de envio juntado aos autos por',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_5 => 'Informações registradas por',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6 => 'Carta devolvida e juntada por',
+    ];
+    $timelineMinorPendente = [
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1 => 'Carta expedida aguardando assinatura',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_2 => 'Aguardando geração de PDF da documentação',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_3 => 'Carta expedida aguardando envio',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_4 => 'Aguardando juntada de termo de envio',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_5 => 'Aguardando informações complementares',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6 => 'Aguardando devolução da carta',
+    ];
+    $timelineDateConcluido = [
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1 => 'Assinatura realizada em',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_2 => 'Documentos gerados em',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_3 => 'Envio realizado em',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_4 => 'Juntada realizada em',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_5 => 'Registro realizado em',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6 => 'Devolução realizada em',
+    ];
 }
 
 $ruleServidor = '?';
@@ -284,11 +308,43 @@ $stateOptions = [
                 $statusCartaLabel = 'Pendente';
                 $statusCartaClass = 'status-pending';
             }
+            $currentSubtarefaTitle = '';
+            foreach ($subtarefas as $s) {
+                if (trim((string) ($s['status'] ?? '')) === 'em_andamento') {
+                    $currentSubtarefaTitle = $subtarefaLabels[$s['tipo'] ?? ''] ?? $s['tipo'] ?? '';
+                    break;
+                }
+            }
+            if ($currentSubtarefaTitle === '' && $statusAtual === 'pendente') {
+                $currentSubtarefaTitle = $subtarefaLabels[CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1] ?? 'Assinar carta expedida';
+            } elseif ($currentSubtarefaTitle === '' && $statusAtual === 'concluída') {
+                $currentSubtarefaTitle = 'Todas as etapas concluídas';
+            } elseif ($currentSubtarefaTitle === '') {
+                $currentSubtarefaTitle = $statusAtual;
+            }
+            $progressStatusesEdit = ['pendente', 'pendente', 'pendente', 'pendente', 'pendente', 'pendente'];
+            for ($o = 1; $o <= 6; $o++) {
+                if (isset($subtarefasPorOrdem[$o])) {
+                    $progressStatusesEdit[$o - 1] = trim((string) ($subtarefasPorOrdem[$o]['status'] ?? 'pendente'));
+                }
+            }
+            $isEmAndamentoEdit = ($statusCartaLabel === 'Em andamento');
             ?>
             <div class="row table header">Subtarefas - Timeline</div>
             <div class="row buttons">
-                <div class="col filter">
-                    <div class="width-sm status <?php echo htmlspecialchars($statusCartaClass, ENT_QUOTES); ?>" style="border: 1px solid var(--color-gray-500);"><?php echo htmlspecialchars($statusCartaLabel, ENT_QUOTES); ?></div>
+                <div class="col filter" title="<?php echo htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES); ?>">
+                    <?php if ($isEmAndamentoEdit): ?>
+                        <div class="status-task-em-andamento">
+                            <div class="width-sm status <?php echo htmlspecialchars($statusCartaClass, ENT_QUOTES); ?>" style="border: 1px solid var(--color-gray-500);"><?php echo htmlspecialchars($statusCartaLabel, ENT_QUOTES); ?></div>
+                            <div class="status-task-progress" role="progressbar" aria-valuenow="<?php echo count(array_filter($progressStatusesEdit, fn($x) => $x === 'concluida')); ?>" aria-valuemin="0" aria-valuemax="6" aria-label="Progresso das subtarefas">
+                                <?php for ($i = 0; $i < 6; $i++): $segClass = $progressStatusesEdit[$i] === 'concluida' ? 'concluida' : ($progressStatusesEdit[$i] === 'em_andamento' ? 'em_andamento' : 'pendente'); ?>
+                                    <div class="status-task-progress-segment <?php echo htmlspecialchars($segClass, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($subtarefaLabels[$ordemParaTipo[$i + 1] ?? ''] ?? '', ENT_QUOTES); ?>"></div>
+                                <?php endfor; ?>
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        <div class="width-sm status <?php echo htmlspecialchars($statusCartaClass, ENT_QUOTES); ?>" style="border: 1px solid var(--color-gray-500);"><?php echo htmlspecialchars($statusCartaLabel, ENT_QUOTES); ?></div>
+                    <?php endif; ?>
                 </div>
                 <?php if (!$temSubtarefas): ?>
                     <div class="col filter">
@@ -304,6 +360,28 @@ $stateOptions = [
                     </div>
                 <?php endif; ?>
             </div>
+            <?php
+            $cartaCreatedRaw = $carta['created_at'] ?? '';
+            $cartaCreatedFormatted = '';
+            if ($cartaCreatedRaw !== '') {
+                $dt0 = \DateTime::createFromFormat('Y-m-d H:i:s', $cartaCreatedRaw);
+                $cartaCreatedFormatted = $dt0 ? $dt0->format('d/m/Y - H:i') : $cartaCreatedRaw;
+            }
+            ?>
+            <div class="row timeline">
+                <div class="row">
+                    <div class="circle finished"></div>
+                    <div class="col filter subtask-status-info">
+                        <span class="minor-info">Carta expedida e cadastrada por</span>
+                        <span class="major-info"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="col filter subtask-date">
+                        <span class="minor-info">Cadastro realizado em <strong><?php echo htmlspecialchars($cartaCreatedFormatted, ENT_QUOTES); ?></strong></span>
+                    </div>
+                </div>
+            </div>
             <?php for ($ordem = 1; $ordem <= 6; $ordem++): ?>
                 <?php
                 $tipo = $ordemParaTipo[$ordem] ?? '';
@@ -312,11 +390,30 @@ $stateOptions = [
                 $circleClass = '';
                 $statusTexto = 'Pendente';
                 $dataMovimento = '';
+                $minorTexto = $timelineMinorPendente[$tipo] ?? $label;
+                $majorTexto = '';
+                $dateLabel = 'Aguardando movimentação';
+                $dadosEspecificos = [];
+                if ($st !== null && !empty(trim((string) ($st['dados_especificos'] ?? '')))) {
+                    $dadosEspecificos = json_decode((string) $st['dados_especificos'], true);
+                    if (!is_array($dadosEspecificos)) {
+                        $dadosEspecificos = [];
+                    }
+                }
+                $nomeResponsavel = isset($dadosEspecificos['nome']) ? trim((string) $dadosEspecificos['nome']) : (isset($dadosEspecificos['responsavel']) ? trim((string) $dadosEspecificos['responsavel']) : '');
                 if ($st !== null) {
                     $status = trim((string) ($st['status'] ?? ''));
                     if ($status === 'concluida') {
                         $circleClass = 'finished';
-                        $statusTexto = 'Concluída';
+                        $minorTexto = $timelineMinorConcluido[$tipo] ?? $label;
+                        $majorTexto = $nomeResponsavel !== '' ? $nomeResponsavel : (strpos($timelineMinorConcluido[$tipo] ?? '', 'por') !== false ? '—' : '');
+                        if ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ORDEM_2 && isset($dadosEspecificos['qtd_docs'])) {
+                            $qtd = (int) $dadosEspecificos['qtd_docs'];
+                            if ($qtd > 0) {
+                                $minorTexto = $qtd . ' ' . ($qtd === 1 ? 'Documento em PDF gerado por' : 'Documentos em PDF gerados por');
+                            }
+                        }
+                        $dateLabel = $timelineDateConcluido[$tipo] ?? 'Movimentação realizada em';
                         $raw = $st['updated_at'] ?? $st['created_at'] ?? '';
                         if ($raw !== '') {
                             $dt = \DateTime::createFromFormat('Y-m-d H:i:s', $raw);
@@ -325,6 +422,9 @@ $stateOptions = [
                     } elseif ($status === 'em_andamento') {
                         $circleClass = 'current';
                         $statusTexto = 'Em andamento';
+                        $minorTexto = $timelineMinorPendente[$tipo] ?? $label;
+                        $majorTexto = $statusTexto;
+                        $dateLabel = 'Aguardando movimentação';
                         $raw = $st['created_at'] ?? $st['updated_at'] ?? '';
                         if ($raw !== '') {
                             $dt = \DateTime::createFromFormat('Y-m-d H:i:s', $raw);
@@ -332,7 +432,13 @@ $stateOptions = [
                         }
                     } else {
                         $statusTexto = 'Pendente';
+                        $minorTexto = $timelineMinorPendente[$tipo] ?? $label;
+                        $majorTexto = $statusTexto;
+                        $dateLabel = 'Aguardando conclusão';
                     }
+                } else {
+                    $minorTexto = $timelineMinorPendente[$tipo] ?? $label;
+                    $majorTexto = $statusTexto;
                 }
                 ?>
                 <div class="row timeline">
@@ -343,16 +449,18 @@ $stateOptions = [
                             <div class="circle" style="background-color: var(--color-gray-300);"></div>
                         <?php endif; ?>
                         <div class="col filter subtask-status-info">
-                            <span class="minor-info"><?php echo htmlspecialchars($label, ENT_QUOTES); ?></span>
-                            <span class="major-info"><?php echo htmlspecialchars($statusTexto, ENT_QUOTES); ?></span>
+                            <span class="minor-info"><?php echo htmlspecialchars($minorTexto, ENT_QUOTES); ?></span>
+                            <?php if ($majorTexto !== ''): ?>
+                                <span class="major-info"><?php echo htmlspecialchars($majorTexto, ENT_QUOTES); ?></span>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <div class="col">
                         <div class="col filter subtask-date">
                             <?php if ($dataMovimento !== ''): ?>
-                                <span class="minor-info">Movimentação realizada em <strong><?php echo htmlspecialchars($dataMovimento, ENT_QUOTES); ?></strong></span>
+                                <span class="minor-info"><?php echo htmlspecialchars($dateLabel, ENT_QUOTES); ?> <strong><?php echo htmlspecialchars($dataMovimento, ENT_QUOTES); ?></strong></span>
                             <?php else: ?>
-                                <span class="minor-info">—</span>
+                                <span class="minor-info"><?php echo htmlspecialchars($dateLabel, ENT_QUOTES); ?></span>
                             <?php endif; ?>
                         </div>
                     </div>
