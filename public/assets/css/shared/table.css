@@ -141,13 +141,16 @@
     .comarca-info {
         display: flex;
         width: 180px;
-    }
+    }    
 }
 
 @media (min-width: 1024px) {
     .detalhes-info {
         display: flex;
         width: 240px;
+    }
+    .button-edit {
+        visibility: visible;
     }
 }
 
