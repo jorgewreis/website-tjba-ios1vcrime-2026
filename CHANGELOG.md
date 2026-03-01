@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0172
+
+**Data:** 2026-03-01 20:17:00 | **Commit:** `f14b2ce` | **Tipo:** `patch`
+
+- Fix: corrigido status de metodo
+
 ## V. 1.02.0171
 
 **Data:** 2026-03-01 20:11:37 | **Commit:** `91aa9e5` | **Tipo:** `patch`
@@ -2070,6 +2076,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

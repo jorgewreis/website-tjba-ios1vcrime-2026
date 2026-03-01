@@ -441,17 +441,17 @@ $stateOptions = [
                                     $tribunalDestino = $sigla . ' - ' . $nomeTribunal;
                                 }
                             }
-                            $majorTexto = $tribunalDestino !== '' ? $tribunalDestino : '—';
-                            $metodoEnvio = trim((string) ($dadosEspecificos['metodo_envio'] ?? ''));
-                            if ($metodoEnvio !== '') {
-                                $preposicaoMetodo = strcasecmp($metodoEnvio, 'PJe') === 0 ? 'pelo' : 'por';
-                                $displayMetodo = strcasecmp($metodoEnvio, 'Email') === 0 ? 'email' : $metodoEnvio;
-                                $metodoEnvioTexto = 'Enviado ' . $preposicaoMetodo . ' ' . $displayMetodo;
-                            }
+                            $majorTexto = $tribunalDestino !== '' ? $tribunalDestino : '—';                            
                             $infoLinha = 'Documento enviado por ' . $nomeExibir . ' em ' . $dataMovimento;
                         } elseif ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ORDEM_4) {
-                            $minorTexto = 'Comprovante de termo de envio juntado e liberado nos autos';
-                            $majorTexto = '';
+                            $minorTexto = 'Comprovante de termo de envio juntado e liberado nos autos';                            
+                            $metodoEnvio = trim((string) ($dadosEspecificos['metodo_envio'] ?? ''));
+                            if ($metodoEnvio !== '') {
+                                $preposicaoMetodo = strcasecmp($metodoEnvio, 'PJe') === 0 || strcasecmp($metodoEnvio, 'Malote Digital') === 0 ? 'pelo' : 'por';
+                                $displayMetodo = strcasecmp($metodoEnvio, 'Email') === 0 ? 'email' : $metodoEnvio;
+                                $metodoEnvioTexto = 'Carta enviada ' . $preposicaoMetodo . ' ' . $displayMetodo;                                
+                            }
+                            $majorTexto = $metodoEnvioTexto;
                             $infoLinha = 'Documento juntado por ' . $nomeExibir . ' em ' . $dataMovimento;
                         } elseif ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ORDEM_5) {
                             $minorTexto = 'Informações complementares informadas';
