@@ -12,6 +12,7 @@ $connection = Conection::getInstance()->getConnection();
 
 $finalidadeFilter = trim($_GET['finalidade'] ?? '');
 $statusFilter = trim($_GET['status'] ?? '');
+$processoFilter = trim($_GET['processo'] ?? '');
 $allowedPerPage = [10, 25, 50, 100];
 $itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 10;
 if (!in_array($itemsPerPage, $allowedPerPage, true)) {
@@ -22,6 +23,7 @@ $currentPage = isset($_GET['page']) ? max(1, (int) $_GET['page']) : 1;
 $filters = [
     'finalidade' => $finalidadeFilter,
     'status' => $statusFilter,
+    'processo' => $processoFilter,
 ];
 $offset = ($currentPage - 1) * $itemsPerPage;
 
@@ -80,12 +82,15 @@ foreach ($finalidadeOrder as $term) {
 }
 
 $baseQueryParams = [];
-if ($finalidadeFilter !== '') {
-    $baseQueryParams['finalidade'] = $finalidadeFilter;
-}
-if ($statusFilter !== '') {
-    $baseQueryParams['status'] = $statusFilter;
-}
+    if ($finalidadeFilter !== '') {
+        $baseQueryParams['finalidade'] = $finalidadeFilter;
+    }
+    if ($statusFilter !== '') {
+        $baseQueryParams['status'] = $statusFilter;
+    }
+    if ($processoFilter !== '') {
+        $baseQueryParams['processo'] = $processoFilter;
+    }
 $baseQueryParams['items_per_page'] = $itemsPerPage;
 
 $paginationButtons = [];
@@ -197,15 +202,22 @@ if ($totalPages > 0) {
                 </select>
             </div>
         </div>
-
+        
         <!-- Ações -->
         <div class="row buttons">
+
+            <!-- Pesquisar na lista -->
+            <input type="text" class="width-md height-md" id="search-input" placeholder="Pesquisar na lista..." value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
+
+            <!-- Exportar -->
             <select class="width-sm height-md" id="export-type">
                 <option value="" selected>Exportar lista</option>
                 <option value="pdf">Gerar PDF</option>
                 <option value="csv">Gerar CSV</option>
                 <option value="print">Imprimir</option>
             </select>
+
+            <!-- Botões de ação -->
             <button class="btn btn-primary" id="novo-cadastro-btn">Novo cadastro</button>
         </div>
 
@@ -343,10 +355,17 @@ if ($totalPages > 0) {
             const finalidadeSelect = document.getElementById('filter-tipo');
             const statusSelect = document.getElementById('filter-status');
             const itemsSelect = document.getElementById('items-per-page');
+            const searchInput = document.getElementById('search-input');
             const novoCadastroBtn = document.getElementById('novo-cadastro-btn');
-            if (!finalidadeSelect || !statusSelect || !itemsSelect) {
+            if (!finalidadeSelect || !statusSelect || !itemsSelect || !searchInput) {
                 return;
             }
+
+            const minSearchDigits = 3;
+            const searchDebounceDelay = 1000;
+            const initialProcessoFilter = <?php echo json_encode($processoFilter, JSON_UNESCAPED_UNICODE); ?>;
+            let hasActiveProcessFilter = initialProcessoFilter.length >= minSearchDigits;
+            let searchTimeout = null;
 
             const applyFilters = function () {
                 const url = new URL(window.location.href);
@@ -358,9 +377,19 @@ if ($totalPages > 0) {
                         params.set(key, value);
                     }
                 };
+                if (searchTimeout !== null) {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = null;
+                }
 
                 setFilter('finalidade', finalidadeSelect.value);
                 setFilter('status', statusSelect.value);
+                const searchValue = searchInput.value.trim();
+                if (searchValue.length >= minSearchDigits) {
+                    params.set('processo', searchValue);
+                } else {
+                    params.delete('processo');
+                }
                 params.set('items_per_page', itemsSelect.value);
                 params.set('page', '1');
 
@@ -370,6 +399,23 @@ if ($totalPages > 0) {
             finalidadeSelect.addEventListener('change', applyFilters);
             statusSelect.addEventListener('change', applyFilters);
             itemsSelect.addEventListener('change', applyFilters);
+            searchInput.addEventListener('input', function () {
+                const value = searchInput.value.trim();
+                if (searchTimeout !== null) {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = null;
+                }
+                const shouldTriggerSearch = value.length >= minSearchDigits || (hasActiveProcessFilter && value.length < minSearchDigits);
+                if (!shouldTriggerSearch) {
+                    return;
+                }
+                if (value.length >= minSearchDigits) {
+                    hasActiveProcessFilter = true;
+                } else {
+                    hasActiveProcessFilter = false;
+                }
+                searchTimeout = setTimeout(applyFilters, searchDebounceDelay);
+            });
 
             if (novoCadastroBtn) {
                 novoCadastroBtn.addEventListener('click', function () {
