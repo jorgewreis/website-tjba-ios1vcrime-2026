@@ -161,6 +161,22 @@ $statusOptions = [
     'cancelada' => 'Cancelada',
 ];
 
+/** Perfis que podem excluir a tarefa e subtarefas (tabela usuario_perfil). */
+$perfisPermitidosExcluir = ['ADMIN', 'DIRETORA', 'MAGISTRADA'];
+$userPerfisEdit = [];
+$userIdEdit = $_SESSION['id_usuario'] ?? null;
+if ($userIdEdit !== null && $userIdEdit !== '') {
+    $stmtPerfis = $connection->prepare('SELECT DISTINCT UPPER(TRIM(perfil)) AS perfil FROM usuario_perfil WHERE usuario = ? AND perfil IS NOT NULL');
+    $stmtPerfis->execute([$userIdEdit]);
+    $userPerfisEdit = $stmtPerfis->fetchAll(PDO::FETCH_COLUMN);
+}
+$podeExcluirTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosExcluir)) > 0;
+
+/** Perfis que podem cancelar a tarefa (apenas altera status para Cancelada): servidor, admin, diretora, magistrada. */
+$perfisPermitidosCancelar = ['SERVIDOR', 'ADMIN', 'DIRETORA', 'MAGISTRADA'];
+$podeCancelarTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosCancelar)) > 0;
+$tarefaJaCancelada = ($statusAtual ?? '') === 'cancelada';
+
 $stateOptions = [
     'AC' => 'Acre',
     'AL' => 'Alagoas',
@@ -553,6 +569,12 @@ $stateOptions = [
             <button class="btn btn-secondary" id="voltar-btn">Voltar</button>
             <?php if ($errorMessage === ''): ?>
                 <button class="btn btn-primary" id="salvar-btn" type="button" disabled>Salvar</button>
+                <?php if ($podeCancelarTarefa && !$tarefaJaCancelada): ?>
+                    <button class="btn btn-secondary-outline" id="cancelar-tarefa-btn" type="button" title="Alterar status da tarefa para Cancelada (não exclui dados)">Cancelar tarefa</button>
+                <?php endif; ?>
+                <?php if ($podeExcluirTarefa): ?>
+                    <button class="btn btn-danger" id="excluir-tarefa-btn" type="button" title="Excluir esta tarefa e todas as subtarefas">Excluir tarefa</button>
+                <?php endif; ?>
             <?php endif; ?>
         </div>
     </div>
@@ -768,6 +790,58 @@ $stateOptions = [
                 if (btnRefreshSubtarefas) {
                     btnRefreshSubtarefas.addEventListener('click', () => {
                         window.location.reload();
+                    });
+                }
+
+                const btnCancelarTarefa = document.getElementById('cancelar-tarefa-btn');
+                if (btnCancelarTarefa && window.__currentCartaId) {
+                    btnCancelarTarefa.addEventListener('click', async () => {
+                        if (!confirm('Deseja cancelar esta tarefa? O status será alterado para "Cancelada". A tarefa e as subtarefas permanecerão no sistema.')) {
+                            return;
+                        }
+                        btnCancelarTarefa.disabled = true;
+                        try {
+                            const res = await fetch('/api/cartorio-cartas-expedidas/cancel.php', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ id: window.__currentCartaId })
+                            });
+                            const data = await res.json().catch(() => ({}));
+                            if (res.ok && data.success) {
+                                window.location.reload();
+                                return;
+                            }
+                            alert(data.error || 'Erro ao cancelar a tarefa.');
+                        } catch (e) {
+                            alert('Erro de conexão ao cancelar.');
+                        }
+                        btnCancelarTarefa.disabled = false;
+                    });
+                }
+
+                const btnExcluirTarefa = document.getElementById('excluir-tarefa-btn');
+                if (btnExcluirTarefa && window.__currentCartaId) {
+                    btnExcluirTarefa.addEventListener('click', async () => {
+                        if (!confirm('Tem certeza que deseja excluir esta tarefa e todas as subtarefas? Esta ação não pode ser desfeita.')) {
+                            return;
+                        }
+                        btnExcluirTarefa.disabled = true;
+                        try {
+                            const res = await fetch('/api/cartorio-cartas-expedidas/delete.php', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ id: window.__currentCartaId })
+                            });
+                            const data = await res.json().catch(() => ({}));
+                            if (res.ok && data.deleted) {
+                                window.location.href = '/frame.php?page=cartasexpedidas';
+                                return;
+                            }
+                            alert(data.error || 'Erro ao excluir a tarefa.');
+                        } catch (e) {
+                            alert('Erro de conexão ao excluir.');
+                        }
+                        btnExcluirTarefa.disabled = false;
                     });
                 }
             })();

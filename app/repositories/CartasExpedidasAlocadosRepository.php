@@ -127,4 +127,20 @@ final class CartasExpedidasAlocadosRepository
         }
         return $rows;
     }
+
+    /**
+     * Remove todos os alocados da carta (usado ao excluir a tarefa principal).
+     */
+    public function deleteByCartaId(string $cartaId): void
+    {
+        $cartaId = trim($cartaId);
+        if ($cartaId === '') {
+            return;
+        }
+        $stmt = $this->connection->prepare(
+            sprintf('DELETE FROM `%s` WHERE `carta_expedida_id` = :carta_id', $this->table)
+        );
+        $stmt->bindValue(':carta_id', $cartaId);
+        $stmt->execute();
+    }
 }

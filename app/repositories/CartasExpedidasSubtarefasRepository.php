@@ -92,6 +92,22 @@ final class CartasExpedidasSubtarefasRepository
         return $rows;
     }
 
+    /**
+     * Remove todas as subtarefas da carta (usado ao excluir a tarefa principal).
+     */
+    public function deleteByCartaId(string $cartaId): void
+    {
+        $cartaId = trim($cartaId);
+        if ($cartaId === '') {
+            return;
+        }
+        $statement = $this->connection->prepare(
+            sprintf('DELETE FROM `%s` WHERE `carta_expedida_id` = :carta_id', $this->table)
+        );
+        $statement->bindValue(':carta_id', $cartaId);
+        $statement->execute();
+    }
+
     public function findByCartaIdEOrdem(string $cartaId, int $ordem): ?array
     {
         $cartaId = trim($cartaId);

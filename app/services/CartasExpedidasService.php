@@ -468,12 +468,25 @@ final class CartasExpedidasService
         return $this->repository->update($id, $payload);
     }
 
+    /**
+     * Altera apenas o status da tarefa principal para "cancelada". Não exclui tarefa nem subtarefas.
+     */
+    public function cancel(string $id): bool
+    {
+        if (trim($id) === '') {
+            throw new InvalidArgumentException('O identificador informado é inválido.');
+        }
+        return $this->repository->update($id, ['status' => 'cancelada']);
+    }
+
     public function delete(string $id): bool
     {
         if (trim($id) === '') {
             throw new InvalidArgumentException('O identificador informado é inválido.');
         }
 
+        $this->subtarefasRepository->deleteByCartaId($id);
+        $this->alocadosRepository->deleteByCartaId($id);
         return $this->repository->delete($id);
     }
 
