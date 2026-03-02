@@ -8,6 +8,9 @@ final class CartasExpedidasAlocadosRepository
     private PDO $connection;
     private string $table;
 
+    /** Collation única para evitar "Illegal mix of collations" em JOIN com usuarios (ex.: common). */
+    private const COLLATION = 'utf8mb4_unicode_ci';
+
     public function __construct(PDO $connection, string $table = 'cartas_expedidas_alocados')
     {
         $this->connection = $connection;
@@ -92,9 +95,12 @@ final class CartasExpedidasAlocadosRepository
             return [];
         }
 
+        $coll = self::COLLATION;
         $sql = sprintf(
-            'SELECT a.`id`, a.`carta_expedida_id`, a.`usuario_id`, a.`created_at`, u.`nome`, u.`sobrenome` FROM `%s` a LEFT JOIN `usuarios` u ON u.`id_usuario` = a.`usuario_id` WHERE a.`carta_expedida_id` = :carta_id ORDER BY a.`created_at` ASC',
-            $this->table
+            'SELECT a.`id`, a.`carta_expedida_id`, a.`usuario_id`, a.`created_at`, u.`nome`, u.`sobrenome` FROM `%s` a LEFT JOIN `usuarios` u ON u.`id_usuario` COLLATE %s = a.`usuario_id` COLLATE %s WHERE a.`carta_expedida_id` = :carta_id ORDER BY a.`created_at` ASC',
+            $this->table,
+            $coll,
+            $coll
         );
         $stmt = $this->connection->prepare($sql);
         $stmt->bindValue(':carta_id', $cartaId);

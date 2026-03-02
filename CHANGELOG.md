@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0176
+
+**Data:** 2026-03-02 17:34:14 | **Commit:** `5eafedc` | **Tipo:** `patch`
+
+- Fix: correção de collate
+
 ## V. 1.02.0175
 
 **Data:** 2026-03-02 17:32:09 | **Commit:** `332aaa1` | **Tipo:** `patch`
@@ -2094,6 +2100,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
