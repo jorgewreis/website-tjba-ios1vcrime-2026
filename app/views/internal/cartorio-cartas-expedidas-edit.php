@@ -175,7 +175,7 @@ $podeExcluirTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosExc
 /** Perfis que podem cancelar a tarefa (apenas altera status para Cancelada): servidor, admin, diretora, magistrada. */
 $perfisPermitidosCancelar = ['SERVIDOR', 'ADMIN', 'DIRETORA', 'MAGISTRADA'];
 $podeCancelarTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosCancelar)) > 0;
-$tarefaJaCancelada = ($statusAtual ?? '') === 'cancelada';
+$tarefaFinalizadaOuCancelada = in_array($statusAtual ?? '', ['cancelada', 'concluída'], true);
 
 $stateOptions = [
     'AC' => 'Acre',
@@ -569,7 +569,7 @@ $stateOptions = [
             <button class="btn btn-secondary" id="voltar-btn">Voltar</button>
             <?php if ($errorMessage === ''): ?>
                 <button class="btn btn-primary" id="salvar-btn" type="button" disabled>Salvar</button>
-                <?php if ($podeCancelarTarefa && !$tarefaJaCancelada): ?>
+                <?php if ($podeCancelarTarefa && !$tarefaFinalizadaOuCancelada): ?>
                     <button class="btn btn-secondary-outline" id="cancelar-tarefa-btn" type="button" title="Alterar status da tarefa para Cancelada (não exclui dados)">Cancelar tarefa</button>
                 <?php endif; ?>
                 <?php if ($podeExcluirTarefa): ?>
