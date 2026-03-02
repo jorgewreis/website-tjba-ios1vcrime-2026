@@ -206,6 +206,36 @@ final class CartasExpedidasService
             throw new InvalidArgumentException('Carta da subtarefa não identificada.');
         }
 
+        // Quando a subtarefa for de "Aguardando informações" (ordem 5),
+        // persiste os dados de processo/vara destino diretamente em cartas_expedidas.
+        if ($ordem === 5 && $dadosJson !== null && $dadosJson !== '') {
+            $dadosArray = json_decode($dadosJson, true);
+            if (is_array($dadosArray)) {
+                $numeroDestino = trim((string) ($dadosArray['numero_processo_destino'] ?? ''));
+                $varaDestinoNome = trim((string) ($dadosArray['vara_destino'] ?? ''));
+                if ($numeroDestino !== '' || $varaDestinoNome !== '') {
+                    $cartaRow = $this->repository->find($cartaId);
+                    if ($cartaRow !== null) {
+                        $update = [];
+                        if ($numeroDestino !== '') {
+                            $update['numero_processo_destino'] = $numeroDestino;
+                        }
+                        if ($varaDestinoNome !== '') {
+                            $comarcaDestinoId = (string) ($cartaRow['comarca_destino_id'] ?? '');
+                            if ($comarcaDestinoId !== '') {
+                                $varaId = $this->varasRepository->ensureVara($comarcaDestinoId, $varaDestinoNome, null);
+                                $update['vara_destino_id'] = $varaId;
+                                $update['vara_destino_nome'] = $varaDestinoNome;
+                            }
+                        }
+                        if (!empty($update)) {
+                            $this->repository->update($cartaId, $update);
+                        }
+                    }
+                }
+            }
+        }
+
         // Corrige cartas antigas para manter as ordens 5 e 6 sincronizadas.
         if ($ordem >= 5) {
             $this->subtarefasRepository->ensureInformacoesDevolucaoPair($cartaId);

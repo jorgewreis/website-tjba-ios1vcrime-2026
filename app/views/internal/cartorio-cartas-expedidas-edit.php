@@ -467,9 +467,21 @@ $stateOptions = [
                             $majorTexto = ($numeroDestino !== '' && $varaDestino !== '') ? $numeroDestino . ' - ' . $varaDestino : ($numeroDestino ?: $varaDestino ?: '—');
                             $infoLinha = 'Documento juntado por ' . $nomeExibir . ' em ' . $dataMovimento;
                         } elseif ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6) {
-                            $minorTexto = 'Carta devolvida com status';
                             $statusDevolucao = trim((string) ($dadosEspecificos['resultado_devolucao'] ?? $dadosEspecificos['status_devolucao'] ?? ''));
-                            $majorTexto = $statusDevolucao !== '' ? $statusDevolucao : '—';
+                            if ($statusDevolucao === 'cumprida_positivamente') {
+                                $minorTexto = 'Carta devolvida cumprida positivamente';
+                            } elseif ($statusDevolucao === 'cumprida_parcialmente') {
+                                $minorTexto = 'Carta devolvida cumprida parcialmente';
+                            } elseif ($statusDevolucao === 'cumprida_negativamente') {
+                                $minorTexto = 'Carta devolvida cumprida negativamente';
+                            } elseif ($statusDevolucao === 'devolvida_sem_cumprimento') {
+                                $minorTexto = 'Carta devolvida sem cumprimento';
+                            } elseif ($statusDevolucao !== '') {
+                                $minorTexto = 'Carta devolvida com status ' . $statusDevolucao;
+                            } else {
+                                $minorTexto = 'Carta devolvida';
+                            }
+                            $majorTexto = '';
                             $infoLinha = 'Carta juntada por ' . $nomeExibir . ' em ' . $dataMovimento;
                         } else {
                             $minorTexto = $label;
