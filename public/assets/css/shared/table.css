@@ -161,7 +161,8 @@
     background-color: var(--color-gray-500);
     margin: 0 10px;
 }
-.timeline .circle.finished:not(:last-child)::after {
+
+.timeline .row:not(:last-child) .circle.finished::after {
     content: '';
     position: absolute;
     top: 38px;
@@ -171,6 +172,8 @@
     background-color: var(--color-gray-300);
     transform: translateY(-50%) rotate(0.25turn);
 }
+
+
 .timeline .circle.current {
     background-color: var(--warning-color);
 }
