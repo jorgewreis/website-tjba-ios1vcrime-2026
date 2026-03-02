@@ -8,6 +8,8 @@ require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../repositories/TribunaisRepository.php';
 require_once __DIR__ . '/../repositories/ComarcasRepository.php';
 require_once __DIR__ . '/../repositories/VarasRepository.php';
+require_once __DIR__ . '/../repositories/CartasExpedidasAlocadosRepository.php';
+require_once __DIR__ . '/../repositories/AlocacoesRegrasRepository.php';
 require_once __DIR__ . '/DataJudService.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
@@ -22,7 +24,11 @@ final class CartasExpedidasService
     private TribunaisRepository $tribunaisRepository;
     private ComarcasRepository $comarcasRepository;
     private VarasRepository $varasRepository;
+    private CartasExpedidasAlocadosRepository $alocadosRepository;
+    private AlocacoesRegrasRepository $alocacoesRegrasRepository;
     private ?DataJudService $dataJudService;
+
+    private const REGRA_ALOCAR_CARTAS = 'ALLOCATE-CARTASEXPEDIDAS';
 
     public function __construct(PDO $connection, ?DataJudService $dataJudService = null)
     {
@@ -34,6 +40,8 @@ final class CartasExpedidasService
         $this->tribunaisRepository = new TribunaisRepository($connection);
         $this->comarcasRepository = new ComarcasRepository($connection);
         $this->varasRepository = new VarasRepository($connection);
+        $this->alocadosRepository = new CartasExpedidasAlocadosRepository($connection);
+        $this->alocacoesRegrasRepository = new AlocacoesRegrasRepository($connection);
         $this->dataJudService = $dataJudService;
     }
 
@@ -46,9 +54,21 @@ final class CartasExpedidasService
                 $this->subtarefasRepository->ensureInformacoesDevolucaoPair($idCarta);
                 $rows[$i]['Subtarefas'] = $this->subtarefasRepository->findPendenteOuEmAndamentoByCartaId($idCarta);
                 $rows[$i]['SubtarefasAll'] = $this->subtarefasRepository->findByCartaId($idCarta);
+                $alocadosRaw = $this->alocadosRepository->findByCartaId($idCarta);
+                $rows[$i]['Alocados'] = [];
+                $max = 5;
+                foreach (array_slice($alocadosRaw, 0, $max) as $a) {
+                    $rows[$i]['Alocados'][] = [
+                        'iniciais' => $a['iniciais'] ?? '—',
+                        'nome_completo' => $a['nome_completo'] ?? '',
+                        'usuario_id' => $a['usuario_id'] ?? '',
+                        'tipo' => 'rule',
+                    ];
+                }
             } else {
                 $rows[$i]['Subtarefas'] = [];
                 $rows[$i]['SubtarefasAll'] = [];
+                $rows[$i]['Alocados'] = [];
             }
         }
         return [
@@ -180,6 +200,15 @@ final class CartasExpedidasService
         ];
 
         $this->repository->insert($row);
+
+        // Regra: sempre que existir regra de alocação para a tarefa, alocar o usuário da regra no momento da criação.
+        $regra = $this->alocacoesRegrasRepository->findByRegra(self::REGRA_ALOCAR_CARTAS);
+        if ($regra !== null) {
+            $usuarioId = trim((string) ($regra['usuario_id'] ?? ''));
+            if ($usuarioId !== '') {
+                $this->alocadosRepository->addAlocado($idCarta, $usuarioId);
+            }
+        }
 
         $this->subtarefasRepository->create(
             $idCarta,

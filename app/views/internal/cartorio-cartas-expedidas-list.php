@@ -292,7 +292,22 @@ if ($totalPages > 0) {
                         <div class="col button-table button-edit" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" title="Editar">
                             <i class="fi fi-rr-file-edit"></i>
                         </div>
-                        <div class="row allocate-users"></div>
+                        <div class="row allocate-users">
+                            <?php
+                            $alocados = $row['Alocados'] ?? [];
+                            if (count($alocados) === 0) {
+                                echo '—';
+                            } else {
+                                foreach ($alocados as $alocado) {
+                                    $tipo = $alocado['tipo'] ?? 'rule';
+                                    $iniciais = $alocado['iniciais'] ?? '—';
+                                    $nomeCompleto = $alocado['nome_completo'] ?? '';
+                                    $title = $nomeCompleto !== '' ? 'Envio de carta alocado para: ' . $nomeCompleto : $iniciais;
+                                    ?><span class="user-allocate <?php echo htmlspecialchars($tipo, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($title, ENT_QUOTES); ?>"><?php echo htmlspecialchars($iniciais, ENT_QUOTES); ?></span><?php
+                                }
+                            }
+                            ?>
+                        </div>
                         <?php
                         $st = $row['Status'] ?? '';
                         $allSt = $row['SubtarefasAll'] ?? [];
