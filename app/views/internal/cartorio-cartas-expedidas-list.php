@@ -302,7 +302,14 @@ if ($totalPages > 0) {
                                     $tipo = $alocado['tipo'] ?? 'specific';
                                     $iniciais = $alocado['iniciais'] ?? '—';
                                     $nomeCompleto = $alocado['nome_completo'] ?? '';
-                                    $title = $nomeCompleto !== '' ? 'Envio de carta alocado para: ' . $nomeCompleto : $iniciais;
+                                    $userLabel = $nomeCompleto !== '' ? $nomeCompleto : $iniciais;
+                                    if ($tipo === 'rule') {
+                                        $title = 'Envio de carta alocado para: ' . $userLabel;
+                                    } elseif ($tipo === 'all') {
+                                        $title = 'Usuário alocado para a tarefa: ' . $userLabel;
+                                    } else {
+                                        $title = 'Alocação voluntária: ' . $userLabel;
+                                    }
                                     $classeTipo = in_array($tipo, ['rule', 'specific', 'all'], true) ? ' ' . $tipo : '';
                                     ?><span class="user-allocate<?php echo $classeTipo; ?>" title="<?php echo htmlspecialchars($title, ENT_QUOTES); ?>"><?php echo htmlspecialchars($iniciais, ENT_QUOTES); ?></span><?php
                                 }
