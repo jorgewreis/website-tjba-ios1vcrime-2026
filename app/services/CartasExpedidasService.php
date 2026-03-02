@@ -235,6 +235,18 @@ final class CartasExpedidasService
             throw new InvalidArgumentException('Carta da subtarefa não identificada.');
         }
 
+        // Sempre que um usuário realizar alterações na tarefa ou subtarefas, alocá-lo na tarefa principal (evita duplicata em addAlocado).
+        $usuarioIdMovimentacao = null;
+        if ($dadosJson !== null && $dadosJson !== '') {
+            $dadosArray = json_decode($dadosJson, true);
+            if (is_array($dadosArray)) {
+                $usuarioIdMovimentacao = trim((string) ($dadosArray['usuario_id'] ?? ''));
+            }
+        }
+        if ($usuarioIdMovimentacao !== '') {
+            $this->alocadosRepository->addAlocado($cartaId, $usuarioIdMovimentacao);
+        }
+
         // Quando a subtarefa for de "Aguardando informações" (ordem 5),
         // persiste os dados de processo/vara destino diretamente em cartas_expedidas.
         if ($ordem === 5 && $dadosJson !== null && $dadosJson !== '') {
@@ -429,6 +441,12 @@ final class CartasExpedidasService
             throw new InvalidArgumentException('O identificador informado é inválido.');
         }
 
+        $usuarioId = trim((string) ($payload['usuario_id'] ?? ''));
+        unset($payload['usuario_id']);
+        if ($usuarioId !== '') {
+            $this->alocadosRepository->addAlocado($id, $usuarioId);
+        }
+
         return $this->repository->update($id, $payload);
     }
 
@@ -449,9 +467,10 @@ final class CartasExpedidasService
     /**
      * Cria a primeira subtarefa (ordem 1 - Assinar carta expedida) quando a carta ainda não possui nenhuma.
      *
+     * @param string|null $usuarioId Usuário que está criando; se informado, é alocado na tarefa principal.
      * @throws InvalidArgumentException Se a carta não existir ou já possuir subtarefas.
      */
-    public function criarPrimeiraSubtarefa(string $cartaId): void
+    public function criarPrimeiraSubtarefa(string $cartaId, ?string $usuarioId = null): void
     {
         $cartaId = trim($cartaId);
         if ($cartaId === '') {
@@ -472,5 +491,8 @@ final class CartasExpedidasService
             null
         );
         $this->repository->update($cartaId, ['status' => 'pendente']);
+        if ($usuarioId !== null && trim($usuarioId) !== '') {
+            $this->alocadosRepository->addAlocado($cartaId, trim($usuarioId));
+        }
     }
 }

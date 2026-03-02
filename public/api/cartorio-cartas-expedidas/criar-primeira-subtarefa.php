@@ -5,6 +5,7 @@ header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
+require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/CartasExpedidasService.php';
 
 $connection = Conection::getInstance()->getConnection();
@@ -16,6 +17,7 @@ if (!is_array($parsed)) {
 }
 
 $cartaId = trim((string) ($parsed['carta_id'] ?? $parsed['cartaId'] ?? $_GET['carta_id'] ?? ''));
+$usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
 
 if ($cartaId === '') {
     http_response_code(400);
@@ -25,7 +27,7 @@ if ($cartaId === '') {
 
 try {
     $service = new CartasExpedidasService($connection);
-    $service->criarPrimeiraSubtarefa($cartaId);
+    $service->criarPrimeiraSubtarefa($cartaId, $usuarioId !== '' ? $usuarioId : null);
     echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);
 } catch (\InvalidArgumentException $exception) {
     http_response_code(400);
