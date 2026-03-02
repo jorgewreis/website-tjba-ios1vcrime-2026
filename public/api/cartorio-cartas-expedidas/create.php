@@ -5,6 +5,7 @@ header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
+require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/DataJudService.php';
 require_once $basePath . '/app/services/CartasExpedidasService.php';
 
@@ -16,6 +17,11 @@ $payload = file_get_contents('php://input') ?: '';
 $parsed = json_decode($payload, true);
 if (!is_array($parsed)) {
     $parsed = $_POST;
+}
+
+$usuarioCadastroId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
+if ($usuarioCadastroId !== '') {
+    $parsed['usuario_cadastro_id'] = $usuarioCadastroId;
 }
 
 try {

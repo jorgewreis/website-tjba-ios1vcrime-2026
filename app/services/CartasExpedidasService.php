@@ -201,18 +201,25 @@ final class CartasExpedidasService
 
         $this->repository->insert($row);
 
-        // 1) Alocação por regra no banco: usuário da regra ALLOCATE-CARTASEXPEDIDAS (tipo 'rule').
+        $usuarioCadastroId = trim((string) ($payload['usuario_cadastro_id'] ?? ''));
+
+        // 1) Quem cadastrou a carta é alocado com tipo 'all' (usuário principal da tarefa).
+        if ($usuarioCadastroId !== '') {
+            $this->alocadosRepository->addAlocado($idCarta, $usuarioCadastroId, CartasExpedidasAlocadosRepository::TIPO_ALL);
+        }
+
+        // 2) Alocação por regra (tipo 'rule'): omitir se for o mesmo usuário que cadastrou.
         $regra = $this->alocacoesRegrasRepository->findByRegra(self::REGRA_ALOCAR_CARTAS);
         if ($regra !== null) {
             $usuarioIdRegra = trim((string) ($regra['usuario_id'] ?? ''));
-            if ($usuarioIdRegra !== '') {
+            if ($usuarioIdRegra !== '' && $usuarioIdRegra !== $usuarioCadastroId) {
                 $this->alocadosRepository->addAlocado($idCarta, $usuarioIdRegra, CartasExpedidasAlocadosRepository::TIPO_RULE);
             }
         }
 
-        // 2) Alocação definida no cadastro como usuário principal (tipo 'all'), se informado.
+        // 3) Usuário principal explícito do formulário (tipo 'all'), se informado e diferente do cadastro.
         $usuarioPrincipalId = trim((string) ($payload['usuario_principal_id'] ?? $payload['usuario_alocado_principal_id'] ?? ''));
-        if ($usuarioPrincipalId !== '') {
+        if ($usuarioPrincipalId !== '' && $usuarioPrincipalId !== $usuarioCadastroId) {
             $this->alocadosRepository->addAlocado($idCarta, $usuarioPrincipalId, CartasExpedidasAlocadosRepository::TIPO_ALL);
         }
 
