@@ -299,11 +299,12 @@ if ($totalPages > 0) {
                                 echo '—';
                             } else {
                                 foreach ($alocados as $alocado) {
-                                    $tipo = $alocado['tipo'] ?? 'rule';
+                                    $tipo = $alocado['tipo'] ?? 'specific';
                                     $iniciais = $alocado['iniciais'] ?? '—';
                                     $nomeCompleto = $alocado['nome_completo'] ?? '';
                                     $title = $nomeCompleto !== '' ? 'Envio de carta alocado para: ' . $nomeCompleto : $iniciais;
-                                    ?><span class="user-allocate <?php echo htmlspecialchars($tipo, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($title, ENT_QUOTES); ?>"><?php echo htmlspecialchars($iniciais, ENT_QUOTES); ?></span><?php
+                                    $classeTipo = in_array($tipo, ['rule', 'specific', 'all'], true) ? ' ' . $tipo : '';
+                                    ?><span class="user-allocate<?php echo $classeTipo; ?>" title="<?php echo htmlspecialchars($title, ENT_QUOTES); ?>"><?php echo htmlspecialchars($iniciais, ENT_QUOTES); ?></span><?php
                                 }
                             }
                             ?>

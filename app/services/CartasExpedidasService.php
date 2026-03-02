@@ -62,7 +62,7 @@ final class CartasExpedidasService
                         'iniciais' => $a['iniciais'] ?? '—',
                         'nome_completo' => $a['nome_completo'] ?? '',
                         'usuario_id' => $a['usuario_id'] ?? '',
-                        'tipo' => 'rule',
+                        'tipo' => $this->normalizeTipoAlocado($a['tipo'] ?? ''),
                     ];
                 }
             } else {
@@ -201,13 +201,19 @@ final class CartasExpedidasService
 
         $this->repository->insert($row);
 
-        // Regra: sempre que existir regra de alocação para a tarefa, alocar o usuário da regra no momento da criação.
+        // 1) Alocação por regra no banco: usuário da regra ALLOCATE-CARTASEXPEDIDAS (tipo 'rule').
         $regra = $this->alocacoesRegrasRepository->findByRegra(self::REGRA_ALOCAR_CARTAS);
         if ($regra !== null) {
-            $usuarioId = trim((string) ($regra['usuario_id'] ?? ''));
-            if ($usuarioId !== '') {
-                $this->alocadosRepository->addAlocado($idCarta, $usuarioId);
+            $usuarioIdRegra = trim((string) ($regra['usuario_id'] ?? ''));
+            if ($usuarioIdRegra !== '') {
+                $this->alocadosRepository->addAlocado($idCarta, $usuarioIdRegra, CartasExpedidasAlocadosRepository::TIPO_RULE);
             }
+        }
+
+        // 2) Alocação definida no cadastro como usuário principal (tipo 'all'), se informado.
+        $usuarioPrincipalId = trim((string) ($payload['usuario_principal_id'] ?? $payload['usuario_alocado_principal_id'] ?? ''));
+        if ($usuarioPrincipalId !== '') {
+            $this->alocadosRepository->addAlocado($idCarta, $usuarioPrincipalId, CartasExpedidasAlocadosRepository::TIPO_ALL);
         }
 
         $this->subtarefasRepository->create(
@@ -338,6 +344,18 @@ final class CartasExpedidasService
         } else {
             $this->repository->update($cartaId, ['status' => 'concluída']);
         }
+    }
+
+    private function normalizeTipoAlocado(string $tipo): string
+    {
+        $t = trim($tipo);
+        if ($t === CartasExpedidasAlocadosRepository::TIPO_RULE || $t === 'rule') {
+            return 'rule';
+        }
+        if ($t === CartasExpedidasAlocadosRepository::TIPO_ALL || $t === 'all') {
+            return 'all';
+        }
+        return 'specific';
     }
 
     private function normalizeTribunalSigla(string $sigla): string

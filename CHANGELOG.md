@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0179
+
+**Data:** 2026-03-02 17:57:54 | **Commit:** `b2c1f2f` | **Tipo:** `patch`
+
+- Fix: correção de alocação por tipo
+
 ## V. 1.02.0178
 
 **Data:** 2026-03-02 17:47:17 | **Commit:** `bf3841a` | **Tipo:** `patch`
@@ -2112,6 +2118,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

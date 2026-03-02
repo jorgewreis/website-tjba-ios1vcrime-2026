@@ -37,11 +37,19 @@ final class CartasExpedidasAlocadosRepository
         return mb_strtoupper(mb_strlen($two) === 2 ? $two : $nome);
     }
 
+    /** Tipo: alocação por regra definida no banco (auto na criação). */
+    public const TIPO_RULE = 'rule';
+    /** Tipo: alocação por alteração de subtarefas ou dados da tarefa principal. */
+    public const TIPO_SPECIFIC = 'specific';
+    /** Tipo: alocação definida no cadastro como usuário principal da tarefa e subtarefas. */
+    public const TIPO_ALL = 'all';
+
     /**
      * Adiciona um alocado à carta. Evita duplicata (mesmo usuario na mesma carta).
      * Limite de 5 por carta deve ser garantido pelo chamador.
+     * @param string $tipo 'rule' | 'specific' | 'all'
      */
-    public function addAlocado(string $cartaId, string $usuarioId): string
+    public function addAlocado(string $cartaId, string $usuarioId, string $tipo = self::TIPO_SPECIFIC): string
     {
         $cartaId = trim($cartaId);
         $usuarioId = trim($usuarioId);
@@ -71,14 +79,17 @@ final class CartasExpedidasAlocadosRepository
             30
         );
 
+        $tipoVal = $tipo === self::TIPO_RULE ? self::TIPO_RULE : ($tipo === self::TIPO_ALL ? self::TIPO_ALL : self::TIPO_SPECIFIC);
+
         $sql = sprintf(
-            'INSERT INTO `%s` (`id`, `carta_expedida_id`, `usuario_id`, `created_at`) VALUES (:id, :carta_expedida_id, :usuario_id, NOW())',
+            'INSERT INTO `%s` (`id`, `carta_expedida_id`, `usuario_id`, `tipo`, `created_at`) VALUES (:id, :carta_expedida_id, :usuario_id, :tipo, NOW())',
             $this->table
         );
         $stmt = $this->connection->prepare($sql);
         $stmt->bindValue(':id', $id);
         $stmt->bindValue(':carta_expedida_id', $cartaId);
         $stmt->bindValue(':usuario_id', $usuarioId);
+        $stmt->bindValue(':tipo', $tipoVal);
         $stmt->execute();
 
         return $id;
@@ -97,7 +108,7 @@ final class CartasExpedidasAlocadosRepository
 
         $coll = self::COLLATION;
         $sql = sprintf(
-            'SELECT a.`id`, a.`carta_expedida_id`, a.`usuario_id`, a.`created_at`, u.`nome`, u.`sobrenome` FROM `%s` a LEFT JOIN `usuarios` u ON u.`id_usuario` COLLATE %s = a.`usuario_id` COLLATE %s WHERE a.`carta_expedida_id` = :carta_id ORDER BY a.`created_at` ASC',
+            'SELECT a.`id`, a.`carta_expedida_id`, a.`usuario_id`, a.`tipo`, a.`created_at`, u.`nome`, u.`sobrenome` FROM `%s` a LEFT JOIN `usuarios` u ON u.`id_usuario` COLLATE %s = a.`usuario_id` COLLATE %s WHERE a.`carta_expedida_id` = :carta_id ORDER BY a.`created_at` ASC',
             $this->table,
             $coll,
             $coll
