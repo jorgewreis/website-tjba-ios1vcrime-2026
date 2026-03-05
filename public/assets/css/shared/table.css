@@ -142,6 +142,9 @@
 
 .subtask-date{    
     width: 360px;
+    text-align: end;
+    align-items: flex-end !important;
+    margin-right: 15px !important;
 }
 .subtask-date .minor-info{
     margin: 0;
@@ -416,5 +419,9 @@
     .detalhes-info {
         width: 25%;
     }    
+
+    .subtask-date{    
+        width: 520px;
+    }
 
 }

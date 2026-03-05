@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0185
+
+**Data:** 2026-03-05 18:53:33 | **Commit:** `eb2ce95` | **Tipo:** `patch`
+
+- Feat: nova página completa criada - Cartas Recebidas
+
 ## V. 1.02.0184
 
 **Data:** 2026-03-02 18:39:07 | **Commit:** `e8f1ed8` | **Tipo:** `patch`
@@ -2148,6 +2154,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

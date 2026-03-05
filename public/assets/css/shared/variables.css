@@ -27,7 +27,7 @@
     --warning-color-hover: #e0a800;
     --warning-color-active: #d39e00;
     --warning-color-disabled: #c0c0c0;
-    --warning-color-bg-light: #fff9d3;
+    --warning-color-bg-light: #fffbe1;
 
     --info-color: #11ceeb;
     --info-color-hover: #0eb8d9;
@@ -39,7 +39,7 @@
     --success-color-hover: #27ac6e; 
     --success-color-active: #20915c;
     --success-color-disabled: #c0c0c0;
-    --success-color-bg-light: #e3fff4;
+    --success-color-bg-light: #ecf9f4;
 
     --color-gray-000: #ffffff;
     --color-gray-100: #f8f9fa;
