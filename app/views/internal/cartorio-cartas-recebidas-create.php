@@ -5,6 +5,59 @@ require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
 
 $connection = Conection::getInstance()->getConnection();
 
+function onlyDigits(string $value): string
+{
+    return preg_replace('/\D+/', '', $value);
+}
+
+function modulo97(string $value): int
+{
+    $resto = 0;
+    $length = strlen($value);
+    for ($i = 0; $i < $length; $i++) {
+        $digit = ord($value[$i]) - 48;
+        if ($digit < 0 || $digit > 9) {
+            continue;
+        }
+        $resto = ($resto * 10 + $digit) % 97;
+    }
+    return $resto;
+}
+
+function calcularDigitoVerificadorCNJ(string $valor): ?string
+{
+    $digits = onlyDigits($valor);
+    if (strlen($digits) !== 20) {
+        return null;
+    }
+    $base = substr($digits, 0, 7) . substr($digits, 9);
+    $resto = modulo97($base . '00');
+    $dvCalc = 98 - $resto;
+    return str_pad((string) $dvCalc, 2, '0', STR_PAD_LEFT);
+}
+
+function validarCNJ(string $valor): bool
+{
+    $digits = onlyDigits($valor);
+    if (strlen($digits) !== 20) {
+        return false;
+    }
+    $dv = substr($digits, 7, 2);
+    $dvCalc = calcularDigitoVerificadorCNJ($digits);
+    if ($dvCalc === null) {
+        return false;
+    }
+    return $dv === $dvCalc;
+}
+
+$cnjError = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $submittedProcesso = trim((string) ($_POST['processo'] ?? $_POST['filter-processo'] ?? ''));
+    if ($submittedProcesso !== '' && !validarCNJ($submittedProcesso)) {
+        $cnjError = 'Número do processo inválido. Verifique se está completo e correto.';
+    }
+}
+
 $currentUserName = '';
 $currentUserId = $_SESSION['id_usuario'] ?? null;
 if ($currentUserId !== null && $currentUserId !== '') {
@@ -72,50 +125,57 @@ try {
         <div class="row table header">Informações obrigatórias</div>
         <div class="row filter">
             <div class="col filter">
-                <label for="filter-processo">Número do processo de origem</label>
-                <input type="text" class="width-md height-md" id="filter-processo" placeholder="Número do processo (20 dígitos ou livre)" required>
+                <label for="filter-processo">Número do processo</label>
+                <input type="text" class="width-md height-md" id="filter-processo" placeholder="Digite o número do processo" required>
             </div>
-            <div class="col filter">
-                <label for="filter-data-recebimento">Data de recebimento</label>
-                <input type="date" class="width-md height-md" id="filter-data-recebimento" placeholder="Data de recebimento">
-            </div>
-        </div>
-        <div class="row filter">
             <div class="col filter">
                 <label for="filter-cidade">Cidade de origem</label>
-                <input type="text" class="width-xl height-md" id="filter-cidade" placeholder="Cidade de origem" maxlength="120" required>
+                <input type="text" class="width-xl height-md" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="50" required>
             </div>
             <div class="col filter">
-                <label for="filter-estado">UF de origem</label>
+                <label for="filter-estado">Estado</label>
                 <select class="width-md height-md" id="filter-estado" required>
-                    <option value="AC">AC</option>
-                    <option value="AL">AL</option>
-                    <option value="AP">AP</option>
-                    <option value="AM">AM</option>
-                    <option value="BA">BA</option>
-                    <option value="CE">CE</option>
-                    <option value="DF">DF</option>
-                    <option value="ES">ES</option>
-                    <option value="GO">GO</option>
-                    <option value="MA">MA</option>
-                    <option value="MT">MT</option>
-                    <option value="MS">MS</option>
-                    <option value="MG">MG</option>
-                    <option value="PA">PA</option>
-                    <option value="PB">PB</option>
-                    <option value="PR">PR</option>
-                    <option value="PE">PE</option>
-                    <option value="PI">PI</option>
-                    <option value="RJ">RJ</option>
-                    <option value="RN">RN</option>
-                    <option value="RS">RS</option>
-                    <option value="RO">RO</option>
-                    <option value="RR">RR</option>
-                    <option value="SC">SC</option>
-                    <option value="SP">SP</option>
-                    <option value="SE">SE</option>
-                    <option value="TO">TO</option>
+                    <option value="AC">Acre</option>
+                    <option value="AL">Alagoas</option>
+                    <option value="AP">Amapá</option>
+                    <option value="AM">Amazonas</option>
+                    <option value="BA" selected>Bahia</option>
+                    <option value="CE">Ceará</option>
+                    <option value="DF">Distrito Federal</option>
+                    <option value="ES">Espírito Santo</option>
+                    <option value="GO">Goiás</option>
+                    <option value="MA">Maranhão</option>
+                    <option value="MT">Mato Grosso</option>
+                    <option value="MS">Mato Grosso do Sul</option>
+                    <option value="MG">Minas Gerais</option>
+                    <option value="PA">Pará</option>
+                    <option value="PB">Paraíba</option>
+                    <option value="PR">Paraná</option>
+                    <option value="PE">Pernambuco</option>
+                    <option value="PI">Piauí</option>
+                    <option value="RJ">Rio de Janeiro</option>
+                    <option value="RN">Rio Grande do Norte</option>
+                    <option value="RS">Rio Grande do Sul</option>
+                    <option value="RO">Rondônia</option>
+                    <option value="RR">Roraima</option>
+                    <option value="SC">Santa Catarina</option>
+                    <option value="SP">São Paulo</option>
+                    <option value="SE">Sergipe</option>
+                    <option value="TO">Tocantins</option>
                 </select>
+            </div>
+        </div>
+        <?php if ($cnjError): ?>
+            <div class="row filter">
+                <div class="col">
+                    <label class="status status-cancelled"><?php echo htmlspecialchars($cnjError, ENT_QUOTES); ?></label>
+                </div>
+            </div>
+        <?php endif; ?>
+        <div class="row filter">
+            <div class="col filter">
+                <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe</label>
+                <input type="text" class="width-lg height-md" id="filter-classe" placeholder="Classe processual" required>
             </div>
         </div>
         <div class="row filter">
@@ -143,11 +203,15 @@ try {
                 <textarea class="width-xl height-md" id="filter-observacoes" rows="2" placeholder="Opcional"></textarea>
             </div>
         </div>
+        <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
+        <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
+
         <div class="row info">
             <span>*Conforme regra de alocação, as Cartas Recebidas serão alocadas automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
         </div>
 
         <div class="row buttons">
+            <button class="btn btn-primary-outline" id="alterar-regra-btn" style="display: none;">Alterar regra de alocação</button>
             <button class="btn btn-secondary" id="voltar-btn">Voltar</button>
             <button class="btn btn-primary" id="cadastrar-btn" type="button">Cadastrar</button>
         </div>
@@ -178,10 +242,44 @@ try {
             }
         })();
     </script>
+    <script src="/assets/js/modules/cartorio/cartas-expedidas/cnj.js"></script>
+    <script src="/assets/js/modules/cartorio/cartas-expedidas/datajud-api.js"></script>
+    <script src="/assets/js/modules/cartorio/cartas-expedidas/text-formatter.js"></script>
+    <script>
+        (function () {
+            var PERFIS_ALTERAR_REGRA = ['ADMIN', 'DIRETORA', 'MAGISTRADA'];
+            function hasPermissionToChangeRule(perfis) {
+                if (!Array.isArray(perfis) || perfis.length === 0) return false;
+                var allowed = PERFIS_ALTERAR_REGRA.map(function (p) { return p.toUpperCase(); });
+                return perfis.some(function (perfil) {
+                    var p = (perfil && String(perfil)).toUpperCase().trim();
+                    return allowed.indexOf(p) !== -1;
+                });
+            }
+            window.addEventListener('DOMContentLoaded', function () {
+                var btn = document.getElementById('alterar-regra-btn');
+                if (!btn) return;
+                fetch('/admin/api/getPerfis.php', { credentials: 'same-origin' })
+                    .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+                    .then(function (data) {
+                        var perfis = (data && data.perfis) ? data.perfis : [];
+                        if (hasPermissionToChangeRule(perfis)) {
+                            btn.style.display = '';
+                            btn.addEventListener('click', function () {
+                                window.location.href = '/frame.php?page=cartasrecebidasrules';
+                            });
+                        }
+                    })
+                    .catch(function () { btn.style.display = 'none'; });
+            });
+        })();
+    </script>
     <script>
         (() => {
             const btn = document.getElementById('cadastrar-btn');
             const feedback = document.getElementById('cadastro-feedback');
+            const classeCodigoField = document.getElementById('hidden-classe-codigo');
+            const classeDescricaoField = document.getElementById('hidden-classe-descricao');
             const showFeedback = (message, type = 'success') => {
                 if (!feedback) return;
                 const variant = type === 'error' ? 'status-cancelled' : 'status-finished';
@@ -189,43 +287,85 @@ try {
             };
             const getValue = (id) => document.getElementById(id)?.value?.trim() ?? '';
 
+            const formatCidade = (value) => {
+                if (typeof TextFormatter !== 'undefined' && typeof TextFormatter.formatProperName === 'function') {
+                    return TextFormatter.formatProperName(value, 50);
+                }
+                return value;
+            };
+
+            const cidadeInput = document.getElementById('filter-cidade');
+            const estadoSelect = document.getElementById('filter-estado');
+            if (cidadeInput) {
+                cidadeInput.addEventListener('blur', () => {
+                    cidadeInput.value = formatCidade(cidadeInput.value);
+                    const cidade = cidadeInput.value.trim();
+                    if (cidade.length < 2) return;
+                    fetch('/api/cartorio-cartas-recebidas/buscar-cidade.php?cidade=' + encodeURIComponent(cidade))
+                        .then(r => r.json())
+                        .then(data => {
+                            if (!data.found) return;
+                            if (data.uf && estadoSelect) {
+                                estadoSelect.value = data.uf;
+                            }
+                            const status = (data.status_cidade || '').trim();
+                            if (status.toUpperCase() === 'CCM') {
+                                alert('Comarca com Central de Mandados');
+                                cidadeInput.value = '';
+                            } else if (status.toLowerCase() === 'agregada' && data.nome) {
+                                cidadeInput.value = formatCidade(data.nome);
+                            }
+                        })
+                        .catch(() => {});
+                });
+            }
+
             if (!btn) return;
 
             btn.addEventListener('click', async (e) => {
                 e.preventDefault();
                 if (btn.disabled) return;
 
-                const numeroProcesso = getValue('filter-processo');
-                const cidadeOrigem = getValue('filter-cidade');
+                const processoRaw = getValue('filter-processo');
+                if (processoRaw === '') {
+                    return showFeedback('Informe o número do processo antes de cadastrar.', 'error');
+                }
+                if (typeof window.validarCNJ === 'function') {
+                    const digits = (processoRaw || '').replace(/\D/g, '');
+                    if (digits.length === 20 && !window.validarCNJ(processoRaw)) {
+                        return showFeedback('O número do processo é inválido. Verifique os dígitos e o dígito verificador.', 'error');
+                    }
+                }
+
+                const cidadeOrigem = formatCidade(getValue('filter-cidade'));
                 const ufOrigem = getValue('filter-estado');
                 const finalidade = getValue('filter-tipo');
-                if (numeroProcesso === '') {
-                    return showFeedback('Informe o número do processo de origem.', 'error');
-                }
                 if (cidadeOrigem === '') {
                     return showFeedback('Informe a cidade de origem.', 'error');
                 }
                 if (ufOrigem === '') {
-                    return showFeedback('Informe a UF de origem.', 'error');
+                    return showFeedback('Informe o estado.', 'error');
                 }
                 if (finalidade === '') {
                     return showFeedback('Informe a finalidade.', 'error');
                 }
 
                 const prazo = parseInt(document.getElementById('filter-prazo')?.value ?? '30', 10) || 30;
-                const dataRecebimento = getValue('filter-data-recebimento');
                 const observacoes = getValue('filter-observacoes');
 
                 const payload = {
-                    numero_processo_origem: numeroProcesso,
+                    numero_processo_origem: processoRaw,
                     cidade_origem: cidadeOrigem,
                     uf_origem: ufOrigem,
                     finalidade,
                     prazo_dias: prazo,
                     observacoes,
                 };
-                if (dataRecebimento !== '') {
-                    payload.data_recebimento = dataRecebimento;
+                if (classeCodigoField?.value.trim()) {
+                    payload.classe_codigo = classeCodigoField.value.trim();
+                }
+                if (classeDescricaoField?.value.trim()) {
+                    payload.classe_descricao = classeDescricaoField.value.trim();
                 }
 
                 btn.disabled = true;

@@ -10,18 +10,14 @@ final class CartasRecebidasSubtarefasRepository
 
     public const TIPO_ORDEM_1 = 'conferencia_inicial';
     public const TIPO_ORDEM_2 = 'expedicao_mandado';
-    public const TIPO_ORDEM_3 = 'certificacao';
-    public const TIPO_ORDEM_4 = 'pdf';
-    public const TIPO_ORDEM_5 = 'devolucao_origem';
-    public const TIPO_ORDEM_6 = 'arquivamento';
+    public const TIPO_ORDEM_3 = 'devolucao_origem';
+    public const TIPO_ORDEM_4 = 'arquivamento';
 
     private const ORDEM_POR_TIPO = [
         self::TIPO_ORDEM_1 => 1,
         self::TIPO_ORDEM_2 => 2,
         self::TIPO_ORDEM_3 => 3,
         self::TIPO_ORDEM_4 => 4,
-        self::TIPO_ORDEM_5 => 5,
-        self::TIPO_ORDEM_6 => 6,
     ];
 
     private const STATUS_EM_ANDAMENTO = 'em_andamento';
@@ -38,8 +34,8 @@ final class CartasRecebidasSubtarefasRepository
     {
         $cartaId = trim($cartaId);
         $tipo = trim($tipo);
-        if ($cartaId === '' || $tipo === '' || $ordem < 1 || $ordem > 6) {
-            throw new InvalidArgumentException('carta_recebida_id, tipo e ordem (1-6) são obrigatórios.');
+        if ($cartaId === '' || $tipo === '' || $ordem < 1 || $ordem > 4) {
+            throw new InvalidArgumentException('carta_recebida_id, tipo e ordem (1-4) são obrigatórios.');
         }
         if (!isset(self::ORDEM_POR_TIPO[$tipo]) || self::ORDEM_POR_TIPO[$tipo] !== $ordem) {
             throw new InvalidArgumentException('Tipo e ordem inválidos.');
@@ -108,7 +104,7 @@ final class CartasRecebidasSubtarefasRepository
     public function findByCartaIdEOrdem(string $cartaId, int $ordem): ?array
     {
         $cartaId = trim($cartaId);
-        if ($cartaId === '' || $ordem < 1 || $ordem > 6) {
+        if ($cartaId === '' || $ordem < 1 || $ordem > 4) {
             return null;
         }
 
@@ -131,48 +127,16 @@ final class CartasRecebidasSubtarefasRepository
     }
 
     /**
-     * Retorna as subtarefas a exibir na lista: 1 em andamento OU 2 quando for Devolução e/ou Arquivamento (sempre mostrar ambas juntas quando uma delas estiver pendente/em andamento).
+     * Retorna as subtarefas a exibir na lista: apenas 1 por vez, a que estiver em andamento ou pendente (primeira na ordem).
      */
     public function findPendenteOuEmAndamentoByCartaId(string $cartaId): array
     {
         $all = $this->findByCartaId($cartaId);
-        $emAndamento = [];
-        $ordem5Row = null;
-        $ordem6Row = null;
-        $faseDevolucaoArquivamento = false;
-
         foreach ($all as $row) {
             $status = (string) ($row['status'] ?? '');
-            $ordem = (int) ($row['ordem'] ?? 0);
-            if ($ordem === 5) {
-                $ordem5Row = $row;
-                if ($status === self::STATUS_EM_ANDAMENTO || $status === self::STATUS_PENDENTE) {
-                    $faseDevolucaoArquivamento = true;
-                }
+            if ($status === self::STATUS_EM_ANDAMENTO || $status === self::STATUS_PENDENTE) {
+                return [$row];
             }
-            if ($ordem === 6) {
-                $ordem6Row = $row;
-                if ($status === self::STATUS_EM_ANDAMENTO || $status === self::STATUS_PENDENTE) {
-                    $faseDevolucaoArquivamento = true;
-                }
-            }
-            if ($ordem !== 5 && $ordem !== 6 && ($status === self::STATUS_EM_ANDAMENTO || $status === self::STATUS_PENDENTE)) {
-                $emAndamento[] = $row;
-            }
-        }
-
-        if ($faseDevolucaoArquivamento && ($ordem5Row !== null || $ordem6Row !== null)) {
-            $out = [];
-            if ($ordem5Row !== null) {
-                $out[] = $ordem5Row;
-            }
-            if ($ordem6Row !== null) {
-                $out[] = $ordem6Row;
-            }
-            return $out;
-        }
-        if (!empty($emAndamento)) {
-            return [reset($emAndamento)];
         }
         return [];
     }
@@ -218,7 +182,7 @@ final class CartasRecebidasSubtarefasRepository
     }
 
     /**
-     * Garante que as subtarefas das ordens 5 (devolução à origem) e 6 (arquivamento) existam em conjunto.
+     * Garante que as subtarefas das ordens 3 (devolução à origem) e 4 (arquivamento) existam em conjunto.
      */
     public function ensureDevolucaoArquivamentoPair(string $cartaId): void
     {
@@ -227,24 +191,24 @@ final class CartasRecebidasSubtarefasRepository
             return;
         }
 
-        $ordem5 = $this->findByCartaIdEOrdem($cartaId, 5);
-        $ordem6 = $this->findByCartaIdEOrdem($cartaId, 6);
+        $ordem3 = $this->findByCartaIdEOrdem($cartaId, 3);
+        $ordem4 = $this->findByCartaIdEOrdem($cartaId, 4);
 
-        if ($ordem5 === null && $ordem6 === null) {
+        if ($ordem3 === null && $ordem4 === null) {
             return;
         }
 
-        if ($ordem5 !== null && $ordem6 === null) {
-            $status5 = trim((string) ($ordem5['status'] ?? ''));
-            $status6 = $status5 === self::STATUS_CONCLUIDA ? self::STATUS_EM_ANDAMENTO : self::STATUS_PENDENTE;
-            $this->create($cartaId, self::TIPO_ORDEM_6, 6, $status6, null);
+        if ($ordem3 !== null && $ordem4 === null) {
+            $status3 = trim((string) ($ordem3['status'] ?? ''));
+            $status4 = $status3 === self::STATUS_CONCLUIDA ? self::STATUS_EM_ANDAMENTO : self::STATUS_PENDENTE;
+            $this->create($cartaId, self::TIPO_ORDEM_4, 4, $status4, null);
             return;
         }
 
-        if ($ordem5 === null && $ordem6 !== null) {
-            $status6 = trim((string) ($ordem6['status'] ?? ''));
-            $status5 = $status6 === self::STATUS_CONCLUIDA ? self::STATUS_CONCLUIDA : self::STATUS_PENDENTE;
-            $this->create($cartaId, self::TIPO_ORDEM_5, 5, $status5, null);
+        if ($ordem3 === null && $ordem4 !== null) {
+            $status4 = trim((string) ($ordem4['status'] ?? ''));
+            $status3 = $status4 === self::STATUS_CONCLUIDA ? self::STATUS_CONCLUIDA : self::STATUS_PENDENTE;
+            $this->create($cartaId, self::TIPO_ORDEM_3, 3, $status3, null);
         }
     }
 
@@ -276,8 +240,6 @@ final class CartasRecebidasSubtarefasRepository
             2 => self::TIPO_ORDEM_2,
             3 => self::TIPO_ORDEM_3,
             4 => self::TIPO_ORDEM_4,
-            5 => self::TIPO_ORDEM_5,
-            6 => self::TIPO_ORDEM_6,
         ];
         return $map[$next] ?? null;
     }

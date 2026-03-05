@@ -2,7 +2,7 @@
 
 ## 1. Visão geral
 
-Submódulo do Módulo de Cartório (m4) para gestão de **cartas recebidas** (precatórias recebidas de outros tribunais). Fluxo: conferência inicial → expedição de mandado → certificação → PDF → devolução à origem → arquivamento (com regra especial vinculada à audiência quando aplicável).
+Submódulo do Módulo de Cartório (m4) para gestão de **cartas recebidas** (precatórias recebidas de outros tribunais). Fluxo: conferência inicial → expedição de mandado → devolução à origem → arquivamento (com regra especial vinculada à audiência quando aplicável).
 
 ## 2. Entidade principal: Carta Recebida
 
@@ -23,12 +23,10 @@ Submódulo do Módulo de Cartório (m4) para gestão de **cartas recebidas** (pr
 
 1. Conferência inicial  
 2. Expedição de mandado  
-3. Certificação  
-4. PDF  
-5. Devolução à origem  
-6. Arquivamento  
+3. Devolução à origem  
+4. Arquivamento definitivo  
 
-Tipos internos (ex.): `conferencia_inicial`, `expedicao_mandado`, `certificacao`, `pdf`, `devolucao_origem`, `arquivamento`.
+Tipos internos: `conferencia_inicial`, `expedicao_mandado`, `devolucao_origem`, `arquivamento`.
 
 ## 5. Alocação
 

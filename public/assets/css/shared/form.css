@@ -484,7 +484,8 @@ select:focus {
 input[type="text"],
 input[type="email"],
 input[type="password"],
-input[type="number"] {
+input[type="number"],
+input[type="date"] {
     height: 42px;
     padding: 0 1em;
     margin: 5px 10px 5px 0;
