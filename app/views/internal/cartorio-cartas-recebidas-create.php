@@ -319,6 +319,9 @@ try {
             btn.addEventListener('click', async (e) => {
                 e.preventDefault();
                 if (btn.disabled) return;
+                // Dispara blur para aplicar correção automática (CNJ no processo; maiúsculas/minúsculas na cidade)
+                document.getElementById('filter-processo')?.blur();
+                document.getElementById('filter-cidade')?.blur();
 
                 const processoRaw = getValue('filter-processo');
                 if (processoRaw === '') {

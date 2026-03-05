@@ -99,6 +99,8 @@ try {
             window.location.href = '/frame.php?page=cejusc';
         }, { capture: true });
     </script>
+    <!-- Padrão: número do processo = cnj.js (correção/formatação CNJ no blur); nome de pessoa/cidade = text-formatter.js (maiúsculas/minúsculas). -->
+    <script src="/assets/js/modules/cartorio/cartas-expedidas/cnj.js"></script>
     <script src="/assets/js/modules/cartorio/cartas-expedidas/text-formatter.js"></script>
     <script>
         (function () {
@@ -148,6 +150,7 @@ try {
                 return value;
             };
 
+            var processoInput = document.getElementById('filter-processo');
             var reuInput = document.getElementById('filter-reu');
             if (reuInput) {
                 reuInput.addEventListener('blur', function () {
@@ -160,6 +163,9 @@ try {
             btn.addEventListener('click', function (e) {
                 e.preventDefault();
                 if (btn.disabled) return;
+                // Dispara blur para aplicar correção automática (CNJ e nome) antes de ler os valores
+                if (processoInput) processoInput.blur();
+                if (reuInput) reuInput.blur();
 
                 var numeroProcesso = getValue('filter-processo');
                 var nomeReu = formatNomeReu(getValue('filter-reu'));
