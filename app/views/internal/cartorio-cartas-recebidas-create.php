@@ -129,6 +129,19 @@ try {
                 <input type="text" class="width-md height-md" id="filter-processo" placeholder="Digite o número do processo" required>
             </div>
             <div class="col filter">
+                <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe</label>
+                <input type="text" class="width-lg height-md" id="filter-classe" placeholder="Classe processual" required>
+            </div>
+        </div>
+        <?php if ($cnjError): ?>
+            <div class="row filter">
+                <div class="col">
+                    <label class="status status-cancelled"><?php echo htmlspecialchars($cnjError, ENT_QUOTES); ?></label>
+                </div>
+            </div>
+        <?php endif; ?>
+        <div class="row filter">
+            <div class="col filter">
                 <label for="filter-cidade">Cidade de origem</label>
                 <input type="text" class="width-xl height-md" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="50" required>
             </div>
@@ -165,19 +178,6 @@ try {
                 </select>
             </div>
         </div>
-        <?php if ($cnjError): ?>
-            <div class="row filter">
-                <div class="col">
-                    <label class="status status-cancelled"><?php echo htmlspecialchars($cnjError, ENT_QUOTES); ?></label>
-                </div>
-            </div>
-        <?php endif; ?>
-        <div class="row filter">
-            <div class="col filter">
-                <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe</label>
-                <input type="text" class="width-lg height-md" id="filter-classe" placeholder="Classe processual" required>
-            </div>
-        </div>
         <div class="row filter">
             <div class="col filter">
                 <label for="filter-tipo">Finalidade</label>
@@ -195,12 +195,6 @@ try {
             <div class="col filter">
                 <label for="filter-prazo">Prazo (dias)</label>
                 <input type="number" class="width-sm height-md" id="filter-prazo" value="30" min="1" max="999" required>
-            </div>
-        </div>
-        <div class="row filter">
-            <div class="col filter">
-                <label for="filter-observacoes">Observações</label>
-                <textarea class="width-xl height-md" id="filter-observacoes" rows="2" placeholder="Opcional"></textarea>
             </div>
         </div>
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
@@ -351,7 +345,6 @@ try {
                 }
 
                 const prazo = parseInt(document.getElementById('filter-prazo')?.value ?? '30', 10) || 30;
-                const observacoes = getValue('filter-observacoes');
 
                 const payload = {
                     numero_processo_origem: processoRaw,
@@ -359,7 +352,6 @@ try {
                     uf_origem: ufOrigem,
                     finalidade,
                     prazo_dias: prazo,
-                    observacoes,
                 };
                 if (classeCodigoField?.value.trim()) {
                     payload.classe_codigo = classeCodigoField.value.trim();
