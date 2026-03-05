@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0189
+
+**Data:** 2026-03-05 20:22:43 | **Commit:** `cdc733f` | **Tipo:** `patch`
+
+- Feat: implementação de conjunto de páginas Cejusc
+
 ## V. 1.02.0188
 
 **Data:** 2026-03-05 19:47:06 | **Commit:** `742db72` | **Tipo:** `patch`
@@ -2172,6 +2178,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
