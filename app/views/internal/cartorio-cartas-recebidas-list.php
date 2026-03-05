@@ -77,7 +77,7 @@ $subtarefaLabels = [
     'conferencia_inicial' => 'Conferência inicial',
     'expedicao_mandado' => 'Expedição de mandado',
     'devolucao_origem' => 'Devolução à origem',
-    'arquivamento' => 'Arquivamento definitivo',
+    'arquivamento' => 'Arquivar',
 ];
 $ordemLabels = [
     1 => $subtarefaLabels['conferencia_inicial'],

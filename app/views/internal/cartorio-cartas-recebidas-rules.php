@@ -46,7 +46,7 @@ if ($userId !== null && $userId !== '') {
 $podeAlterarRegra = count(array_intersect($userPerfis, $perfisAlterarRegra)) > 0;
 
 $ruleName = 'ALLOCATE-CARTASRECEBIDAS';
-$ruleDescription = 'Alocação automática - Cartas Recebidas';
+$ruleDescription = 'Alocação automática - Devolução de Cartas Recebidas';
 $errors = [];
 $successMessage = '';
 $usersList = [];
