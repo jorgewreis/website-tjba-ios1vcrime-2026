@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0203
+
+**Data:** 2026-03-06 16:43:58 | **Commit:** `a87d9f4` | **Tipo:** `patch`
+
+- Fix: tentativa de debug
+
 ## V. 1.02.0202
 
 **Data:** 2026-03-06 16:31:36 | **Commit:** `25fa31c` | **Tipo:** `patch`
@@ -2256,6 +2262,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

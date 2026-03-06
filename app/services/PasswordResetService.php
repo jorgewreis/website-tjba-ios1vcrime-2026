@@ -8,6 +8,22 @@ final class PasswordResetService
 {
     private PDO $pdo;
 
+    /** @param array<string, mixed> $data */
+    private static function debugLog(string $message, array $data = [], string $hypothesisId = ''): void
+    {
+        $path = __DIR__ . '/../../debug-5b84a2.log';
+        $payload = [
+            'sessionId' => '5b84a2',
+            'runId' => $data['runId'] ?? 'run1',
+            'hypothesisId' => $hypothesisId,
+            'location' => 'PasswordResetService',
+            'message' => $message,
+            'data' => $data,
+            'timestamp' => (int) (microtime(true) * 1000),
+        ];
+        @file_put_contents($path, json_encode($payload) . "\n", FILE_APPEND | LOCK_EX);
+    }
+
     public function __construct()
     {
         $this->pdo = Conection::getInstance()->getConnection();
@@ -99,9 +115,59 @@ final class PasswordResetService
 
     /* ================= UTILITÁRIOS ================= */
 
+    /** Garante que .env foi carregado. Tenta vários caminhos (project root, document root). */
+    private function loadEnvOnce(): void
+    {
+        static $loaded = false;
+        if ($loaded) {
+            return;
+        }
+        $candidates = [
+            __DIR__ . '/../../.env',
+            __DIR__ . '/../../../.env',
+        ];
+        if (!empty($_SERVER['DOCUMENT_ROOT'])) {
+            $candidates[] = $_SERVER['DOCUMENT_ROOT'] . '/.env';
+            $candidates[] = $_SERVER['DOCUMENT_ROOT'] . '/../.env';
+        }
+        $envPath = null;
+        foreach ($candidates as $path) {
+            if (is_file($path)) {
+                $envPath = $path;
+                break;
+            }
+        }
+        if ($envPath === null) {
+            self::debugLog('loadEnvOnce: .env não encontrado em nenhum candidato', ['candidates' => $candidates], 'A');
+            $loaded = true;
+            return;
+        }
+        self::debugLog('loadEnvOnce: .env carregado', ['envPath' => $envPath], 'A');
+        $lines = @file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line === '' || $line[0] === '#') {
+                continue;
+            }
+            $eq = strpos($line, '=');
+            if ($eq === false) {
+                continue;
+            }
+            $key = trim(substr($line, 0, $eq));
+            $value = trim(substr($line, $eq + 1));
+            if ($key !== '') {
+                $value = trim($value, " \t\"'");
+                putenv("{$key}={$value}");
+                $_ENV[$key] = $value;
+            }
+        }
+        $loaded = true;
+    }
+
     /** Lê variável de ambiente (getenv ou $_ENV). Aceita MAIL_USER/MAIL_PASS como alias. */
     private function env(string $key, ?string $default = null): ?string
     {
+        $this->loadEnvOnce();
         $v = getenv($key);
         if ($v !== false && $v !== '') {
             return trim((string) $v);
@@ -128,6 +194,7 @@ final class PasswordResetService
         // Fallback (LOG): apenas registra no servidor; nenhum e-mail real enviado
         // ======================
         if ($driver !== 'smtp') {
+            self::debugLog('sendEmail: branch log (driver não é smtp)', ['driver' => $driver], 'B');
             error_log("[RESET SENHA] {$to} | senha temporária: {$senhaTemp}");
             return ['ok' => true, 'sent' => false];
         }
@@ -135,16 +202,41 @@ final class PasswordResetService
         // ======================
         // SMTP (Hostinger, Microsoft 365, etc.)
         // ======================
-        require_once __DIR__ . '/../vendor/autoload.php';
+        $host = $this->env('MAIL_HOST') ?? '';
+        $user = $this->env('MAIL_USERNAME') ?? $this->env('MAIL_USER') ?? '';
+        self::debugLog('sendEmail: após ler env', ['driver' => $driver, 'hasHost' => $host !== '', 'hasUser' => $user !== ''], 'B');
+        if ($host === '' || $user === '') {
+            self::debugLog('sendEmail: retorno early (host ou user vazio)', ['hostEmpty' => $host === '', 'userEmpty' => $user === ''], 'B');
+            error_log('[RESET SENHA] SMTP não configurado: MAIL_HOST ou MAIL_USER vazio após carregar .env');
+            return ['ok' => true, 'sent' => false];
+        }
+
+        $autoloads = [
+            __DIR__ . '/../../vendor/autoload.php',
+            __DIR__ . '/../vendor/autoload.php',
+        ];
+        $autoload = null;
+        foreach ($autoloads as $path) {
+            if (is_file($path)) {
+                $autoload = $path;
+                break;
+            }
+        }
+        if ($autoload === null) {
+            self::debugLog('sendEmail: PHPMailer não encontrado', ['autoloadsChecked' => $autoloads], 'E');
+            error_log('[RESET SENHA] PHPMailer não encontrado. Execute: composer require phpmailer/phpmailer (na raiz do projeto)');
+            return ['ok' => true, 'sent' => false];
+        }
+        require_once $autoload;
 
         $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
 
         try {
             $mail->isSMTP();
-            $mail->Host       = $this->env('MAIL_HOST') ?? '';
+            $mail->Host       = $host;
             $mail->Port       = (int) ($this->env('MAIL_PORT') ?? 587);
             $mail->SMTPAuth   = true;
-            $mail->Username   = $this->env('MAIL_USERNAME') ?? $this->env('MAIL_USER') ?? '';
+            $mail->Username   = $user;
             $mail->Password   = $this->env('MAIL_PASSWORD') ?? $this->env('MAIL_PASS') ?? '';
 
             $encryption = strtolower(trim((string) ($this->env('MAIL_ENCRYPTION') ?? '')));
@@ -157,7 +249,16 @@ final class PasswordResetService
 
             $mail->CharSet = 'UTF-8';
 
-            $fromAddress = $this->env('MAIL_FROM_ADDRESS') ?? $this->env('MAIL_USER') ?? '';
+            // Evita falha de SSL em alguns servidores (certificado)
+            $mail->SMTPOptions = [
+                'ssl' => [
+                    'verify_peer'       => false,
+                    'verify_peer_name'  => false,
+                    'allow_self_signed' => true,
+                ],
+            ];
+
+            $fromAddress = $this->env('MAIL_FROM_ADDRESS') ?? $user;
             $fromName    = $this->env('MAIL_FROM_NAME') ?: 'Sistema';
 
                 $mail->setFrom($fromAddress, $fromName);
@@ -232,13 +333,13 @@ final class PasswordResetService
                     "Sua senha temporária é: {$senhaTemp}\n\n" .
                     "Recomendamos que você altere a senha após o login.\n";
 
-
-                $mail->AltBody = $mail->Body;
-
+                self::debugLog('sendEmail: chamando mail->send()', [], 'C');
                 $mail->send();
+                self::debugLog('sendEmail: mail->send() ok', ['sent' => true], 'C');
                 return ['ok' => true, 'sent' => true];
 
         } catch (\Throwable $e) {
+            self::debugLog('sendEmail: exceção em send', ['error' => $e->getMessage(), 'ok' => false, 'sent' => false], 'C');
             error_log('Erro SMTP: ' . $e->getMessage());
             return ['ok' => false, 'sent' => false];
         }
