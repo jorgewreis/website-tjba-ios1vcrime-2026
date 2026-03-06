@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0193
+
+**Data:** 2026-03-06 15:02:27 | **Commit:** `4f5aa49` | **Tipo:** `patch`
+
+- Fix: correção de classes
+
 ## V. 1.02.0192
 
 **Data:** 2026-03-06 14:57:19 | **Commit:** `29c261b` | **Tipo:** `patch`
@@ -2196,6 +2202,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
