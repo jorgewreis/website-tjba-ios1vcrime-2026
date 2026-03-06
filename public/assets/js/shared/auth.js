@@ -126,7 +126,7 @@
           submitBtn.textContent = "Processando...";
         }
 
-        await fetch(endpoint, {
+        const response = await fetch(endpoint, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -138,12 +138,21 @@
           })
         });
 
-        setAlert(
-          "primary",
-          "Aviso",
-          "Se os dados estiverem corretos, você receberá instruções por e-mail."
-        );
-        form.reset();
+        const result = await response.json().catch(() => ({}));
+        const success = result && result.success === true;
+        const emailSent = result && result.emailSent === true;
+        const message = (result && result.message) || "Não foi possível processar. Tente novamente.";
+
+        if (success) {
+          setAlert(
+            emailSent ? "success" : "primary",
+            emailSent ? "E-mail enviado" : "Senha redefinida",
+            message
+          );
+          form.reset();
+        } else {
+          setAlert("danger", "Erro", message);
+        }
       } catch (error) {
         console.error("Falha ao enviar reset:", error);
         setAlert("danger", "Erro", "Erro de conexão. Tente novamente mais tarde.");

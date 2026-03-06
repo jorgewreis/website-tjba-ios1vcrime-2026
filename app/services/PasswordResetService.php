@@ -13,13 +13,22 @@ final class PasswordResetService
         $this->pdo = Conection::getInstance()->getConnection();
     }
 
-    public function process(string $cpf, string $email): void
+    /**
+     * Processa recuperação de senha. Retorna array com success, emailSent e message.
+     * - success: dados válidos, usuário encontrado e senha atualizada no banco
+     * - emailSent: e-mail foi de fato enviado (SMTP). Com MAIL_DRIVER=log não envia e-mail real.
+     */
+    public function process(string $cpf, string $email): array
     {
         $cpf = Security::normalizeCPF($cpf);
         $email = strtolower(trim($email));
 
         if (!Security::validarCPF($cpf) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            return; // resposta sempre neutra
+            return [
+                'success'   => false,
+                'emailSent' => false,
+                'message'   => 'Não foi possível processar. Verifique CPF e e-mail e tente novamente.'
+            ];
         }
 
         $cpfFormatado = Security::formatCPF($cpf);
@@ -35,7 +44,11 @@ final class PasswordResetService
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$user) {
-            return;
+            return [
+                'success'   => false,
+                'emailSent' => false,
+                'message'   => 'CPF e e-mail não conferem. Verifique os dados e tente novamente.'
+            ];
         }
 
         $senhaTemp = Security::generateTempPassword(10);
@@ -55,29 +68,51 @@ final class PasswordResetService
 
         if ($stmt->rowCount() < 1) {
             $this->pdo->rollBack();
-            return;
+            return [
+                'success'   => false,
+                'emailSent' => false,
+                'message'   => 'Não foi possível atualizar a senha. Tente novamente.'
+            ];
         }
 
-        if (!$this->sendEmail($user['email'], $user['nome'], $senhaTemp)) {
+        $sendResult = $this->sendEmail($user['email'], $user['nome'], $senhaTemp);
+
+        if (!$sendResult['ok']) {
             $this->pdo->rollBack();
-            return;
+            return [
+                'success'   => false,
+                'emailSent' => false,
+                'message'   => 'Senha redefinida, mas o e-mail não pôde ser enviado. Contate o suporte.'
+            ];
         }
 
         $this->pdo->commit();
+
+        return [
+            'success'   => true,
+            'emailSent' => $sendResult['sent'],
+            'message'   => $sendResult['sent']
+                ? 'Um e-mail foi enviado para o endereço informado com a nova senha. Verifique sua caixa de entrada.'
+                : 'Senha redefinida. O envio de e-mail não está ativo neste ambiente. Contate o suporte para obter sua nova senha.'
+        ];
     }
 
     /* ================= UTILITÁRIOS ================= */
 
-    private function sendEmail(string $to, string $nome, string $senhaTemp): bool
+    /**
+     * Envia e-mail com a senha temporária. Retorna ['ok' => bool, 'sent' => bool].
+     * ok: operação concluída (senha pode ser commitada). sent: e-mail foi de fato enviado (SMTP).
+     */
+    private function sendEmail(string $to, string $nome, string $senhaTemp): array
     {
         $driver = getenv('MAIL_DRIVER') ?: 'log';
 
         // ======================
-        // Fallback seguro (LOG)
+        // Fallback (LOG): apenas registra no servidor; nenhum e-mail real enviado
         // ======================
         if ($driver === 'log') {
             error_log("[RESET SENHA] {$to} | senha temporária: {$senhaTemp}");
-            return true;
+            return ['ok' => true, 'sent' => false];
         }
 
         // ======================
@@ -182,16 +217,16 @@ final class PasswordResetService
                 $mail->AltBody = $mail->Body;
 
                 $mail->send();
-                return true;
+                return ['ok' => true, 'sent' => true];
 
             } catch (\Throwable $e) {
                 error_log('Erro SMTP: ' . $e->getMessage());
-                return false;
+                return ['ok' => false, 'sent' => false];
             }
         }
 
         error_log('MAIL_DRIVER inválido ou não suportado');
-        return false;
+        return ['ok' => false, 'sent' => false];
     }
 
 

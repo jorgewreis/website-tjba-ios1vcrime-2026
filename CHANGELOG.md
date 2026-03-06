@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0201
+
+**Data:** 2026-03-06 16:27:50 | **Commit:** `2f1019e` | **Tipo:** `patch`
+
+- Feat: implementação de email corporativo
+
 ## V. 1.02.0200
 
 **Data:** 2026-03-06 16:11:12 | **Commit:** `403cb51` | **Tipo:** `patch`
@@ -2244,6 +2250,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

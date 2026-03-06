@@ -10,18 +10,24 @@ try {
     $body = json_decode(file_get_contents('php://input'), true);
 
     if (!is_array($body)) {
-        throw new RuntimeException('JSON inválido');
+        echo json_encode([
+            'success'   => false,
+            'emailSent' => false,
+            'message'   => 'Requisição inválida.'
+        ]);
+        exit;
     }
 
     $cpf   = (string)($body['cpf'] ?? '');
     $email = (string)($body['email'] ?? '');
 
     $service = new PasswordResetService();
-    $service->process($cpf, $email);
+    $result  = $service->process($cpf, $email);
 
     echo json_encode([
-        'success' => true,
-        'message' => 'Se os dados estiverem corretos, você receberá instruções por e-mail.'
+        'success'   => $result['success'],
+        'emailSent' => $result['emailSent'],
+        'message'   => $result['message']
     ]);
     exit;
 
@@ -30,8 +36,9 @@ try {
 
     http_response_code(500);
     echo json_encode([
-        'success' => false,
-        'message' => 'Erro interno ao processar solicitação.'
+        'success'   => false,
+        'emailSent' => false,
+        'message'   => 'Erro interno ao processar solicitação. Tente novamente mais tarde.'
     ]);
     exit;
 }
