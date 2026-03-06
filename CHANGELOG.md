@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0006
+
+**Data:** 2026-03-06 19:37:44 | **Commit:** `dc1da88` | **Tipo:** `patch`
+
+- Fix: correção definitiva
+
 ## V. 1.03.0005
 
 **Data:** 2026-03-06 19:19:46 | **Commit:** `5b08510` | **Tipo:** `patch`
@@ -2310,6 +2316,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

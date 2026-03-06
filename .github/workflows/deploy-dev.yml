@@ -36,16 +36,6 @@ jobs:
             "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
             "echo SSH_OK && whoami && pwd"
 
-      # Opcional: corrige dono do diretório no servidor. Se sudo pedir senha (sem TTY), falha mas o workflow continua.
-      - name: Fix deploy directory ownership (server)
-        run: |
-          ssh -i ~/.ssh/id_ed25519 \
-            -o IdentitiesOnly=yes \
-            -o StrictHostKeyChecking=yes \
-            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
-            "sudo chown -R \$(whoami): \"${{ secrets.DEV_PATH }}\""
-        continue-on-error: true
-
       - name: Sync files to server (DEV)
         run: |
           rsync -az \
