@@ -98,7 +98,7 @@ $MAJOR_THRESHOLD = 100
 #>
 function Write-Debug-Message {
     param([string]$Message)
-    if ($PSBoundParameters.ContainsKey('Verbose') -and $PSBoundParameters['Verbose']) {
+    if ($VerbosePreference -eq 'Continue') {
         Write-Host "[DEBUG] $Message" -ForegroundColor Cyan
     }
 }

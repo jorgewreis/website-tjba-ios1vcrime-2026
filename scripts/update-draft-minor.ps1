@@ -250,7 +250,7 @@ function Get-BufferEntries {
             }
 
             # Parse: TYPE|MESSAGE|HASH|AUTHOR|TIMESTAMP
-            $parts = $line -split "\|"
+            $parts = @($line -split "\|")
             if ($parts.Count -ge 3) {
                 $entry = [PSCustomObject]@{
                     Type      = $parts[0].Trim()
@@ -333,12 +333,13 @@ function New-SimpleReleaseNote {
         $content += ""
     }
 
-    # Entradas
-    if ($Entries.Count -gt 0) {
+    # Entradas (garante array para evitar falha de .Count em objeto único ou $null)
+    $entriesList = @($Entries)
+    if ($entriesList.Count -gt 0) {
         $content += "## Alterações"
         $content += ""
 
-        foreach ($item in $Entries) {
+        foreach ($item in $entriesList) {
             $line = "- **$($item.Message)**"
             if (![string]::IsNullOrWhiteSpace($item.Hash)) {
                 $line += " ``[$($item.Hash)]``"
@@ -453,8 +454,8 @@ try {
                 -CommitHash $CommitHash `
                 -Author "Unknown"
 
-            # Lê buffer
-            $entries = Get-BufferEntries -BufferPath $bufferPath
+            # Lê buffer (garante array para .Count)
+            $entries = @(Get-BufferEntries -BufferPath $bufferPath)
 
             if ($entries.Count -eq 0) {
                 Write-Warn "Buffer vazio - gerando documento apenas com commit atual"
