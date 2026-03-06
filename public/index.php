@@ -99,18 +99,19 @@ $csrfToken = Security::generateCSRFToken();
                         </div>
                         
                         <div class="row full-line">
-                            <select id="themeSelect" class="width-md" title="Preferência de tema">
+                            <select id="themeSelect" class="width-sm" title="Preferência de tema">
                                 <option value="auto" disabled>Tema automático</option>
                                 <option value="claro" selected>Tema claro</option>
                                 <option value="escuro" disabled>Tema escuro</option>
                             </select>
                         </div>
 
-                        <div class="row buttons" style="background-color: transparent; padding-bottom: 20px;">
-                            <button class="btn btn-primary width-full" type="button">Entrar</button>
+                        <div class="row" style="background-color: transparent; padding: 20px 0 10px 0; width: 100%; border-bottom: 1px solid var(--color-gray-400);">
+                            <button class="btn btn-primary width-md" type="button">Entrar</button>
                         </div>
+
                         <div class="row">
-                            <div class="alert-heading danger width-full" id="alert-login">
+                            <div class="alert-heading danger width-md" id="alert-login">
                                 <div class="alert-header">
                                     <span class="text">Erro</span>
                                     <i class="fi fi-rs-cross"></i>
@@ -119,9 +120,9 @@ $csrfToken = Security::generateCSRFToken();
                             </div>
                         </div>
 
-                        <div class="row pagination" style="border: none; padding-top: 10px;">
+                        <div class="row" style="border: none; padding-top: 10px;">
                             <div class="col">
-                                <button class="btn btn-primary-outline width-full" type="button">Cadastro de estudantes</button>
+                                <button class="btn btn-primary-outline width-md" type="button">Cadastro de estudantes</button>
                                 <label>Estudantes de Direito devem se cadastrar para acompanhamento de audiências.</label>
                             </div>                            
                         </div>
