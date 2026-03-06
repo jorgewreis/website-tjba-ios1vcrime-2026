@@ -41,7 +41,7 @@ try {
             exit;
         }
         $senhaHash = Security::hashPassword($senha);
-        $id = bin2hex(random_bytes(8));
+        $id = 'USR-' . strtoupper(bin2hex(random_bytes(13)));
         $stmt = $pdo->prepare("INSERT INTO usuarios (id_usuario, nome, cpf, senha_hash, ativo) VALUES (?, ?, ?, ?, 1)");
         $stmt->execute([$id, $nome, $cpf, $senhaHash]);
         echo json_encode(['success' => true, 'id' => $id]);

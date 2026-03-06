@@ -1,9 +1,11 @@
-﻿-- ============================================================================
+-- ============================================================================
 -- TRIGGERS.SQL - Sistema de Gestão Criminal de Ilhéus
 -- Banco de Dados: common
 -- Versão: 1.0.0
 -- Data: 2026-02-03
 -- ============================================================================
+-- ID: Gerar sempre no padrão 30 caracteres (prefixo 3 letras + hífen + 26 chars).
+-- Documentação: docs/00-foundation/id-padrao-banco-dados.md
 -- IMPORTANTE: Execute este arquivo via terminal MySQL, não pelo SQLTools
 -- Comando: mysql -u usuario -p common < /caminho/triggers.sql
 -- ============================================================================
@@ -33,7 +35,7 @@ BEGIN
     IF OLD.senha_hash != NEW.senha_hash THEN
         -- Insere a senha anterior no histórico
         INSERT INTO historico_senha (id_historico, usuario, senha_hash, data_alteracao)
-        VALUES (UUID(), NEW.id_usuario, OLD.senha_hash, NOW());
+        VALUES (CONCAT('HIS-', UPPER(SUBSTRING(REPLACE(UUID(), '-', ''), 1, 26))), NEW.id_usuario, OLD.senha_hash, NOW());
     END IF;
 END//
 DELIMITER ;

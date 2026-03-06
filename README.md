@@ -174,7 +174,7 @@ Padrão de navegação do sistema:
 
 ### Usuários
 
-- **Chave primária:** `id_usuario`
+- **Chave primária:** `id_usuario` (padrão de ID: 30 caracteres = 3 letras + hífen + 26 chars; ver [docs/00-foundation/id-padrao-banco-dados.md](docs/00-foundation/id-padrao-banco-dados.md))
 
 ---
 

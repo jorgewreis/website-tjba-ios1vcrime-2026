@@ -1,4 +1,4 @@
-﻿# Especificação e Esquema Base do Banco de Dados
+# Especificação e Esquema Base do Banco de Dados
 
 ## 1. Padrões e Configurações Globais
 
@@ -6,15 +6,17 @@ A infraestrutura de dados do **WebApp | 1vCrimeIlheus** utiliza o sistema gerenc
 
 A padronização de nomenclatura é vital para a manutenção do código SQL e PHP. Todas as tabelas devem utilizar o prefixo `tb_` seguido do nome no plural (ex: `tb_usuarios`, `tb_processos`). Os nomes de colunas devem seguir o padrão *snake_case* (minúsculas com sublinhado). As chaves primárias não devem ser nomeadas apenas como `id`, mas sim incluir o contexto da tabela (ex: `id_usuario`, `id_setor`), facilitando a leitura em *joins* complexos e evitando ambiguidades em relatórios.
 
+**Padrão de IDs (obrigatório):** Todo identificador primário deve ter **30 caracteres**: prefixo de **3 letras** + **hífen** + **código** de **26 caracteres** (ex.: `USR-A1B2C3D4E5F6G7H8I9J0K1L2M3N4`). Tipo: `CHAR(30)`. Ver [docs/00-foundation/id-padrao-banco-dados.md](../00-foundation/id-padrao-banco-dados.md).
+
 ## 2. Estrutura da Tabela de Usuários (Core)
 
-A tabela `tb_usuarios` é o componente central do sistema, armazenando as credenciais de acesso e os vínculos organizacionais. Diferente de implementações tradicionais que usam *Integers* autoincrementais, a chave primária `id_usuario` será do tipo `VARCHAR(20)`. Isso permite o uso de IDs com prefixos semânticos (ex: `USR-2024-AF31`), que aumentam a segurança ao dificultar a enumeração sequencial de registros por atacantes.
+A tabela `tb_usuarios` é o componente central do sistema, armazenando as credenciais de acesso e os vínculos organizacionais. Diferente de implementações tradicionais que usam *Integers* autoincrementais, a chave primária `id_usuario` será do tipo **`CHAR(30)`**, seguindo o padrão de ID do sistema (prefixo `USR-` + 26 caracteres; ver [id-padrao-banco-dados.md](../00-foundation/id-padrao-banco-dados.md)). Isso aumenta a segurança ao dificultar a enumeração sequencial de registros por atacantes.
 
 O armazenamento de dados sensíveis segue regras estritas de negócio. O campo `cpf` deve ser armazenado como `VARCHAR(14)` contendo a máscara (ex: `000.000.000-00`), conforme preferência de exibição, embora a validação no *backend* considere apenas os dígitos. O campo `senha` deve armazenar o *hash* criptografado (nunca o texto plano), com tamanho suficiente para algoritmos modernos como Argon2 ou Bcrypt (recomendado `VARCHAR(255)`). Além disso, a tabela deve conter a coluna `id_setor` para garantir o isolamento de dados e a coluna `deleted_at` para suportar a exclusão lógica (*Soft Delete*).
 
 ### Script SQL: Tabela de Usuários
 
-sql CREATE TABLE tb_usuarios ( id_usuario VARCHAR(20) NOT NULL COMMENT 'PK com prefixo USR-', id_setor INT NOT NULL COMMENT 'FK para tb_setores (Isolamento)', id_perfil INT NOT NULL COMMENT 'FK para tb_perfis (RBAC)', nome_completo VARCHAR(100) NOT NULL, email VARCHAR(100) NOT NULL UNIQUE, cpf VARCHAR(14) NOT NULL UNIQUE COMMENT 'Armazenado com máscara', senha VARCHAR(255) NOT NULL COMMENT 'Hash da senha', status ENUM('ativo', 'inativo', 'bloqueado') DEFAULT 'ativo', tentativas_login TINYINT DEFAULT 0 COMMENT 'Bloqueio após 3 falhas', created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, deleted_at DATETIME NULL COMMENT 'Soft Delete (Exclusão Lógica)', PRIMARY KEY (id_usuario), INDEX idx_setor (id_setor), INDEX idx_status (status) ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+sql CREATE TABLE tb_usuarios ( id_usuario CHAR(30) NOT NULL COMMENT 'PK formato USR- + 26 chars (regra padrão 30 chars)', id_setor INT NOT NULL COMMENT 'FK para tb_setores (Isolamento)', id_perfil INT NOT NULL COMMENT 'FK para tb_perfis (RBAC)', nome_completo VARCHAR(100) NOT NULL, email VARCHAR(100) NOT NULL UNIQUE, cpf VARCHAR(14) NOT NULL UNIQUE COMMENT 'Armazenado com máscara', senha VARCHAR(255) NOT NULL COMMENT 'Hash da senha', status ENUM('ativo', 'inativo', 'bloqueado') DEFAULT 'ativo', tentativas_login TINYINT DEFAULT 0 COMMENT 'Bloqueio após 3 falhas', created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, deleted_at DATETIME NULL COMMENT 'Soft Delete (Exclusão Lógica)', PRIMARY KEY (id_usuario), INDEX idx_setor (id_setor), INDEX idx_status (status) ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 Defining Configuration Structure
 
@@ -58,7 +60,7 @@ A padronização de nomenclatura é vital para a manutenção do código SQL e P
 
 ## 2. Estrutura da Tabela de Usuários (Core)
 
-A tabela `tb_usuarios` é o componente central do sistema, armazenando as credenciais de acesso e os vínculos organizacionais. Diferente de implementações tradicionais que usam *Integers* autoincrementais, a chave primária `id_usuario` será do tipo `VARCHAR(20)`. Isso permite o uso de IDs com prefixos semânticos (ex: `USR-2024-AF31`), que aumentam a segurança ao dificultar a enumeração sequencial de registros por atacantes.
+A tabela `tb_usuarios` é o componente central do sistema, armazenando as credenciais de acesso e os vínculos organizacionais. Diferente de implementações tradicionais que usam *Integers* autoincrementais, a chave primária `id_usuario` será do tipo **`CHAR(30)`**, seguindo o padrão de ID do sistema (prefixo `USR-` + 26 caracteres; ver [id-padrao-banco-dados.md](../00-foundation/id-padrao-banco-dados.md)). Isso aumenta a segurança ao dificultar a enumeração sequencial de registros por atacantes.
 
 O armazenamento de dados sensíveis segue regras estritas de negócio. O campo `cpf` deve ser armazenado como `VARCHAR(14)` contendo a máscara (ex: `000.000.000-00`), conforme preferência de exibição, embora a validação no *backend* considere apenas os dígitos. O campo `senha` deve armazenar o *hash* criptografado (nunca o texto plano), com tamanho suficiente para algoritmos modernos como Argon2 ou Bcrypt (recomendado `VARCHAR(255)`). Além disso, a tabela deve conter a coluna `id_setor` para garantir o isolamento de dados e a coluna `deleted_at` para suportar a exclusão lógica (*Soft Delete*).
 
@@ -66,7 +68,7 @@ O armazenamento de dados sensíveis segue regras estritas de negócio. O campo `
 
 
 
-sql CREATE TABLE tb_usuarios ( id_usuario VARCHAR(20) NOT NULL COMMENT 'PK com prefixo USR-', id_setor INT NOT NULL COMMENT 'FK para tb_setores (Isolamento)', id_perfil INT NOT NULL COMMENT 'FK para tb_perfis (RBAC)', nome_completo VARCHAR(100) NOT NULL, email VARCHAR(100) NOT NULL UNIQUE, cpf VARCHAR(14) NOT NULL UNIQUE COMMENT 'Armazenado com máscara', senha VARCHAR(255) NOT NULL COMMENT 'Hash da senha', status ENUM('ativo', 'inativo', 'bloqueado') DEFAULT 'ativo', tentativas_login TINYINT DEFAULT 0 COMMENT 'Bloqueio após 3 falhas', created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, deleted_at DATETIME NULL COMMENT 'Soft Delete (Exclusão Lógica)', PRIMARY KEY (id_usuario), INDEX idx_setor (id_setor), INDEX idx_status (status) ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+sql CREATE TABLE tb_usuarios ( id_usuario CHAR(30) NOT NULL COMMENT 'PK formato USR- + 26 chars (regra padrão 30 chars)', id_setor INT NOT NULL COMMENT 'FK para tb_setores (Isolamento)', id_perfil INT NOT NULL COMMENT 'FK para tb_perfis (RBAC)', nome_completo VARCHAR(100) NOT NULL, email VARCHAR(100) NOT NULL UNIQUE, cpf VARCHAR(14) NOT NULL UNIQUE COMMENT 'Armazenado com máscara', senha VARCHAR(255) NOT NULL COMMENT 'Hash da senha', status ENUM('ativo', 'inativo', 'bloqueado') DEFAULT 'ativo', tentativas_login TINYINT DEFAULT 0 COMMENT 'Bloqueio após 3 falhas', created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, deleted_at DATETIME NULL COMMENT 'Soft Delete (Exclusão Lógica)', PRIMARY KEY (id_usuario), INDEX idx_setor (id_setor), INDEX idx_status (status) ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 ## 3. Tabelas Auxiliares e Auditoria
 

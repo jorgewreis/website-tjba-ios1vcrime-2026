@@ -190,10 +190,14 @@ body {
         align-items: center;
         gap: 8px;
     }
-    .theme-label {
+    .theme-label,
+    .theme-label-inline {
         font-family: 'Montserrat', sans-serif;
         font-size: 13px;
         color: #384551;
+    }
+    .theme-label-inline {
+        margin-right: 8px;
     }
     .form-control-theme {
         max-width: 120px;

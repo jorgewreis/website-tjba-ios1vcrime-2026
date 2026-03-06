@@ -98,11 +98,12 @@ $csrfToken = Security::generateCSRFToken();
                             </div>
                         </div>
                         
-                        <div class="row full-line">
+                        <div class="row">
+                            <label for="themeSelect" class="theme-label-inline">Tema:</label>
                             <select id="themeSelect" class="width-sm white" title="Preferência de tema">
-                                <option value="auto" disabled>Tema automático</option>
                                 <option value="claro" selected>Tema claro</option>
-                                <option value="escuro" disabled>Tema escuro</option>
+                                <option value="auto">Tema automático</option>
+                                <option value="escuro">Tema escuro</option>
                             </select>
                         </div>
 
@@ -122,7 +123,7 @@ $csrfToken = Security::generateCSRFToken();
 
                         <div class="row" style="border: none; padding-top: 10px;">
                             <div class="col">
-                                <button class="btn btn-primary-outline width-md" type="button">Cadastro de estudantes</button>
+                                <a href="cadastro_estudantes.php" class="btn btn-primary-outline width-md">Cadastro de estudantes</a>
                                 <label>Estudantes de Direito devem se cadastrar para acompanhamento de audiências.</label>
                             </div>                            
                         </div>

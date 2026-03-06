@@ -47,7 +47,7 @@
 
   function getTheme() {
     const t = getCookie(COOKIE_THEME);
-    return t === "claro" || t === "escuro" || t === "auto" ? t : "auto";
+    return t === "claro" || t === "escuro" || t === "auto" ? t : "claro";
   }
 
   function setTheme(theme) {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/security.php';
 require_once __DIR__ . '/../../app/helpers/BootstrapHelper.php';
+require_once __DIR__ . '/../app/helpers/IdGenerator.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -61,7 +62,7 @@ if (!move_uploaded_file($file['tmp_name'], $target)) {
 // opcional: gravar metadados no banco (se houver tabela)
 $pdo = getDatabaseConnection();
 try {
-    $id = bin2hex(random_bytes(8));
+    $id = IdGenerator::generateUniquePrefixedId($pdo, 'documentos', 'id_documento', 'DOC', 30);
     $title = trim((string)($_POST['title'] ?? ''));
     $stmt = $pdo->prepare("INSERT INTO documentos (id_documento, titulo, caminho, mime, tamanho, user_cadastro, data_cadastro) VALUES (?, ?, ?, ?, ?, ?, NOW())");
     $userId = Security::getUserId() ?? 'sistema';
