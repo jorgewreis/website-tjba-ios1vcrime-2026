@@ -70,36 +70,33 @@ $csrfToken = Security::generateCSRFToken();
 
                     <form class="form-login" id="loginForm">
                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
-                        <div class="row">
+                        <div class="row full-line">
                             <div class="col">
                                 <label for="cpf">Login (CPF)</label>
-                                <input class="width-sm white" type="text" id="cpf" name="cpf" required>
+                                <input class="width-full white" type="text" id="cpf" name="cpf" required>
                             </div>
                         </div>
 
-                        <div class="row">
+                        <div class="row full-line">
                             <div class="col">
                                 <label for="senha">Senha</label>
-                                <input class="width-md white" type="password" id="senha" name="senha" required>
+                                <input class="width-full white" type="password" id="senha" name="senha" required>
                             </div>
                         </div>
 
-                        <div class="row">                            
+                        <div class="row table">
                             <div class="col">
                                 <label class="checkbox-label">
                                     <input type="checkbox" id="lembrarUsuario" name="lembrar" value="1">
-                                    <span>Lembrar usuário</span>
+                                    <span>Lembrar-me</span>
                                 </label>
                             </div>
-                        </div>
-
-                        <div class="row">
                             <div class="col">
-                                <a class="link-login" href="recupera_senha.php">Recuperar senha</a>
+                                <a class="link-login" href="recupera_senha.php">Esqueceu a senha?</a>
                             </div>
                         </div>
-
-                        <div class="row">
+                        
+                        <div class="row full-line">
                             <span class="theme-label">Tema:</span>
                             <select id="themeSelect" class="form-control form-control-theme" title="Preferência de tema">
                                 <option value="auto">Auto</option>
@@ -108,11 +105,11 @@ $csrfToken = Security::generateCSRFToken();
                             </select>
                         </div>
 
-                        <div class="row">
-                            <button class="button bg-primary size-full" type="submit">Entrar</button>
+                        <div class="row buttons">
+                            <button class="button bg-primary width-full" type="submit">Entrar</button>
                         </div>
                         <div class="row">
-                            <div class="alert-heading danger size-full" id="alert-login">
+                            <div class="alert-heading danger width-full" id="alert-login">
                                 <div class="alert-header">
                                     <span class="text">Erro</span>
                                     <i class="fi fi-rs-cross"></i>
@@ -121,10 +118,11 @@ $csrfToken = Security::generateCSRFToken();
                             </div>
                         </div>
 
+                        <div class="row pagination">
+                            <button class="button bg-primary-outline" type="button">Cadastro de estudantes</button>
+                        </div>
                         <div class="row">
-                            <div class="col">
-                                <span class="text-login">Estudante de direito? <a class="link-login" href="#">Cadastre-se</a></span>
-                            </div>
+                            <span class="text-small">Estudantes de Direito devem se cadastrar para acompanhamento de audiências.</span>
                         </div>
                     </form>
 
