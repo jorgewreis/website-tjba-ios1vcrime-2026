@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0199
+
+**Data:** 2026-03-06 16:06:28 | **Commit:** `5062974` | **Tipo:** `patch`
+
+- Fix: correção de html
+
 ## V. 1.02.0198
 
 **Data:** 2026-03-06 16:03:18 | **Commit:** `3b3dbe7` | **Tipo:** `patch`
@@ -2232,6 +2238,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

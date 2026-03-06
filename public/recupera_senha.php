@@ -7,7 +7,6 @@ require_once __DIR__ . '/../app/helpers/bootstrap.php';
 
 $csrfToken = Security::generateCSRFToken();
 
-// CPF salvo no cookie "lembrar usuário" para pré-preencher
 $cpfInicial = '';
 if (isset($_COOKIE['tjba_1vcrime_remember_cpf'])) {
     $cpfInicial = trim((string) $_COOKIE['tjba_1vcrime_remember_cpf']);
@@ -20,15 +19,13 @@ if (isset($_COOKIE['tjba_1vcrime_remember_cpf'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Esqueci a senha - Primeira Vara Crime de Ilhéus</title>
 
-    <link rel="stylesheet" href="/assets/css/legacy/reset.css">
-    <link rel="stylesheet" href="/assets/css/legacy/color.css">
-    <link rel="stylesheet" href="/assets/css/legacy/components.css">
-    <link rel="stylesheet" href="/assets/css/legacy/form.css">
-    <link rel="stylesheet" href="/assets/css/legacy/layout.css">
-    <link rel="stylesheet" href="/assets/css/legacy/login.css">
-    <link rel="stylesheet" href="/assets/css/legacy/menu-style.css">
-    <link rel="stylesheet" href="/assets/css/legacy/pages.css">
-    <link rel="stylesheet" href="/assets/css/legacy/style.css">
+    <link rel="stylesheet" href="/assets/css/shared/reset.css">
+    <link rel="stylesheet" href="/assets/css/shared/variables.css">
+    <link rel="stylesheet" href="/assets/css/shared/base.css">
+    <link rel="stylesheet" href="/assets/css/shared/form.css">
+    <link rel="stylesheet" href="/assets/css/shared/table.css">
+    <link rel="stylesheet" href="/assets/css/shared/login.css">
+
     <link rel="icon" type="image/x-icon" href="/assets/img/favicon.ico">
     <script>
         (function() {
@@ -71,32 +68,32 @@ if (isset($_COOKIE['tjba_1vcrime_remember_cpf'])) {
                     <form class="form-login" id="resetForm">
                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
 
-                        <div class="form-line">
-                            <div class="form-block">
+                        <div class="row">
+                            <div class="col">
                                 <label for="cpf">CPF</label>
-                                <input class="form-control size-c" type="text" id="cpf" name="cpf" value="<?php echo htmlspecialchars($cpfInicial, ENT_QUOTES, 'UTF-8'); ?>" required>
+                                <input class="width-md white" type="text" id="cpf" name="cpf" value="<?php echo htmlspecialchars($cpfInicial, ENT_QUOTES, 'UTF-8'); ?>" required>
                             </div>
                         </div>
 
-                        <div class="form-line" id="emailHintLine" style="display: none;">
-                            <div class="form-block">
+                        <div class="row" id="emailHintLine" style="display: none;">
+                            <div class="col">
                                 <span class="email-hint" id="emailHint"></span>
                             </div>
                         </div>
 
-                        <div class="form-line">
-                            <div class="form-block" style="width: 100%;">
+                        <div class="row">
+                            <div class="col">
                                 <label for="email">Confirmar e-mail cadastrado</label>
-                                <input class="form-control size-full" type="email" id="email" name="email" placeholder="Digite o e-mail completo" required>
+                                <input class="width-md white" type="email" id="email" name="email" placeholder="Digite o e-mail completo" required>
                             </div>
                         </div>
 
-                        <div class="form-line">
-                            <button class="button bg-primary size-full" type="submit">Gerar nova senha e enviar por e-mail</button>
+                        <div class="row" style="background-color: transparent; padding: 20px 0 10px 0; width: 100%; border-bottom: 1px solid var(--color-gray-400);">
+                            <button class="btn btn-primary width-md" type="submit">Gerar nova senha e enviar por e-mail</button>
                         </div>
 
-                        <div class="form-line">
-                            <div class="alert-heading size-full" id="alert-login">
+                        <div class="row">
+                            <div class="alert-heading danger width-md" id="alert-login">
                                 <div class="alert-header">
                                     <span class="text">Aviso</span>
                                 </div>
@@ -104,9 +101,11 @@ if (isset($_COOKIE['tjba_1vcrime_remember_cpf'])) {
                             </div>
                         </div>
 
-                        <div class="form-line">
-                            <div class="form-block">
-                                <a class="link-login" href="/index.php">Voltar para login</a>
+                        <div class="row" style="border: none; padding-top: 10px;">
+                            <div class="col">
+                                <label class="link-login">
+                                    <a href="/index.php">Voltar para login</a>
+                                </label>
                             </div>
                         </div>
                     </form>
@@ -141,7 +140,7 @@ if (isset($_COOKIE['tjba_1vcrime_remember_cpf'])) {
                     const data = await r.json();
                     if (data && data.hint) {
                         emailHint.textContent = "E-mail cadastrado (parcial): " + data.hint;
-                        emailHintLine.style.display = "block";
+                        emailHintLine.style.display = "flex";
                     } else {
                         emailHintLine.style.display = "none";
                     }
