@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0202
+
+**Data:** 2026-03-06 16:31:36 | **Commit:** `25fa31c` | **Tipo:** `patch`
+
+- Fix: correção de envio de email
+
 ## V. 1.02.0201
 
 **Data:** 2026-03-06 16:27:50 | **Commit:** `2f1019e` | **Tipo:** `patch`
@@ -2250,6 +2256,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

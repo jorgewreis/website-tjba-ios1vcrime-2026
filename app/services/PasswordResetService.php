@@ -99,47 +99,66 @@ final class PasswordResetService
 
     /* ================= UTILITÁRIOS ================= */
 
+    /** Lê variável de ambiente (getenv ou $_ENV). Aceita MAIL_USER/MAIL_PASS como alias. */
+    private function env(string $key, ?string $default = null): ?string
+    {
+        $v = getenv($key);
+        if ($v !== false && $v !== '') {
+            return trim((string) $v);
+        }
+        $v = $_ENV[$key] ?? null;
+        return $v !== null && $v !== '' ? trim((string) $v) : $default;
+    }
+
     /**
      * Envia e-mail com a senha temporária. Retorna ['ok' => bool, 'sent' => bool].
      * ok: operação concluída (senha pode ser commitada). sent: e-mail foi de fato enviado (SMTP).
      */
     private function sendEmail(string $to, string $nome, string $senhaTemp): array
     {
-        $driver = getenv('MAIL_DRIVER') ?: 'log';
+        $driver = strtolower(trim((string) ($this->env('MAIL_DRIVER') ?? '')));
+        if ($driver === '' && $this->env('MAIL_HOST') !== null) {
+            $driver = 'smtp';
+        }
+        if ($driver === '') {
+            $driver = 'log';
+        }
 
         // ======================
         // Fallback (LOG): apenas registra no servidor; nenhum e-mail real enviado
         // ======================
-        if ($driver === 'log') {
+        if ($driver !== 'smtp') {
             error_log("[RESET SENHA] {$to} | senha temporária: {$senhaTemp}");
             return ['ok' => true, 'sent' => false];
         }
 
         // ======================
-        // SMTP Microsoft 365
+        // SMTP (Hostinger, Microsoft 365, etc.)
         // ======================
-        if ($driver === 'smtp') {
+        require_once __DIR__ . '/../vendor/autoload.php';
 
-            require_once __DIR__ . '/../vendor/autoload.php';
+        $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
 
-            $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+        try {
+            $mail->isSMTP();
+            $mail->Host       = $this->env('MAIL_HOST') ?? '';
+            $mail->Port       = (int) ($this->env('MAIL_PORT') ?? 587);
+            $mail->SMTPAuth   = true;
+            $mail->Username   = $this->env('MAIL_USERNAME') ?? $this->env('MAIL_USER') ?? '';
+            $mail->Password   = $this->env('MAIL_PASSWORD') ?? $this->env('MAIL_PASS') ?? '';
 
-            try {
-                $mail->isSMTP();
-                $mail->Host       = getenv('MAIL_HOST');
-                $mail->Port       = (int) getenv('MAIL_PORT');
-                $mail->SMTPAuth   = true;
-                $mail->Username   = getenv('MAIL_USERNAME');
-                $mail->Password   = getenv('MAIL_PASSWORD');
-                
-                $mail->SMTPSecure = getenv('MAIL_ENCRYPTION') === 'ssl'
-                    ? PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS
-                    : PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+            $encryption = strtolower(trim((string) ($this->env('MAIL_ENCRYPTION') ?? '')));
+            if ($encryption === '' && $mail->Port === 465) {
+                $encryption = 'ssl';
+            }
+            $mail->SMTPSecure = $encryption === 'ssl'
+                ? \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS
+                : \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
 
-                $mail->CharSet    = 'UTF-8';
+            $mail->CharSet = 'UTF-8';
 
-                $fromAddress = getenv('MAIL_FROM_ADDRESS');
-                $fromName    = getenv('MAIL_FROM_NAME') ?: 'Sistema';
+            $fromAddress = $this->env('MAIL_FROM_ADDRESS') ?? $this->env('MAIL_USER') ?? '';
+            $fromName    = $this->env('MAIL_FROM_NAME') ?: 'Sistema';
 
                 $mail->setFrom($fromAddress, $fromName);
                 $mail->addAddress($to, $nome);
@@ -219,14 +238,10 @@ final class PasswordResetService
                 $mail->send();
                 return ['ok' => true, 'sent' => true];
 
-            } catch (\Throwable $e) {
-                error_log('Erro SMTP: ' . $e->getMessage());
-                return ['ok' => false, 'sent' => false];
-            }
+        } catch (\Throwable $e) {
+            error_log('Erro SMTP: ' . $e->getMessage());
+            return ['ok' => false, 'sent' => false];
         }
-
-        error_log('MAIL_DRIVER inválido ou não suportado');
-        return ['ok' => false, 'sent' => false];
     }
 
 
