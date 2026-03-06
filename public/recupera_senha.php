@@ -59,9 +59,9 @@ if (isset($_COOKIE['tjba_1vcrime_remember_cpf'])) {
                 <!-- RIGHT - formulário -->
                 <div class="page-right">
                     <div class="title-page">
-                        <span class="title">Esqueci a senha</span>
+                        <span class="title">Recuperar senha</span>
                         <span class="info-title">
-                            Informe o CPF e confirme o e-mail cadastrado. Uma nova senha de 10 caracteres (letras maiúsculas e números) será gerada, alterada no sistema e enviada por e-mail. Altere-a no próximo login.
+                            Informe o CPF e confirme o e-mail cadastrado.
                         </span>
                     </div>
 
@@ -77,19 +77,19 @@ if (isset($_COOKIE['tjba_1vcrime_remember_cpf'])) {
 
                         <div class="row" id="emailHintLine" style="display: none;">
                             <div class="col">
-                                <span class="email-hint" id="emailHint"></span>
+                                <label class="email-hint" id="emailHint" style="margin-bottom: 15px; color: var(--color-gray-600);"></label>
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col">
                                 <label for="email">Confirmar e-mail cadastrado</label>
-                                <input class="width-md white" type="email" id="email" name="email" placeholder="Digite o e-mail completo" required>
+                                <input class="width-lg white" type="email" id="email" name="email" placeholder="Digite o e-mail cadastrado" required>
                             </div>
                         </div>
 
                         <div class="row" style="background-color: transparent; padding: 20px 0 10px 0; width: 100%; border-bottom: 1px solid var(--color-gray-400);">
-                            <button class="btn btn-primary width-md" type="submit">Gerar nova senha e enviar por e-mail</button>
+                            <button class="btn btn-primary width-md" type="submit">Recuperar senha</button>
                         </div>
 
                         <div class="row">
@@ -139,7 +139,7 @@ if (isset($_COOKIE['tjba_1vcrime_remember_cpf'])) {
                     const r = await fetch("/api/email_hint.php?cpf=" + encodeURIComponent(digits));
                     const data = await r.json();
                     if (data && data.hint) {
-                        emailHint.textContent = "E-mail cadastrado (parcial): " + data.hint;
+                        emailHint.textContent = "E-mail cadastrado : " + data.hint;
                         emailHintLine.style.display = "flex";
                     } else {
                         emailHintLine.style.display = "none";
