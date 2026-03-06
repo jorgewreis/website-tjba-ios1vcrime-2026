@@ -36,6 +36,16 @@ jobs:
             "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
             "echo SSH_OK && whoami && pwd"
 
+      - name: Fix deploy directory ownership (server)
+        run: |
+          ssh -i ~/.ssh/id_ed25519 \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "sudo chown -R \$(whoami): \"${{ secrets.DEV_PATH }}\""
+        # Se este passo falhar (ex.: usuário sem sudo), no servidor rode uma vez como root:
+        #   chown -R DEPLOY_USER: DEV_PATH
+
       - name: Sync files to server (DEV)
         run: |
           rsync -az \
