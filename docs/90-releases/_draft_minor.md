@@ -7,4 +7,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(app): teste de versionamento [patch]** `[edf966f]`
 - **Fix: tentativa de correção de bumper** `[938a88c]`
 - **Fix: nova tentativa de correção** `[39e3881]`
+- **Fix: nova tentativa de fix** `[8b17dc1]`
 
