@@ -26,6 +26,16 @@
         // Só redireciona se o servidor confirmar sucesso (HTTP 2xx + success).
         // A home.php fará nova verificação de sessão/token ao carregar.
         if (response.ok && result && result.success === true) {
+          if (global.App && global.App.Prefs) {
+            const lembrar = form.querySelector("#lembrarUsuario");
+            const cpfInput = form.querySelector('input[name="cpf"]');
+            const cpf = cpfInput ? (cpfInput.value || "").replace(/\D/g, "") : "";
+            if (lembrar && lembrar.checked && cpf.length === 11) {
+              global.App.Prefs.setRememberCpf(cpfInput.value.trim());
+            } else {
+              global.App.Prefs.clearRememberCpf();
+            }
+          }
           window.location.replace("/home.php");
           return;
         }

@@ -38,7 +38,7 @@ final class PasswordResetService
             return;
         }
 
-        $senhaTemp = Security::generateTempPassword();
+        $senhaTemp = Security::generateTempPassword(10);
         $senhaHash = Security::hashPassword($senhaTemp);
 
         $this->pdo->beginTransaction();

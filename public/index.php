@@ -32,6 +32,17 @@ $csrfToken = Security::generateCSRFToken();
   
   
     <link rel="icon" type="image/x-icon" href="/assets/img/favicon.ico">
+    <script>
+        (function() {
+            var name = 'tjba_1vcrime_theme';
+            var i = document.cookie.indexOf(name + '=');
+            if (i === -1) return;
+            i += name.length + 1;
+            var end = document.cookie.indexOf(';', i);
+            var t = decodeURIComponent((end === -1 ? document.cookie.slice(i) : document.cookie.slice(i, end)).trim());
+            if (t === 'claro' || t === 'escuro' || t === 'auto') document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
 </head>
 <body>
     
@@ -49,7 +60,8 @@ $csrfToken = Security::generateCSRFToken();
                     <div class="title-system">
                         <span class="title">PRIMEIRA VARA</span>
                         <span class="info-title">CRIMINAL</span>
-                        <p class="text">O lugar onde a verdade prevalece</p>
+                        <p class="text">A excelência nasce de um fluxo inteligente, padronização segura, responsabilidade clara e foco na efetividade jurisdicional.
+                        </p>
                     </div>
                 </div>
 
@@ -76,10 +88,25 @@ $csrfToken = Security::generateCSRFToken();
                             </div>
                         </div>
 
-                        <div class="form-line">
+                        <div class="form-line form-line-options">
                             <div class="form-block">
                                 <a class="link-login" href="recupera_senha.php">Esqueci a senha.</a>
                             </div>
+                            <div class="form-block form-block-remember">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="lembrarUsuario" name="lembrar" value="1">
+                                    <span>Lembrar usuário</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-line form-line-theme">
+                            <span class="theme-label">Tema:</span>
+                            <select id="themeSelect" class="form-control form-control-theme" title="Preferência de tema">
+                                <option value="auto">Auto</option>
+                                <option value="claro">Claro</option>
+                                <option value="escuro">Escuro</option>
+                            </select>
                         </div>
 
                         <div class="form-line">
@@ -111,18 +138,44 @@ $csrfToken = Security::generateCSRFToken();
     </div>
 
     <script src="/assets/js/shared/cpf.js" defer></script>
+    <script src="/assets/js/shared/prefs.js" defer></script>
     <script src="/assets/js/shared/auth.js" defer></script>
     <script defer>
         document.addEventListener("DOMContentLoaded", async () => {
             const cpfInput = document.querySelector("#cpf");
             const alertBox = document.querySelector("#alert-login");
             const senhaInput = document.querySelector("#senha");
+            const lembrarCheck = document.querySelector("#lembrarUsuario");
+            const themeSelect = document.querySelector("#themeSelect");
 
+            // Ao clicar no CPF: limpa CPF e senha e esconde alerta
             cpfInput?.addEventListener("click", () => {
                 if (cpfInput) cpfInput.value = "";
                 if (senhaInput) senhaInput.value = "";
                 if (alertBox) alertBox.style.display = "none";
             });
+
+            // Ao clicar na senha: limpa só a senha (facilita em caso de senha inválida)
+            senhaInput?.addEventListener("click", () => {
+                if (senhaInput) senhaInput.value = "";
+                if (alertBox) alertBox.style.display = "none";
+            });
+
+            // Cookies: lembrar usuário e tema
+            if (App.Prefs) {
+                App.Prefs.applyThemeFromCookie();
+                const savedCpf = App.Prefs.getRememberCpf();
+                if (savedCpf && cpfInput) {
+                    cpfInput.value = savedCpf;
+                    if (lembrarCheck) lembrarCheck.checked = true;
+                }
+                const savedTheme = App.Prefs.getTheme();
+                if (savedTheme && themeSelect) themeSelect.value = savedTheme;
+                themeSelect?.addEventListener("change", () => {
+                    App.Prefs.setTheme(themeSelect.value);
+                    App.Prefs.applyTheme();
+                });
+            }
 
             await App.CPF.init("#cpf");
             await App.Auth.initLogin("#loginForm", "login.php", "erro", "alert-login");

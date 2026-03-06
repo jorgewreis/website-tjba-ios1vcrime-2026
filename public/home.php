@@ -132,6 +132,7 @@ $userProfile = Security::getUserProfile() ?? '';
         
     </div>    
 
+    <script src="/assets/js/shared/prefs.js" defer></script>
     <script src="/assets/js/shared/common.js" defer></script>
     <script src="/assets/js/shared/menu.js" defer></script>
 
@@ -369,6 +370,7 @@ $userProfile = Security::getUserProfile() ?? '';
         }
 
         document.addEventListener("DOMContentLoaded", async function() {
+            if (window.App && App.Prefs) App.Prefs.applyThemeFromCookie();
             await initDynamicMenu();
             App.Menu.initMenu();
             App.Menu.initActive();
