@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0191
+
+**Data:** 2026-03-06 14:42:40 | **Commit:** `f97de51` | **Tipo:** `patch`
+
+- Feat: Novo sistema de logout
+
 ## V. 1.02.0190
 
 **Data:** 2026-03-05 20:32:37 | **Commit:** `5e890ec` | **Tipo:** `patch`
@@ -2184,6 +2190,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

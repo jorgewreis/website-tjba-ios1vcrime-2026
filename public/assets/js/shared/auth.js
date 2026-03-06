@@ -17,13 +17,16 @@
       try {
         const response = await fetch(endpoint, {
           method: "POST",
-          body: formData
+          body: formData,
+          credentials: "include"
         });
 
         const result = await response.json();
 
-        if (result.success) {
-          window.location.href = "/home.php";
+        // Só redireciona se o servidor confirmar sucesso (HTTP 2xx + success).
+        // A home.php fará nova verificação de sessão/token ao carregar.
+        if (response.ok && result && result.success === true) {
+          window.location.replace("/home.php");
           return;
         }
 

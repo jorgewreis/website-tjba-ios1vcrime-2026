@@ -4,12 +4,16 @@ require_once __DIR__ . '/../config/security.php';
 require_once __DIR__ . '/../app/helpers/bootstrap.php';
 require_once __DIR__ . '/../app/models/Usuario.php';
 
-if (empty($_SESSION['token']) || empty($_SESSION['id_usuario'])) {
-    header('Location: /index.php');
-    exit;
-}
+// Impedir cache: a home só pode ser servida após verificação em cada request
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Cache-Control: post-check=0, pre-check=0', false);
+header('Pragma: no-cache');
+header('Expires: 0');
 
-// Verificar validade do token
+// 1) Exige sessão com token e id_usuario (redireciona se não autenticado)
+Security::requireAuthentication();
+
+// 2) Validar token no banco (expiração e consistência)
 $usuario = new Usuario();
 $user = $usuario->validarToken($_SESSION['token']);
 
@@ -70,7 +74,7 @@ $userProfile = Security::getUserProfile() ?? '';
                             <i class="fi fi-rs-home"></i>
                             <span class="text">Dashboard</span>
                         </a>
-                    </li>                    
+                    </li>
                 </ul>
             </div>
 
@@ -308,6 +312,27 @@ $userProfile = Security::getUserProfile() ?? '';
             return menuItem;
         }
 
+        function appendLogoutItem() {
+            const menuRoot = document.querySelector('.menu-inner');
+            if (!menuRoot) return;
+
+            const li = document.createElement('li');
+            li.className = 'menu-item menu-item-logout';
+            const link = document.createElement('a');
+            link.href = '#';
+            link.className = 'menu-link';
+            link.id = 'logout-btn';
+            link.dataset.logout = '';
+            link.title = 'Sair com segurança';
+            link.innerHTML = '<i class="fi fi-rs-sign-out-alt"></i><span class="text">Sair</span>';
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                App.Common.performLogout('/logout.php', true);
+            });
+            li.appendChild(link);
+            menuRoot.appendChild(li);
+        }
+
         function buildMenuForSections(permittedSections) {
             const menuRoot = document.querySelector('.menu-inner');
 
@@ -340,6 +365,7 @@ $userProfile = Security::getUserProfile() ?? '';
             const perfis = await fetchUserPerfis();
             const permittedSections = getPermittedSections(perfis);
             buildMenuForSections(permittedSections);
+            appendLogoutItem();
         }
 
         document.addEventListener("DOMContentLoaded", async function() {
