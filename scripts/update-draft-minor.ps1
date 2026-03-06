@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Gera Release Notes estilizados automaticamente para cada versão.
 
@@ -34,9 +34,11 @@ param(
     [ValidateNotNullOrEmpty()]
     [string]$CommitHash,
 
-    [Parameter(Mandatory=$true)]
-    [ValidateNotNullOrEmpty()]
-    [string]$CommitMessage,
+    [Parameter(Mandatory=$false)]
+    [string]$CommitMessage = "",
+
+    [Parameter(Mandatory=$false)]
+    [string]$CommitMessagePath = "",
 
     [Parameter(Mandatory=$true)]
     [ValidateSet("major", "minor", "patch")]
@@ -176,17 +178,17 @@ function Get-ChangeType {
 
     $normalized = $FirstLine.Trim().ToLowerInvariant()
 
-    # Conventional commits
-    if ($normalized -match '^\s*(feat|feature)(|$[^)]+$|)?(!)?:') { return "Feature" }
-    if ($normalized -match '^\s*(fix|bugfix)(|$[^)]+$|)?(!)?:') { return "Correção" }
-    if ($normalized -match '^\s*refactor(|$[^)]+$|)?(!)?:') { return "Refatoração" }
-    if ($normalized -match '^\s*perf(|$[^)]+$|)?(!)?:') { return "Performance" }
-    if ($normalized -match '^\s*(security|sec)(|$[^)]+$|)?(!)?:') { return "Segurança" }
-    if ($normalized -match '^\s*docs(|$[^)]+$|)?(!)?:') { return "Documentação" }
-    if ($normalized -match '^\s*test(|$[^)]+$|)?(!)?:') { return "Testes" }
-    if ($normalized -match '^\s*build(|$[^)]+$|)?(!)?:') { return "Build" }
-    if ($normalized -match '^\s*(ci|cd)(|$[^)]+$|)?(!)?:') { return "CI/CD" }
-    if ($normalized -match '^\s*chore(|$[^)]+$|)?(!)?:') { return "Manutenção" }
+    # Conventional commits (escopo opcional: tipo(escopo):)
+    if ($normalized -match '^\s*(feat|feature)(\([^)]+\))?(!)?:') { return "Feature" }
+    if ($normalized -match '^\s*(fix|bugfix)(\([^)]+\))?(!)?:') { return "Correção" }
+    if ($normalized -match '^\s*refactor(\([^)]+\))?(!)?:') { return "Refatoração" }
+    if ($normalized -match '^\s*perf(\([^)]+\))?(!)?:') { return "Performance" }
+    if ($normalized -match '^\s*(security|sec)(\([^)]+\))?(!)?:') { return "Segurança" }
+    if ($normalized -match '^\s*docs(\([^)]+\))?(!)?:') { return "Documentação" }
+    if ($normalized -match '^\s*test(\([^)]+\))?(!)?:') { return "Testes" }
+    if ($normalized -match '^\s*build(\([^)]+\))?(!)?:') { return "Build" }
+    if ($normalized -match '^\s*(ci|cd)(\([^)]+\))?(!)?:') { return "CI/CD" }
+    if ($normalized -match '^\s*chore(\([^)]+\))?(!)?:') { return "Manutenção" }
 
     return "Geral"
 }
@@ -369,6 +371,18 @@ function New-SimpleReleaseNote {
 # =============================================================================
 
 try {
+    if ([string]::IsNullOrWhiteSpace($CommitMessage) -and [string]::IsNullOrWhiteSpace($CommitMessagePath) -eq $false -and (Test-Path -LiteralPath $CommitMessagePath -PathType Leaf)) {
+        try {
+            $CommitMessage = Get-Content -Raw -LiteralPath $CommitMessagePath -Encoding UTF8 -ErrorAction Stop
+            $CommitMessage = $CommitMessage.TrimEnd()
+        } catch {
+            Write-Warn "Não foi possível ler CommitMessagePath: $_"
+        }
+    }
+    if ([string]::IsNullOrWhiteSpace($CommitMessage)) {
+        $CommitMessage = "chore: atualização automática"
+    }
+
     Write-Info "========================================="
     Write-Info "update-draft-minor.ps1 iniciado"
     Write-Info "========================================="

@@ -33,7 +33,9 @@ jobs:
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         if: steps.version_check.outputs.skip_bump != 'true'
         run: |
-          pwsh scripts/bump-version.ps1 -CommitMessage "$env:COMMIT_MESSAGE"
+          printf '%s' "$COMMIT_MESSAGE" > .commit_msg.txt
+          pwsh scripts/bump-version.ps1 -CommitMessagePath .commit_msg.txt
+          rm -f .commit_msg.txt
 
       - name: Commit and push
         run: |

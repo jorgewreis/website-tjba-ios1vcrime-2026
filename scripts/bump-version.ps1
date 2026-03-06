@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Automatiza versionamento semântico (SemVer) para projetos Git.
 
@@ -50,6 +50,9 @@
 param(
     [Parameter(Mandatory=$false)]
     [string]$CommitMessage = "",
+
+    [Parameter(Mandatory=$false)]
+    [string]$CommitMessagePath = "",
 
     [Parameter(Mandatory=$false)]
     [ValidateSet("major", "minor", "patch", "")]
@@ -617,6 +620,15 @@ function Update-Changelog {
 # =============================================================================
 
 try {
+    if ([string]::IsNullOrWhiteSpace($CommitMessage) -and [string]::IsNullOrWhiteSpace($CommitMessagePath) -eq $false -and (Test-Path -LiteralPath $CommitMessagePath -PathType Leaf)) {
+        try {
+            $CommitMessage = Get-Content -Raw -LiteralPath $CommitMessagePath -Encoding UTF8 -ErrorAction Stop
+            $CommitMessage = $CommitMessage.TrimEnd()
+        } catch {
+            Write-Warning-Message "Não foi possível ler CommitMessagePath: $_"
+        }
+    }
+
     Write-Debug-Message "========================================="
     Write-Debug-Message "bump-version.ps1 iniciado"
     Write-Debug-Message "========================================="
