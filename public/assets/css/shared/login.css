@@ -73,6 +73,8 @@ body {
         flex-direction: column;
         align-items: flex-start;
         justify-content: center;
+
+        background-color: var(--primary-color-bg-light-2);
     }
 
     .title-page{
@@ -94,6 +96,8 @@ body {
         }
 
         .title-page .info-title{
+            margin-top: 10px;
+            
             font-family: 'Montserrat', sans-serif;
             font-weight: 400;
             font-size: 12px;
@@ -245,7 +249,6 @@ body {
             color: #161B31;
         }
         .page-left .title-system .info-title{
-            margin-top: -30px;
             margin-left: -3px;
 
             font-family: 'Montserrat', sans-serif;
@@ -256,6 +259,8 @@ body {
 
         .page-left .title-system .text{
             width: 60%;
+            margin-top: 20px;
+
             font-family: 'Montserrat', sans-serif;
             font-weight: 400;
             font-size: 20px;

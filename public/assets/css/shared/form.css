@@ -524,6 +524,9 @@ input[type="text"].status-error {
     color: var(--danger-color-active) !important;
     pointer-events: none !important;
 }
+input.white{
+    background-color: #fff;
+}
 
 /* LABEL */
 label {

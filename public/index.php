@@ -70,25 +70,22 @@ $csrfToken = Security::generateCSRFToken();
 
                     <form class="form-login" id="loginForm">
                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
-                        <div class="form-line">
-                            <div class="form-block">
+                        <div class="row">
+                            <div class="col">
                                 <label for="cpf">Login (CPF)</label>
-                                <input class="form-control size-c" type="text" id="cpf" name="cpf" required>
+                                <input class="width-sm white" type="text" id="cpf" name="cpf" required>
                             </div>
                         </div>
 
-                        <div class="form-line">
-                            <div class="form-block">
+                        <div class="row">
+                            <div class="col">
                                 <label for="senha">Senha</label>
-                                <input class="form-control size-c" type="password" id="senha" name="senha" required>
+                                <input class="width-md white" type="password" id="senha" name="senha" required>
                             </div>
                         </div>
 
-                        <div class="form-line form-line-options">
-                            <div class="form-block">
-                                <a class="link-login" href="recupera_senha.php">Esqueci a senha.</a>
-                            </div>
-                            <div class="form-block form-block-remember">
+                        <div class="row">                            
+                            <div class="col">
                                 <label class="checkbox-label">
                                     <input type="checkbox" id="lembrarUsuario" name="lembrar" value="1">
                                     <span>Lembrar usuário</span>
@@ -96,7 +93,13 @@ $csrfToken = Security::generateCSRFToken();
                             </div>
                         </div>
 
-                        <div class="form-line form-line-theme">
+                        <div class="row">
+                            <div class="col">
+                                <a class="link-login" href="recupera_senha.php">Recuperar senha</a>
+                            </div>
+                        </div>
+
+                        <div class="row">
                             <span class="theme-label">Tema:</span>
                             <select id="themeSelect" class="form-control form-control-theme" title="Preferência de tema">
                                 <option value="auto">Auto</option>
@@ -105,10 +108,10 @@ $csrfToken = Security::generateCSRFToken();
                             </select>
                         </div>
 
-                        <div class="form-line">
+                        <div class="row">
                             <button class="button bg-primary size-full" type="submit">Entrar</button>
                         </div>
-                        <div class="form-line">
+                        <div class="row">
                             <div class="alert-heading danger size-full" id="alert-login">
                                 <div class="alert-header">
                                     <span class="text">Erro</span>
@@ -118,8 +121,8 @@ $csrfToken = Security::generateCSRFToken();
                             </div>
                         </div>
 
-                        <div class="form-line">
-                            <div class="form-block">
+                        <div class="row">
+                            <div class="col">
                                 <span class="text-login">Estudante de direito? <a class="link-login" href="#">Cadastre-se</a></span>
                             </div>
                         </div>
