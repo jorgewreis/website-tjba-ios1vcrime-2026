@@ -70,17 +70,17 @@ $csrfToken = Security::generateCSRFToken();
 
                     <form class="form-login" id="loginForm">
                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
-                        <div class="row full-line">
+                        <div class="row">
                             <div class="col">
                                 <label for="cpf">Login (CPF)</label>
-                                <input class="width-full white" type="text" id="cpf" name="cpf" required>
+                                <input class="width-md white" type="text" id="cpf" name="cpf" required>
                             </div>
                         </div>
 
-                        <div class="row full-line">
+                        <div class="row">
                             <div class="col">
                                 <label for="senha">Senha</label>
-                                <input class="width-full white" type="password" id="senha" name="senha" required>
+                                <input class="width-md white" type="password" id="senha" name="senha" required>
                             </div>
                         </div>
 
@@ -92,21 +92,22 @@ $csrfToken = Security::generateCSRFToken();
                                 </label>
                             </div>
                             <div class="col">
-                                <a class="link-login" href="recupera_senha.php">Esqueceu a senha?</a>
+                                <label class="link-login">
+                                    <a href="recupera_senha.php">Esqueceu a senha?</a>
+                                </label>
                             </div>
                         </div>
                         
                         <div class="row full-line">
-                            <span class="theme-label">Tema:</span>
-                            <select id="themeSelect" class="form-control form-control-theme" title="Preferência de tema">
-                                <option value="auto">Auto</option>
-                                <option value="claro">Claro</option>
-                                <option value="escuro">Escuro</option>
+                            <select id="themeSelect" class="width-md" title="Preferência de tema">
+                                <option value="auto" disabled>Tema automático</option>
+                                <option value="claro" selected>Tema claro</option>
+                                <option value="escuro" disabled>Tema escuro</option>
                             </select>
                         </div>
 
-                        <div class="row buttons">
-                            <button class="button bg-primary width-full" type="submit">Entrar</button>
+                        <div class="row buttons" style="background-color: transparent; padding-bottom: 20px;">
+                            <button class="btn btn-primary width-full" type="button">Entrar</button>
                         </div>
                         <div class="row">
                             <div class="alert-heading danger width-full" id="alert-login">
@@ -118,11 +119,11 @@ $csrfToken = Security::generateCSRFToken();
                             </div>
                         </div>
 
-                        <div class="row pagination">
-                            <button class="button bg-primary-outline" type="button">Cadastro de estudantes</button>
-                        </div>
-                        <div class="row">
-                            <span class="text-small">Estudantes de Direito devem se cadastrar para acompanhamento de audiências.</span>
+                        <div class="row pagination" style="border: none; padding-top: 10px;">
+                            <div class="col">
+                                <button class="btn btn-primary-outline width-full" type="button">Cadastro de estudantes</button>
+                                <label>Estudantes de Direito devem se cadastrar para acompanhamento de audiências.</label>
+                            </div>                            
                         </div>
                     </form>
 

@@ -201,7 +201,12 @@ hr {
     transition: all 0.2s ease;
 }
 
-
+.link-login a{
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--primary-color-active);
+}
 
 /* - CORES */
 
@@ -220,7 +225,7 @@ hr {
     border-color: var(--primary-color-active);
 }
 .btn-primary-outline {
-    background-color: transparent;
+    background-color: white;
     border-color: var(--primary-color);
     color: var(--primary-color);
         

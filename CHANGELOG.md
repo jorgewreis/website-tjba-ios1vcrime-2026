@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0196
+
+**Data:** 2026-03-06 15:46:22 | **Commit:** `ab6b885` | **Tipo:** `patch`
+
+- Fix: correção de tema e layout
+
 ## V. 1.02.0195
 
 **Data:** 2026-03-06 15:27:57 | **Commit:** `99876a4` | **Tipo:** `patch`
@@ -2214,6 +2220,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
