@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0198
+
+**Data:** 2026-03-06 16:03:18 | **Commit:** `3b3dbe7` | **Tipo:** `patch`
+
+- Fix: ajustes no select
+
 ## V. 1.02.0197
 
 **Data:** 2026-03-06 16:01:19 | **Commit:** `a7921ad` | **Tipo:** `patch`
@@ -2226,6 +2232,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

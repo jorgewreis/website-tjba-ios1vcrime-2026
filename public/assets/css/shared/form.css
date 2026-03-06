@@ -483,6 +483,9 @@ select:focus {
     box-shadow: 0 0 0 1px var(--primary-color);
     outline: none;
 }
+select.height-sm {
+    background-image: none;    
+}
 
 /* INPUTS */
 
@@ -529,7 +532,8 @@ input[type="text"].status-error {
     color: var(--danger-color-active) !important;
     pointer-events: none !important;
 }
-input.white{
+input.white,
+select.white{
     background-color: #fff;
 }
 

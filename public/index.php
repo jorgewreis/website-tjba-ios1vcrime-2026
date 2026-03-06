@@ -99,7 +99,7 @@ $csrfToken = Security::generateCSRFToken();
                         </div>
                         
                         <div class="row full-line">
-                            <select id="themeSelect" class="width-sm" title="Preferência de tema">
+                            <select id="themeSelect" class="width-sm white" title="Preferência de tema">
                                 <option value="auto" disabled>Tema automático</option>
                                 <option value="claro" selected>Tema claro</option>
                                 <option value="escuro" disabled>Tema escuro</option>
