@@ -4,4 +4,6 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-_(Será preenchido automaticamente pelo sistema de versionamento)_
+- **feat(app): teste de versionamento [patch]** `[edf966f]`
+- **Fix: tentativa de correção de bumper** `[938a88c]`
+
