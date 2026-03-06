@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.02.0206
+
+**Data:** 2026-03-06 18:25:21 | **Commit:** `0875cc0` | **Tipo:** `patch`
+
+- Fix: ajustes na mensagem de email
+
 ## V. 1.02.0205
 
 **Data:** 2026-03-06 18:17:14 | **Commit:** `30df3c9` | **Tipo:** `patch`
@@ -2274,6 +2280,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -277,12 +277,12 @@ final class PasswordResetService
                     <tr>
                         <td align="center">
 
-                        <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:6px; overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.08);">
+                        <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff; overflow:hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
 
                             <tr>
-                            <td style="background-color:#7a1f1f; padding:20px; text-align:center;">
+                            <td style="background-color:#686BFB; padding:20px; text-align:center;">
                                 <span style="color:#ffffff; font-size:18px; font-weight:bold;">
-                                Primeira Vara Crime de Ilhéus
+                                SGC - Primeira Vara Crime de Ilhéus
                                 </span>
                             </td>
                             </tr>
@@ -294,7 +294,7 @@ final class PasswordResetService
                                 <p>Recebemos uma solicitação para redefinição de senha do seu acesso ao sistema.</p>
 
                                 <p style="margin:25px 0; text-align:center;">
-                                <span style="display:inline-block; background-color:#7a1f1f; color:#ffffff; padding:12px 20px; font-size:16px; letter-spacing:1px; border-radius:4px;">
+                                <span style="display:inline-block; background-color:#ff0040; color:#ffffff; padding:12px 20px; font-size:18px; font-weight: 600; letter-spacing:1px; border-radius:6px;">
                                     ' . htmlspecialchars($senhaTemp, ENT_QUOTES, 'UTF-8') . '
                                 </span>
                                 </p>
