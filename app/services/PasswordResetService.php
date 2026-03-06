@@ -127,8 +127,8 @@ final class PasswordResetService
             __DIR__ . '/../../../.env',
         ];
         if (!empty($_SERVER['DOCUMENT_ROOT'])) {
-            $candidates[] = $_SERVER['DOCUMENT_ROOT'] . '/.env';
             $candidates[] = $_SERVER['DOCUMENT_ROOT'] . '/../.env';
+            $candidates[] = $_SERVER['DOCUMENT_ROOT'] . '/.env';
         }
         $envPath = null;
         foreach ($candidates as $path) {
