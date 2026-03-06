@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0005
+
+**Data:** 2026-03-06 19:19:46 | **Commit:** `5b08510` | **Tipo:** `patch`
+
+- Fix: nova correção de sudo
+
 ## V. 1.03.0004
 
 **Data:** 2026-03-06 19:18:11 | **Commit:** `8b17dc1` | **Tipo:** `patch`
@@ -2304,6 +2310,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
