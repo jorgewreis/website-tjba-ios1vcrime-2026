@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0002
+
+**Data:** 2026-03-06 19:05:35 | **Commit:** `938a88c` | **Tipo:** `patch`
+
+- Fix: tentativa de correção de bumper
+
 ## V. 1.02.0207
 
 **Data:** 2026-03-06 18:49:19 | **Commit:** `d171608` | **Tipo:** `patch`
@@ -2286,6 +2292,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

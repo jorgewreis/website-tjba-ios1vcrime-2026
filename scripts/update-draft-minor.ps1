@@ -58,7 +58,10 @@ param(
     [string]$BufferMinorPath = "docs/90-releases/_buffer_minor.txt",
 
     [Parameter(Mandatory=$false)]
-    [string]$NotesDir = "docs/90-releases/notes"
+    [string]$NotesDir = "docs/90-releases/notes",
+
+    [Parameter(Mandatory=$false)]
+    [string]$DraftMinorPath = "docs/90-releases/_draft_minor.md"
 )
 
 # =============================================================================
@@ -273,6 +276,55 @@ function Get-BufferEntries {
 }
 
 # =============================================================================
+# ATUALIZAÇÃO DO ARQUIVO _draft_minor.md (Entradas Pendentes)
+# =============================================================================
+
+function Update-DraftMinorMarkdown {
+    param(
+        [string]$BufferPath,
+        [string]$DraftPath
+    )
+
+    if ([string]::IsNullOrWhiteSpace($DraftPath)) { return }
+
+    $directory = Split-Path -Path $DraftPath -Parent
+    Ensure-Directory -Path $directory
+
+    $entries = @(Get-BufferEntries -BufferPath $BufferPath)
+
+    $content = @()
+    $content += "# Draft - Release Notes (Minor)"
+    $content += ""
+    $content += "Este arquivo acumula mudanças incrementais para a próxima release MINOR."
+    $content += ""
+    $content += "## Entradas Pendentes"
+    $content += ""
+
+    if ($entries.Count -eq 0) {
+        $content += "_Nenhuma entrada pendente._"
+    }
+    else {
+        foreach ($item in $entries) {
+            $line = "- **$($item.Message)**"
+            if (![string]::IsNullOrWhiteSpace($item.Hash)) {
+                $line += " ``[$($item.Hash)]``"
+            }
+            $content += $line
+        }
+    }
+
+    $content += ""
+
+    try {
+        $content | Out-File -LiteralPath $DraftPath -Encoding UTF8 -Force -ErrorAction Stop
+        Write-Debug-Custom "Draft atualizado: $DraftPath ($($entries.Count) entradas)"
+    }
+    catch {
+        Write-Warn "Não foi possível atualizar o draft: $_"
+    }
+}
+
+# =============================================================================
 # GERAÇÃO DE RELEASE NOTES
 # =============================================================================
 
@@ -417,9 +469,11 @@ try {
     # Define caminhos absolutos
     $bufferPath = Join-Path $RepoRoot $BufferMinorPath
     $notesPath = Join-Path $RepoRoot $NotesDir
+    $draftPath = Join-Path $RepoRoot $DraftMinorPath
 
     Write-Debug-Custom "Buffer path: $bufferPath"
     Write-Debug-Custom "Notes path: $notesPath"
+    Write-Debug-Custom "Draft path: $draftPath"
 
     # Processa baseado no bump
     switch ($Bump) {
@@ -432,6 +486,8 @@ try {
                 -Message $firstLine `
                 -CommitHash $CommitHash `
                 -Author "Unknown"
+
+            Update-DraftMinorMarkdown -BufferPath $bufferPath -DraftPath $draftPath
 
             Write-Host ""
             Write-Host "✅ PATCH REGISTRADO NO BUFFER" -ForegroundColor Green
@@ -487,10 +543,11 @@ try {
                 -Entries $entries `
                 -ImpactLevel $Impact
 
-            # Limpa buffer se sucesso
+            # Limpa buffer se sucesso e atualiza draft para "nenhuma entrada"
             if ($success -and (Test-Path -LiteralPath $outputFile)) {
                 Write-Info "Limpando buffer..."
                 Remove-Item -LiteralPath $bufferPath -Force -ErrorAction SilentlyContinue
+                Update-DraftMinorMarkdown -BufferPath $bufferPath -DraftPath $draftPath
 
                 Write-Host ""
                 Write-Host "✅ VERSÃO MINOR PROCESSADA" -ForegroundColor Green
