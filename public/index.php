@@ -107,7 +107,7 @@ $csrfToken = Security::generateCSRFToken();
                         </div>
 
                         <div class="row" style="background-color: transparent; padding: 20px 0 10px 0; width: 100%; border-bottom: 1px solid var(--color-gray-400);">
-                            <button class="btn btn-primary width-md" type="button">Entrar</button>
+                            <button class="btn btn-primary width-md" type="submit">Entrar</button>
                         </div>
 
                         <div class="row">

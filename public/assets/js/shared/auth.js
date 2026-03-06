@@ -150,6 +150,11 @@
             message
           );
           form.reset();
+          if (emailSent) {
+            setTimeout(() => {
+              window.location.replace("/index.php");
+            }, 2000);
+          }
         } else {
           setAlert("danger", "Erro", message);
         }
