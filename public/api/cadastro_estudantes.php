@@ -18,13 +18,26 @@ if (!is_array($payload)) {
     $payload = $_POST;
 }
 
+// Limites compatíveis com a tabela estudantes (evitar overflow no banco)
+$limites = [
+    'nome_completo' => 200,
+    'telefone'      => 20,
+    'faculdade'     => 150,
+    'email'         => 255,
+    'semestre'      => 2,
+];
+
 $nomeCompleto = trim((string) ($payload['nome_completo'] ?? ''));
-$cpf          = trim((string) ($payload['cpf'] ?? ''));
-$telefone     = trim((string) ($payload['telefone'] ?? ''));
-$whatsapp     = !empty($payload['telefone_whatsapp']);
-$faculdade    = trim((string) ($payload['faculdade'] ?? ''));
-$email        = trim((string) ($payload['email'] ?? ''));
-$semestre     = trim((string) ($payload['semestre'] ?? ''));
+$nomeCompleto = mb_convert_case($nomeCompleto, MB_CASE_TITLE, 'UTF-8');
+$nomeCompleto = mb_substr($nomeCompleto, 0, $limites['nome_completo']);
+
+$cpf       = trim((string) ($payload['cpf'] ?? ''));
+$telefone  = mb_substr(trim((string) ($payload['telefone'] ?? '')), 0, $limites['telefone']);
+$whatsapp  = !empty($payload['telefone_whatsapp']);
+$faculdade = mb_substr(trim((string) ($payload['faculdade'] ?? '')), 0, $limites['faculdade']);
+$email     = mb_strtolower(trim((string) ($payload['email'] ?? '')), 'UTF-8');
+$email     = mb_substr($email, 0, $limites['email']);
+$semestre  = mb_substr(trim((string) ($payload['semestre'] ?? '')), 0, $limites['semestre']);
 
 $cpfNumerico = Security::normalizeCPF($cpf);
 if (!Security::validarCPF($cpfNumerico)) {
@@ -57,12 +70,16 @@ if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
 try {
     $pdo = Conection::getInstance()->getConnection();
 
+    // Verificação de duplicidade: CPF é único no cadastro de estudantes
     $stmt = $pdo->prepare("
         SELECT id FROM estudantes WHERE cpf = ? LIMIT 1
     ");
     $stmt->execute([$cpfFormatado]);
     if ($stmt->fetch()) {
-        echo json_encode(['success' => false, 'message' => 'Este CPF já está cadastrado.']);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Já existe um cadastro com este CPF. Não é possível cadastrar novamente. Se você já se cadastrou, utilize a área de login ou entre em contato com o setor responsável.',
+        ]);
         exit;
     }
 
@@ -89,6 +106,12 @@ try {
     if ($e->getCode() == '42S02') {
         error_log('Tabela estudantes não existe. Execute o SQL em docs/sql/estudantes.sql');
         echo json_encode(['success' => false, 'message' => 'Sistema em configuração. Tente novamente mais tarde.']);
+    } elseif ($e->getCode() === '23000') {
+        // Violação de restrição (ex.: CPF duplicado) — fallback se a checagem anterior não rodar
+        echo json_encode([
+            'success' => false,
+            'message' => 'Já existe um cadastro com este CPF. Não é possível cadastrar novamente.',
+        ]);
     } else {
         error_log('cadastro_estudantes API: ' . $e->getMessage());
         echo json_encode(['success' => false, 'message' => 'Erro ao salvar cadastro. Tente novamente.']);

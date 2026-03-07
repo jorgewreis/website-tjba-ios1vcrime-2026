@@ -347,12 +347,6 @@ debug "Primeira linha: $first_line"
 
 commit_msg_lower="$(printf "%s" "$commit_msg" | tr '[:upper:]' '[:lower:]')"
 
-# #region agent log
-DEBUG_LOG="$repo_root/debug-5b84a2.log"
-case "$commit_msg" in *'"'*) has_quote=1;; *) has_quote=0;; esac
-printf '{"sessionId":"5b84a2","hypothesisId":"H1","location":"post-commit","message":"commit_msg","data":{"len":%s,"hasQuote":%s},"timestamp":%s}\n' "${#commit_msg}" "$has_quote" "$(date +%s000 2>/dev/null || echo 0)" >> "$DEBUG_LOG" 2>/dev/null || true
-# #endregion
-
 # -----------------------------------------------------------------------------
 # EXCEÇÕES: Commits que Pulam Versionamento
 # -----------------------------------------------------------------------------
@@ -536,9 +530,6 @@ if [ "$bump_rc" -eq 0 ]; then
 else
   warn "Bump de versão falhou; amend não realizado. Verifique .git/version-bump.log"
 fi
-# #region agent log
-printf '{"sessionId":"5b84a2","hypothesisId":"H2","location":"post-commit","message":"bump_rc","data":{"bump_rc":%s},"timestamp":%s}\n' "$bump_rc" "$(date +%s000 2>/dev/null || echo 0)" >> "$repo_root/debug-5b84a2.log" 2>/dev/null || true
-# #endregion
 
 # -----------------------------------------------------------------------------
 # ETAPA 2: ATUALIZAÇÃO DE DRAFT DE RELEASE NOTES

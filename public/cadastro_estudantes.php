@@ -6,11 +6,16 @@ require_once __DIR__ . '/../config/security.php';
 require_once __DIR__ . '/../app/helpers/bootstrap.php';
 
 $faculdades = [
+    'Anhanguera - Polo Ilhéus',
+    'Anhanguera - Polo Itabuna',    
+    'Estácio - Polo Ilhéus',
+    'Estácio - Polo Itabuna',
+    'Faculdade de Ilhéus',
     'UESC - Universidade Estadual de Santa Cruz',
-    'FTC - Faculdade de Tecnologia e Ciências (Ilhéus)',
-    'UNIME - União Metropolitana de Educação e Cultura',
     'UFSB - Universidade Federal do Sul da Bahia',
-    'Outra (Ilhéus/região)',
+    'UNEX - Centro Universitário de Excelecia - Itabuna',
+    'UNIME - União Metropolitana de Educação e Cultura - Itabuna',    
+    'Outra',
 ];
 ?>
 <!DOCTYPE html>
@@ -57,28 +62,28 @@ $faculdades = [
                 <div class="page-right">
                     <div class="title-page">
                         <span class="title">Cadastro de estudantes</span>
-                        <span class="info-title">Estudantes de Direito podem se cadastrar para acompanhamento de audiências, atas e pautas. Preencha os dados abaixo. Cadastros inativos por mais de 30 dias são removidos automaticamente.</span>
+                        <span class="info-title">Cadastre-se para acompanhamento de audiências, download de atas e pautas.</span>
                     </div>
 
                     <form class="form-login" id="formEstudante">
                         <div class="row">
                             <div class="col">
                                 <label for="nome_completo">Nome completo *</label>
-                                <input class="width-md white" type="text" id="nome_completo" name="nome_completo" required minlength="3" placeholder="Nome e sobrenome">
+                                <input class="width-lg white" type="text" id="nome_completo" name="nome_completo" required minlength="3" maxlength="200" placeholder="Nome e sobrenome" autocomplete="name">
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col">
                                 <label for="cpf">CPF *</label>
-                                <input class="width-md white" type="text" id="cpf" name="cpf" required placeholder="000.000.000-00">
+                                <input class="width-md white" type="text" id="cpf" name="cpf" required maxlength="14" placeholder="000.000.000-00">
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col">
                                 <label for="telefone">Telefone com DDD *</label>
-                                <input class="width-md white" type="text" id="telefone" name="telefone" required placeholder="(73) 99999-8888">
+                                <input class="width-md white" type="text" id="telefone" name="telefone" required maxlength="20" placeholder="(73) 99999-8888">
                             </div>
                         </div>
 
@@ -94,7 +99,7 @@ $faculdades = [
                         <div class="row">
                             <div class="col">
                                 <label for="faculdade">Faculdade *</label>
-                                <select class="width-md white" id="faculdade" name="faculdade" required>
+                                <select class="width-lg white" id="faculdade" name="faculdade" required>
                                     <option value="">Selecione a faculdade</option>
                                     <?php foreach ($faculdades as $f): ?>
                                         <option value="<?php echo htmlspecialchars($f, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($f, ENT_QUOTES, 'UTF-8'); ?></option>
@@ -106,14 +111,14 @@ $faculdades = [
                         <div class="row">
                             <div class="col">
                                 <label for="email">E-mail (opcional)</label>
-                                <input class="width-md white" type="email" id="email" name="email" placeholder="seu@email.com">
+                                <input class="width-lg white" type="email" id="email" name="email" maxlength="255" placeholder="seu@email.com" autocomplete="email">
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col">
                                 <label for="semestre">Semestre (opcional)</label>
-                                <input class="width-md white" type="text" id="semestre" name="semestre" placeholder="Ex.: 3º semestre">
+                                <input class="width-sm white" type="number" id="semestre" name="semestre" min="1" max="10" maxlength="2">
                             </div>
                         </div>
 
@@ -154,6 +159,27 @@ $faculdades = [
             await App.CPF.init("#cpf");
 
             const form = document.getElementById("formEstudante");
+            const inputNome = document.getElementById("nome_completo");
+            const inputEmail = document.getElementById("email");
+
+            // Formata nome: primeira letra de cada palavra em maiúscula (já limitado por maxlength="200")
+            function formatarNome(val) {
+                return (val || "").toLowerCase().replace(/(^|\s)(\S)/g, (_, prefix, char) => prefix + char.toUpperCase());
+            }
+            inputNome.addEventListener("blur", function () {
+                const v = this.value.trim();
+                if (v) this.value = formatarNome(v);
+            });
+
+            // E-mail sempre em minúsculas (já limitado por maxlength="255")
+            inputEmail.addEventListener("input", function () {
+                const start = this.selectionStart, end = this.selectionEnd;
+                this.value = this.value.toLowerCase();
+                this.setSelectionRange(start, end);
+            });
+            inputEmail.addEventListener("blur", function () {
+                this.value = this.value.toLowerCase();
+            });
             const alertError = document.getElementById("alert-form");
             const alertSuccess = document.getElementById("alert-success");
             const erroMsg = document.getElementById("erro-msg");
@@ -182,14 +208,16 @@ $faculdades = [
 
                 try {
                     const formData = new FormData(form);
+                    const nomeRaw = (formData.get("nome_completo") || "").trim();
+                    const emailRaw = (formData.get("email") || "").trim();
                     const payload = {
-                        nome_completo: formData.get("nome_completo") || "",
+                        nome_completo: nomeRaw ? formatarNome(nomeRaw) : "",
                         cpf: cpfDigits,
-                        telefone: formData.get("telefone") || "",
+                        telefone: (formData.get("telefone") || "").trim().slice(0, 20),
                         telefone_whatsapp: form.querySelector("#telefone_whatsapp").checked,
                         faculdade: formData.get("faculdade") || "",
-                        email: formData.get("email") || "",
-                        semestre: formData.get("semestre") || "",
+                        email: emailRaw.toLowerCase(),
+                        semestre: (formData.get("semestre") || "").toString().slice(0, 2),
                     };
 
                     const res = await fetch("/api/cadastro_estudantes.php", {

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0007
+
+**Data:** 2026-03-07 08:18:54 | **Commit:** `a79caad` | **Tipo:** `patch`
+
+- Fix: Correção de inconformidades de css
+
 ## V. 1.03.0006
 
 **Data:** 2026-03-06 19:37:44 | **Commit:** `dc1da88` | **Tipo:** `patch`
@@ -2316,6 +2322,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
