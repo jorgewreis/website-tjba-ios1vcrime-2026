@@ -122,15 +122,7 @@ $faculdades = [
                         <div class="row">
                             <div class="col">
                                 <label for="senha">Senha *</label>
-                                <input class="width-md white" type="password" id="senha" name="senha" required minlength="6" maxlength="72" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
-                                <span class="minor-info">Será usada para acessar o sistema (audiências, pautas e atas).</span>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col">
-                                <label for="email">E-mail (opcional)</label>
-                                <input class="width-lg white" type="email" id="email" name="email" maxlength="255" placeholder="seu@email.com" autocomplete="email">
+                                <input class="width-md white" type="password" id="senha" name="senha" required minlength="6" maxlength="25" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
                             </div>
                         </div>
 
@@ -170,7 +162,6 @@ $faculdades = [
 
             const form = document.getElementById("formEstudante");
             const inputNome = document.getElementById("nome_completo");
-            const inputEmail = document.getElementById("email");
 
             // Formata nome: primeira letra de cada palavra em maiúscula (já limitado por maxlength="200")
             function formatarNome(val) {
@@ -181,15 +172,6 @@ $faculdades = [
                 if (v) this.value = formatarNome(v);
             });
 
-            // E-mail sempre em minúsculas (já limitado por maxlength="255")
-            inputEmail.addEventListener("input", function () {
-                const start = this.selectionStart, end = this.selectionEnd;
-                this.value = this.value.toLowerCase();
-                this.setSelectionRange(start, end);
-            });
-            inputEmail.addEventListener("blur", function () {
-                this.value = this.value.toLowerCase();
-            });
             function onlyDigits(s) {
                 return (s || "").toString().replace(/\D/g, "");
             }
@@ -220,7 +202,6 @@ $faculdades = [
                 try {
                     const formData = new FormData(form);
                     const nomeRaw = (formData.get("nome_completo") || "").trim();
-                    const emailRaw = (formData.get("email") || "").trim();
                     const payload = {
                         nome_completo: nomeRaw ? formatarNome(nomeRaw) : "",
                         cpf: cpfDigits,
@@ -228,7 +209,6 @@ $faculdades = [
                         telefone: (formData.get("telefone") || "").trim().slice(0, 20),
                         telefone_whatsapp: form.querySelector("#telefone_whatsapp").checked,
                         faculdade: formData.get("faculdade") || "",
-                        email: emailRaw.toLowerCase(),
                         semestre: (formData.get("semestre") || "").toString().slice(0, 2),
                         aceite_termos_lgpd: true,
                     };

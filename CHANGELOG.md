@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0011
+
+**Data:** 2026-03-07 11:00:11 | **Commit:** `cb1cb18` | **Tipo:** `patch`
+
+- Docs: Novo documento de termo de aceite lgpd
+
 ## V. 1.03.0010
 
 **Data:** 2026-03-07 10:35:28 | **Commit:** `3627bff` | **Tipo:** `patch`
@@ -2340,6 +2346,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
