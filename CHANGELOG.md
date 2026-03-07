@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0044
+
+**Data:** 2026-03-07 18:50:10 | **Commit:** `1a4acfa` | **Tipo:** `patch`
+
+- Fix: remoção de arquivos não mais utilizados
+
 ## V. 1.03.0043
 
 **Data:** 2026-03-07 18:47:28 | **Commit:** `9339281` | **Tipo:** `patch`
@@ -2538,6 +2544,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

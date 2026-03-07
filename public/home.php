@@ -392,9 +392,21 @@ $userProfile = Security::getUserProfile() ?? '';
             } catch (err) { /* cross-origin or not loaded */ }
         }
 
+        /** Atualiza o ícone do botão de tema na barra superior (sol / lua / eclipse). */
+        function updateThemeIcon(theme) {
+            var themeToggle = document.getElementById('themeToggle');
+            if (!themeToggle) return;
+            var icon = themeToggle.querySelector('i');
+            if (!icon) return;
+            var iconClasses = { claro: 'fi fi-rs-sun', escuro: 'fi fi-rs-moon', auto: 'fi fi-rs-eclipse-alt' };
+            icon.className = iconClasses[theme] || iconClasses.auto;
+        }
+
         document.addEventListener("DOMContentLoaded", async function() {
             if (window.App && App.Prefs) App.Prefs.applyThemeFromCookie();
-            syncThemeToFrame(App.Prefs ? App.Prefs.getTheme() : 'claro');
+            var currentTheme = App.Prefs ? App.Prefs.getTheme() : 'claro';
+            syncThemeToFrame(currentTheme);
+            updateThemeIcon(currentTheme);
             var frameEl = document.getElementById('frame');
             if (frameEl) frameEl.addEventListener('load', function() { syncThemeToFrame(App.Prefs ? App.Prefs.getTheme() : 'claro'); });
 
@@ -408,6 +420,7 @@ $userProfile = Security::getUserProfile() ?? '';
                     App.Prefs.setTheme(nextTheme);
                     App.Prefs.applyTheme();
                     syncThemeToFrame(nextTheme);
+                    updateThemeIcon(nextTheme);
                     if (window.App && App.Toast && App.Toast.show) {
                         var labels = { claro: 'Claro', escuro: 'Escuro', auto: 'Automático' };
                         App.Toast.show({ type: 'info', variant: 'simple', message: 'Tema alterado para ' + (labels[nextTheme] || nextTheme) + '.' });
