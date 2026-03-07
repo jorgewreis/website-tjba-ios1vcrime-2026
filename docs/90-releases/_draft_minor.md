@@ -32,4 +32,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: atualização de classes** `[9b3389b]`
 - **Fix: melhorias de inputs e selects** `[c0386ea]`
 - **Fix: debug test 1** `[a304f3f]`
+- **Fix: debug test 2** `[9292b46]`
 
