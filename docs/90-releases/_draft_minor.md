@@ -35,4 +35,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: debug test 2** `[9292b46]`
 - **Fix: correção mockup toast** `[0ab2548]`
 - **Fix: debug test 4** `[2f135a8]`
+- **Fix: correção de modelo de timeline** `[0b3787b]`
 
