@@ -127,17 +127,17 @@ try {
     $idUsuario = 'USR-' . strtoupper(bin2hex(random_bytes(13)));
     $senhaHash = Security::hashPassword($senha);
 
-    // Estrutura da tabela usuarios: id_usuario, nome, sobrenome (NOT NULL), cpf, senha_hash (NOT NULL); demais opcionais
+    // Tabela usuarios: NOT NULL = id_usuario, nome, sobrenome, cpf, senha_hash; demais com '' para evitar default value
     $stmt = $pdo->prepare("
         INSERT INTO usuarios (
             id_usuario, nome, sobrenome, data_nascimento, cargo, instituicao, cpf, telefone, email,
             senha_hash, meta, ultimo_acesso, token_acesso, token_expira
         ) VALUES (
-            ?, ?, '', NULL, NULL, NULL, ?, ?, '',
-            ?, NULL, NULL, NULL, NULL
+            ?, ?, ?, '', '', '', ?, ?, '',
+            ?, '', '', '', ''
         )
     ");
-    $stmt->execute([$idUsuario, $nomeCompleto, $cpfFormatado, $telefone, $senhaHash]);
+    $stmt->execute([$idUsuario, $nomeCompleto, '' /* sobrenome */, $cpfFormatado, $telefone, $senhaHash]);
 
     // Garantir que o perfil ESTUDANTE exista em perfis (evita erro de FK se a tabela tiver restrição)
     try {
@@ -174,12 +174,15 @@ try {
         }
         echo json_encode(['success' => false, 'message' => $msg]);
     } else {
-        error_log('cadastro_estudantes API: ' . $e->getMessage());
+        $errMsg = $e->getMessage();
+        error_log('cadastro_estudantes API: ' . $errMsg);
         $msg = 'Erro ao salvar cadastro. Tente novamente.';
-        if (strpos($e->getMessage(), 'doesn\'t have a default value') !== false) {
+        if (strpos($errMsg, 'doesn\'t have a default value') !== false) {
+            // MySQL indica a coluna na mensagem; log completo para suporte
+            error_log('Coluna sem valor (usuarios): ' . $errMsg);
             $msg = 'Erro de configuração do banco: tabela usuarios exige mais campos. Contate o suporte.';
         } else {
-            $msg .= ' Detalhe: ' . $e->getMessage();
+            $msg .= ' Detalhe: ' . $errMsg;
         }
         echo json_encode(['success' => false, 'message' => $msg]);
     }
