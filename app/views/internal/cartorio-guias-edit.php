@@ -169,11 +169,11 @@ $tiposOptions = [
             <div class="row filter" style="justify-content: flex-start;">
                 <div class="col filter">
                     <label for="edit-processo">Processo</label>
-                    <input type="text" id="edit-processo" class="width-md height-md" value="<?php echo htmlspecialchars($guia['numero_processo'] ?? '', ENT_QUOTES); ?>" readonly>
+                    <input type="text" id="edit-processo" class="width-md height-md readonly" value="<?php echo htmlspecialchars($guia['numero_processo'] ?? '', ENT_QUOTES); ?>" readonly>
                 </div>
                 <div class="col filter">
                     <label for="edit-denunciado">Denunciado</label>
-                    <input type="text" id="edit-denunciado" class="width-xl height-md" value="<?php echo htmlspecialchars($guia['denunciado'] ?? '', ENT_QUOTES); ?>" maxlength="255" readonly>
+                    <input type="text" id="edit-denunciado" class="width-xl height-md readonly" value="<?php echo htmlspecialchars($guia['denunciado'] ?? '', ENT_QUOTES); ?>" maxlength="255" readonly>
                 </div>
             </div>
             <div class="row filter">
