@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0013
+
+**Data:** 2026-03-07 11:20:56 | **Commit:** `3f3a3ac` | **Tipo:** `patch`
+
+- Fix: correção de bugs 1
+
 ## V. 1.03.0012
 
 **Data:** 2026-03-07 11:16:33 | **Commit:** `81c4dbb` | **Tipo:** `patch`
@@ -2352,6 +2358,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

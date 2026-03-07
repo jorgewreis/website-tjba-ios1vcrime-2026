@@ -126,8 +126,21 @@ try {
 
     $idUsuario = 'USR-' . strtoupper(bin2hex(random_bytes(13)));
     $senhaHash = Security::hashPassword($senha);
-    $stmt = $pdo->prepare("INSERT INTO usuarios (id_usuario, nome, cpf, senha_hash, ativo) VALUES (?, ?, ?, ?, 1)");
-    $stmt->execute([$idUsuario, $nomeCompleto, $cpfFormatado, $senhaHash]);
+
+    try {
+        $stmt = $pdo->prepare("
+            INSERT INTO usuarios (id_usuario, nome, sobrenome, cpf, email, senha_hash, ativo)
+            VALUES (?, ?, '', ?, NULL, ?, 1)
+        ");
+        $stmt->execute([$idUsuario, $nomeCompleto, $cpfFormatado, $senhaHash]);
+    } catch (PDOException $e) {
+        if (strpos($e->getMessage(), 'Unknown column') !== false) {
+            $stmt = $pdo->prepare("INSERT INTO usuarios (id_usuario, nome, cpf, senha_hash, ativo) VALUES (?, ?, ?, ?, 1)");
+            $stmt->execute([$idUsuario, $nomeCompleto, $cpfFormatado, $senhaHash]);
+        } else {
+            throw $e;
+        }
+    }
 
     $stmt = $pdo->prepare("INSERT INTO usuario_perfil (usuario, perfil) VALUES (?, 'ESTUDANTE')");
     $stmt->execute([$idUsuario]);
@@ -152,7 +165,11 @@ try {
         ]);
     } else {
         error_log('cadastro_estudantes API: ' . $e->getMessage());
-        echo json_encode(['success' => false, 'message' => 'Erro ao salvar cadastro. Tente novamente.']);
+        $msg = 'Erro ao salvar cadastro. Tente novamente.';
+        if (strpos($e->getMessage(), 'doesn\'t have a default value') !== false) {
+            $msg = 'Erro de configuração do banco: tabela usuarios exige mais campos. Contate o suporte.';
+        }
+        echo json_encode(['success' => false, 'message' => $msg]);
     }
 } catch (Throwable $e) {
     if (isset($pdo) && $pdo->inTransaction()) {
