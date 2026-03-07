@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0012
+
+**Data:** 2026-03-07 11:16:33 | **Commit:** `81c4dbb` | **Tipo:** `patch`
+
+- Docs: atualização de documento lgpd
+
 ## V. 1.03.0011
 
 **Data:** 2026-03-07 11:00:11 | **Commit:** `cb1cb18` | **Tipo:** `patch`
@@ -2346,6 +2352,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
