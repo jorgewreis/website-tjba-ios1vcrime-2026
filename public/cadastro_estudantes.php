@@ -156,6 +156,7 @@ $faculdades = [
 
     <script src="/assets/js/shared/cpf.js" defer></script>
     <script src="/assets/js/shared/toast.js" defer></script>
+    <script src="/assets/js/modules/cartorio/cartas-expedidas/text-formatter.js"></script>
     <script defer>
         document.addEventListener("DOMContentLoaded", async () => {
             await App.CPF.init("#cpf");
@@ -163,9 +164,12 @@ $faculdades = [
             const form = document.getElementById("formEstudante");
             const inputNome = document.getElementById("nome_completo");
 
-            // Formata nome: primeira letra de cada palavra em maiúscula (já limitado por maxlength="200")
+            // Formata nome com TextFormatter (padrão do sistema: maiúsculas/minúsculas e exceções de/da/do etc.), max 200 caracteres
             function formatarNome(val) {
-                return (val || "").toLowerCase().replace(/(^|\s)(\S)/g, (_, prefix, char) => prefix + char.toUpperCase());
+                if (typeof TextFormatter !== "undefined" && typeof TextFormatter.formatProperName === "function") {
+                    return TextFormatter.formatProperName(val || "", 200);
+                }
+                return (val || "").trim();
             }
             inputNome.addEventListener("blur", function () {
                 const v = this.value.trim();
@@ -203,7 +207,7 @@ $faculdades = [
                     const formData = new FormData(form);
                     const nomeRaw = (formData.get("nome_completo") || "").trim();
                     const payload = {
-                        nome_completo: nomeRaw ? formatarNome(nomeRaw) : "",
+                        nome_completo: nomeRaw ? formatarNome(nomeRaw) : "", // TextFormatter.formatProperName (padrão do sistema)
                         cpf: cpfDigits,
                         senha: senha,
                         telefone: (formData.get("telefone") || "").trim().slice(0, 20),

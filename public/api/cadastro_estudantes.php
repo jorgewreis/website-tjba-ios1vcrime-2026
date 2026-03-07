@@ -142,6 +142,14 @@ try {
         }
     }
 
+    // Garantir que o perfil ESTUDANTE exista em perfis (evita erro de FK se a tabela tiver restrição)
+    try {
+        $stmt = $pdo->prepare("INSERT IGNORE INTO perfis (id_perfil, descricao) VALUES ('ESTUDANTE', 'Estudante')");
+        $stmt->execute();
+    } catch (Throwable $e) {
+        // ignora se a tabela perfis não existir ou tiver estrutura diferente
+    }
+
     $stmt = $pdo->prepare("INSERT INTO usuario_perfil (usuario, perfil) VALUES (?, 'ESTUDANTE')");
     $stmt->execute([$idUsuario]);
 
@@ -159,10 +167,15 @@ try {
         error_log('Tabela estudantes ou usuarios não existe. Execute os SQL em docs/sql/ e database/schema.sql');
         echo json_encode(['success' => false, 'message' => 'Sistema em configuração. Tente novamente mais tarde.']);
     } elseif ($e->getCode() === '23000') {
-        echo json_encode([
-            'success' => false,
-            'message' => 'Já existe um cadastro com este CPF. Utilize a área de login ou entre em contato com o setor responsável.',
-        ]);
+        $detail = $e->getMessage();
+        if (strpos($detail, 'foreign key') !== false || strpos($detail, 'Foreign key') !== false) {
+            $msg = 'Configuração do banco: o perfil ESTUDANTE precisa existir na tabela perfis. Contate o suporte.';
+        } elseif (strpos($detail, 'Duplicate') !== false) {
+            $msg = 'Já existe um cadastro com este CPF. Utilize a área de login ou entre em contato com o setor responsável.';
+        } else {
+            $msg = 'Erro de restrição no banco. Detalhe: ' . $detail;
+        }
+        echo json_encode(['success' => false, 'message' => $msg]);
     } else {
         error_log('cadastro_estudantes API: ' . $e->getMessage());
         $msg = 'Erro ao salvar cadastro. Tente novamente.';
