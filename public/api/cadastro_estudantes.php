@@ -86,6 +86,10 @@ if (strlen($senha) < 6) {
     exit;
 }
 
+// #region agent log
+$logPath = __DIR__ . '/../../debug-267185.log';
+file_put_contents($logPath, json_encode(['id'=>'entry','timestamp'=>time()*1000,'location'=>'cadastro_estudantes.php:try','message'=>'API try reached','data'=>['hasPayload'=>is_array($payload),'runId'=>'run1'],'hypothesisId'=>'H3']) . "\n", FILE_APPEND);
+// #endregion
 try {
     $pdo = Conection::getInstance()->getConnection();
 
@@ -127,10 +131,16 @@ try {
         $email === '' ? null : $email,
         $semestre === '' ? null : $semestre,
     ]);
+    // #region agent log
+    file_put_contents($logPath, json_encode(['id'=>'after_estudantes','timestamp'=>time()*1000,'location'=>'cadastro_estudantes.php:after_insert_estudantes','message'=>'INSERT estudantes OK','data'=>['runId'=>'run1'],'hypothesisId'=>'H3,H5']) . "\n", FILE_APPEND);
+    // #endregion
 
     $idUsuario = 'USR-' . strtoupper(bin2hex(random_bytes(13)));
     $senhaHash = Security::hashPassword($senha);
 
+    // #region agent log
+    file_put_contents($logPath, json_encode(['id'=>'before_usuarios','timestamp'=>time()*1000,'location'=>'cadastro_estudantes.php:insert_usuarios','message'=>'Before INSERT usuarios','data'=>['nomeLen'=>strlen($nome),'sobrenomeLen'=>strlen($sobrenome),'runId'=>'run1'],'hypothesisId'=>'H3,H5']) . "\n", FILE_APPEND);
+    // #endregion
     // Tabela usuarios: nome/sobrenome do nome completo; ultimo_acesso/token_* NULL (preenchidos no login)
     $stmt = $pdo->prepare("
         INSERT INTO usuarios (
@@ -180,7 +190,11 @@ try {
         echo json_encode(['success' => false, 'message' => $msg]);
     } else {
         $errMsg = $e->getMessage();
+        $errCode = $e->getCode();
         error_log('cadastro_estudantes API: ' . $errMsg);
+        // #region agent log
+        file_put_contents(__DIR__ . '/../../debug-267185.log', json_encode(['id'=>'pdo_else','timestamp'=>time()*1000,'location'=>'cadastro_estudantes.php:catchPDO','message'=>'PDOException else branch','data'=>['code'=>$errCode,'message'=>$errMsg,'hasDefaultValue'=>strpos($errMsg,'default value')!==false,'runId'=>'run1'],'hypothesisId'=>'H1,H2,H5']) . "\n", FILE_APPEND);
+        // #endregion
         $msg = 'Erro ao salvar cadastro. Tente novamente.';
         if (strpos($errMsg, 'doesn\'t have a default value') !== false) {
             // MySQL indica a coluna na mensagem; log completo para suporte
@@ -192,6 +206,9 @@ try {
         echo json_encode(['success' => false, 'message' => $msg]);
     }
 } catch (Throwable $e) {
+    // #region agent log
+    file_put_contents(__DIR__ . '/../../debug-267185.log', json_encode(['id'=>'throwable','timestamp'=>time()*1000,'location'=>'cadastro_estudantes.php:catchThrowable','message'=>'Throwable caught','data'=>['class'=>get_class($e),'message'=>$e->getMessage(),'runId'=>'run1'],'hypothesisId'=>'H4']) . "\n", FILE_APPEND);
+    // #endregion
     if (isset($pdo) && $pdo->inTransaction()) {
         $pdo->rollBack();
     }
