@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0027
+
+**Data:** 2026-03-07 14:23:36 | **Commit:** `c0386ea` | **Tipo:** `patch`
+
+- Fix: melhorias de inputs e selects
+
 ## V. 1.03.0026
 
 **Data:** 2026-03-07 14:12:19 | **Commit:** `9b3389b` | **Tipo:** `patch`
@@ -2436,6 +2442,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

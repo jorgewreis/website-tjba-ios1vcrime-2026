@@ -145,7 +145,7 @@ try {
             </div>
             <div class="col filter">
                 <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
-                <input type="text" class="width-lg height-md" id="filter-classe" placeholder="Preenchido pelo DataJud ao informar o processo (ou digite se não houver retorno)" required readonly>                
+                <input type="text" class="width-lg height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud" required readonly>                
             </div>
             <div class="col filter">
                 <label for="filter-tipo">Finalidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
@@ -206,13 +206,13 @@ try {
                 </select>
             </div>            
             <div class="col filter">
-                <label for="filter-prazo">Prazo cumprimento <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <label for="filter-prazo">Prazo <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <select class="width-sm height-md" id="filter-prazo" required>
                     <option value="5 dias">5 dias</option>
                     <option value="10 dias">10 dias</option>
                     <option value="15 dias">15 dias</option>
-                    <option value="30 dias" selected>30 dias</option>
-                    <option value="60 dias">60 dias</option>
+                    <option value="30 dias">30 dias</option>
+                    <option value="60 dias" selected>60 dias</option>
                     <option value="90 dias">90 dias</option>
                 </select>
             </div>

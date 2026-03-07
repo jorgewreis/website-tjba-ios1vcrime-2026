@@ -60,12 +60,15 @@ try {
         <div class="row table header">Informações obrigatórias</div>
         <div class="row filter">
             <div class="col filter">
-                <label for="filter-processo">Número do processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <label for="filter-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="width-md height-md" id="filter-processo" placeholder="Digite o número do processo" required>
             </div>
-            <div class="col filter">
+            <div class="col filter" id="reu-col">
                 <label for="filter-reu">Nome do réu <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-xl height-md" id="filter-reu" placeholder="Nome do denunciado/réu" maxlength="120" required>
+                <select class="width-xl height-md" id="filter-reu-select" style="display: none;" aria-label="Réus vinculados ao processo">
+                    <!-- preenchido via JS quando houver réus -->
+                </select>
+                <input type="text" class="width-xl height-md" id="filter-reu" placeholder="Nome do denunciado/réu (ou selecione na lista)" maxlength="120" required aria-label="Nome do réu quando não há réus ou opção Outro">
             </div>
         </div>
 
@@ -103,6 +106,92 @@ try {
     <!-- Padrão: número do processo = cnj.js (correção/formatação CNJ no blur); nome de pessoa/cidade = text-formatter.js (maiúsculas/minúsculas). -->
     <script src="/assets/js/modules/cartorio/cartas-expedidas/cnj.js"></script>
     <script src="/assets/js/modules/cartorio/cartas-expedidas/text-formatter.js"></script>
+    <script>
+        (function () {
+            var processoInput = document.getElementById('filter-processo');
+            var reuSelect = document.getElementById('filter-reu-select');
+            var reuInput = document.getElementById('filter-reu');
+
+            function showReuInput() {
+                if (reuSelect) {
+                    reuSelect.style.display = 'none';
+                    reuSelect.innerHTML = '';
+                    reuSelect.value = '';
+                }
+                if (reuInput) {
+                    reuInput.style.display = '';
+                    reuInput.required = true;
+                }
+            }
+
+            function showReuSelect(reus) {
+                if (!reuSelect || !reuInput) return;
+                reuSelect.innerHTML = '';
+                reus.forEach(function (r) {
+                    var opt = document.createElement('option');
+                    opt.value = r.id;
+                    opt.textContent = r.nome;
+                    reuSelect.appendChild(opt);
+                });
+                var outro = document.createElement('option');
+                outro.value = 'outro';
+                outro.textContent = 'Outro';
+                reuSelect.appendChild(outro);
+                reuSelect.style.display = '';
+                reuInput.style.display = 'none';
+                reuInput.required = false;
+                reuInput.value = '';
+            }
+
+            window.addEventListener('cnjValidated', function (event) {
+                var digits = (event.detail && event.detail.digits) ? String(event.detail.digits).replace(/\D/g, '') : '';
+                if (digits.length !== 20) {
+                    showReuInput();
+                    return;
+                }
+                fetch('/api/cartorio-guias/reus-por-processo.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ numero: digits }),
+                    credentials: 'same-origin'
+                })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    var reus = (data && data.reus) ? data.reus : [];
+                    if (reus.length > 0) {
+                        showReuSelect(reus);
+                    } else {
+                        showReuInput();
+                    }
+                })
+                .catch(function () {
+                    showReuInput();
+                });
+            });
+
+            if (reuSelect) {
+                reuSelect.addEventListener('change', function () {
+                    if (this.value === 'outro') {
+                        this.style.display = 'none';
+                        if (reuInput) {
+                            reuInput.style.display = '';
+                            reuInput.required = true;
+                            reuInput.focus();
+                        }
+                    }
+                });
+            }
+
+            if (processoInput) {
+                processoInput.addEventListener('input', function () {
+                    var digits = (this.value || '').replace(/\D/g, '');
+                    if (digits.length !== 20) {
+                        showReuInput();
+                    }
+                });
+            }
+        })();
+    </script>
     <script>
         (function () {
             var PERFIS_ALTERAR_REGRA = ['ADMIN', 'DIRETORA', 'MAGISTRADA'];
@@ -154,12 +243,27 @@ try {
                 return value;
             };
 
-            var processoInput = document.getElementById('filter-processo');
             var reuInput = document.getElementById('filter-reu');
+            var reuSelect = document.getElementById('filter-reu-select');
             if (reuInput) {
                 reuInput.addEventListener('blur', function () {
                     reuInput.value = formatNomeReu(reuInput.value);
                 });
+            }
+
+            function getReuPayload() {
+                var useSelect = reuSelect && reuSelect.style.display !== 'none' && reuSelect.value !== '' && reuSelect.value !== 'outro';
+                if (useSelect) {
+                    var opt = reuSelect.options[reuSelect.selectedIndex];
+                    return {
+                        reu_id: reuSelect.value,
+                        nome_reu: opt ? opt.textContent : ''
+                    };
+                }
+                return {
+                    reu_id: '',
+                    nome_reu: formatNomeReu(getValue('filter-reu'))
+                };
             }
 
             if (!btn) return;
@@ -167,31 +271,36 @@ try {
             btn.addEventListener('click', function (e) {
                 e.preventDefault();
                 if (btn.disabled) return;
-                // Dispara blur para aplicar correção automática (CNJ e nome) antes de ler os valores
                 if (processoInput) processoInput.blur();
                 if (reuInput) reuInput.blur();
 
                 var numeroProcesso = getValue('filter-processo');
-                var nomeReu = formatNomeReu(getValue('filter-reu'));
+                var reuPayload = getReuPayload();
+                var nomeReu = reuPayload.nome_reu;
 
                 if (numeroProcesso === '') {
                     return showFeedback('Informe o número do processo.', 'error');
                 }
-                if (nomeReu === '') {
-                    return showFeedback('Informe o nome do réu.', 'error');
+                if (!nomeReu || nomeReu === '') {
+                    return showFeedback('Informe o réu (selecione na lista ou digite em "Outro").', 'error');
                 }
 
                 btn.disabled = true;
                 if (typeof showToast === 'function') showToast({ type: 'info', variant: 'simple', message: 'Enviando dados...' });
                 else showFeedback('Enviando dados...', 'success');
 
+                var payload = {
+                    numero_processo_origem: numeroProcesso,
+                    nome_reu: nomeReu
+                };
+                if (reuPayload.reu_id) {
+                    payload.reu_id = reuPayload.reu_id;
+                }
+
                 fetch('/api/cartorio-cejusc/create.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        numero_processo_origem: numeroProcesso,
-                        nome_reu: nomeReu
-                    })
+                    body: JSON.stringify(payload)
                 })
                 .then(function (r) { return r.json(); })
                 .then(function (data) {

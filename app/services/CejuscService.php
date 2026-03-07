@@ -82,11 +82,11 @@ final class CejuscService
             throw new InvalidArgumentException('O número do processo é obrigatório.');
         }
 
+        $reuId = trim((string) ($payload['reu_id'] ?? ''));
         $nomeReu = trim((string) ($payload['nome_reu'] ?? ''));
-        if ($nomeReu === '') {
-            throw new InvalidArgumentException('O nome do réu é obrigatório.');
+        if ($nomeReu !== '') {
+            $nomeReu = TextFormatter::formatProperName($nomeReu, 120);
         }
-        $nomeReu = TextFormatter::formatProperName($nomeReu, 120);
 
         $digits = preg_replace('/\D+/', '', $numeroProcesso);
         $numeroFormatado = strlen($digits) === 20 ? $this->formatarCNJ($digits) : $numeroProcesso;
@@ -96,12 +96,19 @@ final class CejuscService
             $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, null, null, false);
         }
 
-        $idReu = $this->reuManager->cadastrarReu($nomeReu, null);
-        if ($idReu === null || $idReu === '') {
-            throw new InvalidArgumentException('Não foi possível cadastrar ou localizar o réu.');
+        if ($reuId !== '') {
+            $this->reuManager->vincularReuProcesso($reuId, $numeroFormatado);
+        } else {
+            if ($nomeReu === '') {
+                throw new InvalidArgumentException('O nome do réu é obrigatório.');
+            }
+            $idReu = $this->reuManager->cadastrarReu($nomeReu, null);
+            if ($idReu === null || $idReu === '') {
+                throw new InvalidArgumentException('Não foi possível cadastrar ou localizar o réu.');
+            }
+            $this->reuManager->vincularReuProcesso($idReu, $numeroFormatado);
+            $reuId = $idReu;
         }
-
-        $this->reuManager->vincularReuProcesso($idReu, $numeroFormatado);
 
         $idTarefa = IdGenerator::generateUniquePrefixedId(
             $this->connection,
@@ -115,7 +122,7 @@ final class CejuscService
             'id' => $idTarefa,
             'processo_origem_id' => $processoOrigemId,
             'numero_processo_origem' => $numeroFormatado,
-            'reu_id' => $idReu,
+            'reu_id' => $reuId,
             'status' => 'pendente',
         ];
 

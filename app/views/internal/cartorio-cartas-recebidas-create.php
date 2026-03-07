@@ -126,21 +126,27 @@ try {
         <div class="row table header">Informações obrigatórias</div>
         <div class="row filter">
             <div class="col filter">
-                <label for="filter-processo">Número do processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <label for="filter-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="width-md height-md" id="filter-processo" placeholder="Digite o número do processo" required>
             </div>
             <div class="col filter">
                 <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
                 <input type="text" class="width-lg height-md" id="filter-classe" placeholder="Preenchido pelo DataJud ao informar o processo (ou digite se não houver retorno)" required readonly>
             </div>
-        </div>
-        <?php if ($cnjError): ?>
-            <div class="row filter">
-                <div class="col">
-                    <label class="status status-cancelled"><?php echo htmlspecialchars($cnjError, ENT_QUOTES); ?></label>
-                </div>
+            <div class="col filter">
+                <label for="filter-tipo">Finalidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <select class="width-lg height-md" id="filter-tipo" required>
+                    <option value="" selected disabled>Selecione aqui</option>
+                    <option value="Intimação para Audiência">Intimação para Audiência</option>
+                    <option value="Intimação de Decisão Interlocutória">Intimação de Decisão</option>
+                    <option value="Intimação da Sentença">Intimação da Sentença</option>
+                    <option value="Citação para apresentar Defesa">Citação para apresentar Defesa</option>
+                    <option value="Citação para apresentar Alegações Finais">Citação para apresentar Alegações Finais</option>
+                    <option value="Suspensão Condicional">Suspensão Condicional</option>
+                    <option value="Outra">Outra não listada</option>
+                </select>
             </div>
-        <?php endif; ?>
+        </div>        
         <div class="row filter">
             <div class="col filter">
                 <label for="filter-cidade">Cidade de origem <span class="label-hint-obrigatorio">*obrigatório</span></label>
@@ -178,28 +184,28 @@ try {
                     <option value="TO">Tocantins</option>
                 </select>
             </div>
-        </div>
-        <div class="row filter">
             <div class="col filter">
-                <label for="filter-tipo">Finalidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <select class="width-lg height-md" id="filter-tipo" required>
-                    <option value="" selected disabled>Selecione aqui</option>
-                    <option value="Intimação para Audiência">Intimação para Audiência</option>
-                    <option value="Intimação de Decisão Interlocutória">Intimação de Decisão</option>
-                    <option value="Intimação da Sentença">Intimação da Sentença</option>
-                    <option value="Citação para apresentar Defesa">Citação para apresentar Defesa</option>
-                    <option value="Citação para apresentar Alegações Finais">Citação para apresentar Alegações Finais</option>
-                    <option value="Suspensão Condicional">Suspensão Condicional</option>
-                    <option value="Outra">Outra não listada</option>
+                <label for="filter-prazo">Prazo <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <select class="width-sm height-md" id="filter-prazo" required>
+                    <option value="5 dias">5 dias</option>
+                    <option value="10 dias">10 dias</option>
+                    <option value="15 dias">15 dias</option>
+                    <option value="30 dias">30 dias</option>
+                    <option value="60 dias" selected>60 dias</option>
+                    <option value="90 dias">90 dias</option>
                 </select>
             </div>
-            <div class="col filter">
-                <label for="filter-prazo">Prazo (dias) <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="number" class="width-sm height-md" id="filter-prazo" value="30" min="1" max="999" required>
-            </div>
-        </div>
+        </div>        
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
+
+        <?php if ($cnjError): ?>
+            <div class="row filter">
+                <div class="col">
+                    <label class="status status-cancelled"><?php echo htmlspecialchars($cnjError, ENT_QUOTES); ?></label>
+                </div>
+            </div>
+        <?php endif; ?>
 
         <div class="row info">
             <span>*Conforme regra de alocação, as Cartas Recebidas serão alocadas automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
