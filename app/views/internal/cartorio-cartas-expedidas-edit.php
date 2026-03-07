@@ -360,19 +360,6 @@ $stateOptions = [
                         <div class="width-sm status <?php echo htmlspecialchars($statusCartaClass, ENT_QUOTES); ?>" style="border: 1px solid var(--color-gray-500);"><?php echo htmlspecialchars($statusCartaLabel, ENT_QUOTES); ?></div>
                     <?php endif; ?>
                 </div>
-                <?php if (!$temSubtarefas): ?>
-                    <div class="col filter">
-                        <button type="button" class="col button-table button-subtask" id="btn-add-subtarefa" title="Adicionar subtarefa" aria-label="Adicionar subtarefa">
-                            <i class="fi fi-rr-add"></i>
-                        </button>
-                    </div>
-                <?php elseif ($temEmAndamentoOuPendente): ?>
-                    <div class="col filter">
-                        <button type="button" class="col button-table button-subtask" id="btn-refresh-subtarefas" title="Atualizar timeline" aria-label="Atualizar timeline">
-                            <i class="fi fi-rr-refresh"></i>
-                        </button>
-                    </div>
-                <?php endif; ?>
             </div>
             <?php
             $cartaCreatedRaw = $carta['created_at'] ?? '';
@@ -767,38 +754,6 @@ $stateOptions = [
                 });
 
                 updateButtonState();
-
-                const btnAddSubtarefa = document.getElementById('btn-add-subtarefa');
-                if (btnAddSubtarefa) {
-                    btnAddSubtarefa.addEventListener('click', async () => {
-                        const cartaId = window.__currentCartaId;
-                        if (!cartaId) return;
-                        btnAddSubtarefa.disabled = true;
-                        try {
-                            const response = await fetch('/api/cartorio-cartas-expedidas/criar-primeira-subtarefa.php', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ carta_id: cartaId }),
-                            });
-                            const data = await response.json();
-                            if (!response.ok || !data.success) {
-                                throw new Error(data.error || 'Falha ao criar subtarefa.');
-                            }
-                            window.location.reload();
-                        } catch (err) {
-                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: err.message || 'Erro ao adicionar subtarefa.' });
-                            else alert(err.message || 'Erro ao adicionar subtarefa.');
-                            btnAddSubtarefa.disabled = false;
-                        }
-                    });
-                }
-
-                const btnRefreshSubtarefas = document.getElementById('btn-refresh-subtarefas');
-                if (btnRefreshSubtarefas) {
-                    btnRefreshSubtarefas.addEventListener('click', () => {
-                        window.location.reload();
-                    });
-                }
 
                 const btnCancelarTarefa = document.getElementById('cancelar-tarefa-btn');
                 if (btnCancelarTarefa && window.__currentCartaId) {

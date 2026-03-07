@@ -287,8 +287,8 @@ try {
                 }
 
                 btn.disabled = true;
-                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'simple', message: 'Enviando dados...' });
-                else showFeedback('Enviando dados...', 'success');
+                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'simple', message: 'Cadastrando...' });
+                else showFeedback('Cadastrando...', 'success');
 
                 var payload = {
                     numero_processo_origem: numeroProcesso,
@@ -306,6 +306,7 @@ try {
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
                     if (data.id) {
+                        if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Tarefa Cejusc cadastrada com sucesso.' });
                         window.location.href = '/frame.php?page=cejusc';
                     } else {
                         showFeedback(data.error || 'Não foi possível cadastrar.', 'error');

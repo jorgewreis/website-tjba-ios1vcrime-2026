@@ -40,10 +40,70 @@ $subtarefaLabels = [
 ];
 
 $subtarefas = [];
+$subtarefasPorOrdem = [];
+$ordemParaTipo = [
+    1 => GuiasSubtarefasRepository::TIPO_ORDEM_1,
+    2 => GuiasSubtarefasRepository::TIPO_ORDEM_2,
+    3 => GuiasSubtarefasRepository::TIPO_ORDEM_3,
+    4 => GuiasSubtarefasRepository::TIPO_ORDEM_4,
+    5 => GuiasSubtarefasRepository::TIPO_ORDEM_5,
+    6 => GuiasSubtarefasRepository::TIPO_ORDEM_6,
+    7 => GuiasSubtarefasRepository::TIPO_ORDEM_7,
+];
+$timelineMinorPendente = [
+    GuiasSubtarefasRepository::TIPO_ORDEM_1 => 'Cálculo da pena de multa',
+    GuiasSubtarefasRepository::TIPO_ORDEM_2 => 'Expedir guia',
+    GuiasSubtarefasRepository::TIPO_ORDEM_3 => 'Assinar guia',
+    GuiasSubtarefasRepository::TIPO_ORDEM_4 => 'Gerar PDF da documentação',
+    GuiasSubtarefasRepository::TIPO_ORDEM_5 => 'Enviar documentos',
+    GuiasSubtarefasRepository::TIPO_ORDEM_6 => 'Juntar termo de envio',
+    GuiasSubtarefasRepository::TIPO_ORDEM_7 => 'Expedir certidão',
+];
+$statusCartaLabel = 'Em andamento';
+$statusCartaClass = 'status-current';
+$progressStatusesEdit = ['pendente', 'pendente', 'pendente', 'pendente', 'pendente', 'pendente', 'pendente'];
+$mostrarBarraEdit = false;
+$segmentosBarraEdit = [];
+$cadastroInfoLinha = '';
 if ($guia !== null) {
     $subtarefasRepo = new GuiasSubtarefasRepository($connection);
     $subtarefasRepo->ensurePrimeiraSubtarefa($idGuia);
     $subtarefas = $subtarefasRepo->findByGuiaId($idGuia);
+    foreach ($subtarefas as $st) {
+        $subtarefasPorOrdem[(int) $st['ordem']] = $st;
+    }
+    $statusGuia = trim((string) ($guia['status'] ?? ''));
+    if ($statusGuia === 'concluída') {
+        $statusCartaLabel = 'Finalizada';
+        $statusCartaClass = 'status-finished';
+    } elseif ($statusGuia === 'pendente') {
+        $statusCartaLabel = 'Pendente';
+        $statusCartaClass = 'status-pending';
+    } elseif ($statusGuia === 'cancelada') {
+        $statusCartaLabel = 'Cancelada';
+        $statusCartaClass = 'status-cancelled';
+    }
+    for ($o = 1; $o <= 7; $o++) {
+        if (isset($subtarefasPorOrdem[$o])) {
+            $progressStatusesEdit[$o - 1] = trim((string) ($subtarefasPorOrdem[$o]['status'] ?? 'pendente'));
+        }
+    }
+    $mostrarBarraEdit = in_array($statusCartaLabel, ['Pendente', 'Em andamento'], true);
+    if ($mostrarBarraEdit) {
+        $segmentosBarraEdit[] = ['class' => 'concluida', 'title' => 'Guia cadastrada'];
+        for ($i = 0; $i < 7; $i++) {
+            $statusSeg = $progressStatusesEdit[$i] ?? 'pendente';
+            $segClass = $statusSeg === 'concluida' ? 'concluida' : ($statusSeg === 'em_andamento' ? 'em_andamento' : 'pendente');
+            $segmentosBarraEdit[] = ['class' => $segClass, 'title' => $subtarefaLabels[$ordemParaTipo[$i + 1] ?? ''] ?? ''];
+        }
+    }
+    $guiaCreatedRaw = $guia['created_at'] ?? '';
+    if ($guiaCreatedRaw !== '') {
+        $dt0 = \DateTime::createFromFormat('Y-m-d H:i:s', $guiaCreatedRaw);
+        $cadastroInfoLinha = $dt0 ? ('Guia cadastrada em ' . $dt0->format('d/m/Y - H:i:s')) : $guiaCreatedRaw;
+    } else {
+        $cadastroInfoLinha = 'Guia cadastrada';
+    }
 }
 
 $perfisExcluir = ['ADMIN', 'DIRETORA', 'MAGISTRADA'];
@@ -106,7 +166,7 @@ $tiposOptions = [
             </div>
         <?php else: ?>
             <div class="row table header">Dados da guia</div>
-            <div class="row filter">
+            <div class="row filter" style="justify-content: flex-start;">
                 <div class="col filter">
                     <label for="edit-processo">Processo</label>
                     <input type="text" id="edit-processo" class="width-md height-md" value="<?php echo htmlspecialchars($guia['numero_processo'] ?? '', ENT_QUOTES); ?>" readonly>
@@ -146,41 +206,88 @@ $tiposOptions = [
                 </div>
             </div>
 
-            <div class="row table header">Subtarefas</div>
-            <?php if (empty($subtarefas)): ?>
-                <div class="row filter">
-                    <div class="col">
-                        <span class="minor-info">Nenhuma subtarefa. </span>
-                        <button type="button" class="btn btn-secondary" id="btn-criar-subtarefa">Criar primeira subtarefa</button>
+            <div class="row table header">Subtarefas - Timeline</div>
+            <div class="row buttons">
+                <div class="col filter">
+                    <?php if ($mostrarBarraEdit): ?>
+                        <div class="width-sm status <?php echo htmlspecialchars($statusCartaClass, ENT_QUOTES); ?> status-with-progress" style="border: 1px solid var(--color-gray-500);">
+                            <span class="status-task-label"><?php echo htmlspecialchars($statusCartaLabel, ENT_QUOTES); ?></span>
+                            <?php $concluidosBarraEdit = 1 + count(array_filter($progressStatusesEdit, fn($x) => $x === 'concluida')); ?>
+                            <div class="status-task-progress" role="progressbar" aria-valuenow="<?php echo $concluidosBarraEdit; ?>" aria-valuemin="0" aria-valuemax="8" aria-label="Progresso das subtarefas">
+                                <?php foreach ($segmentosBarraEdit as $seg): ?>
+                                    <div class="status-task-progress-segment <?php echo htmlspecialchars($seg['class'], ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($seg['title'], ENT_QUOTES); ?>"></div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        <div class="width-sm status <?php echo htmlspecialchars($statusCartaClass, ENT_QUOTES); ?>" style="border: 1px solid var(--color-gray-500);"><?php echo htmlspecialchars($statusCartaLabel, ENT_QUOTES); ?></div>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php if ($guia !== null && $cadastroInfoLinha !== ''): ?>
+            <div class="row timeline finished">
+                <div class="row">
+                    <div class="circle finished"></div>
+                    <div class="col filter subtask-status-info">
+                        <span class="minor-info">Guia cadastrada</span>
                     </div>
                 </div>
-            <?php else: ?>
-                <?php foreach ($subtarefas as $st):
-                    $stId = $st['id'] ?? '';
-                    $stTipo = $st['tipo'] ?? '';
-                    $stLabel = $subtarefaLabels[$stTipo] ?? $stTipo;
-                    $stStatus = $st['status'] ?? 'pendente';
-                    $concluida = $stStatus === 'concluida';
+                <div class="col">
+                    <div class="col filter subtask-date">
+                        <span class="minor-info"><?php echo htmlspecialchars($cadastroInfoLinha, ENT_QUOTES); ?></span>
+                    </div>
+                </div>
+            </div>
+            <?php for ($ordem = 1; $ordem <= 7; $ordem++): ?>
+                <?php
+                $tipo = $ordemParaTipo[$ordem] ?? '';
+                $label = $subtarefaLabels[$tipo] ?? 'Passo ' . $ordem;
+                $st = $subtarefasPorOrdem[$ordem] ?? null;
+                $circleClass = '';
+                $minorTexto = $timelineMinorPendente[$tipo] ?? $label;
+                $dateLabel = 'Aguardando conclusão';
+                if ($st !== null) {
+                    $status = trim((string) ($st['status'] ?? ''));
+                    $raw = $st['updated_at'] ?? $st['created_at'] ?? '';
+                    $dataMovimento = '';
+                    if ($raw !== '') {
+                        $dt = \DateTime::createFromFormat('Y-m-d H:i:s', $raw);
+                        $dataMovimento = $dt ? $dt->format('d/m/Y - H:i:s') : $raw;
+                    }
+                    if ($status === 'concluida') {
+                        $circleClass = 'finished';
+                        $dateLabel = $dataMovimento !== '' ? 'Concluído em ' . $dataMovimento : 'Concluído';
+                    } elseif ($status === 'em_andamento') {
+                        $circleClass = 'current';
+                        $dateLabel = $dataMovimento !== '' ? 'Aguardando movimentação desde ' . $dataMovimento : 'Aguardando movimentação';
+                    } else {
+                        $dateLabel = 'Aguardando conclusão';
+                    }
+                }
                 ?>
-                <div class="col full-line" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" style="border-top: 1px solid var(--color-gray-400);">
-                    <div class="row subtask-info">
-                        <div class="col task-info">
-                            <span class="minor-info"><?php echo htmlspecialchars($stLabel); ?></span>
-                            <span class="status <?php echo $concluida ? 'status-finished' : 'status-pending'; ?>"><?php echo $concluida ? 'Concluída' : 'Pendente'; ?></span>
-                        </div>
-                        <?php if (!$concluida): ?>
-                        <div class="row subtask-buttons">
-                            <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>">Concluir</button>
-                        </div>
+                <div class="row <?php if ($circleClass === 'current') { echo 'timeline current'; } elseif ($circleClass === 'finished') { echo 'timeline finished'; } else { echo 'timeline'; } ?>">
+                    <div class="row">
+                        <?php if ($circleClass !== ''): ?>
+                            <div class="circle <?php echo htmlspecialchars($circleClass, ENT_QUOTES); ?>"></div>
+                        <?php else: ?>
+                            <div class="circle" style="background-color: var(--color-gray-300);"></div>
                         <?php endif; ?>
+                        <div class="col filter subtask-status-info">
+                            <span class="minor-info"><?php echo htmlspecialchars($minorTexto, ENT_QUOTES); ?></span>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="col filter subtask-date">
+                            <span class="minor-info"><?php echo htmlspecialchars($dateLabel, ENT_QUOTES); ?></span>
+                        </div>
                     </div>
                 </div>
-                <?php endforeach; ?>
+            <?php endfor; ?>
             <?php endif; ?>
 
             <div class="row buttons">
                 <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
-                <button type="button" class="btn btn-primary" id="salvar-btn">Salvar alterações</button>
+                <button type="button" class="btn btn-primary" id="salvar-btn" disabled>Salvar alterações</button>
                 <?php if ($podeCancelar && !$tarefaFinalizadaOuCancelada): ?>
                     <button type="button" class="btn btn-primary-outline" id="cancelar-tarefa-btn">Cancelar tarefa</button>
                 <?php endif; ?>
@@ -199,6 +306,16 @@ $tiposOptions = [
         </div>
     </div>
 
+    <?php if ($guia !== null): ?>
+        <script>
+        window.__initialGuiaData = {
+            tipo: <?php echo json_encode($guia['tipo'] ?? '', JSON_UNESCAPED_UNICODE); ?>,
+            regime: <?php echo json_encode($guia['regime'] ?? '', JSON_UNESCAPED_UNICODE); ?>,
+            data_fato: <?php echo json_encode($guia['data_fato'] ?? '', JSON_UNESCAPED_UNICODE); ?>,
+            dias_multa: <?php echo json_encode(isset($guia['dias_multa']) && $guia['dias_multa'] !== null ? (int) $guia['dias_multa'] : '', JSON_UNESCAPED_UNICODE); ?>
+        };
+        </script>
+    <?php endif; ?>
     <script>
     (function () {
         var idGuia = <?php echo json_encode($idGuia, JSON_UNESCAPED_UNICODE); ?>;
@@ -224,8 +341,43 @@ $tiposOptions = [
             }
         }
 
-        document.getElementById('salvar-btn')?.addEventListener('click', function () {
-            var btn = this;
+        var salvarBtn = document.getElementById('salvar-btn');
+        var initialData = window.__initialGuiaData || {};
+        function getCurrentState() {
+            var tipoEl = document.getElementById('edit-tipo');
+            var regimeEl = document.getElementById('edit-regime');
+            var dataFatoEl = document.getElementById('edit-data-fato');
+            var diasMultaEl = document.getElementById('edit-dias-multa');
+            var diasVal = (diasMultaEl && diasMultaEl.value !== '') ? parseInt(diasMultaEl.value, 10) : '';
+            if (diasVal !== '' && isNaN(diasVal)) diasVal = '';
+            return {
+                tipo: tipoEl ? (tipoEl.value || '').trim() : '',
+                regime: regimeEl ? (regimeEl.value || '').trim() : '',
+                data_fato: dataFatoEl ? (dataFatoEl.value || '').trim() : '',
+                dias_multa: diasVal
+            };
+        }
+        function hasChanges() {
+            var cur = getCurrentState();
+            if ((initialData.tipo || '') !== (cur.tipo || '')) return true;
+            if ((initialData.regime || '') !== (cur.regime || '')) return true;
+            if ((initialData.data_fato || '') !== (cur.data_fato || '')) return true;
+            if (String(initialData.dias_multa ?? '') !== String(cur.dias_multa ?? '')) return true;
+            return false;
+        }
+        function updateButtonState() {
+            if (salvarBtn) salvarBtn.disabled = !hasChanges();
+        }
+        ['edit-tipo', 'edit-regime', 'edit-data-fato', 'edit-dias-multa'].forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', updateButtonState);
+                el.addEventListener('change', updateButtonState);
+            }
+        });
+        updateButtonState();
+
+        salvarBtn?.addEventListener('click', function () {
             var regimeVal = document.getElementById('edit-regime')?.value?.trim() || '';
             var dataFatoVal = document.getElementById('edit-data-fato')?.value || '';
             if (regimeVal && ['Aberto', 'Semiaberto', 'Fechado'].indexOf(regimeVal) === -1) {
@@ -252,7 +404,7 @@ $tiposOptions = [
             var diasVal = document.getElementById('edit-dias-multa')?.value;
             if (diasVal !== '' && !isNaN(parseInt(diasVal, 10))) payload.dias_multa = parseInt(diasVal, 10);
 
-            btn.disabled = true;
+            salvarBtn.disabled = true;
             fetch('/api/cartorio-guias/update.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -262,15 +414,15 @@ $tiposOptions = [
             .then(function (data) {
                 if (data.error) {
                     showToastMsg('error', 'Erro', data.error);
-                    btn.disabled = false;
+                    updateButtonState();
                 } else {
                     showToastMsg('success', 'Sucesso', 'Guia atualizada.');
-                    btn.disabled = false;
+                    window.location.href = '/frame.php?page=guias';
                 }
             })
             .catch(function () {
                 showToastMsg('error', 'Erro', 'Erro ao salvar.');
-                btn.disabled = false;
+                updateButtonState();
             });
         });
 
@@ -324,57 +476,6 @@ $tiposOptions = [
             });
         });
 
-        document.getElementById('btn-criar-subtarefa')?.addEventListener('click', function () {
-            var btn = this;
-            btn.disabled = true;
-            fetch('/api/cartorio-guias/criar-primeira-subtarefa.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: idGuia })
-            })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-                if (data.error) {
-                    showToastMsg('error', 'Erro', data.error);
-                    btn.disabled = false;
-                } else {
-                    showToastMsg('success', 'Sucesso', 'Subtarefa criada.');
-                    window.location.reload();
-                }
-            })
-            .catch(function () {
-                showToastMsg('error', 'Erro', 'Erro ao criar subtarefa.');
-                btn.disabled = false;
-            });
-        });
-
-        document.querySelectorAll('.btn-concluir-subtarefa').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                var subtarefaId = this.getAttribute('data-subtarefa-id');
-                if (!subtarefaId) return;
-                var btnEl = this;
-                btnEl.disabled = true;
-                fetch('/api/cartorio-guias/concluir-subtarefa.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: subtarefaId })
-                })
-                .then(function (r) { return r.json(); })
-                .then(function (data) {
-                    if (data.error) {
-                        showToastMsg('error', 'Erro', data.error);
-                        btnEl.disabled = false;
-                    } else {
-                        showToastMsg('success', 'Sucesso', 'Subtarefa concluída.');
-                        window.location.reload();
-                    }
-                })
-                .catch(function () {
-                    showToastMsg('error', 'Erro', 'Erro ao concluir.');
-                    btnEl.disabled = false;
-                });
-            });
-        });
     })();
     </script>
 </body>

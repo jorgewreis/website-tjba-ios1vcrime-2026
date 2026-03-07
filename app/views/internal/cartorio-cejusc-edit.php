@@ -139,13 +139,13 @@ $tarefaFinalizadaOuCancelada = in_array($statusAtual, ['cancelada', 'concluída'
             </div>
         <?php else: ?>
             <div class="row table header">Informações</div>
-            <div class="row filter">
+            <div class="row filter" style="justify-content: flex-start;">
                 <div class="col filter">
-                    <label for="filter-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <label for="filter-processo">Processo</label>
                     <input type="text" id="filter-processo" class="width-md height-md readonly" value="<?php echo htmlspecialchars($processoNumero, ENT_QUOTES); ?>" readonly>
                 </div>
                 <div class="col filter">
-                    <label for="filter-reu">Réu <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <label for="filter-reu">Réu</label>
                     <input type="text" id="filter-reu" class="width-xl height-md readonly" value="<?php echo htmlspecialchars($reuNome, ENT_QUOTES); ?>" readonly>
                 </div>
             </div>
@@ -211,19 +211,6 @@ $tarefaFinalizadaOuCancelada = in_array($statusAtual, ['cancelada', 'concluída'
                         <div class="width-sm status <?php echo htmlspecialchars($statusCartaClass, ENT_QUOTES); ?>" style="border: 1px solid var(--color-gray-500);"><?php echo htmlspecialchars($statusCartaLabel, ENT_QUOTES); ?></div>
                     <?php endif; ?>
                 </div>
-                <?php if (!$temSubtarefas): ?>
-                    <div class="col filter">
-                        <button type="button" class="col button-table button-subtask" id="btn-add-subtarefa" title="Adicionar subtarefa" aria-label="Adicionar subtarefa">
-                            <i class="fi fi-rr-add"></i>
-                        </button>
-                    </div>
-                <?php elseif ($temEmAndamentoOuPendente): ?>
-                    <div class="col filter">
-                        <button type="button" class="col button-table button-subtask" id="btn-refresh-subtarefas" title="Atualizar timeline" aria-label="Atualizar timeline">
-                            <i class="fi fi-rr-refresh"></i>
-                        </button>
-                    </div>
-                <?php endif; ?>
             </div>
 
             <?php
@@ -308,11 +295,6 @@ $tarefaFinalizadaOuCancelada = in_array($statusAtual, ['cancelada', 'concluída'
                         <?php endif; ?>
                         <div class="col filter subtask-status-info">
                             <span class="minor-info"><?php echo htmlspecialchars($minorTexto, ENT_QUOTES); ?></span>
-                            <?php if ($st !== null && trim((string) ($st['status'] ?? '')) === 'em_andamento'): ?>
-                                <div class="col filter" style="margin-top: 6px;">
-                                    <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($st['id'] ?? '', ENT_QUOTES); ?>">Concluir</button>
-                                </div>
-                            <?php endif; ?>
                         </div>
                     </div>
                     <div class="col">
@@ -366,69 +348,6 @@ $tarefaFinalizadaOuCancelada = in_array($statusAtual, ['cancelada', 'concluída'
                         window.location.href = '/frame.php?page=cejusc';
                     }, { capture: true });
                 }
-
-                var btnAdd = document.getElementById('btn-add-subtarefa');
-                if (btnAdd && window.__currentCejuscId) {
-                    btnAdd.addEventListener('click', function () {
-                        btnAdd.disabled = true;
-                        fetch('/api/cartorio-cejusc/criar-primeira-subtarefa.php', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ id: window.__currentCejuscId })
-                        })
-                        .then(function (r) { return r.json(); })
-                        .then(function (data) {
-                            if (data.success) {
-                                window.location.reload();
-                            } else {
-                                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Falha ao criar subtarefa.' });
-                                else alert(data.error || 'Falha ao criar subtarefa.');
-                                btnAdd.disabled = false;
-                            }
-                        })
-                        .catch(function () {
-                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
-                            else alert('Erro de conexão.');
-                            btnAdd.disabled = false;
-                        });
-                    });
-                }
-
-                var btnRefresh = document.getElementById('btn-refresh-subtarefas');
-                if (btnRefresh) {
-                    btnRefresh.addEventListener('click', function () {
-                        window.location.reload();
-                    });
-                }
-
-                document.querySelectorAll('.btn-concluir-subtarefa').forEach(function (btnConcluir) {
-                    var subtarefaId = btnConcluir.getAttribute('data-subtarefa-id');
-                    if (!subtarefaId) return;
-                    btnConcluir.addEventListener('click', function () {
-                        if (btnConcluir.disabled) return;
-                        btnConcluir.disabled = true;
-                        fetch('/api/cartorio-cejusc/concluir-subtarefa.php', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ subtarefa_id: subtarefaId })
-                        })
-                        .then(function (r) { return r.json(); })
-                        .then(function (data) {
-                            if (data.success) {
-                                window.location.reload();
-                            } else {
-                                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao concluir.' });
-                                else alert(data.error || 'Erro ao concluir.');
-                                btnConcluir.disabled = false;
-                            }
-                        })
-                        .catch(function () {
-                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
-                            else alert('Erro de conexão.');
-                            btnConcluir.disabled = false;
-                        });
-                    });
-                });
 
                 var btnCancelar = document.getElementById('cancelar-tarefa-btn');
                 if (btnCancelar && window.__currentCejuscId) {
