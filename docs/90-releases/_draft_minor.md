@@ -27,4 +27,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correção debug 9** `[2c1a509]`
 - **Fix: correção de campos do form** `[491c54d]`
 - **Feat: implementação de conjunto de páginas de Guias** `[3652d18]`
+- **Feat: implementação nova de cadastro de reu** `[86f5c5e]`
 
