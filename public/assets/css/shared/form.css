@@ -58,12 +58,12 @@ hr {
 /* Dicas em labels (obrigatório / automatizado) - não ultrapassar largura do campo */
 .label-hint-obrigatorio,
 .label-hint-automatizado {
-    font-size: 0.75rem;
-    font-weight: 500;
+    font-size: 0.6rem;
+    font-weight: 400;
     white-space: nowrap;
 }
 .label-hint-obrigatorio {
-    color: var(--color-danger);
+    color: var(--bs-danger);
     margin-left: 0.2em;
 }
 .label-hint-automatizado {
@@ -72,6 +72,13 @@ hr {
 }
 
 /* BUTTONS */
+/*
+ * Padrão de botões por ação (usar em todas as páginas):
+ *   Cadastro / Novo cadastro / Cadastrar / Salvar  → .btn .btn-primary
+ *   Voltar                                         → .btn .btn-secondary
+ *   Cancelar (tarefa ou desistir)                   → .btn .btn-secondary-outline
+ *   Excluir                                        → .btn .btn-danger
+ */
 /* - TAMANHOS */
 
 .btn {
@@ -205,8 +212,8 @@ hr {
     transition: all 0.5s ease;
 }
 .pagination-number:hover{
-    background-color: var(--bs-body-color);
-    color: var(--color-text-primary);
+    background-color: var(--bg-primary);
+    color: var(--bs-primary);
     transition: all 0.2s ease;
 }
 .pagination-number.active {
@@ -226,19 +233,22 @@ hr {
 
 /* - CORES */
 
-/* -- COR PRIMÁRIA */
+/* -- COR PRIMÁRIA (Cadastro, Salvar) */
 .btn-primary {
     background-color: var(--color-accent);
     border-color: var(--color-accent);
+    color: var(--color-text-on-primary);
     padding: 0 2.5rem;
 }
 .btn-primary:hover {
     background-color: var(--color-accent-hover);
     border-color: var(--color-accent-hover);
+    color: var(--color-text-on-primary);
 }
 .btn-primary:active {
     background-color: var(--color-accent-active);
     border-color: var(--color-accent-active);
+    color: var(--color-text-on-primary);
 }
 
 .btn-primary-outline {
@@ -257,20 +267,24 @@ hr {
     color: var(--color-text-on-primary);
 }
 
-/* -- COR SECUNDÁRIA */
+/* -- COR SECUNDÁRIA (Voltar) */
 .btn-secondary {
     background-color: var(--bs-secondary);
     border-color: var(--bs-secondary);
+    color: var(--color-text-on-primary);
 }
 .btn-secondary:hover {
     background-color: var(--bs-secondary-hover);
     border-color: var(--bs-secondary-hover);
+    color: var(--color-text-on-primary);
 }
 .btn-secondary:active {
     background-color: var(--bs-secondary-active);
     border-color: var(--bs-secondary-active);
+    color: var(--color-text-on-primary);
 }
 
+/* -- SECUNDÁRIA OUTLINE (Cancelar) */
 .btn-secondary-outline {
     background-color: var(--color-surface-elevated);
     border-color: var(--bs-secondary);
@@ -288,34 +302,37 @@ hr {
     color: var(--color-text-on-primary);
 }
 
-/* - COR DANGER */
+/* - COR DANGER (Excluir) – sólido, texto claro */
 .btn-danger {
-    background-color: var(--bg-danger);
+    background-color: var(--bs-danger);
     border-color: var(--bs-danger);
+    color: var(--color-text-on-primary);
 }
 .btn-danger:hover {
-    background-color: var(--color-danger-hover);
-    border-color: var(--color-danger-hover);
+    background-color: var(--bs-danger-hover);
+    border-color: var(--bs-danger-hover);
+    color: var(--color-text-on-primary);
 }
 .btn-danger:active {
-    background-color: var(--color-danger-active);
-    border-color: var(--color-danger-active);
+    background-color: var(--bs-danger-active);
+    border-color: var(--bs-danger-active);
+    color: var(--color-text-on-primary);
 }
 
 .btn-danger-outline {
     background-color: var(--color-surface-elevated);
-    border-color: var(--color-danger);
-    color: var(--color-text-primary);
+    border-color: var(--bs-danger);
+    color: var(--bs-danger);
     box-shadow: 1px 2px 3px 1px rgba(0, 0, 0, 0.1);
 }
 .btn-danger-outline:hover {
-    background-color: var(--color-danger-hover);
-    border-color: var(--color-danger-hover);
+    background-color: var(--bs-danger);
+    border-color: var(--bs-danger);
     color: var(--color-text-on-primary);
 }
 .btn-danger-outline:active {
-    background-color: var(--color-danger-active);
-    border-color: var(--color-danger-active);
+    background-color: var(--bs-danger-active);
+    border-color: var(--bs-danger-active);
     color: var(--color-text-on-primary);
 }
 
@@ -526,14 +543,14 @@ input[type="date"] {
     border-radius: 6px;
     box-shadow: 1px 2px 3px 1px rgba(0, 0, 0, 0.1);
     
-    background-color: var(--color-border);
+    background-color: var(--bg-input);
     color: var(--color-text-primary);
     font-size: 12px;
     font-family: "Poppins", sans-serif;
 }
 
 input[type="text"].readonly{
-    background-color: var(--bg-input);
+    background-color: var(--bs-paper-bg);
     border: 1px solid var(--color-border-subtle);
     color: var(--color-accent);
     font-weight: 500;
@@ -559,7 +576,7 @@ input[type="text"].status-error {
 }
 input.white,
 select.white{
-    background-color: var(--color-border);
+    background-color: var(--bg-input);
 }
 
 /* LABEL */

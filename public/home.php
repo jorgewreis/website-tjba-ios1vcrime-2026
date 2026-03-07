@@ -37,15 +37,9 @@ $userProfile = Security::getUserProfile() ?? '';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Primeira Vara Crime de Ilhéus - Sistema de Gestão</title>
 
-    <link rel="stylesheet" href="/assets/css/legacy/reset.css">
-  	<link rel="stylesheet" href="/assets/css/shared/color.css">
-    <link rel="stylesheet" href="/assets/css/legacy/components.css">
-    <link rel="stylesheet" href="/assets/css/legacy/form.css">
-    <link rel="stylesheet" href="/assets/css/legacy/layout.css">
-    <link rel="stylesheet" href="/assets/css/legacy/login.css">
-    <link rel="stylesheet" href="/assets/css/legacy/menu-style.css">
-    <link rel="stylesheet" href="/assets/css/legacy/pages.css">
-    <link rel="stylesheet" href="/assets/css/legacy/style.css">
+    <link rel="stylesheet" href="/assets/css/shared/reset.css">
+    <link rel="stylesheet" href="/assets/css/shared/color.css">
+    <link rel="stylesheet" href="/assets/css/shared/layout.css">
     <link rel="stylesheet" href="/assets/css/shared/toast.css">
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
     <link rel="icon" type="image/x-icon" href="/assets/img/favicon.ico">

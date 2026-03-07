@@ -20,9 +20,7 @@ if (isset($_COOKIE['tjba_1vcrime_remember_cpf'])) {
     <title>Esqueci a senha - Primeira Vara Crime de Ilhéus</title>
 
     <link rel="stylesheet" href="/assets/css/shared/reset.css">
-    <link rel="stylesheet" href="/assets/css/shared/variables.css">
     <link rel="stylesheet" href="/assets/css/shared/color.css">
-    <link rel="stylesheet" href="/assets/css/shared/base.css">
     <link rel="stylesheet" href="/assets/css/shared/form.css">
     <link rel="stylesheet" href="/assets/css/shared/table.css">
     <link rel="stylesheet" href="/assets/css/shared/login.css">

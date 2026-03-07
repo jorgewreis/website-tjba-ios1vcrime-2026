@@ -49,10 +49,10 @@ authors:
 - `app/models/Usuario.php`
 - `app/helpers/Conection.php`
 - `app/services/PasswordResetService.php`
-- `public/assets/css/shared/base.css`
+- `public/assets/css/shared/layout.css`
 - `public/assets/css/shared/components.css`
 - `public/assets/css/shared/forms.css`
-- `public/assets/css/shared/variables.css`
+- `public/assets/css/shared/color.css`
 - `public/assets/css/modules/public/login.css`
 - `public/assets/js/shared/auth.js`
 - `public/assets/js/shared/cpf.js`

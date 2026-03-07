@@ -148,7 +148,7 @@ if ($totalPages > 0) {
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="/assets/css/shared/reset.css">
-        <link rel="stylesheet" href="/assets/css/shared/variables.css">
+        <link rel="stylesheet" href="/assets/css/shared/color.css">
         <link rel="stylesheet" href="/assets/css/shared/page.css">
         <link rel="stylesheet" href="/assets/css/shared/form.css">
         <link rel="stylesheet" href="/assets/css/shared/table.css">
