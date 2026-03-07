@@ -40,4 +40,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Feat: nova implementação de tema claro e escuro** `[36661d6]`
 - **Fix: correção de cores tema escuro** `[94c41b6]`
 - **Fix: correção inicial de cores** `[84b61ab]`
+- **Fix: segunda correção de cores** `[a37eb82]`
 
