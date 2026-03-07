@@ -31,4 +31,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Feat: implementaçao de info de campo obrigatorio** `[14a380c]`
 - **Fix: atualização de classes** `[9b3389b]`
 - **Fix: melhorias de inputs e selects** `[c0386ea]`
+- **Fix: debug test 1** `[a304f3f]`
 
