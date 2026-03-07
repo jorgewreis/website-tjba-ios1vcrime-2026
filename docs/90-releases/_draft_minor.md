@@ -41,4 +41,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correção de cores tema escuro** `[94c41b6]`
 - **Fix: correção inicial de cores** `[84b61ab]`
 - **Fix: segunda correção de cores** `[a37eb82]`
+- **Fix: correção de cores 3** `[fabeec8]`
 
