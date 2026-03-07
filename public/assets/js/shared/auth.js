@@ -40,18 +40,25 @@
           return;
         }
 
-        const erroElement = document.getElementById(erroId);
-        if (erroElement) erroElement.textContent = result.message;
-
-        const alertBox = document.getElementById(alertId);
-        if (alertBox) alertBox.style.display = "flex";
-      } catch (error) {
-        const erroElement = document.getElementById(erroId);
-        if (erroElement) {
-          erroElement.textContent = "Erro de conexão. Tente novamente mais tarde.";
+        const message = (result && result.message) ? result.message : "Erro ao entrar.";
+        if (global.App && global.App.Toast) {
+          global.App.Toast.show({ type: "error", variant: "full", title: "Erro", message });
+        } else {
+          const erroElement = document.getElementById(erroId);
+          if (erroElement) erroElement.textContent = message;
+          const alertBox = document.getElementById(alertId);
+          if (alertBox) alertBox.style.display = "flex";
         }
-        const alertBox = document.getElementById(alertId);
-        if (alertBox) alertBox.style.display = "flex";
+      } catch (error) {
+        const message = "Erro de conexão. Tente novamente mais tarde.";
+        if (global.App && global.App.Toast) {
+          global.App.Toast.show({ type: "error", variant: "full", title: "Erro", message });
+        } else {
+          const erroElement = document.getElementById(erroId);
+          if (erroElement) erroElement.textContent = message;
+          const alertBox = document.getElementById(alertId);
+          if (alertBox) alertBox.style.display = "flex";
+        }
       }
     });
   }
@@ -108,12 +115,14 @@
       const email = (emailInput.value || "").trim();
 
       if (cpfDigits.length !== 11) {
-        setAlert("danger", "Erro", "Informe um CPF válido.");
+        if (global.App && global.App.Toast) global.App.Toast.show({ type: "error", variant: "full", title: "Erro", message: "Informe um CPF válido." });
+        else setAlert("danger", "Erro", "Informe um CPF válido.");
         return;
       }
 
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        setAlert("danger", "Erro", "Informe um e-mail válido.");
+        if (global.App && global.App.Toast) global.App.Toast.show({ type: "error", variant: "full", title: "Erro", message: "Informe um e-mail válido." });
+        else setAlert("danger", "Erro", "Informe um e-mail válido.");
         return;
       }
 
@@ -144,11 +153,10 @@
         const message = (result && result.message) || "Não foi possível processar. Tente novamente.";
 
         if (success) {
-          setAlert(
-            emailSent ? "success" : "primary",
-            emailSent ? "E-mail enviado" : "Senha redefinida",
-            message
-          );
+          const toastType = emailSent ? "success" : "info";
+          const toastTitle = emailSent ? "E-mail enviado" : "Senha redefinida";
+          if (global.App && global.App.Toast) global.App.Toast.show({ type: toastType, variant: "full", title: toastTitle, message });
+          else setAlert(emailSent ? "success" : "primary", toastTitle, message);
           form.reset();
           if (emailSent) {
             setTimeout(() => {
@@ -156,11 +164,13 @@
             }, 2000);
           }
         } else {
-          setAlert("danger", "Erro", message);
+          if (global.App && global.App.Toast) global.App.Toast.show({ type: "error", variant: "full", title: "Erro", message });
+          else setAlert("danger", "Erro", message);
         }
       } catch (error) {
         console.error("Falha ao enviar reset:", error);
-        setAlert("danger", "Erro", "Erro de conexão. Tente novamente mais tarde.");
+        if (global.App && global.App.Toast) global.App.Toast.show({ type: "error", variant: "full", title: "Erro", message: "Erro de conexão. Tente novamente mais tarde." });
+        else setAlert("danger", "Erro", "Erro de conexão. Tente novamente mais tarde.");
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;

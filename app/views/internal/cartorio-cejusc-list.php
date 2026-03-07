@@ -122,6 +122,7 @@ if ($totalPages > 0) {
         <link rel="stylesheet" href="/assets/css/shared/form.css">
         <link rel="stylesheet" href="/assets/css/shared/table.css">
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+        <?php include __DIR__ . '/_toast_script.php'; ?>
     </head>
 <body class="page-internal">
 
@@ -414,9 +415,17 @@ if ($totalPages > 0) {
                     .then(function (r) { return r.json(); })
                     .then(function (data) {
                         if (data.success) window.location.reload();
-                        else { alert(data.error || 'Erro ao concluir.'); btn.disabled = false; }
+                        else {
+                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao concluir.' });
+                            else alert(data.error || 'Erro ao concluir.');
+                            btn.disabled = false;
+                        }
                     })
-                    .catch(function () { alert('Erro de conexão.'); btn.disabled = false; });
+                    .catch(function () {
+                        if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
+                        else alert('Erro de conexão.');
+                        btn.disabled = false;
+                    });
                 });
             });
         })();

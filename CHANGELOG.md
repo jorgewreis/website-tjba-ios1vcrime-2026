@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0008
+
+**Data:** 2026-03-07 08:43:26 | **Commit:** `1a43361` | **Tipo:** `patch`
+
+- Feat: nova implementação de toats em todo o sistema
+
 ## V. 1.03.0007
 
 **Data:** 2026-03-07 08:18:54 | **Commit:** `a79caad` | **Tipo:** `patch`
@@ -2322,6 +2328,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

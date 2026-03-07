@@ -41,6 +41,7 @@ try {
         <link rel="stylesheet" href="/assets/css/shared/page.css">
         <link rel="stylesheet" href="/assets/css/shared/form.css">
         <link rel="stylesheet" href="/assets/css/shared/table.css">
+        <?php include __DIR__ . '/_toast_script.php'; ?>
     </head>
 <body class="page-internal">
 
@@ -136,8 +137,11 @@ try {
             var btn = document.getElementById('cadastrar-btn');
             var feedback = document.getElementById('cadastro-feedback');
             var showFeedback = function (message, type) {
-                if (!feedback) return;
-                feedback.innerHTML = '<label class="status ' + (type === 'error' ? 'status-cancelled' : 'status-finished') + '">' + message + '</label>';
+                if (typeof showToast === 'function') {
+                    showToast({ type: type === 'error' ? 'error' : 'success', variant: 'full', title: type === 'error' ? 'Erro' : 'Sucesso', message: message });
+                } else if (feedback) {
+                    feedback.innerHTML = '<label class="status ' + (type === 'error' ? 'status-cancelled' : 'status-finished') + '">' + message + '</label>';
+                }
             };
             var getValue = function (id) {
                 var el = document.getElementById(id);
@@ -178,7 +182,8 @@ try {
                 }
 
                 btn.disabled = true;
-                showFeedback('Enviando dados...', 'success');
+                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'simple', message: 'Enviando dados...' });
+                else showFeedback('Enviando dados...', 'success');
 
                 fetch('/api/cartorio-cejusc/create.php', {
                     method: 'POST',

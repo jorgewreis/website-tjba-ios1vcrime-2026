@@ -5,6 +5,9 @@ require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/security.php';
 require_once __DIR__ . '/../app/helpers/bootstrap.php';
 
+/** Caminho do PDF com os termos sobre LGPD (uso dos dados do estudante). Coloque o arquivo em public/documents/pdf/ */
+$termosLgpdPdfUrl = '/documents/pdf/termos-lgpd-cadastro-estudantes.pdf';
+
 $faculdades = [
     'Anhanguera - Polo Ilhéus',
     'Anhanguera - Polo Itabuna',    
@@ -30,6 +33,8 @@ $faculdades = [
     <link rel="stylesheet" href="/assets/css/shared/form.css">
     <link rel="stylesheet" href="/assets/css/shared/table.css">
     <link rel="stylesheet" href="/assets/css/shared/login.css">
+    <link rel="stylesheet" href="/assets/css/shared/toast.css">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
     <link rel="icon" type="image/x-icon" href="/assets/img/favicon.ico">
     <script>
         (function() {
@@ -63,6 +68,13 @@ $faculdades = [
                     <div class="title-page">
                         <span class="title">Cadastro de estudantes</span>
                         <span class="info-title">Cadastre-se para acompanhamento de audiências, download de atas e pautas.</span>
+                        <p class="description-page" style="margin-top: 0.5em; font-size: 0.9rem;">Antes de se cadastrar, leia os termos sobre uso dos dados pessoais (LGPD).</p>
+                        <a href="<?php echo htmlspecialchars($termosLgpdPdfUrl, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer" style="text-decoration: none; display: inline-block; margin-top: 8px;">
+                            <span class="badge file">
+                                <img src="/assets/icons/Office-File-Pdf-1--Streamline-Ultimate.png" alt="PDF">
+                                <span>Termos sobre LGPD – Cadastro de estudantes</span>
+                            </span>
+                        </a>
                     </div>
 
                     <form class="form-login" id="formEstudante">
@@ -122,23 +134,17 @@ $faculdades = [
                             </div>
                         </div>
 
-                        <div class="row" style="background-color: transparent; padding: 20px 0 10px 0; width: 100%; border-bottom: 1px solid var(--color-gray-400);">
-                            <button class="btn btn-primary width-md" type="submit">Enviar cadastro</button>
+                        <div class="row table">
+                            <div class="col">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="aceite_termos_lgpd" name="aceite_termos_lgpd" value="1" required>
+                                    <span>Li e aceito os <a href="<?php echo htmlspecialchars($termosLgpdPdfUrl, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">termos sobre LGPD</a>, que estabelecem que as informações pessoais cadastradas serão utilizadas somente para autorização de acesso à sala de audiências e preenchimento das atas com informações do estudante. *</span>
+                                </label>
+                            </div>
                         </div>
 
-                        <div class="row">
-                            <div class="alert-heading danger width-md" id="alert-form" style="display: none;">
-                                <div class="alert-header">
-                                    <span class="text">Erro</span>
-                                </div>
-                                <span class="alert-text" id="erro-msg"></span>
-                            </div>
-                            <div class="alert-heading success width-md" id="alert-success" style="display: none;">
-                                <div class="alert-header">
-                                    <span class="text">Sucesso</span>
-                                </div>
-                                <span class="alert-text" id="success-msg"></span>
-                            </div>
+                        <div class="row" style="background-color: transparent; padding: 20px 0 10px 0; width: 100%; border-bottom: 1px solid var(--color-gray-400);">
+                            <button class="btn btn-primary width-md" type="submit">Enviar cadastro</button>
                         </div>
 
                         <div class="row" style="border: none; padding-top: 10px;">
@@ -151,9 +157,11 @@ $faculdades = [
             </div>
         </div>
         <div class="layout-overlay"></div>
+        <div id="toast-container" class="toast-container" aria-live="polite"></div>
     </div>
 
     <script src="/assets/js/shared/cpf.js" defer></script>
+    <script src="/assets/js/shared/toast.js" defer></script>
     <script defer>
         document.addEventListener("DOMContentLoaded", async () => {
             await App.CPF.init("#cpf");
@@ -180,24 +188,20 @@ $faculdades = [
             inputEmail.addEventListener("blur", function () {
                 this.value = this.value.toLowerCase();
             });
-            const alertError = document.getElementById("alert-form");
-            const alertSuccess = document.getElementById("alert-success");
-            const erroMsg = document.getElementById("erro-msg");
-            const successMsg = document.getElementById("success-msg");
-
             function onlyDigits(s) {
                 return (s || "").toString().replace(/\D/g, "");
             }
 
             form.addEventListener("submit", async (e) => {
                 e.preventDefault();
-                alertError.style.display = "none";
-                alertSuccess.style.display = "none";
 
                 const cpfDigits = onlyDigits(document.getElementById("cpf").value);
                 if (cpfDigits.length !== 11) {
-                    erroMsg.textContent = "Informe um CPF válido.";
-                    alertError.style.display = "block";
+                    if (window.App && App.Toast) App.Toast.show({ type: "error", variant: "full", title: "Erro", message: "Informe um CPF válido." });
+                    return;
+                }
+                if (!form.querySelector("#aceite_termos_lgpd").checked) {
+                    if (window.App && App.Toast) App.Toast.show({ type: "error", variant: "full", title: "Atenção", message: "É necessário aceitar os termos sobre LGPD para realizar o cadastro." });
                     return;
                 }
 
@@ -218,6 +222,7 @@ $faculdades = [
                         faculdade: formData.get("faculdade") || "",
                         email: emailRaw.toLowerCase(),
                         semestre: (formData.get("semestre") || "").toString().slice(0, 2),
+                        aceite_termos_lgpd: true,
                     };
 
                     const res = await fetch("/api/cadastro_estudantes.php", {
@@ -228,16 +233,13 @@ $faculdades = [
                     const data = await res.json().catch(() => ({}));
 
                     if (data.success) {
-                        successMsg.textContent = data.message || "Cadastro realizado com sucesso.";
-                        alertSuccess.style.display = "block";
+                        if (window.App && App.Toast) App.Toast.show({ type: "success", variant: "full", title: "Sucesso", message: data.message || "Cadastro realizado com sucesso." });
                         form.reset();
                     } else {
-                        erroMsg.textContent = data.message || "Erro ao enviar. Tente novamente.";
-                        alertError.style.display = "block";
+                        if (window.App && App.Toast) App.Toast.show({ type: "error", variant: "full", title: "Erro", message: data.message || "Erro ao enviar. Tente novamente." });
                     }
                 } catch (err) {
-                    erroMsg.textContent = "Erro de conexão. Tente novamente.";
-                    alertError.style.display = "block";
+                    if (window.App && App.Toast) App.Toast.show({ type: "error", variant: "full", title: "Erro", message: "Erro de conexão. Tente novamente." });
                 } finally {
                     btn.disabled = false;
                     btn.textContent = originalText;

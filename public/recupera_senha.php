@@ -25,7 +25,8 @@ if (isset($_COOKIE['tjba_1vcrime_remember_cpf'])) {
     <link rel="stylesheet" href="/assets/css/shared/form.css">
     <link rel="stylesheet" href="/assets/css/shared/table.css">
     <link rel="stylesheet" href="/assets/css/shared/login.css">
-
+    <link rel="stylesheet" href="/assets/css/shared/toast.css">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
     <link rel="icon" type="image/x-icon" href="/assets/img/favicon.ico">
     <script>
         (function() {
@@ -113,9 +114,11 @@ if (isset($_COOKIE['tjba_1vcrime_remember_cpf'])) {
             </div>
         </div>
         <div class="layout-overlay"></div>
+        <div id="toast-container" class="toast-container" aria-live="polite"></div>
     </div>
 
     <script src="/assets/js/shared/cpf.js" defer></script>
+    <script src="/assets/js/shared/toast.js" defer></script>
     <script src="/assets/js/shared/auth.js" defer></script>
     <script defer>
         document.addEventListener("DOMContentLoaded", async () => {

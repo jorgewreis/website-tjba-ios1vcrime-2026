@@ -115,6 +115,7 @@ $tarefaFinalizadaOuCancelada = in_array($statusAtual, ['cancelada', 'concluída'
         <link rel="stylesheet" href="/assets/css/shared/form.css">
         <link rel="stylesheet" href="/assets/css/shared/table.css">
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+        <?php include __DIR__ . '/_toast_script.php'; ?>
     </head>
 <body class="page-internal">
 
@@ -380,12 +381,14 @@ $tarefaFinalizadaOuCancelada = in_array($statusAtual, ['cancelada', 'concluída'
                             if (data.success) {
                                 window.location.reload();
                             } else {
-                                alert(data.error || 'Falha ao criar subtarefa.');
+                                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Falha ao criar subtarefa.' });
+                                else alert(data.error || 'Falha ao criar subtarefa.');
                                 btnAdd.disabled = false;
                             }
                         })
                         .catch(function () {
-                            alert('Erro de conexão.');
+                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
+                            else alert('Erro de conexão.');
                             btnAdd.disabled = false;
                         });
                     });
@@ -414,12 +417,14 @@ $tarefaFinalizadaOuCancelada = in_array($statusAtual, ['cancelada', 'concluída'
                             if (data.success) {
                                 window.location.reload();
                             } else {
-                                alert(data.error || 'Erro ao concluir.');
+                                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao concluir.' });
+                                else alert(data.error || 'Erro ao concluir.');
                                 btnConcluir.disabled = false;
                             }
                         })
                         .catch(function () {
-                            alert('Erro de conexão.');
+                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
+                            else alert('Erro de conexão.');
                             btnConcluir.disabled = false;
                         });
                     });
@@ -440,12 +445,14 @@ $tarefaFinalizadaOuCancelada = in_array($statusAtual, ['cancelada', 'concluída'
                             if (data.success) {
                                 window.location.reload();
                             } else {
-                                alert(data.error || 'Erro ao cancelar.');
+                                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao cancelar.' });
+                                else alert(data.error || 'Erro ao cancelar.');
                                 btnCancelar.disabled = false;
                             }
                         })
                         .catch(function () {
-                            alert('Erro de conexão.');
+                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
+                            else alert('Erro de conexão.');
                             btnCancelar.disabled = false;
                         });
                     });
@@ -466,12 +473,14 @@ $tarefaFinalizadaOuCancelada = in_array($statusAtual, ['cancelada', 'concluída'
                             if (data.deleted) {
                                 window.location.href = '/frame.php?page=cejusc';
                             } else {
-                                alert(data.error || 'Erro ao excluir.');
+                                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao excluir.' });
+                                else alert(data.error || 'Erro ao excluir.');
                                 btnExcluir.disabled = false;
                             }
                         })
                         .catch(function () {
-                            alert('Erro de conexão.');
+                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
+                            else alert('Erro de conexão.');
                             btnExcluir.disabled = false;
                         });
                     });

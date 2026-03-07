@@ -107,6 +107,7 @@ try {
         <link rel="stylesheet" href="/assets/css/shared/page.css">
         <link rel="stylesheet" href="/assets/css/shared/form.css">
         <link rel="stylesheet" href="/assets/css/shared/table.css">
+        <?php include __DIR__ . '/_toast_script.php'; ?>
     </head>
 <body class="page-internal">
 
@@ -275,9 +276,12 @@ try {
             const classeCodigoField = document.getElementById('hidden-classe-codigo');
             const classeDescricaoField = document.getElementById('hidden-classe-descricao');
             const showFeedback = (message, type = 'success') => {
-                if (!feedback) return;
-                const variant = type === 'error' ? 'status-cancelled' : 'status-finished';
-                feedback.innerHTML = `<label class="status ${variant}">${message}</label>`;
+                if (typeof showToast === 'function') {
+                    showToast({ type: type === 'error' ? 'error' : 'success', variant: 'full', title: type === 'error' ? 'Erro' : 'Sucesso', message });
+                } else if (feedback) {
+                    const variant = type === 'error' ? 'status-cancelled' : 'status-finished';
+                    feedback.innerHTML = `<label class="status ${variant}">${message}</label>`;
+                }
             };
             const getValue = (id) => document.getElementById(id)?.value?.trim() ?? '';
 
@@ -304,7 +308,8 @@ try {
                             }
                             const status = (data.status_cidade || '').trim();
                             if (status.toUpperCase() === 'CCM') {
-                                alert('Comarca com Central de Mandados');
+                                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'simple', message: 'Comarca com Central de Mandados' });
+                                else alert('Comarca com Central de Mandados');
                                 cidadeInput.value = '';
                             } else if (status.toLowerCase() === 'agregada' && data.nome) {
                                 cidadeInput.value = formatCidade(data.nome);
@@ -364,7 +369,8 @@ try {
                 }
 
                 btn.disabled = true;
-                showFeedback('Enviando dados...', 'success');
+                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'simple', message: 'Enviando dados...' });
+                else showFeedback('Enviando dados...', 'success');
 
                 try {
                     const response = await fetch('/api/cartorio-cartas-recebidas/create.php', {

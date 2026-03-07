@@ -46,6 +46,8 @@ $userProfile = Security::getUserProfile() ?? '';
     <link rel="stylesheet" href="/assets/css/legacy/menu-style.css">
     <link rel="stylesheet" href="/assets/css/legacy/pages.css">
     <link rel="stylesheet" href="/assets/css/legacy/style.css">
+    <link rel="stylesheet" href="/assets/css/shared/toast.css">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
     <link rel="icon" type="image/x-icon" href="/assets/img/favicon.ico">
 </head>
 <body>
@@ -129,10 +131,12 @@ $userProfile = Security::getUserProfile() ?? '';
 
         <div class="layout-overlay"></div>
         <div class="drag-target"></div>
-        
-    </div>    
+
+        <div id="toast-container" class="toast-container" aria-live="polite"></div>
+    </div>
 
     <script src="/assets/js/shared/prefs.js" defer></script>
+    <script src="/assets/js/shared/toast.js" defer></script>
     <script src="/assets/js/shared/common.js" defer></script>
     <script src="/assets/js/shared/menu.js" defer></script>
 

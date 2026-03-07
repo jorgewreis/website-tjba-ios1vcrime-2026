@@ -67,6 +67,15 @@ if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
     exit;
 }
 
+$aceiteTermosLgpd = !empty($payload['aceite_termos_lgpd']);
+if (!$aceiteTermosLgpd) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'É necessário aceitar os termos sobre LGPD (uso dos dados pessoais) para realizar o cadastro.',
+    ]);
+    exit;
+}
+
 try {
     $pdo = Conection::getInstance()->getConnection();
 

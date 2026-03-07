@@ -218,6 +218,7 @@ $stateOptions = [
         <link rel="stylesheet" href="/assets/css/shared/form.css">
         <link rel="stylesheet" href="/assets/css/shared/table.css">
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+        <?php include __DIR__ . '/_toast_script.php'; ?>
     </head>
 <body class="page-internal">
 
@@ -572,9 +573,12 @@ $stateOptions = [
                 }
 
                 const showFeedback = (message, type = 'success') => {
-                    if (!feedback) return;
-                    const variant = type === 'error' ? 'status-cancelled' : 'status-finished';
-                    feedback.innerHTML = `<label class="status ${variant}">${message}</label>`;
+                    if (typeof showToast === 'function') {
+                        showToast({ type: type === 'error' ? 'error' : 'success', variant: 'full', title: type === 'error' ? 'Erro' : 'Sucesso', message });
+                    } else if (feedback) {
+                        const variant = type === 'error' ? 'status-cancelled' : 'status-finished';
+                        feedback.innerHTML = `<label class="status ${variant}">${message}</label>`;
+                    }
                 };
 
                 const sanitizePrazo = (value) => {
@@ -650,7 +654,8 @@ $stateOptions = [
                             }
                             const status = (data.status_cidade || '').trim();
                             if (status.toUpperCase() === 'CCM') {
-                                alert('Comarca com Central de Mandados');
+                                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'simple', message: 'Comarca com Central de Mandados' });
+                                else alert('Comarca com Central de Mandados');
                                 cidadeInput.value = '';
                                 if (hiddenComarcaInput) hiddenComarcaInput.value = '';
                             } else {
@@ -691,7 +696,8 @@ $stateOptions = [
                     if (observacoesInput) payload.observacoes = payloadState.observacoes || '';
 
                     salvarBtn.disabled = true;
-                    showFeedback('Atualizando dados...', 'success');
+                    if (typeof showToast === 'function') showToast({ type: 'info', variant: 'simple', message: 'Atualizando dados...' });
+                    else showFeedback('Atualizando dados...', 'success');
 
                     try {
                         const response = await fetch(endpoint, {
@@ -730,7 +736,8 @@ $stateOptions = [
                             }
                             window.location.reload();
                         } catch (err) {
-                            alert(err.message || 'Erro ao adicionar subtarefa.');
+                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: err.message || 'Erro ao adicionar subtarefa.' });
+                            else alert(err.message || 'Erro ao adicionar subtarefa.');
                             btnAddSubtarefa.disabled = false;
                         }
                     });
@@ -761,9 +768,11 @@ $stateOptions = [
                                 window.location.reload();
                                 return;
                             }
-                            alert(data.error || 'Erro ao cancelar a tarefa.');
+                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao cancelar a tarefa.' });
+                            else alert(data.error || 'Erro ao cancelar a tarefa.');
                         } catch (e) {
-                            alert('Erro de conexão ao cancelar.');
+                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão ao cancelar.' });
+                            else alert('Erro de conexão ao cancelar.');
                         }
                         btnCancelarTarefa.disabled = false;
                     });
@@ -787,9 +796,11 @@ $stateOptions = [
                                 window.location.href = '/frame.php?page=cartasrecebidas';
                                 return;
                             }
-                            alert(data.error || 'Erro ao excluir a tarefa.');
+                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao excluir a tarefa.' });
+                            else alert(data.error || 'Erro ao excluir a tarefa.');
                         } catch (e) {
-                            alert('Erro de conexão ao excluir.');
+                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão ao excluir.' });
+                            else alert('Erro de conexão ao excluir.');
                         }
                         btnExcluirTarefa.disabled = false;
                     });

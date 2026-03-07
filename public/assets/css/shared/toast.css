@@ -1,98 +1,167 @@
+/* Container fixo: canto inferior direito, z-index máximo, empilhamento vertical */
+.toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 2147483647;
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: flex-end;
+    gap: 12px;
+    pointer-events: none;
+}
 
-.toast {
-    margin: 20px; /* Somente para visualização do mock-up */
+.toast-container .toast-item {
+    pointer-events: auto;
+    max-width: min(400px, calc(100vw - 48px));
+}
+
+/* Animações: entrada suave pela direita; saída mais lenta pela direita */
+@keyframes toast-enter {
+    from {
+        opacity: 0;
+        transform: translateX(120%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes toast-exit {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(120%);
+    }
+}
+
+.toast-item.toast-visible {
+    animation: toast-enter 0.35s ease-out forwards;
+}
+
+.toast-item.toast-exiting {
+    animation: toast-exit 0.6s ease-in forwards;
+}
+
+/* Base: semitransparente, sombra, bordas */
+.toast,
+.toast-full {
     width: 400px;
-    top: 20px;
-    right: 20px;
-    z-index: 9999;
+    max-width: 100%;
     display: flex;
     flex-direction: column;
-    border: 1px solid var(--color-gray-300);    
-    box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.15);
-    border-radius: 6px;    
-    gap: 10px;
+    border: 1px solid var(--color-gray-300);
+    box-shadow: 4px 8px 24px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.12);
+    border-radius: 6px;
+    gap: 0;
+    overflow: hidden;
 }
-.toast.success{
-    background-color: var(--success-color-bg-light);
+
+.toast {
+    background-color: rgba(246, 246, 255, 0.95);
+}
+
+.toast.success {
+    background-color: rgba(236, 249, 244, 0.95);
     border-color: var(--success-color);
 }
-.toast.error{
-    background-color: var(--danger-color-bg-light);
+
+.toast.error {
+    background-color: rgba(248, 215, 218, 0.95);
     border-color: var(--danger-color);
 }
+
 .toast.info {
-    background-color: var(--primary-color-bg-light-2);
+    background-color: rgba(246, 246, 255, 0.95);
     border-color: var(--primary-color);
 }
 
 .toast-full {
-    margin: 20px; /* Somente para visualização do mock-up */
-    width: 400px;
-    top: 20px;
-    right: 20px;
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-    border: 1px solid var(--color-gray-300);    
-    box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.15);
-    border-radius: 6px;    
-    gap: 10px;
+    background-color: rgba(255, 255, 255, 0.95);
 }
-.toast-full.success{
-    background-color: var(--success-color-bg-light);
+
+.toast-full.success {
+    background-color: rgba(236, 249, 244, 0.95);
     border-color: var(--success-color);
 }
-.toast-full.error{
-    background-color: var(--danger-color-bg-light);
+
+.toast-full.error {
+    background-color: rgba(248, 215, 218, 0.95);
     border-color: var(--danger-color);
 }
 
+.toast-full.info {
+    background-color: rgba(246, 246, 255, 0.95);
+    border-color: var(--primary-color);
+}
+
+/* Modelo 1: barra de título + botão fechar + conteúdo */
 .toast-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     border-radius: 6px 6px 0 0;
     padding: 10px 15px;
-    background-color: var(--color-gray-100);
+    background-color: rgba(248, 249, 250, 0.98);
     border-bottom: 1px solid var(--color-gray-300);
 }
+
 .toast-full.success .toast-header {
     background-color: var(--success-color);
 }
+
 .toast-full.error .toast-header {
     background-color: var(--danger-color);
 }
 
-    .toast-header .toast-title {
-        font-size: 13px;
-        font-weight: 500;
-        color: var(--color-gray-800);
-    }
-    .toast-full.success .toast-header .toast-title {
-        color: var(--color-gray-000);
-    }
-    .toast-full.error .toast-header .toast-title {
-        color: var(--color-gray-000);
-    }
+.toast-full.info .toast-header {
+    background-color: var(--primary-color);
+}
 
-    .toast-header .toast-close {
-        font-size: 16px;
-        color: var(--color-gray-500);
-        cursor: pointer;
-        transition: color 0.7s ease;
-    }
-        .toast-full.success .toast-header .toast-close {
-            color: var(--color-gray-300);
-        }
-        .toast-full.error .toast-header .toast-close {
-            color: var(--color-gray-300);
-        }
-        .toast-header .toast-close:hover {
-            color: var(--color-gray-800);
-            transition: color 0.2s ease;
-        }
+.toast-header .toast-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-gray-800);
+}
 
+.toast-full.success .toast-header .toast-title,
+.toast-full.error .toast-header .toast-title,
+.toast-full.info .toast-header .toast-title {
+    color: var(--color-gray-000);
+}
 
+.toast-header .toast-close {
+    font-size: 18px;
+    line-height: 1;
+    color: var(--color-gray-500);
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0 4px;
+    transition: color 0.2s ease;
+}
+
+.toast-full.success .toast-header .toast-close,
+.toast-full.error .toast-header .toast-close,
+.toast-full.info .toast-header .toast-close {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.toast-header .toast-close:hover {
+    color: var(--color-gray-800);
+}
+
+.toast-full.success .toast-header .toast-close:hover,
+.toast-full.error .toast-header .toast-close:hover,
+.toast-full.info .toast-header .toast-close:hover {
+    color: var(--color-gray-000);
+}
+
+/* Corpo do toast */
 .toast .toast-body {
     display: flex;
     flex-direction: row;
@@ -106,34 +175,83 @@
     flex-direction: row;
     align-items: center;
     justify-content: flex-start;
-    padding: 10px 10px 20px 10px;
+    padding: 12px 16px 16px;
 }
-    .toast-body .toast-icon {
-        padding: 0 10px;
-        font-size: 20px;
-        margin-right: 10px;
-    }
-    .toast-body .toast-message {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-    }
-        .toast-body .toast-message .toast-subtitle {
-            font-size: 12px;
-            font-weight: 500;
-            color: var(--color-gray-700);
-        }
 
-        .toast-body .toast-message .toast-information {
-            font-size: 13px;
-            font-weight: 400;
-            color: var(--color-gray-700);
-        }
-        .toast-full .toast-body .toast-message .toast-information {
-            margin-bottom: 10px;
-        }
+.toast-body .toast-icon {
+    padding: 0 10px;
+    font-size: 20px;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
 
-        .toast-body .toast-message .toast-timestamp {
-            font-size: 10px;
-            color: var(--color-gray-600);
-        }
+.toast-body .toast-message {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.toast-body .toast-message .toast-subtitle {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-gray-700);
+}
+
+.toast-body .toast-message .toast-information {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--color-gray-700);
+    margin: 0;
+}
+
+.toast-full .toast-body .toast-message .toast-information {
+    margin-bottom: 4px;
+}
+
+.toast-body .toast-message .toast-timestamp {
+    font-size: 10px;
+    color: var(--color-gray-600);
+}
+
+/* Modelo 2 (informativo): barra de tempo regressivo interna, semitransparente */
+.toast .toast-countdown-wrap {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: rgba(0, 0, 0, 0.08);
+    border-radius: 0 0 6px 6px;
+    overflow: hidden;
+}
+
+.toast .toast-countdown-bar {
+    height: 100%;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.12);
+    border-radius: 0 0 0 6px;
+    transform-origin: right;
+    transition: none;
+}
+
+.toast.success .toast-countdown-bar {
+    background: rgba(44, 202, 128, 0.4);
+}
+
+.toast.error .toast-countdown-bar {
+    background: rgba(220, 53, 69, 0.4);
+}
+
+.toast.info .toast-countdown-bar {
+    background: rgba(104, 107, 251, 0.4);
+}
+
+/* Toast simples precisa de position relative para o countdown */
+.toast {
+    position: relative;
+}
+
+.toast .toast-body {
+    padding-bottom: 20px;
+}
