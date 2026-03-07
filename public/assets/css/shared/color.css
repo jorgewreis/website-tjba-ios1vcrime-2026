@@ -116,6 +116,7 @@
     /* Semânticas – bordas e acento */
     --color-border: #3d424d;
     --color-border-subtle: #2d3139;
+    --color-border-light: #6a6e77;
     --color-accent: #8b8eff;
     --color-accent-hover: #9e9fff;
     --color-surface-hover: #2d3139;
@@ -185,6 +186,7 @@
 
         --color-border: #3d424d;
         --color-border-subtle: #2d3139;
+        --color-border-light: #252930;
         --color-accent: #8b8eff;
         --color-accent-hover: #9e9fff;
         --color-surface-hover: #2d3139;
