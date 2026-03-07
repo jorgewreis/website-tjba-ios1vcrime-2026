@@ -128,29 +128,24 @@ $tiposOptions = [
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="col filter">
-                    <label for="edit-etapa">Etapa</label>
-                    <input type="text" id="edit-etapa" class="width-md height-md" value="<?php echo htmlspecialchars($guia['etapa'] ?? '', ENT_QUOTES); ?>" maxlength="100">
-                </div>
             </div>
             <div class="row filter">
                 <div class="col filter">
                     <label for="edit-regime">Regime</label>
-                    <input type="text" id="edit-regime" class="width-md height-md" value="<?php echo htmlspecialchars($guia['regime'] ?? '', ENT_QUOTES); ?>" maxlength="100">
+                    <select id="edit-regime" class="width-md height-md">
+                        <option value=""<?php echo (($guia['regime'] ?? '') === '') ? ' selected' : ''; ?>>Selecione (opcional)</option>
+                        <option value="Aberto"<?php echo (($guia['regime'] ?? '') === 'Aberto') ? ' selected' : ''; ?>>Aberto</option>
+                        <option value="Semiaberto"<?php echo (($guia['regime'] ?? '') === 'Semiaberto') ? ' selected' : ''; ?>>Semiaberto</option>
+                        <option value="Fechado"<?php echo (($guia['regime'] ?? '') === 'Fechado') ? ' selected' : ''; ?>>Fechado</option>
+                    </select>
                 </div>
                 <div class="col filter">
                     <label for="edit-data-fato">Data do fato</label>
-                    <input type="date" id="edit-data-fato" class="width-md height-md" value="<?php echo htmlspecialchars($guia['data_fato'] ?? '', ENT_QUOTES); ?>">
+                    <input type="date" id="edit-data-fato" class="width-md height-md" value="<?php echo htmlspecialchars($guia['data_fato'] ?? '', ENT_QUOTES); ?>" max="">
                 </div>
                 <div class="col filter">
                     <label for="edit-dias-multa">Dias-multa</label>
                     <input type="number" id="edit-dias-multa" class="width-sm height-md" min="0" value="<?php echo isset($guia['dias_multa']) && $guia['dias_multa'] !== null ? (int) $guia['dias_multa'] : ''; ?>">
-                </div>
-            </div>
-            <div class="row filter">
-                <div class="col filter">
-                    <label for="edit-observacoes">Observações</label>
-                    <textarea id="edit-observacoes" class="width-xl height-md" rows="2" maxlength="2000"><?php echo htmlspecialchars($guia['observacoes'] ?? '', ENT_QUOTES); ?></textarea>
                 </div>
             </div>
 
@@ -215,6 +210,15 @@ $tiposOptions = [
             window.location.href = '/frame.php?page=guias';
         });
 
+        (function () {
+            var dataFato = document.getElementById('edit-data-fato');
+            if (dataFato) {
+                var today = new Date();
+                today.setDate(today.getDate() - 1);
+                dataFato.setAttribute('max', today.toISOString().split('T')[0]);
+            }
+        })();
+
         if (!idGuia) return;
 
         function showToastMsg(type, title, message) {
@@ -225,16 +229,28 @@ $tiposOptions = [
 
         document.getElementById('salvar-btn')?.addEventListener('click', function () {
             var btn = this;
+            var regimeVal = document.getElementById('edit-regime')?.value?.trim() || '';
+            var dataFatoVal = document.getElementById('edit-data-fato')?.value || '';
+            if (regimeVal && ['Aberto', 'Semiaberto', 'Fechado'].indexOf(regimeVal) === -1) {
+                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'simple', message: 'Regime inválido. Selecione Aberto, Semiaberto ou Fechado.' });
+                return;
+            }
+            if (dataFatoVal) {
+                var hoje = new Date();
+                hoje.setHours(0, 0, 0, 0);
+                if (new Date(dataFatoVal) >= hoje) {
+                    if (typeof showToast === 'function') showToast({ type: 'error', variant: 'simple', message: 'A data do fato deve ser anterior à data de hoje.' });
+                    return;
+                }
+            }
             var payload = {
                 id: idGuia,
                 numero_processo: document.getElementById('edit-processo')?.value?.trim() || '',
                 denunciado: document.getElementById('edit-denunciado')?.value?.trim() || '',
                 tipo: document.getElementById('edit-tipo')?.value || 'Guia - Tipo não informado',
-                etapa: document.getElementById('edit-etapa')?.value?.trim() || '',
-                regime: document.getElementById('edit-regime')?.value?.trim() || '',
-                data_fato: document.getElementById('edit-data-fato')?.value || '',
-                dias_multa: document.getElementById('edit-dias-multa')?.value || '',
-                observacoes: document.getElementById('edit-observacoes')?.value?.trim() || ''
+                regime: regimeVal,
+                data_fato: dataFatoVal,
+                dias_multa: document.getElementById('edit-dias-multa')?.value || ''
             };
             var diasVal = document.getElementById('edit-dias-multa')?.value;
             if (diasVal !== '' && !isNaN(parseInt(diasVal, 10))) payload.dias_multa = parseInt(diasVal, 10);

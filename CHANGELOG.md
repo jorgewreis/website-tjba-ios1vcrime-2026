@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0024
+
+**Data:** 2026-03-07 13:52:37 | **Commit:** `86f5c5e` | **Tipo:** `patch`
+
+- Feat: implementação nova de cadastro de reu
+
 ## V. 1.03.0023
 
 **Data:** 2026-03-07 12:29:41 | **Commit:** `3652d18` | **Tipo:** `patch`
@@ -2418,6 +2424,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

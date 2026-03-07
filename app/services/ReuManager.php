@@ -51,6 +51,24 @@ class ReuManager
     }
 
     /**
+     * Lista réus vinculados a um processo (numero no formato CNJ, ex.: 1234567-89.1234.1.12.3456).
+     *
+     * @return array<int, array{id_reu: string, nome: string}>
+     */
+    public function listarReusPorProcesso(string $numeroProcesso): array
+    {
+        $numero = trim($numeroProcesso);
+        if ($numero === '') {
+            return [];
+        }
+        $sql = "SELECT r.id_reu, r.nome FROM processoReus pr INNER JOIN reus r ON r.id_reu = pr.id_reu WHERE pr.numero = ? ORDER BY r.nome ASC";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$numero]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return is_array($rows) ? $rows : [];
+    }
+
+    /**
      * Vincula um réu a um processo
      */
     public function vincularReuProcesso(string $idReu, string $numeroProcesso): bool

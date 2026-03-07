@@ -5,6 +5,9 @@ require_once __DIR__ . '/../repositories/GuiasRepository.php';
 require_once __DIR__ . '/../repositories/GuiasSubtarefasRepository.php';
 require_once __DIR__ . '/../repositories/GuiasAlocadosRepository.php';
 require_once __DIR__ . '/../repositories/AlocacoesRegrasRepository.php';
+require_once __DIR__ . '/../repositories/ProcessosRepository.php';
+require_once __DIR__ . '/../repositories/ClassesRepository.php';
+require_once __DIR__ . '/../services/ReuManager.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 
@@ -15,8 +18,13 @@ final class GuiasService
     private GuiasSubtarefasRepository $subtarefasRepository;
     private GuiasAlocadosRepository $alocadosRepository;
     private AlocacoesRegrasRepository $alocacoesRegrasRepository;
+    private ProcessosRepository $processosRepository;
+    private ClassesRepository $classesRepository;
+    private ReuManager $reuManager;
 
     private const REGRA_ALOCAR_GUIAS = 'ALLOCATE-GUIAS';
+
+    private const REGIMES_VALIDOS = ['Aberto', 'Semiaberto', 'Fechado'];
 
     public function __construct(PDO $connection)
     {
@@ -25,6 +33,9 @@ final class GuiasService
         $this->subtarefasRepository = new GuiasSubtarefasRepository($connection);
         $this->alocadosRepository = new GuiasAlocadosRepository($connection);
         $this->alocacoesRegrasRepository = new AlocacoesRegrasRepository($connection);
+        $this->processosRepository = new ProcessosRepository($connection);
+        $this->classesRepository = new ClassesRepository($connection);
+        $this->reuManager = new ReuManager($connection);
     }
 
     public function listGuias(array $filters, int $limit, int $offset): array
@@ -84,14 +95,43 @@ final class GuiasService
         $digits = preg_replace('/\D+/', '', $numeroProcesso);
         $numeroFormatado = strlen($digits) === 20 ? $this->formatarCNJ($digits) : $numeroProcesso;
 
+        $reuId = trim((string) ($payload['reu_id'] ?? ''));
         $denunciado = trim((string) ($payload['denunciado'] ?? ''));
         if ($denunciado !== '') {
             $denunciado = TextFormatter::formatProperName($denunciado, 255);
+        }
+        if ($reuId === '' && $denunciado !== '' && strlen($digits) === 20) {
+            $novoReuId = $this->reuManager->cadastrarReu($denunciado, null);
+            if ($novoReuId !== null && $novoReuId !== '') {
+                $this->reuManager->vincularReuProcesso($novoReuId, $numeroFormatado);
+                $reuId = $novoReuId;
+            }
         }
 
         $tipo = trim((string) ($payload['tipo'] ?? 'Guia - Tipo não informado'));
         if ($tipo === '') {
             $tipo = 'Guia - Tipo não informado';
+        }
+
+        $regime = trim((string) ($payload['regime'] ?? ''));
+        if ($regime !== '' && !in_array($regime, self::REGIMES_VALIDOS, true)) {
+            throw new InvalidArgumentException('Regime inválido. Use: Aberto, Semiaberto ou Fechado.');
+        }
+
+        $dataFato = $this->parseDate($payload['data_fato'] ?? null);
+        if ($dataFato !== null && $dataFato > date('Y-m-d')) {
+            throw new InvalidArgumentException('A data do fato deve ser anterior à data de hoje.');
+        }
+
+        $processoId = null;
+        $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
+        $classeDescricao = trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? ''));
+        if ($classeCodigo !== '' && strlen($digits) === 20) {
+            $classeNome = $classeDescricao !== '' ? TextFormatter::formatProperName($classeDescricao, 200) : $classeCodigo;
+            $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
+            $processoId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, $dataFato, false);
+        } elseif (strlen($digits) === 20) {
+            $processoId = $this->processosRepository->ensureProcess($numeroFormatado, null, $dataFato, false);
         }
 
         $idGuia = IdGenerator::generateUniquePrefixedId(
@@ -105,27 +145,18 @@ final class GuiasService
         $row = [
             'id' => $idGuia,
             'numero_processo' => $numeroFormatado,
-            'processo_id' => $payload['processo_id'] ?? null,
+            'processo_id' => $processoId ?? $payload['processo_id'] ?? null,
             'denunciado' => $denunciado !== '' ? $denunciado : null,
-            'reu_id' => $payload['reu_id'] ?? null,
+            'reu_id' => $reuId !== '' ? $reuId : null,
             'tipo' => $tipo,
-            'etapa' => trim((string) ($payload['etapa'] ?? '')),
+            'etapa' => null,
             'status' => 'pendente',
-            'regime' => trim((string) ($payload['regime'] ?? '')),
-            'data_fato' => $this->parseDate($payload['data_fato'] ?? null),
+            'regime' => $regime !== '' ? $regime : null,
+            'data_fato' => $dataFato,
             'dias_multa' => isset($payload['dias_multa']) ? (int) $payload['dias_multa'] : null,
-            'observacoes' => trim((string) ($payload['observacoes'] ?? '')),
+            'observacoes' => null,
             'user_cadastro' => trim((string) ($payload['usuario_cadastro_id'] ?? '')),
         ];
-        if ($row['etapa'] === '') {
-            $row['etapa'] = null;
-        }
-        if ($row['regime'] === '') {
-            $row['regime'] = null;
-        }
-        if ($row['observacoes'] === '') {
-            $row['observacoes'] = null;
-        }
         if ($row['user_cadastro'] === '') {
             $row['user_cadastro'] = null;
         }
@@ -196,8 +227,18 @@ final class GuiasService
         if (isset($filtered['denunciado']) && is_string($filtered['denunciado']) && $filtered['denunciado'] !== '') {
             $filtered['denunciado'] = TextFormatter::formatProperName($filtered['denunciado'], 255);
         }
+        if (isset($filtered['regime'])) {
+            $regime = trim((string) $filtered['regime']);
+            if ($regime !== '' && !in_array($regime, self::REGIMES_VALIDOS, true)) {
+                throw new InvalidArgumentException('Regime inválido. Use: Aberto, Semiaberto ou Fechado.');
+            }
+            $filtered['regime'] = $regime !== '' ? $regime : null;
+        }
         if (isset($filtered['data_fato'])) {
             $filtered['data_fato'] = $this->parseDate($filtered['data_fato']);
+            if ($filtered['data_fato'] !== null && $filtered['data_fato'] > date('Y-m-d')) {
+                throw new InvalidArgumentException('A data do fato não pode ser futura.');
+            }
         }
 
         return $this->repository->update($id, $filtered);
