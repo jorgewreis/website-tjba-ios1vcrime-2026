@@ -30,6 +30,10 @@ $limites = [
 $nomeCompleto = trim((string) ($payload['nome_completo'] ?? ''));
 $nomeCompleto = mb_convert_case($nomeCompleto, MB_CASE_TITLE, 'UTF-8');
 $nomeCompleto = mb_substr($nomeCompleto, 0, $limites['nome_completo']);
+// Primeiro bloco = nome; blocos seguintes = sobrenome
+$partes = preg_split('/\s+/u', $nomeCompleto, 2, PREG_SPLIT_NO_EMPTY);
+$nome = $partes[0] ?? '';
+$sobrenome = isset($partes[1]) ? mb_substr($partes[1], 0, 200) : '';
 
 $cpf       = trim((string) ($payload['cpf'] ?? ''));
 $telefone  = mb_substr(trim((string) ($payload['telefone'] ?? '')), 0, $limites['telefone']);
@@ -127,17 +131,18 @@ try {
     $idUsuario = 'USR-' . strtoupper(bin2hex(random_bytes(13)));
     $senhaHash = Security::hashPassword($senha);
 
-    // Tabela usuarios: NOT NULL = id_usuario, nome, sobrenome, cpf, senha_hash; demais com '' para evitar default value
+    // Tabela usuarios: nome/sobrenome do nome completo; ultimo_acesso/token_* NULL (preenchidos no login)
     $stmt = $pdo->prepare("
         INSERT INTO usuarios (
             id_usuario, nome, sobrenome, data_nascimento, cargo, instituicao, cpf, telefone, email,
             senha_hash, meta, ultimo_acesso, token_acesso, token_expira
         ) VALUES (
-            ?, ?, ?, '', '', '', ?, ?, '',
-            ?, '', '', '', ''
+            ?, ?, ?, '-', '-', '-', ?, ?, ?,
+            ?, '-', NULL, NULL, NULL
         )
     ");
-    $stmt->execute([$idUsuario, $nomeCompleto, '' /* sobrenome */, $cpfFormatado, $telefone, $senhaHash]);
+    $emailOuTraco = $email !== '' ? $email : '-';
+    $stmt->execute([$idUsuario, $nome, $sobrenome, $cpfFormatado, $telefone, $emailOuTraco, $senhaHash]);
 
     // Garantir que o perfil ESTUDANTE exista em perfis (evita erro de FK se a tabela tiver restrição)
     try {
