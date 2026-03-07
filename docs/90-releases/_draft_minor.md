@@ -42,4 +42,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correção inicial de cores** `[84b61ab]`
 - **Fix: segunda correção de cores** `[a37eb82]`
 - **Fix: correção de cores 3** `[fabeec8]`
+- **Fix: correção de cores 5** `[5079e85]`
 
