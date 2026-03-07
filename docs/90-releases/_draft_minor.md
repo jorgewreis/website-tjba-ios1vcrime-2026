@@ -37,4 +37,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: debug test 4** `[2f135a8]`
 - **Fix: correção de modelo de timeline** `[0b3787b]`
 - **Fix: correções minimas** `[efbd48a]`
+- **Feat: nova implementação de tema claro e escuro** `[36661d6]`
 
