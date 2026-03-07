@@ -129,13 +129,13 @@ try {
 
     try {
         $stmt = $pdo->prepare("
-            INSERT INTO usuarios (id_usuario, nome, sobrenome, cpf, email, senha_hash, ativo)
-            VALUES (?, ?, '', ?, NULL, ?, 1)
+            INSERT INTO usuarios (id_usuario, nome, sobrenome, cpf, email, senha_hash)
+            VALUES (?, ?, '', ?, NULL, ?)
         ");
         $stmt->execute([$idUsuario, $nomeCompleto, $cpfFormatado, $senhaHash]);
     } catch (PDOException $e) {
         if (strpos($e->getMessage(), 'Unknown column') !== false) {
-            $stmt = $pdo->prepare("INSERT INTO usuarios (id_usuario, nome, cpf, senha_hash, ativo) VALUES (?, ?, ?, ?, 1)");
+            $stmt = $pdo->prepare("INSERT INTO usuarios (id_usuario, nome, cpf, senha_hash) VALUES (?, ?, ?, ?)");
             $stmt->execute([$idUsuario, $nomeCompleto, $cpfFormatado, $senhaHash]);
         } else {
             throw $e;
