@@ -47,4 +47,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correção de css** `[216454f]`
 - **Fix: correção de css** `[e6c8726]`
 - **Fix: correção de icones** `[9339281]`
+- **Fix: remoção de arquivos não mais utilizados** `[1a4acfa]`
 
