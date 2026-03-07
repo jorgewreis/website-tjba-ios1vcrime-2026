@@ -361,7 +361,7 @@ body {
     }
 
     .menu-link .text {
-        font-family: 'Montserrat';
+        font-family: 'Poppins', sans-serif;
         font-weight: 500;
         font-size: 12px;
         overflow: hidden;
@@ -419,7 +419,7 @@ body {
 
     .menu-header-text {
         margin-left: 30px;
-        font-family: 'Montserrat', sans-serif;
+        font-family: 'Poppins', sans-serif;
         font-weight: 500;
         font-size: 11px;
         color: var(--color-header-text);

@@ -511,10 +511,10 @@ select {
 }
 select:disabled {
     background-color: var(--color-surface-elevated);
-    border-color: var(--color-surface-overlay);
+    border-color: var(--color-border);
     pointer-events: none;
     box-shadow: none;
-    color: var(--color-surface-overlay);
+    color: var(--color-border);
     cursor: not-allowed;
     opacity: 0.65;
 }
