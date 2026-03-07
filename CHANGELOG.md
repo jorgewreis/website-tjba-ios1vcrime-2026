@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0026
+
+**Data:** 2026-03-07 14:12:19 | **Commit:** `9b3389b` | **Tipo:** `patch`
+
+- Fix: atualização de classes
+
 ## V. 1.03.0025
 
 **Data:** 2026-03-07 14:01:18 | **Commit:** `14a380c` | **Tipo:** `patch`
@@ -2430,6 +2436,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

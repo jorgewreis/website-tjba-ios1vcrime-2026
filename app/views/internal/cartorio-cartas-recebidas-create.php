@@ -131,7 +131,7 @@ try {
             </div>
             <div class="col filter">
                 <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
-                <input type="text" class="width-lg height-md" id="filter-classe" placeholder="Classe processual" required>
+                <input type="text" class="width-lg height-md" id="filter-classe" placeholder="Preenchido pelo DataJud ao informar o processo (ou digite se não houver retorno)" required readonly>
             </div>
         </div>
         <?php if ($cnjError): ?>
@@ -239,6 +239,27 @@ try {
     </script>
     <script src="/assets/js/modules/cartorio/cartas-expedidas/cnj.js"></script>
     <script src="/assets/js/modules/cartorio/cartas-expedidas/datajud-api.js"></script>
+    <script>
+        (function () {
+            var processoInput = document.getElementById('filter-processo');
+            if (processoInput) {
+                processoInput.addEventListener('input', function () {
+                    var digits = (this.value || '').replace(/\D/g, '');
+                    if (digits.length !== 20) {
+                        var classeInput = document.getElementById('filter-classe');
+                        if (classeInput) {
+                            classeInput.value = '';
+                            classeInput.readOnly = true;
+                        }
+                        var hCod = document.getElementById('hidden-classe-codigo');
+                        var hDesc = document.getElementById('hidden-classe-descricao');
+                        if (hCod) hCod.value = '';
+                        if (hDesc) hDesc.value = '';
+                    }
+                });
+            }
+        })();
+    </script>
     <script src="/assets/js/modules/cartorio/cartas-expedidas/text-formatter.js"></script>
     <script>
         (function () {
@@ -352,6 +373,11 @@ try {
                     return showFeedback('Informe a finalidade.', 'error');
                 }
 
+                const classeVal = getValue('filter-classe');
+                if (!classeVal || classeVal === 'Classe não informada' || classeVal === 'Aguarde...') {
+                    return showFeedback('Informe a classe processual. Preencha o processo com 20 dígitos para consulta automática ao DataJud ou digite a classe.', 'error');
+                }
+
                 const prazo = parseInt(document.getElementById('filter-prazo')?.value ?? '30', 10) || 30;
 
                 const payload = {
@@ -366,6 +392,11 @@ try {
                 }
                 if (classeDescricaoField?.value.trim()) {
                     payload.classe_descricao = classeDescricaoField.value.trim();
+                } else if (classeVal && classeVal !== 'Classe não informada' && classeVal !== 'Aguarde...') {
+                    payload.classe_descricao = classeVal;
+                    if (!payload.classe_codigo) {
+                        payload.classe_codigo = classeVal.replace(/\s+/g, '').substring(0, 20);
+                    }
                 }
 
                 btn.disabled = true;
