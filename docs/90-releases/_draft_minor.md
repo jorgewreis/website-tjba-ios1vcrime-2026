@@ -15,4 +15,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correção de informações lgpd** `[0dd3fa3]`
 - **Feat: criação de campo senha para estudante** `[3627bff]`
 - **Docs: Novo documento de termo de aceite lgpd** `[cb1cb18]`
+- **Docs: atualização de documento lgpd** `[81c4dbb]`
 
