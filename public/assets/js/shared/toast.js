@@ -15,6 +15,10 @@
     /** Tempo mínimo e máximo (ms) para toasts do tipo simple (informativo) */
     const SIMPLE_DURATION_MIN = 3000;
     const SIMPLE_DURATION_MAX = 15000;
+    /** Duração padrão para toasts full (com botão fechar) quando não principal: 40% da calculada */
+    const FULL_DURATION_DEFAULT_MS = 8000;
+    /** Redução para toasts não-principais: usam 40% do tempo (redução de 60%) */
+    const NON_PRINCIPAL_DURATION_FACTOR = 0.4;
     /** Tempo base + por caractere (ms) para cálculo automático de leitura */
     const SIMPLE_MS_BASE = 2000;
     const SIMPLE_MS_PER_CHAR = 45;
@@ -49,16 +53,19 @@
     }
 
     /**
-     * Calcula duração em ms para toast simples com base no tamanho do texto (leitura).
+     * Calcula duração em ms com base no tamanho do texto (leitura).
+     * Para toasts não-principais (já existe outro na tela), retorna 40% desse valor.
      */
-    function getSimpleDuration(text) {
+    function getCalculatedDuration(text, isPrincipal) {
         if (!text || typeof text !== 'string') return SIMPLE_DURATION_MIN;
         const len = text.trim().length;
-        const ms = SIMPLE_MS_BASE + len * SIMPLE_MS_PER_CHAR;
-        return Math.max(SIMPLE_DURATION_MIN, Math.min(SIMPLE_DURATION_MAX, ms));
+        let ms = SIMPLE_MS_BASE + len * SIMPLE_MS_PER_CHAR;
+        ms = Math.max(SIMPLE_DURATION_MIN, Math.min(SIMPLE_DURATION_MAX, ms));
+        if (!isPrincipal) ms = Math.max(SIMPLE_DURATION_MIN, Math.floor(ms * NON_PRINCIPAL_DURATION_FACTOR));
+        return ms;
     }
 
-    function createToastElement(options) {
+    function createToastElement(options, durationMs) {
         const {
             type = 'info',
             variant = 'full',
@@ -122,17 +129,16 @@
         body.appendChild(msgWrap);
         toast.appendChild(body);
 
-        if (!isFull) {
-            const duration = getSimpleDuration(message);
+        if (durationMs > 0) {
             const countdownWrap = document.createElement('div');
             countdownWrap.className = 'toast-countdown-wrap';
             const countdownBar = document.createElement('div');
             countdownBar.className = 'toast-countdown-bar';
-            countdownBar.style.transition = `transform ${duration}ms linear`;
+            countdownBar.style.transition = 'transform ' + durationMs + 'ms linear';
             countdownBar.style.transform = 'scaleX(1)';
             countdownWrap.appendChild(countdownBar);
             toast.appendChild(countdownWrap);
-            root._toastDuration = duration;
+            root._toastDuration = durationMs;
             root._countdownBar = countdownBar;
         }
 
@@ -152,9 +158,10 @@
         return root;
     }
 
-    function removeToast(toastEl, fromQueue) {
+    function removeToast(toastEl) {
         if (!toastEl || !toastEl.parentNode) return;
         if (toastEl._removeTimeout) clearTimeout(toastEl._removeTimeout);
+        const onClose = toastEl._options && typeof toastEl._options.onClose === 'function';
         toastEl.classList.add('toast-exiting');
         toastEl.classList.remove('toast-visible');
 
@@ -163,6 +170,7 @@
 
         setTimeout(function () {
             if (toastEl.parentNode) toastEl.parentNode.removeChild(toastEl);
+            if (onClose) toastEl._options.onClose();
             processQueue();
         }, EXIT_DURATION);
     }
@@ -176,22 +184,29 @@
 
     function showNow(options) {
         const cont = getContainer();
-        const el = createToastElement(options);
+        const isPrincipal = visibleList.length === 0;
+        const message = options.message || '';
+        let durationMs = 0;
+        if (options.variant === 'simple') {
+            durationMs = getCalculatedDuration(message, isPrincipal);
+        } else {
+            durationMs = getCalculatedDuration(message, isPrincipal);
+            if (durationMs < SIMPLE_DURATION_MIN) durationMs = FULL_DURATION_DEFAULT_MS;
+        }
+        const el = createToastElement(options, durationMs);
         el.classList.add('toast-visible');
         cont.appendChild(el);
         visibleList.push(el);
 
-        if (options.variant === 'simple') {
-            const duration = el._toastDuration;
-            const bar = el._countdownBar;
-            if (bar && duration) {
-                requestAnimationFrame(function () {
-                    bar.style.transform = 'scaleX(0)';
-                });
-            }
+        if (el._countdownBar && durationMs > 0) {
+            requestAnimationFrame(function () {
+                el._countdownBar.style.transform = 'scaleX(0)';
+            });
+        }
+        if (durationMs > 0) {
             el._removeTimeout = setTimeout(function () {
                 removeToast(el);
-            }, duration);
+            }, durationMs);
         }
     }
 
@@ -203,6 +218,7 @@
      * @param {string} [options.title] - Título (modelo full)
      * @param {string} [options.message] - Mensagem principal
      * @param {string} [options.subtitle] - Subtítulo opcional
+     * @param {Function} [options.onClose] - Callback chamado quando o toast for fechado (botão ou auto)
      */
     function show(options) {
         const opts = Object.assign(

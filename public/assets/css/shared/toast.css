@@ -247,11 +247,44 @@
     background: rgba(104, 107, 251, 0.4);
 }
 
-/* Toast simples precisa de position relative para o countdown */
-.toast {
+/* Toast simples e full precisam de position relative para o countdown */
+.toast,
+.toast-full {
     position: relative;
 }
 
 .toast .toast-body {
     padding-bottom: 20px;
+}
+
+/* Barra de countdown também no modelo full */
+.toast-full .toast-countdown-wrap {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: rgba(0, 0, 0, 0.08);
+    border-radius: 0 0 6px 6px;
+    overflow: hidden;
+}
+
+.toast-full .toast-countdown-bar {
+    height: 100%;
+    width: 100%;
+    border-radius: 0 0 0 6px;
+    transform-origin: right;
+    transition: none;
+}
+
+.toast-full.success .toast-countdown-bar {
+    background: rgba(44, 202, 128, 0.4);
+}
+
+.toast-full.error .toast-countdown-bar {
+    background: rgba(220, 53, 69, 0.4);
+}
+
+.toast-full.info .toast-countdown-bar {
+    background: rgba(104, 107, 251, 0.4);
 }

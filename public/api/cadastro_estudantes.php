@@ -76,13 +76,17 @@ if (!$aceiteTermosLgpd) {
     exit;
 }
 
+$senha = trim((string) ($payload['senha'] ?? ''));
+if (strlen($senha) < 6) {
+    echo json_encode(['success' => false, 'message' => 'A senha deve ter no mínimo 6 caracteres.']);
+    exit;
+}
+
 try {
     $pdo = Conection::getInstance()->getConnection();
 
     // Verificação de duplicidade: CPF é único no cadastro de estudantes
-    $stmt = $pdo->prepare("
-        SELECT id FROM estudantes WHERE cpf = ? LIMIT 1
-    ");
+    $stmt = $pdo->prepare("SELECT id FROM estudantes WHERE cpf = ? LIMIT 1");
     $stmt->execute([$cpfFormatado]);
     if ($stmt->fetch()) {
         echo json_encode([
@@ -91,6 +95,19 @@ try {
         ]);
         exit;
     }
+
+    // Verificação: CPF já em usuarios (acesso ao sistema)
+    $stmt = $pdo->prepare("SELECT id_usuario FROM usuarios WHERE cpf = ? LIMIT 1");
+    $stmt->execute([$cpfFormatado]);
+    if ($stmt->fetch()) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Já existe um usuário com este CPF no sistema. Utilize a área de login ou recuperação de senha.',
+        ]);
+        exit;
+    }
+
+    $pdo->beginTransaction();
 
     $stmt = $pdo->prepare("
         INSERT INTO estudantes (
@@ -107,25 +124,40 @@ try {
         $semestre === '' ? null : $semestre,
     ]);
 
+    $idUsuario = 'USR-' . strtoupper(bin2hex(random_bytes(13)));
+    $senhaHash = Security::hashPassword($senha);
+    $stmt = $pdo->prepare("INSERT INTO usuarios (id_usuario, nome, cpf, senha_hash, ativo) VALUES (?, ?, ?, ?, 1)");
+    $stmt->execute([$idUsuario, $nomeCompleto, $cpfFormatado, $senhaHash]);
+
+    $stmt = $pdo->prepare("INSERT INTO usuario_perfil (usuario, perfil) VALUES (?, 'ESTUDANTE')");
+    $stmt->execute([$idUsuario]);
+
+    $pdo->commit();
+
     echo json_encode([
         'success' => true,
-        'message' => 'Cadastro realizado com sucesso. Você poderá consultar audiências, atas e pautas conforme orientações do sistema.',
+        'message' => 'Cadastro realizado com sucesso. Use seu CPF e senha para acessar o sistema (audiências, pautas e atas).',
     ]);
 } catch (PDOException $e) {
+    if (isset($pdo) && $pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
     if ($e->getCode() == '42S02') {
-        error_log('Tabela estudantes não existe. Execute o SQL em docs/sql/estudantes.sql');
+        error_log('Tabela estudantes ou usuarios não existe. Execute os SQL em docs/sql/ e database/schema.sql');
         echo json_encode(['success' => false, 'message' => 'Sistema em configuração. Tente novamente mais tarde.']);
     } elseif ($e->getCode() === '23000') {
-        // Violação de restrição (ex.: CPF duplicado) — fallback se a checagem anterior não rodar
         echo json_encode([
             'success' => false,
-            'message' => 'Já existe um cadastro com este CPF. Não é possível cadastrar novamente.',
+            'message' => 'Já existe um cadastro com este CPF. Utilize a área de login ou entre em contato com o setor responsável.',
         ]);
     } else {
         error_log('cadastro_estudantes API: ' . $e->getMessage());
         echo json_encode(['success' => false, 'message' => 'Erro ao salvar cadastro. Tente novamente.']);
     }
 } catch (Throwable $e) {
+    if (isset($pdo) && $pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
     error_log('cadastro_estudantes API: ' . $e->getMessage());
     echo json_encode(['success' => false, 'message' => 'Erro interno. Tente novamente.']);
 }

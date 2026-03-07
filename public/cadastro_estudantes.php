@@ -121,6 +121,14 @@ $faculdades = [
 
                         <div class="row">
                             <div class="col">
+                                <label for="senha">Senha *</label>
+                                <input class="width-md white" type="password" id="senha" name="senha" required minlength="6" maxlength="72" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+                                <span class="minor-info">Será usada para acessar o sistema (audiências, pautas e atas).</span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col">
                                 <label for="email">E-mail (opcional)</label>
                                 <input class="width-lg white" type="email" id="email" name="email" maxlength="255" placeholder="seu@email.com" autocomplete="email">
                             </div>
@@ -194,6 +202,11 @@ $faculdades = [
                     if (window.App && App.Toast) App.Toast.show({ type: "error", variant: "full", title: "Erro", message: "Informe um CPF válido." });
                     return;
                 }
+                const senha = (form.querySelector("#senha") && form.querySelector("#senha").value) || "";
+                if (senha.length < 6) {
+                    if (window.App && App.Toast) App.Toast.show({ type: "error", variant: "full", title: "Erro", message: "A senha deve ter no mínimo 6 caracteres." });
+                    return;
+                }
                 if (!form.querySelector("#aceite_termos_lgpd").checked) {
                     if (window.App && App.Toast) App.Toast.show({ type: "error", variant: "full", title: "Atenção", message: "É necessário aceitar os termos sobre LGPD para realizar o cadastro." });
                     return;
@@ -211,6 +224,7 @@ $faculdades = [
                     const payload = {
                         nome_completo: nomeRaw ? formatarNome(nomeRaw) : "",
                         cpf: cpfDigits,
+                        senha: senha,
                         telefone: (formData.get("telefone") || "").trim().slice(0, 20),
                         telefone_whatsapp: form.querySelector("#telefone_whatsapp").checked,
                         faculdade: formData.get("faculdade") || "",
@@ -227,7 +241,15 @@ $faculdades = [
                     const data = await res.json().catch(() => ({}));
 
                     if (data.success) {
-                        if (window.App && App.Toast) App.Toast.show({ type: "success", variant: "full", title: "Sucesso", message: data.message || "Cadastro realizado com sucesso." });
+                        if (window.App && App.Toast) {
+                            App.Toast.show({
+                                type: "success",
+                                variant: "full",
+                                title: "Sucesso",
+                                message: data.message || "Cadastro realizado com sucesso.",
+                                onClose: function () { window.location.href = "/index.php"; }
+                            });
+                        }
                         form.reset();
                     } else {
                         if (window.App && App.Toast) App.Toast.show({ type: "error", variant: "full", title: "Erro", message: data.message || "Erro ao enviar. Tente novamente." });
