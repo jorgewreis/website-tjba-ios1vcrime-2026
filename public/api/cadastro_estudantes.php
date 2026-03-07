@@ -162,8 +162,9 @@ try {
         // ignora se a tabela perfis não existir ou tiver estrutura diferente
     }
 
-    $stmt = $pdo->prepare("INSERT INTO usuario_perfil (usuario, perfil) VALUES (?, 'ESTUDANTE')");
-    $stmt->execute([$idUsuario]);
+    $idUsuPerfil = 'USP-' . strtoupper(bin2hex(random_bytes(13)));
+    $stmt = $pdo->prepare("INSERT INTO usuario_perfil (id_usu_perfil, usuario, perfil) VALUES (?, ?, 'ESTUDANTE')");
+    $stmt->execute([$idUsuPerfil, $idUsuario]);
 
     $pdo->commit();
 
