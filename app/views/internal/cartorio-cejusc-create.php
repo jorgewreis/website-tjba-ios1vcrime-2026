@@ -60,11 +60,11 @@ try {
         <div class="row table header">Informações obrigatórias</div>
         <div class="row filter">
             <div class="col filter">
-                <label for="filter-processo">Número do processo</label>
+                <label for="filter-processo">Número do processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="width-md height-md" id="filter-processo" placeholder="Digite o número do processo" required>
             </div>
             <div class="col filter">
-                <label for="filter-reu">Nome do réu</label>
+                <label for="filter-reu">Nome do réu <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="width-xl height-md" id="filter-reu" placeholder="Nome do denunciado/réu" maxlength="120" required>
             </div>
         </div>

@@ -61,26 +61,26 @@ try {
         <div class="row table header">Informações obrigatórias</div>
         <div class="row filter">
             <div class="col filter">
-                <label for="filter-processo">Número do processo</label>
+                <label for="filter-processo">Número do processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="width-md height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" required>
             </div>
             <div class="col filter">
-                <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe</label>
-                <input type="text" class="width-lg height-md" id="filter-classe" placeholder="Classe processual (preenchida via DataJud ao informar o processo)" required>
+                <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
+                <input type="text" class="width-lg height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud ao informar o processo (ou digite se não houver retorno)" required readonly>
             </div>
         </div>
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
         <div class="row filter">
             <div class="col filter" id="denunciado-col">
-                <label for="filter-denunciado">Denunciado</label>
+                <label for="filter-denunciado">Denunciado <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <select class="width-xl height-md" id="filter-denunciado-select" style="display: none;" aria-label="Réus vinculados ao processo">
                     <!-- preenchido via JS quando houver réus -->
                 </select>
                 <input type="text" class="width-xl height-md" id="filter-denunciado" placeholder="Nome do denunciado/réu" maxlength="255" aria-label="Nome do denunciado quando não há réus ou opção Outro">
             </div>
             <div class="col filter">
-                <label for="filter-tipo">Tipo de guia</label>
+                <label for="filter-tipo">Tipo de guia <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <select class="width-lg height-md" id="filter-tipo" required>
                     <option value="Guia - Tipo não informado" selected>Guia - Tipo não informado</option>
                     <option value="Guia de Execução Definitiva">Guia de Execução Definitiva</option>
@@ -234,6 +234,15 @@ try {
                     var digits = (this.value || '').replace(/\D/g, '');
                     if (digits.length !== 20) {
                         showDenunciadoInput();
+                        var classeInput = document.getElementById('filter-classe');
+                        if (classeInput) {
+                            classeInput.value = '';
+                            classeInput.readOnly = true;
+                        }
+                        var hCod = document.getElementById('hidden-classe-codigo');
+                        var hDesc = document.getElementById('hidden-classe-descricao');
+                        if (hCod) hCod.value = '';
+                        if (hDesc) hDesc.value = '';
                     }
                 });
             }

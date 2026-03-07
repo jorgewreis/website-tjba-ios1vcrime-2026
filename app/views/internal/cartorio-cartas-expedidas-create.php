@@ -140,15 +140,15 @@ try {
         <div class="row table header">Informações obrigatórias</div>
         <div class="row filter">
             <div class="col filter">
-                <label for="filter-processo">Processo</label>
+                <label for="filter-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="width-md height-md" id="filter-processo" placeholder="Digite o número do processo" required>
             </div>
             <div class="col filter">
-                <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe</label>
+                <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
                 <input type="text" class="width-lg height-md" id="filter-classe" placeholder="Classe processual" required>                
             </div>
             <div class="col filter">
-                <label for="filter-tipo">Finalidade</label>
+                <label for="filter-tipo">Finalidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <select class="width-lg height-md" id="filter-tipo" required>
                     <option value="" selected disabled>Selecione aqui</option>
                     <option value="Intimação para Audiência">Intimação para Audiência</option>
@@ -170,11 +170,11 @@ try {
         <?php endif; ?>
         <div class="row filter">
             <div class="col filter">
-                <label for="filter-cidade">Cidade</label>
+                <label for="filter-cidade">Cidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="width-xl height-md" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="50" required>
             </div>
             <div class="col filter">
-                <label for="filter-estado">Estado</label>
+                <label for="filter-estado">Estado <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <select class="width-md height-md" id="filter-estado" required>
                     <option value="AC">Acre</option>
                     <option value="AL">Alagoas</option>
@@ -206,7 +206,7 @@ try {
                 </select>
             </div>            
             <div class="col filter">
-                <label for="filter-prazo">Prazo cumprimento</label>
+                <label for="filter-prazo">Prazo cumprimento <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <select class="width-sm height-md" id="filter-prazo" required>
                     <option value="5 dias">5 dias</option>
                     <option value="10 dias">10 dias</option>

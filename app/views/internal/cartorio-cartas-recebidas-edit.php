@@ -250,15 +250,15 @@ $stateOptions = [
             <div class="row table header">Informações obrigatórias</div>
             <div class="row filter">
                 <div class="col filter">
-                    <label for="filter-processo">Processo</label>
+                    <label for="filter-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="text" id="filter-processo" class="width-md height-md readonly" value="<?php echo htmlspecialchars($processoNumero, ENT_QUOTES); ?>" readonly>
                 </div>
                 <div class="col filter">
-                    <label for="filter-classe">Classe</label>
+                    <label for="filter-classe">Classe <span class="label-hint-automatizado">*automatizado</span></label>
                     <input type="text" id="filter-classe" class="width-lg height-md readonly" value="<?php echo htmlspecialchars($classeCodigo !== '' ? ($classeCodigo . ' - ' . $classeNome) : $classeNome, ENT_QUOTES); ?>" readonly>
                 </div>
                 <div class="col filter">
-                    <label for="filter-tipo">Finalidade</label>
+                    <label for="filter-tipo">Finalidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-lg height-md" id="filter-tipo" required>
                         <option value="" disabled>Selecione aqui</option>
                         <?php foreach ($finalidadeOptions as $option): ?>
@@ -269,11 +269,11 @@ $stateOptions = [
             </div>            
             <div class="row filter">
                 <div class="col filter">
-                    <label for="filter-cidade">Cidade</label>
+                    <label for="filter-cidade">Cidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="text" class="width-xl height-md" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="120" value="<?php echo htmlspecialchars($cidadeValue, ENT_QUOTES); ?>" required>
                 </div>
                 <div class="col filter">
-                    <label for="filter-estado">Estado</label>
+                    <label for="filter-estado">Estado <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-md height-md" id="filter-estado" required>
                         <?php foreach ($stateOptions as $code => $label): ?>
                             <option value="<?php echo htmlspecialchars($code, ENT_QUOTES); ?>"<?php echo $ufValue === $code ? ' selected' : ''; ?>><?php echo htmlspecialchars($label); ?></option>
@@ -281,7 +281,7 @@ $stateOptions = [
                     </select>
                 </div>
                 <div class="col filter">
-                    <label for="filter-prazo">Prazo cumprimento</label>
+                    <label for="filter-prazo">Prazo cumprimento <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-sm height-md" id="filter-prazo" required>
                         <?php foreach ($deadlineOptions as $option): ?>
                             <?php $digits = preg_replace('/\D+/', '', $option); ?>

@@ -55,6 +55,22 @@ hr {
     margin: 20px 0;
 }
 
+/* Dicas em labels (obrigatório / automatizado) - não ultrapassar largura do campo */
+.label-hint-obrigatorio,
+.label-hint-automatizado {
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+.label-hint-obrigatorio {
+    color: var(--danger-color);
+    margin-left: 0.2em;
+}
+.label-hint-automatizado {
+    color: var(--primary-color);
+    margin-left: 0.2em;
+}
+
 /* BUTTONS */
 /* - TAMANHOS */
 

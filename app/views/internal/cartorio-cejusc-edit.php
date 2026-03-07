@@ -141,11 +141,11 @@ $tarefaFinalizadaOuCancelada = in_array($statusAtual, ['cancelada', 'concluída'
             <div class="row table header">Informações</div>
             <div class="row filter">
                 <div class="col filter">
-                    <label for="filter-processo">Processo</label>
+                    <label for="filter-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="text" id="filter-processo" class="width-md height-md readonly" value="<?php echo htmlspecialchars($processoNumero, ENT_QUOTES); ?>" readonly>
                 </div>
                 <div class="col filter">
-                    <label for="filter-reu">Réu</label>
+                    <label for="filter-reu">Réu <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="text" id="filter-reu" class="width-xl height-md readonly" value="<?php echo htmlspecialchars($reuNome, ENT_QUOTES); ?>" readonly>
                 </div>
             </div>

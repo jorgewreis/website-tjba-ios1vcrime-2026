@@ -111,17 +111,17 @@ $tiposOptions = [
             <div class="row table header">Dados da guia</div>
             <div class="row filter">
                 <div class="col filter">
-                    <label for="edit-processo">Processo</label>
+                    <label for="edit-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="text" id="edit-processo" class="width-md height-md" value="<?php echo htmlspecialchars($guia['numero_processo'] ?? '', ENT_QUOTES); ?>">
                 </div>
                 <div class="col filter">
-                    <label for="edit-denunciado">Denunciado</label>
+                    <label for="edit-denunciado">Denunciado <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="text" id="edit-denunciado" class="width-xl height-md" value="<?php echo htmlspecialchars($guia['denunciado'] ?? '', ENT_QUOTES); ?>" maxlength="255">
                 </div>
             </div>
             <div class="row filter">
                 <div class="col filter">
-                    <label for="edit-tipo">Tipo</label>
+                    <label for="edit-tipo">Tipo <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select id="edit-tipo" class="width-lg height-md">
                         <?php foreach ($tiposOptions as $opt): ?>
                             <option value="<?php echo htmlspecialchars($opt, ENT_QUOTES); ?>"<?php echo ($guia['tipo'] ?? '') === $opt ? ' selected' : ''; ?>><?php echo htmlspecialchars($opt); ?></option>
