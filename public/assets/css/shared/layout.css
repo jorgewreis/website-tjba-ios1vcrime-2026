@@ -258,14 +258,14 @@ body {
     }
 
     .brand-name-link .name-primary {
-        font-family: 'Montserrat', sans-serif;
+        font-family: 'Poppins', sans-serif;
         font-weight: 500;
         font-size: 14px;
         color: var(--color-text-tertiary);
     }
 
     .brand-name-link .name-secondary {
-        font-family: 'Montserrat', sans-serif;
+        font-family: 'Poppins', sans-serif;
         font-weight: 600;
         font-size: 14px;
         color: var(--color-text-tertiary);
@@ -310,6 +310,7 @@ body {
         display: none;
     }
 
+    /* Menu Items */
     .menu-inner .menu-item {
         position: relative;
         width: 260px;
@@ -331,15 +332,16 @@ body {
         position: absolute;
         background-color: var(--color-accent);
         content: "";
-        inline-size: 0.25rem;
+        inline-size: .25rem;
         inset-inline-end: 0;
-        border-start-start-radius: 0.375rem;
-        border-end-start-radius: 0.375rem;
+        border-start-start-radius: .375rem;
+        border-end-start-radius: .375rem;
         width: 5px;
         height: 42px;
         right: -1px;
     }
 
+    /* Menu Link */
     .menu-item .menu-link {
         position: relative;
         height: 42px;
@@ -350,7 +352,6 @@ body {
         flex-direction: row;
         align-items: center;
         justify-content: flex-start;
-        cursor: pointer;
     }
 
     .menu-item .menu-link i {
@@ -360,7 +361,7 @@ body {
     }
 
     .menu-link .text {
-        font-family: 'Montserrat', sans-serif;
+        font-family: 'Montserrat';
         font-weight: 500;
         font-size: 12px;
         overflow: hidden;
@@ -368,16 +369,112 @@ body {
         white-space: nowrap;
     }
 
+    /* Menu Link States */
     .menu-inner .menu-item .menu-link {
         background-color: var(--color-surface-elevated);
         color: var(--color-muted);
-        transition: all 0.3s ease;
     }
 
     .menu-inner .menu-item.active .menu-link {
         background-color: var(--bg-primary);
         color: var(--color-accent);
-        font-weight: 600;
+    }
+
+    .menu-item.active .menu-sub .menu-item .menu-link {
+        background-color: var(--color-surface-elevated);
+        color: var(--color-muted);
+    }
+
+    .menu-item.active .menu-sub .menu-item:not(.active) .menu-link:hover {
+        background-color: var(--color-surface-hover);
+    }
+
+    /* Menu Sub */
+    .menu-sub {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+    }
+
+    .menu-item.open .menu-sub {
+        max-height: 500px;
+    }
+
+    /* Menu Header */
+    .menu-header {
+        position: relative;
+        opacity: 1;
+    }
+
+    .menu-header::before {
+        position: absolute;
+        background-color: var(--color-header-line);
+        block-size: 1px;
+        content: "";
+        inline-size: 1rem;
+        inset-block-start: 50%;
+        inset-inline-start: 0;
+        transition: all .3s ease-in-out;
+    }
+
+    .menu-header-text {
+        margin-left: 30px;
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 500;
+        font-size: 11px;
+        color: var(--color-header-text);
+        letter-spacing: .4px;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    /* Submenu Items */
+    .menu-sub .menu-item .menu-link {
+        position: relative;
+        padding-left: 34px;
+    }
+
+    .menu-sub .menu-item > .menu-link::before {
+        position: absolute;
+        border-radius: 50%;
+        background-color: var(--color-bullet);
+        block-size: 5px;
+        content: "";
+        inline-size: 5px;
+        inset-inline-start: 20px;
+    }
+
+    .menu-item.active:not(.open) > .menu-link:not(.menu-toggle)::before {
+        width: 5px;
+        height: 5px;
+        background-color: var(--color-accent);
+        block-size: 8px;
+        box-shadow: 0 0 0 3px var(--bg-primary);
+        inline-size: 8px;
+        inset-inline-start: 19px;
+    }
+
+    /* Menu Toggle Arrow */
+    .menu-item .menu-toggle::after {
+        inset-inline-end: 20px;
+        transition: transform .3s;
+    }
+
+    .menu-toggle::after {
+        position: absolute;
+        display: block;
+        border: 2px solid;
+        block-size: .45em;
+        border-block-end: 0;
+        border-inline-start: 0;
+        content: "";
+        inline-size: .45em;
+        inset-block-start: 49%;
+        transform: translateY(-50%) rotate(45deg);
+    }
+
+    .menu-item.open .menu-toggle::after {
+        transform: translateY(-50%) rotate(135deg);
     }
 
     /* ========== TARGET PAGE (iframe) ========== */

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0041
+
+**Data:** 2026-03-07 18:34:36 | **Commit:** `216454f` | **Tipo:** `patch`
+
+- Fix: correção de css
+
 ## V. 1.03.0040
 
 **Data:** 2026-03-07 18:23:08 | **Commit:** `cbe8194` | **Tipo:** `patch`
@@ -2520,6 +2526,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
