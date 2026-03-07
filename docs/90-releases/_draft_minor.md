@@ -46,4 +46,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Feat: Migração e unificação de códigos de estilo** `[cbe8194]`
 - **Fix: correção de css** `[216454f]`
 - **Fix: correção de css** `[e6c8726]`
+- **Fix: correção de icones** `[9339281]`
 
