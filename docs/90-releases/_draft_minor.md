@@ -12,4 +12,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correção definitiva** `[dc1da88]`
 - **Fix: Correção de inconformidades de css** `[a79caad]`
 - **Feat: nova implementação de toats em todo o sistema** `[1a43361]`
+- **Fix: correção de informações lgpd** `[0dd3fa3]`
 
