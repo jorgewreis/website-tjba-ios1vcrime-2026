@@ -127,20 +127,17 @@ try {
     $idUsuario = 'USR-' . strtoupper(bin2hex(random_bytes(13)));
     $senhaHash = Security::hashPassword($senha);
 
-    try {
-        $stmt = $pdo->prepare("
-            INSERT INTO usuarios (id_usuario, nome, sobrenome, cpf, email, senha_hash)
-            VALUES (?, ?, '', ?, NULL, ?)
-        ");
-        $stmt->execute([$idUsuario, $nomeCompleto, $cpfFormatado, $senhaHash]);
-    } catch (PDOException $e) {
-        if (strpos($e->getMessage(), 'Unknown column') !== false) {
-            $stmt = $pdo->prepare("INSERT INTO usuarios (id_usuario, nome, cpf, senha_hash) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$idUsuario, $nomeCompleto, $cpfFormatado, $senhaHash]);
-        } else {
-            throw $e;
-        }
-    }
+    // Estrutura da tabela usuarios: id_usuario, nome, sobrenome (NOT NULL), cpf, senha_hash (NOT NULL); demais opcionais
+    $stmt = $pdo->prepare("
+        INSERT INTO usuarios (
+            id_usuario, nome, sobrenome, data_nascimento, cargo, instituicao, cpf, telefone, email,
+            senha_hash, meta, ultimo_acesso, token_acesso, token_expira
+        ) VALUES (
+            ?, ?, '', NULL, NULL, NULL, ?, ?, '',
+            ?, NULL, NULL, NULL, NULL
+        )
+    ");
+    $stmt->execute([$idUsuario, $nomeCompleto, $cpfFormatado, $telefone, $senhaHash]);
 
     // Garantir que o perfil ESTUDANTE exista em perfis (evita erro de FK se a tabela tiver restrição)
     try {
