@@ -250,11 +250,11 @@ $stateOptions = [
             <div class="row table header">Informações obrigatórias</div>
             <div class="row filter">
                 <div class="col filter">
-                    <label for="filter-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <label for="filter-processo">Processo</label>
                     <input type="text" id="filter-processo" class="width-md height-md readonly" value="<?php echo htmlspecialchars($processoNumero, ENT_QUOTES); ?>" readonly>
                 </div>
                 <div class="col filter">
-                    <label for="filter-classe">Classe <span class="label-hint-automatizado">*automatizado</span></label>
+                    <label for="filter-classe">Classe</label>
                     <input type="text" id="filter-classe" class="width-lg height-md readonly" value="<?php echo htmlspecialchars($classeCodigo !== '' ? ($classeCodigo . ' - ' . $classeNome) : $classeNome, ENT_QUOTES); ?>" readonly>
                 </div>
                 <div class="col filter">

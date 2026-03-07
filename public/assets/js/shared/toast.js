@@ -10,7 +10,7 @@
 
     const MAX_VISIBLE = 5;
     const ENTER_DURATION = 350;
-    const EXIT_DURATION = 600;
+    const EXIT_DURATION = 900;
 
     /** Tempo mínimo e máximo (ms) para toasts do tipo simple (informativo) */
     const SIMPLE_DURATION_MIN = 3000;
@@ -54,12 +54,13 @@
 
     /**
      * Calcula duração em ms com base no tamanho do texto (leitura).
-     * Para toasts não-principais (já existe outro na tela), retorna 40% desse valor.
+     * Inclui +50% de tempo de leitura. Para toasts não-principais, retorna 40% desse valor.
      */
     function getCalculatedDuration(text, isPrincipal) {
         if (!text || typeof text !== 'string') return SIMPLE_DURATION_MIN;
         const len = text.trim().length;
         let ms = SIMPLE_MS_BASE + len * SIMPLE_MS_PER_CHAR;
+        ms = Math.floor(ms * 1.5);
         ms = Math.max(SIMPLE_DURATION_MIN, Math.min(SIMPLE_DURATION_MAX, ms));
         if (!isPrincipal) ms = Math.max(SIMPLE_DURATION_MIN, Math.floor(ms * NON_PRINCIPAL_DURATION_FACTOR));
         return ms;

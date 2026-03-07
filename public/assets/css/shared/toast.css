@@ -47,7 +47,7 @@
 }
 
 .toast-item.toast-exiting {
-    animation: toast-exit 0.6s ease-in forwards;
+    animation: toast-exit 0.9s ease-in forwards;
 }
 
 /* Base: semitransparente, sombra, bordas – fonte e cores do mockup */

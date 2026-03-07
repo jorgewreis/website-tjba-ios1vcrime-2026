@@ -61,12 +61,9 @@ $statusAtual = $guia['status'] ?? '';
 $tarefaFinalizadaOuCancelada = in_array($statusAtual, ['cancelada', 'concluída'], true);
 
 $tiposOptions = [
-    'Guia - Tipo não informado',
     'Guia de Execução Definitiva',
     'Guia de Recolhimento Provisória',
     'Guia de Recolhimento Definitiva',
-    'Guia (corrigir)',
-    'Guia (reenviar)',
 ];
 ?>
 <!DOCTYPE html>
@@ -111,12 +108,12 @@ $tiposOptions = [
             <div class="row table header">Dados da guia</div>
             <div class="row filter">
                 <div class="col filter">
-                    <label for="edit-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="text" id="edit-processo" class="width-md height-md" value="<?php echo htmlspecialchars($guia['numero_processo'] ?? '', ENT_QUOTES); ?>">
+                    <label for="edit-processo">Processo</label>
+                    <input type="text" id="edit-processo" class="width-md height-md" value="<?php echo htmlspecialchars($guia['numero_processo'] ?? '', ENT_QUOTES); ?>" readonly>
                 </div>
                 <div class="col filter">
-                    <label for="edit-denunciado">Denunciado <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="text" id="edit-denunciado" class="width-xl height-md" value="<?php echo htmlspecialchars($guia['denunciado'] ?? '', ENT_QUOTES); ?>" maxlength="255">
+                    <label for="edit-denunciado">Denunciado</label>
+                    <input type="text" id="edit-denunciado" class="width-xl height-md" value="<?php echo htmlspecialchars($guia['denunciado'] ?? '', ENT_QUOTES); ?>" maxlength="255" readonly>
                 </div>
             </div>
             <div class="row filter">
@@ -128,6 +125,10 @@ $tiposOptions = [
                         <?php endforeach; ?>
                     </select>
                 </div>
+                <div class="col filter">
+                    <label for="edit-data-fato">Data do fato</label>
+                    <input type="date" id="edit-data-fato" class="width-md height-md" value="<?php echo htmlspecialchars($guia['data_fato'] ?? '', ENT_QUOTES); ?>" max="">
+                </div>
             </div>
             <div class="row filter">
                 <div class="col filter">
@@ -138,11 +139,7 @@ $tiposOptions = [
                         <option value="Semiaberto"<?php echo (($guia['regime'] ?? '') === 'Semiaberto') ? ' selected' : ''; ?>>Semiaberto</option>
                         <option value="Fechado"<?php echo (($guia['regime'] ?? '') === 'Fechado') ? ' selected' : ''; ?>>Fechado</option>
                     </select>
-                </div>
-                <div class="col filter">
-                    <label for="edit-data-fato">Data do fato</label>
-                    <input type="date" id="edit-data-fato" class="width-md height-md" value="<?php echo htmlspecialchars($guia['data_fato'] ?? '', ENT_QUOTES); ?>" max="">
-                </div>
+                </div>                
                 <div class="col filter">
                     <label for="edit-dias-multa">Dias-multa</label>
                     <input type="number" id="edit-dias-multa" class="width-sm height-md" min="0" value="<?php echo isset($guia['dias_multa']) && $guia['dias_multa'] !== null ? (int) $guia['dias_multa'] : ''; ?>">

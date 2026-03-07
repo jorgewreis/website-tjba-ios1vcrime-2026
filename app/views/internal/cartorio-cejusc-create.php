@@ -243,6 +243,7 @@ try {
                 return value;
             };
 
+            var processoInput = document.getElementById('filter-processo');
             var reuInput = document.getElementById('filter-reu');
             var reuSelect = document.getElementById('filter-reu-select');
             if (reuInput) {
