@@ -26,4 +26,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: tentativa 8** `[de2b7af]`
 - **Fix: correção debug 9** `[2c1a509]`
 - **Fix: correção de campos do form** `[491c54d]`
+- **Feat: implementação de conjunto de páginas de Guias** `[3652d18]`
 
