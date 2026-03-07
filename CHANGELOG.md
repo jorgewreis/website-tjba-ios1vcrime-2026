@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0037
+
+**Data:** 2026-03-07 16:31:40 | **Commit:** `a37eb82` | **Tipo:** `patch`
+
+- Fix: segunda correção de cores
+
 ## V. 1.03.0036
 
 **Data:** 2026-03-07 16:11:40 | **Commit:** `84b61ab` | **Tipo:** `patch`
@@ -2496,6 +2502,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

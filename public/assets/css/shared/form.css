@@ -240,11 +240,11 @@ hr {
     background-color: var(--color-accent-active);
     border-color: var(--color-accent-active);
 }
+
 .btn-primary-outline {
     background-color: var(--color-surface-elevated);
     border-color: var(--color-accent);
-    color: var(--color-text-primary);
-        
+    color: var(--color-text-primary);        
 }
 .btn-primary-outline:hover {
     background-color: var(--color-accent-hover);
@@ -270,6 +270,7 @@ hr {
     background-color: var(--color-text-secondary-active);
     border-color: var(--color-text-secondary-active);
 }
+
 .btn-secondary-outline {
     background-color: var(--color-surface-elevated);
     border-color: var(--color-text-secondary);
@@ -300,6 +301,7 @@ hr {
     background-color: var(--color-danger-active);
     border-color: var(--color-danger-active);
 }
+
 .btn-danger-outline {
     background-color: var(--color-surface-elevated);
     border-color: var(--color-danger);
@@ -330,6 +332,7 @@ hr {
     background-color: var(--color-warning-active);
     border-color: var(--color-warning-active);
 }
+
 .btn-warning-outline {
     background-color: var(--color-surface-elevated);
     border-color: var(--color-warning);
@@ -360,6 +363,7 @@ hr {
     background-color: var(--color-info-active);
     border-color: var(--color-info-active);
 }
+
 .btn-info-outline {
     background-color: var(--color-surface-elevated);
     border-color: var(--color-info);
@@ -389,6 +393,7 @@ hr {
     background-color: var(--color-success-active);
     border-color: var(--color-success-active);
 }
+
 .btn-success-outline {
     background-color: var(--color-surface-elevated);
     border-color: var(--color-success);
@@ -472,7 +477,7 @@ select {
     border-radius: 6px;
     box-shadow: 1px 2px 3px 1px rgba(0, 0, 0, 0.1);
     
-    background-color: var(--color-surface-elevated);
+    background-color: var(--color-border);
     color: var(--color-text-primary);
     font-size: 12px;
     font-family: "Poppins", sans-serif;
@@ -489,10 +494,10 @@ select {
 }
 select:disabled {
     background-color: var(--color-surface-elevated);
-    border-color: var(--color-border);
+    border-color: var(--color-surface-overlay);
     pointer-events: none;
     box-shadow: none;
-    color: var(--color-text-secondary);
+    color: var(--color-surface-overlay);
     cursor: not-allowed;
     opacity: 0.65;
 }
@@ -521,7 +526,7 @@ input[type="date"] {
     border-radius: 6px;
     box-shadow: 1px 2px 3px 1px rgba(0, 0, 0, 0.1);
     
-    background-color: var(--color-surface-elevated);
+    background-color: var(--color-border);
     color: var(--color-text-primary);
     font-size: 12px;
     font-family: "Poppins", sans-serif;
@@ -529,10 +534,10 @@ input[type="date"] {
 
 input[type="text"].readonly{
     background-color: var(--color-surface-elevated);
-    color: var(--color-text-primary);
+    border: 1px solid var(--color-surface-overlay);
+    color: var(--color-accent);
     font-weight: 600;
     box-shadow: none;
-    border: none;
     pointer-events: none;
 }
 
@@ -553,7 +558,7 @@ input[type="text"].status-error {
 }
 input.white,
 select.white{
-    background-color: var(--color-surface-elevated);
+    background-color: var(--color-border);
 }
 
 /* LABEL */
@@ -621,36 +626,36 @@ input[type="radio"] {
 }
 
 .status-finished {
-    background-color: var(--color-success-bg-light);
-    color: var(--color-success-active);
+    background-color: var(--bs-success);
+    color: var(--bg-success);
 }
 
 .status-pending {
-    background-color: var(--color-primary-bg-light);
-    color: var(--color-primary-active);
+    background-color: var(--bs-primary);
+    color: var(--bg-primary);
 }
 
 .status-cancelled {
-    background-color: var(--color-danger-bg-light);
-    color: var(--color-danger-active);
+    background-color: var(--bs-danger);
+    color: var(--bg-danger);
 }
 
 .status-current {
-    background-color: var(--color-warning-bg-light);
-    color: var(--color-warning-active);
+    background-color: var(--bs-warning);
+    color: var(--bg-warning);
 }
 
 .status-primary-light {
-    background-color: var(--color-primary-bg-light);
-    color: var(--color-primary-active);
+    background-color: var(--bs-primary);
+    color: var(--bg-primary);
 }
 .status-secondary-light {
-    background-color: var(--color-secondary-bg-light);
-    color: var(--color-secondary-active);
+    background-color: var(--bs-secondary);
+    color: var(--bg-secondary);
 }
 .status-warning-light {
-    background-color: var(--color-warning-bg-light);
-    color: var(--color-warning-active);
+    background-color: var(--bs-warning);
+    color: var(--bg-warning);
 }
 
 

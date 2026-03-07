@@ -15,10 +15,10 @@
     /** Tempo mínimo e máximo (ms) para toasts do tipo simple (informativo) */
     const SIMPLE_DURATION_MIN = 3000;
     const SIMPLE_DURATION_MAX = 15000;
-    /** Duração padrão para toasts full (com botão fechar) quando não principal: 40% da calculada */
+    /** Duração padrão para toasts full (com botão fechar) */
     const FULL_DURATION_DEFAULT_MS = 8000;
-    /** Redução para toasts não-principais: usam 40% do tempo (redução de 60%) */
-    const NON_PRINCIPAL_DURATION_FACTOR = 0.4;
+    /** Toasts que aparecem com outros já visíveis ficam 60% mais lentos (ex.: 5s → 8s) */
+    const SUBSEQUENT_DURATION_FACTOR = 1.6;
     /** Tempo base + por caractere (ms) para cálculo automático de leitura */
     const SIMPLE_MS_BASE = 2000;
     const SIMPLE_MS_PER_CHAR = 45;
@@ -54,7 +54,7 @@
 
     /**
      * Calcula duração em ms com base no tamanho do texto (leitura).
-     * Inclui +50% de tempo de leitura. Para toasts não-principais, retorna 40% desse valor.
+     * Inclui +50% de tempo de leitura. Toasts que aparecem com outros já visíveis duram 60% a mais.
      */
     function getCalculatedDuration(text, isPrincipal) {
         if (!text || typeof text !== 'string') return SIMPLE_DURATION_MIN;
@@ -62,7 +62,7 @@
         let ms = SIMPLE_MS_BASE + len * SIMPLE_MS_PER_CHAR;
         ms = Math.floor(ms * 1.5);
         ms = Math.max(SIMPLE_DURATION_MIN, Math.min(SIMPLE_DURATION_MAX, ms));
-        if (!isPrincipal) ms = Math.max(SIMPLE_DURATION_MIN, Math.floor(ms * NON_PRINCIPAL_DURATION_FACTOR));
+        if (!isPrincipal) ms = Math.min(SIMPLE_DURATION_MAX, Math.floor(ms * SUBSEQUENT_DURATION_FACTOR));
         return ms;
     }
 
@@ -192,7 +192,9 @@
             durationMs = getCalculatedDuration(message, isPrincipal);
         } else {
             durationMs = getCalculatedDuration(message, isPrincipal);
-            if (durationMs < SIMPLE_DURATION_MIN) durationMs = FULL_DURATION_DEFAULT_MS;
+            if (durationMs < SIMPLE_DURATION_MIN) {
+                durationMs = isPrincipal ? FULL_DURATION_DEFAULT_MS : Math.floor(FULL_DURATION_DEFAULT_MS * SUBSEQUENT_DURATION_FACTOR);
+            }
         }
         const el = createToastElement(options, durationMs);
         el.classList.add('toast-visible');
