@@ -30,4 +30,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Feat: implementação nova de cadastro de reu** `[86f5c5e]`
 - **Feat: implementaçao de info de campo obrigatorio** `[14a380c]`
 - **Fix: atualização de classes** `[9b3389b]`
+- **Fix: melhorias de inputs e selects** `[c0386ea]`
 
