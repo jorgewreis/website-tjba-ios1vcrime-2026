@@ -168,6 +168,8 @@ try {
         $msg = 'Erro ao salvar cadastro. Tente novamente.';
         if (strpos($e->getMessage(), 'doesn\'t have a default value') !== false) {
             $msg = 'Erro de configuração do banco: tabela usuarios exige mais campos. Contate o suporte.';
+        } else {
+            $msg .= ' Detalhe: ' . $e->getMessage();
         }
         echo json_encode(['success' => false, 'message' => $msg]);
     }
@@ -176,5 +178,8 @@ try {
         $pdo->rollBack();
     }
     error_log('cadastro_estudantes API: ' . $e->getMessage());
-    echo json_encode(['success' => false, 'message' => 'Erro interno. Tente novamente.']);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Erro interno. Detalhe: ' . $e->getMessage(),
+    ]);
 }
