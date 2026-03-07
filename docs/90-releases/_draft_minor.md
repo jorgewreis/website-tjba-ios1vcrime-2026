@@ -13,4 +13,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: Correção de inconformidades de css** `[a79caad]`
 - **Feat: nova implementação de toats em todo o sistema** `[1a43361]`
 - **Fix: correção de informações lgpd** `[0dd3fa3]`
+- **Feat: criação de campo senha para estudante** `[3627bff]`
 
