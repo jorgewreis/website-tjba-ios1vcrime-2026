@@ -32,7 +32,7 @@
     const TITLES = {
         success: 'Sucesso!',
         error: 'Erro!',
-        info: 'Informação'
+        info: 'Informação!'
     };
 
     let container = null;

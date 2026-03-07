@@ -1,3 +1,6 @@
+/* Padrão visual: mockup component-toast.html – fonte Poppins e variáveis do design system */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
 /* Container fixo: canto inferior direito, z-index máximo, empilhamento vertical */
 .toast-container {
     position: fixed;
@@ -47,18 +50,19 @@
     animation: toast-exit 0.6s ease-in forwards;
 }
 
-/* Base: semitransparente, sombra, bordas */
+/* Base: semitransparente, sombra, bordas – fonte e cores do mockup */
 .toast,
 .toast-full {
     width: 400px;
     max-width: 100%;
     display: flex;
     flex-direction: column;
-    border: 1px solid var(--color-gray-300);
+    border: 1px solid var(--color-gray-300, #dee2e6);
     box-shadow: 4px 8px 24px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.12);
     border-radius: 6px;
     gap: 0;
     overflow: hidden;
+    font-family: 'Poppins', sans-serif;
 }
 
 .toast {
@@ -67,17 +71,17 @@
 
 .toast.success {
     background-color: rgba(236, 249, 244, 0.95);
-    border-color: var(--success-color);
+    border-color: var(--success-color, #2cca80);
 }
 
 .toast.error {
     background-color: rgba(248, 215, 218, 0.95);
-    border-color: var(--danger-color);
+    border-color: var(--danger-color, #dc3545);
 }
 
 .toast.info {
     background-color: rgba(246, 246, 255, 0.95);
-    border-color: var(--primary-color);
+    border-color: var(--primary-color, #686bfb);
 }
 
 .toast-full {
@@ -86,20 +90,20 @@
 
 .toast-full.success {
     background-color: rgba(236, 249, 244, 0.95);
-    border-color: var(--success-color);
+    border-color: var(--success-color, #2cca80);
 }
 
 .toast-full.error {
     background-color: rgba(248, 215, 218, 0.95);
-    border-color: var(--danger-color);
+    border-color: var(--danger-color, #dc3545);
 }
 
 .toast-full.info {
     background-color: rgba(246, 246, 255, 0.95);
-    border-color: var(--primary-color);
+    border-color: var(--primary-color, #686bfb);
 }
 
-/* Modelo 1: barra de título + botão fechar + conteúdo */
+/* Modelo 1: barra de título + botão fechar + conteúdo (mockup) */
 .toast-header {
     display: flex;
     align-items: center;
@@ -107,37 +111,38 @@
     border-radius: 6px 6px 0 0;
     padding: 10px 15px;
     background-color: rgba(248, 249, 250, 0.98);
-    border-bottom: 1px solid var(--color-gray-300);
+    border-bottom: 1px solid var(--color-gray-300, #dee2e6);
+    font-family: 'Poppins', sans-serif;
 }
 
 .toast-full.success .toast-header {
-    background-color: var(--success-color);
+    background-color: var(--success-color, #2cca80);
 }
 
 .toast-full.error .toast-header {
-    background-color: var(--danger-color);
+    background-color: var(--danger-color, #dc3545);
 }
 
 .toast-full.info .toast-header {
-    background-color: var(--primary-color);
+    background-color: var(--primary-color, #686bfb);
 }
 
 .toast-header .toast-title {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
-    color: var(--color-gray-800);
+    color: var(--color-gray-800, #343a40);
 }
 
 .toast-full.success .toast-header .toast-title,
 .toast-full.error .toast-header .toast-title,
 .toast-full.info .toast-header .toast-title {
-    color: var(--color-gray-000);
+    color: var(--color-gray-000, #ffffff);
 }
 
 .toast-header .toast-close {
-    font-size: 18px;
+    font-size: 20px;
     line-height: 1;
-    color: var(--color-gray-500);
+    color: var(--color-gray-500, #adb5bd);
     cursor: pointer;
     background: none;
     border: none;
@@ -152,13 +157,13 @@
 }
 
 .toast-header .toast-close:hover {
-    color: var(--color-gray-800);
+    color: var(--color-gray-800, #343a40);
 }
 
 .toast-full.success .toast-header .toast-close:hover,
 .toast-full.error .toast-header .toast-close:hover,
 .toast-full.info .toast-header .toast-close:hover {
-    color: var(--color-gray-000);
+    color: var(--color-gray-000, #ffffff);
 }
 
 /* Corpo do toast */
@@ -180,29 +185,36 @@
 
 .toast-body .toast-icon {
     padding: 0 10px;
-    font-size: 20px;
+    font-size: 22px;
     margin-right: 10px;
     flex-shrink: 0;
+    color: inherit;
 }
+
+.toast-full.success .toast-body .toast-icon { color: var(--success-color, #2cca80); }
+.toast-full.error .toast-body .toast-icon { color: var(--danger-color, #dc3545); }
+.toast-full.info .toast-body .toast-icon { color: var(--primary-color, #686bfb); }
 
 .toast-body .toast-message {
     display: flex;
     flex-direction: column;
     gap: 4px;
     min-width: 0;
+    font-family: 'Poppins', sans-serif;
 }
 
 .toast-body .toast-message .toast-subtitle {
     font-size: 12px;
     font-weight: 600;
-    color: var(--color-gray-700);
+    color: var(--color-gray-700, #495057);
 }
 
 .toast-body .toast-message .toast-information {
     font-size: 13px;
     font-weight: 400;
-    color: var(--color-gray-700);
+    color: var(--color-gray-700, #495057);
     margin: 0;
+    line-height: 1.4;
 }
 
 .toast-full .toast-body .toast-message .toast-information {
@@ -210,8 +222,9 @@
 }
 
 .toast-body .toast-message .toast-timestamp {
-    font-size: 10px;
-    color: var(--color-gray-600);
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--color-gray-600, #6c757d);
 }
 
 /* Modelo 2 (informativo): barra de tempo regressivo interna, semitransparente */

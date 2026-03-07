@@ -145,7 +145,7 @@ try {
             </div>
             <div class="col filter">
                 <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
-                <input type="text" class="width-lg height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud" required readonly>                
+                <input type="text" class="width-lg height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud (opcional)" readonly>                
             </div>
             <div class="col filter">
                 <label for="filter-tipo">Finalidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
@@ -356,7 +356,6 @@ try {
 
             const requiredFields = [
                 { id: 'filter-processo', label: 'Número do processo' },
-                { id: 'filter-classe', label: 'Classe processual' },
                 { id: 'filter-tipo', label: 'Finalidade' },
                 { id: 'filter-prazo', label: 'Prazo de cumprimento' },
                 { id: 'filter-estado', label: 'Estado' },
@@ -410,12 +409,12 @@ try {
                 }
 
                 const classeVal = getValue('filter-classe');
-                if (!classeVal || classeVal === 'Classe não informada' || classeVal === 'Aguarde...') {
-                    return showFeedback('Informe a classe processual. Preencha o processo com 20 dígitos para consulta automática ao DataJud ou digite a classe.', 'error');
+                if (classeVal === 'Aguarde...') {
+                    return showFeedback('Aguarde a consulta ao DataJud terminar antes de cadastrar.', 'error');
                 }
                 const payload = {
                     numero_processo: processoRaw,
-                    classe: classeVal,
+                    classe: classeVal || '',
                     finalidade: getValue('filter-tipo'),
                     prazo: sanitizePrazo(getValue('filter-prazo')),
                     estado: getValue('filter-estado'),

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0030
+
+**Data:** 2026-03-07 14:45:57 | **Commit:** `0ab2548` | **Tipo:** `patch`
+
+- Fix: correção mockup toast
+
 ## V. 1.03.0029
 
 **Data:** 2026-03-07 14:38:02 | **Commit:** `9292b46` | **Tipo:** `patch`
@@ -2454,6 +2460,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
