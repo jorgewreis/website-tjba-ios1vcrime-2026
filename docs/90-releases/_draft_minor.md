@@ -11,4 +11,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: nova correção de sudo** `[5b08510]`
 - **Fix: correção definitiva** `[dc1da88]`
 - **Fix: Correção de inconformidades de css** `[a79caad]`
+- **Feat: nova implementação de toats em todo o sistema** `[1a43361]`
 
