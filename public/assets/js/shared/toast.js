@@ -17,8 +17,8 @@
     const SIMPLE_DURATION_MAX = 15000;
     /** Duração padrão para toasts full (com botão fechar) */
     const FULL_DURATION_DEFAULT_MS = 8000;
-    /** Toasts que aparecem com outros já visíveis ficam 60% mais lentos (ex.: 5s → 8s) */
-    const SUBSEQUENT_DURATION_FACTOR = 1.6;
+    /** Cada toast que aparece depois tem duração = 2× a duração do anterior; o primeiro usa tempo base. */
+    const SUBSEQUENT_DURATION_MULTIPLIER = 2;
     /** Tempo base + por caractere (ms) para cálculo automático de leitura */
     const SIMPLE_MS_BASE = 2000;
     const SIMPLE_MS_PER_CHAR = 45;
@@ -53,16 +53,16 @@
     }
 
     /**
-     * Calcula duração em ms com base no tamanho do texto (leitura).
-     * Inclui +50% de tempo de leitura. Toasts que aparecem com outros já visíveis duram 60% a mais.
+     * Duração base (ms) para o primeiro toast da lista – tempo original de contagem.
+     * Usado quando visibleList.length === 0; também como referência para o “anterior” quando não há.
      */
-    function getCalculatedDuration(text, isPrincipal) {
-        if (!text || typeof text !== 'string') return SIMPLE_DURATION_MIN;
-        const len = text.trim().length;
+    function getBaseDuration(message, variant) {
+        if (!message || typeof message !== 'string') return SIMPLE_DURATION_MIN;
+        const len = message.trim().length;
         let ms = SIMPLE_MS_BASE + len * SIMPLE_MS_PER_CHAR;
         ms = Math.floor(ms * 1.5);
         ms = Math.max(SIMPLE_DURATION_MIN, Math.min(SIMPLE_DURATION_MAX, ms));
-        if (!isPrincipal) ms = Math.min(SIMPLE_DURATION_MAX, Math.floor(ms * SUBSEQUENT_DURATION_FACTOR));
+        if (variant !== 'simple' && ms < SIMPLE_DURATION_MIN) ms = FULL_DURATION_DEFAULT_MS;
         return ms;
     }
 
@@ -159,6 +159,47 @@
         return root;
     }
 
+    /**
+     * Reajusta o tempo restante do toast para o equivalente em "tempo base".
+     * Ex.: toast de 20s (2× base 10s), restam 10s → em tempo base restariam 5s; define 5s e continua.
+     * Usado quando esse toast passa a ser o primeiro após o anterior ser removido.
+     */
+    function resetToastToBaseDuration(toastEl) {
+        if (!toastEl || !toastEl._countdownBar || !toastEl._options || !toastEl._startTime) return;
+        if (toastEl._removeTimeout) clearTimeout(toastEl._removeTimeout);
+
+        const currentTotal = toastEl._toastDuration;
+        const elapsed = Date.now() - toastEl._startTime;
+        const remaining = Math.max(0, currentTotal - elapsed);
+
+        if (remaining <= 0) {
+            removeToast(toastEl);
+            return;
+        }
+
+        const opts = toastEl._options;
+        const baseMs = getBaseDuration(opts.message || '', opts.variant || 'full');
+        const newRemaining = Math.round((remaining / currentTotal) * baseMs);
+        if (newRemaining <= 0) {
+            removeToast(toastEl);
+            return;
+        }
+
+        toastEl._toastDuration = baseMs;
+        toastEl._startTime = Date.now();
+
+        const bar = toastEl._countdownBar;
+        const proportionLeft = remaining / currentTotal;
+        bar.style.transition = 'transform ' + newRemaining + 'ms linear';
+        bar.style.transform = 'scaleX(' + proportionLeft + ')';
+        requestAnimationFrame(function () {
+            bar.style.transform = 'scaleX(0)';
+        });
+        toastEl._removeTimeout = setTimeout(function () {
+            removeToast(toastEl);
+        }, newRemaining);
+    }
+
     function removeToast(toastEl) {
         if (!toastEl || !toastEl.parentNode) return;
         if (toastEl._removeTimeout) clearTimeout(toastEl._removeTimeout);
@@ -168,6 +209,11 @@
 
         const idx = visibleList.indexOf(toastEl);
         if (idx > -1) visibleList.splice(idx, 1);
+
+        // Só quando o removido era o primeiro: quem passou a ser o primeiro usa o tempo base.
+        if (idx === 0 && visibleList.length > 0 && visibleList[0]._countdownBar) {
+            resetToastToBaseDuration(visibleList[0]);
+        }
 
         setTimeout(function () {
             if (toastEl.parentNode) toastEl.parentNode.removeChild(toastEl);
@@ -187,14 +233,13 @@
         const cont = getContainer();
         const isPrincipal = visibleList.length === 0;
         const message = options.message || '';
-        let durationMs = 0;
-        if (options.variant === 'simple') {
-            durationMs = getCalculatedDuration(message, isPrincipal);
+        let durationMs;
+        if (isPrincipal) {
+            durationMs = getBaseDuration(message, options.variant);
         } else {
-            durationMs = getCalculatedDuration(message, isPrincipal);
-            if (durationMs < SIMPLE_DURATION_MIN) {
-                durationMs = isPrincipal ? FULL_DURATION_DEFAULT_MS : Math.floor(FULL_DURATION_DEFAULT_MS * SUBSEQUENT_DURATION_FACTOR);
-            }
+            const last = visibleList[visibleList.length - 1];
+            const prevDuration = last._toastDuration || getBaseDuration(message, options.variant);
+            durationMs = Math.min(SIMPLE_DURATION_MAX, Math.floor(prevDuration * SUBSEQUENT_DURATION_MULTIPLIER));
         }
         const el = createToastElement(options, durationMs);
         el.classList.add('toast-visible');
@@ -202,6 +247,7 @@
         visibleList.push(el);
 
         if (el._countdownBar && durationMs > 0) {
+            el._startTime = Date.now();
             requestAnimationFrame(function () {
                 el._countdownBar.style.transform = 'scaleX(0)';
             });

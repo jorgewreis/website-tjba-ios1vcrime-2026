@@ -196,7 +196,7 @@ hr {
     border-radius: 6px;
     box-sizing: border-box;
     
-    background-color: var(--color-surface-elevated);
+    background-color: var(--bg-input);
     color: var(--color-text-primary);    
     font-family: 'Poppins', sans-serif;
     font-size: 14px;
@@ -205,7 +205,7 @@ hr {
     transition: all 0.5s ease;
 }
 .pagination-number:hover{
-    background-color: var(--color-surface-elevated);
+    background-color: var(--bs-body-color);
     color: var(--color-text-primary);
     transition: all 0.2s ease;
 }
@@ -259,39 +259,39 @@ hr {
 
 /* -- COR SECUNDÁRIA */
 .btn-secondary {
-    background-color: var(--color-text-secondary);
-    border-color: var(--color-text-secondary);
+    background-color: var(--bs-secondary);
+    border-color: var(--bs-secondary);
 }
 .btn-secondary:hover {
-    background-color: var(--color-text-secondary-hover);
-    border-color: var(--color-text-secondary-hover);
+    background-color: var(--bs-secondary-hover);
+    border-color: var(--bs-secondary-hover);
 }
 .btn-secondary:active {
-    background-color: var(--color-text-secondary-active);
-    border-color: var(--color-text-secondary-active);
+    background-color: var(--bs-secondary-active);
+    border-color: var(--bs-secondary-active);
 }
 
 .btn-secondary-outline {
     background-color: var(--color-surface-elevated);
-    border-color: var(--color-text-secondary);
+    border-color: var(--bs-secondary);
     color: var(--color-text-primary);
     box-shadow: 1px 2px 3px 1px rgba(0, 0, 0, 0.1);
 }
 .btn-secondary-outline:hover {
-    background-color: var(--color-text-secondary-hover);
-    border-color: var(--color-text-secondary-hover);
+    background-color: var(--bs-secondary-hover);
+    border-color: var(--bs-secondary-hover);
     color: var(--color-text-on-primary);
 }
 .btn-secondary-outline:active {
-    background-color: var(--color-text-secondary-active);
-    border-color: var(--color-text-secondary-active);
+    background-color: var(--bs-secondary-active);
+    border-color: var(--bs-secondary-active);
     color: var(--color-text-on-primary);
 }
 
 /* - COR DANGER */
 .btn-danger {
-    background-color: var(--color-danger);
-    border-color: var(--color-danger);
+    background-color: var(--bg-danger);
+    border-color: var(--bs-danger);
 }
 .btn-danger:hover {
     background-color: var(--color-danger-hover);
@@ -477,7 +477,7 @@ select {
     border-radius: 6px;
     box-shadow: 1px 2px 3px 1px rgba(0, 0, 0, 0.1);
     
-    background-color: var(--color-border);
+    background-color: var(--bg-input);
     color: var(--color-text-primary);
     font-size: 12px;
     font-family: "Poppins", sans-serif;
@@ -533,8 +533,8 @@ input[type="date"] {
 }
 
 input[type="text"].readonly{
-    background-color: var(--color-surface-elevated);
-    border: 1px solid var(--color-border-light);
+    background-color: var(--bg-input);
+    border: 1px solid var(--color-border-subtle);
     color: var(--color-accent);
     font-weight: 500;
     font-size: 14px;
@@ -627,36 +627,36 @@ input[type="radio"] {
 }
 
 .status-finished {
-    background-color: var(--bs-success);
-    color: var(--bg-success);
+    background-color: var(--bg-success);
+    color: var(--bs-success);
 }
 
 .status-pending {
-    background-color: var(--bs-primary);
-    color: var(--bg-primary);
+    background-color: var(--bg-primary);
+    color: var(--bs-primary);
 }
 
 .status-cancelled {
-    background-color: var(--bs-danger);
-    color: var(--bg-danger);
+    background-color: var(--bg-danger);
+    color: var(--bs-danger);
 }
 
 .status-current {
-    background-color: var(--bs-warning);
-    color: var(--bg-warning);
+    background-color: var(--bg-warning);
+    color: var(--bs-warning);
 }
 
 .status-primary-light {
-    background-color: var(--bs-primary);
-    color: var(--bg-primary);
+    background-color: var(--bg-primary);
+    color: var(--bs-primary);
 }
 .status-secondary-light {
-    background-color: var(--bs-secondary);
-    color: var(--bg-secondary);
+    background-color: var(--bg-secondary);
+    color: var(--bs-secondary);
 }
 .status-warning-light {
-    background-color: var(--bs-warning);
-    color: var(--bg-warning);
+    background-color: var(--bg-warning);
+    color: var(--bs-warning);
 }
 
 

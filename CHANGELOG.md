@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0039
+
+**Data:** 2026-03-07 17:16:40 | **Commit:** `5079e85` | **Tipo:** `patch`
+
+- Fix: correção de cores 5
+
 ## V. 1.03.0038
 
 **Data:** 2026-03-07 16:43:10 | **Commit:** `fabeec8` | **Tipo:** `patch`
@@ -2508,6 +2514,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
