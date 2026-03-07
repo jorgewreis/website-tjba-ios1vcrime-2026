@@ -457,6 +457,9 @@ hr {
     opacity: 0.5;
     margin-right: 10px;
 }
+.badge.file img[data-theme="escuro"] {
+    filter: invert(0.8);
+}
 
 
 /* SELECTS */
