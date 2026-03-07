@@ -10,4 +10,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: nova tentativa de fix** `[8b17dc1]`
 - **Fix: nova correção de sudo** `[5b08510]`
 - **Fix: correção definitiva** `[dc1da88]`
+- **Fix: Correção de inconformidades de css** `[a79caad]`
 
