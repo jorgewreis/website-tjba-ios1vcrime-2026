@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0023
+
+**Data:** 2026-03-07 12:29:41 | **Commit:** `3652d18` | **Tipo:** `patch`
+
+- Feat: implementação de conjunto de páginas de Guias
+
 ## V. 1.03.0022
 
 **Data:** 2026-03-07 12:04:10 | **Commit:** `491c54d` | **Tipo:** `patch`
@@ -2412,6 +2418,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
