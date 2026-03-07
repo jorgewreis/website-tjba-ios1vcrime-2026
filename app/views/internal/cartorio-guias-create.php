@@ -400,6 +400,10 @@ try {
                 if (dataFato) payload.data_fato = dataFato;
                 if (diasMultaVal !== null && !isNaN(diasMultaVal)) payload.dias_multa = diasMultaVal;
 
+                // #region agent log
+                fetch('http://127.0.0.1:7304/ingest/df211406-901f-4e15-ab75-9fa46f53cfac',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'64730a'},body:JSON.stringify({sessionId:'64730a',location:'cartorio-guias-create.php:beforeFetch',message:'Guias create submit',data:{payloadKeys:Object.keys(payload),hasClasseCodigo:!!payload.classe_codigo,hasDenunciado:!!payload.denunciado},timestamp:Date.now(),hypothesisId:'A,B'})}).catch(function(){});
+                // #endregion
+
                 fetch('/api/cartorio-guias/create.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -407,6 +411,9 @@ try {
                 })
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
+                    // #region agent log
+                    fetch('http://127.0.0.1:7304/ingest/df211406-901f-4e15-ab75-9fa46f53cfac',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'64730a'},body:JSON.stringify({sessionId:'64730a',location:'cartorio-guias-create.php:then',message:'Guias create response',data:{hasId:!!data.id,hasError:!!data.error,errorMsg:data.error||null},timestamp:Date.now(),hypothesisId:'E'})}).catch(function(){});
+                    // #endregion
                     if (data.id) {
                         if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Guia cadastrada com sucesso.' });
                         window.location.href = '/frame.php?page=guias';
@@ -415,7 +422,10 @@ try {
                         btn.disabled = false;
                     }
                 })
-                .catch(function () {
+                .catch(function (err) {
+                    // #region agent log
+                    fetch('http://127.0.0.1:7304/ingest/df211406-901f-4e15-ab75-9fa46f53cfac',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'64730a'},body:JSON.stringify({sessionId:'64730a',location:'cartorio-guias-create.php:catch',message:'Guias create fetch failed',data:{errMsg:err&&err.message||String(err)},timestamp:Date.now(),hypothesisId:'B'})}).catch(function(){});
+                    // #endregion
                     showFeedback('Erro de conexão.', 'error');
                     btn.disabled = false;
                 });

@@ -131,7 +131,7 @@ try {
             </div>
             <div class="col filter">
                 <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
-                <input type="text" class="width-lg height-md" id="filter-classe" placeholder="Preenchido pelo DataJud ao informar o processo (ou digite se não houver retorno)" required readonly>
+                <input type="text" class="width-lg height-md" id="filter-classe" placeholder="Preenchido automaticamente DataJud" required readonly>
             </div>
             <div class="col filter">
                 <label for="filter-tipo">Finalidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
