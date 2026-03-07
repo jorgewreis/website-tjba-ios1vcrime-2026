@@ -28,4 +28,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correção de campos do form** `[491c54d]`
 - **Feat: implementação de conjunto de páginas de Guias** `[3652d18]`
 - **Feat: implementação nova de cadastro de reu** `[86f5c5e]`
+- **Feat: implementaçao de info de campo obrigatorio** `[14a380c]`
 
