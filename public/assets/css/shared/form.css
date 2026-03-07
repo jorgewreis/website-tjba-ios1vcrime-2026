@@ -51,7 +51,7 @@
 
 hr {
     border: none;
-    border-top: 1px solid #dddddd;
+    border-top: 1px solid var(--color-border);
     margin: 20px 0;
 }
 
@@ -85,7 +85,7 @@ hr {
     box-shadow: 1px 2px 5px 2px rgba(0, 0, 0, 0.2);
     
     background-color: var(--color-gray-400);
-    color: #fff;
+    color: var(--color-text-on-primary);
     font-size: 14px;
     font-family: 'Poppins', sans-serif;
     cursor: pointer;    
@@ -93,13 +93,13 @@ hr {
 }
 .btn:hover {
     background-color: var(--color-gray-500);
-    color: #fff;
+    color: var(--color-text-on-primary);
     border: 1px solid var(--color-gray-500);
     transition: all 0.2s ease;
 }
 .btn:active {
     background-color: var(--color-gray-600);
-    color: #fff;
+    color: var(--color-text-on-primary);
     border: 1px solid var(--color-gray-600);
     box-shadow: none;
     transform: translateY(1px);
@@ -110,7 +110,7 @@ hr {
     border-color: var(--color-gray-200);
     pointer-events: none;
     box-shadow: none;
-    color: #949494;
+    color: var(--color-muted);
     cursor: not-allowed;
     opacity: 0.65;
 }
@@ -211,7 +211,7 @@ hr {
 }
 .pagination-number.active {
     background-color: var(--primary-color);
-    color: #fff;
+    color: var(--color-text-on-primary);
     pointer-events: none;
     cursor: default;
     transition: all 0.2s ease;
@@ -241,7 +241,7 @@ hr {
     border-color: var(--primary-color-active);
 }
 .btn-primary-outline {
-    background-color: white;
+    background-color: var(--color-surface-elevated);
     border-color: var(--primary-color);
     color: var(--primary-color);
         
@@ -249,12 +249,12 @@ hr {
 .btn-primary-outline:hover {
     background-color: var(--primary-color-hover);
     border-color: var(--primary-color-hover);
-    color: #fff;
+    color: var(--color-text-on-primary);
 }
 .btn-primary-outline:active {
     background-color: var(--primary-color-active);
     border-color: var(--primary-color-active);
-    color: #fff;
+    color: var(--color-text-on-primary);
 }
 
 /* -- COR SECUNDÁRIA */
@@ -279,12 +279,12 @@ hr {
 .btn-secondary-outline:hover {
     background-color: var(--secondary-color-hover);
     border-color: var(--secondary-color-hover);
-    color: #fff;
+    color: var(--color-text-on-primary);
 }
 .btn-secondary-outline:active {
     background-color: var(--secondary-color-active);
     border-color: var(--secondary-color-active);
-    color: #fff;
+    color: var(--color-text-on-primary);
 }
 
 /* - COR DANGER */
@@ -309,12 +309,12 @@ hr {
 .btn-danger-outline:hover {
     background-color: var(--danger-color-hover);
     border-color: var(--danger-color-hover);
-    color: #fff;
+    color: var(--color-text-on-primary);
 }
 .btn-danger-outline:active {
     background-color: var(--danger-color-active);
     border-color: var(--danger-color-active);
-    color: #fff;
+    color: var(--color-text-on-primary);
 }
 
 /* -- COR WARNING */
@@ -339,12 +339,12 @@ hr {
 .btn-warning-outline:hover {
     background-color: var(--warning-color-hover);
     border-color: var(--warning-color-hover);
-    color: #fff;
+    color: var(--color-text-on-primary);
 }
 .btn-warning-outline:active {
     background-color: var(--warning-color-active);
     border-color: var(--warning-color-active);
-    color: #fff;
+    color: var(--color-text-on-primary);
 }
 
 /* -- COR INFO */
@@ -368,12 +368,12 @@ hr {
 .btn-info-outline:hover {
     background-color: var(--info-color-hover);
     border-color: var(--info-color-hover);
-    color: #fff;
+    color: var(--color-text-on-primary);
 }
 .btn-info-outline:active {
     background-color: var(--info-color-active);
     border-color: var(--info-color-active);
-    color: #fff;
+    color: var(--color-text-on-primary);
 }
 
 /* -- COR SUCCESS */
@@ -397,12 +397,12 @@ hr {
 .btn-success-outline:hover {
     background-color: var(--success-color-hover);
     border-color: var(--success-color-hover);
-    color: #fff;
+    color: var(--color-text-on-primary);
 }
 .btn-success-outline:active {
     background-color: var(--success-color-active);
     border-color: var(--success-color-active);
-    color: #fff;
+    color: var(--color-text-on-primary);
 }
 
 .button-table{
@@ -436,7 +436,7 @@ hr {
     font-family: "Poppins", sans-serif;
     border-radius: 4px;
     text-transform: uppercase;
-    color: white;
+    color: var(--color-text-on-primary);
 }
 
 .badge.file {
@@ -550,7 +550,7 @@ input[type="text"].status-error {
 }
 input.white,
 select.white{
-    background-color: #fff;
+    background-color: var(--color-surface-elevated);
 }
 
 /* LABEL */

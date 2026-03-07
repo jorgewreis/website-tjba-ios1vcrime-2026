@@ -9,6 +9,7 @@ $message = 'Seu perfil não tem permissão para acessar este recurso. Solicite a
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <?php include __DIR__ . '/../_theme_init.php'; ?>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Erro <?php echo htmlspecialchars($code); ?> - Primeira Vara Crime</title>

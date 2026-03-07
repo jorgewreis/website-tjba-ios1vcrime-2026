@@ -106,6 +106,7 @@ try {
 <!DOCTYPE html>
 <html lang="pt-BR">
     <head>
+        <?php include __DIR__ . '/_theme_init.php'; ?>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <title>Guias - Regras - Primeira Vara Crime de Ilhéus</title>

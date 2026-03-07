@@ -22,6 +22,7 @@ $csrfToken = Security::generateCSRFToken();
   
     <link rel="stylesheet" href="/assets/css/shared/reset.css">
   	<link rel="stylesheet" href="/assets/css/shared/variables.css">
+    <link rel="stylesheet" href="/assets/css/shared/color.css">
     <link rel="stylesheet" href="/assets/css/shared/base.css">
     <link rel="stylesheet" href="/assets/css/shared/form.css">
     <link rel="stylesheet" href="/assets/css/shared/table.css">
@@ -102,8 +103,8 @@ $csrfToken = Security::generateCSRFToken();
                         <div class="row">
                             <select id="themeSelect" class="width-sm height-sm white" title="Preferência de tema">
                                 <option value="claro" selected>Tema claro</option>
-                                <option value="auto" disabled>Tema automático</option>
-                                <option value="escuro" disabled>Tema escuro</option>
+                                <option value="auto">Tema automático</option>
+                                <option value="escuro">Tema escuro</option>
                             </select>
                         </div>
 

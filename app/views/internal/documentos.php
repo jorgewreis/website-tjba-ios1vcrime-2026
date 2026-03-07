@@ -6,6 +6,7 @@ Security::requireAuthentication();
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <?php include __DIR__ . '/_theme_init.php'; ?>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Documentos - Sistema de Gestão</title>

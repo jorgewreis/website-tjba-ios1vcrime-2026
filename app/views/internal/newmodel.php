@@ -8,6 +8,7 @@ Security::requireAuthentication();
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <?php include __DIR__ . '/_theme_init.php'; ?>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cartas Recebidas - Primeira Vara Crime de Ilhéus</title>

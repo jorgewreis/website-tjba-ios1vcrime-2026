@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0034
+
+**Data:** 2026-03-07 15:48:01 | **Commit:** `36661d6` | **Tipo:** `patch`
+
+- Feat: nova implementação de tema claro e escuro
+
 ## V. 1.03.0033
 
 **Data:** 2026-03-07 15:20:51 | **Commit:** `efbd48a` | **Tipo:** `patch`
@@ -2478,6 +2484,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

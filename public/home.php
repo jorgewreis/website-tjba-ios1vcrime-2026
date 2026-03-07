@@ -38,7 +38,7 @@ $userProfile = Security::getUserProfile() ?? '';
     <title>Primeira Vara Crime de Ilhéus - Sistema de Gestão</title>
 
     <link rel="stylesheet" href="/assets/css/legacy/reset.css">
-  	<link rel="stylesheet" href="/assets/css/legacy/color.css">
+  	<link rel="stylesheet" href="/assets/css/shared/color.css">
     <link rel="stylesheet" href="/assets/css/legacy/components.css">
     <link rel="stylesheet" href="/assets/css/legacy/form.css">
     <link rel="stylesheet" href="/assets/css/legacy/layout.css">
@@ -49,6 +49,17 @@ $userProfile = Security::getUserProfile() ?? '';
     <link rel="stylesheet" href="/assets/css/shared/toast.css">
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
     <link rel="icon" type="image/x-icon" href="/assets/img/favicon.ico">
+    <script>
+        (function() {
+            var name = 'tjba_1vcrime_theme';
+            var i = document.cookie.indexOf(name + '=');
+            if (i === -1) return;
+            i += name.length + 1;
+            var end = document.cookie.indexOf(';', i);
+            var t = decodeURIComponent((end === -1 ? document.cookie.slice(i) : document.cookie.slice(i, end)).trim());
+            if (t === 'claro' || t === 'escuro' || t === 'auto') document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
 </head>
 <body>
     
@@ -96,7 +107,7 @@ $userProfile = Security::getUserProfile() ?? '';
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link disabled">
+                                <a class="nav-link" id="themeToggle" href="#" role="button" tabindex="0" aria-label="Alternar tema" title="Alternar tema (claro / escuro / automático)">
                                     <i class="fi fi-rs-eclipse-alt"></i>
                                 </a>
                             </li>                        
@@ -373,8 +384,40 @@ $userProfile = Security::getUserProfile() ?? '';
             appendLogoutItem();
         }
 
+        function syncThemeToFrame(theme) {
+            var frameEl = document.getElementById('frame');
+            if (!frameEl) return;
+            try {
+                var doc = frameEl.contentDocument;
+                if (!doc || !doc.documentElement) return;
+                var effective = theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'escuro' : 'claro') : theme;
+                doc.documentElement.setAttribute('data-theme', effective);
+            } catch (err) { /* cross-origin or not loaded */ }
+        }
+
         document.addEventListener("DOMContentLoaded", async function() {
             if (window.App && App.Prefs) App.Prefs.applyThemeFromCookie();
+            syncThemeToFrame(App.Prefs ? App.Prefs.getTheme() : 'claro');
+            var frameEl = document.getElementById('frame');
+            if (frameEl) frameEl.addEventListener('load', function() { syncThemeToFrame(App.Prefs ? App.Prefs.getTheme() : 'claro'); });
+
+            var themeToggle = document.getElementById('themeToggle');
+            if (themeToggle && App.Prefs) {
+                themeToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    var next = { claro: 'escuro', escuro: 'auto', auto: 'claro' };
+                    var current = App.Prefs.getTheme();
+                    var nextTheme = next[current] || 'claro';
+                    App.Prefs.setTheme(nextTheme);
+                    App.Prefs.applyTheme();
+                    syncThemeToFrame(nextTheme);
+                    if (window.App && App.Toast && App.Toast.show) {
+                        var labels = { claro: 'Claro', escuro: 'Escuro', auto: 'Automático' };
+                        App.Toast.show({ type: 'info', variant: 'simple', message: 'Tema alterado para ' + (labels[nextTheme] || nextTheme) + '.' });
+                    }
+                });
+            }
+
             await initDynamicMenu();
             App.Menu.initMenu();
             App.Menu.initActive();

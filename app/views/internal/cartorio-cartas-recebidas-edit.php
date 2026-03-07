@@ -206,6 +206,7 @@ $stateOptions = [
 <!DOCTYPE html>
 <html>
     <head>
+        <?php include __DIR__ . '/_theme_init.php'; ?>
         <meta lang="pt-BR">
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">

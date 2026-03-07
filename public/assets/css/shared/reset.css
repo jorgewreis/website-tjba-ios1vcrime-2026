@@ -61,6 +61,6 @@ table {
 body {
     font-family: 'Poppins', sans-serif;
     line-height: 1;
-    background: #fff;
-    color: #222;
+    background: var(--color-surface-elevated, #fff);
+    color: var(--color-text-primary, #222);
 }

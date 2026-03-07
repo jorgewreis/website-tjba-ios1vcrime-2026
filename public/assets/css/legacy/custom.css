@@ -23,7 +23,7 @@
   --bs-info-hover: #00bcd4;
   --bs-info-light: #D9F8FC;
   --bs-bg-light: #F8F7FA;
-  --bs-white: #FFFFFF;
+  --bs-white: var(--color-surface-elevated, #ffffff);
 
   --text-primary: #5D596C;
   --text-secondary: #A5A3AE;
@@ -59,11 +59,11 @@
 .fs-7{
   font-size: 0.8rem !important;
   line-height: 1.4rem !important;
-  color: #707479 !important;
+  color: var(--color-text-secondary, #707479) !important;
 }
 
 body {
-  background-color: #f4f4fd !important;
+  background-color: var(--background-color, #f4f4fd) !important;
   box-sizing: border-box;
   overflow-x: hidden;
   overflow-y: auto;
@@ -85,8 +85,8 @@ body.page-internal{
 }
 .btn-primary:hover,
 .bg-primary:hover {
-    background-color: #5a5ce0 !important; /* cor personalizada para hover */
-    border-color: #5a5ce0 !important;
+    background-color: var(--color-accent-hover, #5a5ce0) !important;
+    border-color: var(--color-accent-hover, #5a5ce0) !important;
 }
 .text-primary {
   color: var(--text-primary) !important;
@@ -161,7 +161,7 @@ textarea.form-control
 button.btn-md.readonly{
     background-color: transparent !important;
     border: none !important;
-    color: #6c757d !important;
+    color: var(--color-muted, #6c757d) !important;
     cursor: default !important;
     padding: 0.375rem 0 !important;
 }
@@ -189,10 +189,10 @@ button.btn-md.readonly{
 .error-card { border-radius: .5rem; padding: 1rem; }
 .error-code { font-size: 5rem; line-height: 1; }
 .error-actions .btn { min-width: 140px; }
-.error-details code { background: #f8f9fb; padding: .25rem .5rem; display: inline-block; border-radius: 4px; }
+.error-details code { background: var(--color-gray-100, #f8f9fb); padding: .25rem .5rem; display: inline-block; border-radius: 4px; }
 .error-header img { border-radius: 6px; }
 .error-card .text-muted ul { margin-top: .5rem; }
-.toggle-error-details { border: none; background: none; color: #4a6cf7; text-decoration: underline; cursor: pointer; }
+.toggle-error-details { border: none; background: none; color: var(--color-accent, #4a6cf7); text-decoration: underline; cursor: pointer; }
 .toggle-error-details:focus { outline: 3px solid rgba(74,108,247,0.15); outline-offset: 2px; }
 
 .icon-warning {
@@ -259,4 +259,12 @@ button.btn-md.readonly{
   font-size: 0.75rem !important;
   font-weight: 500 !important;
   padding: 0.25rem 0.5rem !important;  
+}
+
+/* Tema escuro – páginas que usam custom.css (dashboard, etc.) */
+[data-theme="escuro"] {
+  --bs-white: var(--color-surface-elevated);
+  --bs-bg-light: var(--color-surface);
+  --text-primary: var(--color-text-primary);
+  --text-secondary: var(--color-text-secondary);
 }
