@@ -299,6 +299,7 @@ try {
                 return value;
             };
 
+            var processoInput = document.getElementById('filter-processo');
             var denunciadoInput = document.getElementById('filter-denunciado');
             var denunciadoSelect = document.getElementById('filter-denunciado-select');
             if (denunciadoInput) {
