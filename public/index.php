@@ -26,7 +26,8 @@ $csrfToken = Security::generateCSRFToken();
     <link rel="stylesheet" href="/assets/css/shared/table.css">
     <link rel="stylesheet" href="/assets/css/shared/login.css">
     <link rel="stylesheet" href="/assets/css/shared/toast.css">
-    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+    <!-- Ícones: fi-rs-* (regular-straight) -->
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-straight/css/uicons-regular-straight.css">
     <link rel="icon" type="image/x-icon" href="/assets/img/favicon.ico">
     <script>
         (function() {
