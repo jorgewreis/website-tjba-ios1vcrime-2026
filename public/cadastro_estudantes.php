@@ -121,15 +121,15 @@ $faculdades = [
 
                         <div class="row">
                             <div class="col">
-                                <label for="senha">Senha *</label>
-                                <input class="width-md white" type="password" id="senha" name="senha" required minlength="6" maxlength="25" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+                                <label for="email">E-mail *</label>
+                                <input class="width-lg white" type="email" id="email" name="email" required maxlength="255" placeholder="seu@email.com" autocomplete="email">
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col">
-                                <label for="semestre">Semestre (opcional)</label>
-                                <input class="width-sm white" type="number" id="semestre" name="semestre" min="1" max="10" maxlength="2">
+                                <label for="senha">Senha *</label>
+                                <input class="width-md white" type="password" id="senha" name="senha" required minlength="6" maxlength="25" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
                             </div>
                         </div>
 
@@ -197,6 +197,11 @@ $faculdades = [
                     if (window.App && App.Toast) App.Toast.show({ type: "error", variant: "full", title: "Atenção", message: "É necessário aceitar os termos sobre LGPD para realizar o cadastro." });
                     return;
                 }
+                const emailVal = (form.querySelector("#email") && form.querySelector("#email").value || "").trim();
+                if (!emailVal) {
+                    if (window.App && App.Toast) App.Toast.show({ type: "error", variant: "full", title: "Erro", message: "Informe o e-mail (necessário para recuperação de senha)." });
+                    return;
+                }
 
                 const btn = form.querySelector("button[type=submit]");
                 const originalText = btn.textContent;
@@ -213,7 +218,7 @@ $faculdades = [
                         telefone: (formData.get("telefone") || "").trim().slice(0, 20),
                         telefone_whatsapp: form.querySelector("#telefone_whatsapp").checked,
                         faculdade: formData.get("faculdade") || "",
-                        semestre: (formData.get("semestre") || "").toString().slice(0, 2),
+                        email: (formData.get("email") || "").trim().toLowerCase().slice(0, 255),
                         aceite_termos_lgpd: true,
                     };
 
