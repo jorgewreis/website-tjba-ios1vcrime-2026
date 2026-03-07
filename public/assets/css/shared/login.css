@@ -25,7 +25,7 @@ body {
     min-height: 100vh;
     overflow-y: auto;
     overflow-x: hidden;
-    background-color: var(--background-color);
+    background-color: var(--color-surface);
 }
 
 
@@ -74,7 +74,7 @@ body {
         align-items: flex-start;
         justify-content: center;
 
-        background-color: var(--primary-color-bg-light-2);
+        background-color: var(--color-surface-elevated);
     }
 
     .title-page{
@@ -132,16 +132,16 @@ body {
     }
 
         .alert-heading.primary{
-            background-color: var(--bg-primary);
-            color: var(--bs-primary);
+            background-color: var(--color-primary-bg-light);
+            color: var(--color-accent);
         }    
         .alert-heading.danger{
-            background-color: var(--bg-danger);
-            color: var(--bs-danger);
+            background-color: var(--color-danger-bg-light);
+            color: var(--color-danger);
         }
         .alert-heading.success{
-            background-color: var(--bg-success);
-            color: var(--bs-success);
+            background-color: var(--color-success-bg-light);
+            color: var(--color-success);
         }
 
         .alert-heading .alert-header{
@@ -183,7 +183,7 @@ body {
     .checkbox-label input[type="checkbox"] {
         width: 16px;
         height: 16px;
-        accent-color: var(--bs-primary);
+        accent-color: var(--color-accent);
     }
     .form-line-theme {
         display: flex;
@@ -206,7 +206,7 @@ body {
     .email-hint {
         font-family: 'Montserrat', sans-serif;
         font-size: 12px;
-        color: var(--bs-primary);
+        color: var(--color-accent);
         font-weight: 500;
     }
 }

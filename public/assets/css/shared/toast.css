@@ -57,8 +57,8 @@
     max-width: 100%;
     display: flex;
     flex-direction: column;
-    border: 1px solid var(--color-gray-300, #dee2e6);
-    box-shadow: 4px 8px 24px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.12);
+    border: 1px solid var(--color-border);
+    box-shadow: 4px 8px 24px var(--color-box-shadow), 0 2px 8px var(--color-box-shadow-xs);
     border-radius: 6px;
     gap: 0;
     overflow: hidden;
@@ -66,41 +66,41 @@
 }
 
 .toast {
-    background-color: rgba(246, 246, 255, 0.95);
+    background-color: var(--color-surface-elevated);
 }
 
 .toast.success {
-    background-color: rgba(236, 249, 244, 0.95);
-    border-color: var(--success-color, #2cca80);
+    background-color: var(--color-success-bg-light);
+    border-color: var(--color-success);
 }
 
 .toast.error {
-    background-color: rgba(248, 215, 218, 0.95);
-    border-color: var(--danger-color, #dc3545);
+    background-color: var(--color-danger-bg-light);
+    border-color: var(--color-danger);
 }
 
 .toast.info {
-    background-color: rgba(246, 246, 255, 0.95);
-    border-color: var(--primary-color, #686bfb);
+    background-color: var(--color-surface-elevated);
+    border-color: var(--color-accent);
 }
 
 .toast-full {
-    background-color: rgba(255, 255, 255, 0.95);
+    background-color: var(--color-surface-elevated);
 }
 
 .toast-full.success {
-    background-color: rgba(236, 249, 244, 0.95);
-    border-color: var(--success-color, #2cca80);
+    background-color: var(--color-success-bg-light);
+    border-color: var(--color-success);
 }
 
 .toast-full.error {
-    background-color: rgba(248, 215, 218, 0.95);
-    border-color: var(--danger-color, #dc3545);
+    background-color: var(--color-danger-bg-light);
+    border-color: var(--color-danger);
 }
 
 .toast-full.info {
-    background-color: rgba(246, 246, 255, 0.95);
-    border-color: var(--primary-color, #686bfb);
+    background-color: var(--color-surface-elevated);
+    border-color: var(--color-accent);
 }
 
 /* Modelo 1: barra de título + botão fechar + conteúdo (mockup) */
@@ -110,39 +110,39 @@
     justify-content: space-between;
     border-radius: 6px 6px 0 0;
     padding: 10px 15px;
-    background-color: rgba(248, 249, 250, 0.98);
-    border-bottom: 1px solid var(--color-gray-300, #dee2e6);
+    background-color: var(--color-surface-elevated);
+    border-bottom: 1px solid var(--color-border);
     font-family: 'Poppins', sans-serif;
 }
 
 .toast-full.success .toast-header {
-    background-color: var(--success-color, #2cca80);
+    background-color: var(--color-success);
 }
 
 .toast-full.error .toast-header {
-    background-color: var(--danger-color, #dc3545);
+    background-color: var(--color-danger);
 }
 
 .toast-full.info .toast-header {
-    background-color: var(--primary-color, #686bfb);
+    background-color: var(--color-accent);
 }
 
 .toast-header .toast-title {
     font-size: 14px;
     font-weight: 600;
-    color: var(--color-gray-800, #343a40);
+    color: var(--color-text-primary);
 }
 
 .toast-full.success .toast-header .toast-title,
 .toast-full.error .toast-header .toast-title,
 .toast-full.info .toast-header .toast-title {
-    color: var(--color-gray-000, #ffffff);
+    color: var(--color-surface-elevated);
 }
 
 .toast-header .toast-close {
     font-size: 20px;
     line-height: 1;
-    color: var(--color-gray-500, #adb5bd);
+    color: var(--color-text-secondary);
     cursor: pointer;
     background: none;
     border: none;
@@ -153,17 +153,17 @@
 .toast-full.success .toast-header .toast-close,
 .toast-full.error .toast-header .toast-close,
 .toast-full.info .toast-header .toast-close {
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--color-surface-elevated);
 }
 
 .toast-header .toast-close:hover {
-    color: var(--color-gray-800, #343a40);
+    color: var(--color-text-primary);
 }
 
 .toast-full.success .toast-header .toast-close:hover,
 .toast-full.error .toast-header .toast-close:hover,
 .toast-full.info .toast-header .toast-close:hover {
-    color: var(--color-gray-000, #ffffff);
+    color: var(--color-surface-elevated);
 }
 
 /* Corpo do toast */
@@ -191,9 +191,9 @@
     color: inherit;
 }
 
-.toast-full.success .toast-body .toast-icon { color: var(--success-color, #2cca80); }
-.toast-full.error .toast-body .toast-icon { color: var(--danger-color, #dc3545); }
-.toast-full.info .toast-body .toast-icon { color: var(--primary-color, #686bfb); }
+.toast-full.success .toast-body .toast-icon { color: var(--color-success); }
+.toast-full.error .toast-body .toast-icon { color: var(--color-danger); }
+.toast-full.info .toast-body .toast-icon { color: var(--color-accent); }
 
 .toast-body .toast-message {
     display: flex;
@@ -206,13 +206,13 @@
 .toast-body .toast-message .toast-subtitle {
     font-size: 12px;
     font-weight: 600;
-    color: var(--color-gray-700, #495057);
+    color: var(--color-text-secondary);
 }
 
 .toast-body .toast-message .toast-information {
     font-size: 13px;
     font-weight: 400;
-    color: var(--color-gray-700, #495057);
+    color: var(--color-text-secondary);
     margin: 0;
     line-height: 1.4;
 }
@@ -224,7 +224,7 @@
 .toast-body .toast-message .toast-timestamp {
     font-size: 11px;
     font-weight: 400;
-    color: var(--color-gray-600, #6c757d);
+    color: var(--color-text-secondary);
 }
 
 /* Modelo 2 (informativo): barra de tempo regressivo interna, semitransparente */
@@ -234,7 +234,7 @@
     left: 0;
     right: 0;
     height: 4px;
-    background: rgba(0, 0, 0, 0.08);
+    background: var(--color-border);
     border-radius: 0 0 6px 6px;
     overflow: hidden;
 }
@@ -242,22 +242,22 @@
 .toast .toast-countdown-bar {
     height: 100%;
     width: 100%;
-    background: rgba(0, 0, 0, 0.12);
+    background: var(--color-border);
     border-radius: 0 0 0 6px;
     transform-origin: right;
     transition: none;
 }
 
 .toast.success .toast-countdown-bar {
-    background: rgba(44, 202, 128, 0.4);
+    background: var(--color-success);
 }
 
 .toast.error .toast-countdown-bar {
-    background: rgba(220, 53, 69, 0.4);
+    background: var(--color-danger);
 }
 
 .toast.info .toast-countdown-bar {
-    background: rgba(104, 107, 251, 0.4);
+    background: var(--color-accent);
 }
 
 /* Toast simples e full precisam de position relative para o countdown */
@@ -277,7 +277,7 @@
     left: 0;
     right: 0;
     height: 4px;
-    background: rgba(0, 0, 0, 0.08);
+    background: var(--color-border);
     border-radius: 0 0 6px 6px;
     overflow: hidden;
 }
@@ -291,13 +291,13 @@
 }
 
 .toast-full.success .toast-countdown-bar {
-    background: rgba(44, 202, 128, 0.4);
+    background: var(--color-success);
 }
 
 .toast-full.error .toast-countdown-bar {
-    background: rgba(220, 53, 69, 0.4);
+    background: var(--color-danger);
 }
 
 .toast-full.info .toast-countdown-bar {
-    background: rgba(104, 107, 251, 0.4);
+    background: var(--color-accent);
 }

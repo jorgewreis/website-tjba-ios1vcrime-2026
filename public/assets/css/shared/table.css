@@ -14,7 +14,7 @@
     min-height: 60px;
     padding: 0 10px;
     align-items: flex-end;    
-    border-bottom: 1px solid var(--color-gray-300);
+    border-bottom: 1px solid var(--color-border);
 }
 
 .row.buttons {
@@ -23,8 +23,8 @@
     margin-top: 20px;
     padding: 0 10px;
     justify-content: flex-end;
-    border-bottom: 1px solid var(--color-gray-300);
-    background-color: var(--color-gray-100);
+    border-bottom: 1px solid var(--color-border);
+    background-color: var(--color-surface-elevated);
 }
 
 .row.allocate-users {
@@ -35,21 +35,21 @@
     width: 100%;
     min-height: 50px;
     justify-content: space-between;
-    border-bottom: 1px solid var(--color-gray-300);
+    border-bottom: 1px solid var(--color-border);
 }
 
 .row.table.header {
     width: 100%;
     margin-top: 20px;
     padding: 0 10px;
-    border-bottom: 1px solid var(--color-gray-500);
+    border-bottom: 1px solid var(--color-border);
 }
 
 .row.pagination {
     width: 100%;
     min-height: 60px;
     padding: 0 10px;
-    border-top: 1px solid var(--color-gray-500);
+    border-top: 1px solid var(--color-border);
     justify-content: space-between;
 }
 .row.info{
@@ -58,9 +58,9 @@
     margin-top: 20px;
     padding: 0 10px;
     justify-content: flex-start;
-    background-color: var(--primary-color-bg-light-2);
+    background-color: var(--color-surface-elevated);
     color: var(--primary-color-active);
-    border-bottom: 1px solid var(--primary-color);
+    border-bottom: 1px solid var(--color-accent);
 }
 .row.success{
     width: 100%;
@@ -68,9 +68,9 @@
     margin-top: 20px;
     padding: 0 10px;
     justify-content: flex-start;
-    background-color: var(--success-color-bg-light);
+    background-color: var(--color-success-bg-light);
     color: var(--success-color-active);
-    border-bottom: 1px solid var(--success-color);
+    border-bottom: 1px solid var(--color-success);
 }
 
 .row.info span,
@@ -80,7 +80,7 @@
 
 .col.full-line.register {
     width: 100%;
-    border-bottom: 1px solid var(--color-gray-400);
+    border-bottom: 1px solid var(--color-border);
 }
 
 .row.subtask {
@@ -88,9 +88,9 @@
     margin-top: -1px;
     min-height: 40px;
     padding: 0 10px 0 50px;
-    background-color: var(--color-gray-100);
-    border-top: 1px solid var(--color-gray-000);
-    border-bottom: 1px solid var(--color-gray-300);
+    background-color: var(--color-surface-elevated);
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
 }
 
 .row.subtask.subtask-collapsed {
@@ -131,13 +131,13 @@
 .subtask-status-info .minor-info {
     margin: 0 10px;
     font-size: 11px;
-    color: var(--color-gray-600);
+    color: var(--color-text-secondary);
 }
 .subtask-status-info .major-info {
     margin: 5px 10px;
     font-size: 12px;
     font-weight: 600;
-    color: var(--color-gray-800);
+    color: var(--color-text-primary);
 }
 
 .subtask-date{    
@@ -150,7 +150,7 @@
     margin: 0;
     font-size: 11px;
     line-height: 15px;
-    color: var(--color-gray-600);
+    color: var(--color-text-secondary);
 }
 .subtask-date .button-subtask{
     margin-left: -40px;
@@ -161,7 +161,7 @@
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background-color: var(--color-gray-500);
+    background-color: var(--color-text-secondary);
     margin: 0 10px;
 }
 
@@ -172,22 +172,22 @@
     left: -16px;
     width: 45px;
     height: 2px;
-    background-color: var(--color-gray-300);
+    background-color: var(--color-border);
     transform: translateY(-50%) rotate(0.25turn);
 }
 
 
 .timeline .circle.current {
-    background-color: var(--warning-color);
+    background-color: var(--color-warning);
 }
 .timeline .circle.finished {
-    background-color: var(--primary-color);
+    background-color: var(--color-accent);
 }
 .timeline.current:hover{
-    background-color: var(--warning-color-bg-light);
+    background-color: var(--color-warning-bg-light);
 }
 .timeline.finished:hover{
-    background-color: var(--primary-color-bg-light-2);
+    background-color: var(--color-surface-elevated);
 }
 
 /* Botão de status com barra de progresso (barra 3px na borda, largura total) */
@@ -222,23 +222,23 @@
     flex-direction: row;
     border-radius: 0 0 6px 6px;
     overflow: hidden;
-    background-color: var(--color-gray-300);
+    background-color: var(--color-border);
     gap: 0;
 }
 .status-task-progress-segment {
     flex: 1;
     min-width: 2px;
-    background-color: var(--color-gray-400);
+    background-color: var(--color-border);
     transition: background-color 0.2s ease;
 }
 .status-task-progress-segment.concluida {
-    background-color: var(--primary-color);
+    background-color: var(--color-accent);
 }
 .status-task-progress-segment.em_andamento {
-    background-color: var(--warning-color);
+    background-color: var(--color-warning);
 }
 .status-task-progress-segment.pendente {
-    background-color: var(--color-gray-400);
+    background-color: var(--color-border);
 }
 
 .col.status-task {
@@ -282,17 +282,17 @@
     width: fit-content;
     margin: 0 0 3px 20px;
     font-size: 12px;
-    color: var(--color-gray-700);
+    color: var(--color-text-secondary);
     display: block;
 }
 .major-info {
     margin: 0 10px 0 20px;
     font-size: 13px;
-    color: var(--color-gray-900);
+    color: var(--color-text-primary);
     display: block;
 }
 .major-info.important {
-    color: var(--primary-color);
+    color: var(--color-accent);
     font-size: 18px;
     font-weight: 600;
 }
@@ -360,53 +360,53 @@
         width: 30px;
         height: 30px;
         border-radius: 6px;
-        border: 2px solid var(--color-gray-300);
-        background-color: var(--color-gray-100);
+        border: 2px solid var(--color-border);
+        background-color: var(--color-surface-elevated);
         display: flex;
         flex-direction: row;
         align-items: center;
         justify-content: center;
         margin-left: 3px;
-        color: var(--color-gray-600);
+        color: var(--color-text-secondary);
         font-size: 12px;
         font-weight: 600;
         cursor: default;
         transition: background-color 0.2s ease, border-color 0.7s ease, color 0.7s ease;
     }
     .user-allocate:hover {
-        background-color: var(--color-gray-000);
-        border-color: var(--primary-color);
-        color: var(--primary-color-active);
+        background-color: var(--color-surface-elevated);
+        border-color: var(--color-accent);
+        color: var(--color-accent);
         transition: all 0.2s ease;
     }
     .user-allocate.all{
-        border-color: var(--primary-color);
-        color: var(--primary-color-active);
+        border-color: var(--color-accent);
+        color: var(--color-accent);
     }
     .user-allocate.all:hover {
-        background-color: var(--primary-color);
-        border-color: var(--primary-color);
-        color: var(--color-gray-000);
+        background-color: var(--color-accent);
+        border-color: var(--color-accent);
+        color: var(--color-surface-elevated);
         transition: all 0.2s ease;
     }
     .user-allocate.rule {
-        border-color: var(--warning-color);
-        color: var(--warning-color-active);
+        border-color: var(--color-warning);
+        color: var(--color-warning-active);
     }
     .user-allocate.rule:hover {
-        background-color: var(--warning-color);
-        border-color: var(--warning-color);
-        color: var(--color-gray-000);
+        background-color: var(--color-warning);
+        border-color: var(--color-warning);
+        color: var(--color-surface-elevated);
         transition: all 0.2s ease;
     }
     .user-allocate.specific {
-        border-color: var(--color-gray-500);
-        color: var(--color-gray-700);
+        border-color: var(--color-border);
+        color: var(--color-text-secondary);
     }
     .user-allocate.specific:hover {
-        background-color: var(--color-gray-400);
-        border-color: var(--color-gray-500);
-        color: var(--color-gray-000);
+        background-color: var(--color-surface-elevated);
+        border-color: var(--color-border);
+        color: var(--color-text-secondary);
         transition: all 0.2s ease;
     }
 
