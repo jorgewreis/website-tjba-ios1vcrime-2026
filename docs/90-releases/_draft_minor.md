@@ -14,4 +14,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Feat: nova implementação de toats em todo o sistema** `[1a43361]`
 - **Fix: correção de informações lgpd** `[0dd3fa3]`
 - **Feat: criação de campo senha para estudante** `[3627bff]`
+- **Docs: Novo documento de termo de aceite lgpd** `[cb1cb18]`
 
