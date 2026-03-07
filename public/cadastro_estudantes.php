@@ -67,8 +67,7 @@ $faculdades = [
                 <div class="page-right">
                     <div class="title-page">
                         <span class="title">Cadastro de estudantes</span>
-                        <span class="info-title">Cadastre-se para acompanhamento de audiências, download de atas e pautas.</span>
-                        <p class="description-page" style="margin-top: 0.5em; font-size: 0.9rem;">Antes de se cadastrar, leia os termos sobre uso dos dados pessoais (LGPD).</p>
+                        <span class="info-title">Antes de se cadastrar, leia os termos sobre uso dos dados pessoais (LGPD).</span>
                         <a href="<?php echo htmlspecialchars($termosLgpdPdfUrl, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer" style="text-decoration: none; display: inline-block; margin-top: 8px;">
                             <span class="badge file">
                                 <img src="/assets/icons/Office-File-Pdf-1--Streamline-Ultimate.png" alt="PDF">
@@ -138,19 +137,14 @@ $faculdades = [
                             <div class="col">
                                 <label class="checkbox-label">
                                     <input type="checkbox" id="aceite_termos_lgpd" name="aceite_termos_lgpd" value="1" required>
-                                    <span>Li e aceito os <a href="<?php echo htmlspecialchars($termosLgpdPdfUrl, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">termos sobre LGPD</a>, que estabelecem que as informações pessoais cadastradas serão utilizadas somente para autorização de acesso à sala de audiências e preenchimento das atas com informações do estudante. *</span>
+                                    <span>Li e aceito os <a href="<?php echo htmlspecialchars($termosLgpdPdfUrl, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">termos sobre LGPD</a></span>
                                 </label>
                             </div>
                         </div>
 
                         <div class="row" style="background-color: transparent; padding: 20px 0 10px 0; width: 100%; border-bottom: 1px solid var(--color-gray-400);">
-                            <button class="btn btn-primary width-md" type="submit">Enviar cadastro</button>
-                        </div>
-
-                        <div class="row" style="border: none; padding-top: 10px;">
-                            <div class="col">
-                                <a href="/index.php" class="link-login">Voltar para login</a>
-                            </div>
+                            <button class="btn btn-secondary" onclick="window.location.href='/index.php'">Voltar</button>
+                            <button class="btn btn-primary" type="submit">Cadastrar</button>
                         </div>
                     </form>
                 </div>
