@@ -24,4 +24,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correção de bug 6** `[5e5196c]`
 - **Fix: teste de correção 7** `[38cddc5]`
 - **Fix: tentativa 8** `[de2b7af]`
+- **Fix: correção debug 9** `[2c1a509]`
 
