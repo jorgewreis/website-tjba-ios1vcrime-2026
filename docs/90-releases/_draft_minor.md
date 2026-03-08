@@ -52,4 +52,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correção de layout de subtarefa** `[7956dee]`
 - **Feat: Update das informações de tarefas e subtarefas de cartas expedidas** `[a6c0aa7]`
 - **Feat: modelo tarefas e subtarefas de Cartas Recebidas** `[4aa8285]`
+- **Feat: modelo de tarefas e subtarefas de Guias** `[3862020]`
 
