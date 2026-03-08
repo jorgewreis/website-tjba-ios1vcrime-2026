@@ -104,6 +104,14 @@ final class GuiasService
         return $this->repository->findById($id);
     }
 
+    /**
+     * Verifica se já existe guia com o mesmo número do processo, mesmo denunciado (réu) e mesmo tipo.
+     */
+    public function existsGuiaComMesmoProcessoDenunciadoTipo(string $numeroProcesso, string $denunciado, string $tipo): bool
+    {
+        return $this->repository->existsByProcessoDenunciadoTipo($numeroProcesso, $denunciado, $tipo);
+    }
+
     public function create(array $payload): string
     {
         // #region agent log

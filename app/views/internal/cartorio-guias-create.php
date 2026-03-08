@@ -374,8 +374,8 @@ try {
                 }
 
                 btn.disabled = true;
-                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'simple', message: 'Enviando dados...' });
-                else showFeedback('Enviando dados...', 'success');
+                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'simple', message: 'Verificando duplicidade...' });
+                else showFeedback('Verificando duplicidade...', 'success');
 
                 var payload = {
                     numero_processo: numeroProcesso,
@@ -402,39 +402,50 @@ try {
                 if (dataFato) payload.data_fato = dataFato;
                 if (diasMultaVal !== null && !isNaN(diasMultaVal)) payload.dias_multa = diasMultaVal;
 
-                // #region agent log
-                fetch('http://127.0.0.1:7304/ingest/df211406-901f-4e15-ab75-9fa46f53cfac',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'64730a'},body:JSON.stringify({sessionId:'64730a',location:'cartorio-guias-create.php:beforeFetch',message:'Guias create submit',data:{payloadKeys:Object.keys(payload),hasClasseCodigo:!!payload.classe_codigo,hasDenunciado:!!payload.denunciado},timestamp:Date.now(),hypothesisId:'A,B'})}).catch(function(){});
-                // #endregion
+                function doCreate() {
+                    if (typeof showToast === 'function') showToast({ type: 'info', variant: 'simple', message: 'Enviando dados...' });
+                    fetch('/api/cartorio-guias/create.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        if (data.id) {
+                            if (typeof showToast === 'function') {
+                                if (data.valor_multa_calculado) {
+                                    showToast({ type: 'success', variant: 'full', title: 'Cálculo automático', message: 'Cálculo realizado automaticamente pelo sistema. Valor da pena de multa: ' + data.valor_multa_calculado + '.' });
+                                } else {
+                                    showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Guia cadastrada com sucesso.' });
+                                }
+                            }
+                            window.location.href = '/frame.php?page=guias';
+                        } else {
+                            showFeedback(data.error || 'Não foi possível cadastrar.', 'error');
+                            btn.disabled = false;
+                        }
+                    })
+                    .catch(function (err) {
+                        showFeedback('Erro de conexão.', 'error');
+                        btn.disabled = false;
+                    });
+                }
 
-                fetch('/api/cartorio-guias/create.php', {
+                fetch('/api/cartorio-guias/check-duplicate.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({ numero_processo: numeroProcesso, denunciado: denunciado, tipo: tipo })
                 })
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
-                    // #region agent log
-                    fetch('http://127.0.0.1:7304/ingest/df211406-901f-4e15-ab75-9fa46f53cfac',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'64730a'},body:JSON.stringify({sessionId:'64730a',location:'cartorio-guias-create.php:then',message:'Guias create response',data:{hasId:!!data.id,hasError:!!data.error,errorMsg:data.error||null},timestamp:Date.now(),hypothesisId:'E'})}).catch(function(){});
-                    // #endregion
-                    if (data.id) {
-                        if (typeof showToast === 'function') {
-                            if (data.valor_multa_calculado) {
-                                showToast({ type: 'success', variant: 'full', title: 'Cálculo automático', message: 'Cálculo realizado automaticamente pelo sistema. Valor da pena de multa: ' + data.valor_multa_calculado + '.' });
-                            } else {
-                                showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Guia cadastrada com sucesso.' });
-                            }
-                        }
-                        window.location.href = '/frame.php?page=guias';
-                    } else {
-                        showFeedback(data.error || 'Não foi possível cadastrar.', 'error');
+                    if (data.exists && !confirm('Já existe uma Guia cadastrada com o mesmo tipo e mesmo réu. Deseja cadastrar assim mesmo?')) {
                         btn.disabled = false;
+                        return;
                     }
+                    doCreate();
                 })
-                .catch(function (err) {
-                    // #region agent log
-                    fetch('http://127.0.0.1:7304/ingest/df211406-901f-4e15-ab75-9fa46f53cfac',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'64730a'},body:JSON.stringify({sessionId:'64730a',location:'cartorio-guias-create.php:catch',message:'Guias create fetch failed',data:{errMsg:err&&err.message||String(err)},timestamp:Date.now(),hypothesisId:'B'})}).catch(function(){});
-                    // #endregion
-                    showFeedback('Erro de conexão.', 'error');
+                .catch(function () {
+                    showFeedback('Erro ao verificar duplicidade. Tente novamente.', 'error');
                     btn.disabled = false;
                 });
             });

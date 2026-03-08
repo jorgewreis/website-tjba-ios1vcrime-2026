@@ -32,14 +32,14 @@ if ($idGuia === '') {
 }
 
 $subtarefaLabels = [
-    GuiasSubtarefasRepository::TIPO_ORDEM_1 => 'Detalhamento de informações',
-    GuiasSubtarefasRepository::TIPO_ORDEM_2 => 'Cálculo da pena de multa',
-    GuiasSubtarefasRepository::TIPO_ORDEM_3 => 'Expedição da Guia',
-    GuiasSubtarefasRepository::TIPO_ORDEM_4 => 'Assinatura da Juíza',
-    GuiasSubtarefasRepository::TIPO_ORDEM_5 => 'Juntada automática',
-    GuiasSubtarefasRepository::TIPO_ORDEM_6 => 'Geração de PDFs',
-    GuiasSubtarefasRepository::TIPO_ORDEM_7 => 'Envio da Guia',
-    GuiasSubtarefasRepository::TIPO_ORDEM_8 => 'Juntada de termo de envio',
+    GuiasSubtarefasRepository::TIPO_ORDEM_1 => 'Detalhamento: data do fato e dias-multa',
+    GuiasSubtarefasRepository::TIPO_ORDEM_2 => 'Cálculo da pena de multa (valor em R$)',
+    GuiasSubtarefasRepository::TIPO_ORDEM_3 => 'Expedição da Guia ao cartório',
+    GuiasSubtarefasRepository::TIPO_ORDEM_4 => 'Assinatura da Juíza na Guia',
+    GuiasSubtarefasRepository::TIPO_ORDEM_5 => 'Juntada dos autos (automática ou manual)',
+    GuiasSubtarefasRepository::TIPO_ORDEM_6 => 'Geração dos documentos em PDF',
+    GuiasSubtarefasRepository::TIPO_ORDEM_7 => 'Envio da Guia (canal e destinatário)',
+    GuiasSubtarefasRepository::TIPO_ORDEM_8 => 'Juntada do termo de envio aos autos',
 ];
 
 $subtarefas = [];
@@ -55,14 +55,14 @@ $ordemParaTipo = [
     8 => GuiasSubtarefasRepository::TIPO_ORDEM_8,
 ];
 $timelineMinorPendente = [
-    GuiasSubtarefasRepository::TIPO_ORDEM_1 => 'Aguardando detalhamento de informações',
-    GuiasSubtarefasRepository::TIPO_ORDEM_2 => 'Aguardando cálculo da pena de multa',
-    GuiasSubtarefasRepository::TIPO_ORDEM_3 => 'Aguardando expedição da Guia',
-    GuiasSubtarefasRepository::TIPO_ORDEM_4 => 'Guia aguardando assinatura',
-    GuiasSubtarefasRepository::TIPO_ORDEM_5 => 'Aguardando confirmação de juntada automática',
-    GuiasSubtarefasRepository::TIPO_ORDEM_6 => 'Aguardando geração de documentos em PDF',
-    GuiasSubtarefasRepository::TIPO_ORDEM_7 => 'Aguardando envio da Guia',
-    GuiasSubtarefasRepository::TIPO_ORDEM_8 => 'Aguardando comprovante de envio da Guia',
+    GuiasSubtarefasRepository::TIPO_ORDEM_1 => 'Aguardando preenchimento da data do fato e da quantidade de dias-multa para conclusão do detalhamento',
+    GuiasSubtarefasRepository::TIPO_ORDEM_2 => 'Aguardando registro do valor da pena de multa (cálculo automático pelo sistema ou informado manualmente)',
+    GuiasSubtarefasRepository::TIPO_ORDEM_3 => 'Aguardando informação da data de expedição da Guia ao cartório',
+    GuiasSubtarefasRepository::TIPO_ORDEM_4 => 'Aguardando assinatura da Juíza na Guia',
+    GuiasSubtarefasRepository::TIPO_ORDEM_5 => 'Aguardando confirmação da juntada dos autos (informar se automática ou manual)',
+    GuiasSubtarefasRepository::TIPO_ORDEM_6 => 'Aguardando informação da quantidade de documentos gerados em PDF',
+    GuiasSubtarefasRepository::TIPO_ORDEM_7 => 'Aguardando informação do envio da Guia (tipo de envio e destinatário)',
+    GuiasSubtarefasRepository::TIPO_ORDEM_8 => 'Aguardando juntada do comprovante/termo de envio da Guia aos autos',
 ];
 $statusCartaLabel = 'Em andamento';
 $statusCartaClass = 'status-current';
@@ -317,11 +317,11 @@ $tiposOptions = [
                     }
                     if ($status === GuiasSubtarefasRepository::STATUS_CANCELADA) {
                         $circleClass = 'cancelada';
-                        $minorTexto = 'Detalhamento de informações cancelado';
+                        $minorTexto = 'Detalhamento cancelado: etapa de data do fato e dias-multa não concluída';
                         $dateLabel = $dataMovimento !== '' ? $dataMovimento : 'Cancelado';
                     } elseif ($status === GuiasSubtarefasRepository::STATUS_PULADA) {
                         $circleClass = 'pulada';
-                        $minorTexto = 'Cálculo da pena de multa não aplicável';
+                        $minorTexto = 'Etapa pulada: cálculo da pena de multa não aplicável a esta guia';
                         $dateLabel = 'Etapa pulada';
                     } elseif ($status === 'concluida') {
                         $circleClass = 'finished';
@@ -333,31 +333,31 @@ $tiposOptions = [
                             $infoLinha = $nomeUsuario !== '' && $dataMovimento !== '' ? 'Informações registradas por ' . $nomeUsuario . ' em ' . $dataMovimento : ($dataMovimento !== '' ? 'Concluído em ' . $dataMovimento : 'Concluído');
                         } elseif ($ordem === 2) {
                             $vm = $dados['valor_multa'] ?? '';
-                            $minorTexto = 'Pena de multa calculada no valor de ' . ($vm !== '' ? $vm : '—');
-                            $infoLinha = $dataMovimento !== '' ? 'Cálculo automático realizado em ' . $dataMovimento : 'Concluído';
+                            $minorTexto = 'Pena de multa registrada no valor de R$ ' . ($vm !== '' ? number_format((float) $vm, 2, ',', '.') : '—');
+                            $infoLinha = $dataMovimento !== '' ? 'Cálculo realizado em ' . $dataMovimento : 'Concluído';
                         } elseif ($ordem === 3) {
                             $tipoGuia = trim((string) ($guia['tipo'] ?? ''));
                             $dataExp = $dados['data_expedicao'] ?? $dataMovimento;
-                            $minorTexto = 'Guia de ' . ($tipoGuia !== '' ? $tipoGuia : 'guia') . ' expedida em ' . ($dataExp !== '' ? $dataExp : $dataMovimento);
-                            $infoLinha = $dataMovimento !== '' ? $dataMovimento : 'Concluído';
+                            $minorTexto = 'Guia ' . ($tipoGuia !== '' ? '(' . $tipoGuia . ') ' : '') . 'expedida ao cartório em ' . ($dataExp !== '' ? $dataExp : $dataMovimento);
+                            $infoLinha = $nomeUsuario !== '' && $dataMovimento !== '' ? 'Registrado por ' . $nomeUsuario . ' em ' . $dataMovimento : ($dataMovimento !== '' ? $dataMovimento : 'Concluído');
                         } elseif ($ordem === 4) {
-                            $minorTexto = 'Guia assinada pela juíza em ' . $dataMovimento;
+                            $minorTexto = 'Guia assinada pela Juíza em ' . $dataMovimento;
                             $infoLinha = $dataMovimento;
                         } elseif ($ordem === 5) {
                             $tj = trim((string) ($dados['tipo_juntada'] ?? ''));
-                            $minorTexto = $tj === 'manual' ? 'Juntada da Guia realizada pelo servidor' : 'Juntada automática da Guia realizada pelo sistema';
-                            $infoLinha = $dataMovimento !== '' ? $dataMovimento : 'Concluído';
+                            $minorTexto = $tj === 'manual' ? 'Juntada dos autos realizada manualmente pelo servidor' : 'Juntada dos autos realizada automaticamente pelo sistema';
+                            $infoLinha = $nomeUsuario !== '' && $dataMovimento !== '' ? 'Confirmado por ' . $nomeUsuario . ' em ' . $dataMovimento : ($dataMovimento !== '' ? $dataMovimento : 'Concluído');
                         } elseif ($ordem === 6) {
                             $qtd = $dados['qtd_docs'] ?? '';
-                            $minorTexto = ($qtd !== '' ? $qtd : '—') . ' documentos gerados em PDF';
-                            $infoLinha = $dataMovimento !== '' ? $dataMovimento : 'Concluído';
+                            $minorTexto = ($qtd !== '' ? $qtd : '—') . ' documento(s) em PDF gerado(s) e juntado(s) aos autos';
+                            $infoLinha = $dataMovimento !== '' ? 'Registrado em ' . $dataMovimento : 'Concluído';
                         } elseif ($ordem === 7) {
                             $te = trim((string) ($dados['tipo_envio'] ?? ''));
                             $dest = trim((string) ($dados['destinatario'] ?? ''));
-                            $minorTexto = 'Guia enviada por ' . ($te !== '' ? $te : '—') . ' para ' . ($dest !== '' ? $dest : '—');
+                            $minorTexto = 'Guia enviada via ' . ($te !== '' ? $te : '—') . ' para ' . ($dest !== '' ? $dest : '—');
                             $infoLinha = $dataMovimento !== '' ? $dataMovimento : 'Concluído';
                         } else {
-                            $minorTexto = 'Juntada do termo de envio da Guia realizada';
+                            $minorTexto = 'Termo/comprovante de envio da Guia juntado aos autos';
                             $infoLinha = $dataMovimento !== '' ? $dataMovimento : 'Concluído';
                         }
                         $dateLabel = $infoLinha;

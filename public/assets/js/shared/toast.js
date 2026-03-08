@@ -56,13 +56,15 @@
      * Duração base (ms) para o primeiro toast da lista – tempo original de contagem.
      * Usado quando visibleList.length === 0; também como referência para o “anterior” quando não há.
      */
-    function getBaseDuration(message, variant) {
+    function getBaseDuration(message, variant, type) {
         if (!message || typeof message !== 'string') return SIMPLE_DURATION_MIN;
         const len = message.trim().length;
         let ms = SIMPLE_MS_BASE + len * SIMPLE_MS_PER_CHAR;
         ms = Math.floor(ms * 1.5);
+        if (type === 'error') ms = Math.min(SIMPLE_DURATION_MAX, ms * 2);
         ms = Math.max(SIMPLE_DURATION_MIN, Math.min(SIMPLE_DURATION_MAX, ms));
         if (variant !== 'simple' && ms < SIMPLE_DURATION_MIN) ms = FULL_DURATION_DEFAULT_MS;
+        if (variant === 'full' && type === 'error') ms = Math.min(SIMPLE_DURATION_MAX, Math.max(ms, FULL_DURATION_DEFAULT_MS * 2));
         return ms;
     }
 
@@ -178,7 +180,7 @@
         }
 
         const opts = toastEl._options;
-        const baseMs = getBaseDuration(opts.message || '', opts.variant || 'full');
+        const baseMs = getBaseDuration(opts.message || '', opts.variant || 'full', opts.type || 'info');
         const newRemaining = Math.round((remaining / currentTotal) * baseMs);
         if (newRemaining <= 0) {
             removeToast(toastEl);
@@ -233,12 +235,13 @@
         const cont = getContainer();
         const isPrincipal = visibleList.length === 0;
         const message = options.message || '';
+        const type = options.type || 'info';
         let durationMs;
         if (isPrincipal) {
-            durationMs = getBaseDuration(message, options.variant);
+            durationMs = getBaseDuration(message, options.variant, type);
         } else {
             const last = visibleList[visibleList.length - 1];
-            const prevDuration = last._toastDuration || getBaseDuration(message, options.variant);
+            const prevDuration = last._toastDuration || getBaseDuration(message, options.variant, type);
             durationMs = Math.min(SIMPLE_DURATION_MAX, Math.floor(prevDuration * SUBSEQUENT_DURATION_MULTIPLIER));
         }
         const el = createToastElement(options, durationMs);

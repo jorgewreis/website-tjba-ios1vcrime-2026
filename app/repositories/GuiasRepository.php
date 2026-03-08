@@ -40,9 +40,11 @@ final class GuiasRepository
             )
         );
 
+        $joinClause = ' LEFT JOIN `processos` p ON p.`id` = g.`processo_id` LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id` ';
         $sql = sprintf(
-            'SELECT g.`id` AS `IdGuia`, g.`numero_processo` AS `Processo`, g.`denunciado` AS `Denunciado`, g.`tipo` AS `Tipo`, g.`etapa` AS `Etapa`, g.`status` AS `Status`, g.`created_at` AS `Data`, g.`data_fato` AS `data_fato`, g.`dias_multa` AS `dias_multa`, g.`valor_multa` AS `valor_multa` FROM `%s` g %s ORDER BY %s, g.`created_at` DESC LIMIT :limit OFFSET :offset',
+            'SELECT g.`id` AS `IdGuia`, g.`numero_processo` AS `Processo`, COALESCE(cl.`nome`, \'\') AS `Classe`, g.`denunciado` AS `Denunciado`, g.`tipo` AS `Tipo`, g.`etapa` AS `Etapa`, g.`status` AS `Status`, g.`created_at` AS `Data`, g.`data_fato` AS `data_fato`, g.`dias_multa` AS `dias_multa`, g.`valor_multa` AS `valor_multa` FROM `%s` g %s %s ORDER BY %s, g.`created_at` DESC LIMIT :limit OFFSET :offset',
             $this->table,
+            $joinClause,
             $whereClause ? 'WHERE ' . $whereClause : '',
             $orderField
         );
@@ -217,6 +219,34 @@ final class GuiasRepository
     public function getTableName(): string
     {
         return $this->table;
+    }
+
+    /**
+     * Verifica se já existe guia com o mesmo número do processo, mesmo denunciado (réu) e mesmo tipo.
+     * Comparação: numero_processo e tipo exatos (trim); denunciado case-insensitive (collation).
+     */
+    public function existsByProcessoDenunciadoTipo(string $numeroProcesso, string $denunciado, string $tipo): bool
+    {
+        $numeroProcesso = trim($numeroProcesso);
+        $denunciado = trim($denunciado);
+        $tipo = trim($tipo);
+        if ($numeroProcesso === '' || $denunciado === '' || $tipo === '') {
+            return false;
+        }
+        $coll = self::COLLATION;
+        $sql = sprintf(
+            'SELECT 1 FROM `%s` WHERE TRIM(`numero_processo`) COLLATE %s = :numero_processo AND TRIM(`denunciado`) COLLATE %s = :denunciado AND TRIM(`tipo`) COLLATE %s = :tipo LIMIT 1',
+            $this->table,
+            $coll,
+            $coll,
+            $coll
+        );
+        $statement = $this->connection->prepare($sql);
+        $statement->bindValue(':numero_processo', $numeroProcesso);
+        $statement->bindValue(':denunciado', $denunciado);
+        $statement->bindValue(':tipo', $tipo);
+        $statement->execute();
+        return $statement->fetchColumn() !== false;
     }
 
     /**

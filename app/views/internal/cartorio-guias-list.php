@@ -69,14 +69,14 @@ $statusOptions = ['pendente', 'em_andamento', 'concluída', 'cancelada'];
 $statusCounts = array_merge(array_fill_keys($statusOptions, 0), $service->getStatusCounts($filters));
 
 $subtarefaLabels = [
-    GuiasSubtarefasRepository::TIPO_ORDEM_1 => 'Detalhamento de informações',
-    GuiasSubtarefasRepository::TIPO_ORDEM_2 => 'Cálculo da pena de multa',
-    GuiasSubtarefasRepository::TIPO_ORDEM_3 => 'Expedição da Guia',
-    GuiasSubtarefasRepository::TIPO_ORDEM_4 => 'Aguardando assinatura',
-    GuiasSubtarefasRepository::TIPO_ORDEM_5 => 'Juntada automática',
-    GuiasSubtarefasRepository::TIPO_ORDEM_6 => 'Gerar PDF',
-    GuiasSubtarefasRepository::TIPO_ORDEM_7 => 'Aguardando envio da Guia',
-    GuiasSubtarefasRepository::TIPO_ORDEM_8 => 'Juntada de termo de envio',
+    GuiasSubtarefasRepository::TIPO_ORDEM_1 => 'Detalhamento: data do fato e dias-multa',
+    GuiasSubtarefasRepository::TIPO_ORDEM_2 => 'Cálculo da pena de multa (valor em R$)',
+    GuiasSubtarefasRepository::TIPO_ORDEM_3 => 'Expedição da Guia ao cartório',
+    GuiasSubtarefasRepository::TIPO_ORDEM_4 => 'Assinatura da Juíza na Guia',
+    GuiasSubtarefasRepository::TIPO_ORDEM_5 => 'Juntada dos autos (automática ou manual)',
+    GuiasSubtarefasRepository::TIPO_ORDEM_6 => 'Geração dos documentos em PDF',
+    GuiasSubtarefasRepository::TIPO_ORDEM_7 => 'Envio da Guia (canal e destinatário)',
+    GuiasSubtarefasRepository::TIPO_ORDEM_8 => 'Juntada do termo de envio aos autos',
 ];
 $ordemLabels = [
     1 => $subtarefaLabels[GuiasSubtarefasRepository::TIPO_ORDEM_1],
@@ -89,24 +89,24 @@ $ordemLabels = [
     8 => $subtarefaLabels[GuiasSubtarefasRepository::TIPO_ORDEM_8],
 ];
 $taskTitleByTipo = [
-    GuiasSubtarefasRepository::TIPO_ORDEM_1 => 'Aguardando detalhamento de informações',
-    GuiasSubtarefasRepository::TIPO_ORDEM_2 => 'Aguardando cálculo da pena de multa',
-    GuiasSubtarefasRepository::TIPO_ORDEM_3 => 'Aguardando expedição da Guia',
-    GuiasSubtarefasRepository::TIPO_ORDEM_4 => 'Guia aguardando assinatura',
-    GuiasSubtarefasRepository::TIPO_ORDEM_5 => 'Aguardando confirmação de juntada automática',
-    GuiasSubtarefasRepository::TIPO_ORDEM_6 => 'Aguardando geração de documentos em PDF',
-    GuiasSubtarefasRepository::TIPO_ORDEM_7 => 'Aguardando envio da Guia',
-    GuiasSubtarefasRepository::TIPO_ORDEM_8 => 'Aguardando comprovante de envio da Guia',
+    GuiasSubtarefasRepository::TIPO_ORDEM_1 => 'Aguardando data do fato e dias-multa (detalhamento)',
+    GuiasSubtarefasRepository::TIPO_ORDEM_2 => 'Aguardando valor da pena de multa',
+    GuiasSubtarefasRepository::TIPO_ORDEM_3 => 'Aguardando expedição da Guia ao cartório',
+    GuiasSubtarefasRepository::TIPO_ORDEM_4 => 'Aguardando assinatura da Juíza na Guia',
+    GuiasSubtarefasRepository::TIPO_ORDEM_5 => 'Aguardando confirmação da juntada dos autos',
+    GuiasSubtarefasRepository::TIPO_ORDEM_6 => 'Aguardando geração dos documentos em PDF',
+    GuiasSubtarefasRepository::TIPO_ORDEM_7 => 'Aguardando envio da Guia (canal e destinatário)',
+    GuiasSubtarefasRepository::TIPO_ORDEM_8 => 'Aguardando juntada do termo de envio aos autos',
 ];
 $buttonTitleByTipo = [
     GuiasSubtarefasRepository::TIPO_ORDEM_1 => 'Informar data do fato e dias-multa',
-    GuiasSubtarefasRepository::TIPO_ORDEM_2 => 'Informar cálculo da pena de multa',
-    GuiasSubtarefasRepository::TIPO_ORDEM_3 => 'Informar expedição da Guia',
-    GuiasSubtarefasRepository::TIPO_ORDEM_4 => 'Informar assinatura',
-    GuiasSubtarefasRepository::TIPO_ORDEM_5 => 'Confirmar juntada automática',
-    GuiasSubtarefasRepository::TIPO_ORDEM_6 => 'Informar geração em PDF',
-    GuiasSubtarefasRepository::TIPO_ORDEM_7 => 'Informar envio da Guia',
-    GuiasSubtarefasRepository::TIPO_ORDEM_8 => 'Informar juntada de termo de envio',
+    GuiasSubtarefasRepository::TIPO_ORDEM_2 => 'Informar valor da pena de multa',
+    GuiasSubtarefasRepository::TIPO_ORDEM_3 => 'Informar data de expedição da Guia',
+    GuiasSubtarefasRepository::TIPO_ORDEM_4 => 'Informar assinatura da Juíza',
+    GuiasSubtarefasRepository::TIPO_ORDEM_5 => 'Confirmar juntada (automática ou manual)',
+    GuiasSubtarefasRepository::TIPO_ORDEM_6 => 'Informar quantidade de documentos em PDF',
+    GuiasSubtarefasRepository::TIPO_ORDEM_7 => 'Informar tipo de envio e destinatário',
+    GuiasSubtarefasRepository::TIPO_ORDEM_8 => 'Informar juntada do termo de envio',
 ];
 $tipoJuntadaOptions = ['automática' => 'Automática', 'manual' => 'Manual'];
 $tipoEnvioOptions = ['E-mail' => 'E-mail', 'Malote Digital' => 'Malote Digital', 'PJe' => 'PJe', 'eSAJ' => 'eSAJ', 'ePROC' => 'ePROC'];
@@ -252,6 +252,10 @@ if ($totalPages > 0) {
                         <div class="col filter process-info" title="clique para copiar">
                             <span class="minor-info">Processo</span>
                             <span class="major-info"><?php echo htmlspecialchars($row['Processo'] ?? ''); ?></span>
+                        </div>
+                        <div class="col filter" title="Classe processual">
+                            <span class="minor-info">Classe</span>
+                            <span class="major-info"><?php echo htmlspecialchars(!empty($row['Classe']) ? $row['Classe'] : '—'); ?></span>
                         </div>
                     </div>
                     <div class="col filter">
@@ -587,10 +591,20 @@ if ($totalPages > 0) {
                 .then(function(result) {
                     if (result.ok && result.data && !result.data.error) {
                         if (typeof showToast === 'function') {
+                            var msgConcluidaPorTipo = {
+                                'detalhamento_informacoes': 'Detalhamento concluído: data do fato e dias-multa informados.',
+                                'calculo_pena_multa': 'Cálculo da pena de multa registrado.',
+                                'expedicao_guia': 'Expedição da Guia ao cartório registrada.',
+                                'aguardando_assinatura': 'Assinatura da Juíza na Guia registrada.',
+                                'juntada_automatica': 'Juntada dos autos registrada (automática ou manual).',
+                                'gerar_pdf': 'Geração dos documentos em PDF registrada.',
+                                'envio_guia': 'Envio da Guia registrado (canal e destinatário).',
+                                'juntada_termo_envio': 'Juntada do termo de envio aos autos registrada.'
+                            };
+                            var msgConcluida = msgConcluidaPorTipo[subtarefaTipo] || 'Subtarefa concluída.';
+                            showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: msgConcluida });
                             if (result.data.valor_multa_calculado) {
                                 showToast({ type: 'success', variant: 'full', title: 'Cálculo automático', message: 'Cálculo realizado automaticamente pelo sistema. Valor da pena de multa: ' + result.data.valor_multa_calculado + '.' });
-                            } else {
-                                showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Subtarefa concluída.' });
                             }
                         }
                         window.location.reload();
@@ -623,7 +637,7 @@ if ($totalPages > 0) {
                 .then(function(r) { return r.json().then(function(data) { return { ok: r.ok, data }; }); })
                 .then(function(result) {
                     if (result.ok && result.data && !result.data.error) {
-                        if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Subtarefa cancelada.' });
+                        if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Detalhamento cancelado: etapa de data do fato e dias-multa não será concluída.' });
                         window.location.reload();
                     } else {
                         if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: result.data && result.data.error ? result.data.error : 'Erro ao cancelar.' });
@@ -654,7 +668,7 @@ if ($totalPages > 0) {
                 .then(function(result) {
                     if (result.ok && result.data && !result.data.error) {
                         if (typeof showToast === 'function') {
-                            showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Subtarefa criada.' });
+                            showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Primeira subtarefa criada: detalhamento (data do fato e dias-multa) disponível para conclusão.' });
                         }
                         window.location.reload();
                     } else {
