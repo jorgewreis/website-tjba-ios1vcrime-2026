@@ -60,4 +60,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correção de toasts** `[9893c21]`
 - **Feat: implementação de função de verificação de duplicidade de guia** `[58c7b6e]`
 - **Feat: submenu de config user** `[1f023b2]`
+- **Feat: form para alterar senha** `[fce8b45]`
 
