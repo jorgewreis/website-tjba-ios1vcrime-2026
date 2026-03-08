@@ -7,6 +7,7 @@ require_once __DIR__ . '/../repositories/GuiasAlocadosRepository.php';
 require_once __DIR__ . '/../repositories/AlocacoesRegrasRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
+require_once __DIR__ . '/../repositories/SalarioMinimoRepository.php';
 require_once __DIR__ . '/../services/ReuManager.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
@@ -20,6 +21,7 @@ final class GuiasService
     private AlocacoesRegrasRepository $alocacoesRegrasRepository;
     private ProcessosRepository $processosRepository;
     private ClassesRepository $classesRepository;
+    private SalarioMinimoRepository $salarioMinimoRepository;
     private ReuManager $reuManager;
 
     private const REGRA_ALOCAR_GUIAS = 'ALLOCATE-GUIAS';
@@ -35,7 +37,24 @@ final class GuiasService
         $this->alocacoesRegrasRepository = new AlocacoesRegrasRepository($connection);
         $this->processosRepository = new ProcessosRepository($connection);
         $this->classesRepository = new ClassesRepository($connection);
+        $this->salarioMinimoRepository = new SalarioMinimoRepository($connection);
         $this->reuManager = new ReuManager($connection);
+    }
+
+    /**
+     * Calcula o valor da pena de multa em reais: (salário mínimo na data do fato × dias_multa) / 30.
+     * Retorna o valor numérico para persistência em guias.valor_multa ou null se não houver salário vigente.
+     */
+    private function calcularValorPenaMulta(string $dataFato, int $diasMulta): ?float
+    {
+        if ($dataFato === '' || $diasMulta <= 0) {
+            return null;
+        }
+        $salario = $this->salarioMinimoRepository->getValorPorData($dataFato);
+        if ($salario === null) {
+            return null;
+        }
+        return round(($salario * $diasMulta) / 30, 2);
     }
 
     public function listGuias(array $filters, int $limit, int $offset): array
@@ -166,6 +185,13 @@ final class GuiasService
             $row['user_cadastro'] = null;
         }
 
+        if ($row['data_fato'] !== null && isset($row['dias_multa']) && (int) $row['dias_multa'] > 0) {
+            $valorMulta = $this->calcularValorPenaMulta((string) $row['data_fato'], (int) $row['dias_multa']);
+            if ($valorMulta !== null) {
+                $row['valor_multa'] = $valorMulta;
+            }
+        }
+
         // #region agent log
         $logPath = dirname(__DIR__, 2) . '/debug-64730a.log';
         @file_put_contents($logPath, json_encode(['sessionId' => '64730a', 'location' => 'GuiasService.php:create:beforeInsert', 'message' => 'row built', 'data' => ['idGuia' => $idGuia, 'rowKeys' => array_keys($row)], 'timestamp' => round(microtime(true) * 1000), 'hypothesisId' => 'D']) . "\n", FILE_APPEND | LOCK_EX);
@@ -258,6 +284,14 @@ final class GuiasService
 
         $updated = $this->repository->update($id, $filtered);
         if ($updated && (array_key_exists('data_fato', $filtered) || array_key_exists('dias_multa', $filtered))) {
+            $guia = $this->repository->findById($id);
+            if ($guia !== null && isset($guia['data_fato']) && $guia['data_fato'] !== null && $guia['data_fato'] !== ''
+                && isset($guia['dias_multa']) && (int) $guia['dias_multa'] > 0) {
+                $valorMulta = $this->calcularValorPenaMulta((string) $guia['data_fato'], (int) $guia['dias_multa']);
+                if ($valorMulta !== null) {
+                    $this->repository->update($id, ['valor_multa' => $valorMulta]);
+                }
+            }
             $this->sincronizarDetalhamentoAposUpdate($id, $usuarioId);
         }
         return $updated;
@@ -318,7 +352,12 @@ final class GuiasService
         if ($ordem2 !== null) {
             $this->subtarefasRepository->atualizarStatus((string) $ordem2['id'], 'em_andamento');
         }
-        $this->repository->update($idGuia, ['status' => 'em_andamento']);
+        $updatePayload = ['status' => 'em_andamento'];
+        $valorMulta = $this->calcularValorPenaMulta($dataFato, $diasMulta);
+        if ($valorMulta !== null) {
+            $updatePayload['valor_multa'] = $valorMulta;
+        }
+        $this->repository->update($idGuia, $updatePayload);
     }
 
     public function cancel(string $id): bool
@@ -370,6 +409,14 @@ final class GuiasService
             }
         }
 
+        if ($ordem === 2 && (!isset($dadosArray['valor_multa']) || $dadosArray['valor_multa'] === '' || $dadosArray['valor_multa'] === null)) {
+            $guia = $this->repository->findById($guiaId);
+            if ($guia !== null && isset($guia['valor_multa']) && $guia['valor_multa'] !== null && $guia['valor_multa'] !== '') {
+                $dadosArray['valor_multa'] = 'R$ ' . number_format((float) $guia['valor_multa'], 2, ',', '.');
+                $dadosJson = json_encode($dadosArray);
+            }
+        }
+
         if ($dadosJson !== null && $dadosJson !== '') {
             $this->subtarefasRepository->atualizarDadosEspecificos($subtarefaId, $dadosJson);
         }
@@ -382,7 +429,12 @@ final class GuiasService
             $temDados = $dataFato !== '' && $diasMulta > 0;
             $guia = $this->repository->findById($guiaId);
             if ($temDados && $guia !== null) {
-                $this->repository->update($guiaId, ['data_fato' => $dataFato, 'dias_multa' => $diasMulta]);
+                $payloadGuia = ['data_fato' => $dataFato, 'dias_multa' => $diasMulta];
+                $valorMulta = $this->calcularValorPenaMulta($dataFato, $diasMulta);
+                if ($valorMulta !== null) {
+                    $payloadGuia['valor_multa'] = $valorMulta;
+                }
+                $this->repository->update($guiaId, $payloadGuia);
             }
             if ($temDados) {
                 $proxima = $this->subtarefasRepository->findByGuiaIdEOrdem($guiaId, 2);

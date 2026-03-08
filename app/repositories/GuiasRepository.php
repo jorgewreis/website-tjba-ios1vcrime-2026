@@ -41,7 +41,7 @@ final class GuiasRepository
         );
 
         $sql = sprintf(
-            'SELECT g.`id` AS `IdGuia`, g.`numero_processo` AS `Processo`, g.`denunciado` AS `Denunciado`, g.`tipo` AS `Tipo`, g.`etapa` AS `Etapa`, g.`status` AS `Status`, g.`created_at` AS `Data`, g.`data_fato` AS `data_fato`, g.`dias_multa` AS `dias_multa` FROM `%s` g %s ORDER BY %s, g.`created_at` DESC LIMIT :limit OFFSET :offset',
+            'SELECT g.`id` AS `IdGuia`, g.`numero_processo` AS `Processo`, g.`denunciado` AS `Denunciado`, g.`tipo` AS `Tipo`, g.`etapa` AS `Etapa`, g.`status` AS `Status`, g.`created_at` AS `Data`, g.`data_fato` AS `data_fato`, g.`dias_multa` AS `dias_multa`, g.`valor_multa` AS `valor_multa` FROM `%s` g %s ORDER BY %s, g.`created_at` DESC LIMIT :limit OFFSET :offset',
             $this->table,
             $whereClause ? 'WHERE ' . $whereClause : '',
             $orderField
@@ -134,7 +134,7 @@ final class GuiasRepository
 
         $statement = $this->connection->prepare(
             sprintf(
-                'INSERT INTO `%s` (`id`, `numero_processo`, `processo_id`, `denunciado`, `reu_id`, `tipo`, `etapa`, `status`, `regime`, `data_fato`, `dias_multa`, `observacoes`, `created_at`, `updated_at`, `user_cadastro`) VALUES (:id, :numero_processo, :processo_id, :denunciado, :reu_id, :tipo, :etapa, :status, :regime, :data_fato, :dias_multa, :observacoes, NOW(), NOW(), :user_cadastro)',
+                'INSERT INTO `%s` (`id`, `numero_processo`, `processo_id`, `denunciado`, `reu_id`, `tipo`, `etapa`, `status`, `regime`, `data_fato`, `dias_multa`, `valor_multa`, `observacoes`, `created_at`, `updated_at`, `user_cadastro`) VALUES (:id, :numero_processo, :processo_id, :denunciado, :reu_id, :tipo, :etapa, :status, :regime, :data_fato, :dias_multa, :valor_multa, :observacoes, NOW(), NOW(), :user_cadastro)',
                 $this->table
             )
         );
@@ -149,6 +149,7 @@ final class GuiasRepository
         $statement->bindValue(':regime', $row['regime'] ?? null);
         $statement->bindValue(':data_fato', $row['data_fato'] ?? null);
         $statement->bindValue(':dias_multa', isset($row['dias_multa']) ? (int) $row['dias_multa'] : null, PDO::PARAM_INT);
+        $statement->bindValue(':valor_multa', isset($row['valor_multa']) ? $row['valor_multa'] : null, PDO::PARAM_STR);
         $statement->bindValue(':observacoes', $row['observacoes'] ?? null);
         $statement->bindValue(':user_cadastro', $row['user_cadastro'] ?? null);
         $statement->execute();
@@ -160,7 +161,7 @@ final class GuiasRepository
     {
         $allowed = [
             'numero_processo', 'processo_id', 'denunciado', 'reu_id', 'tipo', 'etapa', 'status',
-            'regime', 'data_fato', 'dias_multa', 'observacoes', 'user_cadastro',
+            'regime', 'data_fato', 'dias_multa', 'valor_multa', 'observacoes', 'user_cadastro',
         ];
         $set = [];
         $params = [':id' => $id];

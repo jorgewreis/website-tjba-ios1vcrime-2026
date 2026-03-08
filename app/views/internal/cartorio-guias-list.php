@@ -365,7 +365,10 @@ if ($totalPages > 0) {
                                     <input type="number" class="subtask-dias-multa width-sm height-md" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" min="0" placeholder="Dias-multa" title="Quantidade de dias-multa" value="<?php echo $rowDiasMulta !== '' ? (int) $rowDiasMulta : ''; ?>">
                                 <?php endif; ?>
                                 <?php if ($isOrdem2): ?>
-                                    <input type="text" class="subtask-valor-multa width-sm height-md" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" readonly placeholder="Valor (automático)" title="Valor total da pena de multa">
+                                    <?php
+                                    $valorMultaRow = isset($row['valor_multa']) && $row['valor_multa'] !== null && $row['valor_multa'] !== '' ? 'R$ ' . number_format((float) $row['valor_multa'], 2, ',', '.') : '';
+                                    ?>
+                                    <input type="text" class="subtask-valor-multa width-sm height-md" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" readonly placeholder="Valor (automático)" title="Valor total da pena de multa" value="<?php echo htmlspecialchars($valorMultaRow, ENT_QUOTES); ?>">
                                 <?php endif; ?>
                                 <?php if ($isOrdem5): ?>
                                     <select class="subtask-tipo-juntada width-md height-md" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Tipo de juntada">
