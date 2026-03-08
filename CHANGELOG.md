@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0054
+
+**Data:** 2026-03-08 20:30:38 | **Commit:** `9893c21` | **Tipo:** `patch`
+
+- Fix: correção de toasts
+
 ## V. 1.03.0053
 
 **Data:** 2026-03-08 20:27:41 | **Commit:** `87147e0` | **Tipo:** `patch`
@@ -2598,6 +2604,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
