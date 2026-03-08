@@ -56,4 +56,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correção de inconsistencias** `[b892156]`
 - **Feat: nova função de cópia de numero de processo** `[e4a53e4]`
 - **Fix: refatoração do calculo da pena de multa** `[d356f64]`
+- **Fix: correção do calculo de multa** `[87147e0]`
 
