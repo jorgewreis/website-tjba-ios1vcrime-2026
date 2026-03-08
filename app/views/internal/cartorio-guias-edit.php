@@ -207,9 +207,11 @@ $tiposOptions = [
                 </div>
             </div>
 
-            <div class="row table header">Subtarefas - Timeline</div>
-            <div class="row buttons">
+            <div class="row timeline-header">
                 <div class="col filter">
+                    <span class="header-timeline">Subtarefas - Timeline</span>
+                </div>
+                <div class="col filter" title="<?php echo htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES); ?>">
                     <?php if ($mostrarBarraEdit): ?>
                         <div class="width-sm status <?php echo htmlspecialchars($statusCartaClass, ENT_QUOTES); ?> status-with-progress" style="border: 1px solid var(--color-gray-500);">
                             <span class="status-task-label"><?php echo htmlspecialchars($statusCartaLabel, ENT_QUOTES); ?></span>

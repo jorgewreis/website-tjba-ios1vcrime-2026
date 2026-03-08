@@ -6,6 +6,7 @@ require_once __DIR__ . '/../repositories/CejuscSubtarefasRepository.php';
 require_once __DIR__ . '/../repositories/CejuscAlocadosRepository.php';
 require_once __DIR__ . '/../repositories/AlocacoesRegrasRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
+require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../services/ReuManager.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
@@ -18,6 +19,7 @@ final class CejuscService
     private CejuscAlocadosRepository $alocadosRepository;
     private AlocacoesRegrasRepository $alocacoesRegrasRepository;
     private ProcessosRepository $processosRepository;
+    private ClassesRepository $classesRepository;
     private ReuManager $reuManager;
 
     private const REGRA_ALOCAR_CEJUSC = 'ALLOCATE-CEJUSC';
@@ -30,6 +32,7 @@ final class CejuscService
         $this->alocadosRepository = new CejuscAlocadosRepository($connection);
         $this->alocacoesRegrasRepository = new AlocacoesRegrasRepository($connection);
         $this->processosRepository = new ProcessosRepository($connection);
+        $this->classesRepository = new ClassesRepository($connection);
         $this->reuManager = new ReuManager($connection);
     }
 
@@ -93,7 +96,14 @@ final class CejuscService
 
         $processoOrigemId = null;
         if (strlen($digits) === 20) {
-            $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, null, null, false);
+            $classeId = null;
+            $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
+            $classeDescricao = trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? ''));
+            if ($classeCodigo !== '') {
+                $classeNome = $classeDescricao !== '' ? TextFormatter::formatProperName($classeDescricao, 200) : $classeCodigo;
+                $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
+            }
+            $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, false);
         }
 
         if ($reuId !== '') {

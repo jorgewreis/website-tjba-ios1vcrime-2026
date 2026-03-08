@@ -45,6 +45,7 @@ body {
     
     /* LEFT */
     .page-left{
+        position: relative;
         min-width: 10vw;
         width: calc(100% - 500px);
         height: 100%;
@@ -59,9 +60,30 @@ body {
         background-repeat: no-repeat;
         background-size: cover;
     }
-        .page-left .title-system{
-            display: none;
+    /* Overlay só no tema escuro: escurece a imagem de fundo sem afetar o conteúdo */
+    [data-theme="escuro"] .page-left::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 0;
+        pointer-events: none;
+    }
+    @media (prefers-color-scheme: dark) {
+        [data-theme="auto"] .page-left::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 0;
+            pointer-events: none;
         }
+    }
+    .page-left .title-system{
+        display: none;
+        position: relative;
+        z-index: 1;
+    }
 
     /* PAGE RIGHT */
     .page-right{        
@@ -245,6 +267,8 @@ body {
 
         margin-left: 10vw;
         transition: margin 0.7s ease-in-out;
+        position: relative;
+        z-index: 1;
     }        
         .page-left .title-system .title{
             font-family: 'Montserrat', sans-serif;

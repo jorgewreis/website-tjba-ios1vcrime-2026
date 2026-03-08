@@ -67,14 +67,14 @@ try {
             </div>
             <div class="col filter">
                 <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
-                <input type="text" class="width-lg height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud (opcional)" readonly>
+                <input type="text" class="width-lg height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>
             </div>
         </div>
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
         <div class="row filter">
             <div class="col filter" id="denunciado-col">
-                <label for="filter-denunciado">Denunciado <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <label for="filter-denunciado">Sentenciado <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <select class="width-xl height-md" id="filter-denunciado-select" style="display: none;" aria-label="Réus vinculados ao processo">
                     <!-- preenchido via JS quando houver réus -->
                 </select>
@@ -113,7 +113,7 @@ try {
         </div>
 
         <div class="row info">
-            <span>*Conforme regra de alocação, as Guias serão alocadas automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
+            <span>*Conforme regra de alocação, a expedição e envio das Guias serão alocadas automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
         </div>
 
         <div class="row buttons">

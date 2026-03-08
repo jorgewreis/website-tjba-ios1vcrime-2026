@@ -256,7 +256,12 @@ $stateOptions = [
                 </div>
                 <div class="col filter">
                     <label for="filter-classe">Classe</label>
-                    <input type="text" id="filter-classe" class="width-lg height-md readonly" value="<?php echo htmlspecialchars($classeCodigo !== '' ? ($classeCodigo . ' - ' . $classeNome) : $classeNome, ENT_QUOTES); ?>" readonly>
+                    <?php
+                    $classeReadonly = ($classeNome !== 'Classe não informada');
+                    $classeValue = $classeReadonly ? ($classeCodigo !== '' ? $classeCodigo . ' - ' . $classeNome : $classeNome) : '';
+                    $classeClass = 'width-lg height-md' . ($classeReadonly ? ' readonly' : '');
+                    ?>
+                    <input type="text" id="filter-classe" class="<?php echo htmlspecialchars($classeClass, ENT_QUOTES); ?>" value="<?php echo htmlspecialchars($classeValue, ENT_QUOTES); ?>"<?php echo $classeReadonly ? ' readonly' : ' placeholder="Informe a classe processual"'; ?>>
                 </div>
                 <div class="col filter">
                     <label for="filter-tipo">Finalidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
@@ -340,8 +345,10 @@ $stateOptions = [
                 }
             }
             ?>
-            <div class="row table header">Subtarefas - Timeline</div>
-            <div class="row buttons">
+            <div class="row timeline-header">
+                <div class="col filter">
+                    <span class="header-timeline">Subtarefas - Timeline</span>
+                </div>
                 <div class="col filter" title="<?php echo htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES); ?>">
                     <?php if ($mostrarBarraEdit): ?>
                         <div class="width-sm status <?php echo htmlspecialchars($statusCartaClass, ENT_QUOTES); ?> status-with-progress" style="border: 1px solid var(--color-gray-500);">
@@ -357,7 +364,7 @@ $stateOptions = [
                         <div class="width-sm status <?php echo htmlspecialchars($statusCartaClass, ENT_QUOTES); ?>" style="border: 1px solid var(--color-gray-500);"><?php echo htmlspecialchars($statusCartaLabel, ENT_QUOTES); ?></div>
                     <?php endif; ?>
                 </div>
-            </div>
+            </div>    
             <?php
             $cartaCreatedRaw = $carta['created_at'] ?? '';
             $cartaCreatedFormatted = '';

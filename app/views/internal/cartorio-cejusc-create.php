@@ -64,17 +64,25 @@ try {
                 <label for="filter-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="width-md height-md" id="filter-processo" placeholder="Digite o número do processo" required>
             </div>
+            <div class="col filter">
+                <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe processual <span class="label-hint-automatizado">*automatizado</span></label>
+                <input type="text" class="width-lg height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>
+            </div>
+        </div>
+        <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
+        <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
+        <div class="row filter">
             <div class="col filter" id="reu-col">
                 <label for="filter-reu">Nome do réu <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <select class="width-xl height-md" id="filter-reu-select" style="display: none;" aria-label="Réus vinculados ao processo">
                     <!-- preenchido via JS quando houver réus -->
                 </select>
-                <input type="text" class="width-xl height-md" id="filter-reu" placeholder="Nome do denunciado/réu (ou selecione na lista)" maxlength="120" required aria-label="Nome do réu quando não há réus ou opção Outro">
+                <input type="text" class="width-xl height-md" id="filter-reu" placeholder="Nome do denunciado" maxlength="120" required aria-label="Nome do réu quando não há réus ou opção Outro">
             </div>
         </div>
 
         <div class="row info">
-            <span>*Conforme regra de alocação, as tarefas Cejusc serão alocadas automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
+            <span>*Conforme regra de alocação, o envio de Decisões ao Cejusc será alocado automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
         </div>
 
         <div class="row buttons">
@@ -104,8 +112,9 @@ try {
             window.location.href = '/frame.php?page=cejusc';
         }, { capture: true });
     </script>
-    <!-- Padrão: número do processo = cnj.js (correção/formatação CNJ no blur); nome de pessoa/cidade = text-formatter.js (maiúsculas/minúsculas). -->
+    <!-- Padrão: número do processo = cnj.js (correção/formatação CNJ no blur); DataJud = classe processual; nome de pessoa = text-formatter.js. -->
     <script src="/assets/js/modules/cartorio/cartas-expedidas/cnj.js"></script>
+    <script src="/assets/js/modules/cartorio/cartas-expedidas/datajud-api.js"></script>
     <script src="/assets/js/modules/cartorio/cartas-expedidas/text-formatter.js"></script>
     <script>
         (function () {
@@ -188,6 +197,15 @@ try {
                     var digits = (this.value || '').replace(/\D/g, '');
                     if (digits.length !== 20) {
                         showReuInput();
+                        var classeInput = document.getElementById('filter-classe');
+                        if (classeInput) {
+                            classeInput.value = '';
+                            classeInput.readOnly = true;
+                        }
+                        var hCod = document.getElementById('hidden-classe-codigo');
+                        var hDesc = document.getElementById('hidden-classe-descricao');
+                        if (hCod) hCod.value = '';
+                        if (hDesc) hDesc.value = '';
                     }
                 });
             }
@@ -279,9 +297,15 @@ try {
                 var numeroProcesso = getValue('filter-processo');
                 var reuPayload = getReuPayload();
                 var nomeReu = reuPayload.nome_reu;
+                var classeVal = getValue('filter-classe');
+                var classeCodigoField = document.getElementById('hidden-classe-codigo');
+                var classeDescricaoField = document.getElementById('hidden-classe-descricao');
 
                 if (numeroProcesso === '') {
                     return showFeedback('Informe o número do processo.', 'error');
+                }
+                if (classeVal === 'Aguarde...') {
+                    return showFeedback('Aguarde a consulta ao DataJud terminar antes de cadastrar.', 'error');
                 }
                 if (!nomeReu || nomeReu === '') {
                     return showFeedback('Informe o réu (selecione na lista ou digite em "Outro").', 'error');
@@ -297,6 +321,19 @@ try {
                 };
                 if (reuPayload.reu_id) {
                     payload.reu_id = reuPayload.reu_id;
+                }
+                if (classeCodigoField && classeCodigoField.value.trim()) {
+                    payload.classe_codigo = classeCodigoField.value.trim();
+                }
+                if (classeDescricaoField && classeDescricaoField.value.trim()) {
+                    payload.classe_descricao = classeDescricaoField.value.trim();
+                } else if (classeVal && classeVal !== 'Classe não informada' && classeVal !== 'Aguarde...') {
+                    payload.classe_descricao = classeVal;
+                    if (classeCodigoField && classeCodigoField.value.trim()) {
+                        payload.classe_codigo = classeCodigoField.value.trim();
+                    } else {
+                        payload.classe_codigo = (classeVal || '').replace(/\s+/g, '').substring(0, 20);
+                    }
                 }
 
                 fetch('/api/cartorio-cejusc/create.php', {
