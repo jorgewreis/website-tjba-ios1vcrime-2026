@@ -275,10 +275,14 @@ if ($totalPages > 0) {
                     ?>
                     <div class="col full-line" data-subtarefa-id="<?php echo htmlspecialchars($st['id'] ?? '', ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($st['tipo'] ?? '', ENT_QUOTES); ?>" style="border-top: 1px solid var(--color-gray-400);">
                         <div class="row subtask-item">
-                            <div class="col task-status">
-                                <div class="status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
+                            <div class="left-content">
+                                <div class="col task-status">
+                                    <div class="status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
+                                </div>
                             </div>
-                            <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($st['id'] ?? '', ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($stLabel, ENT_QUOTES); ?>"><i class="fi fi-rr-play"></i></button>
+                            <div class="right-content">
+                                <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($st['id'] ?? '', ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($stLabel, ENT_QUOTES); ?>"><i class="fi fi-rr-play"></i></button>
+                            </div>
                         </div>
                     </div>
                     <?php endforeach; ?>

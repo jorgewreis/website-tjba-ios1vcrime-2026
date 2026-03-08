@@ -338,92 +338,93 @@ hr {
 
 /* -- COR WARNING */
 .btn-warning {
-    background-color: var(--color-warning);
-    border-color: var(--color-warning);
+    background-color: var(--bs-warning);
+    border-color: var(--bs-warning);
 }
 .btn-warning:hover {
-    background-color: var(--color-warning-hover);
-    border-color: var(--color-warning-hover);
+    background-color: var(--bg-warning);
+    border-color: var(--bs-warning);
+    color: var(--bs-warning);
 }
 .btn-warning:active {
-    background-color: var(--color-warning-active);
-    border-color: var(--color-warning-active);
+    background-color: var(--bs-warning-active);
+    border-color: var(--bs-warning-active);
 }
 
 .btn-warning-outline {
     background-color: var(--color-surface-elevated);
-    border-color: var(--color-warning);
+    border-color: var(--bs-warning);
     color: var(--color-text-primary);
     box-shadow: 1px 2px 3px 1px rgba(0, 0, 0, 0.1);
 }
 .btn-warning-outline:hover {
-    background-color: var(--color-warning-hover);
-    border-color: var(--color-warning-hover);
+    background-color: var(--bs-warning-hover);
+    border-color: var(--bs-warning-hover);
     color: var(--color-text-on-primary);
 }
 .btn-warning-outline:active {
-    background-color: var(--color-warning-active);
-    border-color: var(--color-warning-active);
+    background-color: var(--bs-warning-active);
+    border-color: var(--bs-warning-active);
     color: var(--color-text-on-primary);
 }
 
 /* -- COR INFO */
 .btn-info {
-    background-color: var(--color-info);
-    border-color: var(--color-info);
+    background-color: var(--bg-info);
+    border-color: var(--bg-info);
 }
 .btn-info:hover {
-    background-color: var(--color-info-hover);
-    border-color: var(--color-info-hover);
+    background-color: var(--bg-info-hover);
+    border-color: var(--bg-info-hover);
 }
 .btn-info:active {
-    background-color: var(--color-info-active);
-    border-color: var(--color-info-active);
+    background-color: var(--bg-info-active);
+    border-color: var(--bg-info-active);
 }
 
 .btn-info-outline {
     background-color: var(--color-surface-elevated);
-    border-color: var(--color-info);
+    border-color: var(--bg-info);
     color: var(--color-text-primary);
 }
 .btn-info-outline:hover {
-    background-color: var(--color-info-hover);
-    border-color: var(--color-info-hover);
+    background-color: var(--bg-info-hover);
+    border-color: var(--bg-info-hover);
     color: var(--color-text-on-primary);
 }
 .btn-info-outline:active {
-    background-color: var(--color-info-active);
-    border-color: var(--color-info-active);
+    background-color: var(--bg-info-active);
+    border-color: var(--bg-info-active);
     color: var(--color-text-on-primary);
 }
 
 /* -- COR SUCCESS */
 .btn-success {
-    background-color: var(--color-success);
-    border-color: var(--color-success);
+    background-color: var(--bg-success);
+    border-color: var(--bg-success);
 }   
 .btn-success:hover {
-    background-color: var(--success-color-hover);
-    border-color: var(--color-success-hover);
+    background-color: var(--bg-success-hover);
+    border-color: var(--bg-success-hover);
 }
 .btn-success:active {
-    background-color: var(--color-success-active);
-    border-color: var(--color-success-active);
+    background-color: var(--bg-success-active);
+    border-color: var(--bg-success-active);
 }
 
 .btn-success-outline {
     background-color: var(--color-surface-elevated);
-    border-color: var(--color-success);
+    border-color: var(--bg-success);
     color: var(--color-text-primary);
 }
 .btn-success-outline:hover {
-    background-color: var(--color-success-hover);
-    border-color: var(--color-success-hover);
+    background-color: var(--bg-success-hover);
+    border-color: var(--bg-success-hover);
     color: var(--color-text-on-primary);
 }
 .btn-success-outline:active {
-    background-color: var(--color-success-active);
-    border-color: var(--color-success-active);
+    background-color: var(--bg-success-active);
+    border-color: var(--bg-success-active);
     color: var(--color-text-on-primary);
 }
 

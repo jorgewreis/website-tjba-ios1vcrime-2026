@@ -405,7 +405,6 @@ if ($totalPages > 0) {
                     ?>
                     <div class="col full-line" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>" style="border-top: 1px solid var(--color-gray-400);">
                         <div class="row subtask-item">
-                            <?php if ($temComplemento): ?>
                             <div class="left-content">
                                 <div class="col task-status">
                                     <div class="status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
@@ -444,14 +443,11 @@ if ($totalPages > 0) {
                                 </div>
                                 <?php endif; ?>
                             </div>
-                            <?php else: ?>
-                            <div class="col task-status">
-                                <div class="status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
+                            <div class="right-content">
+                                <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?>">
+                                    <i class="fi fi-rr-play"></i>
+                                </button>
                             </div>
-                            <?php endif; ?>
-                            <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?>">
-                                <i class="fi fi-rr-play"></i>
-                            </button>
                         </div>
                     </div>
                     <?php endforeach; ?>

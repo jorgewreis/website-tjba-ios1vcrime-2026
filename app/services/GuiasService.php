@@ -44,7 +44,7 @@ final class GuiasService
         foreach ($rows as $i => $row) {
             $idGuia = (string) ($row['IdGuia'] ?? '');
             if ($idGuia !== '') {
-                $this->subtarefasRepository->ensurePrimeiraSubtarefa($idGuia);
+                $this->subtarefasRepository->ensureOitoSubtarefas($idGuia);
                 $rows[$i]['Subtarefas'] = $this->subtarefasRepository->findPendenteOuEmAndamentoByGuiaId($idGuia);
                 $rows[$i]['SubtarefasAll'] = $this->subtarefasRepository->findByGuiaId($idGuia);
                 $alocadosRaw = $this->alocadosRepository->findByGuiaId($idGuia);
@@ -195,13 +195,15 @@ final class GuiasService
             }
         }
 
-        $this->subtarefasRepository->create(
-            $idGuia,
-            GuiasSubtarefasRepository::TIPO_ORDEM_1,
-            1,
-            'em_andamento',
-            null
-        );
+        $repo = $this->subtarefasRepository;
+        $repo->create($idGuia, $repo::TIPO_ORDEM_1, 1, 'em_andamento', null);
+        $repo->create($idGuia, $repo::TIPO_ORDEM_2, 2, 'pendente', null);
+        $repo->create($idGuia, $repo::TIPO_ORDEM_3, 3, 'pendente', null);
+        $repo->create($idGuia, $repo::TIPO_ORDEM_4, 4, 'pendente', null);
+        $repo->create($idGuia, $repo::TIPO_ORDEM_5, 5, 'pendente', null);
+        $repo->create($idGuia, $repo::TIPO_ORDEM_6, 6, 'pendente', null);
+        $repo->create($idGuia, $repo::TIPO_ORDEM_7, 7, 'pendente', null);
+        $repo->create($idGuia, $repo::TIPO_ORDEM_8, 8, 'pendente', null);
 
         $this->repository->update($idGuia, ['status' => 'em_andamento']);
 
@@ -288,6 +290,7 @@ final class GuiasService
         }
 
         $usuarioIdMovimentacao = null;
+        $dadosArray = [];
         if ($dadosJson !== null && $dadosJson !== '') {
             $dadosArray = json_decode($dadosJson, true);
             if (is_array($dadosArray)) {
@@ -308,22 +311,86 @@ final class GuiasService
 
         $this->subtarefasRepository->marcarConcluida($subtarefaId);
 
-        $proximoTipo = $this->subtarefasRepository->obterProximoTipo($ordem);
-        if ($proximoTipo !== null) {
+        if ($ordem === 1) {
+            $dataFato = isset($dadosArray['data_fato']) ? trim((string) $dadosArray['data_fato']) : '';
+            $diasMulta = isset($dadosArray['dias_multa']) ? (int) $dadosArray['dias_multa'] : 0;
+            $temDados = $dataFato !== '' && $diasMulta > 0;
+            $guia = $this->repository->findById($guiaId);
+            if ($temDados && $guia !== null) {
+                $this->repository->update($guiaId, ['data_fato' => $dataFato, 'dias_multa' => $diasMulta]);
+            }
+            if ($temDados) {
+                $proxima = $this->subtarefasRepository->findByGuiaIdEOrdem($guiaId, 2);
+                if ($proxima !== null) {
+                    $this->subtarefasRepository->atualizarStatus((string) $proxima['id'], 'em_andamento');
+                }
+            } else {
+                $ordem2 = $this->subtarefasRepository->findByGuiaIdEOrdem($guiaId, 2);
+                if ($ordem2 !== null) {
+                    $this->subtarefasRepository->atualizarStatus((string) $ordem2['id'], GuiasSubtarefasRepository::STATUS_PULADA);
+                }
+                $ordem3 = $this->subtarefasRepository->findByGuiaIdEOrdem($guiaId, 3);
+                if ($ordem3 !== null) {
+                    $this->subtarefasRepository->atualizarStatus((string) $ordem3['id'], 'em_andamento');
+                }
+            }
+            $this->repository->update($guiaId, ['status' => 'em_andamento']);
+            return;
+        }
+
+        if ($ordem < 8) {
             $proximaOrdem = $ordem + 1;
             $proxima = $this->subtarefasRepository->findByGuiaIdEOrdem($guiaId, $proximaOrdem);
-            if ($proxima === null) {
-                $this->subtarefasRepository->create($guiaId, $proximoTipo, $proximaOrdem, 'em_andamento', null);
-            } else {
+            if ($proxima !== null) {
                 $statusProx = trim((string) ($proxima['status'] ?? ''));
-                if ($statusProx !== 'concluida') {
+                if ($statusProx !== 'concluida' && $statusProx !== GuiasSubtarefasRepository::STATUS_PULADA) {
                     $this->subtarefasRepository->atualizarStatus((string) $proxima['id'], 'em_andamento');
+                } else {
+                    $next = $proximaOrdem + 1;
+                    while ($next <= 8) {
+                        $seg = $this->subtarefasRepository->findByGuiaIdEOrdem($guiaId, $next);
+                        if ($seg !== null && trim((string) ($seg['status'] ?? '')) !== 'concluida' && trim((string) ($seg['status'] ?? '')) !== GuiasSubtarefasRepository::STATUS_PULADA) {
+                            $this->subtarefasRepository->atualizarStatus((string) $seg['id'], 'em_andamento');
+                            break;
+                        }
+                        $next++;
+                    }
                 }
             }
             $this->repository->update($guiaId, ['status' => 'em_andamento']);
         } else {
             $this->repository->update($guiaId, ['status' => 'concluída']);
         }
+    }
+
+    public function cancelarSubtarefa(string $subtarefaId): void
+    {
+        $subtarefa = $this->subtarefasRepository->findById($subtarefaId);
+        if ($subtarefa === null) {
+            throw new InvalidArgumentException('Subtarefa não encontrada.');
+        }
+
+        $ordem = (int) ($subtarefa['ordem'] ?? 0);
+        if ($ordem !== 1) {
+            throw new InvalidArgumentException('Apenas a subtarefa "Detalhamento de informações" pode ser cancelada.');
+        }
+
+        $guiaId = trim((string) ($subtarefa['guia_id'] ?? ''));
+        if ($guiaId === '') {
+            throw new InvalidArgumentException('Guia da subtarefa não identificada.');
+        }
+
+        $this->subtarefasRepository->atualizarStatus($subtarefaId, GuiasSubtarefasRepository::STATUS_CANCELADA);
+
+        $ordem2 = $this->subtarefasRepository->findByGuiaIdEOrdem($guiaId, 2);
+        if ($ordem2 !== null) {
+            $this->subtarefasRepository->atualizarStatus((string) $ordem2['id'], GuiasSubtarefasRepository::STATUS_PULADA);
+        }
+        $ordem3 = $this->subtarefasRepository->findByGuiaIdEOrdem($guiaId, 3);
+        if ($ordem3 !== null) {
+            $this->subtarefasRepository->atualizarStatus((string) $ordem3['id'], 'em_andamento');
+        }
+        $this->repository->update($guiaId, ['status' => 'em_andamento']);
     }
 
     public function criarPrimeiraSubtarefa(string $guiaId, ?string $usuarioId = null): void
@@ -336,12 +403,8 @@ final class GuiasService
             throw new InvalidArgumentException('Guia não encontrada.');
         }
         $existentes = $this->subtarefasRepository->findByGuiaId($guiaId);
-        if (count($existentes) > 0) {
-            $this->subtarefasRepository->ensurePrimeiraSubtarefa($guiaId);
-            $ordem1 = $this->subtarefasRepository->findByGuiaIdEOrdem($guiaId, 1);
-            if ($ordem1 !== null && trim((string) ($ordem1['status'] ?? '')) !== 'concluida') {
-                $this->subtarefasRepository->atualizarStatus((string) $ordem1['id'], 'em_andamento');
-            }
+        if (count($existentes) === 0) {
+            $this->subtarefasRepository->ensureOitoSubtarefas($guiaId);
             $this->repository->update($guiaId, ['status' => 'em_andamento']);
             if ($usuarioId !== null && trim($usuarioId) !== '') {
                 try {
@@ -352,13 +415,10 @@ final class GuiasService
             }
             return;
         }
-        $this->subtarefasRepository->create(
-            $guiaId,
-            GuiasSubtarefasRepository::TIPO_ORDEM_1,
-            1,
-            'em_andamento',
-            null
-        );
+        $ordem1 = $this->subtarefasRepository->findByGuiaIdEOrdem($guiaId, 1);
+        if ($ordem1 !== null && trim((string) ($ordem1['status'] ?? '')) !== 'concluida' && trim((string) ($ordem1['status'] ?? '')) !== GuiasSubtarefasRepository::STATUS_CANCELADA) {
+            $this->subtarefasRepository->atualizarStatus((string) $ordem1['id'], 'em_andamento');
+        }
         $this->repository->update($guiaId, ['status' => 'em_andamento']);
         if ($usuarioId !== null && trim($usuarioId) !== '') {
             try {

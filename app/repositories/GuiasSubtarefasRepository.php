@@ -8,13 +8,14 @@ final class GuiasSubtarefasRepository
     private PDO $connection;
     private string $table;
 
-    public const TIPO_ORDEM_1 = 'calcular_pena_multa';
-    public const TIPO_ORDEM_2 = 'expedir_guia';
-    public const TIPO_ORDEM_3 = 'assinar_guia';
-    public const TIPO_ORDEM_4 = 'gerar_pdf';
-    public const TIPO_ORDEM_5 = 'enviar_documentos';
-    public const TIPO_ORDEM_6 = 'juntar_termo_envio';
-    public const TIPO_ORDEM_7 = 'expedir_certidao';
+    public const TIPO_ORDEM_1 = 'detalhamento_informacoes';
+    public const TIPO_ORDEM_2 = 'calculo_pena_multa';
+    public const TIPO_ORDEM_3 = 'expedicao_guia';
+    public const TIPO_ORDEM_4 = 'aguardando_assinatura';
+    public const TIPO_ORDEM_5 = 'juntada_automatica';
+    public const TIPO_ORDEM_6 = 'gerar_pdf';
+    public const TIPO_ORDEM_7 = 'envio_guia';
+    public const TIPO_ORDEM_8 = 'juntada_termo_envio';
 
     private const ORDEM_POR_TIPO = [
         self::TIPO_ORDEM_1 => 1,
@@ -24,11 +25,14 @@ final class GuiasSubtarefasRepository
         self::TIPO_ORDEM_5 => 5,
         self::TIPO_ORDEM_6 => 6,
         self::TIPO_ORDEM_7 => 7,
+        self::TIPO_ORDEM_8 => 8,
     ];
 
     private const STATUS_EM_ANDAMENTO = 'em_andamento';
     private const STATUS_PENDENTE = 'pendente';
     private const STATUS_CONCLUIDA = 'concluida';
+    public const STATUS_CANCELADA = 'cancelada';
+    public const STATUS_PULADA = 'pulada';
 
     public function __construct(PDO $connection, string $table = 'guias_subtarefas')
     {
@@ -40,8 +44,8 @@ final class GuiasSubtarefasRepository
     {
         $guiaId = trim($guiaId);
         $tipo = trim($tipo);
-        if ($guiaId === '' || $tipo === '' || $ordem < 1 || $ordem > 7) {
-            throw new InvalidArgumentException('guia_id, tipo e ordem (1-7) são obrigatórios.');
+        if ($guiaId === '' || $tipo === '' || $ordem < 1 || $ordem > 8) {
+            throw new InvalidArgumentException('guia_id, tipo e ordem (1-8) são obrigatórios.');
         }
         if (!isset(self::ORDEM_POR_TIPO[$tipo]) || self::ORDEM_POR_TIPO[$tipo] !== $ordem) {
             throw new InvalidArgumentException('Tipo e ordem inválidos.');
@@ -110,7 +114,7 @@ final class GuiasSubtarefasRepository
     public function findByGuiaIdEOrdem(string $guiaId, int $ordem): ?array
     {
         $guiaId = trim($guiaId);
-        if ($guiaId === '' || $ordem < 1 || $ordem > 7) {
+        if ($guiaId === '' || $ordem < 1 || $ordem > 8) {
             return null;
         }
 
@@ -132,6 +136,9 @@ final class GuiasSubtarefasRepository
         return $row === false ? null : $row;
     }
 
+    /**
+     * Retorna a primeira subtarefa em_andamento ou pendente (ignora cancelada e pulada).
+     */
     public function findPendenteOuEmAndamentoByGuiaId(string $guiaId): array
     {
         $all = $this->findByGuiaId($guiaId);
@@ -169,7 +176,7 @@ final class GuiasSubtarefasRepository
         if ($id === '') {
             throw new InvalidArgumentException('ID da subtarefa é obrigatório.');
         }
-        if (!in_array($status, [self::STATUS_PENDENTE, self::STATUS_EM_ANDAMENTO, self::STATUS_CONCLUIDA], true)) {
+        if (!in_array($status, [self::STATUS_PENDENTE, self::STATUS_EM_ANDAMENTO, self::STATUS_CONCLUIDA, self::STATUS_CANCELADA, self::STATUS_PULADA], true)) {
             throw new InvalidArgumentException('Status de subtarefa inválido.');
         }
 
@@ -233,6 +240,7 @@ final class GuiasSubtarefasRepository
             5 => self::TIPO_ORDEM_5,
             6 => self::TIPO_ORDEM_6,
             7 => self::TIPO_ORDEM_7,
+            8 => self::TIPO_ORDEM_8,
         ];
         return $map[$next] ?? null;
     }
@@ -251,17 +259,25 @@ final class GuiasSubtarefasRepository
     }
 
     /**
-     * Cria a primeira subtarefa (ordem 1) para uma guia que ainda não tem subtarefas.
+     * Garante as 8 subtarefas para uma guia que ainda não tem nenhuma (ex.: pós-migração ou edge case).
      */
-    public function ensurePrimeiraSubtarefa(string $guiaId): void
+    public function ensureOitoSubtarefas(string $guiaId): void
     {
         $guiaId = trim($guiaId);
         if ($guiaId === '') {
             return;
         }
-        $ordem1 = $this->findByGuiaIdEOrdem($guiaId, 1);
-        if ($ordem1 === null) {
-            $this->create($guiaId, self::TIPO_ORDEM_1, 1, self::STATUS_PENDENTE, null);
+        $existentes = $this->findByGuiaId($guiaId);
+        if (count($existentes) > 0) {
+            return;
         }
+        $this->create($guiaId, self::TIPO_ORDEM_1, 1, self::STATUS_EM_ANDAMENTO, null);
+        $this->create($guiaId, self::TIPO_ORDEM_2, 2, self::STATUS_PENDENTE, null);
+        $this->create($guiaId, self::TIPO_ORDEM_3, 3, self::STATUS_PENDENTE, null);
+        $this->create($guiaId, self::TIPO_ORDEM_4, 4, self::STATUS_PENDENTE, null);
+        $this->create($guiaId, self::TIPO_ORDEM_5, 5, self::STATUS_PENDENTE, null);
+        $this->create($guiaId, self::TIPO_ORDEM_6, 6, self::STATUS_PENDENTE, null);
+        $this->create($guiaId, self::TIPO_ORDEM_7, 7, self::STATUS_PENDENTE, null);
+        $this->create($guiaId, self::TIPO_ORDEM_8, 8, self::STATUS_PENDENTE, null);
     }
 }

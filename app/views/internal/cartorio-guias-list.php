@@ -7,6 +7,7 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 require_once __DIR__ . '/../../services/GuiasService.php';
+require_once __DIR__ . '/../../repositories/GuiasSubtarefasRepository.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -68,23 +69,48 @@ $statusOptions = ['pendente', 'em_andamento', 'concluída', 'cancelada'];
 $statusCounts = array_merge(array_fill_keys($statusOptions, 0), $service->getStatusCounts($filters));
 
 $subtarefaLabels = [
-    'calcular_pena_multa' => 'Cálculo da pena de multa',
-    'expedir_guia' => 'Expedir Guia',
-    'assinar_guia' => 'Assinar Guia',
-    'gerar_pdf' => 'Gerar PDF da documentação',
-    'enviar_documentos' => 'Enviar documentos',
-    'juntar_termo_envio' => 'Juntar termo de envio',
-    'expedir_certidao' => 'Expedir certidão',
+    GuiasSubtarefasRepository::TIPO_ORDEM_1 => 'Detalhamento de informações',
+    GuiasSubtarefasRepository::TIPO_ORDEM_2 => 'Cálculo da pena de multa',
+    GuiasSubtarefasRepository::TIPO_ORDEM_3 => 'Expedição da Guia',
+    GuiasSubtarefasRepository::TIPO_ORDEM_4 => 'Aguardando assinatura',
+    GuiasSubtarefasRepository::TIPO_ORDEM_5 => 'Juntada automática',
+    GuiasSubtarefasRepository::TIPO_ORDEM_6 => 'Gerar PDF',
+    GuiasSubtarefasRepository::TIPO_ORDEM_7 => 'Aguardando envio da Guia',
+    GuiasSubtarefasRepository::TIPO_ORDEM_8 => 'Juntada de termo de envio',
 ];
 $ordemLabels = [
-    1 => $subtarefaLabels['calcular_pena_multa'],
-    2 => $subtarefaLabels['expedir_guia'],
-    3 => $subtarefaLabels['assinar_guia'],
-    4 => $subtarefaLabels['gerar_pdf'],
-    5 => $subtarefaLabels['enviar_documentos'],
-    6 => $subtarefaLabels['juntar_termo_envio'],
-    7 => $subtarefaLabels['expedir_certidao'],
+    1 => $subtarefaLabels[GuiasSubtarefasRepository::TIPO_ORDEM_1],
+    2 => $subtarefaLabels[GuiasSubtarefasRepository::TIPO_ORDEM_2],
+    3 => $subtarefaLabels[GuiasSubtarefasRepository::TIPO_ORDEM_3],
+    4 => $subtarefaLabels[GuiasSubtarefasRepository::TIPO_ORDEM_4],
+    5 => $subtarefaLabels[GuiasSubtarefasRepository::TIPO_ORDEM_5],
+    6 => $subtarefaLabels[GuiasSubtarefasRepository::TIPO_ORDEM_6],
+    7 => $subtarefaLabels[GuiasSubtarefasRepository::TIPO_ORDEM_7],
+    8 => $subtarefaLabels[GuiasSubtarefasRepository::TIPO_ORDEM_8],
 ];
+$taskTitleByTipo = [
+    GuiasSubtarefasRepository::TIPO_ORDEM_1 => 'Aguardando detalhamento de informações',
+    GuiasSubtarefasRepository::TIPO_ORDEM_2 => 'Aguardando cálculo da pena de multa',
+    GuiasSubtarefasRepository::TIPO_ORDEM_3 => 'Aguardando expedição da Guia',
+    GuiasSubtarefasRepository::TIPO_ORDEM_4 => 'Guia aguardando assinatura',
+    GuiasSubtarefasRepository::TIPO_ORDEM_5 => 'Aguardando confirmação de juntada automática',
+    GuiasSubtarefasRepository::TIPO_ORDEM_6 => 'Aguardando geração de documentos em PDF',
+    GuiasSubtarefasRepository::TIPO_ORDEM_7 => 'Aguardando envio da Guia',
+    GuiasSubtarefasRepository::TIPO_ORDEM_8 => 'Aguardando comprovante de envio da Guia',
+];
+$buttonTitleByTipo = [
+    GuiasSubtarefasRepository::TIPO_ORDEM_1 => 'Informar data do fato e dias-multa',
+    GuiasSubtarefasRepository::TIPO_ORDEM_2 => 'Informar cálculo da pena de multa',
+    GuiasSubtarefasRepository::TIPO_ORDEM_3 => 'Informar expedição da Guia',
+    GuiasSubtarefasRepository::TIPO_ORDEM_4 => 'Informar assinatura',
+    GuiasSubtarefasRepository::TIPO_ORDEM_5 => 'Confirmar juntada automática',
+    GuiasSubtarefasRepository::TIPO_ORDEM_6 => 'Informar geração em PDF',
+    GuiasSubtarefasRepository::TIPO_ORDEM_7 => 'Informar envio da Guia',
+    GuiasSubtarefasRepository::TIPO_ORDEM_8 => 'Informar juntada de termo de envio',
+];
+$tipoJuntadaOptions = ['automática' => 'Automática', 'manual' => 'Manual'];
+$tipoEnvioOptions = ['E-mail' => 'E-mail', 'Malote Digital' => 'Malote Digital', 'PJe' => 'PJe', 'eSAJ' => 'eSAJ', 'ePROC' => 'ePROC'];
+$destinatarioOptions = ['VEP' => 'VEP', 'SEEU' => 'SEEU'];
 
 $tipoCounts = $service->getTipoCounts($filters);
 $defaultTipos = [
@@ -260,19 +286,36 @@ if ($totalPages > 0) {
                         <?php
                         $st = $row['Status'] ?? '';
                         $allSt = $row['SubtarefasAll'] ?? [];
+                        $progressStatuses = array_fill(0, 8, 'pendente');
+                        foreach ($allSt as $s) {
+                            $o = (int) ($s['ordem'] ?? 0);
+                            if ($o >= 1 && $o <= 8) {
+                                $progressStatuses[$o - 1] = (string) ($s['status'] ?? 'pendente');
+                            }
+                        }
                         $currentSubtarefaTitle = '';
                         foreach ($allSt as $s) {
                             if (trim((string) ($s['status'] ?? '')) === 'em_andamento') {
-                                $currentSubtarefaTitle = $subtarefaLabels[$s['tipo'] ?? ''] ?? $s['tipo'] ?? '';
+                                $currentSubtarefaTitle = $taskTitleByTipo[$s['tipo'] ?? ''] ?? $subtarefaLabels[$s['tipo'] ?? ''] ?? $s['tipo'] ?? '';
                                 break;
                             }
                         }
                         if ($currentSubtarefaTitle === '' && $st === 'pendente') {
-                            $currentSubtarefaTitle = $ordemLabels[1] ?? 'Cálculo da pena de multa';
+                            $currentSubtarefaTitle = $taskTitleByTipo[GuiasSubtarefasRepository::TIPO_ORDEM_1] ?? $ordemLabels[1];
                         } elseif ($currentSubtarefaTitle === '' && $st === 'concluída') {
                             $currentSubtarefaTitle = 'Todas as etapas concluídas';
                         } elseif ($currentSubtarefaTitle === '') {
                             $currentSubtarefaTitle = $st === 'cancelada' ? 'Cancelada' : 'Em andamento';
+                        }
+                        $mostrarBarra = ($st !== 'concluída' && $st !== 'cancelada');
+                        $segmentosBarra = [];
+                        if ($mostrarBarra) {
+                            $segmentosBarra[] = ['class' => 'concluida', 'title' => 'Guia cadastrada'];
+                            for ($i = 0; $i < 8; $i++) {
+                                $statusSeg = $progressStatuses[$i] ?? 'pendente';
+                                $segClass = $statusSeg === 'concluida' ? 'concluida' : ($statusSeg === 'em_andamento' ? 'em_andamento' : ($statusSeg === 'cancelada' || $statusSeg === 'pulada' ? $statusSeg : 'pendente'));
+                                $segmentosBarra[] = ['class' => $segClass, 'title' => $ordemLabels[$i + 1] ?? ''];
+                            }
                         }
                         ?>
                         <div class="col status-task" title="<?php echo htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES); ?>">
@@ -281,8 +324,14 @@ if ($totalPages > 0) {
                                 echo '<div class="width-sm status status-finished">Finalizada</div>';
                             } elseif ($st === 'cancelada') {
                                 echo '<div class="width-sm status status-cancelled">Cancelada</div>';
-                            } elseif ($st === 'em_andamento') {
-                                echo '<div class="width-sm status status-current">Em andamento</div>';
+                            } elseif ($mostrarBarra) {
+                                $concluidosBarra = 1 + count(array_filter($progressStatuses, function ($x) { return $x === 'concluida' || $x === 'cancelada' || $x === 'pulada'; }));
+                                echo '<div class="width-sm status status-current status-with-progress"><span class="status-task-label">Em andamento</span>';
+                                echo '<div class="status-task-progress" role="progressbar" aria-valuenow="' . $concluidosBarra . '" aria-valuemin="0" aria-valuemax="9" aria-label="Progresso">';
+                                foreach ($segmentosBarra as $seg) {
+                                    echo '<div class="status-task-progress-segment ' . htmlspecialchars($seg['class'], ENT_QUOTES) . '" title="' . htmlspecialchars($seg['title'], ENT_QUOTES) . '"></div>';
+                                }
+                                echo '</div></div>';
                             } else {
                                 echo '<div class="width-sm status status-pending">Pendente</div>';
                             }
@@ -296,13 +345,58 @@ if ($totalPages > 0) {
                         $stId = $st['id'] ?? '';
                         $stTipo = $st['tipo'] ?? '';
                         $stLabel = $subtarefaLabels[$stTipo] ?? $stTipo;
+                        $btnTitle = $buttonTitleByTipo[$stTipo] ?? $stLabel;
+                        $isOrdem1 = ($stTipo === GuiasSubtarefasRepository::TIPO_ORDEM_1);
+                        $isOrdem2 = ($stTipo === GuiasSubtarefasRepository::TIPO_ORDEM_2);
+                        $isOrdem5 = ($stTipo === GuiasSubtarefasRepository::TIPO_ORDEM_5);
+                        $isOrdem6 = ($stTipo === GuiasSubtarefasRepository::TIPO_ORDEM_6);
+                        $isOrdem7 = ($stTipo === GuiasSubtarefasRepository::TIPO_ORDEM_7);
                     ?>
                     <div class="col full-line" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>" style="border-top: 1px solid var(--color-gray-400);">
                         <div class="row subtask-item">
-                            <div class="col task-status">
-                                <div class="status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
+                            <div class="left-content">
+                                <div class="col task-status">
+                                    <div class="status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
+                                </div>
+                                <?php if ($isOrdem1): ?>
+                                    <input type="date" class="subtask-data-fato width-sm height-md" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" placeholder="Data do fato" title="Data do fato">
+                                    <input type="number" class="subtask-dias-multa width-sm height-md" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" min="0" placeholder="Dias-multa" title="Quantidade de dias-multa">
+                                <?php endif; ?>
+                                <?php if ($isOrdem2): ?>
+                                    <input type="text" class="subtask-valor-multa width-sm height-md" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" readonly placeholder="Valor (automático)" title="Valor total da pena de multa">
+                                <?php endif; ?>
+                                <?php if ($isOrdem5): ?>
+                                    <select class="subtask-tipo-juntada width-md height-md" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Tipo de juntada">
+                                        <option value="">Selecione</option>
+                                        <?php foreach ($tipoJuntadaOptions as $val => $label): ?>
+                                            <option value="<?php echo htmlspecialchars($val, ENT_QUOTES); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                <?php endif; ?>
+                                <?php if ($isOrdem6): ?>
+                                    <input type="number" class="subtask-qtd-docs width-sm height-md" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" min="4" value="4" placeholder="Qtd (mín 4)" title="Qtd de documentos gerados">
+                                <?php endif; ?>
+                                <?php if ($isOrdem7): ?>
+                                    <select class="subtask-tipo-envio width-md height-md" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Tipo de envio">
+                                        <option value="">Selecione</option>
+                                        <?php foreach ($tipoEnvioOptions as $val => $label): ?>
+                                            <option value="<?php echo htmlspecialchars($val, ENT_QUOTES); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <select class="subtask-destinatario width-sm height-md" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Destinatário">
+                                        <option value="">Dest.</option>
+                                        <?php foreach ($destinatarioOptions as $val => $label): ?>
+                                            <option value="<?php echo htmlspecialchars($val, ENT_QUOTES); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                <?php endif; ?>
                             </div>
-                            <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Concluir"><i class="fi fi-rr-play"></i></button>
+                            <div class="right-content">
+                                <?php if ($isOrdem1): ?>
+                                    <button type="button" class="btn btn-secondary-outline btn-cancelar-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Cancelar esta subtarefa">Cancelar</button>
+                                <?php endif; ?>
+                                <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($btnTitle, ENT_QUOTES); ?>"><i class="fi fi-rr-play"></i></button>
+                            </div>
                         </div>
                     </div>
                     <?php endforeach; ?>
@@ -435,32 +529,100 @@ if ($totalPages > 0) {
         document.querySelectorAll('.btn-concluir-subtarefa').forEach(function (btn) {
             btn.addEventListener('click', function () {
                 const subtarefaId = this.getAttribute('data-subtarefa-id');
+                const subtarefaTipo = this.getAttribute('data-subtarefa-tipo') || '';
                 if (!subtarefaId) return;
+                const block = this.closest('.col.full-line[data-subtarefa-id]');
+                const obj = {};
+                if (block) {
+                    const dataFato = block.querySelector('.subtask-data-fato');
+                    const diasMulta = block.querySelector('.subtask-dias-multa');
+                    const valorMulta = block.querySelector('.subtask-valor-multa');
+                    const tipoJuntada = block.querySelector('.subtask-tipo-juntada');
+                    const qtdDocs = block.querySelector('.subtask-qtd-docs');
+                    const tipoEnvio = block.querySelector('.subtask-tipo-envio');
+                    const destinatario = block.querySelector('.subtask-destinatario');
+                    if (dataFato && dataFato.value && dataFato.value.trim()) obj.data_fato = dataFato.value.trim();
+                    if (diasMulta && diasMulta.value !== '' && parseInt(diasMulta.value, 10) >= 0) obj.dias_multa = parseInt(diasMulta.value, 10);
+                    if (valorMulta && valorMulta.value && valorMulta.value.trim()) obj.valor_multa = valorMulta.value.trim();
+                    if (tipoJuntada && tipoJuntada.value && tipoJuntada.value.trim()) obj.tipo_juntada = tipoJuntada.value.trim();
+                    if (qtdDocs && qtdDocs.value !== '') { var q = parseInt(qtdDocs.value, 10); if (q >= 4) obj.qtd_docs = q; }
+                    if (tipoEnvio && tipoEnvio.value && tipoEnvio.value.trim()) obj.tipo_envio = tipoEnvio.value.trim();
+                    if (destinatario && destinatario.value && destinatario.value.trim()) obj.destinatario = destinatario.value.trim();
+                }
+                if (subtarefaTipo === 'juntada_automatica' && !obj.tipo_juntada) {
+                    if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Atenção', message: 'Selecione o tipo de juntada (automática ou manual).' });
+                    else alert('Selecione o tipo de juntada.');
+                    return;
+                }
+                if (subtarefaTipo === 'gerar_pdf') {
+                    var q = block ? parseInt(block.querySelector('.subtask-qtd-docs')?.value || '0', 10) : 0;
+                    if (q < 4) {
+                        if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Atenção', message: 'Informe no mínimo 4 documentos.' });
+                        else alert('Mínimo 4 documentos.');
+                        return;
+                    }
+                    obj.qtd_docs = q;
+                }
+                if (subtarefaTipo === 'envio_guia' && (!obj.tipo_envio || !obj.destinatario)) {
+                    if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Atenção', message: 'Selecione o tipo de envio e o destinatário.' });
+                    else alert('Selecione tipo de envio e destinatário.');
+                    return;
+                }
+                var dadosEspecificos = Object.keys(obj).length > 0 ? JSON.stringify(obj) : null;
+                var payload = { id: subtarefaId, subtarefa_id: subtarefaId };
+                if (dadosEspecificos) payload.dados_especificos = JSON.parse(dadosEspecificos);
                 const btnEl = this;
                 btnEl.disabled = true;
                 fetch('/api/cartorio-guias/concluir-subtarefa.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: subtarefaId })
+                    body: JSON.stringify(payload)
                 })
                 .then(function(r) { return r.json().then(function(data) { return { ok: r.ok, data }; }); })
                 .then(function(result) {
                     if (result.ok && result.data && !result.data.error) {
-                        if (typeof showToast === 'function') {
-                            showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Subtarefa concluída.' });
-                        }
+                        if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Subtarefa concluída.' });
                         window.location.reload();
                     } else {
-                        if (typeof showToast === 'function') {
-                            showToast({ type: 'error', variant: 'full', title: 'Erro', message: result.data && result.data.error ? result.data.error : 'Erro ao concluir subtarefa.' });
-                        }
+                        if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: result.data && result.data.error ? result.data.error : 'Erro ao concluir subtarefa.' });
+                        else alert(result.data && result.data.error ? result.data.error : 'Erro ao concluir subtarefa.');
                         btnEl.disabled = false;
                     }
                 })
                 .catch(function() {
-                    if (typeof showToast === 'function') {
-                        showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro ao concluir subtarefa.' });
+                    if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro ao concluir subtarefa.' });
+                    else alert('Erro ao concluir subtarefa.');
+                    btnEl.disabled = false;
+                });
+            });
+        });
+
+        document.querySelectorAll('.btn-cancelar-subtarefa').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const subtarefaId = this.getAttribute('data-subtarefa-id');
+                if (!subtarefaId) return;
+                if (!confirm('Deseja cancelar a subtarefa "Detalhamento de informações"? A próxima etapa será disponibilizada.')) return;
+                const btnEl = this;
+                btnEl.disabled = true;
+                fetch('/api/cartorio-guias/cancelar-subtarefa.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ subtarefa_id: subtarefaId })
+                })
+                .then(function(r) { return r.json().then(function(data) { return { ok: r.ok, data }; }); })
+                .then(function(result) {
+                    if (result.ok && result.data && !result.data.error) {
+                        if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Subtarefa cancelada.' });
+                        window.location.reload();
+                    } else {
+                        if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: result.data && result.data.error ? result.data.error : 'Erro ao cancelar.' });
+                        else alert(result.data && result.data.error ? result.data.error : 'Erro ao cancelar.');
+                        btnEl.disabled = false;
                     }
+                })
+                .catch(function() {
+                    if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
+                    else alert('Erro de conexão.');
                     btnEl.disabled = false;
                 });
             });

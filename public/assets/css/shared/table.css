@@ -127,17 +127,28 @@
     flex-direction: row;
     align-items: center;
     gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+.row.subtask-item .right-content {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
 }
 .row.subtask-item .col.task-status .status {
     margin: 0;
 }
-.row.subtask-item .btn.btn-primary {
+.row.subtask-item .btn.btn-primary,
+.row.subtask-item .btn.btn-warning {
     width: 40px;
     height: 40px;
-    padding: 4px 0 0 0;
+    padding: 6px 0 0 0;
     flex-shrink: 0;
 }
-.row.subtask-item .btn.btn-primary i {
+.row.subtask-item .btn.btn-primary i,
+.row.subtask-item .btn.btn-warning i {
     font-size: 1.1rem;
 }
 .row.subtask-info{
@@ -225,6 +236,9 @@
 .timeline .circle.cancelada {
     background-color: var(--color-gray-500);
 }
+.timeline .circle.pulada {
+    background-color: var(--color-gray-500);
+}
 .timeline.current:hover{
     background-color: var(--color-warning-bg-light);
 }
@@ -283,6 +297,9 @@
     background-color: var(--color-border);
 }
 .status-task-progress-segment.cancelada {
+    background-color: var(--color-gray-400);
+}
+.status-task-progress-segment.pulada {
     background-color: var(--color-gray-400);
 }
 

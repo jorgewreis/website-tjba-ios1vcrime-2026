@@ -32,13 +32,14 @@ if ($idGuia === '') {
 }
 
 $subtarefaLabels = [
-    GuiasSubtarefasRepository::TIPO_ORDEM_1 => 'Cálculo da pena de multa',
-    GuiasSubtarefasRepository::TIPO_ORDEM_2 => 'Expedir Guia',
-    GuiasSubtarefasRepository::TIPO_ORDEM_3 => 'Assinar Guia',
-    GuiasSubtarefasRepository::TIPO_ORDEM_4 => 'Gerar PDF da documentação',
-    GuiasSubtarefasRepository::TIPO_ORDEM_5 => 'Enviar documentos',
-    GuiasSubtarefasRepository::TIPO_ORDEM_6 => 'Juntar termo de envio',
-    GuiasSubtarefasRepository::TIPO_ORDEM_7 => 'Expedir certidão',
+    GuiasSubtarefasRepository::TIPO_ORDEM_1 => 'Detalhamento de informações',
+    GuiasSubtarefasRepository::TIPO_ORDEM_2 => 'Cálculo da pena de multa',
+    GuiasSubtarefasRepository::TIPO_ORDEM_3 => 'Expedição da Guia',
+    GuiasSubtarefasRepository::TIPO_ORDEM_4 => 'Assinatura da Juíza',
+    GuiasSubtarefasRepository::TIPO_ORDEM_5 => 'Juntada automática',
+    GuiasSubtarefasRepository::TIPO_ORDEM_6 => 'Geração de PDFs',
+    GuiasSubtarefasRepository::TIPO_ORDEM_7 => 'Envio da Guia',
+    GuiasSubtarefasRepository::TIPO_ORDEM_8 => 'Juntada de termo de envio',
 ];
 
 $subtarefas = [];
@@ -51,19 +52,21 @@ $ordemParaTipo = [
     5 => GuiasSubtarefasRepository::TIPO_ORDEM_5,
     6 => GuiasSubtarefasRepository::TIPO_ORDEM_6,
     7 => GuiasSubtarefasRepository::TIPO_ORDEM_7,
+    8 => GuiasSubtarefasRepository::TIPO_ORDEM_8,
 ];
 $timelineMinorPendente = [
-    GuiasSubtarefasRepository::TIPO_ORDEM_1 => 'Cálculo da pena de multa',
-    GuiasSubtarefasRepository::TIPO_ORDEM_2 => 'Expedir guia',
-    GuiasSubtarefasRepository::TIPO_ORDEM_3 => 'Assinar guia',
-    GuiasSubtarefasRepository::TIPO_ORDEM_4 => 'Gerar PDF da documentação',
-    GuiasSubtarefasRepository::TIPO_ORDEM_5 => 'Enviar documentos',
-    GuiasSubtarefasRepository::TIPO_ORDEM_6 => 'Juntar termo de envio',
-    GuiasSubtarefasRepository::TIPO_ORDEM_7 => 'Expedir certidão',
+    GuiasSubtarefasRepository::TIPO_ORDEM_1 => 'Aguardando detalhamento de informações',
+    GuiasSubtarefasRepository::TIPO_ORDEM_2 => 'Aguardando cálculo da pena de multa',
+    GuiasSubtarefasRepository::TIPO_ORDEM_3 => 'Aguardando expedição da Guia',
+    GuiasSubtarefasRepository::TIPO_ORDEM_4 => 'Guia aguardando assinatura',
+    GuiasSubtarefasRepository::TIPO_ORDEM_5 => 'Aguardando confirmação de juntada automática',
+    GuiasSubtarefasRepository::TIPO_ORDEM_6 => 'Aguardando geração de documentos em PDF',
+    GuiasSubtarefasRepository::TIPO_ORDEM_7 => 'Aguardando envio da Guia',
+    GuiasSubtarefasRepository::TIPO_ORDEM_8 => 'Aguardando comprovante de envio da Guia',
 ];
 $statusCartaLabel = 'Em andamento';
 $statusCartaClass = 'status-current';
-$progressStatusesEdit = ['pendente', 'pendente', 'pendente', 'pendente', 'pendente', 'pendente', 'pendente'];
+$progressStatusesEdit = array_fill(0, 8, 'pendente');
 $mostrarBarraEdit = false;
 $segmentosBarraEdit = [];
 $cadastroInfoLinha = '';
@@ -72,7 +75,7 @@ $classeNome = 'Classe não informada';
 $currentSubtarefaTitle = '';
 if ($guia !== null) {
     $subtarefasRepo = new GuiasSubtarefasRepository($connection);
-    $subtarefasRepo->ensurePrimeiraSubtarefa($idGuia);
+    $subtarefasRepo->ensureOitoSubtarefas($idGuia);
     $subtarefas = $subtarefasRepo->findByGuiaId($idGuia);
     foreach ($subtarefas as $st) {
         $subtarefasPorOrdem[(int) $st['ordem']] = $st;
@@ -88,7 +91,7 @@ if ($guia !== null) {
         $statusCartaLabel = 'Cancelada';
         $statusCartaClass = 'status-cancelled';
     }
-    for ($o = 1; $o <= 7; $o++) {
+    for ($o = 1; $o <= 8; $o++) {
         if (isset($subtarefasPorOrdem[$o])) {
             $progressStatusesEdit[$o - 1] = trim((string) ($subtarefasPorOrdem[$o]['status'] ?? 'pendente'));
         }
@@ -96,9 +99,9 @@ if ($guia !== null) {
     $mostrarBarraEdit = in_array($statusCartaLabel, ['Pendente', 'Em andamento'], true);
     if ($mostrarBarraEdit) {
         $segmentosBarraEdit[] = ['class' => 'concluida', 'title' => 'Guia cadastrada'];
-        for ($i = 0; $i < 7; $i++) {
+        for ($i = 0; $i < 8; $i++) {
             $statusSeg = $progressStatusesEdit[$i] ?? 'pendente';
-            $segClass = $statusSeg === 'concluida' ? 'concluida' : ($statusSeg === 'em_andamento' ? 'em_andamento' : 'pendente');
+            $segClass = $statusSeg === 'concluida' ? 'concluida' : ($statusSeg === 'em_andamento' ? 'em_andamento' : ($statusSeg === 'cancelada' || $statusSeg === 'pulada' ? $statusSeg : 'pendente'));
             $segmentosBarraEdit[] = ['class' => $segClass, 'title' => $subtarefaLabels[$ordemParaTipo[$i + 1] ?? ''] ?? ''];
         }
     }
@@ -135,7 +138,7 @@ if ($guia !== null) {
         }
     }
     if ($currentSubtarefaTitle === '' && $statusGuia === 'pendente') {
-        $currentSubtarefaTitle = $subtarefaLabels[GuiasSubtarefasRepository::TIPO_ORDEM_1] ?? 'Cálculo da pena de multa';
+        $currentSubtarefaTitle = $timelineMinorPendente[GuiasSubtarefasRepository::TIPO_ORDEM_1] ?? $subtarefaLabels[GuiasSubtarefasRepository::TIPO_ORDEM_1];
     } elseif ($currentSubtarefaTitle === '' && $statusGuia === 'concluída') {
         $currentSubtarefaTitle = 'Todas as etapas concluídas';
     } elseif ($currentSubtarefaTitle === '') {
@@ -261,8 +264,8 @@ $tiposOptions = [
                     <?php if ($mostrarBarraEdit): ?>
                         <div class="width-sm status <?php echo htmlspecialchars($statusCartaClass, ENT_QUOTES); ?> status-with-progress" style="border: 1px solid var(--color-gray-500);">
                             <span class="status-task-label"><?php echo htmlspecialchars($statusCartaLabel, ENT_QUOTES); ?></span>
-                            <?php $concluidosBarraEdit = 1 + count(array_filter($progressStatusesEdit, fn($x) => $x === 'concluida')); ?>
-                            <div class="status-task-progress" role="progressbar" aria-valuenow="<?php echo $concluidosBarraEdit; ?>" aria-valuemin="0" aria-valuemax="8" aria-label="Progresso das subtarefas">
+                            <?php $concluidosBarraEdit = 1 + count(array_filter($progressStatusesEdit, fn($x) => $x === 'concluida' || $x === 'cancelada' || $x === 'pulada')); ?>
+                            <div class="status-task-progress" role="progressbar" aria-valuenow="<?php echo $concluidosBarraEdit; ?>" aria-valuemin="0" aria-valuemax="9" aria-label="Progresso das subtarefas">
                                 <?php foreach ($segmentosBarraEdit as $seg): ?>
                                     <div class="status-task-progress-segment <?php echo htmlspecialchars($seg['class'], ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($seg['title'], ENT_QUOTES); ?>"></div>
                                 <?php endforeach; ?>
@@ -287,7 +290,7 @@ $tiposOptions = [
                     </div>
                 </div>
             </div>
-            <?php for ($ordem = 1; $ordem <= 7; $ordem++): ?>
+            <?php for ($ordem = 1; $ordem <= 8; $ordem++): ?>
                 <?php
                 $tipo = $ordemParaTipo[$ordem] ?? '';
                 $label = $subtarefaLabels[$tipo] ?? 'Passo ' . $ordem;
@@ -295,17 +298,69 @@ $tiposOptions = [
                 $circleClass = '';
                 $minorTexto = $timelineMinorPendente[$tipo] ?? $label;
                 $dateLabel = 'Aguardando conclusão';
+                $infoLinha = '';
                 if ($st !== null) {
                     $status = trim((string) ($st['status'] ?? ''));
                     $raw = $st['updated_at'] ?? $st['created_at'] ?? '';
                     $dataMovimento = '';
                     if ($raw !== '') {
                         $dt = \DateTime::createFromFormat('Y-m-d H:i:s', $raw);
-                        $dataMovimento = $dt ? $dt->format('d/m/Y - H:i:s') : $raw;
+                        $dataMovimento = $dt ? $dt->format('d/m/Y - H:i') : $raw;
                     }
-                    if ($status === 'concluida') {
+                    $dadosJson = $st['dados_especificos'] ?? null;
+                    $dados = [];
+                    if ($dadosJson !== null && $dadosJson !== '') {
+                        $dec = json_decode($dadosJson, true);
+                        if (is_array($dec)) {
+                            $dados = $dec;
+                        }
+                    }
+                    if ($status === GuiasSubtarefasRepository::STATUS_CANCELADA) {
+                        $circleClass = 'cancelada';
+                        $minorTexto = 'Detalhamento de informações cancelado';
+                        $dateLabel = $dataMovimento !== '' ? $dataMovimento : 'Cancelado';
+                    } elseif ($status === GuiasSubtarefasRepository::STATUS_PULADA) {
+                        $circleClass = 'pulada';
+                        $minorTexto = 'Cálculo da pena de multa não aplicável';
+                        $dateLabel = 'Etapa pulada';
+                    } elseif ($status === 'concluida') {
                         $circleClass = 'finished';
-                        $dateLabel = $dataMovimento !== '' ? 'Concluído em ' . $dataMovimento : 'Concluído';
+                        $nomeUsuario = trim((string) ($dados['nome'] ?? ''));
+                        if ($ordem === 1) {
+                            $df = $dados['data_fato'] ?? '';
+                            $dm = $dados['dias_multa'] ?? '';
+                            $minorTexto = 'Data do fato: ' . ($df !== '' ? $df : '—') . ' | Quantidade de dias-multa: ' . ($dm !== '' ? $dm : '—');
+                            $infoLinha = $nomeUsuario !== '' && $dataMovimento !== '' ? 'Informações registradas por ' . $nomeUsuario . ' em ' . $dataMovimento : ($dataMovimento !== '' ? 'Concluído em ' . $dataMovimento : 'Concluído');
+                        } elseif ($ordem === 2) {
+                            $vm = $dados['valor_multa'] ?? '';
+                            $minorTexto = 'Pena de multa calculada no valor de ' . ($vm !== '' ? $vm : '—');
+                            $infoLinha = $dataMovimento !== '' ? 'Cálculo automático realizado em ' . $dataMovimento : 'Concluído';
+                        } elseif ($ordem === 3) {
+                            $tipoGuia = trim((string) ($guia['tipo'] ?? ''));
+                            $dataExp = $dados['data_expedicao'] ?? $dataMovimento;
+                            $minorTexto = 'Guia de ' . ($tipoGuia !== '' ? $tipoGuia : 'guia') . ' expedida em ' . ($dataExp !== '' ? $dataExp : $dataMovimento);
+                            $infoLinha = $dataMovimento !== '' ? $dataMovimento : 'Concluído';
+                        } elseif ($ordem === 4) {
+                            $minorTexto = 'Guia assinada pela juíza em ' . $dataMovimento;
+                            $infoLinha = $dataMovimento;
+                        } elseif ($ordem === 5) {
+                            $tj = trim((string) ($dados['tipo_juntada'] ?? ''));
+                            $minorTexto = $tj === 'manual' ? 'Juntada da Guia realizada pelo servidor' : 'Juntada automática da Guia realizada pelo sistema';
+                            $infoLinha = $dataMovimento !== '' ? $dataMovimento : 'Concluído';
+                        } elseif ($ordem === 6) {
+                            $qtd = $dados['qtd_docs'] ?? '';
+                            $minorTexto = ($qtd !== '' ? $qtd : '—') . ' documentos gerados em PDF';
+                            $infoLinha = $dataMovimento !== '' ? $dataMovimento : 'Concluído';
+                        } elseif ($ordem === 7) {
+                            $te = trim((string) ($dados['tipo_envio'] ?? ''));
+                            $dest = trim((string) ($dados['destinatario'] ?? ''));
+                            $minorTexto = 'Guia enviada por ' . ($te !== '' ? $te : '—') . ' para ' . ($dest !== '' ? $dest : '—');
+                            $infoLinha = $dataMovimento !== '' ? $dataMovimento : 'Concluído';
+                        } else {
+                            $minorTexto = 'Juntada do termo de envio da Guia realizada';
+                            $infoLinha = $dataMovimento !== '' ? $dataMovimento : 'Concluído';
+                        }
+                        $dateLabel = $infoLinha;
                     } elseif ($status === 'em_andamento') {
                         $circleClass = 'current';
                         $dateLabel = $dataMovimento !== '' ? 'Aguardando movimentação desde ' . $dataMovimento : 'Aguardando movimentação';
@@ -314,7 +369,7 @@ $tiposOptions = [
                     }
                 }
                 ?>
-                <div class="row <?php if ($circleClass === 'current') { echo 'timeline current'; } elseif ($circleClass === 'finished') { echo 'timeline finished'; } else { echo 'timeline'; } ?>">
+                <div class="row timeline <?php echo $circleClass !== '' ? htmlspecialchars($circleClass, ENT_QUOTES) : ''; ?>">
                     <div class="row">
                         <?php if ($circleClass !== ''): ?>
                             <div class="circle <?php echo htmlspecialchars($circleClass, ENT_QUOTES); ?>"></div>
