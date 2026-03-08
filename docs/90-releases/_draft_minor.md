@@ -49,4 +49,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correção de icones** `[9339281]`
 - **Fix: remoção de arquivos não mais utilizados** `[1a4acfa]`
 - **Fix: pequenos ajustes** `[08ef8a2]`
+- **Fix: correção de layout de subtarefa** `[7956dee]`
 
