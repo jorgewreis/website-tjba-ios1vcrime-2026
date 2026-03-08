@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0056
+
+**Data:** 2026-03-08 20:47:45 | **Commit:** `1f023b2` | **Tipo:** `patch`
+
+- Feat: submenu de config user
+
 ## V. 1.03.0055
 
 **Data:** 2026-03-08 20:43:35 | **Commit:** `58c7b6e` | **Tipo:** `patch`
@@ -2610,6 +2616,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

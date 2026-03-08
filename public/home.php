@@ -113,10 +113,25 @@ $userProfile = Security::getUserProfile() ?? '';
                                     <i class="fi fi-rs-bell"></i>
                                 </a>
                             </li>                        
-                            <li class="nav-item" data-target="settingsuser">
-                                <a class="nav-link">
+                            <li class="nav-item nav-item-settings" id="nav-item-settings">
+                                <a class="nav-link" id="settings-menu-trigger" href="#" role="button" aria-expanded="false" aria-haspopup="true" aria-label="Configurações e perfil">
                                     <i class="fi fi-rs-settings"></i>
                                 </a>
+                                <div class="settings-dropdown" id="settings-dropdown" role="menu" aria-label="Menu Perfil" hidden>
+                                    <div class="settings-dropdown-inner">
+                                        <div class="menu-header">
+                                            <span class="menu-header-text">Perfil</span>
+                                        </div>
+                                        <ul class="settings-dropdown-list">
+                                            <li class="menu-item">
+                                                <a class="menu-link" href="#" role="menuitem" data-settings="alterar-senha">Alterar senha</a>
+                                            </li>
+                                            <li class="menu-item">
+                                                <a class="menu-link" href="#" role="menuitem" data-settings="alterar-dados">Alterar dados pessoais</a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link">
@@ -431,6 +446,53 @@ $userProfile = Security::getUserProfile() ?? '';
             await initDynamicMenu();
             App.Menu.initMenu();
             App.Menu.initActive();
+
+            /* Submenu flutuante do botão Configurações (ícone engrenagem) */
+            (function initSettingsDropdown() {
+                var trigger = document.getElementById('settings-menu-trigger');
+                var dropdown = document.getElementById('settings-dropdown');
+                var navItem = document.getElementById('nav-item-settings');
+                if (!trigger || !dropdown) return;
+
+                function openDropdown() {
+                    dropdown.removeAttribute('hidden');
+                    dropdown.classList.add('is-open');
+                    trigger.setAttribute('aria-expanded', 'true');
+                }
+                function closeDropdown() {
+                    dropdown.setAttribute('hidden', '');
+                    dropdown.classList.remove('is-open');
+                    trigger.setAttribute('aria-expanded', 'false');
+                }
+                function toggleDropdown(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var isOpen = dropdown.classList.contains('is-open');
+                    if (isOpen) closeDropdown();
+                    else openDropdown();
+                }
+
+                trigger.addEventListener('click', toggleDropdown);
+
+                document.addEventListener('click', function(e) {
+                    if (!dropdown.classList.contains('is-open')) return;
+                    if (navItem && navItem.contains(e.target)) return;
+                    closeDropdown();
+                });
+
+                dropdown.querySelectorAll('.menu-link[data-settings]').forEach(function(link) {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        var action = link.getAttribute('data-settings');
+                        closeDropdown();
+                        if (action === 'alterar-senha') {
+                            window.location.href = '/alterar-senha.php';
+                        } else if (action === 'alterar-dados') {
+                            window.location.href = '/alterar-dados-pessoais.php';
+                        }
+                    });
+                });
+            })();
 
             const menuController = App.Menu.initLayout();
 
