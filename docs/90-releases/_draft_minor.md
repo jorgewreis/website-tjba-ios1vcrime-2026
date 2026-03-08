@@ -50,4 +50,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: remoção de arquivos não mais utilizados** `[1a4acfa]`
 - **Fix: pequenos ajustes** `[08ef8a2]`
 - **Fix: correção de layout de subtarefa** `[7956dee]`
+- **Feat: Update das informações de tarefas e subtarefas de cartas expedidas** `[a6c0aa7]`
 
