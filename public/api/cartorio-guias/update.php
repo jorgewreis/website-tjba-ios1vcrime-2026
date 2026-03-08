@@ -29,11 +29,19 @@ if ($id === '') {
 }
 
 unset($parsed['id']);
+$tinhaDataFatoOuDiasMulta = isset($parsed['data_fato']) || isset($parsed['dias_multa']);
 
 try {
     $service = new GuiasService($connection);
     $updated = $service->update($id, $parsed);
-    echo json_encode(['success' => $updated, 'id' => $id], JSON_UNESCAPED_UNICODE);
+    $body = ['success' => $updated, 'id' => $id];
+    if ($tinhaDataFatoOuDiasMulta) {
+        $guia = $service->find($id);
+        if ($guia !== null && isset($guia['valor_multa']) && $guia['valor_multa'] !== '' && $guia['valor_multa'] !== null) {
+            $body['valor_multa_calculado'] = 'R$ ' . number_format((float) $guia['valor_multa'], 2, ',', '.');
+        }
+    }
+    echo json_encode($body, JSON_UNESCAPED_UNICODE);
 } catch (\InvalidArgumentException $exception) {
     http_response_code(400);
     echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);

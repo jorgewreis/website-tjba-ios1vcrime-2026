@@ -520,7 +520,11 @@ $tiposOptions = [
                     showToastMsg('error', 'Erro', data.error);
                     updateButtonState();
                 } else {
-                    showToastMsg('success', 'Sucesso', 'Guia atualizada.');
+                    if (data.valor_multa_calculado) {
+                        showToastMsg('success', 'Cálculo automático', 'Cálculo realizado automaticamente pelo sistema. Valor da pena de multa: ' + data.valor_multa_calculado + '.');
+                    } else {
+                        showToastMsg('success', 'Sucesso', 'Guia atualizada.');
+                    }
                     window.location.href = '/frame.php?page=guias';
                 }
             })

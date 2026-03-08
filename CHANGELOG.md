@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0053
+
+**Data:** 2026-03-08 20:27:41 | **Commit:** `87147e0` | **Tipo:** `patch`
+
+- Fix: correção do calculo de multa
+
 ## V. 1.03.0052
 
 **Data:** 2026-03-08 20:23:10 | **Commit:** `d356f64` | **Tipo:** `patch`
@@ -2592,6 +2598,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

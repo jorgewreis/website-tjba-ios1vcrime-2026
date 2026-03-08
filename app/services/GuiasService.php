@@ -379,7 +379,13 @@ final class GuiasService
         return $this->repository->delete($id);
     }
 
-    public function concluirSubtarefa(string $subtarefaId, ?string $dadosJson = null): void
+    /**
+     * Conclui a subtarefa. Retorna array com chave valor_multa_calculado (valor formatado em R$) quando
+     * o sistema calcular automaticamente a pena de multa (ordem 1 concluída com data_fato e dias_multa).
+     *
+     * @return array{valor_multa_calculado?: string}
+     */
+    public function concluirSubtarefa(string $subtarefaId, ?string $dadosJson = null): array
     {
         $subtarefa = $this->subtarefasRepository->findById($subtarefaId);
         if ($subtarefa === null) {
@@ -388,6 +394,7 @@ final class GuiasService
 
         $ordem = (int) ($subtarefa['ordem'] ?? 0);
         $guiaId = trim((string) ($subtarefa['guia_id'] ?? ''));
+        $resultado = [];
 
         if ($guiaId === '') {
             throw new InvalidArgumentException('Guia da subtarefa não identificada.');
@@ -433,6 +440,7 @@ final class GuiasService
                 $valorMulta = $this->calcularValorPenaMulta($dataFato, $diasMulta);
                 if ($valorMulta !== null) {
                     $payloadGuia['valor_multa'] = $valorMulta;
+                    $resultado['valor_multa_calculado'] = 'R$ ' . number_format($valorMulta, 2, ',', '.');
                 }
                 $this->repository->update($guiaId, $payloadGuia);
             }
@@ -452,7 +460,7 @@ final class GuiasService
                 }
             }
             $this->repository->update($guiaId, ['status' => 'em_andamento']);
-            return;
+            return $resultado;
         }
 
         if ($ordem < 8) {
@@ -478,6 +486,8 @@ final class GuiasService
         } else {
             $this->repository->update($guiaId, ['status' => 'concluída']);
         }
+
+        return $resultado;
     }
 
     public function cancelarSubtarefa(string $subtarefaId): void

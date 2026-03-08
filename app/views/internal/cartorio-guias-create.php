@@ -417,7 +417,13 @@ try {
                     fetch('http://127.0.0.1:7304/ingest/df211406-901f-4e15-ab75-9fa46f53cfac',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'64730a'},body:JSON.stringify({sessionId:'64730a',location:'cartorio-guias-create.php:then',message:'Guias create response',data:{hasId:!!data.id,hasError:!!data.error,errorMsg:data.error||null},timestamp:Date.now(),hypothesisId:'E'})}).catch(function(){});
                     // #endregion
                     if (data.id) {
-                        if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Guia cadastrada com sucesso.' });
+                        if (typeof showToast === 'function') {
+                            if (data.valor_multa_calculado) {
+                                showToast({ type: 'success', variant: 'full', title: 'Cálculo automático', message: 'Cálculo realizado automaticamente pelo sistema. Valor da pena de multa: ' + data.valor_multa_calculado + '.' });
+                            } else {
+                                showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Guia cadastrada com sucesso.' });
+                            }
+                        }
                         window.location.href = '/frame.php?page=guias';
                     } else {
                         showFeedback(data.error || 'Não foi possível cadastrar.', 'error');

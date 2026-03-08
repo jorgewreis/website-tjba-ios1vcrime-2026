@@ -57,8 +57,12 @@ if ($subtarefaId === '') {
 
 try {
     $service = new GuiasService($connection);
-    $service->concluirSubtarefa($subtarefaId, $dadosEspecificos);
-    echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);
+    $resultado = $service->concluirSubtarefa($subtarefaId, $dadosEspecificos);
+    $body = ['success' => true];
+    if (isset($resultado['valor_multa_calculado'])) {
+        $body['valor_multa_calculado'] = $resultado['valor_multa_calculado'];
+    }
+    echo json_encode($body, JSON_UNESCAPED_UNICODE);
 } catch (\InvalidArgumentException $exception) {
     http_response_code(400);
     echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);

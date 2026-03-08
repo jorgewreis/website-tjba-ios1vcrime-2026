@@ -586,7 +586,13 @@ if ($totalPages > 0) {
                 .then(function(r) { return r.json().then(function(data) { return { ok: r.ok, data }; }); })
                 .then(function(result) {
                     if (result.ok && result.data && !result.data.error) {
-                        if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Subtarefa concluída.' });
+                        if (typeof showToast === 'function') {
+                            if (result.data.valor_multa_calculado) {
+                                showToast({ type: 'success', variant: 'full', title: 'Cálculo automático', message: 'Cálculo realizado automaticamente pelo sistema. Valor da pena de multa: ' + result.data.valor_multa_calculado + '.' });
+                            } else {
+                                showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Subtarefa concluída.' });
+                            }
+                        }
                         window.location.reload();
                     } else {
                         if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: result.data && result.data.error ? result.data.error : 'Erro ao concluir subtarefa.' });

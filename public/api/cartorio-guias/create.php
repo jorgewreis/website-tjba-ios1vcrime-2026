@@ -43,12 +43,17 @@ if ($usuarioCadastroId !== '') {
 try {
     $service = new GuiasService($connection);
     $newId = $service->create($parsed);
+    $body = ['id' => $newId];
+    $guia = $service->find($newId);
+    if ($guia !== null && isset($guia['valor_multa']) && $guia['valor_multa'] !== '' && $guia['valor_multa'] !== null) {
+        $body['valor_multa_calculado'] = 'R$ ' . number_format((float) $guia['valor_multa'], 2, ',', '.');
+    }
     // #region agent log
     $logPath = dirname(__DIR__, 3) . '/debug-64730a.log';
     @file_put_contents($logPath, json_encode(['sessionId' => '64730a', 'location' => 'create.php:success', 'message' => 'create returned id', 'data' => ['newId' => $newId], 'timestamp' => round(microtime(true) * 1000), 'hypothesisId' => 'D']) . "\n", FILE_APPEND | LOCK_EX);
     // #endregion
     http_response_code(201);
-    echo json_encode(['id' => $newId], JSON_UNESCAPED_UNICODE);
+    echo json_encode($body, JSON_UNESCAPED_UNICODE);
 } catch (\InvalidArgumentException $exception) {
     // #region agent log
     $logPath = dirname(__DIR__, 3) . '/debug-64730a.log';
