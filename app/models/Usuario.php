@@ -184,4 +184,48 @@ final class Usuario
 
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
+
+    /**
+     * Altera a senha do usuário. Exige senha atual correta.
+     * Nova senha: mínimo 8 caracteres.
+     *
+     * @return array{success: bool, message?: string}
+     */
+    public function alterarSenha(string $idUsuario, string $senhaAtual, string $novaSenha): array
+    {
+        $idUsuario = trim($idUsuario);
+        if ($idUsuario === '') {
+            return ['success' => false, 'message' => 'Usuário não identificado.'];
+        }
+
+        $stmt = $this->pdo->prepare("
+            SELECT senha_hash FROM usuarios WHERE id_usuario = ? LIMIT 1
+        ");
+        $stmt->execute([$idUsuario]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$row || empty($row['senha_hash'])) {
+            return ['success' => false, 'message' => 'Usuário não encontrado.'];
+        }
+
+        if (!Security::verifyPassword($senhaAtual, $row['senha_hash'])) {
+            return ['success' => false, 'message' => 'Senha atual incorreta.'];
+        }
+
+        $novaSenha = trim($novaSenha);
+        if (strlen($novaSenha) < 8) {
+            return ['success' => false, 'message' => 'A nova senha deve ter no mínimo 8 caracteres.'];
+        }
+
+        $novoHash = Security::hashPassword($novaSenha);
+        $stmt = $this->pdo->prepare("
+            UPDATE usuarios SET senha_hash = ? WHERE id_usuario = ?
+        ");
+        $stmt->execute([$novoHash, $idUsuario]);
+
+        if ($stmt->rowCount() < 1) {
+            return ['success' => false, 'message' => 'Não foi possível atualizar a senha. Tente novamente.'];
+        }
+
+        return ['success' => true];
+    }
 }
