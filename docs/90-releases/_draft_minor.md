@@ -54,4 +54,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Feat: modelo tarefas e subtarefas de Cartas Recebidas** `[4aa8285]`
 - **Feat: modelo de tarefas e subtarefas de Guias** `[3862020]`
 - **Fix: correção de inconsistencias** `[b892156]`
+- **Feat: nova função de cópia de numero de processo** `[e4a53e4]`
 
