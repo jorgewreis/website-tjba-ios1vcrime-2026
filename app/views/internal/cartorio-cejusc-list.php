@@ -124,6 +124,7 @@ if ($totalPages > 0) {
         <link rel="stylesheet" href="/assets/css/shared/table.css">
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
         <?php include __DIR__ . '/_toast_script.php'; ?>
+        <?php include __DIR__ . '/_copy_process_script.php'; ?>
     </head>
 <body class="page-internal">
 
@@ -375,13 +376,6 @@ if ($totalPages > 0) {
 
             document.getElementById('novo-cadastro-btn')?.addEventListener('click', function () {
                 window.location.href = '/frame.php?page=cejusccreate';
-            });
-
-            document.querySelectorAll('.process-info .major-info').forEach(function (el) {
-                el.addEventListener('click', function () {
-                    const text = el.textContent.trim();
-                    if (navigator.clipboard) navigator.clipboard.writeText(text);
-                });
             });
 
             document.querySelectorAll('.button-edit').forEach(function (btn) {

@@ -183,6 +183,7 @@ if ($totalPages > 0) {
         <!-- IMPORT - FLATICON -->
         <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
         <?php include __DIR__ . '/_toast_script.php'; ?>
+        <?php include __DIR__ . '/_copy_process_script.php'; ?>
     </head>
 <body class="page-internal">
 
@@ -556,22 +557,6 @@ if ($totalPages > 0) {
                 });
             }
 
-            // Copiar número do processo ao clicar
-            document.querySelectorAll('.process-info .major-info').forEach(function(el) {
-                el.addEventListener('click', function() {
-                    const text = el.textContent.trim();
-                    if (navigator.clipboard) {
-                        navigator.clipboard.writeText(text);
-                    } else {
-                        const tempInput = document.createElement('input');
-                        tempInput.value = text;
-                        document.body.appendChild(tempInput);
-                        tempInput.select();
-                        document.execCommand('copy');
-                        document.body.removeChild(tempInput);
-                    }
-                });
-            });
             document.querySelectorAll('.button-edit').forEach(function (button) {
                 button.addEventListener('click', function () {
                     const cartaId = button.dataset.cartaId;

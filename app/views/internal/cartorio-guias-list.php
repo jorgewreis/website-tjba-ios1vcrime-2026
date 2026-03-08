@@ -180,6 +180,7 @@ if ($totalPages > 0) {
         <link rel="stylesheet" href="/assets/css/shared/table.css">
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
         <?php include __DIR__ . '/_toast_script.php'; ?>
+        <?php include __DIR__ . '/_copy_process_script.php'; ?>
     </head>
 <body class="page-internal">
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0051
+
+**Data:** 2026-03-08 20:12:27 | **Commit:** `e4a53e4` | **Tipo:** `patch`
+
+- Feat: nova função de cópia de numero de processo
+
 ## V. 1.03.0050
 
 **Data:** 2026-03-08 20:07:29 | **Commit:** `b892156` | **Tipo:** `patch`
@@ -2580,6 +2586,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
