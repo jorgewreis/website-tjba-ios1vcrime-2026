@@ -7,6 +7,7 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 require_once __DIR__ . '/../../services/CartasRecebidasService.php';
+require_once __DIR__ . '/../../repositories/CartasRecebidasSubtarefasRepository.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -74,16 +75,53 @@ $statusOptions = [
 $statusCounts = array_merge(array_fill_keys($statusOptions, 0), $service->getStatusCounts($filters));
 
 $subtarefaLabels = [
-    'conferencia_inicial' => 'Conferência inicial',
-    'expedicao_mandado' => 'Expedição de mandado',
-    'devolucao_origem' => 'Devolução à origem',
-    'arquivamento' => 'Arquivar',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_1 => 'Ato ordinatório - Cumprimento',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_2 => 'Expedição de documento',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_3 => 'Juntada de certidão do oficial de justiça',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_4 => 'Ato ordinatório - Devolução',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5 => 'Devolução da Carta',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_6 => 'Juntada de termo de envio',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7 => 'Arquivamento definitivo',
 ];
 $ordemLabels = [
-    1 => $subtarefaLabels['conferencia_inicial'],
-    2 => $subtarefaLabels['expedicao_mandado'],
-    3 => $subtarefaLabels['devolucao_origem'],
-    4 => $subtarefaLabels['arquivamento'],
+    1 => $subtarefaLabels[CartasRecebidasSubtarefasRepository::TIPO_ORDEM_1],
+    2 => $subtarefaLabels[CartasRecebidasSubtarefasRepository::TIPO_ORDEM_2],
+    3 => $subtarefaLabels[CartasRecebidasSubtarefasRepository::TIPO_ORDEM_3],
+    4 => $subtarefaLabels[CartasRecebidasSubtarefasRepository::TIPO_ORDEM_4],
+    5 => $subtarefaLabels[CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5],
+    6 => $subtarefaLabels[CartasRecebidasSubtarefasRepository::TIPO_ORDEM_6],
+    7 => $subtarefaLabels[CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7],
+];
+$taskTitleByTipo = [
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_1 => 'Aguardando ato ordinatório de cumprimento',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_2 => 'Aguardando expedição de documento para cumprimento',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_3 => 'Aguardando cumprimento pelo oficial de justiça',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_4 => 'Aguardando ato ordinatório de devolução',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5 => 'Aguardando envio do processo ao juízo de origem',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_6 => 'Aguardando juntada de termo de envio',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7 => 'Aguardando arquivamento definitivo',
+];
+$buttonTitleByTipo = [
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_1 => 'Informar ato ordinatório de cumprimento',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_2 => 'Informar expedição de documento',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_3 => 'Informar juntada de certidão',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_4 => 'Informar ato ordinatório de devolução',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5 => 'Informar envio do processo',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_6 => 'Informar juntada',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7 => 'Informar arquivamento definitivo',
+];
+$resultadoCumprimentoOptions = [
+    'cumprido_integralmente' => 'Cumprido integralmente',
+    'cumprido_parcialmente' => 'Cumprido parcialmente',
+    'cumprido_negativamente' => 'Cumprido negativamente',
+    'nao_cumprido' => 'Não cumprido',
+];
+$tipoEnvioOptions = [
+    'E-mail' => 'E-mail',
+    'Malote Digital' => 'Malote Digital',
+    'PJe' => 'PJe',
+    'eSAJ' => 'eSAJ',
+    'ePROC' => 'ePROC',
 ];
 
 $defaultFinalidades = [
@@ -303,22 +341,22 @@ if ($totalPages > 0) {
                         <?php
                         $st = $row['Status'] ?? '';
                         $allSt = $row['SubtarefasAll'] ?? [];
-                        $progressStatuses = ['pendente', 'pendente', 'pendente', 'pendente'];
+                        $progressStatuses = ['pendente', 'pendente', 'pendente', 'pendente', 'pendente', 'pendente', 'pendente'];
                         foreach ($allSt as $s) {
                             $o = (int) ($s['ordem'] ?? 0);
-                            if ($o >= 1 && $o <= 4) {
+                            if ($o >= 1 && $o <= 7) {
                                 $progressStatuses[$o - 1] = (string) ($s['status'] ?? 'pendente');
                             }
                         }
                         $currentSubtarefaTitle = '';
                         foreach ($allSt as $s) {
                             if (trim((string) ($s['status'] ?? '')) === 'em_andamento') {
-                                $currentSubtarefaTitle = $subtarefaLabels[$s['tipo'] ?? ''] ?? $s['tipo'] ?? '';
+                                $currentSubtarefaTitle = $taskTitleByTipo[$s['tipo'] ?? ''] ?? $subtarefaLabels[$s['tipo'] ?? ''] ?? $s['tipo'] ?? '';
                                 break;
                             }
                         }
                         if ($currentSubtarefaTitle === '' && $st === 'pendente') {
-                            $currentSubtarefaTitle = $ordemLabels[1] ?? 'Conferência inicial';
+                            $currentSubtarefaTitle = $taskTitleByTipo[CartasRecebidasSubtarefasRepository::TIPO_ORDEM_1] ?? $ordemLabels[1];
                         } elseif ($currentSubtarefaTitle === '' && ($st === 'concluída' || $st === 'finalizada')) {
                             $currentSubtarefaTitle = 'Todas as etapas concluídas';
                         } elseif ($currentSubtarefaTitle === '') {
@@ -329,9 +367,9 @@ if ($totalPages > 0) {
                         $segmentosBarra = [];
                         if ($mostrarBarraStatus) {
                             $segmentosBarra[] = ['class' => 'concluida', 'title' => 'Carta recebida e cadastrada'];
-                            for ($i = 0; $i < 4; $i++) {
+                            for ($i = 0; $i < 7; $i++) {
                                 $statusSeg = $progressStatuses[$i] ?? 'pendente';
-                                $segClass = $statusSeg === 'concluida' ? 'concluida' : ($statusSeg === 'em_andamento' ? 'em_andamento' : 'pendente');
+                                $segClass = $statusSeg === 'concluida' ? 'concluida' : ($statusSeg === 'em_andamento' ? 'em_andamento' : ($statusSeg === 'cancelada' ? 'cancelada' : 'pendente'));
                                 $segmentosBarra[] = ['class' => $segClass, 'title' => $ordemLabels[$i + 1] ?? ''];
                             }
                         }
@@ -347,8 +385,8 @@ if ($totalPages > 0) {
                                 $classStatus = $isEmAndamento ? 'status-current' : 'status-pending';
                                 echo '<div class="width-sm status ' . $classStatus . ' status-with-progress">';
                                 echo '<span class="status-task-label">' . htmlspecialchars($labelStatus, ENT_QUOTES) . '</span>';
-                                $concluidosBarra = 1 + count(array_filter($progressStatuses, fn($x) => $x === 'concluida'));
-                                echo '<div class="status-task-progress" role="progressbar" aria-valuenow="' . $concluidosBarra . '" aria-valuemin="0" aria-valuemax="5" aria-label="Progresso das subtarefas">';
+                                $concluidosBarra = 1 + count(array_filter($progressStatuses, function ($x) { return $x === 'concluida' || $x === 'cancelada'; }));
+                                echo '<div class="status-task-progress" role="progressbar" aria-valuenow="' . $concluidosBarra . '" aria-valuemin="0" aria-valuemax="8" aria-label="Progresso das subtarefas">';
                                 foreach ($segmentosBarra as $seg) {
                                     echo '<div class="status-task-progress-segment ' . htmlspecialchars($seg['class'], ENT_QUOTES) . '" title="' . htmlspecialchars($seg['title'], ENT_QUOTES) . '"></div>';
                                 }
@@ -367,13 +405,36 @@ if ($totalPages > 0) {
                         $stId = $st['id'] ?? '';
                         $stTipo = $st['tipo'] ?? '';
                         $stLabel = $subtarefaLabels[$stTipo] ?? $stTipo;
+                        $btnTitle = $buttonTitleByTipo[$stTipo] ?? $stLabel;
+                        $isOrdem1 = ($stTipo === CartasRecebidasSubtarefasRepository::TIPO_ORDEM_1);
+                        $isOrdem3 = ($stTipo === CartasRecebidasSubtarefasRepository::TIPO_ORDEM_3);
+                        $isOrdem5 = ($stTipo === CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5);
                     ?>
                     <div class="col full-line" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>" style="border-top: 1px solid var(--color-gray-400);">
                         <div class="row subtask-item">
                             <div class="col task-status">
                                 <div class="status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
                             </div>
-                            <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($stLabel, ENT_QUOTES); ?>"><i class="fi fi-rr-play"></i></button>
+                            <?php if ($isOrdem3): ?>
+                                <select class="subtask-resultado-cumprimento width-md height-md" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Resultado do cumprimento">
+                                    <option value="">Selecione o resultado</option>
+                                    <?php foreach ($resultadoCumprimentoOptions as $val => $label): ?>
+                                        <option value="<?php echo htmlspecialchars($val, ENT_QUOTES); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            <?php endif; ?>
+                            <?php if ($isOrdem5): ?>
+                                <select class="subtask-tipo-envio width-md height-md" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Tipo de envio">
+                                    <option value="">Selecione o tipo de envio</option>
+                                    <?php foreach ($tipoEnvioOptions as $val => $label): ?>
+                                        <option value="<?php echo htmlspecialchars($val, ENT_QUOTES); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            <?php endif; ?>
+                            <?php if ($isOrdem1): ?>
+                                <button type="button" class="btn btn-secondary-outline btn-cancelar-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Cancelar esta subtarefa">Cancelar</button>
+                            <?php endif; ?>
+                            <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($btnTitle, ENT_QUOTES); ?>"><i class="fi fi-rr-play"></i></button>
                         </div>
                     </div>
                     <?php endforeach; ?>
@@ -526,23 +587,31 @@ if ($totalPages > 0) {
             document.querySelectorAll('.btn-concluir-subtarefa').forEach(function (btn) {
                 btn.addEventListener('click', function () {
                     const subtarefaId = this.getAttribute('data-subtarefa-id');
+                    const subtarefaTipo = this.getAttribute('data-subtarefa-tipo') || '';
                     if (!subtarefaId) return;
                     const block = this.closest('.col.full-line[data-subtarefa-id]');
-                    let dadosEspecificos = null;
+                    const obj = {};
                     if (block) {
-                        const qtdEl = block.querySelector('.subtask-qtd-docs');
-                        const numeroDestino = block.querySelector('.subtask-numero-destino');
-                        const varaDestino = block.querySelector('.subtask-vara-destino');
-                        const resultadoDevolucao = block.querySelector('.subtask-resultado-devolucao');
-                        const metodoEnvio = block.querySelector('.subtask-metodo-envio');
-                        const obj = {};
-                        if (qtdEl) obj.qtd_docs_gerados = parseInt(qtdEl.value, 10) || 1;
-                        if (numeroDestino && numeroDestino.value.trim()) obj.numero_processo_destino = numeroDestino.value.trim();
-                        if (varaDestino && varaDestino.value.trim()) obj.vara_destino = varaDestino.value.trim();
-                        if (resultadoDevolucao && resultadoDevolucao.value) obj.resultado_devolucao = resultadoDevolucao.value;
-                        if (metodoEnvio && metodoEnvio.value && metodoEnvio.value.trim()) obj.metodo_envio = metodoEnvio.value.trim();
-                        if (Object.keys(obj).length > 0) dadosEspecificos = JSON.stringify(obj);
+                        const resultadoCumprimento = block.querySelector('.subtask-resultado-cumprimento');
+                        const tipoEnvio = block.querySelector('.subtask-tipo-envio');
+                        if (resultadoCumprimento && resultadoCumprimento.value && resultadoCumprimento.value.trim()) {
+                            obj.resultado_cumprimento = resultadoCumprimento.value.trim();
+                        }
+                        if (tipoEnvio && tipoEnvio.value && tipoEnvio.value.trim()) {
+                            obj.tipo_envio = tipoEnvio.value.trim();
+                        }
                     }
+                    if (subtarefaTipo === 'juntada_certidao_oficial' && !(obj.resultado_cumprimento)) {
+                        if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Atenção', message: 'Selecione o resultado do cumprimento.' });
+                        else alert('Selecione o resultado do cumprimento.');
+                        return;
+                    }
+                    if (subtarefaTipo === 'envio_processo' && !(obj.tipo_envio)) {
+                        if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Atenção', message: 'Selecione o tipo de envio.' });
+                        else alert('Selecione o tipo de envio.');
+                        return;
+                    }
+                    const dadosEspecificos = Object.keys(obj).length > 0 ? JSON.stringify(obj) : null;
                     btn.disabled = true;
                     fetch('/api/cartorio-cartas-recebidas/concluir-subtarefa.php', {
                         method: 'POST',
@@ -559,6 +628,36 @@ if ($totalPages > 0) {
                         } else {
                             if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao concluir subtarefa.' });
                             else alert(data.error || 'Erro ao concluir subtarefa.');
+                            btn.disabled = false;
+                        }
+                    })
+                    .catch(function () {
+                        if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
+                        else alert('Erro de conexão.');
+                        btn.disabled = false;
+                    });
+                });
+            });
+
+            // Cancelar subtarefa (apenas ordem 1)
+            document.querySelectorAll('.btn-cancelar-subtarefa').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    const subtarefaId = this.getAttribute('data-subtarefa-id');
+                    if (!subtarefaId) return;
+                    if (!confirm('Deseja cancelar a subtarefa "Ato ordinatório - Cumprimento"? A próxima etapa será disponibilizada.')) return;
+                    btn.disabled = true;
+                    fetch('/api/cartorio-cartas-recebidas/cancelar-subtarefa.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ subtarefa_id: subtarefaId })
+                    })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        if (data.success) {
+                            window.location.reload();
+                        } else {
+                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao cancelar subtarefa.' });
+                            else alert(data.error || 'Erro ao cancelar subtarefa.');
                             btn.disabled = false;
                         }
                     })

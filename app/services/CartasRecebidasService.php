@@ -48,7 +48,6 @@ final class CartasRecebidasService
         foreach ($rows as $i => $row) {
             $idCarta = (string) ($row['IdCarta'] ?? '');
             if ($idCarta !== '') {
-                $this->subtarefasRepository->ensureDevolucaoArquivamentoPair($idCarta);
                 $rows[$i]['Subtarefas'] = $this->subtarefasRepository->findPendenteOuEmAndamentoByCartaId($idCarta);
                 $rows[$i]['SubtarefasAll'] = $this->subtarefasRepository->findByCartaId($idCarta);
                 $alocadosRaw = $this->alocadosRepository->findByCartaId($idCarta);
@@ -178,13 +177,16 @@ final class CartasRecebidasService
             }
         }
 
-        $this->subtarefasRepository->create(
-            $idCarta,
-            CartasRecebidasSubtarefasRepository::TIPO_ORDEM_1,
-            1,
-            'em_andamento',
-            null
-        );
+        $repo = $this->subtarefasRepository;
+        $repo->create($idCarta, $repo::TIPO_ORDEM_1, 1, 'em_andamento', null);
+        $repo->create($idCarta, $repo::TIPO_ORDEM_2, 2, 'pendente', null);
+        $repo->create($idCarta, $repo::TIPO_ORDEM_3, 3, 'pendente', null);
+        $repo->create($idCarta, $repo::TIPO_ORDEM_4, 4, 'pendente', null);
+        $repo->create($idCarta, $repo::TIPO_ORDEM_5, 5, 'pendente', null);
+        $repo->create($idCarta, $repo::TIPO_ORDEM_6, 6, 'pendente', null);
+        $repo->create($idCarta, $repo::TIPO_ORDEM_7, 7, 'pendente', null);
+
+        $this->repository->update($idCarta, ['status' => 'em_andamento']);
 
         return $idCarta;
     }
@@ -214,19 +216,6 @@ final class CartasRecebidasService
             $this->alocadosRepository->addAlocado($cartaId, $usuarioIdMovimentacao);
         }
 
-        if ($ordem >= 3) {
-            $this->subtarefasRepository->ensureDevolucaoArquivamentoPair($cartaId);
-        }
-
-        if ($ordem === 4) {
-            $todas = $this->subtarefasRepository->findByCartaId($cartaId);
-            foreach ($todas as $st) {
-                if ((int) ($st['ordem'] ?? 0) === 3 && trim((string) ($st['status'] ?? '')) !== 'concluida') {
-                    $this->subtarefasRepository->marcarConcluida((string) $st['id']);
-                }
-            }
-        }
-
         $this->subtarefasRepository->marcarConcluida($subtarefaId);
 
         if ($dadosJson !== null && $dadosJson !== '') {
@@ -238,41 +227,41 @@ final class CartasRecebidasService
             $stmt->execute();
         }
 
-        $proximoTipo = $this->subtarefasRepository->obterProximoTipo($ordem);
-        if ($proximoTipo !== null) {
-            $proximaOrdem = $ordem + 1;
-            if ($proximaOrdem === 3) {
-                $ordem3 = $this->subtarefasRepository->findByCartaIdEOrdem($cartaId, 3);
-                if ($ordem3 === null) {
-                    $this->subtarefasRepository->create($cartaId, CartasRecebidasSubtarefasRepository::TIPO_ORDEM_3, 3, 'em_andamento', null);
-                } else {
-                    $status3 = trim((string) ($ordem3['status'] ?? ''));
-                    if ($status3 !== 'concluida') {
-                        $this->subtarefasRepository->atualizarStatus((string) ($ordem3['id'] ?? ''), 'em_andamento');
-                    }
-                }
-                $ordem4 = $this->subtarefasRepository->findByCartaIdEOrdem($cartaId, 4);
-                if ($ordem4 === null) {
-                    $this->subtarefasRepository->create($cartaId, CartasRecebidasSubtarefasRepository::TIPO_ORDEM_4, 4, 'pendente', null);
-                }
-            } elseif ($proximaOrdem === 4) {
-                $ordem4 = $this->subtarefasRepository->findByCartaIdEOrdem($cartaId, 4);
-                if ($ordem4 === null) {
-                    $this->subtarefasRepository->create($cartaId, CartasRecebidasSubtarefasRepository::TIPO_ORDEM_4, 4, 'em_andamento', null);
-                } else {
-                    $status4 = trim((string) ($ordem4['status'] ?? ''));
-                    if ($status4 !== 'concluida') {
-                        $this->subtarefasRepository->atualizarStatus((string) ($ordem4['id'] ?? ''), 'em_andamento');
-                    }
-                }
-            } else {
-                $this->subtarefasRepository->create($cartaId, $proximoTipo, $proximaOrdem, 'em_andamento', null);
+        if ($ordem < 7) {
+            $proxima = $this->subtarefasRepository->findByCartaIdEOrdem($cartaId, $ordem + 1);
+            if ($proxima !== null) {
+                $this->subtarefasRepository->atualizarStatus((string) $proxima['id'], 'em_andamento');
             }
-            $statusCarta = $proximaOrdem === 4 ? 'pendente' : 'em_andamento';
-            $this->repository->update($cartaId, ['status' => $statusCarta]);
+            $this->repository->update($cartaId, ['status' => 'em_andamento']);
         } else {
             $this->repository->update($cartaId, ['status' => 'concluída']);
         }
+    }
+
+    public function cancelarSubtarefa(string $subtarefaId): void
+    {
+        $subtarefa = $this->subtarefasRepository->findById($subtarefaId);
+        if ($subtarefa === null) {
+            throw new InvalidArgumentException('Subtarefa não encontrada.');
+        }
+
+        $ordem = (int) ($subtarefa['ordem'] ?? 0);
+        if ($ordem !== 1) {
+            throw new InvalidArgumentException('Apenas a subtarefa "Ato ordinatório - Cumprimento" pode ser cancelada.');
+        }
+
+        $cartaId = trim((string) ($subtarefa['carta_recebida_id'] ?? ''));
+        if ($cartaId === '') {
+            throw new InvalidArgumentException('Carta da subtarefa não identificada.');
+        }
+
+        $this->subtarefasRepository->atualizarStatus($subtarefaId, CartasRecebidasSubtarefasRepository::STATUS_CANCELADA);
+
+        $proxima = $this->subtarefasRepository->findByCartaIdEOrdem($cartaId, 2);
+        if ($proxima !== null) {
+            $this->subtarefasRepository->atualizarStatus((string) $proxima['id'], 'em_andamento');
+        }
+        $this->repository->update($cartaId, ['status' => 'em_andamento']);
     }
 
     private function normalizeTipoAlocado(string $tipo): string
@@ -388,13 +377,14 @@ final class CartasRecebidasService
         if (count($existentes) > 0) {
             throw new InvalidArgumentException('Esta carta já possui subtarefas.');
         }
-        $this->subtarefasRepository->create(
-            $cartaId,
-            CartasRecebidasSubtarefasRepository::TIPO_ORDEM_1,
-            1,
-            'em_andamento',
-            null
-        );
+        $repo = $this->subtarefasRepository;
+        $repo->create($cartaId, $repo::TIPO_ORDEM_1, 1, 'em_andamento', null);
+        $repo->create($cartaId, $repo::TIPO_ORDEM_2, 2, 'pendente', null);
+        $repo->create($cartaId, $repo::TIPO_ORDEM_3, 3, 'pendente', null);
+        $repo->create($cartaId, $repo::TIPO_ORDEM_4, 4, 'pendente', null);
+        $repo->create($cartaId, $repo::TIPO_ORDEM_5, 5, 'pendente', null);
+        $repo->create($cartaId, $repo::TIPO_ORDEM_6, 6, 'pendente', null);
+        $repo->create($cartaId, $repo::TIPO_ORDEM_7, 7, 'pendente', null);
         $this->repository->update($cartaId, ['status' => 'em_andamento']);
         if ($usuarioId !== null && trim($usuarioId) !== '') {
             $this->alocadosRepository->addAlocado($cartaId, trim($usuarioId));

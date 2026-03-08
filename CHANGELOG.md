@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0048
+
+**Data:** 2026-03-08 19:28:27 | **Commit:** `4aa8285` | **Tipo:** `patch`
+
+- Feat: modelo tarefas e subtarefas de Cartas Recebidas
+
 ## V. 1.03.0047
 
 **Data:** 2026-03-08 19:11:27 | **Commit:** `a6c0aa7` | **Tipo:** `patch`
@@ -2562,6 +2568,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

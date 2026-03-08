@@ -222,6 +222,9 @@
 .timeline .circle.finished {
     background-color: var(--color-accent);
 }
+.timeline .circle.cancelada {
+    background-color: var(--color-gray-500);
+}
 .timeline.current:hover{
     background-color: var(--color-warning-bg-light);
 }
@@ -278,6 +281,9 @@
 }
 .status-task-progress-segment.pendente {
     background-color: var(--color-border);
+}
+.status-task-progress-segment.cancelada {
+    background-color: var(--color-gray-400);
 }
 
 .col.status-task {

@@ -8,21 +8,28 @@ final class CartasRecebidasSubtarefasRepository
     private PDO $connection;
     private string $table;
 
-    public const TIPO_ORDEM_1 = 'conferencia_inicial';
-    public const TIPO_ORDEM_2 = 'expedicao_mandado';
-    public const TIPO_ORDEM_3 = 'devolucao_origem';
-    public const TIPO_ORDEM_4 = 'arquivamento';
+    public const TIPO_ORDEM_1 = 'ato_ordinatorio_cumprimento';
+    public const TIPO_ORDEM_2 = 'expedicao_documento';
+    public const TIPO_ORDEM_3 = 'juntada_certidao_oficial';
+    public const TIPO_ORDEM_4 = 'ato_ordinatorio_devolucao';
+    public const TIPO_ORDEM_5 = 'envio_processo';
+    public const TIPO_ORDEM_6 = 'juntada_termo_envio';
+    public const TIPO_ORDEM_7 = 'arquivamento_definitivo';
 
     private const ORDEM_POR_TIPO = [
         self::TIPO_ORDEM_1 => 1,
         self::TIPO_ORDEM_2 => 2,
         self::TIPO_ORDEM_3 => 3,
         self::TIPO_ORDEM_4 => 4,
+        self::TIPO_ORDEM_5 => 5,
+        self::TIPO_ORDEM_6 => 6,
+        self::TIPO_ORDEM_7 => 7,
     ];
 
     private const STATUS_EM_ANDAMENTO = 'em_andamento';
     private const STATUS_PENDENTE = 'pendente';
     private const STATUS_CONCLUIDA = 'concluida';
+    public const STATUS_CANCELADA = 'cancelada';
 
     public function __construct(PDO $connection, string $table = 'cartas_recebidas_subtarefas')
     {
@@ -34,8 +41,8 @@ final class CartasRecebidasSubtarefasRepository
     {
         $cartaId = trim($cartaId);
         $tipo = trim($tipo);
-        if ($cartaId === '' || $tipo === '' || $ordem < 1 || $ordem > 4) {
-            throw new InvalidArgumentException('carta_recebida_id, tipo e ordem (1-4) são obrigatórios.');
+        if ($cartaId === '' || $tipo === '' || $ordem < 1 || $ordem > 7) {
+            throw new InvalidArgumentException('carta_recebida_id, tipo e ordem (1-7) são obrigatórios.');
         }
         if (!isset(self::ORDEM_POR_TIPO[$tipo]) || self::ORDEM_POR_TIPO[$tipo] !== $ordem) {
             throw new InvalidArgumentException('Tipo e ordem inválidos.');
@@ -104,7 +111,7 @@ final class CartasRecebidasSubtarefasRepository
     public function findByCartaIdEOrdem(string $cartaId, int $ordem): ?array
     {
         $cartaId = trim($cartaId);
-        if ($cartaId === '' || $ordem < 1 || $ordem > 4) {
+        if ($cartaId === '' || $ordem < 1 || $ordem > 7) {
             return null;
         }
 
@@ -128,6 +135,7 @@ final class CartasRecebidasSubtarefasRepository
 
     /**
      * Retorna as subtarefas a exibir na lista: apenas 1 por vez, a que estiver em andamento ou pendente (primeira na ordem).
+     * Ignora subtarefas com status cancelada.
      */
     public function findPendenteOuEmAndamentoByCartaId(string $cartaId): array
     {
@@ -166,7 +174,7 @@ final class CartasRecebidasSubtarefasRepository
         if ($id === '') {
             throw new InvalidArgumentException('ID da subtarefa é obrigatório.');
         }
-        if (!in_array($status, [self::STATUS_PENDENTE, self::STATUS_EM_ANDAMENTO, self::STATUS_CONCLUIDA], true)) {
+        if (!in_array($status, [self::STATUS_PENDENTE, self::STATUS_EM_ANDAMENTO, self::STATUS_CONCLUIDA, self::STATUS_CANCELADA], true)) {
             throw new InvalidArgumentException('Status de subtarefa inválido.');
         }
 
@@ -179,37 +187,6 @@ final class CartasRecebidasSubtarefasRepository
         $statement->bindValue(':status', $status);
         $statement->bindValue(':id', $id);
         $statement->execute();
-    }
-
-    /**
-     * Garante que as subtarefas das ordens 3 (devolução à origem) e 4 (arquivamento) existam em conjunto.
-     */
-    public function ensureDevolucaoArquivamentoPair(string $cartaId): void
-    {
-        $cartaId = trim($cartaId);
-        if ($cartaId === '') {
-            return;
-        }
-
-        $ordem3 = $this->findByCartaIdEOrdem($cartaId, 3);
-        $ordem4 = $this->findByCartaIdEOrdem($cartaId, 4);
-
-        if ($ordem3 === null && $ordem4 === null) {
-            return;
-        }
-
-        if ($ordem3 !== null && $ordem4 === null) {
-            $status3 = trim((string) ($ordem3['status'] ?? ''));
-            $status4 = $status3 === self::STATUS_CONCLUIDA ? self::STATUS_EM_ANDAMENTO : self::STATUS_PENDENTE;
-            $this->create($cartaId, self::TIPO_ORDEM_4, 4, $status4, null);
-            return;
-        }
-
-        if ($ordem3 === null && $ordem4 !== null) {
-            $status4 = trim((string) ($ordem4['status'] ?? ''));
-            $status3 = $status4 === self::STATUS_CONCLUIDA ? self::STATUS_CONCLUIDA : self::STATUS_PENDENTE;
-            $this->create($cartaId, self::TIPO_ORDEM_3, 3, $status3, null);
-        }
     }
 
     public function findById(string $id): ?array
@@ -240,6 +217,9 @@ final class CartasRecebidasSubtarefasRepository
             2 => self::TIPO_ORDEM_2,
             3 => self::TIPO_ORDEM_3,
             4 => self::TIPO_ORDEM_4,
+            5 => self::TIPO_ORDEM_5,
+            6 => self::TIPO_ORDEM_6,
+            7 => self::TIPO_ORDEM_7,
         ];
         return $map[$next] ?? null;
     }
