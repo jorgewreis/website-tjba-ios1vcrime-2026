@@ -111,7 +111,6 @@
     display: flex;
     flex-wrap: wrap;
     flex-direction: column;
-    gap: 10px;
 }
 /* Linha compacta de uma subtarefa na lista (modelo simples ou com complemento) */
 .row.subtask-item {

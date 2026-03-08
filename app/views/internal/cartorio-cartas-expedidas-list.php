@@ -79,12 +79,28 @@ $statusCounts = array_merge(array_fill_keys($statusOptions, 0), $service->getSta
 $statusCounts['em_andamento'] = (int) ($statusCounts['em_andamento'] ?? 0) + (int) ($statusCounts['aguardando assinatura'] ?? 0) + (int) ($statusCounts['aguardando envio'] ?? 0) + (int) ($statusCounts['aguardando juntada do termo'] ?? 0) + (int) ($statusCounts['aguardando juntada de termo'] ?? 0) + (int) ($statusCounts['aguardando cumprimento'] ?? 0);
 
 $subtarefaLabels = [
-    'aguardando_assinatura' => 'Assinar carta expedida',
-    'aguardando_gerar_pdf' => 'Gerar PDF da documentação',
+    'aguardando_assinatura' => 'Aguardando assinatura',
+    'aguardando_gerar_pdf' => 'Gerar PDF',
     'aguardando_envio' => 'Aguardando envio',
-    'aguardando_juntada_termo' => 'Aguardando juntada de termo de envio',
-    'aguardando_informacoes' => 'Aguardando informações',
-    'aguardando_devolucao' => 'Aguardando devolução',
+    'aguardando_juntada_termo' => 'Juntada de termo de envio',
+    'aguardando_informacoes' => 'Aguardando cumprimento',
+    'aguardando_devolucao' => 'Devolução',
+];
+$taskTitleByTipo = [
+    'aguardando_assinatura' => 'Carta aguardando assinatura',
+    'aguardando_gerar_pdf' => 'Aguardando impressão de documentos em PDF',
+    'aguardando_envio' => 'Aguardando envio de Carta',
+    'aguardando_juntada_termo' => 'Aguardando comprovante de envio',
+    'aguardando_informacoes' => 'Aguardando cumprimento',
+    'aguardando_devolucao' => 'Aguardando cumprimento',
+];
+$buttonTitleByTipo = [
+    'aguardando_assinatura' => 'Informar assinatura',
+    'aguardando_gerar_pdf' => 'Informar impressão em PDF',
+    'aguardando_envio' => 'Informar envio',
+    'aguardando_juntada_termo' => 'Informar juntada',
+    'aguardando_informacoes' => 'Informar número do processo no Juízo Deprecado',
+    'aguardando_devolucao' => 'Informar juntada de carta devolvida',
 ];
 $ordemLabels = [
     1 => $subtarefaLabels['aguardando_assinatura'],
@@ -330,12 +346,13 @@ if ($totalPages > 0) {
                         $currentSubtarefaTitle = '';
                         foreach ($allSt as $s) {
                             if (trim((string) ($s['status'] ?? '')) === 'em_andamento') {
-                                $currentSubtarefaTitle = $subtarefaLabels[$s['tipo'] ?? ''] ?? $s['tipo'] ?? '';
+                                $tipoAtual = $s['tipo'] ?? '';
+                                $currentSubtarefaTitle = $taskTitleByTipo[$tipoAtual] ?? $subtarefaLabels[$tipoAtual] ?? $tipoAtual;
                                 break;
                             }
                         }
                         if ($currentSubtarefaTitle === '' && $st === 'pendente') {
-                            $currentSubtarefaTitle = $ordemLabels[1] ?? 'Assinar carta expedida';
+                            $currentSubtarefaTitle = $taskTitleByTipo['aguardando_assinatura'] ?? 'Carta aguardando assinatura';
                         } elseif ($currentSubtarefaTitle === '' && ($st === 'concluída' || $st === 'finalizada')) {
                             $currentSubtarefaTitle = 'Todas as etapas concluídas';
                         } elseif ($currentSubtarefaTitle === '') {
@@ -395,17 +412,17 @@ if ($totalPages > 0) {
                                 </div>
                                 <?php if ($stTipo === 'aguardando_gerar_pdf'): ?>
                                 <div class="col filter">
-                                    <input type="number" class="width-sm height-md subtask-qtd-docs" value="1" min="1" max="10" placeholder="Qtd docs" title="Qtd docs gerados" />
+                                    <input type="number" class="width-sm height-md subtask-qtd-docs" value="2" min="2" max="10" placeholder="Qtd de docs gerados (2 a 10)" title="Qtd de docs gerados" />
                                 </div>
                                 <?php elseif ($stTipo === 'aguardando_envio'): ?>
                                 <div class="col filter">
                                     <select class="width-md height-md subtask-metodo-envio" title="Método de envio">
                                         <option value="">Método de envio</option>
+                                        <option value="Email">E-mail</option>
+                                        <option value="Malote Digital">Malote Digital</option>
                                         <option value="PJe">PJe</option>
                                         <option value="eSAJ">eSAJ</option>
                                         <option value="ePROC">ePROC</option>
-                                        <option value="Malote Digital">Malote Digital</option>
-                                        <option value="Email">Email</option>
                                     </select>
                                 </div>
                                 <?php elseif ($stTipo === 'aguardando_informacoes'): ?>
@@ -419,10 +436,10 @@ if ($totalPages > 0) {
                                 <div class="col filter">
                                     <select class="width-lg height-md subtask-resultado-devolucao" title="Resultado da devolução">
                                         <option value="">Resultado</option>
-                                        <option value="devolvida_sem_cumprimento">Devolvida sem cumprimento</option>
-                                        <option value="cumprida_positivamente">Cumprida positivamente</option>
-                                        <option value="cumprida_parcialmente">Cumprida parcialmente</option>
+                                        <option value="devolvida_sem_cumprimento">Não cumprida</option>
                                         <option value="cumprida_negativamente">Cumprida negativamente</option>
+                                        <option value="cumprida_parcialmente">Cumprida parcialmente</option>
+                                        <option value="cumprida_positivamente">Cumprida integralmente</option>
                                     </select>
                                 </div>
                                 <?php endif; ?>
@@ -432,7 +449,7 @@ if ($totalPages > 0) {
                                 <div class="status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
                             </div>
                             <?php endif; ?>
-                            <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($stLabel, ENT_QUOTES); ?>">
+                            <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?>">
                                 <i class="fi fi-rr-play"></i>
                             </button>
                         </div>
@@ -589,15 +606,42 @@ if ($totalPages > 0) {
                     const subtarefaId = this.getAttribute('data-subtarefa-id');
                     if (!subtarefaId) return;
                     const block = this.closest('.col.full-line[data-subtarefa-id]');
+                    const tipo = block ? (block.getAttribute('data-subtarefa-tipo') || '') : '';
+                    const qtdEl = block ? block.querySelector('.subtask-qtd-docs') : null;
+                    const numeroDestino = block ? block.querySelector('.subtask-numero-destino') : null;
+                    const resultadoDevolucao = block ? block.querySelector('.subtask-resultado-devolucao') : null;
+                    const metodoEnvio = block ? block.querySelector('.subtask-metodo-envio') : null;
+                    if (tipo === 'aguardando_gerar_pdf') {
+                        var qtd = qtdEl ? (parseInt(qtdEl.value, 10) || 0) : 0;
+                        if (qtd < 2 || qtd > 10) {
+                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Atenção', message: 'Informe a quantidade de documentos gerados (2 a 10).' });
+                            else alert('Informe a quantidade de documentos gerados (2 a 10).');
+                            return;
+                        }
+                    } else if (tipo === 'aguardando_envio') {
+                        if (!metodoEnvio || !metodoEnvio.value || !metodoEnvio.value.trim()) {
+                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Atenção', message: 'Selecione o método de envio.' });
+                            else alert('Selecione o método de envio.');
+                            return;
+                        }
+                    } else if (tipo === 'aguardando_informacoes') {
+                        if (!numeroDestino || !numeroDestino.value.trim()) {
+                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Atenção', message: 'Informe o número do processo no Juízo Deprecante.' });
+                            else alert('Informe o número do processo no Juízo Deprecante.');
+                            return;
+                        }
+                    } else if (tipo === 'aguardando_devolucao') {
+                        if (!resultadoDevolucao || !resultadoDevolucao.value) {
+                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Atenção', message: 'Selecione o resultado da devolução.' });
+                            else alert('Selecione o resultado da devolução.');
+                            return;
+                        }
+                    }
                     let dadosEspecificos = null;
                     if (block) {
-                        const qtdEl = block.querySelector('.subtask-qtd-docs');
-                        const numeroDestino = block.querySelector('.subtask-numero-destino');
                         const varaDestino = block.querySelector('.subtask-vara-destino');
-                        const resultadoDevolucao = block.querySelector('.subtask-resultado-devolucao');
-                        const metodoEnvio = block.querySelector('.subtask-metodo-envio');
                         const obj = {};
-                        if (qtdEl) obj.qtd_docs_gerados = parseInt(qtdEl.value, 10) || 1;
+                        if (qtdEl) obj.qtd_docs_gerados = parseInt(qtdEl.value, 10) || 2;
                         if (numeroDestino && numeroDestino.value.trim()) obj.numero_processo_destino = numeroDestino.value.trim();
                         if (varaDestino && varaDestino.value.trim()) obj.vara_destino = varaDestino.value.trim();
                         if (resultadoDevolucao && resultadoDevolucao.value) obj.resultado_devolucao = resultadoDevolucao.value;

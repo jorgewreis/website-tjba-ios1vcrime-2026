@@ -83,12 +83,20 @@ if ($carta !== null) {
         $subtarefasPorOrdem[(int) $st['ordem']] = $st;
     }
     $subtarefaLabels = [
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1 => 'Assinar carta expedida',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_2 => 'Gerar PDF da documentação',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1 => 'Aguardando assinatura',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_2 => 'Gerar PDF',
         CartasExpedidasSubtarefasRepository::TIPO_ORDEM_3 => 'Aguardando envio',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_4 => 'Aguardando juntada de termo de envio',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_5 => 'Aguardando informações',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6 => 'Aguardando devolução',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_4 => 'Juntada de termo de envio',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_5 => 'Aguardando cumprimento',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6 => 'Devolução',
+    ];
+    $taskTitleByTipo = [
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1 => 'Carta aguardando assinatura',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_2 => 'Aguardando impressão de documentos em PDF',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_3 => 'Aguardando envio de Carta',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_4 => 'Aguardando comprovante de envio',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_5 => 'Aguardando cumprimento',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6 => 'Aguardando cumprimento',
     ];
     $ordemParaTipo = [
         1 => CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1,
@@ -108,12 +116,12 @@ if ($carta !== null) {
         }
     }
     $timelineMinorPendente = [
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1 => 'Carta expedida aguardando assinatura',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_2 => 'Aguardando geração de PDF da documentação',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_3 => 'Carta expedida aguardando envio',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1 => 'Aguardando assinatura pela juíza',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_2 => 'Aguardando impressão de documentos em PDF',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_3 => 'Aguardando envio de documentos',
         CartasExpedidasSubtarefasRepository::TIPO_ORDEM_4 => 'Aguardando juntada de termo de envio',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_5 => 'Aguardando informações complementares',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6 => 'Aguardando devolução da carta',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_5 => 'Aguardando juntada de informações',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6 => 'Aguardando devolução da Carta',
     ];
 }
 
@@ -321,12 +329,13 @@ $stateOptions = [
             $currentSubtarefaTitle = '';
             foreach ($subtarefas as $s) {
                 if (trim((string) ($s['status'] ?? '')) === 'em_andamento') {
-                    $currentSubtarefaTitle = $subtarefaLabels[$s['tipo'] ?? ''] ?? $s['tipo'] ?? '';
+                    $tipoAtual = $s['tipo'] ?? '';
+                    $currentSubtarefaTitle = $taskTitleByTipo[$tipoAtual] ?? $subtarefaLabels[$tipoAtual] ?? $tipoAtual;
                     break;
                 }
             }
             if ($currentSubtarefaTitle === '' && $statusAtual === 'pendente') {
-                $currentSubtarefaTitle = $subtarefaLabels[CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1] ?? 'Assinar carta expedida';
+                $currentSubtarefaTitle = $taskTitleByTipo[CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1] ?? 'Carta aguardando assinatura';
             } elseif ($currentSubtarefaTitle === '' && $statusAtual === 'concluída') {
                 $currentSubtarefaTitle = 'Todas as etapas concluídas';
             } elseif ($currentSubtarefaTitle === '') {
@@ -424,19 +433,18 @@ $stateOptions = [
                         $circleClass = 'finished';
                         $nomeExibir = $nomeResponsavel !== '' ? $nomeResponsavel : '—';
                         if ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1) {
-                            $minorTexto = 'Carta expedida assinada';
+                            $minorTexto = 'Carta assinada pela juíza em ' . $dataMovimento;
                             $majorTexto = '';
-                            $infoLinha = 'Documento assinado pela Magistrada em ' . $dataMovimento;
+                            $infoLinha = 'Informação confirmada por ' . $nomeExibir . ' em ' . $dataMovimento;
                         } elseif ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ORDEM_2) {
-                            $qtd = (int) ($dadosEspecificos['qtd_docs'] ?? $dadosEspecificos['qtd_docs_gerados'] ?? 1);
+                            $qtd = (int) ($dadosEspecificos['qtd_docs'] ?? $dadosEspecificos['qtd_docs_gerados'] ?? 2);
                             if ($qtd < 1) {
-                                $qtd = 1;
+                                $qtd = 2;
                             }
-                            $minorTexto = $qtd === 1 ? '1 documento gerado em PDF' : $qtd . ' documentos gerados em PDF';
+                            $minorTexto = $qtd . ' documentos impressos em PDF';
                             $majorTexto = '';
-                            $infoLinha = 'Documentos gerados por ' . $nomeExibir . ' em ' . $dataMovimento;
+                            $infoLinha = 'Impressão realizada por ' . $nomeExibir . ' em ' . $dataMovimento;
                         } elseif ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ORDEM_3) {
-                            $minorTexto = 'Carta expedida enviada para';
                             $tribunalDestino = trim((string) ($dadosEspecificos['tribunal_destino'] ?? $dadosEspecificos['tribunal_nome'] ?? ''));
                             if ($tribunalDestino === '' && isset($carta['uf_destino'])) {
                                 $uf = strtoupper(trim((string) $carta['uf_destino']));
@@ -453,48 +461,37 @@ $stateOptions = [
                                     $tribunalDestino = $sigla . ' - ' . $nomeTribunal;
                                 }
                             }
-                            $majorTexto = $tribunalDestino !== '' ? $tribunalDestino : '—';
-                            $infoLinha = 'Documento enviado por ' . $nomeExibir . ' em ' . $dataMovimento;
-                        } elseif ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ORDEM_4) {
-                            $minorTexto = 'Comprovante de termo de envio juntado e liberado nos autos';
+                            $comarcaEnvio = trim((string) ($dadosEspecificos['comarca_envio'] ?? $dadosEspecificos['cidade_destino'] ?? $carta['cidade_destino'] ?? ''));
+                            $metodoEnvio = trim((string) ($dadosEspecificos['metodo_envio'] ?? ''));
+                            $parteComarca = $comarcaEnvio !== '' ? ' - Comarca de ' . $comarcaEnvio : '';
+                            $preposicao = (strcasecmp($metodoEnvio, 'PJe') === 0 || strcasecmp($metodoEnvio, 'eSAJ') === 0 || strcasecmp($metodoEnvio, 'ePROC') === 0) ? 'pelo' : 'por';
+                            $displayMetodo = $metodoEnvio !== '' ? (strcasecmp($metodoEnvio, 'Email') === 0 ? 'E-mail' : $metodoEnvio) : '';
+                            $parteMetodo = $displayMetodo !== '' ? ' ' . $preposicao . ' ' . $displayMetodo : '';
+                            $minorTexto = 'Carta enviada para ' . ($tribunalDestino !== '' ? $tribunalDestino : '—') . $parteComarca . $parteMetodo;
                             $majorTexto = '';
-                            $metodoEnvioTexto = '';
-                            $metodoEnvioRegistrado = '';
-                            if (isset($subtarefasPorOrdem[3])) {
-                                $dadosEnvio = json_decode((string) ($subtarefasPorOrdem[3]['dados_especificos'] ?? ''), true);
-                                if (is_array($dadosEnvio)) {
-                                    $metodoEnvioRegistrado = trim((string) ($dadosEnvio['metodo_envio'] ?? ''));
-                                }
-                            }
-                            if ($metodoEnvioRegistrado !== '') {
-                                $preposicaoMetodo = strcasecmp($metodoEnvioRegistrado, 'PJe') === 0 ? 'pelo' : 'por';
-                                $displayMetodo = strcasecmp($metodoEnvioRegistrado, 'Email') === 0 ? 'email' : $metodoEnvioRegistrado;
-                                $metodoEnvioTexto = 'Enviado ' . $preposicaoMetodo . ' ' . $displayMetodo;
-                            }
-                            $infoLinha = 'Documento juntado por ' . $nomeExibir . ' em ' . $dataMovimento;
+                            $infoLinha = 'Envio realizado por ' . $nomeExibir . ' em ' . $dataMovimento;
+                        } elseif ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ORDEM_4) {
+                            $minorTexto = 'Juntada do termo de envio realizado';
+                            $majorTexto = '';
+                            $infoLinha = 'Comprovante juntado por ' . $nomeExibir . ' em ' . $dataMovimento;
                         } elseif ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ORDEM_5) {
-                            $minorTexto = 'Informações complementares informadas';
                             $numeroDestino = trim((string) ($dadosEspecificos['numero_processo_destino'] ?? $carta['numero_processo_destino'] ?? ''));
+                            $minorTexto = $numeroDestino !== '' ? 'Número de processo no Juízo Deprecante: ' . $numeroDestino : 'Informações do andamento juntadas';
                             $varaDestino = trim((string) ($dadosEspecificos['vara_destino'] ?? $carta['vara_destino_nome'] ?? ''));
-                            $majorTexto = ($numeroDestino !== '' && $varaDestino !== '') ? $numeroDestino . ' - ' . $varaDestino : ($numeroDestino ?: $varaDestino ?: '—');
-                            $infoLinha = 'Documento juntado por ' . $nomeExibir . ' em ' . $dataMovimento;
+                            $majorTexto = $varaDestino !== '' ? $varaDestino : '';
+                            $infoLinha = 'Informação verificada por ' . $nomeExibir . ' em ' . $dataMovimento;
                         } elseif ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6) {
                             $statusDevolucao = trim((string) ($dadosEspecificos['resultado_devolucao'] ?? $dadosEspecificos['status_devolucao'] ?? ''));
-                            if ($statusDevolucao === 'cumprida_positivamente') {
-                                $minorTexto = 'Carta devolvida cumprida positivamente';
-                            } elseif ($statusDevolucao === 'cumprida_parcialmente') {
-                                $minorTexto = 'Carta devolvida cumprida parcialmente';
-                            } elseif ($statusDevolucao === 'cumprida_negativamente') {
-                                $minorTexto = 'Carta devolvida cumprida negativamente';
-                            } elseif ($statusDevolucao === 'devolvida_sem_cumprimento') {
-                                $minorTexto = 'Carta devolvida sem cumprimento';
-                            } elseif ($statusDevolucao !== '') {
-                                $minorTexto = 'Carta devolvida com status ' . $statusDevolucao;
-                            } else {
-                                $minorTexto = 'Carta devolvida';
-                            }
+                            $labelsDevolucao = [
+                                'cumprida_positivamente' => 'Cumprida integralmente',
+                                'cumprida_parcialmente' => 'Cumprida parcialmente',
+                                'cumprida_negativamente' => 'Cumprida negativamente',
+                                'devolvida_sem_cumprimento' => 'Não cumprida',
+                            ];
+                            $complementoDevolucao = $labelsDevolucao[$statusDevolucao] ?? ($statusDevolucao !== '' ? $statusDevolucao : '');
+                            $minorTexto = $complementoDevolucao !== '' ? 'Carta devolvida ' . $complementoDevolucao : 'Carta devolvida';
                             $majorTexto = '';
-                            $infoLinha = 'Carta juntada por ' . $nomeExibir . ' em ' . $dataMovimento;
+                            $infoLinha = 'Juntada de carta devolvida realizada por ' . $nomeExibir . ' em ' . $dataMovimento;
                         } else {
                             $minorTexto = $label;
                             $infoLinha = 'Movimentação realizada em ' . $dataMovimento;

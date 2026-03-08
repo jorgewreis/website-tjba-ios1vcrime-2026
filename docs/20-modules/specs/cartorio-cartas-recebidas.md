@@ -44,4 +44,4 @@ Tipos internos: `conferencia_inicial`, `expedicao_mandado`, `devolucao_origem`, 
 ## 7. Referências
 
 - [docs/00-foundation/escopo-produto.md](../../00-foundation/escopo-produto.md) — Submódulo Cartas Recebidas.
-- Implementação espelhada em Cartas Expedidas (views, repositórios, serviço, APIs).
+- [cartorio-cartas-expedidas.md](cartorio-cartas-expedidas.md) — especificação do submódulo Cartas Expedidas (fluxo e textos).

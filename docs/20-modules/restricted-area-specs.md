@@ -5,6 +5,8 @@
 - docs/00-foundation/funcionalidades areas publica e restrita.md — regras de segregação, perfis e sigilo.
 - docs/00-foundation/technical-assumptions-constraints.md — autênticação jwt/sessionStorage, políticas de senha e isolamento por setor.
 
+**Specs de submódulos (m4 Cartório):** [Cartas Expedidas](20-modules/specs/cartorio-cartas-expedidas.md) · [Cartas Recebidas](20-modules/specs/cartorio-cartas-recebidas.md) · [Guias](20-modules/specs/cartorio-guias.md) · [Cejusc](20-modules/specs/cartorio-cejusc.md).
+
 ## 1. Visão geral e arquitetura
 A Área Restrita é o núcleo administrativo do webapp. Carregada via dmin/home.php, ela renderiza o conteúdo externo (controllers/views) dentro de um iframe para manter o menu lateral e cabeçalho fixos. Essa abordagem (iframe + shell Next.js) preserva o isolamento entre público e interno, protegendo rotas sensíveis e respeitando o canônico de arquitetura.
 
