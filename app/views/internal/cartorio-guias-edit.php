@@ -217,7 +217,7 @@ $tiposOptions = [
                     <?php
                     $classeReadonly = ($classeNome !== 'Classe não informada');
                     $classeValue = $classeReadonly ? ($classeCodigo !== '' ? $classeCodigo . ' - ' . $classeNome : $classeNome) : '';
-                    $classeClass = 'width-lg height-md' . ($classeReadonly ? ' readonly' : '');
+                    $classeClass = 'width-xl height-md' . ($classeReadonly ? ' readonly' : '');
                     ?>
                     <input type="text" id="filter-classe" class="<?php echo htmlspecialchars($classeClass, ENT_QUOTES); ?>" value="<?php echo htmlspecialchars($classeValue, ENT_QUOTES); ?>"<?php echo $classeReadonly ? ' readonly' : ' placeholder="Informe a classe processual"'; ?>>
                 </div>

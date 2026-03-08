@@ -207,6 +207,9 @@ final class GuiasService
 
         $this->repository->update($idGuia, ['status' => 'em_andamento']);
 
+        // Se o cadastro já veio com data_fato e dias_multa, concluir a subtarefa 1 e ativar a 2
+        $this->sincronizarDetalhamentoAposUpdate($idGuia, $usuarioCadastroId);
+
         return $idGuia;
     }
 
@@ -253,7 +256,69 @@ final class GuiasService
             }
         }
 
-        return $this->repository->update($id, $filtered);
+        $updated = $this->repository->update($id, $filtered);
+        if ($updated && (array_key_exists('data_fato', $filtered) || array_key_exists('dias_multa', $filtered))) {
+            $this->sincronizarDetalhamentoAposUpdate($id, $usuarioId);
+        }
+        return $updated;
+    }
+
+    /**
+     * Se o cadastro da guia tiver data_fato e dias_multa preenchidos e a subtarefa atual for ordem 1 (Detalhamento),
+     * conclui a subtarefa 1 e ativa a ordem 2, para que a subtarefa de Detalhamento não fique pendente à toa.
+     */
+    private function sincronizarDetalhamentoAposUpdate(string $idGuia, string $usuarioId = ''): void
+    {
+        $guia = $this->repository->findById($idGuia);
+        if ($guia === null) {
+            return;
+        }
+        $dataFato = isset($guia['data_fato']) && $guia['data_fato'] !== null && $guia['data_fato'] !== '' ? trim((string) $guia['data_fato']) : '';
+        $diasMulta = isset($guia['dias_multa']) && $guia['dias_multa'] !== null ? (int) $guia['dias_multa'] : 0;
+        if ($dataFato === '' || $diasMulta <= 0) {
+            return;
+        }
+
+        $ordem1 = $this->subtarefasRepository->findByGuiaIdEOrdem($idGuia, 1);
+        if ($ordem1 === null) {
+            return;
+        }
+        $status1 = trim((string) ($ordem1['status'] ?? ''));
+        if ($status1 !== 'pendente' && $status1 !== 'em_andamento') {
+            return;
+        }
+
+        $nomeUsuario = '';
+        if ($usuarioId !== '') {
+            $stmt = $this->connection->prepare('SELECT `nome`, `sobrenome` FROM `usuarios` WHERE `id_usuario` = :id LIMIT 1');
+            $stmt->bindValue(':id', $usuarioId);
+            $stmt->execute();
+            $u = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($u !== false) {
+                $nome = trim((string) ($u['nome'] ?? ''));
+                $sobrenome = trim((string) ($u['sobrenome'] ?? ''));
+                $nomeUsuario = $sobrenome !== '' ? $nome . ' ' . $sobrenome : $nome;
+            }
+        }
+
+        $dadosEspecificos = json_encode(array_filter([
+            'data_fato' => $dataFato,
+            'dias_multa' => $diasMulta,
+            'nome' => $nomeUsuario,
+            'usuario_id' => $usuarioId,
+        ], static function ($v) { return $v !== '' && $v !== null; }));
+
+        $subtarefa1Id = (string) ($ordem1['id'] ?? '');
+        if ($subtarefa1Id !== '') {
+            $this->subtarefasRepository->atualizarDadosEspecificos($subtarefa1Id, $dadosEspecificos);
+            $this->subtarefasRepository->marcarConcluida($subtarefa1Id);
+        }
+
+        $ordem2 = $this->subtarefasRepository->findByGuiaIdEOrdem($idGuia, 2);
+        if ($ordem2 !== null) {
+            $this->subtarefasRepository->atualizarStatus((string) $ordem2['id'], 'em_andamento');
+        }
+        $this->repository->update($idGuia, ['status' => 'em_andamento']);
     }
 
     public function cancel(string $id): bool

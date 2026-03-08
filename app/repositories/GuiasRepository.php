@@ -41,7 +41,7 @@ final class GuiasRepository
         );
 
         $sql = sprintf(
-            'SELECT g.`id` AS `IdGuia`, g.`numero_processo` AS `Processo`, g.`denunciado` AS `Denunciado`, g.`tipo` AS `Tipo`, g.`etapa` AS `Etapa`, g.`status` AS `Status`, g.`created_at` AS `Data` FROM `%s` g %s ORDER BY %s, g.`created_at` DESC LIMIT :limit OFFSET :offset',
+            'SELECT g.`id` AS `IdGuia`, g.`numero_processo` AS `Processo`, g.`denunciado` AS `Denunciado`, g.`tipo` AS `Tipo`, g.`etapa` AS `Etapa`, g.`status` AS `Status`, g.`created_at` AS `Data`, g.`data_fato` AS `data_fato`, g.`dias_multa` AS `dias_multa` FROM `%s` g %s ORDER BY %s, g.`created_at` DESC LIMIT :limit OFFSET :offset',
             $this->table,
             $whereClause ? 'WHERE ' . $whereClause : '',
             $orderField

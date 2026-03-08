@@ -359,8 +359,9 @@ if ($totalPages > 0) {
                                     <div class="status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
                                 </div>
                                 <?php if ($isOrdem1): ?>
-                                    <input type="date" class="subtask-data-fato width-sm height-md" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" placeholder="Data do fato" title="Data do fato">
-                                    <input type="number" class="subtask-dias-multa width-sm height-md" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" min="0" placeholder="Dias-multa" title="Quantidade de dias-multa">
+                                    <?php $rowDataFato = $row['data_fato'] ?? ''; $rowDiasMulta = isset($row['dias_multa']) && $row['dias_multa'] !== null ? (int) $row['dias_multa'] : ''; ?>
+                                    <input type="date" class="subtask-data-fato width-sm height-md" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" placeholder="Data do fato" title="Data do fato" value="<?php echo $rowDataFato !== '' ? htmlspecialchars($rowDataFato, ENT_QUOTES) : ''; ?>">
+                                    <input type="number" class="subtask-dias-multa width-sm height-md" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" min="0" placeholder="Dias-multa" title="Quantidade de dias-multa" value="<?php echo $rowDiasMulta !== '' ? (int) $rowDiasMulta : ''; ?>">
                                 <?php endif; ?>
                                 <?php if ($isOrdem2): ?>
                                     <input type="text" class="subtask-valor-multa width-sm height-md" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" readonly placeholder="Valor (automático)" title="Valor total da pena de multa">
