@@ -58,4 +58,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: refatoração do calculo da pena de multa** `[d356f64]`
 - **Fix: correção do calculo de multa** `[87147e0]`
 - **Fix: correção de toasts** `[9893c21]`
+- **Feat: implementação de função de verificação de duplicidade de guia** `[58c7b6e]`
 
