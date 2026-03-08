@@ -270,19 +270,15 @@ if ($totalPages > 0) {
                 </div>
 
                 <div class="row subtask subtask-collapsed" id="subtask-<?php echo htmlspecialchars($idCarta); ?>" aria-hidden="true">
-                    <?php foreach ($subtarefas as $st): ?>
-                    <div class="col full-line" data-subtarefa-id="<?php echo htmlspecialchars($st['id'] ?? ''); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($st['tipo'] ?? ''); ?>" style="border-top: 1px solid var(--color-gray-400);">
-                        <div class="row subtask-info">
-                            <div class="col task-info">
-                                <span class="minor-info">Subtarefa</span>
-                                <span class="major-info"><?php echo htmlspecialchars($subtarefaLabels[$st['tipo'] ?? ''] ?? $st['tipo'] ?? ''); ?></span>
-                            </div>
+                    <?php foreach ($subtarefas as $st):
+                        $stLabel = $subtarefaLabels[$st['tipo'] ?? ''] ?? $st['tipo'] ?? '';
+                    ?>
+                    <div class="col full-line" data-subtarefa-id="<?php echo htmlspecialchars($st['id'] ?? '', ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($st['tipo'] ?? '', ENT_QUOTES); ?>" style="border-top: 1px solid var(--color-gray-400);">
+                        <div class="row subtask-item">
                             <div class="col task-status">
-                                <div class="height-sm status status-pending"><?php echo htmlspecialchars($subtarefaLabels[$st['tipo'] ?? ''] ?? $st['tipo'] ?? ''); ?></div>
+                                <div class="status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
                             </div>
-                        </div>
-                        <div class="row subtask-buttons">
-                            <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($st['id'] ?? ''); ?>">Concluir</button>
+                            <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($st['id'] ?? '', ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($stLabel, ENT_QUOTES); ?>"><i class="fi fi-rr-play"></i></button>
                         </div>
                     </div>
                     <?php endforeach; ?>

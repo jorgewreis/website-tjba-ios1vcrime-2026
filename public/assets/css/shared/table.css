@@ -34,7 +34,6 @@
     width: 100%;
     min-height: 50px;
     justify-content: space-between;
-    border-bottom: 1px solid var(--color-border);
 }
 
 .row.table.header {
@@ -93,17 +92,15 @@
 
 .col.full-line.register {
     width: 100%;
+    border-top: 1px solid var(--color-border);
     border-bottom: 1px solid var(--color-border);
 }
 
 .row.subtask {
     width: 100%;
-    margin-top: -1px;
     min-height: 40px;
     padding: 0 10px 0 50px;
     background-color: var(--color-surface-elevated);
-    border-top: 1px solid var(--color-border);
-    border-bottom: 1px solid var(--color-border);
 }
 
 .row.subtask.subtask-collapsed {
@@ -113,6 +110,36 @@
 .row.subtask:not(.subtask-collapsed) {
     display: flex;
     flex-wrap: wrap;
+    flex-direction: column;
+    gap: 10px;
+}
+/* Linha compacta de uma subtarefa na lista (modelo simples ou com complemento) */
+.row.subtask-item {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--color-border);
+    width: 100%;
+    min-height: 40px;
+}
+.row.subtask-item .left-content {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+.row.subtask-item .col.task-status .status {
+    margin: 0;
+}
+.row.subtask-item .btn.btn-primary {
+    width: 40px;
+    height: 40px;
+    padding: 4px 0 0 0;
+    flex-shrink: 0;
+}
+.row.subtask-item .btn.btn-primary i {
+    font-size: 1.1rem;
 }
 .row.subtask-info{
     width: 100%;
@@ -178,8 +205,8 @@
     margin: 0 10px;
 }
 
-/* Linha que conecta um bullet ao próximo: só nos itens que não são o último da timeline */
-.row.timeline:not(:last-child) .circle::after {
+/* Linha que conecta um bullet ao próximo: só quando existe outro item da timeline em seguida (não no último) */
+.row.timeline:has(+ .row.timeline) .circle::after {
     content: '';
     position: absolute;
     top: 38px;

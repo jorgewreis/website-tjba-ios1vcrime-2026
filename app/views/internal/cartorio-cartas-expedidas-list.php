@@ -380,91 +380,61 @@ if ($totalPages > 0) {
                 </div>
 
                 <div class="row subtask subtask-collapsed" id="subtask-<?php echo htmlspecialchars($idCarta); ?>" aria-hidden="true">
-                    <?php foreach ($subtarefas as $st): 
+                    <?php foreach ($subtarefas as $st):
                         $stId = $st['id'] ?? '';
                         $stTipo = $st['tipo'] ?? '';
                         $stLabel = $subtarefaLabels[$stTipo] ?? $stTipo;
-                        $stStatus = $st['status'] ?? 'pendente';
-                        $statusLabel = $stStatus === 'em_andamento' ? 'Em andamento' : ($stStatus === 'concluida' ? 'Concluída' : 'Aguardando');
+                        $temComplemento = in_array($stTipo, ['aguardando_gerar_pdf', 'aguardando_envio', 'aguardando_informacoes', 'aguardando_devolucao'], true);
                     ?>
                     <div class="col full-line" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>" style="border-top: 1px solid var(--color-gray-400);">
-                        <div class="row subtask-info">
-                            <div class="col task-info">
-                                <span class="minor-info">Subtarefa</span>
-                                <span class="major-info"><?php echo htmlspecialchars($stLabel); ?></span>
-                            </div>
-                            <div class="row">
-                                <?php if ($stTipo === 'aguardando_gerar_pdf'): ?>
-                                <div class="col button-table button-subtask" title="Reiniciar subtarefa"><i class="fi fi-rr-refresh"></i></div>
-                                <?php endif; ?>
+                        <div class="row subtask-item">
+                            <?php if ($temComplemento): ?>
+                            <div class="left-content">
                                 <div class="col task-status">
-                                    <div class="height-sm status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
+                                    <div class="status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
                                 </div>
+                                <?php if ($stTipo === 'aguardando_gerar_pdf'): ?>
+                                <div class="col filter">
+                                    <input type="number" class="width-sm height-md subtask-qtd-docs" value="1" min="1" max="10" placeholder="Qtd docs" title="Qtd docs gerados" />
+                                </div>
+                                <?php elseif ($stTipo === 'aguardando_envio'): ?>
+                                <div class="col filter">
+                                    <select class="width-md height-md subtask-metodo-envio" title="Método de envio">
+                                        <option value="">Método de envio</option>
+                                        <option value="PJe">PJe</option>
+                                        <option value="eSAJ">eSAJ</option>
+                                        <option value="ePROC">ePROC</option>
+                                        <option value="Malote Digital">Malote Digital</option>
+                                        <option value="Email">Email</option>
+                                    </select>
+                                </div>
+                                <?php elseif ($stTipo === 'aguardando_informacoes'): ?>
+                                <div class="col filter">
+                                    <input type="text" class="width-md height-md subtask-numero-destino" placeholder="Nº processo" title="Número processo destino" />
+                                </div>
+                                <div class="col filter">
+                                    <input type="text" class="width-xl height-md subtask-vara-destino" placeholder="Vara destino" title="Vara destino" />
+                                </div>
+                                <?php elseif ($stTipo === 'aguardando_devolucao'): ?>
+                                <div class="col filter">
+                                    <select class="width-lg height-md subtask-resultado-devolucao" title="Resultado da devolução">
+                                        <option value="">Resultado</option>
+                                        <option value="devolvida_sem_cumprimento">Devolvida sem cumprimento</option>
+                                        <option value="cumprida_positivamente">Cumprida positivamente</option>
+                                        <option value="cumprida_parcialmente">Cumprida parcialmente</option>
+                                        <option value="cumprida_negativamente">Cumprida negativamente</option>
+                                    </select>
+                                </div>
+                                <?php endif; ?>
                             </div>
-                        </div>
-                        <?php if ($stTipo === 'aguardando_gerar_pdf'): ?>
-                        <div class="row subtask-info">
-                            <div class="col filter">
-                                <span class="minor-info">Qtd docs gerados</span>
-                                <input type="number" class="width-sm height-md subtask-qtd-docs" value="1" min="1" max="10" style="background-color: var(--color-gray-000);" />
+                            <?php else: ?>
+                            <div class="col task-status">
+                                <div class="status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
                             </div>
-                        </div>
-                        <?php endif; ?>
-                        <?php if ($stTipo === 'aguardando_envio'): ?>
-                        <div class="row subtask-info">
-                            <div class="col filter">
-                                <span class="minor-info">Método de envio</span>
-                                <select class="width-md height-md subtask-metodo-envio" style="background-color: var(--color-gray-000);">
-                                    <option value="">Selecione</option>
-                                    <option value="PJe">PJe</option>
-                                    <option value="eSAJ">eSAJ</option>
-                                    <option value="ePROC">ePROC</option>
-                                    <option value="Malote Digital">Malote Digital</option>
-                                    <option value="Email">Email</option>
-                                </select>
-                            </div>
-                        </div>
-                        <?php endif; ?>
-                        <?php if ($stTipo === 'aguardando_informacoes'): ?>
-                        <div class="row subtask-info" style="justify-content: flex-start;">
-                            <div class="col filter">
-                                <span class="minor-info">Número processo destino</span>
-                                <input type="text" class="width-md height-md subtask-numero-destino" placeholder="Número do processo" style="background-color: var(--color-gray-000);" />
-                            </div>
-                            <div class="col filter">
-                                <span class="minor-info">Vara destino</span>
-                                <input type="text" class="width-xl height-md subtask-vara-destino" placeholder="Vara destino" style="background-color: var(--color-gray-000);" />
-                            </div>
-                        </div>
-                        <?php endif; ?>
-                        <?php if ($stTipo === 'aguardando_devolucao'): ?>
-                        <div class="row subtask-info">
-                            <div class="col filter">
-                                <span class="minor-info">Resultado</span>
-                                <select class="width-lg height-md subtask-resultado-devolucao" style="background-color: var(--color-gray-000);">
-                                    <option value="">Selecione</option>
-                                    <option value="devolvida_sem_cumprimento">Devolvida sem cumprimento</option>
-                                    <option value="cumprida_positivamente">Cumprida positivamente</option>
-                                    <option value="cumprida_parcialmente">Cumprida parcialmente</option>
-                                    <option value="cumprida_negativamente">Cumprida negativamente</option>
-                                </select>
-                            </div>
-                        </div>
-                        <?php endif; ?>
-                        <div class="row subtask-buttons">
-                            <?php if ($stTipo === 'aguardando_assinatura'): ?>
-                            <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>">Informar assinatura</button>
-                            <?php elseif ($stTipo === 'aguardando_gerar_pdf'): ?>
-                            <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>">Informar PDF's gerados</button>
-                            <?php elseif ($stTipo === 'aguardando_envio'): ?>
-                            <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>">Informar envio realizado</button>
-                            <?php elseif ($stTipo === 'aguardando_juntada_termo'): ?>
-                            <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>">Informar juntada do termo</button>
-                            <?php elseif ($stTipo === 'aguardando_informacoes'): ?>
-                            <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>">Juntar informações</button>
-                            <?php elseif ($stTipo === 'aguardando_devolucao'): ?>
-                            <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>">Juntar Carta Devolvida</button>
                             <?php endif; ?>
+                            <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($stLabel, ENT_QUOTES); ?>">
+                                <i class="fi fi-rr-play"></i>
+                            </button>
                         </div>
                     </div>
                     <?php endforeach; ?>

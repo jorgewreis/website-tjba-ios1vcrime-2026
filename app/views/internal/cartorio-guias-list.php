@@ -298,14 +298,11 @@ if ($totalPages > 0) {
                         $stLabel = $subtarefaLabels[$stTipo] ?? $stTipo;
                     ?>
                     <div class="col full-line" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>" style="border-top: 1px solid var(--color-gray-400);">
-                        <div class="row subtask-info">
-                            <div class="col task-info">
-                                <span class="minor-info">Subtarefa</span>
-                                <span class="major-info"><?php echo htmlspecialchars($stLabel); ?></span>
+                        <div class="row subtask-item">
+                            <div class="col task-status">
+                                <div class="status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
                             </div>
-                        </div>
-                        <div class="row subtask-buttons">
-                            <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>">Concluir</button>
+                            <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Concluir"><i class="fi fi-rr-play"></i></button>
                         </div>
                     </div>
                     <?php endforeach; ?>

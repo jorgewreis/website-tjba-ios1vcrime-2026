@@ -7,6 +7,8 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 require_once __DIR__ . '/../../repositories/GuiasSubtarefasRepository.php';
+require_once __DIR__ . '/../../repositories/ProcessosRepository.php';
+require_once __DIR__ . '/../../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../../services/GuiasService.php';
 
 $connection = Conection::getInstance()->getConnection();
@@ -65,6 +67,9 @@ $progressStatusesEdit = ['pendente', 'pendente', 'pendente', 'pendente', 'penden
 $mostrarBarraEdit = false;
 $segmentosBarraEdit = [];
 $cadastroInfoLinha = '';
+$classeCodigo = '';
+$classeNome = 'Classe não informada';
+$currentSubtarefaTitle = '';
 if ($guia !== null) {
     $subtarefasRepo = new GuiasSubtarefasRepository($connection);
     $subtarefasRepo->ensurePrimeiraSubtarefa($idGuia);
@@ -103,6 +108,38 @@ if ($guia !== null) {
         $cadastroInfoLinha = $dt0 ? ('Guia cadastrada em ' . $dt0->format('d/m/Y - H:i:s')) : $guiaCreatedRaw;
     } else {
         $cadastroInfoLinha = 'Guia cadastrada';
+    }
+    $processoId = trim((string) ($guia['processo_id'] ?? ''));
+    if ($processoId !== '') {
+        $processosRepo = new ProcessosRepository($connection);
+        $processoRow = $processosRepo->findById($processoId);
+        if ($processoRow !== null) {
+            $classeId = trim((string) ($processoRow['classe_id'] ?? ''));
+            if ($classeId !== '') {
+                $classesRepo = new ClassesRepository($connection);
+                $classeRow = $classesRepo->findById($classeId);
+                if ($classeRow !== null) {
+                    $classeNome = trim((string) ($classeRow['nome'] ?? 'Classe não informada'));
+                    if ($classeNome === '') {
+                        $classeNome = 'Classe não informada';
+                    }
+                    $classeCodigo = trim((string) ($classeRow['codigo'] ?? ''));
+                }
+            }
+        }
+    }
+    foreach ($subtarefas as $s) {
+        if (trim((string) ($s['status'] ?? '')) === 'em_andamento') {
+            $currentSubtarefaTitle = $subtarefaLabels[$s['tipo'] ?? ''] ?? $s['tipo'] ?? '';
+            break;
+        }
+    }
+    if ($currentSubtarefaTitle === '' && $statusGuia === 'pendente') {
+        $currentSubtarefaTitle = $subtarefaLabels[GuiasSubtarefasRepository::TIPO_ORDEM_1] ?? 'Cálculo da pena de multa';
+    } elseif ($currentSubtarefaTitle === '' && $statusGuia === 'concluída') {
+        $currentSubtarefaTitle = 'Todas as etapas concluídas';
+    } elseif ($currentSubtarefaTitle === '') {
+        $currentSubtarefaTitle = $statusCartaLabel;
     }
 }
 
@@ -173,6 +210,15 @@ $tiposOptions = [
                     <input type="text" id="edit-processo" class="width-md height-md readonly" value="<?php echo htmlspecialchars($guia['numero_processo'] ?? '', ENT_QUOTES); ?>" readonly>
                 </div>
                 <div class="col filter">
+                    <label for="filter-classe">Classe</label>
+                    <?php
+                    $classeReadonly = ($classeNome !== 'Classe não informada');
+                    $classeValue = $classeReadonly ? ($classeCodigo !== '' ? $classeCodigo . ' - ' . $classeNome : $classeNome) : '';
+                    $classeClass = 'width-lg height-md' . ($classeReadonly ? ' readonly' : '');
+                    ?>
+                    <input type="text" id="filter-classe" class="<?php echo htmlspecialchars($classeClass, ENT_QUOTES); ?>" value="<?php echo htmlspecialchars($classeValue, ENT_QUOTES); ?>"<?php echo $classeReadonly ? ' readonly' : ' placeholder="Informe a classe processual"'; ?>>
+                </div>
+                <div class="col filter">
                     <label for="edit-denunciado">Denunciado</label>
                     <input type="text" id="edit-denunciado" class="width-xl height-md readonly" value="<?php echo htmlspecialchars($guia['denunciado'] ?? '', ENT_QUOTES); ?>" maxlength="255" readonly>
                 </div>
@@ -227,7 +273,7 @@ $tiposOptions = [
                     <?php endif; ?>
                 </div>
             </div>
-            <?php if ($guia !== null && $cadastroInfoLinha !== ''): ?>
+            <?php if ($guia !== null): ?>
             <div class="row timeline finished">
                 <div class="row">
                     <div class="circle finished"></div>
@@ -237,7 +283,7 @@ $tiposOptions = [
                 </div>
                 <div class="col">
                     <div class="col filter subtask-date">
-                        <span class="minor-info"><?php echo htmlspecialchars($cadastroInfoLinha, ENT_QUOTES); ?></span>
+                        <span class="minor-info"><?php echo htmlspecialchars($cadastroInfoLinha !== '' ? $cadastroInfoLinha : 'Guia cadastrada', ENT_QUOTES); ?></span>
                     </div>
                 </div>
             </div>

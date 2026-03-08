@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
 require_once __DIR__ . '/../../repositories/CejuscSubtarefasRepository.php';
+require_once __DIR__ . '/../../repositories/ProcessosRepository.php';
+require_once __DIR__ . '/../../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../../services/CejuscService.php';
 
 $connection = Conection::getInstance()->getConnection();
@@ -26,6 +28,8 @@ if ($idTarefa === '') {
 }
 
 $processoNumero = '';
+$classeCodigo = '';
+$classeNome = 'Classe não informada';
 $reuNome = '';
 $statusAtual = 'pendente';
 $subtarefas = [];
@@ -45,6 +49,22 @@ $ruleName = 'ALLOCATE-CEJUSC';
 
 if ($tarefa !== null) {
     $processoNumero = trim((string) ($tarefa['numero_processo_origem'] ?? ''));
+    $processosRepo = new ProcessosRepository($connection);
+    $processoRow = $processosRepo->findById((string) ($tarefa['processo_origem_id'] ?? ''));
+    if ($processoRow !== null) {
+        $classeId = trim((string) ($processoRow['classe_id'] ?? ''));
+        if ($classeId !== '') {
+            $classesRepo = new ClassesRepository($connection);
+            $classeRow = $classesRepo->findById($classeId);
+            if ($classeRow !== null) {
+                $classeNome = trim((string) ($classeRow['nome'] ?? 'Classe não informada'));
+                if ($classeNome === '') {
+                    $classeNome = 'Classe não informada';
+                }
+                $classeCodigo = trim((string) ($classeRow['codigo'] ?? ''));
+            }
+        }
+    }
     $reuNome = trim((string) ($tarefa['reu_nome'] ?? ''));
     $statusAtual = trim((string) ($tarefa['status'] ?? 'pendente'));
     if ($statusAtual === '') {
@@ -144,6 +164,15 @@ $tarefaFinalizadaOuCancelada = in_array($statusAtual, ['cancelada', 'concluída'
                 <div class="col filter">
                     <label for="filter-processo">Processo</label>
                     <input type="text" id="filter-processo" class="width-md height-md readonly" value="<?php echo htmlspecialchars($processoNumero, ENT_QUOTES); ?>" readonly>
+                </div>
+                <div class="col filter">
+                    <label for="filter-classe">Classe</label>
+                    <?php
+                    $classeReadonly = ($classeNome !== 'Classe não informada');
+                    $classeValue = $classeReadonly ? ($classeCodigo !== '' ? $classeCodigo . ' - ' . $classeNome : $classeNome) : '';
+                    $classeClass = 'width-lg height-md' . ($classeReadonly ? ' readonly' : '');
+                    ?>
+                    <input type="text" id="filter-classe" class="<?php echo htmlspecialchars($classeClass, ENT_QUOTES); ?>" value="<?php echo htmlspecialchars($classeValue, ENT_QUOTES); ?>"<?php echo $classeReadonly ? ' readonly' : ' placeholder="Informe a classe processual"'; ?>>
                 </div>
                 <div class="col filter">
                     <label for="filter-reu">Réu</label>

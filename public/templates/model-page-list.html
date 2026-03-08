@@ -127,25 +127,19 @@
                 </div>
             </div>
 
-            <!-- Subtarefas -->
+            <!-- Subtarefas (modelo simples: uma linha, status + botão) -->
             <div class="row subtask">
                 <div class="col full-line">
-                    <div class="row subtask-info">
-                        <div class="col task-info">
-                            <span class="minor-info">Subtarefa</span>
-                            <span class="major-info">Assinar Guia Expedida</span>
+                    <div class="row subtask-item">
+                        <div class="col task-status">
+                            <div class="status status-pending">Aguardando assinatura</div>
                         </div>
-                        <div class="row">                            
-                            <div class="col task-status">
-                                <div class="height-sm status status-pending">Aguardando assinatura</div>
-                            </div>
-                        </div>                    
-                    </div>
-                    <div class="row subtask-buttons">
-                        <button class="btn btn-primary">Informar assinatura</button>
+                        <button class="btn btn-primary" title="Informar assinatura">
+                            <i class="fi fi-rr-play"></i>
+                        </button>
                     </div>
                 </div>
-            </div>            
+            </div>
         </div>
         <!-- Fim do registro -->
 
@@ -189,34 +183,24 @@
                 </div>
             </div>
 
-            <!-- Subtarefas -->
+            <!-- Subtarefas (modelo com complemento: uma linha, status + input + botão) -->
             <div class="row subtask">
                 <div class="col full-line">
-                    <div class="row subtask-info">
-                        <div class="col task-info">
-                            <span class="minor-info">Subtarefa</span>
-                            <span class="major-info">Gerar PDF da documentação</span>
-                        </div>                        
-                        <div class="row">
-                            <div class="col button-table button-subtask" title="Reiniciar subtarefa">
-                                <i class="fi fi-rr-refresh"></i>
+                    <div class="row subtask-item">
+                        <div class="left-content">
+                            <div class="col task-status">
+                                <div class="status status-current">Gerar PDF's</div>
                             </div>
                             <div class="col task-status">
-                                <div class="height-sm status status-pending">Aguardando gerar PDF</div>
+                                <input type="number" class="width-sm height-md" value="" min="1" max="10" placeholder="Qtd docs gerados" />
                             </div>
-                        </div>                    
-                    </div>
-                    <div class="row subtask-info">
-                        <div class="col filter">
-                            <span class="minor-info">Qtd docs gerados</span>
-                            <input type="number" class="width-sm height-md" value="1" min="1" max="10" />
                         </div>
-                    </div>
-                    <div class="row subtask-buttons">
-                        <button class="btn btn-primary">Informar PDF's gerados</button>
+                        <button class="btn btn-primary" title="Informar PDF's gerados">
+                            <i class="fi fi-rr-play"></i>
+                        </button>
                     </div>
                 </div>
-            </div>            
+            </div>
         </div>
         <!-- Fim do registro -->
 
