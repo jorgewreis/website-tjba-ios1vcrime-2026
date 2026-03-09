@@ -136,10 +136,10 @@ try {
     $stmt = $pdo->prepare("
         INSERT INTO usuarios (
             id_usuario, nome, sobrenome, data_nascimento, cargo, instituicao, cpf, telefone, email,
-            senha_hash, meta, ultimo_acesso, token_acesso, token_expira
+            senha_hash, meta, ultimo_acesso, token_acesso, token_expira, created_at, updated_at
         ) VALUES (
             ?, ?, ?, '-', '-', '-', ?, ?, ?,
-            ?, '-', NULL, NULL, NULL
+            ?, '-', NULL, NULL, NULL, NOW(), NOW()
         )
     ");
     $stmt->execute([$idUsuario, $nome, $sobrenome, $cpfFormatado, $telefone, $email, $senhaHash]);

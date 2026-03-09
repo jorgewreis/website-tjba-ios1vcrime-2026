@@ -28,34 +28,33 @@ if ($userId !== '') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csrf_token']) && Security::verifyCSRFToken($_POST['csrf_token'] ?? null)) {
-    $nome = trim((string) ($_POST['nome'] ?? ''));
-    $sobrenome = trim((string) ($_POST['sobrenome'] ?? ''));
     $email = trim((string) ($_POST['email'] ?? ''));
     $telefone = trim((string) ($_POST['telefone'] ?? ''));
     $cargo = trim((string) ($_POST['cargo'] ?? ''));
-    $instituicao = trim((string) ($_POST['instituicao'] ?? ''));
+    $instituicao = trim((string) ($_POST['setor'] ?? $_POST['instituicao'] ?? ''));
 
-    if ($nome === '') {
-        $mensagemErro = 'O nome é obrigatório.';
+    $resultado = $usuario->atualizarDadosPessoais($userId, [
+        'email' => $email,
+        'telefone' => $telefone,
+        'cargo' => $cargo,
+        'instituicao' => $instituicao,
+    ]);
+    if ($resultado['success']) {
+        $dados = $usuario->getDadosPessoais($userId);
+        $mensagemSucesso = 'Dados atualizados com sucesso.';
     } else {
-        $resultado = $usuario->atualizarDadosPessoais($userId, [
-            'nome' => $nome,
-            'sobrenome' => $sobrenome,
-            'email' => $email,
-            'telefone' => $telefone,
-            'cargo' => $cargo,
-            'instituicao' => $instituicao,
-        ]);
-        if ($resultado['success']) {
-            $dados = $usuario->getDadosPessoais($userId);
-            $mensagemSucesso = 'Dados atualizados com sucesso.';
-        } else {
-            $mensagemErro = $resultado['message'] ?? 'Não foi possível atualizar os dados.';
-        }
+        $mensagemErro = $resultado['message'] ?? 'Não foi possível atualizar os dados.';
     }
 }
 
 $csrfToken = Security::generateCSRFToken();
+
+$cargoOpcoes = ['Estagiário', 'Técnico Judiciário', 'Analista Judiciário', 'Magistrado'];
+$setorOpcoes = ['Cartório', 'Gabinete', 'Sala de Audiências', 'Vara'];
+
+$perfisTexto = count($perfis) > 0 ? implode(', ', $perfis) : 'nenhum perfil vinculado';
+$perfisTexto = function_exists('mb_strtolower') ? mb_strtolower($perfisTexto, 'UTF-8') : strtolower($perfisTexto);
+$ultimaAlteracaoSenhaLower = function_exists('mb_strtolower') ? mb_strtolower($ultimaAlteracaoSenha, 'UTF-8') : strtolower($ultimaAlteracaoSenha);
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -72,6 +71,19 @@ $csrfToken = Security::generateCSRFToken();
         <link rel="stylesheet" href="/assets/css/shared/table.css">
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
         <?php include __DIR__ . '/_toast_script.php'; ?>
+        <style>
+            .regras-alocacao-list { font-size: 12px; }
+            .regras-alocacao-list .regras-alocacao-item {
+                width: 100%;
+                padding: 10px 12px;
+                margin-bottom: 0;
+                border-bottom: 1px solid var(--color-border);
+                box-sizing: border-box;
+            }
+            .regras-alocacao-list .regras-alocacao-item:last-child { border-bottom: none; }
+            .regras-alocacao-regra { font-weight: 600; }
+            .regras-alocacao-desc { color: var(--color-text-secondary); }
+        </style>
     </head>
 <body class="page-internal">
 
@@ -115,12 +127,12 @@ $csrfToken = Security::generateCSRFToken();
 
                 <div class="row filter">
                     <div class="col filter">
-                        <label for="edit-nome">Nome <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                        <input type="text" id="edit-nome" name="nome" class="width-xl height-md" value="<?php echo htmlspecialchars($dados['nome'] ?? '', ENT_QUOTES); ?>" maxlength="255" required>
+                        <label for="edit-nome">Nome</label>
+                        <input type="text" id="edit-nome" class="width-xl height-md readonly" value="<?php echo htmlspecialchars($dados['nome'] ?? '', ENT_QUOTES); ?>" readonly>
                     </div>
                     <div class="col filter">
                         <label for="edit-sobrenome">Sobrenome</label>
-                        <input type="text" id="edit-sobrenome" name="sobrenome" class="width-xl height-md" value="<?php echo htmlspecialchars($dados['sobrenome'] ?? '', ENT_QUOTES); ?>" maxlength="255">
+                        <input type="text" id="edit-sobrenome" class="width-xl height-md readonly" value="<?php echo htmlspecialchars($dados['sobrenome'] ?? '', ENT_QUOTES); ?>" readonly>
                     </div>
                 </div>
 
@@ -138,11 +150,21 @@ $csrfToken = Security::generateCSRFToken();
                 <div class="row filter">
                     <div class="col filter">
                         <label for="edit-cargo">Cargo</label>
-                        <input type="text" id="edit-cargo" name="cargo" class="width-lg height-md" value="<?php echo htmlspecialchars($dados['cargo'] ?? '', ENT_QUOTES); ?>" maxlength="100">
+                        <select id="edit-cargo" name="cargo" class="width-lg height-md">
+                            <option value="">Selecione (opcional)</option>
+                            <?php foreach ($cargoOpcoes as $opt): ?>
+                                <option value="<?php echo htmlspecialchars($opt, ENT_QUOTES); ?>"<?php echo ($dados['cargo'] ?? '') === $opt ? ' selected' : ''; ?>><?php echo htmlspecialchars($opt); ?></option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                     <div class="col filter">
-                        <label for="edit-instituicao">Instituição</label>
-                        <input type="text" id="edit-instituicao" name="instituicao" class="width-lg height-md" value="<?php echo htmlspecialchars($dados['instituicao'] ?? '', ENT_QUOTES); ?>" maxlength="200">
+                        <label for="edit-setor">Setor</label>
+                        <select id="edit-setor" name="setor" class="width-lg height-md">
+                            <option value="">Selecione (opcional)</option>
+                            <?php foreach ($setorOpcoes as $opt): ?>
+                                <option value="<?php echo htmlspecialchars($opt, ENT_QUOTES); ?>"<?php echo ($dados['instituicao'] ?? '') === $opt ? ' selected' : ''; ?>><?php echo htmlspecialchars($opt); ?></option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                 </div>
 
@@ -171,18 +193,12 @@ $csrfToken = Security::generateCSRFToken();
 
                 <div class="row filter">
                     <div class="col filter">
-                        <label>Perfis vinculados</label>
-                        <div class="width-xl height-md" style="padding: 8px 12px; background: var(--color-surface-elevated); border-radius: 4px; min-height: 42px; border: 1px solid var(--color-border-subtle);">
-                            <?php if (count($perfis) > 0): ?>
-                                <span class="minor-info"><?php echo htmlspecialchars(implode(', ', $perfis), ENT_QUOTES); ?></span>
-                            <?php else: ?>
-                                <span class="minor-info">Nenhum perfil vinculado</span>
-                            <?php endif; ?>
-                        </div>
+                        <label for="edit-perfis">Perfis vinculados</label>
+                        <input type="text" id="edit-perfis" class="width-xl height-md readonly" value="<?php echo htmlspecialchars($perfisTexto, ENT_QUOTES); ?>" readonly>
                     </div>
                     <div class="col filter">
-                        <label>Última alteração de senha</label>
-                        <input type="text" class="width-md height-md readonly" value="<?php echo htmlspecialchars($ultimaAlteracaoSenha, ENT_QUOTES); ?>" readonly>
+                        <label for="edit-ultima-senha">Última alteração de senha</label>
+                        <input type="text" id="edit-ultima-senha" class="width-md height-md readonly" value="<?php echo htmlspecialchars($ultimaAlteracaoSenhaLower, ENT_QUOTES); ?>" readonly>
                     </div>
                 </div>
 
@@ -191,16 +207,16 @@ $csrfToken = Security::generateCSRFToken();
                 <div class="row filter">
                     <div class="col full-line">
                         <?php if (count($regrasAlocacao) > 0): ?>
-                            <ul class="list-plain" style="margin: 0; padding-left: 1.2rem;">
-                                <?php foreach ($regrasAlocacao as $regra): ?>
-                                    <li style="margin-bottom: 6px;">
-                                        <strong><?php echo htmlspecialchars($regra['regra'] ?? '', ENT_QUOTES); ?></strong>
+                            <div class="regras-alocacao-list">
+                                <?php foreach ($regrasAlocacao as $idx => $regra): ?>
+                                    <div class="col full-line register regras-alocacao-item">
+                                        <span class="regras-alocacao-regra"><?php echo htmlspecialchars($regra['regra'] ?? '', ENT_QUOTES); ?></span>
                                         <?php if (!empty(trim((string) ($regra['descricao'] ?? '')))): ?>
-                                            — <?php echo htmlspecialchars($regra['descricao'], ENT_QUOTES); ?>
+                                            <span class="regras-alocacao-desc"> — <?php echo htmlspecialchars($regra['descricao'], ENT_QUOTES); ?></span>
                                         <?php endif; ?>
-                                    </li>
+                                    </div>
                                 <?php endforeach; ?>
-                            </ul>
+                            </div>
                         <?php else: ?>
                             <span class="minor-info">Nenhuma regra de alocação definida para seu usuário.</span>
                         <?php endif; ?>
@@ -209,7 +225,7 @@ $csrfToken = Security::generateCSRFToken();
 
                 <div class="row buttons">
                     <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
-                    <button type="submit" class="btn btn-primary" id="salvar-btn">Salvar alterações</button>
+                    <button type="submit" class="btn btn-primary" id="salvar-btn" disabled>Salvar alterações</button>
                 </div>
             </form>
         <?php endif; ?>
@@ -223,23 +239,54 @@ $csrfToken = Security::generateCSRFToken();
         </div>
     </div>
 
+    <?php if ($dados !== null): ?>
     <script>
     (function () {
+        var initial = {
+            email: <?php echo json_encode($dados['email'] ?? '', JSON_UNESCAPED_UNICODE); ?>,
+            telefone: <?php echo json_encode($dados['telefone'] ?? '', JSON_UNESCAPED_UNICODE); ?>,
+            cargo: <?php echo json_encode($dados['cargo'] ?? '', JSON_UNESCAPED_UNICODE); ?>,
+            setor: <?php echo json_encode($dados['instituicao'] ?? '', JSON_UNESCAPED_UNICODE); ?>
+        };
+
+        function getCurrent() {
+            var emailEl = document.getElementById('edit-email');
+            var telEl = document.getElementById('edit-telefone');
+            var cargoEl = document.getElementById('edit-cargo');
+            var setorEl = document.getElementById('edit-setor');
+            return {
+                email: emailEl ? (emailEl.value || '').trim() : '',
+                telefone: telEl ? (telEl.value || '').trim() : '',
+                cargo: cargoEl ? (cargoEl.value || '').trim() : '',
+                setor: setorEl ? (setorEl.value || '').trim() : ''
+            };
+        }
+        function hasChanges() {
+            var cur = getCurrent();
+            return (initial.email || '') !== (cur.email || '') ||
+                (initial.telefone || '') !== (cur.telefone || '') ||
+                (initial.cargo || '') !== (cur.cargo || '') ||
+                (initial.setor || '') !== (cur.setor || '');
+        }
+        function updateSalvarState() {
+            var btn = document.getElementById('salvar-btn');
+            if (btn) btn.disabled = !hasChanges();
+        }
+
         document.getElementById('voltar-btn')?.addEventListener('click', function () {
             window.location.href = '/frame.php?page=dashboard';
         });
 
-        document.getElementById('form-dados-pessoais')?.addEventListener('submit', function () {
-            var nome = document.getElementById('edit-nome');
-            if (nome && nome.value.trim() === '') {
-                if (typeof showToast === 'function') {
-                    showToast({ type: 'error', variant: 'full', title: 'Atenção', message: 'O nome é obrigatório.' });
-                }
-                return false;
+        ['edit-email', 'edit-telefone', 'edit-cargo', 'edit-setor'].forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', updateSalvarState);
+                el.addEventListener('change', updateSalvarState);
             }
-            return true;
         });
+        updateSalvarState();
     })();
     </script>
+    <?php endif; ?>
 </body>
 </html>

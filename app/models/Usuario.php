@@ -218,7 +218,7 @@ final class Usuario
 
         $novoHash = Security::hashPassword($novaSenha);
         $stmt = $this->pdo->prepare("
-            UPDATE usuarios SET senha_hash = ? WHERE id_usuario = ?
+            UPDATE usuarios SET senha_hash = ?, updated_at = NOW() WHERE id_usuario = ?
         ");
         $stmt->execute([$novoHash, $idUsuario]);
 
@@ -251,8 +251,8 @@ final class Usuario
     }
 
     /**
-     * Atualiza dados pessoais permitidos (nome, sobrenome, email, telefone, cargo, instituicao).
-     * CPF e id_usuario não podem ser alterados.
+     * Atualiza dados pessoais permitidos (email, telefone, cargo, instituicao/setor).
+     * Nome e sobrenome não podem ser alterados por esta função. CPF e id_usuario também não.
      *
      * @return array{success: bool, message?: string}
      */
@@ -263,20 +263,14 @@ final class Usuario
             return ['success' => false, 'message' => 'Usuário não identificado.'];
         }
 
-        $allowed = ['nome', 'sobrenome', 'email', 'telefone', 'cargo', 'instituicao'];
+        $allowed = ['email', 'telefone', 'cargo', 'instituicao'];
         $set = [];
         $params = [':id' => $idUsuario];
         foreach ($allowed as $campo) {
             if (!array_key_exists($campo, $dados)) {
                 continue;
             }
-            $valor = $dados[$campo];
-            if ($campo === 'nome' || $campo === 'sobrenome') {
-                $valor = trim((string) $valor);
-            }
-            if ($campo === 'email' || $campo === 'telefone' || $campo === 'cargo' || $campo === 'instituicao') {
-                $valor = trim((string) $valor);
-            }
+            $valor = trim((string) $dados[$campo]);
             $set[] = "`{$campo}` = :{$campo}";
             $params[":{$campo}"] = $valor === '' ? null : $valor;
         }
@@ -284,6 +278,7 @@ final class Usuario
             return ['success' => false, 'message' => 'Nenhum dado permitido para atualização.'];
         }
 
+        $set[] = '`updated_at` = NOW()';
         $sql = 'UPDATE usuarios SET ' . implode(', ', $set) . ' WHERE id_usuario = :id LIMIT 1';
         $stmt = $this->pdo->prepare($sql);
         foreach ($params as $k => $v) {
