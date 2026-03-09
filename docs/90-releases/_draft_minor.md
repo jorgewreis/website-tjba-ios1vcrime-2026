@@ -61,4 +61,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Feat: implementação de função de verificação de duplicidade de guia** `[58c7b6e]`
 - **Feat: submenu de config user** `[1f023b2]`
 - **Feat: form para alterar senha** `[fce8b45]`
+- **Feat: form alterar dados pessoais** `[f3efbb6]`
 
