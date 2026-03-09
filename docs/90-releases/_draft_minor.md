@@ -66,4 +66,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correção de layout** `[b14477f]`
 - **Fix: correção de função** `[8b37369]`
 - **Feat: novo conjunto de páginas - Editais** `[551e051]`
+- **Feat: novo conjunto - medidas protetivas** `[3cbc68e]`
 
