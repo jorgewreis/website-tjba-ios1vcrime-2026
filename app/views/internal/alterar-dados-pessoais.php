@@ -13,7 +13,7 @@ $userId = $userId ?? ($_SESSION['id_usuario'] ?? '');
 $dados = null;
 $perfis = [];
 $regrasAlocacao = [];
-$ultimaAlteracaoSenha = 'Não registrada';
+$ultimaAlteracaoDados = 'não registrada';
 $mensagemErro = '';
 $mensagemSucesso = '';
 
@@ -25,6 +25,13 @@ if ($userId !== '') {
     }
     $regrasRepo = new AlocacoesRegrasRepository($connection);
     $regrasAlocacao = $regrasRepo->findByUsuarioId($userId);
+    if ($dados !== null && !empty($dados['updated_at'])) {
+        $dt = \DateTime::createFromFormat('Y-m-d H:i:s', $dados['updated_at']);
+        if ($dt === false) {
+            $dt = \DateTime::createFromFormat('Y-m-d H:i:s.u', $dados['updated_at']);
+        }
+        $ultimaAlteracaoDados = $dt ? $dt->format('d/m/Y H:i') : trim($dados['updated_at']);
+    }
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csrf_token']) && Security::verifyCSRFToken($_POST['csrf_token'] ?? null)) {
@@ -41,6 +48,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csrf_token']) && Secu
     ]);
     if ($resultado['success']) {
         $dados = $usuario->getDadosPessoais($userId);
+        if ($dados !== null && !empty($dados['updated_at'])) {
+            $dt = \DateTime::createFromFormat('Y-m-d H:i:s', $dados['updated_at']);
+            if ($dt === false) {
+                $dt = \DateTime::createFromFormat('Y-m-d H:i:s.u', $dados['updated_at']);
+            }
+            $ultimaAlteracaoDados = $dt ? $dt->format('d/m/Y H:i') : trim($dados['updated_at']);
+        } else {
+            $ultimaAlteracaoDados = 'não registrada';
+        }
         $mensagemSucesso = 'Dados atualizados com sucesso.';
     } else {
         $mensagemErro = $resultado['message'] ?? 'Não foi possível atualizar os dados.';
@@ -54,7 +70,7 @@ $setorOpcoes = ['Cartório', 'Gabinete', 'Sala de Audiências', 'Vara'];
 
 $perfisTexto = count($perfis) > 0 ? implode(', ', $perfis) : 'nenhum perfil vinculado';
 $perfisTexto = function_exists('mb_strtolower') ? mb_strtolower($perfisTexto, 'UTF-8') : strtolower($perfisTexto);
-$ultimaAlteracaoSenhaLower = function_exists('mb_strtolower') ? mb_strtolower($ultimaAlteracaoSenha, 'UTF-8') : strtolower($ultimaAlteracaoSenha);
+$ultimaAlteracaoDadosLower = function_exists('mb_strtolower') ? mb_strtolower($ultimaAlteracaoDados, 'UTF-8') : strtolower($ultimaAlteracaoDados);
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -192,14 +208,14 @@ $ultimaAlteracaoSenhaLower = function_exists('mb_strtolower') ? mb_strtolower($u
                 <div class="row table header">Informações do perfil (somente leitura)</div>
 
                 <div class="col full-line register">
-                    <div class="row table">
+                    <div class="row table" style="padding: 10px;">
                         <div class="col filter">
                             <label for="edit-perfis">Perfis vinculados</label>
                             <input type="text" id="edit-perfis" class="width-xl height-md readonly" value="<?php echo htmlspecialchars($perfisTexto, ENT_QUOTES); ?>" readonly>
                         </div>
                         <div class="col filter">
-                            <label for="edit-ultima-senha">Última alteração de senha</label>
-                            <input type="text" id="edit-ultima-senha" class="width-md height-md readonly" value="<?php echo htmlspecialchars($ultimaAlteracaoSenhaLower, ENT_QUOTES); ?>" readonly>
+                            <label for="edit-ultima-dados">Última alteração de dados</label>
+                            <input type="text" id="edit-ultima-dados" class="width-md height-md readonly" value="<?php echo htmlspecialchars($ultimaAlteracaoDadosLower, ENT_QUOTES); ?>" readonly>
                         </div>
                     </div>
                 </div>
@@ -210,7 +226,7 @@ $ultimaAlteracaoSenhaLower = function_exists('mb_strtolower') ? mb_strtolower($u
                     <div class="row table">
                         <div class="col full-line">
                             <?php if (count($regrasAlocacao) > 0): ?>
-                                <div class="regras-alocacao-list">
+                                <div class="regras-alocacao-list" style="width: 100%;">
                                     <?php foreach ($regrasAlocacao as $idx => $regra): ?>
                                         <div class="col full-line register regras-alocacao-item">
                                             <span class="regras-alocacao-regra"><?php echo htmlspecialchars($regra['regra'] ?? '', ENT_QUOTES); ?></span>

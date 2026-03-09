@@ -249,7 +249,7 @@ final class Usuario
             return null;
         }
         $stmt = $this->pdo->prepare("
-            SELECT id_usuario, nome, sobrenome, cpf, email, telefone, cargo, instituicao, ultimo_acesso
+            SELECT id_usuario, nome, sobrenome, cpf, email, telefone, cargo, instituicao, ultimo_acesso, updated_at
             FROM usuarios
             WHERE id_usuario = ?
             LIMIT 1
