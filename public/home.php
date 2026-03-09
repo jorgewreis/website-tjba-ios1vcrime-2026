@@ -488,7 +488,8 @@ $userProfile = Security::getUserProfile() ?? '';
                         if (action === 'alterar-senha') {
                             window.location.href = '/alterar-senha.php';
                         } else if (action === 'alterar-dados') {
-                            window.location.href = '/alterar-dados-pessoais.php';
+                            var frame = document.getElementById('frame');
+                            if (frame) frame.src = '/frame.php?page=alterardados';
                         }
                     });
                 });

@@ -228,4 +228,69 @@ final class Usuario
 
         return ['success' => true];
     }
+
+    /**
+     * Retorna os dados pessoais do usuário para exibição/edição (sem senha_hash).
+     * Retorna null se não encontrado.
+     */
+    public function getDadosPessoais(string $idUsuario): ?array
+    {
+        $idUsuario = trim($idUsuario);
+        if ($idUsuario === '') {
+            return null;
+        }
+        $stmt = $this->pdo->prepare("
+            SELECT id_usuario, nome, sobrenome, cpf, email, telefone, cargo, instituicao, ultimo_acesso
+            FROM usuarios
+            WHERE id_usuario = ?
+            LIMIT 1
+        ");
+        $stmt->execute([$idUsuario]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row === false ? null : $row;
+    }
+
+    /**
+     * Atualiza dados pessoais permitidos (nome, sobrenome, email, telefone, cargo, instituicao).
+     * CPF e id_usuario não podem ser alterados.
+     *
+     * @return array{success: bool, message?: string}
+     */
+    public function atualizarDadosPessoais(string $idUsuario, array $dados): array
+    {
+        $idUsuario = trim($idUsuario);
+        if ($idUsuario === '') {
+            return ['success' => false, 'message' => 'Usuário não identificado.'];
+        }
+
+        $allowed = ['nome', 'sobrenome', 'email', 'telefone', 'cargo', 'instituicao'];
+        $set = [];
+        $params = [':id' => $idUsuario];
+        foreach ($allowed as $campo) {
+            if (!array_key_exists($campo, $dados)) {
+                continue;
+            }
+            $valor = $dados[$campo];
+            if ($campo === 'nome' || $campo === 'sobrenome') {
+                $valor = trim((string) $valor);
+            }
+            if ($campo === 'email' || $campo === 'telefone' || $campo === 'cargo' || $campo === 'instituicao') {
+                $valor = trim((string) $valor);
+            }
+            $set[] = "`{$campo}` = :{$campo}";
+            $params[":{$campo}"] = $valor === '' ? null : $valor;
+        }
+        if (empty($set)) {
+            return ['success' => false, 'message' => 'Nenhum dado permitido para atualização.'];
+        }
+
+        $sql = 'UPDATE usuarios SET ' . implode(', ', $set) . ' WHERE id_usuario = :id LIMIT 1';
+        $stmt = $this->pdo->prepare($sql);
+        foreach ($params as $k => $v) {
+            $stmt->bindValue($k, $v);
+        }
+        $stmt->execute();
+
+        return ['success' => $stmt->rowCount() >= 1];
+    }
 }

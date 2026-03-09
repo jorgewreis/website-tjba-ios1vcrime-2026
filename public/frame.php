@@ -49,6 +49,7 @@ $allowed_pages = [
     'usuarios'              => $PAGES . '/usuarios.php',
     'configuracoes'         => $PAGES . '/configuracoes.php',
     'documentos'            => $PAGES . '/documentos.php',
+    'alterardados'          => $PAGES . '/alterar-dados-pessoais.php',
 
     '401'=> $ERRORS . '/401.php',
     '403'=> $ERRORS . '/403.php',
@@ -82,7 +83,8 @@ $page_to_section = [
     'oficioscartorio'   => 'Cartório',
     'oficiosgabinete'   => 'Gabinete',
     'produtividade'     => 'Cartório',
-    'reuspresos'        => 'Gabinete' // 'reuspresos' não está em $allowed_pages, será ignorado.
+    'reuspresos'        => 'Gabinete',
+    'alterardados'      => 'Perfil'
 ];
 
 /**
@@ -94,20 +96,22 @@ $page_to_section = [
  */
 function hasAccessToSection(array $userPerfils, ?string $requiredSection): bool
 {
-    // De acordo com as memórias do usuário, "Estudante não tem acesso à área interna em nenhuma hipótese."
-    // Portanto, se o usuário tiver o perfil 'ESTUDANTE', o acesso é negado imediatamente.
+    // Estudante não tem acesso à área interna, exceto à seção "Perfil" (alterar dados pessoais / alterar senha).
+    $perfilSectionsAllowedForEstudante = ['Perfil'];
     if (in_array('ESTUDANTE', $userPerfils, true)) {
-        return false;
+        if ($requiredSection === null || !in_array($requiredSection, $perfilSectionsAllowedForEstudante, true)) {
+            return false;
+        }
     }
 
     if ($requiredSection === null) {
-        return true; // Se nenhuma seção é requerida, o acesso é permitido (após a verificação de ESTUDANTE).
+        return true;
     }
 
     // Mapeamento de seções para perfis permitidos.
     $sectionMap = [
-        // Removido 'ESTUDANTE' de 'All' para cumprir a restrição.
         'All' => ['CONSULTOR', 'CARTORIO', 'AUDIENCIA', 'GABINETE', 'ADMIN', 'SERVIDOR', 'CHEFIA'],
+        'Perfil' => ['ESTUDANTE', 'CONSULTOR', 'CARTORIO', 'AUDIENCIA', 'GABINETE', 'ADMIN', 'SERVIDOR', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'],
         'Cartório' => ['CARTORIO', 'AUDIENCIA', 'GABINETE', 'ADMIN', 'SERVIDOR', 'CHEFIA'],
         'Gabinete' => ['GABINETE', 'ADMIN', 'CHEFIA'],
         'Sala de Audiências' => ['AUDIENCIA', 'GABINETE', 'ADMIN', 'CHEFIA'],

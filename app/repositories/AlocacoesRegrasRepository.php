@@ -35,6 +35,29 @@ final class AlocacoesRegrasRepository
     }
 
     /**
+     * Retorna todas as regras em que o usuário está definido como alocado (usuario_id = ?).
+     *
+     * @return array<int, array>
+     */
+    public function findByUsuarioId(string $usuarioId): array
+    {
+        $usuarioId = trim($usuarioId);
+        if ($usuarioId === '') {
+            return [];
+        }
+        $statement = $this->connection->prepare(
+            sprintf(
+                'SELECT `id`, `regra`, `descricao`, `usuario_id`, `usuario_atualiza_id`, `created_at`, `updated_at` FROM `%s` WHERE `usuario_id` = :usuario_id ORDER BY `regra`',
+                $this->table
+            )
+        );
+        $statement->bindValue(':usuario_id', $usuarioId);
+        $statement->execute();
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+        return $rows === false ? [] : $rows;
+    }
+
+    /**
      * Cria ou atualiza a regra. Retorna a linha atualizada/inserida.
      * id gerado com IdGenerator prefixo ALR, 30 caracteres.
      */
