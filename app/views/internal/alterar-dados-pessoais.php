@@ -109,7 +109,7 @@ $ultimaAlteracaoSenhaLower = function_exists('mb_strtolower') ? mb_strtolower($u
                 <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
             </div>
         <?php else: ?>
-            <form id="form-dados-pessoais" method="post" action="">
+            <form id="form-dados-pessoais" method="post" action="" style="width: 100%;">
                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
 
                 <div class="row table header">Dados cadastrais</div>
@@ -191,35 +191,39 @@ $ultimaAlteracaoSenhaLower = function_exists('mb_strtolower') ? mb_strtolower($u
 
                 <div class="row table header">Informações do perfil (somente leitura)</div>
 
-                <div class="row filter">
-                    <div class="col filter">
-                        <label for="edit-perfis">Perfis vinculados</label>
-                        <input type="text" id="edit-perfis" class="width-xl height-md readonly" value="<?php echo htmlspecialchars($perfisTexto, ENT_QUOTES); ?>" readonly>
-                    </div>
-                    <div class="col filter">
-                        <label for="edit-ultima-senha">Última alteração de senha</label>
-                        <input type="text" id="edit-ultima-senha" class="width-md height-md readonly" value="<?php echo htmlspecialchars($ultimaAlteracaoSenhaLower, ENT_QUOTES); ?>" readonly>
+                <div class="col full-line register">
+                    <div class="row table">
+                        <div class="col filter">
+                            <label for="edit-perfis">Perfis vinculados</label>
+                            <input type="text" id="edit-perfis" class="width-xl height-md readonly" value="<?php echo htmlspecialchars($perfisTexto, ENT_QUOTES); ?>" readonly>
+                        </div>
+                        <div class="col filter">
+                            <label for="edit-ultima-senha">Última alteração de senha</label>
+                            <input type="text" id="edit-ultima-senha" class="width-md height-md readonly" value="<?php echo htmlspecialchars($ultimaAlteracaoSenhaLower, ENT_QUOTES); ?>" readonly>
+                        </div>
                     </div>
                 </div>
 
                 <div class="row table header">Regras de alocação definidas para você</div>
 
-                <div class="row filter">
-                    <div class="col full-line">
-                        <?php if (count($regrasAlocacao) > 0): ?>
-                            <div class="regras-alocacao-list">
-                                <?php foreach ($regrasAlocacao as $idx => $regra): ?>
-                                    <div class="col full-line register regras-alocacao-item">
-                                        <span class="regras-alocacao-regra"><?php echo htmlspecialchars($regra['regra'] ?? '', ENT_QUOTES); ?></span>
-                                        <?php if (!empty(trim((string) ($regra['descricao'] ?? '')))): ?>
-                                            <span class="regras-alocacao-desc"> — <?php echo htmlspecialchars($regra['descricao'], ENT_QUOTES); ?></span>
-                                        <?php endif; ?>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php else: ?>
-                            <span class="minor-info">Nenhuma regra de alocação definida para seu usuário.</span>
-                        <?php endif; ?>
+                <div class="col full-line register">
+                    <div class="row table">
+                        <div class="col full-line">
+                            <?php if (count($regrasAlocacao) > 0): ?>
+                                <div class="regras-alocacao-list">
+                                    <?php foreach ($regrasAlocacao as $idx => $regra): ?>
+                                        <div class="col full-line register regras-alocacao-item">
+                                            <span class="regras-alocacao-regra"><?php echo htmlspecialchars($regra['regra'] ?? '', ENT_QUOTES); ?></span>
+                                            <?php if (!empty(trim((string) ($regra['descricao'] ?? '')))): ?>
+                                                <span class="regras-alocacao-desc"> — <?php echo htmlspecialchars($regra['descricao'], ENT_QUOTES); ?></span>
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php else: ?>
+                                <span class="minor-info">Nenhuma regra de alocação definida para seu usuário.</span>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
 

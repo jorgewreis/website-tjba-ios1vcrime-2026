@@ -217,10 +217,19 @@ final class Usuario
         }
 
         $novoHash = Security::hashPassword($novaSenha);
-        $stmt = $this->pdo->prepare("
-            UPDATE usuarios SET senha_hash = ?, updated_at = NOW() WHERE id_usuario = ?
-        ");
-        $stmt->execute([$novoHash, $idUsuario]);
+        try {
+            $stmt = $this->pdo->prepare("
+                UPDATE usuarios SET senha_hash = ?, updated_at = NOW() WHERE id_usuario = ?
+            ");
+            $stmt->execute([$novoHash, $idUsuario]);
+        } catch (\PDOException $e) {
+            if (stripos($e->getMessage(), 'updated_at') !== false || stripos($e->getMessage(), 'Unknown column') !== false) {
+                $stmt = $this->pdo->prepare("UPDATE usuarios SET senha_hash = ? WHERE id_usuario = ?");
+                $stmt->execute([$novoHash, $idUsuario]);
+            } else {
+                throw $e;
+            }
+        }
 
         if ($stmt->rowCount() < 1) {
             return ['success' => false, 'message' => 'Não foi possível atualizar a senha. Tente novamente.'];
@@ -278,14 +287,27 @@ final class Usuario
             return ['success' => false, 'message' => 'Nenhum dado permitido para atualização.'];
         }
 
-        $set[] = '`updated_at` = NOW()';
-        $sql = 'UPDATE usuarios SET ' . implode(', ', $set) . ' WHERE id_usuario = :id LIMIT 1';
-        $stmt = $this->pdo->prepare($sql);
-        foreach ($params as $k => $v) {
-            $stmt->bindValue($k, $v);
-        }
-        $stmt->execute();
+        $setWithUpdated = array_merge($set, ['`updated_at` = NOW()']);
+        $sqlWithUpdated = 'UPDATE usuarios SET ' . implode(', ', $setWithUpdated) . ' WHERE id_usuario = :id LIMIT 1';
+        $sqlWithoutUpdated = 'UPDATE usuarios SET ' . implode(', ', $set) . ' WHERE id_usuario = :id LIMIT 1';
 
-        return ['success' => $stmt->rowCount() >= 1];
+        try {
+            $stmt = $this->pdo->prepare($sqlWithUpdated);
+            foreach ($params as $k => $v) {
+                $stmt->bindValue($k, $v);
+            }
+            $stmt->execute();
+            return ['success' => $stmt->rowCount() >= 1];
+        } catch (\PDOException $e) {
+            if (stripos($e->getMessage(), 'updated_at') !== false || stripos($e->getMessage(), 'Unknown column') !== false) {
+                $stmt = $this->pdo->prepare($sqlWithoutUpdated);
+                foreach ($params as $k => $v) {
+                    $stmt->bindValue($k, $v);
+                }
+                $stmt->execute();
+                return ['success' => $stmt->rowCount() >= 1];
+            }
+            throw $e;
+        }
     }
 }
