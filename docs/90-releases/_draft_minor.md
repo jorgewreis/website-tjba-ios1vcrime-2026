@@ -64,4 +64,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Feat: form alterar dados pessoais** `[f3efbb6]`
 - **Fix: correção de informações** `[634ba92]`
 - **Fix: correção de layout** `[b14477f]`
+- **Fix: correção de função** `[8b37369]`
 
