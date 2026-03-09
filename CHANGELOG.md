@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0062
+
+**Data:** 2026-03-09 20:00:00 | **Commit:** `551e051` | **Tipo:** `patch`
+
+- Feat: novo conjunto de páginas - Editais
+
 ## V. 1.03.0061
 
 **Data:** 2026-03-08 21:32:34 | **Commit:** `8b37369` | **Tipo:** `patch`
@@ -2646,6 +2652,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
