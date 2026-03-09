@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0063
+
+**Data:** 2026-03-09 20:46:00 | **Commit:** `3cbc68e` | **Tipo:** `patch`
+
+- Feat: novo conjunto - medidas protetivas
+
 ## V. 1.03.0062
 
 **Data:** 2026-03-09 20:00:00 | **Commit:** `551e051` | **Tipo:** `patch`
@@ -2652,6 +2658,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

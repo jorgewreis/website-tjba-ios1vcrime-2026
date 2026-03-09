@@ -257,7 +257,10 @@ Arquivos de exemplo (espelhando seus módulos):
 - `app/views/internal/cejusc.php`
 - `app/views/internal/editais.php`
 - `app/views/internal/guias.php`
-- `app/views/internal/medidas_protetivas.php`
+- `app/views/internal/cartorio-medidas-protetivas-list.php`
+- `app/views/internal/cartorio-medidas-protetivas-create.php`
+- `app/views/internal/cartorio-medidas-protetivas-edit.php`
+- `app/views/internal/cartorio-medidas-protetivas-rules.php`
 - `app/views/internal/oficios_cartorio.php`
 - `app/views/internal/oficios_gabinete.php`
 - `app/views/internal/produtividade.php`

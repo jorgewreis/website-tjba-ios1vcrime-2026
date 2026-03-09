@@ -204,10 +204,12 @@ Etapas:
 
 #### 4.6.7 Submódulo — Medidas Protetivas
 
-- conferência de partes  
-- mandados para requerido e requerente  
-- ofícios condicionais  
-- integração com CEJUSC
+- cadastro inicial do processo, classe automática, réu e vítimas  
+- vinculação de partes ao processo com papéis e polos distintos  
+- cadastro de partes no PJe  
+- expedição de mandados de intimação  
+- integração automática com CEJUSC  
+- registro e consulta de prioridades processuais por vítima
 
 #### 4.6.8 Submódulo — CEJUSC
 
