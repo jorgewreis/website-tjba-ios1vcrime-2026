@@ -23,7 +23,7 @@ if ($id === '') {
     exit;
 }
 
-$allowed = ['polo', 'prioridade_mulher', 'prioridade_crianca_adolescente', 'prioridade_idoso', 'prioridade_pessoa_deficiencia'];
+$allowed = ['tipo_parte', 'polo', 'prioridade_mulher', 'prioridade_crianca_adolescente', 'prioridade_idoso', 'prioridade_pessoa_deficiencia'];
 $data = array_intersect_key($parsed, array_flip($allowed));
 if ($data === []) {
     echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);

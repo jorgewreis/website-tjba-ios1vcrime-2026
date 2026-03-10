@@ -51,6 +51,8 @@ $partes = $processo['partes'] ?? [];
                         <td><?php echo htmlspecialchars($p['polo'] ?? '—'); ?></td>
                         <td>
                             <a href="/frame.php?page=consultapartesedit&id=<?php echo urlencode($p['parte_id'] ?? ''); ?>" class="btn btn-secondary-outline">Ver pessoa</a>
+                            <a href="/frame.php?page=processospartesedit&id=<?php echo urlencode($p['id'] ?? ''); ?>" class="btn btn-secondary-outline">Editar vínculo</a>
+                            <button type="button" class="btn btn-secondary-outline btn-desvincular" data-id="<?php echo htmlspecialchars($p['id'] ?? ''); ?>" data-processo-id="<?php echo htmlspecialchars($processo['id'] ?? ''); ?>">Desvincular</button>
                         </td>
                     </tr>
                     <?php endforeach; ?>
@@ -64,5 +66,23 @@ $partes = $processo['partes'] ?? [];
             <a href="/frame.php?page=processospartescreate&processo_id=<?php echo urlencode($processo['id'] ?? ''); ?>" class="btn btn-primary">Vincular parte</a>
         </div>
     </div>
+    <script>
+    document.querySelectorAll('.btn-desvincular').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var id = this.getAttribute('data-id');
+            var processoId = this.getAttribute('data-processo-id');
+            if (!id || !processoId) return;
+            if (!confirm('Desvincular esta parte do processo?')) return;
+            this.disabled = true;
+            fetch('/api/processos-partes/delete.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id }) })
+                .then(function(r) { return r.json(); })
+                .then(function(d) {
+                    if (d.deleted) { window.location.reload(); }
+                    else { if (typeof showToast === 'function') showToast({ type: 'error', message: d.error || 'Erro.' }); btn.disabled = false; }
+                })
+                .catch(function() { btn.disabled = false; });
+        });
+    });
+    </script>
 </body>
 </html>

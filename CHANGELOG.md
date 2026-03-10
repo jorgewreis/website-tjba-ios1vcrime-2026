@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0078
+
+**Data:** 2026-03-10 19:34:10 | **Commit:** `3995b63` | **Tipo:** `patch`
+
+- Feat: consulta instituicao
+
 ## V. 1.03.0077
 
 **Data:** 2026-03-10 19:21:39 | **Commit:** `eb7ff85` | **Tipo:** `patch`
@@ -2742,6 +2748,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

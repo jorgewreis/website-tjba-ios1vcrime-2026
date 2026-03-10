@@ -1,0 +1,7 @@
+# Ordem de execução dos scripts SQL (módulo Pessoas e Instituições)
+
+1. **partes-processos-partes.sql** – Cria `partes`, `processos_partes`, `processo_prioridades`. Requer tabela `processos`.
+2. **alter-partes-campos-opcionais.sql** – Torna CPF, sexo e data_nascimento opcionais em `partes`.
+3. **pessoas-instituicoes-vinculos.sql** – Cria `instituicoes_publicas`, `instituicoes_enderecos`, `instituicoes_telefones`, `instituicoes_setores`, `partes_telefones`, `partes_enderecos`, `partes_instituicoes`.
+4. **alter-processos-partes-observacoes-ativo.sql** – Adiciona `observacoes` e `ativo` em `processos_partes`.
+5. **alter-cejusc-guias-partes-drop-reus.sql** – Substitui `reu_id` por `parte_id` em cejusc_tarefas e guias; remove tabelas `reus` e `processoReus`. Executar apenas após migração de dados legados, se houver.

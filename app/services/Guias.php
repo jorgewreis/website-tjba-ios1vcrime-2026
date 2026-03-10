@@ -581,16 +581,17 @@ class Guias
      */
     public function obterGuia(string $idGuia): ?array
     {
+        // Legado: antes usava LEFT JOIN reus; agora usa partes (e opcionalmente parte_id quando a migração alter-cejusc-guias-partes-drop-reus foi aplicada).
         $sql = "SELECT 
                     g.*, 
-                    p.classe AS processo_classe,
+                    proc.classe AS processo_classe,
                     c.descricao AS classe_desc,
-                    r.cpf AS reu_cpf,
-                    r.telefone AS reu_telefone
+                    pt.cpf AS reu_cpf,
+                    (SELECT ptt.numero FROM partes_telefones ptt WHERE ptt.parte_id = pt.id AND ptt.principal = 1 LIMIT 1) AS reu_telefone
                 FROM guia g
-                LEFT JOIN processos p ON g.processo = p.numero
-                LEFT JOIN classes c ON p.classe = c.cod
-                LEFT JOIN reus r ON g.denunciado = r.nome
+                LEFT JOIN processos proc ON g.processo = proc.numero
+                LEFT JOIN classes c ON proc.classe = c.cod
+                LEFT JOIN partes pt ON (g.parte_id = pt.id OR (g.denunciado IS NOT NULL AND g.denunciado <> '' AND g.denunciado = pt.nome_completo))
                 WHERE g.id_guia = ?
                 LIMIT 1";
 

@@ -68,6 +68,11 @@ $allowed_pages = [
     'instituicoespublicascreate' => $PAGES . '/instituicoes-publicas-create.php',
     'instituicoespublicasedit'   => $PAGES . '/instituicoes-publicas-edit.php',
     'processospartescreate'     => $PAGES . '/processos-partes-create.php',
+    'processosparteslist'       => $PAGES . '/processos-partes-list.php',
+    'processospartesedit'      => $PAGES . '/processos-partes-edit.php',
+    'partesinstituicoeslist'    => $PAGES . '/partes-instituicoes-list.php',
+    'partesinstituicoescreate'  => $PAGES . '/partes-instituicoes-create.php',
+    'partesinstituicoesedit'    => $PAGES . '/partes-instituicoes-edit.php',
 
     '401'=> $ERRORS . '/401.php',
     '403'=> $ERRORS . '/403.php',
@@ -120,6 +125,11 @@ $page_to_section = [
     'instituicoespublicascreate' => 'Consultas',
     'instituicoespublicasedit'   => 'Consultas',
     'processospartescreate'     => 'Consultas',
+    'processosparteslist'       => 'Consultas',
+    'processospartesedit'       => 'Consultas',
+    'partesinstituicoeslist'    => 'Consultas',
+    'partesinstituicoescreate'  => 'Consultas',
+    'partesinstituicoesedit'    => 'Consultas',
 ];
 
 /**

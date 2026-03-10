@@ -92,6 +92,24 @@ final class ProcessosPartesRepository
         return $id;
     }
 
+    public function findById(string $id): ?array
+    {
+        $id = trim($id);
+        if ($id === '') {
+            return null;
+        }
+        $statement = $this->connection->prepare(
+            sprintf(
+                'SELECT pp.`id`, pp.`processo_id`, pp.`parte_id`, pp.`tipo_parte`, pp.`polo`, pp.`prioridade_mulher`, pp.`prioridade_crianca_adolescente`, pp.`prioridade_idoso`, pp.`prioridade_pessoa_deficiencia`, pp.`created_at`, pp.`updated_at`, p.`nome_completo`, p.`cpf`, proc.`numero_processo` FROM `%s` pp LEFT JOIN `partes` p ON p.`id` = pp.`parte_id` LEFT JOIN `processos` proc ON proc.`id` = pp.`processo_id` WHERE pp.`id` = :id LIMIT 1',
+                $this->table
+            )
+        );
+        $statement->bindValue(':id', $id);
+        $statement->execute();
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+        return $result === false ? null : $result;
+    }
+
     /** @return list<array<string, mixed>> */
     public function findByParteId(string $parteId): array
     {
@@ -176,6 +194,7 @@ final class ProcessosPartesRepository
     public function update(string $id, array $payload): bool
     {
         $allowed = [
+            'tipo_parte',
             'polo',
             'prioridade_mulher',
             'prioridade_crianca_adolescente',
@@ -190,9 +209,17 @@ final class ProcessosPartesRepository
                 continue;
             }
             $set[] = sprintf('`%s` = :%s', $column, $column);
-            $params[':' . $column] = str_starts_with($column, 'prioridade_')
-                ? ((int) ((bool) $payload[$column]))
-                : trim((string) $payload[$column]);
+            if (str_starts_with($column, 'prioridade_')) {
+                $params[':' . $column] = (int) ((bool) $payload[$column]);
+            } elseif ($column === 'tipo_parte') {
+                $val = trim((string) $payload[$column]);
+                if (!in_array($val, self::TIPOS_VALIDOS, true)) {
+                    throw new InvalidArgumentException('Tipo de parte inválido.');
+                }
+                $params[':' . $column] = $val;
+            } else {
+                $params[':' . $column] = trim((string) $payload[$column]);
+            }
         }
 
         if (empty($set)) {
