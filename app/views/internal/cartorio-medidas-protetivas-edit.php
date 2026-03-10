@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../../repositories/MedidasProtetivasSubtarefasRepository.php';
+require_once __DIR__ . '/../../helpers/CartorioTimelineHelper.php';
 require_once __DIR__ . '/../../services/MedidasProtetivasService.php';
 
 $connection = Conection::getInstance()->getConnection();
@@ -47,13 +48,16 @@ $podeCancelarTarefa = count(array_intersect($userPerfis, $perfisPermitidosCancel
 
 $statusAtual = trim((string) ($medida['status'] ?? 'pendente'));
 $tarefaFinalizadaOuCancelada = in_array($statusAtual, ['cancelada', 'concluída'], true);
+$timelineData = $medida !== null
+    ? cartorioTimelineBuildViewData('medidas_protetivas', [
+        'task' => $medida,
+        'task_status' => $statusAtual,
+        'subtarefas' => $subtarefas,
+    ])
+    : [];
 $subtarefaLabels = [
     MedidasProtetivasSubtarefasRepository::TIPO_ORDEM_1 => 'Cadastro de partes no PJe',
     MedidasProtetivasSubtarefasRepository::TIPO_ORDEM_2 => 'Expedição de mandados de intimação',
-];
-$buttonTitleByOrdem = [
-    1 => 'Informar cadastro de partes no PJe',
-    2 => 'Informar expedição de mandados',
 ];
 $timelineMinorPendente = [
     1 => 'Aguardando cadastro das partes no PJe',
@@ -233,130 +237,7 @@ $prioridadeLabels = [
                 </div>
             </div>
 
-            <?php
-            $statusLabel = 'Em andamento';
-            $statusClass = 'status-current';
-            if ($statusAtual === 'concluída') {
-                $statusLabel = 'Finalizada';
-                $statusClass = 'status-finished';
-            } elseif ($statusAtual === 'pendente') {
-                $statusLabel = 'Pendente';
-                $statusClass = 'status-pending';
-            } elseif ($statusAtual === 'cancelada') {
-                $statusLabel = 'Cancelada';
-                $statusClass = 'status-cancelled';
-            }
-            $progressStatuses = ['pendente', 'pendente'];
-            for ($ordem = 1; $ordem <= 2; $ordem++) {
-                if (isset($subtarefasPorOrdem[$ordem])) {
-                    $progressStatuses[$ordem - 1] = trim((string) ($subtarefasPorOrdem[$ordem]['status'] ?? 'pendente'));
-                }
-            }
-            $mostrarBarra = in_array($statusAtual, ['pendente', 'em_andamento'], true);
-            ?>
-            <div class="row timeline-header">
-                <div class="col filter">
-                    <span class="header-timeline">Subtarefas - Timeline</span>
-                </div>
-                <div class="col filter">
-                    <?php if ($mostrarBarra): ?>
-                        <div class="width-sm status <?php echo htmlspecialchars($statusClass, ENT_QUOTES); ?> status-with-progress" style="border: 1px solid var(--color-gray-500);">
-                            <span class="status-task-label"><?php echo htmlspecialchars($statusLabel, ENT_QUOTES); ?></span>
-                            <div class="status-task-progress" role="progressbar" aria-valuenow="<?php echo 1 + count(array_filter($progressStatuses, static fn ($value) => $value === 'concluida')); ?>" aria-valuemin="0" aria-valuemax="3">
-                                <div class="status-task-progress-segment concluida" title="Medida protetiva cadastrada"></div>
-                                <?php foreach ($progressStatuses as $index => $statusSeg): ?>
-                                    <div class="status-task-progress-segment <?php echo htmlspecialchars($statusSeg === 'concluida' ? 'concluida' : ($statusSeg === 'em_andamento' ? 'em_andamento' : 'pendente')); ?>" title="<?php echo htmlspecialchars($subtarefaLabels[$ordemParaTipo[$index + 1]], ENT_QUOTES); ?>"></div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                    <?php else: ?>
-                        <div class="width-sm status <?php echo htmlspecialchars($statusClass, ENT_QUOTES); ?>" style="border: 1px solid var(--color-gray-500);"><?php echo htmlspecialchars($statusLabel, ENT_QUOTES); ?></div>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <?php
-            $createdRaw = (string) ($medida['created_at'] ?? '');
-            $createdFormatted = '';
-            if ($createdRaw !== '') {
-                $dt = \DateTime::createFromFormat('Y-m-d H:i:s', $createdRaw);
-                $createdFormatted = $dt ? $dt->format('d/m/Y - H:i') : $createdRaw;
-            }
-            ?>
-            <div class="row timeline finished">
-                <div class="row">
-                    <div class="circle finished"></div>
-                    <div class="col filter subtask-status-info">
-                        <span class="minor-info">Medida protetiva cadastrada</span>
-                    </div>
-                </div>
-                <div class="col">
-                    <div class="col filter subtask-date">
-                        <span class="minor-info"><?php echo htmlspecialchars($createdFormatted !== '' ? 'Cadastro realizado em ' . $createdFormatted : 'Cadastro realizado', ENT_QUOTES); ?></span>
-                    </div>
-                </div>
-            </div>
-
-            <?php for ($ordem = 1; $ordem <= 2; $ordem++): ?>
-                <?php
-                $subtarefa = $subtarefasPorOrdem[$ordem] ?? null;
-                $circleClass = '';
-                $minorTexto = $timelineMinorPendente[$ordem];
-                $dateLabel = 'Aguardando conclusão';
-                $stId = (string) ($subtarefa['id'] ?? '');
-                $dadosEspecificos = [];
-                if ($subtarefa !== null && trim((string) ($subtarefa['dados_especificos'] ?? '')) !== '') {
-                    $dadosEspecificos = json_decode((string) $subtarefa['dados_especificos'], true);
-                    if (!is_array($dadosEspecificos)) {
-                        $dadosEspecificos = [];
-                    }
-                }
-                $nomeUsuario = trim((string) ($dadosEspecificos['nome'] ?? ''));
-                $qtd = isset($dadosEspecificos['qtd']) ? (int) $dadosEspecificos['qtd'] : 0;
-                if ($subtarefa !== null) {
-                    $status = trim((string) ($subtarefa['status'] ?? ''));
-                    $raw = (string) ($subtarefa['updated_at'] ?? $subtarefa['created_at'] ?? '');
-                    $dataMovimento = '';
-                    if ($raw !== '') {
-                        $dt = \DateTime::createFromFormat('Y-m-d H:i:s', $raw);
-                        $dataMovimento = $dt ? $dt->format('d/m/Y - H:i') : $raw;
-                    }
-                    if ($status === 'concluida') {
-                        $circleClass = 'finished';
-                        if ($ordem === 1) {
-                            $minorTexto = $qtd . ' partes cadastradas no PJe';
-                            $dateLabel = $nomeUsuario !== '' && $dataMovimento !== '' ? 'Cadastro realizado por ' . $nomeUsuario . ' em ' . $dataMovimento : ($dataMovimento !== '' ? $dataMovimento : 'Concluído');
-                        } else {
-                            $minorTexto = $qtd . ' mandados de intimação expedidos';
-                            $dateLabel = $nomeUsuario !== '' && $dataMovimento !== '' ? 'Expedição realizada por ' . $nomeUsuario . ' em ' . $dataMovimento : ($dataMovimento !== '' ? $dataMovimento : 'Concluído');
-                        }
-                    } elseif ($status === 'em_andamento') {
-                        $circleClass = 'current';
-                        $dateLabel = 'Aguardando movimentação';
-                    }
-                }
-                ?>
-                <div class="row timeline <?php echo $circleClass !== '' ? htmlspecialchars($circleClass, ENT_QUOTES) : ''; ?>">
-                    <div class="row">
-                        <div class="circle <?php echo $circleClass !== '' ? htmlspecialchars($circleClass, ENT_QUOTES) : ''; ?>"<?php if ($circleClass === ''): ?> style="background-color: var(--color-gray-300);"<?php endif; ?>></div>
-                        <div class="col filter subtask-status-info">
-                            <span class="minor-info"><?php echo htmlspecialchars($minorTexto, ENT_QUOTES); ?></span>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="col filter subtask-date">
-                            <span class="minor-info"><?php echo htmlspecialchars($dateLabel, ENT_QUOTES); ?></span>
-                        </div>
-                        <?php if ($subtarefa !== null && trim((string) ($subtarefa['status'] ?? '')) === 'em_andamento'): ?>
-                            <div class="col filter" style="margin-top: 0.5rem;">
-                                <label for="qtd-subtarefa-<?php echo $ordem; ?>">Quantidade realizada</label>
-                                <input type="number" id="qtd-subtarefa-<?php echo $ordem; ?>" class="width-sm height-md" min="1" placeholder="Qtd">
-                                <button type="button" class="btn btn-primary btn-informar-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-ordem="<?php echo $ordem; ?>" style="margin-top: 0.25rem;"><?php echo htmlspecialchars($buttonTitleByOrdem[$ordem], ENT_QUOTES); ?></button>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            <?php endfor; ?>
+            <?php include __DIR__ . '/_cartorio_timeline.php'; ?>
 
             <input type="hidden" id="hidden-medida-id" value="<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>">
         <?php endif; ?>
@@ -440,50 +321,8 @@ $prioridadeLabels = [
                     });
                 });
 
-                document.querySelectorAll('.btn-informar-subtarefa').forEach(function (btn) {
-                    btn.addEventListener('click', function () {
-                        var subtarefaId = this.getAttribute('data-subtarefa-id');
-                        var ordem = parseInt(this.getAttribute('data-ordem') || '0', 10);
-                        var qtdEl = document.getElementById('qtd-subtarefa-' + ordem);
-                        var qtd = parseInt((qtdEl?.value || '0'), 10);
-                        if (!subtarefaId || isNaN(qtd) || qtd < 1) {
-                            if (typeof showToast === 'function') {
-                                showToast({ type: 'error', variant: 'full', title: 'Campo obrigatório', message: 'Informe uma quantidade maior que zero.' });
-                            }
-                            return;
-                        }
-                        btn.disabled = true;
-                        fetch('/api/cartorio-medidas-protetivas/concluir-subtarefa.php', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                subtarefa_id: subtarefaId,
-                                dados_especificos: { qtd: qtd }
-                            })
-                        })
-                        .then(function (response) { return response.json(); })
-                        .then(function (data) {
-                            if (data.success) {
-                                window.location.reload();
-                                return;
-                            }
-                            if (typeof showToast === 'function') {
-                                showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao concluir.' });
-                            }
-                            btn.disabled = false;
-                        })
-                        .catch(function () {
-                            if (typeof showToast === 'function') {
-                                showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
-                            }
-                            btn.disabled = false;
-                        });
-                    });
-                });
-
                 var btnCancelar = document.getElementById('cancelar-tarefa-btn');
                 btnCancelar?.addEventListener('click', function () {
-                    if (!confirm('Deseja cancelar esta medida protetiva?')) return;
                     btnCancelar.disabled = true;
                     fetch('/api/cartorio-medidas-protetivas/cancel.php', {
                         method: 'POST',

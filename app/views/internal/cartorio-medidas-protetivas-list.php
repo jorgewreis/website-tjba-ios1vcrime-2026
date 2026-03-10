@@ -197,7 +197,7 @@ if ($totalPages > 0) {
                     </div>
                     <div class="col filter comarca-info">
                         <span class="minor-info">Classe</span>
-                        <span class="major-info"><?php echo htmlspecialchars((string) ($row['Classe'] ?? '—')); ?></span>
+                        <span class="major-info text-ellipsis" title="<?php echo htmlspecialchars((string) ($row['Classe'] ?? '—'), ENT_QUOTES); ?>"><?php echo htmlspecialchars((string) ($row['Classe'] ?? '—')); ?></span>
                     </div>
                     <div class="col filter comarca-info">
                         <span class="minor-info">Réu</span>

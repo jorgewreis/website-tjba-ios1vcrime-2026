@@ -87,13 +87,6 @@ try {
                 <input type="number" class="width-sm height-md" id="filter-prazo-dias" min="1" placeholder="Ex.: 15" required title="Prazo em dias a partir da data de publicação">
             </div>
         </div>
-        <div class="row filter">
-            <div class="col filter">
-                <label for="filter-observacoes">Observações</label>
-                <input type="text" class="width-xl height-md" id="filter-observacoes" placeholder="Opcional">
-            </div>
-        </div>
-
         <div class="row info">
             <span>*Conforme regra de alocação, os Editais serão alocados automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
         </div>
@@ -243,8 +236,7 @@ try {
                 var payload = {
                     processo: processo,
                     tipo_edital: tipoEdital,
-                    prazo_dias: prazoDias,
-                    observacoes: (document.getElementById('filter-observacoes')?.value || '').trim()
+                    prazo_dias: prazoDias
                 };
                 var hCod = document.getElementById('hidden-classe-codigo');
                 var hDesc = document.getElementById('hidden-classe-descricao');

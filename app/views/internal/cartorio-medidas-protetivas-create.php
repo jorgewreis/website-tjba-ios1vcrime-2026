@@ -121,7 +121,7 @@ try {
                 </select>
             </div>
             <div class="col filter">
-                <label for="reu-data-nascimento">Data de nascimento <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <label for="reu-data-nascimento">Data de nascimento</label>
                 <input type="date" class="width-md height-md" id="reu-data-nascimento">
             </div>
         </div>
@@ -130,13 +130,6 @@ try {
         <div id="vitimas-container"></div>
         <div class="row buttons">
             <button class="btn btn-secondary-outline" id="add-vitima-btn" type="button">Adicionar vítima</button>
-        </div>
-
-        <div class="row filter">
-            <div class="col filter">
-                <label for="filter-observacoes">Observações</label>
-                <input type="text" class="width-xl height-md" id="filter-observacoes" placeholder="Opcional">
-            </div>
         </div>
 
         <div class="row info">
@@ -322,8 +315,8 @@ try {
             function validateVitimas(vitimas) {
                 for (var i = 0; i < vitimas.length; i += 1) {
                     var vitima = vitimas[i];
-                    if (!vitima.cpf || !vitima.nome_completo || !vitima.sexo || !vitima.data_nascimento) {
-                        return 'Preencha CPF, nome completo, sexo e data de nascimento para cada vítima informada.';
+                    if (!vitima.cpf || !vitima.nome_completo || !vitima.sexo) {
+                        return 'Preencha CPF, nome completo e sexo para cada vítima informada.';
                     }
                 }
                 return '';
@@ -344,8 +337,8 @@ try {
                 }
 
                 var reu = collectParte('reu');
-                if (!reu.cpf || !reu.nome_completo || !reu.sexo || !reu.data_nascimento) {
-                    showFeedback('Preencha CPF, nome completo, sexo e data de nascimento do réu.', 'error');
+                if (!reu.cpf || !reu.nome_completo || !reu.sexo) {
+                    showFeedback('Preencha CPF, nome completo e sexo do réu.', 'error');
                     return;
                 }
 
@@ -359,8 +352,7 @@ try {
                 var payload = {
                     processo: processo,
                     reu: reu,
-                    vitimas: vitimas,
-                    observacoes: (document.getElementById('filter-observacoes')?.value || '').trim()
+                    vitimas: vitimas
                 };
 
                 var classeCodigoField = document.getElementById('hidden-classe-codigo');

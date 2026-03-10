@@ -5,6 +5,7 @@ require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
 require_once __DIR__ . '/../../repositories/CejuscSubtarefasRepository.php';
 require_once __DIR__ . '/../../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../../repositories/ClassesRepository.php';
+require_once __DIR__ . '/../../helpers/CartorioTimelineHelper.php';
 require_once __DIR__ . '/../../services/CejuscService.php';
 
 $connection = Conection::getInstance()->getConnection();
@@ -72,7 +73,7 @@ if ($tarefa !== null) {
     }
 
     $subtarefasRepo = new CejuscSubtarefasRepository($connection);
-    $subtarefasRepo->ensureEnviarJuntarPair($idTarefa);
+    $subtarefasRepo->ensureFluxoCompleto($idTarefa);
     $subtarefas = $subtarefasRepo->findByCejuscId($idTarefa);
     foreach ($subtarefas as $st) {
         $subtarefasPorOrdem[(int) $st['ordem']] = $st;
@@ -120,6 +121,13 @@ if ($userIdEdit !== null && $userIdEdit !== '') {
 $podeExcluirTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosExcluir)) > 0;
 $podeCancelarTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosCancelar)) > 0;
 $tarefaFinalizadaOuCancelada = in_array($statusAtual, ['cancelada', 'concluída'], true);
+$timelineData = $tarefa !== null
+    ? cartorioTimelineBuildViewData('cejusc', [
+        'task' => $tarefa,
+        'task_status' => $statusAtual,
+        'subtarefas' => $subtarefas,
+    ])
+    : [];
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -169,7 +177,7 @@ $tarefaFinalizadaOuCancelada = in_array($statusAtual, ['cancelada', 'concluída'
                     <label for="filter-classe">Classe</label>
                     <?php
                     $classeReadonly = ($classeNome !== 'Classe não informada');
-                    $classeValue = $classeReadonly ? ($classeCodigo !== '' ? $classeCodigo . ' - ' . $classeNome : $classeNome) : '';
+                    $classeValue = $classeReadonly ? $classeNome : '';
                     $classeClass = 'width-xl height-md' . ($classeReadonly ? ' readonly' : '');
                     ?>
                     <input type="text" id="filter-classe" class="<?php echo htmlspecialchars($classeClass, ENT_QUOTES); ?>" value="<?php echo htmlspecialchars($classeValue, ENT_QUOTES); ?>"<?php echo $classeReadonly ? ' readonly' : ' placeholder="Informe a classe processual"'; ?>>
@@ -180,160 +188,7 @@ $tarefaFinalizadaOuCancelada = in_array($statusAtual, ['cancelada', 'concluída'
                 </div>
             </div>
 
-            <?php
-            $statusCartaLabel = 'Em andamento';
-            $statusCartaClass = 'status-current';
-            if ($statusAtual === 'concluída') {
-                $statusCartaLabel = 'Finalizada';
-                $statusCartaClass = 'status-finished';
-            } elseif ($statusAtual === 'pendente') {
-                $statusCartaLabel = 'Pendente';
-                $statusCartaClass = 'status-pending';
-            } elseif ($statusAtual === 'cancelada') {
-                $statusCartaLabel = 'Cancelada';
-                $statusCartaClass = 'status-cancelled';
-            }
-            $currentSubtarefaTitle = '';
-            foreach ($subtarefas as $s) {
-                if (trim((string) ($s['status'] ?? '')) === 'em_andamento') {
-                    $currentSubtarefaTitle = $subtarefaLabels[$s['tipo'] ?? ''] ?? $s['tipo'] ?? '';
-                    break;
-                }
-            }
-            if ($currentSubtarefaTitle === '' && $statusAtual === 'pendente') {
-                $currentSubtarefaTitle = $subtarefaLabels[CejuscSubtarefasRepository::TIPO_ORDEM_1] ?? 'Enviar Decisão';
-            } elseif ($currentSubtarefaTitle === '' && $statusAtual === 'concluída') {
-                $currentSubtarefaTitle = 'Todas as etapas concluídas';
-            } elseif ($currentSubtarefaTitle === '') {
-                $currentSubtarefaTitle = $statusAtual;
-            }
-            $progressStatusesEdit = ['pendente', 'pendente'];
-            for ($o = 1; $o <= 2; $o++) {
-                if (isset($subtarefasPorOrdem[$o])) {
-                    $progressStatusesEdit[$o - 1] = trim((string) ($subtarefasPorOrdem[$o]['status'] ?? 'pendente'));
-                }
-            }
-            $mostrarBarraEdit = ($statusCartaLabel === 'Pendente' || $statusCartaLabel === 'Em andamento');
-            $segmentosBarraEdit = [];
-            if ($mostrarBarraEdit) {
-                $segmentosBarraEdit[] = ['class' => 'concluida', 'title' => 'Tarefa cadastrada'];
-                for ($i = 0; $i < 2; $i++) {
-                    $statusSeg = $progressStatusesEdit[$i] ?? 'pendente';
-                    $segClass = $statusSeg === 'concluida' ? 'concluida' : ($statusSeg === 'em_andamento' ? 'em_andamento' : 'pendente');
-                    $segmentosBarraEdit[] = ['class' => $segClass, 'title' => $subtarefaLabels[$ordemParaTipo[$i + 1] ?? ''] ?? ''];
-                }
-            }
-            ?>
-            <div class="row table header">Subtarefas - Timeline</div>
-            <div class="row buttons">
-                <div class="col filter" title="<?php echo htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES); ?>">
-                    <?php if ($mostrarBarraEdit): ?>
-                        <div class="width-sm status <?php echo htmlspecialchars($statusCartaClass, ENT_QUOTES); ?> status-with-progress" style="border: 1px solid var(--color-gray-500);">
-                            <span class="status-task-label"><?php echo htmlspecialchars($statusCartaLabel, ENT_QUOTES); ?></span>
-                            <?php $concluidosBarraEdit = 1 + count(array_filter($progressStatusesEdit, fn($x) => $x === 'concluida')); ?>
-                            <div class="status-task-progress" role="progressbar" aria-valuenow="<?php echo $concluidosBarraEdit; ?>" aria-valuemin="0" aria-valuemax="3" aria-label="Progresso das subtarefas">
-                                <?php foreach ($segmentosBarraEdit as $seg): ?>
-                                    <div class="status-task-progress-segment <?php echo htmlspecialchars($seg['class'], ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($seg['title'], ENT_QUOTES); ?>"></div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                    <?php else: ?>
-                        <div class="width-sm status <?php echo htmlspecialchars($statusCartaClass, ENT_QUOTES); ?>" style="border: 1px solid var(--color-gray-500);"><?php echo htmlspecialchars($statusCartaLabel, ENT_QUOTES); ?></div>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <?php
-            $tarefaCreatedRaw = $tarefa['created_at'] ?? '';
-            $tarefaCreatedFormatted = '';
-            if ($tarefaCreatedRaw !== '') {
-                $dt0 = \DateTime::createFromFormat('Y-m-d H:i:s', $tarefaCreatedRaw);
-                $tarefaCreatedFormatted = $dt0 ? $dt0->format('d/m/Y - H:i:s') : $tarefaCreatedRaw;
-            }
-            $cadastroInfoLinha = 'Tarefa cadastrada em ' . $tarefaCreatedFormatted;
-            ?>
-            <div class="row timeline finished">
-                <div class="row">
-                    <div class="circle finished"></div>
-                    <div class="col filter subtask-status-info">
-                        <span class="minor-info">Tarefa cadastrada</span>
-                    </div>
-                </div>
-                <div class="col">
-                    <div class="col filter subtask-date">
-                        <span class="minor-info"><?php echo htmlspecialchars($cadastroInfoLinha, ENT_QUOTES); ?></span>
-                    </div>
-                </div>
-            </div>
-
-            <?php for ($ordem = 1; $ordem <= 2; $ordem++): ?>
-                <?php
-                $tipo = $ordemParaTipo[$ordem] ?? '';
-                $label = $subtarefaLabels[$tipo] ?? 'Passo ' . $ordem;
-                $st = $subtarefasPorOrdem[$ordem] ?? null;
-                $circleClass = '';
-                $statusTexto = 'Pendente';
-                $dataMovimento = '';
-                $minorTexto = $label;
-                $dateLabel = 'Aguardando movimentação';
-                $dadosEspecificos = [];
-                if ($st !== null && !empty(trim((string) ($st['dados_especificos'] ?? '')))) {
-                    $dadosEspecificos = json_decode((string) $st['dados_especificos'], true);
-                    if (!is_array($dadosEspecificos)) {
-                        $dadosEspecificos = [];
-                    }
-                }
-                $nomeResponsavel = isset($dadosEspecificos['nome']) ? trim((string) $dadosEspecificos['nome']) : (isset($dadosEspecificos['responsavel']) ? trim((string) $dadosEspecificos['responsavel']) : '');
-                $infoLinha = '';
-                if ($st !== null) {
-                    $status = trim((string) ($st['status'] ?? ''));
-                    $raw = $st['updated_at'] ?? $st['created_at'] ?? '';
-                    if ($raw !== '') {
-                        $dt = \DateTime::createFromFormat('Y-m-d H:i:s', $raw);
-                        $dataMovimento = $dt ? $dt->format('d/m/Y - H:i:s') : $raw;
-                    }
-                    if ($status === 'concluida') {
-                        $circleClass = 'finished';
-                        $nomeExibir = $nomeResponsavel !== '' ? $nomeResponsavel : '—';
-                        $minorTexto = $label . ' concluído';
-                        $infoLinha = 'Concluído por ' . $nomeExibir . ' em ' . $dataMovimento;
-                        $dateLabel = $infoLinha;
-                    } elseif ($status === 'em_andamento') {
-                        $circleClass = 'current';
-                        $statusTexto = 'Em andamento';
-                        $minorTexto = $label;
-                        if ($dataMovimento !== '') {
-                            $dateLabel = 'Aguardando movimentação';
-                        } else {
-                            $dateLabel = 'Aguardando conclusão';
-                        }
-                    } else {
-                        $minorTexto = $label;
-                        $dateLabel = 'Aguardando conclusão';
-                    }
-                }
-                if ($infoLinha !== '') {
-                    $dateLabel = $infoLinha;
-                }
-                ?>
-                <div class="row <?php if ($circleClass === 'current') { echo 'timeline current'; } elseif ($circleClass === 'finished') { echo 'timeline finished'; } else { echo 'timeline'; } ?>">
-                    <div class="row">
-                        <?php if ($circleClass !== ''): ?>
-                            <div class="circle <?php echo htmlspecialchars($circleClass, ENT_QUOTES); ?>"></div>
-                        <?php else: ?>
-                            <div class="circle" style="background-color: var(--color-gray-300);"></div>
-                        <?php endif; ?>
-                        <div class="col filter subtask-status-info">
-                            <span class="minor-info"><?php echo htmlspecialchars($minorTexto, ENT_QUOTES); ?></span>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="col filter subtask-date">
-                            <span class="minor-info"><?php echo htmlspecialchars($dateLabel, ENT_QUOTES); ?></span>
-                        </div>
-                    </div>
-                </div>
-            <?php endfor; ?>
+            <?php include __DIR__ . '/_cartorio_timeline.php'; ?>
 
             <input type="hidden" id="hidden-carta-id" value="<?php echo htmlspecialchars($idTarefa, ENT_QUOTES); ?>">
         <?php endif; ?>
@@ -382,7 +237,6 @@ $tarefaFinalizadaOuCancelada = in_array($statusAtual, ['cancelada', 'concluída'
                 var btnCancelar = document.getElementById('cancelar-tarefa-btn');
                 if (btnCancelar && window.__currentCejuscId) {
                     btnCancelar.addEventListener('click', function () {
-                        if (!confirm('Deseja cancelar esta tarefa? O status será alterado para "Cancelada".')) return;
                         btnCancelar.disabled = true;
                         fetch('/api/cartorio-cejusc/cancel.php', {
                             method: 'POST',

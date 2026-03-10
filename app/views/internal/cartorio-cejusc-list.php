@@ -66,12 +66,14 @@ $statusOptions = ['pendente', 'em_andamento', 'concluída', 'cancelada'];
 $statusCounts = array_merge(array_fill_keys($statusOptions, 0), $service->getStatusCounts($filters));
 
 $subtarefaLabels = [
-    'enviar_decisao' => 'Enviar Decisão',
-    'juntar_termo_envio' => 'Juntar termo de envio',
+    'gerar_pdf_decisao' => 'Gerar PDF da decisão',
+    'enviar_decisao' => 'Envio da decisão por e-mail',
+    'juntar_termo_envio' => 'Juntada de termo de envio',
 ];
 $ordemLabels = [
-    1 => $subtarefaLabels['enviar_decisao'],
-    2 => $subtarefaLabels['juntar_termo_envio'],
+    1 => $subtarefaLabels['gerar_pdf_decisao'],
+    2 => $subtarefaLabels['enviar_decisao'],
+    3 => $subtarefaLabels['juntar_termo_envio'],
 ];
 
 $baseQueryParams = [];
@@ -136,7 +138,7 @@ if ($totalPages > 0) {
             <span class="specific">Lista de tarefas</span>
         </div>
         <h1 class="title-page">Cejusc</h1>
-        <p class="description-page">Envio de decisão ao Cejusc e juntada do comprovante de envio.</p>
+        <p class="description-page">Geração da decisão em PDF, envio por e-mail ao Cejusc e juntada do comprovante de envio.</p>
     </div>
 
     <div class="card-page">
@@ -173,10 +175,10 @@ if ($totalPages > 0) {
                 $idCarta = $row['IdCarta'];
                 $subtarefas = $row['Subtarefas'] ?? [];
                 $allSt = $row['SubtarefasAll'] ?? [];
-                $progressStatuses = ['pendente', 'pendente'];
+                $progressStatuses = ['pendente', 'pendente', 'pendente'];
                 foreach ($allSt as $s) {
                     $o = (int) ($s['ordem'] ?? 0);
-                    if ($o >= 1 && $o <= 2) {
+                    if ($o >= 1 && $o <= 3) {
                         $progressStatuses[$o - 1] = (string) ($s['status'] ?? 'pendente');
                     }
                 }
@@ -189,7 +191,7 @@ if ($totalPages > 0) {
                 }
                 $st = $row['Status'] ?? '';
                 if ($currentSubtarefaTitle === '' && $st === 'pendente') {
-                    $currentSubtarefaTitle = $ordemLabels[1] ?? 'Enviar Decisão';
+                    $currentSubtarefaTitle = $ordemLabels[1] ?? 'Gerar PDF da decisão';
                 } elseif ($currentSubtarefaTitle === '' && ($st === 'concluída')) {
                     $currentSubtarefaTitle = 'Todas as etapas concluídas';
                 } elseif ($currentSubtarefaTitle === '') {
@@ -199,7 +201,7 @@ if ($totalPages > 0) {
                 $mostrarBarraStatus = ($st !== 'concluída' && $st !== 'cancelada');
                 $segmentosBarra = [];
                 if ($mostrarBarraStatus) {
-                    for ($i = 0; $i < 2; $i++) {
+                    for ($i = 0; $i < 3; $i++) {
                         $statusSeg = $progressStatuses[$i] ?? 'pendente';
                         $segClass = $statusSeg === 'concluida' ? 'concluida' : ($statusSeg === 'em_andamento' ? 'em_andamento' : 'pendente');
                         $segmentosBarra[] = ['class' => $segClass, 'title' => $ordemLabels[$i + 1] ?? ''];
@@ -257,7 +259,7 @@ if ($totalPages > 0) {
                                 echo '<div class="width-sm status ' . $classStatus . ' status-with-progress">';
                                 echo '<span class="status-task-label">' . htmlspecialchars($labelStatus) . '</span>';
                                 $concluidosBarra = count(array_filter($progressStatuses, fn($x) => $x === 'concluida'));
-                                echo '<div class="status-task-progress" role="progressbar" aria-valuenow="' . $concluidosBarra . '" aria-valuemin="0" aria-valuemax="2">';
+                                echo '<div class="status-task-progress" role="progressbar" aria-valuenow="' . $concluidosBarra . '" aria-valuemin="0" aria-valuemax="3">';
                                 foreach ($segmentosBarra as $seg) {
                                     echo '<div class="status-task-progress-segment ' . htmlspecialchars($seg['class']) . '" title="' . htmlspecialchars($seg['title']) . '"></div>';
                                 }

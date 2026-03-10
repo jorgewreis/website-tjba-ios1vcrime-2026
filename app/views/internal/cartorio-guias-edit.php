@@ -9,6 +9,7 @@ if (function_exists('mb_internal_encoding')) {
 require_once __DIR__ . '/../../repositories/GuiasSubtarefasRepository.php';
 require_once __DIR__ . '/../../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../../repositories/ClassesRepository.php';
+require_once __DIR__ . '/../../helpers/CartorioTimelineHelper.php';
 require_once __DIR__ . '/../../services/GuiasService.php';
 
 $connection = Conection::getInstance()->getConnection();
@@ -159,6 +160,13 @@ $podeExcluir = count(array_intersect($userPerfis, $perfisExcluir)) > 0;
 $podeCancelar = count(array_intersect($userPerfis, $perfisCancelar)) > 0;
 $statusAtual = $guia['status'] ?? '';
 $tarefaFinalizadaOuCancelada = in_array($statusAtual, ['cancelada', 'concluída'], true);
+$timelineData = $guia !== null
+    ? cartorioTimelineBuildViewData('guias', [
+        'task' => $guia,
+        'task_status' => $statusAtual,
+        'subtarefas' => $subtarefas,
+    ])
+    : [];
 
 $tiposOptions = [
     'Guia de Execução Definitiva',
@@ -216,7 +224,7 @@ $tiposOptions = [
                     <label for="filter-classe">Classe</label>
                     <?php
                     $classeReadonly = ($classeNome !== 'Classe não informada');
-                    $classeValue = $classeReadonly ? ($classeCodigo !== '' ? $classeCodigo . ' - ' . $classeNome : $classeNome) : '';
+                    $classeValue = $classeReadonly ? $classeNome : '';
                     $classeClass = 'width-xl height-md' . ($classeReadonly ? ' readonly' : '');
                     ?>
                     <input type="text" id="filter-classe" class="<?php echo htmlspecialchars($classeClass, ENT_QUOTES); ?>" value="<?php echo htmlspecialchars($classeValue, ENT_QUOTES); ?>"<?php echo $classeReadonly ? ' readonly' : ' placeholder="Informe a classe processual"'; ?>>
@@ -255,138 +263,15 @@ $tiposOptions = [
                     <input type="number" id="edit-dias-multa" class="width-sm height-md" min="0" value="<?php echo isset($guia['dias_multa']) && $guia['dias_multa'] !== null ? (int) $guia['dias_multa'] : ''; ?>">
                 </div>
             </div>
-
-            <div class="row timeline-header">
+            <div class="row filter">
                 <div class="col filter">
-                    <span class="header-timeline">Subtarefas - Timeline</span>
-                </div>
-                <div class="col filter" title="<?php echo htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES); ?>">
-                    <?php if ($mostrarBarraEdit): ?>
-                        <div class="width-sm status <?php echo htmlspecialchars($statusCartaClass, ENT_QUOTES); ?> status-with-progress" style="border: 1px solid var(--color-gray-500);">
-                            <span class="status-task-label"><?php echo htmlspecialchars($statusCartaLabel, ENT_QUOTES); ?></span>
-                            <?php $concluidosBarraEdit = 1 + count(array_filter($progressStatusesEdit, fn($x) => $x === 'concluida' || $x === 'cancelada' || $x === 'pulada')); ?>
-                            <div class="status-task-progress" role="progressbar" aria-valuenow="<?php echo $concluidosBarraEdit; ?>" aria-valuemin="0" aria-valuemax="9" aria-label="Progresso das subtarefas">
-                                <?php foreach ($segmentosBarraEdit as $seg): ?>
-                                    <div class="status-task-progress-segment <?php echo htmlspecialchars($seg['class'], ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($seg['title'], ENT_QUOTES); ?>"></div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                    <?php else: ?>
-                        <div class="width-sm status <?php echo htmlspecialchars($statusCartaClass, ENT_QUOTES); ?>" style="border: 1px solid var(--color-gray-500);"><?php echo htmlspecialchars($statusCartaLabel, ENT_QUOTES); ?></div>
-                    <?php endif; ?>
+                    <label for="edit-observacoes">Observações</label>
+                    <input type="text" id="edit-observacoes" class="width-xl height-md" value="<?php echo htmlspecialchars((string) ($guia['observacoes'] ?? ''), ENT_QUOTES); ?>" placeholder="Opcional">
                 </div>
             </div>
+
             <?php if ($guia !== null): ?>
-            <div class="row timeline finished">
-                <div class="row">
-                    <div class="circle finished"></div>
-                    <div class="col filter subtask-status-info">
-                        <span class="minor-info">Guia cadastrada</span>
-                    </div>
-                </div>
-                <div class="col">
-                    <div class="col filter subtask-date">
-                        <span class="minor-info"><?php echo htmlspecialchars($cadastroInfoLinha !== '' ? $cadastroInfoLinha : 'Guia cadastrada', ENT_QUOTES); ?></span>
-                    </div>
-                </div>
-            </div>
-            <?php for ($ordem = 1; $ordem <= 8; $ordem++): ?>
-                <?php
-                $tipo = $ordemParaTipo[$ordem] ?? '';
-                $label = $subtarefaLabels[$tipo] ?? 'Passo ' . $ordem;
-                $st = $subtarefasPorOrdem[$ordem] ?? null;
-                $circleClass = '';
-                $minorTexto = $timelineMinorPendente[$tipo] ?? $label;
-                $dateLabel = 'Aguardando conclusão';
-                $infoLinha = '';
-                if ($st !== null) {
-                    $status = trim((string) ($st['status'] ?? ''));
-                    $raw = $st['updated_at'] ?? $st['created_at'] ?? '';
-                    $dataMovimento = '';
-                    if ($raw !== '') {
-                        $dt = \DateTime::createFromFormat('Y-m-d H:i:s', $raw);
-                        $dataMovimento = $dt ? $dt->format('d/m/Y - H:i') : $raw;
-                    }
-                    $dadosJson = $st['dados_especificos'] ?? null;
-                    $dados = [];
-                    if ($dadosJson !== null && $dadosJson !== '') {
-                        $dec = json_decode($dadosJson, true);
-                        if (is_array($dec)) {
-                            $dados = $dec;
-                        }
-                    }
-                    if ($status === GuiasSubtarefasRepository::STATUS_CANCELADA) {
-                        $circleClass = 'cancelada';
-                        $minorTexto = 'Detalhamento cancelado: etapa de data do fato e dias-multa não concluída';
-                        $dateLabel = $dataMovimento !== '' ? $dataMovimento : 'Cancelado';
-                    } elseif ($status === GuiasSubtarefasRepository::STATUS_PULADA) {
-                        $circleClass = 'pulada';
-                        $minorTexto = 'Etapa pulada: cálculo da pena de multa não aplicável a esta guia';
-                        $dateLabel = 'Etapa pulada';
-                    } elseif ($status === 'concluida') {
-                        $circleClass = 'finished';
-                        $nomeUsuario = trim((string) ($dados['nome'] ?? ''));
-                        if ($ordem === 1) {
-                            $df = $dados['data_fato'] ?? '';
-                            $dm = $dados['dias_multa'] ?? '';
-                            $minorTexto = 'Data do fato: ' . ($df !== '' ? $df : '—') . ' | Quantidade de dias-multa: ' . ($dm !== '' ? $dm : '—');
-                            $infoLinha = $nomeUsuario !== '' && $dataMovimento !== '' ? 'Informações registradas por ' . $nomeUsuario . ' em ' . $dataMovimento : ($dataMovimento !== '' ? 'Concluído em ' . $dataMovimento : 'Concluído');
-                        } elseif ($ordem === 2) {
-                            $vm = $dados['valor_multa'] ?? '';
-                            $minorTexto = 'Pena de multa registrada no valor de R$ ' . ($vm !== '' ? number_format((float) $vm, 2, ',', '.') : '—');
-                            $infoLinha = $dataMovimento !== '' ? 'Cálculo realizado em ' . $dataMovimento : 'Concluído';
-                        } elseif ($ordem === 3) {
-                            $tipoGuia = trim((string) ($guia['tipo'] ?? ''));
-                            $dataExp = $dados['data_expedicao'] ?? $dataMovimento;
-                            $minorTexto = 'Guia ' . ($tipoGuia !== '' ? '(' . $tipoGuia . ') ' : '') . 'expedida ao cartório em ' . ($dataExp !== '' ? $dataExp : $dataMovimento);
-                            $infoLinha = $nomeUsuario !== '' && $dataMovimento !== '' ? 'Registrado por ' . $nomeUsuario . ' em ' . $dataMovimento : ($dataMovimento !== '' ? $dataMovimento : 'Concluído');
-                        } elseif ($ordem === 4) {
-                            $minorTexto = 'Guia assinada pela Juíza em ' . $dataMovimento;
-                            $infoLinha = $dataMovimento;
-                        } elseif ($ordem === 5) {
-                            $tj = trim((string) ($dados['tipo_juntada'] ?? ''));
-                            $minorTexto = $tj === 'manual' ? 'Juntada dos autos realizada manualmente pelo servidor' : 'Juntada dos autos realizada automaticamente pelo sistema';
-                            $infoLinha = $nomeUsuario !== '' && $dataMovimento !== '' ? 'Confirmado por ' . $nomeUsuario . ' em ' . $dataMovimento : ($dataMovimento !== '' ? $dataMovimento : 'Concluído');
-                        } elseif ($ordem === 6) {
-                            $qtd = $dados['qtd_docs'] ?? '';
-                            $minorTexto = ($qtd !== '' ? $qtd : '—') . ' documento(s) em PDF gerado(s) e juntado(s) aos autos';
-                            $infoLinha = $dataMovimento !== '' ? 'Registrado em ' . $dataMovimento : 'Concluído';
-                        } elseif ($ordem === 7) {
-                            $te = trim((string) ($dados['tipo_envio'] ?? ''));
-                            $dest = trim((string) ($dados['destinatario'] ?? ''));
-                            $minorTexto = 'Guia enviada via ' . ($te !== '' ? $te : '—') . ' para ' . ($dest !== '' ? $dest : '—');
-                            $infoLinha = $dataMovimento !== '' ? $dataMovimento : 'Concluído';
-                        } else {
-                            $minorTexto = 'Termo/comprovante de envio da Guia juntado aos autos';
-                            $infoLinha = $dataMovimento !== '' ? $dataMovimento : 'Concluído';
-                        }
-                        $dateLabel = $infoLinha;
-                    } elseif ($status === 'em_andamento') {
-                        $circleClass = 'current';
-                        $dateLabel = $dataMovimento !== '' ? 'Aguardando movimentação desde ' . $dataMovimento : 'Aguardando movimentação';
-                    } else {
-                        $dateLabel = 'Aguardando conclusão';
-                    }
-                }
-                ?>
-                <div class="row timeline <?php echo $circleClass !== '' ? htmlspecialchars($circleClass, ENT_QUOTES) : ''; ?>">
-                    <div class="row">
-                        <?php if ($circleClass !== ''): ?>
-                            <div class="circle <?php echo htmlspecialchars($circleClass, ENT_QUOTES); ?>"></div>
-                        <?php else: ?>
-                            <div class="circle" style="background-color: var(--color-gray-300);"></div>
-                        <?php endif; ?>
-                        <div class="col filter subtask-status-info">
-                            <span class="minor-info"><?php echo htmlspecialchars($minorTexto, ENT_QUOTES); ?></span>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="col filter subtask-date">
-                            <span class="minor-info"><?php echo htmlspecialchars($dateLabel, ENT_QUOTES); ?></span>
-                        </div>
-                    </div>
-                </div>
-            <?php endfor; ?>
+                <?php include __DIR__ . '/_cartorio_timeline.php'; ?>
             <?php endif; ?>
 
             <div class="row buttons">
@@ -416,7 +301,8 @@ $tiposOptions = [
             tipo: <?php echo json_encode($guia['tipo'] ?? '', JSON_UNESCAPED_UNICODE); ?>,
             regime: <?php echo json_encode($guia['regime'] ?? '', JSON_UNESCAPED_UNICODE); ?>,
             data_fato: <?php echo json_encode($guia['data_fato'] ?? '', JSON_UNESCAPED_UNICODE); ?>,
-            dias_multa: <?php echo json_encode(isset($guia['dias_multa']) && $guia['dias_multa'] !== null ? (int) $guia['dias_multa'] : '', JSON_UNESCAPED_UNICODE); ?>
+            dias_multa: <?php echo json_encode(isset($guia['dias_multa']) && $guia['dias_multa'] !== null ? (int) $guia['dias_multa'] : '', JSON_UNESCAPED_UNICODE); ?>,
+            observacoes: <?php echo json_encode((string) ($guia['observacoes'] ?? ''), JSON_UNESCAPED_UNICODE); ?>
         };
         </script>
     <?php endif; ?>
@@ -452,13 +338,15 @@ $tiposOptions = [
             var regimeEl = document.getElementById('edit-regime');
             var dataFatoEl = document.getElementById('edit-data-fato');
             var diasMultaEl = document.getElementById('edit-dias-multa');
+            var observacoesEl = document.getElementById('edit-observacoes');
             var diasVal = (diasMultaEl && diasMultaEl.value !== '') ? parseInt(diasMultaEl.value, 10) : '';
             if (diasVal !== '' && isNaN(diasVal)) diasVal = '';
             return {
                 tipo: tipoEl ? (tipoEl.value || '').trim() : '',
                 regime: regimeEl ? (regimeEl.value || '').trim() : '',
                 data_fato: dataFatoEl ? (dataFatoEl.value || '').trim() : '',
-                dias_multa: diasVal
+                dias_multa: diasVal,
+                observacoes: observacoesEl ? (observacoesEl.value || '').trim() : ''
             };
         }
         function hasChanges() {
@@ -467,12 +355,13 @@ $tiposOptions = [
             if ((initialData.regime || '') !== (cur.regime || '')) return true;
             if ((initialData.data_fato || '') !== (cur.data_fato || '')) return true;
             if (String(initialData.dias_multa ?? '') !== String(cur.dias_multa ?? '')) return true;
+            if ((initialData.observacoes || '') !== (cur.observacoes || '')) return true;
             return false;
         }
         function updateButtonState() {
             if (salvarBtn) salvarBtn.disabled = !hasChanges();
         }
-        ['edit-tipo', 'edit-regime', 'edit-data-fato', 'edit-dias-multa'].forEach(function (id) {
+        ['edit-tipo', 'edit-regime', 'edit-data-fato', 'edit-dias-multa', 'edit-observacoes'].forEach(function (id) {
             var el = document.getElementById(id);
             if (el) {
                 el.addEventListener('input', updateButtonState);
@@ -503,7 +392,8 @@ $tiposOptions = [
                 tipo: document.getElementById('edit-tipo')?.value || 'Guia - Tipo não informado',
                 regime: regimeVal,
                 data_fato: dataFatoVal,
-                dias_multa: document.getElementById('edit-dias-multa')?.value || ''
+                dias_multa: document.getElementById('edit-dias-multa')?.value || '',
+                observacoes: document.getElementById('edit-observacoes')?.value?.trim() || ''
             };
             var diasVal = document.getElementById('edit-dias-multa')?.value;
             if (diasVal !== '' && !isNaN(parseInt(diasVal, 10))) payload.dias_multa = parseInt(diasVal, 10);
@@ -534,7 +424,6 @@ $tiposOptions = [
         });
 
         document.getElementById('cancelar-tarefa-btn')?.addEventListener('click', function () {
-            if (!confirm('Deseja realmente cancelar esta guia?')) return;
             var btn = this;
             btn.disabled = true;
             fetch('/api/cartorio-guias/cancel.php', {

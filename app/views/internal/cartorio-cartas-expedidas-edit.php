@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
 require_once __DIR__ . '/../../repositories/CartasExpedidasSubtarefasRepository.php';
 require_once __DIR__ . '/../../repositories/TribunaisRepository.php';
+require_once __DIR__ . '/../../helpers/CartorioTimelineHelper.php';
 require_once __DIR__ . '/../../services/CartasExpedidasService.php';
 
 $connection = Conection::getInstance()->getConnection();
@@ -184,6 +185,15 @@ $podeExcluirTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosExc
 $perfisPermitidosCancelar = ['SERVIDOR', 'ADMIN', 'DIRETORA', 'MAGISTRADA'];
 $podeCancelarTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosCancelar)) > 0;
 $tarefaFinalizadaOuCancelada = in_array($statusAtual ?? '', ['cancelada', 'concluída'], true);
+$timelineData = $carta !== null
+    ? cartorioTimelineBuildViewData('cartas_expedidas', [
+        'task' => $carta,
+        'task_status' => $statusAtual,
+        'subtarefas' => $subtarefas ?? [],
+        'ruleServidor' => $ruleServidor,
+        'tribunaisRepo' => $tribunaisRepo ?? null,
+    ])
+    : [];
 
 $stateOptions = [
     'AC' => 'Acre',
@@ -270,7 +280,7 @@ $stateOptions = [
                     <label for="filter-classe">Classe</label>
                     <?php
                     $classeReadonly = ($classeNome !== 'Classe não informada');
-                    $classeValue = $classeReadonly ? ($classeCodigo !== '' ? $classeCodigo . ' - ' . $classeNome : $classeNome) : '';
+                    $classeValue = $classeReadonly ? $classeNome : '';
                     $classeClass = 'width-xl height-md' . ($classeReadonly ? ' readonly' : '');
                     ?>
                     <input type="text" id="filter-classe" class="<?php echo htmlspecialchars($classeClass, ENT_QUOTES); ?>" value="<?php echo htmlspecialchars($classeValue, ENT_QUOTES); ?>"<?php echo $classeReadonly ? ' readonly' : ' placeholder="Informe a classe processual"'; ?>>
@@ -316,243 +326,7 @@ $stateOptions = [
             </div> -->
 
             <!-- Timeline de subtarefas -->
-            <?php
-            $statusCartaLabel = 'Em andamento';
-            $statusCartaClass = 'status-current';
-            if ($statusAtual === 'concluída') {
-                $statusCartaLabel = 'Finalizada';
-                $statusCartaClass = 'status-finished';
-            } elseif ($statusAtual === 'pendente') {
-                $statusCartaLabel = 'Pendente';
-                $statusCartaClass = 'status-pending';
-            }
-            $currentSubtarefaTitle = '';
-            foreach ($subtarefas as $s) {
-                if (trim((string) ($s['status'] ?? '')) === 'em_andamento') {
-                    $tipoAtual = $s['tipo'] ?? '';
-                    $currentSubtarefaTitle = $taskTitleByTipo[$tipoAtual] ?? $subtarefaLabels[$tipoAtual] ?? $tipoAtual;
-                    break;
-                }
-            }
-            if ($currentSubtarefaTitle === '' && $statusAtual === 'pendente') {
-                $currentSubtarefaTitle = $taskTitleByTipo[CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1] ?? 'Carta aguardando assinatura';
-            } elseif ($currentSubtarefaTitle === '' && $statusAtual === 'concluída') {
-                $currentSubtarefaTitle = 'Todas as etapas concluídas';
-            } elseif ($currentSubtarefaTitle === '') {
-                $currentSubtarefaTitle = $statusAtual;
-            }
-            $progressStatusesEdit = ['pendente', 'pendente', 'pendente', 'pendente', 'pendente', 'pendente'];
-            for ($o = 1; $o <= 6; $o++) {
-                if (isset($subtarefasPorOrdem[$o])) {
-                    $progressStatusesEdit[$o - 1] = trim((string) ($subtarefasPorOrdem[$o]['status'] ?? 'pendente'));
-                }
-            }
-            $mostrarBarraEdit = ($statusCartaLabel === 'Pendente' || $statusCartaLabel === 'Em andamento');
-            $segmentosBarraEdit = [];
-            if ($mostrarBarraEdit) {
-                $segmentosBarraEdit[] = ['class' => 'concluida', 'title' => 'Carta expedida e cadastrada'];
-                for ($i = 0; $i < 6; $i++) {
-                    $statusSeg = $progressStatusesEdit[$i] ?? 'pendente';
-                    $segClass = $statusSeg === 'concluida' ? 'concluida' : ($statusSeg === 'em_andamento' ? 'em_andamento' : 'pendente');
-                    $segmentosBarraEdit[] = ['class' => $segClass, 'title' => $subtarefaLabels[$ordemParaTipo[$i + 1] ?? ''] ?? ''];
-                }
-            }
-            ?>
-            <div class="row timeline-header">
-                <div class="col filter">
-                    <span class="header-timeline">Subtarefas - Timeline</span>
-                </div>
-                <div class="col filter" title="<?php echo htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES); ?>">
-                    <?php if ($mostrarBarraEdit): ?>
-                        <div class="width-sm status <?php echo htmlspecialchars($statusCartaClass, ENT_QUOTES); ?> status-with-progress" style="border: 1px solid var(--color-gray-500);">
-                            <span class="status-task-label"><?php echo htmlspecialchars($statusCartaLabel, ENT_QUOTES); ?></span>
-                            <?php $concluidosBarraEdit = 1 + count(array_filter($progressStatusesEdit, fn($x) => $x === 'concluida')); ?>
-                            <div class="status-task-progress" role="progressbar" aria-valuenow="<?php echo $concluidosBarraEdit; ?>" aria-valuemin="0" aria-valuemax="7" aria-label="Progresso das subtarefas">
-                                <?php foreach ($segmentosBarraEdit as $seg): ?>
-                                    <div class="status-task-progress-segment <?php echo htmlspecialchars($seg['class'], ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($seg['title'], ENT_QUOTES); ?>"></div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                    <?php else: ?>
-                        <div class="width-sm status <?php echo htmlspecialchars($statusCartaClass, ENT_QUOTES); ?>" style="border: 1px solid var(--color-gray-500);"><?php echo htmlspecialchars($statusCartaLabel, ENT_QUOTES); ?></div>
-                    <?php endif; ?>
-                </div>
-            </div>
-            <?php
-            $cartaCreatedRaw = $carta['created_at'] ?? '';
-            $cartaCreatedFormatted = '';
-            if ($cartaCreatedRaw !== '') {
-                $dt0 = \DateTime::createFromFormat('Y-m-d H:i:s', $cartaCreatedRaw);
-                $cartaCreatedFormatted = $dt0 ? $dt0->format('d/m/Y - H:i:s') : $cartaCreatedRaw;
-            }
-            $cadastroInfoLinha = 'Documento cadastrado por ' . htmlspecialchars($ruleServidor, ENT_QUOTES) . ' em ' . $cartaCreatedFormatted;
-            ?>
-            <div class="row timeline finished">
-                <div class="row">
-                    <div class="circle finished"></div>
-                    <div class="col filter subtask-status-info">
-                        <span class="minor-info">Carta expedida e cadastrada</span>
-                    </div>
-                </div>
-                <div class="col">
-                    <div class="col filter subtask-date">
-                        <span class="minor-info"><?php echo $cadastroInfoLinha; ?></span>
-                    </div>
-                </div>
-            </div>
-            <?php for ($ordem = 1; $ordem <= 6; $ordem++): ?>
-                <?php
-                $tipo = $ordemParaTipo[$ordem] ?? '';
-                $label = $subtarefaLabels[$tipo] ?? 'Passo ' . $ordem;
-                $st = $subtarefasPorOrdem[$ordem] ?? null;
-                $circleClass = '';
-                $statusTexto = 'Pendente';
-                $dataMovimento = '';
-            $minorTexto = $timelineMinorPendente[$tipo] ?? $label;
-            $majorTexto = '';
-            $metodoEnvioTexto = '';
-            $dateLabel = 'Aguardando movimentação';
-                $dadosEspecificos = [];
-                if ($st !== null && !empty(trim((string) ($st['dados_especificos'] ?? '')))) {
-                    $dadosEspecificos = json_decode((string) $st['dados_especificos'], true);
-                    if (!is_array($dadosEspecificos)) {
-                        $dadosEspecificos = [];
-                    }
-                }
-                $nomeResponsavel = isset($dadosEspecificos['nome']) ? trim((string) $dadosEspecificos['nome']) : (isset($dadosEspecificos['responsavel']) ? trim((string) $dadosEspecificos['responsavel']) : '');
-                $infoLinha = '';
-                if ($st !== null) {
-                    $status = trim((string) ($st['status'] ?? ''));
-                    $raw = $st['updated_at'] ?? $st['created_at'] ?? '';
-                    $dataMovimento = '';
-                    if ($raw !== '') {
-                        $dt = \DateTime::createFromFormat('Y-m-d H:i:s', $raw);
-                        $dataMovimento = $dt ? $dt->format('d/m/Y - H:i:s') : $raw;
-                    }
-                    if ($status === 'concluida') {
-                        $circleClass = 'finished';
-                        $nomeExibir = $nomeResponsavel !== '' ? $nomeResponsavel : '—';
-                        if ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1) {
-                            $minorTexto = 'Carta assinada pela juíza em ' . $dataMovimento;
-                            $majorTexto = '';
-                            $infoLinha = 'Informação confirmada por ' . $nomeExibir . ' em ' . $dataMovimento;
-                        } elseif ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ORDEM_2) {
-                            $qtd = (int) ($dadosEspecificos['qtd_docs'] ?? $dadosEspecificos['qtd_docs_gerados'] ?? 2);
-                            if ($qtd < 1) {
-                                $qtd = 2;
-                            }
-                            $minorTexto = $qtd . ' documentos impressos em PDF';
-                            $majorTexto = '';
-                            $infoLinha = 'Impressão realizada por ' . $nomeExibir . ' em ' . $dataMovimento;
-                        } elseif ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ORDEM_3) {
-                            $tribunalDestino = trim((string) ($dadosEspecificos['tribunal_destino'] ?? $dadosEspecificos['tribunal_nome'] ?? ''));
-                            if ($tribunalDestino === '' && isset($carta['uf_destino'])) {
-                                $uf = strtoupper(trim((string) $carta['uf_destino']));
-                                if ($uf !== '') {
-                                    $sigla = $uf === 'DF' ? 'TJDFT' : 'TJ' . $uf;
-                                    $tribunalRow = $tribunaisRepo->findBySigla($sigla);
-                                    $nomeTribunal = '';
-                                    if ($tribunalRow !== null) {
-                                        $nomeTribunal = trim((string) ($tribunalRow['nome'] ?? ''));
-                                    }
-                                    if ($nomeTribunal === '') {
-                                        $nomeTribunal = 'Tribunal de Justiça do Estado - ' . $uf;
-                                    }
-                                    $tribunalDestino = $sigla . ' - ' . $nomeTribunal;
-                                }
-                            }
-                            $comarcaEnvio = trim((string) ($dadosEspecificos['comarca_envio'] ?? $dadosEspecificos['cidade_destino'] ?? $carta['cidade_destino'] ?? ''));
-                            $metodoEnvio = trim((string) ($dadosEspecificos['metodo_envio'] ?? ''));
-                            $parteComarca = $comarcaEnvio !== '' ? ' - Comarca de ' . $comarcaEnvio : '';
-                            $preposicao = (strcasecmp($metodoEnvio, 'PJe') === 0 || strcasecmp($metodoEnvio, 'eSAJ') === 0 || strcasecmp($metodoEnvio, 'ePROC') === 0) ? 'pelo' : 'por';
-                            $displayMetodo = $metodoEnvio !== '' ? (strcasecmp($metodoEnvio, 'Email') === 0 ? 'E-mail' : $metodoEnvio) : '';
-                            $parteMetodo = $displayMetodo !== '' ? ' ' . $preposicao . ' ' . $displayMetodo : '';
-                            $minorTexto = 'Carta enviada para ' . ($tribunalDestino !== '' ? $tribunalDestino : '—') . $parteComarca . $parteMetodo;
-                            $majorTexto = '';
-                            $infoLinha = 'Envio realizado por ' . $nomeExibir . ' em ' . $dataMovimento;
-                        } elseif ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ORDEM_4) {
-                            $minorTexto = 'Juntada do termo de envio realizado';
-                            $majorTexto = '';
-                            $infoLinha = 'Comprovante juntado por ' . $nomeExibir . ' em ' . $dataMovimento;
-                        } elseif ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ORDEM_5) {
-                            $numeroDestino = trim((string) ($dadosEspecificos['numero_processo_destino'] ?? $carta['numero_processo_destino'] ?? ''));
-                            $minorTexto = $numeroDestino !== '' ? 'Número de processo no Juízo Deprecante: ' . $numeroDestino : 'Informações do andamento juntadas';
-                            $varaDestino = trim((string) ($dadosEspecificos['vara_destino'] ?? $carta['vara_destino_nome'] ?? ''));
-                            $majorTexto = $varaDestino !== '' ? $varaDestino : '';
-                            $infoLinha = 'Informação verificada por ' . $nomeExibir . ' em ' . $dataMovimento;
-                        } elseif ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6) {
-                            $statusDevolucao = trim((string) ($dadosEspecificos['resultado_devolucao'] ?? $dadosEspecificos['status_devolucao'] ?? ''));
-                            $labelsDevolucao = [
-                                'cumprida_positivamente' => 'Cumprida integralmente',
-                                'cumprida_parcialmente' => 'Cumprida parcialmente',
-                                'cumprida_negativamente' => 'Cumprida negativamente',
-                                'devolvida_sem_cumprimento' => 'Não cumprida',
-                            ];
-                            $complementoDevolucao = $labelsDevolucao[$statusDevolucao] ?? ($statusDevolucao !== '' ? $statusDevolucao : '');
-                            $minorTexto = $complementoDevolucao !== '' ? 'Carta devolvida ' . $complementoDevolucao : 'Carta devolvida';
-                            $majorTexto = '';
-                            $infoLinha = 'Juntada de carta devolvida realizada por ' . $nomeExibir . ' em ' . $dataMovimento;
-                        } else {
-                            $minorTexto = $label;
-                            $infoLinha = 'Movimentação realizada em ' . $dataMovimento;
-                        }
-                        $dateLabel = $infoLinha;
-                    } elseif ($status === 'em_andamento') {
-                        $circleClass = 'current';
-                        $statusTexto = 'Em andamento';
-                        $minorTexto = $timelineMinorPendente[$tipo] ?? $label;
-                        $majorTexto = $statusTexto;
-                        if ($dataMovimento !== '') {
-                            $dateLabel = 'Aguardando movimentação';
-                        } else {
-                            $raw = $st['created_at'] ?? $st['updated_at'] ?? '';
-                            if ($raw !== '') {
-                                $dt = \DateTime::createFromFormat('Y-m-d H:i:s', $raw);
-                                $dataMovimento = $dt ? $dt->format('d/m/Y - H:i:s') : $raw;
-                                $dateLabel = 'Aguardando movimentação desde ' . $dataMovimento;
-                            } else {
-                                $dateLabel = 'Aguardando movimentação';
-                            }
-                        }
-                    } else {
-                        $statusTexto = 'Pendente';
-                        $minorTexto = $timelineMinorPendente[$tipo] ?? $label;
-                        $majorTexto = $statusTexto;
-                        $dateLabel = 'Aguardando conclusão';
-                    }
-                } else {
-                    $minorTexto = $timelineMinorPendente[$tipo] ?? $label;
-                    $majorTexto = $statusTexto;
-                    $dateLabel = 'Aguardando conclusão';
-                }
-                if ($infoLinha !== '') {
-                    $dateLabel = $infoLinha;
-                }
-                ?>
-                <div class="row <?php if ($circleClass === 'current') { echo 'timeline current'; } else if ($circleClass === 'finished') { echo 'timeline finished'; } else { echo 'timeline'; } ?>">
-                    <div class="row">
-                        <?php if ($circleClass !== ''): ?>
-                            <div class="circle <?php echo htmlspecialchars($circleClass, ENT_QUOTES); ?>"></div>
-                        <?php else: ?>
-                            <div class="circle" style="background-color: var(--color-gray-300);"></div>
-                        <?php endif; ?>
-                        <div class="col filter subtask-status-info">
-                            <span class="minor-info"><?php echo htmlspecialchars($minorTexto, ENT_QUOTES); ?></span>
-                            <?php if ($majorTexto !== ''): ?>
-                                <span class="major-info"><?php echo htmlspecialchars($majorTexto, ENT_QUOTES); ?></span>
-                            <?php endif; ?>
-                            <?php if ($metodoEnvioTexto !== ''): ?>
-                                <span class="major-info"><?php echo htmlspecialchars($metodoEnvioTexto, ENT_QUOTES); ?></span>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="col filter subtask-date">
-                            <span class="minor-info"><?php echo htmlspecialchars($dateLabel, ENT_QUOTES); ?></span>
-                        </div>
-                    </div>
-                </div>
-            <?php endfor; ?>
+            <?php include __DIR__ . '/_cartorio_timeline.php'; ?>
 
             <input type="hidden" id="hidden-carta-id" value="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>">
             <input type="hidden" id="hidden-comarca-id" value="<?php echo htmlspecialchars($comarcaDestinoId, ENT_QUOTES); ?>">
@@ -763,9 +537,6 @@ $stateOptions = [
                 const btnCancelarTarefa = document.getElementById('cancelar-tarefa-btn');
                 if (btnCancelarTarefa && window.__currentCartaId) {
                     btnCancelarTarefa.addEventListener('click', async () => {
-                        if (!confirm('Deseja cancelar esta tarefa? O status será alterado para "Cancelada". A tarefa e as subtarefas permanecerão no sistema.')) {
-                            return;
-                        }
                         btnCancelarTarefa.disabled = true;
                         try {
                             const res = await fetch('/api/cartorio-cartas-expedidas/cancel.php', {

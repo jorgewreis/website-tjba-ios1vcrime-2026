@@ -8,12 +8,14 @@ final class CejuscSubtarefasRepository
     private PDO $connection;
     private string $table;
 
-    public const TIPO_ORDEM_1 = 'enviar_decisao';
-    public const TIPO_ORDEM_2 = 'juntar_termo_envio';
+    public const TIPO_ORDEM_1 = 'gerar_pdf_decisao';
+    public const TIPO_ORDEM_2 = 'enviar_decisao';
+    public const TIPO_ORDEM_3 = 'juntar_termo_envio';
 
     private const ORDEM_POR_TIPO = [
         self::TIPO_ORDEM_1 => 1,
         self::TIPO_ORDEM_2 => 2,
+        self::TIPO_ORDEM_3 => 3,
     ];
 
     private const STATUS_EM_ANDAMENTO = 'em_andamento';
@@ -30,8 +32,8 @@ final class CejuscSubtarefasRepository
     {
         $cejuscId = trim($cejuscId);
         $tipo = trim($tipo);
-        if ($cejuscId === '' || $tipo === '' || $ordem < 1 || $ordem > 2) {
-            throw new InvalidArgumentException('cejusc_tarefa_id, tipo e ordem (1-2) são obrigatórios.');
+        if ($cejuscId === '' || $tipo === '' || $ordem < 1 || $ordem > 3) {
+            throw new InvalidArgumentException('cejusc_tarefa_id, tipo e ordem (1-3) sao obrigatorios.');
         }
         if (!isset(self::ORDEM_POR_TIPO[$tipo]) || self::ORDEM_POR_TIPO[$tipo] !== $ordem) {
             throw new InvalidArgumentException('Tipo e ordem inválidos.');
@@ -100,7 +102,7 @@ final class CejuscSubtarefasRepository
     public function findByCejuscIdEOrdem(string $cejuscId, int $ordem): ?array
     {
         $cejuscId = trim($cejuscId);
-        if ($cejuscId === '' || $ordem < 1 || $ordem > 2) {
+        if ($cejuscId === '' || $ordem < 1 || $ordem > 3) {
             return null;
         }
 
@@ -195,10 +197,12 @@ final class CejuscSubtarefasRepository
         $statement->execute();
     }
 
-    /**
-     * Garante que as subtarefas das ordens 1 (enviar decisão) e 2 (juntar termo de envio) existam em conjunto.
-     */
     public function ensureEnviarJuntarPair(string $cejuscId): void
+    {
+        $this->ensureFluxoCompleto($cejuscId);
+    }
+
+    public function ensureFluxoCompleto(string $cejuscId): void
     {
         $cejuscId = trim($cejuscId);
         if ($cejuscId === '') {
@@ -207,23 +211,72 @@ final class CejuscSubtarefasRepository
 
         $ordem1 = $this->findByCejuscIdEOrdem($cejuscId, 1);
         $ordem2 = $this->findByCejuscIdEOrdem($cejuscId, 2);
+        $ordem3 = $this->findByCejuscIdEOrdem($cejuscId, 3);
 
-        if ($ordem1 === null && $ordem2 === null) {
+        if ($ordem1 === null && $ordem2 === null && $ordem3 === null) {
             return;
         }
 
-        if ($ordem1 !== null && $ordem2 === null) {
-            $status1 = trim((string) ($ordem1['status'] ?? ''));
-            $status2 = $status1 === self::STATUS_CONCLUIDA ? self::STATUS_EM_ANDAMENTO : self::STATUS_PENDENTE;
-            $this->create($cejuscId, self::TIPO_ORDEM_2, 2, $status2, null);
-            return;
+        if ($ordem1 !== null && trim((string) ($ordem1['tipo'] ?? '')) === self::TIPO_ORDEM_2) {
+            $statusLegado = trim((string) ($ordem1['status'] ?? self::STATUS_PENDENTE));
+            $this->atualizarOrdem((string) $ordem1['id'], 2);
+            if ($statusLegado === self::STATUS_EM_ANDAMENTO) {
+                $this->atualizarStatus((string) $ordem1['id'], self::STATUS_PENDENTE);
+            }
+            if ($ordem2 !== null && trim((string) ($ordem2['tipo'] ?? '')) === self::TIPO_ORDEM_3) {
+                $this->atualizarOrdem((string) $ordem2['id'], 3);
+            }
+            $statusPrimeira = $statusLegado === self::STATUS_CONCLUIDA ? self::STATUS_CONCLUIDA : ($statusLegado === self::STATUS_EM_ANDAMENTO ? self::STATUS_EM_ANDAMENTO : self::STATUS_PENDENTE);
+            $this->create($cejuscId, self::TIPO_ORDEM_1, 1, $statusPrimeira, null);
+            $ordem1 = $this->findByCejuscIdEOrdem($cejuscId, 1);
+            $ordem2 = $this->findByCejuscIdEOrdem($cejuscId, 2);
+            $ordem3 = $this->findByCejuscIdEOrdem($cejuscId, 3);
         }
 
         if ($ordem1 === null && $ordem2 !== null) {
-            $status2 = trim((string) ($ordem2['status'] ?? ''));
-            $status1 = $status2 === self::STATUS_CONCLUIDA ? self::STATUS_CONCLUIDA : self::STATUS_PENDENTE;
+            $status2 = trim((string) ($ordem2['status'] ?? self::STATUS_PENDENTE));
+            $status1 = ($status2 === self::STATUS_CONCLUIDA || $status2 === self::STATUS_EM_ANDAMENTO) ? self::STATUS_CONCLUIDA : self::STATUS_PENDENTE;
             $this->create($cejuscId, self::TIPO_ORDEM_1, 1, $status1, null);
+            $ordem1 = $this->findByCejuscIdEOrdem($cejuscId, 1);
         }
+
+        if ($ordem2 === null && $ordem1 !== null) {
+            $status1 = trim((string) ($ordem1['status'] ?? self::STATUS_PENDENTE));
+            $status2 = $status1 === self::STATUS_CONCLUIDA ? self::STATUS_EM_ANDAMENTO : self::STATUS_PENDENTE;
+            $this->create($cejuscId, self::TIPO_ORDEM_2, 2, $status2, null);
+            $ordem2 = $this->findByCejuscIdEOrdem($cejuscId, 2);
+        }
+
+        if ($ordem2 !== null && $ordem3 === null) {
+            $status2 = trim((string) ($ordem2['status'] ?? self::STATUS_PENDENTE));
+            $status3 = $status2 === self::STATUS_CONCLUIDA ? self::STATUS_EM_ANDAMENTO : self::STATUS_PENDENTE;
+            $this->create($cejuscId, self::TIPO_ORDEM_3, 3, $status3, null);
+            return;
+        }
+
+        if ($ordem2 === null && $ordem3 !== null) {
+            $status3 = trim((string) ($ordem3['status'] ?? self::STATUS_PENDENTE));
+            $status2 = ($status3 === self::STATUS_CONCLUIDA || $status3 === self::STATUS_EM_ANDAMENTO) ? self::STATUS_CONCLUIDA : self::STATUS_PENDENTE;
+            $this->create($cejuscId, self::TIPO_ORDEM_2, 2, $status2, null);
+        }
+    }
+
+    public function atualizarOrdem(string $id, int $ordem): void
+    {
+        $id = trim($id);
+        if ($id === '' || $ordem < 1 || $ordem > 3) {
+            throw new InvalidArgumentException('ID e ordem validos sao obrigatorios.');
+        }
+
+        $statement = $this->connection->prepare(
+            sprintf(
+                'UPDATE `%s` SET `ordem` = :ordem, `updated_at` = NOW() WHERE `id` = :id LIMIT 1',
+                $this->table
+            )
+        );
+        $statement->bindValue(':ordem', $ordem, PDO::PARAM_INT);
+        $statement->bindValue(':id', $id);
+        $statement->execute();
     }
 
     public function findById(string $id): ?array
@@ -252,6 +305,7 @@ final class CejuscSubtarefasRepository
         $map = [
             1 => self::TIPO_ORDEM_1,
             2 => self::TIPO_ORDEM_2,
+            3 => self::TIPO_ORDEM_3,
         ];
         return $map[$next] ?? null;
     }

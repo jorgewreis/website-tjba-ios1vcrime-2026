@@ -42,7 +42,7 @@ final class CejuscService
         foreach ($rows as $i => $row) {
             $idTarefa = (string) ($row['IdCarta'] ?? '');
             if ($idTarefa !== '') {
-                $this->subtarefasRepository->ensureEnviarJuntarPair($idTarefa);
+                $this->subtarefasRepository->ensureFluxoCompleto($idTarefa);
                 $rows[$i]['Subtarefas'] = $this->subtarefasRepository->findPendenteOuEmAndamentoByCejuscId($idTarefa);
                 $rows[$i]['SubtarefasAll'] = $this->subtarefasRepository->findByCejuscId($idTarefa);
                 $alocadosRaw = $this->alocadosRepository->findByCejuscId($idTarefa);
@@ -152,20 +152,9 @@ final class CejuscService
             }
         }
 
-        $this->subtarefasRepository->create(
-            $idTarefa,
-            CejuscSubtarefasRepository::TIPO_ORDEM_1,
-            1,
-            'em_andamento',
-            null
-        );
-        $this->subtarefasRepository->create(
-            $idTarefa,
-            CejuscSubtarefasRepository::TIPO_ORDEM_2,
-            2,
-            'pendente',
-            null
-        );
+        $this->subtarefasRepository->create($idTarefa, CejuscSubtarefasRepository::TIPO_ORDEM_1, 1, 'em_andamento', null);
+        $this->subtarefasRepository->create($idTarefa, CejuscSubtarefasRepository::TIPO_ORDEM_2, 2, 'pendente', null);
+        $this->subtarefasRepository->create($idTarefa, CejuscSubtarefasRepository::TIPO_ORDEM_3, 3, 'pendente', null);
 
         $this->repository->updateStatus($idTarefa, 'em_andamento');
 
@@ -209,6 +198,14 @@ final class CejuscService
                 $this->subtarefasRepository->atualizarStatus((string) $ordem2['id'], 'em_andamento');
             } else {
                 $this->subtarefasRepository->create($cejuscId, CejuscSubtarefasRepository::TIPO_ORDEM_2, 2, 'em_andamento', null);
+            }
+            $this->repository->updateStatus($cejuscId, 'em_andamento');
+        } elseif ($ordem === 2) {
+            $ordem3 = $this->subtarefasRepository->findByCejuscIdEOrdem($cejuscId, 3);
+            if ($ordem3 !== null) {
+                $this->subtarefasRepository->atualizarStatus((string) $ordem3['id'], 'em_andamento');
+            } else {
+                $this->subtarefasRepository->create($cejuscId, CejuscSubtarefasRepository::TIPO_ORDEM_3, 3, 'em_andamento', null);
             }
             $this->repository->updateStatus($cejuscId, 'em_andamento');
         } else {
@@ -289,7 +286,7 @@ final class CejuscService
         }
         $existentes = $this->subtarefasRepository->findByCejuscId($cejuscId);
         if (count($existentes) > 0) {
-            $this->subtarefasRepository->ensureEnviarJuntarPair($cejuscId);
+            $this->subtarefasRepository->ensureFluxoCompleto($cejuscId);
             $ordem1 = $this->subtarefasRepository->findByCejuscIdEOrdem($cejuscId, 1);
             if ($ordem1 !== null && trim((string) ($ordem1['status'] ?? '')) !== 'concluida') {
                 $this->subtarefasRepository->atualizarStatus((string) $ordem1['id'], 'em_andamento');
@@ -297,20 +294,9 @@ final class CejuscService
             $this->repository->updateStatus($cejuscId, 'em_andamento');
             return;
         }
-        $this->subtarefasRepository->create(
-            $cejuscId,
-            CejuscSubtarefasRepository::TIPO_ORDEM_1,
-            1,
-            'em_andamento',
-            null
-        );
-        $this->subtarefasRepository->create(
-            $cejuscId,
-            CejuscSubtarefasRepository::TIPO_ORDEM_2,
-            2,
-            'pendente',
-            null
-        );
+        $this->subtarefasRepository->create($cejuscId, CejuscSubtarefasRepository::TIPO_ORDEM_1, 1, 'em_andamento', null);
+        $this->subtarefasRepository->create($cejuscId, CejuscSubtarefasRepository::TIPO_ORDEM_2, 2, 'pendente', null);
+        $this->subtarefasRepository->create($cejuscId, CejuscSubtarefasRepository::TIPO_ORDEM_3, 3, 'pendente', null);
         $this->repository->updateStatus($cejuscId, 'em_andamento');
         if ($usuarioId !== null && trim($usuarioId) !== '') {
             $this->alocadosRepository->addAlocado($cejuscId, trim($usuarioId));

@@ -5,6 +5,7 @@ require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
 require_once __DIR__ . '/../../repositories/EditaisSubtarefasRepository.php';
 require_once __DIR__ . '/../../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../../repositories/ClassesRepository.php';
+require_once __DIR__ . '/../../helpers/CartorioTimelineHelper.php';
 require_once __DIR__ . '/../../services/EditaisService.php';
 
 $connection = Conection::getInstance()->getConnection();
@@ -33,7 +34,6 @@ $statusAtual = 'pendente';
 $observacoesValue = '';
 $tipoEditalValue = '';
 $prazoDiasValue = '';
-$decursoInfo = ['data_limite_formatada' => '', 'prazo_cumprido' => false];
 $subtarefas = [];
 $subtarefasPorOrdem = [];
 $subtarefaLabels = [
@@ -47,12 +47,6 @@ $taskTitleByOrdem = [
     2 => 'Aguardando envio para publicação',
     3 => 'Aguardando certificação da publicação do edital',
     4 => 'Aguardando certificação de decurso do prazo do edital',
-];
-$buttonTitleByOrdem = [
-    1 => 'Informar expedição do edital',
-    2 => 'Informar envio para publicação',
-    3 => 'Informar certificação da publicação',
-    4 => 'Informar certificação de decurso do prazo',
 ];
 $timelineMinorPendente = [
     1 => 'Aguardando expedição do edital',
@@ -83,8 +77,6 @@ if ($edital !== null) {
     $tipoEditalValue = trim((string) ($edital['tipo_edital'] ?? ''));
     $prazoDiasValue = isset($edital['prazo_dias']) ? (int) $edital['prazo_dias'] : 0;
 
-    $decursoInfo = $service->getDecursoInfo($idEdital);
-
     $subtarefasRepo = new EditaisSubtarefasRepository($connection);
     $subtarefasRepo->ensureQuatroSubtarefas($idEdital);
     $subtarefas = $subtarefasRepo->findByEditalId($idEdital);
@@ -113,6 +105,13 @@ if ($userIdEdit !== null && $userIdEdit !== '') {
 $podeExcluirTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosExcluir)) > 0;
 $podeCancelarTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosCancelar)) > 0;
 $tarefaFinalizadaOuCancelada = in_array($statusAtual, ['cancelada', 'concluída'], true);
+$timelineData = $edital !== null
+    ? cartorioTimelineBuildViewData('editais', [
+        'task' => $edital,
+        'task_status' => $statusAtual,
+        'subtarefas' => $subtarefas,
+    ])
+    : [];
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -179,189 +178,7 @@ $tarefaFinalizadaOuCancelada = in_array($statusAtual, ['cancelada', 'concluída'
                 </div>
             </div>
 
-            <?php
-            $statusCartaLabel = 'Em andamento';
-            $statusCartaClass = 'status-current';
-            if ($statusAtual === 'concluída') {
-                $statusCartaLabel = 'Finalizada';
-                $statusCartaClass = 'status-finished';
-            } elseif ($statusAtual === 'pendente') {
-                $statusCartaLabel = 'Pendente';
-                $statusCartaClass = 'status-pending';
-            } elseif ($statusAtual === 'cancelada') {
-                $statusCartaLabel = 'Cancelada';
-                $statusCartaClass = 'status-cancelled';
-            }
-            $currentSubtarefaTitle = '';
-            foreach ($subtarefas as $s) {
-                if (trim((string) ($s['status'] ?? '')) === 'em_andamento') {
-                    $currentSubtarefaTitle = $subtarefaLabels[$s['tipo'] ?? ''] ?? $s['tipo'] ?? '';
-                    break;
-                }
-            }
-            if ($currentSubtarefaTitle === '' && $statusAtual === 'pendente') {
-                $currentSubtarefaTitle = $subtarefaLabels[EditaisSubtarefasRepository::TIPO_ORDEM_1] ?? 'Expedição de Edital';
-            } elseif ($currentSubtarefaTitle === '' && $statusAtual === 'concluída') {
-                $currentSubtarefaTitle = 'Todas as etapas concluídas';
-            } elseif ($currentSubtarefaTitle === '') {
-                $currentSubtarefaTitle = $statusAtual;
-            }
-            $progressStatusesEdit = ['pendente', 'pendente', 'pendente', 'pendente'];
-            for ($o = 1; $o <= 4; $o++) {
-                if (isset($subtarefasPorOrdem[$o])) {
-                    $progressStatusesEdit[$o - 1] = trim((string) ($subtarefasPorOrdem[$o]['status'] ?? 'pendente'));
-                }
-            }
-            $mostrarBarraEdit = ($statusCartaLabel === 'Pendente' || $statusCartaLabel === 'Em andamento');
-            $segmentosBarraEdit = [];
-            if ($mostrarBarraEdit) {
-                $segmentosBarraEdit[] = ['class' => 'concluida', 'title' => 'Edital cadastrado'];
-                for ($i = 0; $i < 4; $i++) {
-                    $statusSeg = $progressStatusesEdit[$i] ?? 'pendente';
-                    $segClass = $statusSeg === 'concluida' ? 'concluida' : ($statusSeg === 'em_andamento' ? 'em_andamento' : 'pendente');
-                    $segmentosBarraEdit[] = ['class' => $segClass, 'title' => $subtarefaLabels[$ordemParaTipo[$i + 1] ?? ''] ?? ''];
-                }
-            }
-            ?>
-            <div class="row timeline-header">
-                <div class="col filter">
-                    <span class="header-timeline">Subtarefas - Timeline</span>
-                </div>
-                <div class="col filter" title="<?php echo htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES); ?>">
-                    <?php if ($mostrarBarraEdit): ?>
-                        <div class="width-sm status <?php echo htmlspecialchars($statusCartaClass, ENT_QUOTES); ?> status-with-progress" style="border: 1px solid var(--color-gray-500);">
-                            <span class="status-task-label"><?php echo htmlspecialchars($statusCartaLabel, ENT_QUOTES); ?></span>
-                            <?php $concluidosBarraEdit = 1 + count(array_filter($progressStatusesEdit, fn($x) => $x === 'concluida')); ?>
-                            <div class="status-task-progress" role="progressbar" aria-valuenow="<?php echo $concluidosBarraEdit; ?>" aria-valuemin="0" aria-valuemax="5" aria-label="Progresso das subtarefas">
-                                <?php foreach ($segmentosBarraEdit as $seg): ?>
-                                    <div class="status-task-progress-segment <?php echo htmlspecialchars($seg['class'], ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($seg['title'], ENT_QUOTES); ?>"></div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                    <?php else: ?>
-                        <div class="width-sm status <?php echo htmlspecialchars($statusCartaClass, ENT_QUOTES); ?>" style="border: 1px solid var(--color-gray-500);"><?php echo htmlspecialchars($statusCartaLabel, ENT_QUOTES); ?></div>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <?php
-            $editalCreatedRaw = $edital['created_at'] ?? '';
-            $editalCreatedFormatted = '';
-            if ($editalCreatedRaw !== '') {
-                $dt0 = \DateTime::createFromFormat('Y-m-d H:i:s', $editalCreatedRaw);
-                $editalCreatedFormatted = $dt0 ? $dt0->format('d/m/Y - H:i') : $editalCreatedRaw;
-            }
-            $cadastroInfoLinha = 'Edital cadastrado em ' . $editalCreatedFormatted;
-            ?>
-            <div class="row timeline finished">
-                <div class="row">
-                    <div class="circle finished"></div>
-                    <div class="col filter subtask-status-info">
-                        <span class="minor-info">Edital cadastrado</span>
-                    </div>
-                </div>
-                <div class="col">
-                    <div class="col filter subtask-date">
-                        <span class="minor-info"><?php echo htmlspecialchars($cadastroInfoLinha !== '' ? $cadastroInfoLinha : 'Edital cadastrado', ENT_QUOTES); ?></span>
-                    </div>
-                </div>
-            </div>
-
-            <?php for ($ordem = 1; $ordem <= 4; $ordem++): ?>
-                <?php
-                $tipo = $ordemParaTipo[$ordem] ?? '';
-                $label = $subtarefaLabels[$tipo] ?? 'Passo ' . $ordem;
-                $st = $subtarefasPorOrdem[$ordem] ?? null;
-                $circleClass = '';
-                $minorTexto = $timelineMinorPendente[$ordem] ?? $label;
-                $dateLabel = 'Aguardando conclusão';
-                $infoLinha = '';
-                $stId = $st['id'] ?? '';
-                $dadosEspecificos = [];
-                if ($st !== null && !empty(trim((string) ($st['dados_especificos'] ?? '')))) {
-                    $dadosEspecificos = json_decode((string) $st['dados_especificos'], true);
-                    if (!is_array($dadosEspecificos)) {
-                        $dadosEspecificos = [];
-                    }
-                }
-                $nomeUsuario = trim((string) ($dadosEspecificos['nome'] ?? ''));
-                $dataPublicacao = trim((string) ($dadosEspecificos['data_publicacao'] ?? ''));
-                if ($st !== null) {
-                    $status = trim((string) ($st['status'] ?? ''));
-                    $raw = $st['updated_at'] ?? $st['created_at'] ?? '';
-                    $dataMovimento = '';
-                    if ($raw !== '') {
-                        $dt = \DateTime::createFromFormat('Y-m-d H:i:s', $raw);
-                        $dataMovimento = $dt ? $dt->format('d/m/Y - H:i') : $raw;
-                    }
-                    if ($status === 'concluida') {
-                        $circleClass = 'finished';
-                        if ($ordem === 1) {
-                            $minorTexto = 'Edital expedido';
-                            $infoLinha = $nomeUsuario !== '' && $dataMovimento !== '' ? 'Expedição realizada por ' . $nomeUsuario . ' em ' . $dataMovimento : ($dataMovimento !== '' ? $dataMovimento : 'Concluído');
-                        } elseif ($ordem === 2) {
-                            $minorTexto = 'Edital enviado para publicação no DJEN';
-                            $infoLinha = $nomeUsuario !== '' && $dataMovimento !== '' ? 'Edital enviado por ' . $nomeUsuario . ' em ' . $dataMovimento : ($dataMovimento !== '' ? $dataMovimento : 'Concluído');
-                        } elseif ($ordem === 3) {
-                            $dtPub = $dataPublicacao !== '' ? \DateTime::createFromFormat('Y-m-d', $dataPublicacao) : null;
-                            $dataPubExibir = $dtPub ? $dtPub->format('d/m/Y') : ($dataPublicacao !== '' ? $dataPublicacao : $dataMovimento);
-                            $minorTexto = 'Publicação do edital realizada em ' . $dataPubExibir;
-                            $infoLinha = $nomeUsuario !== '' && $dataMovimento !== '' ? 'Certificação realizada por ' . $nomeUsuario . ' em ' . $dataMovimento : ($dataMovimento !== '' ? $dataMovimento : 'Concluído');
-                        } else {
-                            $minorTexto = 'Decurso do prazo do edital certificado';
-                            $infoLinha = $nomeUsuario !== '' && $dataMovimento !== '' ? 'Certificação realizada por ' . $nomeUsuario . ' em ' . $dataMovimento : ($dataMovimento !== '' ? $dataMovimento : 'Concluído');
-                        }
-                        $dateLabel = $infoLinha;
-                    } elseif ($status === 'em_andamento') {
-                        $circleClass = 'current';
-                        $minorTexto = $timelineMinorPendente[$ordem] ?? $label;
-                        $dateLabel = 'Aguardando movimentação';
-                    } else {
-                        $minorTexto = $timelineMinorPendente[$ordem] ?? $label;
-                        $dateLabel = 'Aguardando conclusão';
-                    }
-                }
-                ?>
-                <div class="row timeline <?php echo $circleClass !== '' ? $circleClass : ''; ?>">
-                    <div class="row">
-                        <?php if ($circleClass !== ''): ?>
-                            <div class="circle <?php echo htmlspecialchars($circleClass, ENT_QUOTES); ?>"></div>
-                        <?php else: ?>
-                            <div class="circle" style="background-color: var(--color-gray-300);"></div>
-                        <?php endif; ?>
-                        <div class="col filter subtask-status-info">
-                            <span class="minor-info"><?php echo htmlspecialchars($minorTexto, ENT_QUOTES); ?></span>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="col filter subtask-date">
-                            <span class="minor-info"><?php echo htmlspecialchars($dateLabel, ENT_QUOTES); ?></span>
-                        </div>
-                        <?php if ($st !== null && trim((string) ($st['status'] ?? '')) === 'em_andamento'): ?>
-                            <?php
-                            $podeInformarOrdem4 = true;
-                            $mensagemDecurso = '';
-                            if ($ordem === 4) {
-                                $podeInformarOrdem4 = $decursoInfo['prazo_cumprido'];
-                                $mensagemDecurso = $decursoInfo['data_limite_formatada'] !== '' && !$podeInformarOrdem4
-                                    ? 'Disponível após ' . $decursoInfo['data_limite_formatada'] . ' (decurso do prazo)'
-                                    : '';
-                            }
-                            ?>
-                            <div class="col filter" style="margin-top: 0.5rem;">
-                                <?php if ($ordem === 3): ?>
-                                    <label for="edit-data-publicacao-<?php echo $ordem; ?>">Data da publicação</label>
-                                    <input type="date" id="edit-data-publicacao-<?php echo $ordem; ?>" class="width-md height-md" data-ordem="<?php echo $ordem; ?>" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>">
-                                <?php endif; ?>
-                                <?php if ($ordem === 4 && $mensagemDecurso !== ''): ?>
-                                    <span class="minor-info" style="display: block; margin-bottom: 0.25rem;"><?php echo htmlspecialchars($mensagemDecurso, ENT_QUOTES); ?></span>
-                                <?php endif; ?>
-                                <button type="button" class="btn btn-primary btn-informar-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-ordem="<?php echo $ordem; ?>" style="margin-top: 0.25rem;" <?php if ($ordem === 4 && !$podeInformarOrdem4): ?>disabled title="<?php echo htmlspecialchars($mensagemDecurso, ENT_QUOTES); ?>"<?php endif; ?>><?php echo htmlspecialchars($buttonTitleByOrdem[$ordem] ?? 'Informar', ENT_QUOTES); ?></button>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            <?php endfor; ?>
+            <?php include __DIR__ . '/_cartorio_timeline.php'; ?>
 
             <input type="hidden" id="hidden-edital-id" value="<?php echo htmlspecialchars($idEdital, ENT_QUOTES); ?>">
         <?php endif; ?>
@@ -443,7 +260,6 @@ $tarefaFinalizadaOuCancelada = in_array($statusAtual, ['cancelada', 'concluída'
                 var btnCancelar = document.getElementById('cancelar-tarefa-btn');
                 if (btnCancelar && window.__currentEditalId) {
                     btnCancelar.addEventListener('click', function () {
-                        if (!confirm('Deseja cancelar este edital? O status será alterado para "Cancelada".')) return;
                         btnCancelar.disabled = true;
                         fetch('/api/cartorio-editais/cancel.php', {
                             method: 'POST',
@@ -492,41 +308,6 @@ $tarefaFinalizadaOuCancelada = in_array($statusAtual, ['cancelada', 'concluída'
                     });
                 }
 
-                document.querySelectorAll('.btn-informar-subtarefa').forEach(function (btn) {
-                    btn.addEventListener('click', function () {
-                        var subtarefaId = this.getAttribute('data-subtarefa-id');
-                        var ordem = parseInt(this.getAttribute('data-ordem') || '0', 10);
-                        if (!subtarefaId) return;
-                        var payload = { subtarefa_id: subtarefaId };
-                        if (ordem === 3) {
-                            var dataPubEl = document.getElementById('edit-data-publicacao-3');
-                            var dataPub = (dataPubEl && dataPubEl.value) ? dataPubEl.value.trim() : '';
-                            if (!dataPub) {
-                                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Campo obrigatório', message: 'Informe a data da publicação.' });
-                                return;
-                            }
-                            payload.dados_especificos = { data_publicacao: dataPub };
-                        }
-                        btn.disabled = true;
-                        fetch('/api/cartorio-editais/concluir-subtarefa.php', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(payload)
-                        })
-                        .then(function (r) { return r.json(); })
-                        .then(function (data) {
-                            if (data.success) window.location.reload();
-                            else {
-                                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao concluir.' });
-                                btn.disabled = false;
-                            }
-                        })
-                        .catch(function () {
-                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
-                            btn.disabled = false;
-                        });
-                    });
-                });
             })();
         </script>
     <?php endif; ?>

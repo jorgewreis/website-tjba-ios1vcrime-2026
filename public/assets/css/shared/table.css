@@ -359,6 +359,13 @@
     font-weight: 600;
 }
 
+.text-ellipsis {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 /* TAMANHOS PADRONIZADOS */
 .process-info {
     width: 220px;

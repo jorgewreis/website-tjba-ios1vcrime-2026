@@ -243,7 +243,7 @@ if ($totalPages > 0) {
                     </div>
                     <div class="col filter comarca-info">
                         <span class="minor-info">Classe</span>
-                        <span class="major-info"><?php echo htmlspecialchars($row['Classe'] ?? '—'); ?></span>
+                        <span class="major-info text-ellipsis" title="<?php echo htmlspecialchars($row['Classe'] ?? '—', ENT_QUOTES); ?>"><?php echo htmlspecialchars($row['Classe'] ?? '—'); ?></span>
                     </div>
                     <div class="row">
                         <div class="col button-table button-edit" data-edital-id="<?php echo htmlspecialchars($idEdital); ?>" title="Editar">
