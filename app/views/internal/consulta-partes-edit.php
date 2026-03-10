@@ -128,9 +128,15 @@ if ($pessoa === null) {
             <div class="row filter" data-id="<?php echo htmlspecialchars($vi['id'] ?? ''); ?>">
                 <div class="col filter"><?php echo htmlspecialchars($vi['instituicao_nome'] ?? $vi['instituicao_sigla'] ?? '—'); ?></div>
                 <div class="col filter"><?php echo htmlspecialchars($vi['cargo_funcao'] ?? '—'); ?></div>
-                <div class="col filter"><button type="button" class="btn btn-secondary-outline btn-del-vinculo" data-id="<?php echo htmlspecialchars($vi['id'] ?? ''); ?>">Excluir</button></div>
+                <div class="col filter">
+                    <a href="/frame.php?page=partesinstituicoesedit&id=<?php echo urlencode($vi['id'] ?? ''); ?>" class="btn btn-secondary-outline">Editar</a>
+                    <button type="button" class="btn btn-secondary-outline btn-del-vinculo" data-id="<?php echo htmlspecialchars($vi['id'] ?? ''); ?>">Excluir</button>
+                </div>
             </div>
             <?php endforeach; ?>
+        </div>
+        <div class="row filter">
+            <a href="/frame.php?page=partesinstituicoescreate&parte_id=<?php echo urlencode($pessoa['id'] ?? ''); ?>" class="btn btn-primary">Vincular instituição</a>
         </div>
     </div>
 

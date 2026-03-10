@@ -62,11 +62,6 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
                 <textarea class="width-xl height-md" id="observacoes" rows="2"><?php echo htmlspecialchars($inst['observacoes'] ?? ''); ?></textarea>
             </div>
         </div>
-        <div class="row filter">
-            <div class="col filter">
-                <label><input type="checkbox" id="ativo"<?php echo !empty($inst['ativo']) ? ' checked' : ''; ?>> Ativo</label>
-            </div>
-        </div>
         <div class="row buttons">
             <a href="/frame.php?page=instituicoespublicas" class="btn btn-secondary">Voltar</a>
             <button type="button" class="btn btn-primary" id="salvar-btn">Salvar</button>
@@ -104,8 +99,7 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
             nome: nomeVal,
             nome_fantasia: nomeFantasiaVal === '' ? null : nomeFantasiaVal,
             cnpj: cnpjRaw === '' ? null : cnpjRaw,
-            observacoes: (document.getElementById('observacoes').value || '').trim() || null,
-            ativo: document.getElementById('ativo').checked ? 1 : 0
+            observacoes: (document.getElementById('observacoes').value || '').trim() || null
         };
         this.disabled = true;
         fetch('/api/instituicoes-publicas/update.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })

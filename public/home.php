@@ -224,8 +224,6 @@ $userProfile = Security::getUserProfile() ?? '';
                     { icon: 'fi fi-rs-users-alt', label: 'Consulta Partes', target: 'consultapartes' },
                     { icon: 'fi fi-rs-folder-open', label: 'Consulta Processos', target: 'consultaprocessos' },
                     { icon: 'fi fi-rs-building', label: 'Instituições Públicas', target: 'instituicoespublicas' },
-                    { icon: 'fi fi-rs-link', label: 'Vínculos processo-parte', target: 'processosparteslist' },
-                    { icon: 'fi fi-rs-link', label: 'Vínculos pessoa-instituição', target: 'partesinstituicoeslist' },
                     { icon: 'fi fi-rs-marker', label: 'CEP', target: 'consultacep' }
                 ]
             },
