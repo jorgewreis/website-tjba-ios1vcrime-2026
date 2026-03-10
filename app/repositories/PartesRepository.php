@@ -49,6 +49,23 @@ final class PartesRepository
         return $result === false ? null : $result;
     }
 
+    public function findByNomeCompleto(string $nomeCompleto): ?array
+    {
+        $nomeCompleto = TextFormatter::formatProperName(trim($nomeCompleto), 255);
+        if ($nomeCompleto === '') {
+            return null;
+        }
+
+        $statement = $this->connection->prepare(
+            sprintf('SELECT `id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `created_at`, `updated_at` FROM `%s` WHERE `nome_completo` = :nome_completo LIMIT 1', $this->table)
+        );
+        $statement->bindValue(':nome_completo', $nomeCompleto);
+        $statement->execute();
+
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+        return $result === false ? null : $result;
+    }
+
     /** @return list<array<string, mixed>> */
     public function fetchList(array $filters, int $limit, int $offset): array
     {
@@ -115,13 +132,20 @@ final class PartesRepository
 
     public function insert(array $row): string
     {
-        $cpf = $this->normalizeCpf((string) ($row['cpf'] ?? ''));
         $nomeCompleto = TextFormatter::formatProperName((string) ($row['nome_completo'] ?? ''), 255);
+        if ($nomeCompleto === '') {
+            throw new InvalidArgumentException('Nome completo é obrigatório para cadastrar a parte.');
+        }
+
+        $cpf = $this->normalizeCpf((string) ($row['cpf'] ?? ''));
         $sexo = trim((string) ($row['sexo'] ?? ''));
         $dataNascimento = trim((string) ($row['data_nascimento'] ?? ''));
 
-        if ($cpf === '' || $nomeCompleto === '' || $sexo === '' || $dataNascimento === '') {
-            throw new InvalidArgumentException('CPF, nome completo, sexo e data de nascimento são obrigatórios para cadastrar a parte.');
+        if ($cpf !== '') {
+            $existenteCpf = $this->findByCpf($cpf);
+            if ($existenteCpf !== null) {
+                throw new InvalidArgumentException('Já existe pessoa cadastrada com este CPF.');
+            }
         }
 
         $id = trim((string) ($row['id'] ?? ''));
@@ -136,10 +160,10 @@ final class PartesRepository
             )
         );
         $statement->bindValue(':id', $id);
-        $statement->bindValue(':cpf', $cpf);
+        $statement->bindValue(':cpf', $cpf === '' ? null : $cpf);
         $statement->bindValue(':nome_completo', $nomeCompleto);
-        $statement->bindValue(':sexo', $sexo);
-        $statement->bindValue(':data_nascimento', $dataNascimento);
+        $statement->bindValue(':sexo', $sexo === '' ? null : $sexo);
+        $statement->bindValue(':data_nascimento', $dataNascimento === '' ? null : $dataNascimento);
         $statement->execute();
 
         return $id;
@@ -147,9 +171,10 @@ final class PartesRepository
 
     public function update(string $id, array $payload): bool
     {
+        $id = trim($id);
         $allowed = ['cpf', 'nome_completo', 'sexo', 'data_nascimento'];
         $set = [];
-        $params = [':id' => trim($id)];
+        $params = [':id' => $id];
 
         foreach ($allowed as $column) {
             if (!array_key_exists($column, $payload)) {
@@ -158,10 +183,20 @@ final class PartesRepository
             $value = $payload[$column];
             if ($column === 'cpf') {
                 $value = $this->normalizeCpf((string) $value);
+                $value = $value === '' ? null : $value;
+                if ($value !== null && $value !== '') {
+                    $existente = $this->findByCpf($value);
+                    if ($existente !== null && (string) $existente['id'] !== $id) {
+                        throw new InvalidArgumentException('Já existe outra pessoa cadastrada com este CPF.');
+                    }
+                }
             } elseif ($column === 'nome_completo') {
                 $value = TextFormatter::formatProperName((string) $value, 255);
             } else {
                 $value = trim((string) $value);
+                if (in_array($column, ['sexo', 'data_nascimento'], true)) {
+                    $value = $value === '' ? null : $value;
+                }
             }
             $set[] = sprintf('`%s` = :%s', $column, $column);
             $params[':' . $column] = $value;

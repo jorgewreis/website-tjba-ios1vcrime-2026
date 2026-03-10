@@ -35,6 +35,40 @@ final class InstituicoesPublicasRepository
         return $result === false ? null : $result;
     }
 
+    public function findByNome(string $nome): ?array
+    {
+        $nome = TextFormatter::formatProperName(trim((string) $nome), 255);
+        if ($nome === '') {
+            return null;
+        }
+
+        $statement = $this->connection->prepare(
+            sprintf('SELECT `id`, `nome`, `nome_fantasia`, `cnpj`, `observacoes`, `ativo`, `created_at`, `updated_at` FROM `%s` WHERE `nome` = :nome LIMIT 1', $this->table)
+        );
+        $statement->bindValue(':nome', $nome);
+        $statement->execute();
+
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+        return $result === false ? null : $result;
+    }
+
+    public function findByCnpj(string $cnpj): ?array
+    {
+        $cnpj = preg_replace('/\D+/', '', trim((string) $cnpj));
+        if ($cnpj === '') {
+            return null;
+        }
+
+        $statement = $this->connection->prepare(
+            sprintf('SELECT `id`, `nome`, `nome_fantasia`, `cnpj`, `observacoes`, `ativo`, `created_at`, `updated_at` FROM `%s` WHERE `cnpj` = :cnpj LIMIT 1', $this->table)
+        );
+        $statement->bindValue(':cnpj', $cnpj);
+        $statement->execute();
+
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+        return $result === false ? null : $result;
+    }
+
     public function fetchList(array $filters, int $limit, int $offset): array
     {
         [$whereClause, $params] = $this->buildFilterClause($filters);
@@ -75,13 +109,25 @@ final class InstituicoesPublicasRepository
             throw new InvalidArgumentException('Nome da instituição é obrigatório.');
         }
 
+        $existenteNome = $this->findByNome($nome);
+        if ($existenteNome !== null) {
+            throw new InvalidArgumentException('Já existe instituição cadastrada com este nome.');
+        }
+
+        $cnpj = preg_replace('/\D+/', '', (string) ($row['cnpj'] ?? ''));
+        if ($cnpj !== '') {
+            $existenteCnpj = $this->findByCnpj($cnpj);
+            if ($existenteCnpj !== null) {
+                throw new InvalidArgumentException('Já existe instituição cadastrada com este CNPJ.');
+            }
+        }
+
         $id = trim((string) ($row['id'] ?? ''));
         if ($id === '') {
             $id = IdGenerator::generateUniquePrefixedId($this->connection, $this->table, 'id', 'INS', 30);
         }
 
         $nomeFantasia = trim((string) ($row['nome_fantasia'] ?? ''));
-        $cnpj = preg_replace('/\D+/', '', (string) ($row['cnpj'] ?? ''));
         $observacoes = trim((string) ($row['observacoes'] ?? ''));
         $ativo = isset($row['ativo']) ? (int) (bool) $row['ativo'] : 1;
 
@@ -104,9 +150,10 @@ final class InstituicoesPublicasRepository
 
     public function update(string $id, array $payload): bool
     {
+        $id = trim($id);
         $allowed = ['nome', 'nome_fantasia', 'cnpj', 'observacoes', 'ativo'];
         $set = [];
-        $params = [':id' => trim($id)];
+        $params = [':id' => $id];
 
         foreach ($allowed as $column) {
             if (!array_key_exists($column, $payload)) {
@@ -115,9 +162,21 @@ final class InstituicoesPublicasRepository
             $value = $payload[$column];
             if ($column === 'nome') {
                 $value = TextFormatter::formatProperName((string) $value, 255);
+                if ($value !== '') {
+                    $existente = $this->findByNome($value);
+                    if ($existente !== null && (string) $existente['id'] !== $id) {
+                        throw new InvalidArgumentException('Já existe outra instituição cadastrada com este nome.');
+                    }
+                }
             } elseif ($column === 'cnpj') {
                 $value = preg_replace('/\D+/', '', (string) $value);
                 $value = $value === '' ? null : $value;
+                if ($value !== null && $value !== '') {
+                    $existente = $this->findByCnpj($value);
+                    if ($existente !== null && (string) $existente['id'] !== $id) {
+                        throw new InvalidArgumentException('Já existe outra instituição cadastrada com este CNPJ.');
+                    }
+                }
             } elseif ($column === 'ativo') {
                 $value = (int) (bool) $value;
             } else {

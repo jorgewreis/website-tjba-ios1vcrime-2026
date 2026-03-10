@@ -65,17 +65,12 @@ final class ProcessosPartesRepository
             throw new InvalidArgumentException('Polo inválido.');
         }
 
-        $row = $this->findOne($processoId, $parteId, $tipoParte);
-        $flags = $this->normalizePrioridades($prioridades);
-
-        if ($row !== null) {
-            $payload = array_merge([
-                'polo' => $polo,
-            ], $flags);
-            $this->update((string) $row['id'], $payload);
-            return (string) $row['id'];
+        $existente = $this->findByProcessoAndParte($processoId, $parteId);
+        if ($existente !== null) {
+            throw new InvalidArgumentException('Esta pessoa já está vinculada a este processo. Uma pessoa não pode ser cadastrada mais de uma vez no mesmo processo.');
         }
 
+        $flags = $this->normalizePrioridades($prioridades);
         $id = IdGenerator::generateUniquePrefixedId($this->connection, $this->table, 'id', 'PPR', 30);
         $statement = $this->connection->prepare(
             sprintf(
@@ -214,6 +209,31 @@ final class ProcessosPartesRepository
         $statement->execute();
 
         return $statement->rowCount() > 0;
+    }
+
+    /**
+     * Verifica se já existe vínculo da parte com o processo (uma pessoa só pode aparecer uma vez por processo).
+     */
+    public function findByProcessoAndParte(string $processoId, string $parteId): ?array
+    {
+        $processoId = trim($processoId);
+        $parteId = trim($parteId);
+        if ($processoId === '' || $parteId === '') {
+            return null;
+        }
+
+        $statement = $this->connection->prepare(
+            sprintf(
+                'SELECT `id`, `processo_id`, `parte_id`, `tipo_parte`, `polo`, `prioridade_mulher`, `prioridade_crianca_adolescente`, `prioridade_idoso`, `prioridade_pessoa_deficiencia`, `created_at`, `updated_at` FROM `%s` WHERE `processo_id` = :processo_id AND `parte_id` = :parte_id LIMIT 1',
+                $this->table
+            )
+        );
+        $statement->bindValue(':processo_id', $processoId);
+        $statement->bindValue(':parte_id', $parteId);
+        $statement->execute();
+
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+        return $result === false ? null : $result;
     }
 
     private function findOne(string $processoId, string $parteId, string $tipoParte): ?array

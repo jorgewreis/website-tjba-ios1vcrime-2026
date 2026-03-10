@@ -8,40 +8,49 @@ if (function_exists('mb_internal_encoding')) {
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-    <?php include __DIR__ . '/_theme_init.php'; ?>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Nova Pessoa - Consulta Partes</title>
-    <link rel="stylesheet" href="/assets/css/shared/reset.css">
-    <link rel="stylesheet" href="/assets/css/shared/color.css">
-    <link rel="stylesheet" href="/assets/css/shared/page.css">
-    <link rel="stylesheet" href="/assets/css/shared/form.css">
-    <?php include __DIR__ . '/_toast_script.php'; ?>
-</head>
+    <head>
+        <?php include __DIR__ . '/_theme_init.php'; ?>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Consulta Partes - Cadastro - Primeira Vara Crime de Ilhéus</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="/assets/css/shared/reset.css">
+        <link rel="stylesheet" href="/assets/css/shared/color.css">
+        <link rel="stylesheet" href="/assets/css/shared/page.css">
+        <link rel="stylesheet" href="/assets/css/shared/form.css">
+        <link rel="stylesheet" href="/assets/css/shared/table.css">
+        <?php include __DIR__ . '/_toast_script.php'; ?>
+    </head>
 <body class="page-internal">
+
     <div class="spacing-top-page"></div>
+
     <div class="header-page">
-        <div class="location"><span class="all">Interno - Consultas -</span> <span class="specific">Nova pessoa</span></div>
+        <div class="location">
+            <span class="all">Interno - Consultas - Consulta Partes -</span>
+            <span class="specific">Cadastro</span>
+        </div>
         <h1 class="title-page">Cadastrar pessoa</h1>
-        <p class="description-page">Dados básicos da parte (pessoa).</p>
+        <p class="description-page">Dados básicos da parte (pessoa). Apenas o nome completo é obrigatório; CPF, sexo e data de nascimento podem ser informados quando disponíveis.</p>
     </div>
+
     <div class="card-page">
-        <div class="row table header">Dados obrigatórios</div>
+        <div class="row table header">Informações da parte</div>
         <div class="row filter">
             <div class="col filter">
-                <label for="cpf">CPF <span class="label-hint-obrigatorio">*</span></label>
-                <input type="text" class="width-md height-md" id="cpf" name="cpf" placeholder="Somente números" required>
-            </div>
-            <div class="col filter">
-                <label for="nome_completo">Nome completo <span class="label-hint-obrigatorio">*</span></label>
-                <input type="text" class="width-xl height-md" id="nome_completo" name="nome_completo" required>
+                <label for="nome_completo">Nome completo <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <input type="text" class="width-xl height-md" id="nome_completo" name="nome_completo" placeholder="Nome completo da pessoa" required>
             </div>
         </div>
         <div class="row filter">
             <div class="col filter">
-                <label for="sexo">Sexo <span class="label-hint-obrigatorio">*</span></label>
-                <select class="width-md height-md" id="sexo" name="sexo" required>
+                <label for="cpf">CPF</label>
+                <input type="text" class="width-md height-md" id="cpf" name="cpf" placeholder="Somente números">
+            </div>
+            <div class="col filter">
+                <label for="sexo">Sexo</label>
+                <select class="width-md height-md" id="sexo" name="sexo">
                     <option value="">Selecione</option>
                     <option value="Feminino">Feminino</option>
                     <option value="Masculino">Masculino</option>
@@ -49,33 +58,58 @@ if (function_exists('mb_internal_encoding')) {
                 </select>
             </div>
             <div class="col filter">
-                <label for="data_nascimento">Data de nascimento <span class="label-hint-obrigatorio">*</span></label>
-                <input type="date" class="width-md height-md" id="data_nascimento" name="data_nascimento" required>
+                <label for="data_nascimento">Data de nascimento</label>
+                <input type="date" class="width-md height-md" id="data_nascimento" name="data_nascimento">
             </div>
         </div>
+
         <div class="row buttons">
-            <a href="/frame.php?page=consultapartes" class="btn btn-secondary">Voltar</a>
+            <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
             <button type="button" class="btn btn-primary" id="cadastrar-btn">Cadastrar</button>
         </div>
-        <div id="feedback" class="row" aria-live="polite"></div>
+
+        <div class="row pagination">
+            <div class="col">
+                <label id="cadastro-feedback" class="status-placeholder" aria-live="polite"></label>
+            </div>
+        </div>
     </div>
+
+    <div class="footer-page">
+        <div class="location">
+            <span class="all">Aplicativo web desenvolvido integralmente por </span>
+            <span class="specific">Jorge Reis Develop</span>
+            <span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span>
+        </div>
+    </div>
+
     <script>
     (function() {
+        document.getElementById('voltar-btn').addEventListener('click', function() {
+            window.location.href = '/frame.php?page=consultapartes';
+        });
+
         document.getElementById('cadastrar-btn').addEventListener('click', function() {
-            var cpf = (document.getElementById('cpf').value || '').replace(/\D/g, '');
             var nome = (document.getElementById('nome_completo').value || '').trim();
-            var sexo = (document.getElementById('sexo').value || '').trim();
-            var data = (document.getElementById('data_nascimento').value || '').trim();
-            if (!cpf || !nome || !sexo || !data) {
-                if (typeof showToast === 'function') showToast({ type: 'error', message: 'Preencha CPF, nome, sexo e data de nascimento.' });
-                else alert('Preencha todos os campos obrigatórios.');
+            if (!nome) {
+                if (typeof showToast === 'function') showToast({ type: 'error', message: 'Nome completo é obrigatório.' });
+                else alert('Informe o nome completo.');
                 return;
             }
+            var cpf = (document.getElementById('cpf').value || '').replace(/\D/g, '');
+            var sexo = (document.getElementById('sexo').value || '').trim();
+            var data = (document.getElementById('data_nascimento').value || '').trim();
+
             this.disabled = true;
             fetch('/api/pessoas/create.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ cpf: cpf, nome_completo: nome, sexo: sexo, data_nascimento: data })
+                body: JSON.stringify({
+                    nome_completo: nome,
+                    cpf: cpf || null,
+                    sexo: sexo || null,
+                    data_nascimento: data || null
+                })
             })
             .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
             .then(function(result) {

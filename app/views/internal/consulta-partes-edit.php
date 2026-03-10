@@ -73,7 +73,7 @@ if ($pessoa === null) {
             </div>
         </div>
         <div class="row buttons">
-            <a href="/frame.php?page=consultapartes" class="btn btn-secondary">Voltar</a>
+            <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
             <button type="button" class="btn btn-primary" id="salvar-btn">Salvar dados</button>
         </div>
 
@@ -127,8 +127,20 @@ if ($pessoa === null) {
             <?php endforeach; ?>
         </div>
     </div>
+
+    <div class="footer-page">
+        <div class="location">
+            <span class="all">Aplicativo web desenvolvido integralmente por </span>
+            <span class="specific">Jorge Reis Develop</span>
+            <span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span>
+        </div>
+    </div>
+
     <script>
     (function() {
+        document.getElementById('voltar-btn').addEventListener('click', function() {
+            window.location.href = '/frame.php?page=consultapartes';
+        });
         var parteId = document.getElementById('parte-id').value;
         document.getElementById('salvar-btn').addEventListener('click', function() {
             var payload = {

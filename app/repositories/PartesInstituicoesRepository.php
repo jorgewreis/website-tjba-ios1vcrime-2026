@@ -91,6 +91,31 @@ final class PartesInstituicoesRepository
         return $statement->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Verifica se já existe vínculo da parte com a instituição (uma pessoa não pode ser vinculada mais de uma vez à mesma instituição).
+     */
+    public function findByParteAndInstituicao(string $parteId, string $instituicaoId): ?array
+    {
+        $parteId = trim($parteId);
+        $instituicaoId = trim($instituicaoId);
+        if ($parteId === '' || $instituicaoId === '') {
+            return null;
+        }
+
+        $statement = $this->connection->prepare(
+            sprintf(
+                'SELECT `id`, `parte_id`, `instituicao_id`, `setor_id`, `profissao`, `cargo_funcao`, `data_inclusao`, `data_inicio`, `data_fim`, `ativo`, `observacoes`, `created_at`, `updated_at` FROM `%s` WHERE `parte_id` = :parte_id AND `instituicao_id` = :instituicao_id LIMIT 1',
+                $this->table
+            )
+        );
+        $statement->bindValue(':parte_id', $parteId);
+        $statement->bindValue(':instituicao_id', $instituicaoId);
+        $statement->execute();
+
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+        return $result === false ? null : $result;
+    }
+
     public function insert(array $row): string
     {
         $parteId = trim((string) ($row['parte_id'] ?? ''));
@@ -98,6 +123,11 @@ final class PartesInstituicoesRepository
         $dataInclusao = trim((string) ($row['data_inclusao'] ?? ''));
         if ($parteId === '' || $instituicaoId === '' || $dataInclusao === '') {
             throw new InvalidArgumentException('parte_id, instituicao_id e data_inclusao são obrigatórios.');
+        }
+
+        $existente = $this->findByParteAndInstituicao($parteId, $instituicaoId);
+        if ($existente !== null) {
+            throw new InvalidArgumentException('Esta pessoa já está vinculada a esta instituição. Uma pessoa não pode ser cadastrada mais de uma vez na mesma instituição.');
         }
 
         $id = trim((string) ($row['id'] ?? ''));
