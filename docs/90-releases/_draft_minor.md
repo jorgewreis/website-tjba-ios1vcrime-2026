@@ -84,4 +84,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Feat: consulta instituicao** `[3995b63]`
 - **Fix: pequenos ajustes de codigo** `[c05d8c8]`
 - **Fix: correção de pessoa** `[ab4287a]`
+- **Fix: correção de formatação** `[c6b9c81]`
 
