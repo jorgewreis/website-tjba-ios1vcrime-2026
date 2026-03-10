@@ -20,15 +20,68 @@ $csrfToken = Security::generateCSRFToken();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Primeira Vara Crime de Ilhéus - Sistema de Gestão</title>
   
-    <link rel="stylesheet" href="/assets/css/shared/reset.css">
-    <link rel="stylesheet" href="/assets/css/shared/color.css">
-    <link rel="stylesheet" href="/assets/css/shared/form.css">
-    <link rel="stylesheet" href="/assets/css/shared/table.css">
-    <link rel="stylesheet" href="/assets/css/shared/login.css">
-    <link rel="stylesheet" href="/assets/css/shared/toast.css">
+    <link rel="stylesheet" href="./assets/css/shared/reset.css">
+    <link rel="stylesheet" href="./assets/css/shared/color.css">
+    <link rel="stylesheet" href="./assets/css/shared/form.css">
+    <link rel="stylesheet" href="./assets/css/shared/table.css">
+    <link rel="stylesheet" href="./assets/css/shared/login.css">
+    <link rel="stylesheet" href="./assets/css/shared/toast.css">
     <!-- Ícones: fi-rs-* (regular-straight) -->
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-straight/css/uicons-regular-straight.css">
     <link rel="icon" type="image/x-icon" href="/assets/img/favicon.ico">
+
+    <style>
+        /* Estilos específicos para esta página */
+        @media (max-width: 1365px) {
+            .footer-page {
+                display: none;
+            }
+        }
+        
+        @media (min-width: 1366px) {
+            
+        .footer-page {
+            position: absolute;            
+            bottom: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: transparent;
+        }
+            .footer-page .info-page {
+                width: 100%;
+                display: flex;                
+                flex-direction: column;
+                align-items: flex-start;
+                justify-content: center;
+                padding: 10px;
+                background-color: #ffffff30;
+            }
+                .footer-page .info-page .info-line {
+                    width: 100%;
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 12px;
+                }
+            .footer-page .info-app {
+                width: 100%;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+                font-size: 10px;
+                padding: 5px;
+                background-color: #ffffff20;
+            }
+        }
+
+
+    </style>
+
     <script>
         (function() {
             var name = 'tjba_1vcrime_theme';
@@ -59,6 +112,14 @@ $csrfToken = Security::generateCSRFToken();
                         <span class="info-title">CRIMINAL</span>
                         <p class="text">A excelência nasce de um fluxo inteligente, padronização segura, responsabilidade clara e foco na efetividade jurisdicional.
                         </p>
+                    </div>
+                    <!-- FOOTER - SYSTEM -->
+                    <div class="footer-page">                        
+                        <div class="info-page">
+                            <span class="info-line">Rua Dr. Hygino Filho, bloco C, 1º andar, sala 312 - Jardim Atlântico, Ilhéus - BA</span>
+                            <span class="info-line">Tel.: 73 3234-3428 - Whatsapp: 71 99610-8241 - Email: ilheus1vcriminal@tjba.jus.br</span>
+                        </div>
+                        <div class="info-app">Sistema desenvolvido integralmente por Jorge Reis Developer - 2026 - Todos os direitos reservados</div>
                     </div>
                 </div>
 

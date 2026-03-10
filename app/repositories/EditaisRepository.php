@@ -17,6 +17,8 @@ final class EditaisRepository
         'cancelada',
     ];
 
+    private const TIPO_EDITAL_COLLATION = 'utf8mb4_unicode_ci';
+
     public function __construct(PDO $connection, string $table = 'editais')
     {
         $this->connection = $connection;
@@ -202,6 +204,14 @@ final class EditaisRepository
             if ($processoValue !== '') {
                 $clauses[] = 'p.`numero_processo` LIKE :processo';
                 $params[':processo'] = '%' . $processoValue . '%';
+            }
+        }
+
+        if (isset($filters['tipo_edital'])) {
+            $tipoEditalValue = trim((string) $filters['tipo_edital']);
+            if ($tipoEditalValue !== '') {
+                $clauses[] = 'e.`tipo_edital` COLLATE ' . self::TIPO_EDITAL_COLLATION . ' = :tipo_edital';
+                $params[':tipo_edital'] = $tipoEditalValue;
             }
         }
 

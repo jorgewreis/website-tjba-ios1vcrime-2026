@@ -11,6 +11,7 @@ $connection = Conection::getInstance()->getConnection();
 
 $statusFilter = trim($_GET['status'] ?? '');
 $processoFilter = trim($_GET['processo'] ?? '');
+$tipoEditalFilter = trim($_GET['tipo_edital'] ?? '');
 $allowedPerPage = [10, 25, 50, 100];
 $itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 10;
 if (!in_array($itemsPerPage, $allowedPerPage, true)) {
@@ -24,6 +25,7 @@ $page = $pageNumber;
 $outputFilters = [
     'status' => $statusFilter,
     'processo' => $processoFilter,
+    'tipo_edital' => $tipoEditalFilter,
 ];
 
 try {

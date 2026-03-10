@@ -13,6 +13,7 @@ $connection = Conection::getInstance()->getConnection();
 $routePage = trim((string) ($_GET['page'] ?? 'editais'));
 $statusFilter = trim($_GET['status'] ?? '');
 $processoFilter = trim($_GET['processo'] ?? '');
+$tipoEditalFilter = trim($_GET['tipo_edital'] ?? '');
 $allowedPerPage = [10, 25, 50, 100];
 $itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 10;
 if (!in_array($itemsPerPage, $allowedPerPage, true)) {
@@ -30,6 +31,7 @@ if ($pageNumberParam !== null && $pageNumberParam !== '') {
 $filters = [
     'status' => $statusFilter,
     'processo' => $processoFilter,
+    'tipo_edital' => $tipoEditalFilter,
 ];
 $offset = ($currentPage - 1) * $itemsPerPage;
 
@@ -63,6 +65,7 @@ $pagesLabel = $totalPages === 1 ? 'página' : 'páginas';
 $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
 
 $statusOptions = ['pendente', 'em_andamento', 'concluída', 'cancelada'];
+$tipoEditalOptions = ['Citação', 'Intimação', 'Notificação', 'Outro'];
 $statusCounts = array_merge(array_fill_keys($statusOptions, 0), $service->getStatusCounts($filters));
 
 $subtarefaLabels = [
@@ -87,6 +90,9 @@ if ($statusFilter !== '') {
 }
 if ($processoFilter !== '') {
     $baseQueryParams['processo'] = $processoFilter;
+}
+if ($tipoEditalFilter !== '') {
+    $baseQueryParams['tipo_edital'] = $tipoEditalFilter;
 }
 $baseQueryParams['items_per_page'] = $itemsPerPage;
 
@@ -153,6 +159,17 @@ if ($totalPages > 0) {
                     <option value="em_andamento"<?php echo $statusFilter === 'em_andamento' ? ' selected' : ''; ?>>Em andamento (<?php echo (int) ($statusCounts['em_andamento'] ?? 0); ?>)</option>
                     <option value="concluída"<?php echo $statusFilter === 'concluída' ? ' selected' : ''; ?>>Finalizada (<?php echo (int) ($statusCounts['concluída'] ?? 0); ?>)</option>
                     <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>Cancelada (<?php echo (int) ($statusCounts['cancelada'] ?? 0); ?>)</option>
+                </select>
+            </div>
+            <div class="col filter">
+                <label for="filter-tipo-edital">Filtrar por tipo de edital</label>
+                <select class="width-md height-md" id="filter-tipo-edital">
+                    <option value=""<?php echo $tipoEditalFilter === '' ? ' selected' : ''; ?>>Mostrar todos</option>
+                    <?php foreach ($tipoEditalOptions as $tipoEditalOption): ?>
+                        <option value="<?php echo htmlspecialchars($tipoEditalOption, ENT_QUOTES); ?>"<?php echo $tipoEditalFilter === $tipoEditalOption ? ' selected' : ''; ?>>
+                            <?php echo htmlspecialchars($tipoEditalOption); ?>
+                        </option>
+                    <?php endforeach; ?>
                 </select>
             </div>
             <div class="col filter">
@@ -359,6 +376,7 @@ if ($totalPages > 0) {
         (function () {
             const applyFilters = function () {
                 const status = document.getElementById('filter-status')?.value ?? '';
+                const tipoEdital = document.getElementById('filter-tipo-edital')?.value ?? '';
                 const processo = document.getElementById('search-input')?.value?.trim() ?? '';
                 const perPage = document.getElementById('items-per-page')?.value ?? '10';
                 const params = new URLSearchParams(window.location.search);
@@ -366,11 +384,13 @@ if ($totalPages > 0) {
                 params.set('page_number', '1');
                 params.set('items_per_page', perPage);
                 if (status) params.set('status', status); else params.delete('status');
+                if (tipoEdital) params.set('tipo_edital', tipoEdital); else params.delete('tipo_edital');
                 if (processo) params.set('processo', processo); else params.delete('processo');
                 window.location.href = '?' + params.toString();
             };
 
             document.getElementById('filter-status')?.addEventListener('change', applyFilters);
+            document.getElementById('filter-tipo-edital')?.addEventListener('change', applyFilters);
             document.getElementById('items-per-page')?.addEventListener('change', applyFilters);
 
             document.getElementById('search-input')?.addEventListener('keypress', function (e) {
