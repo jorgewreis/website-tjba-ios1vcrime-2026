@@ -76,4 +76,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: ajustes de layout** `[8c95bf2]`
 - **Feat: paginação e filtro em cep** `[1d8de0d]`
 - **Fix: correção de layout** `[510cf71]`
+- **Feat: novo modelo Consulta Partes** `[81ffc85]`
 
