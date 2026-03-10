@@ -72,4 +72,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: pequenos ajustes** `[e65131d]`
 - **Fix: pequenas correções de css** `[6e6f793]`
 - **Feat: nova página consulta cep** `[7fdfa07]`
+- **Fix: pequenos ajustes** `[ec15581]`
 
