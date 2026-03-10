@@ -74,4 +74,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Feat: nova página consulta cep** `[7fdfa07]`
 - **Fix: pequenos ajustes** `[ec15581]`
 - **Fix: ajustes de layout** `[8c95bf2]`
+- **Feat: paginação e filtro em cep** `[1d8de0d]`
 
