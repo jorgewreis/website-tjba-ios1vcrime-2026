@@ -152,8 +152,11 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                         <td><?php echo htmlspecialchars($row['nome_fantasia'] ?? '—'); ?></td>
                         <td><?php
                         $cnpjCell = $row['cnpj'] ?? '';
-                        $cnpjCell = preg_replace('/\D+/', '', $cnpjCell);
-                        echo htmlspecialchars($cnpjCell !== '' && strlen($cnpjCell) === 14 ? Security::formatCNPJ($cnpjCell) : ($row['cnpj'] ?? '') !== '' ? ($row['cnpj'] ?? '') : '—');
+                        $cnpjCell = preg_replace('/\D+/', '', (string) $cnpjCell);
+                        $cnpjDisplay = ($cnpjCell !== '' && strlen($cnpjCell) === 14)
+                            ? Security::formatCNPJ($cnpjCell)
+                            : (($row['cnpj'] ?? '') !== '' ? ($row['cnpj'] ?? '') : '—');
+                        echo htmlspecialchars($cnpjDisplay);
                     ?></td>
                         <td>
                             <button type="button" class="btn btn-secondary-outline" title="Editar" data-edit-id="<?php echo htmlspecialchars($row['id'] ?? ''); ?>"><i class="fi fi-rr-file-edit"></i></button>
