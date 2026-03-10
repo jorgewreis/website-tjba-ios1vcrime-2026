@@ -66,6 +66,90 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
             <a href="/frame.php?page=instituicoespublicas" class="btn btn-secondary">Voltar</a>
             <button type="button" class="btn btn-primary" id="salvar-btn">Salvar</button>
         </div>
+
+        <div class="row table header">Endereços</div>
+        <div id="enderecos-list">
+            <?php foreach ($inst['enderecos'] ?? [] as $e): ?>
+            <div class="row filter" data-id="<?php echo htmlspecialchars($e['id'] ?? ''); ?>">
+                <div class="col filter"><?php echo htmlspecialchars(trim(($e['logradouro'] ?? '') . ($e['numero'] ? ' ' . $e['numero'] : '') . ($e['bairro'] ? ' - ' . $e['bairro'] : '') . ($e['cidade'] ? ' - ' . $e['cidade'] : '') . ($e['uf'] ? '/' . $e['uf'] : ''))); ?></div>
+                <div class="col filter"><?php echo !empty($e['principal']) ? 'Principal' : '—'; ?></div>
+                <div class="col filter"><button type="button" class="btn btn-secondary-outline btn-del-end" data-id="<?php echo htmlspecialchars($e['id'] ?? ''); ?>">Excluir</button></div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        <div class="row filter">
+            <div class="col filter">
+                <label for="new-end-cep">CEP</label>
+                <input type="text" class="width-sm height-md" id="new-end-cep" placeholder="00000-000" maxlength="9">
+                <button type="button" class="btn btn-secondary-outline" id="buscar-cep-btn">Buscar CEP</button>
+            </div>
+        </div>
+        <div class="row filter">
+            <div class="col filter">
+                <label for="new-end-logradouro">Logradouro</label>
+                <input type="text" class="width-xl height-md" id="new-end-logradouro" placeholder="Rua, avenida...">
+            </div>
+            <div class="col filter">
+                <label for="new-end-numero">Número</label>
+                <input type="text" class="width-sm height-md" id="new-end-numero" placeholder="Nº">
+            </div>
+            <div class="col filter">
+                <label for="new-end-complemento">Complemento</label>
+                <input type="text" class="width-md height-md" id="new-end-complemento" placeholder="Sala, andar...">
+            </div>
+        </div>
+        <div class="row filter">
+            <div class="col filter">
+                <label for="new-end-bairro">Bairro</label>
+                <input type="text" class="width-md height-md" id="new-end-bairro" placeholder="Bairro">
+            </div>
+            <div class="col filter">
+                <label for="new-end-cidade">Cidade</label>
+                <input type="text" class="width-md height-md" id="new-end-cidade" placeholder="Cidade">
+            </div>
+            <div class="col filter">
+                <label for="new-end-uf">UF</label>
+                <input type="text" class="width-xs height-md" id="new-end-uf" placeholder="UF" maxlength="2">
+            </div>
+            <label class="inline"><input type="checkbox" id="new-end-principal"> Principal</label>
+            <button type="button" class="btn btn-secondary-outline" id="add-end-btn">Adicionar endereço</button>
+        </div>
+
+        <div class="row table header">Telefones</div>
+        <div id="telefones-list">
+            <?php foreach ($inst['telefones'] ?? [] as $t): ?>
+            <div class="row filter" data-id="<?php echo htmlspecialchars($t['id'] ?? ''); ?>">
+                <div class="col filter"><?php echo htmlspecialchars($t['tipo'] ?? '—'); ?></div>
+                <div class="col filter"><?php echo htmlspecialchars($t['numero'] ?? ''); ?></div>
+                <div class="col filter"><?php echo htmlspecialchars($t['ramal'] ?? '—'); ?></div>
+                <div class="col filter"><?php echo !empty($t['principal']) ? 'Principal' : '—'; ?></div>
+                <div class="col filter"><button type="button" class="btn btn-secondary-outline btn-del-tel" data-id="<?php echo htmlspecialchars($t['id'] ?? ''); ?>">Excluir</button></div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        <div class="row filter">
+            <input type="text" class="width-sm height-md" id="new-tel-tipo" placeholder="Tipo">
+            <input type="text" class="width-md height-md" id="new-tel-numero" placeholder="Número *">
+            <input type="text" class="width-sm height-md" id="new-tel-ramal" placeholder="Ramal">
+            <label class="inline"><input type="checkbox" id="new-tel-principal"> Principal</label>
+            <button type="button" class="btn btn-secondary-outline" id="add-tel-btn">Adicionar telefone</button>
+        </div>
+
+        <div class="row table header">Setores</div>
+        <div id="setores-list">
+            <?php foreach ($inst['setores'] ?? [] as $s): ?>
+            <div class="row filter" data-id="<?php echo htmlspecialchars($s['id'] ?? ''); ?>">
+                <div class="col filter"><?php echo htmlspecialchars($s['nome_setor'] ?? ''); ?></div>
+                <div class="col filter"><?php echo htmlspecialchars($s['sigla'] ?? '—'); ?></div>
+                <div class="col filter"><button type="button" class="btn btn-secondary-outline btn-del-setor" data-id="<?php echo htmlspecialchars($s['id'] ?? ''); ?>">Excluir</button></div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        <div class="row filter">
+            <input type="text" class="width-xl height-md" id="new-setor-nome" placeholder="Nome do setor *">
+            <input type="text" class="width-sm height-md" id="new-setor-sigla" placeholder="Sigla">
+            <button type="button" class="btn btn-secondary-outline" id="add-setor-btn">Adicionar setor</button>
+        </div>
     </div>
     <script>
     (function() {
@@ -110,6 +194,112 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
             document.getElementById('salvar-btn').disabled = false;
         })
         .catch(function() { document.getElementById('salvar-btn').disabled = false; });
+    });
+
+    var instId = document.getElementById('inst-id').value;
+    document.getElementById('add-tel-btn').addEventListener('click', function() {
+        var numero = (document.getElementById('new-tel-numero').value || '').trim();
+        if (!numero) { if (typeof showToast === 'function') showToast({ type: 'error', message: 'Informe o número.' }); return; }
+        var payload = {
+            instituicao_id: instId,
+            tipo: (document.getElementById('new-tel-tipo').value || '').trim() || null,
+            numero: numero,
+            ramal: (document.getElementById('new-tel-ramal').value || '').trim() || null,
+            principal: document.getElementById('new-tel-principal').checked ? 1 : 0
+        };
+        fetch('/api/instituicoes-publicas/telefones/create.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.id) { window.location.reload(); }
+            else { if (typeof showToast === 'function') showToast({ type: 'error', message: d.error || 'Erro.' }); }
+        });
+    });
+    document.querySelectorAll('.btn-del-tel').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            if (!confirm('Excluir este telefone?')) return;
+            var id = this.getAttribute('data-id');
+            fetch('/api/instituicoes-publicas/telefones/delete.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id }) })
+            .then(function(r) { return r.json(); })
+            .then(function(d) { if (d.deleted) window.location.reload(); });
+        });
+    });
+
+    document.getElementById('add-setor-btn').addEventListener('click', function() {
+        var nomeSetor = (document.getElementById('new-setor-nome').value || '').trim();
+        if (!nomeSetor) { if (typeof showToast === 'function') showToast({ type: 'error', message: 'Informe o nome do setor.' }); return; }
+        var payload = {
+            instituicao_id: instId,
+            nome_setor: nomeSetor,
+            sigla: (document.getElementById('new-setor-sigla').value || '').trim() || null
+        };
+        fetch('/api/instituicoes-publicas/setores/create.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.id) { window.location.reload(); }
+            else { if (typeof showToast === 'function') showToast({ type: 'error', message: d.error || 'Erro.' }); }
+        });
+    });
+    document.querySelectorAll('.btn-del-setor').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            if (!confirm('Excluir este setor?')) return;
+            var id = this.getAttribute('data-id');
+            fetch('/api/instituicoes-publicas/setores/delete.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id }) })
+            .then(function(r) { return r.json(); })
+            .then(function(d) { if (d.deleted) window.location.reload(); });
+        });
+    });
+
+    document.getElementById('buscar-cep-btn').addEventListener('click', function() {
+        var cep = (document.getElementById('new-end-cep').value || '').replace(/\D/g, '');
+        if (cep.length !== 8) { if (typeof showToast === 'function') showToast({ type: 'error', message: 'Informe um CEP com 8 dígitos.' }); return; }
+        this.disabled = true;
+        fetch('/api/cep/consulta.php?q=' + encodeURIComponent(cep), { method: 'GET', credentials: 'same-origin' })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.mode === 'cep' && d.data) {
+                document.getElementById('new-end-logradouro').value = d.data.logradouro || '';
+                document.getElementById('new-end-bairro').value = d.data.bairro || '';
+                document.getElementById('new-end-cidade').value = d.data.cidade || '';
+                document.getElementById('new-end-uf').value = (d.data.uf || '').toUpperCase().slice(0, 2);
+                if (typeof showToast === 'function') showToast({ type: 'success', message: 'CEP encontrado.' });
+            } else {
+                if (typeof showToast === 'function') showToast({ type: 'error', message: d.error || 'CEP não encontrado.' });
+            }
+        })
+        .catch(function() { if (typeof showToast === 'function') showToast({ type: 'error', message: 'Erro ao consultar CEP.' }); })
+        .finally(function() { document.getElementById('buscar-cep-btn').disabled = false; });
+    });
+    document.getElementById('add-end-btn').addEventListener('click', function() {
+        var logradouro = (document.getElementById('new-end-logradouro').value || '').trim();
+        var cidade = (document.getElementById('new-end-cidade').value || '').trim();
+        if (!logradouro && !cidade) { if (typeof showToast === 'function') showToast({ type: 'error', message: 'Informe ao menos logradouro ou cidade.' }); return; }
+        var cepRaw = (document.getElementById('new-end-cep').value || '').replace(/\D/g, '');
+        var payload = {
+            instituicao_id: instId,
+            cep: cepRaw.length === 8 ? cepRaw : null,
+            logradouro: logradouro || null,
+            numero: (document.getElementById('new-end-numero').value || '').trim() || null,
+            complemento: (document.getElementById('new-end-complemento').value || '').trim() || null,
+            bairro: (document.getElementById('new-end-bairro').value || '').trim() || null,
+            cidade: cidade || null,
+            uf: (document.getElementById('new-end-uf').value || '').trim().toUpperCase().slice(0, 2) || null,
+            principal: document.getElementById('new-end-principal').checked ? 1 : 0
+        };
+        fetch('/api/instituicoes-publicas/enderecos/create.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.id) { window.location.reload(); }
+            else { if (typeof showToast === 'function') showToast({ type: 'error', message: d.error || 'Erro.' }); }
+        });
+    });
+    document.querySelectorAll('.btn-del-end').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            if (!confirm('Excluir este endereço?')) return;
+            var id = this.getAttribute('data-id');
+            fetch('/api/instituicoes-publicas/enderecos/delete.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id }) })
+            .then(function(r) { return r.json(); })
+            .then(function(d) { if (d.deleted) window.location.reload(); });
+        });
     });
     </script>
 </body>
