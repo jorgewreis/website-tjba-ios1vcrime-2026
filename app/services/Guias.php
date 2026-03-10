@@ -179,15 +179,21 @@ class Guias
                 }
             }
 
-            // 3. Cadastra o réu (com CPF se fornecido)
+            // 3. Cadastra o réu (com CPF se fornecido) e obtém parte_id para a guia (BD usa parte_id em guia)
             $idReu = null;
             $reuAuto = false;
-            if (!empty($dados['reu'])) {
-                $cpf = $dados['cpf'] ?? null;
-                $reuExistia = $this->buscarReu($dados['reu']);
-                $idReu = $this->cadastrarReu($dados['reu'], $cpf);
-                if (!$reuExistia && $idReu !== null) {
-                    $reuAuto = true;
+            $reuRaw = trim((string)($dados['reu'] ?? ''));
+            if ($reuRaw !== '') {
+                // Se vier formato de ID (ex: PRT-xxx), usa como parte_id; senão cadastra por nome
+                if (preg_match('/^[A-Z]{2,4}-[A-Za-z0-9\-]+$/', $reuRaw)) {
+                    $idReu = $reuRaw;
+                } else {
+                    $cpf = $dados['cpf'] ?? null;
+                    $reuExistia = $this->buscarReu($reuRaw);
+                    $idReu = $this->cadastrarReu($reuRaw, $cpf);
+                    if (!$reuExistia && $idReu !== null) {
+                        $reuAuto = true;
+                    }
                 }
             }
 
@@ -213,10 +219,10 @@ class Guias
                 $this->cadastrarPrioridades($dados['processo'], $prioridades);
             }
 
-            // 6. Cadastra a guia
+            // 6. Cadastra a guia (tabela guia usa parte_id após migração alter-cejusc-guias-partes-drop-reus)
             $idGuia = $this->gerarId();
             $sql = "INSERT INTO guia 
-                    (id_guia, tipo, processo, denunciado, etapa, status, regime, data_fato, dias_multa, observacoes, data_cadastro, data_atualizacao, user_cadastro) 
+                    (id_guia, tipo, processo, parte_id, etapa, status, regime, data_fato, dias_multa, observacoes, data_cadastro, data_atualizacao, user_cadastro) 
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             
             // Preparar valores
@@ -230,7 +236,7 @@ class Guias
                 $idGuia,
                 $dados['tipo'],
                 $dados['processo'],
-                $dados['reu'],
+                $idReu,
                 $dados['etapa'],
                 $dados['status'],
                 $regime,
@@ -436,11 +442,16 @@ class Guias
                 $this->cadastrarProcesso($dados['processo'], $dados['classe_cod']);
             }
 
-            // 3. Cadastra/atualiza réu
+            // 3. Cadastra/atualiza réu e obtém parte_id (BD usa parte_id em guia)
             $idReu = null;
-            if (!empty($dados['reu'])) {
-                $cpf = $dados['cpf'] ?? null;
-                $idReu = $this->cadastrarReu($dados['reu'], $cpf);
+            $reuRaw = trim((string)($dados['reu'] ?? ''));
+            if ($reuRaw !== '') {
+                if (preg_match('/^[A-Z]{2,4}-[A-Za-z0-9\-]+$/', $reuRaw)) {
+                    $idReu = $reuRaw;
+                } else {
+                    $cpf = $dados['cpf'] ?? null;
+                    $idReu = $this->cadastrarReu($reuRaw, $cpf);
+                }
             }
 
             // 4. Vincula réu ao processo
@@ -474,13 +485,13 @@ class Guias
             $userCadastro = $dados['user_cadastro'] ?? 'sistema';
 
             $sql = "UPDATE guia
-                    SET tipo = ?, processo = ?, denunciado = ?, regime = ?, data_fato = ?, dias_multa = ?, observacoes = ?, data_atualizacao = ?, user_cadastro = ?
+                    SET tipo = ?, processo = ?, parte_id = ?, regime = ?, data_fato = ?, dias_multa = ?, observacoes = ?, data_atualizacao = ?, user_cadastro = ?
                     WHERE id_guia = ?";
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([
                 $dados['tipo'],
                 $dados['processo'],
-                $dados['reu'],
+                $idReu,
                 $regime,
                 $dataFato,
                 $diasMulta,
@@ -541,16 +552,14 @@ class Guias
 
                 $sqlAloc = "INSERT INTO guiasUsuarios (id_alocacao, id_usuario, id_guia, data_cadastro)
                             VALUES (?, ?, ?, ?)";
-                $stmtAloc = $this->connection->prepare($sqlAloc);
+                $stmtAloc = $this->pdo->prepare($sqlAloc);
 
                 if ($stmtAloc) {
                     $dataCadastro = (new DateTime('now', new DateTimeZone('America/Bahia')))->format('Y-m-d');
                     foreach ($servidoresAlocar as $userId) {
                         $idAlocacao = $this->gerarId();
-                        $stmtAloc->bind_param('ssss', $idAlocacao, $userId, $idGuia, $dataCadastro);
-                        $stmtAloc->execute();
+                        $stmtAloc->execute([$idAlocacao, $userId, $idGuia, $dataCadastro]);
                     }
-                    $stmtAloc->close();
                 }
             }
 
@@ -581,17 +590,18 @@ class Guias
      */
     public function obterGuia(string $idGuia): ?array
     {
-        // Legado: antes usava LEFT JOIN reus; agora usa partes (e opcionalmente parte_id quando a migração alter-cejusc-guias-partes-drop-reus foi aplicada).
+        // BD alterado: guia usa parte_id (FK partes.id). Nome do denunciado vem de partes.nome_completo.
         $sql = "SELECT 
                     g.*, 
                     proc.classe AS processo_classe,
                     c.descricao AS classe_desc,
+                    pt.nome_completo AS denunciado_nome,
                     pt.cpf AS reu_cpf,
                     (SELECT ptt.numero FROM partes_telefones ptt WHERE ptt.parte_id = pt.id AND ptt.principal = 1 LIMIT 1) AS reu_telefone
                 FROM guia g
                 LEFT JOIN processos proc ON g.processo = proc.numero
                 LEFT JOIN classes c ON proc.classe = c.cod
-                LEFT JOIN partes pt ON (g.parte_id = pt.id OR (g.denunciado IS NOT NULL AND g.denunciado <> '' AND g.denunciado = pt.nome_completo))
+                LEFT JOIN partes pt ON g.parte_id = pt.id
                 WHERE g.id_guia = ?
                 LIMIT 1";
 
@@ -624,7 +634,8 @@ class Guias
             'id_guia' => (string)($row['id_guia'] ?? ''),
             'tipo' => (string)($row['tipo'] ?? ''),
             'processo' => (string)($row['processo'] ?? ''),
-            'denunciado' => (string)($row['denunciado'] ?? ''),
+            'denunciado' => (string)($row['denunciado_nome'] ?? $row['denunciado'] ?? ''),
+            'parte_id' => (string)($row['parte_id'] ?? ''),
             'etapa' => (string)($row['etapa'] ?? ''),
             'status' => (string)($row['status'] ?? ''),
             'regime' => (string)($row['regime'] ?? ''),

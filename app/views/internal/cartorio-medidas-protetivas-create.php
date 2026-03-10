@@ -73,14 +73,19 @@ try {
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
 
         <div class="row table header">Réu</div>
-        <div class="row filter">
+        <div class="row filter" id="reu-row-principal">
+            <div class="col filter">
+                <label for="reu-select">Réu / Denunciado <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <select class="width-xl height-md" id="reu-select" style="display: none;" aria-label="Réus vinculados ao processo ou sugestões por nome">
+                    <!-- preenchido via JS: réus do processo ou sugestões (nome + CPF) + Outro / Cadastrar novo -->
+                </select>
+                <input type="text" class="width-xl height-md" id="reu-nome" placeholder="Nome do réu (digite para buscar ou cadastrar)" maxlength="255" aria-label="Nome do réu quando não há réus ou opção Outro">
+            </div>
+        </div>
+        <div class="row filter" id="reu-campos-complementares" style="display: none;">
             <div class="col filter">
                 <label for="reu-cpf">CPF <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="width-md height-md" id="reu-cpf" placeholder="Somente números">
-            </div>
-            <div class="col filter">
-                <label for="reu-nome">Nome completo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-xl height-md" id="reu-nome" placeholder="Nome completo do réu">
             </div>
             <div class="col filter">
                 <label for="reu-sexo">Sexo <span class="label-hint-obrigatorio">*obrigatório</span></label>
@@ -92,7 +97,7 @@ try {
                 </select>
             </div>
             <div class="col filter">
-                <label for="reu-data-nascimento">Data de nascimento</label>
+                <label for="reu-data-nascimento">Data de nascimento <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="date" class="width-md height-md" id="reu-data-nascimento">
             </div>
         </div>
@@ -133,17 +138,20 @@ try {
     <template id="vitima-template">
         <div class="vitima-card">
             <div class="row table header"><span class="vitima-card-index">Vítima</span></div>
-            <div class="row filter">
+            <div class="row filter vitima-row-principal">
                 <div class="col filter">
-                    <label>CPF</label>
+                    <label>Vítima (nome)</label>
+                    <select class="width-xl height-md vitima-select" style="display: none;" aria-label="Sugestões por nome"></select>
+                    <input type="text" class="width-xl height-md vitima-nome" placeholder="Digite o nome para buscar ou cadastrar" maxlength="255">
+                </div>
+            </div>
+            <div class="row filter vitima-campos-complementares" style="display: none;">
+                <div class="col filter">
+                    <label>CPF <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="text" class="width-md height-md vitima-cpf" placeholder="Somente números">
                 </div>
                 <div class="col filter">
-                    <label>Nome completo</label>
-                    <input type="text" class="width-xl height-md vitima-nome" placeholder="Nome completo da vítima">
-                </div>
-                <div class="col filter">
-                    <label>Sexo</label>
+                    <label>Sexo <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-md height-md vitima-sexo">
                         <option value="">Selecione</option>
                         <option value="Feminino">Feminino</option>
@@ -152,7 +160,7 @@ try {
                     </select>
                 </div>
                 <div class="col filter">
-                    <label>Data de nascimento</label>
+                    <label>Data de nascimento <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="date" class="width-md height-md vitima-data-nascimento">
                 </div>
             </div>
@@ -236,6 +244,167 @@ try {
     </script>
     <script>
         (function () {
+            var processoInput = document.getElementById('filter-processo');
+            var reuSelect = document.getElementById('reu-select');
+            var reuNome = document.getElementById('reu-nome');
+            var reuComplementares = document.getElementById('reu-campos-complementares');
+            var lastReuSuggestionNome = '';
+
+            function showReuInput() {
+                if (reuSelect) {
+                    reuSelect.style.display = 'none';
+                    reuSelect.innerHTML = '';
+                    reuSelect.value = '';
+                }
+                if (reuNome) {
+                    reuNome.style.display = '';
+                    reuNome.required = true;
+                }
+                if (reuComplementares) reuComplementares.style.display = 'none';
+            }
+
+            function showReuSelect(reus) {
+                if (!reuSelect || !reuNome) return;
+                reuSelect.innerHTML = '';
+                reus.forEach(function (r) {
+                    var opt = document.createElement('option');
+                    opt.value = r.id;
+                    opt.textContent = r.nome;
+                    reuSelect.appendChild(opt);
+                });
+                var outro = document.createElement('option');
+                outro.value = 'outro';
+                outro.textContent = 'Outro';
+                reuSelect.appendChild(outro);
+                reuSelect.style.display = '';
+                reuNome.style.display = 'none';
+                reuNome.required = false;
+                reuNome.value = '';
+                if (reuComplementares) reuComplementares.style.display = 'none';
+            }
+
+            function formatCpfDisplay(cpf) {
+                var s = (cpf || '').replace(/\D/g, '');
+                if (s.length !== 11) return cpf || '';
+                return s.slice(0, 3) + '.' + s.slice(3, 6) + '.' + s.slice(6, 9) + '-' + s.slice(9);
+            }
+
+            function showReuSelectSugestoes(pessoas, nomeDigitado) {
+                if (!reuSelect || !reuNome) return;
+                reuSelect.innerHTML = '';
+                pessoas.forEach(function (p) {
+                    var opt = document.createElement('option');
+                    opt.value = p.id;
+                    var label = (p.nome_completo || '').trim();
+                    if ((p.cpf || '').replace(/\D/g, '').length === 11) {
+                        label += ' - ' + formatCpfDisplay(p.cpf);
+                    }
+                    opt.textContent = label || p.id;
+                    reuSelect.appendChild(opt);
+                });
+                var novo = document.createElement('option');
+                novo.value = '__novo__';
+                novo.textContent = 'Cadastrar novo: ' + (nomeDigitado || '');
+                reuSelect.appendChild(novo);
+                lastReuSuggestionNome = nomeDigitado || '';
+                reuSelect.style.display = '';
+                reuNome.style.display = 'none';
+                reuNome.required = false;
+                if (reuComplementares) reuComplementares.style.display = 'none';
+            }
+
+            function carregarReusDoProcesso() {
+                var digits = (processoInput && processoInput.value || '').replace(/\D/g, '');
+                if (digits.length !== 20) {
+                    showReuInput();
+                    return;
+                }
+                fetch('/api/cartorio-guias/reus-por-processo.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ numero: digits }),
+                    credentials: 'same-origin'
+                })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    var reus = (data && data.reus) ? data.reus : [];
+                    if (reus.length > 0) {
+                        showReuSelect(reus);
+                    } else {
+                        showReuInput();
+                    }
+                })
+                .catch(function () { showReuInput(); });
+            }
+
+            if (processoInput) {
+                processoInput.addEventListener('blur', function () {
+                    carregarReusDoProcesso();
+                });
+                processoInput.addEventListener('input', function () {
+                    if ((processoInput.value || '').replace(/\D/g, '').length !== 20) {
+                        showReuInput();
+                    }
+                });
+            }
+
+            if (reuSelect) {
+                reuSelect.addEventListener('change', function () {
+                    if (this.value === 'outro') {
+                        reuSelect.style.display = 'none';
+                        reuSelect.innerHTML = '';
+                        reuSelect.value = '';
+                        if (reuNome) {
+                            reuNome.style.display = '';
+                            reuNome.required = true;
+                            reuNome.focus();
+                        }
+                        if (reuComplementares) reuComplementares.style.display = 'none';
+                    } else if (this.value === '__novo__') {
+                        reuSelect.style.display = 'none';
+                        reuSelect.innerHTML = '';
+                        reuSelect.value = '';
+                        if (reuNome) {
+                            reuNome.value = lastReuSuggestionNome;
+                            reuNome.style.display = '';
+                            reuNome.required = true;
+                            reuNome.focus();
+                        }
+                        if (reuComplementares) reuComplementares.style.display = '';
+                    } else if (this.value !== '') {
+                        if (reuComplementares) reuComplementares.style.display = 'none';
+                    }
+                });
+            }
+
+            if (reuNome) {
+                reuNome.addEventListener('blur', function () {
+                    var nome = (reuNome.value || '').trim();
+                    if (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
+                        nome = TextFormatter.formatProperName(nome, 255);
+                        reuNome.value = nome;
+                    }
+                    if (nome.length < 2) return;
+                    if (reuSelect && reuSelect.style.display !== 'none' && reuSelect.value !== '' && reuSelect.value !== 'outro' && reuSelect.value !== '__novo__') return;
+                    fetch('/api/pessoas/search-by-name.php?nome=' + encodeURIComponent(nome) + '&limit=20', { credentials: 'same-origin' })
+                        .then(function (r) { return r.json(); })
+                        .then(function (data) {
+                            var pessoas = (data && data.pessoas) ? data.pessoas : [];
+                            if (pessoas.length > 0) {
+                                showReuSelectSugestoes(pessoas, nome);
+                            } else {
+                                if (reuComplementares) reuComplementares.style.display = '';
+                            }
+                        })
+                        .catch(function () {
+                            if (reuComplementares) reuComplementares.style.display = '';
+                        });
+                });
+            }
+        })();
+    </script>
+    <script>
+        (function () {
             var PERFIS_ALTERAR_REGRA = ['ADMIN', 'DIRETORA', 'MAGISTRADA'];
 
             function hasPermissionToChangeRule(perfis) {
@@ -288,6 +457,12 @@ try {
                 });
             }
 
+            function formatCpfDisplay(cpf) {
+                var s = (cpf || '').replace(/\D/g, '');
+                if (s.length !== 11) return cpf || '';
+                return s.slice(0, 3) + '.' + s.slice(3, 6) + '.' + s.slice(6, 9) + '-' + s.slice(9);
+            }
+
             function updateVitimaTitles() {
                 Array.from(container.querySelectorAll('.vitima-card')).forEach(function (card, index) {
                     var title = card.querySelector('.vitima-card-index');
@@ -297,9 +472,92 @@ try {
                 });
             }
 
+            function showVitimaComplementares(card, show) {
+                var comp = card.querySelector('.vitima-campos-complementares');
+                if (comp) comp.style.display = show ? '' : 'none';
+            }
+
             function attachCardEvents(card) {
-                formatNome(card.querySelector('.vitima-nome'));
+                var nomeInput = card.querySelector('.vitima-nome');
+                var selectEl = card.querySelector('.vitima-select');
+                var lastVitimaSuggestionNome = '';
+                formatNome(nomeInput);
                 onlyDigitsInput(card.querySelector('.vitima-cpf'));
+
+                function showVitimaInput() {
+                    if (selectEl) {
+                        selectEl.style.display = 'none';
+                        selectEl.innerHTML = '';
+                        selectEl.value = '';
+                    }
+                    if (nomeInput) nomeInput.style.display = '';
+                    showVitimaComplementares(card, false);
+                }
+
+                function showVitimaSelectSugestoes(pessoas, nomeDigitado) {
+                    if (!selectEl || !nomeInput) return;
+                    selectEl.innerHTML = '';
+                    pessoas.forEach(function (p) {
+                        var opt = document.createElement('option');
+                        opt.value = p.id;
+                        var label = (p.nome_completo || '').trim();
+                        if ((p.cpf || '').replace(/\D/g, '').length === 11) {
+                            label += ' - ' + formatCpfDisplay(p.cpf);
+                        }
+                        opt.textContent = label || p.id;
+                        selectEl.appendChild(opt);
+                    });
+                    var novo = document.createElement('option');
+                    novo.value = '__novo__';
+                    novo.textContent = 'Cadastrar novo: ' + (nomeDigitado || '');
+                    selectEl.appendChild(novo);
+                    lastVitimaSuggestionNome = nomeDigitado || '';
+                    selectEl.style.display = '';
+                    nomeInput.style.display = 'none';
+                    showVitimaComplementares(card, false);
+                }
+
+                if (nomeInput) {
+                    nomeInput.addEventListener('blur', function () {
+                        var nome = (nomeInput.value || '').trim();
+                        if (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
+                            nome = TextFormatter.formatProperName(nome, 255);
+                            nomeInput.value = nome;
+                        }
+                        if (nome.length < 2) return;
+                        if (selectEl && selectEl.style.display !== 'none' && selectEl.value !== '' && selectEl.value !== '__novo__') return;
+                        fetch('/api/pessoas/search-by-name.php?nome=' + encodeURIComponent(nome) + '&limit=20', { credentials: 'same-origin' })
+                            .then(function (r) { return r.json(); })
+                            .then(function (data) {
+                                var pessoas = (data && data.pessoas) ? data.pessoas : [];
+                                if (pessoas.length > 0) {
+                                    showVitimaSelectSugestoes(pessoas, nome);
+                                } else {
+                                    showVitimaComplementares(card, true);
+                                }
+                            })
+                            .catch(function () { showVitimaComplementares(card, true); });
+                    });
+                }
+
+                if (selectEl) {
+                    selectEl.addEventListener('change', function () {
+                        if (this.value === '__novo__') {
+                            selectEl.style.display = 'none';
+                            selectEl.innerHTML = '';
+                            selectEl.value = '';
+                            if (nomeInput) {
+                                nomeInput.value = lastVitimaSuggestionNome;
+                                nomeInput.style.display = '';
+                                nomeInput.focus();
+                            }
+                            showVitimaComplementares(card, true);
+                        } else if (this.value !== '') {
+                            showVitimaComplementares(card, false);
+                        }
+                    });
+                }
+
                 card.querySelector('.btn-remover-vitima')?.addEventListener('click', function () {
                     card.remove();
                     updateVitimaTitles();
@@ -314,7 +572,6 @@ try {
                 updateVitimaTitles();
             }
 
-            formatNome(document.getElementById('reu-nome'));
             onlyDigitsInput(document.getElementById('reu-cpf'));
 
             addBtn?.addEventListener('click', function () {
@@ -344,37 +601,71 @@ try {
                 return (value || '').replace(/\D/g, '');
             }
 
-            function collectParte(prefix) {
+            var reuSelect = document.getElementById('reu-select');
+            var reuNome = document.getElementById('reu-nome');
+
+            function collectReu() {
+                var useSelect = reuSelect && reuSelect.style.display !== 'none' && reuSelect.value !== '' && reuSelect.value !== 'outro' && reuSelect.value !== '__novo__';
+                if (useSelect) {
+                    return { parte_id: reuSelect.value };
+                }
+                var nomeVal = (reuNome && reuNome.value || '').trim();
+                if (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
+                    nomeVal = TextFormatter.formatProperName(nomeVal, 255);
+                }
                 return {
-                    cpf: onlyDigits(document.getElementById(prefix + '-cpf')?.value || ''),
-                    nome_completo: (document.getElementById(prefix + '-nome')?.value || '').trim(),
-                    sexo: (document.getElementById(prefix + '-sexo')?.value || '').trim(),
-                    data_nascimento: (document.getElementById(prefix + '-data-nascimento')?.value || '').trim()
+                    parte_id: '',
+                    cpf: onlyDigits(document.getElementById('reu-cpf')?.value || ''),
+                    nome_completo: nomeVal,
+                    sexo: (document.getElementById('reu-sexo')?.value || '').trim(),
+                    data_nascimento: (document.getElementById('reu-data-nascimento')?.value || '').trim()
                 };
             }
 
             function collectVitimas() {
                 return Array.from(document.querySelectorAll('.vitima-card')).map(function (card) {
-                    return {
-                        cpf: onlyDigits(card.querySelector('.vitima-cpf')?.value || ''),
-                        nome_completo: (card.querySelector('.vitima-nome')?.value || '').trim(),
-                        sexo: (card.querySelector('.vitima-sexo')?.value || '').trim(),
-                        data_nascimento: (card.querySelector('.vitima-data-nascimento')?.value || '').trim(),
+                    var selectEl = card.querySelector('.vitima-select');
+                    var nomeInput = card.querySelector('.vitima-nome');
+                    var useSelect = selectEl && selectEl.style.display !== 'none' && selectEl.value !== '' && selectEl.value !== '__novo__';
+                    var nomeVal = (nomeInput && nomeInput.value || '').trim();
+                    if (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
+                        nomeVal = TextFormatter.formatProperName(nomeVal, 255);
+                    }
+                    var base = {
                         mulher: !!card.querySelector('.vitima-mulher')?.checked,
                         crianca_adolescente: !!card.querySelector('.vitima-crianca')?.checked,
                         idoso: !!card.querySelector('.vitima-idoso')?.checked,
                         pessoa_deficiencia: !!card.querySelector('.vitima-pcd')?.checked
                     };
+                    if (useSelect) {
+                        return Object.assign({ parte_id: selectEl.value, cpf: '', nome_completo: '', sexo: '', data_nascimento: '' }, base);
+                    }
+                    return Object.assign({
+                        parte_id: '',
+                        cpf: onlyDigits(card.querySelector('.vitima-cpf')?.value || ''),
+                        nome_completo: nomeVal,
+                        sexo: (card.querySelector('.vitima-sexo')?.value || '').trim(),
+                        data_nascimento: (card.querySelector('.vitima-data-nascimento')?.value || '').trim()
+                    }, base);
                 }).filter(function (vitima) {
-                    return vitima.cpf || vitima.nome_completo || vitima.sexo || vitima.data_nascimento || vitima.mulher || vitima.crianca_adolescente || vitima.idoso || vitima.pessoa_deficiencia;
+                    return vitima.parte_id || vitima.cpf || vitima.nome_completo || vitima.sexo || vitima.data_nascimento || vitima.mulher || vitima.crianca_adolescente || vitima.idoso || vitima.pessoa_deficiencia;
                 });
+            }
+
+            function validateReu(reu) {
+                if (reu.parte_id) return '';
+                if (!reu.cpf || !reu.nome_completo || !reu.sexo || !reu.data_nascimento) {
+                    return 'Preencha CPF, nome completo, sexo e data de nascimento do réu (ou selecione um réu existente).';
+                }
+                return '';
             }
 
             function validateVitimas(vitimas) {
                 for (var i = 0; i < vitimas.length; i += 1) {
                     var vitima = vitimas[i];
-                    if (!vitima.cpf || !vitima.nome_completo || !vitima.sexo) {
-                        return 'Preencha CPF, nome completo e sexo para cada vítima informada.';
+                    if (vitima.parte_id) continue;
+                    if (!vitima.cpf || !vitima.nome_completo || !vitima.sexo || !vitima.data_nascimento) {
+                        return 'Preencha CPF, nome completo, sexo e data de nascimento para cada vítima informada (ou selecione uma pessoa existente).';
                     }
                 }
                 return '';
@@ -394,9 +685,15 @@ try {
                     return;
                 }
 
-                var reu = collectParte('reu');
-                if (!reu.cpf || !reu.nome_completo || !reu.sexo) {
-                    showFeedback('Preencha CPF, nome completo e sexo do réu.', 'error');
+                var reu = collectReu();
+                var reuError = validateReu(reu);
+                if (reuError) {
+                    var reuComp = document.getElementById('reu-campos-complementares');
+                    if (reuComp && reuComp.style.display === 'none' && reuNome && (reuNome.value || '').trim().length >= 2) {
+                        reuComp.style.display = '';
+                        document.getElementById('reu-cpf')?.focus();
+                    }
+                    showFeedback(reuError, 'error');
                     return;
                 }
 

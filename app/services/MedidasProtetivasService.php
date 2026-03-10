@@ -134,7 +134,8 @@ final class MedidasProtetivasService
         if (!is_array($reuPayload)) {
             throw new InvalidArgumentException('Os dados do réu são obrigatórios.');
         }
-        $reuData = $this->validatePartePayload($reuPayload, 'réu');
+
+        $parteReuId = $this->resolveParteIdFromPayload($reuPayload, 'réu');
 
         $vitimas = $payload['vitimas'] ?? [];
         if (!is_array($vitimas)) {
@@ -143,12 +144,15 @@ final class MedidasProtetivasService
 
         $this->connection->beginTransaction();
         try {
-            $parteReuId = $this->partesRepository->ensureParte(
-                $reuData['cpf'],
-                $reuData['nome_completo'],
-                $reuData['sexo'],
-                $reuData['data_nascimento']
-            );
+            if ($parteReuId === null) {
+                $reuData = $this->validatePartePayload($reuPayload, 'réu');
+                $parteReuId = $this->partesRepository->ensureParte(
+                    $reuData['cpf'],
+                    $reuData['nome_completo'],
+                    $reuData['sexo'],
+                    $reuData['data_nascimento']
+                );
+            }
             $this->processosPartesRepository->addParte(
                 $processoId,
                 $parteReuId,
@@ -164,13 +168,16 @@ final class MedidasProtetivasService
                     continue;
                 }
 
-                $vitimaData = $this->validatePartePayload($vitimaPayload, 'vítima #' . ($index + 1));
-                $parteVitimaId = $this->partesRepository->ensureParte(
-                    $vitimaData['cpf'],
-                    $vitimaData['nome_completo'],
-                    $vitimaData['sexo'],
-                    $vitimaData['data_nascimento']
-                );
+                $parteVitimaId = $this->resolveParteIdFromPayload($vitimaPayload, 'vítima #' . ($index + 1));
+                if ($parteVitimaId === null) {
+                    $vitimaData = $this->validatePartePayload($vitimaPayload, 'vítima #' . ($index + 1));
+                    $parteVitimaId = $this->partesRepository->ensureParte(
+                        $vitimaData['cpf'],
+                        $vitimaData['nome_completo'],
+                        $vitimaData['sexo'],
+                        $vitimaData['data_nascimento']
+                    );
+                }
 
                 $flags = $this->extractPrioridadeFlags($vitimaPayload);
                 $this->processosPartesRepository->addParte(
@@ -350,6 +357,22 @@ final class MedidasProtetivasService
         return $this->repository->delete($id);
     }
 
+    /**
+     * Se o payload tiver parte_id válido, retorna esse id. Caso contrário retorna null (caller deve validar e ensureParte).
+     */
+    private function resolveParteIdFromPayload(array $payload, string $label): ?string
+    {
+        $parteId = trim((string) ($payload['parte_id'] ?? ''));
+        if ($parteId === '') {
+            return null;
+        }
+        $parte = $this->partesRepository->findById($parteId);
+        if ($parte !== null) {
+            return $parte['id'];
+        }
+        throw new InvalidArgumentException('Parte informada para ' . $label . ' não foi encontrada.');
+    }
+
     private function validatePartePayload(array $payload, string $label): array
     {
         $cpf = preg_replace('/\D+/', '', (string) ($payload['cpf'] ?? ''));
@@ -409,6 +432,9 @@ final class MedidasProtetivasService
 
     private function isPartePayloadEmpty(array $payload): bool
     {
+        if (trim((string) ($payload['parte_id'] ?? '')) !== '') {
+            return false;
+        }
         $keys = ['cpf', 'nome_completo', 'sexo', 'data_nascimento'];
         foreach ($keys as $key) {
             if (trim((string) ($payload[$key] ?? '')) !== '') {
