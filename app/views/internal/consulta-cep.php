@@ -49,9 +49,9 @@ declare(strict_types=1);
         </div>
 
         <div class="row table header">Resultados</div>
-        <div id="resultado-container">
-            <div class="row pagination">
-                <div class="col">
+        <div class="col full-line register" id="resultado-container">
+            <div class="row table">
+                <div class="col full-line">
                     <label id="consulta-feedback" class="status-placeholder" aria-live="polite"></label>
                 </div>
             </div>
