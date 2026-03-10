@@ -179,6 +179,35 @@ try {
                 });
             });
 
+            var lastSuggestionNome = '';
+            function formatCpfDisplay(cpf) {
+                var s = (cpf || '').replace(/\D/g, '');
+                if (s.length !== 11) return cpf || '';
+                return s.slice(0, 3) + '.' + s.slice(3, 6) + '.' + s.slice(6, 9) + '-' + s.slice(9);
+            }
+            function showReuSelectSugestoes(pessoas, nomeDigitado) {
+                if (!reuSelect || !reuInput) return;
+                reuSelect.innerHTML = '';
+                pessoas.forEach(function (p) {
+                    var opt = document.createElement('option');
+                    opt.value = p.id;
+                    var label = (p.nome_completo || '').trim();
+                    if ((p.cpf || '').replace(/\D/g, '').length === 11) {
+                        label += ' - ' + formatCpfDisplay(p.cpf);
+                    }
+                    opt.textContent = label || p.id;
+                    reuSelect.appendChild(opt);
+                });
+                var novo = document.createElement('option');
+                novo.value = '__novo__';
+                novo.textContent = 'Cadastrar novo: ' + (nomeDigitado || '');
+                reuSelect.appendChild(novo);
+                lastSuggestionNome = nomeDigitado || '';
+                reuSelect.style.display = '';
+                reuInput.style.display = 'none';
+                reuInput.required = false;
+            }
+
             if (reuSelect) {
                 reuSelect.addEventListener('change', function () {
                     if (this.value === 'outro') {
@@ -188,7 +217,38 @@ try {
                             reuInput.required = true;
                             reuInput.focus();
                         }
+                    } else if (this.value === '__novo__') {
+                        reuSelect.style.display = 'none';
+                        reuSelect.innerHTML = '';
+                        reuSelect.value = '';
+                        if (reuInput) {
+                            reuInput.value = lastSuggestionNome;
+                            reuInput.style.display = '';
+                            reuInput.required = true;
+                            reuInput.focus();
+                        }
                     }
+                });
+            }
+
+            if (reuInput) {
+                reuInput.addEventListener('blur', function () {
+                    var nome = (reuInput.value || '').trim();
+                    if (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
+                        nome = TextFormatter.formatProperName(nome, 120);
+                        reuInput.value = nome;
+                    }
+                    if (nome.length < 2) return;
+                    if (reuSelect.style.display !== 'none' && reuSelect.value && reuSelect.value !== 'outro' && reuSelect.value !== '__novo__') return;
+                    fetch('/api/pessoas/search-by-name.php?nome=' + encodeURIComponent(nome) + '&limit=20', { credentials: 'same-origin' })
+                        .then(function (r) { return r.json(); })
+                        .then(function (data) {
+                            var pessoas = (data && data.pessoas) ? data.pessoas : [];
+                            if (pessoas.length > 0) {
+                                showReuSelectSugestoes(pessoas, nome);
+                            }
+                        })
+                        .catch(function () {});
                 });
             }
 
@@ -272,7 +332,7 @@ try {
             }
 
             function getReuPayload() {
-                var useSelect = reuSelect && reuSelect.style.display !== 'none' && reuSelect.value !== '' && reuSelect.value !== 'outro';
+                var useSelect = reuSelect && reuSelect.style.display !== 'none' && reuSelect.value !== '' && reuSelect.value !== 'outro' && reuSelect.value !== '__novo__';
                 if (useSelect) {
                     var opt = reuSelect.options[reuSelect.selectedIndex];
                     return {

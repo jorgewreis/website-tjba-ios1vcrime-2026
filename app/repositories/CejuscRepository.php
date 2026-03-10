@@ -44,7 +44,7 @@ final class CejuscRepository
         $fromClause = $this->buildFromClause();
 
         $sql = sprintf(
-            'SELECT ct.`id` AS `IdCarta`, ct.`numero_processo_origem` AS `Processo`, ct.`status` AS `Status`, ct.`created_at` AS `Data`, r.`nome` AS `ReuNome` FROM %s %s ORDER BY %s, ct.`created_at` DESC LIMIT :limit OFFSET :offset',
+            'SELECT ct.`id` AS `IdCarta`, ct.`numero_processo_origem` AS `Processo`, ct.`status` AS `Status`, ct.`created_at` AS `Data`, p.`nome_completo` AS `ReuNome` FROM %s %s ORDER BY %s, ct.`created_at` DESC LIMIT :limit OFFSET :offset',
             $fromClause,
             $whereClause ? 'WHERE ' . $whereClause : '',
             $orderField
@@ -104,7 +104,7 @@ final class CejuscRepository
 
     public function insert(array $row): string
     {
-        $required = ['id', 'numero_processo_origem', 'reu_id', 'status'];
+        $required = ['id', 'numero_processo_origem', 'parte_id', 'status'];
         foreach ($required as $key) {
             if (!array_key_exists($key, $row) || (string) $row[$key] === '') {
                 throw new InvalidArgumentException("Campo obrigatório ausente ou vazio: {$key}");
@@ -113,14 +113,14 @@ final class CejuscRepository
 
         $statement = $this->connection->prepare(
             sprintf(
-                'INSERT INTO `%s` (`id`, `processo_origem_id`, `numero_processo_origem`, `reu_id`, `status`, `created_at`, `updated_at`) VALUES (:id, :processo_origem_id, :numero_processo_origem, :reu_id, :status, NOW(), NOW())',
+                'INSERT INTO `%s` (`id`, `processo_origem_id`, `numero_processo_origem`, `parte_id`, `status`, `created_at`, `updated_at`) VALUES (:id, :processo_origem_id, :numero_processo_origem, :parte_id, :status, NOW(), NOW())',
                 $this->table
             )
         );
         $statement->bindValue(':id', $row['id']);
         $statement->bindValue(':processo_origem_id', $row['processo_origem_id'] ?? null);
         $statement->bindValue(':numero_processo_origem', $row['numero_processo_origem']);
-        $statement->bindValue(':reu_id', $row['reu_id']);
+        $statement->bindValue(':parte_id', $row['parte_id']);
         $statement->bindValue(':status', $row['status']);
         $statement->execute();
 
@@ -176,10 +176,9 @@ final class CejuscRepository
             return null;
         }
 
-        $coll = self::COLLATION;
         $fromClause = $this->buildFromClause();
         $sql = sprintf(
-            'SELECT ct.*, r.`nome` AS `reu_nome` FROM %s WHERE ct.`id` = :id LIMIT 1',
+            'SELECT ct.*, p.`nome_completo` AS `reu_nome` FROM %s WHERE ct.`id` = :id LIMIT 1',
             $fromClause
         );
         $statement = $this->connection->prepare($sql);
@@ -198,12 +197,9 @@ final class CejuscRepository
 
     private function buildFromClause(): string
     {
-        $coll = self::COLLATION;
         return sprintf(
-            '`%s` ct LEFT JOIN `reus` r ON r.`id_reu` COLLATE %s = ct.`reu_id` COLLATE %s',
-            $this->table,
-            $coll,
-            $coll
+            '`%s` ct LEFT JOIN `partes` p ON p.`id` = ct.`parte_id`',
+            $this->table
         );
     }
 

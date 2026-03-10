@@ -11,7 +11,6 @@ require_once __DIR__ . '/../repositories/ProcessoPrioridadesRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../services/CejuscService.php';
-require_once __DIR__ . '/../services/ReuManager.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 
@@ -28,7 +27,6 @@ final class MedidasProtetivasService
     private ProcessosRepository $processosRepository;
     private ClassesRepository $classesRepository;
     private CejuscService $cejuscService;
-    private ReuManager $reuManager;
 
     private const REGRA_ALOCAR_MP = 'ALLOCATE-MEDIDASPROTETIVAS';
 
@@ -45,7 +43,6 @@ final class MedidasProtetivasService
         $this->processosRepository = new ProcessosRepository($connection);
         $this->classesRepository = new ClassesRepository($connection);
         $this->cejuscService = new CejuscService($connection);
-        $this->reuManager = new ReuManager($connection);
     }
 
     public function listMedidasProtetivas(array $filters, int $limit, int $offset): array
@@ -189,12 +186,6 @@ final class MedidasProtetivasService
                 }
             }
 
-            $reuIdLegacy = $this->reuManager->cadastrarReu($reuData['nome_completo'], $reuData['cpf']);
-            if ($reuIdLegacy === null || trim($reuIdLegacy) === '') {
-                throw new RuntimeException('Não foi possível criar ou localizar o réu para integração com o Cejusc.');
-            }
-            $this->reuManager->vincularReuProcesso($reuIdLegacy, $numeroFormatado);
-
             $medidaId = IdGenerator::generateUniquePrefixedId(
                 $this->connection,
                 $this->repository->getTableName(),
@@ -226,8 +217,7 @@ final class MedidasProtetivasService
 
             $cejuscId = $this->cejuscService->create([
                 'numero_processo_origem' => $numeroFormatado,
-                'reu_id' => $reuIdLegacy,
-                'nome_reu' => $reuData['nome_completo'],
+                'parte_id' => $parteReuId,
                 'classe_codigo' => $classeCodigo,
                 'classe_descricao' => $classeDescricao,
                 'usuario_cadastro_id' => $usuarioCadastroId,

@@ -254,6 +254,48 @@ final class PartesRepository
         ]);
     }
 
+    /**
+     * Garante uma parte por nome e opcionalmente CPF (para Cejusc/Guias).
+     * Se CPF informado: busca por CPF; se não achar, insere com nome e CPF.
+     * Se só nome: busca por nome_completo exato; se não achar, insere só com nome.
+     */
+    public function ensureParteByNomeOuCpf(string $nomeCompleto, ?string $cpf = null): string
+    {
+        $nomeCompleto = TextFormatter::formatProperName(trim($nomeCompleto), 255);
+        if ($nomeCompleto === '') {
+            throw new InvalidArgumentException('Nome completo é obrigatório.');
+        }
+
+        $cpfNormalized = $cpf !== null && $cpf !== '' ? $this->normalizeCpf($cpf) : '';
+        if ($cpfNormalized !== '') {
+            if (!Security::validarCPF($cpfNormalized)) {
+                throw new InvalidArgumentException('CPF inválido. Verifique os dígitos.');
+            }
+            $existing = $this->findByCpf($cpfNormalized);
+            if ($existing !== null) {
+                $this->update((string) $existing['id'], ['nome_completo' => $nomeCompleto]);
+                return (string) $existing['id'];
+            }
+            return $this->insert([
+                'nome_completo' => $nomeCompleto,
+                'cpf' => $cpfNormalized,
+                'sexo' => null,
+                'data_nascimento' => null,
+            ]);
+        }
+
+        $existing = $this->findByNomeCompleto($nomeCompleto);
+        if ($existing !== null) {
+            return (string) $existing['id'];
+        }
+        return $this->insert([
+            'nome_completo' => $nomeCompleto,
+            'cpf' => null,
+            'sexo' => null,
+            'data_nascimento' => null,
+        ]);
+    }
+
     private function normalizeCpf(string $cpf): string
     {
         return preg_replace('/\D+/', '', trim($cpf));

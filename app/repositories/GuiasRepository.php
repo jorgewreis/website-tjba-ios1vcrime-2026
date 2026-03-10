@@ -136,7 +136,7 @@ final class GuiasRepository
 
         $statement = $this->connection->prepare(
             sprintf(
-                'INSERT INTO `%s` (`id`, `numero_processo`, `processo_id`, `denunciado`, `reu_id`, `tipo`, `etapa`, `status`, `regime`, `data_fato`, `dias_multa`, `valor_multa`, `observacoes`, `created_at`, `updated_at`, `user_cadastro`) VALUES (:id, :numero_processo, :processo_id, :denunciado, :reu_id, :tipo, :etapa, :status, :regime, :data_fato, :dias_multa, :valor_multa, :observacoes, NOW(), NOW(), :user_cadastro)',
+                'INSERT INTO `%s` (`id`, `numero_processo`, `processo_id`, `denunciado`, `parte_id`, `tipo`, `etapa`, `status`, `regime`, `data_fato`, `dias_multa`, `valor_multa`, `observacoes`, `created_at`, `updated_at`, `user_cadastro`) VALUES (:id, :numero_processo, :processo_id, :denunciado, :parte_id, :tipo, :etapa, :status, :regime, :data_fato, :dias_multa, :valor_multa, :observacoes, NOW(), NOW(), :user_cadastro)',
                 $this->table
             )
         );
@@ -144,7 +144,7 @@ final class GuiasRepository
         $statement->bindValue(':numero_processo', $row['numero_processo']);
         $statement->bindValue(':processo_id', $row['processo_id'] ?? null);
         $statement->bindValue(':denunciado', $row['denunciado'] ?? null);
-        $statement->bindValue(':reu_id', $row['reu_id'] ?? null);
+        $statement->bindValue(':parte_id', $row['parte_id'] ?? null);
         $statement->bindValue(':tipo', $row['tipo']);
         $statement->bindValue(':etapa', $row['etapa'] ?? null);
         $statement->bindValue(':status', $row['status']);
@@ -162,7 +162,7 @@ final class GuiasRepository
     public function update(string $id, array $payload): bool
     {
         $allowed = [
-            'numero_processo', 'processo_id', 'denunciado', 'reu_id', 'tipo', 'etapa', 'status',
+            'numero_processo', 'processo_id', 'denunciado', 'parte_id', 'tipo', 'etapa', 'status',
             'regime', 'data_fato', 'dias_multa', 'valor_multa', 'observacoes', 'user_cadastro',
         ];
         $set = [];

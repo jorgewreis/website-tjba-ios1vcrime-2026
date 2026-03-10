@@ -6,9 +6,10 @@ require_once __DIR__ . '/../repositories/GuiasSubtarefasRepository.php';
 require_once __DIR__ . '/../repositories/GuiasAlocadosRepository.php';
 require_once __DIR__ . '/../repositories/AlocacoesRegrasRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
+require_once __DIR__ . '/../repositories/ProcessosPartesRepository.php';
+require_once __DIR__ . '/../repositories/PartesRepository.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../repositories/SalarioMinimoRepository.php';
-require_once __DIR__ . '/../services/ReuManager.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 
@@ -20,9 +21,10 @@ final class GuiasService
     private GuiasAlocadosRepository $alocadosRepository;
     private AlocacoesRegrasRepository $alocacoesRegrasRepository;
     private ProcessosRepository $processosRepository;
+    private ProcessosPartesRepository $processosPartesRepository;
+    private PartesRepository $partesRepository;
     private ClassesRepository $classesRepository;
     private SalarioMinimoRepository $salarioMinimoRepository;
-    private ReuManager $reuManager;
 
     private const REGRA_ALOCAR_GUIAS = 'ALLOCATE-GUIAS';
 
@@ -36,9 +38,10 @@ final class GuiasService
         $this->alocadosRepository = new GuiasAlocadosRepository($connection);
         $this->alocacoesRegrasRepository = new AlocacoesRegrasRepository($connection);
         $this->processosRepository = new ProcessosRepository($connection);
+        $this->processosPartesRepository = new ProcessosPartesRepository($connection);
+        $this->partesRepository = new PartesRepository($connection);
         $this->classesRepository = new ClassesRepository($connection);
         $this->salarioMinimoRepository = new SalarioMinimoRepository($connection);
-        $this->reuManager = new ReuManager($connection);
     }
 
     /**
@@ -127,17 +130,13 @@ final class GuiasService
         $digits = preg_replace('/\D+/', '', $numeroProcesso);
         $numeroFormatado = strlen($digits) === 20 ? $this->formatarCNJ($digits) : $numeroProcesso;
 
-        $reuId = trim((string) ($payload['reu_id'] ?? ''));
+        $parteId = trim((string) ($payload['parte_id'] ?? $payload['reu_id'] ?? ''));
         $denunciado = trim((string) ($payload['denunciado'] ?? ''));
         if ($denunciado !== '') {
             $denunciado = TextFormatter::formatProperName($denunciado, 255);
         }
-        if ($reuId === '' && $denunciado !== '' && strlen($digits) === 20) {
-            $novoReuId = $this->reuManager->cadastrarReu($denunciado, null);
-            if ($novoReuId !== null && $novoReuId !== '') {
-                $this->reuManager->vincularReuProcesso($novoReuId, $numeroFormatado);
-                $reuId = $novoReuId;
-            }
+        if ($parteId === '' && $denunciado !== '' && strlen($digits) === 20) {
+            $parteId = $this->partesRepository->ensureParteByNomeOuCpf($denunciado, null);
         }
 
         $tipo = trim((string) ($payload['tipo'] ?? 'Guia - Tipo não informado'));
@@ -166,6 +165,23 @@ final class GuiasService
             $processoId = $this->processosRepository->ensureProcess($numeroFormatado, null, $dataFato, false);
         }
 
+        if ($parteId !== '' && $processoId !== null) {
+            $existente = $this->processosPartesRepository->findByProcessoAndParte($processoId, $parteId);
+            if ($existente === null) {
+                $this->processosPartesRepository->addParte(
+                    $processoId,
+                    $parteId,
+                    ProcessosPartesRepository::TIPO_SENTENCIADO,
+                    ProcessosPartesRepository::POLO_PASSIVO
+                );
+            }
+        }
+
+        if ($denunciado === '' && $parteId !== '') {
+            $parte = $this->partesRepository->findById($parteId);
+            $denunciado = $parte !== null ? trim((string) ($parte['nome_completo'] ?? '')) : '';
+        }
+
         $idGuia = IdGenerator::generateUniquePrefixedId(
             $this->connection,
             $this->repository->getTableName(),
@@ -179,7 +195,7 @@ final class GuiasService
             'numero_processo' => $numeroFormatado,
             'processo_id' => $processoId ?? $payload['processo_id'] ?? null,
             'denunciado' => $denunciado !== '' ? $denunciado : null,
-            'reu_id' => $reuId !== '' ? $reuId : null,
+            'parte_id' => $parteId !== '' ? $parteId : null,
             'tipo' => $tipo,
             'etapa' => null,
             'status' => 'pendente',
@@ -264,7 +280,7 @@ final class GuiasService
         }
 
         $allowed = [
-            'numero_processo', 'processo_id', 'denunciado', 'reu_id', 'tipo', 'etapa', 'status',
+            'numero_processo', 'processo_id', 'denunciado', 'parte_id', 'tipo', 'etapa', 'status',
             'regime', 'data_fato', 'dias_multa', 'observacoes', 'user_cadastro',
         ];
         $filtered = [];
@@ -272,6 +288,9 @@ final class GuiasService
             if (array_key_exists($key, $payload)) {
                 $filtered[$key] = $payload[$key];
             }
+        }
+        if (array_key_exists('reu_id', $payload) && !array_key_exists('parte_id', $filtered)) {
+            $filtered['parte_id'] = $payload['reu_id'];
         }
         if (isset($filtered['denunciado']) && is_string($filtered['denunciado']) && $filtered['denunciado'] !== '') {
             $filtered['denunciado'] = TextFormatter::formatProperName($filtered['denunciado'], 255);

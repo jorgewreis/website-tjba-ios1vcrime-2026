@@ -191,6 +191,35 @@ try {
                 denunciadoInput.value = '';
             }
 
+            var lastSuggestionNome = '';
+            function formatCpfDisplay(cpf) {
+                var s = (cpf || '').replace(/\D/g, '');
+                if (s.length !== 11) return cpf || '';
+                return s.slice(0, 3) + '.' + s.slice(3, 6) + '.' + s.slice(6, 9) + '-' + s.slice(9);
+            }
+            function showDenunciadoSelectSugestoes(pessoas, nomeDigitado) {
+                if (!denunciadoSelect || !denunciadoInput) return;
+                denunciadoSelect.innerHTML = '';
+                pessoas.forEach(function (p) {
+                    var opt = document.createElement('option');
+                    opt.value = p.id;
+                    var label = (p.nome_completo || '').trim();
+                    if ((p.cpf || '').replace(/\D/g, '').length === 11) {
+                        label += ' - ' + formatCpfDisplay(p.cpf);
+                    }
+                    opt.textContent = label || p.id;
+                    denunciadoSelect.appendChild(opt);
+                });
+                var novo = document.createElement('option');
+                novo.value = '__novo__';
+                novo.textContent = 'Cadastrar novo: ' + (nomeDigitado || '');
+                denunciadoSelect.appendChild(novo);
+                lastSuggestionNome = nomeDigitado || '';
+                denunciadoSelect.style.display = '';
+                denunciadoInput.style.display = 'none';
+                denunciadoInput.required = false;
+            }
+
             window.addEventListener('cnjValidated', function (event) {
                 var digits = (event.detail && event.detail.digits) ? String(event.detail.digits).replace(/\D/g, '') : '';
                 if (digits.length !== 20) {
@@ -226,7 +255,38 @@ try {
                             denunciadoInput.required = true;
                             denunciadoInput.focus();
                         }
+                    } else if (this.value === '__novo__') {
+                        denunciadoSelect.style.display = 'none';
+                        denunciadoSelect.innerHTML = '';
+                        denunciadoSelect.value = '';
+                        if (denunciadoInput) {
+                            denunciadoInput.value = lastSuggestionNome;
+                            denunciadoInput.style.display = '';
+                            denunciadoInput.required = true;
+                            denunciadoInput.focus();
+                        }
                     }
+                });
+            }
+
+            if (denunciadoInput) {
+                denunciadoInput.addEventListener('blur', function () {
+                    var nome = (denunciadoInput.value || '').trim();
+                    if (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
+                        nome = TextFormatter.formatProperName(nome, 255);
+                        denunciadoInput.value = nome;
+                    }
+                    if (nome.length < 2) return;
+                    if (denunciadoSelect.style.display !== 'none' && denunciadoSelect.value && denunciadoSelect.value !== 'outro' && denunciadoSelect.value !== '__novo__') return;
+                    fetch('/api/pessoas/search-by-name.php?nome=' + encodeURIComponent(nome) + '&limit=20', { credentials: 'same-origin' })
+                        .then(function (r) { return r.json(); })
+                        .then(function (data) {
+                            var pessoas = (data && data.pessoas) ? data.pessoas : [];
+                            if (pessoas.length > 0) {
+                                showDenunciadoSelectSugestoes(pessoas, nome);
+                            }
+                        })
+                        .catch(function () {});
                 });
             }
 
@@ -316,7 +376,7 @@ try {
             var filterClasse = document.getElementById('filter-classe');
 
             function getDenunciadoPayload() {
-                var useSelect = denunciadoSelect && denunciadoSelect.style.display !== 'none' && denunciadoSelect.value !== '' && denunciadoSelect.value !== 'outro';
+                var useSelect = denunciadoSelect && denunciadoSelect.style.display !== 'none' && denunciadoSelect.value !== '' && denunciadoSelect.value !== 'outro' && denunciadoSelect.value !== '__novo__';
                 if (useSelect) {
                     var opt = denunciadoSelect.options[denunciadoSelect.selectedIndex];
                     return {

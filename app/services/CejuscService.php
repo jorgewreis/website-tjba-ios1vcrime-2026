@@ -6,8 +6,9 @@ require_once __DIR__ . '/../repositories/CejuscSubtarefasRepository.php';
 require_once __DIR__ . '/../repositories/CejuscAlocadosRepository.php';
 require_once __DIR__ . '/../repositories/AlocacoesRegrasRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
+require_once __DIR__ . '/../repositories/ProcessosPartesRepository.php';
+require_once __DIR__ . '/../repositories/PartesRepository.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
-require_once __DIR__ . '/../services/ReuManager.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 
@@ -19,8 +20,9 @@ final class CejuscService
     private CejuscAlocadosRepository $alocadosRepository;
     private AlocacoesRegrasRepository $alocacoesRegrasRepository;
     private ProcessosRepository $processosRepository;
+    private ProcessosPartesRepository $processosPartesRepository;
+    private PartesRepository $partesRepository;
     private ClassesRepository $classesRepository;
-    private ReuManager $reuManager;
 
     private const REGRA_ALOCAR_CEJUSC = 'ALLOCATE-CEJUSC';
 
@@ -32,8 +34,9 @@ final class CejuscService
         $this->alocadosRepository = new CejuscAlocadosRepository($connection);
         $this->alocacoesRegrasRepository = new AlocacoesRegrasRepository($connection);
         $this->processosRepository = new ProcessosRepository($connection);
+        $this->processosPartesRepository = new ProcessosPartesRepository($connection);
+        $this->partesRepository = new PartesRepository($connection);
         $this->classesRepository = new ClassesRepository($connection);
-        $this->reuManager = new ReuManager($connection);
     }
 
     public function listTarefas(array $filters, int $limit, int $offset): array
@@ -85,7 +88,7 @@ final class CejuscService
             throw new InvalidArgumentException('O número do processo é obrigatório.');
         }
 
-        $reuId = trim((string) ($payload['reu_id'] ?? ''));
+        $parteId = trim((string) ($payload['parte_id'] ?? $payload['reu_id'] ?? ''));
         $nomeReu = trim((string) ($payload['nome_reu'] ?? ''));
         if ($nomeReu !== '') {
             $nomeReu = TextFormatter::formatProperName($nomeReu, 120);
@@ -106,18 +109,34 @@ final class CejuscService
             $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, false);
         }
 
-        if ($reuId !== '') {
-            $this->reuManager->vincularReuProcesso($reuId, $numeroFormatado);
+        if ($parteId !== '') {
+            if ($processoOrigemId !== null) {
+                $existente = $this->processosPartesRepository->findByProcessoAndParte($processoOrigemId, $parteId);
+                if ($existente === null) {
+                    $this->processosPartesRepository->addParte(
+                        $processoOrigemId,
+                        $parteId,
+                        ProcessosPartesRepository::TIPO_REQUERIDO,
+                        ProcessosPartesRepository::POLO_PASSIVO
+                    );
+                }
+            }
         } else {
             if ($nomeReu === '') {
                 throw new InvalidArgumentException('O nome do réu é obrigatório.');
             }
-            $idReu = $this->reuManager->cadastrarReu($nomeReu, null);
-            if ($idReu === null || $idReu === '') {
-                throw new InvalidArgumentException('Não foi possível cadastrar ou localizar o réu.');
+            $parteId = $this->partesRepository->ensureParteByNomeOuCpf($nomeReu, null);
+            if ($processoOrigemId !== null) {
+                $existente = $this->processosPartesRepository->findByProcessoAndParte($processoOrigemId, $parteId);
+                if ($existente === null) {
+                    $this->processosPartesRepository->addParte(
+                        $processoOrigemId,
+                        $parteId,
+                        ProcessosPartesRepository::TIPO_REQUERIDO,
+                        ProcessosPartesRepository::POLO_PASSIVO
+                    );
+                }
             }
-            $this->reuManager->vincularReuProcesso($idReu, $numeroFormatado);
-            $reuId = $idReu;
         }
 
         $idTarefa = IdGenerator::generateUniquePrefixedId(
@@ -132,7 +151,7 @@ final class CejuscService
             'id' => $idTarefa,
             'processo_origem_id' => $processoOrigemId,
             'numero_processo_origem' => $numeroFormatado,
-            'reu_id' => $reuId,
+            'parte_id' => $parteId,
             'status' => 'pendente',
         ];
 

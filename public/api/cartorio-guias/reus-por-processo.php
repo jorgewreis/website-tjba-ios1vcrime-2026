@@ -5,7 +5,6 @@ header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
-require_once $basePath . '/app/services/ReuManager.php';
 require_once $basePath . '/app/repositories/ProcessosRepository.php';
 require_once $basePath . '/app/repositories/ProcessosPartesRepository.php';
 
@@ -40,20 +39,8 @@ $numeroFormatado = sprintf(
 );
 
 $reus = [];
-$nomesIncluidos = [];
 
 try {
-    $reuManager = new ReuManager($connection);
-    $lista = $reuManager->listarReusPorProcesso($numeroFormatado);
-    foreach ($lista as $row) {
-        $id = $row['id_reu'] ?? '';
-        $nome = trim($row['nome'] ?? '');
-        $reus[] = ['id' => $id, 'nome' => $nome];
-        if ($nome !== '') {
-            $nomesIncluidos[strtolower($nome)] = true;
-        }
-    }
-
     $processosRepo = new ProcessosRepository($connection);
     $processoPartesRepo = new ProcessosPartesRepository($connection);
     $processo = $processosRepo->findByNumero($numeroFormatado);
@@ -67,17 +54,13 @@ try {
                 continue;
             }
             if (in_array($tipo, $tiposPassivos, true)) {
-                $key = strtolower($nomeCompleto);
-                if (!isset($nomesIncluidos[$key])) {
-                    $reus[] = ['id' => $pp['parte_id'] ?? '', 'nome' => $nomeCompleto];
-                    $nomesIncluidos[$key] = true;
-                }
+                $reus[] = ['id' => $pp['parte_id'] ?? '', 'nome' => $nomeCompleto];
             }
         }
     }
 
     echo json_encode(['reus' => $reus], JSON_UNESCAPED_UNICODE);
-} catch (\Throwable $e) {
+} catch (Throwable $e) {
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao listar réus.', 'reus' => []], JSON_UNESCAPED_UNICODE);
 }
