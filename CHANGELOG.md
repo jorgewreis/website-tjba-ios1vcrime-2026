@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0072
+
+**Data:** 2026-03-10 17:35:06 | **Commit:** `510cf71` | **Tipo:** `patch`
+
+- Fix: correção de layout
+
 ## V. 1.03.0071
 
 **Data:** 2026-03-10 17:31:12 | **Commit:** `1d8de0d` | **Tipo:** `patch`
@@ -2706,6 +2712,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

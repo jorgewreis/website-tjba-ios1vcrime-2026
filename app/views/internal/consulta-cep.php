@@ -108,6 +108,34 @@ declare(strict_types=1);
                 return [5, 10, 25, 50].indexOf(value) !== -1 ? value : 10;
             }
 
+            function getPaginationButtons(totalPages, current) {
+                var buttons = [];
+                var start = Math.max(1, current - 2);
+                var end = Math.min(totalPages, current + 2);
+                for (var pageNumber = start; pageNumber <= end; pageNumber += 1) {
+                    buttons.push(pageNumber);
+                }
+                return buttons;
+            }
+
+            function getTrailingPages(totalPages, buttons) {
+                var trailing = [];
+                if (buttons.length === 0) {
+                    return trailing;
+                }
+                var lastVisible = buttons[buttons.length - 1];
+                if (lastVisible >= totalPages) {
+                    return trailing;
+                }
+                var start = Math.max(totalPages - 1, lastVisible + 1);
+                for (var pageNumber = start; pageNumber <= totalPages; pageNumber += 1) {
+                    if (buttons.indexOf(pageNumber) === -1) {
+                        trailing.push(pageNumber);
+                    }
+                }
+                return trailing;
+            }
+
             function setFeedback(message, type) {
                 if (!feedback) return;
                 feedback.innerHTML = message
@@ -160,39 +188,65 @@ declare(strict_types=1);
 
             function renderPagination(totalItems, page, perPage) {
                 var totalPages = totalItems > 0 ? Math.ceil(totalItems / perPage) : 1;
+                var startItem = totalItems > 0 ? ((page - 1) * perPage) + 1 : 0;
+                var endItem = totalItems > 0 ? Math.min(page * perPage, totalItems) : 0;
                 var isPrevDisabled = page <= 1;
                 var isNextDisabled = page >= totalPages;
+                var paginationButtons = getPaginationButtons(totalPages, page);
+                var trailingPages = getTrailingPages(totalPages, paginationButtons);
+                var paginationEllipsis = trailingPages.length > 0 && paginationButtons[paginationButtons.length - 1] < (totalPages - 1);
 
                 return '' +
                     '<div class="row pagination">' +
-                        '<div class="col">' +
-                            '<label id="consulta-feedback" class="status-placeholder" aria-live="polite"></label>' +
-                        '</div>' +
-                        '<div class="col" style="margin-left: auto;">' +
-                            '<span class="pagination-info">Página ' + page + ' de ' + totalPages + '</span>' +
-                            '<button class="btn btn-secondary" id="pagina-anterior-btn" type="button"' + (isPrevDisabled ? ' disabled' : '') + '>Anterior</button>' +
-                            '<button class="btn btn-secondary" id="proxima-pagina-btn" type="button"' + (isNextDisabled ? ' disabled' : '') + '>Próxima</button>' +
+                        '<span class="pagination-info" id="consulta-feedback">Mostrando ' + startItem + '-' + endItem + ' de ' + totalItems + ' endereços (' + totalPages + ' páginas, ' + perPage + ' itens por página)</span>' +
+                        '<div class="pagination-controls">' +
+                            '<a class="pagination-symbol' + (isPrevDisabled ? ' disabled' : '') + '" href="#" data-page-action="prev" ' + (isPrevDisabled ? 'aria-disabled="true"' : '') + '>' +
+                                '<img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior">' +
+                            '</a>' +
+                            paginationButtons.map(function (pageNumber) {
+                                return '<a class="pagination-number' + (pageNumber === page ? ' active' : '') + '" href="#" data-page-number="' + pageNumber + '">' + pageNumber + '</a>';
+                            }).join('') +
+                            (paginationEllipsis
+                                ? '<a class="pagination-symbol pagination-ellipsis" aria-hidden="true"><img src="/assets/icons/Navigation-Menu-Horizontal--Streamline-Ultimate.png" alt="Mais páginas"></a>'
+                                : '') +
+                            trailingPages.map(function (pageNumber) {
+                                return '<a class="pagination-number' + (pageNumber === page ? ' active' : '') + '" href="#" data-page-number="' + pageNumber + '">' + pageNumber + '</a>';
+                            }).join('') +
+                            '<a class="pagination-symbol' + (isNextDisabled ? ' disabled' : '') + '" href="#" data-page-action="next" ' + (isNextDisabled ? 'aria-disabled="true"' : '') + '>' +
+                                '<img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página">' +
+                            '</a>' +
                         '</div>' +
                     '</div>';
             }
 
             function attachPaginationEvents(totalItems, page, perPage) {
                 var totalPages = totalItems > 0 ? Math.ceil(totalItems / perPage) : 1;
-                var prevBtn = document.getElementById('pagina-anterior-btn');
-                var nextBtn = document.getElementById('proxima-pagina-btn');
-
-                prevBtn?.addEventListener('click', function () {
-                    if (currentPage > 1) {
-                        currentPage -= 1;
-                        renderCurrentResults();
-                    }
+                document.querySelectorAll('[data-page-number]').forEach(function (link) {
+                    link.addEventListener('click', function (event) {
+                        event.preventDefault();
+                        var targetPage = parseInt(this.getAttribute('data-page-number') || '1', 10);
+                        if (!isNaN(targetPage) && targetPage >= 1 && targetPage <= totalPages && targetPage !== currentPage) {
+                            currentPage = targetPage;
+                            renderCurrentResults();
+                        }
+                    });
                 });
 
-                nextBtn?.addEventListener('click', function () {
-                    if (currentPage < totalPages) {
-                        currentPage += 1;
-                        renderCurrentResults();
-                    }
+                document.querySelectorAll('[data-page-action]').forEach(function (link) {
+                    link.addEventListener('click', function (event) {
+                        event.preventDefault();
+                        if (this.classList.contains('disabled')) {
+                            return;
+                        }
+                        var action = this.getAttribute('data-page-action');
+                        if (action === 'prev' && currentPage > 1) {
+                            currentPage -= 1;
+                            renderCurrentResults();
+                        } else if (action === 'next' && currentPage < totalPages) {
+                            currentPage += 1;
+                            renderCurrentResults();
+                        }
+                    });
                 });
             }
 
@@ -205,7 +259,6 @@ declare(strict_types=1);
                     renderResultRow(data) +
                     renderPagination(1, 1, getItemsPerPage());
                 feedback = document.getElementById('consulta-feedback');
-                setFeedback('1 endereço encontrado.', 'success');
                 attachPaginationEvents(1, 1, getItemsPerPage());
             }
 
@@ -234,7 +287,6 @@ declare(strict_types=1);
 
                 resultadoContainer.innerHTML = html;
                 feedback = document.getElementById('consulta-feedback');
-                setFeedback(totalItems + ' endereço(s) encontrado(s).', 'success');
                 attachPaginationEvents(totalItems, currentPage, perPage);
             }
 
