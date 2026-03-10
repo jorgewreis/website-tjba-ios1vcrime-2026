@@ -68,4 +68,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Feat: novo conjunto de páginas - Editais** `[551e051]`
 - **Feat: novo conjunto - medidas protetivas** `[3cbc68e]`
 - **Fix: pequenos ajustes** `[e5a5b95]`
+- **Fix: grande correção de falhas** `[6545fc7]`
 
