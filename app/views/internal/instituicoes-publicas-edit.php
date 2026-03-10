@@ -76,11 +76,15 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
     (function() {
         var nomeEl = document.getElementById('nome');
         var nomeFantasiaEl = document.getElementById('nome_fantasia');
-        if (nomeEl && typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
-            nomeEl.addEventListener('blur', function() { this.value = TextFormatter.formatProperName(this.value, 255); });
+        if (nomeEl) {
+            nomeEl.addEventListener('blur', function() {
+                this.value = (this.value || '').trim().replace(/\s+/g, ' ').slice(0, 255);
+            });
         }
-        if (nomeFantasiaEl && typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
-            nomeFantasiaEl.addEventListener('blur', function() { this.value = TextFormatter.formatProperName(this.value, 120); });
+        if (nomeFantasiaEl) {
+            nomeFantasiaEl.addEventListener('blur', function() {
+                this.value = (this.value || '').trim().toUpperCase().slice(0, 120);
+            });
         }
         if (typeof App !== 'undefined' && App.CNPJ && App.CNPJ.init) {
             App.CNPJ.init('#cnpj');
@@ -93,12 +97,12 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
             if (typeof showToast === 'function') showToast({ type: 'error', message: 'CNPJ inválido. Verifique os dígitos.' });
             return;
         }
-        var nomeVal = (document.getElementById('nome').value || '').trim();
-        var nomeFantasiaVal = (document.getElementById('nome_fantasia').value || '').trim();
+        var nomeVal = (document.getElementById('nome').value || '').trim().replace(/\s+/g, ' ').slice(0, 255);
+        var nomeFantasiaVal = (document.getElementById('nome_fantasia').value || '').trim().toUpperCase().slice(0, 120);
         var payload = {
             id: id,
-            nome: (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) ? TextFormatter.formatProperName(nomeVal, 255) : nomeVal,
-            nome_fantasia: nomeFantasiaVal === '' ? null : ((typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) ? TextFormatter.formatProperName(nomeFantasiaVal, 120) : nomeFantasiaVal),
+            nome: nomeVal,
+            nome_fantasia: nomeFantasiaVal === '' ? null : nomeFantasiaVal,
             cnpj: cnpjRaw === '' ? null : cnpjRaw,
             observacoes: (document.getElementById('observacoes').value || '').trim() || null,
             ativo: document.getElementById('ativo').checked ? 1 : 0

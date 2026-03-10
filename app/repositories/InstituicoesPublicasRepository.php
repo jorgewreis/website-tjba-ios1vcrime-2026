@@ -38,7 +38,7 @@ final class InstituicoesPublicasRepository
 
     public function findByNome(string $nome): ?array
     {
-        $nome = TextFormatter::formatProperName(trim((string) $nome), 255);
+        $nome = $this->normalizeNomeInstituicao($nome);
         if ($nome === '') {
             return null;
         }
@@ -105,7 +105,7 @@ final class InstituicoesPublicasRepository
 
     public function insert(array $row): string
     {
-        $nome = TextFormatter::formatProperName((string) ($row['nome'] ?? ''), 255);
+        $nome = $this->normalizeNomeInstituicao((string) ($row['nome'] ?? ''));
         if ($nome === '') {
             throw new InvalidArgumentException('Nome da instituição é obrigatório.');
         }
@@ -132,7 +132,7 @@ final class InstituicoesPublicasRepository
         }
 
         $nomeFantasia = (string) ($row['nome_fantasia'] ?? '');
-        $nomeFantasia = $nomeFantasia !== '' ? TextFormatter::formatProperName(trim($nomeFantasia), 120) : '';
+        $nomeFantasia = $nomeFantasia !== '' ? $this->normalizeSiglaInstituicao(trim($nomeFantasia)) : '';
         $observacoes = trim((string) ($row['observacoes'] ?? ''));
         $ativo = isset($row['ativo']) ? (int) (bool) $row['ativo'] : 1;
 
@@ -166,7 +166,7 @@ final class InstituicoesPublicasRepository
             }
             $value = $payload[$column];
             if ($column === 'nome') {
-                $value = TextFormatter::formatProperName((string) $value, 255);
+                $value = $this->normalizeNomeInstituicao((string) $value);
                 if ($value !== '') {
                     $existente = $this->findByNome($value);
                     if ($existente !== null && (string) $existente['id'] !== $id) {
@@ -187,7 +187,7 @@ final class InstituicoesPublicasRepository
                 }
             } elseif ($column === 'nome_fantasia') {
                 $value = trim((string) $value);
-                $value = $value === '' ? null : TextFormatter::formatProperName($value, 120);
+                $value = $value === '' ? null : $this->normalizeSiglaInstituicao($value);
             } elseif ($column === 'ativo') {
                 $value = (int) (bool) $value;
             } else {
@@ -212,6 +212,32 @@ final class InstituicoesPublicasRepository
         $statement->execute();
 
         return $statement->rowCount() > 0;
+    }
+
+    /** Nome da instituição: trim, normaliza espaços, limita 255. Permite números e símbolos (hífen, ª, º, etc.). */
+    private function normalizeNomeInstituicao(string $value): string
+    {
+        $value = preg_replace('/\s+/', ' ', trim($value));
+        if (strlen($value) > 255) {
+            $value = substr($value, 0, 255);
+            $value = rtrim($value);
+        }
+        return $value;
+    }
+
+    /** Sigla / nome fantasia: trim, maiúsculas, limita 120. */
+    private function normalizeSiglaInstituicao(string $value): string
+    {
+        $value = trim($value);
+        if (function_exists('mb_strtoupper')) {
+            $value = mb_strtoupper($value, 'UTF-8');
+        } else {
+            $value = strtoupper($value);
+        }
+        if (strlen($value) > 120) {
+            $value = substr($value, 0, 120);
+        }
+        return $value;
     }
 
     /** @return array{0: string, 1: array<string, mixed>} */

@@ -56,34 +56,36 @@ if (function_exists('mb_internal_encoding')) mb_internal_encoding('UTF-8');
     (function() {
         var nomeEl = document.getElementById('nome');
         var nomeFantasiaEl = document.getElementById('nome_fantasia');
-        if (nomeEl && typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
-            nomeEl.addEventListener('blur', function() { this.value = TextFormatter.formatProperName(this.value, 255); });
+        if (nomeEl) {
+            nomeEl.addEventListener('blur', function() {
+                this.value = (this.value || '').trim().replace(/\s+/g, ' ').slice(0, 255);
+            });
         }
-        if (nomeFantasiaEl && typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
-            nomeFantasiaEl.addEventListener('blur', function() { this.value = TextFormatter.formatProperName(this.value, 120); });
+        if (nomeFantasiaEl) {
+            nomeFantasiaEl.addEventListener('blur', function() {
+                this.value = (this.value || '').trim().toUpperCase().slice(0, 120);
+            });
         }
         if (typeof App !== 'undefined' && App.CNPJ && App.CNPJ.init) {
             App.CNPJ.init('#cnpj');
         }
     })();
     document.getElementById('cadastrar-btn').addEventListener('click', function() {
-        var nome = (document.getElementById('nome').value || '').trim();
+        var nome = (document.getElementById('nome').value || '').trim().replace(/\s+/g, ' ').slice(0, 255);
         if (!nome) { if (typeof showToast === 'function') showToast({ type: 'error', message: 'Nome é obrigatório.' }); return; }
         var cnpjRaw = (document.getElementById('cnpj').value || '').replace(/\D/g, '');
         if (cnpjRaw && cnpjRaw.length === 14 && typeof App !== 'undefined' && App.CNPJ && !App.CNPJ.validar(cnpjRaw)) {
             if (typeof showToast === 'function') showToast({ type: 'error', message: 'CNPJ inválido. Verifique os dígitos.' });
             return;
         }
+        var nomeFantasiaVal = (document.getElementById('nome_fantasia').value || '').trim().toUpperCase().slice(0, 120);
         this.disabled = true;
         fetch('/api/instituicoes-publicas/create.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                nome: (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) ? TextFormatter.formatProperName(nome, 255) : nome,
-                nome_fantasia: (function() {
-                    var v = (document.getElementById('nome_fantasia').value || '').trim();
-                    return v === '' ? null : (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName ? TextFormatter.formatProperName(v, 120) : v);
-                })(),
+                nome: nome,
+                nome_fantasia: nomeFantasiaVal === '' ? null : nomeFantasiaVal,
                 cnpj: cnpjRaw === '' ? null : cnpjRaw,
                 observacoes: (document.getElementById('observacoes').value || '').trim() || null
             })

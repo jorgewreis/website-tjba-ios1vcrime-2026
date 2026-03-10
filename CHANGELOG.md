@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0081
+
+**Data:** 2026-03-10 20:18:56 | **Commit:** `c6b9c81` | **Tipo:** `patch`
+
+- Fix: correção de formatação
+
 ## V. 1.03.0080
 
 **Data:** 2026-03-10 20:07:16 | **Commit:** `ab4287a` | **Tipo:** `patch`
@@ -2760,6 +2766,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
