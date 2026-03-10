@@ -80,4 +80,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correção de layout** `[81178a2]`
 - **Fix: correções de codigos** `[42402a7]`
 - **Fix: pequenos ajustes** `[13ed3a2]`
+- **Fix: correção de bug** `[eb7ff85]`
 
