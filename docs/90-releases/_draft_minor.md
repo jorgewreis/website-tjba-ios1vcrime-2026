@@ -81,4 +81,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correções de codigos** `[42402a7]`
 - **Fix: pequenos ajustes** `[13ed3a2]`
 - **Fix: correção de bug** `[eb7ff85]`
+- **Feat: consulta instituicao** `[3995b63]`
 
