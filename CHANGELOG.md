@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0080
+
+**Data:** 2026-03-10 20:07:16 | **Commit:** `ab4287a` | **Tipo:** `patch`
+
+- Fix: correção de pessoa
+
 ## V. 1.03.0079
 
 **Data:** 2026-03-10 19:46:37 | **Commit:** `c05d8c8` | **Tipo:** `patch`
@@ -2754,6 +2760,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -222,8 +222,9 @@ final class InstituicoesPublicasRepository
 
         $nome = trim((string) ($filters['nome'] ?? ''));
         if ($nome !== '') {
-            $conditions[] = '(`nome` LIKE :nome OR `nome_fantasia` LIKE :nome)';
-            $params[':nome'] = '%' . $nome . '%';
+            $conditions[] = '(`nome` LIKE :nome_filter OR `nome_fantasia` LIKE :nome_fantasia_filter)';
+            $params[':nome_filter'] = '%' . $nome . '%';
+            $params[':nome_fantasia_filter'] = '%' . $nome . '%';
         }
 
         $ativo = $filters['ativo'] ?? null;

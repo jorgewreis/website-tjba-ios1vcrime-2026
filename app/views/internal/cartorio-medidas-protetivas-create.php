@@ -43,6 +43,7 @@ try {
         <link rel="stylesheet" href="/assets/css/shared/form.css">
         <link rel="stylesheet" href="/assets/css/shared/table.css">
         <?php include __DIR__ . '/_toast_script.php'; ?>
+        <script src="/assets/js/shared/cpf.js"></script>
     </head>
 <body class="page-internal">
 
@@ -482,7 +483,6 @@ try {
                 var selectEl = card.querySelector('.vitima-select');
                 var lastVitimaSuggestionNome = '';
                 formatNome(nomeInput);
-                onlyDigitsInput(card.querySelector('.vitima-cpf'));
 
                 function showVitimaInput() {
                     if (selectEl) {
@@ -558,6 +558,13 @@ try {
                     });
                 }
 
+                var cpfInput = card.querySelector('.vitima-cpf');
+                if (cpfInput && typeof App !== 'undefined' && App.CPF && App.CPF.init) {
+                    var uid = 'vitima-cpf-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+                    cpfInput.id = uid;
+                    App.CPF.init('#' + uid);
+                }
+
                 card.querySelector('.btn-remover-vitima')?.addEventListener('click', function () {
                     card.remove();
                     updateVitimaTitles();
@@ -572,13 +579,61 @@ try {
                 updateVitimaTitles();
             }
 
-            onlyDigitsInput(document.getElementById('reu-cpf'));
+            if (typeof App !== 'undefined' && App.CPF && App.CPF.init) {
+                App.CPF.init('#reu-cpf');
+            }
 
             addBtn?.addEventListener('click', function () {
                 addVitima();
             });
 
             addVitima();
+        })();
+    </script>
+    <script>
+        (function () {
+            function idadeEmAnos(dataStr) {
+                if (!dataStr || dataStr.length < 10) return null;
+                var d = new Date(dataStr);
+                if (isNaN(d.getTime())) return null;
+                var hoje = new Date();
+                var anos = hoje.getFullYear() - d.getFullYear();
+                var m = hoje.getMonth() - d.getMonth();
+                if (m < 0 || (m === 0 && hoje.getDate() < d.getDate())) anos--;
+                return anos;
+            }
+
+            document.addEventListener('change', function (e) {
+                if (e.target && e.target.classList && e.target.classList.contains('vitima-data-nascimento')) {
+                    var card = e.target.closest('.vitima-card');
+                    if (card) {
+                        var anos = idadeEmAnos(e.target.value);
+                        var check = card.querySelector('.vitima-crianca');
+                        if (check) {
+                            if (anos !== null && anos < 18) {
+                                check.checked = true;
+                                check.disabled = true;
+                            } else {
+                                check.disabled = false;
+                            }
+                        }
+                    }
+                }
+                if (e.target && e.target.classList && e.target.classList.contains('vitima-sexo')) {
+                    var card = e.target.closest('.vitima-card');
+                    if (card) {
+                        var check = card.querySelector('.vitima-mulher');
+                        if (check) {
+                            if (e.target.value === 'Feminino') {
+                                check.checked = true;
+                                check.disabled = true;
+                            } else {
+                                check.disabled = false;
+                            }
+                        }
+                    }
+                }
+            });
         })();
     </script>
     <script>
@@ -697,11 +752,25 @@ try {
                     return;
                 }
 
+                if (!reu.parte_id && reu.cpf && reu.cpf.length === 11 && typeof App !== 'undefined' && App.CPF && !App.CPF.validar(reu.cpf)) {
+                    showFeedback('CPF do réu inválido. Verifique os dígitos.', 'error');
+                    document.getElementById('reu-cpf')?.focus();
+                    return;
+                }
+
                 var vitimas = collectVitimas();
                 var vitimasError = validateVitimas(vitimas);
                 if (vitimasError) {
                     showFeedback(vitimasError, 'error');
                     return;
+                }
+
+                for (var vi = 0; vi < vitimas.length; vi++) {
+                    var v = vitimas[vi];
+                    if (!v.parte_id && v.cpf && v.cpf.length === 11 && typeof App !== 'undefined' && App.CPF && !App.CPF.validar(v.cpf)) {
+                        showFeedback('CPF inválido na vítima ' + (vi + 1) + '. Verifique os dígitos.', 'error');
+                        return;
+                    }
                 }
 
                 var payload = {
