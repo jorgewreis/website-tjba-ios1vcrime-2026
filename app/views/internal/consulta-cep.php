@@ -107,33 +107,43 @@ declare(strict_types=1);
                 feedback = document.getElementById('consulta-feedback');
             }
 
+            function renderTableHeader() {
+                return '' +
+                    '<div class="row table header">' +
+                        '<div class="col" style="width: 380px;"><span class="major-info text-ellipsis">Logradouro</span></div>' +
+                        '<div class="col" style="width: 210px;"><span class="major-info text-ellipsis">Bairro</span></div>' +
+                        '<div class="col" style="width: 150px;"><span class="major-info text-ellipsis">Cidade</span></div>' +
+                        '<div class="col" style="width: 50px;"><span class="major-info text-ellipsis">UF</span></div>' +
+                        '<div class="col" style="width: 110px;"><span class="major-info text-ellipsis">CEP</span></div>' +
+                    '</div>';
+            }
+
+            function renderResultRow(item) {
+                return '' +
+                    '<div class="row table">' +
+                        '<div class="col" style="width: 380px;">' +
+                            '<span class="major-info text-ellipsis">' + escapeHtml(item.logradouro || '') + '</span>' +
+                        '</div>' +
+                        '<div class="col" style="width: 210px;">' +
+                            '<span class="major-info text-ellipsis">' + escapeHtml(item.bairro || '') + '</span>' +
+                        '</div>' +
+                        '<div class="col" style="width: 150px;">' +
+                            '<span class="major-info text-ellipsis">' + escapeHtml(item.cidade || '') + '</span>' +
+                        '</div>' +
+                        '<div class="col" style="width: 50px;">' +
+                            '<span class="major-info text-ellipsis">' + escapeHtml(item.uf || '') + '</span>' +
+                        '</div>' +
+                        '<div class="col" style="width: 110px;">' +
+                            '<span class="major-info text-ellipsis">' + escapeHtml(formatCep(item.cep || '')) + '</span>' +
+                        '</div>' +
+                    '</div>';
+            }
+
             function renderSingleResult(data) {
                 if (!resultadoContainer) return;
                 resultadoContainer.innerHTML = '' +
-                    '<div class="row filter">' +
-                        '<div class="col filter">' +
-                            '<label>Logradouro</label>' +
-                            '<input type="text" class="width-xl height-md" readonly value="' + escapeHtml(data.logradouro || '') + '">' +
-                        '</div>' +
-                        '<div class="col filter">' +
-                            '<label>Bairro</label>' +
-                            '<input type="text" class="width-lg height-md" readonly value="' + escapeHtml(data.bairro || '') + '">' +
-                        '</div>' +
-                    '</div>' +
-                    '<div class="row filter">' +
-                        '<div class="col filter">' +
-                            '<label>Cidade</label>' +
-                            '<input type="text" class="width-lg height-md" readonly value="' + escapeHtml(data.cidade || '') + '">' +
-                        '</div>' +
-                        '<div class="col filter">' +
-                            '<label>UF</label>' +
-                            '<input type="text" class="width-sm height-md" readonly value="' + escapeHtml(data.uf || '') + '">' +
-                        '</div>' +
-                        '<div class="col filter">' +
-                            '<label>CEP</label>' +
-                            '<input type="text" class="width-md height-md" readonly value="' + escapeHtml(formatCep(data.cep || '')) + '">' +
-                        '</div>' +
-                    '</div>' +
+                    renderTableHeader() +
+                    renderResultRow(data) +
                     '<div class="row pagination">' +
                         '<div class="col">' +
                             '<label id="consulta-feedback" class="status-placeholder" aria-live="polite"></label>' +
@@ -146,34 +156,9 @@ declare(strict_types=1);
             function renderListResults(results) {
                 if (!resultadoContainer) return;
 
-                var html = '';
+                var html = renderTableHeader();
                 results.forEach(function (item, index) {
-                    html += '' +
-                        '<div class="row table header">Endereço ' + (index + 1) + '</div>' +
-                        '<div class="row filter">' +
-                            '<div class="col filter">' +
-                                '<label>Logradouro</label>' +
-                                '<input type="text" class="width-xl height-md" readonly value="' + escapeHtml(item.logradouro || '') + '">' +
-                            '</div>' +
-                            '<div class="col filter">' +
-                                '<label>Bairro</label>' +
-                                '<input type="text" class="width-lg height-md" readonly value="' + escapeHtml(item.bairro || '') + '">' +
-                            '</div>' +
-                        '</div>' +
-                        '<div class="row filter">' +
-                            '<div class="col filter">' +
-                                '<label>Cidade</label>' +
-                                '<input type="text" class="width-lg height-md" readonly value="' + escapeHtml(item.cidade || '') + '">' +
-                            '</div>' +
-                            '<div class="col filter">' +
-                                '<label>UF</label>' +
-                                '<input type="text" class="width-sm height-md" readonly value="' + escapeHtml(item.uf || '') + '">' +
-                            '</div>' +
-                            '<div class="col filter">' +
-                                '<label>CEP</label>' +
-                                '<input type="text" class="width-md height-md" readonly value="' + escapeHtml(formatCep(item.cep || '')) + '">' +
-                            '</div>' +
-                        '</div>';
+                    html += renderResultRow(item);
                 });
 
                 html += '' +
