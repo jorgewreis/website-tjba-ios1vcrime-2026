@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0071
+
+**Data:** 2026-03-10 17:31:12 | **Commit:** `1d8de0d` | **Tipo:** `patch`
+
+- Feat: paginação e filtro em cep
+
 ## V. 1.03.0070
 
 **Data:** 2026-03-10 17:26:18 | **Commit:** `8c95bf2` | **Tipo:** `patch`
@@ -2700,6 +2706,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

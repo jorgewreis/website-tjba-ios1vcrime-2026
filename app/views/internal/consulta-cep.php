@@ -49,6 +49,17 @@ declare(strict_types=1);
         </div>
 
         <div class="row table header">Resultados</div>
+        <div class="row filter">
+            <div class="col filter">
+                <label for="items-per-page">Itens por página</label>
+                <select class="width-sm height-md" id="items-per-page">
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                </select>
+            </div>
+        </div>
         <div class="col full-line register" id="resultado-container">
             <div class="row table">
                 <div class="col full-line">
@@ -71,8 +82,11 @@ declare(strict_types=1);
             var buscaInput = document.getElementById('filter-busca');
             var consultarBtn = document.getElementById('consultar-btn');
             var limparBtn = document.getElementById('limpar-btn');
+            var itemsPerPageSelect = document.getElementById('items-per-page');
             var resultadoContainer = document.getElementById('resultado-container');
             var feedback = document.getElementById('consulta-feedback');
+            var currentResults = [];
+            var currentPage = 1;
 
             function escapeHtml(value) {
                 return String(value || '')
@@ -87,6 +101,11 @@ declare(strict_types=1);
                 var digits = String(value || '').replace(/\D/g, '');
                 if (digits.length !== 8) return value || '';
                 return digits.slice(0, 2) + '.' + digits.slice(2, 5) + '-' + digits.slice(5);
+            }
+
+            function getItemsPerPage() {
+                var value = parseInt(itemsPerPageSelect && itemsPerPageSelect.value ? itemsPerPageSelect.value : '10', 10);
+                return [5, 10, 25, 50].indexOf(value) !== -1 ? value : 10;
             }
 
             function setFeedback(message, type) {
@@ -139,38 +158,90 @@ declare(strict_types=1);
                     '</div>';
             }
 
+            function renderPagination(totalItems, page, perPage) {
+                var totalPages = totalItems > 0 ? Math.ceil(totalItems / perPage) : 1;
+                var isPrevDisabled = page <= 1;
+                var isNextDisabled = page >= totalPages;
+
+                return '' +
+                    '<div class="row pagination">' +
+                        '<div class="col">' +
+                            '<label id="consulta-feedback" class="status-placeholder" aria-live="polite"></label>' +
+                        '</div>' +
+                        '<div class="col" style="margin-left: auto;">' +
+                            '<span class="pagination-info">Página ' + page + ' de ' + totalPages + '</span>' +
+                            '<button class="btn btn-secondary" id="pagina-anterior-btn" type="button"' + (isPrevDisabled ? ' disabled' : '') + '>Anterior</button>' +
+                            '<button class="btn btn-secondary" id="proxima-pagina-btn" type="button"' + (isNextDisabled ? ' disabled' : '') + '>Próxima</button>' +
+                        '</div>' +
+                    '</div>';
+            }
+
+            function attachPaginationEvents(totalItems, page, perPage) {
+                var totalPages = totalItems > 0 ? Math.ceil(totalItems / perPage) : 1;
+                var prevBtn = document.getElementById('pagina-anterior-btn');
+                var nextBtn = document.getElementById('proxima-pagina-btn');
+
+                prevBtn?.addEventListener('click', function () {
+                    if (currentPage > 1) {
+                        currentPage -= 1;
+                        renderCurrentResults();
+                    }
+                });
+
+                nextBtn?.addEventListener('click', function () {
+                    if (currentPage < totalPages) {
+                        currentPage += 1;
+                        renderCurrentResults();
+                    }
+                });
+            }
+
             function renderSingleResult(data) {
                 if (!resultadoContainer) return;
+                currentResults = [data];
+                currentPage = 1;
                 resultadoContainer.innerHTML = '' +
                     renderTableHeader() +
                     renderResultRow(data) +
-                    '<div class="row pagination">' +
-                        '<div class="col">' +
-                            '<label id="consulta-feedback" class="status-placeholder" aria-live="polite"></label>' +
-                        '</div>' +
-                    '</div>';
+                    renderPagination(1, 1, getItemsPerPage());
                 feedback = document.getElementById('consulta-feedback');
                 setFeedback('1 endereço encontrado.', 'success');
+                attachPaginationEvents(1, 1, getItemsPerPage());
             }
 
-            function renderListResults(results) {
+            function renderCurrentResults() {
                 if (!resultadoContainer) return;
+                var perPage = getItemsPerPage();
+                var totalItems = currentResults.length;
+                var totalPages = totalItems > 0 ? Math.ceil(totalItems / perPage) : 1;
+
+                if (currentPage > totalPages) {
+                    currentPage = totalPages;
+                }
+                if (currentPage < 1) {
+                    currentPage = 1;
+                }
+
+                var start = (currentPage - 1) * perPage;
+                var pageResults = currentResults.slice(start, start + perPage);
 
                 var html = renderTableHeader();
-                results.forEach(function (item, index) {
+                pageResults.forEach(function (item) {
                     html += renderResultRow(item);
                 });
 
-                html += '' +
-                    '<div class="row pagination">' +
-                        '<div class="col">' +
-                            '<label id="consulta-feedback" class="status-placeholder" aria-live="polite"></label>' +
-                        '</div>' +
-                    '</div>';
+                html += renderPagination(totalItems, currentPage, perPage);
 
                 resultadoContainer.innerHTML = html;
                 feedback = document.getElementById('consulta-feedback');
-                setFeedback(results.length + ' endereço(s) encontrado(s).', 'success');
+                setFeedback(totalItems + ' endereço(s) encontrado(s).', 'success');
+                attachPaginationEvents(totalItems, currentPage, perPage);
+            }
+
+            function renderListResults(results) {
+                currentResults = Array.isArray(results) ? results.slice() : [];
+                currentPage = 1;
+                renderCurrentResults();
             }
 
             function showError(message) {
@@ -234,9 +305,19 @@ declare(strict_types=1);
             consultarBtn?.addEventListener('click', performSearch);
             limparBtn?.addEventListener('click', function () {
                 if (buscaInput) buscaInput.value = '';
+                currentResults = [];
+                currentPage = 1;
                 resetResultContainer();
                 setFeedback('', 'success');
                 buscaInput?.focus();
+            });
+            itemsPerPageSelect?.addEventListener('change', function () {
+                if (currentResults.length > 1) {
+                    currentPage = 1;
+                    renderCurrentResults();
+                } else if (currentResults.length === 1) {
+                    renderSingleResult(currentResults[0]);
+                }
             });
             buscaInput?.addEventListener('keydown', function (event) {
                 if (event.key === 'Enter') {
