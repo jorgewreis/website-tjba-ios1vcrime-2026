@@ -69,4 +69,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Feat: novo conjunto - medidas protetivas** `[3cbc68e]`
 - **Fix: pequenos ajustes** `[e5a5b95]`
 - **Fix: grande correção de falhas** `[6545fc7]`
+- **Fix: pequenos ajustes** `[e65131d]`
 
