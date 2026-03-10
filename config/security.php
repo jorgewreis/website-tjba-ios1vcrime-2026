@@ -123,6 +123,50 @@ final class Security
                substr($cpf, 9, 2);
     }
 
+    public static function normalizeCNPJ(string $cnpj): string
+    {
+        return preg_replace('/\D+/', '', $cnpj) ?? '';
+    }
+
+    /**
+     * Valida CNPJ (14 dígitos) e dígitos verificadores.
+     */
+    public static function validarCNPJ(string $cnpj): bool
+    {
+        if (strlen($cnpj) !== 14 || preg_match('/^(\d)\1{13}$/', $cnpj)) {
+            return false;
+        }
+
+        $pesos1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+        $soma = 0;
+        for ($i = 0; $i < 12; $i++) {
+            $soma += (int) $cnpj[$i] * $pesos1[$i];
+        }
+        $resto = $soma % 11;
+        $dv1 = $resto < 2 ? 0 : 11 - $resto;
+        if ((int) $cnpj[12] !== $dv1) {
+            return false;
+        }
+
+        $pesos2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+        $soma = 0;
+        for ($i = 0; $i < 13; $i++) {
+            $soma += (int) $cnpj[$i] * $pesos2[$i];
+        }
+        $resto = $soma % 11;
+        $dv2 = $resto < 2 ? 0 : 11 - $resto;
+        return (int) $cnpj[13] === $dv2;
+    }
+
+    public static function formatCNPJ(string $cnpj): string
+    {
+        return substr($cnpj, 0, 2) . '.' .
+               substr($cnpj, 2, 3) . '.' .
+               substr($cnpj, 5, 3) . '/' .
+               substr($cnpj, 8, 4) . '-' .
+               substr($cnpj, 12, 2);
+    }
+
     public static function generateTempPassword(int $len = 8): string
     {
         $chars = 'ABCDEFGHJKLMNPQRSTUVWXY23456789';

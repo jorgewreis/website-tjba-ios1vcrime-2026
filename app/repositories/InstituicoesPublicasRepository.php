@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
+require_once __DIR__ . '/../../config/security.php';
 
 final class InstituicoesPublicasRepository
 {
@@ -116,6 +117,9 @@ final class InstituicoesPublicasRepository
 
         $cnpj = preg_replace('/\D+/', '', (string) ($row['cnpj'] ?? ''));
         if ($cnpj !== '') {
+            if (!Security::validarCNPJ($cnpj)) {
+                throw new InvalidArgumentException('CNPJ inválido. Verifique os dígitos.');
+            }
             $existenteCnpj = $this->findByCnpj($cnpj);
             if ($existenteCnpj !== null) {
                 throw new InvalidArgumentException('Já existe instituição cadastrada com este CNPJ.');
@@ -127,7 +131,8 @@ final class InstituicoesPublicasRepository
             $id = IdGenerator::generateUniquePrefixedId($this->connection, $this->table, 'id', 'INS', 30);
         }
 
-        $nomeFantasia = trim((string) ($row['nome_fantasia'] ?? ''));
+        $nomeFantasia = (string) ($row['nome_fantasia'] ?? '');
+        $nomeFantasia = $nomeFantasia !== '' ? TextFormatter::formatProperName(trim($nomeFantasia), 120) : '';
         $observacoes = trim((string) ($row['observacoes'] ?? ''));
         $ativo = isset($row['ativo']) ? (int) (bool) $row['ativo'] : 1;
 
@@ -172,16 +177,22 @@ final class InstituicoesPublicasRepository
                 $value = preg_replace('/\D+/', '', (string) $value);
                 $value = $value === '' ? null : $value;
                 if ($value !== null && $value !== '') {
+                    if (!Security::validarCNPJ($value)) {
+                        throw new InvalidArgumentException('CNPJ inválido. Verifique os dígitos.');
+                    }
                     $existente = $this->findByCnpj($value);
                     if ($existente !== null && (string) $existente['id'] !== $id) {
                         throw new InvalidArgumentException('Já existe outra instituição cadastrada com este CNPJ.');
                     }
                 }
+            } elseif ($column === 'nome_fantasia') {
+                $value = trim((string) $value);
+                $value = $value === '' ? null : TextFormatter::formatProperName($value, 120);
             } elseif ($column === 'ativo') {
                 $value = (int) (bool) $value;
             } else {
                 $value = trim((string) $value);
-                $value = $value === '' && in_array($column, ['nome_fantasia', 'observacoes'], true) ? null : $value;
+                $value = $value === '' && $column === 'observacoes' ? null : $value;
             }
             $set[] = sprintf('`%s` = :%s', $column, $column);
             $params[':' . $column] = $value;

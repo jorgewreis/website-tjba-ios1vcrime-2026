@@ -14,6 +14,8 @@ if (function_exists('mb_internal_encoding')) mb_internal_encoding('UTF-8');
     <link rel="stylesheet" href="/assets/css/shared/page.css">
     <link rel="stylesheet" href="/assets/css/shared/form.css">
     <?php include __DIR__ . '/_toast_script.php'; ?>
+    <script src="/assets/js/shared/text-formatter.js"></script>
+    <script src="/assets/js/shared/cnpj.js"></script>
 </head>
 <body class="page-internal">
     <div class="spacing-top-page"></div>
@@ -51,17 +53,38 @@ if (function_exists('mb_internal_encoding')) mb_internal_encoding('UTF-8');
         </div>
     </div>
     <script>
+    (function() {
+        var nomeEl = document.getElementById('nome');
+        var nomeFantasiaEl = document.getElementById('nome_fantasia');
+        if (nomeEl && typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
+            nomeEl.addEventListener('blur', function() { this.value = TextFormatter.formatProperName(this.value, 255); });
+        }
+        if (nomeFantasiaEl && typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
+            nomeFantasiaEl.addEventListener('blur', function() { this.value = TextFormatter.formatProperName(this.value, 120); });
+        }
+        if (typeof App !== 'undefined' && App.CNPJ && App.CNPJ.init) {
+            App.CNPJ.init('#cnpj');
+        }
+    })();
     document.getElementById('cadastrar-btn').addEventListener('click', function() {
         var nome = (document.getElementById('nome').value || '').trim();
         if (!nome) { if (typeof showToast === 'function') showToast({ type: 'error', message: 'Nome é obrigatório.' }); return; }
+        var cnpjRaw = (document.getElementById('cnpj').value || '').replace(/\D/g, '');
+        if (cnpjRaw && cnpjRaw.length === 14 && typeof App !== 'undefined' && App.CNPJ && !App.CNPJ.validar(cnpjRaw)) {
+            if (typeof showToast === 'function') showToast({ type: 'error', message: 'CNPJ inválido. Verifique os dígitos.' });
+            return;
+        }
         this.disabled = true;
         fetch('/api/instituicoes-publicas/create.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                nome: nome,
-                nome_fantasia: (document.getElementById('nome_fantasia').value || '').trim() || null,
-                cnpj: (document.getElementById('cnpj').value || '').replace(/\D/g, '') || null,
+                nome: (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) ? TextFormatter.formatProperName(nome, 255) : nome,
+                nome_fantasia: (function() {
+                    var v = (document.getElementById('nome_fantasia').value || '').trim();
+                    return v === '' ? null : (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName ? TextFormatter.formatProperName(v, 120) : v);
+                })(),
+                cnpj: cnpjRaw === '' ? null : cnpjRaw,
                 observacoes: (document.getElementById('observacoes').value || '').trim() || null
             })
         })

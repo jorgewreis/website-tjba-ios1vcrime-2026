@@ -83,8 +83,21 @@ if (function_exists('mb_internal_encoding')) {
         </div>
     </div>
 
+    <script src="/assets/js/shared/text-formatter.js"></script>
+    <script src="/assets/js/shared/cpf.js"></script>
     <script>
     (function() {
+        var nomeEl = document.getElementById('nome_completo');
+        var cpfEl = document.getElementById('cpf');
+        if (nomeEl && typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
+            nomeEl.addEventListener('blur', function() {
+                this.value = TextFormatter.formatProperName(this.value, 255);
+            });
+        }
+        if (typeof App !== 'undefined' && App.CPF && App.CPF.init) {
+            App.CPF.init('#cpf');
+        }
+
         document.getElementById('voltar-btn').addEventListener('click', function() {
             window.location.href = '/frame.php?page=consultapartes';
         });
@@ -96,7 +109,13 @@ if (function_exists('mb_internal_encoding')) {
                 else alert('Informe o nome completo.');
                 return;
             }
-            var cpf = (document.getElementById('cpf').value || '').replace(/\D/g, '');
+            var cpfRaw = (document.getElementById('cpf').value || '').replace(/\D/g, '');
+            if (cpfRaw && cpfRaw.length === 11 && typeof App !== 'undefined' && App.CPF && !App.CPF.validar(cpfRaw)) {
+                if (typeof showToast === 'function') showToast({ type: 'error', message: 'CPF inválido. Verifique os dígitos.' });
+                else alert('CPF inválido. Verifique os dígitos.');
+                return;
+            }
+            var cpf = cpfRaw || null;
             var sexo = (document.getElementById('sexo').value || '').trim();
             var data = (document.getElementById('data_nascimento').value || '').trim();
 
@@ -105,8 +124,8 @@ if (function_exists('mb_internal_encoding')) {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    nome_completo: nome,
-                    cpf: cpf || null,
+                    nome_completo: (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) ? TextFormatter.formatProperName(nome, 255) : nome,
+                    cpf: cpf,
                     sexo: sexo || null,
                     data_nascimento: data || null
                 })

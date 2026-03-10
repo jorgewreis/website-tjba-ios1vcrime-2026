@@ -8,6 +8,7 @@ if (function_exists('mb_internal_encoding')) {
 
 require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../services/PessoasService.php';
+require_once __DIR__ . '/../../../config/security.php';
 
 $id = trim((string) ($_GET['id'] ?? ''));
 if ($id === '') {
@@ -36,6 +37,8 @@ if ($pessoa === null) {
     <link rel="stylesheet" href="/assets/css/shared/form.css">
     <link rel="stylesheet" href="/assets/css/shared/table.css">
     <?php include __DIR__ . '/_toast_script.php'; ?>
+    <script src="/assets/js/shared/text-formatter.js"></script>
+    <script src="/assets/js/shared/cpf.js"></script>
 </head>
 <body class="page-internal">
     <div class="spacing-top-page"></div>
@@ -50,7 +53,10 @@ if ($pessoa === null) {
         <div class="row filter">
             <div class="col filter">
                 <label for="cpf">CPF</label>
-                <input type="text" class="width-md height-md" id="cpf" value="<?php echo htmlspecialchars($pessoa['cpf'] ?? ''); ?>">
+                <input type="text" class="width-md height-md" id="cpf" value="<?php
+                    $cpfVal = $pessoa['cpf'] ?? '';
+                    echo htmlspecialchars(strlen($cpfVal) === 11 ? Security::formatCPF($cpfVal) : $cpfVal);
+                ?>">
             </div>
             <div class="col filter">
                 <label for="nome_completo">Nome completo</label>
@@ -138,15 +144,31 @@ if ($pessoa === null) {
 
     <script>
     (function() {
+        var nomeEl = document.getElementById('nome_completo');
+        if (nomeEl && typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
+            nomeEl.addEventListener('blur', function() {
+                this.value = TextFormatter.formatProperName(this.value, 255);
+            });
+        }
+        if (typeof App !== 'undefined' && App.CPF && App.CPF.init) {
+            App.CPF.init('#cpf');
+        }
+
         document.getElementById('voltar-btn').addEventListener('click', function() {
             window.location.href = '/frame.php?page=consultapartes';
         });
         var parteId = document.getElementById('parte-id').value;
         document.getElementById('salvar-btn').addEventListener('click', function() {
+            var cpfRaw = (document.getElementById('cpf').value || '').replace(/\D/g, '');
+            if (cpfRaw && cpfRaw.length === 11 && typeof App !== 'undefined' && App.CPF && !App.CPF.validar(cpfRaw)) {
+                if (typeof showToast === 'function') showToast({ type: 'error', message: 'CPF inválido. Verifique os dígitos.' });
+                return;
+            }
+            var nomeVal = (document.getElementById('nome_completo').value || '').trim();
             var payload = {
                 id: parteId,
-                cpf: (document.getElementById('cpf').value || '').replace(/\D/g, ''),
-                nome_completo: (document.getElementById('nome_completo').value || '').trim(),
+                cpf: cpfRaw || '',
+                nome_completo: (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) ? TextFormatter.formatProperName(nomeVal, 255) : nomeVal,
                 sexo: (document.getElementById('sexo').value || '').trim(),
                 data_nascimento: (document.getElementById('data_nascimento').value || '').trim()
             };

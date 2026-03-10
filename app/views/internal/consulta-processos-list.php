@@ -107,7 +107,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
             </div>
             <div class="col filter">
                 <label for="filter-parte">Nome da parte</label>
-                <input type="text" class="width-md height-md" id="filter-parte" name="parte_nome" placeholder="Nome da parte" value="<?php echo htmlspecialchars($parteNomeFilter); ?>">
+                <input type="text" class="width-lg height-md" id="filter-parte" name="parte_nome" placeholder="Nome da parte" value="<?php echo htmlspecialchars($parteNomeFilter); ?>">
             </div>
             <div class="col filter">
                 <label for="items-per-page">Itens por página</label>

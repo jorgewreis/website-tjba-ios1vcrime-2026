@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
+require_once __DIR__ . '/../../config/security.php';
 
 final class PartesRepository
 {
@@ -142,6 +143,9 @@ final class PartesRepository
         $dataNascimento = trim((string) ($row['data_nascimento'] ?? ''));
 
         if ($cpf !== '') {
+            if (!Security::validarCPF($cpf)) {
+                throw new InvalidArgumentException('CPF inválido. Verifique os dígitos.');
+            }
             $existenteCpf = $this->findByCpf($cpf);
             if ($existenteCpf !== null) {
                 throw new InvalidArgumentException('Já existe pessoa cadastrada com este CPF.');
@@ -185,6 +189,9 @@ final class PartesRepository
                 $value = $this->normalizeCpf((string) $value);
                 $value = $value === '' ? null : $value;
                 if ($value !== null && $value !== '') {
+                    if (!Security::validarCPF($value)) {
+                        throw new InvalidArgumentException('CPF inválido. Verifique os dígitos.');
+                    }
                     $existente = $this->findByCpf($value);
                     if ($existente !== null && (string) $existente['id'] !== $id) {
                         throw new InvalidArgumentException('Já existe outra pessoa cadastrada com este CPF.');

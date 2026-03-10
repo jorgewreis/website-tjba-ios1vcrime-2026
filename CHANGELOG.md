@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0075
+
+**Data:** 2026-03-10 18:52:26 | **Commit:** `42402a7` | **Tipo:** `patch`
+
+- Fix: correções de codigos
+
 ## V. 1.03.0074
 
 **Data:** 2026-03-10 18:39:17 | **Commit:** `81178a2` | **Tipo:** `patch`
@@ -2724,6 +2730,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

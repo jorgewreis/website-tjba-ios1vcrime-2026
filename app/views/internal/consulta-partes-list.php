@@ -8,6 +8,7 @@ if (function_exists('mb_internal_encoding')) {
 
 require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../services/PessoasService.php';
+require_once __DIR__ . '/../../../config/security.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -86,6 +87,8 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
         <link rel="stylesheet" href="/assets/css/shared/table.css">
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
         <?php include __DIR__ . '/_toast_script.php'; ?>
+        <script src="/assets/js/shared/text-formatter.js"></script>
+        <script src="/assets/js/shared/cpf.js"></script>
     </head>
 <body class="page-internal">
 
@@ -106,7 +109,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
             <input type="hidden" name="items_per_page" value="<?php echo (int) $itemsPerPage; ?>">
             <div class="col filter">
                 <label for="filter-nome">Nome</label>
-                <input type="text" class="width-md height-md" id="filter-nome" name="nome" placeholder="Nome da parte" value="<?php echo htmlspecialchars($nomeFilter); ?>">
+                <input type="text" class="width-lg height-md" id="filter-nome" name="nome" placeholder="Nome da parte" value="<?php echo htmlspecialchars($nomeFilter); ?>">
             </div>
             <div class="col filter">
                 <label for="filter-cpf">CPF</label>
@@ -127,7 +130,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
         </form>
 
         <div class="row buttons">
-            <button type="button" class="btn btn-primary" id="novo-cadastro-btn">Nova pessoa</button>
+            <button type="button" class="btn btn-primary" id="novo-cadastro-btn">Novo cadastro</button>
         </div>
 
         <div class="row table header">Lista de Partes</div>
@@ -135,7 +138,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
             <div class="row table">
                 <div class="col">
                     <div class="col filter no-data">
-                        <span class="major-info">Informe os critérios acima (nome, CPF ou instituição) e clique em Consultar para exibir os resultados.</span>
+                        <span class="major-info">Informe ao menos um critério (nome ou CPF) e clique em Consultar para exibir os resultados.</span>
                     </div>
                 </div>
             </div>
@@ -154,7 +157,10 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                     <?php foreach ($rows as $row): ?>
                     <tr>
                         <td><?php echo htmlspecialchars($row['nome_completo'] ?? '—'); ?></td>
-                        <td><?php echo htmlspecialchars($row['cpf'] ?? '—'); ?></td>
+                        <td><?php
+                        $cpfCell = $row['cpf'] ?? '';
+                        echo htmlspecialchars($cpfCell !== '' && strlen($cpfCell) === 11 ? Security::formatCPF($cpfCell) : ($cpfCell !== '' ? $cpfCell : '—'));
+                    ?></td>
                         <td><?php echo (int) ($row['total_processos'] ?? 0); ?></td>
                         <td><?php echo (int) ($row['total_instituicoes'] ?? 0); ?></td>
                         <td>
@@ -207,6 +213,15 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
 
     <script>
     (function() {
+        var filterNome = document.getElementById('filter-nome');
+        if (filterNome && typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
+            filterNome.addEventListener('blur', function() {
+                this.value = TextFormatter.formatProperName(this.value, 255);
+            });
+        }
+        if (document.getElementById('filter-cpf') && typeof App !== 'undefined' && App.CPF && App.CPF.init) {
+            App.CPF.init('#filter-cpf');
+        }
         document.getElementById('novo-cadastro-btn').addEventListener('click', function() {
             window.location.href = '/frame.php?page=consultapartescreate';
         });

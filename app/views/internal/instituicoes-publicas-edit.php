@@ -5,6 +5,7 @@ if (function_exists('mb_internal_encoding')) mb_internal_encoding('UTF-8');
 
 require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../services/InstituicoesPublicasService.php';
+require_once __DIR__ . '/../../../config/security.php';
 
 $id = trim((string) ($_GET['id'] ?? ''));
 if ($id === '') { header('Location: /frame.php?page=instituicoespublicas'); exit; }
@@ -24,6 +25,8 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
     <link rel="stylesheet" href="/assets/css/shared/page.css">
     <link rel="stylesheet" href="/assets/css/shared/form.css">
     <?php include __DIR__ . '/_toast_script.php'; ?>
+    <script src="/assets/js/shared/text-formatter.js"></script>
+    <script src="/assets/js/shared/cnpj.js"></script>
 </head>
 <body class="page-internal">
     <div class="spacing-top-page"></div>
@@ -47,7 +50,10 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
             </div>
             <div class="col filter">
                 <label for="cnpj">CNPJ</label>
-                <input type="text" class="width-md height-md" id="cnpj" value="<?php echo htmlspecialchars($inst['cnpj'] ?? ''); ?>">
+                <input type="text" class="width-md height-md" id="cnpj" value="<?php
+                    $cnpjVal = preg_replace('/\D+/', '', (string) ($inst['cnpj'] ?? ''));
+                    echo htmlspecialchars($cnpjVal !== '' && strlen($cnpjVal) === 14 ? Security::formatCNPJ($cnpjVal) : ($inst['cnpj'] ?? ''));
+                ?>">
             </div>
         </div>
         <div class="row filter">
@@ -67,13 +73,33 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
         </div>
     </div>
     <script>
+    (function() {
+        var nomeEl = document.getElementById('nome');
+        var nomeFantasiaEl = document.getElementById('nome_fantasia');
+        if (nomeEl && typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
+            nomeEl.addEventListener('blur', function() { this.value = TextFormatter.formatProperName(this.value, 255); });
+        }
+        if (nomeFantasiaEl && typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
+            nomeFantasiaEl.addEventListener('blur', function() { this.value = TextFormatter.formatProperName(this.value, 120); });
+        }
+        if (typeof App !== 'undefined' && App.CNPJ && App.CNPJ.init) {
+            App.CNPJ.init('#cnpj');
+        }
+    })();
     document.getElementById('salvar-btn').addEventListener('click', function() {
         var id = document.getElementById('inst-id').value;
+        var cnpjRaw = (document.getElementById('cnpj').value || '').replace(/\D/g, '');
+        if (cnpjRaw && cnpjRaw.length === 14 && typeof App !== 'undefined' && App.CNPJ && !App.CNPJ.validar(cnpjRaw)) {
+            if (typeof showToast === 'function') showToast({ type: 'error', message: 'CNPJ inválido. Verifique os dígitos.' });
+            return;
+        }
+        var nomeVal = (document.getElementById('nome').value || '').trim();
+        var nomeFantasiaVal = (document.getElementById('nome_fantasia').value || '').trim();
         var payload = {
             id: id,
-            nome: (document.getElementById('nome').value || '').trim(),
-            nome_fantasia: (document.getElementById('nome_fantasia').value || '').trim() || null,
-            cnpj: (document.getElementById('cnpj').value || '').replace(/\D/g, '') || null,
+            nome: (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) ? TextFormatter.formatProperName(nomeVal, 255) : nomeVal,
+            nome_fantasia: nomeFantasiaVal === '' ? null : ((typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) ? TextFormatter.formatProperName(nomeFantasiaVal, 120) : nomeFantasiaVal),
+            cnpj: cnpjRaw === '' ? null : cnpjRaw,
             observacoes: (document.getElementById('observacoes').value || '').trim() || null,
             ativo: document.getElementById('ativo').checked ? 1 : 0
         };
