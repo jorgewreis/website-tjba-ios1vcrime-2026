@@ -78,4 +78,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correção de layout** `[510cf71]`
 - **Feat: novo modelo Consulta Partes** `[81ffc85]`
 - **Fix: correção de layout** `[81178a2]`
+- **Fix: correções de codigos** `[42402a7]`
 
