@@ -35,6 +35,7 @@ try {
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <title>Medidas Protetivas - Cadastro - Primeira Vara Crime de Ilhéus</title>
+        <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="/assets/css/shared/reset.css">
         <link rel="stylesheet" href="/assets/css/shared/color.css">
@@ -42,160 +43,6 @@ try {
         <link rel="stylesheet" href="/assets/css/shared/form.css">
         <link rel="stylesheet" href="/assets/css/shared/table.css">
         <?php include __DIR__ . '/_toast_script.php'; ?>
-        <style>
-            .create-section {
-                width: 100%;
-                margin-bottom: 1.5rem;
-            }
-
-            .create-section:last-of-type {
-                margin-bottom: 0;
-            }
-
-            .section-subtitle {
-                margin: 0.35rem 0 0.9rem 0;
-                color: var(--color-text-secondary);
-                font-size: 0.95rem;
-                line-height: 1.5;
-            }
-
-            .summary-grid,
-            .partes-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-                gap: 1rem;
-                width: 100%;
-            }
-
-            .summary-card,
-            .person-card,
-            .allocation-card,
-            .vitima-card {
-                width: 100%;
-                border: 1px solid var(--color-gray-400);
-                border-radius: 12px;
-                background: var(--color-background);
-            }
-
-            .summary-card,
-            .person-card,
-            .allocation-card {
-                padding: 1rem;
-            }
-
-            .summary-card-title,
-            .person-card-title,
-            .allocation-card-title {
-                display: block;
-                margin-bottom: 0.35rem;
-                font-size: 0.95rem;
-                font-weight: 600;
-                color: var(--color-text-primary);
-            }
-
-            .summary-card p,
-            .allocation-card p {
-                margin: 0;
-                color: var(--color-text-secondary);
-                line-height: 1.5;
-                font-size: 0.92rem;
-            }
-
-            .person-card .partes-grid {
-                gap: 0.85rem;
-            }
-
-            .section-toolbar {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 1rem;
-                flex-wrap: wrap;
-                margin-bottom: 0.9rem;
-            }
-
-            .section-toolbar .section-subtitle {
-                margin: 0;
-                flex: 1;
-                min-width: 240px;
-            }
-
-            .vitima-card {
-                padding: 1rem;
-                margin-top: 1rem;
-            }
-
-            .vitima-card-header {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 1rem;
-                margin-bottom: 0.75rem;
-                flex-wrap: wrap;
-            }
-
-            .vitima-card-index {
-                margin: 0;
-                font-size: 1rem;
-                font-weight: 600;
-                color: var(--color-text-primary);
-            }
-
-            .checkbox-group {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 0.85rem 1.25rem;
-                margin-top: 1rem;
-                padding-top: 0.9rem;
-                border-top: 1px solid var(--color-gray-300);
-            }
-
-            .checkbox-group label {
-                display: inline-flex;
-                align-items: center;
-                gap: 0.45rem;
-                font-size: 0.95rem;
-                color: var(--color-text-secondary);
-            }
-
-            .allocation-card strong {
-                color: var(--color-text-primary);
-            }
-
-            .actions-bar {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 1rem;
-                flex-wrap: wrap;
-                margin-top: 0.5rem;
-            }
-
-            .actions-bar-left,
-            .actions-bar-right {
-                display: flex;
-                align-items: center;
-                gap: 0.75rem;
-                flex-wrap: wrap;
-            }
-
-            .field-hint {
-                margin-top: 0.35rem;
-                font-size: 0.82rem;
-                color: var(--color-text-secondary);
-            }
-
-            @media (max-width: 768px) {
-                .actions-bar {
-                    align-items: stretch;
-                }
-
-                .actions-bar-left,
-                .actions-bar-right {
-                    width: 100%;
-                }
-            }
-        </style>
     </head>
 <body class="page-internal">
 
@@ -211,99 +58,61 @@ try {
     </div>
 
     <div class="card-page">
-        <div class="create-section">
-            <div class="summary-grid">
-                <div class="summary-card">
-                    <span class="summary-card-title">Cadastro inicial</span>
-                    <p>Informe o processo e os dados do polo passivo para gerar a medida protetiva com estrutura padronizada no sistema.</p>
-                </div>
-                <div class="summary-card">
-                    <span class="summary-card-title">Vítimas e prioridades</span>
-                    <p>As vítimas podem ser incluídas com dados pessoais e marcadores de prioridade para facilitar o tratamento posterior.</p>
-                </div>
-                <div class="summary-card">
-                    <span class="summary-card-title">Fluxo automático</span>
-                    <p>Após o cadastro, a medida seguirá para as subtarefas internas e poderá originar o fluxo vinculado do Cejusc.</p>
-                </div>
+        <div class="row table header">Informações obrigatórias</div>
+        <div class="row filter">
+            <div class="col filter">
+                <label for="filter-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <input type="text" class="width-md height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" required>
+            </div>
+            <div class="col filter">
+                <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe processual <span class="label-hint-automatizado">*automatizado</span></label>
+                <input type="text" class="width-lg height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>
+            </div>
+        </div>
+        <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
+        <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
+
+        <div class="row table header">Réu</div>
+        <div class="row filter">
+            <div class="col filter">
+                <label for="reu-cpf">CPF <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <input type="text" class="width-md height-md" id="reu-cpf" placeholder="Somente números">
+            </div>
+            <div class="col filter">
+                <label for="reu-nome">Nome completo <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <input type="text" class="width-xl height-md" id="reu-nome" placeholder="Nome completo do réu">
+            </div>
+            <div class="col filter">
+                <label for="reu-sexo">Sexo <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <select class="width-md height-md" id="reu-sexo">
+                    <option value="">Selecione</option>
+                    <option value="Feminino">Feminino</option>
+                    <option value="Masculino">Masculino</option>
+                    <option value="Outro">Outro</option>
+                </select>
+            </div>
+            <div class="col filter">
+                <label for="reu-data-nascimento">Data de nascimento</label>
+                <input type="date" class="width-md height-md" id="reu-data-nascimento">
             </div>
         </div>
 
-        <div class="create-section">
-            <div class="row table header">Informações obrigatórias</div>
-            <p class="section-subtitle">Comece pelo processo. A classe processual é preenchida automaticamente quando o número CNJ é validado.</p>
-            <div class="row filter">
-                <div class="col filter">
-                    <label for="filter-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="text" class="width-md height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" required>
-                    <span class="field-hint">Use o número CNJ completo com 20 dígitos.</span>
-                </div>
-                <div class="col filter">
-                    <label for="filter-classe" id="processo-ap-info">Classe processual <span class="label-hint-automatizado">*automatizado</span></label>
-                    <input type="text" class="width-lg height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>
-                    <span class="field-hint">Campo apenas informativo, preenchido automaticamente quando o processo for localizado.</span>
-                </div>
-            </div>
-            <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
-            <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
-        </div>
-
-        <div class="create-section">
-            <div class="row table header">Réu</div>
-            <p class="section-subtitle">Preencha os dados principais da parte do polo passivo vinculada à medida protetiva.</p>
-            <div class="person-card">
-                <div class="person-card-title">Parte principal</div>
-                <div class="partes-grid">
-                    <div class="col filter">
-                        <label for="reu-cpf">CPF <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                        <input type="text" class="width-md height-md" id="reu-cpf" placeholder="Somente números">
-                    </div>
-                    <div class="col filter">
-                        <label for="reu-nome">Nome completo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                        <input type="text" class="width-xl height-md" id="reu-nome" placeholder="Nome completo do réu">
-                    </div>
-                    <div class="col filter">
-                        <label for="reu-sexo">Sexo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                        <select class="width-md height-md" id="reu-sexo">
-                            <option value="">Selecione</option>
-                            <option value="Feminino">Feminino</option>
-                            <option value="Masculino">Masculino</option>
-                            <option value="Outro">Outro</option>
-                        </select>
-                    </div>
-                    <div class="col filter">
-                        <label for="reu-data-nascimento">Data de nascimento</label>
-                        <input type="date" class="width-md height-md" id="reu-data-nascimento">
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="create-section">
-            <div class="row table header">Vítimas</div>
-            <div class="section-toolbar">
-                <p class="section-subtitle">Inclua uma ou mais vítimas quando necessário. Campos parcialmente preenchidos exigem CPF, nome completo e sexo.</p>
+        <div class="row table header">Vítimas</div>
+        <div class="row filter">
+            <div class="col filter">
                 <button class="btn btn-secondary-outline" id="add-vitima-btn" type="button">Adicionar vítima</button>
             </div>
-            <div id="vitimas-container"></div>
+        </div>
+        <div id="vitimas-container"></div>
+
+        <div class="row info">
+            <span>*Conforme regra de alocação, as medidas protetivas serão alocadas automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
         </div>
 
-        <div class="create-section">
-            <div class="allocation-card">
-                <span class="allocation-card-title">Alocação automática</span>
-                <p>Conforme a regra ativa do módulo, as medidas protetivas serão alocadas automaticamente para <strong><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong>.</p>
-            </div>
-        </div>
-
-        <div class="create-section">
-            <div class="actions-bar">
-                <div class="actions-bar-left">
-                    <button class="btn btn-primary-outline" id="alterar-regra-btn" type="button" style="display: none;">Alterar regra de alocação</button>
-                </div>
-                <div class="actions-bar-right">
-                    <button class="btn btn-secondary" id="voltar-btn" type="button">Voltar</button>
-                    <button class="btn btn-primary" id="cadastrar-btn" type="button">Cadastrar</button>
-                </div>
-            </div>
+        <div class="row buttons">
+            <button class="btn btn-primary-outline" id="alterar-regra-btn" style="display: none;">Alterar regra de alocação</button>
+            <button class="btn btn-secondary" id="voltar-btn">Voltar</button>
+            <button class="btn btn-primary" id="cadastrar-btn" type="button">Cadastrar</button>
         </div>
 
         <div class="row pagination">
@@ -323,11 +132,8 @@ try {
 
     <template id="vitima-template">
         <div class="vitima-card">
-            <div class="vitima-card-header">
-                <h3 class="vitima-card-index">Vítima</h3>
-                <button class="btn btn-secondary-outline btn-remover-vitima" type="button">Remover</button>
-            </div>
-            <div class="partes-grid">
+            <div class="row table header"><span class="vitima-card-index">Vítima</span></div>
+            <div class="row filter">
                 <div class="col filter">
                     <label>CPF</label>
                     <input type="text" class="width-md height-md vitima-cpf" placeholder="Somente números">
@@ -350,11 +156,24 @@ try {
                     <input type="date" class="width-md height-md vitima-data-nascimento">
                 </div>
             </div>
-            <div class="checkbox-group">
-                <label><input type="checkbox" class="vitima-mulher"> Mulher</label>
-                <label><input type="checkbox" class="vitima-crianca"> Criança/Adolescente</label>
-                <label><input type="checkbox" class="vitima-idoso"> Idoso</label>
-                <label><input type="checkbox" class="vitima-pcd"> Pessoa com deficiência</label>
+            <div class="row filter">
+                <div class="col filter">
+                    <label><input type="checkbox" class="vitima-mulher"> Mulher</label>
+                </div>
+                <div class="col filter">
+                    <label><input type="checkbox" class="vitima-crianca"> Criança/Adolescente</label>
+                </div>
+                <div class="col filter">
+                    <label><input type="checkbox" class="vitima-idoso"> Idoso</label>
+                </div>
+                <div class="col filter">
+                    <label><input type="checkbox" class="vitima-pcd"> Pessoa com deficiência</label>
+                </div>
+            </div>
+            <div class="row filter">
+                <div class="col filter">
+                    <button class="btn btn-secondary-outline btn-remover-vitima" type="button">Remover</button>
+                </div>
             </div>
         </div>
     </template>
@@ -368,6 +187,53 @@ try {
     <script src="/assets/js/modules/cartorio/cartas-expedidas/cnj.js"></script>
     <script src="/assets/js/modules/cartorio/cartas-expedidas/datajud-api.js"></script>
     <script src="/assets/js/modules/cartorio/cartas-expedidas/text-formatter.js"></script>
+    <script>
+        (function () {
+            var processoInput = document.getElementById('filter-processo');
+            var classeInput = document.getElementById('filter-classe');
+            var hCod = document.getElementById('hidden-classe-codigo');
+            var hDesc = document.getElementById('hidden-classe-descricao');
+            function limparClasse() {
+                if (classeInput) classeInput.value = '';
+                if (hCod) hCod.value = '';
+                if (hDesc) hDesc.value = '';
+            }
+            function preencherClasse(codigo, descricao) {
+                if (classeInput) classeInput.value = (codigo && descricao) ? (codigo + ' - ' + descricao) : (descricao || codigo || '');
+                if (hCod) hCod.value = codigo || '';
+                if (hDesc) hDesc.value = descricao || '';
+            }
+            if (processoInput) {
+                processoInput.addEventListener('blur', function () {
+                    var digits = (this.value || '').replace(/\D/g, '');
+                    if (digits.length !== 20) {
+                        limparClasse();
+                        return;
+                    }
+                    fetch('/api/datajud/search-processo.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ numero: digits }),
+                        credentials: 'same-origin'
+                    })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        var d = data && data.data;
+                        var classe = d && d.classe;
+                        if (classe && (classe.codigo || classe.descricao)) {
+                            preencherClasse(classe.codigo || '', classe.descricao || '');
+                        } else {
+                            limparClasse();
+                        }
+                    })
+                    .catch(function () { limparClasse(); });
+                });
+                processoInput.addEventListener('input', function () {
+                    if ((this.value || '').replace(/\D/g, '').length !== 20) limparClasse();
+                });
+            }
+        })();
+    </script>
     <script>
         (function () {
             var PERFIS_ALTERAR_REGRA = ['ADMIN', 'DIRETORA', 'MAGISTRADA'];
