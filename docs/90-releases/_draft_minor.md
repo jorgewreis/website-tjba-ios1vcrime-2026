@@ -86,4 +86,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correção de pessoa** `[ab4287a]`
 - **Fix: correção de formatação** `[c6b9c81]`
 - **Fix: pequenos ajustes** `[f458b84]`
+- **Fix: correção de ajustes** `[05ca497]`
 
