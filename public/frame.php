@@ -24,6 +24,7 @@ $ERRORS = $PAGES . '/errors';
 // Lista de páginas permitidas e seus caminhos.
 $allowed_pages = [
     'dashboard'             => $PAGES . '/dashboard.php',
+    'consultacep'          => $PAGES . '/consulta-cep.php',
     'cejusc'                => $PAGES . '/cartorio-cejusc-list.php',
     'cejuscedit'            => $PAGES . '/cartorio-cejusc-edit.php',
     'cejusccreate'          => $PAGES . '/cartorio-cejusc-create.php',
@@ -68,6 +69,7 @@ $allowed_pages = [
 // Mapeia páginas para suas seções, usadas no controle de acesso.
 $page_to_section = [
     'dashboard'         => 'All',
+    'consultacep'       => 'Consultas',
     'cartasexpedidas'   => 'Cartório',
     'cartasexpedidasedit'   => 'Cartório',
     'cartasexpedidascreate' => 'Cartório',
@@ -127,6 +129,7 @@ function hasAccessToSection(array $userPerfils, ?string $requiredSection): bool
         'Cartório' => ['CARTORIO', 'AUDIENCIA', 'GABINETE', 'ADMIN', 'SERVIDOR', 'CHEFIA'],
         'Gabinete' => ['GABINETE', 'ADMIN', 'CHEFIA'],
         'Sala de Audiências' => ['AUDIENCIA', 'GABINETE', 'ADMIN', 'CHEFIA'],
+        'Consultas' => ['CONSULTOR', 'CARTORIO', 'AUDIENCIA', 'GABINETE', 'ADMIN', 'SERVIDOR', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'],
         // 'Estudantes' e 'Consultor' podem ser removidos se não houver páginas mapeadas para eles.
         'Estudantes' => ['ADMIN'], // Estudante não tem acesso, mas Admin pode gerenciar.
         'Consultor'  => ['CONSULTOR', 'ADMIN'],

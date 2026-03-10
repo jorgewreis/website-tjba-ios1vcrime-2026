@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0068
+
+**Data:** 2026-03-10 17:19:20 | **Commit:** `7fdfa07` | **Tipo:** `patch`
+
+- Feat: nova página consulta cep
+
 ## V. 1.03.0067
 
 **Data:** 2026-03-10 16:52:23 | **Commit:** `6e6f793` | **Tipo:** `patch`
@@ -2682,6 +2688,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

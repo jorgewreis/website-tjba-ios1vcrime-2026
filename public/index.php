@@ -116,7 +116,7 @@ $csrfToken = Security::generateCSRFToken();
                     <!-- FOOTER - SYSTEM -->
                     <div class="footer-page">                        
                         <div class="info-page">
-                            <span class="info-line">Rua Dr. Hygino Filho, bloco C, 1º andar, sala 312 - Jardim Atlântico, Ilhéus - BA</span>
+                            <span class="info-line">Rua Dr. Hygino Filho, bloco C, 1º andar, sala 132 - Jardim Atlântico, Ilhéus - BA</span>
                             <span class="info-line">Tel.: 73 3234-3428 - Whatsapp: 71 99610-8241 - Email: ilheus1vcriminal@tjba.jus.br</span>
                         </div>
                         <div class="info-app">Sistema desenvolvido integralmente por Jorge Reis Developer - 2026 - Todos os direitos reservados</div>
