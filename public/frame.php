@@ -58,6 +58,17 @@ $allowed_pages = [
     'documentos'            => $PAGES . '/documentos.php',
     'alterardados'          => $PAGES . '/alterar-dados-pessoais.php',
 
+    'consultaparte'         => $PAGES . '/consulta-partes-list.php',
+    'consultapartes'        => $PAGES . '/consulta-partes-list.php',
+    'consultapartescreate'  => $PAGES . '/consulta-partes-create.php',
+    'consultapartesedit'    => $PAGES . '/consulta-partes-edit.php',
+    'consultaprocessos'     => $PAGES . '/consulta-processos-list.php',
+    'consultaprocessosedit' => $PAGES . '/consulta-processos-edit.php',
+    'instituicoespublicas'  => $PAGES . '/instituicoes-publicas-list.php',
+    'instituicoespublicascreate' => $PAGES . '/instituicoes-publicas-create.php',
+    'instituicoespublicasedit'   => $PAGES . '/instituicoes-publicas-edit.php',
+    'processospartescreate'     => $PAGES . '/processos-partes-create.php',
+
     '401'=> $ERRORS . '/401.php',
     '403'=> $ERRORS . '/403.php',
     '404'=> $ERRORS . '/404.php',
@@ -98,7 +109,17 @@ $page_to_section = [
     'oficiosgabinete'   => 'Gabinete',
     'produtividade'     => 'Cartório',
     'reuspresos'        => 'Gabinete',
-    'alterardados'      => 'Perfil'
+    'alterardados'      => 'Perfil',
+    'consultaparte'     => 'Consultas',
+    'consultapartes'    => 'Consultas',
+    'consultapartescreate'  => 'Consultas',
+    'consultapartesedit'    => 'Consultas',
+    'consultaprocessos'     => 'Consultas',
+    'consultaprocessosedit' => 'Consultas',
+    'instituicoespublicas'  => 'Consultas',
+    'instituicoespublicascreate' => 'Consultas',
+    'instituicoespublicasedit'   => 'Consultas',
+    'processospartescreate'     => 'Consultas',
 ];
 
 /**

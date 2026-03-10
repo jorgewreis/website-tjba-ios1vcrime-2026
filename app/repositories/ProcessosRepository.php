@@ -92,6 +92,71 @@ final class ProcessosRepository
         return $result === false ? null : $result;
     }
 
+    /** @return list<array<string, mixed>> */
+    public function fetchList(array $filters, int $limit, int $offset): array
+    {
+        [$whereClause, $params, $joinClause] = $this->buildListFilter($filters);
+
+        $groupBy = $joinClause !== '' ? ' GROUP BY proc.`id` ' : '';
+        $sql = sprintf(
+            'SELECT proc.`id`, proc.`numero_processo`, proc.`classe_id`, proc.`data_fato`, proc.`sigiloso`, proc.`created_at`, proc.`updated_at` FROM `%s` proc %s %s %s ORDER BY proc.`numero_processo` ASC LIMIT :limit OFFSET :offset',
+            $this->table,
+            $joinClause,
+            $whereClause ? 'WHERE ' . $whereClause : '',
+            $groupBy
+        );
+        $statement = $this->connection->prepare($sql);
+        foreach ($params as $name => $value) {
+            $statement->bindValue($name, $value);
+        }
+        $statement->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $statement->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $statement->execute();
+
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+        return $rows === false ? [] : $rows;
+    }
+
+    public function count(array $filters): int
+    {
+        [$whereClause, $params, $joinClause] = $this->buildListFilter($filters);
+        $sql = sprintf('SELECT COUNT(DISTINCT proc.`id`) AS total FROM `%s` proc %s %s', $this->table, $joinClause, $whereClause ? 'WHERE ' . $whereClause : '');
+        $statement = $this->connection->prepare($sql);
+        foreach ($params as $name => $value) {
+            $statement->bindValue($name, $value);
+        }
+        $statement->execute();
+
+        return (int) $statement->fetchColumn();
+    }
+
+    /** @return array{0: string, 1: array<string, mixed>, 2: string} */
+    private function buildListFilter(array $filters): array
+    {
+        $conditions = [];
+        $params = [];
+        $joinClause = '';
+
+        $numero = trim((string) ($filters['numero'] ?? $filters['numero_processo'] ?? ''));
+        if ($numero !== '') {
+            $digits = $this->normalizeNumber($numero);
+            if ($digits !== '') {
+                $conditions[] = 'REPLACE(REPLACE(proc.`numero_processo`, \'-\', \'\'), \'.\', \'\') LIKE :numero';
+                $params[':numero'] = '%' . $digits . '%';
+            }
+        }
+
+        $parteNome = trim((string) ($filters['parte_nome'] ?? $filters['nome'] ?? ''));
+        if ($parteNome !== '') {
+            $joinClause = ' INNER JOIN `processos_partes` pp ON pp.`processo_id` = proc.`id` INNER JOIN `partes` pt ON pt.`id` = pp.`parte_id` ';
+            $conditions[] = 'pt.`nome_completo` LIKE :parte_nome';
+            $params[':parte_nome'] = '%' . $parteNome . '%';
+        }
+
+        $where = $conditions === [] ? '' : implode(' AND ', $conditions);
+        return [$where, $params, $joinClause];
+    }
+
     private function updateIfNeeded(string $id, ?string $classeId, ?string $dataFato, bool $sigiloso): void
     {
         $statement = $this->connection->prepare(

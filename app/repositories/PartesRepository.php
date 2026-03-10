@@ -49,6 +49,70 @@ final class PartesRepository
         return $result === false ? null : $result;
     }
 
+    /** @return list<array<string, mixed>> */
+    public function fetchList(array $filters, int $limit, int $offset): array
+    {
+        [$whereClause, $params, $joinClause] = $this->buildListFilter($filters);
+
+        $sql = sprintf(
+            'SELECT p.`id`, p.`cpf`, p.`nome_completo`, p.`sexo`, p.`data_nascimento`, p.`created_at`, p.`updated_at` FROM `%s` p %s %s ORDER BY p.`nome_completo` ASC LIMIT :limit OFFSET :offset',
+            $this->table,
+            $joinClause,
+            $whereClause ? 'WHERE ' . $whereClause : ''
+        );
+        $statement = $this->connection->prepare($sql);
+        foreach ($params as $name => $value) {
+            $statement->bindValue($name, $value);
+        }
+        $statement->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $statement->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $statement->execute();
+
+        return $statement->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function count(array $filters): int
+    {
+        [$whereClause, $params, $joinClause] = $this->buildListFilter($filters);
+        $sql = sprintf('SELECT COUNT(DISTINCT p.`id`) AS total FROM `%s` p %s %s', $this->table, $joinClause, $whereClause ? 'WHERE ' . $whereClause : '');
+        $statement = $this->connection->prepare($sql);
+        foreach ($params as $name => $value) {
+            $statement->bindValue($name, $value);
+        }
+        $statement->execute();
+
+        return (int) $statement->fetchColumn();
+    }
+
+    /** @return array{0: string, 1: array<string, mixed>, 2: string} */
+    private function buildListFilter(array $filters): array
+    {
+        $conditions = [];
+        $params = [];
+        $joinClause = '';
+
+        $nome = trim((string) ($filters['nome'] ?? ''));
+        if ($nome !== '') {
+            $conditions[] = 'p.`nome_completo` LIKE :nome';
+            $params[':nome'] = '%' . $nome . '%';
+        }
+
+        $cpf = $this->normalizeCpf((string) ($filters['cpf'] ?? ''));
+        if ($cpf !== '') {
+            $conditions[] = 'p.`cpf` = :cpf';
+            $params[':cpf'] = $cpf;
+        }
+
+        $instituicaoId = trim((string) ($filters['instituicao_id'] ?? ''));
+        if ($instituicaoId !== '') {
+            $joinClause = ' INNER JOIN `partes_instituicoes` pi ON pi.`parte_id` = p.`id` AND pi.`instituicao_id` = :instituicao_id ';
+            $params[':instituicao_id'] = $instituicaoId;
+        }
+
+        $where = $conditions === [] ? '' : implode(' AND ', $conditions);
+        return [$where, $params, $joinClause];
+    }
+
     public function insert(array $row): string
     {
         $cpf = $this->normalizeCpf((string) ($row['cpf'] ?? ''));

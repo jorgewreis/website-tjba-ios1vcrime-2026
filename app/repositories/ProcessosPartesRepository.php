@@ -97,6 +97,30 @@ final class ProcessosPartesRepository
         return $id;
     }
 
+    /** @return list<array<string, mixed>> */
+    public function findByParteId(string $parteId): array
+    {
+        $parteId = trim($parteId);
+        if ($parteId === '') {
+            return [];
+        }
+
+        $sql = sprintf(
+            'SELECT pp.`id`, pp.`processo_id`, pp.`parte_id`, pp.`tipo_parte`, pp.`polo`, pp.`prioridade_mulher`, pp.`prioridade_crianca_adolescente`, pp.`prioridade_idoso`, pp.`prioridade_pessoa_deficiencia`, pp.`created_at`, pp.`updated_at`, proc.`numero_processo`
+             FROM `%s` pp
+             LEFT JOIN `processos` proc ON proc.`id` = pp.`processo_id`
+             WHERE pp.`parte_id` = :parte_id
+             ORDER BY proc.`numero_processo` ASC, pp.`created_at` ASC',
+            $this->table
+        );
+        $statement = $this->connection->prepare($sql);
+        $statement->bindValue(':parte_id', $parteId);
+        $statement->execute();
+
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+        return $rows === false ? [] : $rows;
+    }
+
     public function findByProcessoId(string $processoId, ?string $tipoParte = null): array
     {
         $processoId = trim($processoId);
@@ -125,6 +149,19 @@ final class ProcessosPartesRepository
 
         $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
         return $rows === false ? [] : $rows;
+    }
+
+    public function delete(string $id): bool
+    {
+        $id = trim($id);
+        if ($id === '') {
+            return false;
+        }
+        $statement = $this->connection->prepare(sprintf('DELETE FROM `%s` WHERE `id` = :id LIMIT 1', $this->table));
+        $statement->bindValue(':id', $id);
+        $statement->execute();
+
+        return $statement->rowCount() > 0;
     }
 
     public function deleteByProcessoId(string $processoId): void
