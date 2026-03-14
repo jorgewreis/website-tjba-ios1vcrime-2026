@@ -150,17 +150,22 @@ try {
 
     <div class="card-page">
         <form method="post" class="rule-form" style="width: 100%">
-            <div class="row table header">Regras de alocação automática</div>
+            <div class="row table subtitle left padding-tb-lg padding-lr-lg">Regras de alocação automática</div>    
             <?php if (!$podeAlterarRegra): ?>
-                <div class="row filter">
+                <div class="row table left padding-tb-md padding-lr-lg border-bottom full-line">
                     <div class="col">
                         <label class="status status-primary-light">Apenas perfis admin, diretora ou magistrada podem alterar esta regra. Você pode visualizar a configuração atual.</label>
                     </div>
                 </div>
             <?php endif; ?>
-            <div class="row filter">
-                <div class="col filter">
-                    <label for="filter-processo">Servidor</label>
+
+            <div class="row table buttons left padding-lr-md padding-tb-md">
+                <span class="minor-info">Acompanhamento e envio de Cartas Expedidas</span>
+            </div>
+
+            <div class="row table subtitle left padding-tb-lg padding-lr-lg">
+                <div class="col">
+                    <label for="filter-processo">Responsável</label>
                     <select class="width-lg height-md" id="filter-processo" name="id_user" <?php echo $podeAlterarRegra ? '' : 'disabled'; ?> required>
                         <option value="" disabled<?php echo $selectedUserId === '' ? ' selected' : ''; ?>>Selecione um servidor</option>
                         <?php foreach ($usersList as $user): ?>
@@ -171,14 +176,15 @@ try {
                     </select>
                 </div>
             </div> 
+
             <?php if (!empty($ruleRow['id'] ?? '')): ?>
-                <div class="row <?php if($ruleUsuarioNome === ''){ echo 'info'; } else { echo 'success'; } ?>">
+                <div class="row table <?php if($ruleUsuarioNome === ''){ echo 'info'; } else { echo 'success'; } ?>">
                     <span><?php echo htmlspecialchars(sprintf('Envio de Cartas Expedidas: %s - %s', $ruleRow['id'] ?? 'sem ID', $ruleUsuarioNome)); ?></span>
                 </div>
             <?php endif; ?>
 
             <!-- Ações -->
-            <div class="row buttons">
+            <div class="row table right padding-tb-md padding-lr-lg row-gap-10">
                 <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
                 <?php if ($podeAlterarRegra): ?>
                     <button type="submit" class="btn btn-primary">Salvar</button>
@@ -187,14 +193,14 @@ try {
 
             <!-- Informações -->
             <?php if ($successMessage): ?>
-                <div class="row filter">
+                <div class="row table buttons left padding-lr-md padding-tb-md">
                     <div class="col">
                         <label class="status status-finished"><?php echo htmlspecialchars($successMessage); ?></label>
                     </div>
                 </div>
             <?php endif; ?>
             <?php if (!empty($errors)): ?>
-                <div class="row filter">
+                <div class="row table buttons left padding-lr-md padding-tb-md">
                     <div class="col">
                         <?php foreach ($errors as $error): ?>
                             <label class="status status-cancelled"><?php echo htmlspecialchars($error); ?></label>

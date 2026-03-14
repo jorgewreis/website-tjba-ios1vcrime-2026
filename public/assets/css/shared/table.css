@@ -428,13 +428,17 @@
 @media (min-width: 768px) {    
     
     /* COLUMNS WITH ID FIX */
-    .row.left:not(.subtitle) {
+    .row.left {
         width: fit-content;
     }
-
-    .row-right {
+    .row.right {
         display: fit-content;
 
+    }
+
+    .row.left.info,
+    .row.left.subtitle {
+        width: 100px;
     }
 }
 

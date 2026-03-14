@@ -139,7 +139,7 @@ try {
 
     <div class="card-page">       
         <div class="row table subtitle left padding-tb-lg padding-lr-lg">Informações obrigatórias para o cadastro</div>
-        <div class="row table left left padding-tb-md padding-lr-lg border-bottom row-gap-10">
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
                 <label for="filter-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="width-md height-md" id="filter-processo" placeholder="Digite o número do processo" required>
@@ -164,14 +164,14 @@ try {
         </div>
 
         <?php if ($cnjError): ?>
-            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10">
+            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
                 <div class="col">
                     <label class="status status-cancelled"><?php echo htmlspecialchars($cnjError, ENT_QUOTES); ?></label>
                 </div>
             </div>
         <?php endif; ?>
 
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10">
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
                 <label for="filter-cidade">Cidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="width-xl height-md" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="50" required>
@@ -210,7 +210,7 @@ try {
             </div>            
             <div class="col">
                 <label for="filter-prazo">Prazo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <select class="width-sm height-md" id="filter-prazo" required>
+                <select class="width-sm height-md" id="filter-prazo" required style="width: 210px;">
                     <option value="5 dias">5 dias</option>
                     <option value="10 dias">10 dias</option>
                     <option value="15 dias">15 dias</option>
