@@ -234,7 +234,7 @@ if ($totalPages > 0) {
         <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Lista de Documentos</div>
 
         <!-- FILTERS -->
-        <div class="row table between padding-tb-sm padding-lr-lg border-bottom">
+        <div class="row table between padding-tb-lg padding-lr-lg border-bottom">
             
             <div class="row left">
                 <!-- FILTER FINALIDADE -->
@@ -285,24 +285,26 @@ if ($totalPages > 0) {
             </div>
         </div>
         
-        <!-- Tabela -->
-        
+        <!-- REGISTER -->        
         <?php if (!empty($rows)): ?>
             <?php foreach ($rows as $row):
                 $processo = $row['Processo'];
                 $idCarta = $row['IdCarta'];
                 $subtarefas = $row['Subtarefas'] ?? [];
             ?>
-            <div class="col table left" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>">
-                <div class="row table" id="<?php echo htmlspecialchars($idCarta); ?>">
-                    <div class="row">
+            <!-- REGISTRO COMPLETO -->
+            <div class="col" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>">
+
+                <!-- TAREFA -->
+                <div class="row table between padding-lf-md" id="<?php echo htmlspecialchars($idCarta); ?>">
+                    <div class="row left">
                         <div class="col">
                             <label class="button-table" title="Expandir detalhes">
                                 <input type="radio" name="open-subtask" value="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" aria-controls="subtask-<?php echo htmlspecialchars($idCarta); ?>" aria-expanded="false" />
                                 <i class="fi fi-rr-angle-small-down"></i>
                             </label>
                         </div>
-                        <div class="col filter process-info" title="clique para copiar">
+                        <div class="col process-info" title="clique para copiar">
                             <?php
                                 $classeNome = $row['ClasseNome'] ?? 'Classe não informada';
                                 $classeStyle = $classeNome !== 'Classe não informada' ? 'style="color: var(--primary-color-active); font-weight: 600;"' : '';
@@ -310,16 +312,16 @@ if ($totalPages > 0) {
                             <span class="minor-info text-ellipsis" title="<?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?>" <?php echo $classeStyle; ?>><?php echo htmlspecialchars($classeNome); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars($row['Processo']); ?></span>
                         </div>
+                        <div class="col comarca-info">
+                            <span class="minor-info">Comarca de destino</span>
+                            <span class="major-info"><?php echo htmlspecialchars($row['Comarca'] . ' - ' . $row['Estado']); ?></span>
+                        </div>
+                        <div class="col detalhes-info">
+                            <span class="minor-info"><?php echo htmlspecialchars($row['Finalidade']); ?></span>
+                            <span class="major-info"><?php echo htmlspecialchars($row['Prazo'] . ' dias'); ?></span>
+                        </div>
                     </div>
-                    <div class="col filter comarca-info">
-                        <span class="minor-info">Comarca de destino</span>
-                        <span class="major-info"><?php echo htmlspecialchars($row['Comarca'] . ' - ' . $row['Estado']); ?></span>
-                    </div>
-                    <div class="col filter detalhes-info">
-                        <span class="minor-info"><?php echo htmlspecialchars($row['Finalidade']); ?></span>
-                        <span class="major-info"><?php echo htmlspecialchars($row['Prazo'] . ' dias'); ?></span>
-                    </div>
-                    <div class="row">
+                    <div class="row right">
                         <div class="col button-table button-edit" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" title="Editar">
                             <i class="fi fi-rr-file-edit"></i>
                         </div>
@@ -410,6 +412,7 @@ if ($totalPages > 0) {
                     </div>
                 </div>
 
+                <!-- SUB-TAREFA -->
                 <div class="row subtask subtask-collapsed" id="subtask-<?php echo htmlspecialchars($idCarta); ?>" aria-hidden="true">
                     <?php foreach ($subtarefas as $st):
                         $stId = $st['id'] ?? '';
@@ -472,8 +475,9 @@ if ($totalPages > 0) {
                     <?php endif; ?>
                 </div>
             </div>
+
             <?php endforeach; ?>
-        <?php else: // Caso não haja dados para exibir ?>
+            <?php else: // Caso não haja dados para exibir ?>
             <div class="row table">
                 <div class="col">
                     <div class="col filter no-data">
@@ -481,7 +485,7 @@ if ($totalPages > 0) {
                     </div>
                 </div>
             </div>
-        <?php endif; ?>
+            <?php endif; ?>
 
         <!-- Paginação -->
         <div class="row pagination">
