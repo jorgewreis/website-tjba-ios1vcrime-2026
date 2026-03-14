@@ -124,8 +124,8 @@ try {
     </div>
 
     <div class="card-page">
-        <div class="row table header">Informações obrigatórias</div>
-        <div class="row filter">
+        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Informações obrigatórias</div>
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col filter">
                 <label for="filter-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="width-md height-md" id="filter-processo" placeholder="Digite o número do processo" required>
@@ -147,8 +147,8 @@ try {
                     <option value="Outra">Outra não listada</option>
                 </select>
             </div>
-        </div>        
-        <div class="row filter">
+        </div>
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col filter">
                 <label for="filter-cidade">Cidade de origem <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="width-xl height-md" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="50" required>
@@ -201,7 +201,7 @@ try {
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
 
         <?php if ($cnjError): ?>
-            <div class="row filter">
+            <div class="row table left padding-lr-sm padding-tb-sm">
                 <div class="col">
                     <label class="status status-cancelled"><?php echo htmlspecialchars($cnjError, ENT_QUOTES); ?></label>
                 </div>
@@ -212,7 +212,7 @@ try {
             <span>*Conforme regra de alocação, as Cartas Recebidas serão alocadas automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
         </div>
 
-        <div class="row buttons">
+        <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
             <button class="btn btn-primary-outline" id="alterar-regra-btn" style="display: none;">Alterar regra de alocação</button>
             <button class="btn btn-secondary" id="voltar-btn">Voltar</button>
             <button class="btn btn-primary" id="cadastrar-btn" type="button">Cadastrar</button>

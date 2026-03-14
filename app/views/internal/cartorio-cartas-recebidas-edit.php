@@ -266,14 +266,14 @@ $stateOptions = [
 
     <div class="card-page">
         <?php if ($errorMessage !== ''): ?>
-            <div class="row filter">
+            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
                 <div class="col">
                     <label class="status status-cancelled"><?php echo htmlspecialchars($errorMessage, ENT_QUOTES); ?></label>
                 </div>
             </div>
         <?php else: ?>
-            <div class="row table header">Informações obrigatórias</div>
-            <div class="row filter">
+            <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Informações obrigatórias</div>
+            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
                 <div class="col filter">
                     <label for="filter-processo">Processo</label>
                     <input type="text" id="filter-processo" class="width-md height-md readonly" value="<?php echo htmlspecialchars($processoNumero, ENT_QUOTES); ?>" readonly>
@@ -297,7 +297,7 @@ $stateOptions = [
                     </select>
                 </div>
             </div>            
-            <div class="row filter">
+            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
                 <div class="col filter">
                     <label for="filter-cidade">Cidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="text" class="width-xl height-md" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="120" value="<?php echo htmlspecialchars($cidadeValue, ENT_QUOTES); ?>" required>
@@ -320,7 +320,7 @@ $stateOptions = [
                     </select>
                 </div>
             </div>            
-            <!-- <div class="row filter">
+            <!-- <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
                 <div class="col filter">
                     <label for="filter-observacoes">Observações</label>
                     <textarea id="filter-observacoes" class="width-xl" rows="4"><?php echo htmlspecialchars($observacoesValue, ENT_QUOTES); ?></textarea>
@@ -334,7 +334,7 @@ $stateOptions = [
             <input type="hidden" id="hidden-comarca-id" value="<?php echo htmlspecialchars($comarcaDestinoId, ENT_QUOTES); ?>">
 
         <?php endif; ?>
-        <div class="row buttons">
+        <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
             <button class="btn btn-secondary" id="voltar-btn">Voltar</button>
             <?php if ($errorMessage === ''): ?>
                 <button class="btn btn-primary" id="salvar-btn" type="button" disabled>Salvar alterações</button>

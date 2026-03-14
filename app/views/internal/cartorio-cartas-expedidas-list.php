@@ -234,7 +234,7 @@ if ($totalPages > 0) {
         <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Lista de Documentos</div>
 
         <!-- FILTERS -->
-        <div class="row table between padding-tb-lg padding-lr-lg border-bottom">
+        <div class="row table between padding-tb-lg padding-lr-md border-bottom">
             
             <div class="row left row-gap-10">
                 <!-- FILTER FINALIDADE -->
@@ -296,7 +296,7 @@ if ($totalPages > 0) {
             <div class="col full-line border-bottom" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idCarta); ?>">
 
                 <!-- TAREFA -->
-                <div class="row table between padding-lf-md">
+                <div class="row table between padding-lr-md">
                     
                     <!-- DIV LEFT -->
                     <div class="row left">

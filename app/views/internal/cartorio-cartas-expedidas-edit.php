@@ -264,7 +264,7 @@ $stateOptions = [
 
     <div class="card-page">
         <?php if ($errorMessage !== ''): ?>
-            <div class="row filter">
+            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
                 <div class="col">
                     <label class="status status-cancelled"><?php echo htmlspecialchars($errorMessage, ENT_QUOTES); ?></label>
                 </div>

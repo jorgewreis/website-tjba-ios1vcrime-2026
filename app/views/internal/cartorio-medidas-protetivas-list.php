@@ -126,34 +126,42 @@ if ($totalPages > 0) {
     </div>
 
     <div class="card-page">
-        <div class="row filter">
-            <div class="col filter">
-                <label for="filter-status">Filtrar por status</label>
-                <select class="width-md height-md" id="filter-status">
-                    <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Mostrar todos</option>
-                    <option value="pendente"<?php echo $statusFilter === 'pendente' ? ' selected' : ''; ?>>Pendente (<?php echo (int) $statusCounts['pendente']; ?>)</option>
-                    <option value="em_andamento"<?php echo $statusFilter === 'em_andamento' ? ' selected' : ''; ?>>Em andamento (<?php echo (int) $statusCounts['em_andamento']; ?>)</option>
-                    <option value="concluída"<?php echo $statusFilter === 'concluída' ? ' selected' : ''; ?>>Finalizada (<?php echo (int) $statusCounts['concluída']; ?>)</option>
-                    <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>Cancelada (<?php echo (int) $statusCounts['cancelada']; ?>)</option>
-                </select>
-            </div>
-            <div class="col filter">
-                <label for="items-per-page">Itens por página</label>
-                <select class="width-sm height-md" id="items-per-page">
-                    <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
-                    <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
-                    <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
-                    <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
-                </select>
-            </div>
-        </div>
 
-        <div class="row buttons">
+        <!-- ROW ACTIONS -->
+        <div class="row table buttons right padding-lr-md padding-tb-md row-gap-10">
             <input type="text" class="width-md height-md" id="search-input" placeholder="Pesquisar por processo..." value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
             <button class="btn btn-primary" id="novo-cadastro-btn">Novo cadastro</button>
         </div>
 
-        <div class="row table header">Lista de Medidas Protetivas</div>
+        <!-- SUBTITLE TABLE -->
+        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Lista de Medidas Protetivas</div>
+
+        <!-- FILTERS -->
+        <div class="row table between padding-tb-lg padding-lr-md border-bottom">
+            <div class="row left row-gap-10">
+                <div class="col">
+                    <label for="filter-status">Filtrar por status</label>
+                    <select class="width-md height-md" id="filter-status">
+                        <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Mostrar todos</option>
+                        <option value="pendente"<?php echo $statusFilter === 'pendente' ? ' selected' : ''; ?>>Pendente (<?php echo (int) $statusCounts['pendente']; ?>)</option>
+                        <option value="em_andamento"<?php echo $statusFilter === 'em_andamento' ? ' selected' : ''; ?>>Em andamento (<?php echo (int) $statusCounts['em_andamento']; ?>)</option>
+                        <option value="concluída"<?php echo $statusFilter === 'concluída' ? ' selected' : ''; ?>>Finalizada (<?php echo (int) $statusCounts['concluída']; ?>)</option>
+                        <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>Cancelada (<?php echo (int) $statusCounts['cancelada']; ?>)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col right">
+                <div class="col">
+                    <label for="items-per-page">Itens por página</label>
+                    <select class="width-sm height-md" id="items-per-page">
+                        <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
+                        <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
+                        <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
+                        <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
+                    </select>
+                </div>
+            </div>
+        </div>
         <?php if (!empty($rows)): ?>
             <?php foreach ($rows as $row):
                 $idMedida = (string) ($row['IdMedida'] ?? '');
@@ -182,7 +190,7 @@ if ($totalPages > 0) {
                 $mostrarBarraStatus = !in_array($st, ['concluída', 'cancelada'], true);
             ?>
             <div class="col full-line register" data-medida-id="<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>">
-                <div class="row table" id="<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>">
+                <div class="row table padding-lr-md" id="<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>">
                     <div class="row">
                         <div class="col">
                             <label class="button-table" title="Expandir detalhes">

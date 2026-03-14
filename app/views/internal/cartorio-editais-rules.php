@@ -139,15 +139,15 @@ try {
 
     <div class="card-page">
         <form method="post" class="rule-form" style="width: 100%">
-            <div class="row table header">Regras de alocação automática</div>
+            <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Regras de alocação automática</div>
             <?php if (!$podeAlterarRegra): ?>
-                <div class="row filter">
+                <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
                     <div class="col">
                         <label class="status status-primary-light">Apenas perfis admin, diretora ou magistrada podem alterar esta regra. Você pode visualizar a configuração atual.</label>
                     </div>
                 </div>
             <?php endif; ?>
-            <div class="row filter">
+            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
                 <div class="col filter">
                     <label for="filter-servidor">Servidor</label>
                     <select class="width-lg height-md" id="filter-servidor" name="id_user" <?php echo $podeAlterarRegra ? '' : 'disabled'; ?> required>
@@ -166,7 +166,7 @@ try {
                 </div>
             <?php endif; ?>
 
-            <div class="row buttons">
+            <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
                 <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
                 <?php if ($podeAlterarRegra): ?>
                     <button type="submit" class="btn btn-primary">Salvar</button>
@@ -174,14 +174,14 @@ try {
             </div>
 
             <?php if ($successMessage): ?>
-                <div class="row filter">
+                <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
                     <div class="col">
                         <label class="status status-finished"><?php echo htmlspecialchars($successMessage); ?></label>
                     </div>
                 </div>
             <?php endif; ?>
             <?php if (!empty($errors)): ?>
-                <div class="row filter">
+                <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
                     <div class="col">
                         <?php foreach ($errors as $error): ?>
                             <label class="status status-cancelled"><?php echo htmlspecialchars($error); ?></label>
