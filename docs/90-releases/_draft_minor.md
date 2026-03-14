@@ -129,4 +129,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix: correções de bugs** `[9d84623]`
 - **fix: correções finas** `[c8d0359]`
 - **fix: correção de select** `[c05193e]`
+- **fix: pequenos ajustes** `[14ec040]`
 
