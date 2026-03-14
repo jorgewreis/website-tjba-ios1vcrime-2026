@@ -189,35 +189,40 @@ if ($totalPages > 0) {
                 }
                 $mostrarBarraStatus = !in_array($st, ['concluída', 'cancelada'], true);
             ?>
-            <div class="col full-line register" data-medida-id="<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>">
-                <div class="row table padding-lr-md" id="<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>">
-                    <div class="row">
+            <!-- REGISTRO COMPLETO -->
+            <div class="col full-line border-bottom" data-medida-id="<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>">
+
+                <!-- TAREFA -->
+                <div class="row table between padding-lr-md">
+                    <!-- DIV LEFT -->
+                    <div class="row left">
                         <div class="col">
                             <label class="button-table" title="Expandir detalhes">
                                 <input type="radio" name="open-subtask" value="<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>" aria-controls="subtask-<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>" aria-expanded="false" />
                                 <i class="fi fi-rr-angle-small-down"></i>
                             </label>
                         </div>
-                        <div class="col filter process-info" title="clique para copiar">
+                        <div class="col process-info" title="clique para copiar">
                             <span class="minor-info">Processo</span>
                             <span class="major-info"><?php echo htmlspecialchars((string) ($row['Processo'] ?? '—')); ?></span>
                         </div>
-                    </div>
-                    <div class="col filter comarca-info">
-                        <span class="minor-info">Classe</span>
-                        <span class="major-info text-ellipsis" title="<?php echo htmlspecialchars((string) ($row['Classe'] ?? '—'), ENT_QUOTES); ?>"><?php echo htmlspecialchars((string) ($row['Classe'] ?? '—')); ?></span>
-                    </div>
-                    <div class="col filter comarca-info">
-                        <span class="minor-info">Réu</span>
-                        <span class="major-info"><?php echo htmlspecialchars((string) ($row['ReuNome'] ?? '—')); ?></span>
-                    </div>
-                    <?php if (!empty($row['CejuscTarefaId'])): ?>
-                        <div class="col filter comarca-info">
+                        <div class="col comarca-info">
+                            <span class="minor-info">Classe</span>
+                            <span class="major-info text-ellipsis" title="<?php echo htmlspecialchars((string) ($row['Classe'] ?? '—'), ENT_QUOTES); ?>"><?php echo htmlspecialchars((string) ($row['Classe'] ?? '—')); ?></span>
+                        </div>
+                        <div class="col detalhes-info">
+                            <span class="minor-info">Réu</span>
+                            <span class="major-info"><?php echo htmlspecialchars((string) ($row['ReuNome'] ?? '—')); ?></span>
+                        </div>
+                        <?php if (!empty($row['CejuscTarefaId'])): ?>
+                        <div class="col detalhes-info">
                             <span class="minor-info">Cejusc</span>
                             <a class="major-info" href="/frame.php?page=cejuscedit&id=<?php echo urlencode((string) $row['CejuscTarefaId']); ?>">Abrir tarefa</a>
                         </div>
-                    <?php endif; ?>
-                    <div class="row">
+                        <?php endif; ?>
+                    </div>
+                    <!-- DIV RIGHT -->
+                    <div class="row right">
                         <div class="col button-table button-edit" data-medida-id="<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>" title="Editar">
                             <i class="fi fi-rr-file-edit"></i>
                         </div>
@@ -257,43 +262,45 @@ if ($totalPages > 0) {
                     </div>
                 </div>
 
-                <div class="row subtask subtask-collapsed" id="subtask-<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>" aria-hidden="true">
-                    <?php foreach ($subtarefas as $subtarefa): ?>
-                        <div class="col full-line" data-subtarefa-id="<?php echo htmlspecialchars((string) ($subtarefa['id'] ?? ''), ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars((string) ($subtarefa['tipo'] ?? ''), ENT_QUOTES); ?>" style="border-top: 1px solid var(--color-gray-400);">
-                            <div class="row subtask-item">
-                                <div class="left-content">
-                                    <div class="col task-status">
-                                        <div class="status status-pending"><?php echo htmlspecialchars($subtarefaLabels[$subtarefa['tipo'] ?? ''] ?? 'Subtarefa'); ?></div>
-                                    </div>
-                                </div>
-                                <div class="right-content">
-                                    <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars((string) ($subtarefa['id'] ?? ''), ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($subtarefaLabels[$subtarefa['tipo'] ?? ''] ?? 'Concluir', ENT_QUOTES); ?>"><i class="fi fi-rr-play"></i></button>
-                                </div>
+                <!-- SUB-TAREFAS -->
+                <div class="col subtask subtask-collapsed padding-lr-lg full-line" id="subtask-<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>" aria-hidden="true">
+                    <?php foreach ($subtarefas as $subtarefa):
+                        $stId = (string) ($subtarefa['id'] ?? '');
+                        $stTipo = (string) ($subtarefa['tipo'] ?? '');
+                        $stLabel = $subtarefaLabels[$stTipo] ?? 'Subtarefa';
+                    ?>
+                        <div class="row table between padding-tb-sm border-top full-line" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
+                            <div class="col table left row-gap-10">
+                                <div class="status status-pending padding-lr-lg"><?php echo htmlspecialchars($stLabel); ?></div>
+                            </div>
+                            <div class="col table right">
+                                <button type="button" class="btn btn-primary padding-lr-lg row-gap-10 btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($stLabel, ENT_QUOTES); ?>"><span class="value-button">Concluir</span></button>
                             </div>
                         </div>
                     <?php endforeach; ?>
                     <?php if (empty($subtarefas)): ?>
-                        <div class="col full-line">
-                            <span class="minor-info">Nenhuma subtarefa pendente.</span>
+                        <div class="row table between padding-tb-md border-top">
+                            <span class="minor-info">Nenhuma sub-tarefa pendente.</span>
                         </div>
                     <?php endif; ?>
                 </div>
             </div>
             <?php endforeach; ?>
         <?php else: ?>
-            <div class="row table">
-                <div class="col">
-                    <div class="col filter no-data">
+            <div class="col subtask subtask-collapsed padding-lr-md full-line">
+                <div class="row table between padding-tb-md border-top">
+                    <div class="col table left no-data">
                         <span class="major-info">Nenhuma medida protetiva cadastrada.</span>
                     </div>
                 </div>
             </div>
         <?php endif; ?>
 
-        <div class="row pagination">
-            <span class="pagination-info">Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $totalDocuments; ?> registros</span>
+        <!-- Paginação -->
+        <div class="row table between padding-tb-lg padding-lr-md">
+            <span class="left pagination-info">Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $totalDocuments; ?> registros</span>
             <?php if ($totalPages > 0): ?>
-                <div class="pagination-controls">
+                <div class="right pagination-controls">
                     <?php
                     $prevPage = $currentPage > 1 ? $currentPage - 1 : 1;
                     $prevParams = $baseQueryParams;
