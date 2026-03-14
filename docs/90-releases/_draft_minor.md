@@ -95,4 +95,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: pequenos ajustes** `[f5c60dd]`
 - **fix: pequenos ajustes de table** `[80ef648]`
 - **fix: pequenos ajustes** `[0dd6a76]`
+- **fix: correções e ajustes** `[39ec80e]`
 
