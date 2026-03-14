@@ -106,7 +106,7 @@ if ($pessoa === null) {
                 <label for="new-tel-numero">Número</label>
                 <input type="text" class="width-md height-md white" id="new-tel-numero" placeholder="Somente números">
             </div>
-            <label for="new-tel-numero">-</label>
+            <label for="add-tel-btn">-</label>
             <button type="button" class="btn btn-secondary-outline" id="add-tel-btn">Adicionar telefone</button>
         </div>
 
@@ -126,11 +126,11 @@ if ($pessoa === null) {
             </div>
             <div class="col">
                 <label for="buscar-cep-btn">-</label>
-                <button type="button" class="btn btn-secondary-outline" id="buscar-cep-btn">Buscar</button>
+                <button type="button" class="btn btn-secondary-outline" id="buscar-cep-btn">Buscar CEP</button>
             </div>
         </div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
-            <div class="col">                
+            <div class="col">
                 <label for="new-end-logradouro">Logradouro</label>
                 <input type="text" class="width-xl height-md white" id="new-end-logradouro" placeholder="Rua, avenida...">
             </div>
@@ -187,7 +187,7 @@ if ($pessoa === null) {
             <?php endforeach; ?>
         </div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
-            <button type="button" class="btn btn-primary" id="vincular-instituicao-btn">Vincular instituição</button>
+            <button href="/frame.php?page=partesinstituicoescreate&parte_id=<?php echo urlencode($pessoa['id'] ?? ''); ?>" class="btn btn-primary">Vincular instituição</button>
         </div>
     </div>
 
@@ -251,16 +251,21 @@ if ($pessoa === null) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ parte_id: parteId, tipo: tipo || null, numero: numero })
             })
-            .then(function(r) { return r.json(); })
-            .then(function(d) {
-                if (d.id) { window.location.reload(); }
+            .then(function(r) {
+                var ok = r.ok;
+                return r.json().then(function(d) { return { ok: ok, data: d }; }).catch(function() { return { ok: false, data: { error: "Resposta inválida do servidor." }; });
+            })
+            .then(function(result) {
+                if (result.ok && result.data.id) { window.location.reload(); }
                 else {
-                    if (typeof showToast === 'function') showToast({ type: 'error', message: (d && d.error) || 'Erro ao adicionar telefone.' });
+                    var errMsg = (result.data && result.data.error) || 'Erro ao adicionar telefone.';
+                    if (typeof showToast === 'function') showToast({ type: 'error', message: errMsg });
                     document.getElementById('add-tel-btn').disabled = false;
                 }
             })
-            .catch(function() {
-                if (typeof showToast === 'function') showToast({ type: 'error', message: 'Erro ao adicionar telefone.' });
+            .catch(function(err) {
+                var msg = (err && err.message) ? err.message : 'Erro de conexão.';
+                if (typeof showToast === 'function') showToast({ type: 'error', message: 'Erro ao adicionar telefone: ' + msg });
                 document.getElementById('add-tel-btn').disabled = false;
             });
         });
