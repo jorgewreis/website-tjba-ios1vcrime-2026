@@ -224,7 +224,7 @@ try {
         <div class="row table left info padding-tb-md padding-lr-lg">
             <span>*Conforme regra de divisão de tarefas, todas as Cartas Expedidas serão alocadas automaticamente e deverão ser remetidas por <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
         </div>
-        <div class="row table left info padding-tb-md padding-lr-lg">
+        <div class="row table left padding-tb-md padding-lr-lg">
             <div class="col">
                 <label id="cadastro-feedback" class="status-placeholder" aria-live="polite"></label>
             </div>

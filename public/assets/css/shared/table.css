@@ -75,14 +75,10 @@
     }
     
     .row.info{
-        width: 100%;
-        min-height: 50px;
-        margin-top: 20px;
-        padding: 0 10px;
+        width: 100%;        
         justify-content: flex-start;
         background-color: var(--bg-primary);
         color: var(--primary-color-active);
-        border-bottom: 1px solid var(--color-accent);
     }
     .row.success{
         width: 100%;
@@ -196,7 +192,7 @@
     }
 
     .full-line {
-        width: 100%;
+        width: 100% !important;
         box-sizing: border-box;
     }
 
