@@ -423,7 +423,7 @@ if ($totalPages > 0) {
                         $isOrdem5 = ($stTipo === CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5);
                     ?>
                     <div class="row table between padding-tb-sm border-top full-line" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
-                        <div class="col table left row-gap-10">
+                        <div class="row table left row-gap-10">
                             <div class="status status-pending padding-lr-lg"><?php echo htmlspecialchars($stLabel); ?></div>
                             <?php if ($isOrdem3): ?>
                                 <select class="subtask-resultado-cumprimento width-md height-md" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Resultado do cumprimento">

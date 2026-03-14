@@ -431,7 +431,7 @@ if ($totalPages > 0) {
                         $temComplemento = in_array($stTipo, ['aguardando_gerar_pdf', 'aguardando_envio', 'aguardando_informacoes', 'aguardando_devolucao'], true);
                     ?>
                     <div class="row table between padding-tb-sm border-top" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
-                        <div class="col table left row-gap-10">
+                        <div class="row table left row-gap-10">
                             <div class="status status-pending padding-lr-lg"><?php echo htmlspecialchars($stLabel); ?></div>
                             <?php if ($stTipo === 'aguardando_gerar_pdf'): ?>
                                 <div class="col">

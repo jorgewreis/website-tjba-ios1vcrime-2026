@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0117
+
+**Data:** 2026-03-14 18:20:58 | **Commit:** `9eaa428` | **Tipo:** `patch`
+
+- fix: pequenos ajustes subtasks
+
 ## V. 1.03.0116
 
 **Data:** 2026-03-14 18:09:50 | **Commit:** `eac3bfd` | **Tipo:** `patch`
@@ -2976,6 +2982,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
