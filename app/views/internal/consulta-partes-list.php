@@ -100,7 +100,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
             <span class="specific">Consulta Partes</span>
         </div>
         <h1 class="title-page">Consulta Partes</h1>
-        <p class="description-page">Pesquisa por pessoa: nome, CPF ou instituição vinculada. Informe ao menos um critério e clique em Consultar.</p>
+        <p class="description-page">Pesquisa por pessoa: nome ou CPF. Informe ao menos um critério e clique em Consultar.</p>
     </div>
 
     <div class="card-page">
@@ -119,10 +119,23 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                         <label for="filter-cpf">CPF</label>
                         <input type="text" class="width-md height-md white" id="filter-cpf" name="cpf" placeholder="CPF" value="<?php echo htmlspecialchars($cpfFilter); ?>">
                     </div>
+                </div>
+                <div class="row right">
                     <div class="col">
                         <button type="submit" class="btn btn-primary">Consultar</button>
                     </div>
                 </div>
+            </div>            
+        </form>
+
+        <!-- ROW ACTIONS -->
+        <div class="row table buttons right padding-lr-md padding-tb-md row-gap-10">
+            <button type="button" class="btn btn-primary" id="novo-cadastro-btn">Novo cadastro</button>
+        </div>
+
+        <!-- SUBTITLE TABLE -->
+        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Lista de Partes</div>
+            <div class="row table between padding-tb-lg padding-lr-md border-bottom"></div>
                 <div class="col right">
                     <div class="col">
                         <label for="items-per-page">Itens por página</label>
@@ -135,15 +148,6 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                     </div>
                 </div>
             </div>
-        </form>
-
-        <!-- ROW ACTIONS -->
-        <div class="row table buttons right padding-lr-md padding-tb-md row-gap-10">
-            <button type="button" class="btn btn-primary" id="novo-cadastro-btn">Novo cadastro</button>
-        </div>
-
-        <!-- SUBTITLE TABLE -->
-        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Lista de Partes</div>
         <?php if (!$filtrou): ?>
             <div class="col subtask subtask-collapsed padding-lr-md full-line">
                 <div class="row table between padding-tb-md border-top">

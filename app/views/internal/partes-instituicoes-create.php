@@ -5,8 +5,20 @@ header('Content-Type: text/html; charset=UTF-8');
 if (function_exists('mb_internal_encoding')) mb_internal_encoding('UTF-8');
 
 require_once __DIR__ . '/../../helpers/Conection.php';
+require_once __DIR__ . '/../../../config/security.php';
+require_once __DIR__ . '/../../services/PessoasService.php';
+require_once __DIR__ . '/../../services/InstituicoesPublicasService.php';
 
 $parteIdPrefill = trim((string) ($_GET['parte_id'] ?? ''));
+
+$connection = Conection::getInstance()->getConnection();
+$pessoasService = new PessoasService($connection);
+$instituicoesService = new InstituicoesPublicasService($connection);
+$listLimit = 500;
+$pessoasList = $pessoasService->list([], $listLimit, 0);
+$instituicoesList = $instituicoesService->list([], $listLimit, 0);
+$pessoas = $pessoasList['rows'] ?? [];
+$instituicoes = $instituicoesList['rows'] ?? [];
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -33,14 +45,35 @@ $parteIdPrefill = trim((string) ($_GET['parte_id'] ?? ''));
         <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Dados do vínculo</div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
-                <label for="parte_id">ID da pessoa (parte) *</label>
-                <input type="text" class="width-md height-md white" id="parte_id" placeholder="Ex: PRT-..." value="<?php echo htmlspecialchars($parteIdPrefill); ?>" required>
-                <a href="/frame.php?page=consultapartes" target="_blank" class="btn btn-secondary-outline" style="margin-top:4px;">Buscar pessoa</a>
+                <label for="parte_id">Pessoa (parte) *</label>
+                <select class="width-xl height-md white" id="parte_id" required>
+                    <option value="">— Selecione a pessoa —</option>
+                    <?php foreach ($pessoas as $p): ?>
+                    <?php
+                        $cpfVal = $p['cpf'] ?? '';
+                        $cpfDisplay = ($cpfVal !== '' && strlen($cpfVal) === 11) ? Security::formatCPF($cpfVal) : $cpfVal;
+                        $label = htmlspecialchars($p['nome_completo'] ?? $p['id'] ?? '—');
+                        if ($cpfDisplay !== '') { $label .= ' – ' . htmlspecialchars($cpfDisplay); }
+                    ?>
+                    <option value="<?php echo htmlspecialchars($p['id'] ?? ''); ?>"<?php echo ($parteIdPrefill !== '' && ($p['id'] ?? '') === $parteIdPrefill) ? ' selected' : ''; ?>><?php echo $label; ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <button type="button" class="btn btn-secondary-outline" style="margin-top:4px;" id="btn-buscar-pessoa">Abrir lista de pessoas</button>
             </div>
             <div class="col">
-                <label for="instituicao_id">ID da instituição *</label>
-                <input type="text" class="width-md height-md white" id="instituicao_id" placeholder="Ex: INS-..." required>
-                <a href="/frame.php?page=instituicoespublicas" target="_blank" class="btn btn-secondary-outline" style="margin-top:4px;">Buscar instituição</a>
+                <label for="instituicao_id">Instituição *</label>
+                <select class="width-xl height-md white" id="instituicao_id" required>
+                    <option value="">— Selecione a instituição —</option>
+                    <?php foreach ($instituicoes as $i): ?>
+                    <?php
+                        $nomeInst = htmlspecialchars($i['nome'] ?? $i['id'] ?? '—');
+                        $sigla = trim($i['nome_fantasia'] ?? '');
+                        if ($sigla !== '') { $nomeInst .= ' (' . htmlspecialchars($sigla) . ')'; }
+                    ?>
+                    <option value="<?php echo htmlspecialchars($i['id'] ?? ''); ?>"><?php echo $nomeInst; ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <button type="button" class="btn btn-secondary-outline" style="margin-top:4px;" id="btn-buscar-instituicao">Abrir lista de instituições</button>
             </div>
         </div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
@@ -61,40 +94,19 @@ $parteIdPrefill = trim((string) ($_GET['parte_id'] ?? ''));
         </div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
-                <label for="data_inclusao">Data de inclusão *</label>
-                <input type="date" class="width-md height-md white" id="data_inclusao" required>
-            </div>
-            <div class="col">
-                <label for="data_inicio">Data início</label>
-                <input type="date" class="width-md height-md white" id="data_inicio">
-            </div>
-            <div class="col">
-                <label for="data_fim">Data fim</label>
-                <input type="date" class="width-md height-md white" id="data_fim">
-            </div>
-        </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
-            <div class="col">
-                <label><input type="checkbox" id="ativo" checked> Ativo</label>
-            </div>
-        </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
-            <div class="col">
                 <label for="observacoes">Observações</label>
                 <textarea class="width-xl height-md white" id="observacoes" rows="2"></textarea>
             </div>
         </div>
         <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
-            <a href="/frame.php?page=partesinstituicoeslist" class="btn btn-secondary">Voltar</a>
+            <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
             <button type="button" class="btn btn-primary" id="salvar-btn">Salvar</button>
         </div>
     </div>
     <script>
-    (function() {
-        var hoje = new Date().toISOString().slice(0, 10);
-        var dataInclusao = document.getElementById('data_inclusao');
-        if (dataInclusao && !dataInclusao.value) dataInclusao.value = hoje;
-    })();
+    document.getElementById('voltar-btn').addEventListener('click', function() { window.location.href = '/frame.php?page=partesinstituicoeslist'; });
+    document.getElementById('btn-buscar-pessoa').addEventListener('click', function() { window.open('/frame.php?page=consultapartes', '_blank'); });
+    document.getElementById('btn-buscar-instituicao').addEventListener('click', function() { window.open('/frame.php?page=instituicoespublicas', '_blank'); });
     document.getElementById('instituicao_id').addEventListener('change', function() {
         var instId = (this.value || '').trim();
         var sel = document.getElementById('setor_id');
@@ -114,10 +126,9 @@ $parteIdPrefill = trim((string) ($_GET['parte_id'] ?? ''));
     document.getElementById('salvar-btn').addEventListener('click', function() {
         var parteId = (document.getElementById('parte_id').value || '').trim();
         var instituicaoId = (document.getElementById('instituicao_id').value || '').trim();
-        var dataInclusao = (document.getElementById('data_inclusao').value || '').trim();
         var cargoFuncao = (document.getElementById('cargo_funcao').value || '').trim();
-        if (!parteId || !instituicaoId || !dataInclusao) {
-            if (typeof showToast === 'function') showToast({ type: 'error', message: 'Preencha pessoa, instituição e data de inclusão.' });
+        if (!parteId || !instituicaoId) {
+            if (typeof showToast === 'function') showToast({ type: 'error', message: 'Selecione a pessoa e a instituição.' });
             return;
         }
         var payload = {
@@ -126,10 +137,6 @@ $parteIdPrefill = trim((string) ($_GET['parte_id'] ?? ''));
             setor_id: (document.getElementById('setor_id').value || '').trim() || null,
             profissao: (document.getElementById('profissao').value || '').trim() || null,
             cargo_funcao: cargoFuncao || null,
-            data_inclusao: dataInclusao,
-            data_inicio: (document.getElementById('data_inicio').value || '').trim() || null,
-            data_fim: (document.getElementById('data_fim').value || '').trim() || null,
-            ativo: document.getElementById('ativo').checked,
             observacoes: (document.getElementById('observacoes').value || '').trim() || null
         };
         this.disabled = true;

@@ -23,6 +23,17 @@ if ($parteId === '') {
     exit;
 }
 
+$hoje = date('Y-m-d');
+if (empty(trim((string) ($parsed['data_inclusao'] ?? '')))) {
+    $parsed['data_inclusao'] = $hoje;
+}
+if (empty(trim((string) ($parsed['data_inicio'] ?? '')))) {
+    $parsed['data_inicio'] = $parsed['data_inclusao'];
+}
+if (!isset($parsed['ativo'])) {
+    $parsed['ativo'] = 1;
+}
+
 try {
     $service = new PessoasService($connection);
     $newId = $service->addVinculoInstituicao($parteId, $parsed);

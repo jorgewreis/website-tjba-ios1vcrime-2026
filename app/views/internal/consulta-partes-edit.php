@@ -108,6 +108,43 @@ if ($pessoa === null) {
             </div>
             <?php endforeach; ?>
         </div>
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col">
+                <label for="new-end-cep">CEP</label>
+                <input type="text" class="width-sm height-md white" id="new-end-cep" placeholder="00000-000" maxlength="9">
+                <button type="button" class="btn btn-secondary-outline" id="buscar-cep-btn">Buscar CEP</button>
+            </div>
+        </div>
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col">
+                <label for="new-end-logradouro">Logradouro</label>
+                <input type="text" class="width-xl height-md white" id="new-end-logradouro" placeholder="Rua, avenida...">
+            </div>
+            <div class="col">
+                <label for="new-end-numero">Número</label>
+                <input type="text" class="width-sm height-md white" id="new-end-numero" placeholder="Nº">
+            </div>
+            <div class="col">
+                <label for="new-end-complemento">Complemento</label>
+                <input type="text" class="width-md height-md white" id="new-end-complemento" placeholder="Sala, andar...">
+            </div>
+        </div>
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col">
+                <label for="new-end-bairro">Bairro</label>
+                <input type="text" class="width-md height-md white" id="new-end-bairro" placeholder="Bairro">
+            </div>
+            <div class="col">
+                <label for="new-end-cidade">Cidade</label>
+                <input type="text" class="width-md height-md white" id="new-end-cidade" placeholder="Cidade">
+            </div>
+            <div class="col">
+                <label for="new-end-uf">UF</label>
+                <input type="text" class="width-xs height-md white" id="new-end-uf" placeholder="UF" maxlength="2">
+            </div>
+            <label class="inline"><input type="checkbox" id="new-end-principal"> Principal</label>
+            <button type="button" class="btn btn-secondary-outline" id="add-end-btn">Adicionar endereço</button>
+        </div>
 
         <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Vínculos com processos</div>
         <div id="vinculos-processos">
@@ -189,18 +226,23 @@ if ($pessoa === null) {
             .catch(function() { document.getElementById('salvar-btn').disabled = false; });
         });
         document.getElementById('add-tel-btn').addEventListener('click', function() {
-            var numero = (document.getElementById('new-tel-numero').value || '').trim();
+            var tipoEl = document.getElementById('new-tel-tipo');
+            var numeroEl = document.getElementById('new-tel-numero');
+            var numero = (numeroEl && numeroEl.value ? numeroEl.value : '').trim();
             if (!numero) { if (typeof showToast === 'function') showToast({ type: 'error', message: 'Informe o número.' }); return; }
+            var tipo = (tipoEl && tipoEl.value ? tipoEl.value : '').trim();
+            this.disabled = true;
             fetch('/api/pessoas/telefones/create.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ parte_id: parteId, tipo: document.getElementById('new-tel-tipo').value.trim(), numero: numero })
+                body: JSON.stringify({ parte_id: parteId, tipo: tipo || null, numero: numero })
             })
             .then(function(r) { return r.json(); })
             .then(function(d) {
                 if (d.id) { window.location.reload(); }
-                else { if (typeof showToast === 'function') showToast({ type: 'error', message: d.error || 'Erro.' }); }
-            });
+                else { if (typeof showToast === 'function') showToast({ type: 'error', message: (d && d.error) || 'Erro.' }); document.getElementById('add-tel-btn').disabled = false; }
+            })
+            .catch(function() { if (typeof showToast === 'function') showToast({ type: 'error', message: 'Erro ao adicionar telefone.' }); document.getElementById('add-tel-btn').disabled = false; });
         });
         document.querySelectorAll('.btn-del-tel').forEach(function(btn) {
             btn.addEventListener('click', function() {
@@ -216,6 +258,62 @@ if ($pessoa === null) {
                 if (!confirm('Desvincular esta instituição?')) return;
                 var id = this.getAttribute('data-id');
                 fetch('/api/pessoas/vinculos-instituicoes/delete.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id }) })
+                .then(function(r) { return r.json(); })
+                .then(function(d) { if (d.deleted) window.location.reload(); });
+            });
+        });
+
+        document.getElementById('buscar-cep-btn').addEventListener('click', function() {
+            var cep = (document.getElementById('new-end-cep').value || '').replace(/\D/g, '');
+            if (cep.length !== 8) { if (typeof showToast === 'function') showToast({ type: 'error', message: 'Informe um CEP com 8 dígitos.' }); return; }
+            this.disabled = true;
+            fetch('/api/cep/consulta.php?q=' + encodeURIComponent(cep), { method: 'GET', credentials: 'same-origin' })
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                if (d.mode === 'cep' && d.data) {
+                    document.getElementById('new-end-logradouro').value = d.data.logradouro || '';
+                    document.getElementById('new-end-bairro').value = d.data.bairro || '';
+                    document.getElementById('new-end-cidade').value = d.data.cidade || '';
+                    document.getElementById('new-end-uf').value = (d.data.uf || '').toUpperCase().slice(0, 2);
+                    if (typeof showToast === 'function') showToast({ type: 'success', message: 'CEP encontrado.' });
+                } else {
+                    if (typeof showToast === 'function') showToast({ type: 'error', message: (d && d.error) || 'CEP não encontrado.' });
+                }
+            })
+            .catch(function() { if (typeof showToast === 'function') showToast({ type: 'error', message: 'Erro ao consultar CEP.' }); })
+            .finally(function() { document.getElementById('buscar-cep-btn').disabled = false; });
+        });
+        document.getElementById('add-end-btn').addEventListener('click', function() {
+            var logradouro = (document.getElementById('new-end-logradouro').value || '').trim();
+            var cidade = (document.getElementById('new-end-cidade').value || '').trim();
+            if (!logradouro && !cidade) { if (typeof showToast === 'function') showToast({ type: 'error', message: 'Informe ao menos logradouro ou cidade.' }); return; }
+            var cepRaw = (document.getElementById('new-end-cep').value || '').replace(/\D/g, '');
+            var payload = {
+                parte_id: parteId,
+                cep: cepRaw.length === 8 ? cepRaw : null,
+                logradouro: logradouro || null,
+                numero: (document.getElementById('new-end-numero').value || '').trim() || null,
+                complemento: (document.getElementById('new-end-complemento').value || '').trim() || null,
+                bairro: (document.getElementById('new-end-bairro').value || '').trim() || null,
+                cidade: cidade || null,
+                uf: (document.getElementById('new-end-uf').value || '').trim().toUpperCase().slice(0, 2) || null,
+                principal: document.getElementById('new-end-principal').checked ? 1 : 0
+            };
+            this.disabled = true;
+            fetch('/api/pessoas/enderecos/create.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                if (d.id) { window.location.reload(); }
+                else { if (typeof showToast === 'function') showToast({ type: 'error', message: (d && d.error) || 'Erro.' }); document.getElementById('add-end-btn').disabled = false; }
+            })
+            .catch(function() { if (typeof showToast === 'function') showToast({ type: 'error', message: 'Erro ao adicionar endereço.' }); document.getElementById('add-end-btn').disabled = false; });
+        });
+        document.querySelectorAll('.btn-del-end').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                if (!confirm('Excluir este endereço?')) return;
+                var id = this.getAttribute('data-id');
+                if (!id) return;
+                fetch('/api/pessoas/enderecos/delete.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id }) })
                 .then(function(r) { return r.json(); })
                 .then(function(d) { if (d.deleted) window.location.reload(); });
             });

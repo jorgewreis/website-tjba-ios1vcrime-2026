@@ -184,16 +184,7 @@ $prioridadeLabels = [
                                 <label>Data de nascimento</label>
                                 <input type="text" class="width-md height-md readonly" value="<?php echo htmlspecialchars((string) ($vitima['data_nascimento'] ?? ''), ENT_QUOTES); ?>" readonly>
                             </div>
-                        </div>
-                        <div class="badge-line">
-                            <?php if (!empty($vitima['prioridade_mulher'])): ?><span class="status status-primary-light padding-lr-lg">Mulher</span><?php endif; ?>
-                            <?php if (!empty($vitima['prioridade_crianca_adolescente'])): ?><span class="status status-primary-light padding-lr-lg">Criança/Adolescente</span><?php endif; ?>
-                            <?php if (!empty($vitima['prioridade_idoso'])): ?><span class="status status-primary-light padding-lr-lg">Idoso</span><?php endif; ?>
-                            <?php if (!empty($vitima['prioridade_pessoa_deficiencia'])): ?><span class="status status-primary-light padding-lr-lg">Pessoa com deficiência</span><?php endif; ?>
-                            <?php if (empty($vitima['prioridade_mulher']) && empty($vitima['prioridade_crianca_adolescente']) && empty($vitima['prioridade_idoso']) && empty($vitima['prioridade_pessoa_deficiencia'])): ?>
-                                <span class="minor-info">Sem prioridade processual vinculada.</span>
-                            <?php endif; ?>
-                        </div>
+                        </div>                        
                     </div>
                 <?php endforeach; ?>
             <?php else: ?>
@@ -204,7 +195,7 @@ $prioridadeLabels = [
                 </div>
             <?php endif; ?>
 
-            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="row table between padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
                 <div class="col filter">
                     <label>Prioridades do processo</label>
                     <div class="badge-line">
