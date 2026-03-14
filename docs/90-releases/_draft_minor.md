@@ -113,4 +113,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: mais correções agrupadas** `[abda51a]`
 - **fix: correção de consultas** `[d461e18]`
 - **fix: pequenos ajustes** `[6bbae31]`
+- **fix: pequenos ajustes** `[78d22c5]`
 
