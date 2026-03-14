@@ -106,4 +106,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix: correção de classes** `[4d4dd1d]`
 - **fix: melhorias nas informações** `[f4ae92b]`
 - **fix: pequenos ajustes** `[d8a2264]`
+- **fix: pequenos ajustes** `[55bee89]`
 
