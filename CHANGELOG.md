@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0099
+
+**Data:** 2026-03-14 14:29:04 | **Commit:** `897b74b` | **Tipo:** `patch`
+
+- fix: correção de layout responsivo
+
 ## V. 1.03.0098
 
 **Data:** 2026-03-14 14:19:01 | **Commit:** `c0989bf` | **Tipo:** `patch`
@@ -2868,6 +2874,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

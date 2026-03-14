@@ -415,7 +415,7 @@
 }
 
 .text-ellipsis {
-    min-width: 0;
+    width: 180px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -468,9 +468,13 @@
 }
 
 @media (min-width: 1280px) {
-    .row.filter{
-        justify-content: space-between;
-        padding-right: calc(100% - 960px);
+    
+    /* COLUMNS WITH ID FIX */
+    .col.comarca-info {
+        width: calc(200px + 3vw);
+    }
+    .col.detalhes-info {
+        width: calc(260px + 3vw);
     }
 
     .row.allocate-users {
