@@ -103,18 +103,19 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
     <div class="card-page">
 
         <!-- FILTROS -->
-        <form method="get" id="form-filters">
+        <form method="get" id="form-filters" style="width: 100%">
             <input type="hidden" name="page" value="<?php echo htmlspecialchars($routePage); ?>">
             <input type="hidden" name="items_per_page" value="<?php echo (int) $itemsPerPage; ?>">
-            <div class="row table between padding-tb-lg padding-lr-md border-bottom">
+            <div class="row table between padding-tb-lg padding-lr-md border-bottom full-line">
                 <div class="row left row-gap-10">
                     <div class="col">
                         <label for="filter-nome">Nome</label>
                         <input type="text" class="width-md height-md white" id="filter-nome" name="nome" placeholder="Nome da instituição" value="<?php echo htmlspecialchars($nomeFilter); ?>">
                     </div>                    
                 </div>
-                <div class="col right">
+                <div class="row right">
                     <div class="col">
+                        <label for="filter-cpf">-</label>
                         <button type="submit" class="btn btn-primary">Consultar</button>
                     </div>                    
                 </div>
@@ -141,7 +142,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                 </select>
             </div>
         </div>
-        
+
         <?php if (!$filtrou): ?>
             <div class="col subtask subtask-collapsed padding-lr-md full-line">
                 <div class="row table between padding-tb-md border-top">

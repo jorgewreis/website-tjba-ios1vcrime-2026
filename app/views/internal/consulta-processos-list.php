@@ -100,7 +100,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
     <div class="card-page">
 
         <!-- FILTROS -->
-        <form method="get" id="form-filters">
+        <form method="get" id="form-filters" style="width: 100%">
             <input type="hidden" name="page" value="<?php echo htmlspecialchars($routePage); ?>">
             <input type="hidden" name="items_per_page" value="<?php echo (int) $itemsPerPage; ?>">
             <div class="row table between padding-tb-lg padding-lr-md border-bottom full-line">
