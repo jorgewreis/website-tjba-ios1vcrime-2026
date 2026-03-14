@@ -68,7 +68,11 @@ if (function_exists('mb_internal_encoding')) {
             <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line telefone-row">
                 <div class="col">
                     <label>Tipo</label>
-                    <input type="text" class="width-md height-md white tel-tipo" placeholder="Ex: Celular, Comercial">
+                    <select class="width-md height-md white tel-tipo">
+                        <option value="">Selecione</option>
+                        <option value="Telefone fixo">Telefone fixo</option>
+                        <option value="Celular">Celular</option>
+                    </select>
                 </div>
                 <div class="col">
                     <label>Número *</label>
@@ -139,7 +143,8 @@ if (function_exists('mb_internal_encoding')) {
         document.getElementById('add-telefone-btn').addEventListener('click', function() {
             var container = document.getElementById('telefones-cadastro');
             var tpl = document.querySelector('#telefones-cadastro .telefone-row').cloneNode(true);
-            tpl.querySelector('.tel-tipo').value = '';
+            var sel = tpl.querySelector('.tel-tipo');
+            if (sel) sel.selectedIndex = 0;
             tpl.querySelector('.tel-numero').value = '';
             container.appendChild(tpl);
         });

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0125
+
+**Data:** 2026-03-14 19:39:00 | **Commit:** `c05193e` | **Tipo:** `patch`
+
+- fix: correção de select
+
 ## V. 1.03.0124
 
 **Data:** 2026-03-14 19:36:27 | **Commit:** `c8d0359` | **Tipo:** `patch`
@@ -3024,6 +3030,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

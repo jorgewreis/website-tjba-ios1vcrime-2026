@@ -94,8 +94,18 @@ if ($pessoa === null) {
             <?php endforeach; ?>
         </div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
-            <input type="text" class="width-sm height-md white" id="new-tel-tipo" placeholder="Tipo">
-            <input type="text" class="width-md height-md white" id="new-tel-numero" placeholder="Número">
+            <div class="col">
+                <label for="new-tel-tipo">Tipo</label>
+                <select class="width-md height-md white" id="new-tel-tipo">
+                    <option value="">Selecione</option>
+                    <option value="Telefone fixo">Telefone fixo</option>
+                    <option value="Celular">Celular</option>
+                </select>
+            </div>
+            <div class="col">
+                <label for="new-tel-numero">Número</label>
+                <input type="text" class="width-md height-md white" id="new-tel-numero" placeholder="Somente números">
+            </div>
             <button type="button" class="btn btn-secondary-outline" id="add-tel-btn">Adicionar telefone</button>
         </div>
 
@@ -228,7 +238,7 @@ if ($pessoa === null) {
         document.getElementById('add-tel-btn').addEventListener('click', function() {
             var tipoEl = document.getElementById('new-tel-tipo');
             var numeroEl = document.getElementById('new-tel-numero');
-            var numero = (numeroEl && numeroEl.value ? numeroEl.value : '').trim();
+            var numero = (numeroEl && numeroEl.value ? numeroEl.value : '').replace(/\D/g, '').trim();
             if (!numero) { if (typeof showToast === 'function') showToast({ type: 'error', message: 'Informe o número.' }); return; }
             var tipo = (tipoEl && tipoEl.value ? tipoEl.value : '').trim();
             this.disabled = true;

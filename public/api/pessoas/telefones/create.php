@@ -23,17 +23,20 @@ if ($parteId === '') {
     exit;
 }
 
-$numero = trim((string) ($parsed['numero'] ?? ''));
+$numero = preg_replace('/\D/', '', trim((string) ($parsed['numero'] ?? '')));
 if ($numero === '') {
     http_response_code(400);
     echo json_encode(['error' => 'Número do telefone é obrigatório.'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
+$tipo = array_key_exists('tipo', $parsed) ? trim((string) $parsed['tipo']) : '';
+$tipo = ($tipo === '' || $tipo === null) ? null : $tipo;
+
 try {
     $service = new PessoasService($connection);
     $newId = $service->addTelefone($parteId, [
-        'tipo' => array_key_exists('tipo', $parsed) ? trim((string) $parsed['tipo']) : null,
+        'tipo' => $tipo,
         'numero' => $numero,
     ]);
     http_response_code(201);
