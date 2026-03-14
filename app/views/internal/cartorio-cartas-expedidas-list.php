@@ -423,15 +423,15 @@ if ($totalPages > 0) {
                 </div>
 
                 <!-- SUB-TAREFAS -->
-                <div class="col subtask subtask-collapsed padding-lr-md full-line" id="subtask-<?php echo htmlspecialchars($idCarta); ?>" aria-hidden="true">
+                <div class="col subtask subtask-collapsed padding-lr-lg full-line" id="subtask-<?php echo htmlspecialchars($idCarta); ?>" aria-hidden="true">
                     <?php foreach ($subtarefas as $st):
                         $stId = $st['id'] ?? '';
                         $stTipo = $st['tipo'] ?? '';
                         $stLabel = $subtarefaLabels[$stTipo] ?? $stTipo;
                         $temComplemento = in_array($stTipo, ['aguardando_gerar_pdf', 'aguardando_envio', 'aguardando_informacoes', 'aguardando_devolucao'], true);
                     ?>
-                    <div class="row table between padding-tb-md border-top full-line" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
-                        <div class="row table left">
+                    <div class="row table between padding-tb-sm border-top full-line" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
+                        <div class="col table left row-gap-10">
                             <div class="status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
                             <?php if ($stTipo === 'aguardando_gerar_pdf'): ?>
                                 <div class="col">
