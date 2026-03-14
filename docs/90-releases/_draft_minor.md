@@ -111,4 +111,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correções multiplas** `[3c3d1f7]`
 - **fix: mais correções de layout** `[19b4788]`
 - **Fix: mais correções agrupadas** `[abda51a]`
+- **fix: correção de consultas** `[d461e18]`
 
