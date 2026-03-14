@@ -444,6 +444,10 @@ hr {
     color: var(--color-text-primary);
 }
 
+button.btn i.fi {
+    margin-top: 6px;
+}
+
 
 /* BADGES */
 .badge {

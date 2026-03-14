@@ -468,8 +468,8 @@ if ($totalPages > 0) {
                             <?php endif; ?>
                         </div>
                         <div class="col table right">
-                            <button type="button" class="btn btn-primary padding-lr-lg" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?>">
-                                <i class="fi fi-rr-play"></i>
+                            <button type="button" class="btn btn-primary padding-lr-lg row-gap-10" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?>">
+                                <i class="fi fi-rr-play" style="margin-top: 6px;"></i>
                                 <span class="value-button">Concluir</span>
                             </button>
                         </div>
