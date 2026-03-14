@@ -171,11 +171,23 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                         </div>
                         <div class="col parte-tel">
                             <span class="minor-info">Telefones</span>
-                            <span class="major-info"><?php echo htmlspecialchars($row['telefone'] ?? ''); ?></span>
+                            <!-- TODO: listar telefones -->
+                            <span class="major-info">
+                                <?php foreach ($row['telefones'] ?? [] as $t): ?>
+                                    <?php echo htmlspecialchars($t['tipo'] ?? '') . ': ' . htmlspecialchars($t['    numero'] ?? ''); ?>                                    
+                                <?php endforeach; ?>
+                            </span>
                         </div>
                         <div class="col parte-instituitoces">
                             <span class="minor-info">Instituições vinculadas</span>
-                            <span class="major-info"><?php echo htmlspecialchars($row['instituicoes_vinculadas'] ?? ''); ?></span>
+                            <!-- TODO: listar instituições -->
+                            <span class="major-info">
+                                <?php foreach ($row['instituicoes'] ?? [] as $i): ?>
+                                    <?php echo htmlspecialchars($i['nome'] ?? ''); ?>
+                                    <?php echo htmlspecialchars($i['sigla'] ?? ''); ?>
+                                    <?php echo htmlspecialchars($i['cargo_funcao'] ?? ''); ?>                                    
+                                <?php endforeach; ?>
+                            </span>
                         </div>
                     </div>
                     <div class="row right">
