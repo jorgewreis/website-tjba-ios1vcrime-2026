@@ -8,6 +8,8 @@ if (function_exists('mb_internal_encoding')) {
 
 require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../services/PessoasService.php';
+require_once __DIR__ . '/../../repositories/PartesTelefonesRepository.php';
+require_once __DIR__ . '/../../repositories/PartesInstituicoesRepository.php';
 require_once __DIR__ . '/../../../config/security.php';
 
 $connection = Conection::getInstance()->getConnection();
@@ -40,6 +42,26 @@ if ($filtrou) {
         $listResult = $service->list($filters, $itemsPerPage, $offset);
         $rows = $listResult['rows'] ?? [];
         $totalDocuments = (int) ($listResult['total'] ?? 0);
+
+        $telefonesRepo = new PartesTelefonesRepository($connection);
+        $vinculosInstRepo = new PartesInstituicoesRepository($connection);
+        foreach ($rows as $i => $row) {
+            $parteId = (string) ($row['id'] ?? '');
+            if ($parteId !== '') {
+                $rows[$i]['telefones'] = $telefonesRepo->findByParteId($parteId);
+                $vinculos = $vinculosInstRepo->findByParteId($parteId, true);
+                $rows[$i]['instituicoes'] = array_map(function (array $v): array {
+                    return [
+                        'nome' => $v['instituicao_nome'] ?? '',
+                        'sigla' => $v['instituicao_sigla'] ?? '',
+                        'cargo_funcao' => $v['cargo_funcao'] ?? '',
+                    ];
+                }, $vinculos);
+            } else {
+                $rows[$i]['telefones'] = [];
+                $rows[$i]['instituicoes'] = [];
+            }
+        }
     } catch (Throwable $e) {
         die('Erro ao carregar os dados: ' . $e->getMessage());
     }
@@ -171,22 +193,41 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                         </div>
                         <div class="col parte-tel">
                             <span class="minor-info">Telefones</span>
-                            <!-- TODO: listar telefones -->
                             <span class="major-info">
-                                <?php foreach ($row['telefones'] ?? [] as $t): ?>
-                                    <?php echo htmlspecialchars($t['tipo'] ?? '') . ': ' . htmlspecialchars($t['    numero'] ?? ''); ?>                                    
-                                <?php endforeach; ?>
+                                <?php
+                                $telefones = $row['telefones'] ?? [];
+                                if (empty($telefones)) {
+                                    echo '—';
+                                } else {
+                                    $partesTel = array_map(function ($t) {
+                                        $tipo = trim($t['tipo'] ?? '');
+                                        $numero = trim($t['numero'] ?? '');
+                                        return $tipo !== '' ? htmlspecialchars($tipo) . ': ' . htmlspecialchars($numero) : htmlspecialchars($numero);
+                                    }, $telefones);
+                                    echo implode(' · ', $partesTel);
+                                }
+                                ?>
                             </span>
                         </div>
                         <div class="col parte-instituitoces">
                             <span class="minor-info">Instituições vinculadas</span>
-                            <!-- TODO: listar instituições -->
                             <span class="major-info">
-                                <?php foreach ($row['instituicoes'] ?? [] as $i): ?>
-                                    <?php echo htmlspecialchars($i['nome'] ?? ''); ?>
-                                    <?php echo htmlspecialchars($i['sigla'] ?? ''); ?>
-                                    <?php echo htmlspecialchars($i['cargo_funcao'] ?? ''); ?>                                    
-                                <?php endforeach; ?>
+                                <?php
+                                $instituicoes = $row['instituicoes'] ?? [];
+                                if (empty($instituicoes)) {
+                                    echo '—';
+                                } else {
+                                    $partesInst = array_map(function ($i) {
+                                        $n = htmlspecialchars(trim($i['nome'] ?? ''));
+                                        $s = trim($i['sigla'] ?? '');
+                                        if ($s !== '') { $n .= ' (' . htmlspecialchars($s) . ')'; }
+                                        $c = trim($i['cargo_funcao'] ?? '');
+                                        if ($c !== '') { $n .= ' – ' . htmlspecialchars($c); }
+                                        return $n;
+                                    }, $instituicoes);
+                                    echo implode(' · ', $partesInst);
+                                }
+                                ?>
                             </span>
                         </div>
                     </div>
