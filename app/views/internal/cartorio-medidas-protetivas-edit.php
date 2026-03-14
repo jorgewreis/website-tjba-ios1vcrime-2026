@@ -91,9 +91,6 @@ $prioridadeLabels = [
         <?php include __DIR__ . '/_toast_script.php'; ?>
         <style>
             .readonly-list {
-                border: 1px solid var(--color-gray-400);
-                border-radius: 12px;
-                padding: 1rem;
                 width: 100%;
             }
             .readonly-list + .readonly-list {
@@ -128,13 +125,13 @@ $prioridadeLabels = [
                 </div>
             </div>
         <?php else: ?>
-            <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Informações</div>
-            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
-                <div class="col filter">
+            <div class="row table subtitle left padding-tb-lg padding-lr-md border-bottom">Informações</div>
+            <div class="row table left padding-tb-md padding-lr-md row-gap-10 full-line">
+                <div class="col">
                     <label for="filter-processo">Processo</label>
                     <input type="text" id="filter-processo" class="width-md height-md readonly" value="<?php echo htmlspecialchars((string) ($medida['numero_processo'] ?? ''), ENT_QUOTES); ?>" readonly>
                 </div>
-                <div class="col filter">
+                <div class="col">
                     <label for="filter-classe">Classe</label>
                     <input type="text" id="filter-classe" class="width-xl height-md readonly" value="<?php echo htmlspecialchars((string) ($medida['classe_nome'] ?? 'Classe não informada'), ENT_QUOTES); ?>" readonly>
                 </div>
@@ -142,7 +139,7 @@ $prioridadeLabels = [
 
             <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Réu</div>
             <div class="readonly-list">
-                <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+                <div class="row table left padding-tb-md padding-lr-md border-bottom row-gap-10 full-line">
                     <div class="col filter">
                         <label>Nome completo</label>
                         <input type="text" class="width-xl height-md readonly" value="<?php echo htmlspecialchars((string) ($medida['reu']['nome_completo'] ?? ''), ENT_QUOTES); ?>" readonly>
@@ -189,10 +186,10 @@ $prioridadeLabels = [
                             </div>
                         </div>
                         <div class="badge-line">
-                            <?php if (!empty($vitima['prioridade_mulher'])): ?><span class="status status-primary-light">Mulher</span><?php endif; ?>
-                            <?php if (!empty($vitima['prioridade_crianca_adolescente'])): ?><span class="status status-primary-light">Criança/Adolescente</span><?php endif; ?>
-                            <?php if (!empty($vitima['prioridade_idoso'])): ?><span class="status status-primary-light">Idoso</span><?php endif; ?>
-                            <?php if (!empty($vitima['prioridade_pessoa_deficiencia'])): ?><span class="status status-primary-light">Pessoa com deficiência</span><?php endif; ?>
+                            <?php if (!empty($vitima['prioridade_mulher'])): ?><span class="status status-primary-light padding-lr-lg">Mulher</span><?php endif; ?>
+                            <?php if (!empty($vitima['prioridade_crianca_adolescente'])): ?><span class="status status-primary-light padding-lr-lg">Criança/Adolescente</span><?php endif; ?>
+                            <?php if (!empty($vitima['prioridade_idoso'])): ?><span class="status status-primary-light padding-lr-lg">Idoso</span><?php endif; ?>
+                            <?php if (!empty($vitima['prioridade_pessoa_deficiencia'])): ?><span class="status status-primary-light padding-lr-lg">Pessoa com deficiência</span><?php endif; ?>
                             <?php if (empty($vitima['prioridade_mulher']) && empty($vitima['prioridade_crianca_adolescente']) && empty($vitima['prioridade_idoso']) && empty($vitima['prioridade_pessoa_deficiencia'])): ?>
                                 <span class="minor-info">Sem prioridade processual vinculada.</span>
                             <?php endif; ?>
@@ -202,7 +199,7 @@ $prioridadeLabels = [
             <?php else: ?>
                 <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
                     <div class="col">
-                        <label class="status status-primary-light">Nenhuma vítima informada no cadastro inicial.</label>
+                        <label class="status status-primary-light padding-lr-lg">Nenhuma vítima informada no cadastro inicial.</label>
                     </div>
                 </div>
             <?php endif; ?>
@@ -213,7 +210,7 @@ $prioridadeLabels = [
                     <div class="badge-line">
                         <?php if (!empty($medida['prioridades_processo'])): ?>
                             <?php foreach ($medida['prioridades_processo'] as $prioridade): ?>
-                                <span class="status status-primary-light"><?php echo htmlspecialchars($prioridadeLabels[(string) ($prioridade['prioridade'] ?? '')] ?? (string) ($prioridade['prioridade'] ?? 'Prioridade'), ENT_QUOTES); ?></span>
+                                <span class="status status-primary-light padding-lr-lg"><?php echo htmlspecialchars($prioridadeLabels[(string) ($prioridade['prioridade'] ?? '')] ?? (string) ($prioridade['prioridade'] ?? 'Prioridade'), ENT_QUOTES); ?></span>
                             <?php endforeach; ?>
                         <?php else: ?>
                             <span class="minor-info">Processo sem prioridade processual cadastrada.</span>
@@ -224,7 +221,7 @@ $prioridadeLabels = [
                     <div class="col filter">
                         <label>Cejusc</label>
                         <div class="badge-line">
-                            <a class="btn btn-secondary-outline" href="/frame.php?page=cejuscedit&id=<?php echo urlencode((string) $medida['cejusc_tarefa_id']); ?>">Abrir tarefa Cejusc</a>
+                            <button class="btn btn-secondary-outline" href="/frame.php?page=cejuscedit&id=<?php echo urlencode((string) $medida['cejusc_tarefa_id']); ?>">Abrir tarefa Cejusc</button>
                         </div>
                     </div>
                 <?php endif; ?>

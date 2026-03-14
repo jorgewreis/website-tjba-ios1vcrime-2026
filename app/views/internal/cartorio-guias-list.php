@@ -278,7 +278,7 @@ if ($totalPages > 0) {
                             <span class="minor-info">Denunciado</span>
                             <span class="major-info"><?php echo htmlspecialchars($row['Denunciado'] ?? '—'); ?></span>
                         </div>
-                        <div class="col detalhes-info">
+                        <div class="col detalhes-info-tipo">
                             <span class="minor-info">Tipo</span>
                             <span class="major-info"><?php echo htmlspecialchars($row['Tipo'] ?? '—'); ?></span>
                         </div>
