@@ -53,10 +53,10 @@ if ($pessoa === null) {
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
                 <label for="cpf">CPF</label>
-                <input type="text" class="width-md height-md white" id="cpf" value="<?php
+                <input type="text" class="width-md height-md white readyonl" id="cpf" value="<?php
                     $cpfVal = $pessoa['cpf'] ?? '';
                     echo htmlspecialchars(strlen($cpfVal) === 11 ? Security::formatCPF($cpfVal) : $cpfVal);
-                ?>">
+                ?>" readonly>
             </div>
             <div class="col">
                 <label for="nome_completo">Nome completo</label>
@@ -106,6 +106,7 @@ if ($pessoa === null) {
                 <label for="new-tel-numero">Número</label>
                 <input type="text" class="width-md height-md white" id="new-tel-numero" placeholder="Somente números">
             </div>
+            <label for="new-tel-numero">-</label>
             <button type="button" class="btn btn-secondary-outline" id="add-tel-btn">Adicionar telefone</button>
         </div>
 
@@ -122,11 +123,14 @@ if ($pessoa === null) {
             <div class="col">
                 <label for="new-end-cep">CEP</label>
                 <input type="text" class="width-sm height-md white" id="new-end-cep" placeholder="00000-000" maxlength="9">
-                <button type="button" class="btn btn-secondary-outline" id="buscar-cep-btn">Buscar CEP</button>
+            </div>
+            <div class="col">
+                <label for="buscar-cep-btn">-</label>
+                <button type="button" class="btn btn-secondary-outline" id="buscar-cep-btn">Buscar</button>
             </div>
         </div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
-            <div class="col">
+            <div class="col">                
                 <label for="new-end-logradouro">Logradouro</label>
                 <input type="text" class="width-xl height-md white" id="new-end-logradouro" placeholder="Rua, avenida...">
             </div>
@@ -183,7 +187,7 @@ if ($pessoa === null) {
             <?php endforeach; ?>
         </div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
-            <a href="/frame.php?page=partesinstituicoescreate&parte_id=<?php echo urlencode($pessoa['id'] ?? ''); ?>" class="btn btn-primary">Vincular instituição</a>
+            <button type="button" class="btn btn-primary" id="vincular-instituicao-btn">Vincular instituição</button>
         </div>
     </div>
 
@@ -250,9 +254,15 @@ if ($pessoa === null) {
             .then(function(r) { return r.json(); })
             .then(function(d) {
                 if (d.id) { window.location.reload(); }
-                else { if (typeof showToast === 'function') showToast({ type: 'error', message: (d && d.error) || 'Erro.' }); document.getElementById('add-tel-btn').disabled = false; }
+                else {
+                    if (typeof showToast === 'function') showToast({ type: 'error', message: (d && d.error) || 'Erro ao adicionar telefone.' });
+                    document.getElementById('add-tel-btn').disabled = false;
+                }
             })
-            .catch(function() { if (typeof showToast === 'function') showToast({ type: 'error', message: 'Erro ao adicionar telefone.' }); document.getElementById('add-tel-btn').disabled = false; });
+            .catch(function() {
+                if (typeof showToast === 'function') showToast({ type: 'error', message: 'Erro ao adicionar telefone.' });
+                document.getElementById('add-tel-btn').disabled = false;
+            });
         });
         document.querySelectorAll('.btn-del-tel').forEach(function(btn) {
             btn.addEventListener('click', function() {

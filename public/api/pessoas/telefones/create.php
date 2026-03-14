@@ -46,5 +46,6 @@ try {
     echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
     http_response_code(500);
-    echo json_encode(['error' => 'Erro ao adicionar telefone: ' . $exception->getMessage()], JSON_UNESCAPED_UNICODE);
+    $msg = 'Erro ao adicionar telefone: ' . $exception->getMessage();
+    echo json_encode(['error' => $msg], JSON_UNESCAPED_UNICODE);
 }

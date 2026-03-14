@@ -64,8 +64,11 @@ final class PartesTelefonesRepository
 
         $id = trim((string) ($row['id'] ?? ''));
         if ($id === '') {
-            $id = IdGenerator::generateUniquePrefixedId($this->connection, $this->table, 'id', 'PTE', 30);
+            $id = IdGenerator::generateUniquePrefixedId($this->connection, $this->table, 'id', 'TEL', 30);
         }
+
+        $tipoVal = trim((string) ($row['tipo'] ?? ''));
+        $tipoBind = $tipoVal !== '' ? $tipoVal : null;
 
         $statement = $this->connection->prepare(
             sprintf(
@@ -75,7 +78,11 @@ final class PartesTelefonesRepository
         );
         $statement->bindValue(':id', $id);
         $statement->bindValue(':parte_id', $parteId);
-        $statement->bindValue(':tipo', trim((string) ($row['tipo'] ?? '')) ?: null);
+        if ($tipoBind === null) {
+            $statement->bindValue(':tipo', null, PDO::PARAM_NULL);
+        } else {
+            $statement->bindValue(':tipo', $tipoBind);
+        }
         $statement->bindValue(':numero', $numero);
         $statement->bindValue(':whatsapp', isset($row['whatsapp']) ? (int) (bool) $row['whatsapp'] : 0, PDO::PARAM_INT);
         $statement->bindValue(':principal', isset($row['principal']) ? (int) (bool) $row['principal'] : 0, PDO::PARAM_INT);
