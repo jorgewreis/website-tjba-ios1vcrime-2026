@@ -63,6 +63,40 @@ if (function_exists('mb_internal_encoding')) {
             </div>
         </div>
 
+        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Telefones (opcional)</div>
+        <div id="telefones-cadastro">
+            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line telefone-row">
+                <div class="col">
+                    <label>Tipo</label>
+                    <input type="text" class="width-md height-md white tel-tipo" placeholder="Ex: Celular, Comercial">
+                </div>
+                <div class="col">
+                    <label>Número *</label>
+                    <input type="text" class="width-md height-md white tel-numero" placeholder="Somente números">
+                </div>
+            </div>
+        </div>
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <button type="button" class="btn btn-secondary-outline" id="add-telefone-btn">Adicionar outro telefone</button>
+        </div>
+
+        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Endereços (opcional)</div>
+        <div id="enderecos-cadastro">
+            <div class="endereco-row row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+                <div class="col"><label>CEP</label><input type="text" class="end-cep width-sm height-md white" placeholder="00000-000" maxlength="9"></div>
+                <div class="col"><label>Logradouro</label><input type="text" class="end-logradouro width-xl height-md white" placeholder="Rua, avenida..."></div>
+                <div class="col"><label>Número</label><input type="text" class="end-numero width-sm height-md white" placeholder="Nº"></div>
+                <div class="col"><label>Complemento</label><input type="text" class="end-complemento width-md height-md white" placeholder="Sala, andar..."></div>
+                <div class="col"><label>Bairro</label><input type="text" class="end-bairro width-md height-md white" placeholder="Bairro"></div>
+                <div class="col"><label>Cidade</label><input type="text" class="end-cidade width-md height-md white" placeholder="Cidade"></div>
+                <div class="col"><label>UF</label><input type="text" class="end-uf width-xs height-md white" placeholder="UF" maxlength="2"></div>
+                <div class="col"><label class="inline"><input type="checkbox" class="end-principal"> Principal</label></div>
+            </div>
+        </div>
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <button type="button" class="btn btn-secondary-outline" id="add-endereco-btn">Adicionar outro endereço</button>
+        </div>
+
         <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
             <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
             <button type="button" class="btn btn-primary" id="cadastrar-btn">Cadastrar</button>
@@ -102,6 +136,28 @@ if (function_exists('mb_internal_encoding')) {
             window.location.href = '/frame.php?page=consultapartes';
         });
 
+        document.getElementById('add-telefone-btn').addEventListener('click', function() {
+            var container = document.getElementById('telefones-cadastro');
+            var tpl = document.querySelector('#telefones-cadastro .telefone-row').cloneNode(true);
+            tpl.querySelector('.tel-tipo').value = '';
+            tpl.querySelector('.tel-numero').value = '';
+            container.appendChild(tpl);
+        });
+
+        document.getElementById('add-endereco-btn').addEventListener('click', function() {
+            var container = document.getElementById('enderecos-cadastro');
+            var tpl = document.querySelector('#enderecos-cadastro .endereco-row').cloneNode(true);
+            tpl.querySelector('.end-cep').value = '';
+            tpl.querySelector('.end-logradouro').value = '';
+            tpl.querySelector('.end-numero').value = '';
+            tpl.querySelector('.end-complemento').value = '';
+            tpl.querySelector('.end-bairro').value = '';
+            tpl.querySelector('.end-cidade').value = '';
+            tpl.querySelector('.end-uf').value = '';
+            tpl.querySelector('.end-principal').checked = false;
+            container.appendChild(tpl);
+        });
+
         document.getElementById('cadastrar-btn').addEventListener('click', function() {
             var nome = (document.getElementById('nome_completo').value || '').trim();
             if (!nome) {
@@ -119,16 +175,55 @@ if (function_exists('mb_internal_encoding')) {
             var sexo = (document.getElementById('sexo').value || '').trim();
             var data = (document.getElementById('data_nascimento').value || '').trim();
 
+            var telefones = [];
+            document.querySelectorAll('#telefones-cadastro .telefone-row').forEach(function(row) {
+                var numeroEl = row.querySelector('.tel-numero');
+                var tipoEl = row.querySelector('.tel-tipo');
+                var numero = (numeroEl && numeroEl.value ? numeroEl.value : '').replace(/\D/g, '').trim();
+                if (numero !== '') {
+                    var tipo = (tipoEl && tipoEl.value ? tipoEl.value : '').trim();
+                    telefones.push({ tipo: tipo || null, numero: numero });
+                }
+            });
+
+            var enderecos = [];
+            document.querySelectorAll('#enderecos-cadastro .endereco-row').forEach(function(row) {
+                var cep = (row.querySelector('.end-cep') && row.querySelector('.end-cep').value ? row.querySelector('.end-cep').value : '').replace(/\D/g, '').trim();
+                var logradouro = (row.querySelector('.end-logradouro') && row.querySelector('.end-logradouro').value ? row.querySelector('.end-logradouro').value : '').trim();
+                var numero = (row.querySelector('.end-numero') && row.querySelector('.end-numero').value ? row.querySelector('.end-numero').value : '').trim();
+                var complemento = (row.querySelector('.end-complemento') && row.querySelector('.end-complemento').value ? row.querySelector('.end-complemento').value : '').trim();
+                var bairro = (row.querySelector('.end-bairro') && row.querySelector('.end-bairro').value ? row.querySelector('.end-bairro').value : '').trim();
+                var cidade = (row.querySelector('.end-cidade') && row.querySelector('.end-cidade').value ? row.querySelector('.end-cidade').value : '').trim();
+                var uf = (row.querySelector('.end-uf') && row.querySelector('.end-uf').value ? row.querySelector('.end-uf').value : '').trim().toUpperCase().slice(0, 2);
+                var principal = row.querySelector('.end-principal') && row.querySelector('.end-principal').checked;
+                if (cep !== '' || logradouro !== '' || numero !== '' || complemento !== '' || bairro !== '' || cidade !== '' || uf !== '') {
+                    enderecos.push({
+                        cep: cep || null,
+                        logradouro: logradouro || null,
+                        numero: numero || null,
+                        complemento: complemento || null,
+                        bairro: bairro || null,
+                        cidade: cidade || null,
+                        uf: uf || null,
+                        principal: principal ? 1 : 0
+                    });
+                }
+            });
+
             this.disabled = true;
+            var payload = {
+                nome_completo: (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) ? TextFormatter.formatProperName(nome, 255) : nome,
+                cpf: cpf,
+                sexo: sexo || null,
+                data_nascimento: data || null
+            };
+            if (telefones.length > 0) payload.telefones = telefones;
+            if (enderecos.length > 0) payload.enderecos = enderecos;
+
             fetch('/api/pessoas/create.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    nome_completo: (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) ? TextFormatter.formatProperName(nome, 255) : nome,
-                    cpf: cpf,
-                    sexo: sexo || null,
-                    data_nascimento: data || null
-                })
+                body: JSON.stringify(payload)
             })
             .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
             .then(function(result) {

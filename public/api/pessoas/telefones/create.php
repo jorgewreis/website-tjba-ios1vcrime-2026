@@ -23,9 +23,19 @@ if ($parteId === '') {
     exit;
 }
 
+$numero = trim((string) ($parsed['numero'] ?? ''));
+if ($numero === '') {
+    http_response_code(400);
+    echo json_encode(['error' => 'Número do telefone é obrigatório.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 try {
     $service = new PessoasService($connection);
-    $newId = $service->addTelefone($parteId, $parsed);
+    $newId = $service->addTelefone($parteId, [
+        'tipo' => array_key_exists('tipo', $parsed) ? trim((string) $parsed['tipo']) : null,
+        'numero' => $numero,
+    ]);
     http_response_code(201);
     echo json_encode(['id' => $newId], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $exception) {

@@ -72,6 +72,47 @@ final class PessoasService
                 'sexo' => $payload['sexo'] ?? '',
                 'data_nascimento' => $payload['data_nascimento'] ?? '',
             ]);
+
+            $telefones = $payload['telefones'] ?? [];
+            if (is_array($telefones)) {
+                foreach ($telefones as $tel) {
+                    $numero = trim((string) ($tel['numero'] ?? ''));
+                    if ($numero !== '') {
+                        $this->telefonesRepository->insert([
+                            'parte_id' => $id,
+                            'tipo' => trim((string) ($tel['tipo'] ?? '')) ?: null,
+                            'numero' => $numero,
+                        ]);
+                    }
+                }
+            }
+
+            $enderecos = $payload['enderecos'] ?? [];
+            if (is_array($enderecos)) {
+                foreach ($enderecos as $end) {
+                    $cep = trim((string) ($end['cep'] ?? ''));
+                    $logradouro = trim((string) ($end['logradouro'] ?? ''));
+                    $numero = trim((string) ($end['numero'] ?? ''));
+                    $complemento = trim((string) ($end['complemento'] ?? ''));
+                    $bairro = trim((string) ($end['bairro'] ?? ''));
+                    $cidade = trim((string) ($end['cidade'] ?? ''));
+                    $uf = trim((string) ($end['uf'] ?? ''));
+                    if ($cep !== '' || $logradouro !== '' || $numero !== '' || $complemento !== '' || $bairro !== '' || $cidade !== '' || $uf !== '') {
+                        $this->enderecosRepository->insert([
+                            'parte_id' => $id,
+                            'cep' => $cep ?: null,
+                            'logradouro' => $logradouro ?: null,
+                            'numero' => $numero ?: null,
+                            'complemento' => $complemento ?: null,
+                            'bairro' => $bairro ?: null,
+                            'cidade' => $cidade ?: null,
+                            'uf' => $uf ?: null,
+                            'principal' => isset($end['principal']) ? (int) (bool) $end['principal'] : 0,
+                        ]);
+                    }
+                }
+            }
+
             $this->connection->commit();
             return $id;
         } catch (Throwable $e) {
@@ -95,8 +136,15 @@ final class PessoasService
 
     public function addTelefone(string $parteId, array $row): string
     {
-        $row['parte_id'] = $parteId;
-        return $this->telefonesRepository->insert($row);
+        $numero = trim((string) ($row['numero'] ?? ''));
+        if ($numero === '') {
+            throw new InvalidArgumentException('Número do telefone é obrigatório.');
+        }
+        return $this->telefonesRepository->insert([
+            'parte_id' => $parteId,
+            'tipo' => isset($row['tipo']) ? (trim((string) $row['tipo']) ?: null) : null,
+            'numero' => $numero,
+        ]);
     }
 
     public function updateTelefone(string $id, array $payload): bool
@@ -111,8 +159,21 @@ final class PessoasService
 
     public function addEndereco(string $parteId, array $row): string
     {
-        $row['parte_id'] = $parteId;
-        return $this->enderecosRepository->insert($row);
+        $data = [
+            'parte_id' => $parteId,
+            'cep' => isset($row['cep']) ? (trim((string) $row['cep']) ?: null) : null,
+            'logradouro' => isset($row['logradouro']) ? (trim((string) $row['logradouro']) ?: null) : null,
+            'numero' => isset($row['numero']) ? (trim((string) $row['numero']) ?: null) : null,
+            'complemento' => isset($row['complemento']) ? (trim((string) $row['complemento']) ?: null) : null,
+            'bairro' => isset($row['bairro']) ? (trim((string) $row['bairro']) ?: null) : null,
+            'cidade' => isset($row['cidade']) ? (trim((string) $row['cidade']) ?: null) : null,
+            'uf' => isset($row['uf']) ? (trim((string) $row['uf']) ?: null) : null,
+            'principal' => isset($row['principal']) ? (int) (bool) $row['principal'] : 0,
+        ];
+        if (array_key_exists('ativo', $row)) {
+            $data['ativo'] = (int) (bool) $row['ativo'];
+        }
+        return $this->enderecosRepository->insert($data);
     }
 
     public function updateEndereco(string $id, array $payload): bool
@@ -127,8 +188,27 @@ final class PessoasService
 
     public function addVinculoInstituicao(string $parteId, array $row): string
     {
-        $row['parte_id'] = $parteId;
-        return $this->partesInstituicoesRepository->insert($row);
+        $instituicaoId = trim((string) ($row['instituicao_id'] ?? ''));
+        if ($instituicaoId === '') {
+            throw new InvalidArgumentException('instituicao_id é obrigatório.');
+        }
+        $dataInclusao = trim((string) ($row['data_inclusao'] ?? ''));
+        if ($dataInclusao === '') {
+            $dataInclusao = date('Y-m-d');
+        }
+        $data = [
+            'parte_id' => $parteId,
+            'instituicao_id' => $instituicaoId,
+            'data_inclusao' => $dataInclusao,
+            'data_inicio' => isset($row['data_inicio']) && trim((string) $row['data_inicio']) !== '' ? trim((string) $row['data_inicio']) : $dataInclusao,
+            'setor_id' => isset($row['setor_id']) ? (trim((string) $row['setor_id']) ?: null) : null,
+            'profissao' => isset($row['profissao']) ? (trim((string) $row['profissao']) ?: null) : null,
+            'cargo_funcao' => isset($row['cargo_funcao']) ? (trim((string) $row['cargo_funcao']) ?: null) : null,
+            'data_fim' => isset($row['data_fim']) ? (trim((string) $row['data_fim']) ?: null) : null,
+            'ativo' => array_key_exists('ativo', $row) ? (int) (bool) $row['ativo'] : 1,
+            'observacoes' => isset($row['observacoes']) ? (trim((string) $row['observacoes']) ?: null) : null,
+        ];
+        return $this->partesInstituicoesRepository->insert($data);
     }
 
     public function updateVinculoInstituicao(string $id, array $payload): bool

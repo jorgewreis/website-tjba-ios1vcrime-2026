@@ -23,9 +23,23 @@ if ($parteId === '') {
     exit;
 }
 
+$row = [
+    'cep' => array_key_exists('cep', $parsed) ? trim((string) $parsed['cep']) : null,
+    'logradouro' => array_key_exists('logradouro', $parsed) ? trim((string) $parsed['logradouro']) : null,
+    'numero' => array_key_exists('numero', $parsed) ? trim((string) $parsed['numero']) : null,
+    'complemento' => array_key_exists('complemento', $parsed) ? trim((string) $parsed['complemento']) : null,
+    'bairro' => array_key_exists('bairro', $parsed) ? trim((string) $parsed['bairro']) : null,
+    'cidade' => array_key_exists('cidade', $parsed) ? trim((string) $parsed['cidade']) : null,
+    'uf' => array_key_exists('uf', $parsed) ? trim((string) $parsed['uf']) : null,
+    'principal' => isset($parsed['principal']) ? (int) (bool) $parsed['principal'] : 0,
+];
+if (isset($parsed['ativo'])) {
+    $row['ativo'] = (int) (bool) $parsed['ativo'];
+}
+
 try {
     $service = new PessoasService($connection);
-    $newId = $service->addEndereco($parteId, $parsed);
+    $newId = $service->addEndereco($parteId, $row);
     http_response_code(201);
     echo json_encode(['id' => $newId], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $exception) {
