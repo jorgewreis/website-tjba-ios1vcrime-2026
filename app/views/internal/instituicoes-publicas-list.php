@@ -111,21 +111,12 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                     <div class="col">
                         <label for="filter-nome">Nome</label>
                         <input type="text" class="width-md height-md white" id="filter-nome" name="nome" placeholder="Nome da instituição" value="<?php echo htmlspecialchars($nomeFilter); ?>">
-                    </div>
-                    <div class="col">
-                        <button type="submit" class="btn btn-primary">Consultar</button>
-                    </div>
+                    </div>                    
                 </div>
                 <div class="col right">
                     <div class="col">
-                        <label for="items-per-page">Itens por página</label>
-                        <select class="width-sm height-md white" name="items_per_page" id="items-per-page">
-                            <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
-                            <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
-                            <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
-                            <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
-                        </select>
-                    </div>
+                        <button type="submit" class="btn btn-primary">Consultar</button>
+                    </div>                    
                 </div>
             </div>
         </form>
@@ -137,6 +128,20 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
 
         <!-- SUBTITLE TABLE -->
         <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Lista de Instituições</div>
+
+        
+        <div class="row table between padding-tb-lg padding-lr-md border-bottom full-line">
+            <div class="col">
+                <label for="items-per-page">Itens por página</label>
+                <select class="width-sm height-md white" name="items_per_page" id="items-per-page">
+                    <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
+                    <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
+                    <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
+                    <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
+                </select>
+            </div>
+        </div>
+        
         <?php if (!$filtrou): ?>
             <div class="col subtask subtask-collapsed padding-lr-md full-line">
                 <div class="row table between padding-tb-md border-top">
@@ -145,6 +150,8 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                     </div>
                 </div>
             </div>
+
+
         <?php elseif (!empty($rows)): ?>
             <table class="table-list">
                 <thead>

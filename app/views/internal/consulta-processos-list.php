@@ -103,7 +103,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
         <form method="get" id="form-filters">
             <input type="hidden" name="page" value="<?php echo htmlspecialchars($routePage); ?>">
             <input type="hidden" name="items_per_page" value="<?php echo (int) $itemsPerPage; ?>">
-            <div class="row table between padding-tb-lg padding-lr-md border-bottom">
+            <div class="row table between padding-tb-lg padding-lr-md border-bottom full-line">
                 <div class="row left row-gap-10">
                     <div class="col">
                         <label for="filter-numero">Número do processo</label>
@@ -113,26 +113,31 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                         <label for="filter-parte">Nome da parte</label>
                         <input type="text" class="width-lg height-md white" id="filter-parte" name="parte_nome" placeholder="Nome da parte" value="<?php echo htmlspecialchars($parteNomeFilter); ?>">
                     </div>
+                </div>
+                <div class="row right">
                     <div class="col">
+                        <label for="filter-cpf">-</label>
                         <button type="submit" class="btn btn-primary">Consultar</button>
                     </div>
-                </div>
-                <div class="col right">
-                    <div class="col">
-                        <label for="items-per-page">Itens por página</label>
-                        <select class="width-sm height-md white" name="items_per_page" id="items-per-page">
-                            <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
-                            <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
-                            <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
-                            <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
-                        </select>
-                    </div>
-                </div>
+                </div>                
             </div>
         </form>
 
         <!-- SUBTITLE TABLE -->
         <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Lista de Processos</div>
+
+        <div class="row table between padding-tb-lg padding-lr-md border-bottom full-line">
+            <div class="col">
+                <label for="items-per-page">Itens por página</label>
+                <select class="width-sm height-md white" name="items_per_page" id="items-per-page">
+                    <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
+                    <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
+                    <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
+                    <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
+                </select>
+            </div>
+        </div>
+
         <?php if (!$filtrou): ?>
             <div class="col subtask subtask-collapsed padding-lr-md full-line">
                 <div class="row table between padding-tb-md border-top">
