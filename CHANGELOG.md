@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0096
+
+**Data:** 2026-03-14 13:50:34 | **Commit:** `45e750a` | **Tipo:** `patch`
+
+- fix: correção de subtarefas
+
 ## V. 1.03.0095
 
 **Data:** 2026-03-14 13:46:47 | **Commit:** `7d4283c` | **Tipo:** `patch`
@@ -2850,6 +2856,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

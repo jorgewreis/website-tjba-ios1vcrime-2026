@@ -293,10 +293,10 @@ if ($totalPages > 0) {
                 $subtarefas = $row['Subtarefas'] ?? [];
             ?>
             <!-- REGISTRO COMPLETO -->
-            <div class="col full-line border-bottom" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>">
-
+            <div class="col full-line border-bottom" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idCarta); ?>">
+                
                 <!-- TAREFA -->
-                <div class="row table between padding-lf-md" id="<?php echo htmlspecialchars($idCarta); ?>">
+                <div class="row table between padding-lf-md">
                     
                     <!-- DIV LEFT -->
                     <div class="row left">
@@ -469,8 +469,7 @@ if ($totalPages > 0) {
                         </div>
                         <div class="col table right">
                             <button type="button" class="btn btn-primary padding-lr-lg row-gap-10" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?>">
-                                <i class="fi fi-rr-play" style="margin-top: 6px;"></i>
-                                <span class="value-button">Concluir</span>
+                                <span class="value-button">Concluir sub-tarefa</span>
                             </button>
                         </div>
                     </div>
