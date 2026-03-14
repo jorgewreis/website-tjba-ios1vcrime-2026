@@ -228,60 +228,62 @@ if ($totalPages > 0) {
 
             <!-- ACTIONS -->
             <button class="btn btn-primary" id="novo-cadastro-btn">Novo cadastro</button>
-
         </div>
 
-        <!-- FILTERS -->
-            <div class="row table between padding-tb-sm padding-lr-lg border-bottom ">
-                
-                <div class="row left">
-                    <!-- FILTER FINALIDADE -->
-                    <div class="col">
-                        <label for="filter-tipo">Filtrar por finalidade</label>
-                        <select class="width-md height-md" id="filter-tipo">
-                            <option value=""<?php echo $finalidadeFilter === '' ? ' selected' : ''; ?>>Mostrar todas</option>
-                            <?php foreach ($finalidadeCounts as $finalidade => $count): ?>
-                                <option value="<?php echo htmlspecialchars($finalidade, ENT_QUOTES); ?>"<?php echo $finalidadeFilter === $finalidade ? ' selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($finalidade, ENT_QUOTES); ?> (<?php echo htmlspecialchars((string) $count); ?>)
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
+        <!-- SUBTITLE TABLE -->
+        <div class="row subtitle table left padding-tb-lg padding-lr-lg border-bottom">Lista de Documentos</div>
 
-                    <!-- FILTER STATUS -->
-                    <div class="col">
-                        <label for="filter-status">Filtrar por status</label>
-                        <select class="width-md height-md" id="filter-status">
-                            <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Mostrar todos</option>
-                            <option value="pendente"<?php echo $statusFilter === 'pendente' ? ' selected' : ''; ?>>
-                                Pendente (<?php echo htmlspecialchars((string) ($statusCounts['pendente'] ?? 0)); ?>)
+        <!-- FILTERS -->
+        <div class="row table between padding-tb-sm padding-lr-lg border-bottom">
+            
+            <div class="row left">
+                <!-- FILTER FINALIDADE -->
+                <div class="col">
+                    <label for="filter-tipo">Filtrar por finalidade</label>
+                    <select class="width-md height-md" id="filter-tipo">
+                        <option value=""<?php echo $finalidadeFilter === '' ? ' selected' : ''; ?>>Mostrar todas</option>
+                        <?php foreach ($finalidadeCounts as $finalidade => $count): ?>
+                            <option value="<?php echo htmlspecialchars($finalidade, ENT_QUOTES); ?>"<?php echo $finalidadeFilter === $finalidade ? ' selected' : ''; ?>>
+                                <?php echo htmlspecialchars($finalidade, ENT_QUOTES); ?> (<?php echo htmlspecialchars((string) $count); ?>)
                             </option>
-                            <option value="em_andamento"<?php echo $statusFilter === 'em_andamento' ? ' selected' : ''; ?>>
-                                Em andamento (<?php echo htmlspecialchars((string) ($statusCounts['em_andamento'] ?? 0)); ?>)
-                            </option>
-                            <option value="concluída"<?php echo $statusFilter === 'concluída' ? ' selected' : ''; ?>>
-                                Finalizada (<?php echo htmlspecialchars((string) ($statusCounts['concluída'] ?? 0)); ?>)
-                            </option>
-                            <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>
-                                Cancelada (<?php echo htmlspecialchars((string) ($statusCounts['cancelada'] ?? 0)); ?>)
-                            </option>
-                        </select>
-                    </div>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
 
-                <!-- FILTER PAGINATION -->
-                <div class="col right">
-                    <div class="col">
-                        <label for="items-per-page">Itens por página</label>
-                        <select class="width-sm height-md" id="items-per-page">
-                            <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
-                            <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
-                            <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
-                            <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
-                        </select>
-                    </div>
+                <!-- FILTER STATUS -->
+                <div class="col">
+                    <label for="filter-status">Filtrar por status</label>
+                    <select class="width-md height-md" id="filter-status">
+                        <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Mostrar todos</option>
+                        <option value="pendente"<?php echo $statusFilter === 'pendente' ? ' selected' : ''; ?>>
+                            Pendente (<?php echo htmlspecialchars((string) ($statusCounts['pendente'] ?? 0)); ?>)
+                        </option>
+                        <option value="em_andamento"<?php echo $statusFilter === 'em_andamento' ? ' selected' : ''; ?>>
+                            Em andamento (<?php echo htmlspecialchars((string) ($statusCounts['em_andamento'] ?? 0)); ?>)
+                        </option>
+                        <option value="concluída"<?php echo $statusFilter === 'concluída' ? ' selected' : ''; ?>>
+                            Finalizada (<?php echo htmlspecialchars((string) ($statusCounts['concluída'] ?? 0)); ?>)
+                        </option>
+                        <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>
+                            Cancelada (<?php echo htmlspecialchars((string) ($statusCounts['cancelada'] ?? 0)); ?>)
+                        </option>
+                    </select>
                 </div>
             </div>
+
+            <!-- FILTER PAGINATION -->
+            <div class="col right">
+                <div class="col">
+                    <label for="items-per-page">Itens por página</label>
+                    <select class="width-sm height-md" id="items-per-page">
+                        <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
+                        <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
+                        <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
+                        <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
+                    </select>
+                </div>
+            </div>
+        </div>
         
         <!-- Tabela -->
         
