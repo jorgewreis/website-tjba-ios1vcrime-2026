@@ -104,4 +104,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix: layout fixed** `[c0989bf]`
 - **fix: correção de layout responsivo** `[897b74b]`
 - **fix: correção de classes** `[4d4dd1d]`
+- **fix: melhorias nas informações** `[f4ae92b]`
 
