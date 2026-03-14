@@ -131,4 +131,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix: correção de select** `[c05193e]`
 - **fix: pequenos ajustes** `[14ec040]`
 - **fix: mais ajustes** `[c98f32d]`
+- **fix: correçao de erros** `[58bbc56]`
 
