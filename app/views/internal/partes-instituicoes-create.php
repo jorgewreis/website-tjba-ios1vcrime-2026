@@ -18,6 +18,7 @@ $parteIdPrefill = trim((string) ($_GET['parte_id'] ?? ''));
     <link rel="stylesheet" href="/assets/css/shared/color.css">
     <link rel="stylesheet" href="/assets/css/shared/page.css">
     <link rel="stylesheet" href="/assets/css/shared/form.css">
+    <link rel="stylesheet" href="/assets/css/shared/table.css">
     <?php include __DIR__ . '/_toast_script.php'; ?>
     <script src="/assets/js/shared/text-formatter.js"></script>
 </head>
@@ -29,61 +30,61 @@ $parteIdPrefill = trim((string) ($_GET['parte_id'] ?? ''));
         <p class="description-page">Vincule uma pessoa (parte) a uma instituição pública.</p>
     </div>
     <div class="card-page">
-        <div class="row table header">Dados do vínculo</div>
-        <div class="row filter">
-            <div class="col filter">
+        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Dados do vínculo</div>
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col">
                 <label for="parte_id">ID da pessoa (parte) *</label>
-                <input type="text" class="width-md height-md" id="parte_id" placeholder="Ex: PRT-..." value="<?php echo htmlspecialchars($parteIdPrefill); ?>" required>
+                <input type="text" class="width-md height-md white" id="parte_id" placeholder="Ex: PRT-..." value="<?php echo htmlspecialchars($parteIdPrefill); ?>" required>
                 <a href="/frame.php?page=consultapartes" target="_blank" class="btn btn-secondary-outline" style="margin-top:4px;">Buscar pessoa</a>
             </div>
-            <div class="col filter">
+            <div class="col">
                 <label for="instituicao_id">ID da instituição *</label>
-                <input type="text" class="width-md height-md" id="instituicao_id" placeholder="Ex: INS-..." required>
+                <input type="text" class="width-md height-md white" id="instituicao_id" placeholder="Ex: INS-..." required>
                 <a href="/frame.php?page=instituicoespublicas" target="_blank" class="btn btn-secondary-outline" style="margin-top:4px;">Buscar instituição</a>
             </div>
         </div>
-        <div class="row filter">
-            <div class="col filter">
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col">
                 <label for="setor_id">Setor (opcional)</label>
-                <select class="width-md height-md" id="setor_id">
+                <select class="width-md height-md white" id="setor_id">
                     <option value="">— Selecione a instituição primeiro —</option>
                 </select>
             </div>
-            <div class="col filter">
+            <div class="col">
                 <label for="profissao">Profissão</label>
-                <input type="text" class="width-md height-md" id="profissao" placeholder="Ex: Policial">
+                <input type="text" class="width-md height-md white" id="profissao" placeholder="Ex: Policial">
             </div>
-            <div class="col filter">
+            <div class="col">
                 <label for="cargo_funcao">Cargo / Função *</label>
-                <input type="text" class="width-md height-md" id="cargo_funcao" placeholder="Ex: Investigador">
+                <input type="text" class="width-md height-md white" id="cargo_funcao" placeholder="Ex: Investigador">
             </div>
         </div>
-        <div class="row filter">
-            <div class="col filter">
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col">
                 <label for="data_inclusao">Data de inclusão *</label>
-                <input type="date" class="width-md height-md" id="data_inclusao" required>
+                <input type="date" class="width-md height-md white" id="data_inclusao" required>
             </div>
-            <div class="col filter">
+            <div class="col">
                 <label for="data_inicio">Data início</label>
-                <input type="date" class="width-md height-md" id="data_inicio">
+                <input type="date" class="width-md height-md white" id="data_inicio">
             </div>
-            <div class="col filter">
+            <div class="col">
                 <label for="data_fim">Data fim</label>
-                <input type="date" class="width-md height-md" id="data_fim">
+                <input type="date" class="width-md height-md white" id="data_fim">
             </div>
         </div>
-        <div class="row filter">
-            <div class="col filter">
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col">
                 <label><input type="checkbox" id="ativo" checked> Ativo</label>
             </div>
         </div>
-        <div class="row filter">
-            <div class="col filter">
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col">
                 <label for="observacoes">Observações</label>
-                <textarea class="width-xl height-md" id="observacoes" rows="2"></textarea>
+                <textarea class="width-xl height-md white" id="observacoes" rows="2"></textarea>
             </div>
         </div>
-        <div class="row buttons">
+        <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
             <a href="/frame.php?page=partesinstituicoeslist" class="btn btn-secondary">Voltar</a>
             <button type="button" class="btn btn-primary" id="salvar-btn">Salvar</button>
         </div>

@@ -41,6 +41,7 @@ if (!empty($vinculo['instituicao_id'])) {
     <link rel="stylesheet" href="/assets/css/shared/color.css">
     <link rel="stylesheet" href="/assets/css/shared/page.css">
     <link rel="stylesheet" href="/assets/css/shared/form.css">
+    <link rel="stylesheet" href="/assets/css/shared/table.css">
     <?php include __DIR__ . '/_toast_script.php'; ?>
     <script src="/assets/js/shared/text-formatter.js"></script>
 </head>
@@ -52,58 +53,58 @@ if (!empty($vinculo['instituicao_id'])) {
     </div>
     <div class="card-page">
         <input type="hidden" id="vinculo-id" value="<?php echo htmlspecialchars($vinculo['id'] ?? ''); ?>">
-        <div class="row table header">Dados do vínculo</div>
-        <div class="row filter">
-            <div class="col filter"><strong>Pessoa:</strong> <?php echo htmlspecialchars($parteNome); ?> <a href="/frame.php?page=consultapartesedit&id=<?php echo urlencode($vinculo['parte_id'] ?? ''); ?>" class="btn btn-secondary-outline">Ver pessoa</a></div>
+        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Dados do vínculo</div>
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col"><strong>Pessoa:</strong> <?php echo htmlspecialchars($parteNome); ?> <a href="/frame.php?page=consultapartesedit&id=<?php echo urlencode($vinculo['parte_id'] ?? ''); ?>" class="btn btn-secondary-outline">Ver pessoa</a></div>
         </div>
-        <div class="row filter">
-            <div class="col filter"><strong>Instituição:</strong> <?php echo htmlspecialchars($instNome); ?></div>
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col"><strong>Instituição:</strong> <?php echo htmlspecialchars($instNome); ?></div>
         </div>
-        <div class="row filter">
-            <div class="col filter">
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col">
                 <label for="setor_id">Setor</label>
-                <select class="width-md height-md" id="setor_id">
+                <select class="width-md height-md white" id="setor_id">
                     <option value="">— Nenhum —</option>
                     <?php foreach ($setores as $s): ?>
                         <option value="<?php echo htmlspecialchars($s['id'] ?? ''); ?>"<?php echo (($vinculo['setor_id'] ?? '') === ($s['id'] ?? '')) ? ' selected' : ''; ?>><?php echo htmlspecialchars($s['nome_setor'] ?? $s['sigla'] ?? $s['id'] ?? ''); ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="col filter">
+            <div class="col">
                 <label for="profissao">Profissão</label>
-                <input type="text" class="width-md height-md" id="profissao" value="<?php echo htmlspecialchars($vinculo['profissao'] ?? ''); ?>">
+                <input type="text" class="width-md height-md white" id="profissao" value="<?php echo htmlspecialchars($vinculo['profissao'] ?? ''); ?>">
             </div>
-            <div class="col filter">
+            <div class="col">
                 <label for="cargo_funcao">Cargo / Função</label>
-                <input type="text" class="width-md height-md" id="cargo_funcao" value="<?php echo htmlspecialchars($vinculo['cargo_funcao'] ?? ''); ?>">
+                <input type="text" class="width-md height-md white" id="cargo_funcao" value="<?php echo htmlspecialchars($vinculo['cargo_funcao'] ?? ''); ?>">
             </div>
         </div>
-        <div class="row filter">
-            <div class="col filter">
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col">
                 <label for="data_inclusao">Data de inclusão *</label>
-                <input type="date" class="width-md height-md" id="data_inclusao" value="<?php echo htmlspecialchars($vinculo['data_inclusao'] ?? ''); ?>" required>
+                <input type="date" class="width-md height-md white" id="data_inclusao" value="<?php echo htmlspecialchars($vinculo['data_inclusao'] ?? ''); ?>" required>
             </div>
-            <div class="col filter">
+            <div class="col">
                 <label for="data_inicio">Data início</label>
-                <input type="date" class="width-md height-md" id="data_inicio" value="<?php echo htmlspecialchars($vinculo['data_inicio'] ?? ''); ?>">
+                <input type="date" class="width-md height-md white" id="data_inicio" value="<?php echo htmlspecialchars($vinculo['data_inicio'] ?? ''); ?>">
             </div>
-            <div class="col filter">
+            <div class="col">
                 <label for="data_fim">Data fim</label>
-                <input type="date" class="width-md height-md" id="data_fim" value="<?php echo htmlspecialchars($vinculo['data_fim'] ?? ''); ?>">
+                <input type="date" class="width-md height-md white" id="data_fim" value="<?php echo htmlspecialchars($vinculo['data_fim'] ?? ''); ?>">
             </div>
         </div>
-        <div class="row filter">
-            <div class="col filter">
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col">
                 <label><input type="checkbox" id="ativo"<?php echo !empty($vinculo['ativo']) ? ' checked' : ''; ?>> Ativo</label>
             </div>
         </div>
-        <div class="row filter">
-            <div class="col filter">
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col">
                 <label for="observacoes">Observações</label>
-                <textarea class="width-xl height-md" id="observacoes" rows="2"><?php echo htmlspecialchars($vinculo['observacoes'] ?? ''); ?></textarea>
+                <textarea class="width-xl height-md white" id="observacoes" rows="2"><?php echo htmlspecialchars($vinculo['observacoes'] ?? ''); ?></textarea>
             </div>
         </div>
-        <div class="row buttons">
+        <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
             <a href="/frame.php?page=partesinstituicoeslist" class="btn btn-secondary">Voltar</a>
             <button type="button" class="btn btn-primary" id="salvar-btn">Salvar</button>
         </div>

@@ -36,39 +36,39 @@ if (function_exists('mb_internal_encoding')) {
     </div>
 
     <div class="card-page">
-        <div class="row table header">Informações da parte</div>
-        <div class="row filter">
-            <div class="col filter">
+        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Informações da parte</div>
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col">
                 <label for="nome_completo">Nome completo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-xl height-md" id="nome_completo" name="nome_completo" placeholder="Nome completo da pessoa" required>
+                <input type="text" class="width-xl height-md white" id="nome_completo" name="nome_completo" placeholder="Nome completo da pessoa" required>
             </div>
         </div>
-        <div class="row filter">
-            <div class="col filter">
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col">
                 <label for="cpf">CPF</label>
-                <input type="text" class="width-md height-md" id="cpf" name="cpf" placeholder="Somente números">
+                <input type="text" class="width-md height-md white" id="cpf" name="cpf" placeholder="Somente números">
             </div>
-            <div class="col filter">
+            <div class="col">
                 <label for="sexo">Sexo</label>
-                <select class="width-md height-md" id="sexo" name="sexo">
+                <select class="width-md height-md white" id="sexo" name="sexo">
                     <option value="">Selecione</option>
                     <option value="Feminino">Feminino</option>
                     <option value="Masculino">Masculino</option>
                     <option value="Outro">Outro</option>
                 </select>
             </div>
-            <div class="col filter">
+            <div class="col">
                 <label for="data_nascimento">Data de nascimento</label>
-                <input type="date" class="width-md height-md" id="data_nascimento" name="data_nascimento">
+                <input type="date" class="width-md height-md white" id="data_nascimento" name="data_nascimento">
             </div>
         </div>
 
-        <div class="row buttons">
+        <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
             <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
             <button type="button" class="btn btn-primary" id="cadastrar-btn">Cadastrar</button>
         </div>
 
-        <div class="row pagination">
+        <div class="row table between padding-tb-lg padding-lr-md">
             <div class="col">
                 <label id="cadastro-feedback" class="status-placeholder" aria-live="polite"></label>
             </div>

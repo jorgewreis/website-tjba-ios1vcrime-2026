@@ -267,7 +267,7 @@ if ($totalPages > 0) {
                 </div>
 
                 <!-- SUB-TAREFAS -->
-                <div class="col subtask subtask-collapsed padding-lr-lg full-line" id="subtask-<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>" aria-hidden="true">
+                <div class="col subtask subtask-collapsed padding-lr-lg" id="subtask-<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>" aria-hidden="true">
                     <?php foreach ($subtarefas as $subtarefa):
                         $stId = (string) ($subtarefa['id'] ?? '');
                         $stTipo = (string) ($subtarefa['tipo'] ?? '');
@@ -291,7 +291,7 @@ if ($totalPages > 0) {
             </div>
             <?php endforeach; ?>
         <?php else: ?>
-            <div class="col subtask subtask-collapsed padding-lr-md full-line">
+            <div class="col subtask subtask-collapsed padding-lr-md">
                 <div class="row table between padding-tb-md border-top">
                     <div class="col table left no-data">
                         <span class="major-info">Nenhuma medida protetiva cadastrada.</span>

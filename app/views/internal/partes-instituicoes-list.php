@@ -51,24 +51,35 @@ if ($parteId !== '') {
         <p class="description-page">Consulte por pessoa (parte) ou por instituição.</p>
     </div>
     <div class="card-page">
-        <form method="get" class="row filter" id="form-filters">
+
+        <!-- FILTROS -->
+        <form method="get" id="form-filters">
             <input type="hidden" name="page" value="partesinstituicoeslist">
-            <div class="col filter">
-                <label for="parte_id">ID da pessoa (parte)</label>
-                <input type="text" class="width-md height-md" id="parte_id" name="parte_id" placeholder="Ex: PRT-..." value="<?php echo htmlspecialchars($parteId); ?>">
-            </div>
-            <div class="col filter">
-                <label for="instituicao_id">ID da instituição</label>
-                <input type="text" class="width-md height-md" id="instituicao_id" name="instituicao_id" placeholder="Ex: INS-..." value="<?php echo htmlspecialchars($instituicaoId); ?>">
-            </div>
-            <div class="col filter">
-                <button type="submit" class="btn btn-primary">Consultar</button>
+            <div class="row table between padding-tb-lg padding-lr-md border-bottom">
+                <div class="row left row-gap-10">
+                    <div class="col">
+                        <label for="parte_id">ID da pessoa (parte)</label>
+                        <input type="text" class="width-md height-md white" id="parte_id" name="parte_id" placeholder="Ex: PRT-..." value="<?php echo htmlspecialchars($parteId); ?>">
+                    </div>
+                    <div class="col">
+                        <label for="instituicao_id">ID da instituição</label>
+                        <input type="text" class="width-md height-md white" id="instituicao_id" name="instituicao_id" placeholder="Ex: INS-..." value="<?php echo htmlspecialchars($instituicaoId); ?>">
+                    </div>
+                    <div class="col">
+                        <button type="submit" class="btn btn-primary">Consultar</button>
+                    </div>
+                </div>
             </div>
         </form>
+
         <?php if ($parteId === '' && $instituicaoId === ''): ?>
-            <div class="row table"><div class="col"><span class="major-info">Informe o ID da pessoa ou da instituição e clique em Consultar.</span></div></div>
+            <div class="col subtask subtask-collapsed padding-lr-md full-line">
+                <div class="row table between padding-tb-md border-top">
+                    <div class="col table left no-data"><span class="major-info">Informe o ID da pessoa ou da instituição e clique em Consultar.</span></div>
+                </div>
+            </div>
         <?php elseif (!empty($rows)): ?>
-            <div class="row table header"><?php echo $parteId !== '' ? 'Instituições vinculadas a ' . htmlspecialchars($parteNome) : 'Pessoas vinculadas a ' . htmlspecialchars($instituicaoNome); ?></div>
+            <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom"><?php echo $parteId !== '' ? 'Instituições vinculadas a ' . htmlspecialchars($parteNome) : 'Pessoas vinculadas a ' . htmlspecialchars($instituicaoNome); ?></div>
             <table class="table-list">
                 <thead>
                     <tr>
@@ -104,12 +115,16 @@ if ($parteId !== '') {
                     <?php endforeach; ?>
                 </tbody>
             </table>
-            <div class="row buttons">
+            <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
                 <a href="/frame.php?page=partesinstituicoescreate" class="btn btn-primary">Novo vínculo</a>
             </div>
         <?php else: ?>
-            <div class="row table"><div class="col"><span class="major-info">Nenhum vínculo encontrado.</span></div></div>
-            <div class="row buttons">
+            <div class="col subtask subtask-collapsed padding-lr-md full-line">
+                <div class="row table between padding-tb-md border-top">
+                    <div class="col table left no-data"><span class="major-info">Nenhum vínculo encontrado.</span></div>
+                </div>
+            </div>
+            <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
                 <a href="/frame.php?page=partesinstituicoescreate" class="btn btn-primary">Novo vínculo</a>
             </div>
         <?php endif; ?>

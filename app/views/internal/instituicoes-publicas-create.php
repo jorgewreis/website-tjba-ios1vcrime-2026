@@ -13,6 +13,7 @@ if (function_exists('mb_internal_encoding')) mb_internal_encoding('UTF-8');
     <link rel="stylesheet" href="/assets/css/shared/color.css">
     <link rel="stylesheet" href="/assets/css/shared/page.css">
     <link rel="stylesheet" href="/assets/css/shared/form.css">
+    <link rel="stylesheet" href="/assets/css/shared/table.css">
     <?php include __DIR__ . '/_toast_script.php'; ?>
     <script src="/assets/js/shared/text-formatter.js"></script>
     <script src="/assets/js/shared/cnpj.js"></script>
@@ -24,30 +25,30 @@ if (function_exists('mb_internal_encoding')) mb_internal_encoding('UTF-8');
         <h1 class="title-page">Nova instituição pública</h1>
     </div>
     <div class="card-page">
-        <div class="row table header">Dados</div>
-        <div class="row filter">
-            <div class="col filter">
+        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Dados</div>
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col">
                 <label for="nome">Nome *</label>
-                <input type="text" class="width-xl height-md" id="nome" required>
+                <input type="text" class="width-xl height-md white" id="nome" required>
             </div>
         </div>
-        <div class="row filter">
-            <div class="col filter">
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col">
                 <label for="nome_fantasia">Nome fantasia / Sigla</label>
-                <input type="text" class="width-md height-md" id="nome_fantasia">
+                <input type="text" class="width-md height-md white" id="nome_fantasia">
             </div>
-            <div class="col filter">
+            <div class="col">
                 <label for="cnpj">CNPJ</label>
-                <input type="text" class="width-md height-md" id="cnpj" placeholder="Somente números">
+                <input type="text" class="width-md height-md white" id="cnpj" placeholder="Somente números">
             </div>
         </div>
-        <div class="row filter">
-            <div class="col filter">
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col">
                 <label for="observacoes">Observações</label>
-                <textarea class="width-xl height-md" id="observacoes" rows="2"></textarea>
+                <textarea class="width-xl height-md white" id="observacoes" rows="2"></textarea>
             </div>
         </div>
-        <div class="row buttons">
+        <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
             <a href="/frame.php?page=instituicoespublicas" class="btn btn-secondary">Voltar</a>
             <button type="button" class="btn btn-primary" id="cadastrar-btn">Cadastrar</button>
         </div>

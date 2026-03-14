@@ -41,20 +41,31 @@ if ($processoId !== '') {
         <p class="description-page">Informe o ID do processo para listar as partes vinculadas.</p>
     </div>
     <div class="card-page">
-        <form method="get" class="row filter" id="form-filters">
+
+        <!-- FILTROS -->
+        <form method="get" id="form-filters">
             <input type="hidden" name="page" value="processosparteslist">
-            <div class="col filter">
-                <label for="processo_id">ID do processo</label>
-                <input type="text" class="width-md height-md" id="processo_id" name="processo_id" placeholder="Ex: PRC-..." value="<?php echo htmlspecialchars($processoId); ?>">
-            </div>
-            <div class="col filter">
-                <button type="submit" class="btn btn-primary">Consultar</button>
+            <div class="row table between padding-tb-lg padding-lr-md border-bottom">
+                <div class="row left row-gap-10">
+                    <div class="col">
+                        <label for="processo_id">ID do processo</label>
+                        <input type="text" class="width-md height-md white" id="processo_id" name="processo_id" placeholder="Ex: PRC-..." value="<?php echo htmlspecialchars($processoId); ?>">
+                    </div>
+                    <div class="col">
+                        <button type="submit" class="btn btn-primary">Consultar</button>
+                    </div>
+                </div>
             </div>
         </form>
+
         <?php if ($processoId !== '' && $processo === null): ?>
-            <div class="row table"><div class="col"><span class="major-info">Processo não encontrado.</span></div></div>
+            <div class="col subtask subtask-collapsed padding-lr-md full-line">
+                <div class="row table between padding-tb-md border-top">
+                    <div class="col table left no-data"><span class="major-info">Processo não encontrado.</span></div>
+                </div>
+            </div>
         <?php elseif (!empty($partes)): ?>
-            <div class="row table header">Partes do processo <?php echo htmlspecialchars($processo['numero_processo'] ?? $processoId); ?></div>
+            <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Partes do processo <?php echo htmlspecialchars($processo['numero_processo'] ?? $processoId); ?></div>
             <table class="table-list">
                 <thead><tr><th>Nome</th><th>CPF</th><th>Tipo</th><th>Polo</th><th>Ações</th></tr></thead>
                 <tbody>
@@ -72,13 +83,17 @@ if ($processoId !== '') {
                     <?php endforeach; ?>
                 </tbody>
             </table>
-            <div class="row buttons">
+            <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
                 <a href="/frame.php?page=consultaprocessosedit&id=<?php echo urlencode($processoId); ?>" class="btn btn-primary">Abrir processo</a>
                 <a href="/frame.php?page=processospartescreate&processo_id=<?php echo urlencode($processoId); ?>" class="btn btn-secondary">Vincular parte</a>
             </div>
         <?php elseif ($processoId !== ''): ?>
-            <div class="row table"><div class="col"><span class="major-info">Nenhuma parte vinculada a este processo.</span></div></div>
-            <div class="row buttons">
+            <div class="col subtask subtask-collapsed padding-lr-md full-line">
+                <div class="row table between padding-tb-md border-top">
+                    <div class="col table left no-data"><span class="major-info">Nenhuma parte vinculada a este processo.</span></div>
+                </div>
+            </div>
+            <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
                 <a href="/frame.php?page=processospartescreate&processo_id=<?php echo urlencode($processoId); ?>" class="btn btn-primary">Vincular parte</a>
             </div>
         <?php endif; ?>

@@ -24,6 +24,7 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
     <link rel="stylesheet" href="/assets/css/shared/color.css">
     <link rel="stylesheet" href="/assets/css/shared/page.css">
     <link rel="stylesheet" href="/assets/css/shared/form.css">
+    <link rel="stylesheet" href="/assets/css/shared/table.css">
     <?php include __DIR__ . '/_toast_script.php'; ?>
     <script src="/assets/js/shared/text-formatter.js"></script>
     <script src="/assets/js/shared/cnpj.js"></script>
@@ -36,118 +37,118 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
     </div>
     <div class="card-page">
         <input type="hidden" id="inst-id" value="<?php echo htmlspecialchars($inst['id']); ?>">
-        <div class="row table header">Dados</div>
-        <div class="row filter">
-            <div class="col filter">
+        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Dados</div>
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col">
                 <label for="nome">Nome *</label>
-                <input type="text" class="width-xl height-md" id="nome" value="<?php echo htmlspecialchars($inst['nome'] ?? ''); ?>" required>
+                <input type="text" class="width-xl height-md white" id="nome" value="<?php echo htmlspecialchars($inst['nome'] ?? ''); ?>" required>
             </div>
         </div>
-        <div class="row filter">
-            <div class="col filter">
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col">
                 <label for="nome_fantasia">Nome fantasia / Sigla</label>
-                <input type="text" class="width-md height-md" id="nome_fantasia" value="<?php echo htmlspecialchars($inst['nome_fantasia'] ?? ''); ?>">
+                <input type="text" class="width-md height-md white" id="nome_fantasia" value="<?php echo htmlspecialchars($inst['nome_fantasia'] ?? ''); ?>">
             </div>
-            <div class="col filter">
+            <div class="col">
                 <label for="cnpj">CNPJ</label>
-                <input type="text" class="width-md height-md" id="cnpj" value="<?php
+                <input type="text" class="width-md height-md white" id="cnpj" value="<?php
                     $cnpjVal = preg_replace('/\D+/', '', (string) ($inst['cnpj'] ?? ''));
                     echo htmlspecialchars($cnpjVal !== '' && strlen($cnpjVal) === 14 ? Security::formatCNPJ($cnpjVal) : ($inst['cnpj'] ?? ''));
                 ?>">
             </div>
         </div>
-        <div class="row filter">
-            <div class="col filter">
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col">
                 <label for="observacoes">Observações</label>
-                <textarea class="width-xl height-md" id="observacoes" rows="2"><?php echo htmlspecialchars($inst['observacoes'] ?? ''); ?></textarea>
+                <textarea class="width-xl height-md white" id="observacoes" rows="2"><?php echo htmlspecialchars($inst['observacoes'] ?? ''); ?></textarea>
             </div>
         </div>
-        <div class="row buttons">
+        <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
             <a href="/frame.php?page=instituicoespublicas" class="btn btn-secondary">Voltar</a>
             <button type="button" class="btn btn-primary" id="salvar-btn">Salvar</button>
         </div>
 
-        <div class="row table header">Endereços</div>
+        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Endereços</div>
         <div id="enderecos-list">
             <?php foreach ($inst['enderecos'] ?? [] as $e): ?>
-            <div class="row filter" data-id="<?php echo htmlspecialchars($e['id'] ?? ''); ?>">
-                <div class="col filter"><?php echo htmlspecialchars(trim(($e['logradouro'] ?? '') . ($e['numero'] ? ' ' . $e['numero'] : '') . ($e['bairro'] ? ' - ' . $e['bairro'] : '') . ($e['cidade'] ? ' - ' . $e['cidade'] : '') . ($e['uf'] ? '/' . $e['uf'] : ''))); ?></div>
-                <div class="col filter"><?php echo !empty($e['principal']) ? 'Principal' : '—'; ?></div>
-                <div class="col filter"><button type="button" class="btn btn-secondary-outline btn-del-end" data-id="<?php echo htmlspecialchars($e['id'] ?? ''); ?>">Excluir</button></div>
+            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line" data-id="<?php echo htmlspecialchars($e['id'] ?? ''); ?>">
+                <div class="col"><?php echo htmlspecialchars(trim(($e['logradouro'] ?? '') . ($e['numero'] ? ' ' . $e['numero'] : '') . ($e['bairro'] ? ' - ' . $e['bairro'] : '') . ($e['cidade'] ? ' - ' . $e['cidade'] : '') . ($e['uf'] ? '/' . $e['uf'] : ''))); ?></div>
+                <div class="col"><?php echo !empty($e['principal']) ? 'Principal' : '—'; ?></div>
+                <div class="col"><button type="button" class="btn btn-secondary-outline btn-del-end" data-id="<?php echo htmlspecialchars($e['id'] ?? ''); ?>">Excluir</button></div>
             </div>
             <?php endforeach; ?>
         </div>
-        <div class="row filter">
-            <div class="col filter">
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col">
                 <label for="new-end-cep">CEP</label>
-                <input type="text" class="width-sm height-md" id="new-end-cep" placeholder="00000-000" maxlength="9">
+                <input type="text" class="width-sm height-md white" id="new-end-cep" placeholder="00000-000" maxlength="9">
                 <button type="button" class="btn btn-secondary-outline" id="buscar-cep-btn">Buscar CEP</button>
             </div>
         </div>
-        <div class="row filter">
-            <div class="col filter">
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col">
                 <label for="new-end-logradouro">Logradouro</label>
-                <input type="text" class="width-xl height-md" id="new-end-logradouro" placeholder="Rua, avenida...">
+                <input type="text" class="width-xl height-md white" id="new-end-logradouro" placeholder="Rua, avenida...">
             </div>
-            <div class="col filter">
+            <div class="col">
                 <label for="new-end-numero">Número</label>
-                <input type="text" class="width-sm height-md" id="new-end-numero" placeholder="Nº">
+                <input type="text" class="width-sm height-md white" id="new-end-numero" placeholder="Nº">
             </div>
-            <div class="col filter">
+            <div class="col">
                 <label for="new-end-complemento">Complemento</label>
-                <input type="text" class="width-md height-md" id="new-end-complemento" placeholder="Sala, andar...">
+                <input type="text" class="width-md height-md white" id="new-end-complemento" placeholder="Sala, andar...">
             </div>
         </div>
-        <div class="row filter">
-            <div class="col filter">
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col">
                 <label for="new-end-bairro">Bairro</label>
-                <input type="text" class="width-md height-md" id="new-end-bairro" placeholder="Bairro">
+                <input type="text" class="width-md height-md white" id="new-end-bairro" placeholder="Bairro">
             </div>
-            <div class="col filter">
+            <div class="col">
                 <label for="new-end-cidade">Cidade</label>
-                <input type="text" class="width-md height-md" id="new-end-cidade" placeholder="Cidade">
+                <input type="text" class="width-md height-md white" id="new-end-cidade" placeholder="Cidade">
             </div>
-            <div class="col filter">
+            <div class="col">
                 <label for="new-end-uf">UF</label>
-                <input type="text" class="width-xs height-md" id="new-end-uf" placeholder="UF" maxlength="2">
+                <input type="text" class="width-xs height-md white" id="new-end-uf" placeholder="UF" maxlength="2">
             </div>
             <label class="inline"><input type="checkbox" id="new-end-principal"> Principal</label>
             <button type="button" class="btn btn-secondary-outline" id="add-end-btn">Adicionar endereço</button>
         </div>
 
-        <div class="row table header">Telefones</div>
+        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Telefones</div>
         <div id="telefones-list">
             <?php foreach ($inst['telefones'] ?? [] as $t): ?>
-            <div class="row filter" data-id="<?php echo htmlspecialchars($t['id'] ?? ''); ?>">
-                <div class="col filter"><?php echo htmlspecialchars($t['tipo'] ?? '—'); ?></div>
-                <div class="col filter"><?php echo htmlspecialchars($t['numero'] ?? ''); ?></div>
-                <div class="col filter"><?php echo htmlspecialchars($t['ramal'] ?? '—'); ?></div>
-                <div class="col filter"><?php echo !empty($t['principal']) ? 'Principal' : '—'; ?></div>
-                <div class="col filter"><button type="button" class="btn btn-secondary-outline btn-del-tel" data-id="<?php echo htmlspecialchars($t['id'] ?? ''); ?>">Excluir</button></div>
+            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line" data-id="<?php echo htmlspecialchars($t['id'] ?? ''); ?>">
+                <div class="col"><?php echo htmlspecialchars($t['tipo'] ?? '—'); ?></div>
+                <div class="col"><?php echo htmlspecialchars($t['numero'] ?? ''); ?></div>
+                <div class="col"><?php echo htmlspecialchars($t['ramal'] ?? '—'); ?></div>
+                <div class="col"><?php echo !empty($t['principal']) ? 'Principal' : '—'; ?></div>
+                <div class="col"><button type="button" class="btn btn-secondary-outline btn-del-tel" data-id="<?php echo htmlspecialchars($t['id'] ?? ''); ?>">Excluir</button></div>
             </div>
             <?php endforeach; ?>
         </div>
-        <div class="row filter">
-            <input type="text" class="width-sm height-md" id="new-tel-tipo" placeholder="Tipo">
-            <input type="text" class="width-md height-md" id="new-tel-numero" placeholder="Número *">
-            <input type="text" class="width-sm height-md" id="new-tel-ramal" placeholder="Ramal">
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <input type="text" class="width-sm height-md white" id="new-tel-tipo" placeholder="Tipo">
+            <input type="text" class="width-md height-md white" id="new-tel-numero" placeholder="Número *">
+            <input type="text" class="width-sm height-md white" id="new-tel-ramal" placeholder="Ramal">
             <label class="inline"><input type="checkbox" id="new-tel-principal"> Principal</label>
             <button type="button" class="btn btn-secondary-outline" id="add-tel-btn">Adicionar telefone</button>
         </div>
 
-        <div class="row table header">Setores</div>
+        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Setores</div>
         <div id="setores-list">
             <?php foreach ($inst['setores'] ?? [] as $s): ?>
-            <div class="row filter" data-id="<?php echo htmlspecialchars($s['id'] ?? ''); ?>">
-                <div class="col filter"><?php echo htmlspecialchars($s['nome_setor'] ?? ''); ?></div>
-                <div class="col filter"><?php echo htmlspecialchars($s['sigla'] ?? '—'); ?></div>
-                <div class="col filter"><button type="button" class="btn btn-secondary-outline btn-del-setor" data-id="<?php echo htmlspecialchars($s['id'] ?? ''); ?>">Excluir</button></div>
+            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line" data-id="<?php echo htmlspecialchars($s['id'] ?? ''); ?>">
+                <div class="col"><?php echo htmlspecialchars($s['nome_setor'] ?? ''); ?></div>
+                <div class="col"><?php echo htmlspecialchars($s['sigla'] ?? '—'); ?></div>
+                <div class="col"><button type="button" class="btn btn-secondary-outline btn-del-setor" data-id="<?php echo htmlspecialchars($s['id'] ?? ''); ?>">Excluir</button></div>
             </div>
             <?php endforeach; ?>
         </div>
-        <div class="row filter">
-            <input type="text" class="width-xl height-md" id="new-setor-nome" placeholder="Nome do setor *">
-            <input type="text" class="width-sm height-md" id="new-setor-sigla" placeholder="Sigla">
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <input type="text" class="width-xl height-md white" id="new-setor-nome" placeholder="Nome do setor *">
+            <input type="text" class="width-sm height-md white" id="new-setor-sigla" placeholder="Sigla">
             <button type="button" class="btn btn-secondary-outline" id="add-setor-btn">Adicionar setor</button>
         </div>
     </div>

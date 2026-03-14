@@ -38,7 +38,7 @@ $partes = $processo['partes'] ?? [];
     </div>
     <div class="card-page">
         <input type="hidden" id="processo-id" value="<?php echo htmlspecialchars($processo['id'] ?? ''); ?>">
-        <div class="row table header">Partes vinculadas</div>
+        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Partes vinculadas</div>
         <?php if (!empty($partes)): ?>
             <table class="table-list">
                 <thead><tr><th>Nome</th><th>CPF</th><th>Tipo</th><th>Polo</th><th>Ações</th></tr></thead>
@@ -59,9 +59,13 @@ $partes = $processo['partes'] ?? [];
                 </tbody>
             </table>
         <?php else: ?>
-            <div class="row table"><div class="col"><span class="major-info">Nenhuma parte vinculada.</span></div></div>
+            <div class="col subtask subtask-collapsed padding-lr-md full-line">
+                <div class="row table between padding-tb-md border-top">
+                    <div class="col table left no-data"><span class="major-info">Nenhuma parte vinculada.</span></div>
+                </div>
+            </div>
         <?php endif; ?>
-        <div class="row buttons">
+        <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
             <a href="/frame.php?page=consultaprocessos" class="btn btn-secondary">Voltar</a>
             <a href="/frame.php?page=processospartescreate&processo_id=<?php echo urlencode($processo['id'] ?? ''); ?>" class="btn btn-primary">Vincular parte</a>
         </div>

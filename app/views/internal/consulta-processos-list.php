@@ -98,36 +98,45 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
     </div>
 
     <div class="card-page">
-        <form method="get" class="row filter" id="form-filters">
+
+        <!-- FILTROS -->
+        <form method="get" id="form-filters">
             <input type="hidden" name="page" value="<?php echo htmlspecialchars($routePage); ?>">
             <input type="hidden" name="items_per_page" value="<?php echo (int) $itemsPerPage; ?>">
-            <div class="col filter">
-                <label for="filter-numero">Número do processo</label>
-                <input type="text" class="width-md height-md" id="filter-numero" name="numero" placeholder="Número do processo" value="<?php echo htmlspecialchars($numeroFilter); ?>">
-            </div>
-            <div class="col filter">
-                <label for="filter-parte">Nome da parte</label>
-                <input type="text" class="width-lg height-md" id="filter-parte" name="parte_nome" placeholder="Nome da parte" value="<?php echo htmlspecialchars($parteNomeFilter); ?>">
-            </div>
-            <div class="col filter">
-                <label for="items-per-page">Itens por página</label>
-                <select class="width-sm height-md" name="items_per_page" id="items-per-page">
-                    <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
-                    <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
-                    <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
-                    <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
-                </select>
-            </div>
-            <div class="col filter">
-                <button type="submit" class="btn btn-primary">Consultar</button>
+            <div class="row table between padding-tb-lg padding-lr-md border-bottom">
+                <div class="row left row-gap-10">
+                    <div class="col">
+                        <label for="filter-numero">Número do processo</label>
+                        <input type="text" class="width-md height-md white" id="filter-numero" name="numero" placeholder="Número do processo" value="<?php echo htmlspecialchars($numeroFilter); ?>">
+                    </div>
+                    <div class="col">
+                        <label for="filter-parte">Nome da parte</label>
+                        <input type="text" class="width-lg height-md white" id="filter-parte" name="parte_nome" placeholder="Nome da parte" value="<?php echo htmlspecialchars($parteNomeFilter); ?>">
+                    </div>
+                    <div class="col">
+                        <button type="submit" class="btn btn-primary">Consultar</button>
+                    </div>
+                </div>
+                <div class="col right">
+                    <div class="col">
+                        <label for="items-per-page">Itens por página</label>
+                        <select class="width-sm height-md white" name="items_per_page" id="items-per-page">
+                            <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
+                            <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
+                            <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
+                            <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
+                        </select>
+                    </div>
+                </div>
             </div>
         </form>
 
-        <div class="row table header">Lista de Processos</div>
+        <!-- SUBTITLE TABLE -->
+        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Lista de Processos</div>
         <?php if (!$filtrou): ?>
-            <div class="row table">
-                <div class="col">
-                    <div class="col filter no-data">
+            <div class="col subtask subtask-collapsed padding-lr-md full-line">
+                <div class="row table between padding-tb-md border-top">
+                    <div class="col table left no-data">
                         <span class="major-info">Informe o número do processo ou o nome da parte e clique em Consultar para exibir os resultados.</span>
                     </div>
                 </div>
@@ -136,8 +145,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
             <table class="table-list">
                 <thead>
                     <tr>
-                        <th>Processo</th>
-                        <th>Classe</th>
+                        <th class="process-info">Processo</th>
                         <th>Partes</th>
                         <th>Ações</th>
                     </tr>
@@ -145,8 +153,10 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                 <tbody>
                     <?php foreach ($rows as $row): ?>
                     <tr>
-                        <td><?php echo htmlspecialchars($row['numero_processo'] ?? '—'); ?></td>
-                        <td><?php echo htmlspecialchars($row['classe_nome'] ?? '—'); ?></td>
+                        <td class="process-info">
+                            <span class="minor-info"><?php echo htmlspecialchars($row['classe_nome'] ?? '—'); ?></span>
+                            <span class="major-info"><?php echo htmlspecialchars($row['numero_processo'] ?? '—'); ?></span>
+                        </td>
                         <td><?php echo (int) ($row['total_partes'] ?? 0); ?></td>
                         <td>
                             <button type="button" class="btn btn-secondary-outline" data-edit-id="<?php echo htmlspecialchars($row['id'] ?? ''); ?>">Abrir</button>
@@ -156,9 +166,9 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                 </tbody>
             </table>
         <?php else: ?>
-            <div class="row table">
-                <div class="col">
-                    <div class="col filter no-data">
+            <div class="col subtask subtask-collapsed padding-lr-md full-line">
+                <div class="row table between padding-tb-md border-top">
+                    <div class="col table left no-data">
                         <span class="major-info">Nenhum processo encontrado para os critérios informados.</span>
                     </div>
                 </div>
@@ -166,13 +176,14 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
         <?php endif; ?>
 
         <?php if ($filtrou): ?>
-        <div class="row pagination">
-            <span class="pagination-info">
+        <!-- Paginação -->
+        <div class="row table between padding-tb-lg padding-lr-md">
+            <span class="left pagination-info">
                 Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $totalDocuments; ?> <?php echo $documentsLabel; ?>
                 <?php if ($totalPages > 0): ?>(<?php echo $totalPages; ?> <?php echo $pagesLabel; ?>, <?php echo $itemsPerPage; ?> <?php echo $itemsLabel; ?> por página)<?php endif; ?>
             </span>
             <?php if ($totalPages > 0): ?>
-                <div class="pagination-controls">
+                <div class="right pagination-controls">
                     <?php
                     $prevParams = $baseQueryParams; $prevParams['page_number'] = max(1, $currentPage - 1);
                     $nextParams = $baseQueryParams; $nextParams['page_number'] = min($totalPages, $currentPage + 1);

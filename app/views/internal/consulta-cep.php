@@ -31,33 +31,36 @@ declare(strict_types=1);
     </div>
 
     <div class="card-page">
-        <div class="row table header">Consulta</div>
-        <div class="row filter">
-            <div class="col filter">
+
+        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Consulta</div>
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col">
                 <label for="filter-busca">CEP ou endereço <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-xl height-md" id="filter-busca" placeholder="Digite um CEP ou um endereço, como jasmin, nelson costa, ilheus" required>
+                <input type="text" class="width-xl height-md white" id="filter-busca" placeholder="Digite um CEP ou um endereço, como jasmin, nelson costa, ilheus" required>
             </div>
         </div>
 
-        <div class="row info">
+        <div class="row info padding-tb-md">
             <span>*Para endereço, informe no formato <strong style="margin-left: 3px">logradouro, cidade</strong> ou <strong style="margin-left: 3px">logradouro, bairro, cidade</strong>. Se informar apenas o logradouro, a consulta considera Ilhéus/BA como padrão.</span>
         </div>
 
-        <div class="row buttons">
+        <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
             <button class="btn btn-secondary" id="limpar-btn" type="button">Limpar</button>
             <button class="btn btn-primary" id="consultar-btn" type="button">Consultar</button>
         </div>
 
-        <div class="row table header">Resultados</div>
-        <div class="row filter">
-            <div class="col filter">
-                <label for="items-per-page">Itens por página</label>
-                <select class="width-sm height-md" id="items-per-page">
-                    <option value="5">5</option>
-                    <option value="10" selected>10</option>
-                    <option value="25">25</option>
-                    <option value="50">50</option>
-                </select>
+        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Resultados</div>
+        <div class="row table between padding-tb-lg padding-lr-md border-bottom">
+            <div class="col right">
+                <div class="col">
+                    <label for="items-per-page">Itens por página</label>
+                    <select class="width-sm height-md white" id="items-per-page">
+                        <option value="5">5</option>
+                        <option value="10" selected>10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
             </div>
         </div>
         <div class="col full-line register" id="resultado-container">
@@ -146,7 +149,7 @@ declare(strict_types=1);
             function resetResultContainer() {
                 if (!resultadoContainer) return;
                 resultadoContainer.innerHTML = '' +
-                    '<div class="row pagination">' +
+                    '<div class="row table between padding-tb-lg padding-lr-md">' +
                         '<div class="col">' +
                             '<label id="consulta-feedback" class="status-placeholder" aria-live="polite"></label>' +
                         '</div>' +
@@ -156,7 +159,7 @@ declare(strict_types=1);
 
             function renderTableHeader() {
                 return '' +
-                    '<div class="row table header">' +
+                    '<div class="row table between padding-tb-md padding-lr-lg border-bottom">' +
                         '<div class="col" style="width: 380px;"><span class="major-info text-ellipsis">Logradouro</span></div>' +
                         '<div class="col" style="width: 210px;"><span class="major-info text-ellipsis">Bairro</span></div>' +
                         '<div class="col" style="width: 150px;"><span class="major-info text-ellipsis">Cidade</span></div>' +
@@ -197,9 +200,9 @@ declare(strict_types=1);
                 var paginationEllipsis = trailingPages.length > 0 && paginationButtons[paginationButtons.length - 1] < (totalPages - 1);
 
                 return '' +
-                    '<div class="row pagination">' +
-                        '<span class="pagination-info" id="consulta-feedback">Mostrando ' + startItem + '-' + endItem + ' de ' + totalItems + ' endereços (' + totalPages + ' páginas, ' + perPage + ' itens por página)</span>' +
-                        '<div class="pagination-controls">' +
+                    '<div class="row table between padding-tb-lg padding-lr-md">' +
+                        '<span class="left pagination-info" id="consulta-feedback">Mostrando ' + startItem + '-' + endItem + ' de ' + totalItems + ' endereços (' + totalPages + ' páginas, ' + perPage + ' itens por página)</span>' +
+                        '<div class="right pagination-controls">' +
                             '<a class="pagination-symbol' + (isPrevDisabled ? ' disabled' : '') + '" href="#" data-page-action="prev" ' + (isPrevDisabled ? 'aria-disabled="true"' : '') + '>' +
                                 '<img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior">' +
                             '</a>' +

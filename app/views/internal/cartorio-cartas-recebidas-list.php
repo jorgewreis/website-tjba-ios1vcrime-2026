@@ -82,6 +82,9 @@ $subtarefaLabels = [
     CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5 => 'Devolução da Carta',
     CartasRecebidasSubtarefasRepository::TIPO_ORDEM_6 => 'Juntada de termo de envio',
     CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7 => 'Arquivamento definitivo',
+    // Tipos que podem vir do banco com nome alternativo
+    'devolucao_origem' => 'Aguardando devolução',
+    'devolução_origem' => 'Aguardando devolução',
 ];
 $ordemLabels = [
     1 => $subtarefaLabels[CartasRecebidasSubtarefasRepository::TIPO_ORDEM_1],
@@ -100,6 +103,8 @@ $taskTitleByTipo = [
     CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5 => 'Aguardando envio do processo ao juízo de origem',
     CartasRecebidasSubtarefasRepository::TIPO_ORDEM_6 => 'Aguardando juntada de termo de envio',
     CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7 => 'Aguardando arquivamento definitivo',
+    'devolucao_origem' => 'Aguardando devolução',
+    'devolução_origem' => 'Aguardando devolução',
 ];
 $buttonTitleByTipo = [
     CartasRecebidasSubtarefasRepository::TIPO_ORDEM_1 => 'Informar ato ordinatório de cumprimento',
@@ -109,6 +114,8 @@ $buttonTitleByTipo = [
     CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5 => 'Informar envio do processo',
     CartasRecebidasSubtarefasRepository::TIPO_ORDEM_6 => 'Informar juntada',
     CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7 => 'Informar arquivamento definitivo',
+    'devolucao_origem' => 'Informar devolução',
+    'devolução_origem' => 'Informar devolução',
 ];
 $resultadoCumprimentoOptions = [
     'cumprido_integralmente' => 'Cumprido integralmente',
@@ -405,7 +412,7 @@ if ($totalPages > 0) {
                 </div>
 
                 <!-- SUB-TAREFAS -->
-                <div class="col subtask subtask-collapsed padding-lr-lg full-line" id="subtask-<?php echo htmlspecialchars($idCarta); ?>" aria-hidden="true">
+                <div class="col subtask subtask-collapsed padding-lr-lg" id="subtask-<?php echo htmlspecialchars($idCarta); ?>" aria-hidden="true">
                     <?php foreach ($subtarefas as $st):
                         $stId = $st['id'] ?? '';
                         $stTipo = $st['tipo'] ?? '';
@@ -452,7 +459,7 @@ if ($totalPages > 0) {
             </div>
             <?php endforeach; ?>
         <?php else: // Caso não haja dados para exibir ?>
-            <div class="col subtask subtask-collapsed padding-lr-md full-line">
+            <div class="col subtask subtask-collapsed padding-lr-md">
                 <div class="row table between padding-tb-md border-top">
                     <div class="col table left no-data">
                         <span class="major-info">Nenhum documento cadastrado.</span>

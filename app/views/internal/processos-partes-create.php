@@ -40,6 +40,7 @@ $polosValidos = ['ativo' => 'Ativo', 'passivo' => 'Passivo', 'terceiros' => 'Ter
     <link rel="stylesheet" href="/assets/css/shared/color.css">
     <link rel="stylesheet" href="/assets/css/shared/page.css">
     <link rel="stylesheet" href="/assets/css/shared/form.css">
+    <link rel="stylesheet" href="/assets/css/shared/table.css">
     <?php include __DIR__ . '/_toast_script.php'; ?>
 </head>
 <body class="page-internal">
@@ -50,26 +51,26 @@ $polosValidos = ['ativo' => 'Ativo', 'passivo' => 'Passivo', 'terceiros' => 'Ter
     </div>
     <div class="card-page">
         <input type="hidden" id="processo-id" value="<?php echo htmlspecialchars($processoId); ?>">
-        <div class="row table header">Parte</div>
-        <div class="row filter">
-            <div class="col filter">
+        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Parte</div>
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col">
                 <label for="parte-id">ID da parte (pessoa) *</label>
-                <input type="text" class="width-xl height-md" id="parte-id" placeholder="ID da pessoa cadastrada (ex: PRT-...)" required>
+                <input type="text" class="width-xl height-md white" id="parte-id" placeholder="ID da pessoa cadastrada (ex: PRT-...)" required>
             </div>
         </div>
-        <div class="row filter">
-            <div class="col filter">
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col">
                 <label for="tipo_parte">Tipo de parte *</label>
-                <select class="width-md height-md" id="tipo_parte" required>
+                <select class="width-md height-md white" id="tipo_parte" required>
                     <option value="">Selecione</option>
                     <?php foreach ($tiposValidos as $val => $label): ?>
                         <option value="<?php echo htmlspecialchars($val); ?>"><?php echo htmlspecialchars($label); ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="col filter">
+            <div class="col">
                 <label for="polo">Polo *</label>
-                <select class="width-md height-md" id="polo" required>
+                <select class="width-md height-md white" id="polo" required>
                     <option value="">Selecione</option>
                     <?php foreach ($polosValidos as $val => $label): ?>
                         <option value="<?php echo htmlspecialchars($val); ?>"><?php echo htmlspecialchars($label); ?></option>
@@ -77,7 +78,7 @@ $polosValidos = ['ativo' => 'Ativo', 'passivo' => 'Passivo', 'terceiros' => 'Ter
                 </select>
             </div>
         </div>
-        <div class="row buttons">
+        <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
             <a href="/frame.php?page=consultaprocessosedit&id=<?php echo urlencode($processoId); ?>" class="btn btn-secondary">Voltar</a>
             <button type="button" class="btn btn-primary" id="vincular-btn">Vincular</button>
         </div>

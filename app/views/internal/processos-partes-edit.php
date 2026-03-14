@@ -32,6 +32,7 @@ $polosValidos = ['ativo' => 'Ativo', 'passivo' => 'Passivo', 'terceiros' => 'Ter
     <link rel="stylesheet" href="/assets/css/shared/color.css">
     <link rel="stylesheet" href="/assets/css/shared/page.css">
     <link rel="stylesheet" href="/assets/css/shared/form.css">
+    <link rel="stylesheet" href="/assets/css/shared/table.css">
     <?php include __DIR__ . '/_toast_script.php'; ?>
 </head>
 <body class="page-internal">
@@ -43,44 +44,44 @@ $polosValidos = ['ativo' => 'Ativo', 'passivo' => 'Passivo', 'terceiros' => 'Ter
     <div class="card-page">
         <input type="hidden" id="vinculo-id" value="<?php echo htmlspecialchars($vinculo['id'] ?? ''); ?>">
         <input type="hidden" id="processo-id" value="<?php echo htmlspecialchars($vinculo['processo_id'] ?? ''); ?>">
-        <div class="row table header">Dados do vínculo</div>
-        <div class="row filter">
-            <div class="col filter"><strong>Processo:</strong> <?php echo htmlspecialchars($vinculo['numero_processo'] ?? '—'); ?></div>
-            <div class="col filter"><strong>Parte:</strong> <?php echo htmlspecialchars($vinculo['nome_completo'] ?? '—'); ?> (<?php echo htmlspecialchars($vinculo['cpf'] ?? '—'); ?>)</div>
+        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Dados do vínculo</div>
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col"><strong>Processo:</strong> <?php echo htmlspecialchars($vinculo['numero_processo'] ?? '—'); ?></div>
+            <div class="col"><strong>Parte:</strong> <?php echo htmlspecialchars($vinculo['nome_completo'] ?? '—'); ?> (<?php echo htmlspecialchars($vinculo['cpf'] ?? '—'); ?>)</div>
         </div>
-        <div class="row filter">
-            <div class="col filter">
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col">
                 <label for="tipo_parte">Tipo de parte *</label>
-                <select class="width-md height-md" id="tipo_parte" required>
+                <select class="width-md height-md white" id="tipo_parte" required>
                     <?php foreach ($tiposValidos as $val => $label): ?>
                         <option value="<?php echo htmlspecialchars($val); ?>"<?php echo (($vinculo['tipo_parte'] ?? '') === $val) ? ' selected' : ''; ?>><?php echo htmlspecialchars($label); ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="col filter">
+            <div class="col">
                 <label for="polo">Polo *</label>
-                <select class="width-md height-md" id="polo" required>
+                <select class="width-md height-md white" id="polo" required>
                     <?php foreach ($polosValidos as $val => $label): ?>
                         <option value="<?php echo htmlspecialchars($val); ?>"<?php echo (($vinculo['polo'] ?? '') === $val) ? ' selected' : ''; ?>><?php echo htmlspecialchars($label); ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
         </div>
-        <div class="row filter">
-            <div class="col filter">
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col">
                 <label><input type="checkbox" id="prioridade_mulher"<?php echo !empty($vinculo['prioridade_mulher']) ? ' checked' : ''; ?>> Prioridade mulher</label>
             </div>
-            <div class="col filter">
+            <div class="col">
                 <label><input type="checkbox" id="prioridade_crianca_adolescente"<?php echo !empty($vinculo['prioridade_crianca_adolescente']) ? ' checked' : ''; ?>> Prioridade criança/adolescente</label>
             </div>
-            <div class="col filter">
+            <div class="col">
                 <label><input type="checkbox" id="prioridade_idoso"<?php echo !empty($vinculo['prioridade_idoso']) ? ' checked' : ''; ?>> Prioridade idoso</label>
             </div>
-            <div class="col filter">
+            <div class="col">
                 <label><input type="checkbox" id="prioridade_pessoa_deficiencia"<?php echo !empty($vinculo['prioridade_pessoa_deficiencia']) ? ' checked' : ''; ?>> Prioridade pessoa com deficiência</label>
             </div>
         </div>
-        <div class="row buttons">
+        <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
             <a href="/frame.php?page=consultaprocessosedit&id=<?php echo urlencode($vinculo['processo_id'] ?? ''); ?>" class="btn btn-secondary">Voltar</a>
             <button type="button" class="btn btn-primary" id="salvar-btn">Salvar</button>
         </div>

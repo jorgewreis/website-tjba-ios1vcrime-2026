@@ -49,93 +49,93 @@ if ($pessoa === null) {
     </div>
     <div class="card-page">
         <input type="hidden" id="parte-id" value="<?php echo htmlspecialchars($pessoa['id'] ?? ''); ?>">
-        <div class="row table header">Dados básicos</div>
-        <div class="row filter">
-            <div class="col filter">
+        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Dados básicos</div>
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col">
                 <label for="cpf">CPF</label>
-                <input type="text" class="width-md height-md" id="cpf" value="<?php
+                <input type="text" class="width-md height-md white" id="cpf" value="<?php
                     $cpfVal = $pessoa['cpf'] ?? '';
                     echo htmlspecialchars(strlen($cpfVal) === 11 ? Security::formatCPF($cpfVal) : $cpfVal);
                 ?>">
             </div>
-            <div class="col filter">
+            <div class="col">
                 <label for="nome_completo">Nome completo</label>
-                <input type="text" class="width-xl height-md" id="nome_completo" value="<?php echo htmlspecialchars($pessoa['nome_completo'] ?? ''); ?>">
+                <input type="text" class="width-xl height-md white" id="nome_completo" value="<?php echo htmlspecialchars($pessoa['nome_completo'] ?? ''); ?>">
             </div>
         </div>
-        <div class="row filter">
-            <div class="col filter">
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="col">
                 <label for="sexo">Sexo</label>
-                <select class="width-md height-md" id="sexo">
+                <select class="width-md height-md white" id="sexo">
                     <option value="">Selecione</option>
                     <option value="Feminino"<?php echo ($pessoa['sexo'] ?? '') === 'Feminino' ? ' selected' : ''; ?>>Feminino</option>
                     <option value="Masculino"<?php echo ($pessoa['sexo'] ?? '') === 'Masculino' ? ' selected' : ''; ?>>Masculino</option>
                     <option value="Outro"<?php echo ($pessoa['sexo'] ?? '') === 'Outro' ? ' selected' : ''; ?>>Outro</option>
                 </select>
             </div>
-            <div class="col filter">
+            <div class="col">
                 <label for="data_nascimento">Data de nascimento</label>
-                <input type="date" class="width-md height-md" id="data_nascimento" value="<?php echo htmlspecialchars($pessoa['data_nascimento'] ?? ''); ?>">
+                <input type="date" class="width-md height-md white" id="data_nascimento" value="<?php echo htmlspecialchars($pessoa['data_nascimento'] ?? ''); ?>">
             </div>
         </div>
-        <div class="row buttons">
+        <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
             <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
             <button type="button" class="btn btn-primary" id="salvar-btn">Salvar dados</button>
         </div>
 
-        <div class="row table header">Telefones</div>
+        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Telefones</div>
         <div id="telefones-list">
             <?php foreach ($pessoa['telefones'] ?? [] as $t): ?>
-            <div class="row filter" data-id="<?php echo htmlspecialchars($t['id'] ?? ''); ?>">
-                <div class="col filter"><?php echo htmlspecialchars($t['tipo'] ?? '—'); ?></div>
-                <div class="col filter"><?php echo htmlspecialchars($t['numero'] ?? ''); ?></div>
-                <div class="col filter"><button type="button" class="btn btn-secondary-outline btn-del-tel" data-id="<?php echo htmlspecialchars($t['id'] ?? ''); ?>">Excluir</button></div>
+            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line" data-id="<?php echo htmlspecialchars($t['id'] ?? ''); ?>">
+                <div class="col"><?php echo htmlspecialchars($t['tipo'] ?? '—'); ?></div>
+                <div class="col"><?php echo htmlspecialchars($t['numero'] ?? ''); ?></div>
+                <div class="col"><button type="button" class="btn btn-secondary-outline btn-del-tel" data-id="<?php echo htmlspecialchars($t['id'] ?? ''); ?>">Excluir</button></div>
             </div>
             <?php endforeach; ?>
         </div>
-        <div class="row filter">
-            <input type="text" class="width-sm height-md" id="new-tel-tipo" placeholder="Tipo">
-            <input type="text" class="width-md height-md" id="new-tel-numero" placeholder="Número">
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <input type="text" class="width-sm height-md white" id="new-tel-tipo" placeholder="Tipo">
+            <input type="text" class="width-md height-md white" id="new-tel-numero" placeholder="Número">
             <button type="button" class="btn btn-secondary-outline" id="add-tel-btn">Adicionar telefone</button>
         </div>
 
-        <div class="row table header">Endereços</div>
+        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Endereços</div>
         <div id="enderecos-list">
             <?php foreach ($pessoa['enderecos'] ?? [] as $e): ?>
-            <div class="row filter" data-id="<?php echo htmlspecialchars($e['id'] ?? ''); ?>">
-                <div class="col filter"><?php echo htmlspecialchars(trim(($e['logradouro'] ?? '') . ' ' . ($e['numero'] ?? '') . ' ' . ($e['bairro'] ?? '') . ' ' . ($e['cidade'] ?? ''))); ?></div>
-                <div class="col filter"><button type="button" class="btn btn-secondary-outline btn-del-end" data-id="<?php echo htmlspecialchars($e['id'] ?? ''); ?>">Excluir</button></div>
+            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line" data-id="<?php echo htmlspecialchars($e['id'] ?? ''); ?>">
+                <div class="col"><?php echo htmlspecialchars(trim(($e['logradouro'] ?? '') . ' ' . ($e['numero'] ?? '') . ' ' . ($e['bairro'] ?? '') . ' ' . ($e['cidade'] ?? ''))); ?></div>
+                <div class="col"><button type="button" class="btn btn-secondary-outline btn-del-end" data-id="<?php echo htmlspecialchars($e['id'] ?? ''); ?>">Excluir</button></div>
             </div>
             <?php endforeach; ?>
         </div>
 
-        <div class="row table header">Vínculos com processos</div>
+        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Vínculos com processos</div>
         <div id="vinculos-processos">
             <?php foreach ($pessoa['vinculos_processos'] ?? [] as $vp): ?>
-            <div class="row filter">
-                <div class="col filter"><?php echo htmlspecialchars($vp['numero_processo'] ?? $vp['processo_id'] ?? '—'); ?></div>
-                <div class="col filter"><?php echo htmlspecialchars($vp['tipo_parte'] ?? ''); ?> / <?php echo htmlspecialchars($vp['polo'] ?? ''); ?></div>
+            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+                <div class="col"><?php echo htmlspecialchars($vp['numero_processo'] ?? $vp['processo_id'] ?? '—'); ?></div>
+                <div class="col"><?php echo htmlspecialchars($vp['tipo_parte'] ?? ''); ?> / <?php echo htmlspecialchars($vp['polo'] ?? ''); ?></div>
             </div>
             <?php endforeach; ?>
             <?php if (empty($pessoa['vinculos_processos'])): ?>
-            <div class="row filter"><span class="minor-info">Nenhum vínculo com processo.</span></div>
+            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line"><span class="minor-info">Nenhum vínculo com processo.</span></div>
             <?php endif; ?>
         </div>
 
-        <div class="row table header">Vínculos com instituições</div>
+        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Vínculos com instituições</div>
         <div id="vinculos-inst-list">
             <?php foreach ($pessoa['vinculos_instituicoes'] ?? [] as $vi): ?>
-            <div class="row filter" data-id="<?php echo htmlspecialchars($vi['id'] ?? ''); ?>">
-                <div class="col filter"><?php echo htmlspecialchars($vi['instituicao_nome'] ?? $vi['instituicao_sigla'] ?? '—'); ?></div>
-                <div class="col filter"><?php echo htmlspecialchars($vi['cargo_funcao'] ?? '—'); ?></div>
-                <div class="col filter">
+            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line" data-id="<?php echo htmlspecialchars($vi['id'] ?? ''); ?>">
+                <div class="col"><?php echo htmlspecialchars($vi['instituicao_nome'] ?? $vi['instituicao_sigla'] ?? '—'); ?></div>
+                <div class="col"><?php echo htmlspecialchars($vi['cargo_funcao'] ?? '—'); ?></div>
+                <div class="col">
                     <a href="/frame.php?page=partesinstituicoesedit&id=<?php echo urlencode($vi['id'] ?? ''); ?>" class="btn btn-secondary-outline">Editar</a>
                     <button type="button" class="btn btn-secondary-outline btn-del-vinculo" data-id="<?php echo htmlspecialchars($vi['id'] ?? ''); ?>">Excluir</button>
                 </div>
             </div>
             <?php endforeach; ?>
         </div>
-        <div class="row filter">
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <a href="/frame.php?page=partesinstituicoescreate&parte_id=<?php echo urlencode($pessoa['id'] ?? ''); ?>" class="btn btn-primary">Vincular instituição</a>
         </div>
     </div>
