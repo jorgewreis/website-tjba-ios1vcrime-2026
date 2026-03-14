@@ -119,4 +119,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix: correction list table** `[e80b086]`
 - **fix: pequenas correções** `[6180fdf]`
 - **fix: pequenos ajustes** `[8093c35]`
+- **fix: correções parciais** `[eac3bfd]`
 
