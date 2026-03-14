@@ -438,7 +438,7 @@
 
     .row.left.info,
     .row.left.subtitle {
-        width: 100px;
+        width: 100%;
     }
 }
 

@@ -159,11 +159,11 @@ try {
                 </div>
             <?php endif; ?>
 
-            <div class="row table buttons left padding-lr-md padding-tb-md">
-                <span class="minor-info">Acompanhamento e envio de Cartas Expedidas</span>
+            <div class="row table buttons left padding-lr-md padding-tb-md full-line">
+                <span class="minor-info" style="font-weight: 600;">Acompanhamento e envio de Cartas Expedidas</span>
             </div>
 
-            <div class="row table subtitle left padding-tb-lg padding-lr-lg">
+            <div class="row table left padding-tb-sm padding-lr-lg">
                 <div class="col">
                     <label for="filter-processo">Responsável</label>
                     <select class="width-lg height-md" id="filter-processo" name="id_user" <?php echo $podeAlterarRegra ? '' : 'disabled'; ?> required>
@@ -179,7 +179,7 @@ try {
 
             <?php if (!empty($ruleRow['id'] ?? '')): ?>
                 <div class="row table <?php if($ruleUsuarioNome === ''){ echo 'info'; } else { echo 'success'; } ?>">
-                    <span><?php echo htmlspecialchars(sprintf('Envio de Cartas Expedidas: %s - %s', $ruleRow['id'] ?? 'sem ID', $ruleUsuarioNome)); ?></span>
+                    <span><?php echo htmlspecialchars(sprintf('Regra atual: %s - %s', $ruleRow['id'] ?? 'sem ID', $ruleUsuarioNome)); ?></span>
                 </div>
             <?php endif; ?>
 
