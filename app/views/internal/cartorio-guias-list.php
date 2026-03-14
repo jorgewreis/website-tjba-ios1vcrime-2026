@@ -273,11 +273,7 @@ if ($totalPages > 0) {
                         <div class="col comarca-info">
                             <span class="minor-info">Denunciado</span>
                             <span class="major-info"><?php echo htmlspecialchars($row['Denunciado'] ?? '—'); ?></span>
-                        </div>
-                        <div class="col detalhes-info">
-                            <span class="minor-info">Denunciado</span>
-                            <span class="major-info"><?php echo htmlspecialchars($row['Denunciado'] ?? '—'); ?></span>
-                        </div>
+                        </div>                        
                         <div class="col detalhes-info-tipo">
                             <span class="minor-info">Tipo</span>
                             <span class="major-info"><?php echo htmlspecialchars($row['Tipo'] ?? '—'); ?></span>

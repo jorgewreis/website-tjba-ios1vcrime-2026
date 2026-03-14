@@ -231,7 +231,11 @@ if ($totalPages > 0) {
                         </div>
                         <!-- DADOS DO PROCESSO -->
                         <div class="col process-info" title="clique para copiar">
-                            <span class="minor-info">Processo</span>
+                            <?php
+                                $classeNome = $row['ClasseNome'] ?? 'Classe não informada';
+                                $classeStyle = $classeNome !== 'Classe não informada' ? 'style="color: var(--primary-color-active); font-weight: 600;"' : '';
+                            ?>
+                            <span class="minor-info text-ellipsis" title="<?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?>" <?php echo $classeStyle; ?>><?php echo htmlspecialchars($classeNome); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars($row['Processo']); ?></span>
                         </div>
                         <div class="col comarca-info">
