@@ -48,7 +48,7 @@ if ($pessoa === null) {
         <p class="description-page">Dados básicos, telefones, endereços e vínculos com instituições.</p>
     </div>
     <div class="card-page">
-        <input type="hidden" id="parte-id" value="<?php echo htmlspecialchars($pessoa['id'] ?? ''); ?>">
+        <input type="hidden" id="parte-id" value="<?php echo htmlspecialchars(trim((string) ($pessoa['id'] ?? $pessoa['ID'] ?? ''))); ?>">
         <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Dados básicos</div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
@@ -214,7 +214,11 @@ if ($pessoa === null) {
         document.getElementById('voltar-btn').addEventListener('click', function() {
             window.location.href = '/frame.php?page=consultapartes';
         });
-        var parteId = document.getElementById('parte-id').value;
+        function getParteId() {
+            var el = document.getElementById('parte-id');
+            return (el && el.value) ? String(el.value).trim() : '';
+        }
+        var parteId = getParteId();
         document.getElementById('salvar-btn').addEventListener('click', function() {
             var cpfRaw = (document.getElementById('cpf').value || '').replace(/\D/g, '');
             if (cpfRaw && cpfRaw.length === 11 && typeof App !== 'undefined' && App.CPF && !App.CPF.validar(cpfRaw)) {
@@ -240,6 +244,11 @@ if ($pessoa === null) {
             .catch(function() { document.getElementById('salvar-btn').disabled = false; });
         });
         document.getElementById('add-tel-btn').addEventListener('click', function() {
+            var parteIdAtual = getParteId();
+            if (!parteIdAtual) {
+                if (typeof showToast === 'function') showToast({ type: 'error', message: 'ID da pessoa não encontrado. Recarregue a página.' });
+                return;
+            }
             var tipoEl = document.getElementById('new-tel-tipo');
             var numeroEl = document.getElementById('new-tel-numero');
             var numero = (numeroEl && numeroEl.value ? numeroEl.value : '').replace(/\D/g, '').trim();
@@ -249,16 +258,18 @@ if ($pessoa === null) {
             fetch('/api/pessoas/telefones/create.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ parte_id: parteId, tipo: tipo || null, numero: numero })
+                body: JSON.stringify({ parte_id: parteIdAtual, tipo: tipo || null, numero: numero })
             })
             .then(function(r) {
                 var ok = r.ok;
-                return r.json().then(function(d) { return { ok: ok, data: d }; }).catch(function() { return { ok: false, data: { error: "Resposta inválida do servidor." }; });
+                return r.json().then(function(d) { return { ok: ok, data: d }; }).catch(function() {
+                    return { ok: false, data: { error: "Resposta invalida." } };
+                });
             })
             .then(function(result) {
                 if (result.ok && result.data.id) { window.location.reload(); }
                 else {
-                    var errMsg = (result.data && result.data.error) || 'Erro ao adicionar telefone.';
+                    var errMsg = (result.data && result.data.error) || "Erro ao adicionar telefone.";
                     if (typeof showToast === 'function') showToast({ type: 'error', message: errMsg });
                     document.getElementById('add-tel-btn').disabled = false;
                 }
@@ -309,12 +320,17 @@ if ($pessoa === null) {
             .finally(function() { document.getElementById('buscar-cep-btn').disabled = false; });
         });
         document.getElementById('add-end-btn').addEventListener('click', function() {
+            var parteIdAtual = getParteId();
+            if (!parteIdAtual) {
+                if (typeof showToast === 'function') showToast({ type: 'error', message: 'ID da pessoa não encontrado. Recarregue a página.' });
+                return;
+            }
             var logradouro = (document.getElementById('new-end-logradouro').value || '').trim();
             var cidade = (document.getElementById('new-end-cidade').value || '').trim();
             if (!logradouro && !cidade) { if (typeof showToast === 'function') showToast({ type: 'error', message: 'Informe ao menos logradouro ou cidade.' }); return; }
             var cepRaw = (document.getElementById('new-end-cep').value || '').replace(/\D/g, '');
             var payload = {
-                parte_id: parteId,
+                parte_id: parteIdAtual,
                 cep: cepRaw.length === 8 ? cepRaw : null,
                 logradouro: logradouro || null,
                 numero: (document.getElementById('new-end-numero').value || '').trim() || null,
@@ -326,12 +342,25 @@ if ($pessoa === null) {
             };
             this.disabled = true;
             fetch('/api/pessoas/enderecos/create.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-            .then(function(r) { return r.json(); })
-            .then(function(d) {
-                if (d.id) { window.location.reload(); }
-                else { if (typeof showToast === 'function') showToast({ type: 'error', message: (d && d.error) || 'Erro.' }); document.getElementById('add-end-btn').disabled = false; }
+            .then(function(r) {
+                var ok = r.ok;
+                return r.json().then(function(d) { return { ok: ok, data: d }; }).catch(function() {
+                    return { ok: false, data: { error: "Resposta invalida." } };
+                });
             })
-            .catch(function() { if (typeof showToast === 'function') showToast({ type: 'error', message: 'Erro ao adicionar endereço.' }); document.getElementById('add-end-btn').disabled = false; });
+            .then(function(result) {
+                if (result.ok && result.data.id) { window.location.reload(); }
+                else {
+                    var errMsg = (result.data && result.data.error) || "Erro ao adicionar endereco.";
+                    if (typeof showToast === 'function') showToast({ type: 'error', message: errMsg });
+                    document.getElementById('add-end-btn').disabled = false;
+                }
+            })
+            .catch(function(err) {
+                var msg = (err && err.message) ? err.message : 'Erro de conexão.';
+                if (typeof showToast === 'function') showToast({ type: 'error', message: 'Erro ao adicionar endereço: ' + msg });
+                document.getElementById('add-end-btn').disabled = false;
+            });
         });
         document.querySelectorAll('.btn-del-end').forEach(function(btn) {
             btn.addEventListener('click', function() {

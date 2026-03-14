@@ -4,6 +4,9 @@ declare(strict_types=1);
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
+if (!is_file($basePath . '/app/helpers/Conection.php')) {
+    $basePath = dirname(__DIR__, 4);
+}
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/PessoasService.php';
@@ -23,17 +26,21 @@ if ($parteId === '') {
     exit;
 }
 
+$emptyToNull = static function ($v) {
+    $s = trim((string) $v);
+    return $s === '' ? null : $s;
+};
 $row = [
-    'cep' => array_key_exists('cep', $parsed) ? trim((string) $parsed['cep']) : null,
-    'logradouro' => array_key_exists('logradouro', $parsed) ? trim((string) $parsed['logradouro']) : null,
-    'numero' => array_key_exists('numero', $parsed) ? trim((string) $parsed['numero']) : null,
-    'complemento' => array_key_exists('complemento', $parsed) ? trim((string) $parsed['complemento']) : null,
-    'bairro' => array_key_exists('bairro', $parsed) ? trim((string) $parsed['bairro']) : null,
-    'cidade' => array_key_exists('cidade', $parsed) ? trim((string) $parsed['cidade']) : null,
-    'uf' => array_key_exists('uf', $parsed) ? trim((string) $parsed['uf']) : null,
+    'cep' => $emptyToNull($parsed['cep'] ?? ''),
+    'logradouro' => $emptyToNull($parsed['logradouro'] ?? ''),
+    'numero' => $emptyToNull($parsed['numero'] ?? ''),
+    'complemento' => $emptyToNull($parsed['complemento'] ?? ''),
+    'bairro' => $emptyToNull($parsed['bairro'] ?? ''),
+    'cidade' => $emptyToNull($parsed['cidade'] ?? ''),
+    'uf' => $emptyToNull($parsed['uf'] ?? ''),
     'principal' => isset($parsed['principal']) ? (int) (bool) $parsed['principal'] : 0,
 ];
-if (isset($parsed['ativo'])) {
+if (array_key_exists('ativo', $parsed)) {
     $row['ativo'] = (int) (bool) $parsed['ativo'];
 }
 
