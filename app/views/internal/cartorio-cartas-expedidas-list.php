@@ -294,7 +294,7 @@ if ($totalPages > 0) {
             ?>
             <!-- REGISTRO COMPLETO -->
             <div class="col full-line border-bottom" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idCarta); ?>">
-                
+
                 <!-- TAREFA -->
                 <div class="row table between padding-lf-md">
                     
@@ -469,7 +469,7 @@ if ($totalPages > 0) {
                         </div>
                         <div class="col table right">
                             <button type="button" class="btn btn-primary padding-lr-lg row-gap-10" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?>">
-                                <span class="value-button">Concluir sub-tarefa</span>
+                                <span class="value-button">Concluir</span>
                             </button>
                         </div>
                     </div>
@@ -593,7 +593,7 @@ if ($totalPages > 0) {
                 radio.addEventListener('change', function () {
                     const cartaId = this.value;
                     const targetId = 'subtask-' + cartaId;
-                    document.querySelectorAll('.row.subtask').forEach(function (subtaskRow) {
+                    document.querySelectorAll('.col.subtask').forEach(function (subtaskRow) {
                         const isTarget = subtaskRow.id === targetId;
                         subtaskRow.classList.toggle('subtask-collapsed', !isTarget);
                         subtaskRow.setAttribute('aria-hidden', isTarget ? 'false' : 'true');
