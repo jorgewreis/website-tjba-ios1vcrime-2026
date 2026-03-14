@@ -213,7 +213,7 @@ if ($totalPages > 0) {
     <div class="card-page">
     
         <!-- ROW ACTIONS -->
-        <div class="row table right padding-lr-md padding-tb-md row-gap-10">
+        <div class="row table buttons right padding-lr-md padding-tb-md row-gap-10">
 
             <!-- SEARCH -->
             <input type="text" class="width-md height-md" id="search-input" placeholder="Pesquisar na lista..." value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
@@ -231,7 +231,7 @@ if ($totalPages > 0) {
         </div>
 
         <!-- SUBTITLE TABLE -->
-        <div class="row subtitle table left padding-tb-lg padding-lr-lg border-bottom">Lista de Documentos</div>
+        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Lista de Documentos</div>
 
         <!-- FILTERS -->
         <div class="row table between padding-tb-sm padding-lr-lg border-bottom">
