@@ -164,20 +164,24 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
             <div class="col full-line border-bottom">
                 <?php foreach ($rows as $row): ?>
                 <div class="row table between padding-lr-md padding-tb-md border-bottom">
-                    <div class="col left">
+                    <div class="row left">
                         <div class="col parte-info">
                             <span class="minor-info">Nome</span>
                             <span class="major-info"><?php $cpfCell = $row['cpf']; echo htmlspecialchars($row['nome_completo'] . " (" .  htmlspecialchars($cpfCell !== '' && strlen($cpfCell) === 11 ? Security::formatCPF($cpfCell) : ($cpfCell !== '' ? $cpfCell : '—'))) . ")" ?></span>
                         </div>
                         <div class="col parte-tel">
                             <span class="minor-info">Telefones</span>
+                            <span class="major-info"><?php echo htmlspecialchars($row['telefone'] ?? ''); ?></span>
                         </div>
                         <div class="col parte-instituitoces">
                             <span class="minor-info">Instituições vinculadas</span>
+                            <span class="major-info"><?php echo htmlspecialchars($row['instituicoes_vinculadas'] ?? ''); ?></span>
                         </div>
                     </div>
-                    <div class="col parte-edit">
-                        <button type="button" class="" title="Editar" data-edit-id="<?php echo htmlspecialchars($row['id'] ?? ''); ?>"><i class="fi fi-rr-file-edit"></i></button>
+                    <div class="row right">
+                        <div class="col part-edit">
+                            <button type="button" class="" title="Editar" data-edit-id="<?php echo htmlspecialchars($row['id'] ?? ''); ?>"><i class="fi fi-rr-file-edit"></i></button>
+                        </div>
                     </div>
                 </div>
             </div>       

@@ -154,44 +154,40 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
 
 
         <?php elseif (!empty($rows)): ?>
-            <table class="table-list">
-                <thead>
-                    <tr>
-                        <th>Nome</th>
-                        <th>Sigla / Nome fantasia</th>
-                        <th>CNPJ</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($rows as $row): ?>
-                    <tr>
-                        <td><?php echo htmlspecialchars($row['nome'] ?? '—'); ?></td>
-                        <td><?php echo htmlspecialchars($row['nome_fantasia'] ?? '—'); ?></td>
-                        <td><?php
-                        $cnpjCell = $row['cnpj'] ?? '';
-                        $cnpjCell = preg_replace('/\D+/', '', (string) $cnpjCell);
-                        $cnpjDisplay = ($cnpjCell !== '' && strlen($cnpjCell) === 14)
-                            ? Security::formatCNPJ($cnpjCell)
-                            : (($row['cnpj'] ?? '') !== '' ? ($row['cnpj'] ?? '') : '—');
-                        echo htmlspecialchars($cnpjDisplay);
-                    ?></td>
-                        <td>
-                            <button type="button" class="btn btn-secondary-outline" title="Editar" data-edit-id="<?php echo htmlspecialchars($row['id'] ?? ''); ?>"><i class="fi fi-rr-file-edit"></i></button>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        <?php else: ?>
-            <div class="col subtask subtask-collapsed padding-lr-md full-line">
-                <div class="row table between padding-tb-md border-top">
-                    <div class="col table left no-data">
-                        <span class="major-info">Nenhuma instituição encontrada para os critérios informados.</span>
+            <div class="col full-line border-bottom">
+                <?php foreach ($rows as $row): ?>
+                <div class="row table between padding-lr-md padding-tb-md border-bottom">
+                    <div class="row left">
+                        <div class="col inst-info">
+                            <span class="minor-info"><?php echo htmlspecialchars($row['nome'] ?? '—'); ?></span>
+                            <span class="major-info"><?php echo htmlspecialchars($row['nome_fantasia'] ?? '—'); ?></span>
+                        </div>
+                        <div class="col inst-cnpj">
+                            <span class="minor-info">CNPJ</span>
+                            <span class="major-info"><?php echo htmlspecialchars($row['cnpj'] ?? '—'); ?></span>
+                        </div>
+                        <div class="col inst-observacoes">
+                            <span class="minor-info">Observações</span>
+                            <span class="major-info"><?php echo htmlspecialchars($row['observacoes'] ?? '—'); ?></span>
+                        </div>                        
+                    </div>                    
+                    <div class="row right">
+                        <div class="col inst-edit">
+                            <button type="button" class="" title="Editar" data-edit-id="<?php echo htmlspecialchars($row['id'] ?? ''); ?>"><i class="fi fi-rr-file-edit"></i></button>
+                        </div>
                     </div>
                 </div>
+                <?php endforeach; ?>
             </div>
-        <?php endif; ?>
+            <?php else: ?>
+                <div class="col subtask subtask-collapsed padding-lr-md full-line">
+                    <div class="row table between padding-tb-md border-top">
+                        <div class="col table left no-data">
+                            <span class="major-info">Nenhuma instituição encontrada para os critérios informados.</span>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
 
         <?php if ($filtrou): ?>
         <!-- Paginação -->

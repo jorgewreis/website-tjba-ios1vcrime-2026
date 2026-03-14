@@ -147,38 +147,36 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                 </div>
             </div>
         <?php elseif (!empty($rows)): ?>
-            <table class="table-list">
-                <thead>
-                    <tr>
-                        <th class="process-info">Processo</th>
-                        <th>Partes</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($rows as $row): ?>
-                    <tr>
-                        <td class="process-info">
+            <div class="col full-line border-bottom">
+                <?php foreach ($rows as $row): ?>
+                <div class="row table between padding-lr-md padding-tb-md border-bottom">
+                    <div class="row left">
+                        <div class="col process-info">
                             <span class="minor-info"><?php echo htmlspecialchars($row['classe_nome'] ?? '—'); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars($row['numero_processo'] ?? '—'); ?></span>
-                        </td>
-                        <td><?php echo (int) ($row['total_partes'] ?? 0); ?></td>
-                        <td>
-                            <button type="button" class="btn btn-secondary-outline" data-edit-id="<?php echo htmlspecialchars($row['id'] ?? ''); ?>">Abrir</button>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        <?php else: ?>
-            <div class="col subtask subtask-collapsed padding-lr-md full-line">
-                <div class="row table between padding-tb-md border-top">
-                    <div class="col table left no-data">
-                        <span class="major-info">Nenhum processo encontrado para os critérios informados.</span>
+                        </div>
+                        <div class="col process-partes">
+                            <span class="minor-info">Partes</span>
+                            <span class="major-info"><?php echo htmlspecialchars($row['total_partes'] ?? '—'); ?></span>
+                        </div>                        
+                    </div>
+                    <div class="row right">
+                        <div class="col process-edit">
+                            <button type="button" class="" title="Abrir" data-edit-id="<?php echo htmlspecialchars($row['id'] ?? ''); ?>"><i class="fi fi-rr-file-edit"></i></button>
+                        </div>
                     </div>
                 </div>
+                <?php endforeach; ?>
             </div>
-        <?php endif; ?>
+            <?php else: ?>
+                <div class="col subtask subtask-collapsed padding-lr-md full-line">
+                    <div class="row table between padding-tb-md border-top">
+                        <div class="col table left no-data">
+                            <span class="major-info">Nenhum processo encontrado para os critérios informados.</span>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
 
         <?php if ($filtrou): ?>
         <!-- Paginação -->
