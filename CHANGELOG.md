@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0122
+
+**Data:** 2026-03-14 19:20:47 | **Commit:** `0eda73f` | **Tipo:** `patch`
+
+- fix: correção de telefones
+
 ## V. 1.03.0121
 
 **Data:** 2026-03-14 19:15:54 | **Commit:** `956a635` | **Tipo:** `patch`
@@ -3006,6 +3012,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -8,6 +8,8 @@ if (function_exists('mb_internal_encoding')) {
 
 require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../services/PessoasService.php';
+require_once __DIR__ . '/../../repositories/PartesTelefonesRepository.php';
+require_once __DIR__ . '/../../repositories/PartesInstituicoesRepository.php';
 require_once __DIR__ . '/../../../config/security.php';
 
 $connection = Conection::getInstance()->getConnection();
@@ -40,6 +42,26 @@ if ($filtrou) {
         $listResult = $service->list($filters, $itemsPerPage, $offset);
         $rows = $listResult['rows'] ?? [];
         $totalDocuments = (int) ($listResult['total'] ?? 0);
+
+        $telefonesRepo = new PartesTelefonesRepository($connection);
+        $vinculosInstRepo = new PartesInstituicoesRepository($connection);
+        foreach ($rows as $i => $row) {
+            $parteId = (string) ($row['id'] ?? $row['ID'] ?? '');
+            if ($parteId !== '') {
+                $rows[$i]['telefones'] = $telefonesRepo->findByParteId($parteId);
+                $vinculos = $vinculosInstRepo->findByParteId($parteId, true);
+                $rows[$i]['instituicoes'] = array_map(function (array $v): array {
+                    return [
+                        'nome' => $v['instituicao_nome'] ?? '',
+                        'sigla' => $v['instituicao_sigla'] ?? '',
+                        'cargo_funcao' => $v['cargo_funcao'] ?? '',
+                    ];
+                }, $vinculos);
+            } else {
+                $rows[$i]['telefones'] = [];
+                $rows[$i]['instituicoes'] = [];
+            }
+        }
     } catch (Throwable $e) {
         die('Erro ao carregar os dados: ' . $e->getMessage());
     }
@@ -167,7 +189,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                     <div class="row left">
                         <div class="col parte-info">
                             <span class="minor-info">Nome</span>
-                            <span class="major-info"><?php $cpfCell = $row['cpf']; echo htmlspecialchars($row['nome_completo'] . " (" .  htmlspecialchars($cpfCell !== '' && strlen($cpfCell) === 11 ? Security::formatCPF($cpfCell) : ($cpfCell !== '' ? $cpfCell : '—'))) . ")" ?></span>
+                            <span class="major-info"><?php $cpfCell = $row['cpf'] ?? ''; echo htmlspecialchars(($row['nome_completo'] ?? '') . ' (' . ($cpfCell !== '' && strlen($cpfCell) === 11 ? Security::formatCPF($cpfCell) : ($cpfCell !== '' ? $cpfCell : '—')) . ')'); ?></span>
                         </div>
                         <div class="col parte-tel">
                             <span class="minor-info">Telefones</span>
@@ -175,7 +197,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                                 <?php
                                 $telefones = $row['telefones'] ?? [];
                                 if (empty($telefones)) {
-                                    echo '—'; 
+                                    echo '—';
                                 } else {
                                     $partesTel = array_map(function ($t) {
                                         $tipo = trim($t['tipo'] ?? '');
@@ -215,8 +237,8 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                         </div>
                     </div>
                 </div>
-            </div>       
-            <?php endforeach; ?>
+                <?php endforeach; ?>
+            </div>
             <?php else: ?>
                 <div class="col subtask subtask-collapsed padding-lr-md full-line">
                     <div class="row table between padding-tb-md border-top">
