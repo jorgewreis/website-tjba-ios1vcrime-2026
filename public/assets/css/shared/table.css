@@ -59,6 +59,117 @@
         border-bottom: 1px solid var(--primary-color);
     }
 
+    .row.allocate-users {
+        display: none;
+    }
+
+    .row.timeline-header {
+        width: 100%;
+        min-height: 50px;
+        padding: 0 20px;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--color-border);
+        font-weight: 600;
+        color: var(--color-text-secondary);
+        font-size: 14px;
+    }
+
+    .row.pagination {
+        width: 100%;
+        min-height: 60px;
+        padding: 0 10px;
+        border-top: 1px solid var(--color-border);
+        justify-content: space-between;
+    }
+    .row.info{
+        width: 100%;
+        min-height: 50px;
+        margin-top: 20px;
+        padding: 0 10px;
+        justify-content: flex-start;
+        background-color: var(--bg-primary);
+        color: var(--primary-color-active);
+        border-bottom: 1px solid var(--color-accent);
+    }
+    .row.success{
+        width: 100%;
+        min-height: 50px;
+        margin-top: 20px;
+        padding: 0 10px;
+        justify-content: flex-start;
+        background-color: var(--color-success-bg-light);
+        color: var(--success-color-active);
+        border-bottom: 1px solid var(--color-success);
+    }
+
+    .row.subtask-item {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid var(--color-border);
+        width: 100%;
+        min-height: 40px;
+    }
+    .row.subtask-item .left-content {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
+        flex: 1;
+        min-width: 0;
+    }
+    .row.subtask-item .right-content {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+    }
+    .row.subtask-item .col.task-status .status {
+        margin: 0;
+    }
+    .row.subtask-item .btn.btn-primary,
+    .row.subtask-item .btn.btn-warning {
+        width: 40px;
+        height: 40px;
+        padding: 6px 0 0 0;
+        flex-shrink: 0;
+    }
+    .row.subtask-item .btn.btn-primary i,
+    .row.subtask-item .btn.btn-warning i {
+        font-size: 1.1rem;
+    }
+    .row.subtask-info{
+        width: 100%;
+        margin-top: 10px;
+        justify-content: space-between;
+    }
+    .row.subtask-buttons{
+        width: 100%;
+        margin-bottom: 10px;
+        justify-content: flex-end;
+    }
+    .row.timeline{
+        width: 100%;
+        justify-content: space-between;
+        min-height: 60px;
+        padding: 10px;
+    }
+
+    .row.info span,
+    .row.success span{
+        font-size: 12px;
+    }
+
+    .row.subtask {
+        margin: 0 20px 0 40px;
+    }
+
+    .row.subtask-collapsed {
+        display: none;
+    }
+
     /* GAP */
     .row-gap-5 {
         gap: 5px;
@@ -93,133 +204,11 @@
         border-right: 1px solid var(--color-gray-200);
     }
 
-    
+    .col.full-line {
+        width: 100%;
+    }
 
-.row.allocate-users {
-    display: none;
-}
 
-.row.timeline-header {
-    width: 100%;
-    min-height: 50px;
-    padding: 0 20px;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--color-border);
-    font-weight: 600;
-    color: var(--color-text-secondary);
-    font-size: 14px;
-}
-
-.row.pagination {
-    width: 100%;
-    min-height: 60px;
-    padding: 0 10px;
-    border-top: 1px solid var(--color-border);
-    justify-content: space-between;
-}
-.row.info{
-    width: 100%;
-    min-height: 50px;
-    margin-top: 20px;
-    padding: 0 10px;
-    justify-content: flex-start;
-    background-color: var(--bg-primary);
-    color: var(--primary-color-active);
-    border-bottom: 1px solid var(--color-accent);
-}
-.row.success{
-    width: 100%;
-    min-height: 50px;
-    margin-top: 20px;
-    padding: 0 10px;
-    justify-content: flex-start;
-    background-color: var(--color-success-bg-light);
-    color: var(--success-color-active);
-    border-bottom: 1px solid var(--color-success);
-}
-
-.row.info span,
-.row.success span{
-    font-size: 12px;
-}
-
-.col.full-line.register {
-    width: 100%;
-    border-top: 1px solid var(--color-border);
-    border-bottom: 1px solid var(--color-border);
-}
-
-.row.subtask {
-    width: 100%;
-    min-height: 40px;
-    padding: 0 10px 0 50px;
-    background-color: var(--color-surface-elevated);
-}
-
-.row.subtask.subtask-collapsed {
-    display: none;
-}
-
-.row.subtask:not(.subtask-collapsed) {
-    display: flex;
-    flex-wrap: wrap;
-    flex-direction: column;
-}
-/* Linha compacta de uma subtarefa na lista (modelo simples ou com complemento) */
-.row.subtask-item {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    border-top: 1px solid var(--color-border);
-    width: 100%;
-    min-height: 40px;
-}
-.row.subtask-item .left-content {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 10px;
-    flex: 1;
-    min-width: 0;
-}
-.row.subtask-item .right-content {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
-}
-.row.subtask-item .col.task-status .status {
-    margin: 0;
-}
-.row.subtask-item .btn.btn-primary,
-.row.subtask-item .btn.btn-warning {
-    width: 40px;
-    height: 40px;
-    padding: 6px 0 0 0;
-    flex-shrink: 0;
-}
-.row.subtask-item .btn.btn-primary i,
-.row.subtask-item .btn.btn-warning i {
-    font-size: 1.1rem;
-}
-.row.subtask-info{
-    width: 100%;
-    margin-top: 10px;
-    justify-content: space-between;
-}
-.row.subtask-buttons{
-    width: 100%;
-    margin-bottom: 10px;
-    justify-content: flex-end;
-}
-.row.timeline{
-    width: 100%;
-    justify-content: space-between;
-    min-height: 60px;
-    padding: 10px;
-}
 
 .task-info .major-info {
     font-size: 13px;
@@ -268,7 +257,6 @@
     margin: 0 10px;
 }
 
-/* Linha que conecta um bullet ao próximo: só quando existe outro item da timeline em seguida (não no último) */
 .row.timeline:has(+ .row.timeline) .circle::after {
     content: '';
     position: absolute;

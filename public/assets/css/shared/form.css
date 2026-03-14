@@ -571,7 +571,7 @@ input[type="text"].status-error {
 }
 input.white,
 select.white{
-    background-color: var(--bg-input);
+    background-color: var(--color-white-100);
 }
 
 /* LABEL */
