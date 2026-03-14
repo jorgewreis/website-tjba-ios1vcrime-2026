@@ -91,4 +91,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix: pequenos ajustes** `[6907a0f]`
 - **Fix: pequenos ajustes** `[1ab82c0]`
 - **fix: correções pequenas** `[d52cd91]`
+- **fix: correção de layout** `[0f878dd]`
 
