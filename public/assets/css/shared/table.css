@@ -18,7 +18,7 @@
         justify-content: flex-start;
     }
     .row.right {
-        justify-content: flex-end;    
+        justify-content: flex-end;
     }
     .row.center {
         justify-content: center;
@@ -432,7 +432,7 @@
 @media (min-width: 768px) {    
     
     /* COLUMNS WITH ID FIX */
-    .row.left {
+    .row.left:not(.subtitle) {
         width: fit-content;
     }
 

@@ -138,17 +138,17 @@ try {
     </div>
 
     <div class="card-page">       
-        <div class="row table header">Informações obrigatórias</div>
-        <div class="row filter">
-            <div class="col filter">
+        <div class="row table subtitle left padding-tb-lg padding-lr-lg">Informações obrigatórias para o cadastro</div>
+        <div class="row table left left padding-tb-md padding-lr-lg border-bottom row-gap-10">
+            <div class="col">
                 <label for="filter-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="width-md height-md" id="filter-processo" placeholder="Digite o número do processo" required>
             </div>
-            <div class="col filter">
+            <div class="col">
                 <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
                 <input type="text" class="width-lg height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>                
             </div>
-            <div class="col filter">
+            <div class="col">
                 <label for="filter-tipo">Finalidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <select class="width-lg height-md" id="filter-tipo" required>
                     <option value="" selected disabled>Selecione aqui</option>
@@ -160,21 +160,23 @@ try {
                     <option value="Suspensão Condicional">Suspensão Condicional</option>
                     <option value="Outra">Outra não listada</option>
                 </select>
-            </div>            
+            </div>
         </div>
+
         <?php if ($cnjError): ?>
-            <div class="row filter">
+            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10">
                 <div class="col">
                     <label class="status status-cancelled"><?php echo htmlspecialchars($cnjError, ENT_QUOTES); ?></label>
                 </div>
             </div>
         <?php endif; ?>
-        <div class="row filter">
-            <div class="col filter">
+
+        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10">
+            <div class="col">
                 <label for="filter-cidade">Cidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="width-xl height-md" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="50" required>
             </div>
-            <div class="col filter">
+            <div class="col">
                 <label for="filter-estado">Estado <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <select class="width-md height-md" id="filter-estado" required>
                     <option value="AC">Acre</option>
@@ -206,7 +208,7 @@ try {
                     <option value="TO">Tocantins</option>
                 </select>
             </div>            
-            <div class="col filter">
+            <div class="col">
                 <label for="filter-prazo">Prazo <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <select class="width-sm height-md" id="filter-prazo" required>
                     <option value="5 dias">5 dias</option>
@@ -218,26 +220,25 @@ try {
                 </select>
             </div>
         </div>
-        <div class="row info">
+
+        <div class="row table left info padding-tb-md padding-lr-lg">
             <span>*Conforme regra de divisão de tarefas, todas as Cartas Expedidas serão alocadas automaticamente e deverão ser remetidas por <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
+        </div>
+        <div class="row table left info padding-tb-md padding-lr-lg">
+            <div class="col">
+                <label id="cadastro-feedback" class="status-placeholder" aria-live="polite"></label>
+            </div>
         </div>
 
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
 
         <!-- Ações -->
-        <div class="row buttons">
+        <div class="row table right padding-tb-md padding-lr-lg border-top row-gap-10">
             <button class="btn btn-primary-outline" id="alterar-regra-btn" style="display: none;">Alterar regra de envio</button> <!-- visível apenas para usuários com permissão de administrador -->
             <button class="btn btn-secondary" id="voltar-btn">Voltar</button>
             <button class="btn btn-primary" id="cadastrar-btn" type="button">Cadastrar</button>
         </div>        
-
-        <!-- Informações -->
-        <div class="row pagination">
-            <div class="col">
-                <label id="cadastro-feedback" class="status-placeholder" aria-live="polite"></label>
-            </div>
-        </div>
     </div>
         
     <!-- Develop Info -->
