@@ -124,4 +124,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix: correção de php** `[1858d1c]`
 - **FIX: PEQUENAS MELHORIAS** `[2c20046]`
 - **fix: pequenos ajustes** `[450146b]`
+- **fix: pequenos ajustes** `[956a635]`
 
