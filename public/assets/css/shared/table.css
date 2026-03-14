@@ -211,6 +211,36 @@
         display: none;
     }
 
+    /* COLUMNS WITH ID FIX */
+    .row.left {
+        width: 100%;
+    }
+        .col.process-info {
+            width: 300px;
+        }
+        .col.comarca-info {
+            display: none;
+        }
+        .col.detalhes-info {
+            display: none;
+        }
+
+    .row-right {
+        display: 100%;
+
+    }
+        .col.button-table {
+            display: none;
+        }
+        .row.allocate-users {
+            max-width: 110px;
+            width: fit-content;
+        }
+    
+    .left.pagination-info {
+        display: none;
+    }
+
 
 
 .task-info .major-info {
@@ -351,10 +381,6 @@
     align-items: flex-start;
 }
 
-.button-edit{
-    visibility: hidden;
-}
-
 .button-subtask{
     width: 30px;
     height: 30px;
@@ -395,26 +421,6 @@
     white-space: nowrap;
 }
 
-/* TAMANHOS PADRONIZADOS */
-.process-info {
-    width: 220px;
-    cursor: pointer;
-}
-.comarca-info {
-    display: none;
-}
-.detalhes-info {
-    display: none;    
-}
-.process-select {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    width: 25px;
-    height: 40px;    
-}
-
 .status-task {
     display: flex;
     align-items: flex-end;
@@ -424,19 +430,40 @@
 }
 
 @media (min-width: 768px) {    
-    .comarca-info {
-        display: flex;
-        width: 180px;
-    }    
+    
+    /* COLUMNS WITH ID FIX */
+    .row.left {
+        width: fit-content;
+    }
+
+    .row-right {
+        display: fit-content;
+
+    }
 }
 
-@media (min-width: 1024px) {
-    .detalhes-info {
-        display: flex;
-        width: 240px;
-    }
+@media (min-width: 1024px) {    
     .button-edit {
         visibility: visible;
+    }
+
+    /* COLUMNS WITH ID FIX */
+    .col.comarca-info {
+        display: flex;
+        width: 200px;
+    }
+    .col.button-table {
+        display: flex;
+    }      
+    .left.pagination-info {
+        display: flex;
+    }
+}
+
+@media (min-width: 1080px) {
+    .col.detalhes-info {
+        display: flex;
+        width: 260px;
     }
 }
 
@@ -506,20 +533,6 @@
         border-color: var(--color-border);
         color: var(--color-text-secondary);
         transition: all 0.2s ease;
-    }
-
-    .process-info {
-        width: 300px;
-    }
-    .comarca-info {
-        width: 20%;
-    }
-    .detalhes-info {
-        width: 25%;
-    }    
-
-    .subtask-date{    
-        width: 520px;
     }
 
 }
