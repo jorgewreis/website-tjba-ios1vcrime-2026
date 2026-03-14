@@ -8,8 +8,6 @@ if (function_exists('mb_internal_encoding')) {
 
 require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../services/PessoasService.php';
-require_once __DIR__ . '/../../repositories/PartesTelefonesRepository.php';
-require_once __DIR__ . '/../../repositories/PartesInstituicoesRepository.php';
 require_once __DIR__ . '/../../../config/security.php';
 
 $connection = Conection::getInstance()->getConnection();
@@ -42,26 +40,6 @@ if ($filtrou) {
         $listResult = $service->list($filters, $itemsPerPage, $offset);
         $rows = $listResult['rows'] ?? [];
         $totalDocuments = (int) ($listResult['total'] ?? 0);
-
-        $telefonesRepo = new PartesTelefonesRepository($connection);
-        $vinculosInstRepo = new PartesInstituicoesRepository($connection);
-        foreach ($rows as $i => $row) {
-            $parteId = (string) ($row['id'] ?? '');
-            if ($parteId !== '') {
-                $rows[$i]['telefones'] = $telefonesRepo->findByParteId($parteId);
-                $vinculos = $vinculosInstRepo->findByParteId($parteId, true);
-                $rows[$i]['instituicoes'] = array_map(function (array $v): array {
-                    return [
-                        'nome' => $v['instituicao_nome'] ?? '',
-                        'sigla' => $v['instituicao_sigla'] ?? '',
-                        'cargo_funcao' => $v['cargo_funcao'] ?? '',
-                    ];
-                }, $vinculos);
-            } else {
-                $rows[$i]['telefones'] = [];
-                $rows[$i]['instituicoes'] = [];
-            }
-        }
     } catch (Throwable $e) {
         die('Erro ao carregar os dados: ' . $e->getMessage());
     }
@@ -197,7 +175,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                                 <?php
                                 $telefones = $row['telefones'] ?? [];
                                 if (empty($telefones)) {
-                                    echo '—';
+                                    echo '—'; 
                                 } else {
                                     $partesTel = array_map(function ($t) {
                                         $tipo = trim($t['tipo'] ?? '');

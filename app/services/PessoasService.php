@@ -32,7 +32,16 @@ final class PessoasService
         foreach ($rows as $i => $row) {
             $parteId = (string) ($row['id'] ?? '');
             $rows[$i]['total_processos'] = $parteId !== '' ? count($this->processosPartesRepository->findByParteId($parteId)) : 0;
-            $rows[$i]['total_instituicoes'] = $parteId !== '' ? count($this->partesInstituicoesRepository->findByParteId($parteId, true)) : 0;
+            $vinculosInst = $parteId !== '' ? $this->partesInstituicoesRepository->findByParteId($parteId, true) : [];
+            $rows[$i]['total_instituicoes'] = count($vinculosInst);
+            $rows[$i]['telefones'] = $parteId !== '' ? $this->telefonesRepository->findByParteId($parteId) : [];
+            $rows[$i]['instituicoes'] = array_map(function (array $v): array {
+                return [
+                    'nome' => $v['instituicao_nome'] ?? '',
+                    'sigla' => $v['instituicao_sigla'] ?? '',
+                    'cargo_funcao' => $v['cargo_funcao'] ?? '',
+                ];
+            }, $vinculosInst);
         }
         return [
             'rows' => $rows,
