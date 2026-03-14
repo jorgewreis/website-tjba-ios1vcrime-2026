@@ -111,7 +111,7 @@ try {
         </div>
         <div id="vitimas-container"></div>
 
-        <div class="row info">
+        <div class="row info padding-tb-md">
             <span>*Conforme regra de alocação, as medidas protetivas serão alocadas automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
         </div>
 

@@ -87,7 +87,7 @@ try {
                 <input type="number" class="width-sm height-md" id="filter-prazo-dias" min="1" placeholder="Ex.: 15" required title="Prazo em dias a partir da data de publicação">
             </div>
         </div>
-        <div class="row info">
+        <div class="row info padding-tb-md">
             <span>*Conforme regra de alocação, os Editais serão alocados automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
         </div>
 

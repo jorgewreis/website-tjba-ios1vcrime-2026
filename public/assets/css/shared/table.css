@@ -220,6 +220,10 @@
         .col.detalhes-info {
             display: none;
         }
+        .col.detalhes-info-tipo {
+            display: none;
+        }
+
 
     .row-right {
         display: 100%;
@@ -474,6 +478,10 @@
         width: calc(200px + 3vw);
     }
     .col.detalhes-info {
+        width: calc(260px + 3vw);
+    }
+    .col.detalhes-info-info {
+        display: flex;
         width: calc(260px + 3vw);
     }
 

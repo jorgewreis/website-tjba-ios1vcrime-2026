@@ -219,8 +219,8 @@ if ($totalPages > 0) {
 
         <!-- ROW ACTIONS -->
         <div class="row table buttons right padding-lr-md padding-tb-md row-gap-10">
-            <input type="text" class="width-md height-md" id="search-input" placeholder="Pesquisar na lista..." value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
-            <select class="width-sm height-md" id="export-type" disabled>
+            <input type="text" class="width-md height-md white" id="search-input" placeholder="Pesquisar na lista..." value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
+            <select class="width-sm height-md white" id="export-type" disabled>
                 <option value="" selected>Exportar lista</option>
                 <option value="pdf">Gerar PDF</option>
                 <option value="csv">Gerar CSV</option>
@@ -561,7 +561,7 @@ if ($totalPages > 0) {
                 radio.addEventListener('change', function () {
                     const cartaId = this.value;
                     const targetId = 'subtask-' + cartaId;
-                    document.querySelectorAll('.row.subtask').forEach(function (subtaskRow) {
+                    document.querySelectorAll('.col.subtask').forEach(function (subtaskRow) {
                         const isTarget = subtaskRow.id === targetId;
                         subtaskRow.classList.toggle('subtask-collapsed', !isTarget);
                         subtaskRow.setAttribute('aria-hidden', isTarget ? 'false' : 'true');

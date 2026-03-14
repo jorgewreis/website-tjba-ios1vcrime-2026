@@ -178,7 +178,7 @@ try {
             </div> 
 
             <?php if (!empty($ruleRow['id'] ?? '')): ?>
-                <div class="row table <?php if($ruleUsuarioNome === ''){ echo 'info'; } else { echo 'success'; } ?>">
+                <div class="row table padding-tb-md <?php if($ruleUsuarioNome === ''){ echo 'info'; } else { echo 'success'; } ?>">
                     <span><?php echo htmlspecialchars(sprintf('Regra atual: %s - %s', $ruleRow['id'] ?? 'sem ID', $ruleUsuarioNome)); ?></span>
                 </div>
             <?php endif; ?>

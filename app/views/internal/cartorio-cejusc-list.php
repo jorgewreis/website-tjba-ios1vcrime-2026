@@ -145,7 +145,7 @@ if ($totalPages > 0) {
 
         <!-- ROW ACTIONS -->
         <div class="row table buttons right padding-lr-md padding-tb-md row-gap-10">
-            <input type="text" class="width-md height-md" id="search-input" placeholder="Pesquisar por processo..." value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
+            <input type="text" class="width-md height-md white" id="search-input" placeholder="Pesquisar por processo..." value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
             <button class="btn btn-primary" id="novo-cadastro-btn">Novo cadastro</button>
         </div>
 
@@ -229,6 +229,7 @@ if ($totalPages > 0) {
                                 <i class="fi fi-rr-angle-small-down"></i>
                             </label>
                         </div>
+                        <!-- DADOS DO PROCESSO -->
                         <div class="col process-info" title="clique para copiar">
                             <span class="minor-info">Processo</span>
                             <span class="major-info"><?php echo htmlspecialchars($row['Processo']); ?></span>
@@ -404,7 +405,7 @@ if ($totalPages > 0) {
                 radio.addEventListener('change', function () {
                     const cartaId = this.value;
                     const targetId = 'subtask-' + cartaId;
-                    document.querySelectorAll('.row.subtask').forEach(function (row) {
+                    document.querySelectorAll('.col.subtask').forEach(function (row) {
                         const isTarget = row.id === targetId;
                         row.classList.toggle('subtask-collapsed', !isTarget);
                         row.setAttribute('aria-hidden', isTarget ? 'false' : 'true');

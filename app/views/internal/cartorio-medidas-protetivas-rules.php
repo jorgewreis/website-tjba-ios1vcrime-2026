@@ -153,7 +153,7 @@ try {
                 </div>
             </div>
             <?php if (!empty($ruleRow['id'] ?? '')): ?>
-                <div class="row success">
+                <div class="row success padding-tb-md">
                     <span><?php echo htmlspecialchars(sprintf('Medidas Protetivas: %s - %s', $ruleRow['id'] ?? 'sem ID', $ruleUsuarioNome)); ?></span>
                 </div>
             <?php endif; ?>

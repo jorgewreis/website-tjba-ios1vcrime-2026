@@ -172,7 +172,7 @@ try {
                 </div>
             </div> 
             <?php if (!empty($ruleRow['id'] ?? '')): ?>
-                <div class="row <?php if($ruleUsuarioNome === ''){ echo 'info'; } else { echo 'success'; } ?>">
+                <div class="row padding-tb-md <?php if($ruleUsuarioNome === ''){ echo 'info'; } else { echo 'success'; } ?>">
                     <span><?php echo htmlspecialchars(sprintf('Cartas Recebidas: %s - %s', $ruleRow['id'] ?? 'sem ID', $ruleUsuarioNome)); ?></span>
                 </div>
             <?php endif; ?>

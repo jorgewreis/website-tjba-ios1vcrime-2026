@@ -199,7 +199,7 @@ if ($totalPages > 0) {
 
         <!-- ROW ACTIONS -->
         <div class="row table buttons right padding-lr-md padding-tb-md row-gap-10">
-            <input type="text" class="width-md height-md" id="search-input" placeholder="Pesquisar por processo..." value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
+            <input type="text" class="width-md height-md white" id="search-input" placeholder="Pesquisar por processo..." value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
             <button class="btn btn-primary" id="novo-cadastro-btn">Novo cadastro</button>
         </div>
 
@@ -261,13 +261,18 @@ if ($totalPages > 0) {
                                 <i class="fi fi-rr-angle-small-down"></i>
                             </label>
                         </div>
+                        <!-- DADOS DO PROCESSO -->
                         <div class="col process-info" title="clique para copiar">
-                            <span class="minor-info">Processo</span>
+                            <?php
+                                $classeGuia = !empty($row['Classe']) ? $row['Classe'] : 'Classe não informada';
+                                $classeStyleGuia = $classeGuia !== 'Classe não informada' ? 'style="color: var(--primary-color-active); font-weight: 600;"' : '';
+                            ?>
+                            <span class="minor-info text-ellipsis" title="<?php echo htmlspecialchars($classeGuia, ENT_QUOTES); ?>" <?php echo $classeStyleGuia; ?>><?php echo htmlspecialchars($classeGuia); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars($row['Processo'] ?? ''); ?></span>
                         </div>
-                        <div class="col comarca-info" title="Classe processual">
-                            <span class="minor-info">Classe</span>
-                            <span class="major-info text-ellipsis" title="<?php echo htmlspecialchars(!empty($row['Classe']) ? $row['Classe'] : '—', ENT_QUOTES); ?>"><?php echo htmlspecialchars(!empty($row['Classe']) ? $row['Classe'] : '—'); ?></span>
+                        <div class="col comarca-info">
+                            <span class="minor-info">Denunciado</span>
+                            <span class="major-info"><?php echo htmlspecialchars($row['Denunciado'] ?? '—'); ?></span>
                         </div>
                         <div class="col detalhes-info">
                             <span class="minor-info">Denunciado</span>
@@ -533,7 +538,7 @@ if ($totalPages > 0) {
             radio.addEventListener('change', function () {
                 const guiaId = this.value;
                 const targetId = 'subtask-' + guiaId;
-                document.querySelectorAll('.row.subtask').forEach(function (subtaskRow) {
+                document.querySelectorAll('.col.subtask').forEach(function (subtaskRow) {
                     const isTarget = subtaskRow.id === targetId;
                     subtaskRow.classList.toggle('subtask-collapsed', !isTarget);
                     subtaskRow.setAttribute('aria-hidden', isTarget ? 'false' : 'true');

@@ -156,7 +156,7 @@ try {
                 </div>
             </div>
             <?php if (!empty($ruleRow['id'] ?? '')): ?>
-                <div class="row <?php echo $ruleUsuarioNome === '' ? 'info' : 'success'; ?>">
+                <div class="row padding-tb-md <?php echo $ruleUsuarioNome === '' ? 'info' : 'success'; ?>">
                     <span><?php echo htmlspecialchars(sprintf('Guias: %s - %s', $ruleRow['id'] ?? 'sem ID', $ruleUsuarioNome)); ?></span>
                 </div>
             <?php endif; ?>

@@ -81,7 +81,7 @@ try {
             </div>
         </div>
 
-        <div class="row info">
+        <div class="row info padding-tb-md">
             <span>*Conforme regra de alocação, o envio de Decisões ao Cejusc será alocado automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
         </div>
 
