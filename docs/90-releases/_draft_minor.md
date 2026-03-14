@@ -107,4 +107,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix: melhorias nas informações** `[f4ae92b]`
 - **fix: pequenos ajustes** `[d8a2264]`
 - **fix: pequenos ajustes** `[55bee89]`
+- **fix: correção de layout** `[18b2c0e]`
 
