@@ -213,8 +213,8 @@ if ($totalPages > 0) {
     <div class="card-page">
 
         <!-- Filtros -->
-        <div class="row filter">
-            <div class="col filter">
+        <div class="row table left padding-lr-md padding-tb-sm border-bottom">
+            <div class="col">
                 <label for="filter-tipo">Filtrar por finalidade</label>
                 <select class="width-md height-md" id="filter-tipo">
                     <option value=""<?php echo $finalidadeFilter === '' ? ' selected' : ''; ?>>Mostrar todas</option>
@@ -225,7 +225,7 @@ if ($totalPages > 0) {
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="col filter">
+            <div class="col">
                 <label for="filter-status">Filtrar por status</label>
                 <select class="width-md height-md" id="filter-status">
                     <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Mostrar todos</option>
@@ -243,7 +243,7 @@ if ($totalPages > 0) {
                     </option>
                 </select>
             </div>
-            <div class="col filter">
+            <div class="col">
                 <label for="items-per-page">Itens por página</label>
                 <select class="width-sm height-md" id="items-per-page">
                     <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
@@ -255,7 +255,7 @@ if ($totalPages > 0) {
         </div>
         
         <!-- Ações -->
-        <div class="row buttons">
+        <div class="row table right padding-lr-md padding-tb-sm">
 
             <!-- Pesquisar na lista -->
             <input type="text" class="width-md height-md" id="search-input" placeholder="Pesquisar na lista..." value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
@@ -280,7 +280,7 @@ if ($totalPages > 0) {
                 $idCarta = $row['IdCarta'];
                 $subtarefas = $row['Subtarefas'] ?? [];
             ?>
-            <div class="col full-line register" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>">
+            <div class="col table left" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>">
                 <div class="row table" id="<?php echo htmlspecialchars($idCarta); ?>">
                     <div class="row">
                         <div class="col">
