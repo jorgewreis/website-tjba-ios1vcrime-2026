@@ -161,42 +161,28 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
         </div>
 
         <?php elseif (!empty($rows)): ?>
-            <table class="table-list">
-                <thead>
-                    <tr>
-                        <th>Nome</th>
-                        <th>CPF</th>
-                        <th>Processos</th>
-                        <th>Instituições</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($rows as $row): ?>
-                    <tr>
-                        <td><?php echo htmlspecialchars($row['nome_completo'] ?? '—'); ?></td>
-                        <td><?php
-                        $cpfCell = $row['cpf'] ?? '';
-                        echo htmlspecialchars($cpfCell !== '' && strlen($cpfCell) === 11 ? Security::formatCPF($cpfCell) : ($cpfCell !== '' ? $cpfCell : '—'));
-                    ?></td>
-                        <td><?php echo (int) ($row['total_processos'] ?? 0); ?></td>
-                        <td><?php echo (int) ($row['total_instituicoes'] ?? 0); ?></td>
-                        <td>
-                            <button type="button" class="btn btn-secondary-outline" title="Editar" data-edit-id="<?php echo htmlspecialchars($row['id'] ?? ''); ?>"><i class="fi fi-rr-file-edit"></i></button>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        <?php else: ?>
-            <div class="col subtask subtask-collapsed padding-lr-md full-line">
-                <div class="row table between padding-tb-md border-top">
-                    <div class="col table left no-data">
-                        <span class="major-info">Nenhuma parte encontrada para os critérios informados.</span>
+            <div class="col full-line border-bottom">
+                <?php foreach ($rows as $row): ?>
+                <div class="row table between padding-lr-md border-bottom">
+                    <div class="col parte-info">
+                        <span class="minor-info">Nome</span>
+                        <span class="major-info"><?php $cpfCell = $row['cpf']; echo htmlspecialchars($row['nome_completo'] . "(" .  htmlspecialchars($cpfCell !== '' && strlen($cpfCell) === 11 ? Security::formatCPF($cpfCell) : ($cpfCell !== '' ? $cpfCell : '—'))); ?></span>
+                    </div>
+                    <div class="col parte-edit">
+                        <button type="button" class="" title="Editar" data-edit-id="<?php echo htmlspecialchars($row['id'] ?? ''); ?>"><i class="fi fi-rr-file-edit"></i></button>
                     </div>
                 </div>
-            </div>
-        <?php endif; ?>
+            </div>       
+            <?php endforeach; ?>
+            <?php else: ?>
+                <div class="col subtask subtask-collapsed padding-lr-md full-line">
+                    <div class="row table between padding-tb-md border-top">
+                        <div class="col table left no-data">
+                            <span class="major-info">Nenhuma parte encontrada para os critérios informados.</span>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
 
         <?php if ($filtrou): ?>
         <!-- Paginação -->
