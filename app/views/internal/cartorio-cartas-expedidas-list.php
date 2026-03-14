@@ -423,72 +423,72 @@ if ($totalPages > 0) {
                 </div>
 
                 <!-- SUB-TAREFAS -->
-                <div class="col subtask subtask-collapsed full-line" id="subtask-<?php echo htmlspecialchars($idCarta); ?>" aria-hidden="true">
+                <div class="col subtask subtask-collapsed padding-lr-md full-line" id="subtask-<?php echo htmlspecialchars($idCarta); ?>" aria-hidden="true">
                     <?php foreach ($subtarefas as $st):
                         $stId = $st['id'] ?? '';
                         $stTipo = $st['tipo'] ?? '';
                         $stLabel = $subtarefaLabels[$stTipo] ?? $stTipo;
                         $temComplemento = in_array($stTipo, ['aguardando_gerar_pdf', 'aguardando_envio', 'aguardando_informacoes', 'aguardando_devolucao'], true);
                     ?>
-                    <div class="row table between padding-tb-md border-top" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>" style="border-top: 1px solid var(--color-gray-400);">
-                        <div class="row table left">
-                            <div class="col task-status">
+                    <div class="row table between padding-tb-md border-top" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
+                        <div class="col table left">
+                            <div class="row">
                                 <div class="status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
+                                <?php if ($stTipo === 'aguardando_gerar_pdf'): ?>
+                                    <div class="col">
+                                        <input type="number" class="width-sm height-md subtask-qtd-docs" value="2" min="2" max="10" placeholder="Qtd de docs gerados (2 a 10)" title="Qtd de docs gerados" />
+                                    </div>
+                                <?php elseif ($stTipo === 'aguardando_envio'): ?>
+                                    <div class="col">
+                                        <select class="width-md height-md subtask-metodo-envio" title="Método de envio">
+                                            <option value="">Método de envio</option>
+                                            <option value="Email">E-mail</option>
+                                            <option value="Malote Digital">Malote Digital</option>
+                                            <option value="PJe">PJe</option>
+                                            <option value="eSAJ">eSAJ</option>
+                                            <option value="ePROC">ePROC</option>
+                                        </select>
+                                    </div>
+                                <?php elseif ($stTipo === 'aguardando_informacoes'): ?>
+                                    <div class="col">
+                                        <input type="text" class="width-md height-md subtask-numero-destino" placeholder="Nº processo" title="Número processo destino" />
+                                    </div>
+                                    <div class="col">
+                                        <input type="text" class="width-xl height-md subtask-vara-destino" placeholder="Vara destino" title="Vara destino" />
+                                    </div>
+                                <?php elseif ($stTipo === 'aguardando_devolucao'): ?>
+                                    <div class="col">
+                                        <select class="width-lg height-md subtask-resultado-devolucao" title="Resultado da devolução">
+                                            <option value="">Resultado</option>
+                                            <option value="devolvida_sem_cumprimento">Não cumprida</option>
+                                            <option value="cumprida_negativamente">Cumprida negativamente</option>
+                                            <option value="cumprida_parcialmente">Cumprida parcialmente</option>
+                                            <option value="cumprida_positivamente">Cumprida integralmente</option>
+                                        </select>
+                                    </div>
+                                <?php endif; ?>
                             </div>
-                            <?php if ($stTipo === 'aguardando_gerar_pdf'): ?>
-                            <div class="col filter">
-                                <input type="number" class="width-sm height-md subtask-qtd-docs" value="2" min="2" max="10" placeholder="Qtd de docs gerados (2 a 10)" title="Qtd de docs gerados" />
+                            <div class="col table right">
+                                <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?>">
+                                    <i class="fi fi-rr-play"></i>
+                                </button>
                             </div>
-                            <?php elseif ($stTipo === 'aguardando_envio'): ?>
-                            <div class="col filter">
-                                <select class="width-md height-md subtask-metodo-envio" title="Método de envio">
-                                    <option value="">Método de envio</option>
-                                    <option value="Email">E-mail</option>
-                                    <option value="Malote Digital">Malote Digital</option>
-                                    <option value="PJe">PJe</option>
-                                    <option value="eSAJ">eSAJ</option>
-                                    <option value="ePROC">ePROC</option>
-                                </select>
-                            </div>
-                            <?php elseif ($stTipo === 'aguardando_informacoes'): ?>
-                            <div class="col filter">
-                                <input type="text" class="width-md height-md subtask-numero-destino" placeholder="Nº processo" title="Número processo destino" />
-                            </div>
-                            <div class="col filter">
-                                <input type="text" class="width-xl height-md subtask-vara-destino" placeholder="Vara destino" title="Vara destino" />
-                            </div>
-                            <?php elseif ($stTipo === 'aguardando_devolucao'): ?>
-                            <div class="col filter">
-                                <select class="width-lg height-md subtask-resultado-devolucao" title="Resultado da devolução">
-                                    <option value="">Resultado</option>
-                                    <option value="devolvida_sem_cumprimento">Não cumprida</option>
-                                    <option value="cumprida_negativamente">Cumprida negativamente</option>
-                                    <option value="cumprida_parcialmente">Cumprida parcialmente</option>
-                                    <option value="cumprida_positivamente">Cumprida integralmente</option>
-                                </select>
-                            </div>
-                            <?php endif; ?>
-                        </div>
-                        <div class="row table right">
-                            <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?>">
-                                <i class="fi fi-rr-play"></i>
-                            </button>
                         </div>
                     </div>
                     <?php endforeach; ?>
                     <?php if (empty($subtarefas)): ?>
-                    <div class="row table padding-tb-md">
-                        <span class="minor-info">Nenhuma subtarefa pendente.</span>
-                    </div>
+                        <div class="row table between padding-tb-md border-top">
+                            <span class="minor-info">Nenhuma sub-tarefa pendente.</span>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
 
             <?php endforeach; ?>
             <?php else: // Caso não haja dados para exibir ?>
-            <div class="row table">
-                <div class="col">
-                    <div class="col filter no-data">
+            <div class="col subtask subtask-collapsed padding-lr-md full-line">
+                <div class="row table between padding-tb-md border-top">
+                    <div class="col table left no-data">
                         <span class="major-info">Nenhum documento cadastrado.</span>
                     </div>
                 </div>
@@ -496,13 +496,13 @@ if ($totalPages > 0) {
             <?php endif; ?>
 
         <!-- Paginação -->
-        <div class="row pagination">
-            <span class="pagination-info">
+        <div class="row table between padding-tb-lg padding-lr-md">
+            <span class="left pagination-info">
                 Mostrando <?php echo htmlspecialchars((string) $startItem); ?>-<?php echo htmlspecialchars((string) $endItem); ?> de <?php echo htmlspecialchars((string) $totalDocuments); ?> <?php echo htmlspecialchars($documentsLabel); ?>
                 (<?php echo htmlspecialchars((string) $totalPages); ?> <?php echo htmlspecialchars($pagesLabel); ?>, <?php echo htmlspecialchars((string) $itemsPerPage); ?> <?php echo htmlspecialchars($itemsLabel); ?> por página)
             </span>
             <?php if ($totalPages > 0): ?>
-                <div class="pagination-controls">
+                <div class="right pagination-controls">
                     <?php
                         $prevPage = $currentPage > 1 ? $currentPage - 1 : 1;
                         $prevParams = $baseQueryParams;
