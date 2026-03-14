@@ -234,7 +234,7 @@ if ($totalPages > 0) {
         <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Lista de Documentos</div>
 
         <!-- FILTERS -->
-        <div class="row table between padding-tb-lg padding-lr-lg border-bottom">
+        <div class="row table between padding-tb-lg padding-lr-lg border-bottom row-gap-10">
             
             <div class="row left">
                 <!-- FILTER FINALIDADE -->
@@ -293,7 +293,7 @@ if ($totalPages > 0) {
                 $subtarefas = $row['Subtarefas'] ?? [];
             ?>
             <!-- REGISTRO COMPLETO -->
-            <div class="col" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>">
+            <div class="col full-line border-bottom" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>">
 
                 <!-- TAREFA -->
                 <div class="row table between padding-lf-md" id="<?php echo htmlspecialchars($idCarta); ?>">
@@ -413,7 +413,7 @@ if ($totalPages > 0) {
                 </div>
 
                 <!-- SUB-TAREFA -->
-                <div class="row subtask subtask-collapsed" id="subtask-<?php echo htmlspecialchars($idCarta); ?>" aria-hidden="true">
+                <div class="row subtask subtask-collapsed border-top" id="subtask-<?php echo htmlspecialchars($idCarta); ?>" aria-hidden="true">
                     <?php foreach ($subtarefas as $st):
                         $stId = $st['id'] ?? '';
                         $stTipo = $st['tipo'] ?? '';
