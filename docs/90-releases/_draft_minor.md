@@ -121,4 +121,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix: pequenos ajustes** `[8093c35]`
 - **fix: correções parciais** `[eac3bfd]`
 - **fix: pequenos ajustes subtasks** `[9eaa428]`
+- **fix: correção de php** `[1858d1c]`
 
