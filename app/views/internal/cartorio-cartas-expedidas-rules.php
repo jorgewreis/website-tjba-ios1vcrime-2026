@@ -193,17 +193,17 @@ try {
 
             <!-- Informações -->
             <?php if ($successMessage): ?>
-                <div class="row table buttons left padding-lr-md padding-tb-md">
+                <div class="row table left padding-lr-sm padding-tb-sm">
                     <div class="col">
-                        <label class="status status-finished"><?php echo htmlspecialchars($successMessage); ?></label>
+                        <label class="status status-finished padding-lr-lg"><?php echo htmlspecialchars($successMessage); ?></label>
                     </div>
                 </div>
             <?php endif; ?>
             <?php if (!empty($errors)): ?>
-                <div class="row table buttons left padding-lr-md padding-tb-md">
+                <div class="row table left padding-lr-sm padding-tb-sm">
                     <div class="col">
                         <?php foreach ($errors as $error): ?>
-                            <label class="status status-cancelled"><?php echo htmlspecialchars($error); ?></label>
+                            <label class="status status-cancelled padding-lr-lg"><?php echo htmlspecialchars($error); ?></label>
                         <?php endforeach; ?>
                     </div>
                 </div>
