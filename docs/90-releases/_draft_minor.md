@@ -115,4 +115,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix: pequenos ajustes** `[6bbae31]`
 - **fix: pequenos ajustes** `[78d22c5]`
 - **fix: pequenos ajustes** `[f1503cb]`
+- **fix: pequenos ajustes** `[6a83de5]`
 
