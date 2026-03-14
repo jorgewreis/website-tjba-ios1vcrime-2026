@@ -102,4 +102,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix: correção de subtarefas** `[45e750a]`
 - **fix: correção subtask** `[3fcd8ef]`
 - **fix: layout fixed** `[c0989bf]`
+- **fix: correção de layout responsivo** `[897b74b]`
 
