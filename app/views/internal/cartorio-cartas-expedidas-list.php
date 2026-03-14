@@ -234,9 +234,9 @@ if ($totalPages > 0) {
         <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Lista de Documentos</div>
 
         <!-- FILTERS -->
-        <div class="row table between padding-tb-lg padding-lr-lg border-bottom row-gap-10">
+        <div class="row table between padding-tb-lg padding-lr-lg border-bottom">
             
-            <div class="row left">
+            <div class="row left row-gap-10">
                 <!-- FILTER FINALIDADE -->
                 <div class="col">
                     <label for="filter-tipo">Filtrar por finalidade</label>
@@ -432,7 +432,7 @@ if ($totalPages > 0) {
                     ?>
                     <div class="row table between padding-tb-sm border-top full-line" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
                         <div class="col table left row-gap-10">
-                            <div class="status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
+                            <div class="status status-pending padding-lr-lg"><?php echo htmlspecialchars($stLabel); ?></div>
                             <?php if ($stTipo === 'aguardando_gerar_pdf'): ?>
                                 <div class="col">
                                     <input type="number" class="width-sm height-md subtask-qtd-docs" value="2" min="2" max="10" placeholder="Qtd de docs gerados (2 a 10)" title="Qtd de docs gerados" />
@@ -468,8 +468,9 @@ if ($totalPages > 0) {
                             <?php endif; ?>
                         </div>
                         <div class="col table right">
-                            <button type="button" class="btn btn-primary btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?>">
+                            <button type="button" class="btn btn-primary padding-lr-lg" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?>">
                                 <i class="fi fi-rr-play"></i>
+                                <span class="value-button">Concluir</span>
                             </button>
                         </div>
                     </div>
