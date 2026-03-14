@@ -137,7 +137,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
         <!-- SUBTITLE TABLE -->
         <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Lista de Partes</div>
         
-        <div class="row table between padding-tb-lg padding-lr-md border-bottom">
+        <div class="row table between padding-tb-lg padding-lr-md border-bottom full-line">
             <div class="row right">
                 <div class="col">
                     <label for="items-per-page">Itens por página</label>
@@ -149,15 +149,17 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                     </select>
                 </div>
             </div>
-            <?php if (!$filtrou): ?>
-            <div class="col subtask subtask-collapsed padding-lr-md full-line">
-                <div class="row table between padding-tb-md border-top">
-                    <div class="col table left no-data">
-                        <span class="major-info">Informe ao menos um critério (nome ou CPF) e clique em Consultar para exibir os resultados.</span>
-                    </div>
+        </div>
+
+        <?php if (!$filtrou): ?>
+        <div class="row table between padding-tb-lg padding-lr-md border-bottom full-line">
+            <div class="row table between padding-tb-md border-top">
+                <div class="col table left no-data">
+                    <span class="major-info">Informe ao menos um critério (nome ou CPF) e clique em Consultar para exibir os resultados.</span>
                 </div>
             </div>
         </div>
+
         <?php elseif (!empty($rows)): ?>
             <table class="table-list">
                 <thead>
