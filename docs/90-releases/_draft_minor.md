@@ -125,4 +125,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **FIX: PEQUENAS MELHORIAS** `[2c20046]`
 - **fix: pequenos ajustes** `[450146b]`
 - **fix: pequenos ajustes** `[956a635]`
+- **fix: correção de telefones** `[0eda73f]`
 
