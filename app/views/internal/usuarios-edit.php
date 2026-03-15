@@ -495,10 +495,8 @@ function deriveUsuarioStatus(array $usuario): string
             var nome = (nomeInput && nomeInput.value) ? nomeInput.value.trim() : '';
             var sobrenome = (sobrenomeInput && sobrenomeInput.value) ? sobrenomeInput.value.trim() : '';
             var email = (emailInput && emailInput.value) ? emailInput.value.trim() : '';
-            var dataNascimento = (dataNascimentoInput && dataNascimentoInput.value) ? dataNascimentoInput.value : '';
             if (!nome || !sobrenome) return false;
             if (!email || !validarEmail(email)) return false;
-            if (!dataNascimento) return false;
             return true;
         }
 
