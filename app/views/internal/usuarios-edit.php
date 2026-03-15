@@ -141,8 +141,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $mensagemErro = 'Nome e sobrenome são obrigatórios.';
             } elseif ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $mensagemErro = 'E-mail obrigatório e válido.';
-            } elseif ($dataNascimentoIso === null) {
-                $mensagemErro = 'Informe a data de nascimento no formato AAAA-MM-DD.';
             } else {
                 if ($cargo === 'Magistrada' && $setorLabel === '') {
                     $setorLabel = 'Gabinete';
@@ -151,11 +149,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 try {
                     $connection->beginTransaction();
 
+                    $dataNascimentoSave = $dataNascimentoRaw !== '' && $dataNascimentoIso !== null ? $dataNascimentoIso : null;
                     $stmt = $connection->prepare('UPDATE usuarios SET nome = ?, sobrenome = ?, data_nascimento = ?, email = ?, telefone = ?, cargo = ?, instituicao = ?, cadastro_ativo = ?, updated_at = NOW() WHERE id_usuario = ?');
                     $stmt->execute([
                         $nome,
                         $sobrenome,
-                        $dataNascimentoIso,
+                        $dataNascimentoSave,
                         $email,
                         $telefone !== '' ? $telefone : null,
                         $cargo !== '' ? $cargo : null,

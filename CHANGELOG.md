@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0141
+
+**Data:** 2026-03-15 16:37:55 | **Commit:** `f5c1adb` | **Tipo:** `patch`
+
+- fix: nota tentativa de correcao
+
 ## V. 1.03.0140
 
 **Data:** 2026-03-15 16:35:34 | **Commit:** `7b643f2` | **Tipo:** `patch`
@@ -3120,6 +3126,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
