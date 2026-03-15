@@ -135,4 +135,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: página de usuários criada** `[e5d33ef]`
 - **Feat: criação de página edit de usuarios** `[c16815a]`
 - **fix: correção de função text** `[7adf1c7]`
+- **fix: correção de estilo** `[032c695]`
 
