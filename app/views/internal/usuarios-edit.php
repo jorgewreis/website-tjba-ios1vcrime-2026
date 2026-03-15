@@ -51,7 +51,7 @@ $statusAtual = 'ativo';
 $dataNascimentoVal = '';
 
 // Carregar usuário (apenas internos – tabela usuarios)
-$stmt = $connection->prepare('SELECT id_usuario, nome, sobrenome, cpf, email, telefone, cargo, instituicao, cadastro_ativo, data_nascimento, ultimo_acesso FROM usuarios WHERE id_usuario = ? LIMIT 1');
+$stmt = $connection->prepare('SELECT id_usuario, nome, sobrenome, cpf, email, telefone, cargo, instituicao, cadastro_ativo, data_nascimento FROM usuarios WHERE id_usuario = ? LIMIT 1');
 $stmt->execute([$idUsuario]);
 $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 if ($usuario === false || empty($usuario['id_usuario'])) {
@@ -89,7 +89,6 @@ if ($cpfUsuario !== '') {
 $statusAtual = deriveUsuarioStatus([
     'cadastro_ativo' => $usuario['cadastro_ativo'] ?? null,
     'bloqueado_login' => $bloqueadoLogin ? 1 : 0,
-    'ultimo_acesso' => $usuario['ultimo_acesso'] ?? null,
 ]);
 
 // POST: salvar ou excluir
@@ -251,10 +250,6 @@ function deriveUsuarioStatus(array $usuario): string
     }
     if (!empty($usuario['bloqueado_login'])) {
         return 'bloqueado';
-    }
-    $ultimoAcesso = $usuario['ultimo_acesso'] ?? null;
-    if ($ultimoAcesso === null || trim((string) $ultimoAcesso) === '') {
-        return 'pendente';
     }
     return 'ativo';
 }

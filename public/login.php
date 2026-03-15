@@ -92,6 +92,7 @@ $usuario->atualizarToken(
     $_SESSION['token'],
     TOKEN_EXPIRATION_HOURS
 );
+$usuario->registrarUltimoAcesso($resultado['id_usuario']);
 
 // login bem-sucedido: limpa registros de tentativa
 unset($_SESSION['login_attempts']);

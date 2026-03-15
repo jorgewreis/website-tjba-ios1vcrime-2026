@@ -3,9 +3,13 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/Conection.php';
 require_once __DIR__ . '/../../config/security.php';
+require_once __DIR__ . '/../services/ExternalUsersCleanupService.php';
 
 final class Usuario
 {
+    private const LAST_ACCESS_SESSION_KEY = 'last_access_touch';
+    private const LAST_ACCESS_REFRESH_SECONDS = 300;
+
     private PDO $pdo;
 
     public function __construct()
@@ -19,6 +23,9 @@ final class Usuario
 
     public function autenticar(string $cpf, string $senha): array
     {
+        $cleanupService = new ExternalUsersCleanupService($this->pdo);
+        $cleanupService->purgeInactiveStudents();
+
         $cpfNumerico = Security::normalizeCPF($cpf);
 
         if (!Security::validarCPF($cpfNumerico) || $senha === '') {
@@ -175,6 +182,17 @@ final class Usuario
         $stmt->execute([$token, $expira, $idUsuario]);
     }
 
+    public function registrarUltimoAcesso(string $idUsuario): void
+    {
+        $stmt = $this->pdo->prepare("
+            UPDATE usuarios
+            SET ultimo_acesso = NOW()
+            WHERE id_usuario = ?
+        ");
+        $stmt->execute([$idUsuario]);
+        $this->markLastAccessRefresh($idUsuario);
+    }
+
     public function validarToken(string $token): ?array
     {
         $stmt = $this->pdo->prepare("
@@ -187,7 +205,15 @@ final class Usuario
         ");
         $stmt->execute([$token]);
 
-        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        $usuario = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        if ($usuario !== null) {
+            $idUsuario = trim((string) ($usuario['id_usuario'] ?? ''));
+            if ($idUsuario !== '' && $this->shouldRefreshLastAccess($idUsuario)) {
+                $this->registrarUltimoAcesso($idUsuario);
+            }
+        }
+
+        return $usuario;
     }
 
     /**
@@ -314,5 +340,33 @@ final class Usuario
             }
             throw $e;
         }
+    }
+
+    private function shouldRefreshLastAccess(string $idUsuario): bool
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            return true;
+        }
+
+        $registry = $_SESSION[self::LAST_ACCESS_SESSION_KEY] ?? [];
+        if (!is_array($registry)) {
+            return true;
+        }
+
+        $lastTouch = isset($registry[$idUsuario]) ? (int) $registry[$idUsuario] : 0;
+        return $lastTouch <= 0 || (time() - $lastTouch) >= self::LAST_ACCESS_REFRESH_SECONDS;
+    }
+
+    private function markLastAccessRefresh(string $idUsuario): void
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            return;
+        }
+
+        if (!isset($_SESSION[self::LAST_ACCESS_SESSION_KEY]) || !is_array($_SESSION[self::LAST_ACCESS_SESSION_KEY])) {
+            $_SESSION[self::LAST_ACCESS_SESSION_KEY] = [];
+        }
+
+        $_SESSION[self::LAST_ACCESS_SESSION_KEY][$idUsuario] = time();
     }
 }

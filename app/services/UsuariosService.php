@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../repositories/UsuariosListRepository.php';
 require_once __DIR__ . '/../repositories/EstudantesListRepository.php';
+require_once __DIR__ . '/ExternalUsersCleanupService.php';
 
 final class UsuariosService
 {
@@ -35,6 +36,9 @@ final class UsuariosService
      */
     public function list(array $filters, int $limit, int $offset): array
     {
+        $cleanupService = new ExternalUsersCleanupService($this->connection);
+        $cleanupService->purgeInactiveStudents();
+
         $tipoFilter = trim((string) ($filters['tipo'] ?? ''));
         $perfilFilter = trim((string) ($filters['perfil'] ?? ''));
 

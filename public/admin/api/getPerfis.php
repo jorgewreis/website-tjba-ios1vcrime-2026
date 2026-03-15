@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../../config/config.php';
 require_once __DIR__ . '/../../../config/security.php';
 require_once __DIR__ . '/../../../app/helpers/Conection.php';
+require_once __DIR__ . '/../../../app/models/Usuario.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -11,6 +12,19 @@ try {
     if (!Security::isAuthenticated()) {
         http_response_code(401);
         echo json_encode(['success' => false, 'message' => 'Não autenticado']);
+        exit;
+    }
+
+    $token = Security::getToken();
+    $usuario = new Usuario();
+    $user = ($token !== null && $token !== '') ? $usuario->validarToken($token) : null;
+    if ($user === null) {
+        $_SESSION = [];
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_destroy();
+        }
+        http_response_code(401);
+        echo json_encode(['success' => false, 'message' => 'Sessão expirada']);
         exit;
     }
 

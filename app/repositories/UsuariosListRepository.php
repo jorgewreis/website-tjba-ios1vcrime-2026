@@ -129,10 +129,6 @@ final class UsuariosListRepository
         if (!empty($row['bloqueado_login'])) {
             return 'bloqueado';
         }
-        $ultimoAcesso = $row['ultimo_acesso'] ?? null;
-        if ($ultimoAcesso === null || $ultimoAcesso === '') {
-            return 'pendente';
-        }
         return 'ativo';
     }
 

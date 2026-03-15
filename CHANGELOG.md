@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0142
+
+**Data:** 2026-03-15 16:49:07 | **Commit:** `b6f8e6a` | **Tipo:** `patch`
+
+- fix: correcao de seguranca
+
 ## V. 1.03.0141
 
 **Data:** 2026-03-15 16:37:55 | **Commit:** `f5c1adb` | **Tipo:** `patch`
@@ -3126,6 +3132,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
