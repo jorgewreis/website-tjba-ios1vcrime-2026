@@ -294,7 +294,7 @@ function deriveUsuarioStatus(array $usuario): string
     <div class="card-page">
         <?php if ($mensagemErro !== ''): ?>
         <div class="row table left padding-lr-lg padding-tb-md border-bottom">
-            <p class="status status-cancelled"><?php echo htmlspecialchars($mensagemErro, ENT_QUOTES, 'UTF-8'); ?></p>
+            <p class="status status-cancelled padding-lr-lg"><?php echo htmlspecialchars($mensagemErro, ENT_QUOTES, 'UTF-8'); ?></p>
         </div>
         <?php endif; ?>
 
@@ -351,7 +351,7 @@ function deriveUsuarioStatus(array $usuario): string
             </div>
             <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
                 <div class="col full-line">
-                    <label for="edit-data-nascimento">Data de nascimento <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <label for="edit-data-nascimento">Data de nascimento</label>
                     <input type="date" id="edit-data-nascimento" name="data_nascimento" class="width-md height-md white" max="<?php echo date('Y-m-d'); ?>" value="<?php echo htmlspecialchars($dataNascimentoVal, ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
             </div>
@@ -428,7 +428,6 @@ function deriveUsuarioStatus(array $usuario): string
         var nomeInput = document.getElementById('edit-nome');
         var sobrenomeInput = document.getElementById('edit-sobrenome');
         var emailInput = document.getElementById('edit-email');
-        var dataNascimentoInput = document.getElementById('edit-data-nascimento');
         var statusSelect = document.getElementById('edit-status');
         var cargoSelect = document.getElementById('edit-cargo');
         var setorSelect = document.getElementById('edit-setor');
@@ -524,10 +523,6 @@ function deriveUsuarioStatus(array $usuario): string
         syncCargoToSetor();
         initTextFormatter();
         initEmailValidation();
-        if (dataNascimentoInput) {
-            dataNascimentoInput.addEventListener('input', updateSalvarButton);
-            dataNascimentoInput.addEventListener('change', updateSalvarButton);
-        }
         document.querySelectorAll('input[name="perfil[]"]').forEach(function (cb) {
             cb.addEventListener('change', updateSalvarButton);
         });
