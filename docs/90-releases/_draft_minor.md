@@ -139,4 +139,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Feat: criação de pagina de edit de usuarios** `[66ae9b0]`
 - **fix: correção basica de edit** `[b9ddd65]`
 - **fix: mais correcoes** `[5dd7ecc]`
+- **fix: correcao de status na edicao** `[cf607e3]`
 
