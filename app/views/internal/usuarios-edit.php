@@ -331,7 +331,7 @@ function deriveUsuarioStatus(array $usuario): string
             <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
                 <div class="col">
                     <label for="edit-nome">Nome <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="text" id="edit-nome" name="nome" class="width-md height-md white" placeholder="Nome" required maxlength="100" value="<?php echo $nomeVal; ?>">
+                    <input type="text" id="edit-nome" name="nome" class="width-md height-md white readonly" placeholder="Nome" required maxlength="100" value="<?php echo $nomeVal; ?>" readonly>
                 </div>
                 <div class="col">
                     <label for="edit-sobrenome">Sobrenome <span class="label-hint-obrigatorio">*obrigatório</span></label>
@@ -352,7 +352,7 @@ function deriveUsuarioStatus(array $usuario): string
             <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
                 <div class="col full-line">
                     <label for="edit-data-nascimento">Data de nascimento <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="date" id="edit-data-nascimento" name="data_nascimento" class="width-md height-md white" required max="<?php echo date('Y-m-d'); ?>" value="<?php echo htmlspecialchars($dataNascimentoVal, ENT_QUOTES, 'UTF-8'); ?>">
+                    <input type="date" id="edit-data-nascimento" name="data_nascimento" class="width-md height-md white" max="<?php echo date('Y-m-d'); ?>" value="<?php echo htmlspecialchars($dataNascimentoVal, ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
             </div>
 
