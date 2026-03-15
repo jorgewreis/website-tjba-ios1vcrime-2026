@@ -7,6 +7,7 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 require_once __DIR__ . '/../../helpers/Conection.php';
+require_once __DIR__ . '/../../helpers/DateHelper.php';
 require_once __DIR__ . '/../../../config/security.php';
 
 Security::requireAuthentication();
@@ -47,15 +48,18 @@ $usuario = null;
 $perfisAtuais = [];
 $setorAtual = '';
 $statusAtual = 'ativo';
+$dataNascimentoVal = '';
 
 // Carregar usuário (apenas internos – tabela usuarios)
-$stmt = $connection->prepare('SELECT id_usuario, nome, sobrenome, cpf, email, telefone, cargo, instituicao, cadastro_ativo FROM usuarios WHERE id_usuario = ? LIMIT 1');
+$stmt = $connection->prepare('SELECT id_usuario, nome, sobrenome, cpf, email, telefone, cargo, instituicao, cadastro_ativo, data_nascimento FROM usuarios WHERE id_usuario = ? LIMIT 1');
 $stmt->execute([$idUsuario]);
 $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 if ($usuario === false || empty($usuario['id_usuario'])) {
     header('Location: /frame.php?page=usuarioslist');
     exit;
 }
+
+$dataNascimentoVal = DateHelper::formatForInput($usuario['data_nascimento'] ?? '');
 
 $stmt = $connection->prepare('SELECT perfil FROM usuario_perfil WHERE usuario = ? AND perfil IS NOT NULL');
 $stmt->execute([$idUsuario]);
@@ -126,6 +130,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $sobrenome = trim((string) ($_POST['sobrenome'] ?? ''));
             $email = trim((string) ($_POST['email'] ?? ''));
             $telefone = trim((string) ($_POST['telefone'] ?? ''));
+            $dataNascimentoRaw = trim((string) ($_POST['data_nascimento'] ?? ''));
+            $dataNascimentoIso = DateHelper::normalizeIsoDate($dataNascimentoRaw);
+            $dataNascimentoVal = $dataNascimentoRaw;
             $cargo = trim((string) ($_POST['cargo'] ?? ''));
             $setorLabel = trim((string) ($_POST['setor'] ?? ''));
             $status = trim((string) ($_POST['status'] ?? 'ativo'));
@@ -137,6 +144,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $mensagemErro = 'Nome e sobrenome são obrigatórios.';
             } elseif ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $mensagemErro = 'E-mail obrigatório e válido.';
+            } elseif ($dataNascimentoIso === null) {
+                $mensagemErro = 'Informe a data de nascimento no formato AAAA-MM-DD.';
             } else {
                 if ($cargo === 'Magistrada' && $setorLabel === '') {
                     $setorLabel = 'Gabinete';
@@ -145,10 +154,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 try {
                     $connection->beginTransaction();
 
-                    $stmt = $connection->prepare('UPDATE usuarios SET nome = ?, sobrenome = ?, email = ?, telefone = ?, cargo = ?, instituicao = ?, cadastro_ativo = ?, updated_at = NOW() WHERE id_usuario = ?');
+                    $stmt = $connection->prepare('UPDATE usuarios SET nome = ?, sobrenome = ?, data_nascimento = ?, email = ?, telefone = ?, cargo = ?, instituicao = ?, cadastro_ativo = ?, updated_at = NOW() WHERE id_usuario = ?');
                     $stmt->execute([
                         $nome,
                         $sobrenome,
+                        $dataNascimentoIso,
                         $email,
                         $telefone !== '' ? $telefone : null,
                         $cargo !== '' ? $cargo : null,
@@ -327,6 +337,12 @@ $perfisValidos = ['ESTAGIARIO', 'SERVIDOR', 'DIRETORA', 'MAGISTRADA', 'ADMIN'];
                     <input type="text" id="edit-telefone" name="telefone" class="width-sm height-md white" placeholder="(00) 00000-0000" maxlength="50" value="<?php echo htmlspecialchars($telefoneVal, ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
             </div>
+            <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
+                <div class="col full-line">
+                    <label for="edit-data-nascimento">Data de nascimento <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <input type="date" id="edit-data-nascimento" name="data_nascimento" class="width-md height-md white" required max="<?php echo date('Y-m-d'); ?>" value="<?php echo htmlspecialchars($dataNascimentoVal, ENT_QUOTES, 'UTF-8'); ?>">
+                </div>
+            </div>
 
             <div class="row table subtitle padding-lr-lg padding-tb-lg border-bottom">Status e dados complementares</div>
             <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
@@ -400,6 +416,7 @@ $perfisValidos = ['ESTAGIARIO', 'SERVIDOR', 'DIRETORA', 'MAGISTRADA', 'ADMIN'];
         var nomeInput = document.getElementById('edit-nome');
         var sobrenomeInput = document.getElementById('edit-sobrenome');
         var emailInput = document.getElementById('edit-email');
+        var dataNascimentoInput = document.getElementById('edit-data-nascimento');
         var cargoSelect = document.getElementById('edit-cargo');
         var setorSelect = document.getElementById('edit-setor');
         var salvarBtn = document.getElementById('salvar-btn');
@@ -461,8 +478,10 @@ $perfisValidos = ['ESTAGIARIO', 'SERVIDOR', 'DIRETORA', 'MAGISTRADA', 'ADMIN'];
             var nome = (nomeInput && nomeInput.value) ? nomeInput.value.trim() : '';
             var sobrenome = (sobrenomeInput && sobrenomeInput.value) ? sobrenomeInput.value.trim() : '';
             var email = (emailInput && emailInput.value) ? emailInput.value.trim() : '';
+            var dataNascimento = (dataNascimentoInput && dataNascimentoInput.value) ? dataNascimentoInput.value : '';
             if (!nome || !sobrenome) return false;
             if (!email || !validarEmail(email)) return false;
+            if (!dataNascimento) return false;
             return true;
         }
 
@@ -490,6 +509,10 @@ $perfisValidos = ['ESTAGIARIO', 'SERVIDOR', 'DIRETORA', 'MAGISTRADA', 'ADMIN'];
         syncCargoToSetor();
         initTextFormatter();
         initEmailValidation();
+        if (dataNascimentoInput) {
+            dataNascimentoInput.addEventListener('input', updateSalvarButton);
+            dataNascimentoInput.addEventListener('change', updateSalvarButton);
+        }
         updateSalvarButton();
     })();
     </script>

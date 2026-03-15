@@ -7,6 +7,7 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 require_once __DIR__ . '/../../helpers/Conection.php';
+require_once __DIR__ . '/../../helpers/DateHelper.php';
 require_once __DIR__ . '/../../../config/security.php';
 
 Security::requireAuthentication();
@@ -59,6 +60,7 @@ $formValues = [
     'cargo'   => '',
     'setor'   => '',
     'perfil'  => '',
+    'data_nascimento' => '',
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -71,6 +73,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $cpf = preg_replace('/\D/', '', trim((string) ($_POST['cpf'] ?? '')));
         $email = trim((string) ($_POST['email'] ?? ''));
         $telefone = trim((string) ($_POST['telefone'] ?? ''));
+        $dataNascimentoRaw = trim((string) ($_POST['data_nascimento'] ?? ''));
+        $dataNascimentoIso = DateHelper::normalizeIsoDate($dataNascimentoRaw);
         $senha = (string) ($_POST['senha'] ?? '');
         $senhaConfirm = (string) ($_POST['senha_confirm'] ?? '');
         $cargo = trim((string) ($_POST['cargo'] ?? ''));
@@ -92,6 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'cargo'    => $cargo,
             'setor'    => $setorLabel,
             'perfil'   => $perfil,
+            'data_nascimento' => $dataNascimentoRaw,
         ];
 
         if ($nome === '' || $sobrenome === '') {
@@ -100,6 +105,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $mensagemErro = 'CPF inválido ou incompleto.';
         } elseif ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $mensagemErro = 'E-mail obrigatório e válido.';
+        } elseif ($dataNascimentoIso === null) {
+            $mensagemErro = 'Informe a data de nascimento no formato AAAA-MM-DD.';
         } elseif (strlen($senha) < 10 || !preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{10,}$/', $senha)) {
             $mensagemErro = 'Senha deve ter no mínimo 10 caracteres, 1 maiúscula, 1 minúscula, 1 número e 1 símbolo.';
         } elseif ($senha !== $senhaConfirm) {
@@ -123,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             id_usuario, nome, sobrenome, data_nascimento, cargo, instituicao, cpf, telefone, email,
                             senha_hash, meta, ultimo_acesso, token_acesso, token_expira, cadastro_ativo, created_at, updated_at
                         ) VALUES (
-                            ?, ?, ?, '-', ?, ?, ?, ?, ?,
+                            ?, ?, ?, ?, ?, ?, ?, ?, ?,
                             ?, '-', NULL, NULL, NULL, 0, NOW(), NOW()
                         )
                     ");
@@ -131,6 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $idUsuario,
                         $nome,
                         $sobrenome,
+                        $dataNascimentoIso,
                         $cargo !== '' ? $cargo : null,
                         $setorLabel !== '' ? $setorLabel : '-',
                         $cpfFormatado,
@@ -276,6 +284,12 @@ $csrfToken = Security::generateCSRFToken();
                 </div>
             </div>
             <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
+                <div class="col full-line">
+                    <label for="create-data-nascimento">Data de nascimento <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <input type="date" id="create-data-nascimento" name="data_nascimento" class="width-md height-md white" required max="<?php echo date('Y-m-d'); ?>" value="<?php echo htmlspecialchars($formValues['data_nascimento'], ENT_QUOTES, 'UTF-8'); ?>">
+                </div>
+            </div>
+            <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
                 <div class="col">
                     <label for="create-senha">Senha <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="password" id="create-senha" name="senha" class="width-md height-md white" placeholder="Mín. 10 caracteres, 1 maiúscula, 1 minúscula, 1 número, 1 símbolo" required minlength="10" maxlength="255">
@@ -364,6 +378,7 @@ $csrfToken = Security::generateCSRFToken();
         var senhaConfirmInput = document.getElementById('create-senha-confirm');
         var cargoSelect = document.getElementById('create-cargo');
         var setorSelect = document.getElementById('create-setor');
+        var dataNascimentoInput = document.getElementById('create-data-nascimento');
         var perfilSelect = document.getElementById('create-perfil');
         var cadastrarBtn = document.getElementById('cadastrar-btn');
         var voltarBtn = document.getElementById('voltar-btn');
@@ -496,6 +511,11 @@ $csrfToken = Security::generateCSRFToken();
             }
         }
 
+        if (dataNascimentoInput) {
+            dataNascimentoInput.addEventListener('input', updateCadastrarButton);
+            dataNascimentoInput.addEventListener('change', updateCadastrarButton);
+        }
+
         function isFormValidForSubmit() {
             var nome = (nomeInput && nomeInput.value) ? nomeInput.value.trim() : '';
             var sobrenome = (sobrenomeInput && sobrenomeInput.value) ? sobrenomeInput.value.trim() : '';
@@ -503,10 +523,12 @@ $csrfToken = Security::generateCSRFToken();
             var email = (emailInput && emailInput.value) ? emailInput.value.trim() : '';
             var senha = (senhaInput && senhaInput.value) ? senhaInput.value : '';
             var conf = (senhaConfirmInput && senhaConfirmInput.value) ? senhaConfirmInput.value : '';
+            var dataNascimento = (dataNascimentoInput && dataNascimentoInput.value) ? dataNascimentoInput.value : '';
             if (!nome || !sobrenome) return false;
             if (cpf.replace(/\D/g, '').length !== 11 || !validarCPF(cpf)) return false;
             if (!email || !validarEmail(email)) return false;
             if (!validarSenha(senha)) return false;
+            if (!dataNascimento) return false;
             return senha === conf;
         }
 
