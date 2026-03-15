@@ -133,4 +133,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix: mais ajustes** `[c98f32d]`
 - **fix: correçao de erros** `[58bbc56]`
 - **Fix: página de usuários criada** `[e5d33ef]`
+- **Feat: criação de página edit de usuarios** `[c16815a]`
 
