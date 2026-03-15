@@ -236,7 +236,7 @@ if ($totalPages > 0) {
         <!-- FILTERS -->
         <div class="row table between padding-tb-lg padding-lr-md border-bottom">
             
-            <div class="row left row-gap-10">
+            <div class="row left row-gap-10 fit">
                 <!-- FILTER FINALIDADE -->
                 <div class="col">
                     <label for="filter-tipo">Filtrar por finalidade</label>
@@ -299,7 +299,7 @@ if ($totalPages > 0) {
                 <div class="row table between padding-lr-md">
                     
                     <!-- DIV LEFT -->
-                    <div class="row left">
+                    <div class="row left fit">
                         <!-- TOGGLE -->
                         <div class="col">
                             <label class="button-table" title="Expandir detalhes">
@@ -327,7 +327,7 @@ if ($totalPages > 0) {
                     </div>
 
                     <!-- DIV RIGHT -->
-                    <div class="row right">
+                    <div class="row right fit">
 
                         <!-- BUTTONS -->
                         <div class="col button-table button-edit" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" title="Editar">
@@ -431,7 +431,7 @@ if ($totalPages > 0) {
                         $temComplemento = in_array($stTipo, ['aguardando_gerar_pdf', 'aguardando_envio', 'aguardando_informacoes', 'aguardando_devolucao'], true);
                     ?>
                     <div class="row table between padding-tb-sm border-top" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
-                        <div class="row table left row-gap-10">
+                        <div class="row table left row-gap-10 fit">
                             <div class="status status-pending padding-lr-lg"><?php echo htmlspecialchars($stLabel); ?></div>
                             <?php if ($stTipo === 'aguardando_gerar_pdf'): ?>
                                 <div class="col">
@@ -467,7 +467,7 @@ if ($totalPages > 0) {
                                 </div>
                             <?php endif; ?>
                         </div>
-                        <div class="col table right">
+                        <div class="col table right fit">
                             <button type="button" class="btn btn-primary padding-lr-lg row-gap-10" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?>">
                                 <span class="value-button">Concluir</span>
                             </button>

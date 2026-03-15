@@ -477,7 +477,7 @@
         width: 200px;
     }
     .col.parte-nome {
-        width: calc(200px + 3vw);
+        width: calc(240px + 3vw);
     }
     .col.parte-tipo {
         width: calc(160px + 3vw);

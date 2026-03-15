@@ -12,6 +12,17 @@ require_once __DIR__ . '/../../../config/security.php';
 
 $connection = Conection::getInstance()->getConnection();
 
+/** Barra "Row action" (Novo cadastro) apenas para admin, magistrada e diretora */
+$perfisComAcessoRowAction = ['ADMIN', 'MAGISTRADA', 'DIRETORA'];
+$userPerfis = [];
+$userId = Security::getUserId();
+if ($userId !== null && $userId !== '') {
+    $stmt = $connection->prepare('SELECT DISTINCT UPPER(TRIM(perfil)) AS perfil FROM usuario_perfil WHERE usuario = ? AND perfil IS NOT NULL');
+    $stmt->execute([$userId]);
+    $userPerfis = $stmt->fetchAll(PDO::FETCH_COLUMN);
+}
+$showRowAction = count(array_intersect($userPerfis, $perfisComAcessoRowAction)) > 0;
+
 $routePage = trim((string) ($_GET['page'] ?? 'usuarioslist'));
 $tipoFilter = trim((string) ($_GET['tipo'] ?? ''));
 $perfilFilter = trim((string) ($_GET['perfil'] ?? ''));
@@ -82,7 +93,7 @@ $statusLabels = [
     'inativo'  => 'Inativo',
 ];
 $statusClasses = [
-    'ativo'    => 'status-current',
+    'ativo'    => 'status-success',
     'pendente' => 'status-pending',
     'bloqueado' => 'status-cancelled',
     'inativo'  => 'status-cancelled',
@@ -119,12 +130,25 @@ $statusClasses = [
     </div>
 
     <div class="card-page">
+        <?php
+        $flashSuccess = $_SESSION['usuarios_create_success'] ?? '';
+        if ($flashSuccess !== '') {
+            unset($_SESSION['usuarios_create_success']);
+        }
+        ?>
+        <?php if ($flashSuccess !== ''): ?>
+        <div class="row filter padding-lr-lg padding-tb-md">
+            <div class="col">
+                <p class="status status-current"><?php echo htmlspecialchars($flashSuccess, ENT_QUOTES, 'UTF-8'); ?></p>
+            </div>
+        </div>
+        <?php endif; ?>
 
         <!-- FILTROS -->
         <form method="get" id="form-filters" style="width: 100%">
             <input type="hidden" name="page" value="<?php echo htmlspecialchars($routePage); ?>">
             <div class="row table between padding-tb-lg padding-lr-md border-bottom full-line">
-                <div class="row left row-gap-10">
+                <div class="row left row-gap-10 fit">
                     <div class="col">
                         <label for="filter-tipo">Tipo</label>
                         <select class="width-md height-md white" id="filter-tipo" name="tipo">
@@ -155,7 +179,7 @@ $statusClasses = [
                         </select>
                     </div>
                 </div>
-                <div class="row right">
+                <div class="row right fit">
                     <div class="col">
                         <label for="filter-perfil">-</label>
                         <button type="submit" class="btn btn-primary">Consultar</button>
@@ -164,10 +188,12 @@ $statusClasses = [
             </div>
         </form>
 
-        <!-- ROW ACTIONS -->
+        <?php if ($showRowAction): ?>
+        <!-- ROW ACTIONS (apenas admin, magistrada, diretora) -->
         <div class="row table buttons right padding-lr-md padding-tb-md row-gap-10">
             <button type="button" class="btn btn-primary" id="novo-cadastro-btn">Novo cadastro</button>
         </div>
+        <?php endif; ?>
 
         <!-- SUBTITLE TABLE -->
         <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Lista de usuários</div>
@@ -186,7 +212,7 @@ $statusClasses = [
                     $cargo = trim($row['cargo'] ?? '');
                     $editId = $row['id_usuario'] ?? $row['id'] ?? '';
                     ?>
-                    <div class="row table between padding-lr-md padding-tb-md border-bottom">
+                    <div class="row table between padding-lr-sm padding-tb-sm border-bottom">
                         <div class="row table left fit">
                             <div class="col parte-nome text-ellipsis">
                                 <span class="minor-info">Nome</span>
@@ -210,7 +236,6 @@ $statusClasses = [
                                 <button type="button" class="" title="Editar" data-edit-id="<?php echo htmlspecialchars($editId); ?>"><i class="fi fi-rr-file-edit"></i></button>
                             </div>
                             <div class="col">
-                                <span class="minor-info">Status</span>
                                 <span class="major-info"><span class="width-sm status <?php echo htmlspecialchars($statusClass); ?>"><?php echo htmlspecialchars($statusLabel); ?></span></span>
                             </div>
                         </div>

@@ -138,7 +138,7 @@ if ($totalPages > 0) {
 
         <!-- FILTERS -->
         <div class="row table between padding-tb-lg padding-lr-md border-bottom">
-            <div class="row left row-gap-10">
+            <div class="row left row-gap-10 fit">
                 <div class="col">
                     <label for="filter-status">Filtrar por status</label>
                     <select class="width-md height-md" id="filter-status">
@@ -150,7 +150,7 @@ if ($totalPages > 0) {
                     </select>
                 </div>
             </div>
-            <div class="col right">
+            <div class="col right fit">
                 <div class="col">
                     <label for="items-per-page">Itens por página</label>
                     <select class="width-sm height-md" id="items-per-page">
@@ -195,7 +195,7 @@ if ($totalPages > 0) {
                 <!-- TAREFA -->
                 <div class="row table between padding-lr-md">
                     <!-- DIV LEFT -->
-                    <div class="row left">
+                    <div class="row left fit">
                         <div class="col">
                             <label class="button-table" title="Expandir detalhes">
                                 <input type="radio" name="open-subtask" value="<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>" aria-controls="subtask-<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>" aria-expanded="false" />
@@ -226,7 +226,7 @@ if ($totalPages > 0) {
                         <?php endif; ?>
                     </div>
                     <!-- DIV RIGHT -->
-                    <div class="row right">
+                    <div class="row right fit">
                         <div class="col button-table button-edit" data-medida-id="<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>" title="Editar">
                             <i class="fi fi-rr-file-edit"></i>
                         </div>
@@ -274,10 +274,10 @@ if ($totalPages > 0) {
                         $stLabel = $subtarefaLabels[$stTipo] ?? 'Subtarefa';
                     ?>
                         <div class="row table between padding-tb-sm border-top full-line" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
-                            <div class="row table left row-gap-10">
+                            <div class="row table left row-gap-10 fit">
                                 <div class="status status-pending padding-lr-lg"><?php echo htmlspecialchars($stLabel); ?></div>
                             </div>
-                            <div class="col table right">
+                            <div class="col table right fit">
                                 <button type="button" class="btn btn-primary padding-lr-lg row-gap-10 btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($stLabel, ENT_QUOTES); ?>"><span class="value-button">Concluir</span></button>
                             </div>
                         </div>

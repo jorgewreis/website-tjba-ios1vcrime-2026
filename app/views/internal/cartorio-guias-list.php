@@ -208,7 +208,7 @@ if ($totalPages > 0) {
 
         <!-- FILTERS -->
         <div class="row table between padding-tb-lg padding-lr-md border-bottom">
-            <div class="row left row-gap-10">
+            <div class="row left row-gap-10 fit">
                 <div class="col">
                     <label for="filter-tipo">Filtrar por tipo</label>
                     <select class="width-md height-md" id="filter-tipo">
@@ -231,7 +231,7 @@ if ($totalPages > 0) {
                     </select>
                 </div>
             </div>
-            <div class="col right">
+            <div class="col right fit">
                 <div class="col">
                     <label for="items-per-page">Itens por página</label>
                     <select class="width-sm height-md" id="items-per-page">
@@ -254,7 +254,7 @@ if ($totalPages > 0) {
                 <!-- TAREFA -->
                 <div class="row table between padding-lr-md">
                     <!-- DIV LEFT -->
-                    <div class="row left">
+                    <div class="row left fit">
                         <div class="col">
                             <label class="button-table" title="Expandir detalhes">
                                 <input type="radio" name="open-subtask" value="<?php echo htmlspecialchars($idGuia, ENT_QUOTES); ?>" aria-controls="subtask-<?php echo htmlspecialchars($idGuia); ?>" aria-expanded="false" />
@@ -280,7 +280,7 @@ if ($totalPages > 0) {
                         </div>
                     </div>
                     <!-- DIV RIGHT -->
-                    <div class="row right">
+                    <div class="row right fit">
                         <div class="col button-table button-edit" data-guia-id="<?php echo htmlspecialchars($idGuia, ENT_QUOTES); ?>" title="Editar">
                             <i class="fi fi-rr-file-edit"></i>
                         </div>
@@ -373,7 +373,7 @@ if ($totalPages > 0) {
                         $isOrdem7 = ($stTipo === GuiasSubtarefasRepository::TIPO_ORDEM_7);
                     ?>
                     <div class="row table between padding-tb-sm border-top full-line" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
-                        <div class="row table left row-gap-10">
+                        <div class="row table left row-gap-10 fit">
                             <div class="status status-pending padding-lr-lg"><?php echo htmlspecialchars($stLabel); ?></div>
                             <?php if ($isOrdem1): ?>
                                 <?php $rowDataFato = $row['data_fato'] ?? ''; $rowDiasMulta = isset($row['dias_multa']) && $row['dias_multa'] !== null ? (int) $row['dias_multa'] : ''; ?>
