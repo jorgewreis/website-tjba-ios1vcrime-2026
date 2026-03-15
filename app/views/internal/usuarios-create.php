@@ -212,6 +212,7 @@ $csrfToken = Security::generateCSRFToken();
         <link rel="stylesheet" href="/assets/css/shared/table.css">
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
         <?php include __DIR__ . '/_toast_script.php'; ?>
+        <script src="/assets/js/shared/text-formatter.js"></script>
     </head>
 <body class="page-internal">
 
@@ -393,17 +394,16 @@ $csrfToken = Security::generateCSRFToken();
 
         if (cargoSelect) cargoSelect.addEventListener('change', syncCargoToPerfilAndSetor);
 
-        function textFormatterTitle(value) {
-            if (typeof value !== 'string') return '';
-            return value.trim().replace(/\s+/g, ' ').split(' ').map(function (word) {
-                return word.length === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-            }).join(' ');
-        }
-
+        /** Aplica o formatador padrão do sistema (TextFormatter.formatProperName) em nome e sobrenome no blur. */
         function initTextFormatter() {
             [nomeInput, sobrenomeInput].forEach(function (el) {
                 if (!el) return;
-                el.addEventListener('blur', function () { this.value = textFormatterTitle(this.value); updateCadastrarButton(); });
+                el.addEventListener('blur', function () {
+                    if (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
+                        this.value = TextFormatter.formatProperName(this.value, 100);
+                    }
+                    updateCadastrarButton();
+                });
                 el.addEventListener('input', function () { updateCadastrarButton(); });
             });
         }
