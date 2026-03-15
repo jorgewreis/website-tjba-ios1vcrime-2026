@@ -429,6 +429,7 @@ function deriveUsuarioStatus(array $usuario): string
         var sobrenomeInput = document.getElementById('edit-sobrenome');
         var emailInput = document.getElementById('edit-email');
         var dataNascimentoInput = document.getElementById('edit-data-nascimento');
+        var statusSelect = document.getElementById('edit-status');
         var cargoSelect = document.getElementById('edit-cargo');
         var setorSelect = document.getElementById('edit-setor');
         var salvarBtn = document.getElementById('salvar-btn');
@@ -452,7 +453,11 @@ function deriveUsuarioStatus(array $usuario): string
             }
         }
 
-        if (cargoSelect) cargoSelect.addEventListener('change', syncCargoToSetor);
+        if (cargoSelect) {
+            cargoSelect.addEventListener('change', function () { syncCargoToSetor(); updateSalvarButton(); });
+        }
+        if (setorSelect) setorSelect.addEventListener('change', updateSalvarButton);
+        if (statusSelect) statusSelect.addEventListener('change', updateSalvarButton);
 
         function initTextFormatter() {
             [nomeInput, sobrenomeInput].forEach(function (el) {
@@ -525,6 +530,9 @@ function deriveUsuarioStatus(array $usuario): string
             dataNascimentoInput.addEventListener('input', updateSalvarButton);
             dataNascimentoInput.addEventListener('change', updateSalvarButton);
         }
+        document.querySelectorAll('input[name="perfil[]"]').forEach(function (cb) {
+            cb.addEventListener('change', updateSalvarButton);
+        });
         updateSalvarButton();
     })();
     </script>
