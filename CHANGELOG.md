@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0136
+
+**Data:** 2026-03-15 16:25:09 | **Commit:** `cf607e3` | **Tipo:** `patch`
+
+- fix: correcao de status na edicao
+
 ## V. 1.03.0135
 
 **Data:** 2026-03-15 16:22:20 | **Commit:** `5dd7ecc` | **Tipo:** `patch`
@@ -3090,6 +3096,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
