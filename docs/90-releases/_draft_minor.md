@@ -144,4 +144,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix: pequenos ajustes** `[d245e7f]`
 - **fix: correção de data** `[27751d8]`
 - **fix: pequenos ajustes** `[7b643f2]`
+- **fix: nota tentativa de correcao** `[f5c1adb]`
 
