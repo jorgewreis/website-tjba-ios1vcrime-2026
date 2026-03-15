@@ -259,7 +259,7 @@ $csrfToken = Security::generateCSRFToken();
                 </div>
                 <div class="col">
                     <label for="create-email">E-mail *obrigatório</label>
-                    <input type="email" id="create-email" name="email" class="width-lg height-md white" placeholder="email@exemplo.com" required maxlength="255" value="<?php echo htmlspecialchars($formValues['email'], ENT_QUOTES, 'UTF-8'); ?>">
+                    <input type="email" id="create-email" name="email" class="width-lg height-md white" placeholder="email@exemplo.com" required maxlength="255" value="<?php echo htmlspecialchars($formValues['email'], ENT_QUOTES, 'UTF-8'); ?>">                    
                     <span class="error-message" id="create-email-error" aria-live="polite"></span>
                 </div>
             </div>

@@ -707,3 +707,21 @@ input[type="radio"] {
 .width-full {
     width: 100%;
 }
+
+
+.error-message {
+    position: absolute;
+    display: block;
+    background-color: var(--color-gray-000);
+    padding: 5px 10px;
+    font-size: 10px;
+    font-family: "Poppins", sans-serif;
+    color: var(--color-text-danger);
+    margin-top: 5px;
+    margin-left: 13px;
+    top: 70px;
+    right: 0;
+    border-radius: 6px;
+    box-shadow: 0 0 2px 1px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--bs-danger);
+}

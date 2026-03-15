@@ -236,6 +236,10 @@
             display: none;
         }
 
+    .col.relative {
+        position: relative;
+    }
+
     .row-right {
         display: 100%;
 

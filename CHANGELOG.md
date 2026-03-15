@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0132
+
+**Data:** 2026-03-15 15:33:28 | **Commit:** `032c695` | **Tipo:** `patch`
+
+- fix: correção de estilo
+
 ## V. 1.03.0131
 
 **Data:** 2026-03-15 15:21:48 | **Commit:** `7adf1c7` | **Tipo:** `patch`
@@ -3066,6 +3072,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
