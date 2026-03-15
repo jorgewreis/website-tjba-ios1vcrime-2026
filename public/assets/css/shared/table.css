@@ -526,6 +526,9 @@
         display: flex;
         width: calc(200px + 3vw);
     }
+    .col.parte-nome {
+        width: calc(3000px + 3vw);
+    }
 
     .row.allocate-users {
         margin: 0 0 0 5px;

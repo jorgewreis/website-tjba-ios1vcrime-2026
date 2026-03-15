@@ -28,7 +28,7 @@ if (function_exists('mb_internal_encoding')) mb_internal_encoding('UTF-8');
         <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Dados</div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
-                <label for="nome">Nome *</label>
+                <label for="nome">Nome <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="width-xl height-md white" id="nome" required>
             </div>
         </div>

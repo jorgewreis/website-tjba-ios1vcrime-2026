@@ -105,4 +105,62 @@ final class UsuariosService
         }
         return 3;
     }
+
+    /**
+     * Contagens por tipo (interno / externo) para os filtros.
+     * Respeita o filtro de perfil atual.
+     *
+     * @return array{interno: int, externo: int}
+     */
+    public function getTipoCounts(array $filters): array
+    {
+        $perfilFilter = trim((string) ($filters['perfil'] ?? ''));
+        $repoServidores = new UsuariosListRepository($this->connection);
+        $repoEstudantes = new EstudantesListRepository($this->connectionEstudantes, $this->connection);
+
+        $interno = 0;
+        $externo = 0;
+
+        if ($perfilFilter === '') {
+            $interno = $repoServidores->countServidores(null);
+            $externo = $repoEstudantes->count();
+        } elseif ($perfilFilter === 'estudante') {
+            $externo = $repoEstudantes->count();
+        } else {
+            $perfilForServ = $repoServidores::PERFIL_MAP[$perfilFilter] ?? null;
+            if ($perfilForServ !== null) {
+                $interno = $repoServidores->countServidores($perfilFilter);
+            }
+        }
+
+        return ['interno' => $interno, 'externo' => $externo];
+    }
+
+    /**
+     * Contagens por perfil para os filtros.
+     * Respeita o filtro de tipo atual.
+     *
+     * @return array<string, int> chaves: estagiario, servidor, diretora, magistrada, admin, estudante
+     */
+    public function getPerfilCounts(array $filters): array
+    {
+        $tipoFilter = trim((string) ($filters['tipo'] ?? ''));
+        $repoServidores = new UsuariosListRepository($this->connection);
+        $repoEstudantes = new EstudantesListRepository($this->connectionEstudantes, $this->connection);
+
+        $perfilOptions = ['estagiario', 'servidor', 'diretora', 'magistrada', 'admin', 'estudante'];
+        $counts = array_fill_keys($perfilOptions, 0);
+
+        if ($tipoFilter !== 'externo') {
+            $byPerfil = $repoServidores->countServidoresByPerfil();
+            foreach ($byPerfil as $key => $n) {
+                $counts[$key] = $n;
+            }
+        }
+        if ($tipoFilter !== 'interno') {
+            $counts['estudante'] = $repoEstudantes->count();
+        }
+
+        return $counts;
+    }
 }

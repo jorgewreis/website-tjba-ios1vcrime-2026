@@ -86,6 +86,9 @@ $documentsLabel = $totalDocuments === 1 ? 'usuário' : 'usuários';
 $pagesLabel = $totalPages === 1 ? 'página' : 'páginas';
 $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
 
+$tipoCounts = $service->getTipoCounts($filters);
+$perfilCounts = $service->getPerfilCounts($filters);
+
 $statusLabels = [
     'ativo'    => 'Ativo',
     'pendente' => 'Pendente',
@@ -132,14 +135,19 @@ $statusClasses = [
     <div class="card-page">
         <?php
         $flashSuccess = $_SESSION['usuarios_create_success'] ?? '';
+        $flashEdit = $_SESSION['usuarios_edit_message'] ?? '';
         if ($flashSuccess !== '') {
             unset($_SESSION['usuarios_create_success']);
         }
+        if ($flashEdit !== '') {
+            unset($_SESSION['usuarios_edit_message']);
+        }
+        $flashMessage = $flashSuccess !== '' ? $flashSuccess : $flashEdit;
         ?>
-        <?php if ($flashSuccess !== ''): ?>
+        <?php if ($flashMessage !== ''): ?>
         <div class="row filter padding-lr-lg padding-tb-md">
             <div class="col">
-                <p class="status status-current"><?php echo htmlspecialchars($flashSuccess, ENT_QUOTES, 'UTF-8'); ?></p>
+                <p class="status status-current padding-lr-lg"><?php echo htmlspecialchars($flashMessage, ENT_QUOTES, 'UTF-8'); ?></p>
             </div>
         </div>
         <?php endif; ?>
@@ -153,20 +161,36 @@ $statusClasses = [
                         <label for="filter-tipo">Tipo</label>
                         <select class="width-md height-md white" id="filter-tipo" name="tipo">
                             <option value=""<?php echo $tipoFilter === '' ? ' selected' : ''; ?>>Todos</option>
-                            <option value="interno"<?php echo $tipoFilter === 'interno' ? ' selected' : ''; ?>>Interno</option>
-                            <option value="externo"<?php echo $tipoFilter === 'externo' ? ' selected' : ''; ?>>Externo</option>
+                            <option value="interno"<?php echo $tipoFilter === 'interno' ? ' selected' : ''; ?>>
+                                Interno (<?php echo (int) ($tipoCounts['interno'] ?? 0); ?>)
+                            </option>
+                            <option value="externo"<?php echo $tipoFilter === 'externo' ? ' selected' : ''; ?>>
+                                Externo (<?php echo (int) ($tipoCounts['externo'] ?? 0); ?>)
+                            </option>
                         </select>
                     </div>
                     <div class="col">
                         <label for="filter-perfil">Perfil</label>
                         <select class="width-md height-md white" id="filter-perfil" name="perfil">
                             <option value=""<?php echo $perfilFilter === '' ? ' selected' : ''; ?>>Todos</option>
-                            <option value="estagiario"<?php echo $perfilFilter === 'estagiario' ? ' selected' : ''; ?>>Estagiário</option>
-                            <option value="servidor"<?php echo $perfilFilter === 'servidor' ? ' selected' : ''; ?>>Servidor</option>
-                            <option value="diretora"<?php echo $perfilFilter === 'diretora' ? ' selected' : ''; ?>>Diretora</option>
-                            <option value="magistrada"<?php echo $perfilFilter === 'magistrada' ? ' selected' : ''; ?>>Magistrada</option>
-                            <option value="admin"<?php echo $perfilFilter === 'admin' ? ' selected' : ''; ?>>Admin</option>
-                            <option value="estudante"<?php echo $perfilFilter === 'estudante' ? ' selected' : ''; ?>>Estudante</option>
+                            <option value="estagiario"<?php echo $perfilFilter === 'estagiario' ? ' selected' : ''; ?>>
+                                Estagiário (<?php echo (int) ($perfilCounts['estagiario'] ?? 0); ?>)
+                            </option>
+                            <option value="servidor"<?php echo $perfilFilter === 'servidor' ? ' selected' : ''; ?>>
+                                Servidor (<?php echo (int) ($perfilCounts['servidor'] ?? 0); ?>)
+                            </option>
+                            <option value="diretora"<?php echo $perfilFilter === 'diretora' ? ' selected' : ''; ?>>
+                                Diretora (<?php echo (int) ($perfilCounts['diretora'] ?? 0); ?>)
+                            </option>
+                            <option value="magistrada"<?php echo $perfilFilter === 'magistrada' ? ' selected' : ''; ?>>
+                                Magistrada (<?php echo (int) ($perfilCounts['magistrada'] ?? 0); ?>)
+                            </option>
+                            <option value="admin"<?php echo $perfilFilter === 'admin' ? ' selected' : ''; ?>>
+                                Admin (<?php echo (int) ($perfilCounts['admin'] ?? 0); ?>)
+                            </option>
+                            <option value="estudante"<?php echo $perfilFilter === 'estudante' ? ' selected' : ''; ?>>
+                                Estudante (<?php echo (int) ($perfilCounts['estudante'] ?? 0); ?>)
+                            </option>
                         </select>
                     </div>
                     <div class="col">

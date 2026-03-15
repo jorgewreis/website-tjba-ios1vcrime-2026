@@ -45,7 +45,7 @@ $instituicoes = $instituicoesList['rows'] ?? [];
         <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Dados do vínculo</div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
-                <label for="parte_id">Pessoa (parte) *</label>
+                <label for="parte_id">Pessoa (parte) <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <select class="width-xl height-md white" id="parte_id" required>
                     <option value="">— Selecione a pessoa —</option>
                     <?php foreach ($pessoas as $p): ?>
@@ -61,7 +61,7 @@ $instituicoes = $instituicoesList['rows'] ?? [];
                 <button type="button" class="btn btn-secondary-outline" style="margin-top:4px;" id="btn-buscar-pessoa">Abrir lista de pessoas</button>
             </div>
             <div class="col">
-                <label for="instituicao_id">Instituição *</label>
+                <label for="instituicao_id">Instituição <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <select class="width-xl height-md white" id="instituicao_id" required>
                     <option value="">— Selecione a instituição —</option>
                     <?php foreach ($instituicoes as $i): ?>
@@ -88,7 +88,7 @@ $instituicoes = $instituicoesList['rows'] ?? [];
                 <input type="text" class="width-md height-md white" id="profissao" placeholder="Ex: Policial">
             </div>
             <div class="col">
-                <label for="cargo_funcao">Cargo / Função *</label>
+                <label for="cargo_funcao">Cargo / Função <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="width-md height-md white" id="cargo_funcao" placeholder="Ex: Investigador">
             </div>
         </div>

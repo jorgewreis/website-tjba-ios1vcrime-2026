@@ -81,7 +81,7 @@ if (!empty($vinculo['instituicao_id'])) {
         </div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
-                <label for="data_inclusao">Data de inclusão *</label>
+                <label for="data_inclusao">Data de inclusão <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="date" class="width-md height-md white" id="data_inclusao" value="<?php echo htmlspecialchars($vinculo['data_inclusao'] ?? ''); ?>" required>
             </div>
             <div class="col">

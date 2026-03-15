@@ -54,13 +54,13 @@ $polosValidos = ['ativo' => 'Ativo', 'passivo' => 'Passivo', 'terceiros' => 'Ter
         <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Parte</div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
-                <label for="parte-id">ID da parte (pessoa) *</label>
+                <label for="parte-id">ID da parte (pessoa) <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="width-xl height-md white" id="parte-id" placeholder="ID da pessoa cadastrada (ex: PRT-...)" required>
             </div>
         </div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
-                <label for="tipo_parte">Tipo de parte *</label>
+                <label for="tipo_parte">Tipo de parte <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <select class="width-md height-md white" id="tipo_parte" required>
                     <option value="">Selecione</option>
                     <?php foreach ($tiposValidos as $val => $label): ?>
@@ -69,7 +69,7 @@ $polosValidos = ['ativo' => 'Ativo', 'passivo' => 'Passivo', 'terceiros' => 'Ter
                 </select>
             </div>
             <div class="col">
-                <label for="polo">Polo *</label>
+                <label for="polo">Polo <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <select class="width-md height-md white" id="polo" required>
                     <option value="">Selecione</option>
                     <?php foreach ($polosValidos as $val => $label): ?>

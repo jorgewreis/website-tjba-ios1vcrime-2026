@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0133
+
+**Data:** 2026-03-15 16:06:58 | **Commit:** `66ae9b0` | **Tipo:** `patch`
+
+- Feat: criação de pagina de edit de usuarios
+
 ## V. 1.03.0132
 
 **Data:** 2026-03-15 15:33:28 | **Commit:** `032c695` | **Tipo:** `patch`
@@ -3072,6 +3078,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

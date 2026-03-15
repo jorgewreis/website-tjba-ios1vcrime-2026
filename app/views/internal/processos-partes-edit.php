@@ -51,7 +51,7 @@ $polosValidos = ['ativo' => 'Ativo', 'passivo' => 'Passivo', 'terceiros' => 'Ter
         </div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
-                <label for="tipo_parte">Tipo de parte *</label>
+                <label for="tipo_parte">Tipo de parte <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <select class="width-md height-md white" id="tipo_parte" required>
                     <?php foreach ($tiposValidos as $val => $label): ?>
                         <option value="<?php echo htmlspecialchars($val); ?>"<?php echo (($vinculo['tipo_parte'] ?? '') === $val) ? ' selected' : ''; ?>><?php echo htmlspecialchars($label); ?></option>
@@ -59,7 +59,7 @@ $polosValidos = ['ativo' => 'Ativo', 'passivo' => 'Passivo', 'terceiros' => 'Ter
                 </select>
             </div>
             <div class="col">
-                <label for="polo">Polo *</label>
+                <label for="polo">Polo <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <select class="width-md height-md white" id="polo" required>
                     <?php foreach ($polosValidos as $val => $label): ?>
                         <option value="<?php echo htmlspecialchars($val); ?>"<?php echo (($vinculo['polo'] ?? '') === $val) ? ' selected' : ''; ?>><?php echo htmlspecialchars($label); ?></option>

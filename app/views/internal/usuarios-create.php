@@ -146,16 +146,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
 
                     if ($setorLabel !== '') {
-                        $codigo = $setorToCodigo[$setorLabel] ?? null;
-                        if ($codigo) {
+                        $idSetor = null;
+                        if (isset($setorToCodigo[$setorLabel])) {
+                            $codigo = $setorToCodigo[$setorLabel];
                             $stmt = $connection->prepare('SELECT id_setor FROM setores WHERE codigo = ? LIMIT 1');
                             $stmt->execute([$codigo]);
                             $row = $stmt->fetch(PDO::FETCH_ASSOC);
                             if ($row && !empty($row['id_setor'])) {
-                                $idUsuSetor = 'USO-' . strtoupper(bin2hex(random_bytes(13)));
-                                $stmt = $connection->prepare('INSERT INTO usuario_setor (id_usu_setor, usuario, setor) VALUES (?, ?, ?)');
-                                $stmt->execute([$idUsuSetor, $idUsuario, $row['id_setor']]);
+                                $idSetor = trim($row['id_setor']);
                             }
+                        }
+                        if ($idSetor === null) {
+                            $stmt = $connection->prepare('SELECT id_setor FROM setores WHERE nome = ? LIMIT 1');
+                            $stmt->execute([$setorLabel]);
+                            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+                            if ($row && !empty($row['id_setor'])) {
+                                $idSetor = trim($row['id_setor']);
+                            }
+                        }
+                        if ($idSetor !== null) {
+                            $idUsuSetor = 'USO-' . strtoupper(bin2hex(random_bytes(13)));
+                            $stmt = $connection->prepare('INSERT INTO usuario_setor (id_usu_setor, usuario, setor) VALUES (?, ?, ?)');
+                            $stmt->execute([$idUsuSetor, $idUsuario, $idSetor]);
                         }
                     }
 
@@ -243,34 +255,34 @@ $csrfToken = Security::generateCSRFToken();
             <div class="row table subtitle padding-lr-lg padding-tb-lg">Dados obrigatórios</div>
             <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
                 <div class="col">
-                    <label for="create-nome">Nome *obrigatório</label>
+                    <label for="create-nome">Nome <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="text" id="create-nome" name="nome" class="width-md height-md white" placeholder="Nome" required maxlength="100" value="<?php echo htmlspecialchars($formValues['nome'], ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
                 <div class="col">
-                    <label for="create-sobrenome">Sobrenome *obrigatório</label>
+                    <label for="create-sobrenome">Sobrenome <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="text" id="create-sobrenome" name="sobrenome" class="width-lg height-md white" placeholder="Sobrenome" required maxlength="100" value="<?php echo htmlspecialchars($formValues['sobrenome'], ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
             </div>
             <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
                 <div class="col">
-                    <label for="create-cpf">CPF *obrigatório</label>
+                    <label for="create-cpf">CPF <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="text" id="create-cpf" name="cpf" class="width-sm height-md white" placeholder="000.000.000-00" required maxlength="14" value="<?php echo htmlspecialchars($formValues['cpf'], ENT_QUOTES, 'UTF-8'); ?>">
                     <span class="error-message" id="create-cpf-error" aria-live="polite"></span>
                 </div>
                 <div class="col">
-                    <label for="create-email">E-mail *obrigatório</label>
+                    <label for="create-email">E-mail <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="email" id="create-email" name="email" class="width-lg height-md white" placeholder="email@exemplo.com" required maxlength="255" value="<?php echo htmlspecialchars($formValues['email'], ENT_QUOTES, 'UTF-8'); ?>">                    
                     <span class="error-message" id="create-email-error" aria-live="polite"></span>
                 </div>
             </div>
             <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
                 <div class="col">
-                    <label for="create-senha">Senha *obrigatório</label>
+                    <label for="create-senha">Senha <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="password" id="create-senha" name="senha" class="width-md height-md white" placeholder="Mín. 10 caracteres, 1 maiúscula, 1 minúscula, 1 número, 1 símbolo" required minlength="10" maxlength="255">
                     <span class="error-message" id="create-senha-error" aria-live="polite"></span>
                 </div>
                 <div class="col">
-                    <label for="create-senha-confirm">Confirmar senha *obrigatório</label>
+                    <label for="create-senha-confirm">Confirmar senha <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="password" id="create-senha-confirm" name="senha_confirm" class="width-md height-md white" placeholder="Repita a senha" required minlength="10" maxlength="255">
                     <span class="error-message" id="create-senha-confirm-error" aria-live="polite"></span>
                 </div>

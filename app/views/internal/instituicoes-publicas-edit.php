@@ -40,7 +40,7 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
         <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Dados</div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
-                <label for="nome">Nome *</label>
+                <label for="nome">Nome <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="width-xl height-md white" id="nome" value="<?php echo htmlspecialchars($inst['nome'] ?? ''); ?>" required>
             </div>
         </div>

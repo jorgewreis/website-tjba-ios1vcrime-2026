@@ -76,6 +76,34 @@ final class UsuariosListRepository
         return (int) $statement->fetchColumn();
     }
 
+    /**
+     * Contagem de servidores por perfil (para exibir nos filtros).
+     * Chaves: estagiario, servidor, diretora, magistrada, admin.
+     *
+     * @return array<string, int>
+     */
+    public function countServidoresByPerfil(): array
+    {
+        $reverseMap = array_flip(self::PERFIL_MAP);
+        unset($reverseMap['ESTUDANTE']);
+        $result = array_fill_keys(array_values($reverseMap), 0);
+
+        $sql = "SELECT up.perfil, COUNT(DISTINCT up.usuario) AS cnt
+                FROM usuario_perfil up
+                WHERE up.usuario IN (SELECT usuario FROM usuario_perfil WHERE perfil != 'ESTUDANTE')
+                AND up.perfil != 'ESTUDANTE'
+                GROUP BY up.perfil";
+        $stmt = $this->connection->query($sql);
+        while (($row = $stmt->fetch(PDO::FETCH_ASSOC)) !== false) {
+            $perfil = trim((string) ($row['perfil'] ?? ''));
+            $key = $reverseMap[$perfil] ?? strtolower($perfil);
+            if (isset($result[$key])) {
+                $result[$key] = (int) ($row['cnt'] ?? 0);
+            }
+        }
+        return $result;
+    }
+
     /** @return array{0: string, 1: array<string, mixed>} */
     private function buildServidoresFilter(?string $perfilFilter): array
     {

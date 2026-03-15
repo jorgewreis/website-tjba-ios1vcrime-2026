@@ -75,7 +75,7 @@ if (function_exists('mb_internal_encoding')) {
                     </select>
                 </div>
                 <div class="col">
-                    <label>Número *</label>
+                    <label>Número <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="text" class="width-md height-md white tel-numero" placeholder="Somente números">
                 </div>
             </div>
