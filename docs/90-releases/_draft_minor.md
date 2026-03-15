@@ -140,4 +140,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix: correção basica de edit** `[b9ddd65]`
 - **fix: mais correcoes** `[5dd7ecc]`
 - **fix: correcao de status na edicao** `[cf607e3]`
+- **fix: correcao de salvamento** `[9e7c6d6]`
 
