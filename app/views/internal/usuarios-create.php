@@ -105,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $mensagemErro = 'CPF inválido ou incompleto.';
         } elseif ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $mensagemErro = 'E-mail obrigatório e válido.';
-        } elseif ($dataNascimentoIso === null) {
+        } elseif ($dataNascimentoRaw !== '' && $dataNascimentoIso === null) {
             $mensagemErro = 'Informe a data de nascimento no formato AAAA-MM-DD.';
         } elseif (strlen($senha) < 10 || !preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{10,}$/', $senha)) {
             $mensagemErro = 'Senha deve ter no mínimo 10 caracteres, 1 maiúscula, 1 minúscula, 1 número e 1 símbolo.';
@@ -285,8 +285,8 @@ $csrfToken = Security::generateCSRFToken();
             </div>
             <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
                 <div class="col full-line">
-                    <label for="create-data-nascimento">Data de nascimento <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="date" id="create-data-nascimento" name="data_nascimento" class="width-md height-md white" required max="<?php echo date('Y-m-d'); ?>" value="<?php echo htmlspecialchars($formValues['data_nascimento'], ENT_QUOTES, 'UTF-8'); ?>">
+                    <label for="create-data-nascimento">Data de nascimento</label>
+                    <input type="date" id="create-data-nascimento" name="data_nascimento" class="width-md height-md white" max="<?php echo date('Y-m-d'); ?>" value="<?php echo htmlspecialchars($formValues['data_nascimento'], ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
             </div>
             <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
@@ -523,12 +523,10 @@ $csrfToken = Security::generateCSRFToken();
             var email = (emailInput && emailInput.value) ? emailInput.value.trim() : '';
             var senha = (senhaInput && senhaInput.value) ? senhaInput.value : '';
             var conf = (senhaConfirmInput && senhaConfirmInput.value) ? senhaConfirmInput.value : '';
-            var dataNascimento = (dataNascimentoInput && dataNascimentoInput.value) ? dataNascimentoInput.value : '';
             if (!nome || !sobrenome) return false;
             if (cpf.replace(/\D/g, '').length !== 11 || !validarCPF(cpf)) return false;
             if (!email || !validarEmail(email)) return false;
             if (!validarSenha(senha)) return false;
-            if (!dataNascimento) return false;
             return senha === conf;
         }
 
