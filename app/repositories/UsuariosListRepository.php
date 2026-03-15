@@ -35,14 +35,15 @@ final class UsuariosListRepository
     {
         [$whereClause, $params] = $this->buildServidoresFilter($perfilFilter);
 
-        $sql = 'SELECT v.id_usuario, v.nome, v.sobrenome, v.nome_completo, v.cpf, v.email, v.cargo, v.instituicao, v.telefone, v.ultimo_acesso, v.perfis, v.setores,
+        $sql = "SELECT v.id_usuario, v.nome, v.sobrenome, v.nome_completo, v.cpf, v.email, v.cargo, v.instituicao, v.telefone, v.ultimo_acesso, v.perfis,
+                COALESCE(NULLIF(TRIM(v.setores), ''), NULLIF(TRIM(v.instituicao), ''), '') AS setores,
                 COALESCE(tl.bloqueado, 0) AS bloqueado_login,
                 COALESCE(u.cadastro_ativo, 1) AS cadastro_ativo
                 FROM v_usuarios_completo v
                 INNER JOIN usuarios u ON v.id_usuario = u.id_usuario
                 LEFT JOIN tentativas_login tl ON v.cpf = tl.cpf AND tl.bloqueado = 1
-                ' . $whereClause . '
-                ORDER BY v.nome_completo ASC';
+                " . $whereClause . "
+                ORDER BY v.nome_completo ASC";
 
         $statement = $this->connection->prepare($sql);
         foreach ($params as $name => $value) {
