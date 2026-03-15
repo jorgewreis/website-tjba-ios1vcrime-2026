@@ -223,7 +223,18 @@
         .col.detalhes-info-tipo {
             display: none;
         }
-
+        .col.parte-nome {
+            width: 140px;
+        }
+        .col.parte-tipo {
+            width: 120px;
+        }
+        .col.parte-setor {
+            display: none;
+        }
+        .col.parte-cargo {
+            display: none;
+        }
 
     .row-right {
         display: 100%;
@@ -430,14 +441,23 @@
 }
 
 @media (min-width: 768px) {    
-    
-    /* COLUMNS WITH ID FIX */
-    .row.left {
-        width: fit-content;
+    .row.left.fit,
+    .row.right.fit {
+        width: fit-content !important;
     }
-    .row.right {
-        display: fit-content;
 
+    /* COLUMNS WITH ID FIX */    
+    .col.parte-nome {
+        width: 200px;
+    }
+    .col.parte-tipo {
+        width: 160px;
+    }
+    .col.parte-setor {
+        width: 180px;
+    }
+    .col.parte-cargo {
+        width: 180px;
     }
 
     .row.left.info,
@@ -456,6 +476,20 @@
         display: flex;
         width: 200px;
     }
+    .col.parte-nome {
+        width: calc(200px + 3vw);
+    }
+    .col.parte-tipo {
+        width: calc(160px + 3vw);
+    }
+    .col.parte-setor {
+        display: flex;
+        width: calc(180px + 3vw);
+    }
+    .col.parte-cargo {
+        width: 200px;
+    }
+
     .col.button-table {
         display: flex;
     }      
@@ -483,6 +517,10 @@
     .col.detalhes-info-info {
         display: flex;
         width: calc(260px + 3vw);
+    }
+    .col.parte-cargo {
+        display: flex;
+        width: calc(200px + 3vw);
     }
 
     .row.allocate-users {

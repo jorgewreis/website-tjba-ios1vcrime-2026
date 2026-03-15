@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0129
+
+**Data:** 2026-03-15 11:12:53 | **Commit:** `e5d33ef` | **Tipo:** `patch`
+
+- Fix: página de usuários criada
+
 ## V. 1.03.0128
 
 **Data:** 2026-03-14 20:01:32 | **Commit:** `58bbc56` | **Tipo:** `patch`
@@ -3048,6 +3054,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

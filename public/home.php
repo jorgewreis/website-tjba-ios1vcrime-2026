@@ -238,7 +238,7 @@ $userProfile = Security::getUserProfile() ?? '';
             {
                 section: 'Admin',
                 items: [
-                    { icon: 'fi fi-rs-id-badge', label: 'Servidores', target: 'admservidores' }
+                    { icon: 'fi fi-rs-id-badge', label: 'Usuários', target: 'usuarioslist' }
                 ]
             }
         ];

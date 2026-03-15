@@ -28,7 +28,7 @@ final class Usuario
         $cpfFormatado = Security::formatCPF($cpfNumerico);
 
         $stmt = $this->pdo->prepare("
-            SELECT id_usuario, nome, senha_hash
+            SELECT id_usuario, nome, senha_hash, COALESCE(cadastro_ativo, 1) AS cadastro_ativo
             FROM usuarios
             WHERE cpf = ?
             LIMIT 1
@@ -42,6 +42,10 @@ final class Usuario
             !Security::verifyPassword($senha, $usuario['senha_hash'])
         ) {
             return ['success' => false];
+        }
+
+        if (empty($usuario['cadastro_ativo'])) {
+            return ['success' => false, 'inactive' => true, 'message' => 'Seu cadastro está pendente de validação. Entre em contato com a diretoria ou o administrador do sistema.'];
         }
 
         $perfis = $this->getPerfisUsuario($usuario['id_usuario']);
@@ -178,6 +182,7 @@ final class Usuario
             FROM usuarios
             WHERE token_acesso = ?
               AND token_expira > NOW()
+              AND COALESCE(cadastro_ativo, 1) = 1
             LIMIT 1
         ");
         $stmt->execute([$token]);

@@ -645,6 +645,11 @@ input[type="radio"] {
     color: var(--bs-primary);
 }
 
+.status-success {
+    background-color: var(--bg-success);
+    color: var(--bs-success-active);
+}
+
 .status-cancelled {
     background-color: var(--bg-danger);
     color: var(--bs-danger);

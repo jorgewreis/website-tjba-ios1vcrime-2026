@@ -66,9 +66,12 @@ if (($resultado['success'] ?? false) !== true) {
     $attempts[] = $now;
     $_SESSION['login_attempts'] = $attempts;
 
+    $message = !empty($resultado['inactive']) && !empty($resultado['message'])
+        ? $resultado['message']
+        : 'CPF ou senha inválidos.';
     echo json_encode([
         'success' => false,
-        'message' => 'CPF ou senha inválidos.'
+        'message' => $message
     ]);
     exit;
 }

@@ -53,7 +53,10 @@ $allowed_pages = [
     'cartasrecebidasrules'  => $PAGES . '/cartorio-cartas-recebidas-rules.php',
     'produtividade'         => $PAGES . '/produtividade.php',
     'notificacoes'          => $PAGES . '/notificacoes.php',
-    'usuarios'              => $PAGES . '/usuarios.php',
+    'usuarios'              => $PAGES . '/usuarios-list.php',
+    'usuarioslist'          => $PAGES . '/usuarios-list.php',
+    'usuarioscreate'        => $PAGES . '/usuarios-create.php',
+    'usuariosedit'          => $PAGES . '/usuarios-edit.php',
     'configuracoes'         => $PAGES . '/configuracoes.php',
     'documentos'            => $PAGES . '/documentos.php',
     'alterardados'          => $PAGES . '/alterar-dados-pessoais.php',
@@ -130,6 +133,10 @@ $page_to_section = [
     'partesinstituicoeslist'    => 'Consultas',
     'partesinstituicoescreate'  => 'Consultas',
     'partesinstituicoesedit'    => 'Consultas',
+    'usuarios'                  => 'Admin',
+    'usuarioslist'              => 'Admin',
+    'usuarioscreate'            => 'Admin',
+    'usuariosedit'              => 'Admin',
 ];
 
 /**

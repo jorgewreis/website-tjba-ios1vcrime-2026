@@ -132,14 +132,14 @@ try {
     $idUsuario = 'USR-' . strtoupper(bin2hex(random_bytes(13)));
     $senhaHash = Security::hashPassword($senha);
 
-    // Tabela usuarios: nome/sobrenome do nome completo; ultimo_acesso/token_* NULL (preenchidos no login)
+    // Tabela usuarios: Tipo externo, Setor (via usuario_setor), Cargo Estudante, Status Ativo (cadastro_ativo=1)
     $stmt = $pdo->prepare("
         INSERT INTO usuarios (
             id_usuario, nome, sobrenome, data_nascimento, cargo, instituicao, cpf, telefone, email,
-            senha_hash, meta, ultimo_acesso, token_acesso, token_expira, created_at, updated_at
+            senha_hash, meta, ultimo_acesso, token_acesso, token_expira, cadastro_ativo, created_at, updated_at
         ) VALUES (
-            ?, ?, ?, '-', '-', '-', ?, ?, ?,
-            ?, '-', NULL, NULL, NULL, NOW(), NOW()
+            ?, ?, ?, '-', 'Estudante', '-', ?, ?, ?,
+            ?, '-', NULL, NULL, NULL, 1, NOW(), NOW()
         )
     ");
     $stmt->execute([$idUsuario, $nome, $sobrenome, $cpfFormatado, $telefone, $email, $senhaHash]);
@@ -155,6 +155,20 @@ try {
     $idUsuPerfil = 'USP-' . strtoupper(bin2hex(random_bytes(13)));
     $stmt = $pdo->prepare("INSERT INTO usuario_perfil (id_usu_perfil, usuario, perfil) VALUES (?, ?, 'ESTUDANTE')");
     $stmt->execute([$idUsuPerfil, $idUsuario]);
+
+    // Alocação automática: Setor "Sala de Audiências" (Tipo externo, Cargo Estudante já definidos acima)
+    try {
+        $stmt = $pdo->prepare("SELECT id_setor FROM setores WHERE codigo = 'AUDIENCIA' OR nome LIKE '%Sala%Audi%' LIMIT 1");
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($row && !empty($row['id_setor'])) {
+            $idUsuSetor = 'USO-' . strtoupper(bin2hex(random_bytes(13)));
+            $stmt = $pdo->prepare("INSERT INTO usuario_setor (id_usu_setor, usuario, setor) VALUES (?, ?, ?)");
+            $stmt->execute([$idUsuSetor, $idUsuario, $row['id_setor']]);
+        }
+    } catch (Throwable $e) {
+        // não falha o cadastro se setores/usuario_setor não existirem ou setor não estiver cadastrado
+    }
 
     $pdo->commit();
 
