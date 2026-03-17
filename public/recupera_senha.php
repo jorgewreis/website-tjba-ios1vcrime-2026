@@ -54,6 +54,14 @@ if (isset($_COOKIE['tjba_1vcrime_remember_cpf'])) {
                         <span class="info-title">CRIMINAL</span>
                         <p class="text">A excelência nasce de um fluxo inteligente, padronização segura, responsabilidade clara e foco na efetividade jurisdicional.</p>
                     </div>
+                    <!-- FOOTER - SYSTEM -->
+                    <div class="footer-page">                        
+                        <div class="info-page">
+                            <span class="info-line">Rua Dr. Hygino Filho, bloco C, 1º andar, sala 132 - Jardim Atlântico, Ilhéus - BA</span>
+                            <span class="info-line">Tel.: 73 3234-3428 - Whatsapp: 71 99610-8241 - Email: ilheus1vcriminal@tjba.jus.br</span>
+                        </div>
+                        <div class="info-app">Sistema desenvolvido integralmente por Jorge Reis Developer - 2026 - Todos os direitos reservados</div>
+                    </div>
                 </div>
 
                 <!-- RIGHT - formulário -->
@@ -68,28 +76,26 @@ if (isset($_COOKIE['tjba_1vcrime_remember_cpf'])) {
                     <form class="form-login" id="resetForm">
                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
 
-                        <div class="row">
-                            <div class="col">
+                        <div class="row table left padding-tb-lg row-gap-10">
+                            <div class="col table left">
                                 <label for="cpf">CPF</label>
                                 <input class="width-md white" type="text" id="cpf" name="cpf" value="<?php echo htmlspecialchars($cpfInicial, ENT_QUOTES, 'UTF-8'); ?>" required>
-                            </div>
-                        </div>
-
-                        <div class="row" id="emailHintLine" style="display: none;">
-                            <div class="col">
-                                <label class="email-hint" id="emailHint" style="margin-bottom: 15px; color: var(--color-gray-600);"></label>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col">
+                            </div>                        
+                            <div class="col table left">
                                 <label for="email">Confirmar e-mail cadastrado</label>
                                 <input class="width-lg white" type="email" id="email" name="email" placeholder="Digite o e-mail cadastrado" required>
                             </div>
                         </div>
 
-                        <div class="row" style="background-color: transparent; padding: 20px 0 10px 0; width: 100%; border-bottom: 1px solid var(--color-gray-400);">
-                            <button class="btn btn-primary width-md" type="submit">Recuperar senha</button>
+                        <div class="row table left padding-tb-lg" id="emailHintLine" style="display: none;">
+                            <div class="col">
+                                <label class="email-hint" id="emailHint" style="margin-bottom: 15px; color: var(--color-gray-600);"></label>
+                            </div>
+                        </div>                      
+
+                        <div class="row table left row-gap-10 full-line padding-tb-md border-top">
+                            <button class="btn btn-secondary-outline" type="button" onclick="window.location.href = '/index.php';">Voltar</button>
+                            <button class="btn btn-primary" type="submit">Recuperar senha</button>
                         </div>
 
                         <div class="row">
@@ -99,15 +105,7 @@ if (isset($_COOKIE['tjba_1vcrime_remember_cpf'])) {
                                 </div>
                                 <span class="alert-text" id="erro"></span>
                             </div>
-                        </div>
-
-                        <div class="row" style="border: none; padding-top: 10px;">
-                            <div class="col">
-                                <label class="link-login">
-                                    <a href="/index.php">Voltar para login</a>
-                                </label>
-                            </div>
-                        </div>
+                        </div>                        
                     </form>
                 </div>
             </div>

@@ -24,63 +24,13 @@ $csrfToken = Security::generateCSRFToken();
     <link rel="stylesheet" href="./assets/css/shared/color.css">
     <link rel="stylesheet" href="./assets/css/shared/form.css">
     <link rel="stylesheet" href="./assets/css/shared/table.css">
+    <link rel="stylesheet" href="./assets/css/shared/page.css">
     <link rel="stylesheet" href="./assets/css/shared/login.css">
     <link rel="stylesheet" href="./assets/css/shared/toast.css">
+
     <!-- Ícones: fi-rs-* (regular-straight) -->
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-straight/css/uicons-regular-straight.css">
     <link rel="icon" type="image/x-icon" href="/assets/img/favicon.ico">
-
-    <style>
-        /* Estilos específicos para esta página */
-        @media (max-width: 1365px) {
-            .footer-page {
-                display: none;
-            }
-        }
-        
-        @media (min-width: 1366px) {
-            
-        .footer-page {
-            position: absolute;            
-            bottom: 0;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background-color: transparent;
-        }
-            .footer-page .info-page {
-                width: 100%;
-                display: flex;                
-                flex-direction: column;
-                align-items: flex-start;
-                justify-content: center;
-                padding: 10px;
-                background-color: #ffffff30;
-            }
-                .footer-page .info-page .info-line {
-                    width: 100%;
-                    display: flex;
-                    flex-direction: row;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 12px;
-                }
-            .footer-page .info-app {
-                width: 100%;
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                justify-content: center;
-                font-size: 10px;
-                padding: 5px;
-                background-color: #ffffff20;
-            }
-        }
-
-
-    </style>
 
     <script>
         (function() {
@@ -146,7 +96,7 @@ $csrfToken = Security::generateCSRFToken();
                             </div>
                         </div>
 
-                        <div class="row table">
+                        <div class="row table between full-line padding-tb-lg row-gap-10">
                             <div class="col">
                                 <label class="checkbox-label">
                                     <input type="checkbox" id="lembrarUsuario" name="lembrar" value="1">
@@ -168,7 +118,7 @@ $csrfToken = Security::generateCSRFToken();
                             </select>
                         </div>
 
-                        <div class="row" style="background-color: transparent; padding: 20px 0 10px 0; width: 100%; border-bottom: 1px solid var(--color-gray-400);">
+                        <div class="row table left padding-tb-md border-bottom">
                             <button class="btn btn-primary width-md" type="submit">Entrar</button>
                         </div>
 
@@ -182,7 +132,7 @@ $csrfToken = Security::generateCSRFToken();
                             </div>
                         </div>
 
-                        <div class="row" style="border: none; padding-top: 10px;">
+                        <div class="row table left padding-tb-md">
                             <div class="col">
                                 <button class="btn btn-primary-outline width-md" onclick="window.location.href='cadastro_estudantes.php'">Cadastro de estudantes</button>
                                 <label>Estudantes de Direito devem se cadastrar para acompanhamento de audiências.</label>

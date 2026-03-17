@@ -61,6 +61,14 @@ $faculdades = [
                         <span class="info-title">CRIMINAL</span>
                         <p class="text">A excelência nasce de um fluxo inteligente, padronização segura, responsabilidade clara e foco na efetividade jurisdicional.</p>
                     </div>
+                    <!-- FOOTER - SYSTEM -->
+                    <div class="footer-page">                        
+                        <div class="info-page">
+                            <span class="info-line">Rua Dr. Hygino Filho, bloco C, 1º andar, sala 132 - Jardim Atlântico, Ilhéus - BA</span>
+                            <span class="info-line">Tel.: 73 3234-3428 - Whatsapp: 71 99610-8241 - Email: ilheus1vcriminal@tjba.jus.br</span>
+                        </div>
+                        <div class="info-app">Sistema desenvolvido integralmente por Jorge Reis Developer - 2026 - Todos os direitos reservados</div>
+                    </div>
                 </div>
 
                 <div class="page-right">
@@ -141,9 +149,11 @@ $faculdades = [
                             </div>
                         </div>
 
-                        <div class="row" style="background-color: transparent; padding: 20px 0 10px 0; width: 100%; border-bottom: 1px solid var(--color-gray-400);">
-                            <button class="btn btn-secondary" onclick="window.location.href='/index.php'">Voltar</button>
+                        <div class="row table left border-bottom padding-tb-md">                            
                             <button class="btn btn-primary" type="submit">Cadastrar</button>
+                        </div>
+                        <div class="row table left border-bottom padding-tb-md">
+                            <button class="btn btn-secondary" onclick="window.location.href='/index.php'">Voltar</button>
                         </div>
                     </form>
                 </div>

@@ -55,8 +55,9 @@
     }
     .row.subtitle {
         background: #F8F9FA;
-        background: linear-gradient(180deg, rgba(248, 249, 250, 1) 0%, rgba(248, 249, 250, 1) 50%, rgba(231, 231, 255, 1) 100%);
+        background-color: linear-gradient(180deg, var(--color-gray-100) 0%, var(--color-gray-100) 85%, var(--color-accent) 100%);
         border-bottom: 1px solid var(--primary-color);
+        border-top: 1px solid var(--color-gray-300);
     }
 
     .row.allocate-users {

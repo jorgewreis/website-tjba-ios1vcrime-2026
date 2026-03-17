@@ -83,13 +83,40 @@ body{
 
 @media (min-width: 1280px) {
     .footer-page {
+        position: absolute;            
+        bottom: 0;
+        width: 100%;
         display: flex;
         flex-direction: column;
-        justify-content: flex-start;
         align-items: center;
-
-        min-width: 400px;
-
-        margin: 10px 0;    
-    } 
+        justify-content: center;
+        background-color: transparent;
+    }
+        .footer-page .info-page {
+            width: 100%;
+            display: flex;                
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 10px;
+            background-color: #ffffff80;
+        }
+            .footer-page .info-page .info-line {
+                width: 100%;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+                font-size: 12px;
+            }
+        .footer-page .info-app {
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            padding: 5px;
+            background-color: #ffffff60;
+        }        
 }
