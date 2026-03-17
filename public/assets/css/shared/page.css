@@ -3,6 +3,7 @@
 /* PAGE */
 body{
     background-color: var(--primary-bg);
+    overflow-x: hidden;
 }
 
 /* SPACING */
@@ -83,8 +84,6 @@ body{
 
 @media (min-width: 1280px) {
     .footer-page {
-        position: absolute;            
-        bottom: 0;
         width: 100%;
         display: flex;
         flex-direction: column;

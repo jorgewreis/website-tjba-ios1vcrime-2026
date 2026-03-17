@@ -160,7 +160,7 @@ declare(strict_types=1);
             function renderResultRow(item) {
                 return '' +
                     '<div class="row table between full-line padding-tb-sm padding-lr-md border-bottom">' +
-                        '<div class="col left fit row-gap-10">' +
+                        '<div class="row left fit row-gap-10">' +
                             '<div class="col" style="min-width: 300px;">' +
                                 '<label style="font-size: 10px;">Logradouro</label>' +
                                 '<span class="major-info text-ellipsis" style="margin: 0 0 0 12px;">' + escapeHtml(item.logradouro || '') + '</span>' +
@@ -174,7 +174,7 @@ declare(strict_types=1);
                                 '<span class="major-info text-ellipsis" style="margin: 0 0 0 12px;">' + escapeHtml(item.cidade || '') + ' - ' + escapeHtml(item.uf || '') + '</span>' +
                             '</div>' +
                         '</div>' +
-                        '<div class="col right fit row-gap-10">' +
+                        '<div class="row right fit row-gap-10">' +
                             '<div class="col" style="width: 110px;">' +
                                 '<label style="font-size: 10px;">CEP</label>' +
                                 '<span class="major-info text-ellipsis" style="margin: 0 0 0 12px;">' + escapeHtml(formatCep(item.cep || '')) + '</span>' +
