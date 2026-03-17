@@ -148,4 +148,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix: correcao de seguranca** `[b6f8e6a]`
 - **fix: correcao de obrigatoriedade** `[f962dc0]`
 - **Fix: pequenos ajustes** `[5667101]`
+- **fix: pequenos ajustes** `[c13bae5]`
 
