@@ -32,6 +32,7 @@ $faculdades = [
     <link rel="stylesheet" href="/assets/css/shared/form.css">
     <link rel="stylesheet" href="/assets/css/shared/table.css">
     <link rel="stylesheet" href="/assets/css/shared/login.css">
+    <link rel="stylesheet" href="/assets/css/shared/page.css">
     <link rel="stylesheet" href="/assets/css/shared/toast.css">
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
     <link rel="icon" type="image/x-icon" href="/assets/img/favicon.ico">
@@ -152,7 +153,7 @@ $faculdades = [
                         <div class="row table left border-bottom padding-tb-md">                            
                             <button class="btn btn-primary" type="submit">Cadastrar</button>
                         </div>
-                        <div class="row table left border-bottom padding-tb-md">
+                        <div class="row table left padding-tb-md">
                             <button class="btn btn-secondary" onclick="window.location.href='/index.php'">Voltar</button>
                         </div>
                     </form>

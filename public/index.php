@@ -20,13 +20,13 @@ $csrfToken = Security::generateCSRFToken();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Primeira Vara Crime de Ilhéus - Sistema de Gestão</title>
   
-    <link rel="stylesheet" href="./assets/css/shared/reset.css">
-    <link rel="stylesheet" href="./assets/css/shared/color.css">
-    <link rel="stylesheet" href="./assets/css/shared/form.css">
-    <link rel="stylesheet" href="./assets/css/shared/table.css">
-    <link rel="stylesheet" href="./assets/css/shared/page.css">
-    <link rel="stylesheet" href="./assets/css/shared/login.css">
-    <link rel="stylesheet" href="./assets/css/shared/toast.css">
+    <link rel="stylesheet" href="/assets/css/shared/reset.css">
+    <link rel="stylesheet" href="/assets/css/shared/color.css">
+    <link rel="stylesheet" href="/assets/css/shared/form.css">
+    <link rel="stylesheet" href="/assets/css/shared/table.css">
+    <link rel="stylesheet" href="/assets/css/shared/page.css">
+    <link rel="stylesheet" href="/assets/css/shared/login.css">
+    <link rel="stylesheet" href="/assets/css/shared/toast.css">
 
     <!-- Ícones: fi-rs-* (regular-straight) -->
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-straight/css/uicons-regular-straight.css">

@@ -132,7 +132,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
             <input type="hidden" name="page" value="<?php echo htmlspecialchars($routePage); ?>">
             <input type="hidden" name="items_per_page" value="<?php echo (int) $itemsPerPage; ?>">
             <div class="row table between padding-tb-lg padding-lr-md border-bottom full-line">
-                <div class="row left row-gap-10">
+                <div class="row left row-gap-10 fit">
                     <div class="col">
                         <label for="filter-nome">Nome</label>
                         <input type="text" class="width-lg height-md white" id="filter-nome" name="nome" placeholder="Nome da parte" value="<?php echo htmlspecialchars($nomeFilter); ?>">
@@ -142,9 +142,9 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                         <input type="text" class="width-md height-md white" id="filter-cpf" name="cpf" placeholder="CPF" value="<?php echo htmlspecialchars($cpfFilter); ?>">
                     </div>
                 </div>
-                <div class="row right">
+                <div class="row right fit">
                     <div class="col">
-                        <label for="filter-cpf">-</label>
+                        <label style="color: var(--color-gray-000);">-</label>
                         <button type="submit" class="btn btn-primary">Consultar</button>
                     </div>
                 </div>

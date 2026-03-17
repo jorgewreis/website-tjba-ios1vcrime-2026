@@ -205,7 +205,7 @@ $statusClasses = [
                 </div>
                 <div class="row right fit">
                     <div class="col">
-                        <label for="filter-perfil">-</label>
+                        <label style="color: var(--color-gray-000);">-</label>
                         <button type="submit" class="btn btn-primary">Consultar</button>
                     </div>
                 </div>

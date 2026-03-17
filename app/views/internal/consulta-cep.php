@@ -27,7 +27,7 @@ declare(strict_types=1);
             <span class="specific">Consulta</span>
         </div>
         <h1 class="title-page">Consulta CEP</h1>
-        <p class="description-page">Pesquise por CEP ou por parte do endereço. Exemplos: 45.658-250, jasmin, ilheus ou jasmin, nelson costa, ilheus.</p>
+        <p class="description-page">Pesquise por CEP ou por parte do endereço.</p>
     </div>
 
     <div class="card-page">
@@ -35,7 +35,7 @@ declare(strict_types=1);
         <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Consulta</div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
-                <label for="filter-busca">CEP ou endereço <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <label for="filter-busca">CEP ou Endereço <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="width-xl height-md white" id="filter-busca" placeholder="Digite um CEP ou um endereço, como jasmin, nelson costa, ilheus" required>
             </div>
         </div>
@@ -157,33 +157,27 @@ declare(strict_types=1);
                 feedback = document.getElementById('consulta-feedback');
             }
 
-            function renderTableHeader() {
-                return '' +
-                    '<div class="row table between padding-tb-md padding-lr-lg border-bottom">' +
-                        '<div class="col" style="width: 380px;"><span class="major-info text-ellipsis">Logradouro</span></div>' +
-                        '<div class="col" style="width: 210px;"><span class="major-info text-ellipsis">Bairro</span></div>' +
-                        '<div class="col" style="width: 150px;"><span class="major-info text-ellipsis">Cidade</span></div>' +
-                        '<div class="col" style="width: 50px;"><span class="major-info text-ellipsis">UF</span></div>' +
-                        '<div class="col" style="width: 110px;"><span class="major-info text-ellipsis">CEP</span></div>' +
-                    '</div>';
-            }
-
             function renderResultRow(item) {
                 return '' +
-                    '<div class="row table">' +
-                        '<div class="col" style="width: 380px;">' +
+                    '<div class="row table left full-line row-gap-10 padding-tb-md padding-lr-sm border-bottom">' +
+                        '<div class="col" style="min-width: 300px;">' +
+                            '<label>Logradouro:</label>' +
                             '<span class="major-info text-ellipsis">' + escapeHtml(item.logradouro || '') + '</span>' +
                         '</div>' +
                         '<div class="col" style="width: 210px;">' +
+                            '<label>Bairro:</label>' +
                             '<span class="major-info text-ellipsis">' + escapeHtml(item.bairro || '') + '</span>' +
                         '</div>' +
                         '<div class="col" style="width: 150px;">' +
+                            '<label>Cidade:</label>' +
                             '<span class="major-info text-ellipsis">' + escapeHtml(item.cidade || '') + '</span>' +
                         '</div>' +
                         '<div class="col" style="width: 50px;">' +
+                            '<label>UF:</label>' +
                             '<span class="major-info text-ellipsis">' + escapeHtml(item.uf || '') + '</span>' +
                         '</div>' +
                         '<div class="col" style="width: 110px;">' +
+                            '<label>CEP:</label>' +
                             '<span class="major-info text-ellipsis">' + escapeHtml(formatCep(item.cep || '')) + '</span>' +
                         '</div>' +
                     '</div>';
@@ -258,7 +252,6 @@ declare(strict_types=1);
                 currentResults = [data];
                 currentPage = 1;
                 resultadoContainer.innerHTML = '' +
-                    renderTableHeader() +
                     renderResultRow(data) +
                     renderPagination(1, 1, getItemsPerPage());
                 feedback = document.getElementById('consulta-feedback');
@@ -281,7 +274,7 @@ declare(strict_types=1);
                 var start = (currentPage - 1) * perPage;
                 var pageResults = currentResults.slice(start, start + perPage);
 
-                var html = renderTableHeader();
+                var html = "";
                 pageResults.forEach(function (item) {
                     html += renderResultRow(item);
                 });

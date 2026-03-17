@@ -24,6 +24,7 @@ if (isset($_COOKIE['tjba_1vcrime_remember_cpf'])) {
     <link rel="stylesheet" href="/assets/css/shared/form.css">
     <link rel="stylesheet" href="/assets/css/shared/table.css">
     <link rel="stylesheet" href="/assets/css/shared/login.css">
+    <link rel="stylesheet" href="/assets/css/shared/page.css">
     <link rel="stylesheet" href="/assets/css/shared/toast.css">
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
     <link rel="icon" type="image/x-icon" href="/assets/img/favicon.ico">
@@ -93,9 +94,11 @@ if (isset($_COOKIE['tjba_1vcrime_remember_cpf'])) {
                             </div>
                         </div>                      
 
-                        <div class="row table left row-gap-10 full-line padding-tb-md border-top">
-                            <button class="btn btn-secondary-outline" type="button" onclick="window.location.href = '/index.php';">Voltar</button>
+                        <div class="row table left row-gap-10 full-line padding-tb-md border-bottom">
                             <button class="btn btn-primary" type="submit">Recuperar senha</button>
+                        </div>
+                        <div class="row table left row-gap-10 padding-tb-md">
+                            <button class="btn btn-secondary" type="button" onclick="window.location.href = '/index.php';">Voltar</button>
                         </div>
 
                         <div class="row">
