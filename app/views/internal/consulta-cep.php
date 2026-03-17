@@ -142,7 +142,7 @@ declare(strict_types=1);
             function setFeedback(message, type) {
                 if (!feedback) return;
                 feedback.innerHTML = message
-                    ? '<label class="status ' + (type === 'error' ? 'status-cancelled' : 'status-finished') + '">' + escapeHtml(message) + '</label>'
+                    ? '<label class="padding-lr-lg status ' + (type === 'error' ? 'status-cancelled' : 'status-finished') + '">' + escapeHtml(message) + '</label>'
                     : '';
             }
 
@@ -159,26 +159,26 @@ declare(strict_types=1);
 
             function renderResultRow(item) {
                 return '' +
-                    '<div class="row table left full-line row-gap-10 padding-tb-md padding-lr-sm border-bottom">' +
-                        '<div class="col" style="min-width: 300px;">' +
-                            '<label>Logradouro:</label>' +
-                            '<span class="major-info text-ellipsis">' + escapeHtml(item.logradouro || '') + '</span>' +
+                    '<div class="row table between full-line padding-tb-sm padding-lr-md border-bottom">' +
+                        '<div class="col left fit row-gap-10">' +
+                            '<div class="col" style="min-width: 300px;">' +
+                                '<label style="font-size: 10px;">Logradouro</label>' +
+                                '<span class="major-info text-ellipsis" style="margin: 0 0 0 12px;">' + escapeHtml(item.logradouro || '') + '</span>' +
+                            '</div>' +
+                            '<div class="col" style="width: 210px;">' +
+                                '<label style="font-size: 10px;">Bairro</label>' +
+                                '<span class="major-info text-ellipsis" style="margin: 0 0 0 12px;">' + escapeHtml(item.bairro || '') + '</span>' +
+                            '</div>' +
+                            '<div class="col" style="width: 150px;">' +
+                                '<label style="font-size: 10px;">Cidade</label>' +
+                                '<span class="major-info text-ellipsis" style="margin: 0 0 0 12px;">' + escapeHtml(item.cidade || '') + ' - ' + escapeHtml(item.uf || '') + '</span>' +
+                            '</div>' +
                         '</div>' +
-                        '<div class="col" style="width: 210px;">' +
-                            '<label>Bairro:</label>' +
-                            '<span class="major-info text-ellipsis">' + escapeHtml(item.bairro || '') + '</span>' +
-                        '</div>' +
-                        '<div class="col" style="width: 150px;">' +
-                            '<label>Cidade:</label>' +
-                            '<span class="major-info text-ellipsis">' + escapeHtml(item.cidade || '') + '</span>' +
-                        '</div>' +
-                        '<div class="col" style="width: 50px;">' +
-                            '<label>UF:</label>' +
-                            '<span class="major-info text-ellipsis">' + escapeHtml(item.uf || '') + '</span>' +
-                        '</div>' +
-                        '<div class="col" style="width: 110px;">' +
-                            '<label>CEP:</label>' +
-                            '<span class="major-info text-ellipsis">' + escapeHtml(formatCep(item.cep || '')) + '</span>' +
+                        '<div class="col right fit row-gap-10">' +
+                            '<div class="col" style="width: 110px;">' +
+                                '<label style="font-size: 10px;">CEP</label>' +
+                                '<span class="major-info text-ellipsis" style="margin: 0 0 0 12px;">' + escapeHtml(formatCep(item.cep || '')) + '</span>' +
+                            '</div>' +
                         '</div>' +
                     '</div>';
             }
