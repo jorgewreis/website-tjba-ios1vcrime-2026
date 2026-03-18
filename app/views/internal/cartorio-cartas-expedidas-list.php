@@ -405,11 +405,11 @@ if ($totalPages > 0) {
                             </div>
                             <?php if ($stTipo === 'aguardando_gerar_pdf'): ?>
                                 <div class="col">
-                                    <input type="number" class="width-sm height-md subtask-qtd-docs" value="2" min="2" max="10" placeholder="Qtd de docs (2 a 10)" title="Qtd de docs gerados" />
+                                    <input type="number" class="width-sm height-sm subtask-qtd-docs" value="2" min="2" max="10" placeholder="Qtd de docs (2 a 10)" title="Qtd de docs gerados" />
                                 </div>
                             <?php elseif ($stTipo === 'aguardando_envio'): ?>
                                 <div class="col">
-                                    <select class="width-md height-md subtask-metodo-envio" title="Método de envio">
+                                    <select class="width-md height-sm subtask-metodo-envio" title="Método de envio">
                                         <option value="">Método de envio</option>
                                         <option value="Email">E-mail</option>
                                         <option value="Malote Digital">Malote Digital</option>
@@ -420,14 +420,14 @@ if ($totalPages > 0) {
                                 </div>
                             <?php elseif ($stTipo === 'aguardando_informacoes'): ?>
                                 <div class="col">
-                                    <input type="text" class="width-md height-md subtask-numero-destino" placeholder="Nº processo" title="Número processo destino" />
+                                    <input type="text" class="width-400 height-sm subtask-numero-destino" placeholder="Nº processo" title="Número processo destino" />
                                 </div>
                                 <div class="col">
-                                    <input type="text" class="width-xl height-md subtask-vara-destino" placeholder="Vara destino" title="Vara destino" />
+                                    <input type="text" class="width-600 height-sm subtask-vara-destino" placeholder="Vara destino" title="Vara destino" />
                                 </div>
                             <?php elseif ($stTipo === 'aguardando_devolucao'): ?>
                                 <div class="col">
-                                    <select class="width-lg height-md subtask-resultado-devolucao" title="Resultado da devolução">
+                                    <select class="width-500 height-sm subtask-resultado-devolucao" title="Resultado da devolução">
                                         <option value="">Resultado</option>
                                         <option value="devolvida_sem_cumprimento">Não cumprida</option>
                                         <option value="cumprida_negativamente">Cumprida negativamente</option>

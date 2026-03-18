@@ -655,41 +655,111 @@ input[type="radio"] {
 .width-100 {
     width: 50px;
 }
+    .width-100 .major-info,
+    .width-100 .minor-info {
+        width: 50px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 .width-200 {
     width: 100px;
 }
+    .width-200 .major-info,
+    .width-200 .minor-info {
+        width: 100px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 .width-300 {
     width: 150px;
 }
+    .width-300 .major-info,
+    .width-300 .minor-info {
+        width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 .width-400 {
     width: 200px;
 }
+    .width-400 .major-info,
+    .width-400 .minor-info {
+        width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 .width-500 {
     width: 250px;
 }
+    .width-500 .major-info,
+    .width-500 .minor-info {
+        width: 250px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 .width-600 {
     width: 300px;
 }
+    .width-600 .major-info,
+    .width-600 .minor-info {
+        width: 300px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 .width-700 {
     width: 350px;
 }
+    .width-700 .major-info,
+    .width-700 .minor-info {
+        width: 350px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 .width-800 {
     width: 400px;
 }
+    .width-800 .major-info,
+    .width-800 .minor-info {
+        width: 400px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 .width-900 {
     width: 450px;
 }
+    .width-900 .major-info,
+    .width-900 .minor-info {
+        width: 450px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 .width-999 {
     width: 500px;
 }
+    .width-999 .major-info,
+    .width-999 .minor-info {
+        width: 500px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 
 .height-sm {
-    height: 30px;
+    height: 30px !important;
     font-size: 12px;
 }
 .height-md {
-    height: 40px;
+    height: 40px !important;
 }
 .height-lg {
-    height: 50px;
+    height: 50px !important;
 }

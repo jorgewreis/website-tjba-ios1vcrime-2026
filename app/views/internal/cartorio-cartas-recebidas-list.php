@@ -422,7 +422,7 @@ if ($totalPages > 0) {
                         <div class="row table left row-gap-10 fit">
                             <div class="status status-pending padding-lr-lg"><?php echo htmlspecialchars($stLabel); ?></div>
                             <?php if ($isOrdem3): ?>
-                                <select class="subtask-resultado-cumprimento width-md height-md" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Resultado do cumprimento">
+                                <select class="subtask-resultado-cumprimento width-md height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Resultado do cumprimento">
                                     <option value="">Selecione o resultado</option>
                                     <?php foreach ($resultadoCumprimentoOptions as $val => $label): ?>
                                         <option value="<?php echo htmlspecialchars($val, ENT_QUOTES); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES); ?></option>
@@ -430,7 +430,7 @@ if ($totalPages > 0) {
                                 </select>
                             <?php endif; ?>
                             <?php if ($isOrdem5): ?>
-                                <select class="subtask-tipo-envio width-md height-md" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Tipo de envio">
+                                <select class="subtask-tipo-envio width-md height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Tipo de envio">
                                     <option value="">Selecione o tipo de envio</option>
                                     <?php foreach ($tipoEnvioOptions as $val => $label): ?>
                                         <option value="<?php echo htmlspecialchars($val, ENT_QUOTES); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES); ?></option>

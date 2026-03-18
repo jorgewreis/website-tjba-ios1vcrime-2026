@@ -401,13 +401,6 @@
     font-weight: 600;
 }
 
-.text-ellipsis {
-    width: 180px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
 .status-task {
     display: flex;
     align-items: flex-end;
