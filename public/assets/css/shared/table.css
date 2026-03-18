@@ -11,6 +11,18 @@
     .row.filters {
         background-color: var(--color-background-menu);
     }
+
+    .cartas-expedidas-allocate {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .subtask-row-fields {
+        flex-wrap: wrap;
+    }
     .row.subtitle {
         background: var(--color-background-elevated);
         background-color: linear-gradient(180deg, var(--color-background-elevated) 0%, var(--color-background-elevated) 85%, var(--color-primary) 100%);
