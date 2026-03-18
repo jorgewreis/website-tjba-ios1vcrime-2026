@@ -298,17 +298,17 @@ function deriveUsuarioStatus(array $usuario): string
                 <div class="row table left fit row-gap-10">
                     <div class="col">
                         <label for="edit-cpf">CPF</label>
-                        <input type="text" id="edit-cpf" class="width-sm height-md readonly" value="<?php echo $cpfVal; ?>" readonly>
+                        <input type="text" id="edit-cpf" class="width-100 height-md readonly" value="<?php echo $cpfVal; ?>" readonly>
                     </div>
                     <div class="col">
                         <label for="edit-tipo">Tipo</label>
-                        <input type="text" id="edit-tipo" class="width-sm height-md readonly" value="Interno" readonly>
+                        <input type="text" id="edit-tipo" class="width-100 height-md readonly" value="Interno" readonly>
                     </div>
                 </div>
                 <div class="row table right fit">
                     <div class="col">
                         <label for="edit-status">Status</label>
-                        <select id="edit-status" name="status" class="width-md height-md white">
+                        <select id="edit-status" name="status" class="width-200 height-md white">
                             <option value="pendente"<?php echo $statusAtual === 'pendente' ? ' selected' : ''; ?>>Pendente</option>
                             <option value="ativo"<?php echo $statusAtual === 'ativo' ? ' selected' : ''; ?>>Ativo</option>
                             <option value="bloqueado"<?php echo $statusAtual === 'bloqueado' ? ' selected' : ''; ?>>Bloqueado</option>
@@ -321,28 +321,28 @@ function deriveUsuarioStatus(array $usuario): string
             <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
                 <div class="col">
                     <label for="edit-nome">Nome <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="text" id="edit-nome" name="nome" class="width-md height-md white readonly" placeholder="Nome" required maxlength="100" value="<?php echo $nomeVal; ?>" readonly>
+                    <input type="text" id="edit-nome" name="nome" class="width-200 height-md white readonly" placeholder="Nome" required maxlength="100" value="<?php echo $nomeVal; ?>" readonly>
                 </div>
                 <div class="col">
                     <label for="edit-sobrenome">Sobrenome <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="text" id="edit-sobrenome" name="sobrenome" class="width-lg height-md white" placeholder="Sobrenome" required maxlength="100" value="<?php echo $sobrenomeVal; ?>">
+                    <input type="text" id="edit-sobrenome" name="sobrenome" class="width-400 height-md white" placeholder="Sobrenome" required maxlength="100" value="<?php echo $sobrenomeVal; ?>">
                 </div>
             </div>
             <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
                 <div class="col">
                     <label for="edit-email">E-mail <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="email" id="edit-email" name="email" class="width-lg height-md white" placeholder="email@exemplo.com" required maxlength="255" value="<?php echo $emailVal; ?>">
+                    <input type="email" id="edit-email" name="email" class="width-400 height-md white" placeholder="email@exemplo.com" required maxlength="255" value="<?php echo $emailVal; ?>">
                     <span class="error-message" id="edit-email-error" aria-live="polite"></span>
                 </div>
                 <div class="col">
                     <label for="edit-telefone">Telefone</label>
-                    <input type="text" id="edit-telefone" name="telefone" class="width-sm height-md white" placeholder="(00) 00000-0000" maxlength="50" value="<?php echo htmlspecialchars($telefoneVal, ENT_QUOTES, 'UTF-8'); ?>">
+                    <input type="text" id="edit-telefone" name="telefone" class="width-100 height-md white" placeholder="(00) 00000-0000" maxlength="50" value="<?php echo htmlspecialchars($telefoneVal, ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
             </div>
             <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
                 <div class="col full-line">
                     <label for="edit-data-nascimento">Data de nascimento</label>
-                    <input type="date" id="edit-data-nascimento" name="data_nascimento" class="width-md height-md white" max="<?php echo date('Y-m-d'); ?>" value="<?php echo htmlspecialchars($dataNascimentoVal, ENT_QUOTES, 'UTF-8'); ?>">
+                    <input type="date" id="edit-data-nascimento" name="data_nascimento" class="width-200 height-md white" max="<?php echo date('Y-m-d'); ?>" value="<?php echo htmlspecialchars($dataNascimentoVal, ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
             </div>
 
@@ -350,7 +350,7 @@ function deriveUsuarioStatus(array $usuario): string
             <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
                 <div class="col">
                     <label for="edit-cargo">Cargo</label>
-                    <select id="edit-cargo" name="cargo" class="width-lg height-md white">
+                    <select id="edit-cargo" name="cargo" class="width-400 height-md white">
                         <option value="">Selecione (opcional)</option>
                         <option value="Estagiário"<?php echo $cargoVal === 'Estagiário' ? ' selected' : ''; ?>>Estagiário</option>
                         <option value="Técnico Judiciário"<?php echo $cargoVal === 'Técnico Judiciário' ? ' selected' : ''; ?>>Técnico Judiciário</option>
@@ -362,7 +362,7 @@ function deriveUsuarioStatus(array $usuario): string
                 </div>
                 <div class="col">
                     <label for="edit-setor">Setor</label>
-                    <select id="edit-setor" name="setor" class="width-lg height-md white">
+                    <select id="edit-setor" name="setor" class="width-400 height-md white">
                         <option value="">Selecione (opcional)</option>
                         <option value="Cartório"<?php echo $setorAtual === 'Cartório' ? ' selected' : ''; ?>>Cartório</option>
                         <option value="Gabinete"<?php echo $setorAtual === 'Gabinete' ? ' selected' : ''; ?>>Gabinete</option>

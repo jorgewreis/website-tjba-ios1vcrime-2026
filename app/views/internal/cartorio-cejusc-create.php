@@ -58,11 +58,11 @@ try {
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col filter">
                 <label for="filter-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-md height-md" id="filter-processo" placeholder="Digite o número do processo" required>
+                <input type="text" class="width-200 height-md" id="filter-processo" placeholder="Digite o número do processo" required>
             </div>
             <div class="col filter">
                 <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe processual <span class="label-hint-automatizado">*automatizado</span></label>
-                <input type="text" class="width-lg height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>
+                <input type="text" class="width-400 height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>
             </div>
         </div>
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
@@ -70,10 +70,10 @@ try {
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col filter" id="reu-col">
                 <label for="filter-reu">Nome do réu <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <select class="width-xl height-md" id="filter-reu-select" style="display: none;" aria-label="Réus vinculados ao processo">
+                <select class="width-600 height-md" id="filter-reu-select" style="display: none;" aria-label="Réus vinculados ao processo">
                     <!-- preenchido via JS quando houver réus -->
                 </select>
-                <input type="text" class="width-xl height-md" id="filter-reu" placeholder="Nome do denunciado" maxlength="120" required aria-label="Nome do réu quando não há réus ou opção Outro">
+                <input type="text" class="width-600 height-md" id="filter-reu" placeholder="Nome do denunciado" maxlength="120" required aria-label="Nome do réu quando não há réus ou opção Outro">
             </div>
         </div>
 

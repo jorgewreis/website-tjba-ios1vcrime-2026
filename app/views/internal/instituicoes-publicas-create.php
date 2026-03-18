@@ -25,23 +25,23 @@ if (function_exists('mb_internal_encoding')) mb_internal_encoding('UTF-8');
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
                 <label for="nome">Nome <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-xl height-md white" id="nome" required>
+                <input type="text" class="width-600 height-md white" id="nome" required>
             </div>
         </div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
                 <label for="nome_fantasia">Nome fantasia / Sigla</label>
-                <input type="text" class="width-md height-md white" id="nome_fantasia">
+                <input type="text" class="width-200 height-md white" id="nome_fantasia">
             </div>
             <div class="col">
                 <label for="cnpj">CNPJ</label>
-                <input type="text" class="width-md height-md white" id="cnpj" placeholder="Somente números">
+                <input type="text" class="width-200 height-md white" id="cnpj" placeholder="Somente números">
             </div>
         </div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
                 <label for="observacoes">Observações</label>
-                <textarea class="width-xl height-md white" id="observacoes" rows="2"></textarea>
+                <textarea class="width-600 height-md white" id="observacoes" rows="2"></textarea>
             </div>
         </div>
         <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">

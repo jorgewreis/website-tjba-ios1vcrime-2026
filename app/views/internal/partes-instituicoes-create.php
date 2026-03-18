@@ -42,7 +42,7 @@ $instituicoes = $instituicoesList['rows'] ?? [];
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
                 <label for="parte_id">Pessoa (parte) <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <select class="width-xl height-md white" id="parte_id" required>
+                <select class="width-600 height-md white" id="parte_id" required>
                     <option value="">— Selecione a pessoa —</option>
                     <?php foreach ($pessoas as $p): ?>
                     <?php
@@ -58,7 +58,7 @@ $instituicoes = $instituicoesList['rows'] ?? [];
             </div>
             <div class="col">
                 <label for="instituicao_id">Instituição <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <select class="width-xl height-md white" id="instituicao_id" required>
+                <select class="width-600 height-md white" id="instituicao_id" required>
                     <option value="">— Selecione a instituição —</option>
                     <?php foreach ($instituicoes as $i): ?>
                     <?php
@@ -75,23 +75,23 @@ $instituicoes = $instituicoesList['rows'] ?? [];
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
                 <label for="setor_id">Setor (opcional)</label>
-                <select class="width-md height-md white" id="setor_id">
+                <select class="width-200 height-md white" id="setor_id">
                     <option value="">— Selecione a instituição primeiro —</option>
                 </select>
             </div>
             <div class="col">
                 <label for="profissao">Profissão</label>
-                <input type="text" class="width-md height-md white" id="profissao" placeholder="Ex: Policial">
+                <input type="text" class="width-200 height-md white" id="profissao" placeholder="Ex: Policial">
             </div>
             <div class="col">
                 <label for="cargo_funcao">Cargo / Função <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-md height-md white" id="cargo_funcao" placeholder="Ex: Investigador">
+                <input type="text" class="width-200 height-md white" id="cargo_funcao" placeholder="Ex: Investigador">
             </div>
         </div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
                 <label for="observacoes">Observações</label>
-                <textarea class="width-xl height-md white" id="observacoes" rows="2"></textarea>
+                <textarea class="width-600 height-md white" id="observacoes" rows="2"></textarea>
             </div>
         </div>
         <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">

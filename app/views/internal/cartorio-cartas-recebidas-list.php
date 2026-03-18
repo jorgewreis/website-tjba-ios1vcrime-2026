@@ -420,7 +420,7 @@ if ($totalPages > 0) {
                             </div>
                             <?php if ($isOrdem3): ?>
                                 <div class="col">
-                                <select class="subtask-resultado-cumprimento width-md height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Resultado do cumprimento">
+                                <select class="subtask-resultado-cumprimento width-200 height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Resultado do cumprimento">
                                     <option value="">Selecione o resultado</option>
                                     <?php foreach ($resultadoCumprimentoOptions as $val => $label): ?>
                                         <option value="<?php echo htmlspecialchars($val, ENT_QUOTES); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES); ?></option>
@@ -430,7 +430,7 @@ if ($totalPages > 0) {
                             <?php endif; ?>
                             <?php if ($isOrdem5): ?>
                                 <div class="col">
-                                <select class="subtask-tipo-envio width-md height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Tipo de envio">
+                                <select class="subtask-tipo-envio width-200 height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Tipo de envio">
                                     <option value="">Selecione o tipo de envio</option>
                                     <?php foreach ($tipoEnvioOptions as $val => $label): ?>
                                         <option value="<?php echo htmlspecialchars($val, ENT_QUOTES); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES); ?></option>

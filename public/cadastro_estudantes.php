@@ -88,21 +88,21 @@ $faculdades = [
                         <div class="row">
                             <div class="col">
                                 <label for="nome_completo">Nome completo *</label>
-                                <input class="width-lg white" type="text" id="nome_completo" name="nome_completo" required minlength="3" maxlength="200" placeholder="Nome e sobrenome" autocomplete="name">
+                                <input class="width-400 white" type="text" id="nome_completo" name="nome_completo" required minlength="3" maxlength="200" placeholder="Nome e sobrenome" autocomplete="name">
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col">
                                 <label for="cpf">CPF *</label>
-                                <input class="width-md white" type="text" id="cpf" name="cpf" required maxlength="14" placeholder="000.000.000-00">
+                                <input class="width-200 white" type="text" id="cpf" name="cpf" required maxlength="14" placeholder="000.000.000-00">
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col">
                                 <label for="telefone">Telefone com DDD *</label>
-                                <input class="width-md white" type="text" id="telefone" name="telefone" required maxlength="20" placeholder="(73) 99999-8888">
+                                <input class="width-200 white" type="text" id="telefone" name="telefone" required maxlength="20" placeholder="(73) 99999-8888">
                             </div>
                         </div>
 
@@ -118,7 +118,7 @@ $faculdades = [
                         <div class="row">
                             <div class="col">
                                 <label for="faculdade">Faculdade *</label>
-                                <select class="width-lg white" id="faculdade" name="faculdade" required>
+                                <select class="width-400 white" id="faculdade" name="faculdade" required>
                                     <option value="">Selecione a faculdade</option>
                                     <?php foreach ($faculdades as $f): ?>
                                         <option value="<?php echo htmlspecialchars($f, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($f, ENT_QUOTES, 'UTF-8'); ?></option>
@@ -130,14 +130,14 @@ $faculdades = [
                         <div class="row">
                             <div class="col">
                                 <label for="email">E-mail *</label>
-                                <input class="width-lg white" type="email" id="email" name="email" required maxlength="255" placeholder="seu@email.com" autocomplete="email">
+                                <input class="width-400 white" type="email" id="email" name="email" required maxlength="255" placeholder="seu@email.com" autocomplete="email">
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col">
                                 <label for="senha">Senha *</label>
-                                <input class="width-md white" type="password" id="senha" name="senha" required minlength="6" maxlength="25" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+                                <input class="width-200 white" type="password" id="senha" name="senha" required minlength="6" maxlength="25" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
                             </div>
                         </div>
 

@@ -214,26 +214,26 @@ $tiposOptions = [
             <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line" style="justify-content: flex-start;">
                 <div class="col filter">
                     <label for="edit-processo">Processo</label>
-                    <input type="text" id="edit-processo" class="width-md height-md readonly" value="<?php echo htmlspecialchars($guia['numero_processo'] ?? '', ENT_QUOTES); ?>" readonly>
+                    <input type="text" id="edit-processo" class="width-200 height-md readonly" value="<?php echo htmlspecialchars($guia['numero_processo'] ?? '', ENT_QUOTES); ?>" readonly>
                 </div>
                 <div class="col filter">
                     <label for="filter-classe">Classe</label>
                     <?php
                     $classeReadonly = ($classeNome !== 'Classe não informada');
                     $classeValue = $classeReadonly ? $classeNome : '';
-                    $classeClass = 'width-xl height-md' . ($classeReadonly ? ' readonly' : '');
+                    $classeClass = 'width-600 height-md' . ($classeReadonly ? ' readonly' : '');
                     ?>
                     <input type="text" id="filter-classe" class="<?php echo htmlspecialchars($classeClass, ENT_QUOTES); ?>" value="<?php echo htmlspecialchars($classeValue, ENT_QUOTES); ?>"<?php echo $classeReadonly ? ' readonly' : ' placeholder="Informe a classe processual"'; ?>>
                 </div>
                 <div class="col filter">
                     <label for="edit-denunciado">Denunciado</label>
-                    <input type="text" id="edit-denunciado" class="width-xl height-md readonly" value="<?php echo htmlspecialchars($guia['denunciado'] ?? '', ENT_QUOTES); ?>" maxlength="255" readonly>
+                    <input type="text" id="edit-denunciado" class="width-600 height-md readonly" value="<?php echo htmlspecialchars($guia['denunciado'] ?? '', ENT_QUOTES); ?>" maxlength="255" readonly>
                 </div>
             </div>
             <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
                 <div class="col filter">
                     <label for="edit-tipo">Tipo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <select id="edit-tipo" class="width-lg height-md">
+                    <select id="edit-tipo" class="width-400 height-md">
                         <?php foreach ($tiposOptions as $opt): ?>
                             <option value="<?php echo htmlspecialchars($opt, ENT_QUOTES); ?>"<?php echo ($guia['tipo'] ?? '') === $opt ? ' selected' : ''; ?>><?php echo htmlspecialchars($opt); ?></option>
                         <?php endforeach; ?>
@@ -241,13 +241,13 @@ $tiposOptions = [
                 </div>
                 <div class="col filter">
                     <label for="edit-data-fato">Data do fato</label>
-                    <input type="date" id="edit-data-fato" class="width-md height-md" value="<?php echo htmlspecialchars($guia['data_fato'] ?? '', ENT_QUOTES); ?>" max="">
+                    <input type="date" id="edit-data-fato" class="width-200 height-md" value="<?php echo htmlspecialchars($guia['data_fato'] ?? '', ENT_QUOTES); ?>" max="">
                 </div>
             </div>
             <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
                 <div class="col filter">
                     <label for="edit-regime">Regime</label>
-                    <select id="edit-regime" class="width-md height-md">
+                    <select id="edit-regime" class="width-200 height-md">
                         <option value=""<?php echo (($guia['regime'] ?? '') === '') ? ' selected' : ''; ?>>Selecione (opcional)</option>
                         <option value="Aberto"<?php echo (($guia['regime'] ?? '') === 'Aberto') ? ' selected' : ''; ?>>Aberto</option>
                         <option value="Semiaberto"<?php echo (($guia['regime'] ?? '') === 'Semiaberto') ? ' selected' : ''; ?>>Semiaberto</option>
@@ -256,13 +256,13 @@ $tiposOptions = [
                 </div>                
                 <div class="col filter">
                     <label for="edit-dias-multa">Dias-multa</label>
-                    <input type="number" id="edit-dias-multa" class="width-sm height-md" min="0" value="<?php echo isset($guia['dias_multa']) && $guia['dias_multa'] !== null ? (int) $guia['dias_multa'] : ''; ?>">
+                    <input type="number" id="edit-dias-multa" class="width-100 height-md" min="0" value="<?php echo isset($guia['dias_multa']) && $guia['dias_multa'] !== null ? (int) $guia['dias_multa'] : ''; ?>">
                 </div>
             </div>
             <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
                 <div class="col filter">
                     <label for="edit-observacoes">Observações</label>
-                    <input type="text" id="edit-observacoes" class="width-xl height-md" value="<?php echo htmlspecialchars((string) ($guia['observacoes'] ?? ''), ENT_QUOTES); ?>" placeholder="Opcional">
+                    <input type="text" id="edit-observacoes" class="width-600 height-md" value="<?php echo htmlspecialchars((string) ($guia['observacoes'] ?? ''), ENT_QUOTES); ?>" placeholder="Opcional">
                 </div>
             </div>
 

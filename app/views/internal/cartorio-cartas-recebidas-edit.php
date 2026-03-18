@@ -272,20 +272,20 @@ $stateOptions = [
             <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
                 <div class="col filter">
                     <label for="filter-processo">Processo</label>
-                    <input type="text" id="filter-processo" class="width-md height-md readonly" value="<?php echo htmlspecialchars($processoNumero, ENT_QUOTES); ?>" readonly>
+                    <input type="text" id="filter-processo" class="width-200 height-md readonly" value="<?php echo htmlspecialchars($processoNumero, ENT_QUOTES); ?>" readonly>
                 </div>
                 <div class="col filter">
                     <label for="filter-classe">Classe</label>
                     <?php
                     $classeReadonly = ($classeNome !== 'Classe não informada');
                     $classeValue = $classeReadonly ? $classeNome : '';
-                    $classeClass = 'width-xl height-md' . ($classeReadonly ? ' readonly' : '');
+                    $classeClass = 'width-600 height-md' . ($classeReadonly ? ' readonly' : '');
                     ?>
                     <input type="text" id="filter-classe" class="<?php echo htmlspecialchars($classeClass, ENT_QUOTES); ?>" value="<?php echo htmlspecialchars($classeValue, ENT_QUOTES); ?>"<?php echo $classeReadonly ? ' readonly' : ' placeholder="Informe a classe processual"'; ?>>
                 </div>
                 <div class="col filter">
                     <label for="filter-tipo">Finalidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <select class="width-lg height-md" id="filter-tipo" required>
+                    <select class="width-400 height-md" id="filter-tipo" required>
                         <option value="" disabled>Selecione aqui</option>
                         <?php foreach ($finalidadeOptions as $option): ?>
                             <option value="<?php echo htmlspecialchars($option, ENT_QUOTES); ?>"<?php echo $finalidadeValue === $option ? ' selected' : ''; ?>><?php echo htmlspecialchars($option); ?></option>
@@ -296,11 +296,11 @@ $stateOptions = [
             <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
                 <div class="col filter">
                     <label for="filter-cidade">Cidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="text" class="width-xl height-md" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="120" value="<?php echo htmlspecialchars($cidadeValue, ENT_QUOTES); ?>" required>
+                    <input type="text" class="width-600 height-md" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="120" value="<?php echo htmlspecialchars($cidadeValue, ENT_QUOTES); ?>" required>
                 </div>
                 <div class="col filter">
                     <label for="filter-estado">Estado <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <select class="width-md height-md" id="filter-estado" required>
+                    <select class="width-200 height-md" id="filter-estado" required>
                         <?php foreach ($stateOptions as $code => $label): ?>
                             <option value="<?php echo htmlspecialchars($code, ENT_QUOTES); ?>"<?php echo $ufValue === $code ? ' selected' : ''; ?>><?php echo htmlspecialchars($label); ?></option>
                         <?php endforeach; ?>
@@ -308,7 +308,7 @@ $stateOptions = [
                 </div>
                 <div class="col filter">
                     <label for="filter-prazo">Prazo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <select class="width-sm height-md" id="filter-prazo" required>
+                    <select class="width-100 height-md" id="filter-prazo" required>
                         <?php foreach ($deadlineOptions as $option): ?>
                             <?php $digits = preg_replace('/\D+/', '', $option); ?>
                             <option value="<?php echo htmlspecialchars($option, ENT_QUOTES); ?>"<?php echo (int) $digits === $prazoAtual ? ' selected' : ''; ?>><?php echo htmlspecialchars($option); ?></option>
@@ -319,7 +319,7 @@ $stateOptions = [
             <!-- <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
                 <div class="col filter">
                     <label for="filter-observacoes">Observações</label>
-                    <textarea id="filter-observacoes" class="width-xl" rows="4"><?php echo htmlspecialchars($observacoesValue, ENT_QUOTES); ?></textarea>
+                    <textarea id="filter-observacoes" class="width-600" rows="4"><?php echo htmlspecialchars($observacoesValue, ENT_QUOTES); ?></textarea>
                 </div>
             </div> -->
 

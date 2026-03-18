@@ -106,28 +106,28 @@ $csrfToken = Security::generateCSRFToken();
                         <div class="row">
                             <div class="col">
                                 <label for="senha_atual">Senha atual</label>
-                                <input class="width-md white" type="password" id="senha_atual" name="senha_atual" autocomplete="current-password" required>
+                                <input class="width-200 white" type="password" id="senha_atual" name="senha_atual" autocomplete="current-password" required>
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col">
                                 <label for="nova_senha">Nova senha</label>
-                                <input class="width-md white" type="password" id="nova_senha" name="nova_senha" autocomplete="new-password" minlength="8" required>
+                                <input class="width-200 white" type="password" id="nova_senha" name="nova_senha" autocomplete="new-password" minlength="8" required>
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col">
                                 <label for="confirmar_senha">Confirmar nova senha</label>
-                                <input class="width-md white" type="password" id="confirmar_senha" name="confirmar_senha" autocomplete="new-password" minlength="8" required>
+                                <input class="width-200 white" type="password" id="confirmar_senha" name="confirmar_senha" autocomplete="new-password" minlength="8" required>
                             </div>
                         </div>
 
                         <?php if ($mensagemErro !== ''): ?>
                         <div class="row">
                             <div class="col">
-                                <div class="alert-heading danger width-md" role="alert">
+                                <div class="alert-heading danger width-200" role="alert">
                                     <div class="alert-header"><span class="text">Aviso</span></div>
                                     <span class="alert-text"><?php echo htmlspecialchars($mensagemErro, ENT_QUOTES, 'UTF-8'); ?></span>
                                 </div>
@@ -136,7 +136,7 @@ $csrfToken = Security::generateCSRFToken();
                         <?php endif; ?>
 
                         <div class="row" style="background-color: transparent; padding: 20px 0 10px 0; width: 100%; border-bottom: 1px solid var(--color-gray-400);">
-                            <button class="btn btn-primary width-md" type="submit">Alterar senha</button>
+                            <button class="btn btn-primary width-200" type="submit">Alterar senha</button>
                         </div>
 
                         <div class="row" style="border: none; padding-top: 10px;">

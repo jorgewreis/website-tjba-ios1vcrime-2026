@@ -125,11 +125,11 @@ $prioridadeLabels = [
             <div class="row table left padding-tb-md padding-lr-md row-gap-10 full-line">
                 <div class="col">
                     <label for="filter-processo">Processo</label>
-                    <input type="text" id="filter-processo" class="width-md height-md readonly" value="<?php echo htmlspecialchars((string) ($medida['numero_processo'] ?? ''), ENT_QUOTES); ?>" readonly>
+                    <input type="text" id="filter-processo" class="width-200 height-md readonly" value="<?php echo htmlspecialchars((string) ($medida['numero_processo'] ?? ''), ENT_QUOTES); ?>" readonly>
                 </div>
                 <div class="col">
                     <label for="filter-classe">Classe</label>
-                    <input type="text" id="filter-classe" class="width-xl height-md readonly" value="<?php echo htmlspecialchars((string) ($medida['classe_nome'] ?? 'Classe não informada'), ENT_QUOTES); ?>" readonly>
+                    <input type="text" id="filter-classe" class="width-600 height-md readonly" value="<?php echo htmlspecialchars((string) ($medida['classe_nome'] ?? 'Classe não informada'), ENT_QUOTES); ?>" readonly>
                 </div>
             </div>
 
@@ -138,21 +138,21 @@ $prioridadeLabels = [
                 <div class="row table left padding-tb-md padding-lr-md border-bottom row-gap-10 full-line">
                     <div class="col filter">
                         <label>Nome completo</label>
-                        <input type="text" class="width-xl height-md readonly" value="<?php echo htmlspecialchars((string) ($medida['reu']['nome_completo'] ?? ''), ENT_QUOTES); ?>" readonly>
+                        <input type="text" class="width-600 height-md readonly" value="<?php echo htmlspecialchars((string) ($medida['reu']['nome_completo'] ?? ''), ENT_QUOTES); ?>" readonly>
                     </div>
                     <div class="col filter">
                         <label>CPF</label>
-                        <input type="text" class="width-md height-md readonly" value="<?php echo htmlspecialchars((string) ($medida['reu']['cpf'] ?? ''), ENT_QUOTES); ?>" readonly>
+                        <input type="text" class="width-200 height-md readonly" value="<?php echo htmlspecialchars((string) ($medida['reu']['cpf'] ?? ''), ENT_QUOTES); ?>" readonly>
                     </div>
                 </div>
                 <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
                     <div class="col filter">
                         <label>Sexo</label>
-                        <input type="text" class="width-md height-md readonly" value="<?php echo htmlspecialchars((string) ($medida['reu']['sexo'] ?? ''), ENT_QUOTES); ?>" readonly>
+                        <input type="text" class="width-200 height-md readonly" value="<?php echo htmlspecialchars((string) ($medida['reu']['sexo'] ?? ''), ENT_QUOTES); ?>" readonly>
                     </div>
                     <div class="col filter">
                         <label>Data de nascimento</label>
-                        <input type="text" class="width-md height-md readonly" value="<?php echo htmlspecialchars((string) ($medida['reu']['data_nascimento'] ?? ''), ENT_QUOTES); ?>" readonly>
+                        <input type="text" class="width-200 height-md readonly" value="<?php echo htmlspecialchars((string) ($medida['reu']['data_nascimento'] ?? ''), ENT_QUOTES); ?>" readonly>
                     </div>
                 </div>
             </div>
@@ -164,21 +164,21 @@ $prioridadeLabels = [
                         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
                             <div class="col filter">
                                 <label>Nome completo</label>
-                                <input type="text" class="width-xl height-md readonly" value="<?php echo htmlspecialchars((string) ($vitima['nome_completo'] ?? ''), ENT_QUOTES); ?>" readonly>
+                                <input type="text" class="width-600 height-md readonly" value="<?php echo htmlspecialchars((string) ($vitima['nome_completo'] ?? ''), ENT_QUOTES); ?>" readonly>
                             </div>
                             <div class="col filter">
                                 <label>CPF</label>
-                                <input type="text" class="width-md height-md readonly" value="<?php echo htmlspecialchars((string) ($vitima['cpf'] ?? ''), ENT_QUOTES); ?>" readonly>
+                                <input type="text" class="width-200 height-md readonly" value="<?php echo htmlspecialchars((string) ($vitima['cpf'] ?? ''), ENT_QUOTES); ?>" readonly>
                             </div>
                         </div>
                         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
                             <div class="col filter">
                                 <label>Sexo</label>
-                                <input type="text" class="width-md height-md readonly" value="<?php echo htmlspecialchars((string) ($vitima['sexo'] ?? ''), ENT_QUOTES); ?>" readonly>
+                                <input type="text" class="width-200 height-md readonly" value="<?php echo htmlspecialchars((string) ($vitima['sexo'] ?? ''), ENT_QUOTES); ?>" readonly>
                             </div>
                             <div class="col filter">
                                 <label>Data de nascimento</label>
-                                <input type="text" class="width-md height-md readonly" value="<?php echo htmlspecialchars((string) ($vitima['data_nascimento'] ?? ''), ENT_QUOTES); ?>" readonly>
+                                <input type="text" class="width-200 height-md readonly" value="<?php echo htmlspecialchars((string) ($vitima['data_nascimento'] ?? ''), ENT_QUOTES); ?>" readonly>
                             </div>
                         </div>                        
                     </div>
@@ -217,7 +217,7 @@ $prioridadeLabels = [
             <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
                 <div class="col filter">
                     <label for="edit-observacoes">Observações</label>
-                    <input type="text" id="edit-observacoes" class="width-xl height-md" value="<?php echo htmlspecialchars((string) ($medida['observacoes'] ?? ''), ENT_QUOTES); ?>" placeholder="Opcional">
+                    <input type="text" id="edit-observacoes" class="width-600 height-md" value="<?php echo htmlspecialchars((string) ($medida['observacoes'] ?? ''), ENT_QUOTES); ?>" placeholder="Opcional">
                 </div>
             </div>
 

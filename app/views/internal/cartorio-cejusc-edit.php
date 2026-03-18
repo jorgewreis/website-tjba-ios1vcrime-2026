@@ -167,20 +167,20 @@ $timelineData = $tarefa !== null
             <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line" style="justify-content: flex-start;">
                 <div class="col filter">
                     <label for="filter-processo">Processo</label>
-                    <input type="text" id="filter-processo" class="width-md height-md readonly" value="<?php echo htmlspecialchars($processoNumero, ENT_QUOTES); ?>" readonly>
+                    <input type="text" id="filter-processo" class="width-200 height-md readonly" value="<?php echo htmlspecialchars($processoNumero, ENT_QUOTES); ?>" readonly>
                 </div>
                 <div class="col filter">
                     <label for="filter-classe">Classe</label>
                     <?php
                     $classeReadonly = ($classeNome !== 'Classe não informada');
                     $classeValue = $classeReadonly ? $classeNome : '';
-                    $classeClass = 'width-xl height-md' . ($classeReadonly ? ' readonly' : '');
+                    $classeClass = 'width-600 height-md' . ($classeReadonly ? ' readonly' : '');
                     ?>
                     <input type="text" id="filter-classe" class="<?php echo htmlspecialchars($classeClass, ENT_QUOTES); ?>" value="<?php echo htmlspecialchars($classeValue, ENT_QUOTES); ?>"<?php echo $classeReadonly ? ' readonly' : ' placeholder="Informe a classe processual"'; ?>>
                 </div>
                 <div class="col filter">
                     <label for="filter-reu">Réu</label>
-                    <input type="text" id="filter-reu" class="width-xl height-md readonly" value="<?php echo htmlspecialchars($reuNome, ENT_QUOTES); ?>" readonly>
+                    <input type="text" id="filter-reu" class="width-600 height-md readonly" value="<?php echo htmlspecialchars($reuNome, ENT_QUOTES); ?>" readonly>
                 </div>
             </div>
 

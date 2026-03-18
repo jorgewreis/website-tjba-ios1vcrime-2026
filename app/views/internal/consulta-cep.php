@@ -26,31 +26,32 @@ declare(strict_types=1);
         <p class="description-page">Pesquise por CEP ou por parte do endereço.</p>
     </div>
 
-    <div class="card-page">
+    <div class="container-full card-page">
 
-        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Consulta</div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
-            <div class="col">
-                <label for="filter-busca">CEP ou Endereço <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-xl height-md white" id="filter-busca" placeholder="Digite um CEP ou um endereço, como jasmin, nelson costa, ilheus" required>
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-start">
+                <h2>Consulta CEP</h2>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md">
+                <select class="width-300 height-md" id="export-type" disabled aria-disabled="true" title="Indisponível nesta consulta">
+                    <option value="">Exportar lista</option>
+                </select>
+                <button class="btn btn-secondary height-md" id="limpar-btn" type="button">Limpar</button>
+                <button class="btn btn-primary height-md" id="consultar-btn" type="button">Consultar</button>
             </div>
         </div>
 
-        <div class="row info padding-tb-md">
-            <span>*Para endereço, informe no formato <strong style="margin-left: 3px">logradouro, cidade</strong> ou <strong style="margin-left: 3px">logradouro, bairro, cidade</strong>. Se informar apenas o logradouro, a consulta considera Ilhéus/BA como padrão.</span>
-        </div>
-
-        <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
-            <button class="btn btn-secondary" id="limpar-btn" type="button">Limpar</button>
-            <button class="btn btn-primary" id="consultar-btn" type="button">Consultar</button>
-        </div>
-
-        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Resultados</div>
-        <div class="row table between padding-tb-lg padding-lr-md border-bottom">
-            <div class="col right">
+        <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
+            <div class="display-flex row row-fit justify-start gap-y-md">
+                <div class="col">
+                    <label for="filter-busca">CEP ou endereço <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <input type="text" class="width-700 height-md" id="filter-busca" placeholder="CEP ou logradouro, cidade (ex.: jasmin, ilheus)" required>
+                </div>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md align-end">
                 <div class="col">
                     <label for="items-per-page">Itens por página</label>
-                    <select class="width-sm height-md white" id="items-per-page">
+                    <select class="width-300 height-md" id="items-per-page">
                         <option value="5">5</option>
                         <option value="10" selected>10</option>
                         <option value="25">25</option>
@@ -59,10 +60,15 @@ declare(strict_types=1);
                 </div>
             </div>
         </div>
-        <div class="col full-line register" id="resultado-container">
-            <div class="row table">
-                <div class="col full-line">
-                    <label id="consulta-feedback" class="status-placeholder" aria-live="polite"></label>
+
+        <div class="display-flex row row-full padding-x-md padding-y-sm border-bottom">
+            <span class="minor-info">Para endereço, use <strong>logradouro, cidade</strong> ou <strong>logradouro, bairro, cidade</strong>. Só o logradouro assume Ilhéus/BA.</span>
+        </div>
+
+        <div class="display-flex col col-full" id="resultado-container">
+            <div class="display-flex col col-full register border-bottom">
+                <div class="display-flex row row-full padding-x-sm padding-y-sm">
+                    <label id="consulta-feedback" class="status-placeholder major-info" aria-live="polite"></label>
                 </div>
             </div>
         </div>
@@ -145,9 +151,9 @@ declare(strict_types=1);
             function resetResultContainer() {
                 if (!resultadoContainer) return;
                 resultadoContainer.innerHTML = '' +
-                    '<div class="row table between padding-tb-lg padding-lr-md">' +
-                        '<div class="col">' +
-                            '<label id="consulta-feedback" class="status-placeholder" aria-live="polite"></label>' +
+                    '<div class="display-flex col col-full register border-bottom">' +
+                        '<div class="display-flex row row-full padding-x-sm padding-y-sm">' +
+                            '<label id="consulta-feedback" class="status-placeholder major-info" aria-live="polite"></label>' +
                         '</div>' +
                     '</div>';
                 feedback = document.getElementById('consulta-feedback');
@@ -155,25 +161,27 @@ declare(strict_types=1);
 
             function renderResultRow(item) {
                 return '' +
-                    '<div class="row table between full-line padding-tb-sm padding-lr-md border-bottom">' +
-                        '<div class="row left fit row-gap-10">' +
-                            '<div class="col" style="min-width: 300px;">' +
-                                '<label style="font-size: 10px;">Logradouro</label>' +
-                                '<span class="major-info text-ellipsis" style="margin: 0 0 0 12px;">' + escapeHtml(item.logradouro || '') + '</span>' +
+                    '<div class="display-flex col col-full register border-bottom">' +
+                        '<div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">' +
+                            '<div class="display-flex row row-fit justify-start gap-y-sm">' +
+                                '<div class="col width-400">' +
+                                    '<span class="minor-info">Logradouro</span>' +
+                                    '<span class="major-info text-ellipsis">' + escapeHtml(item.logradouro || '') + '</span>' +
+                                '</div>' +
+                                '<div class="col width-300">' +
+                                    '<span class="minor-info">Bairro</span>' +
+                                    '<span class="major-info text-ellipsis">' + escapeHtml(item.bairro || '') + '</span>' +
+                                '</div>' +
+                                '<div class="col width-300">' +
+                                    '<span class="minor-info">Cidade / UF</span>' +
+                                    '<span class="major-info text-ellipsis">' + escapeHtml(item.cidade || '') + ' — ' + escapeHtml(item.uf || '') + '</span>' +
+                                '</div>' +
                             '</div>' +
-                            '<div class="col" style="width: 210px;">' +
-                                '<label style="font-size: 10px;">Bairro</label>' +
-                                '<span class="major-info text-ellipsis" style="margin: 0 0 0 12px;">' + escapeHtml(item.bairro || '') + '</span>' +
-                            '</div>' +
-                            '<div class="col" style="width: 150px;">' +
-                                '<label style="font-size: 10px;">Cidade</label>' +
-                                '<span class="major-info text-ellipsis" style="margin: 0 0 0 12px;">' + escapeHtml(item.cidade || '') + ' - ' + escapeHtml(item.uf || '') + '</span>' +
-                            '</div>' +
-                        '</div>' +
-                        '<div class="row right fit row-gap-10">' +
-                            '<div class="col" style="width: 110px;">' +
-                                '<label style="font-size: 10px;">CEP</label>' +
-                                '<span class="major-info text-ellipsis" style="margin: 0 0 0 12px;">' + escapeHtml(formatCep(item.cep || '')) + '</span>' +
+                            '<div class="display-flex row row-fit justify-end">' +
+                                '<div class="col width-200">' +
+                                    '<span class="minor-info">CEP</span>' +
+                                    '<span class="major-info">' + escapeHtml(formatCep(item.cep || '')) + '</span>' +
+                                '</div>' +
                             '</div>' +
                         '</div>' +
                     '</div>';
@@ -190,24 +198,20 @@ declare(strict_types=1);
                 var paginationEllipsis = trailingPages.length > 0 && paginationButtons[paginationButtons.length - 1] < (totalPages - 1);
 
                 return '' +
-                    '<div class="row table between padding-tb-lg padding-lr-md">' +
-                        '<span class="left pagination-info" id="consulta-feedback">Mostrando ' + startItem + '-' + endItem + ' de ' + totalItems + ' endereços (' + totalPages + ' páginas, ' + perPage + ' itens por página)</span>' +
-                        '<div class="right pagination-controls">' +
-                            '<a class="pagination-symbol' + (isPrevDisabled ? ' disabled' : '') + '" href="#" data-page-action="prev" ' + (isPrevDisabled ? 'aria-disabled="true"' : '') + '>' +
-                                '<img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior">' +
-                            '</a>' +
+                    '<div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">' +
+                        '<span class="pagination-info" id="consulta-feedback">Mostrando ' + startItem + '-' + endItem + ' de ' + totalItems + ' endereços (' + totalPages + ' páginas, ' + perPage + ' itens por página)</span>' +
+                        '<div class="pagination-controls">' +
+                            '<a class="pagination-symbol' + (isPrevDisabled ? ' disabled' : '') + '" href="#" data-page-action="prev" ' + (isPrevDisabled ? 'aria-disabled="true"' : '') + ' aria-label="Página anterior">‹</a>' +
                             paginationButtons.map(function (pageNumber) {
                                 return '<a class="pagination-number' + (pageNumber === page ? ' active' : '') + '" href="#" data-page-number="' + pageNumber + '">' + pageNumber + '</a>';
                             }).join('') +
                             (paginationEllipsis
-                                ? '<a class="pagination-symbol pagination-ellipsis" aria-hidden="true"><img src="/assets/icons/Navigation-Menu-Horizontal--Streamline-Ultimate.png" alt="Mais páginas"></a>'
+                                ? '<span class="pagination-symbol pagination-ellipsis" aria-hidden="true">…</span>'
                                 : '') +
                             trailingPages.map(function (pageNumber) {
                                 return '<a class="pagination-number' + (pageNumber === page ? ' active' : '') + '" href="#" data-page-number="' + pageNumber + '">' + pageNumber + '</a>';
                             }).join('') +
-                            '<a class="pagination-symbol' + (isNextDisabled ? ' disabled' : '') + '" href="#" data-page-action="next" ' + (isNextDisabled ? 'aria-disabled="true"' : '') + '>' +
-                                '<img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página">' +
-                            '</a>' +
+                            '<a class="pagination-symbol' + (isNextDisabled ? ' disabled' : '') + '" href="#" data-page-action="next" ' + (isNextDisabled ? 'aria-disabled="true"' : '') + ' aria-label="Próxima página">›</a>' +
                         '</div>' +
                     '</div>';
             }

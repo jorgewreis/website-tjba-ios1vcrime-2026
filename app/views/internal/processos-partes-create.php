@@ -51,13 +51,13 @@ $polosValidos = ['ativo' => 'Ativo', 'passivo' => 'Passivo', 'terceiros' => 'Ter
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
                 <label for="parte-id">ID da parte (pessoa) <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-xl height-md white" id="parte-id" placeholder="ID da pessoa cadastrada (ex: PRT-...)" required>
+                <input type="text" class="width-600 height-md white" id="parte-id" placeholder="ID da pessoa cadastrada (ex: PRT-...)" required>
             </div>
         </div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
                 <label for="tipo_parte">Tipo de parte <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <select class="width-md height-md white" id="tipo_parte" required>
+                <select class="width-200 height-md white" id="tipo_parte" required>
                     <option value="">Selecione</option>
                     <?php foreach ($tiposValidos as $val => $label): ?>
                         <option value="<?php echo htmlspecialchars($val); ?>"><?php echo htmlspecialchars($label); ?></option>
@@ -66,7 +66,7 @@ $polosValidos = ['ativo' => 'Ativo', 'passivo' => 'Passivo', 'terceiros' => 'Ter
             </div>
             <div class="col">
                 <label for="polo">Polo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <select class="width-md height-md white" id="polo" required>
+                <select class="width-200 height-md white" id="polo" required>
                     <option value="">Selecione</option>
                     <?php foreach ($polosValidos as $val => $label): ?>
                         <option value="<?php echo htmlspecialchars($val); ?>"><?php echo htmlspecialchars($label); ?></option>

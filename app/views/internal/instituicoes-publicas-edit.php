@@ -37,17 +37,17 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
                 <label for="nome">Nome <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-xl height-md white" id="nome" value="<?php echo htmlspecialchars($inst['nome'] ?? ''); ?>" required>
+                <input type="text" class="width-600 height-md white" id="nome" value="<?php echo htmlspecialchars($inst['nome'] ?? ''); ?>" required>
             </div>
         </div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
                 <label for="nome_fantasia">Nome fantasia / Sigla</label>
-                <input type="text" class="width-md height-md white" id="nome_fantasia" value="<?php echo htmlspecialchars($inst['nome_fantasia'] ?? ''); ?>">
+                <input type="text" class="width-200 height-md white" id="nome_fantasia" value="<?php echo htmlspecialchars($inst['nome_fantasia'] ?? ''); ?>">
             </div>
             <div class="col">
                 <label for="cnpj">CNPJ</label>
-                <input type="text" class="width-md height-md white" id="cnpj" value="<?php
+                <input type="text" class="width-200 height-md white" id="cnpj" value="<?php
                     $cnpjVal = preg_replace('/\D+/', '', (string) ($inst['cnpj'] ?? ''));
                     echo htmlspecialchars($cnpjVal !== '' && strlen($cnpjVal) === 14 ? Security::formatCNPJ($cnpjVal) : ($inst['cnpj'] ?? ''));
                 ?>">
@@ -56,7 +56,7 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
                 <label for="observacoes">Observações</label>
-                <textarea class="width-xl height-md white" id="observacoes" rows="2"><?php echo htmlspecialchars($inst['observacoes'] ?? ''); ?></textarea>
+                <textarea class="width-600 height-md white" id="observacoes" rows="2"><?php echo htmlspecialchars($inst['observacoes'] ?? ''); ?></textarea>
             </div>
         </div>
         <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
@@ -77,32 +77,32 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
                 <label for="new-end-cep">CEP</label>
-                <input type="text" class="width-sm height-md white" id="new-end-cep" placeholder="00000-000" maxlength="9">
+                <input type="text" class="width-100 height-md white" id="new-end-cep" placeholder="00000-000" maxlength="9">
                 <button type="button" class="btn btn-secondary-outline" id="buscar-cep-btn">Buscar CEP</button>
             </div>
         </div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
                 <label for="new-end-logradouro">Logradouro</label>
-                <input type="text" class="width-xl height-md white" id="new-end-logradouro" placeholder="Rua, avenida...">
+                <input type="text" class="width-600 height-md white" id="new-end-logradouro" placeholder="Rua, avenida...">
             </div>
             <div class="col">
                 <label for="new-end-numero">Número</label>
-                <input type="text" class="width-sm height-md white" id="new-end-numero" placeholder="Nº">
+                <input type="text" class="width-100 height-md white" id="new-end-numero" placeholder="Nº">
             </div>
             <div class="col">
                 <label for="new-end-complemento">Complemento</label>
-                <input type="text" class="width-md height-md white" id="new-end-complemento" placeholder="Sala, andar...">
+                <input type="text" class="width-200 height-md white" id="new-end-complemento" placeholder="Sala, andar...">
             </div>
         </div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
                 <label for="new-end-bairro">Bairro</label>
-                <input type="text" class="width-md height-md white" id="new-end-bairro" placeholder="Bairro">
+                <input type="text" class="width-200 height-md white" id="new-end-bairro" placeholder="Bairro">
             </div>
             <div class="col">
                 <label for="new-end-cidade">Cidade</label>
-                <input type="text" class="width-md height-md white" id="new-end-cidade" placeholder="Cidade">
+                <input type="text" class="width-200 height-md white" id="new-end-cidade" placeholder="Cidade">
             </div>
             <div class="col">
                 <label for="new-end-uf">UF</label>
@@ -125,9 +125,9 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
             <?php endforeach; ?>
         </div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
-            <input type="text" class="width-sm height-md white" id="new-tel-tipo" placeholder="Tipo">
-            <input type="text" class="width-md height-md white" id="new-tel-numero" placeholder="Número *">
-            <input type="text" class="width-sm height-md white" id="new-tel-ramal" placeholder="Ramal">
+            <input type="text" class="width-100 height-md white" id="new-tel-tipo" placeholder="Tipo">
+            <input type="text" class="width-200 height-md white" id="new-tel-numero" placeholder="Número *">
+            <input type="text" class="width-100 height-md white" id="new-tel-ramal" placeholder="Ramal">
             <label class="inline"><input type="checkbox" id="new-tel-principal"> Principal</label>
             <button type="button" class="btn btn-secondary-outline" id="add-tel-btn">Adicionar telefone</button>
         </div>
@@ -143,8 +143,8 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
             <?php endforeach; ?>
         </div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
-            <input type="text" class="width-xl height-md white" id="new-setor-nome" placeholder="Nome do setor *">
-            <input type="text" class="width-sm height-md white" id="new-setor-sigla" placeholder="Sigla">
+            <input type="text" class="width-600 height-md white" id="new-setor-nome" placeholder="Nome do setor *">
+            <input type="text" class="width-100 height-md white" id="new-setor-sigla" placeholder="Sigla">
             <button type="button" class="btn btn-secondary-outline" id="add-setor-btn">Adicionar setor</button>
         </div>
     </div>

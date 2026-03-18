@@ -162,7 +162,7 @@ try {
             <div class="row table left padding-tb-sm padding-lr-lg">
                 <div class="col">
                     <label for="filter-processo">Responsável</label>
-                    <select class="width-lg height-md" id="filter-processo" name="id_user" <?php echo $podeAlterarRegra ? '' : 'disabled'; ?> required>
+                    <select class="width-400 height-md" id="filter-processo" name="id_user" <?php echo $podeAlterarRegra ? '' : 'disabled'; ?> required>
                         <option value="" disabled<?php echo $selectedUserId === '' ? ' selected' : ''; ?>>Selecione um servidor</option>
                         <?php foreach ($usersList as $user): ?>
                             <option value="<?php echo htmlspecialchars($user['id'], ENT_QUOTES); ?>"<?php echo $selectedUserId === $user['id'] ? ' selected' : ''; ?>>

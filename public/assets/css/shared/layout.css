@@ -78,22 +78,7 @@ body {
             width: 100%;
         }
 
-    /* COLUMN SIZING */
-    .width-sm {
-        width: 50px;
-    }
-    .width-md {
-        width: 100px;
-    }
-    .width-lg {
-        width: 200px;
-    }
-    .width-xl {
-        width: 300px;
-    }
-    .width-xxl {
-        width: 400px;
-    }
+    /* Larguras de coluna: usar .width-100 … .width-999 em form.css */
     .width-full {
         width: 100%;
     }

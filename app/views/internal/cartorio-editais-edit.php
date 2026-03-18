@@ -150,27 +150,27 @@ $timelineData = $edital !== null
             <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line" style="justify-content: flex-start;">
                 <div class="col filter">
                     <label for="filter-processo">Processo</label>
-                    <input type="text" id="filter-processo" class="width-md height-md readonly" value="<?php echo htmlspecialchars($processoNumero, ENT_QUOTES); ?>" readonly>
+                    <input type="text" id="filter-processo" class="width-200 height-md readonly" value="<?php echo htmlspecialchars($processoNumero, ENT_QUOTES); ?>" readonly>
                 </div>
                 <div class="col filter">
                     <label for="filter-classe">Classe</label>
-                    <input type="text" id="filter-classe" class="width-xl height-md readonly" value="<?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?>" readonly>
+                    <input type="text" id="filter-classe" class="width-600 height-md readonly" value="<?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?>" readonly>
                 </div>
             </div>
             <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
                 <div class="col filter">
                     <label for="edit-tipo-edital">Tipo de edital</label>
-                    <input type="text" id="edit-tipo-edital" class="width-lg height-md readonly" value="<?php echo htmlspecialchars($tipoEditalValue, ENT_QUOTES); ?>" readonly>
+                    <input type="text" id="edit-tipo-edital" class="width-400 height-md readonly" value="<?php echo htmlspecialchars($tipoEditalValue, ENT_QUOTES); ?>" readonly>
                 </div>
                 <div class="col filter">
                     <label for="edit-prazo-dias">Prazo do edital (dias)</label>
-                    <input type="text" id="edit-prazo-dias" class="width-sm height-md readonly" value="<?php echo $prazoDiasValue > 0 ? (int) $prazoDiasValue : '—'; ?>" readonly>
+                    <input type="text" id="edit-prazo-dias" class="width-100 height-md readonly" value="<?php echo $prazoDiasValue > 0 ? (int) $prazoDiasValue : '—'; ?>" readonly>
                 </div>
             </div>
             <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
                 <div class="col filter">
                     <label for="edit-observacoes">Observações</label>
-                    <input type="text" id="edit-observacoes" class="width-xl height-md" value="<?php echo htmlspecialchars($observacoesValue, ENT_QUOTES); ?>" placeholder="Opcional">
+                    <input type="text" id="edit-observacoes" class="width-600 height-md" value="<?php echo htmlspecialchars($observacoesValue, ENT_QUOTES); ?>" placeholder="Opcional">
                 </div>
             </div>
 

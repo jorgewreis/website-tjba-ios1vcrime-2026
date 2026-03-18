@@ -129,40 +129,40 @@ $ultimaAlteracaoDadosLower = function_exists('mb_strtolower') ? mb_strtolower($u
                 <div class="row filter">
                     <div class="col filter">
                         <label for="edit-id">Identificador</label>
-                        <input type="text" id="edit-id" class="width-md height-md readonly" value="<?php echo htmlspecialchars($dados['id_usuario'] ?? '', ENT_QUOTES); ?>" readonly>
+                        <input type="text" id="edit-id" class="width-200 height-md readonly" value="<?php echo htmlspecialchars($dados['id_usuario'] ?? '', ENT_QUOTES); ?>" readonly>
                     </div>
                     <div class="col filter">
                         <label for="edit-cpf">CPF</label>
-                        <input type="text" id="edit-cpf" class="width-md height-md readonly" value="<?php echo htmlspecialchars($dados['cpf'] ?? '', ENT_QUOTES); ?>" readonly>
+                        <input type="text" id="edit-cpf" class="width-200 height-md readonly" value="<?php echo htmlspecialchars($dados['cpf'] ?? '', ENT_QUOTES); ?>" readonly>
                     </div>
                 </div>
 
                 <div class="row filter">
                     <div class="col filter">
                         <label for="edit-nome">Nome</label>
-                        <input type="text" id="edit-nome" class="width-xl height-md readonly" value="<?php echo htmlspecialchars($dados['nome'] ?? '', ENT_QUOTES); ?>" readonly>
+                        <input type="text" id="edit-nome" class="width-600 height-md readonly" value="<?php echo htmlspecialchars($dados['nome'] ?? '', ENT_QUOTES); ?>" readonly>
                     </div>
                     <div class="col filter">
                         <label for="edit-sobrenome">Sobrenome</label>
-                        <input type="text" id="edit-sobrenome" class="width-xl height-md readonly" value="<?php echo htmlspecialchars($dados['sobrenome'] ?? '', ENT_QUOTES); ?>" readonly>
+                        <input type="text" id="edit-sobrenome" class="width-600 height-md readonly" value="<?php echo htmlspecialchars($dados['sobrenome'] ?? '', ENT_QUOTES); ?>" readonly>
                     </div>
                 </div>
 
                 <div class="row filter">
                     <div class="col filter">
                         <label for="edit-email">E-mail</label>
-                        <input type="email" id="edit-email" name="email" class="width-xl height-md" value="<?php echo htmlspecialchars($dados['email'] ?? '', ENT_QUOTES); ?>" maxlength="255">
+                        <input type="email" id="edit-email" name="email" class="width-600 height-md" value="<?php echo htmlspecialchars($dados['email'] ?? '', ENT_QUOTES); ?>" maxlength="255">
                     </div>
                     <div class="col filter">
                         <label for="edit-telefone">Telefone</label>
-                        <input type="text" id="edit-telefone" name="telefone" class="width-md height-md" value="<?php echo htmlspecialchars($dados['telefone'] ?? '', ENT_QUOTES); ?>" maxlength="50">
+                        <input type="text" id="edit-telefone" name="telefone" class="width-200 height-md" value="<?php echo htmlspecialchars($dados['telefone'] ?? '', ENT_QUOTES); ?>" maxlength="50">
                     </div>
                 </div>
 
                 <div class="row filter">
                     <div class="col filter">
                         <label for="edit-cargo">Cargo</label>
-                        <select id="edit-cargo" name="cargo" class="width-lg height-md">
+                        <select id="edit-cargo" name="cargo" class="width-400 height-md">
                             <option value="">Selecione (opcional)</option>
                             <?php foreach ($cargoOpcoes as $opt): ?>
                                 <option value="<?php echo htmlspecialchars($opt, ENT_QUOTES); ?>"<?php echo ($dados['cargo'] ?? '') === $opt ? ' selected' : ''; ?>><?php echo htmlspecialchars($opt); ?></option>
@@ -171,7 +171,7 @@ $ultimaAlteracaoDadosLower = function_exists('mb_strtolower') ? mb_strtolower($u
                     </div>
                     <div class="col filter">
                         <label for="edit-setor">Setor</label>
-                        <select id="edit-setor" name="setor" class="width-lg height-md">
+                        <select id="edit-setor" name="setor" class="width-400 height-md">
                             <option value="">Selecione (opcional)</option>
                             <?php foreach ($setorOpcoes as $opt): ?>
                                 <option value="<?php echo htmlspecialchars($opt, ENT_QUOTES); ?>"<?php echo ($dados['instituicao'] ?? '') === $opt ? ' selected' : ''; ?>><?php echo htmlspecialchars($opt); ?></option>
@@ -183,7 +183,7 @@ $ultimaAlteracaoDadosLower = function_exists('mb_strtolower') ? mb_strtolower($u
                 <?php if ($mensagemErro !== ''): ?>
                 <div class="row filter">
                     <div class="col">
-                        <div class="alert-heading danger width-xl" role="alert">
+                        <div class="alert-heading danger width-600" role="alert">
                             <div class="alert-header"><span class="text">Aviso</span></div>
                             <span class="alert-text"><?php echo htmlspecialchars($mensagemErro, ENT_QUOTES, 'UTF-8'); ?></span>
                         </div>
@@ -193,7 +193,7 @@ $ultimaAlteracaoDadosLower = function_exists('mb_strtolower') ? mb_strtolower($u
                 <?php if ($mensagemSucesso !== ''): ?>
                 <div class="row filter">
                     <div class="col">
-                        <div class="alert-heading success width-xl" role="status">
+                        <div class="alert-heading success width-600" role="status">
                             <div class="alert-header"><span class="text">Sucesso</span></div>
                             <span class="alert-text"><?php echo htmlspecialchars($mensagemSucesso, ENT_QUOTES, 'UTF-8'); ?></span>
                         </div>
@@ -207,11 +207,11 @@ $ultimaAlteracaoDadosLower = function_exists('mb_strtolower') ? mb_strtolower($u
                     <div class="row table" style="padding: 10px;">
                         <div class="col filter">
                             <label for="edit-perfis">Perfis vinculados</label>
-                            <input type="text" id="edit-perfis" class="width-xl height-md readonly" value="<?php echo htmlspecialchars($perfisTexto, ENT_QUOTES); ?>" readonly>
+                            <input type="text" id="edit-perfis" class="width-600 height-md readonly" value="<?php echo htmlspecialchars($perfisTexto, ENT_QUOTES); ?>" readonly>
                         </div>
                         <div class="col filter">
                             <label for="edit-ultima-dados">Última alteração de dados</label>
-                            <input type="text" id="edit-ultima-dados" class="width-md height-md readonly" value="<?php echo htmlspecialchars($ultimaAlteracaoDadosLower, ENT_QUOTES); ?>" readonly>
+                            <input type="text" id="edit-ultima-dados" class="width-200 height-md readonly" value="<?php echo htmlspecialchars($ultimaAlteracaoDadosLower, ENT_QUOTES); ?>" readonly>
                         </div>
                     </div>
                 </div>

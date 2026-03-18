@@ -36,17 +36,17 @@ if (function_exists('mb_internal_encoding')) {
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
                 <label for="nome_completo">Nome completo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-xl height-md white" id="nome_completo" name="nome_completo" placeholder="Nome completo da pessoa" required>
+                <input type="text" class="width-600 height-md white" id="nome_completo" name="nome_completo" placeholder="Nome completo da pessoa" required>
             </div>
         </div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
                 <label for="cpf">CPF</label>
-                <input type="text" class="width-md height-md white" id="cpf" name="cpf" placeholder="Somente números">
+                <input type="text" class="width-200 height-md white" id="cpf" name="cpf" placeholder="Somente números">
             </div>
             <div class="col">
                 <label for="sexo">Sexo</label>
-                <select class="width-md height-md white" id="sexo" name="sexo">
+                <select class="width-200 height-md white" id="sexo" name="sexo">
                     <option value="">Selecione</option>
                     <option value="Feminino">Feminino</option>
                     <option value="Masculino">Masculino</option>
@@ -55,7 +55,7 @@ if (function_exists('mb_internal_encoding')) {
             </div>
             <div class="col">
                 <label for="data_nascimento">Data de nascimento</label>
-                <input type="date" class="width-md height-md white" id="data_nascimento" name="data_nascimento">
+                <input type="date" class="width-200 height-md white" id="data_nascimento" name="data_nascimento">
             </div>
         </div>
 
@@ -64,7 +64,7 @@ if (function_exists('mb_internal_encoding')) {
             <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line telefone-row">
                 <div class="col">
                     <label>Tipo</label>
-                    <select class="width-md height-md white tel-tipo">
+                    <select class="width-200 height-md white tel-tipo">
                         <option value="">Selecione</option>
                         <option value="Telefone fixo">Telefone fixo</option>
                         <option value="Celular">Celular</option>
@@ -72,7 +72,7 @@ if (function_exists('mb_internal_encoding')) {
                 </div>
                 <div class="col">
                     <label>Número <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="text" class="width-md height-md white tel-numero" placeholder="Somente números">
+                    <input type="text" class="width-200 height-md white tel-numero" placeholder="Somente números">
                 </div>
             </div>
         </div>
@@ -83,12 +83,12 @@ if (function_exists('mb_internal_encoding')) {
         <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Endereços (opcional)</div>
         <div id="enderecos-cadastro">
             <div class="endereco-row row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
-                <div class="col"><label>CEP</label><input type="text" class="end-cep width-sm height-md white" placeholder="00000-000" maxlength="9"></div>
-                <div class="col"><label>Logradouro</label><input type="text" class="end-logradouro width-xl height-md white" placeholder="Rua, avenida..."></div>
-                <div class="col"><label>Número</label><input type="text" class="end-numero width-sm height-md white" placeholder="Nº"></div>
-                <div class="col"><label>Complemento</label><input type="text" class="end-complemento width-md height-md white" placeholder="Sala, andar..."></div>
-                <div class="col"><label>Bairro</label><input type="text" class="end-bairro width-md height-md white" placeholder="Bairro"></div>
-                <div class="col"><label>Cidade</label><input type="text" class="end-cidade width-md height-md white" placeholder="Cidade"></div>
+                <div class="col"><label>CEP</label><input type="text" class="end-cep width-100 height-md white" placeholder="00000-000" maxlength="9"></div>
+                <div class="col"><label>Logradouro</label><input type="text" class="end-logradouro width-600 height-md white" placeholder="Rua, avenida..."></div>
+                <div class="col"><label>Número</label><input type="text" class="end-numero width-100 height-md white" placeholder="Nº"></div>
+                <div class="col"><label>Complemento</label><input type="text" class="end-complemento width-200 height-md white" placeholder="Sala, andar..."></div>
+                <div class="col"><label>Bairro</label><input type="text" class="end-bairro width-200 height-md white" placeholder="Bairro"></div>
+                <div class="col"><label>Cidade</label><input type="text" class="end-cidade width-200 height-md white" placeholder="Cidade"></div>
                 <div class="col"><label>UF</label><input type="text" class="end-uf width-xs height-md white" placeholder="UF" maxlength="2"></div>
                 <div class="col"><label class="inline"><input type="checkbox" class="end-principal"> Principal</label></div>
             </div>

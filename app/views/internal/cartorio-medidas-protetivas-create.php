@@ -59,11 +59,11 @@ try {
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col filter">
                 <label for="filter-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-md height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" required>
+                <input type="text" class="width-200 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" required>
             </div>
             <div class="col filter">
                 <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe processual <span class="label-hint-automatizado">*automatizado</span></label>
-                <input type="text" class="width-lg height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>
+                <input type="text" class="width-400 height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>
             </div>
         </div>
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
@@ -73,20 +73,20 @@ try {
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line" id="reu-row-principal">
             <div class="col filter">
                 <label for="reu-select">Réu / Denunciado <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <select class="width-xl height-md" id="reu-select" style="display: none;" aria-label="Réus vinculados ao processo ou sugestões por nome">
+                <select class="width-600 height-md" id="reu-select" style="display: none;" aria-label="Réus vinculados ao processo ou sugestões por nome">
                     <!-- preenchido via JS: réus do processo ou sugestões (nome + CPF) + Outro / Cadastrar novo -->
                 </select>
-                <input type="text" class="width-xl height-md" id="reu-nome" placeholder="Nome do réu (digite para buscar ou cadastrar)" maxlength="255" aria-label="Nome do réu quando não há réus ou opção Outro">
+                <input type="text" class="width-600 height-md" id="reu-nome" placeholder="Nome do réu (digite para buscar ou cadastrar)" maxlength="255" aria-label="Nome do réu quando não há réus ou opção Outro">
             </div>
         </div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line" id="reu-campos-complementares" style="display: none;">
             <div class="col filter">
                 <label for="reu-cpf">CPF <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-md height-md" id="reu-cpf" placeholder="Somente números">
+                <input type="text" class="width-200 height-md" id="reu-cpf" placeholder="Somente números">
             </div>
             <div class="col filter">
                 <label for="reu-sexo">Sexo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <select class="width-md height-md" id="reu-sexo">
+                <select class="width-200 height-md" id="reu-sexo">
                     <option value="">Selecione</option>
                     <option value="Feminino">Feminino</option>
                     <option value="Masculino">Masculino</option>
@@ -95,7 +95,7 @@ try {
             </div>
             <div class="col filter">
                 <label for="reu-data-nascimento">Data de nascimento <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="date" class="width-md height-md" id="reu-data-nascimento">
+                <input type="date" class="width-200 height-md" id="reu-data-nascimento">
             </div>
         </div>
 
@@ -138,18 +138,18 @@ try {
             <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line vitima-row-principal">
                 <div class="col filter">
                     <label>Vítima (nome)</label>
-                    <select class="width-xl height-md vitima-select" style="display: none;" aria-label="Sugestões por nome"></select>
-                    <input type="text" class="width-xl height-md vitima-nome" placeholder="Digite o nome para buscar ou cadastrar" maxlength="255">
+                    <select class="width-600 height-md vitima-select" style="display: none;" aria-label="Sugestões por nome"></select>
+                    <input type="text" class="width-600 height-md vitima-nome" placeholder="Digite o nome para buscar ou cadastrar" maxlength="255">
                 </div>
             </div>
             <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line vitima-campos-complementares" style="display: none;">
                 <div class="col filter">
                     <label>CPF <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="text" class="width-md height-md vitima-cpf" placeholder="Somente números">
+                    <input type="text" class="width-200 height-md vitima-cpf" placeholder="Somente números">
                 </div>
                 <div class="col filter">
                     <label>Sexo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <select class="width-md height-md vitima-sexo">
+                    <select class="width-200 height-md vitima-sexo">
                         <option value="">Selecione</option>
                         <option value="Feminino">Feminino</option>
                         <option value="Masculino">Masculino</option>
@@ -158,7 +158,7 @@ try {
                 </div>
                 <div class="col filter">
                     <label>Data de nascimento <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="date" class="width-md height-md vitima-data-nascimento">
+                    <input type="date" class="width-200 height-md vitima-data-nascimento">
                 </div>
             </div>
             <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">

@@ -375,15 +375,15 @@ if ($totalPages > 0) {
                             </div>
                             <?php if ($isOrdem1): ?>
                                 <?php $rowDataFato = $row['data_fato'] ?? ''; $rowDiasMulta = isset($row['dias_multa']) && $row['dias_multa'] !== null ? (int) $row['dias_multa'] : ''; ?>
-                                <div class="col"><input type="date" class="subtask-data-fato width-sm height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" placeholder="Data do fato" title="Data do fato" value="<?php echo $rowDataFato !== '' ? htmlspecialchars($rowDataFato, ENT_QUOTES) : ''; ?>"></div>
-                                <div class="col"><input type="number" class="subtask-dias-multa width-sm height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" min="0" placeholder="Dias-multa" title="Quantidade de dias-multa" value="<?php echo $rowDiasMulta !== '' ? (int) $rowDiasMulta : ''; ?>"></div>
+                                <div class="col"><input type="date" class="subtask-data-fato width-100 height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" placeholder="Data do fato" title="Data do fato" value="<?php echo $rowDataFato !== '' ? htmlspecialchars($rowDataFato, ENT_QUOTES) : ''; ?>"></div>
+                                <div class="col"><input type="number" class="subtask-dias-multa width-100 height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" min="0" placeholder="Dias-multa" title="Quantidade de dias-multa" value="<?php echo $rowDiasMulta !== '' ? (int) $rowDiasMulta : ''; ?>"></div>
                             <?php endif; ?>
                             <?php if ($isOrdem2): ?>
                                 <?php $valorMultaRow = isset($row['valor_multa']) && $row['valor_multa'] !== null && $row['valor_multa'] !== '' ? 'R$ ' . number_format((float) $row['valor_multa'], 2, ',', '.') : ''; ?>
-                                <div class="col"><input type="text" class="subtask-valor-multa width-sm height-sm readonly" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" readonly placeholder="Valor (automático)" title="Valor total da pena de multa" value="<?php echo htmlspecialchars($valorMultaRow, ENT_QUOTES); ?>"></div>
+                                <div class="col"><input type="text" class="subtask-valor-multa width-100 height-sm readonly" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" readonly placeholder="Valor (automático)" title="Valor total da pena de multa" value="<?php echo htmlspecialchars($valorMultaRow, ENT_QUOTES); ?>"></div>
                             <?php endif; ?>
                             <?php if ($isOrdem5): ?>
-                                <div class="col"><select class="subtask-tipo-juntada width-md height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Tipo de juntada">
+                                <div class="col"><select class="subtask-tipo-juntada width-200 height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Tipo de juntada">
                                     <option value="">Selecione</option>
                                     <?php foreach ($tipoJuntadaOptions as $val => $label): ?>
                                         <option value="<?php echo htmlspecialchars($val, ENT_QUOTES); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES); ?></option>
@@ -391,16 +391,16 @@ if ($totalPages > 0) {
                                 </select></div>
                             <?php endif; ?>
                             <?php if ($isOrdem6): ?>
-                                <div class="col"><input type="number" class="subtask-qtd-docs width-sm height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" min="4" value="4" placeholder="Qtd (mín 4)" title="Qtd de documentos gerados"></div>
+                                <div class="col"><input type="number" class="subtask-qtd-docs width-100 height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" min="4" value="4" placeholder="Qtd (mín 4)" title="Qtd de documentos gerados"></div>
                             <?php endif; ?>
                             <?php if ($isOrdem7): ?>
-                                <div class="col"><select class="subtask-tipo-envio width-md height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Tipo de envio">
+                                <div class="col"><select class="subtask-tipo-envio width-200 height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Tipo de envio">
                                     <option value="">Selecione</option>
                                     <?php foreach ($tipoEnvioOptions as $val => $label): ?>
                                         <option value="<?php echo htmlspecialchars($val, ENT_QUOTES); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES); ?></option>
                                     <?php endforeach; ?>
                                 </select></div>
-                                <div class="col"><select class="subtask-destinatario width-sm height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Destinatário">
+                                <div class="col"><select class="subtask-destinatario width-100 height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Destinatário">
                                     <option value="">Dest.</option>
                                     <?php foreach ($destinatarioOptions as $val => $label): ?>
                                         <option value="<?php echo htmlspecialchars($val, ENT_QUOTES); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES); ?></option>

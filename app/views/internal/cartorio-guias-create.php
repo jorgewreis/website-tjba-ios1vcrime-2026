@@ -59,11 +59,11 @@ try {
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col filter">
                 <label for="filter-processo">Número do processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-md height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" required>
+                <input type="text" class="width-200 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" required>
             </div>
             <div class="col filter">
                 <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
-                <input type="text" class="width-lg height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>
+                <input type="text" class="width-400 height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>
             </div>
         </div>
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
@@ -71,14 +71,14 @@ try {
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col filter" id="denunciado-col">
                 <label for="filter-denunciado">Sentenciado <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <select class="width-xl height-md" id="filter-denunciado-select" style="display: none;" aria-label="Réus vinculados ao processo">
+                <select class="width-600 height-md" id="filter-denunciado-select" style="display: none;" aria-label="Réus vinculados ao processo">
                     <!-- preenchido via JS quando houver réus -->
                 </select>
-                <input type="text" class="width-xl height-md" id="filter-denunciado" placeholder="Nome do denunciado/réu" maxlength="255" aria-label="Nome do denunciado quando não há réus ou opção Outro">
+                <input type="text" class="width-600 height-md" id="filter-denunciado" placeholder="Nome do denunciado/réu" maxlength="255" aria-label="Nome do denunciado quando não há réus ou opção Outro">
             </div>
             <div class="col filter">
                 <label for="filter-tipo">Tipo de guia <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <select class="width-lg height-md" id="filter-tipo" required>
+                <select class="width-400 height-md" id="filter-tipo" required>
                     <option value="Guia - Tipo não informado" selected>Guia - Tipo não informado</option>
                     <option value="Guia de Execução Definitiva">Guia de Execução Definitiva</option>
                     <option value="Guia de Recolhimento Provisória">Guia de Recolhimento Provisória</option>
@@ -91,7 +91,7 @@ try {
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col filter">
                 <label for="filter-regime">Regime</label>
-                <select class="width-md height-md" id="filter-regime">
+                <select class="width-200 height-md" id="filter-regime">
                     <option value="">Selecione (opcional)</option>
                     <option value="Aberto">Aberto</option>
                     <option value="Semiaberto">Semiaberto</option>
@@ -100,11 +100,11 @@ try {
             </div>
             <div class="col filter">
                 <label for="filter-data-fato">Data do fato</label>
-                <input type="date" class="width-md height-md" id="filter-data-fato" max="">
+                <input type="date" class="width-200 height-md" id="filter-data-fato" max="">
             </div>
             <div class="col filter">
                 <label for="filter-dias-multa">Dias-multa</label>
-                <input type="number" class="width-sm height-md" id="filter-dias-multa" min="0" placeholder="—">
+                <input type="number" class="width-100 height-md" id="filter-dias-multa" min="0" placeholder="—">
             </div>
         </div>
 

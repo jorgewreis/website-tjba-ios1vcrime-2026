@@ -143,7 +143,7 @@ $statusClasses = [
         <?php if ($flashMessage !== ''): ?>
         <div class="display-flex row row-full padding-x-md padding-y-sm border-bottom">
             <div class="col col-full">
-                <p class="status status-current padding-x-lg height-sm"><?php echo htmlspecialchars($flashMessage, ENT_QUOTES, 'UTF-8'); ?></p>
+                <p class="status status-current padding-x-lg"><?php echo htmlspecialchars($flashMessage, ENT_QUOTES, 'UTF-8'); ?></p>
             </div>
         </div>
         <?php endif; ?>
@@ -251,7 +251,7 @@ $statusClasses = [
                     </div>
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">
                             <div class="col">
-                                <span class="height-sm status padding-x-lg <?php echo htmlspecialchars($statusClass); ?>"><?php echo htmlspecialchars($statusLabel); ?></span>
+                                <span class="status padding-x-lg <?php echo htmlspecialchars($statusClass); ?>"><?php echo htmlspecialchars($statusLabel); ?></span>
                             </div>
                             <div class="col part-edit">
                                 <button type="button" class="" title="Editar" data-edit-id="<?php echo htmlspecialchars($editId); ?>"><i class="fi fi-rr-file-edit"></i></button>

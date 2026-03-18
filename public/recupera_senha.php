@@ -80,11 +80,11 @@ if (isset($_COOKIE['tjba_1vcrime_remember_cpf'])) {
                         <div class="row table left padding-tb-lg row-gap-10">
                             <div class="col table left">
                                 <label for="cpf">CPF</label>
-                                <input class="width-md white" type="text" id="cpf" name="cpf" value="<?php echo htmlspecialchars($cpfInicial, ENT_QUOTES, 'UTF-8'); ?>" required>
+                                <input class="width-200 white" type="text" id="cpf" name="cpf" value="<?php echo htmlspecialchars($cpfInicial, ENT_QUOTES, 'UTF-8'); ?>" required>
                             </div>                        
                             <div class="col table left">
                                 <label for="email">Confirmar e-mail cadastrado</label>
-                                <input class="width-lg white" type="email" id="email" name="email" placeholder="Digite o e-mail cadastrado" required>
+                                <input class="width-400 white" type="email" id="email" name="email" placeholder="Digite o e-mail cadastrado" required>
                             </div>
                         </div>
 
@@ -102,7 +102,7 @@ if (isset($_COOKIE['tjba_1vcrime_remember_cpf'])) {
                         </div>
 
                         <div class="row">
-                            <div class="alert-heading danger width-md" id="alert-login">
+                            <div class="alert-heading danger width-200" id="alert-login">
                                 <div class="alert-header">
                                     <span class="text">Aviso</span>
                                 </div>

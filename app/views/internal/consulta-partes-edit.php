@@ -49,20 +49,20 @@ if ($pessoa === null) {
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
                 <label for="cpf">CPF</label>
-                <input type="text" class="width-md height-md white readyonl" id="cpf" value="<?php
+                <input type="text" class="width-200 height-md white readyonl" id="cpf" value="<?php
                     $cpfVal = $pessoa['cpf'] ?? '';
                     echo htmlspecialchars(strlen($cpfVal) === 11 ? Security::formatCPF($cpfVal) : $cpfVal);
                 ?>" readonly>
             </div>
             <div class="col">
                 <label for="nome_completo">Nome completo</label>
-                <input type="text" class="width-xl height-md white" id="nome_completo" value="<?php echo htmlspecialchars($pessoa['nome_completo'] ?? ''); ?>">
+                <input type="text" class="width-600 height-md white" id="nome_completo" value="<?php echo htmlspecialchars($pessoa['nome_completo'] ?? ''); ?>">
             </div>
         </div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
                 <label for="sexo">Sexo</label>
-                <select class="width-md height-md white" id="sexo">
+                <select class="width-200 height-md white" id="sexo">
                     <option value="">Selecione</option>
                     <option value="Feminino"<?php echo ($pessoa['sexo'] ?? '') === 'Feminino' ? ' selected' : ''; ?>>Feminino</option>
                     <option value="Masculino"<?php echo ($pessoa['sexo'] ?? '') === 'Masculino' ? ' selected' : ''; ?>>Masculino</option>
@@ -71,7 +71,7 @@ if ($pessoa === null) {
             </div>
             <div class="col">
                 <label for="data_nascimento">Data de nascimento</label>
-                <input type="date" class="width-md height-md white" id="data_nascimento" value="<?php echo htmlspecialchars($pessoa['data_nascimento'] ?? ''); ?>">
+                <input type="date" class="width-200 height-md white" id="data_nascimento" value="<?php echo htmlspecialchars($pessoa['data_nascimento'] ?? ''); ?>">
             </div>
         </div>
         <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
@@ -92,7 +92,7 @@ if ($pessoa === null) {
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
                 <label for="new-tel-tipo">Tipo</label>
-                <select class="width-md height-md white" id="new-tel-tipo">
+                <select class="width-200 height-md white" id="new-tel-tipo">
                     <option value="">Selecione</option>
                     <option value="Telefone fixo">Telefone fixo</option>
                     <option value="Celular">Celular</option>
@@ -100,7 +100,7 @@ if ($pessoa === null) {
             </div>
             <div class="col">
                 <label for="new-tel-numero">Número</label>
-                <input type="text" class="width-md height-md white" id="new-tel-numero" placeholder="Somente números">
+                <input type="text" class="width-200 height-md white" id="new-tel-numero" placeholder="Somente números">
             </div>
             <label for="add-tel-btn">-</label>
             <button type="button" class="btn btn-secondary-outline" id="add-tel-btn">Adicionar telefone</button>
@@ -118,7 +118,7 @@ if ($pessoa === null) {
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
                 <label for="new-end-cep">CEP</label>
-                <input type="text" class="width-sm height-md white" id="new-end-cep" placeholder="00000-000" maxlength="9">
+                <input type="text" class="width-100 height-md white" id="new-end-cep" placeholder="00000-000" maxlength="9">
             </div>
             <div class="col">
                 <label for="buscar-cep-btn">-</label>
@@ -128,25 +128,25 @@ if ($pessoa === null) {
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
                 <label for="new-end-logradouro">Logradouro</label>
-                <input type="text" class="width-xl height-md white" id="new-end-logradouro" placeholder="Rua, avenida...">
+                <input type="text" class="width-600 height-md white" id="new-end-logradouro" placeholder="Rua, avenida...">
             </div>
             <div class="col">
                 <label for="new-end-numero">Número</label>
-                <input type="text" class="width-sm height-md white" id="new-end-numero" placeholder="Nº">
+                <input type="text" class="width-100 height-md white" id="new-end-numero" placeholder="Nº">
             </div>
             <div class="col">
                 <label for="new-end-complemento">Complemento</label>
-                <input type="text" class="width-md height-md white" id="new-end-complemento" placeholder="Sala, andar...">
+                <input type="text" class="width-200 height-md white" id="new-end-complemento" placeholder="Sala, andar...">
             </div>
         </div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
                 <label for="new-end-bairro">Bairro</label>
-                <input type="text" class="width-md height-md white" id="new-end-bairro" placeholder="Bairro">
+                <input type="text" class="width-200 height-md white" id="new-end-bairro" placeholder="Bairro">
             </div>
             <div class="col">
                 <label for="new-end-cidade">Cidade</label>
-                <input type="text" class="width-md height-md white" id="new-end-cidade" placeholder="Cidade">
+                <input type="text" class="width-200 height-md white" id="new-end-cidade" placeholder="Cidade">
             </div>
             <div class="col">
                 <label for="new-end-uf">UF</label>
