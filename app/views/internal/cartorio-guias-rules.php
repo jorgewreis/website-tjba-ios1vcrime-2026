@@ -106,17 +106,13 @@ try {
 <!DOCTYPE html>
 <html lang="pt-BR">
     <head>
-        <?php include __DIR__ . '/_theme_init.php'; ?>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <title>Guias - Regras - Primeira Vara Crime de Ilhéus</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="/assets/css/shared/reset.css">
-        <link rel="stylesheet" href="/assets/css/shared/color.css">
-        <link rel="stylesheet" href="/assets/css/shared/page.css">
-        <link rel="stylesheet" href="/assets/css/shared/form.css">
-        <link rel="stylesheet" href="/assets/css/shared/table.css">
+                <?php include __DIR__ . '/_internal_head_styles.php'; ?>
+
         <?php include __DIR__ . '/_toast_script.php'; ?>
     </head>
 <body class="page-internal">

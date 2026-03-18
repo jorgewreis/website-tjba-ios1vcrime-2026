@@ -17,14 +17,10 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <?php include __DIR__ . '/_theme_init.php'; ?>
-    <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Editar Instituição</title>
-    <link rel="stylesheet" href="/assets/css/shared/reset.css">
-    <link rel="stylesheet" href="/assets/css/shared/color.css">
-    <link rel="stylesheet" href="/assets/css/shared/page.css">
-    <link rel="stylesheet" href="/assets/css/shared/form.css">
-    <link rel="stylesheet" href="/assets/css/shared/table.css">
+            <?php include __DIR__ . '/_internal_head_styles.php'; ?>
+
     <?php include __DIR__ . '/_toast_script.php'; ?>
     <script src="/assets/js/shared/text-formatter.js"></script>
     <script src="/assets/js/shared/cnpj.js"></script>
