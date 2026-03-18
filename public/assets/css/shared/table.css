@@ -1,47 +1,5 @@
-/* TABLE COMPONENTS */
-/* ROW + COMPONENTS */
-.row {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-    .row.table {
-        width: 100%;
-        min-height: 40px;
-        box-sizing: border-box;
-    }
-
-    /* ROW ALIGN */
-    .row.left {
-        justify-content: flex-start;
-    }
-    .row.right {
-        justify-content: flex-end;
-    }
-    .row.center {
-        justify-content: center;
-    }
-    .row.between {
-        justify-content: space-between;
-    }
-
-    /* ROW PADDING */
-    .padding-tb-sm {
-        padding-top: 5px;
-        padding-bottom: 5px;
-    }
-    .padding-tb-md {
-        padding-top: 10px;
-        padding-bottom: 10px;
-    }
-    .padding-tb-lg {
-        padding-top: 15px;
-        padding-bottom: 15px;
-    }
-
-    /* BORDER TOP BOTTOM */
+/* TABLE */
+/* BORDER TOP BOTTOM */
     .border-top {
         border-top: 1px solid var(--color-gray-200);
     }
@@ -50,14 +8,14 @@
     }
 
     /* ROWS SPECIALS */
-    .row.buttons {
-        background-color: var(--color-gray-100);
+    .row.filters {
+        background-color: var(--color-background-menu);
     }
     .row.subtitle {
-        background: #F8F9FA;
-        background-color: linear-gradient(180deg, var(--color-gray-100) 0%, var(--color-gray-100) 85%, var(--color-accent) 100%);
-        border-bottom: 1px solid var(--primary-color);
-        border-top: 1px solid var(--color-gray-300);
+        background: var(--color-background-elevated);
+        background-color: linear-gradient(180deg, var(--color-background-elevated) 0%, var(--color-background-elevated) 85%, var(--color-primary) 100%);
+        border-bottom: 1px solid var(--color-primary);
+        border-top: 1px solid var(--color-border);
     }
 
     .row.allocate-users {
@@ -199,7 +157,8 @@
 
     
     /* COLS SPECIALS */
-    .col.subtask {
+    .col.subtask,
+    .row.subtask {
         margin: 0 5px 0 40px;
         width: calc(100% - 45px);
     }
@@ -474,6 +433,7 @@
 @media (min-width: 1024px) {    
     .button-edit {
         visibility: visible;
+        margin-top: 7px;
     }
 
     /* COLUMNS WITH ID FIX */

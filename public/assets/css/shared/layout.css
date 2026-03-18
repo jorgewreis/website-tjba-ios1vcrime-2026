@@ -1,11 +1,3 @@
-/**
- * Layout da home (shell): menu lateral, navbar, content wrapper, iframe.
- * Migrado a partir de legacy (layout, menu-style, style) – apenas classes usadas por home.php.
- * Depende de shared/color.css. Variáveis: --color-*, --bs-*, --bg-*.
- * base.css foi removido (estava vazio); index/recupera_senha/cadastro usam só reset + color + form/login.
- */
-
-/* ========== MOBILE – NO VIEW (max-width: 389px) ========== */
 @media (max-width: 389px) {
     .view {
         display: none;
@@ -15,7 +7,6 @@
     }
 }
 
-/* ========== GLOBAL BODY (home shell) ========== */
 body {
     width: 100vw;
     min-height: 100vh;
@@ -24,8 +15,177 @@ body {
     background-color: var(--background-color);
 }
 
+
 /* ========== DESKTOP (min-width: 390px) ========== */
 @media (min-width: 390px) {
+
+    /* CONTAINER */
+    .container {
+        width: 410px;
+    }
+
+    .container-sm {
+        width: 540px;
+    }
+
+    .container-md {
+        width: 720px;
+    }
+
+    .container-lg {
+        width: 960px;
+    }
+
+    .container-xl {
+        width: 1140px;
+    }
+
+    .container-xxl {
+        width: 1320px;
+    }
+
+    .container-full {
+        width: 100%;
+    }
+
+    /* DISPLAY */
+    .display-none {
+        display: none;
+    }
+    .display-block {
+        display: block;
+    }
+    .display-flex {
+        display: flex;
+        flex-wrap: wrap;
+    }
+    
+    /* ROW */
+    .row {
+        flex-direction: row;
+    }
+        .row-fit {
+            width: fit-content;
+        }
+        .row-full {
+            width: 100%;
+        }
+
+    .col {
+        flex-direction: column;
+    }
+        .col-full {
+            width: 100%;
+        }
+
+    /* COLUMN SIZING */
+    .width-sm {
+        width: 50px;
+    }
+    .width-md {
+        width: 100px;
+    }
+    .width-lg {
+        width: 200px;
+    }
+    .width-xl {
+        width: 300px;
+    }
+    .width-xxl {
+        width: 400px;
+    }
+    .width-full {
+        width: 100%;
+    }
+
+    /* GAP */
+    .gap-x-sm {
+        gap: 10x;
+    }
+    .gap-x-md {
+        gap: 20px;
+    }
+    .gap-x-lg {
+        gap: 30px;
+    }
+    .gap-y-sm {
+        gap: 5px;
+    }
+    .gap-y-md {
+        gap: 10px;
+    }
+    .gap-y-lg {
+        gap: 15px;
+    }
+
+    /* PADDING */
+    .padding-x-sm { 
+        padding-left: 5px;
+        padding-right: 5px;
+    }
+    .padding-x-md {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+    .padding-x-lg {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    .padding-y-sm {
+        padding-top: 5px;
+        padding-bottom: 5px;
+    }
+    .padding-y-md {
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+    .padding-y-lg {
+        padding-top: 15px;
+        padding-bottom: 15px;
+    }
+    
+    /* ALIGNMENT */
+    .align-start {
+        align-items: flex-start;
+    }
+    .align-center {
+        align-items: center;
+    }
+    .align-end {
+        align-items: flex-end;
+    }
+    .align-between {
+        align-items: space-between;
+    }
+    .align-around {
+        align-items: space-around;
+    }
+    .align-evenly {
+        align-items: space-evenly;
+    }
+
+
+    /* JUSTIFICATION */
+    .justify-start {
+        justify-content: flex-start;
+    }
+    .justify-center {
+        justify-content: center;
+    }
+    .justify-end {
+        justify-content: flex-end;
+    }
+    .justify-between {
+        justify-content: space-between;
+    }
+    .justify-around {
+        justify-content: space-around;
+    }
+    .justify-evenly {
+        justify-content: space-evenly;
+    }
+
+
     .layout-wraper {
         display: flex;
         flex-direction: column;

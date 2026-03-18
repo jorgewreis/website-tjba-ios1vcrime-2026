@@ -9,6 +9,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="../../public/assets/css/shared/reset.css">
         <link rel="stylesheet" href="../../public/assets/css/shared/color.css">
+        <link rel="stylesheet" href="../../public/assets/css/shared/layout.css">
         <link rel="stylesheet" href="../../public/assets/css/shared/page.css">
         <link rel="stylesheet" href="../../public/assets/css/shared/form.css">
         <link rel="stylesheet" href="../../public/assets/css/shared/table.css">
@@ -39,178 +40,119 @@
         </div>
     </div>
 
-    <div class="card-page">
+    <!-- CARD PAGE -->
+    <div class="container-full card-page">
+
+        <!-- TITLE TABLE -->
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-start">
+                <h2>Lista de documentos</h2>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md">
+                <input type="text" class="width-400 height-md" id="search-input" placeholder="Pesquisar na lista...">
+                <select class="width-300 height-md" id="export-type">
+                    <option value="" selected>Exportar lista</option>
+                    <option value="pdf">Gerar PDF</option>
+                    <option value="csv">Gerar CSV</option>
+                    <option value="print">Imprimir</option>
+                </select>
+                <button class="btn btn-primary" id="novo-cadastro-btn">Novo cadastro</button>
+            </div>
+        </div>
 
         <!-- Filtros -->
-        <div class="row filter">
-            <div class="col filter">
-                <label for="filter-tipo">Filtrar por finalidade</label>
-                <select class="width-md height-md" id="filter-tipo">
-                    <option value="" selected>Mostrar todas</option>
-                    <option value="Intimação para Audiência">Intimação para Audiência (45)</option>
-                    <option value="Intimação de Decisão Interlocutória">Intimação de Decisão Interlocutória (8)</option>
-                    <option value="Intimação da Sentença">Intimação da Sentença (12)</option>
-                    <option value="Citação para apresentar Defesa">Citação para apresentar Defesa (9)</option>
-                    <option value="Citação para apresentar Alegações Finais">Citação para apresentar Alegações Finais (2)</option>
-                    <option value="Suspensão Condicional">Suspensão Condicional (7)</option>
-                    <option value="Outra">Outra (3)</option>
-                </select>
+        <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
+            <div class="display-flex row row-fit justify-start gap-y-md">
+                <div class="col">
+                    <label for="filter-tipo">Filtrar por finalidade</label>
+                    <select class="width-700 height-md" id="filter-tipo">
+                        <option value="" selected>Mostrar todas</option>
+                        <option value="Intimação para Audiência">Intimação para Audiência (45)</option>
+                        <option value="Intimação de Decisão Interlocutória">Intimação de Decisão Interlocutória (8)</option>
+                        <option value="Intimação da Sentença">Intimação da Sentença (12)</option>
+                        <option value="Citação para apresentar Defesa">Citação para apresentar Defesa (9)</option>
+                        <option value="Citação para apresentar Alegações Finais">Citação para apresentar Alegações Finais (2)</option>
+                        <option value="Suspensão Condicional">Suspensão Condicional (7)</option>
+                        <option value="Outra">Outra (3)</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <label for="filter-status">Filtrar por status</label>
+                    <select class="width-500 height-md" id="filter-status">
+                        <option value="" selected>Mostrar todos</option>
+                        <option value="aguardando assinatura">Aguardando assinatura (21)</option>
+                        <option value="aguardando envio">Aguardando envio (14)</option>
+                        <option value="aguardando juntada do termo">Aguardando juntada do termo (12)</option>
+                        <option value="aguardando cumprimento">Aguardando cumprimento (8)</option>
+                    </select>
+                </div>
             </div>
-            <div class="col filter">
-                <label for="filter-status">Filtrar por status</label>
-                <select class="width-md height-md" id="filter-status">
-                    <option value="" selected>Mostrar todos</option>
-                    <option value="aguardando assinatura">Aguardando assinatura (21)</option>
-                    <option value="aguardando envio">Aguardando envio (14)</option>
-                    <option value="aguardando juntada do termo">Aguardando juntada do termo (12)</option>
-                    <option value="aguardando cumprimento">Aguardando cumprimento (8)</option>
-                </select>
-            </div>
-            <div class="col filter">
-                <label for="items-per-page">Itens por página</label>
-                <select class="width-sm height-md" id="items-per-page">
-                    <option value="10">10</option>
-                    <option value="25" selected>25</option>
-                    <option value="50">50</option>
-                    <option value="100">100</option>
-                </select>
-            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md">
+                <div class="col">
+                    <label for="items-per-page">Itens por página</label>
+                    <select class="width-300 height-md" id="items-per-page">
+                        <option value="10">10</option>
+                        <option value="25" selected>25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+            </div>            
         </div>
-
-        <!-- Ações -->
-        <div class="row buttons">
-            <input type="text" class="width-md height-md" id="search-input" placeholder="Pesquisar na lista...">
-            <select class="width-sm height-md" id="export-type">
-                <option value="" selected>Exportar lista</option>
-                <option value="pdf">Gerar PDF</option>
-                <option value="csv">Gerar CSV</option>
-                <option value="print">Imprimir</option>
-            </select>
-            <button class="btn btn-primary" id="novo-cadastro-btn">Novo cadastro</button>
-        </div>
-
-        <!-- Tabela -->
-        <div class="row table header">Lista de Documentos</div>
         
-        <!-- Registro -->
-        <div class="col full-line register">
+        <!-- REGISTER -->
+        <div class="display-flex col col-full register border-bottom">
 
-            <!-- Tarefa -->
-            <div class="row table" id="sample-row">
-                <div class="row">
+            <!-- TASK -->
+            <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm" id="sample-row">
+                <div class="display-flex row row-fit justify-start gap-y-sm">
                     <div class="col">
                         <label class="button-table" title="Expandir detalhes">
                             <input type="radio" name="open-subtask" />
                             <i class="fi fi-rr-angle-small-down"></i>
                         </label>                
                     </div>
-                    <div class="col filter process-info" title="clique para copiar">
-                        <span class="minor-info">Cartas Recebidas</span>
+                    <div class="col width-500" title="clique para copiar">
+                        <span class="minor-info text-ellipsis">Cartas Recebidas</span>
                         <span class="major-info">08002343-11.2026.8.05.0103</span>
                     </div>
-                </div>
-                <div class="col filter comarca-info">
-                    <span class="minor-info">Comarca de destino</span>
-                    <span class="major-info">Ilhéus - BA</span>
-                </div>
-                <div class="col filter detalhes-info">
-                    <span class="minor-info">Finalidade</span>
-                    <span class="major-info">Intimação para Audiência</span>
-                </div>
-                <div class="row">
+                    <div class="col width-400" title="clique para copiar">
+                        <span class="minor-info">Comarca de destino</span>
+                        <span class="major-info text-ellipsis">Ilhéus - BA</span>
+                    </div>
+                    <div class="col width-500" title="clique para copiar">
+                        <span class="minor-info">Finalidade</span>
+                        <span class="major-info text-ellipsis">Intimação para Audiência</span>
+                    </div>
+                </div>                
+                <div class="display-flex row row-fit justify-end gap-y-sm">
                     <div class="col button-table button-edit" title="Editar">
                         <i class="fi fi-rr-file-edit"></i>
                     </div>
-                    <div class="col status-task" title="aguardando cumprimento">
-                        <div class="width-sm status status-current">Em andamento</div>
+                    <div class="col" title="aguardando cumprimento">
+                        <div class="padding-x-lg status status-current">Em andamento</div>
                     </div>                
                 </div>
             </div>
 
             <!-- Subtarefas (modelo simples: uma linha, status + botão) -->
-            <div class="row subtask">
-                <div class="col full-line">
-                    <div class="row subtask-item">
-                        <div class="col task-status">
-                            <div class="status status-pending">Aguardando assinatura</div>
-                        </div>
-                        <button class="btn btn-primary" title="Informar assinatura">
-                            <i class="fi fi-rr-play"></i>
-                        </button>
+            <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top">
+                <div class="display-flex row row-fit justify-start gap-y-sm">
+                    <div class="col task-status">
+                        <div class="padding-x-lg height-sm status status-pending">Aguardando assinatura</div>
                     </div>
                 </div>
-            </div>
-        </div>
-        <!-- Fim do registro -->
-
-        <!-- Registro -->
-        <div class="col full-line register">
-
-            <!-- Tarefa -->
-            <div class="row table" id="sample-row">
-                <div class="row">
-                    <div class="col">
-                        <label class="button-table" title="Expandir detalhes">
-                            <input type="radio" name="open-subtask" />
-                            <i class="fi fi-rr-angle-small-down"></i>
-                        </label>                
-                    </div>
-                    <div class="col filter process-info" title="clique para copiar">
-                        <span class="minor-info">Cartas Recebidas</span>
-                        <span class="major-info">08002343-11.2026.8.05.0103</span>
-                    </div>
-                </div>
-                <div class="col filter comarca-info">
-                    <span class="minor-info">Comarca de destino</span>
-                    <span class="major-info">Ilhéus - BA</span>
-                </div>
-                <div class="col filter detalhes-info">
-                    <span class="minor-info">Finalidade</span>
-                    <span class="major-info">Intimação para Audiência</span>
-                </div>
-                <div class="row">
-                    <div class="col button-table button-edit" title="Editar">
-                        <i class="fi fi-rr-file-edit"></i>
-                    </div>
-                    <div class="row allocate-users">
-                        <div class="user-allocate all" title="Tarefa alocada para: Maria Silva">MS</div>
-                        <div class="user-allocate specific" title="Sub-tarefa realizada por: João Santos">JS</div>
-                        <div class="user-allocate rule" title="Envio de carta alocado para: Mário Bastos">MB</div>
-                    </div>
-                    <div class="col status-task" title="aguardando cumprimento">
-                        <div class="width-sm status status-current">Em andamento</div>
-                    </div>                
-                </div>
-            </div>
-
-            <!-- Subtarefas (modelo com complemento: uma linha, status + input + botão) -->
-            <div class="row subtask">
-                <div class="col full-line">
-                    <div class="row subtask-item">
-                        <div class="left-content">
-                            <div class="col task-status">
-                                <div class="status status-current">Gerar PDF's</div>
-                            </div>
-                            <div class="col task-status">
-                                <input type="number" class="width-sm height-md" value="" min="1" max="10" placeholder="Qtd docs gerados" />
-                            </div>
-                        </div>
-                        <div class="right-content">
-                            <button class="btn btn-warning" title="Cancelar">
-                                <i class="fi fi-rr-cross-circle"></i>
-                            </button>
-                            <button class="btn btn-primary" title="Informar PDF's gerados">
-                                <i class="fi fi-rr-play"></i>
-                            </button>
-                        </div>                        
-                    </div>
+                <div class="display-flex row row-fit justify-end">
+                    <button class="btn btn-primary height-sm" title="Informar assinatura">
+                        <span class="value-button">Informar assinatura</span>
+                    </button>
                 </div>
             </div>
         </div>
         <!-- Fim do registro -->
 
         <!-- Paginação -->
-        <div class="row pagination">
+        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
             <span class="pagination-info">Mostrando 1-25 de 100 documentos</span>
             <div class="pagination-controls">
                 <div class="pagination-symbol disabled">
@@ -223,6 +165,7 @@
                 </div>
             </div>
         </div> 
+        <!-- Fim da paginação -->
 
     </div>
 

@@ -92,7 +92,7 @@ $taskTitleByTipo = [
     'aguardando_envio' => 'Aguardando envio de Carta',
     'aguardando_juntada_termo' => 'Aguardando comprovante de envio',
     'aguardando_informacoes' => 'Aguardando cumprimento',
-    'aguardando_devolucao' => 'Aguardando cumprimento',
+    'aguardando_devolucao' => 'Aguardando devolução',
 ];
 $buttonTitleByTipo = [
     'aguardando_assinatura' => 'Informar assinatura',
@@ -213,7 +213,7 @@ if ($totalPages > 0) {
     <div class="card-page">
     
         <!-- ROW ACTIONS -->
-        <div class="row table buttons right padding-lr-md padding-tb-md row-gap-10">
+        <div class="display-flex row ">
 
             <!-- SEARCH -->
             <input type="text" class="width-md height-md white" id="search-input" placeholder="Pesquisar na lista..." value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
