@@ -121,69 +121,60 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
         <p class="description-page">Pesquisa por pessoa: nome ou CPF. Informe ao menos um critério e clique em Consultar.</p>
     </div>
 
-    <div class="card-page">
+    <div class="container-full card-page">
 
-        <!-- FILTROS -->
-        <form method="get" id="form-filters" style="width: 100%">
-            <input type="hidden" name="page" value="<?php echo htmlspecialchars($routePage); ?>">
-            <input type="hidden" name="items_per_page" value="<?php echo (int) $itemsPerPage; ?>">
-            <div class="row table between padding-tb-lg padding-lr-md border-bottom full-line">
-                <div class="row left row-gap-10 fit">
-                    <div class="col">
-                        <label for="filter-nome">Nome</label>
-                        <input type="text" class="width-lg height-md white" id="filter-nome" name="nome" placeholder="Nome da parte" value="<?php echo htmlspecialchars($nomeFilter); ?>">
-                    </div>
-                    <div class="col">
-                        <label for="filter-cpf">CPF</label>
-                        <input type="text" class="width-md height-md white" id="filter-cpf" name="cpf" placeholder="CPF" value="<?php echo htmlspecialchars($cpfFilter); ?>">
-                    </div>
-                </div>
-                <div class="row right fit">
-                    <div class="col">
-                        <label style="color: var(--color-gray-000);">-</label>
-                        <button type="submit" class="btn btn-primary">Consultar</button>
-                    </div>
-                </div>
-            </div>            
-        </form>
-
-        <!-- ROW ACTIONS -->
-        <div class="row table buttons right padding-lr-md padding-tb-md row-gap-10">
-            <button type="button" class="btn btn-primary" id="novo-cadastro-btn">Novo cadastro</button>
-        </div>
-
-        <!-- SUBTITLE TABLE -->
-        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Lista de Partes</div>
-        
-        <div class="row table between padding-tb-lg padding-lr-md border-bottom full-line">
-            <div class="row right">
-                <div class="col">
-                    <label for="items-per-page">Itens por página</label>
-                    <select class="width-sm height-md white" name="items_per_page" id="items-per-page">
-                        <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
-                        <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
-                        <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
-                        <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
-                    </select>
-                </div>
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-start">
+                <h2>Lista de partes</h2>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md">
+                <button type="button" class="btn btn-primary height-md" id="novo-cadastro-btn">Novo cadastro</button>
             </div>
         </div>
 
-        <?php if (!$filtrou): ?>
-        <div class="row table between padding-tb-lg padding-lr-md border-bottom full-line">
-            <div class="row table between padding-tb-md border-top">
-                <div class="col table left no-data">
-                    <span class="major-info">Informe ao menos um critério (nome ou CPF) e clique em Consultar para exibir os resultados.</span>
+        <form method="get" id="form-filters" class="display-flex col col-full" style="width:100%">
+            <input type="hidden" name="page" value="<?php echo htmlspecialchars($routePage); ?>">
+            <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
+                <div class="display-flex row row-fit justify-start gap-y-md">
+                    <div class="col">
+                        <label for="filter-nome">Nome</label>
+                        <input type="text" class="width-500 height-md" id="filter-nome" name="nome" placeholder="Nome da parte" value="<?php echo htmlspecialchars($nomeFilter); ?>">
+                    </div>
+                    <div class="col">
+                        <label for="filter-cpf">CPF</label>
+                        <input type="text" class="width-300 height-md" id="filter-cpf" name="cpf" placeholder="CPF" value="<?php echo htmlspecialchars($cpfFilter); ?>">
+                    </div>
                 </div>
+                <div class="display-flex row row-fit justify-end gap-y-md align-end">
+                    <div class="col">
+                        <label for="items-per-page">Itens por página</label>
+                        <select class="width-300 height-md" name="items_per_page" id="items-per-page">
+                            <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
+                            <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
+                            <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
+                            <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
+                        </select>
+                    </div>
+                    <div class="col">
+                        <button type="submit" class="btn btn-primary height-md">Consultar</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <?php if (!$filtrou): ?>
+        <div class="display-flex col col-full register border-bottom">
+            <div class="display-flex row row-full padding-x-sm padding-y-sm">
+                <span class="major-info">Informe ao menos um critério (nome ou CPF) e clique em Consultar para exibir os resultados.</span>
             </div>
         </div>
 
         <?php elseif (!empty($rows)): ?>
-            <div class="col full-line border-bottom">
-                <?php foreach ($rows as $row): ?>
-                <div class="row table between padding-lr-md padding-tb-md border-bottom">
-                    <div class="row left">
-                        <div class="col parte-info">
+            <?php foreach ($rows as $row): ?>
+            <div class="display-flex col col-full register border-bottom">
+                <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
+                    <div class="display-flex row row-fit justify-start gap-y-sm">
+                        <div class="col width-500 parte-info">
                             <span class="minor-info">Nome</span>
                             <span class="major-info"><?php $cpfCell = $row['cpf'] ?? ''; echo htmlspecialchars(($row['nome_completo'] ?? '') . ' (' . ($cpfCell !== '' && strlen($cpfCell) === 11 ? Security::formatCPF($cpfCell) : ($cpfCell !== '' ? $cpfCell : '—')) . ')'); ?></span>
                         </div>
@@ -227,33 +218,30 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                             </span>
                         </div>
                     </div>
-                    <div class="row right">
+                    <div class="display-flex row row-fit justify-end">
                         <div class="col part-edit">
                             <button type="button" class="" title="Editar" data-edit-id="<?php echo htmlspecialchars($row['id'] ?? ''); ?>"><i class="fi fi-rr-file-edit"></i></button>
                         </div>
                     </div>
                 </div>
-                <?php endforeach; ?>
             </div>
+            <?php endforeach; ?>
             <?php else: ?>
-                <div class="col subtask subtask-collapsed padding-lr-md full-line">
-                    <div class="row table between padding-tb-md border-top">
-                        <div class="col table left no-data">
-                            <span class="major-info">Nenhuma parte encontrada para os critérios informados.</span>
-                        </div>
+                <div class="display-flex col col-full register border-bottom">
+                    <div class="display-flex row row-full padding-x-sm padding-y-sm">
+                        <span class="major-info">Nenhuma parte encontrada para os critérios informados.</span>
                     </div>
                 </div>
             <?php endif; ?>
 
         <?php if ($filtrou): ?>
-        <!-- Paginação -->
-        <div class="row table between padding-tb-lg padding-lr-md">
-            <span class="left pagination-info">
+        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
+            <span class="pagination-info">
                 Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $totalDocuments; ?> <?php echo $documentsLabel; ?>
                 <?php if ($totalPages > 0): ?>(<?php echo $totalPages; ?> <?php echo $pagesLabel; ?>, <?php echo $itemsPerPage; ?> <?php echo $itemsLabel; ?> por página)<?php endif; ?>
             </span>
             <?php if ($totalPages > 0): ?>
-                <div class="right pagination-controls">
+                <div class="pagination-controls">
                     <?php
                     $prevParams = $baseQueryParams; $prevParams['page_number'] = max(1, $currentPage - 1);
                     $nextParams = $baseQueryParams; $nextParams['page_number'] = min($totalPages, $currentPage + 1);

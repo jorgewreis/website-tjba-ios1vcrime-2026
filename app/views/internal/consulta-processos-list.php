@@ -93,96 +93,94 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
         <p class="description-page">Pesquisa por número do processo ou nome da parte. Informe ao menos um critério e clique em Consultar.</p>
     </div>
 
-    <div class="card-page">
+    <div class="container-full card-page">
 
-        <!-- FILTROS -->
-        <form method="get" id="form-filters" style="width: 100%">
-            <input type="hidden" name="page" value="<?php echo htmlspecialchars($routePage); ?>">
-            <input type="hidden" name="items_per_page" value="<?php echo (int) $itemsPerPage; ?>">
-            <div class="row table between padding-tb-lg padding-lr-md border-bottom full-line">
-                <div class="row left row-gap-10 fit">
-                    <div class="col">
-                        <label for="filter-numero">Número do processo</label>
-                        <input type="text" class="width-md height-md white" id="filter-numero" name="numero" placeholder="Número do processo" value="<?php echo htmlspecialchars($numeroFilter); ?>">
-                    </div>
-                    <div class="col">
-                        <label for="filter-parte">Nome da parte</label>
-                        <input type="text" class="width-lg height-md white" id="filter-parte" name="parte_nome" placeholder="Nome da parte" value="<?php echo htmlspecialchars($parteNomeFilter); ?>">
-                    </div>
-                </div>
-                <div class="row right fit">
-                    <div class="col">
-                        <label style="color: var(--color-gray-000);">-</label>
-                        <button type="submit" class="btn btn-primary">Consultar</button>
-                    </div>
-                </div>                
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-start">
+                <h2>Lista de processos</h2>
             </div>
-        </form>
-
-        <!-- SUBTITLE TABLE -->
-        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Lista de Processos</div>
-
-        <div class="row table between padding-tb-lg padding-lr-md border-bottom full-line">
-            <div class="col">
-                <label for="items-per-page">Itens por página</label>
-                <select class="width-sm height-md white" name="items_per_page" id="items-per-page">
-                    <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
-                    <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
-                    <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
-                    <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
+            <div class="display-flex row row-fit justify-end gap-y-md">
+                <select class="width-300 height-md" disabled aria-hidden="true">
+                    <option>Exportar lista</option>
                 </select>
             </div>
         </div>
 
-        <?php if (!$filtrou): ?>
-            <div class="col subtask subtask-collapsed padding-lr-md full-line">
-                <div class="row table between padding-tb-md border-top">
-                    <div class="col table left no-data">
-                        <span class="major-info">Informe o número do processo ou o nome da parte e clique em Consultar para exibir os resultados.</span>
+        <form method="get" id="form-filters" class="display-flex col col-full" style="width:100%">
+            <input type="hidden" name="page" value="<?php echo htmlspecialchars($routePage); ?>">
+            <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
+                <div class="display-flex row row-fit justify-start gap-y-md">
+                    <div class="col">
+                        <label for="filter-numero">Número do processo</label>
+                        <input type="text" class="width-400 height-md" id="filter-numero" name="numero" placeholder="Número do processo" value="<?php echo htmlspecialchars($numeroFilter); ?>">
+                    </div>
+                    <div class="col">
+                        <label for="filter-parte">Nome da parte</label>
+                        <input type="text" class="width-500 height-md" id="filter-parte" name="parte_nome" placeholder="Nome da parte" value="<?php echo htmlspecialchars($parteNomeFilter); ?>">
+                    </div>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-md align-end">
+                    <div class="col">
+                        <label for="items-per-page">Itens por página</label>
+                        <select class="width-300 height-md" name="items_per_page" id="items-per-page">
+                            <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
+                            <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
+                            <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
+                            <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
+                        </select>
+                    </div>
+                    <div class="col">
+                        <label class="display-none" for="btn-consultar-proc">Consultar</label>
+                        <button type="submit" class="btn btn-primary height-md" id="btn-consultar-proc">Consultar</button>
                     </div>
                 </div>
             </div>
+        </form>
+
+        <?php if (!$filtrou): ?>
+            <div class="display-flex col col-full register border-bottom">
+                <div class="display-flex row row-full padding-x-sm padding-y-sm">
+                    <span class="major-info">Informe o número do processo ou o nome da parte e clique em Consultar para exibir os resultados.</span>
+                </div>
+            </div>
         <?php elseif (!empty($rows)): ?>
-            <div class="col full-line border-bottom">
-                <?php foreach ($rows as $row): ?>
-                <div class="row table between padding-lr-md padding-tb-md border-bottom">
-                    <div class="row left">
-                        <div class="col process-info">
+            <?php foreach ($rows as $row): ?>
+            <div class="display-flex col col-full register border-bottom">
+                <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
+                    <div class="display-flex row row-fit justify-start gap-y-sm">
+                        <div class="col width-500 process-info">
                             <span class="minor-info"><?php echo htmlspecialchars($row['classe_nome'] ?? '—'); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars($row['numero_processo'] ?? '—'); ?></span>
                         </div>
-                        <div class="col process-partes">
+                        <div class="col width-200">
                             <span class="minor-info">Partes</span>
                             <span class="major-info"><?php echo htmlspecialchars($row['total_partes'] ?? '—'); ?></span>
-                        </div>                        
+                        </div>
                     </div>
-                    <div class="row right">
+                    <div class="display-flex row row-fit justify-end">
                         <div class="col process-edit">
                             <button type="button" class="" title="Abrir" data-edit-id="<?php echo htmlspecialchars($row['id'] ?? ''); ?>"><i class="fi fi-rr-file-edit"></i></button>
                         </div>
                     </div>
                 </div>
-                <?php endforeach; ?>
             </div>
-            <?php else: ?>
-                <div class="col subtask subtask-collapsed padding-lr-md full-line">
-                    <div class="row table between padding-tb-md border-top">
-                        <div class="col table left no-data">
-                            <span class="major-info">Nenhum processo encontrado para os critérios informados.</span>
-                        </div>
-                    </div>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <div class="display-flex col col-full register border-bottom">
+                <div class="display-flex row row-full padding-x-sm padding-y-sm">
+                    <span class="major-info">Nenhum processo encontrado para os critérios informados.</span>
                 </div>
-            <?php endif; ?>
+            </div>
+        <?php endif; ?>
 
         <?php if ($filtrou): ?>
-        <!-- Paginação -->
-        <div class="row table between padding-tb-lg padding-lr-md">
-            <span class="left pagination-info">
+        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
+            <span class="pagination-info">
                 Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $totalDocuments; ?> <?php echo $documentsLabel; ?>
                 <?php if ($totalPages > 0): ?>(<?php echo $totalPages; ?> <?php echo $pagesLabel; ?>, <?php echo $itemsPerPage; ?> <?php echo $itemsLabel; ?> por página)<?php endif; ?>
             </span>
             <?php if ($totalPages > 0): ?>
-                <div class="right pagination-controls">
+                <div class="pagination-controls">
                     <?php
                     $prevParams = $baseQueryParams; $prevParams['page_number'] = max(1, $currentPage - 1);
                     $nextParams = $baseQueryParams; $nextParams['page_number'] = min($totalPages, $currentPage + 1);

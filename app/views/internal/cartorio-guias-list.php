@@ -191,23 +191,29 @@ if ($totalPages > 0) {
         <p class="description-page">Controle de guias de execução e recolhimento.</p>
     </div>
 
-    <div class="card-page">
+    <div class="container-full card-page">
 
-        <!-- ROW ACTIONS -->
-        <div class="row table buttons right padding-lr-md padding-tb-md row-gap-10">
-            <input type="text" class="width-md height-md white" id="search-input" placeholder="Pesquisar por processo..." value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
-            <button class="btn btn-primary" id="novo-cadastro-btn">Novo cadastro</button>
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-start">
+                <h2>Lista de guias</h2>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md">
+                <input type="text" class="width-400 height-md" id="search-input" placeholder="Pesquisar por processo..." value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
+                <select class="width-300 height-md" id="export-type" disabled>
+                    <option value="" selected>Exportar lista</option>
+                    <option value="pdf">Gerar PDF</option>
+                    <option value="csv">Gerar CSV</option>
+                    <option value="print">Imprimir</option>
+                </select>
+                <button class="btn btn-primary" id="novo-cadastro-btn">Novo cadastro</button>
+            </div>
         </div>
 
-        <!-- SUBTITLE TABLE -->
-        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Lista de Guias</div>
-
-        <!-- FILTERS -->
-        <div class="row table between padding-tb-lg padding-lr-md border-bottom">
-            <div class="row left row-gap-10 fit">
+        <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
+            <div class="display-flex row row-fit justify-start gap-y-md">
                 <div class="col">
                     <label for="filter-tipo">Filtrar por tipo</label>
-                    <select class="width-md height-md" id="filter-tipo">
+                    <select class="width-500 height-md" id="filter-tipo">
                         <option value=""<?php echo $tipoFilter === '' ? ' selected' : ''; ?>>Mostrar todos</option>
                         <?php foreach ($tipoCountsOrdered as $tipo => $count): if ($count === 0 && $tipoFilter !== $tipo) continue; ?>
                             <option value="<?php echo htmlspecialchars($tipo, ENT_QUOTES); ?>"<?php echo $tipoFilter === $tipo ? ' selected' : ''; ?>>
@@ -218,7 +224,7 @@ if ($totalPages > 0) {
                 </div>
                 <div class="col">
                     <label for="filter-status">Filtrar por status</label>
-                    <select class="width-md height-md" id="filter-status">
+                    <select class="width-500 height-md" id="filter-status">
                         <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Mostrar todos</option>
                         <option value="pendente"<?php echo $statusFilter === 'pendente' ? ' selected' : ''; ?>>Pendente (<?php echo (int) ($statusCounts['pendente'] ?? 0); ?>)</option>
                         <option value="em_andamento"<?php echo $statusFilter === 'em_andamento' ? ' selected' : ''; ?>>Em andamento (<?php echo (int) ($statusCounts['em_andamento'] ?? 0); ?>)</option>
@@ -227,10 +233,10 @@ if ($totalPages > 0) {
                     </select>
                 </div>
             </div>
-            <div class="col right fit">
+            <div class="display-flex row row-fit justify-end gap-y-md">
                 <div class="col">
                     <label for="items-per-page">Itens por página</label>
-                    <select class="width-sm height-md" id="items-per-page">
+                    <select class="width-300 height-md" id="items-per-page">
                         <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
                         <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
                         <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
@@ -244,21 +250,17 @@ if ($totalPages > 0) {
                 $idGuia = $row['IdGuia'];
                 $subtarefas = $row['Subtarefas'] ?? [];
             ?>
-            <!-- REGISTRO COMPLETO -->
-            <div class="col full-line border-bottom" data-guia-id="<?php echo htmlspecialchars($idGuia, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idGuia); ?>">
+            <div class="display-flex col col-full register border-bottom" data-guia-id="<?php echo htmlspecialchars($idGuia, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idGuia); ?>">
 
-                <!-- TAREFA -->
-                <div class="row table between padding-lr-md">
-                    <!-- DIV LEFT -->
-                    <div class="row left fit">
+                <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
+                    <div class="display-flex row row-fit justify-start gap-y-sm align-center">
                         <div class="col">
                             <label class="button-table" title="Expandir detalhes">
                                 <input type="radio" name="open-subtask" value="<?php echo htmlspecialchars($idGuia, ENT_QUOTES); ?>" aria-controls="subtask-<?php echo htmlspecialchars($idGuia); ?>" aria-expanded="false" />
                                 <i class="fi fi-rr-angle-small-down"></i>
                             </label>
                         </div>
-                        <!-- DADOS DO PROCESSO -->
-                        <div class="col process-info" title="clique para copiar">
+                        <div class="col width-500 process-info" title="clique para copiar">
                             <?php
                                 $classeGuia = !empty($row['Classe']) ? $row['Classe'] : 'Classe não informada';
                                 $classeStyleGuia = $classeGuia !== 'Classe não informada' ? 'style="color: var(--primary-color-active); font-weight: 600;"' : '';
@@ -266,21 +268,20 @@ if ($totalPages > 0) {
                             <span class="minor-info text-ellipsis" title="<?php echo htmlspecialchars($classeGuia, ENT_QUOTES); ?>" <?php echo $classeStyleGuia; ?>><?php echo htmlspecialchars($classeGuia); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars($row['Processo'] ?? ''); ?></span>
                         </div>
-                        <div class="col comarca-info">
+                        <div class="col width-400" title="clique para copiar">
                             <span class="minor-info">Denunciado</span>
-                            <span class="major-info"><?php echo htmlspecialchars($row['Denunciado'] ?? '—'); ?></span>
-                        </div>                        
-                        <div class="col detalhes-info-tipo">
+                            <span class="major-info text-ellipsis"><?php echo htmlspecialchars($row['Denunciado'] ?? '—'); ?></span>
+                        </div>
+                        <div class="col width-300" title="clique para copiar">
                             <span class="minor-info">Tipo</span>
-                            <span class="major-info"><?php echo htmlspecialchars($row['Tipo'] ?? '—'); ?></span>
+                            <span class="major-info text-ellipsis"><?php echo htmlspecialchars($row['Tipo'] ?? '—'); ?></span>
                         </div>
                     </div>
-                    <!-- DIV RIGHT -->
-                    <div class="row right fit">
+                    <div class="display-flex row row-fit justify-end gap-y-sm align-center">
                         <div class="col button-table button-edit" data-guia-id="<?php echo htmlspecialchars($idGuia, ENT_QUOTES); ?>" title="Editar">
                             <i class="fi fi-rr-file-edit"></i>
                         </div>
-                        <div class="row allocate-users">
+                        <div class="display-flex row row-fit justify-end gap-y-sm allocate-chips-row">
                             <?php
                             $alocados = $row['Alocados'] ?? [];
                             if (count($alocados) === 0) {
@@ -333,30 +334,29 @@ if ($totalPages > 0) {
                             }
                         }
                         ?>
-                        <div class="col status-task" title="<?php echo htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES); ?>">
+                        <div class="col<?php echo $mostrarBarra ? ' status-task' : ''; ?>" title="<?php echo htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES); ?>">
                             <?php
                             if ($st === 'concluída') {
-                                echo '<div class="width-sm status status-finished">Finalizada</div>';
+                                echo '<div class="padding-x-lg status status-finished">Finalizada</div>';
                             } elseif ($st === 'cancelada') {
-                                echo '<div class="width-sm status status-cancelled">Cancelada</div>';
+                                echo '<div class="padding-x-lg status status-cancelled">Cancelada</div>';
                             } elseif ($mostrarBarra) {
                                 $concluidosBarra = 1 + count(array_filter($progressStatuses, function ($x) { return $x === 'concluida' || $x === 'cancelada' || $x === 'pulada'; }));
-                                echo '<div class="width-sm status status-current status-with-progress"><span class="status-task-label">Em andamento</span>';
+                                echo '<div class="width-300 status status-current status-with-progress"><span class="status-task-label width-300">Em andamento</span>';
                                 echo '<div class="status-task-progress" role="progressbar" aria-valuenow="' . $concluidosBarra . '" aria-valuemin="0" aria-valuemax="9" aria-label="Progresso">';
                                 foreach ($segmentosBarra as $seg) {
                                     echo '<div class="status-task-progress-segment ' . htmlspecialchars($seg['class'], ENT_QUOTES) . '" title="' . htmlspecialchars($seg['title'], ENT_QUOTES) . '"></div>';
                                 }
                                 echo '</div></div>';
                             } else {
-                                echo '<div class="width-sm status status-pending">Pendente</div>';
+                                echo '<div class="padding-x-lg status status-pending">Pendente</div>';
                             }
                             ?>
                         </div>
                     </div>
                 </div>
 
-                <!-- SUB-TAREFAS -->
-                <div class="col subtask subtask-collapsed padding-lr-lg" id="subtask-<?php echo htmlspecialchars($idGuia); ?>" aria-hidden="true">
+                <div class="display-flex col col-full subtask subtask-collapsed" id="subtask-<?php echo htmlspecialchars($idGuia); ?>" aria-hidden="true">
                     <?php foreach ($subtarefas as $st):
                         $stId = $st['id'] ?? '';
                         $stTipo = $st['tipo'] ?? '';
@@ -368,79 +368,78 @@ if ($totalPages > 0) {
                         $isOrdem6 = ($stTipo === GuiasSubtarefasRepository::TIPO_ORDEM_6);
                         $isOrdem7 = ($stTipo === GuiasSubtarefasRepository::TIPO_ORDEM_7);
                     ?>
-                    <div class="row table between padding-tb-sm border-top full-line" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
-                        <div class="row table left row-gap-10 fit">
-                            <div class="status status-pending padding-lr-lg"><?php echo htmlspecialchars($stLabel); ?></div>
+                    <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
+                        <div class="display-flex row row-fit justify-start gap-y-sm align-center subtask-row-fields">
+                            <div class="col task-status">
+                                <div class="padding-x-lg height-sm status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
+                            </div>
                             <?php if ($isOrdem1): ?>
                                 <?php $rowDataFato = $row['data_fato'] ?? ''; $rowDiasMulta = isset($row['dias_multa']) && $row['dias_multa'] !== null ? (int) $row['dias_multa'] : ''; ?>
-                                <input type="date" class="subtask-data-fato width-sm height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" placeholder="Data do fato" title="Data do fato" value="<?php echo $rowDataFato !== '' ? htmlspecialchars($rowDataFato, ENT_QUOTES) : ''; ?>">
-                                <input type="number" class="subtask-dias-multa width-sm height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" min="0" placeholder="Dias-multa" title="Quantidade de dias-multa" value="<?php echo $rowDiasMulta !== '' ? (int) $rowDiasMulta : ''; ?>">
+                                <div class="col"><input type="date" class="subtask-data-fato width-sm height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" placeholder="Data do fato" title="Data do fato" value="<?php echo $rowDataFato !== '' ? htmlspecialchars($rowDataFato, ENT_QUOTES) : ''; ?>"></div>
+                                <div class="col"><input type="number" class="subtask-dias-multa width-sm height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" min="0" placeholder="Dias-multa" title="Quantidade de dias-multa" value="<?php echo $rowDiasMulta !== '' ? (int) $rowDiasMulta : ''; ?>"></div>
                             <?php endif; ?>
                             <?php if ($isOrdem2): ?>
                                 <?php $valorMultaRow = isset($row['valor_multa']) && $row['valor_multa'] !== null && $row['valor_multa'] !== '' ? 'R$ ' . number_format((float) $row['valor_multa'], 2, ',', '.') : ''; ?>
-                                <input type="text" class="subtask-valor-multa width-sm height-sm readonly" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" readonly placeholder="Valor (automático)" title="Valor total da pena de multa" value="<?php echo htmlspecialchars($valorMultaRow, ENT_QUOTES); ?>">
+                                <div class="col"><input type="text" class="subtask-valor-multa width-sm height-sm readonly" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" readonly placeholder="Valor (automático)" title="Valor total da pena de multa" value="<?php echo htmlspecialchars($valorMultaRow, ENT_QUOTES); ?>"></div>
                             <?php endif; ?>
                             <?php if ($isOrdem5): ?>
-                                <select class="subtask-tipo-juntada width-md height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Tipo de juntada">
+                                <div class="col"><select class="subtask-tipo-juntada width-md height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Tipo de juntada">
                                     <option value="">Selecione</option>
                                     <?php foreach ($tipoJuntadaOptions as $val => $label): ?>
                                         <option value="<?php echo htmlspecialchars($val, ENT_QUOTES); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES); ?></option>
                                     <?php endforeach; ?>
-                                </select>
+                                </select></div>
                             <?php endif; ?>
                             <?php if ($isOrdem6): ?>
-                                <input type="number" class="subtask-qtd-docs width-sm height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" min="4" value="4" placeholder="Qtd (mín 4)" title="Qtd de documentos gerados">
+                                <div class="col"><input type="number" class="subtask-qtd-docs width-sm height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" min="4" value="4" placeholder="Qtd (mín 4)" title="Qtd de documentos gerados"></div>
                             <?php endif; ?>
                             <?php if ($isOrdem7): ?>
-                                <select class="subtask-tipo-envio width-md height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Tipo de envio">
+                                <div class="col"><select class="subtask-tipo-envio width-md height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Tipo de envio">
                                     <option value="">Selecione</option>
                                     <?php foreach ($tipoEnvioOptions as $val => $label): ?>
                                         <option value="<?php echo htmlspecialchars($val, ENT_QUOTES); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES); ?></option>
                                     <?php endforeach; ?>
-                                </select>
-                                <select class="subtask-destinatario width-sm height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Destinatário">
+                                </select></div>
+                                <div class="col"><select class="subtask-destinatario width-sm height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Destinatário">
                                     <option value="">Dest.</option>
                                     <?php foreach ($destinatarioOptions as $val => $label): ?>
                                         <option value="<?php echo htmlspecialchars($val, ENT_QUOTES); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES); ?></option>
                                     <?php endforeach; ?>
-                                </select>
+                                </select></div>
                             <?php endif; ?>
                         </div>
-                        <div class="col table right">
+                        <div class="display-flex row row-fit justify-end align-center gap-y-sm">
                             <?php if ($isOrdem1): ?>
-                                <button type="button" class="btn btn-secondary-outline btn-cancelar-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Cancelar esta subtarefa">Cancelar</button>
+                                <button type="button" class="btn btn-secondary-outline height-sm btn-cancelar-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Cancelar esta subtarefa">Cancelar</button>
                             <?php endif; ?>
-                            <button type="button" class="btn btn-primary padding-lr-lg row-gap-10 btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($btnTitle, ENT_QUOTES); ?>"><span class="value-button">Concluir</span></button>
+                            <button type="button" class="btn btn-primary height-sm btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($btnTitle, ENT_QUOTES); ?>"><span class="value-button">Concluir</span></button>
                         </div>
                     </div>
                     <?php endforeach; ?>
                     <?php if (empty($subtarefas)): ?>
-                        <div class="row table between padding-tb-md border-top">
+                        <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top align-center gap-y-sm">
                             <span class="minor-info">Nenhuma sub-tarefa pendente.</span>
-                            <button type="button" class="btn btn-secondary btn-criar-subtarefa" data-guia-id="<?php echo htmlspecialchars($idGuia, ENT_QUOTES); ?>">Criar primeira subtarefa</button>
+                            <button type="button" class="btn btn-secondary height-sm btn-criar-subtarefa" data-guia-id="<?php echo htmlspecialchars($idGuia, ENT_QUOTES); ?>">Criar primeira subtarefa</button>
                         </div>
                     <?php endif; ?>
                 </div>
             </div>
             <?php endforeach; ?>
         <?php else: ?>
-            <div class="col subtask subtask-collapsed padding-lr-md">
-                <div class="row table between padding-tb-md border-top">
-                    <div class="col table left no-data">
-                        <span class="major-info">Nenhuma guia cadastrada.</span>
-                    </div>
+            <div class="display-flex col col-full register border-bottom">
+                <div class="display-flex row row-full padding-x-sm padding-y-sm">
+                    <span class="major-info">Nenhuma guia cadastrada.</span>
                 </div>
             </div>
         <?php endif; ?>
 
-        <!-- Paginação -->
-        <div class="row table between padding-tb-lg padding-lr-md">
-            <span class="left pagination-info">
+        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
+            <span class="pagination-info">
                 Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $totalDocuments; ?> <?php echo $documentsLabel; ?>
                 (<?php echo $totalPages; ?> <?php echo $pagesLabel; ?>, <?php echo $itemsPerPage; ?> <?php echo $itemsLabel; ?> por página)
             </span>
             <?php if ($totalPages > 0): ?>
-                <div class="right pagination-controls">
+                <div class="pagination-controls">
                     <?php
                     $prevPage = $currentPage > 1 ? $currentPage - 1 : 1;
                     $prevParams = $baseQueryParams;

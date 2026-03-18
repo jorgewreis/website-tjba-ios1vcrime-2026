@@ -46,82 +46,95 @@ if ($parteId !== '') {
         <h1 class="title-page">Vínculos pessoa-instituição</h1>
         <p class="description-page">Consulte por pessoa (parte) ou por instituição.</p>
     </div>
-    <div class="card-page">
+    <div class="container-full card-page">
 
-        <!-- FILTROS -->
-        <form method="get" id="form-filters">
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-start">
+                <h2>Vínculos</h2>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md">
+                <a href="/frame.php?page=partesinstituicoescreate" class="btn btn-primary height-md">Novo vínculo</a>
+            </div>
+        </div>
+
+        <form method="get" id="form-filters" class="display-flex col col-full" style="width:100%">
             <input type="hidden" name="page" value="partesinstituicoeslist">
-            <div class="row table between padding-tb-lg padding-lr-md border-bottom">
-                <div class="row left row-gap-10">
+            <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
+                <div class="display-flex row row-fit justify-start gap-y-md">
                     <div class="col">
                         <label for="parte_id">ID da pessoa (parte)</label>
-                        <input type="text" class="width-md height-md white" id="parte_id" name="parte_id" placeholder="Ex: PRT-..." value="<?php echo htmlspecialchars($parteId); ?>">
+                        <input type="text" class="width-400 height-md" id="parte_id" name="parte_id" placeholder="Ex: PRT-..." value="<?php echo htmlspecialchars($parteId); ?>">
                     </div>
                     <div class="col">
                         <label for="instituicao_id">ID da instituição</label>
-                        <input type="text" class="width-md height-md white" id="instituicao_id" name="instituicao_id" placeholder="Ex: INS-..." value="<?php echo htmlspecialchars($instituicaoId); ?>">
+                        <input type="text" class="width-400 height-md" id="instituicao_id" name="instituicao_id" placeholder="Ex: INS-..." value="<?php echo htmlspecialchars($instituicaoId); ?>">
                     </div>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-md align-end">
                     <div class="col">
-                        <button type="submit" class="btn btn-primary">Consultar</button>
+                        <button type="submit" class="btn btn-primary height-md">Consultar</button>
                     </div>
                 </div>
             </div>
         </form>
 
         <?php if ($parteId === '' && $instituicaoId === ''): ?>
-            <div class="col subtask subtask-collapsed padding-lr-md full-line">
-                <div class="row table between padding-tb-md border-top">
-                    <div class="col table left no-data"><span class="major-info">Informe o ID da pessoa ou da instituição e clique em Consultar.</span></div>
+            <div class="display-flex col col-full register border-bottom">
+                <div class="display-flex row row-full padding-x-sm padding-y-sm">
+                    <span class="major-info">Informe o ID da pessoa ou da instituição e clique em Consultar.</span>
                 </div>
             </div>
         <?php elseif (!empty($rows)): ?>
-            <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom"><?php echo $parteId !== '' ? 'Instituições vinculadas a ' . htmlspecialchars($parteNome) : 'Pessoas vinculadas a ' . htmlspecialchars($instituicaoNome); ?></div>
-            <table class="table-list">
-                <thead>
-                    <tr>
-                        <?php if ($instituicaoId !== ''): ?>
-                            <th>Pessoa</th><th>CPF</th>
-                        <?php endif; ?>
-                        <?php if ($parteId !== ''): ?>
-                            <th>Instituição</th>
-                        <?php endif; ?>
-                        <th>Cargo/Função</th><th>Data inclusão</th><th>Ativo</th><th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($rows as $r): ?>
-                    <tr>
-                        <?php if ($instituicaoId !== ''): ?>
-                            <td><?php echo htmlspecialchars($r['parte_nome'] ?? '—'); ?></td>
-                            <td><?php echo htmlspecialchars($r['parte_cpf'] ?? '—'); ?></td>
-                        <?php endif; ?>
-                        <?php if ($parteId !== ''): ?>
-                            <td><?php echo htmlspecialchars($r['instituicao_nome'] ?? $r['instituicao_sigla'] ?? '—'); ?></td>
-                        <?php endif; ?>
-                        <td><?php echo htmlspecialchars($r['cargo_funcao'] ?? '—'); ?></td>
-                        <td><?php echo htmlspecialchars($r['data_inclusao'] ?? '—'); ?></td>
-                        <td><?php echo !empty($r['ativo']) ? 'Sim' : 'Não'; ?></td>
-                        <td>
-                            <a href="/frame.php?page=partesinstituicoesedit&id=<?php echo urlencode($r['id'] ?? ''); ?>" class="btn btn-secondary-outline">Editar</a>
-                            <?php if ($parteId !== ''): ?>
-                                <a href="/frame.php?page=consultapartesedit&id=<?php echo urlencode($r['parte_id'] ?? ''); ?>" class="btn btn-secondary-outline">Ver pessoa</a>
-                            <?php endif; ?>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-            <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
-                <a href="/frame.php?page=partesinstituicoescreate" class="btn btn-primary">Novo vínculo</a>
+            <div class="display-flex row row-full padding-x-sm padding-y-sm border-bottom">
+                <span class="minor-info"><?php echo $parteId !== '' ? 'Instituições vinculadas a ' . htmlspecialchars($parteNome) : 'Pessoas vinculadas a ' . htmlspecialchars($instituicaoNome); ?></span>
             </div>
-        <?php else: ?>
-            <div class="col subtask subtask-collapsed padding-lr-md full-line">
-                <div class="row table between padding-tb-md border-top">
-                    <div class="col table left no-data"><span class="major-info">Nenhum vínculo encontrado.</span></div>
+            <?php foreach ($rows as $r): ?>
+            <div class="display-flex col col-full register border-bottom">
+                <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
+                    <div class="display-flex row row-fit justify-start gap-y-md">
+                        <?php if ($instituicaoId !== ''): ?>
+                        <div class="col width-400">
+                            <span class="minor-info">Pessoa</span>
+                            <span class="major-info"><?php echo htmlspecialchars($r['parte_nome'] ?? '—'); ?></span>
+                        </div>
+                        <div class="col width-200">
+                            <span class="minor-info">CPF</span>
+                            <span class="major-info"><?php echo htmlspecialchars($r['parte_cpf'] ?? '—'); ?></span>
+                        </div>
+                        <?php endif; ?>
+                        <?php if ($parteId !== ''): ?>
+                        <div class="col width-400">
+                            <span class="minor-info">Instituição</span>
+                            <span class="major-info"><?php echo htmlspecialchars($r['instituicao_nome'] ?? $r['instituicao_sigla'] ?? '—'); ?></span>
+                        </div>
+                        <?php endif; ?>
+                        <div class="col width-300">
+                            <span class="minor-info">Cargo/Função</span>
+                            <span class="major-info"><?php echo htmlspecialchars($r['cargo_funcao'] ?? '—'); ?></span>
+                        </div>
+                        <div class="col width-200">
+                            <span class="minor-info">Data inclusão</span>
+                            <span class="major-info"><?php echo htmlspecialchars($r['data_inclusao'] ?? '—'); ?></span>
+                        </div>
+                        <div class="col width-200">
+                            <span class="minor-info">Ativo</span>
+                            <span class="major-info"><?php echo !empty($r['ativo']) ? 'Sim' : 'Não'; ?></span>
+                        </div>
+                    </div>
+                    <div class="display-flex row row-fit justify-end gap-y-sm">
+                        <a href="/frame.php?page=partesinstituicoesedit&id=<?php echo urlencode($r['id'] ?? ''); ?>" class="btn btn-secondary-outline height-sm">Editar</a>
+                        <?php if ($parteId !== ''): ?>
+                            <a href="/frame.php?page=consultapartesedit&id=<?php echo urlencode($r['parte_id'] ?? ''); ?>" class="btn btn-secondary-outline height-sm">Ver pessoa</a>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
-            <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
-                <a href="/frame.php?page=partesinstituicoescreate" class="btn btn-primary">Novo vínculo</a>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <div class="display-flex col col-full register border-bottom">
+                <div class="display-flex row row-full padding-x-sm padding-y-sm">
+                    <span class="major-info">Nenhum vínculo encontrado.</span>
+                </div>
             </div>
         <?php endif; ?>
     </div>

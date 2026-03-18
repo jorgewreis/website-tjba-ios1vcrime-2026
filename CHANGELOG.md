@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0153
+
+**Data:** 2026-03-17 22:30:41 | **Commit:** `a8cec6b` | **Tipo:** `patch`
+
+- Fix: mais ajustes para alinhamento
+
 ## V. 1.03.0152
 
 **Data:** 2026-03-17 22:17:39 | **Commit:** `25b7686` | **Tipo:** `patch`
@@ -3192,6 +3198,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

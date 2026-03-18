@@ -82,21 +82,21 @@ $csrfToken = Security::generateCSRFToken();
 
                     <form class="form-login" id="loginForm">
                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
-                        <div class="row">
+                        <div class="display-flex row row-full justify-start align-center padding-x-lg padding-y-md">
                             <div class="col">
                                 <label for="cpf">Login (CPF)</label>
-                                <input class="width-md white" type="text" id="cpf" name="cpf" required>
+                                <input class="width-500 white" type="text" id="cpf" name="cpf" required>
                             </div>
                         </div>
 
-                        <div class="row">
+                        <div class="display-flex row row-full justify-start align-center padding-x-lg padding-y-md">
                             <div class="col">
                                 <label for="senha">Senha</label>
-                                <input class="width-md white" type="password" id="senha" name="senha" required>
+                                <input class="width-400 white" type="password" id="senha" name="senha" required>
                             </div>
                         </div>
 
-                        <div class="row table between full-line padding-tb-lg row-gap-10">
+                        <div class="display-flex row row-full justify-between align-center">
                             <div class="col">
                                 <label class="checkbox-label">
                                     <input type="checkbox" id="lembrarUsuario" name="lembrar" value="1">
@@ -110,20 +110,20 @@ $csrfToken = Security::generateCSRFToken();
                             </div>
                         </div>
                         
-                        <div class="row">
-                            <select id="themeSelect" class="width-sm height-sm white" title="Preferência de tema">
+                        <div class="display-flex row row-full justify-start align-center padding-x-lg padding-y-md">
+                            <select id="themeSelect" class="width-400 height-sm white" title="Preferência de tema">
                                 <option value="claro" selected>Tema claro</option>
                                 <option value="auto">Tema automático</option>
                                 <option value="escuro">Tema escuro</option>
                             </select>
                         </div>
 
-                        <div class="row table left padding-tb-md border-bottom">
-                            <button class="btn btn-primary width-md" type="submit">Entrar</button>
+                        <div class="display-flex row row-full justify-start align-center padding-x-lg padding-y-md border-bottom">
+                            <button class="btn btn-primary" type="submit">Entrar</button>
                         </div>
 
-                        <div class="row">
-                            <div class="alert-heading danger width-md" id="alert-login">
+                        <div class="display-flex row row-full justify-start align-center">
+                            <div class="alert-heading danger" id="alert-login">
                                 <div class="alert-header">
                                     <span class="text">Erro</span>
                                     <i class="fi fi-rs-cross"></i>
@@ -132,9 +132,9 @@ $csrfToken = Security::generateCSRFToken();
                             </div>
                         </div>
 
-                        <div class="row table left padding-tb-md">
+                        <div class="display-flex row row-full justify-start align-center padding-x-lg padding-y-md">
                             <div class="col">
-                                <button class="btn btn-primary-outline width-md" onclick="window.location.href='cadastro_estudantes.php'">Cadastro de estudantes</button>
+                                <button class="btn btn-primary-outline" onclick="window.location.href='cadastro_estudantes.php'">Cadastro de estudantes</button>
                                 <label>Estudantes de Direito devem se cadastrar para acompanhamento de audiências.</label>
                             </div>                            
                         </div>

@@ -36,61 +36,87 @@ if ($processoId !== '') {
         <h1 class="title-page">Vínculos processo-parte</h1>
         <p class="description-page">Informe o ID do processo para listar as partes vinculadas.</p>
     </div>
-    <div class="card-page">
+    <div class="container-full card-page">
 
-        <!-- FILTROS -->
-        <form method="get" id="form-filters">
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-start">
+                <h2>Partes do processo</h2>
+            </div>
+        </div>
+
+        <form method="get" id="form-filters" class="display-flex col col-full" style="width:100%">
             <input type="hidden" name="page" value="processosparteslist">
-            <div class="row table between padding-tb-lg padding-lr-md border-bottom">
-                <div class="row left row-gap-10">
+            <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
+                <div class="display-flex row row-fit justify-start gap-y-md">
                     <div class="col">
                         <label for="processo_id">ID do processo</label>
-                        <input type="text" class="width-md height-md white" id="processo_id" name="processo_id" placeholder="Ex: PRC-..." value="<?php echo htmlspecialchars($processoId); ?>">
+                        <input type="text" class="width-500 height-md" id="processo_id" name="processo_id" placeholder="Ex: PRC-..." value="<?php echo htmlspecialchars($processoId); ?>">
                     </div>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-md align-end">
                     <div class="col">
-                        <button type="submit" class="btn btn-primary">Consultar</button>
+                        <button type="submit" class="btn btn-primary height-md">Consultar</button>
                     </div>
                 </div>
             </div>
         </form>
 
         <?php if ($processoId !== '' && $processo === null): ?>
-            <div class="col subtask subtask-collapsed padding-lr-md full-line">
-                <div class="row table between padding-tb-md border-top">
-                    <div class="col table left no-data"><span class="major-info">Processo não encontrado.</span></div>
+            <div class="display-flex col col-full register border-bottom">
+                <div class="display-flex row row-full padding-x-sm padding-y-sm">
+                    <span class="major-info">Processo não encontrado.</span>
                 </div>
             </div>
         <?php elseif (!empty($partes)): ?>
-            <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Partes do processo <?php echo htmlspecialchars($processo['numero_processo'] ?? $processoId); ?></div>
-            <table class="table-list">
-                <thead><tr><th>Nome</th><th>CPF</th><th>Tipo</th><th>Polo</th><th>Ações</th></tr></thead>
-                <tbody>
-                    <?php foreach ($partes as $p): ?>
-                    <tr>
-                        <td><?php echo htmlspecialchars($p['nome_completo'] ?? '—'); ?></td>
-                        <td><?php echo htmlspecialchars($p['cpf'] ?? '—'); ?></td>
-                        <td><?php echo htmlspecialchars($p['tipo_parte'] ?? '—'); ?></td>
-                        <td><?php echo htmlspecialchars($p['polo'] ?? '—'); ?></td>
-                        <td>
-                            <a href="/frame.php?page=consultapartesedit&id=<?php echo urlencode($p['parte_id'] ?? ''); ?>" class="btn btn-secondary-outline">Ver pessoa</a>
-                            <a href="/frame.php?page=processospartesedit&id=<?php echo urlencode($p['id'] ?? ''); ?>" class="btn btn-secondary-outline">Editar vínculo</a>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-            <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
-                <a href="/frame.php?page=consultaprocessosedit&id=<?php echo urlencode($processoId); ?>" class="btn btn-primary">Abrir processo</a>
-                <a href="/frame.php?page=processospartescreate&processo_id=<?php echo urlencode($processoId); ?>" class="btn btn-secondary">Vincular parte</a>
+            <div class="display-flex row row-full padding-x-sm padding-y-sm border-bottom">
+                <span class="minor-info">Processo <?php echo htmlspecialchars($processo['numero_processo'] ?? $processoId); ?></span>
             </div>
-        <?php elseif ($processoId !== ''): ?>
-            <div class="col subtask subtask-collapsed padding-lr-md full-line">
-                <div class="row table between padding-tb-md border-top">
-                    <div class="col table left no-data"><span class="major-info">Nenhuma parte vinculada a este processo.</span></div>
+            <?php foreach ($partes as $p): ?>
+            <div class="display-flex col col-full register border-bottom">
+                <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
+                    <div class="display-flex row row-fit justify-start gap-y-md">
+                        <div class="col width-400">
+                            <span class="minor-info">Nome</span>
+                            <span class="major-info"><?php echo htmlspecialchars($p['nome_completo'] ?? '—'); ?></span>
+                        </div>
+                        <div class="col width-200">
+                            <span class="minor-info">CPF</span>
+                            <span class="major-info"><?php echo htmlspecialchars($p['cpf'] ?? '—'); ?></span>
+                        </div>
+                        <div class="col width-200">
+                            <span class="minor-info">Tipo</span>
+                            <span class="major-info"><?php echo htmlspecialchars($p['tipo_parte'] ?? '—'); ?></span>
+                        </div>
+                        <div class="col width-200">
+                            <span class="minor-info">Polo</span>
+                            <span class="major-info"><?php echo htmlspecialchars($p['polo'] ?? '—'); ?></span>
+                        </div>
+                    </div>
+                    <div class="display-flex row row-fit justify-end gap-y-sm">
+                        <a href="/frame.php?page=consultapartesedit&id=<?php echo urlencode($p['parte_id'] ?? ''); ?>" class="btn btn-secondary-outline height-sm">Ver pessoa</a>
+                        <a href="/frame.php?page=processospartesedit&id=<?php echo urlencode($p['id'] ?? ''); ?>" class="btn btn-secondary-outline height-sm">Editar vínculo</a>
+                    </div>
                 </div>
             </div>
-            <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
-                <a href="/frame.php?page=processospartescreate&processo_id=<?php echo urlencode($processoId); ?>" class="btn btn-primary">Vincular parte</a>
+            <?php endforeach; ?>
+            <div class="display-flex row row-full justify-end gap-y-sm padding-x-sm padding-y-sm border-top">
+                <a href="/frame.php?page=consultaprocessosedit&id=<?php echo urlencode($processoId); ?>" class="btn btn-primary height-md">Abrir processo</a>
+                <a href="/frame.php?page=processospartescreate&processo_id=<?php echo urlencode($processoId); ?>" class="btn btn-secondary height-md">Vincular parte</a>
+            </div>
+        <?php elseif ($processoId !== ''): ?>
+            <div class="display-flex col col-full register border-bottom">
+                <div class="display-flex row row-full padding-x-sm padding-y-sm">
+                    <span class="major-info">Nenhuma parte vinculada a este processo.</span>
+                </div>
+            </div>
+            <div class="display-flex row row-full justify-end gap-y-sm padding-x-sm padding-y-sm border-top">
+                <a href="/frame.php?page=processospartescreate&processo_id=<?php echo urlencode($processoId); ?>" class="btn btn-primary height-md">Vincular parte</a>
+            </div>
+        <?php else: ?>
+            <div class="display-flex col col-full register border-bottom">
+                <div class="display-flex row row-full padding-x-sm padding-y-sm">
+                    <span class="major-info">Informe o ID do processo e clique em Consultar.</span>
+                </div>
             </div>
         <?php endif; ?>
     </div>

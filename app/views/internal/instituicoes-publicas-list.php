@@ -96,104 +96,92 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
         <p class="description-page">Cadastro de instituições públicas. Informe o nome (ou parte dele) e clique em Consultar para exibir os resultados.</p>
     </div>
 
-    <div class="card-page">
+    <div class="container-full card-page">
 
-        <!-- FILTROS -->
-        <form method="get" id="form-filters" style="width: 100%">
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-start">
+                <h2>Lista de instituições</h2>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md">
+                <button type="button" class="btn btn-primary height-md" id="novo-cadastro-btn">Nova instituição</button>
+            </div>
+        </div>
+
+        <form method="get" id="form-filters" class="display-flex col col-full" style="width:100%">
             <input type="hidden" name="page" value="<?php echo htmlspecialchars($routePage); ?>">
-            <input type="hidden" name="items_per_page" value="<?php echo (int) $itemsPerPage; ?>">
-            <div class="row table between padding-tb-lg padding-lr-md border-bottom full-line">
-                <div class="row left row-gap-10 fit">
+            <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
+                <div class="display-flex row row-fit justify-start gap-y-md">
                     <div class="col">
                         <label for="filter-nome">Nome</label>
-                        <input type="text" class="width-md height-md white" id="filter-nome" name="nome" placeholder="Nome da instituição" value="<?php echo htmlspecialchars($nomeFilter); ?>">
-                    </div>                    
+                        <input type="text" class="width-500 height-md" id="filter-nome" name="nome" placeholder="Nome da instituição" value="<?php echo htmlspecialchars($nomeFilter); ?>">
+                    </div>
                 </div>
-                <div class="row right fit">
+                <div class="display-flex row row-fit justify-end gap-y-md align-end">
                     <div class="col">
-                        <label style="color: var(--color-gray-000);">-</label>
-                        <button type="submit" class="btn btn-primary">Consultar</button>
-                    </div>                    
+                        <label for="items-per-page">Itens por página</label>
+                        <select class="width-300 height-md" name="items_per_page" id="items-per-page">
+                            <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
+                            <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
+                            <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
+                            <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
+                        </select>
+                    </div>
+                    <div class="col">
+                        <button type="submit" class="btn btn-primary height-md">Consultar</button>
+                    </div>
                 </div>
             </div>
         </form>
 
-        <!-- ROW ACTIONS -->
-        <div class="row table buttons right padding-lr-md padding-tb-md row-gap-10">
-            <button type="button" class="btn btn-primary" id="novo-cadastro-btn">Nova instituição</button>
-        </div>
-
-        <!-- SUBTITLE TABLE -->
-        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Lista de Instituições</div>
-
-        
-        <div class="row table between padding-tb-lg padding-lr-md border-bottom full-line">
-            <div class="col">
-                <label for="items-per-page">Itens por página</label>
-                <select class="width-sm height-md white" name="items_per_page" id="items-per-page">
-                    <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
-                    <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
-                    <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
-                    <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
-                </select>
-            </div>
-        </div>
-
         <?php if (!$filtrou): ?>
-            <div class="col subtask subtask-collapsed padding-lr-md full-line">
-                <div class="row table between padding-tb-md border-top">
-                    <div class="col table left no-data">
-                        <span class="major-info">Informe o nome (ou parte do nome) acima e clique em Consultar para exibir os resultados.</span>
-                    </div>
-                </div>
+        <div class="display-flex col col-full register border-bottom">
+            <div class="display-flex row row-full padding-x-sm padding-y-sm">
+                <span class="major-info">Informe o nome (ou parte do nome) acima e clique em Consultar para exibir os resultados.</span>
             </div>
-
+        </div>
 
         <?php elseif (!empty($rows)): ?>
-            <div class="col full-line border-bottom">
-                <?php foreach ($rows as $row): ?>
-                <div class="row table between padding-lr-md padding-tb-md border-bottom">
-                    <div class="row left">
-                        <div class="col inst-info">
+            <?php foreach ($rows as $row): ?>
+            <div class="display-flex col col-full register border-bottom">
+                <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
+                    <div class="display-flex row row-fit justify-start gap-y-sm">
+                        <div class="col width-500 inst-info">
                             <span class="minor-info"><?php echo htmlspecialchars($row['nome'] ?? '—'); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars($row['nome_fantasia'] ?? '—'); ?></span>
                         </div>
-                        <div class="col inst-cnpj">
+                        <div class="col width-300 inst-cnpj">
                             <span class="minor-info">CNPJ</span>
                             <span class="major-info"><?php echo htmlspecialchars($row['cnpj'] ?? '—'); ?></span>
                         </div>
-                        <div class="col inst-observacoes">
+                        <div class="col width-400 inst-observacoes">
                             <span class="minor-info">Observações</span>
                             <span class="major-info"><?php echo htmlspecialchars($row['observacoes'] ?? '—'); ?></span>
-                        </div>                        
-                    </div>                    
-                    <div class="row right">
+                        </div>
+                    </div>
+                    <div class="display-flex row row-fit justify-end">
                         <div class="col inst-edit">
                             <button type="button" class="" title="Editar" data-edit-id="<?php echo htmlspecialchars($row['id'] ?? ''); ?>"><i class="fi fi-rr-file-edit"></i></button>
                         </div>
                     </div>
                 </div>
-                <?php endforeach; ?>
             </div>
+            <?php endforeach; ?>
             <?php else: ?>
-                <div class="col subtask subtask-collapsed padding-lr-md full-line">
-                    <div class="row table between padding-tb-md border-top">
-                        <div class="col table left no-data">
-                            <span class="major-info">Nenhuma instituição encontrada para os critérios informados.</span>
-                        </div>
+                <div class="display-flex col col-full register border-bottom">
+                    <div class="display-flex row row-full padding-x-sm padding-y-sm">
+                        <span class="major-info">Nenhuma instituição encontrada para os critérios informados.</span>
                     </div>
                 </div>
             <?php endif; ?>
 
         <?php if ($filtrou): ?>
-        <!-- Paginação -->
-        <div class="row table between padding-tb-lg padding-lr-md">
-            <span class="left pagination-info">
+        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
+            <span class="pagination-info">
                 Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $totalDocuments; ?> <?php echo $documentsLabel; ?>
                 <?php if ($totalPages > 0): ?>(<?php echo $totalPages; ?> <?php echo $pagesLabel; ?>, <?php echo $itemsPerPage; ?> <?php echo $itemsLabel; ?> por página)<?php endif; ?>
             </span>
             <?php if ($totalPages > 0): ?>
-                <div class="right pagination-controls">
+                <div class="pagination-controls">
                     <?php
                     $prevParams = $baseQueryParams;
                     $prevParams['page_number'] = max(1, $currentPage - 1);

@@ -128,7 +128,7 @@ $statusClasses = [
         <p class="description-page">Listagem de servidores internos (estagiários, servidores, diretora, admin, magistrada) e externos (estudantes). Use os filtros e clique em Consultar.</p>
     </div>
 
-    <div class="card-page">
+    <div class="container-full card-page">
         <?php
         $flashSuccess = $_SESSION['usuarios_create_success'] ?? '';
         $flashEdit = $_SESSION['usuarios_edit_message'] ?? '';
@@ -141,21 +141,31 @@ $statusClasses = [
         $flashMessage = $flashSuccess !== '' ? $flashSuccess : $flashEdit;
         ?>
         <?php if ($flashMessage !== ''): ?>
-        <div class="row filter padding-lr-lg padding-tb-md">
-            <div class="col">
-                <p class="status status-current padding-lr-lg"><?php echo htmlspecialchars($flashMessage, ENT_QUOTES, 'UTF-8'); ?></p>
+        <div class="display-flex row row-full padding-x-md padding-y-sm border-bottom">
+            <div class="col col-full">
+                <p class="status status-current padding-x-lg height-sm"><?php echo htmlspecialchars($flashMessage, ENT_QUOTES, 'UTF-8'); ?></p>
             </div>
         </div>
         <?php endif; ?>
 
-        <!-- FILTROS -->
-        <form method="get" id="form-filters" style="width: 100%">
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-start">
+                <h2>Lista de usuários</h2>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md">
+                <?php if ($showRowAction): ?>
+                <button type="button" class="btn btn-primary height-md" id="novo-cadastro-btn">Novo cadastro</button>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <form method="get" id="form-filters" class="display-flex col col-full" style="width:100%">
             <input type="hidden" name="page" value="<?php echo htmlspecialchars($routePage); ?>">
-            <div class="row table between padding-tb-lg padding-lr-md border-bottom full-line">
-                <div class="row left row-gap-10 fit">
+            <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
+                <div class="display-flex row row-fit justify-start gap-y-md">
                     <div class="col">
                         <label for="filter-tipo">Tipo</label>
-                        <select class="width-md height-md white" id="filter-tipo" name="tipo">
+                        <select class="width-300 height-md" id="filter-tipo" name="tipo">
                             <option value=""<?php echo $tipoFilter === '' ? ' selected' : ''; ?>>Todos</option>
                             <option value="interno"<?php echo $tipoFilter === 'interno' ? ' selected' : ''; ?>>
                                 Interno (<?php echo (int) ($tipoCounts['interno'] ?? 0); ?>)
@@ -167,7 +177,7 @@ $statusClasses = [
                     </div>
                     <div class="col">
                         <label for="filter-perfil">Perfil</label>
-                        <select class="width-md height-md white" id="filter-perfil" name="perfil">
+                        <select class="width-500 height-md" id="filter-perfil" name="perfil">
                             <option value=""<?php echo $perfilFilter === '' ? ' selected' : ''; ?>>Todos</option>
                             <option value="estagiario"<?php echo $perfilFilter === 'estagiario' ? ' selected' : ''; ?>>
                                 Estagiário (<?php echo (int) ($perfilCounts['estagiario'] ?? 0); ?>)
@@ -189,97 +199,82 @@ $statusClasses = [
                             </option>
                         </select>
                     </div>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-md align-end">
                     <div class="col">
                         <label for="items-per-page">Itens por página</label>
-                        <select class="width-sm height-md white" id="items-per-page" name="items_per_page">
+                        <select class="width-300 height-md" id="items-per-page" name="items_per_page">
                             <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
                             <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
                             <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
                             <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
                         </select>
                     </div>
-                </div>
-                <div class="row right fit">
                     <div class="col">
-                        <label style="color: var(--color-gray-000);">-</label>
-                        <button type="submit" class="btn btn-primary">Consultar</button>
+                        <button type="submit" class="btn btn-primary height-md">Consultar</button>
                     </div>
                 </div>
             </div>
         </form>
 
-        <?php if ($showRowAction): ?>
-        <!-- ROW ACTIONS (apenas admin, magistrada, diretora) -->
-        <div class="row table buttons right padding-lr-md padding-tb-md row-gap-10">
-            <button type="button" class="btn btn-primary" id="novo-cadastro-btn">Novo cadastro</button>
-        </div>
-        <?php endif; ?>
-
-        <!-- SUBTITLE TABLE -->
-        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Lista de usuários</div>
-
         <?php if (!empty($rows)): ?>
-            <div class="col full-line border-bottom">
-                <?php foreach ($rows as $row): ?>
+            <?php foreach ($rows as $row): ?>
                     <?php
                     $status = $row['status'] ?? 'ativo';
                     $statusLabel = $statusLabels[$status] ?? $status;
                     $statusClass = $statusClasses[$status] ?? 'status-current';
                     $tipoLabel = ($row['tipo'] ?? 'interno') === 'externo' ? 'Externo' : 'Interno';
                     $setores = trim($row['setores'] ?? '');
-                    // Exibir "Sala de Audiências" para o usuário; internamente o setor permanece AUDIENCIA
                     $setoresDisplay = str_replace('AUDIENCIA', 'Sala de Audiências', $setores);
                     $cargo = trim($row['cargo'] ?? '');
                     $editId = $row['id_usuario'] ?? $row['id'] ?? '';
                     ?>
-                    <div class="row table between padding-lr-sm padding-tb-sm border-bottom">
-                        <div class="row table left fit">
-                            <div class="col parte-nome text-ellipsis">
+            <div class="display-flex col col-full register border-bottom">
+                <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
+                    <div class="display-flex row row-fit justify-start gap-y-sm wrap">
+                            <div class="col width-400 parte-nome text-ellipsis">
                                 <span class="minor-info">Nome</span>
                                 <span class="major-info"><?php echo htmlspecialchars($row['nome_completo'] ?? '—'); ?></span>
                             </div>
-                            <div class="col parte-tipo">
+                            <div class="col width-200 parte-tipo">
                                 <span class="minor-info">Tipo</span>
                                 <span class="major-info"><?php echo htmlspecialchars($tipoLabel); ?></span>
                             </div>
-                            <div class="col parte-setor">
+                            <div class="col width-300 parte-setor">
                                 <span class="minor-info">Setor</span>
                                 <span class="major-info"><?php echo $setoresDisplay !== '' ? htmlspecialchars($setoresDisplay) : '—'; ?></span>
                             </div>
-                            <div class="col parte-cargo">
+                            <div class="col width-300 parte-cargo">
                                 <span class="minor-info">Cargo</span>
                                 <span class="major-info"><?php echo $cargo !== '' ? htmlspecialchars($cargo) : '—'; ?></span>
                             </div>
-                        </div>
-                        <div class="row table right fit">
+                    </div>
+                    <div class="display-flex row row-fit justify-end gap-y-sm align-center">
+                            <div class="col">
+                                <span class="height-sm status padding-x-lg <?php echo htmlspecialchars($statusClass); ?>"><?php echo htmlspecialchars($statusLabel); ?></span>
+                            </div>
                             <div class="col part-edit">
                                 <button type="button" class="" title="Editar" data-edit-id="<?php echo htmlspecialchars($editId); ?>"><i class="fi fi-rr-file-edit"></i></button>
                             </div>
-                            <div class="col">
-                                <span class="major-info"><span class="width-sm status <?php echo htmlspecialchars($statusClass); ?>"><?php echo htmlspecialchars($statusLabel); ?></span></span>
-                            </div>
-                        </div>
                     </div>
-                <?php endforeach; ?>
+                </div>
             </div>
+                <?php endforeach; ?>
         <?php else: ?>
-            <div class="col subtask subtask-collapsed padding-lr-md full-line">
-                <div class="row table between padding-tb-md border-top">
-                    <div class="col table left no-data">
-                        <span class="major-info">Nenhum usuário encontrado para os critérios informados.</span>
-                    </div>
+            <div class="display-flex col col-full register border-bottom">
+                <div class="display-flex row row-full padding-x-sm padding-y-sm">
+                    <span class="major-info">Nenhum usuário encontrado para os critérios informados.</span>
                 </div>
             </div>
         <?php endif; ?>
 
-        <!-- Paginação -->
-        <div class="row table between padding-tb-lg padding-lr-md">
-            <span class="left pagination-info">
+        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
+            <span class="pagination-info">
                 Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $totalDocuments; ?> <?php echo $documentsLabel; ?>
                 <?php if ($totalPages > 0): ?>(<?php echo $totalPages; ?> <?php echo $pagesLabel; ?>, <?php echo $itemsPerPage; ?> <?php echo $itemsLabel; ?> por página)<?php endif; ?>
             </span>
             <?php if ($totalPages > 0): ?>
-                <div class="right pagination-controls">
+                <div class="pagination-controls">
                     <?php
                     $prevParams = $baseQueryParams;
                     $prevParams['page_number'] = max(1, $currentPage - 1);

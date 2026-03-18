@@ -12,7 +12,8 @@
         background-color: var(--color-background-menu);
     }
 
-    .cartas-expedidas-allocate {
+    .cartas-expedidas-allocate,
+    .allocate-chips-row {
         display: flex;
         flex-direction: row;
         flex-wrap: wrap;
