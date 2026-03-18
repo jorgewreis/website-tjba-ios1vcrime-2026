@@ -157,4 +157,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: pequenos ajustes** `[4c00228]`
 - **fix: mais alguns ajustes** `[25b7686]`
 - **Fix: mais ajustes para alinhamento** `[a8cec6b]`
+- **Fix: ajustes de tamanhos css** `[1e29458]`
 
