@@ -155,4 +155,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: melhorias refeitas** `[4d98aeb]`
 - **Fix: grande correção de estilos** `[f7ed93e]`
 - **Fix: pequenos ajustes** `[4c00228]`
+- **fix: mais alguns ajustes** `[25b7686]`
 
