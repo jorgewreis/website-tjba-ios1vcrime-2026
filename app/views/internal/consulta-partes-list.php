@@ -163,7 +163,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
         </form>
 
         <?php if (!$filtrou): ?>
-        <div class="display-flex col col-full register border-bottom">
+        <div class="display-flex col col-full register border-bottom status-current border-bottom" style="margin-bottom: 15px;">
             <div class="display-flex row row-full padding-x-sm padding-y-sm">
                 <span class="major-info">Informe ao menos um critério (nome ou CPF) e clique em Consultar para exibir os resultados.</span>
             </div>

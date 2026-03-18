@@ -99,11 +99,6 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
             <div class="display-flex row row-fit justify-start">
                 <h2>Lista de processos</h2>
             </div>
-            <div class="display-flex row row-fit justify-end gap-y-md">
-                <select class="width-300 height-md" disabled aria-hidden="true">
-                    <option>Exportar lista</option>
-                </select>
-            </div>
         </div>
 
         <form method="get" id="form-filters" class="display-flex col col-full" style="width:100%">
@@ -138,9 +133,9 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
         </form>
 
         <?php if (!$filtrou): ?>
-            <div class="display-flex col col-full register border-bottom">
+                <div class="display-flex col col-full register border-bottom status-current border-bottom" style="margin-bottom: 15px;">
                 <div class="display-flex row row-full padding-x-sm padding-y-sm">
-                    <span class="major-info">Informe o número do processo ou o nome da parte e clique em Consultar para exibir os resultados.</span>
+                    <span class="padding-y-md major-info">Informe o número do processo ou o nome da parte e clique em Consultar para exibir os resultados.</span>
                 </div>
             </div>
         <?php elseif (!empty($rows)): ?>
