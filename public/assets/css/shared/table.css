@@ -510,7 +510,7 @@
         height: 30px;
         border-radius: 6px;
         border: 2px solid var(--color-border);
-        background-color: var(--color-surface-elevated);
+        background-color: var(--color-background-elevated);
         display: flex;
         flex-direction: row;
         align-items: center;
@@ -523,19 +523,19 @@
         transition: background-color 0.2s ease, border-color 0.7s ease, color 0.7s ease;
     }
     .user-allocate:hover {
-        background-color: var(--color-surface-elevated);
-        border-color: var(--color-accent);
-        color: var(--color-accent);
+        background-color: var(--color-background-elevated);
+        border-color: var(--color-primary);
+        color: var(--color-primary);
         transition: all 0.2s ease;
     }
     .user-allocate.all{
-        border-color: var(--color-accent);
-        color: var(--color-accent);
+        border-color: var(--color-primary);
+        color: var(--color-primary-active);
     }
     .user-allocate.all:hover {
-        background-color: var(--color-accent);
-        border-color: var(--color-accent);
-        color: var(--color-surface-elevated);
+        background-color: var(--color-primary);
+        border-color: var(--color-primary);
+        color: var(--color-background-elevated);
         transition: all 0.2s ease;
     }
     .user-allocate.rule {
@@ -545,7 +545,7 @@
     .user-allocate.rule:hover {
         background-color: var(--color-warning);
         border-color: var(--color-warning);
-        color: var(--color-surface-elevated);
+        color: var(--color-background-elevated);
         transition: all 0.2s ease;
     }
     .user-allocate.specific {
@@ -553,7 +553,7 @@
         color: var(--color-text-secondary);
     }
     .user-allocate.specific:hover {
-        background-color: var(--color-surface-elevated);
+        background-color: var(--color-background-elevated);
         border-color: var(--color-border);
         color: var(--color-text-secondary);
         transition: all 0.2s ease;
