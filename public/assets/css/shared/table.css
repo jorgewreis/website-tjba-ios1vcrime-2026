@@ -349,7 +349,7 @@
     transition: background-color 0.2s ease;
 }
 .status-task-progress-segment.concluida {
-    background-color: var(--color-accent);
+    background-color: var(--color-primary);
 }
 .status-task-progress-segment.em_andamento {
     background-color: var(--color-warning);
