@@ -350,6 +350,25 @@ if ($totalPages > 0) {
 
     <script>
         (function () {
+            function notify(type, title, message) {
+                if (typeof showToast === 'function') {
+                    showToast({ type: type, variant: 'full', title: title, message: message });
+                }
+            }
+            var POST_RELOAD_TOAST_KEY = 'cartorio.postReloadToast';
+            function queuePostReloadToast(type, title, message) {
+                try { sessionStorage.setItem(POST_RELOAD_TOAST_KEY, JSON.stringify({ type: type, title: title, message: message })); } catch (e) {}
+            }
+            function flushPostReloadToast() {
+                try {
+                    var raw = sessionStorage.getItem(POST_RELOAD_TOAST_KEY);
+                    if (!raw) return;
+                    sessionStorage.removeItem(POST_RELOAD_TOAST_KEY);
+                    var data = JSON.parse(raw);
+                    if (data && data.message) notify(data.type || 'info', data.title || 'Informação', data.message);
+                } catch (e) {}
+            }
+            flushPostReloadToast();
             function applyFilters() {
                 var status = document.getElementById('filter-status')?.value || '';
                 var processo = document.getElementById('search-input')?.value?.trim() || '';
@@ -398,9 +417,7 @@ if ($totalPages > 0) {
                     var qtd = window.prompt('Informe a quantidade realizada nesta subtarefa:');
                     var qtdInt = parseInt(qtd || '0', 10);
                     if (!qtd || isNaN(qtdInt) || qtdInt < 1) {
-                        if (typeof showToast === 'function') {
-                            showToast({ type: 'error', variant: 'full', title: 'Campo obrigatório', message: 'Informe uma quantidade maior que zero.' });
-                        }
+                        notify('error', 'Campo obrigatório', 'Informe uma quantidade maior que zero.');
                         return;
                     }
                     btn.disabled = true;
@@ -415,18 +432,15 @@ if ($totalPages > 0) {
                     .then(function (response) { return response.json(); })
                     .then(function (data) {
                         if (data.success) {
+                            queuePostReloadToast('success', 'Sucesso', 'Subtarefa concluída com sucesso.');
                             window.location.reload();
                             return;
                         }
-                        if (typeof showToast === 'function') {
-                            showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao concluir.' });
-                        }
+                        notify('error', 'Erro', data.error || 'Erro ao concluir.');
                         btn.disabled = false;
                     })
                     .catch(function () {
-                        if (typeof showToast === 'function') {
-                            showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
-                        }
+                        notify('error', 'Erro', 'Erro de conexão.');
                         btn.disabled = false;
                     });
                 });

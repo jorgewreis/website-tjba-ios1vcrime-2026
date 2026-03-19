@@ -487,6 +487,25 @@ if ($totalPages > 0) {
 
     <script>
     (function () {
+        const notify = (type, title, message) => {
+            if (typeof showToast === 'function') {
+                showToast({ type, variant: 'full', title, message });
+            }
+        };
+        const POST_RELOAD_TOAST_KEY = 'cartorio.postReloadToast';
+        const queuePostReloadToast = (type, title, message) => {
+            try { sessionStorage.setItem(POST_RELOAD_TOAST_KEY, JSON.stringify({ type, title, message })); } catch (e) {}
+        };
+        const flushPostReloadToast = () => {
+            try {
+                const raw = sessionStorage.getItem(POST_RELOAD_TOAST_KEY);
+                if (!raw) return;
+                sessionStorage.removeItem(POST_RELOAD_TOAST_KEY);
+                const data = JSON.parse(raw);
+                if (data && data.message) notify(data.type || 'info', data.title || 'Informação', data.message);
+            } catch (e) {}
+        };
+        flushPostReloadToast();
         const baseParams = <?php echo json_encode($baseQueryParams, JSON_UNESCAPED_UNICODE); ?>;
 
         function applyFilters() {
@@ -570,22 +589,19 @@ if ($totalPages > 0) {
                     if (destinatario && destinatario.value && destinatario.value.trim()) obj.destinatario = destinatario.value.trim();
                 }
                 if (subtarefaTipo === 'juntada_automatica' && !obj.tipo_juntada) {
-                    if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Atenção', message: 'Selecione o tipo de juntada (automática ou manual).' });
-                    else alert('Selecione o tipo de juntada.');
+                    notify('error', 'Atenção', 'Selecione o tipo de juntada (automática ou manual).');
                     return;
                 }
                 if (subtarefaTipo === 'gerar_pdf') {
                     var q = block ? parseInt(block.querySelector('.subtask-qtd-docs')?.value || '0', 10) : 0;
                     if (q < 4) {
-                        if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Atenção', message: 'Informe no mínimo 4 documentos.' });
-                        else alert('Mínimo 4 documentos.');
+                        notify('error', 'Atenção', 'Informe no mínimo 4 documentos.');
                         return;
                     }
                     obj.qtd_docs = q;
                 }
                 if (subtarefaTipo === 'envio_guia' && (!obj.tipo_envio || !obj.destinatario)) {
-                    if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Atenção', message: 'Selecione o tipo de envio e o destinatário.' });
-                    else alert('Selecione tipo de envio e destinatário.');
+                    notify('error', 'Atenção', 'Selecione o tipo de envio e o destinatário.');
                     return;
                 }
                 var dadosEspecificos = Object.keys(obj).length > 0 ? JSON.stringify(obj) : null;
@@ -601,33 +617,26 @@ if ($totalPages > 0) {
                 .then(function(r) { return r.json().then(function(data) { return { ok: r.ok, data }; }); })
                 .then(function(result) {
                     if (result.ok && result.data && !result.data.error) {
-                        if (typeof showToast === 'function') {
-                            var msgConcluidaPorTipo = {
-                                'detalhamento_informacoes': 'Detalhamento concluído: data do fato e dias-multa informados.',
-                                'calculo_pena_multa': 'Cálculo da pena de multa registrado.',
-                                'expedicao_guia': 'Expedição da Guia ao cartório registrada.',
-                                'aguardando_assinatura': 'Assinatura da Juíza na Guia registrada.',
-                                'juntada_automatica': 'Juntada dos autos registrada (automática ou manual).',
-                                'gerar_pdf': 'Geração dos documentos em PDF registrada.',
-                                'envio_guia': 'Envio da Guia registrado (canal e destinatário).',
-                                'juntada_termo_envio': 'Juntada do termo de envio aos autos registrada.'
-                            };
-                            var msgConcluida = msgConcluidaPorTipo[subtarefaTipo] || 'Subtarefa concluída.';
-                            showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: msgConcluida });
-                            if (result.data.valor_multa_calculado) {
-                                showToast({ type: 'success', variant: 'full', title: 'Cálculo automático', message: 'Cálculo realizado automaticamente pelo sistema. Valor da pena de multa: ' + result.data.valor_multa_calculado + '.' });
-                            }
-                        }
+                        var msgConcluidaPorTipo = {
+                            'detalhamento_informacoes': 'Detalhamento concluído: data do fato e dias-multa informados.',
+                            'calculo_pena_multa': 'Cálculo da pena de multa registrado.',
+                            'expedicao_guia': 'Expedição da Guia ao cartório registrada.',
+                            'aguardando_assinatura': 'Assinatura da Juíza na Guia registrada.',
+                            'juntada_automatica': 'Juntada dos autos registrada (automática ou manual).',
+                            'gerar_pdf': 'Geração dos documentos em PDF registrada.',
+                            'envio_guia': 'Envio da Guia registrado (canal e destinatário).',
+                            'juntada_termo_envio': 'Juntada do termo de envio aos autos registrada.'
+                        };
+                        var msgConcluida = msgConcluidaPorTipo[subtarefaTipo] || 'Subtarefa concluída.';
+                        queuePostReloadToast('success', 'Sucesso', msgConcluida);
                         window.location.reload();
                     } else {
-                        if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: result.data && result.data.error ? result.data.error : 'Erro ao concluir subtarefa.' });
-                        else alert(result.data && result.data.error ? result.data.error : 'Erro ao concluir subtarefa.');
+                        notify('error', 'Erro', result.data && result.data.error ? result.data.error : 'Erro ao concluir subtarefa.');
                         btnEl.disabled = false;
                     }
                 })
                 .catch(function() {
-                    if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro ao concluir subtarefa.' });
-                    else alert('Erro ao concluir subtarefa.');
+                    notify('error', 'Erro', 'Erro ao concluir subtarefa.');
                     btnEl.disabled = false;
                 });
             });
@@ -648,17 +657,15 @@ if ($totalPages > 0) {
                 .then(function(r) { return r.json().then(function(data) { return { ok: r.ok, data }; }); })
                 .then(function(result) {
                     if (result.ok && result.data && !result.data.error) {
-                        if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Detalhamento cancelado: etapa de data do fato e dias-multa não será concluída.' });
+                        queuePostReloadToast('success', 'Sucesso', 'Detalhamento cancelado: etapa de data do fato e dias-multa não será concluída.');
                         window.location.reload();
                     } else {
-                        if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: result.data && result.data.error ? result.data.error : 'Erro ao cancelar.' });
-                        else alert(result.data && result.data.error ? result.data.error : 'Erro ao cancelar.');
+                        notify('error', 'Erro', result.data && result.data.error ? result.data.error : 'Erro ao cancelar.');
                         btnEl.disabled = false;
                     }
                 })
                 .catch(function() {
-                    if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
-                    else alert('Erro de conexão.');
+                    notify('error', 'Erro', 'Erro de conexão.');
                     btnEl.disabled = false;
                 });
             });
@@ -678,9 +685,7 @@ if ($totalPages > 0) {
                 .then(function(r) { return r.json().then(function(data) { return { ok: r.ok, data }; }); })
                 .then(function(result) {
                     if (result.ok && result.data && !result.data.error) {
-                        if (typeof showToast === 'function') {
-                            showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Primeira subtarefa criada: detalhamento (data do fato e dias-multa) disponível para conclusão.' });
-                        }
+                        queuePostReloadToast('success', 'Sucesso', 'Primeira subtarefa criada: detalhamento (data do fato e dias-multa) disponível para conclusão.');
                         window.location.reload();
                     } else {
                         if (typeof showToast === 'function') {

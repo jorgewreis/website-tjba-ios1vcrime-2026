@@ -404,6 +404,25 @@ if ($totalPages > 0) {
 
     <script>
         (function () {
+            const notify = (type, title, message) => {
+                if (typeof showToast === 'function') {
+                    showToast({ type, variant: 'full', title, message });
+                }
+            };
+            const POST_RELOAD_TOAST_KEY = 'cartorio.postReloadToast';
+            const queuePostReloadToast = (type, title, message) => {
+                try { sessionStorage.setItem(POST_RELOAD_TOAST_KEY, JSON.stringify({ type, title, message })); } catch (e) {}
+            };
+            const flushPostReloadToast = () => {
+                try {
+                    const raw = sessionStorage.getItem(POST_RELOAD_TOAST_KEY);
+                    if (!raw) return;
+                    sessionStorage.removeItem(POST_RELOAD_TOAST_KEY);
+                    const data = JSON.parse(raw);
+                    if (data && data.message) notify(data.type || 'info', data.title || 'Informação', data.message);
+                } catch (e) {}
+            };
+            flushPostReloadToast();
             const applyFilters = function () {
                 const status = document.getElementById('filter-status')?.value ?? '';
                 const tipoEdital = document.getElementById('filter-tipo-edital')?.value ?? '';
@@ -459,7 +478,12 @@ if ($totalPages > 0) {
                     const tipo = this.closest('[data-subtarefa-tipo]')?.getAttribute('data-subtarefa-tipo');
                     if (tipo === 'certificacao_publicacao') {
                         const dataPub = prompt('Informe a data da publicação (AAAA-MM-DD):');
-                        if (dataPub) payload.dados_especificos = { data_publicacao: dataPub };
+                        if (!dataPub || !dataPub.trim()) {
+                            notify('error', 'Atenção', 'A data da publicação é obrigatória para concluir esta subtarefa.');
+                            this.disabled = false;
+                            return;
+                        }
+                        payload.dados_especificos = { data_publicacao: dataPub.trim() };
                     }
                     fetch('/api/cartorio-editais/concluir-subtarefa.php', {
                         method: 'POST',
@@ -468,16 +492,17 @@ if ($totalPages > 0) {
                     })
                     .then(function (r) { return r.json(); })
                     .then(function (data) {
-                        if (data.success) window.location.reload();
+                        if (data.success) {
+                            queuePostReloadToast('success', 'Sucesso', 'Subtarefa concluída com sucesso.');
+                            window.location.reload();
+                        }
                         else {
-                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao concluir.' });
-                            else alert(data.error || 'Erro ao concluir.');
+                            notify('error', 'Erro', data.error || 'Erro ao concluir.');
                             btn.disabled = false;
                         }
                     })
                     .catch(function () {
-                        if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
-                        else alert('Erro de conexão.');
+                        notify('error', 'Erro', 'Erro de conexão.');
                         btn.disabled = false;
                     });
                 });

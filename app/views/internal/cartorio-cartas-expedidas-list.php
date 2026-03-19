@@ -526,6 +526,25 @@ if ($totalPages > 0) {
     <script src="/assets/js/modules/cartorio/cartas-expedidas/search-list.js"></script>
     <script>
         (function () {
+            const notify = (type, title, message) => {
+                if (typeof showToast === 'function') {
+                    showToast({ type, variant: 'full', title, message });
+                }
+            };
+            const POST_RELOAD_TOAST_KEY = 'cartorio.postReloadToast';
+            const queuePostReloadToast = (type, title, message) => {
+                try { sessionStorage.setItem(POST_RELOAD_TOAST_KEY, JSON.stringify({ type, title, message })); } catch (e) {}
+            };
+            const flushPostReloadToast = () => {
+                try {
+                    const raw = sessionStorage.getItem(POST_RELOAD_TOAST_KEY);
+                    if (!raw) return;
+                    sessionStorage.removeItem(POST_RELOAD_TOAST_KEY);
+                    const data = JSON.parse(raw);
+                    if (data && data.message) notify(data.type || 'info', data.title || 'Informação', data.message);
+                } catch (e) {}
+            };
+            flushPostReloadToast();
             if (window.CartasExpedidasSearch && typeof window.CartasExpedidasSearch.initializeProcessSearch === 'function') {
                 window.CartasExpedidasSearch.initializeProcessSearch({
                     inputId: 'search-input',
@@ -585,26 +604,22 @@ if ($totalPages > 0) {
                     if (tipo === 'aguardando_gerar_pdf') {
                         var qtd = qtdEl ? (parseInt(qtdEl.value, 10) || 0) : 0;
                         if (qtd < 2 || qtd > 10) {
-                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Atenção', message: 'Informe a quantidade de documentos gerados (2 a 10).' });
-                            else alert('Informe a quantidade de documentos gerados (2 a 10).');
+                            notify('error', 'Atenção', 'Informe a quantidade de documentos gerados (2 a 10).');
                             return;
                         }
                     } else if (tipo === 'aguardando_envio') {
                         if (!metodoEnvio || !metodoEnvio.value || !metodoEnvio.value.trim()) {
-                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Atenção', message: 'Selecione o método de envio.' });
-                            else alert('Selecione o método de envio.');
+                            notify('error', 'Atenção', 'Selecione o método de envio.');
                             return;
                         }
                     } else if (tipo === 'aguardando_informacoes') {
                         if (!numeroDestino || !numeroDestino.value.trim()) {
-                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Atenção', message: 'Informe o número do processo no Juízo Deprecante.' });
-                            else alert('Informe o número do processo no Juízo Deprecante.');
+                            notify('error', 'Atenção', 'Informe o número do processo no Juízo Deprecante.');
                             return;
                         }
                     } else if (tipo === 'aguardando_devolucao') {
                         if (!resultadoDevolucao || !resultadoDevolucao.value) {
-                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Atenção', message: 'Selecione o resultado da devolução.' });
-                            else alert('Selecione o resultado da devolução.');
+                            notify('error', 'Atenção', 'Selecione o resultado da devolução.');
                             return;
                         }
                     }
@@ -631,16 +646,15 @@ if ($totalPages > 0) {
                     .then(function (r) { return r.json(); })
                     .then(function (data) {
                         if (data.success) {
+                            queuePostReloadToast('success', 'Sucesso', 'Subtarefa concluída com sucesso.');
                             window.location.reload();
                         } else {
-                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao concluir subtarefa.' });
-                            else alert(data.error || 'Erro ao concluir subtarefa.');
+                            notify('error', 'Erro', data.error || 'Erro ao concluir subtarefa.');
                             btn.disabled = false;
                         }
                     })
                     .catch(function () {
-                        if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
-                        else alert('Erro de conexão.');
+                        notify('error', 'Erro', 'Erro de conexão.');
                         btn.disabled = false;
                     });
                 });

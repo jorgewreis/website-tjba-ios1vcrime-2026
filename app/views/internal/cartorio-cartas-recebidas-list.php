@@ -528,6 +528,25 @@ if ($totalPages > 0) {
     <script src="/assets/js/modules/cartorio/cartas-recebidas/search-list.js"></script>
     <script>
         (function () {
+            const notify = (type, title, message) => {
+                if (typeof showToast === 'function') {
+                    showToast({ type, variant: 'full', title, message });
+                }
+            };
+            const POST_RELOAD_TOAST_KEY = 'cartorio.postReloadToast';
+            const queuePostReloadToast = (type, title, message) => {
+                try { sessionStorage.setItem(POST_RELOAD_TOAST_KEY, JSON.stringify({ type, title, message })); } catch (e) {}
+            };
+            const flushPostReloadToast = () => {
+                try {
+                    const raw = sessionStorage.getItem(POST_RELOAD_TOAST_KEY);
+                    if (!raw) return;
+                    sessionStorage.removeItem(POST_RELOAD_TOAST_KEY);
+                    const data = JSON.parse(raw);
+                    if (data && data.message) notify(data.type || 'info', data.title || 'Informação', data.message);
+                } catch (e) {}
+            };
+            flushPostReloadToast();
             if (window.CartasRecebidasSearch && typeof window.CartasRecebidasSearch.initializeProcessSearch === 'function') {
                 window.CartasRecebidasSearch.initializeProcessSearch({
                     inputId: 'search-input',
@@ -592,13 +611,11 @@ if ($totalPages > 0) {
                         }
                     }
                     if (subtarefaTipo === 'juntada_certidao_oficial' && !(obj.resultado_cumprimento)) {
-                        if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Atenção', message: 'Selecione o resultado do cumprimento.' });
-                        else alert('Selecione o resultado do cumprimento.');
+                        notify('error', 'Atenção', 'Selecione o resultado do cumprimento.');
                         return;
                     }
                     if (subtarefaTipo === 'envio_processo' && !(obj.tipo_envio)) {
-                        if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Atenção', message: 'Selecione o tipo de envio.' });
-                        else alert('Selecione o tipo de envio.');
+                        notify('error', 'Atenção', 'Selecione o tipo de envio.');
                         return;
                     }
                     const dadosEspecificos = Object.keys(obj).length > 0 ? JSON.stringify(obj) : null;
@@ -614,16 +631,15 @@ if ($totalPages > 0) {
                     .then(function (r) { return r.json(); })
                     .then(function (data) {
                         if (data.success) {
+                            queuePostReloadToast('success', 'Sucesso', 'Subtarefa concluída com sucesso.');
                             window.location.reload();
                         } else {
-                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao concluir subtarefa.' });
-                            else alert(data.error || 'Erro ao concluir subtarefa.');
+                            notify('error', 'Erro', data.error || 'Erro ao concluir subtarefa.');
                             btn.disabled = false;
                         }
                     })
                     .catch(function () {
-                        if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
-                        else alert('Erro de conexão.');
+                        notify('error', 'Erro', 'Erro de conexão.');
                         btn.disabled = false;
                     });
                 });
@@ -644,16 +660,15 @@ if ($totalPages > 0) {
                     .then(function (r) { return r.json(); })
                     .then(function (data) {
                         if (data.success) {
+                            queuePostReloadToast('info', 'Informação', 'Subtarefa cancelada com sucesso.');
                             window.location.reload();
                         } else {
-                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao cancelar subtarefa.' });
-                            else alert(data.error || 'Erro ao cancelar subtarefa.');
+                            notify('error', 'Erro', data.error || 'Erro ao cancelar subtarefa.');
                             btn.disabled = false;
                         }
                     })
                     .catch(function () {
-                        if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
-                        else alert('Erro de conexão.');
+                        notify('error', 'Erro', 'Erro de conexão.');
                         btn.disabled = false;
                     });
                 });
