@@ -57,8 +57,8 @@ if ($subtarefaId === '') {
 
 try {
     $service = new CejuscService($connection);
-    $service->concluirSubtarefa($subtarefaId, $dadosEspecificos);
-    echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);
+    $resultado = $service->concluirSubtarefa($subtarefaId, $dadosEspecificos);
+    echo json_encode(array_merge(['success' => true], is_array($resultado) ? $resultado : []), JSON_UNESCAPED_UNICODE);
 } catch (\InvalidArgumentException $exception) {
     http_response_code(400);
     echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);

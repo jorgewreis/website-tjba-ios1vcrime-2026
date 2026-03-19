@@ -326,6 +326,16 @@ $tiposOptions = [
                 showToast({ type: type, variant: 'full', title: title, message: message });
             }
         }
+        function queuePostReloadToast(type, title, message) {
+            try {
+                var key = 'cartorio.postReloadToast';
+                var raw = sessionStorage.getItem(key);
+                var fila = raw ? JSON.parse(raw) : [];
+                var lista = Array.isArray(fila) ? fila : ((fila && fila.message) ? [fila] : []);
+                lista.push({ type: type, title: title, message: message });
+                sessionStorage.setItem(key, JSON.stringify(lista));
+            } catch (e) {}
+        }
 
         var salvarBtn = document.getElementById('salvar-btn');
         var initialData = window.__initialGuiaData || {};
@@ -429,8 +439,8 @@ $tiposOptions = [
             })
             .then(function (r) { return r.json(); })
             .then(function (data) {
-                if (data.error) {
-                    showToastMsg('error', 'Erro', data.error);
+                if (data.error || data.deleted === false) {
+                    showToastMsg('error', 'Erro', data.error || 'Erro ao excluir.');
                     btn.disabled = false;
                 } else {
                     showToastMsg('success', 'Sucesso', 'Guia cancelada.');
@@ -458,7 +468,12 @@ $tiposOptions = [
                     showToastMsg('error', 'Erro', data.error);
                     btn.disabled = false;
                 } else {
-                    showToastMsg('success', 'Sucesso', 'Guia excluída.');
+                    (Array.isArray(data.subtarefas_toasts) ? data.subtarefas_toasts : []).forEach(function (msg) {
+                        queuePostReloadToast('info', 'Subtarefa excluída', msg);
+                    });
+                    if (data.tarefa_toast) {
+                        queuePostReloadToast('success', 'Sucesso', data.tarefa_toast);
+                    }
                     window.location.href = '/frame.php?page=guias';
                 }
             })

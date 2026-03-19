@@ -13,6 +13,7 @@ require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../services/CejuscService.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
+require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
 
 final class MedidasProtetivasService
 {
@@ -272,7 +273,7 @@ final class MedidasProtetivasService
         }
     }
 
-    public function concluirSubtarefa(string $subtarefaId, ?string $dadosJson = null): void
+    public function concluirSubtarefa(string $subtarefaId, ?string $dadosJson = null): array
     {
         $subtarefa = $this->subtarefasRepository->findById($subtarefaId);
         if ($subtarefa === null) {
@@ -318,10 +319,19 @@ final class MedidasProtetivasService
         if ($proxima !== null) {
             $this->subtarefasRepository->atualizarStatus((string) $proxima['id'], 'em_andamento');
             $this->repository->update($medidaId, ['status' => 'em_andamento']);
-            return;
+            return ['tarefa_principal_concluida' => false];
         }
 
         $this->repository->update($medidaId, ['status' => 'concluída']);
+        $medida = $this->repository->findById($medidaId);
+        $processo = trim((string) ($medida['numero_processo_origem'] ?? ''));
+        $reu = trim((string) ($medida['reu_nome_completo'] ?? ''));
+        return [
+            'tarefa_principal_concluida' => true,
+            'tarefa_principal_mensagem' => 'Tarefa principal concluída automaticamente: medida protetiva do processo '
+                . ($processo !== '' ? $processo : 'não informado')
+                . ' (réu: ' . ($reu !== '' ? $reu : 'não informado') . ').',
+        ];
     }
 
     public function update(string $id, array $payload): bool
@@ -352,15 +362,30 @@ final class MedidasProtetivasService
         return $this->repository->update($id, ['status' => 'cancelada']);
     }
 
-    public function delete(string $id): bool
+    public function delete(string $id): array
     {
         if (trim($id) === '') {
             throw new InvalidArgumentException('O identificador informado é inválido.');
         }
 
+        $subtarefas = $this->subtarefasRepository->findByMedidaId($id);
+        $mensagensSubtarefas = [];
+        foreach ($subtarefas as $subtarefa) {
+            $tipo = trim((string) ($subtarefa['tipo'] ?? 'subtarefa'));
+            if ($tipo !== '') {
+                $mensagensSubtarefas[] = 'Subtarefa excluída: ' . str_replace('_', ' ', $tipo) . '.';
+            }
+        }
         $this->subtarefasRepository->deleteByMedidaId($id);
         $this->alocadosRepository->deleteByMedidaId($id);
-        return $this->repository->delete($id);
+        $deleted = $this->repository->delete($id);
+        $orfandade = OrphanSubtarefasCleaner::cleanAll($this->connection);
+        return [
+            'deleted' => $deleted,
+            'subtarefas_toasts' => $mensagensSubtarefas,
+            'tarefa_toast' => 'Tarefa principal excluída com sucesso.',
+            'subtarefas_orfas_removidas' => array_sum($orfandade),
+        ];
     }
 
     /**

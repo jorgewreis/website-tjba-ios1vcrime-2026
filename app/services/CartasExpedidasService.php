@@ -13,6 +13,7 @@ require_once __DIR__ . '/../repositories/AlocacoesRegrasRepository.php';
 require_once __DIR__ . '/DataJudService.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
+require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
 
 final class CartasExpedidasService
 {
@@ -280,7 +281,7 @@ final class CartasExpedidasService
         return $idCarta;
     }
 
-    public function concluirSubtarefa(string $subtarefaId, ?string $dadosJson = null): void
+    public function concluirSubtarefa(string $subtarefaId, ?string $dadosJson = null): array
     {
         $subtarefa = $this->subtarefasRepository->findById($subtarefaId);
         if ($subtarefa === null) {
@@ -417,8 +418,22 @@ final class CartasExpedidasService
             }
             $statusCarta = $proximaOrdem === 6 ? 'pendente' : 'em_andamento';
             $this->repository->update($cartaId, ['status' => $statusCarta]);
+            return ['tarefa_principal_concluida' => false];
         } else {
             $this->repository->update($cartaId, ['status' => 'concluída']);
+            $carta = $this->repository->find($cartaId);
+            $processo = trim((string) ($carta['numero_processo_origem'] ?? ''));
+            $finalidade = trim((string) ($carta['finalidade'] ?? ''));
+            $cidade = trim((string) ($carta['cidade_destino'] ?? ''));
+            $uf = trim((string) ($carta['uf_destino'] ?? ''));
+            $msg = 'Tarefa principal concluída automaticamente: carta expedida do processo '
+                . ($processo !== '' ? $processo : 'não informado')
+                . ' (' . ($finalidade !== '' ? $finalidade : 'finalidade não informada')
+                . ' para ' . (($cidade !== '' ? $cidade : 'comarca não informada') . ($uf !== '' ? '/' . $uf : '')) . ').';
+            return [
+                'tarefa_principal_concluida' => true,
+                'tarefa_principal_mensagem' => $msg,
+            ];
         }
     }
 
@@ -555,15 +570,30 @@ final class CartasExpedidasService
         return $this->repository->update($id, ['status' => 'cancelada']);
     }
 
-    public function delete(string $id): bool
+    public function delete(string $id): array
     {
         if (trim($id) === '') {
             throw new InvalidArgumentException('O identificador informado é inválido.');
         }
 
+        $subtarefas = $this->subtarefasRepository->findByCartaId($id);
+        $mensagensSubtarefas = [];
+        foreach ($subtarefas as $subtarefa) {
+            $tipo = trim((string) ($subtarefa['tipo'] ?? 'subtarefa'));
+            if ($tipo !== '') {
+                $mensagensSubtarefas[] = 'Subtarefa excluída: ' . str_replace('_', ' ', $tipo) . '.';
+            }
+        }
         $this->subtarefasRepository->deleteByCartaId($id);
         $this->alocadosRepository->deleteByCartaId($id);
-        return $this->repository->delete($id);
+        $deleted = $this->repository->delete($id);
+        $orfandade = OrphanSubtarefasCleaner::cleanAll($this->connection);
+        return [
+            'deleted' => $deleted,
+            'subtarefas_toasts' => $mensagensSubtarefas,
+            'tarefa_toast' => 'Tarefa principal excluída com sucesso.',
+            'subtarefas_orfas_removidas' => array_sum($orfandade),
+        ];
     }
 
     public function find(string $id): ?array

@@ -168,6 +168,8 @@ if ($totalPages > 0) {
             <?php foreach ($rows as $row):
                 $idMedida = (string) ($row['IdMedida'] ?? '');
                 $subtarefas = $row['Subtarefas'] ?? [];
+                $statusTarefa = (string) ($row['Status'] ?? '');
+                $tarefaConcluida = in_array($statusTarefa, ['concluída', 'concluida', 'finalizada'], true);
                 $allSt = $row['SubtarefasAll'] ?? [];
                 $progressStatuses = ['pendente', 'pendente'];
                 foreach ($allSt as $subtarefa) {
@@ -196,10 +198,12 @@ if ($totalPages > 0) {
                 <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm align-center">
                     <div class="display-flex row row-fit justify-start gap-y-sm align-center">
                         <div class="col">
-                            <label class="button-table" title="Expandir detalhes">
-                                <input type="radio" name="open-subtask" value="<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>" aria-controls="subtask-<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>" aria-expanded="false" />
-                                <i class="fi fi-rr-angle-small-down"></i>
-                            </label>
+                            <?php if (!$tarefaConcluida): ?>
+                                <label class="button-table" title="Expandir detalhes">
+                                    <input type="radio" name="open-subtask" value="<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>" aria-controls="subtask-<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>" aria-expanded="false" />
+                                    <i class="fi fi-rr-angle-small-down"></i>
+                                </label>
+                            <?php endif; ?>
                         </div>
                         <div class="col width-500 col-process process-info" title="clique para copiar">
                             <?php
@@ -271,6 +275,7 @@ if ($totalPages > 0) {
                     </div>
                 </div>
 
+                <?php if (!$tarefaConcluida): ?>
                 <div class="display-flex col col-full subtask subtask-collapsed" id="subtask-<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>" aria-hidden="true">
                     <?php foreach ($subtarefas as $subtarefa):
                         $stId = (string) ($subtarefa['id'] ?? '');
@@ -296,6 +301,7 @@ if ($totalPages > 0) {
                         </div>
                     <?php endif; ?>
                 </div>
+                <?php endif; ?>
             </div>
             <?php endforeach; ?>
         <?php else: ?>
@@ -357,7 +363,13 @@ if ($totalPages > 0) {
             }
             var POST_RELOAD_TOAST_KEY = 'cartorio.postReloadToast';
             function queuePostReloadToast(type, title, message) {
-                try { sessionStorage.setItem(POST_RELOAD_TOAST_KEY, JSON.stringify({ type: type, title: title, message: message })); } catch (e) {}
+                try {
+                    var raw = sessionStorage.getItem(POST_RELOAD_TOAST_KEY);
+                    var fila = raw ? JSON.parse(raw) : [];
+                    var lista = Array.isArray(fila) ? fila : ((fila && fila.message) ? [fila] : []);
+                    lista.push({ type: type, title: title, message: message });
+                    sessionStorage.setItem(POST_RELOAD_TOAST_KEY, JSON.stringify(lista));
+                } catch (e) {}
             }
             function flushPostReloadToast() {
                 try {
@@ -365,7 +377,10 @@ if ($totalPages > 0) {
                     if (!raw) return;
                     sessionStorage.removeItem(POST_RELOAD_TOAST_KEY);
                     var data = JSON.parse(raw);
-                    if (data && data.message) notify(data.type || 'info', data.title || 'Informação', data.message);
+                    var lista = Array.isArray(data) ? data : ((data && data.message) ? [data] : []);
+                    lista.forEach(function (item) {
+                        if (item && item.message) notify(item.type || 'info', item.title || 'Informação', item.message);
+                    });
                 } catch (e) {}
             }
             flushPostReloadToast();
@@ -433,6 +448,9 @@ if ($totalPages > 0) {
                     .then(function (data) {
                         if (data.success) {
                             queuePostReloadToast('success', 'Sucesso', 'Subtarefa concluída com sucesso.');
+                            if (data.tarefa_principal_concluida && data.tarefa_principal_mensagem) {
+                                queuePostReloadToast('success', 'Sucesso', data.tarefa_principal_mensagem);
+                            }
                             window.location.reload();
                             return;
                         }

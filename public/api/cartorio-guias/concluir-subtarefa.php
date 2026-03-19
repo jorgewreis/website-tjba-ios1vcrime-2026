@@ -62,6 +62,12 @@ try {
     if (isset($resultado['valor_multa_calculado'])) {
         $body['valor_multa_calculado'] = $resultado['valor_multa_calculado'];
     }
+    if (isset($resultado['tarefa_principal_concluida'])) {
+        $body['tarefa_principal_concluida'] = (bool) $resultado['tarefa_principal_concluida'];
+    }
+    if (isset($resultado['tarefa_principal_mensagem'])) {
+        $body['tarefa_principal_mensagem'] = (string) $resultado['tarefa_principal_mensagem'];
+    }
     echo json_encode($body, JSON_UNESCAPED_UNICODE);
 } catch (\InvalidArgumentException $exception) {
     http_response_code(400);

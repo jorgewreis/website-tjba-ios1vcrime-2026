@@ -12,6 +12,7 @@ require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../repositories/SalarioMinimoRepository.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
+require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
 
 final class GuiasService
 {
@@ -395,15 +396,30 @@ final class GuiasService
         return $this->repository->update($id, ['status' => 'cancelada']);
     }
 
-    public function delete(string $id): bool
+    public function delete(string $id): array
     {
         if (trim($id) === '') {
             throw new InvalidArgumentException('O identificador informado é inválido.');
         }
 
+        $subtarefas = $this->subtarefasRepository->findByGuiaId($id);
+        $mensagensSubtarefas = [];
+        foreach ($subtarefas as $subtarefa) {
+            $tipo = trim((string) ($subtarefa['tipo'] ?? 'subtarefa'));
+            if ($tipo !== '') {
+                $mensagensSubtarefas[] = 'Subtarefa excluída: ' . str_replace('_', ' ', $tipo) . '.';
+            }
+        }
         $this->subtarefasRepository->deleteByGuiaId($id);
         $this->alocadosRepository->deleteByGuiaId($id);
-        return $this->repository->delete($id);
+        $deleted = $this->repository->delete($id);
+        $orfandade = OrphanSubtarefasCleaner::cleanAll($this->connection);
+        return [
+            'deleted' => $deleted,
+            'subtarefas_toasts' => $mensagensSubtarefas,
+            'tarefa_toast' => 'Tarefa principal excluída com sucesso.',
+            'subtarefas_orfas_removidas' => array_sum($orfandade),
+        ];
     }
 
     /**
@@ -498,6 +514,7 @@ final class GuiasService
                 }
             }
             $this->repository->update($guiaId, ['status' => 'em_andamento']);
+            $resultado['tarefa_principal_concluida'] = false;
             return $resultado;
         }
 
@@ -531,8 +548,19 @@ final class GuiasService
                 }
             }
             $this->repository->update($guiaId, ['status' => 'em_andamento']);
+            $resultado['tarefa_principal_concluida'] = false;
         } else {
             $this->repository->update($guiaId, ['status' => 'concluída']);
+            $guia = $this->repository->findById($guiaId);
+            $processo = trim((string) ($guia['numero_processo'] ?? ''));
+            $tipo = trim((string) ($guia['tipo'] ?? ''));
+            $denunciado = trim((string) ($guia['denunciado'] ?? ''));
+            $resultado['tarefa_principal_concluida'] = true;
+            $resultado['tarefa_principal_mensagem'] =
+                'Tarefa principal concluída automaticamente: guia do processo '
+                . ($processo !== '' ? $processo : 'não informado')
+                . ' (' . ($tipo !== '' ? $tipo : 'tipo não informado')
+                . ' - ' . ($denunciado !== '' ? $denunciado : 'denunciado não informado') . ').';
         }
 
         return $resultado;

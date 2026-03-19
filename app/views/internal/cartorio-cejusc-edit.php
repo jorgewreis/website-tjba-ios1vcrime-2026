@@ -221,6 +221,16 @@ $timelineData = $tarefa !== null
         </script>
         <script>
             (function () {
+                function queuePostReloadToast(type, title, message) {
+                    try {
+                        var key = 'cartorio.postReloadToast';
+                        var raw = sessionStorage.getItem(key);
+                        var fila = raw ? JSON.parse(raw) : [];
+                        var lista = Array.isArray(fila) ? fila : ((fila && fila.message) ? [fila] : []);
+                        lista.push({ type: type, title: title, message: message });
+                        sessionStorage.setItem(key, JSON.stringify(lista));
+                    } catch (e) {}
+                }
                 var btn = document.getElementById('voltar-btn');
                 if (btn) {
                     btn.addEventListener('click', function (e) {
@@ -267,6 +277,12 @@ $timelineData = $tarefa !== null
                         .then(function (r) { return r.json(); })
                         .then(function (data) {
                             if (data.deleted) {
+                                (Array.isArray(data.subtarefas_toasts) ? data.subtarefas_toasts : []).forEach(function (msg) {
+                                    queuePostReloadToast('info', 'Subtarefa excluída', msg);
+                                });
+                                if (data.tarefa_toast) {
+                                    queuePostReloadToast('success', 'Sucesso', data.tarefa_toast);
+                                }
                                 window.location.href = '/frame.php?page=cejusc';
                             } else {
                                 if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao excluir.' });

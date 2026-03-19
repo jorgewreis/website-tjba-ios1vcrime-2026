@@ -11,6 +11,7 @@ require_once __DIR__ . '/../repositories/PartesRepository.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
+require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
 
 final class CejuscService
 {
@@ -180,7 +181,7 @@ final class CejuscService
         return $idTarefa;
     }
 
-    public function concluirSubtarefa(string $subtarefaId, ?string $dadosJson = null): void
+    public function concluirSubtarefa(string $subtarefaId, ?string $dadosJson = null): array
     {
         $subtarefa = $this->subtarefasRepository->findById($subtarefaId);
         if ($subtarefa === null) {
@@ -219,6 +220,7 @@ final class CejuscService
                 $this->subtarefasRepository->create($cejuscId, CejuscSubtarefasRepository::TIPO_ORDEM_2, 2, 'em_andamento', null);
             }
             $this->repository->updateStatus($cejuscId, 'em_andamento');
+            return ['tarefa_principal_concluida' => false];
         } elseif ($ordem === 2) {
             $ordem3 = $this->subtarefasRepository->findByCejuscIdEOrdem($cejuscId, 3);
             if ($ordem3 !== null) {
@@ -227,8 +229,18 @@ final class CejuscService
                 $this->subtarefasRepository->create($cejuscId, CejuscSubtarefasRepository::TIPO_ORDEM_3, 3, 'em_andamento', null);
             }
             $this->repository->updateStatus($cejuscId, 'em_andamento');
+            return ['tarefa_principal_concluida' => false];
         } else {
             $this->repository->updateStatus($cejuscId, 'concluída');
+            $tarefa = $this->repository->findById($cejuscId);
+            $processo = trim((string) ($tarefa['numero_processo_origem'] ?? ''));
+            $reu = trim((string) ($tarefa['nome_reu'] ?? ''));
+            return [
+                'tarefa_principal_concluida' => true,
+                'tarefa_principal_mensagem' => 'Tarefa principal concluída automaticamente: fluxo Cejusc do processo '
+                    . ($processo !== '' ? $processo : 'não informado')
+                    . ' (réu: ' . ($reu !== '' ? $reu : 'não informado') . ').',
+            ];
         }
     }
 
@@ -283,15 +295,30 @@ final class CejuscService
         return $this->repository->updateStatus($id, 'cancelada');
     }
 
-    public function delete(string $id): bool
+    public function delete(string $id): array
     {
         if (trim($id) === '') {
             throw new InvalidArgumentException('O identificador informado é inválido.');
         }
 
+        $subtarefas = $this->subtarefasRepository->findByCejuscId($id);
+        $mensagensSubtarefas = [];
+        foreach ($subtarefas as $subtarefa) {
+            $tipo = trim((string) ($subtarefa['tipo'] ?? 'subtarefa'));
+            if ($tipo !== '') {
+                $mensagensSubtarefas[] = 'Subtarefa excluída: ' . str_replace('_', ' ', $tipo) . '.';
+            }
+        }
         $this->subtarefasRepository->deleteByCejuscId($id);
         $this->alocadosRepository->deleteByCejuscId($id);
-        return $this->repository->delete($id);
+        $deleted = $this->repository->delete($id);
+        $orfandade = OrphanSubtarefasCleaner::cleanAll($this->connection);
+        return [
+            'deleted' => $deleted,
+            'subtarefas_toasts' => $mensagensSubtarefas,
+            'tarefa_toast' => 'Tarefa principal excluída com sucesso.',
+            'subtarefas_orfas_removidas' => array_sum($orfandade),
+        ];
     }
 
     public function criarPrimeiraSubtarefa(string $cejuscId, ?string $usuarioId = null): void

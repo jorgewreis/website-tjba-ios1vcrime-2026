@@ -549,6 +549,16 @@ $stateOptions = [
 
                 const btnExcluirTarefa = document.getElementById('excluir-tarefa-btn');
                 if (btnExcluirTarefa && window.__currentCartaId) {
+                    const queuePostReloadToast = (type, title, message) => {
+                        try {
+                            const key = 'cartorio.postReloadToast';
+                            const raw = sessionStorage.getItem(key);
+                            const fila = raw ? JSON.parse(raw) : [];
+                            const lista = Array.isArray(fila) ? fila : (fila && fila.message ? [fila] : []);
+                            lista.push({ type, title, message });
+                            sessionStorage.setItem(key, JSON.stringify(lista));
+                        } catch (e) {}
+                    };
                     btnExcluirTarefa.addEventListener('click', async () => {
                         if (!confirm('Tem certeza que deseja excluir esta tarefa e todas as subtarefas? Esta ação não pode ser desfeita.')) {
                             return;
@@ -562,6 +572,12 @@ $stateOptions = [
                             });
                             const data = await res.json().catch(() => ({}));
                             if (res.ok && data.deleted) {
+                                (Array.isArray(data.subtarefas_toasts) ? data.subtarefas_toasts : []).forEach((msg) => {
+                                    queuePostReloadToast('info', 'Subtarefa excluída', msg);
+                                });
+                                if (data.tarefa_toast) {
+                                    queuePostReloadToast('success', 'Sucesso', data.tarefa_toast);
+                                }
                                 window.location.href = '/frame.php?page=cartasrecebidas';
                                 return;
                             }

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0009
+
+**Data:** 2026-03-19 20:08:30 | **Commit:** `db13f5b` | **Tipo:** `patch`
+
+- Fix: correcao de tarefa concluida
+
 ## V. 1.04.0008
 
 **Data:** 2026-03-19 19:51:30 | **Commit:** `10498e6` | **Tipo:** `patch`
@@ -3342,6 +3348,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

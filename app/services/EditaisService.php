@@ -9,6 +9,7 @@ require_once __DIR__ . '/../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
+require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
 
 final class EditaisService
 {
@@ -175,7 +176,7 @@ final class EditaisService
         }
     }
 
-    public function concluirSubtarefa(string $subtarefaId, ?string $dadosJson = null): void
+    public function concluirSubtarefa(string $subtarefaId, ?string $dadosJson = null): array
     {
         $subtarefa = $this->subtarefasRepository->findById($subtarefaId);
         if ($subtarefa === null) {
@@ -241,8 +242,21 @@ final class EditaisService
         if ($proximaEncontrada !== null) {
             $this->subtarefasRepository->atualizarStatus((string) $proximaEncontrada['id'], 'em_andamento');
             $this->repository->update($editalId, ['status' => 'em_andamento']);
+            return ['tarefa_principal_concluida' => false];
         } else {
             $this->repository->update($editalId, ['status' => 'concluída']);
+            $edital = $this->repository->findById($editalId);
+            $processo = trim((string) ($edital['numero_processo'] ?? ''));
+            $tipoEdital = trim((string) ($edital['tipo_edital'] ?? ''));
+            $prazoDias = isset($edital['prazo_dias']) ? (int) $edital['prazo_dias'] : 0;
+            $msg = 'Tarefa principal concluída automaticamente: edital do processo '
+                . ($processo !== '' ? $processo : 'não informado')
+                . ' (' . ($tipoEdital !== '' ? $tipoEdital : 'tipo não informado')
+                . ', prazo de ' . ($prazoDias > 0 ? $prazoDias : 0) . ' dias).';
+            return [
+                'tarefa_principal_concluida' => true,
+                'tarefa_principal_mensagem' => $msg,
+            ];
         }
     }
 
@@ -394,14 +408,29 @@ final class EditaisService
         return $this->repository->update($id, ['status' => 'cancelada']);
     }
 
-    public function delete(string $id): bool
+    public function delete(string $id): array
     {
         if (trim($id) === '') {
             throw new InvalidArgumentException('O identificador informado é inválido.');
         }
 
+        $subtarefas = $this->subtarefasRepository->findByEditalId($id);
+        $mensagensSubtarefas = [];
+        foreach ($subtarefas as $subtarefa) {
+            $tipo = trim((string) ($subtarefa['tipo'] ?? 'subtarefa'));
+            if ($tipo !== '') {
+                $mensagensSubtarefas[] = 'Subtarefa excluída: ' . str_replace('_', ' ', $tipo) . '.';
+            }
+        }
         $this->subtarefasRepository->deleteByEditalId($id);
         $this->alocadosRepository->deleteByEditalId($id);
-        return $this->repository->delete($id);
+        $deleted = $this->repository->delete($id);
+        $orfandade = OrphanSubtarefasCleaner::cleanAll($this->connection);
+        return [
+            'deleted' => $deleted,
+            'subtarefas_toasts' => $mensagensSubtarefas,
+            'tarefa_toast' => 'Tarefa principal excluída com sucesso.',
+            'subtarefas_orfas_removidas' => array_sum($orfandade),
+        ];
     }
 }

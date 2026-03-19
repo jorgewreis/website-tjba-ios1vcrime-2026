@@ -42,8 +42,8 @@ if ($id === '') {
 
 try {
     $service = new CartasRecebidasService($connection);
-    $removed = $service->delete($id);
-    echo json_encode(['deleted' => $removed], JSON_UNESCAPED_UNICODE);
+    $resultado = $service->delete($id);
+    echo json_encode(is_array($resultado) ? $resultado : ['deleted' => (bool) $resultado], JSON_UNESCAPED_UNICODE);
 } catch (\InvalidArgumentException $exception) {
     http_response_code(400);
     echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);
