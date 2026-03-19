@@ -79,17 +79,17 @@ $statusCounts = array_merge(array_fill_keys($statusOptions, 0), $service->getSta
 $statusCounts['em_andamento'] = (int) ($statusCounts['em_andamento'] ?? 0) + (int) ($statusCounts['aguardando assinatura'] ?? 0) + (int) ($statusCounts['aguardando envio'] ?? 0) + (int) ($statusCounts['aguardando juntada do termo'] ?? 0) + (int) ($statusCounts['aguardando juntada de termo'] ?? 0) + (int) ($statusCounts['aguardando cumprimento'] ?? 0);
 
 $subtarefaLabels = [
-    'aguardando_assinatura' => 'Aguardando assinatura',
-    'aguardando_gerar_pdf' => 'Gerar PDF',
-    'aguardando_envio' => 'Aguardando envio',
-    'aguardando_juntada_termo' => 'Juntada de termo de envio',
-    'aguardando_informacoes' => 'Aguardando cumprimento',
-    'aguardando_devolucao' => 'Devolução',
+    'aguardando_assinatura' => 'Assinar Carta expedida (Magistrada)',
+    'aguardando_gerar_pdf' => 'Imprimir peças em PDF',
+    'aguardando_envio' => 'Enviar Carta expedida',
+    'aguardando_juntada_termo' => 'Juntar comprovante de envio',
+    'aguardando_informacoes' => 'Informar detalhes',
+    'aguardando_devolucao' => 'Juntar carta devolvida',
 ];
 $taskTitleByTipo = [
-    'aguardando_assinatura' => 'Carta aguardando assinatura',
-    'aguardando_gerar_pdf' => 'Aguardando impressão de documentos em PDF',
-    'aguardando_envio' => 'Aguardando envio de Carta',
+    'aguardando_assinatura' => 'Aguardando assinatura pela Magistrada',
+    'aguardando_gerar_pdf' => 'Aguardando impressão de peças em PDF',
+    'aguardando_envio' => 'Aguardando envio de Carta expedida',
     'aguardando_juntada_termo' => 'Aguardando comprovante de envio',
     'aguardando_informacoes' => 'Aguardando cumprimento',
     'aguardando_devolucao' => 'Aguardando devolução',
@@ -99,7 +99,7 @@ $buttonTitleByTipo = [
     'aguardando_gerar_pdf' => 'Informar impressão em PDF',
     'aguardando_envio' => 'Informar envio',
     'aguardando_juntada_termo' => 'Informar juntada',
-    'aguardando_informacoes' => 'Informar número do processo no Juízo Deprecado',
+    'aguardando_informacoes' => 'Informar complementos',
     'aguardando_devolucao' => 'Informar juntada de carta devolvida',
 ];
 $ordemLabels = [
@@ -439,7 +439,7 @@ if ($totalPages > 0) {
                         </div>
                         <div class="display-flex row row-fit justify-end align-center">
                             <button type="button" class="btn btn-primary height-sm btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?>">
-                                <span class="value-button">Concluir</span>
+                                <span class="value-button"><?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?></span>
                             </button>
                         </div>
                     </div>

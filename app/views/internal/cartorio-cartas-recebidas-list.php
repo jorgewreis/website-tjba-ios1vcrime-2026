@@ -75,13 +75,13 @@ $statusOptions = [
 $statusCounts = array_merge(array_fill_keys($statusOptions, 0), $service->getStatusCounts($filters));
 
 $subtarefaLabels = [
-    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_1 => 'Ato ordinatório - Cumprimento',
-    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_2 => 'Expedição de documento',
-    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_3 => 'Juntada de certidão do oficial de justiça',
-    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_4 => 'Ato ordinatório - Devolução',
-    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5 => 'Devolução da Carta',
-    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_6 => 'Juntada de termo de envio',
-    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7 => 'Arquivamento definitivo',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_1 => 'Expedir Ato Ordinatório - Cumprimento',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_2 => 'Expedição de mandado/ofício',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_3 => 'Juntar de certidão do oficial de justiça',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_4 => 'Expedir Ato Ordinatório - Devolução',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5 => 'Devolver Carta ao Juízo Deprecante',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_6 => 'Juntar comprovante de envio',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7 => 'Arquivar definitivamente com baixa',
     // Tipos que podem vir do banco com nome alternativo
     'devolucao_origem' => 'Aguardando devolução',
     'devolução_origem' => 'Aguardando devolução',
@@ -96,22 +96,22 @@ $ordemLabels = [
     7 => $subtarefaLabels[CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7],
 ];
 $taskTitleByTipo = [
-    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_1 => 'Aguardando ato ordinatório de cumprimento',
-    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_2 => 'Aguardando expedição de documento para cumprimento',
-    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_3 => 'Aguardando cumprimento pelo oficial de justiça',
-    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_4 => 'Aguardando ato ordinatório de devolução',
-    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5 => 'Aguardando envio do processo ao juízo de origem',
-    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_6 => 'Aguardando juntada de termo de envio',
-    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7 => 'Aguardando arquivamento definitivo',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_1 => 'Aguardando expedição do Ato Ordinatório - Cumprimento',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_2 => 'Aguardando expedição de mandado/ofício',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_3 => 'Aguardando juntada de certidão do oficial de justiça',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_4 => 'Aguardando expedição do Ato Ordinatório - Devolução',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5 => 'Aguardando devolução da Carta ao Juízo Deprecante',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_6 => 'Aguardando juntada de comprovante de envio',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7 => 'Aguardando arquivamento definitivo com baixa',
     'devolucao_origem' => 'Aguardando devolução',
     'devolução_origem' => 'Aguardando devolução',
 ];
 $buttonTitleByTipo = [
-    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_1 => 'Informar ato ordinatório de cumprimento',
-    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_2 => 'Informar expedição de documento',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_1 => 'Informar expedição',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_2 => 'Informar expedição',
     CartasRecebidasSubtarefasRepository::TIPO_ORDEM_3 => 'Informar juntada de certidão',
-    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_4 => 'Informar ato ordinatório de devolução',
-    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5 => 'Informar envio do processo',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_4 => 'Informar expedição',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5 => 'Informar devolução',
     CartasRecebidasSubtarefasRepository::TIPO_ORDEM_6 => 'Informar juntada',
     CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7 => 'Informar arquivamento definitivo',
     'devolucao_origem' => 'Informar devolução',
@@ -420,7 +420,7 @@ if ($totalPages > 0) {
                             </div>
                             <?php if ($isOrdem3): ?>
                                 <div class="col">
-                                <select class="subtask-resultado-cumprimento width-200 height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Resultado do cumprimento">
+                                <select class="subtask-resultado-cumprimento width-500 height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Resultado do cumprimento">
                                     <option value="">Selecione o resultado</option>
                                     <?php foreach ($resultadoCumprimentoOptions as $val => $label): ?>
                                         <option value="<?php echo htmlspecialchars($val, ENT_QUOTES); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES); ?></option>
@@ -430,7 +430,7 @@ if ($totalPages > 0) {
                             <?php endif; ?>
                             <?php if ($isOrdem5): ?>
                                 <div class="col">
-                                <select class="subtask-tipo-envio width-200 height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Tipo de envio">
+                                <select class="subtask-tipo-envio width-400 height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Tipo de envio">
                                     <option value="">Selecione o tipo de envio</option>
                                     <?php foreach ($tipoEnvioOptions as $val => $label): ?>
                                         <option value="<?php echo htmlspecialchars($val, ENT_QUOTES); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES); ?></option>
@@ -443,7 +443,9 @@ if ($totalPages > 0) {
                             <?php if ($isOrdem1): ?>
                                 <button type="button" class="btn btn-secondary-outline height-sm btn-cancelar-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Cancelar esta subtarefa">Cancelar</button>
                             <?php endif; ?>
-                            <button type="button" class="btn btn-primary height-sm btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($btnTitle, ENT_QUOTES); ?>"><span class="value-button">Concluir</span></button>
+                            <button type="button" class="btn btn-primary height-sm btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($btnTitle, ENT_QUOTES); ?>">
+                                <span class="value-button"><?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?></span>
+                            </button>
                         </div>
                     </div>
                     <?php endforeach; ?>
