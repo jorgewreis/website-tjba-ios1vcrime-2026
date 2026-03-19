@@ -114,6 +114,7 @@ try {
             window.location.href = '/frame.php?page=editais';
         }, { capture: true });
     </script>
+    <script src="/assets/js/modules/cartorio/cartas-expedidas/cnj.js"></script>
     <script>
         (function () {
             var processoInput = document.getElementById('filter-processo');
@@ -204,15 +205,27 @@ try {
             }
 
             btn.addEventListener('click', function () {
-                var processo = (document.getElementById('filter-processo')?.value || '').trim();
+                var processoInput = document.getElementById('filter-processo');
+                var processo = (processoInput?.value || '').trim();
                 if (!processo) {
                     showFeedback('O número do processo é obrigatório.', 'error');
                     return;
                 }
-                var digits = onlyDigits(processo);
-                if (digits.length !== 20) {
-                    showFeedback('O número do processo está incompleto ou inválido (20 dígitos).', 'error');
-                    return;
+                if (processoInput && typeof window.normalizeAndValidateCNJValue === 'function') {
+                    var normalized = window.normalizeAndValidateCNJValue(processo, { toastOnInvalid: true });
+                    if (!normalized.ok) {
+                        processoInput.value = '';
+                        processoInput.focus();
+                        return;
+                    }
+                    processoInput.value = normalized.formatted;
+                    processo = normalized.formatted;
+                } else {
+                    var digits = onlyDigits(processo);
+                    if (digits.length !== 20) {
+                        showFeedback('O número do processo está incompleto ou inválido (20 dígitos).', 'error');
+                        return;
+                    }
                 }
                 var tipoEdital = (document.getElementById('filter-tipo-edital')?.value || '').trim();
                 if (!tipoEdital) {

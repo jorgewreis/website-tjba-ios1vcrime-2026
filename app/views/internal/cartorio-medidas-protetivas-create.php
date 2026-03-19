@@ -122,7 +122,7 @@ try {
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom" id="vitimas-container"></div>
 
-        <div class="row info padding-x-md padding-y-md">
+        <div class="display-flex row row-full info padding-x-md padding-y-md">
             <span>*Conforme regra de alocação, as medidas protetivas serão alocadas automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
         </div>
 
@@ -743,12 +743,22 @@ try {
             if (!btn) return;
 
             btn.addEventListener('click', function () {
-                var processo = (document.getElementById('filter-processo')?.value || '').trim();
+                var processoInput = document.getElementById('filter-processo');
+                var processo = (processoInput?.value || '').trim();
                 if (!processo) {
                     showFeedback('O número do processo é obrigatório.', 'error');
                     return;
                 }
-                if (onlyDigits(processo).length !== 20) {
+                if (processoInput && typeof window.normalizeAndValidateCNJValue === 'function') {
+                    var normalized = window.normalizeAndValidateCNJValue(processo, { toastOnInvalid: true });
+                    if (!normalized.ok) {
+                        processoInput.value = '';
+                        processoInput.focus();
+                        return;
+                    }
+                    processoInput.value = normalized.formatted;
+                    processo = normalized.formatted;
+                } else if (onlyDigits(processo).length !== 20) {
                     showFeedback('O número do processo está incompleto ou inválido (20 dígitos).', 'error');
                     return;
                 }

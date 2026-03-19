@@ -1,20 +1,21 @@
 // cnj.js
-// Validação e formatação do número do processo CNJ
+// Padronização de número do processo CNJ
+// Regra: se receber 13 dígitos (ou 15 chars mascarados equivalentes), completa com ".8.05.0103",
+// valida e, se inválido, limpa o campo e exibe toast de erro.
 
 const CNJ_SUFFIX = '.8.05.0103';
+const CNJ_SUFFIX_DIGITS = '8050103';
 const CNJ_MAX_DIGITS = 20;
 
 function onlyDigits(value) {
-    return (value || '').replace(/\D/g, '');
+    return String(value || '').replace(/\D/g, '');
 }
 
 function modulo97(valor) {
     let resto = 0;
     for (let i = 0; i < valor.length; i += 1) {
-        const digito = valor.charCodeAt(i) - 48; // '0' = 48
-        if (digito < 0 || digito > 9) {
-            continue;
-        }
+        const digito = valor.charCodeAt(i) - 48;
+        if (digito < 0 || digito > 9) continue;
         resto = (resto * 10 + digito) % 97;
     }
     return resto;
@@ -22,34 +23,16 @@ function modulo97(valor) {
 
 function calcularDigitoVerificadorCNJ(valor) {
     const digits = onlyDigits(valor);
-    if (digits.length !== CNJ_MAX_DIGITS) {
-        return null;
-    }
+    if (digits.length !== CNJ_MAX_DIGITS) return null;
     const base = digits.slice(0, 7) + digits.slice(9);
     const resto = modulo97(base + '00');
     const dvCalc = 98 - resto;
     return dvCalc.toString().padStart(2, '0');
 }
 
-function completarCNJ(valor) {
-    const digits = onlyDigits(valor);
-    if (digits.length === 11) {
-        return `${digits.substring(0, 7)}-${digits.substring(7, 9)}.${digits.substring(9, 13)}${CNJ_SUFFIX}`;
-    }
-    if (digits.length < CNJ_MAX_DIGITS) {
-        const missing = CNJ_MAX_DIGITS - digits.length;
-        const suffixDigits = CNJ_SUFFIX.replace(/\D/g, '');
-        const adicional = suffixDigits.slice(-missing);
-        return digits + adicional;
-    }
-    return digits;
-}
-
 function validarCNJ(valor) {
     const digits = onlyDigits(valor);
-    if (digits.length !== CNJ_MAX_DIGITS) {
-        return false;
-    }
+    if (digits.length !== CNJ_MAX_DIGITS) return false;
     const dv = digits.slice(7, 9);
     const dvCalc = calcularDigitoVerificadorCNJ(digits);
     return dvCalc !== null && dv === dvCalc;
@@ -57,120 +40,135 @@ function validarCNJ(valor) {
 
 function formatarCNJ(valor) {
     const digits = onlyDigits(valor);
-    if (digits.length !== CNJ_MAX_DIGITS) {
-        return valor;
-    }
+    if (digits.length !== CNJ_MAX_DIGITS) return valor;
     return `${digits.slice(0, 7)}-${digits.slice(7, 9)}.${digits.slice(9, 13)}.${digits.slice(13, 14)}.${digits.slice(14, 16)}.${digits.slice(16)}`;
 }
 
-if (typeof window !== 'undefined') {
-    window.addEventListener('DOMContentLoaded', function () {
-        const processoInput = document.getElementById('filter-processo');
-        if (processoInput) {
-            processoInput.addEventListener('blur', function () {
-                const rawValue = processoInput.value.trim();
-                let digits = onlyDigits(rawValue);
-
-                if (digits.length === 0) {
-                    processoInput.value = '';
-                    return;
-                }
-
-                if (digits.length < CNJ_MAX_DIGITS) {
-                    if (digits.length === 11) {
-                        processoInput.value = completarCNJ(digits);
-                    }
-                    return;
-                }
-
-                digits = digits.slice(0, CNJ_MAX_DIGITS);
-                if (!validarCNJ(digits)) {
-                    processoInput.value = '';
-                    return;
-                }
-
-                const formatado = formatarCNJ(digits);
-                processoInput.value = formatado;
-                dispatchCnjValidated(formatado);
-            });
-        }
-
-        document.querySelectorAll('input[id*="processo"], input[id*="process"]').forEach((input) => {
-            if (input.id === 'filter-processo') return;
-            attachProcessInputBehavior(input);
-        });
-    });
+function formatarCNJParcial(valor) {
+    const digits = onlyDigits(valor).slice(0, CNJ_MAX_DIGITS);
+    let out = '';
+    for (let i = 0; i < digits.length; i += 1) {
+        out += digits[i];
+        if (i === 6 && digits.length > 7) out += '-';
+        if (i === 8 && digits.length > 9) out += '.';
+        if (i === 12 && digits.length > 13) out += '.';
+        if (i === 13 && digits.length > 14) out += '.';
+        if (i === 15 && digits.length > 16) out += '.';
+    }
+    return out;
 }
 
-function attachProcessInputBehavior(input) {
-    if (!input) return;
-    let lastValue = '';
+function completarComSufixoSeElegivel(rawValue) {
+    const raw = String(rawValue || '').trim();
+    let digits = onlyDigits(raw);
+    // 13 dígitos puros ou 15 caracteres com máscara parcial (equivalente a 13 dígitos)
+    const elegivel = digits.length === 13 || (raw.length === 15 && digits.length === 13);
+    if (elegivel) {
+        digits += CNJ_SUFFIX_DIGITS;
+    }
+    return digits.slice(0, CNJ_MAX_DIGITS);
+}
 
-    const safeSelect = (el, position) => {
-        if (typeof el.setSelectionRange === 'function') {
-            try {
-                el.setSelectionRange(position, position);
-            } catch (err) {
-                // ignore
-            }
-        }
-    };
+function showInvalidToast() {
+    if (typeof showToast === 'function') {
+        showToast({
+            type: 'error',
+            variant: 'full',
+            title: 'Erro',
+            message: 'Número do processo incorreto. Verifique e tente novamente.',
+        });
+    }
+}
 
-    const scheduleValidation = (el) => {
-        if (!el) return;
-        const validators = window.FormUtils;
-        if (!validators || typeof validators.validateInput !== 'function') return;
-        setTimeout(() => {
-            const result = validators.validateInput(el);
-            if (typeof validators.applyValidationFeedback === 'function') {
-                validators.applyValidationFeedback(el, result);
-            }
-        }, 100);
-    };
+function normalizeAndValidateCNJValue(rawValue, options) {
+    const opts = Object.assign({ clearOnInvalid: false, toastOnInvalid: false }, options || {});
+    const raw = String(rawValue || '').trim();
+    if (raw === '') {
+        return { ok: true, empty: true, digits: '', formatted: '' };
+    }
 
-    input.addEventListener('input', function () {
-        const cursorPosition = (typeof this.selectionStart === 'number') ? this.selectionStart : this.value.length;
-        const oldValue = lastValue;
-        const newValue = this.value;
-        const apenasNumeros = newValue.replace(/\D/g, '');
-        const shouldAutoComplete = apenasNumeros.length === 13 && !oldValue.endsWith(CNJ_SUFFIX);
+    const digits = completarComSufixoSeElegivel(raw);
+    const valid = digits.length === CNJ_MAX_DIGITS && validarCNJ(digits);
+    const formatted = valid ? formatarCNJ(digits) : '';
 
-        if (shouldAutoComplete) {
-            this.value = formatarCNJ(newValue, true);
-            safeSelect(this, this.value.length);
-            scheduleValidation(this);
-        } else {
-            const oldLength = this.value.length;
-            this.value = formatarCNJ(this.value, false);
-            const diff = this.value.length - oldLength;
-            safeSelect(this, cursorPosition + diff);
-            scheduleValidation(this);
-        }
+    if (!valid && opts.toastOnInvalid) {
+        showInvalidToast();
+    }
 
-        lastValue = this.value;
-    });
-
-    input.addEventListener('keydown', function (e) {
-        const apenasNumeros = this.value.replace(/\D/g, '');
-        if (e.key === '.' && apenasNumeros.length === 13) {
-            e.preventDefault();
-            this.value = formatarCNJ(this.value + '.', true);
-            scheduleValidation(this);
-        }
-    });
+    return { ok: valid, empty: false, digits, formatted };
 }
 
 function dispatchCnjValidated(valor) {
-    if (!valor || typeof window === 'undefined') {
-        return;
-    }
+    if (!valor || typeof window === 'undefined') return;
     const digits = onlyDigits(valor);
     window.dispatchEvent(new CustomEvent('cnjValidated', {
-        detail: {
-            numero: valor,
-            digits,
-        },
+        detail: { numero: valor, digits },
     }));
+}
+
+function bindProcessoInput(input) {
+    if (!input || input.readOnly || input.disabled) return;
+
+    input.addEventListener('input', function () {
+        this.value = formatarCNJParcial(this.value);
+    });
+
+    input.addEventListener('blur', function () {
+        const result = normalizeAndValidateCNJValue(this.value, { toastOnInvalid: true });
+        if (result.empty) {
+            this.value = '';
+            return;
+        }
+        if (!result.ok) {
+            this.value = '';
+            return;
+        }
+        this.value = result.formatted;
+        dispatchCnjValidated(result.formatted);
+    });
+}
+
+function bindFormSubmitValidation(input) {
+    const form = input && input.form ? input.form : null;
+    if (!form || form.dataset.cnjBound === '1') return;
+
+    form.addEventListener('submit', function (event) {
+        const cnjInputs = form.querySelectorAll('input[id="filter-processo"], input[id="filter-numero"], input[data-cnj-input="true"]');
+        for (let i = 0; i < cnjInputs.length; i += 1) {
+            const input = cnjInputs[i];
+            if (input.readOnly || input.disabled) continue;
+            const result = normalizeAndValidateCNJValue(input.value, { toastOnInvalid: true });
+            if (result.empty) continue;
+            if (!result.ok) {
+                input.value = '';
+                event.preventDefault();
+                input.focus();
+                return;
+            }
+            input.value = result.formatted;
+        }
+    });
+
+    form.dataset.cnjBound = '1';
+}
+
+function bindAllCNJInputs() {
+    const inputs = document.querySelectorAll('input[id="filter-processo"], input[id="filter-numero"], input[data-cnj-input="true"]');
+    inputs.forEach(function (input) {
+        bindProcessoInput(input);
+        bindFormSubmitValidation(input);
+    });
+}
+
+if (typeof window !== 'undefined') {
+    window.normalizeAndValidateCNJValue = normalizeAndValidateCNJValue;
+    window.validarCNJ = validarCNJ;
+    window.formatarCNJ = formatarCNJ;
+    window.onlyDigitsCNJ = onlyDigits;
+
+    window.addEventListener('DOMContentLoaded', function () {
+        bindAllCNJInputs();
+    });
 }
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -178,7 +176,7 @@ if (typeof module !== 'undefined' && module.exports) {
         calcularDigitoVerificadorCNJ,
         validarCNJ,
         formatarCNJ,
-        completarCNJ,
         onlyDigits,
+        normalizeAndValidateCNJValue,
     };
 }

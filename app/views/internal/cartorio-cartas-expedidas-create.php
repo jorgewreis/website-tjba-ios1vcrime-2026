@@ -378,12 +378,19 @@ try {
                 document.getElementById('filter-processo')?.blur();
                 document.getElementById('filter-cidade')?.blur();
 
+                const processoInputEl = document.getElementById('filter-processo');
                 const processoRaw = getValue('filter-processo');
                 if (processoRaw === '') {
                     return showFeedback('Informe o número do processo antes de cadastrar.', 'error');
                 }
-                if (typeof window.validarCNJ === 'function' && !window.validarCNJ(processoRaw)) {
-                    return showFeedback('O número do processo é inválido. Verifique os dígitos e o dígito verificador.', 'error');
+                if (processoInputEl && typeof window.normalizeAndValidateCNJValue === 'function') {
+                    const normalized = window.normalizeAndValidateCNJValue(processoRaw, { toastOnInvalid: true });
+                    if (!normalized.ok) {
+                        processoInputEl.value = '';
+                        processoInputEl.focus();
+                        return;
+                    }
+                    processoInputEl.value = normalized.formatted;
                 }
                 if (!validateRequiredFields()) {
                     return;
@@ -405,7 +412,7 @@ try {
                     return showFeedback('Aguarde a consulta ao DataJud terminar antes de cadastrar.', 'error');
                 }
                 const payload = {
-                    numero_processo: processoRaw,
+                    numero_processo: getValue('filter-processo'),
                     classe: classeVal || '',
                     finalidade: getValue('filter-tipo'),
                     prazo: sanitizePrazo(getValue('filter-prazo')),

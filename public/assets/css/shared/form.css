@@ -231,35 +231,35 @@ hr {
 .btn-secondary {
     background-color: var(--color-secondary);
     border-color: var(--color-secondary);
-    color: var(--color-text-on-primary);
+    color: var(--color-text-secondary);
 }
 .btn-secondary:hover {
     background-color: var(--color-secondary-hover);
     border-color: var(--color-secondary-hover);
-    color: var(--color-text-on-primary);
+    color: var(--color-text-secondary);
 }
 .btn-secondary:active {
     background-color: var(--color-secondary-active);
     border-color: var(--color-secondary-active);
-    color: var(--color-text-on-primary);
+    color: var(--color-text-secondary);
 }
 
 /* -- SECUNDÁRIA OUTLINE (Cancelar) */
 .btn-secondary-outline {
     background-color: var(--color-background-elevated);
     border-color: var(--color-secondary);
-    color: var(--color-text-primary);
+    color: var(--color-text-secondary);
     box-shadow: 1px 2px 3px 1px rgba(0, 0, 0, 0.1);
 }
 .btn-secondary-outline:hover {
     background-color: var(--color-secondary-hover);
     border-color: var(--color-secondary-hover);
-    color: var(--color-text-on-primary);
+    color: var(--color-text-secondary);
 }
 .btn-secondary-outline:active {
     background-color: var(--color-secondary-active);
     border-color: var(--color-secondary-active);
-    color: var(--color-text-on-primary);
+    color: var(--color-text-secondary);
 }
 
 /* - COR DANGER (Excluir) – sólido, texto claro */
@@ -409,6 +409,13 @@ button.btn i.fi {
     margin-top: 6px;
 }
 
+btn:disabled {
+    opacity: 0.2;
+    cursor: not-allowed;
+    pointer-events: none;
+    box-shadow: none;
+    filter: grayscale(100%);
+}
 
 /* BADGES */
 .badge {

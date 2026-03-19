@@ -357,6 +357,16 @@ try {
                 if (numeroProcesso === '') {
                     return showFeedback('Informe o número do processo.', 'error');
                 }
+                if (processoInput && typeof window.normalizeAndValidateCNJValue === 'function') {
+                    var normalized = window.normalizeAndValidateCNJValue(numeroProcesso, { toastOnInvalid: true });
+                    if (!normalized.ok) {
+                        processoInput.value = '';
+                        processoInput.focus();
+                        return;
+                    }
+                    processoInput.value = normalized.formatted;
+                    numeroProcesso = normalized.formatted;
+                }
                 if (classeVal === 'Aguarde...') {
                     return showFeedback('Aguarde a consulta ao DataJud terminar antes de cadastrar.', 'error');
                 }

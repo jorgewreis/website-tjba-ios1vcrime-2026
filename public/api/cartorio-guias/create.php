@@ -40,7 +40,23 @@ if ($usuarioCadastroId !== '') {
     $parsed['usuario_cadastro_id'] = $usuarioCadastroId;
 }
 
+function assertCnjFormattedValue(array $input, string $key, string $fieldLabel): void
+{
+    if (!array_key_exists($key, $input)) {
+        return;
+    }
+    $value = trim((string) ($input[$key] ?? ''));
+    if ($value === '') {
+        return;
+    }
+    if (!preg_match('/^\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}$/', $value)) {
+        throw new \InvalidArgumentException($fieldLabel . ' deve ser enviado no formato CNJ completo (0000000-00.0000.0.00.0000).');
+    }
+}
+
 try {
+    assertCnjFormattedValue($parsed, 'numero_processo', 'Número do processo');
+
     $service = new GuiasService($connection);
     $newId = $service->create($parsed);
     $body = ['id' => $newId];

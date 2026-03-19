@@ -95,8 +95,8 @@ try {
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter">
                 <label for="filter-regime">Regime</label>
-                <select class="width-300 height-md" id="filter-regime">
-                    <option value="">Selecione (opcional)</option>
+                <select class="width-400 height-md" id="filter-regime">
+                    <option value="">Selecione o regime</option>
                     <option value="Aberto">Aberto</option>
                     <option value="Semiaberto">Semiaberto</option>
                     <option value="Fechado">Fechado</option>
@@ -401,11 +401,15 @@ try {
                 if (numeroProcesso === '') {
                     return showFeedback('Informe o número do processo.', 'error');
                 }
-                if (typeof window.validarCNJ === 'function') {
-                    var digits = (numeroProcesso || '').replace(/\D/g, '');
-                    if (digits.length === 20 && !window.validarCNJ(numeroProcesso)) {
-                        return showFeedback('O número do processo é inválido. Verifique os dígitos e o dígito verificador.', 'error');
+                if (processoInput && typeof window.normalizeAndValidateCNJValue === 'function') {
+                    var normalized = window.normalizeAndValidateCNJValue(numeroProcesso, { toastOnInvalid: true });
+                    if (!normalized.ok) {
+                        processoInput.value = '';
+                        processoInput.focus();
+                        return;
                     }
+                    processoInput.value = normalized.formatted;
+                    numeroProcesso = normalized.formatted;
                 }
                 var classeVal = getValue('filter-classe');
                 if (classeVal === 'Aguarde...') {

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0001
+
+**Data:** 2026-03-19 16:58:43 | **Commit:** `00cb0c2` | **Tipo:** `patch`
+
+- Fix: correcao de validacao cnj
+
 ## V. 1.03.0169
 
 **Data:** 2026-03-19 15:47:33 | **Commit:** `ca48b80` | **Tipo:** `patch`
@@ -3294,6 +3300,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

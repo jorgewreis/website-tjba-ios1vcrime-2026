@@ -38,7 +38,7 @@ declare(strict_types=1);
             <div class="display-flex row row-fit justify-start gap-y-md">
                 <div class="col">
                     <label for="filter-busca">CEP ou endereço <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="text" class="width-800 height-md" id="filter-busca" placeholder="CEP ou logradouro, cidade (ex.: jasmin, ilheus)" required>
+                    <input type="text" class="width-800 height-md" id="filter-busca" placeholder="Digite o CEP ou logradouro e cidade" required>
                 </div>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-end">

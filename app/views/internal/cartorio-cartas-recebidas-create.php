@@ -348,15 +348,19 @@ try {
                 document.getElementById('filter-processo')?.blur();
                 document.getElementById('filter-cidade')?.blur();
 
+                const processoInputEl = document.getElementById('filter-processo');
                 const processoRaw = getValue('filter-processo');
                 if (processoRaw === '') {
                     return showFeedback('Informe o número do processo antes de cadastrar.', 'error');
                 }
-                if (typeof window.validarCNJ === 'function') {
-                    const digits = (processoRaw || '').replace(/\D/g, '');
-                    if (digits.length === 20 && !window.validarCNJ(processoRaw)) {
-                        return showFeedback('O número do processo é inválido. Verifique os dígitos e o dígito verificador.', 'error');
+                if (processoInputEl && typeof window.normalizeAndValidateCNJValue === 'function') {
+                    const normalized = window.normalizeAndValidateCNJValue(processoRaw, { toastOnInvalid: true });
+                    if (!normalized.ok) {
+                        processoInputEl.value = '';
+                        processoInputEl.focus();
+                        return;
                     }
+                    processoInputEl.value = normalized.formatted;
                 }
 
                 const cidadeOrigem = formatCidade(getValue('filter-cidade'));
@@ -380,7 +384,7 @@ try {
                 const prazo = parseInt(document.getElementById('filter-prazo')?.value ?? '30', 10) || 30;
 
                 const payload = {
-                    numero_processo_origem: processoRaw,
+                    numero_processo_origem: getValue('filter-processo'),
                     cidade_origem: cidadeOrigem,
                     uf_origem: ufOrigem,
                     finalidade,
