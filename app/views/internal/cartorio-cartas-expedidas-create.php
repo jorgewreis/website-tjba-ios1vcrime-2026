@@ -72,7 +72,8 @@ if ($currentUserId !== null && $currentUserId !== '') {
     }
 }
 
-$ruleServidor = '?';
+$ruleServidor = '';
+$hasRuleAllocation = false;
 $ruleName = 'ALLOCATE-CARTASEXPEDIDAS';
 try {
     $regrasRepo = new AlocacoesRegrasRepository($connection);
@@ -86,9 +87,7 @@ try {
             $nome = trim((string) ($u['nome'] ?? ''));
             $sobrenome = trim((string) ($u['sobrenome'] ?? ''));
             $ruleServidor = $sobrenome !== '' ? $nome . ' ' . $sobrenome : $nome;
-            if ($ruleServidor === '') {
-                $ruleServidor = '?';
-            }
+            $hasRuleAllocation = $ruleServidor !== '';
         }
     }
 } catch (\Throwable $exception) {
@@ -223,7 +222,11 @@ try {
         </div>
 
         <div class="display-flex row row-full info padding-x-md padding-y-md">
-            <span>*Conforme regra de divisão de tarefas, todas as Cartas Expedidas serão alocadas automaticamente e deverão ser remetidas por <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
+            <?php if ($hasRuleAllocation): ?>
+                <span>*Conforme regra de divisão de tarefas, todas as Cartas Expedidas serão alocadas automaticamente e deverão ser remetidas por <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
+            <?php else: ?>
+                <span>*Não existe nenhum usuário alocado automaticamente para esta tarefa no momento.</span>
+            <?php endif; ?>
         </div>
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0002
+
+**Data:** 2026-03-19 17:15:05 | **Commit:** `9bcd73c` | **Tipo:** `patch`
+
+- Feat: implementacao de sistema para remover alocacao de usuario por regra
+
 ## V. 1.04.0001
 
 **Data:** 2026-03-19 16:58:43 | **Commit:** `00cb0c2` | **Tipo:** `patch`
@@ -3300,6 +3306,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

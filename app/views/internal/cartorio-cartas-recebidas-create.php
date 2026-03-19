@@ -71,7 +71,8 @@ if ($currentUserId !== null && $currentUserId !== '') {
     }
 }
 
-$ruleServidor = '?';
+$ruleServidor = '';
+$hasRuleAllocation = false;
 $ruleName = 'ALLOCATE-CARTASRECEBIDAS';
 try {
     $regrasRepo = new AlocacoesRegrasRepository($connection);
@@ -85,9 +86,7 @@ try {
             $nome = trim((string) ($u['nome'] ?? ''));
             $sobrenome = trim((string) ($u['sobrenome'] ?? ''));
             $ruleServidor = $sobrenome !== '' ? $nome . ' ' . $sobrenome : $nome;
-            if ($ruleServidor === '') {
-                $ruleServidor = '?';
-            }
+            $hasRuleAllocation = $ruleServidor !== '';
         }
     }
 } catch (\Throwable $exception) {
@@ -210,7 +209,11 @@ try {
         <?php endif; ?>
 
         <div class="display-flex row row-full info padding-x-md padding-y-md">
-            <span>*Conforme regra de alocação, as Cartas Recebidas serão alocadas automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
+            <?php if ($hasRuleAllocation): ?>
+                <span>*Conforme regra de alocação, as Cartas Recebidas serão alocadas automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
+            <?php else: ?>
+                <span>*Não existe nenhum usuário alocado automaticamente para esta tarefa no momento.</span>
+            <?php endif; ?>
         </div>
 
         <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">

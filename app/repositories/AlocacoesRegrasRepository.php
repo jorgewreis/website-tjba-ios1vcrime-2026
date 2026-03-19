@@ -113,4 +113,33 @@ final class AlocacoesRegrasRepository
         $row = $this->findByRegra($regra);
         return $row ?? ['id' => $id, 'regra' => $regra, 'descricao' => $descricao, 'usuario_id' => $usuarioId, 'usuario_atualiza_id' => $usuarioAtualizaId];
     }
+
+    /**
+     * Remove a alocação de usuário da regra (mantém a regra existente).
+     */
+    public function clearAllocation(string $regra, ?string $usuarioAtualizaId = null): array
+    {
+        $regra = trim($regra);
+        if ($regra === '') {
+            throw new InvalidArgumentException('Regra é obrigatória.');
+        }
+
+        $existing = $this->findByRegra($regra);
+        if ($existing === null) {
+            throw new RuntimeException('Regra não encontrada para remoção de alocação.');
+        }
+
+        $statement = $this->connection->prepare(
+            sprintf(
+                'UPDATE `%s` SET `usuario_id` = NULL, `usuario_atualiza_id` = :usuario_atualiza_id, `updated_at` = NOW() WHERE `regra` = :regra LIMIT 1',
+                $this->table
+            )
+        );
+        $statement->bindValue(':usuario_atualiza_id', $usuarioAtualizaId);
+        $statement->bindValue(':regra', $regra);
+        $statement->execute();
+
+        $row = $this->findByRegra($regra);
+        return $row ?? $existing;
+    }
 }

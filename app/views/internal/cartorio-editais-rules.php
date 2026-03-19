@@ -68,7 +68,7 @@ $ruleDescription = 'Alocação automática - Editais';
 $errors = [];
 $successMessage = '';
 $usersList = [];
-$selectedUserId = '1';
+$selectedUserId = '';
 $ruleRow = null;
 $ruleUsuarioId = '';
 $ruleUsuarioNome = 'Nenhum usuário definido';
@@ -110,28 +110,47 @@ try {
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $action = trim((string) ($_POST['action'] ?? 'save'));
         if (!$podeAlterarRegra) {
             $errors[] = 'Seu perfil não tem permissão para alterar esta regra. Apenas admin, diretora ou magistrada podem alterar.';
-        } elseif (($postedUserId = trim((string) ($_POST['id_user'] ?? ''))) === '') {
-            $errors[] = 'Selecione um servidor antes de salvar.';
+        } elseif ($action === 'clear') {
+            try {
+                $usuarioAtualizaId = null;
+                if (isset($_SESSION['id_usuario'])) {
+                    $usuarioAtualizaId = trim((string) $_SESSION['id_usuario']);
+                }
+                $ruleRow = $regrasRepo->clearAllocation($ruleName, $usuarioAtualizaId !== '' ? $usuarioAtualizaId : null);
+                $ruleUsuarioId = '';
+                $ruleUsuarioNome = resolveUsuarioNomeEditais($connection, null);
+                $successMessage = 'Alocação removida com sucesso. A tarefa ficará sem alocação automática por regra.';
+                $selectedUserId = '';
+            } catch (\InvalidArgumentException | \RuntimeException $exception) {
+                $errors[] = $exception->getMessage();
+            } catch (\Throwable $exception) {
+                $errors[] = 'Erro inesperado ao remover a alocação: ' . $exception->getMessage();
+            }
         } else {
-            if (isUsuarioEstudante($connection, $postedUserId)) {
-                $errors[] = 'Não é permitido alocar um estudante em regras internas do cartório.';
+            if (($postedUserId = trim((string) ($_POST['id_user'] ?? ''))) === '') {
+                $errors[] = 'Selecione um servidor antes de salvar.';
             } else {
-                try {
-                    $usuarioAtualizaId = null;
-                    if (isset($_SESSION['id_usuario'])) {
-                        $usuarioAtualizaId = trim((string) $_SESSION['id_usuario']);
+                if (isUsuarioEstudante($connection, $postedUserId)) {
+                    $errors[] = 'Não é permitido alocar um estudante em regras internas do cartório.';
+                } else {
+                    try {
+                        $usuarioAtualizaId = null;
+                        if (isset($_SESSION['id_usuario'])) {
+                            $usuarioAtualizaId = trim((string) $_SESSION['id_usuario']);
+                        }
+                        $ruleRow = $regrasRepo->save($ruleName, $ruleDescription, $postedUserId, $usuarioAtualizaId !== '' ? $usuarioAtualizaId : null);
+                        $ruleUsuarioId = (string) ($ruleRow['usuario_id'] ?? $postedUserId);
+                        $ruleUsuarioNome = resolveUsuarioNomeEditais($connection, $ruleUsuarioId);
+                        $successMessage = 'Regra atualizada com sucesso.';
+                        $selectedUserId = (string) ($ruleRow['usuario_id'] ?? $postedUserId);
+                    } catch (\InvalidArgumentException | \RuntimeException $exception) {
+                        $errors[] = $exception->getMessage();
+                    } catch (\Throwable $exception) {
+                        $errors[] = 'Erro inesperado ao salvar a regra: ' . $exception->getMessage();
                     }
-                    $ruleRow = $regrasRepo->save($ruleName, $ruleDescription, $postedUserId, $usuarioAtualizaId !== '' ? $usuarioAtualizaId : null);
-                    $ruleUsuarioId = (string) ($ruleRow['usuario_id'] ?? $postedUserId);
-                    $ruleUsuarioNome = resolveUsuarioNomeEditais($connection, $ruleUsuarioId);
-                    $successMessage = 'Regra atualizada com sucesso.';
-                    $selectedUserId = (string) ($ruleRow['usuario_id'] ?? $postedUserId);
-                } catch (\InvalidArgumentException | \RuntimeException $exception) {
-                    $errors[] = $exception->getMessage();
-                } catch (\Throwable $exception) {
-                    $errors[] = 'Erro inesperado ao salvar a regra: ' . $exception->getMessage();
                 }
             }
         }
@@ -186,8 +205,8 @@ try {
                 <div class="display-flex row row-fit justify-start gap-y-md">
                     <div class="col filter">
                         <label for="filter-servidor">Servidor</label>
-                        <select class="width-600 height-md" id="filter-servidor" name="id_user" data-original-user-name="<?php echo htmlspecialchars($ruleUsuarioNome, ENT_QUOTES, 'UTF-8'); ?>" data-original-user-id="<?php echo htmlspecialchars($selectedUserId, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $podeAlterarRegra ? '' : 'disabled'; ?> required>
-                            <option value="" disabled<?php echo $selectedUserId === '' ? ' selected' : ''; ?>>Selecione um servidor</option>
+                        <select class="width-600 height-md" id="filter-servidor" name="id_user" data-original-user-name="<?php echo htmlspecialchars($ruleUsuarioNome, ENT_QUOTES, 'UTF-8'); ?>" data-original-user-id="<?php echo htmlspecialchars($selectedUserId, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $podeAlterarRegra ? '' : 'disabled'; ?>>
+                            <option value=""<?php echo $selectedUserId === '' ? ' selected' : ''; ?>>Sem alocação automática</option>
                             <?php foreach ($usersList as $user): ?>
                                 <option value="<?php echo htmlspecialchars($user['id'], ENT_QUOTES); ?>"<?php echo $selectedUserId === $user['id'] ? ' selected' : ''; ?>>
                                     <?php echo htmlspecialchars($user['name']); ?>
@@ -210,7 +229,8 @@ try {
             <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
                 <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
                 <?php if ($podeAlterarRegra): ?>
-                    <button type="submit" class="btn btn-primary" id="salvar-btn" disabled>Salvar</button>
+                    <button type="submit" class="btn btn-danger-outline" id="remover-alocacao-btn" name="action" value="clear" formnovalidate disabled>Remover alocação</button>
+                    <button type="submit" class="btn btn-primary" id="salvar-btn" name="action" value="save" disabled>Salvar</button>
                 <?php endif; ?>
             </div>
 
@@ -254,6 +274,7 @@ try {
 
         (() => {
             const saveBtn = document.getElementById('salvar-btn');
+            const clearBtn = document.getElementById('remover-alocacao-btn');
             const select = document.querySelector('select[name="id_user"]');
             if (!saveBtn || !select) return;
 
@@ -266,6 +287,11 @@ try {
 
                 if (changed) saveBtn.removeAttribute('disabled');
                 else saveBtn.setAttribute('disabled', '');
+
+                if (clearBtn) {
+                    if (effectiveOriginalId !== '') clearBtn.removeAttribute('disabled');
+                    else clearBtn.setAttribute('disabled', '');
+                }
             };
 
             select.addEventListener('change', syncSaveButton);

@@ -5,7 +5,8 @@ require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
 
 $connection = Conection::getInstance()->getConnection();
 
-$ruleServidor = '?';
+$ruleServidor = '';
+$hasRuleAllocation = false;
 $ruleName = 'ALLOCATE-CEJUSC';
 try {
     $regrasRepo = new AlocacoesRegrasRepository($connection);
@@ -19,9 +20,7 @@ try {
             $nome = trim((string) ($u['nome'] ?? ''));
             $sobrenome = trim((string) ($u['sobrenome'] ?? ''));
             $ruleServidor = $sobrenome !== '' ? $nome . ' ' . $sobrenome : $nome;
-            if ($ruleServidor === '') {
-                $ruleServidor = '?';
-            }
+            $hasRuleAllocation = $ruleServidor !== '';
         }
     }
 } catch (\Throwable $e) {
@@ -82,7 +81,11 @@ try {
         </div>
 
         <div class="display-flex row row-full info padding-x-md padding-y-md">
-            <span>*Conforme regra de alocação, o envio de Decisões ao Cejusc será alocado automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
+            <?php if ($hasRuleAllocation): ?>
+                <span>*Conforme regra de alocação, o envio de Decisões ao Cejusc será alocado automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
+            <?php else: ?>
+                <span>*Não existe nenhum usuário alocado automaticamente para esta tarefa no momento.</span>
+            <?php endif; ?>
         </div>
 
         <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
