@@ -369,13 +369,14 @@ if ($totalPages > 0) {
                     <?php foreach ($subtarefas as $st):
                         $stId = $st['id'] ?? '';
                         $stTipo = $st['tipo'] ?? '';
+                        $stTipoNormalizado = strtolower(trim((string) $stTipo));
                         $stLabel = $subtarefaLabels[$stTipo] ?? $stTipo;
                         $btnTitle = $buttonTitleByTipo[$stTipo] ?? $stLabel;
-                        $isOrdem1 = ($stTipo === GuiasSubtarefasRepository::TIPO_ORDEM_1);
-                        $isOrdem2 = ($stTipo === GuiasSubtarefasRepository::TIPO_ORDEM_2);
-                        $isOrdem5 = ($stTipo === GuiasSubtarefasRepository::TIPO_ORDEM_5);
-                        $isOrdem6 = ($stTipo === GuiasSubtarefasRepository::TIPO_ORDEM_6);
-                        $isOrdem7 = ($stTipo === GuiasSubtarefasRepository::TIPO_ORDEM_7);
+                        $isOrdem1 = in_array($stTipoNormalizado, [strtolower(GuiasSubtarefasRepository::TIPO_ORDEM_1), 'informar_detalhes', 'detalhamento'], true);
+                        $isOrdem2 = in_array($stTipoNormalizado, [strtolower(GuiasSubtarefasRepository::TIPO_ORDEM_2), 'calcular_multa', 'calculo_multa'], true);
+                        $isOrdem5 = in_array($stTipoNormalizado, [strtolower(GuiasSubtarefasRepository::TIPO_ORDEM_5), 'confirmar_juntada', 'juntada_autos', 'juntada_guia_autos', 'juntada_nos_autos'], true);
+                        $isOrdem6 = in_array($stTipoNormalizado, [strtolower(GuiasSubtarefasRepository::TIPO_ORDEM_6), 'geracao_pdf', 'pdf'], true);
+                        $isOrdem7 = in_array($stTipoNormalizado, [strtolower(GuiasSubtarefasRepository::TIPO_ORDEM_7), 'enviar_guia', 'envio'], true);
                         $dadosEspecificosSt = [];
                         if (!empty($st['dados_especificos'])) {
                             $dadosDecode = json_decode((string) $st['dados_especificos'], true);
@@ -592,6 +593,7 @@ if ($totalPages > 0) {
             btn.addEventListener('click', function () {
                 const subtarefaId = this.getAttribute('data-subtarefa-id');
                 const normalizeTipo = (value) => String(value || '').trim().toLowerCase();
+                const hasTipo = (tipo, aliases) => aliases.includes(tipo);
                 if (!subtarefaId) return;
                 const block = this.closest('[data-subtarefa-id][data-subtarefa-tipo]');
                 const subtarefaTipo = normalizeTipo(
@@ -615,7 +617,7 @@ if ($totalPages > 0) {
                     if (tipoEnvio && tipoEnvio.value && tipoEnvio.value.trim()) obj.tipo_envio = tipoEnvio.value.trim();
                     if (destinatario && destinatario.value && destinatario.value.trim()) obj.destinatario = destinatario.value.trim();
                 }
-                if (subtarefaTipo === 'detalhamento_informacoes') {
+                if (hasTipo(subtarefaTipo, ['detalhamento_informacoes', 'informar_detalhes', 'detalhamento'])) {
                     var dataFatoValor = (obj.data_fato || '').trim();
                     if (dataFatoValor !== '') {
                         var hoje = new Date();
@@ -633,7 +635,7 @@ if ($totalPages > 0) {
                     notify('error', 'Atenção', 'Selecione o tipo de juntada (automática ou manual).');
                     return;
                 }
-                if (subtarefaTipo === 'gerar_pdf') {
+                if (hasTipo(subtarefaTipo, ['gerar_pdf', 'geracao_pdf', 'pdf'])) {
                     var q = block ? parseInt(block.querySelector('.subtask-qtd-docs')?.value || '0', 10) : 0;
                     if (q < 4) {
                         notify('error', 'Atenção', 'Informe no mínimo 4 documentos.');
@@ -641,7 +643,7 @@ if ($totalPages > 0) {
                     }
                     obj.qtd_docs = q;
                 }
-                if (['envio_guia', 'enviar_guia'].includes(subtarefaTipo) && (!obj.tipo_envio || !obj.destinatario)) {
+                if (hasTipo(subtarefaTipo, ['envio_guia', 'enviar_guia', 'envio']) && (!obj.tipo_envio || !obj.destinatario)) {
                     notify('error', 'Atenção', 'Selecione o tipo de envio e o destinatário.');
                     return;
                 }

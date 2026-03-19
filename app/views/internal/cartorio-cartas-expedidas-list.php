@@ -423,6 +423,11 @@ if ($totalPages > 0) {
                     <?php foreach ($subtarefas as $st):
                         $stId = $st['id'] ?? '';
                         $stTipo = $st['tipo'] ?? '';
+                        $stTipoNormalizado = strtolower(trim((string) $stTipo));
+                        $isGerarPdf = in_array($stTipoNormalizado, ['aguardando_gerar_pdf', 'gerar_pdf', 'geracao_pdf'], true);
+                        $isEnvio = in_array($stTipoNormalizado, ['aguardando_envio', 'envio_processo', 'enviar_processo', 'envio'], true);
+                        $isInformacoes = in_array($stTipoNormalizado, ['aguardando_informacoes', 'informar_dados', 'detalhamento_informacoes', 'informar_detalhes'], true);
+                        $isDevolucao = in_array($stTipoNormalizado, ['aguardando_devolucao', 'confirmar_juntada', 'juntada_devolucao', 'juntar_devolucao'], true);
                         $stLabel = $subtarefaLabels[$stTipo] ?? $stTipo;
                     ?>
                     <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
@@ -430,11 +435,11 @@ if ($totalPages > 0) {
                             <div class="col task-status">
                                 <div class="padding-x-lg height-sm status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
                             </div>
-                            <?php if ($stTipo === 'aguardando_gerar_pdf'): ?>
+                            <?php if ($isGerarPdf): ?>
                                 <div class="col">
                                     <input type="number" class="width-100 height-sm subtask-qtd-docs" value="2" min="2" max="10" placeholder="Qtd de docs (2 a 10)" title="Qtd de docs gerados" />
                                 </div>
-                            <?php elseif ($stTipo === 'aguardando_envio'): ?>
+                            <?php elseif ($isEnvio): ?>
                                 <div class="col">
                                     <select class="width-400 height-sm subtask-metodo-envio" title="Método de envio">
                                         <option value="">Método de envio</option>
@@ -445,14 +450,14 @@ if ($totalPages > 0) {
                                         <option value="ePROC">ePROC</option>
                                     </select>
                                 </div>
-                            <?php elseif ($stTipo === 'aguardando_informacoes'): ?>
+                            <?php elseif ($isInformacoes): ?>
                                 <div class="col">
                                     <input type="text" class="width-400 height-sm subtask-numero-destino" placeholder="Nº processo" title="Número processo destino" value="<?php echo htmlspecialchars($numeroProcessoDestinoAtual, ENT_QUOTES); ?>" />
                                 </div>
                                 <div class="col">
                                     <input type="text" class="width-600 height-sm subtask-vara-destino" placeholder="Vara destino" title="Vara destino" value="<?php echo htmlspecialchars($varaDestinoAtual, ENT_QUOTES); ?>" />
                                 </div>
-                            <?php elseif ($stTipo === 'aguardando_devolucao'): ?>
+                            <?php elseif ($isDevolucao): ?>
                                 <div class="col">
                                     <select class="width-500 height-sm subtask-resultado-devolucao" title="Resultado da devolução">
                                         <option value="">Resultado</option>

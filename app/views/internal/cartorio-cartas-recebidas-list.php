@@ -410,11 +410,30 @@ if ($totalPages > 0) {
                     <?php foreach ($subtarefas as $st):
                         $stId = $st['id'] ?? '';
                         $stTipo = $st['tipo'] ?? '';
+                        $stTipoNormalizado = strtolower(trim((string) $stTipo));
                         $stLabel = $subtarefaLabels[$stTipo] ?? $stTipo;
                         $btnTitle = $buttonTitleByTipo[$stTipo] ?? $stLabel;
                         $isOrdem1 = ($stTipo === CartasRecebidasSubtarefasRepository::TIPO_ORDEM_1);
-                        $isOrdem3 = ($stTipo === CartasRecebidasSubtarefasRepository::TIPO_ORDEM_3);
-                        $isOrdem5 = ($stTipo === CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5);
+                        $isOrdem3 = in_array(
+                            $stTipoNormalizado,
+                            [
+                                strtolower(CartasRecebidasSubtarefasRepository::TIPO_ORDEM_3),
+                                'certidao_oficial_justica',
+                                'juntada_certidao',
+                                'confirmar_juntada',
+                            ],
+                            true
+                        );
+                        $isOrdem5 = in_array(
+                            $stTipoNormalizado,
+                            [
+                                strtolower(CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5),
+                                'envio_processo',
+                                'enviar_processo',
+                                'envio',
+                            ],
+                            true
+                        );
                     ?>
                     <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
                         <div class="display-flex row row-fit justify-start gap-y-sm align-center subtask-row-fields">
@@ -633,7 +652,7 @@ if ($totalPages > 0) {
                         notify('error', 'Atenção', 'Selecione o resultado do cumprimento.');
                         return;
                     }
-                    if (['envio_processo', 'enviar_processo'].includes(subtarefaTipo) && !(obj.tipo_envio)) {
+                    if (['envio_processo', 'enviar_processo', 'envio'].includes(subtarefaTipo) && !(obj.tipo_envio)) {
                         notify('error', 'Atenção', 'Selecione o tipo de envio.');
                         return;
                     }

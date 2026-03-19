@@ -329,6 +329,8 @@ if ($totalPages > 0) {
                         <?php foreach ($subtarefas as $st):
                             $stId = $st['id'] ?? '';
                             $stTipo = $st['tipo'] ?? '';
+                            $stTipoNormalizado = strtolower(trim((string) $stTipo));
+                            $isCertificacaoPublicacao = in_array($stTipoNormalizado, ['certificacao_publicacao', 'certificacao_diario', 'publicacao_certificada'], true);
                             $stLabel = $subtarefaLabels[$stTipo] ?? $stTipo;
                             $dadosEspecificosSt = [];
                             if (!empty($st['dados_especificos'])) {
@@ -344,7 +346,7 @@ if ($totalPages > 0) {
                                 <div class="col task-status">
                                     <div class="padding-x-lg height-sm status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
                                 </div>
-                                <?php if ($stTipo === 'certificacao_publicacao'): ?>
+                                <?php if ($isCertificacaoPublicacao): ?>
                                     <div class="col">
                                         <input type="date" class="width-300 height-sm subtask-data-publicacao" value="<?php echo htmlspecialchars($dataPublicacaoValue, ENT_QUOTES); ?>" title="Data da publicação no diário">
                                     </div>
@@ -499,12 +501,14 @@ if ($totalPages > 0) {
 
             document.querySelectorAll('.btn-concluir-subtarefa').forEach(function (btn) {
                 btn.addEventListener('click', function () {
+                    const normalizeTipo = (value) => String(value || '').trim().toLowerCase();
+                    const hasTipo = (tipo, aliases) => aliases.includes(tipo);
                     const subtarefaId = this.getAttribute('data-subtarefa-id');
                     if (!subtarefaId) return;
                     this.disabled = true;
                     const payload = { subtarefa_id: subtarefaId };
-                    const tipo = this.closest('[data-subtarefa-tipo]')?.getAttribute('data-subtarefa-tipo');
-                    if (tipo === 'certificacao_publicacao') {
+                    const tipo = normalizeTipo(this.closest('[data-subtarefa-tipo]')?.getAttribute('data-subtarefa-tipo'));
+                    if (hasTipo(tipo, ['certificacao_publicacao', 'certificacao_diario', 'publicacao_certificada'])) {
                         const block = this.closest('[data-subtarefa-id][data-subtarefa-tipo]');
                         const dataInput = block ? block.querySelector('.subtask-data-publicacao') : null;
                         const dataPub = dataInput ? (dataInput.value || '').trim() : '';
