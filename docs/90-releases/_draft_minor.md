@@ -170,4 +170,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix: ajustes de div quebrado** `[e88309a]`
 - **fix: correção de buttons** `[d05b3b6]`
 - **Fix: correcao de subtarefas sem funcionar** `[d681458]`
+- **Fix: correcao de subtarefa de detalhes** `[10498e6]`
 
