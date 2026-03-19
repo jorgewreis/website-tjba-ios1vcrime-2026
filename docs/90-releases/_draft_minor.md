@@ -9,4 +9,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correcao de erro na remocao de alocacao** `[46e6215]`
 - **Fix: correcao de feedbacks para toasts** `[f737aa2]`
 - **Fix: correcao de movimentacoes das subtarefas** `[5e8ad8b]`
+- **Fix: correcao de movimentacao de subtarefas** `[dc88dc2]`
 
