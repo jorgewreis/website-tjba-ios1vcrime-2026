@@ -163,4 +163,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correção de css** `[f0a78ef]`
 - **fix: pequenos ajustes** `[944a84d]`
 - **fix: pequenos ajustes** `[fce0aff]`
+- **fix: pequenos ajustes** `[c6c86d9]`
 
