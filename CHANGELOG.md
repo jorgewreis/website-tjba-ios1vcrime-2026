@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0011
+
+**Data:** 2026-03-19 20:20:38 | **Commit:** `1a59dfc` | **Tipo:** `patch`
+
+- Fix: nova tentativa de correcao
+
 ## V. 1.04.0010
 
 **Data:** 2026-03-19 20:15:35 | **Commit:** `c3f5394` | **Tipo:** `patch`
@@ -3354,6 +3360,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

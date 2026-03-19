@@ -631,6 +631,14 @@ if ($totalPages > 0) {
                 btn.addEventListener('click', function () {
                     const subtarefaId = this.getAttribute('data-subtarefa-id');
                     const normalizeTipo = (value) => String(value || '').trim().toLowerCase();
+                    const getFieldValue = (className) => {
+                        const selector = '.' + className;
+                        let el = block ? block.querySelector(selector) : null;
+                        if (!el && subtarefaId) {
+                            el = document.querySelector(selector + '[data-subtarefa-id="' + subtarefaId + '"]');
+                        }
+                        return el && typeof el.value !== 'undefined' ? String(el.value || '').trim() : '';
+                    };
                     if (!subtarefaId) return;
                     const block = this.closest('[data-subtarefa-id][data-subtarefa-tipo]');
                     const subtarefaTipo = normalizeTipo(
@@ -638,17 +646,15 @@ if ($totalPages > 0) {
                         (block ? block.getAttribute('data-subtarefa-tipo') : '')
                     );
                     const obj = {};
-                    if (block) {
-                        const resultadoCumprimento = block.querySelector('.subtask-resultado-cumprimento');
-                        const tipoEnvio = block.querySelector('.subtask-tipo-envio');
-                        if (resultadoCumprimento && resultadoCumprimento.value && resultadoCumprimento.value.trim()) {
-                            obj.resultado_cumprimento = resultadoCumprimento.value.trim();
-                        }
-                        if (tipoEnvio && tipoEnvio.value && tipoEnvio.value.trim()) {
-                            obj.tipo_envio = tipoEnvio.value.trim();
-                        }
+                    const resultadoCumprimentoValue = getFieldValue('subtask-resultado-cumprimento');
+                    const tipoEnvioValue = getFieldValue('subtask-tipo-envio');
+                    if (resultadoCumprimentoValue) {
+                        obj.resultado_cumprimento = resultadoCumprimentoValue;
                     }
-                    if (['juntada_certidao_oficial', 'confirmar_juntada', 'juntada_certidao', 'certidao_oficial_justica'].includes(subtarefaTipo) && !(obj.resultado_cumprimento)) {
+                    if (tipoEnvioValue) {
+                        obj.tipo_envio = tipoEnvioValue;
+                    }
+                    if (['juntada_certidao_oficial', 'confirmar_juntada', 'juntada_certidao', 'certidao_oficial_justica', 'juntada_certidao_oficial_justica'].includes(subtarefaTipo) && !(obj.resultado_cumprimento)) {
                         notify('error', 'Atenção', 'Selecione o resultado do cumprimento.');
                         return;
                     }
