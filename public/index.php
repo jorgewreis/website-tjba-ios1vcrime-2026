@@ -86,18 +86,18 @@ $csrfToken = Security::generateCSRFToken();
                         <div class="display-flex row row-full justify-start align-center padding-x-lg padding-y-md">
                             <div class="col">
                                 <label for="cpf">Login (CPF)</label>
-                                <input class="width-500 white" type="text" id="cpf" name="cpf" required>
+                                <input class="width-500" type="text" id="cpf" name="cpf" required>
                             </div>
                         </div>
 
                         <div class="display-flex row row-full justify-start align-center padding-x-lg padding-y-md">
                             <div class="col">
                                 <label for="senha">Senha</label>
-                                <input class="width-400 white" type="password" id="senha" name="senha" required>
+                                <input class="width-400" type="password" id="senha" name="senha" required>
                             </div>
                         </div>
 
-                        <div class="display-flex row row-full justify-between align-center">
+                        <div class="display-flex row row-full justify-between align-center padding-x-sm">
                             <div class="col">
                                 <label class="checkbox-label">
                                     <input type="checkbox" id="lembrarUsuario" name="lembrar" value="1">
