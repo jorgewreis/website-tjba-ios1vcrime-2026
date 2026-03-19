@@ -31,11 +31,7 @@ declare(strict_types=1);
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
             <div class="display-flex row row-fit justify-start">
                 <h2>Dados para consulta</h2>
-            </div>
-            <div class="display-flex row row-fit justify-end gap-y-md">                
-                <button class="btn btn-secondary height-md" id="limpar-btn" type="button">Limpar</button>
-                <button class="btn btn-primary height-md" id="consultar-btn" type="button">Consultar</button>
-            </div>
+            </div>            
         </div>
 
         <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
@@ -55,12 +51,15 @@ declare(strict_types=1);
                         <option value="50">50</option>
                     </select>
                 </div>
+                <div class="col">
+                    <button class="btn btn-primary height-md" id="consultar-btn" type="button">Consultar</button>
+                </div>
             </div>
         </div>
 
         <div class="display-flex col col-full register border-bottom status-current border-bottom" style="margin-bottom: 15px;">
             <div class="display-flex row row-full padding-x-sm padding-y-sm">
-                <span class="major-info">Para endereço, use <strong>logradouro, cidade</strong> ou <strong>logradouro, bairro, cidade</strong>. Só o logradouro assume Ilhéus/BA.</span>                
+                <span class="padding-y-md major-info">Para endereço, use <strong>logradouro, cidade</strong> ou <strong>logradouro, bairro, cidade</strong>. Só o logradouro assume Ilhéus/BA.</span>                
             </div>
         </div>
 

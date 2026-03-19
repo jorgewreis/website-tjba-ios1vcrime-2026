@@ -193,7 +193,7 @@ if ($totalPages > 0) {
             ?>
             <div class="display-flex col col-full register border-bottom" data-medida-id="<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>">
 
-                <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
+                <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm align-center">
                     <div class="display-flex row row-fit justify-start gap-y-sm align-center">
                         <div class="col">
                             <label class="button-table" title="Expandir detalhes">
