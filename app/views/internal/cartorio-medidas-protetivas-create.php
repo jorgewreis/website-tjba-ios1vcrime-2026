@@ -54,9 +54,14 @@ try {
         <p class="description-page">Registre o processo, identifique o réu, relacione as vítimas e prepare automaticamente o vínculo posterior com o fluxo do Cejusc.</p>
     </div>
 
-    <div class="card-page">
-        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Informações obrigatórias</div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+    <div class="container-full card-page">
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-start">
+                <h2>Informações obrigatórias</h2>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md"></div>
+        </div>
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter">
                 <label for="filter-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="width-200 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" required>
@@ -69,8 +74,13 @@ try {
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
 
-        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Réu</div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line" id="reu-row-principal">
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-start">
+                <h2>Réu</h2>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md"></div>
+        </div>
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md" id="reu-row-principal">
             <div class="col filter">
                 <label for="reu-select">Réu / Denunciado <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <select class="width-600 height-md" id="reu-select" style="display: none;" aria-label="Réus vinculados ao processo ou sugestões por nome">
@@ -79,7 +89,7 @@ try {
                 <input type="text" class="width-600 height-md" id="reu-nome" placeholder="Nome do réu (digite para buscar ou cadastrar)" maxlength="255" aria-label="Nome do réu quando não há réus ou opção Outro">
             </div>
         </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line" id="reu-campos-complementares" style="display: none;">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md" id="reu-campos-complementares" style="display: none;">
             <div class="col filter">
                 <label for="reu-cpf">CPF <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="width-200 height-md" id="reu-cpf" placeholder="Somente números">
@@ -99,8 +109,13 @@ try {
             </div>
         </div>
 
-        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Vítimas</div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-start">
+                <h2>Vítimas</h2>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md"></div>
+        </div>
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter">
                 <button class="btn btn-secondary-outline" id="add-vitima-btn" type="button">Adicionar vítima</button>
             </div>
@@ -111,7 +126,7 @@ try {
             <span>*Conforme regra de alocação, as medidas protetivas serão alocadas automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
         </div>
 
-        <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
+        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
             <button class="btn btn-primary-outline" id="alterar-regra-btn" style="display: none;">Alterar regra de alocação</button>
             <button class="btn btn-secondary" id="voltar-btn">Voltar</button>
             <button class="btn btn-primary" id="cadastrar-btn" type="button">Cadastrar</button>
@@ -134,15 +149,20 @@ try {
 
     <template id="vitima-template">
         <div class="vitima-card">
-            <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom"><span class="vitima-card-index">Vítima</span></div>
-            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line vitima-row-principal">
+            <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+                <div class="display-flex row row-fit justify-start">
+                    <h2><span class="vitima-card-index">Vítima</span></h2>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-md"></div>
+            </div>
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md vitima-row-principal">
                 <div class="col filter">
                     <label>Vítima (nome)</label>
                     <select class="width-600 height-md vitima-select" style="display: none;" aria-label="Sugestões por nome"></select>
                     <input type="text" class="width-600 height-md vitima-nome" placeholder="Digite o nome para buscar ou cadastrar" maxlength="255">
                 </div>
             </div>
-            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line vitima-campos-complementares" style="display: none;">
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md vitima-campos-complementares" style="display: none;">
                 <div class="col filter">
                     <label>CPF <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="text" class="width-200 height-md vitima-cpf" placeholder="Somente números">
@@ -161,7 +181,7 @@ try {
                     <input type="date" class="width-200 height-md vitima-data-nascimento">
                 </div>
             </div>
-            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col filter">
                     <label><input type="checkbox" class="vitima-mulher"> Mulher</label>
                 </div>
@@ -175,7 +195,7 @@ try {
                     <label><input type="checkbox" class="vitima-pcd"> Pessoa com deficiência</label>
                 </div>
             </div>
-            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col filter">
                     <button class="btn btn-secondary-outline btn-remover-vitima" type="button">Remover</button>
                 </div>
@@ -212,6 +232,10 @@ try {
                 processoInput.addEventListener('blur', function () {
                     var digits = (this.value || '').replace(/\D/g, '');
                     if (digits.length !== 20) {
+                        limparClasse();
+                        return;
+                    }
+                    if (typeof window.validarCNJ === 'function' && !window.validarCNJ(digits)) {
                         limparClasse();
                         return;
                     }

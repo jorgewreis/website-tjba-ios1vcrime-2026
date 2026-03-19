@@ -260,7 +260,7 @@ if ($totalPages > 0) {
                                 <i class="fi fi-rr-angle-small-down"></i>
                             </label>
                         </div>
-                        <div class="col width-500 col-process" title="clique para copiar">
+                        <div class="col width-500 col-process process-info" title="clique para copiar">
                             <?php
                                 $classeGuia = !empty($row['Classe']) ? $row['Classe'] : 'Classe não informada';
                                 $classeStyleGuia = $classeGuia !== 'Classe não informada' ? 'style="color: var(--primary-color-active); font-weight: 600;"' : '';

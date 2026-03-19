@@ -119,9 +119,14 @@ try {
         <p class="description-page">Preencha os dados da carta precatória recebida de outro tribunal.</p>
     </div>
 
-    <div class="card-page">
-        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Informações obrigatórias</div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+    <div class="container-full card-page">
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-start">
+                <h2>Informações obrigatórias</h2>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md"></div>
+        </div>
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter">
                 <label for="filter-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="width-200 height-md" id="filter-processo" placeholder="Digite o número do processo" required>
@@ -144,7 +149,7 @@ try {
                 </select>
             </div>
         </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter">
                 <label for="filter-cidade">Cidade de origem <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="width-600 height-md" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="50" required>
@@ -197,7 +202,7 @@ try {
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
 
         <?php if ($cnjError): ?>
-            <div class="row table left padding-lr-sm padding-tb-sm">
+            <div class="display-flex row row-full padding-x-sm padding-y-sm">
                 <div class="col">
                     <label class="status status-cancelled"><?php echo htmlspecialchars($cnjError, ENT_QUOTES); ?></label>
                 </div>
@@ -208,7 +213,7 @@ try {
             <span>*Conforme regra de alocação, as Cartas Recebidas serão alocadas automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
         </div>
 
-        <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
+        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
             <button class="btn btn-primary-outline" id="alterar-regra-btn" style="display: none;">Alterar regra de alocação</button>
             <button class="btn btn-secondary" id="voltar-btn">Voltar</button>
             <button class="btn btn-primary" id="cadastrar-btn" type="button">Cadastrar</button>

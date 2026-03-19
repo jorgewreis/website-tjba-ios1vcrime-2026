@@ -28,6 +28,7 @@ if ($processoId !== '') {
             <?php include __DIR__ . '/_internal_head_styles.php'; ?>
 
     <?php include __DIR__ . '/_toast_script.php'; ?>
+    <?php include __DIR__ . '/_copy_process_script.php'; ?>
 </head>
 <body class="page-internal">
     <div class="spacing-top-page"></div>
@@ -69,7 +70,10 @@ if ($processoId !== '') {
             </div>
         <?php elseif (!empty($partes)): ?>
             <div class="display-flex row row-full padding-x-sm padding-y-sm border-bottom">
-                <span class="minor-info">Processo <?php echo htmlspecialchars($processo['numero_processo'] ?? $processoId); ?></span>
+                <div class="col process-info">
+                    <span class="minor-info">Processo</span>
+                    <span class="major-info"><?php echo htmlspecialchars($processo['numero_processo'] ?? $processoId); ?></span>
+                </div>
             </div>
             <?php foreach ($partes as $p): ?>
             <div class="display-flex col col-full register border-bottom">

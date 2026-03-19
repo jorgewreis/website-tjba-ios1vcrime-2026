@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0168
+
+**Data:** 2026-03-19 15:15:16 | **Commit:** `bfbc7f7` | **Tipo:** `patch`
+
+- Feat: nova implementacao em create pages
+
 ## V. 1.03.0167
 
 **Data:** 2026-03-19 14:40:02 | **Commit:** `09bef46` | **Tipo:** `patch`
@@ -3282,6 +3288,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

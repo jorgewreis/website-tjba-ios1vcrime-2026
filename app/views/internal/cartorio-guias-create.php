@@ -54,9 +54,13 @@ try {
         <p class="description-page">Registre uma nova guia de execução ou recolhimento (processo e denunciado).</p>
     </div>
 
-    <div class="card-page">
-        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Informações obrigatórias</div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+    <div class="container-full card-page">
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-start">
+                <h2>Informações obrigatórias</h2>
+            </div>
+        </div>
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter">
                 <label for="filter-processo">Número do processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="width-200 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" required>
@@ -68,7 +72,7 @@ try {
         </div>
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter" id="denunciado-col">
                 <label for="filter-denunciado">Sentenciado <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <select class="width-600 height-md" id="filter-denunciado-select" style="display: none;" aria-label="Réus vinculados ao processo">
@@ -88,7 +92,7 @@ try {
                 </select>
             </div>
         </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter">
                 <label for="filter-regime">Regime</label>
                 <select class="width-200 height-md" id="filter-regime">
@@ -112,7 +116,7 @@ try {
             <span>*Conforme regra de alocação, a expedição e envio das Guias serão alocadas automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
         </div>
 
-        <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
+        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
             <button class="btn btn-primary-outline" id="alterar-regra-btn" style="display: none;">Alterar regra de alocação</button>
             <button class="btn btn-secondary" id="voltar-btn">Voltar</button>
             <button class="btn btn-primary" id="cadastrar-btn" type="button">Cadastrar</button>

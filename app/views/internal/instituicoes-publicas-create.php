@@ -20,15 +20,19 @@ if (function_exists('mb_internal_encoding')) mb_internal_encoding('UTF-8');
         <div class="location"><span class="all">Interno - Instituições -</span> <span class="specific">Nova</span></div>
         <h1 class="title-page">Nova instituição pública</h1>
     </div>
-    <div class="card-page">
-        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Dados</div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+    <div class="container-full card-page">
+        <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-start">
+                <h2>Dados</h2>
+            </div>
+        </div>
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="nome">Nome <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="width-600 height-md white" id="nome" required>
             </div>
         </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="nome_fantasia">Nome fantasia / Sigla</label>
                 <input type="text" class="width-200 height-md white" id="nome_fantasia">
@@ -38,13 +42,13 @@ if (function_exists('mb_internal_encoding')) mb_internal_encoding('UTF-8');
                 <input type="text" class="width-200 height-md white" id="cnpj" placeholder="Somente números">
             </div>
         </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="observacoes">Observações</label>
                 <textarea class="width-600 height-md white" id="observacoes" rows="2"></textarea>
             </div>
         </div>
-        <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
+        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
             <a href="/frame.php?page=instituicoespublicas" class="btn btn-secondary">Voltar</a>
             <button type="button" class="btn btn-primary" id="cadastrar-btn">Cadastrar</button>
         </div>

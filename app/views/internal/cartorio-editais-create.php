@@ -53,9 +53,13 @@ try {
         <p class="description-page">Registre o edital vinculado ao processo para acompanhar expedição, envio ao DJEN, certificação da publicação e decurso do prazo.</p>
     </div>
 
-    <div class="card-page">
-        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Informações obrigatórias</div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+    <div class="container-full card-page">
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-start">
+                <h2>Informações obrigatórias</h2>
+            </div>
+        </div>
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter">
                 <label for="filter-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="width-200 height-md" id="filter-processo" placeholder="Digite o número do processo" required>
@@ -67,7 +71,7 @@ try {
         </div>
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter">
                 <label for="filter-tipo-edital">Tipo de edital <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <select class="width-400 height-md" id="filter-tipo-edital" required>
@@ -87,7 +91,7 @@ try {
             <span>*Conforme regra de alocação, os Editais serão alocados automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
         </div>
 
-        <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
+        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
             <button class="btn btn-primary-outline" id="alterar-regra-btn" style="display: none;">Alterar regra de alocação</button>
             <button class="btn btn-secondary" id="voltar-btn">Voltar</button>
             <button class="btn btn-primary" id="cadastrar-btn" type="button">Cadastrar</button>

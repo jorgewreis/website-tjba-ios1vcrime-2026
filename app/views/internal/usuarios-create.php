@@ -229,6 +229,7 @@ $csrfToken = Security::generateCSRFToken();
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
         <?php include __DIR__ . '/_toast_script.php'; ?>
         <script src="/assets/js/shared/text-formatter.js"></script>
+        <script src="/assets/js/shared/cpf.js"></script>
     </head>
 <body class="page-internal">
 
@@ -243,7 +244,7 @@ $csrfToken = Security::generateCSRFToken();
         <p class="description-page">Cadastre um servidor (tipo interno). O cadastro será criado com status Pendente; setor e perfis podem ser definidos na edição por admin ou diretora para liberar o acesso.</p>
     </div>
 
-    <div class="card-page">
+    <div class="container-full card-page">
         <?php if ($mensagemErro !== ''): ?>
         <div class="row filter padding-lr-lg padding-tb-md">
             <div class="col">
@@ -256,8 +257,13 @@ $csrfToken = Security::generateCSRFToken();
 
         <form id="form-create-usuario" method="post" action="" style="width: 100%;">
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
-            <div class="row table subtitle padding-lr-lg padding-tb-lg">Dados obrigatórios</div>
-            <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
+            <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+                <div class="display-flex row row-fit justify-start">
+                    <h2>Dados obrigatórios</h2>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-md"></div>
+            </div>
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col">
                     <label for="create-nome">Nome <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="text" id="create-nome" name="nome" class="width-200 height-md white" placeholder="Nome" required maxlength="100" value="<?php echo htmlspecialchars($formValues['nome'], ENT_QUOTES, 'UTF-8'); ?>">
@@ -267,7 +273,7 @@ $csrfToken = Security::generateCSRFToken();
                     <input type="text" id="create-sobrenome" name="sobrenome" class="width-400 height-md white" placeholder="Sobrenome" required maxlength="100" value="<?php echo htmlspecialchars($formValues['sobrenome'], ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
             </div>
-            <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col">
                     <label for="create-cpf">CPF <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="text" id="create-cpf" name="cpf" class="width-100 height-md white" placeholder="000.000.000-00" required maxlength="14" value="<?php echo htmlspecialchars($formValues['cpf'], ENT_QUOTES, 'UTF-8'); ?>">
@@ -279,13 +285,13 @@ $csrfToken = Security::generateCSRFToken();
                     <span class="error-message" id="create-email-error" aria-live="polite"></span>
                 </div>
             </div>
-            <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col full-line">
                     <label for="create-data-nascimento">Data de nascimento</label>
                     <input type="date" id="create-data-nascimento" name="data_nascimento" class="width-200 height-md white" max="<?php echo date('Y-m-d'); ?>" value="<?php echo htmlspecialchars($formValues['data_nascimento'], ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
             </div>
-            <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col">
                     <label for="create-senha">Senha <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="password" id="create-senha" name="senha" class="width-200 height-md white" placeholder="Mín. 10 caracteres, 1 maiúscula, 1 minúscula, 1 número, 1 símbolo" required minlength="10" maxlength="255">
@@ -298,8 +304,13 @@ $csrfToken = Security::generateCSRFToken();
                 </div>
             </div>
 
-            <div class="row table subtitle padding-lr-lg padding-tb-lg border-bottom">Dados complementares</div>
-            <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
+            <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+                <div class="display-flex row row-fit justify-start">
+                    <h2>Dados complementares</h2>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-md"></div>
+            </div>
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col">
                     <label for="create-telefone">Telefone</label>
                     <input type="text" id="create-telefone" name="telefone" class="width-100 height-md white" placeholder="(00) 00000-0000" maxlength="50" value="<?php echo htmlspecialchars($formValues['telefone'], ENT_QUOTES, 'UTF-8'); ?>">
@@ -317,7 +328,7 @@ $csrfToken = Security::generateCSRFToken();
                     </select>
                 </div>
             </div>
-            <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col">
                     <label for="create-setor">Setor</label>
                     <select id="create-setor" name="setor" class="width-400 height-md white">
@@ -340,13 +351,13 @@ $csrfToken = Security::generateCSRFToken();
                 </div>
             </div>
 
-            <div class="row table left padding-lr-lg padding-tb-md border-bottom full-line row-gap-10">
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col">
                     <p class="status status-primary-light padding-lr-lg" style="display: flex; flex-direction: row; align-items: center; justify-content: left; max-width: 80vw; flex-wrap: wrap;">O cadastro será criado com status <strong style="margin-left: 3px;"> Pendente</strong>.</p>
                 </div>
             </div>
 
-            <div class="row table right padding-lr-lg padding-tb-md border-bottom full-line row-gap-10">
+            <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
                 <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
                 <button type="submit" class="btn btn-primary" id="cadastrar-btn" disabled>Cadastrar</button>
             </div>
@@ -467,13 +478,20 @@ $csrfToken = Security::generateCSRFToken();
 
         function initCPFMask() {
             if (!cpfInput) return;
-            cpfInput.addEventListener('input', function () { this.value = formatCPF(this.value); });
             cpfInput.addEventListener('blur', function () {
                 var raw = this.value.replace(/\D/g, '');
-                if (raw.length === 11) showFieldError('cpf', validarCPF(this.value) ? '' : 'CPF inválido.');
+                if (raw.length === 11) {
+                    var ok = (typeof App !== 'undefined' && App.CPF && App.CPF.validar)
+                        ? App.CPF.validar(raw)
+                        : validarCPF(this.value);
+                    showFieldError('cpf', ok ? '' : 'CPF inválido.');
+                }
                 else showFieldError('cpf', raw.length > 0 ? 'CPF deve ter 11 dígitos.' : '');
                 updateCadastrarButton();
             });
+            if (typeof App !== 'undefined' && App.CPF && App.CPF.init) {
+                App.CPF.init('#create-cpf');
+            }
             cpfInput.addEventListener('input', function () { updateCadastrarButton(); });
         }
 
@@ -520,7 +538,13 @@ $csrfToken = Security::generateCSRFToken();
             var senha = (senhaInput && senhaInput.value) ? senhaInput.value : '';
             var conf = (senhaConfirmInput && senhaConfirmInput.value) ? senhaConfirmInput.value : '';
             if (!nome || !sobrenome) return false;
-            if (cpf.replace(/\D/g, '').length !== 11 || !validarCPF(cpf)) return false;
+            var cpfDigits = cpf.replace(/\D/g, '');
+            if (cpfDigits.length !== 11) return false;
+            if (typeof App !== 'undefined' && App.CPF && App.CPF.validar) {
+                if (!App.CPF.validar(cpfDigits)) return false;
+            } else {
+                if (!validarCPF(cpf)) return false;
+            }
             if (!email || !validarEmail(email)) return false;
             if (!validarSenha(senha)) return false;
             return senha === conf;

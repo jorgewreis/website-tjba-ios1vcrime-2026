@@ -165,7 +165,7 @@ try {
                 <div class="display-flex row row-fit justify-start gap-y-md">
                     <div class="col filter">
                         <label for="filter-processo">Servidor</label>
-                        <select class="width-400 height-md" id="filter-processo" name="id_user" <?php echo $podeAlterarRegra ? '' : 'disabled'; ?> required>
+                        <select class="width-600 height-md" id="filter-processo" name="id_user" <?php echo $podeAlterarRegra ? '' : 'disabled'; ?> required>
                             <option value="" disabled<?php echo $selectedUserId === '' ? ' selected' : ''; ?>>Selecione um servidor</option>
                             <?php foreach ($usersList as $user): ?>
                                 <option value="<?php echo htmlspecialchars($user['id'], ENT_QUOTES); ?>"<?php echo $selectedUserId === $user['id'] ? ' selected' : ''; ?>>

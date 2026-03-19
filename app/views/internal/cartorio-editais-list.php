@@ -253,7 +253,7 @@ if ($totalPages > 0) {
                                 <i class="fi fi-rr-angle-small-down"></i>
                             </label>
                         </div>
-                        <div class="col width-500 col-process" title="clique para copiar">
+                        <div class="col width-500 col-process process-info" title="clique para copiar">
                             <?php
                                 $classeEdital = $row['Classe'] ?? 'Classe não informada';
                                 if ($classeEdital === '') {

@@ -79,6 +79,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                 <?php include __DIR__ . '/_internal_head_styles.php'; ?>
 
         <?php include __DIR__ . '/_toast_script.php'; ?>
+        <?php include __DIR__ . '/_copy_process_script.php'; ?>
     </head>
 <body class="page-internal">
 

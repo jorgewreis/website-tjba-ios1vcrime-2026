@@ -37,9 +37,13 @@ $instituicoes = $instituicoesList['rows'] ?? [];
         <h1 class="title-page">Novo vínculo pessoa-instituição</h1>
         <p class="description-page">Vincule uma pessoa (parte) a uma instituição pública.</p>
     </div>
-    <div class="card-page">
-        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Dados do vínculo</div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+    <div class="container-full card-page">
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-start">
+                <h2>Dados do vínculo</h2>
+            </div>
+        </div>
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="parte_id">Pessoa (parte) <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <select class="width-600 height-md white" id="parte_id" required>
@@ -72,7 +76,7 @@ $instituicoes = $instituicoesList['rows'] ?? [];
                 <button type="button" class="btn btn-secondary-outline" style="margin-top:4px;" id="btn-buscar-instituicao">Abrir lista de instituições</button>
             </div>
         </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="setor_id">Setor (opcional)</label>
                 <select class="width-200 height-md white" id="setor_id">
@@ -88,13 +92,13 @@ $instituicoes = $instituicoesList['rows'] ?? [];
                 <input type="text" class="width-200 height-md white" id="cargo_funcao" placeholder="Ex: Investigador">
             </div>
         </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="observacoes">Observações</label>
                 <textarea class="width-600 height-md white" id="observacoes" rows="2"></textarea>
             </div>
         </div>
-        <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
+        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
             <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
             <button type="button" class="btn btn-primary" id="salvar-btn">Salvar</button>
         </div>

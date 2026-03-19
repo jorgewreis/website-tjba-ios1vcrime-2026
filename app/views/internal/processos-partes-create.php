@@ -45,16 +45,20 @@ $polosValidos = ['ativo' => 'Ativo', 'passivo' => 'Passivo', 'terceiros' => 'Ter
         <div class="location"><span class="all">Interno - Consultas -</span> <span class="specific">Vincular parte</span></div>
         <h1 class="title-page">Vincular parte ao processo <?php echo htmlspecialchars($processo['numero_processo'] ?? ''); ?></h1>
     </div>
-    <div class="card-page">
+    <div class="container-full card-page">
         <input type="hidden" id="processo-id" value="<?php echo htmlspecialchars($processoId); ?>">
-        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Parte</div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-start">
+                <h2>Parte</h2>
+            </div>
+        </div>
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="parte-id">ID da parte (pessoa) <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="width-600 height-md white" id="parte-id" placeholder="ID da pessoa cadastrada (ex: PRT-...)" required>
             </div>
         </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="tipo_parte">Tipo de parte <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <select class="width-200 height-md white" id="tipo_parte" required>
@@ -74,7 +78,7 @@ $polosValidos = ['ativo' => 'Ativo', 'passivo' => 'Passivo', 'terceiros' => 'Ter
                 </select>
             </div>
         </div>
-        <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
+        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
             <a href="/frame.php?page=consultaprocessosedit&id=<?php echo urlencode($processoId); ?>" class="btn btn-secondary">Voltar</a>
             <button type="button" class="btn btn-primary" id="vincular-btn">Vincular</button>
         </div>

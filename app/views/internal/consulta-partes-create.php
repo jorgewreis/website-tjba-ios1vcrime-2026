@@ -31,15 +31,20 @@ if (function_exists('mb_internal_encoding')) {
         <p class="description-page">Dados básicos da parte (pessoa). Apenas o nome completo é obrigatório; CPF, sexo e data de nascimento podem ser informados quando disponíveis.</p>
     </div>
 
-    <div class="card-page">
-        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Informações da parte</div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+    <div class="container-full card-page">
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-start">
+                <h2>Informações da parte</h2>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md"></div>
+        </div>
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="nome_completo">Nome completo <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="width-600 height-md white" id="nome_completo" name="nome_completo" placeholder="Nome completo da pessoa" required>
             </div>
         </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="cpf">CPF</label>
                 <input type="text" class="width-200 height-md white" id="cpf" name="cpf" placeholder="Somente números">
@@ -59,9 +64,13 @@ if (function_exists('mb_internal_encoding')) {
             </div>
         </div>
 
-        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Telefones (opcional)</div>
+        <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-start">
+                <h2>Telefones (opcional)</h2>
+            </div>
+        </div>
         <div id="telefones-cadastro">
-            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line telefone-row">
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md telefone-row">
                 <div class="col">
                     <label>Tipo</label>
                     <select class="width-200 height-md white tel-tipo">
@@ -76,13 +85,17 @@ if (function_exists('mb_internal_encoding')) {
                 </div>
             </div>
         </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <button type="button" class="btn btn-secondary-outline" id="add-telefone-btn">Adicionar outro telefone</button>
         </div>
 
-        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Endereços (opcional)</div>
+        <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-start">
+                <h2>Endereços (opcional)</h2>
+            </div>
+        </div>
         <div id="enderecos-cadastro">
-            <div class="endereco-row row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="endereco-row display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col"><label>CEP</label><input type="text" class="end-cep width-100 height-md white" placeholder="00000-000" maxlength="9"></div>
                 <div class="col"><label>Logradouro</label><input type="text" class="end-logradouro width-600 height-md white" placeholder="Rua, avenida..."></div>
                 <div class="col"><label>Número</label><input type="text" class="end-numero width-100 height-md white" placeholder="Nº"></div>
@@ -93,17 +106,17 @@ if (function_exists('mb_internal_encoding')) {
                 <div class="col"><label class="inline"><input type="checkbox" class="end-principal"> Principal</label></div>
             </div>
         </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <button type="button" class="btn btn-secondary-outline" id="add-endereco-btn">Adicionar outro endereço</button>
         </div>
 
-        <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
+        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
             <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
             <button type="button" class="btn btn-primary" id="cadastrar-btn">Cadastrar</button>
         </div>
 
-        <div class="row table between padding-tb-lg padding-lr-md">
-            <div class="col">
+        <div class="display-flex row row-full justify-between padding-x-md padding-y-md">
+            <div class="col col-full">
                 <label id="cadastro-feedback" class="status-placeholder" aria-live="polite"></label>
             </div>
         </div>
