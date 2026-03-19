@@ -596,9 +596,13 @@ if ($totalPages > 0) {
             document.querySelectorAll('.btn-concluir-subtarefa').forEach(function (btn) {
                 btn.addEventListener('click', function () {
                     const subtarefaId = this.getAttribute('data-subtarefa-id');
-                    const subtarefaTipo = this.getAttribute('data-subtarefa-tipo') || '';
+                    const normalizeTipo = (value) => String(value || '').trim().toLowerCase();
                     if (!subtarefaId) return;
                     const block = this.closest('[data-subtarefa-id][data-subtarefa-tipo]');
+                    const subtarefaTipo = normalizeTipo(
+                        this.getAttribute('data-subtarefa-tipo') ||
+                        (block ? block.getAttribute('data-subtarefa-tipo') : '')
+                    );
                     const obj = {};
                     if (block) {
                         const resultadoCumprimento = block.querySelector('.subtask-resultado-cumprimento');
@@ -610,11 +614,11 @@ if ($totalPages > 0) {
                             obj.tipo_envio = tipoEnvio.value.trim();
                         }
                     }
-                    if (subtarefaTipo === 'juntada_certidao_oficial' && !(obj.resultado_cumprimento)) {
+                    if (['juntada_certidao_oficial', 'confirmar_juntada', 'juntada_certidao'].includes(subtarefaTipo) && !(obj.resultado_cumprimento)) {
                         notify('error', 'Atenção', 'Selecione o resultado do cumprimento.');
                         return;
                     }
-                    if (subtarefaTipo === 'envio_processo' && !(obj.tipo_envio)) {
+                    if (['envio_processo', 'enviar_processo'].includes(subtarefaTipo) && !(obj.tipo_envio)) {
                         notify('error', 'Atenção', 'Selecione o tipo de envio.');
                         return;
                     }

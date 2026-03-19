@@ -387,7 +387,7 @@ if ($totalPages > 0) {
                                 <div class="col"><input type="text" class="subtask-valor-multa width-100 height-sm readonly" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" readonly placeholder="Valor (automático)" title="Valor total da pena de multa" value="<?php echo htmlspecialchars($valorMultaRow, ENT_QUOTES); ?>"></div>
                             <?php endif; ?>
                             <?php if ($isOrdem5): ?>
-                                <div class="col"><select class="subtask-tipo-juntada width-200 height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Tipo de juntada">
+                                <div class="col"><select class="subtask-tipo-juntada width-300 height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Tipo de juntada">
                                     <option value="">Selecione</option>
                                     <?php foreach ($tipoJuntadaOptions as $val => $label): ?>
                                         <option value="<?php echo htmlspecialchars($val, ENT_QUOTES); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES); ?></option>
@@ -395,16 +395,16 @@ if ($totalPages > 0) {
                                 </select></div>
                             <?php endif; ?>
                             <?php if ($isOrdem6): ?>
-                                <div class="col"><input type="number" class="subtask-qtd-docs width-100 height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" min="4" value="4" placeholder="Qtd (mín 4)" title="Qtd de documentos gerados"></div>
+                                <div class="col"><input type="number" class="subtask-qtd-docs width-200 height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" min="4" value="4" placeholder="Qtd (mín 4)" title="Qtd de documentos gerados"></div>
                             <?php endif; ?>
                             <?php if ($isOrdem7): ?>
-                                <div class="col"><select class="subtask-tipo-envio width-200 height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Tipo de envio">
+                                <div class="col"><select class="subtask-tipo-envio width-300 height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Tipo de envio">
                                     <option value="">Selecione</option>
                                     <?php foreach ($tipoEnvioOptions as $val => $label): ?>
                                         <option value="<?php echo htmlspecialchars($val, ENT_QUOTES); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES); ?></option>
                                     <?php endforeach; ?>
                                 </select></div>
-                                <div class="col"><select class="subtask-destinatario width-100 height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Destinatário">
+                                <div class="col"><select class="subtask-destinatario width-200 height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Destinatário">
                                     <option value="">Dest.</option>
                                     <?php foreach ($destinatarioOptions as $val => $label): ?>
                                         <option value="<?php echo htmlspecialchars($val, ENT_QUOTES); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES); ?></option>
@@ -568,9 +568,13 @@ if ($totalPages > 0) {
         document.querySelectorAll('.btn-concluir-subtarefa').forEach(function (btn) {
             btn.addEventListener('click', function () {
                 const subtarefaId = this.getAttribute('data-subtarefa-id');
-                const subtarefaTipo = this.getAttribute('data-subtarefa-tipo') || '';
+                const normalizeTipo = (value) => String(value || '').trim().toLowerCase();
                 if (!subtarefaId) return;
-                const block = this.closest('.col.full-line[data-subtarefa-id]');
+                const block = this.closest('[data-subtarefa-id][data-subtarefa-tipo]');
+                const subtarefaTipo = normalizeTipo(
+                    this.getAttribute('data-subtarefa-tipo') ||
+                    (block ? block.getAttribute('data-subtarefa-tipo') : '')
+                );
                 const obj = {};
                 if (block) {
                     const dataFato = block.querySelector('.subtask-data-fato');
@@ -588,7 +592,7 @@ if ($totalPages > 0) {
                     if (tipoEnvio && tipoEnvio.value && tipoEnvio.value.trim()) obj.tipo_envio = tipoEnvio.value.trim();
                     if (destinatario && destinatario.value && destinatario.value.trim()) obj.destinatario = destinatario.value.trim();
                 }
-                if (subtarefaTipo === 'juntada_automatica' && !obj.tipo_juntada) {
+                if (['juntada_automatica', 'confirmar_juntada', 'juntada_autos'].includes(subtarefaTipo) && !obj.tipo_juntada) {
                     notify('error', 'Atenção', 'Selecione o tipo de juntada (automática ou manual).');
                     return;
                 }
@@ -600,7 +604,7 @@ if ($totalPages > 0) {
                     }
                     obj.qtd_docs = q;
                 }
-                if (subtarefaTipo === 'envio_guia' && (!obj.tipo_envio || !obj.destinatario)) {
+                if (['envio_guia', 'enviar_guia'].includes(subtarefaTipo) && (!obj.tipo_envio || !obj.destinatario)) {
                     notify('error', 'Atenção', 'Selecione o tipo de envio e o destinatário.');
                     return;
                 }

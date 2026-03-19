@@ -593,31 +593,32 @@ if ($totalPages > 0) {
             // Concluir subtarefa
             document.querySelectorAll('.btn-concluir-subtarefa').forEach(function (btn) {
                 btn.addEventListener('click', function () {
+                    const normalizeTipo = (value) => String(value || '').trim().toLowerCase();
                     const subtarefaId = this.getAttribute('data-subtarefa-id');
                     if (!subtarefaId) return;
                     const block = this.closest('[data-subtarefa-id][data-subtarefa-tipo]');
-                    const tipo = block ? (block.getAttribute('data-subtarefa-tipo') || '') : '';
+                    const tipo = normalizeTipo(block ? (block.getAttribute('data-subtarefa-tipo') || '') : '');
                     const qtdEl = block ? block.querySelector('.subtask-qtd-docs') : null;
                     const numeroDestino = block ? block.querySelector('.subtask-numero-destino') : null;
                     const resultadoDevolucao = block ? block.querySelector('.subtask-resultado-devolucao') : null;
                     const metodoEnvio = block ? block.querySelector('.subtask-metodo-envio') : null;
-                    if (tipo === 'aguardando_gerar_pdf') {
+                    if (['aguardando_gerar_pdf', 'gerar_pdf'].includes(tipo)) {
                         var qtd = qtdEl ? (parseInt(qtdEl.value, 10) || 0) : 0;
                         if (qtd < 2 || qtd > 10) {
                             notify('error', 'Atenção', 'Informe a quantidade de documentos gerados (2 a 10).');
                             return;
                         }
-                    } else if (tipo === 'aguardando_envio') {
+                    } else if (['aguardando_envio', 'envio_processo', 'enviar_processo'].includes(tipo)) {
                         if (!metodoEnvio || !metodoEnvio.value || !metodoEnvio.value.trim()) {
                             notify('error', 'Atenção', 'Selecione o método de envio.');
                             return;
                         }
-                    } else if (tipo === 'aguardando_informacoes') {
+                    } else if (['aguardando_informacoes', 'informar_dados', 'detalhamento_informacoes'].includes(tipo)) {
                         if (!numeroDestino || !numeroDestino.value.trim()) {
                             notify('error', 'Atenção', 'Informe o número do processo no Juízo Deprecante.');
                             return;
                         }
-                    } else if (tipo === 'aguardando_devolucao') {
+                    } else if (['aguardando_devolucao', 'confirmar_juntada', 'juntada_devolucao'].includes(tipo)) {
                         if (!resultadoDevolucao || !resultadoDevolucao.value) {
                             notify('error', 'Atenção', 'Selecione o resultado da devolução.');
                             return;

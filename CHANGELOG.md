@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0006
+
+**Data:** 2026-03-19 17:48:54 | **Commit:** `dc88dc2` | **Tipo:** `patch`
+
+- Fix: correcao de movimentacao de subtarefas
+
 ## V. 1.04.0005
 
 **Data:** 2026-03-19 17:41:21 | **Commit:** `5e8ad8b` | **Tipo:** `patch`
@@ -3324,6 +3330,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
