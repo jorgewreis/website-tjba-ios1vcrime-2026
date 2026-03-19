@@ -78,7 +78,7 @@ try {
                 <select class="width-800 height-md" id="filter-denunciado-select" style="display: none;" aria-label="Réus vinculados ao processo">
                     <!-- preenchido via JS quando houver réus -->
                 </select>
-                <input type="text" class="width-800 height-md" id="filter-denunciado" placeholder="Nome do denunciado/réu" maxlength="255" aria-label="Nome do denunciado quando não há réus ou opção Outro">
+                <input type="text" class="width-800 height-md" id="filter-denunciado" placeholder="Digite o nome completo" maxlength="255" aria-label="Nome do denunciado quando não há réus ou opção Outro">
             </div>
             <div class="col filter">
                 <label for="filter-tipo">Tipo de guia <span class="label-hint-obrigatorio">*obrigatório</span></label>
@@ -112,7 +112,7 @@ try {
             </div>
         </div>
 
-        <div class="row info padding-x-md padding-y-md">
+        <div class="display-flex row row-full info padding-x-md padding-y-md">
             <span>*Conforme regra de alocação, a expedição e envio das Guias serão alocadas automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
         </div>
 
@@ -122,11 +122,7 @@ try {
             <button class="btn btn-primary" id="cadastrar-btn" type="button">Cadastrar</button>
         </div>
 
-        <div class="row pagination">
-            <div class="col">
-                <label id="cadastro-feedback" class="status-placeholder" aria-live="polite"></label>
-            </div>
-        </div>
+        
     </div>
 
     <div class="footer-page">
@@ -341,12 +337,9 @@ try {
     <script>
         (function () {
             var btn = document.getElementById('cadastrar-btn');
-            var feedback = document.getElementById('cadastro-feedback');
             var showFeedback = function (message, type) {
                 if (typeof showToast === 'function') {
                     showToast({ type: type === 'error' ? 'error' : 'success', variant: 'full', title: type === 'error' ? 'Erro' : 'Sucesso', message: message });
-                } else if (feedback) {
-                    feedback.innerHTML = '<label class="status ' + (type === 'error' ? 'status-cancelled' : 'status-finished') + '">' + message + '</label>';
                 }
             };
             var getValue = function (id) {

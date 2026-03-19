@@ -126,7 +126,7 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
         </div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <input type="text" class="width-100 height-md white" id="new-tel-tipo" placeholder="Tipo">
-            <input type="text" class="width-200 height-md white" id="new-tel-numero" placeholder="Número *">
+            <input type="text" class="width-200 height-md white" id="new-tel-numero" placeholder="(00) 00000-0000">
             <input type="text" class="width-100 height-md white" id="new-tel-ramal" placeholder="Ramal">
             <label class="inline"><input type="checkbox" id="new-tel-principal"> Principal</label>
             <button type="button" class="btn btn-secondary-outline" id="add-tel-btn">Adicionar telefone</button>

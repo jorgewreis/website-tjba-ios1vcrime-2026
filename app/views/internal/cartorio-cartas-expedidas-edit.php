@@ -281,7 +281,7 @@ $stateOptions = [
                     $classeValue = $classeReadonly ? $classeNome : '';
                     $classeClass = 'width-600 height-md' . ($classeReadonly ? ' readonly' : '');
                     ?>
-                    <input type="text" id="filter-classe" class="<?php echo htmlspecialchars($classeClass, ENT_QUOTES); ?>" value="<?php echo htmlspecialchars($classeValue, ENT_QUOTES); ?>"<?php echo $classeReadonly ? ' readonly' : ' placeholder="Informe a classe processual"'; ?>>
+                    <input type="text" id="filter-classe" class="<?php echo htmlspecialchars($classeClass, ENT_QUOTES); ?>" value="<?php echo htmlspecialchars($classeValue, ENT_QUOTES); ?>"<?php echo $classeReadonly ? ' readonly' : ' placeholder="Preenchido automaticamente pelo DataJud"'; ?>>
                 </div>
                 <div class="col">
                     <label for="filter-tipo">Finalidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
@@ -363,7 +363,6 @@ $stateOptions = [
             (() => {
                 const endpoint = '/api/cartorio-cartas-expedidas/update.php';
                 const salvarBtn = document.getElementById('salvar-btn');
-                const feedback = document.getElementById('cadastro-feedback');
                 const cidadeInput = document.getElementById('filter-cidade');
                 const estadoSelect = document.getElementById('filter-estado');
                 const finalidadeSelect = document.getElementById('filter-tipo');
@@ -380,9 +379,6 @@ $stateOptions = [
                 const showFeedback = (message, type = 'success') => {
                     if (typeof showToast === 'function') {
                         showToast({ type: type === 'error' ? 'error' : 'success', variant: 'full', title: type === 'error' ? 'Erro' : 'Sucesso', message });
-                    } else if (feedback) {
-                        const variant = type === 'error' ? 'status-cancelled' : 'status-finished';
-                        feedback.innerHTML = `<label class="status ${variant}">${message}</label>`;
                     }
                 };
 
@@ -460,7 +456,6 @@ $stateOptions = [
                             const status = (data.status_cidade || '').trim();
                             if (status.toUpperCase() === 'CCM') {
                                 if (typeof showToast === 'function') showToast({ type: 'info', variant: 'simple', message: 'Comarca com Central de Mandados' });
-                                else alert('Comarca com Central de Mandados');
                                 cidadeInput.value = '';
                                 if (hiddenComarcaInput) hiddenComarcaInput.value = '';
                             } else {
@@ -542,10 +537,8 @@ $stateOptions = [
                                 return;
                             }
                             if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao cancelar a tarefa.' });
-                            else alert(data.error || 'Erro ao cancelar a tarefa.');
                         } catch (e) {
                             if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão ao cancelar.' });
-                            else alert('Erro de conexão ao cancelar.');
                         }
                         btnCancelarTarefa.disabled = false;
                     });
@@ -570,10 +563,8 @@ $stateOptions = [
                                 return;
                             }
                             if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao excluir a tarefa.' });
-                            else alert(data.error || 'Erro ao excluir a tarefa.');
                         } catch (e) {
                             if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão ao excluir.' });
-                            else alert('Erro de conexão ao excluir.');
                         }
                         btnExcluirTarefa.disabled = false;
                     });

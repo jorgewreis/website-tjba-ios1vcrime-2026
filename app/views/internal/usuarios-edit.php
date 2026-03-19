@@ -321,7 +321,7 @@ function deriveUsuarioStatus(array $usuario): string
             <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
                 <div class="col">
                     <label for="edit-nome">Nome <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="text" id="edit-nome" name="nome" class="width-200 height-md white readonly" placeholder="Nome" required maxlength="100" value="<?php echo $nomeVal; ?>" readonly>
+                    <input type="text" id="edit-nome" name="nome" class="width-200 height-md white readonly" placeholder="Digite o nome completo" required maxlength="100" value="<?php echo $nomeVal; ?>" readonly>
                 </div>
                 <div class="col">
                     <label for="edit-sobrenome">Sobrenome <span class="label-hint-obrigatorio">*obrigatório</span></label>

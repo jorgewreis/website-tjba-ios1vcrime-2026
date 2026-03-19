@@ -186,7 +186,7 @@ try {
                 <div class="display-flex row row-fit justify-start gap-y-md">
                     <div class="col filter">
                         <label for="filter-servidor">Servidor</label>
-                        <select class="width-600 height-md" id="filter-servidor" name="id_user" data-original-user-name="<?php echo htmlspecialchars($ruleUsuarioNome, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $podeAlterarRegra ? '' : 'disabled'; ?> required>
+                        <select class="width-600 height-md" id="filter-servidor" name="id_user" data-original-user-name="<?php echo htmlspecialchars($ruleUsuarioNome, ENT_QUOTES, 'UTF-8'); ?>" data-original-user-id="<?php echo htmlspecialchars($selectedUserId, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $podeAlterarRegra ? '' : 'disabled'; ?> required>
                             <option value="" disabled<?php echo $selectedUserId === '' ? ' selected' : ''; ?>>Selecione um servidor</option>
                             <?php foreach ($usersList as $user): ?>
                                 <option value="<?php echo htmlspecialchars($user['id'], ENT_QUOTES); ?>"<?php echo $selectedUserId === $user['id'] ? ' selected' : ''; ?>>
@@ -257,13 +257,15 @@ try {
             const select = document.querySelector('select[name="id_user"]');
             if (!saveBtn || !select) return;
 
-            const originalName = (select.getAttribute('data-original-user-name') || '').trim();
+            const originalId = (select.getAttribute('data-original-user-id') || '').trim();
 
             const syncSaveButton = () => {
-                const opt = select.options[select.selectedIndex];
-                const selectedName = (opt ? opt.textContent : '').trim();
-                const shouldEnable = selectedName !== originalName;
-                saveBtn.disabled = !shouldEnable;
+                const currentId = (select.value || '').trim();
+                const effectiveOriginalId = originalId !== '' ? originalId : currentId;
+                const changed = currentId !== effectiveOriginalId;
+
+                if (changed) saveBtn.removeAttribute('disabled');
+                else saveBtn.setAttribute('disabled', '');
             };
 
             select.addEventListener('change', syncSaveButton);

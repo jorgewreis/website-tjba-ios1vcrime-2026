@@ -86,13 +86,13 @@ try {
                 <select class="width-800 height-md" id="reu-select" style="display: none;" aria-label="Réus vinculados ao processo ou sugestões por nome">
                     <!-- preenchido via JS: réus do processo ou sugestões (nome + CPF) + Outro / Cadastrar novo -->
                 </select>
-                <input type="text" class="width-800 height-md" id="reu-nome" placeholder="Nome do réu (digite para buscar ou cadastrar)" maxlength="255" aria-label="Nome do réu quando não há réus ou opção Outro">
+                <input type="text" class="width-800 height-md" id="reu-nome" placeholder="Digite o nome completo" maxlength="255" aria-label="Nome do réu quando não há réus ou opção Outro">
             </div>
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md" id="reu-campos-complementares" style="display: none;">
             <div class="col filter">
                 <label for="reu-cpf">CPF <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-300 height-md" id="reu-cpf" placeholder="Somente números">
+                <input type="text" class="width-300 height-md" id="reu-cpf" placeholder="000.000.000-00">
             </div>
             <div class="col filter">
                 <label for="reu-sexo">Sexo <span class="label-hint-obrigatorio">*obrigatório</span></label>
@@ -132,11 +132,7 @@ try {
             <button class="btn btn-primary" id="cadastrar-btn" type="button">Cadastrar</button>
         </div>
 
-        <div class="row pagination">
-            <div class="col">
-                <label id="cadastro-feedback" class="status-placeholder" aria-live="polite"></label>
-            </div>
-        </div>
+        
     </div>
 
     <div class="footer-page">
@@ -159,13 +155,13 @@ try {
                 <div class="col filter">
                     <label>Vítima (nome)</label>
                     <select class="width-600 height-md vitima-select" style="display: none;" aria-label="Sugestões por nome"></select>
-                    <input type="text" class="width-600 height-md vitima-nome" placeholder="Digite o nome para buscar ou cadastrar" maxlength="255">
+                    <input type="text" class="width-600 height-md vitima-nome" placeholder="Digite o nome completo" maxlength="255">
                 </div>
             </div>
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md vitima-campos-complementares" style="display: none;">
                 <div class="col filter">
                     <label>CPF <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="text" class="width-200 height-md vitima-cpf" placeholder="Somente números">
+                    <input type="text" class="width-200 height-md vitima-cpf" placeholder="000.000.000-00">
                 </div>
                 <div class="col filter">
                     <label>Sexo <span class="label-hint-obrigatorio">*obrigatório</span></label>
@@ -659,7 +655,6 @@ try {
     <script>
         (function () {
             function showFeedback(message, type) {
-                var feedback = document.getElementById('cadastro-feedback');
                 if (typeof showToast === 'function') {
                     showToast({
                         type: type === 'error' ? 'error' : 'success',
@@ -667,8 +662,6 @@ try {
                         title: type === 'error' ? 'Erro' : 'Sucesso',
                         message: message
                     });
-                } else if (feedback) {
-                    feedback.innerHTML = '<label class="status ' + (type === 'error' ? 'status-cancelled' : 'status-finished') + '">' + message + '</label>';
                 }
             }
 

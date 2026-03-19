@@ -176,7 +176,7 @@ $timelineData = $tarefa !== null
                     $classeValue = $classeReadonly ? $classeNome : '';
                     $classeClass = 'width-600 height-md' . ($classeReadonly ? ' readonly' : '');
                     ?>
-                    <input type="text" id="filter-classe" class="<?php echo htmlspecialchars($classeClass, ENT_QUOTES); ?>" value="<?php echo htmlspecialchars($classeValue, ENT_QUOTES); ?>"<?php echo $classeReadonly ? ' readonly' : ' placeholder="Informe a classe processual"'; ?>>
+                    <input type="text" id="filter-classe" class="<?php echo htmlspecialchars($classeClass, ENT_QUOTES); ?>" value="<?php echo htmlspecialchars($classeValue, ENT_QUOTES); ?>"<?php echo $classeReadonly ? ' readonly' : ' placeholder="Preenchido automaticamente pelo DataJud"'; ?>>
                 </div>
                 <div class="col filter">
                     <label for="filter-reu">Réu</label>
@@ -203,7 +203,6 @@ $timelineData = $tarefa !== null
 
         <div class="row pagination">
             <div class="col">
-                <label id="cadastro-feedback" class="status-placeholder" aria-live="polite"></label>
             </div>
         </div>
     </div>
@@ -245,13 +244,11 @@ $timelineData = $tarefa !== null
                                 window.location.reload();
                             } else {
                                 if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao cancelar.' });
-                                else alert(data.error || 'Erro ao cancelar.');
                                 btnCancelar.disabled = false;
                             }
                         })
                         .catch(function () {
                             if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
-                            else alert('Erro de conexão.');
                             btnCancelar.disabled = false;
                         });
                     });
@@ -273,13 +270,11 @@ $timelineData = $tarefa !== null
                                 window.location.href = '/frame.php?page=cejusc';
                             } else {
                                 if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao excluir.' });
-                                else alert(data.error || 'Erro ao excluir.');
                                 btnExcluir.disabled = false;
                             }
                         })
                         .catch(function () {
                             if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
-                            else alert('Erro de conexão.');
                             btnExcluir.disabled = false;
                         });
                     });

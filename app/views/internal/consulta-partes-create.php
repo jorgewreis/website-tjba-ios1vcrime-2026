@@ -41,13 +41,13 @@ if (function_exists('mb_internal_encoding')) {
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="nome_completo">Nome completo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-600 height-md white" id="nome_completo" name="nome_completo" placeholder="Nome completo da pessoa" required>
+                <input type="text" class="width-600 height-md white" id="nome_completo" name="nome_completo" placeholder="Digite o nome completo" required>
             </div>
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="cpf">CPF</label>
-                <input type="text" class="width-200 height-md white" id="cpf" name="cpf" placeholder="Somente números">
+                <input type="text" class="width-200 height-md white" id="cpf" name="cpf" placeholder="000.000.000-00">
             </div>
             <div class="col">
                 <label for="sexo">Sexo</label>
@@ -81,7 +81,7 @@ if (function_exists('mb_internal_encoding')) {
                 </div>
                 <div class="col">
                     <label>Número <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="text" class="width-200 height-md white tel-numero" placeholder="Somente números">
+                    <input type="text" class="width-200 height-md white tel-numero" placeholder="(00) 00000-0000">
                 </div>
             </div>
         </div>
@@ -115,11 +115,7 @@ if (function_exists('mb_internal_encoding')) {
             <button type="button" class="btn btn-primary" id="cadastrar-btn">Cadastrar</button>
         </div>
 
-        <div class="display-flex row row-full justify-between padding-x-md padding-y-md">
-            <div class="col col-full">
-                <label id="cadastro-feedback" class="status-placeholder" aria-live="polite"></label>
-            </div>
-        </div>
+        
     </div>
 
     <div class="footer-page">
@@ -176,13 +172,11 @@ if (function_exists('mb_internal_encoding')) {
             var nome = (document.getElementById('nome_completo').value || '').trim();
             if (!nome) {
                 if (typeof showToast === 'function') showToast({ type: 'error', message: 'Nome completo é obrigatório.' });
-                else alert('Informe o nome completo.');
                 return;
             }
             var cpfRaw = (document.getElementById('cpf').value || '').replace(/\D/g, '');
             if (cpfRaw && cpfRaw.length === 11 && typeof App !== 'undefined' && App.CPF && !App.CPF.validar(cpfRaw)) {
                 if (typeof showToast === 'function') showToast({ type: 'error', message: 'CPF inválido. Verifique os dígitos.' });
-                else alert('CPF inválido. Verifique os dígitos.');
                 return;
             }
             var cpf = cpfRaw || null;
@@ -246,7 +240,6 @@ if (function_exists('mb_internal_encoding')) {
                     window.location.href = '/frame.php?page=consultapartesedit&id=' + encodeURIComponent(result.data.id);
                 } else {
                     if (typeof showToast === 'function') showToast({ type: 'error', message: result.data.error || 'Erro ao cadastrar.' });
-                    else alert(result.data.error || 'Erro ao cadastrar.');
                     document.getElementById('cadastrar-btn').disabled = false;
                 }
             })

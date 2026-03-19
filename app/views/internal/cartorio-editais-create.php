@@ -62,11 +62,11 @@ try {
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter">
                 <label for="filter-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-400 height-md" id="filter-processo" placeholder="Digite o número do processo" required>
+                <input type="text" class="width-400 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" required>
             </div>
             <div class="col filter">
                 <label for="filter-classe" id="label-classe">Classe processual <span class="label-hint-automatizado">*automatizado</span></label>
-                <input type="text" class="width-600 height-md" id="filter-classe" placeholder="Preenchido automaticamente" readonly>
+                <input type="text" class="width-600 height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>
             </div>
         </div>
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
@@ -87,7 +87,7 @@ try {
                 <input type="number" class="width-300 height-md" id="filter-prazo-dias" min="1" placeholder="Ex.: 15" required title="Prazo em dias a partir da data de publicação">
             </div>
         </div>
-        <div class="row info padding-x-md padding-y-md">
+        <div class="display-flex row row-full info padding-x-md padding-y-md">
             <span>*Conforme regra de alocação, os Editais serão alocados automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
         </div>
 
@@ -97,11 +97,7 @@ try {
             <button class="btn btn-primary" id="cadastrar-btn" type="button">Cadastrar</button>
         </div>
 
-        <div class="row pagination">
-            <div class="col">
-                <label id="cadastro-feedback" class="status-placeholder" aria-live="polite"></label>
-            </div>
-        </div>
+        
     </div>
 
     <div class="footer-page">
@@ -197,12 +193,9 @@ try {
     <script>
         (function () {
             var btn = document.getElementById('cadastrar-btn');
-            var feedback = document.getElementById('cadastro-feedback');
             var showFeedback = function (message, type) {
                 if (typeof showToast === 'function') {
                     showToast({ type: type === 'error' ? 'error' : 'success', variant: 'full', title: type === 'error' ? 'Erro' : 'Sucesso', message: message });
-                } else if (feedback) {
-                    feedback.innerHTML = '<label class="status ' + (type === 'error' ? 'status-cancelled' : 'status-finished') + '">' + message + '</label>';
                 }
             };
 

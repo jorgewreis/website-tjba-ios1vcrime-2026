@@ -223,7 +223,7 @@ $tiposOptions = [
                     $classeValue = $classeReadonly ? $classeNome : '';
                     $classeClass = 'width-600 height-md' . ($classeReadonly ? ' readonly' : '');
                     ?>
-                    <input type="text" id="filter-classe" class="<?php echo htmlspecialchars($classeClass, ENT_QUOTES); ?>" value="<?php echo htmlspecialchars($classeValue, ENT_QUOTES); ?>"<?php echo $classeReadonly ? ' readonly' : ' placeholder="Informe a classe processual"'; ?>>
+                    <input type="text" id="filter-classe" class="<?php echo htmlspecialchars($classeClass, ENT_QUOTES); ?>" value="<?php echo htmlspecialchars($classeValue, ENT_QUOTES); ?>"<?php echo $classeReadonly ? ' readonly' : ' placeholder="Preenchido automaticamente pelo DataJud"'; ?>>
                 </div>
                 <div class="col filter">
                     <label for="edit-denunciado">Denunciado</label>

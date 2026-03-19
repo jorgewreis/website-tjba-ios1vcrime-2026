@@ -100,7 +100,7 @@ if ($pessoa === null) {
             </div>
             <div class="col">
                 <label for="new-tel-numero">Número</label>
-                <input type="text" class="width-200 height-md white" id="new-tel-numero" placeholder="Somente números">
+                <input type="text" class="width-200 height-md white" id="new-tel-numero" placeholder="(00) 00000-0000">
             </div>
             <label for="add-tel-btn">-</label>
             <button type="button" class="btn btn-secondary-outline" id="add-tel-btn">Adicionar telefone</button>

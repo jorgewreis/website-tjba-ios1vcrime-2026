@@ -1,0 +1,22 @@
+---
+description: Contrato global para páginas create/edit internas
+globs: app/views/**/*-{create,edit}.php
+alwaysApply: false
+---
+
+# Contrato Global Create/Edit
+
+- Reutilizar classes CSS existentes; nunca criar classe nova para layout dessas telas.
+- Estrutura de blocos deve seguir padrão `container-full card-page`, com seções `display-flex` e ações no rodapé da página.
+- Feedback ao usuário deve usar somente `showToast` (success/error/info); não usar feedback inline.
+- Campo de CPF usa placeholder `000.000.000-00` e validação front/back compatível.
+- Campo CNJ/processo usa placeholder `0000000-00.0000.0.00.0000` e validação CNJ no front/back.
+- Campo de telefone usa placeholder `(00) 00000-0000` com máscara e sanitização no envio.
+- Campos de nome completo usam placeholder `Digite o nome completo` com normalização de texto.
+- Campos readonly/disabled preenchidos automaticamente mantêm placeholder informativo.
+- Para campos equivalentes, `*-create.php` e `*-edit.php` devem ter placeholders, validações e comportamento equivalentes.
+- Estados de botão:
+  - botão de voltar sempre habilitado;
+  - botão de salvar/cadastrar habilita apenas quando formulário está válido e/ou houve alteração.
+- Selects sem placeholder literal devem ter primeira opção padrão `Selecione ...`.
+- IDs/names, labels e tamanhos (`width-*` / `height-md`) devem ser consistentes por tipo de campo.

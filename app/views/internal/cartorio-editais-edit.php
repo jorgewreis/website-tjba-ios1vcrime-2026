@@ -194,7 +194,6 @@ $timelineData = $edital !== null
 
         <div class="row pagination">
             <div class="col">
-                <label id="cadastro-feedback" class="status-placeholder" aria-live="polite"></label>
             </div>
         </div>
     </div>
@@ -293,7 +292,6 @@ $timelineData = $edital !== null
                                 window.location.href = '/frame.php?page=editais';
                             } else {
                                 if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao excluir.' });
-                                else alert(data.error || 'Erro ao excluir.');
                                 btnExcluir.disabled = false;
                             }
                         })

@@ -246,13 +246,16 @@ $csrfToken = Security::generateCSRFToken();
 
     <div class="container-full card-page">
         <?php if ($mensagemErro !== ''): ?>
-        <div class="row filter padding-lr-lg padding-tb-md">
-            <div class="col">
-                <div class="alert-heading danger width-600" role="alert">
-                    <span class="alert-text"><?php echo htmlspecialchars($mensagemErro, ENT_QUOTES, 'UTF-8'); ?></span>
-                </div>
-            </div>
-        </div>
+            <script>
+                if (typeof showToast === 'function') {
+                    showToast({
+                        type: 'error',
+                        variant: 'full',
+                        title: 'Erro',
+                        message: <?php echo json_encode($mensagemErro, JSON_UNESCAPED_UNICODE); ?>
+                    });
+                }
+            </script>
         <?php endif; ?>
 
         <form id="form-create-usuario" method="post" action="" style="width: 100%;">
@@ -266,7 +269,7 @@ $csrfToken = Security::generateCSRFToken();
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col">
                     <label for="create-nome">Nome <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="text" id="create-nome" name="nome" class="width-200 height-md white" placeholder="Nome" required maxlength="100" value="<?php echo htmlspecialchars($formValues['nome'], ENT_QUOTES, 'UTF-8'); ?>">
+                    <input type="text" id="create-nome" name="nome" class="width-200 height-md white" placeholder="Digite o nome completo" required maxlength="100" value="<?php echo htmlspecialchars($formValues['nome'], ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
                 <div class="col">
                     <label for="create-sobrenome">Sobrenome <span class="label-hint-obrigatorio">*obrigatório</span></label>

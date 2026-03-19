@@ -62,7 +62,7 @@ try {
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter">
                 <label for="filter-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-400 height-md" id="filter-processo" placeholder="Digite o número do processo" required>
+                <input type="text" class="width-400 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" required>
             </div>
             <div class="col filter">
                 <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe processual <span class="label-hint-automatizado">*automatizado</span></label>
@@ -77,11 +77,11 @@ try {
                 <select class="width-800 height-md" id="filter-reu-select" style="display: none;" aria-label="Réus vinculados ao processo">
                     <!-- preenchido via JS quando houver réus -->
                 </select>
-                <input type="text" class="width-800 height-md" id="filter-reu" placeholder="Nome do denunciado" maxlength="120" required aria-label="Nome do réu quando não há réus ou opção Outro">
+                <input type="text" class="width-800 height-md" id="filter-reu" placeholder="Digite o nome completo" maxlength="120" required aria-label="Nome do réu quando não há réus ou opção Outro">
             </div>
         </div>
 
-        <div class="row info padding-x-md padding-y-md">
+        <div class="display-flex row row-full info padding-x-md padding-y-md">
             <span>*Conforme regra de alocação, o envio de Decisões ao Cejusc será alocado automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
         </div>
 
@@ -91,11 +91,7 @@ try {
             <button class="btn btn-primary" id="cadastrar-btn" type="button">Cadastrar</button>
         </div>
 
-        <div class="row pagination">
-            <div class="col">
-                <label id="cadastro-feedback" class="status-placeholder" aria-live="polite"></label>
-            </div>
-        </div>
+        
     </div>
 
     <div class="footer-page">
@@ -303,12 +299,9 @@ try {
     <script>
         (function () {
             var btn = document.getElementById('cadastrar-btn');
-            var feedback = document.getElementById('cadastro-feedback');
             var showFeedback = function (message, type) {
                 if (typeof showToast === 'function') {
                     showToast({ type: type === 'error' ? 'error' : 'success', variant: 'full', title: type === 'error' ? 'Erro' : 'Sucesso', message: message });
-                } else if (feedback) {
-                    feedback.innerHTML = '<label class="status ' + (type === 'error' ? 'status-cancelled' : 'status-finished') + '">' + message + '</label>';
                 }
             };
             var getValue = function (id) {

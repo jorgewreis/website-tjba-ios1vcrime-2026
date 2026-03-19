@@ -143,7 +143,7 @@ try {
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="filter-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-400 height-md" id="filter-processo" placeholder="Digite o número do processo" required>
+                <input type="text" class="width-400 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" required>
             </div>
             <div class="col">
                 <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
@@ -225,12 +225,6 @@ try {
         <div class="display-flex row row-full info padding-x-md padding-y-md">
             <span>*Conforme regra de divisão de tarefas, todas as Cartas Expedidas serão alocadas automaticamente e deverão ser remetidas por <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
         </div>
-        <div class="display-flex row row-full padding-x-md padding-y-md">
-            <div class="col">
-                <label id="cadastro-feedback" class="status-placeholder" aria-live="polite"></label>
-            </div>
-        </div>
-
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
 
@@ -293,15 +287,11 @@ try {
     <script>
         (() => {
             const btn = document.getElementById('cadastrar-btn');
-            const feedback = document.getElementById('cadastro-feedback');
             const classeCodigoField = document.getElementById('hidden-classe-codigo');
             const classeDescricaoField = document.getElementById('hidden-classe-descricao');
             const showFeedback = (message, type = 'success') => {
                 if (typeof showToast === 'function') {
                     showToast({ type: type === 'error' ? 'error' : 'success', variant: 'full', title: type === 'error' ? 'Erro' : 'Sucesso', message });
-                } else if (feedback) {
-                    const variant = type === 'error' ? 'status-cancelled' : 'status-finished';
-                    feedback.innerHTML = `<label class="status ${variant}">${message}</label>`;
                 }
             };
 
@@ -342,7 +332,6 @@ try {
                             const status = (data.status_cidade || '').trim();
                             if (status.toUpperCase() === 'CCM') {
                                 if (typeof showToast === 'function') showToast({ type: 'info', variant: 'simple', message: 'Comarca com Central de Mandados' });
-                                else alert('Comarca com Central de Mandados');
                                 cidadeInput.value = '';
                             } else if (status.toLowerCase() === 'agregada' && data.nome) {
                                 cidadeInput.value = formatCidade(data.nome);
