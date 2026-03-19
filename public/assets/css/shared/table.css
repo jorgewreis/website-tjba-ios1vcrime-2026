@@ -413,14 +413,6 @@
         width: fit-content !important;
     }
 
-    /* COLUMNS WITH ID FIX */    
-    .col-comarca {
-        display: flex;
-    }    
-    .col-cejusc {
-        display: flex;
-    }
-
     .row.left.info,
     .row.left.subtitle {
         width: 100%;
@@ -433,20 +425,6 @@
         margin-top: 7px;
     }
 
-    /* COLUMNS WITH ID FIX */
-    .col-finalidade {
-        display: flex;
-    }
-    .col-reu {
-        display: flex;
-    }
-    .col-tipo-edital {
-        display: flex;
-    }
-    .col-tipo-guia {
-        display: flex;
-    }
-
     .col.button-table {
         display: flex;
     }      
@@ -456,31 +434,34 @@
 }
 
 @media (min-width: 1080px) {
-    .col.detalhes-info {
+
+    /* COLUMNS WITH ID FIX */    
+    .col-comarca {
         display: flex;
-        width: 260px;
+    }    
+    .col-cejusc {
+        display: flex;
     }
 }
 
 @media (min-width: 1280px) {
     
     /* COLUMNS WITH ID FIX */
-    .col.comarca-info {
-        width: calc(200px + 3vw);
-    }
-    .col.detalhes-info {
-        width: calc(260px + 3vw);
-    }
-    .col.detalhes-info-info {
+    .col-finalidade {
         display: flex;
-        width: calc(260px + 3vw);
+        margin-right: 4vw;
     }
-    .col.parte-cargo {
+    .col-reu {
         display: flex;
-        width: calc(200px + 3vw);
+        margin-right: 4vw;
     }
-    .col.parte-nome {
-        width: calc(300px + 3vw);
+    .col-tipo-edital {
+        display: flex;
+        margin-right: 4vw;
+    }
+    .col-tipo-guia {
+        display: flex;
+        margin-right: 4vw;
     }
 
     .row.allocate-users {

@@ -228,17 +228,24 @@ if ($totalPages > 0) {
                         <div class="col button-table button-edit" data-medida-id="<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>" title="Editar">
                             <i class="fi fi-rr-file-edit"></i>
                         </div>
-                        <div class="display-flex row row-fit justify-end gap-y-sm allocate-chips-row">
+                        <div class="display-flex row row-fit justify-end gap-y-sm allocate-chips-row allocate-users">
                             <?php
                             $alocados = $row['Alocados'] ?? [];
-                            if (count($alocados) === 0) {
-                                echo '—';
-                            } else {
+                            if (count($alocados) > 0) {
                                 foreach ($alocados as $alocado) {
+                                    $tipo = $alocado['tipo'] ?? 'specific';
                                     $iniciais = $alocado['iniciais'] ?? '—';
                                     $nomeCompleto = $alocado['nome_completo'] ?? '';
-                                    $title = 'Alocado: ' . ($nomeCompleto !== '' ? $nomeCompleto : $iniciais);
-                                    echo '<span class="user-allocate" title="' . htmlspecialchars($title) . '">' . htmlspecialchars($iniciais) . '</span>';
+                                    $userLabel = $nomeCompleto !== '' ? $nomeCompleto : $iniciais;
+                                    if ($tipo === 'rule') {
+                                        $title = 'Medida protetiva alocada para ' . ($nomeCompleto !== '' ? $nomeCompleto : $iniciais);
+                                    } elseif ($tipo === 'all') {
+                                        $title = 'Usuário alocado para a tarefa: ' . ($nomeCompleto !== '' ? $nomeCompleto : $iniciais);
+                                    } else {
+                                        $title = 'Alocação voluntária: ' . ($nomeCompleto !== '' ? $nomeCompleto : $iniciais);
+                                    }
+                                    $classeTipo = in_array($tipo, ['rule', 'specific', 'all'], true) ? ' ' . $tipo : '';
+                                    ?><span class="user-allocate<?php echo $classeTipo; ?>" title="<?php echo htmlspecialchars($title, ENT_QUOTES); ?>"><?php echo htmlspecialchars($iniciais, ENT_QUOTES); ?></span><?php
                                 }
                             }
                             ?>

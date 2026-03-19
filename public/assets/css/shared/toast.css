@@ -58,7 +58,7 @@
     display: flex;
     flex-direction: column;
     border: 1px solid var(--color-border);
-    box-shadow: 4px 8px 24px var(--color-box-shadow), 0 2px 8px var(--color-box-shadow-xs);
+    box-shadow: 4px 8px 24px var(--color-shadow), 0 2px 8px var(--color-shadow-subtle);
     border-radius: 6px;
     gap: 0;
     overflow: hidden;
@@ -66,7 +66,7 @@
 }
 
 .toast {
-    background-color: var(--color-surface-elevated);
+    background-color: var(--color-background-elevated);
 }
 
 .toast.success {
@@ -80,12 +80,12 @@
 }
 
 .toast.info {
-    background-color: var(--color-surface-elevated);
-    border-color: var(--color-accent);
+    background-color: var(--color-background-elevated);
+    border-color: var(--color-primary);
 }
 
 .toast-full {
-    background-color: var(--color-surface-elevated);
+    background-color: var(--color-background-elevated);
 }
 
 .toast-full.success {
@@ -100,7 +100,7 @@
 
 .toast-full.info {
     background-color: var(--color-surface-elevated);
-    border-color: var(--color-accent);
+    border-color: var(--color-primary);
 }
 
 /* Modelo 1: barra de título + botão fechar + conteúdo (mockup) */
@@ -110,7 +110,7 @@
     justify-content: space-between;
     border-radius: 6px 6px 0 0;
     padding: 10px 15px;
-    background-color: var(--color-surface-elevated);
+    background-color: var(--color-background-elevated);
     border-bottom: 1px solid var(--color-border);
     font-family: 'Poppins', sans-serif;
 }
@@ -124,7 +124,7 @@
 }
 
 .toast-full.info .toast-header {
-    background-color: var(--color-accent);
+    background-color: var(--color-primary);
 }
 
 .toast-header .toast-title {
@@ -136,7 +136,7 @@
 .toast-full.success .toast-header .toast-title,
 .toast-full.error .toast-header .toast-title,
 .toast-full.info .toast-header .toast-title {
-    color: var(--color-surface-elevated);
+    color: var(--color-background-elevated);
 }
 
 .toast-header .toast-close {
@@ -153,7 +153,7 @@
 .toast-full.success .toast-header .toast-close,
 .toast-full.error .toast-header .toast-close,
 .toast-full.info .toast-header .toast-close {
-    color: var(--color-surface-elevated);
+    color: var(--color-background-elevated);
 }
 
 .toast-header .toast-close:hover {
@@ -163,7 +163,7 @@
 .toast-full.success .toast-header .toast-close:hover,
 .toast-full.error .toast-header .toast-close:hover,
 .toast-full.info .toast-header .toast-close:hover {
-    color: var(--color-surface-elevated);
+    color: var(--color-background-elevated);
 }
 
 /* Corpo do toast */
@@ -193,7 +193,7 @@
 
 .toast-full.success .toast-body .toast-icon { color: var(--color-success); }
 .toast-full.error .toast-body .toast-icon { color: var(--color-danger); }
-.toast-full.info .toast-body .toast-icon { color: var(--color-accent); }
+.toast-full.info .toast-body .toast-icon { color: var(--color-primary); }
 
 .toast-body .toast-message {
     display: flex;
@@ -257,7 +257,7 @@
 }
 
 .toast.info .toast-countdown-bar {
-    background: var(--color-accent);
+    background: var(--color-primary);
 }
 
 /* Toast simples e full precisam de position relative para o countdown */
@@ -299,5 +299,5 @@
 }
 
 .toast-full.info .toast-countdown-bar {
-    background: var(--color-accent);
+    background: var(--color-primary);
 }

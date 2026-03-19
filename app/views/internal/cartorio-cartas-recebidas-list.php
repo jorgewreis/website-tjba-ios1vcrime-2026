@@ -237,18 +237,7 @@ if ($totalPages > 0) {
         </div>
 
         <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
-            <div class="display-flex row row-fit justify-start gap-y-md">
-                <div class="col">
-                    <label for="filter-tipo">Filtrar por finalidade</label>
-                    <select class="width-700 height-md" id="filter-tipo">
-                        <option value=""<?php echo $finalidadeFilter === '' ? ' selected' : ''; ?>>Mostrar todas</option>
-                        <?php foreach ($finalidadeCounts as $finalidade => $count): ?>
-                            <option value="<?php echo htmlspecialchars($finalidade, ENT_QUOTES); ?>"<?php echo $finalidadeFilter === $finalidade ? ' selected' : ''; ?>>
-                                <?php echo htmlspecialchars($finalidade, ENT_QUOTES); ?> (<?php echo htmlspecialchars((string) $count); ?>)
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
+            <div class="display-flex row row-fit justify-start gap-y-md">                
                 <div class="col">
                     <label for="filter-status">Filtrar por status</label>
                     <select class="width-500 height-md" id="filter-status">
@@ -265,6 +254,17 @@ if ($totalPages > 0) {
                         <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>
                             Cancelada (<?php echo htmlspecialchars((string) ($statusCounts['cancelada'] ?? 0)); ?>)
                         </option>
+                    </select>
+                </div>
+                <div class="col">
+                    <label for="filter-tipo">Filtrar por finalidade</label>
+                    <select class="width-700 height-md" id="filter-tipo">
+                        <option value=""<?php echo $finalidadeFilter === '' ? ' selected' : ''; ?>>Mostrar todas</option>
+                        <?php foreach ($finalidadeCounts as $finalidade => $count): ?>
+                            <option value="<?php echo htmlspecialchars($finalidade, ENT_QUOTES); ?>"<?php echo $finalidadeFilter === $finalidade ? ' selected' : ''; ?>>
+                                <?php echo htmlspecialchars($finalidade, ENT_QUOTES); ?> (<?php echo htmlspecialchars((string) $count); ?>)
+                            </option>
+                        <?php endforeach; ?>
                     </select>
                 </div>
             </div>
@@ -317,23 +317,21 @@ if ($totalPages > 0) {
                         <div class="col button-table button-edit" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" title="Editar">
                             <i class="fi fi-rr-file-edit"></i>
                         </div>
-                        <div class="display-flex row row-fit justify-end gap-y-sm allocate-chips-row">
+                        <div class="display-flex row row-fit justify-end gap-y-sm allocate-chips-row allocate-users">
                             <?php
                             $alocados = $row['Alocados'] ?? [];
-                            if (count($alocados) === 0) {
-                                echo '—';
-                            } else {
+                            if (count($alocados) > 0) {
                                 foreach ($alocados as $alocado) {
                                     $tipo = $alocado['tipo'] ?? 'specific';
                                     $iniciais = $alocado['iniciais'] ?? '—';
                                     $nomeCompleto = $alocado['nome_completo'] ?? '';
                                     $userLabel = $nomeCompleto !== '' ? $nomeCompleto : $iniciais;
                                     if ($tipo === 'rule') {
-                                        $title = 'Carta recebida alocada para: ' . $userLabel;
+                                        $title = 'Carta recebida alocada para ' . ($nomeCompleto !== '' ? $nomeCompleto : $iniciais);
                                     } elseif ($tipo === 'all') {
-                                        $title = 'Usuário alocado para a tarefa: ' . $userLabel;
+                                        $title = 'Usuário alocado para a tarefa: ' . ($nomeCompleto !== '' ? $nomeCompleto : $iniciais);
                                     } else {
-                                        $title = 'Alocação voluntária: ' . $userLabel;
+                                        $title = 'Alocação voluntária: ' . ($nomeCompleto !== '' ? $nomeCompleto : $iniciais);
                                     }
                                     $classeTipo = in_array($tipo, ['rule', 'specific', 'all'], true) ? ' ' . $tipo : '';
                                     ?><span class="user-allocate<?php echo $classeTipo; ?>" title="<?php echo htmlspecialchars($title, ENT_QUOTES); ?>"><?php echo htmlspecialchars($iniciais, ENT_QUOTES); ?></span><?php

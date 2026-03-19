@@ -174,7 +174,10 @@
 
     /* SHADOW COLORS */
     --color-shadow: var(--color-black-400);
-    --color-shadow-subtle: var(--color-black-500);    
+    --color-shadow-subtle: var(--color-black-500);
+    --box-shadow-sm: 0 0 2px 1px var(--color-shadow);
+    --box-shadow-md: 0 1px 4px 1px var(--color-shadow);
+    --box-shadow-lg: 0 2px 8px 2px var(--color-shadow);
 }
 
 /* ========== TEMA ESCURO ========== */

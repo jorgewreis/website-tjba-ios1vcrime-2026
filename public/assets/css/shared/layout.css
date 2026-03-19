@@ -223,7 +223,7 @@ body {
         margin: 16px 16px 0;
         padding: 0 24px;
         border-radius: 0.375rem;
-        box-shadow: var(--color-shadow-subtle);
+        box-shadow: var(--box-shadow-md);
         background-color: var(--color-background-elevated);
         color: var(--color-text-primary);
         z-index: 700;
@@ -263,8 +263,12 @@ body {
     .nav-link {
         display: block;
         padding-top: 8px;
+        color: var(--color-text-secondary);
         cursor: pointer;
         transition: opacity 0.3s ease;
+    }
+    .nav-link:hover {
+        color: var(--color-text-primary);
     }
 
     .nav-link.disabled {
@@ -308,7 +312,7 @@ body {
         bottom: 0;
         right: 0;
         border-radius: 100%;
-        box-shadow: 0 0 0 2px var(--color-surface-elevated);
+        box-shadow: 0 0 0 2px var(--color-background-elevated);
         background-color: var(--color-success);
     }
 
@@ -344,10 +348,11 @@ body {
         width: 260px;
         height: 100vh;
         left: -300px;
+        box-shadow: 4px 0 6px 1px var(--color-shadow-subtle);
         margin-inline: 0 !important;
         display: flex;
         flex-direction: column;
-        background-color: var(--color-surface-elevated);
+        background-color: var(--color-background-elevated);
         z-index: 1100;
         transition: left 0.7s ease-in-out;
     }
@@ -427,7 +432,7 @@ body {
         align-items: center;
         justify-content: center;
         border-radius: 100%;
-        background-color: var(--color-surface-elevated);
+        background-color: var(--color-background-elevated);
         cursor: pointer;
     }
 
@@ -516,7 +521,7 @@ body {
 
     /* Menu Link States */
     .menu-inner .menu-item .menu-link {
-        background-color: var(--color-surface-elevated);
+        background-color: var(--color-background-elevated);
         color: var(--color-text-primary);
     }
 
@@ -526,7 +531,7 @@ body {
     }
 
     .menu-item.active .menu-sub .menu-item .menu-link {
-        background-color: var(--color-surface-elevated);
+        background-color: var(--color-background-elevated);
         color: var(--color-text-primary);
     }
 
@@ -553,7 +558,7 @@ body {
 
     .menu-header::before {
         position: absolute;
-        background-color: var(--color-header-line);
+        background-color: var(--color-border-subtle);
         block-size: 1px;
         content: "";
         inline-size: 1rem;
