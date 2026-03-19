@@ -120,7 +120,7 @@ $csrfToken = Security::generateCSRFToken();
                         </div>
 
                         <div class="display-flex row row-full justify-start align-center padding-x-lg padding-y-md border-bottom">
-                            <button class="btn btn-primary" type="submit">Entrar</button>
+                            <button class="btn btn-primary width-300" type="submit">Entrar</button>
                         </div>
 
                         <div class="display-flex row row-full justify-start align-center">

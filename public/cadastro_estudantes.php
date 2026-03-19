@@ -86,28 +86,28 @@ $faculdades = [
                     </div>
 
                     <form class="form-login" id="formEstudante">
-                        <div class="display-flex row row-full justify-start align-center padding-x-sm padding-y-md">
+                        <div class="display-flex row row-full justify-start align-center padding-x-sm">
                             <div class="col">
                                 <label for="nome_completo">Nome completo *</label>
                                 <input class="width-600" type="text" id="nome_completo" name="nome_completo" required minlength="3" maxlength="200" placeholder="Nome e sobrenome" autocomplete="name">
                             </div>
                         </div>
 
-                        <div class="display-flex row row-full justify-start align-center padding-x-sm padding-y-md">
+                        <div class="display-flex row row-full justify-start align-center padding-x-sm">
                             <div class="col">
                                 <label for="cpf">CPF *</label>
                                 <input class="width-400" type="text" id="cpf" name="cpf" required maxlength="14" placeholder="000.000.000-00">
                             </div>
                         </div>
 
-                        <div class="display-flex row row-full justify-start align-center padding-x-sm padding-y-md">
+                        <div class="display-flex row row-full justify-start align-center padding-x-sm">
                             <div class="col">
                                 <label for="telefone">Telefone com DDD *</label>
                                 <input class="width-400" type="text" id="telefone" name="telefone" required maxlength="20" placeholder="(73) 99999-8888">
                             </div>
                         </div>
 
-                        <div class="display-flex row row-full justify-start align-center padding-x-sm padding-y-md">
+                        <div class="display-flex row row-full justify-start align-center padding-x-sm">
                             <div class="col">
                                 <label class="checkbox-label">
                                     <input type="checkbox" id="telefone_whatsapp" name="telefone_whatsapp" value="1">
@@ -116,7 +116,7 @@ $faculdades = [
                             </div>
                         </div>
 
-                        <div class="display-flex row row-full justify-start align-center padding-x-sm padding-y-md">
+                        <div class="display-flex row row-full justify-start align-center padding-x-sm padding-y-sm">
                             <div class="col">
                                 <label for="faculdade">Faculdade *</label>
                                 <select class="width-700" id="faculdade" name="faculdade" required>
@@ -128,21 +128,21 @@ $faculdades = [
                             </div>
                         </div>
 
-                        <div class="display-flex row row-full justify-start align-center padding-x-sm padding-y-md">
+                        <div class="display-flex row row-full justify-start align-center padding-x-sm">
                             <div class="col">
                                 <label for="email">E-mail *</label>
                                 <input class="width-600" type="email" id="email" name="email" required maxlength="255" placeholder="seu@email.com" autocomplete="email">
                             </div>
                         </div>
 
-                        <div class="display-flex row row-full justify-start align-center padding-x-sm padding-y-md">
+                        <div class="display-flex row row-full justify-start align-center padding-x-sm">
                             <div class="col">
                                 <label for="senha">Senha *</label>
                                 <input class="width-400" type="password" id="senha" name="senha" required minlength="6" maxlength="25" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
                             </div>
                         </div>
 
-                        <div class="display-flex row row-full justify-start align-center padding-x-sm padding-y-md">
+                        <div class="display-flex row row-full justify-start align-center padding-x-sm">
                             <div class="col">
                                 <label class="checkbox-label">
                                     <input type="checkbox" id="aceite_termos_lgpd" name="aceite_termos_lgpd" value="1" required>
@@ -152,10 +152,10 @@ $faculdades = [
                         </div>
 
                         <div class="display-flex row row-full justify-start align-center padding-x-sm padding-y-md border-bottom">
-                            <button class="btn btn-primary" type="submit">Cadastrar</button>
+                            <button class="btn btn-primary width-300" type="submit">Cadastrar</button>
                         </div>
                         <div class="display-flex row row-full justify-start align-center padding-x-sm padding-y-md">
-                            <button class="btn btn-secondary" onclick="window.location.href='/index.php'">Voltar</button>
+                            <button class="btn btn-secondary width-300" onclick="window.location.href='/index.php'">Voltar</button>
                         </div>
                     </form>
                 </div>

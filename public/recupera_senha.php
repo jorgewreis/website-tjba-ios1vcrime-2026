@@ -23,6 +23,7 @@ if (isset($_COOKIE['tjba_1vcrime_remember_cpf'])) {
     <link rel="stylesheet" href="/assets/css/shared/color.css">
     <link rel="stylesheet" href="/assets/css/shared/form.css">
     <link rel="stylesheet" href="/assets/css/shared/table.css">
+    <link rel="stylesheet" href="/assets/css/shared/layout.css">
     <link rel="stylesheet" href="/assets/css/shared/login.css">
     <link rel="stylesheet" href="/assets/css/shared/page.css">
     <link rel="stylesheet" href="/assets/css/shared/toast.css">
@@ -77,7 +78,7 @@ if (isset($_COOKIE['tjba_1vcrime_remember_cpf'])) {
                     <form class="form-login" id="resetForm">
                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
 
-                        <div class="display-flex row row-full justify-start align-center padding-x-sm padding-y-md">
+                        <div class="display-flex row row-full justify-start align-center padding-x-sm">
                             <div class="col">
                                 <label for="cpf">CPF</label>
                                 <input class="width-400" type="text" id="cpf" name="cpf" value="<?php echo htmlspecialchars($cpfInicial, ENT_QUOTES, 'UTF-8'); ?>" required>
@@ -98,7 +99,7 @@ if (isset($_COOKIE['tjba_1vcrime_remember_cpf'])) {
                             <button class="btn btn-primary" type="submit">Recuperar senha</button>
                         </div>
                         <div class="display-flex row row-full justify-start align-center padding-x-sm padding-y-md">
-                            <button class="btn btn-secondary" type="button" onclick="window.location.href = '/index.php';">Voltar</button>
+                            <button class="btn btn-secondary width-300" type="button" onclick="window.location.href = '/index.php';">Voltar</button>
                         </div>
 
                         <div class="display-flex row row-full justify-start align-center padding-x-sm padding-y-md">
