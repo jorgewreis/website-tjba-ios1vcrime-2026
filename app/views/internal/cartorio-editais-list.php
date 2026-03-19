@@ -81,6 +81,13 @@ $ordemLabels = [
     4 => $subtarefaLabels['certificacao_decurso_prazo'],
 ];
 
+$buttonTitleByTipo = [
+    'expedicao_edital' => 'Informar expedição do edital',
+    'envio_djen' => 'Informar envio para publicação no DJEN',
+    'certificacao_publicacao' => 'Informar certificação da publicação',
+    'certificacao_decurso_prazo' => 'Informar decurso do prazo',
+];
+
 $baseQueryParams = [];
 if ($routePage !== '') {
     $baseQueryParams['page'] = $routePage;

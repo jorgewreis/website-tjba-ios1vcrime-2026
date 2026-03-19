@@ -76,6 +76,12 @@ $ordemLabels = [
     3 => $subtarefaLabels['juntar_termo_envio'],
 ];
 
+$buttonTitleByTipo = [
+    'gerar_pdf_decisao' => 'Informar impressão em PDF',
+    'enviar_decisao' => 'Informar envio por e-mail',
+    'juntar_termo_envio' => 'Informar juntada de termo de envio',
+];
+
 $baseQueryParams = [];
 if ($routePage !== '') {
     $baseQueryParams['page'] = $routePage;

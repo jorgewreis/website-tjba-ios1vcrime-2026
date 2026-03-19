@@ -219,7 +219,8 @@ if ($totalPages > 0) {
                         <?php if (!empty($row['CejuscTarefaId'])): ?>
                         <div class="col width-400 col-cejusc">
                             <span class="minor-info">Cejusc</span>
-                            <button class="btn btn-primary-outline height-sm" href="/frame.php?page=cejuscedit&id=<?php echo urlencode((string) $row['CejuscTarefaId']); ?>">Abrir tarefa</button>
+                            <button class="btn btn-primary-outline height-sm" title="Abrir tarefa" href="/frame.php?page=cejuscedit&id=<?php echo urlencode((string) $row['CejuscTarefaId']); ?>">Abrir tarefa</button>
+                        </div>
                         <?php endif; ?>
                     </div>
                 </div>

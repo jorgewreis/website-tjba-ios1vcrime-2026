@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.03.0163
+
+**Data:** 2026-03-19 10:39:46 | **Commit:** `50edc9b` | **Tipo:** `patch`
+
+- fix: pequenos ajustes de campos
+
 ## V. 1.03.0162
 
 **Data:** 2026-03-19 10:32:11 | **Commit:** `fd491c3` | **Tipo:** `patch`
@@ -3252,6 +3258,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
