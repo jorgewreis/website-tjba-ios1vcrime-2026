@@ -173,4 +173,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correcao de subtarefa de detalhes** `[10498e6]`
 - **Fix: correcao de tarefa concluida** `[db13f5b]`
 - **Fix: correcao de subtarefas** `[c3f5394]`
+- **Fix: nova tentativa de correcao** `[1a59dfc]`
 
