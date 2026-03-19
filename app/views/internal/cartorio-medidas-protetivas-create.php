@@ -64,11 +64,11 @@ try {
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter">
                 <label for="filter-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-200 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" required>
+                <input type="text" class="width-400 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" required>
             </div>
             <div class="col filter">
                 <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe processual <span class="label-hint-automatizado">*automatizado</span></label>
-                <input type="text" class="width-400 height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>
+                <input type="text" class="width-600 height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>
             </div>
         </div>
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
@@ -83,20 +83,20 @@ try {
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md" id="reu-row-principal">
             <div class="col filter">
                 <label for="reu-select">Réu / Denunciado <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <select class="width-600 height-md" id="reu-select" style="display: none;" aria-label="Réus vinculados ao processo ou sugestões por nome">
+                <select class="width-800 height-md" id="reu-select" style="display: none;" aria-label="Réus vinculados ao processo ou sugestões por nome">
                     <!-- preenchido via JS: réus do processo ou sugestões (nome + CPF) + Outro / Cadastrar novo -->
                 </select>
-                <input type="text" class="width-600 height-md" id="reu-nome" placeholder="Nome do réu (digite para buscar ou cadastrar)" maxlength="255" aria-label="Nome do réu quando não há réus ou opção Outro">
+                <input type="text" class="width-800 height-md" id="reu-nome" placeholder="Nome do réu (digite para buscar ou cadastrar)" maxlength="255" aria-label="Nome do réu quando não há réus ou opção Outro">
             </div>
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md" id="reu-campos-complementares" style="display: none;">
             <div class="col filter">
                 <label for="reu-cpf">CPF <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-200 height-md" id="reu-cpf" placeholder="Somente números">
+                <input type="text" class="width-300 height-md" id="reu-cpf" placeholder="Somente números">
             </div>
             <div class="col filter">
                 <label for="reu-sexo">Sexo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <select class="width-200 height-md" id="reu-sexo">
+                <select class="width-300 height-md" id="reu-sexo">
                     <option value="">Selecione</option>
                     <option value="Feminino">Feminino</option>
                     <option value="Masculino">Masculino</option>
@@ -105,7 +105,7 @@ try {
             </div>
             <div class="col filter">
                 <label for="reu-data-nascimento">Data de nascimento <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="date" class="width-200 height-md" id="reu-data-nascimento">
+                <input type="date" class="width-300 height-md" id="reu-data-nascimento">
             </div>
         </div>
 
@@ -117,12 +117,12 @@ try {
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter">
-                <button class="btn btn-secondary-outline" id="add-vitima-btn" type="button">Adicionar vítima</button>
+                <button class="btn btn-primary-outline height-sm" id="add-vitima-btn" type="button">Adicionar vítima</button>
             </div>
         </div>
-        <div id="vitimas-container"></div>
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom" id="vitimas-container"></div>
 
-        <div class="row info padding-tb-md">
+        <div class="row info padding-x-md padding-y-md">
             <span>*Conforme regra de alocação, as medidas protetivas serão alocadas automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
         </div>
 
@@ -197,7 +197,7 @@ try {
             </div>
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col filter">
-                    <button class="btn btn-secondary-outline btn-remover-vitima" type="button">Remover</button>
+                    <button class="btn btn-danger-outline height-sm btn-remover-vitima" type="button">Remover</button>
                 </div>
             </div>
         </div>

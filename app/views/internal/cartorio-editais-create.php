@@ -62,11 +62,11 @@ try {
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter">
                 <label for="filter-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-200 height-md" id="filter-processo" placeholder="Digite o número do processo" required>
+                <input type="text" class="width-400 height-md" id="filter-processo" placeholder="Digite o número do processo" required>
             </div>
             <div class="col filter">
                 <label for="filter-classe" id="label-classe">Classe processual <span class="label-hint-automatizado">*automatizado</span></label>
-                <input type="text" class="width-400 height-md" id="filter-classe" placeholder="Preenchido automaticamente" readonly>
+                <input type="text" class="width-600 height-md" id="filter-classe" placeholder="Preenchido automaticamente" readonly>
             </div>
         </div>
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
@@ -74,7 +74,7 @@ try {
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter">
                 <label for="filter-tipo-edital">Tipo de edital <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <select class="width-400 height-md" id="filter-tipo-edital" required>
+                <select class="width-500 height-md" id="filter-tipo-edital" required>
                     <option value="">Selecione</option>
                     <option value="Citação">Citação</option>
                     <option value="Intimação">Intimação</option>
@@ -84,10 +84,10 @@ try {
             </div>
             <div class="col filter">
                 <label for="filter-prazo-dias">Prazo do edital (dias) <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="number" class="width-100 height-md" id="filter-prazo-dias" min="1" placeholder="Ex.: 15" required title="Prazo em dias a partir da data de publicação">
+                <input type="number" class="width-300 height-md" id="filter-prazo-dias" min="1" placeholder="Ex.: 15" required title="Prazo em dias a partir da data de publicação">
             </div>
         </div>
-        <div class="row info padding-tb-md">
+        <div class="row info padding-x-md padding-y-md">
             <span>*Conforme regra de alocação, os Editais serão alocados automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
         </div>
 

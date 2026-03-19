@@ -24,15 +24,15 @@
     --color-purple-900: #222467;
 
     /* GREEN */
-    --color-green-100: #E8FADF;
-    --color-green-200: #C2EFCB;
-    --color-green-300: #9CE7B7;
-    --color-green-400: #8FF7A7;
-    --color-green-500: #71DD37;
-    --color-green-600: #54C917;
-    --color-green-700: #37B500;
-    --color-green-800: #1A9C00;
-    --color-green-900: #0D8800;
+    --color-green-100: #e8fadf;
+    --color-green-200: #c2efcb;
+    --color-green-300: #9ce7b7;
+    --color-green-400: #8ff7a7;
+    --color-green-500: #37dd61;
+    --color-green-600: #17c970;
+    --color-green-700: #00b53c;
+    --color-green-800: #00a108;
+    --color-green-900: #008d00;
 
     /* YELLOW */
     --color-yellow-100: #FFFBF3;
@@ -127,7 +127,7 @@
     --color-secondary-text: var(--color-gray-000);
 
     /* SUCCESS COLORS */
-    --color-success: var(--color-green-500);
+    --color-success: var(--color-green-400);
     --color-success-hover: var(--color-green-600);
     --color-success-active: var(--color-green-700);
     --color-success-disabled: var(--color-green-200);

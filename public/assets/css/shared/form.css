@@ -10,7 +10,7 @@
     padding: 12px;
     border-radius: 12px;
     box-sizing: border-box;
-    background-color: var(--bs-paper-bg);
+    background-color: var(--color-background-elevated);
 }
 .info-panel[data-state="loading"] {
     opacity: 0.9;
@@ -63,11 +63,11 @@ hr {
     white-space: nowrap;
 }
 .label-hint-obrigatorio {
-    color: var(--bs-danger);
+    color: var(--color-danger);
     margin-left: 0.2em;
 }
 .label-hint-automatizado {
-    color: var(--color-accent);
+    color: var(--color-primary);
     margin-left: 0.2em;
 }
 

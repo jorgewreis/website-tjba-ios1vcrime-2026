@@ -62,11 +62,11 @@ try {
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter">
                 <label for="filter-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-200 height-md" id="filter-processo" placeholder="Digite o número do processo" required>
+                <input type="text" class="width-400 height-md" id="filter-processo" placeholder="Digite o número do processo" required>
             </div>
             <div class="col filter">
                 <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe processual <span class="label-hint-automatizado">*automatizado</span></label>
-                <input type="text" class="width-400 height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>
+                <input type="text" class="width-600 height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>
             </div>
         </div>
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
@@ -74,14 +74,14 @@ try {
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter" id="reu-col">
                 <label for="filter-reu">Nome do réu <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <select class="width-600 height-md" id="filter-reu-select" style="display: none;" aria-label="Réus vinculados ao processo">
+                <select class="width-800 height-md" id="filter-reu-select" style="display: none;" aria-label="Réus vinculados ao processo">
                     <!-- preenchido via JS quando houver réus -->
                 </select>
-                <input type="text" class="width-600 height-md" id="filter-reu" placeholder="Nome do denunciado" maxlength="120" required aria-label="Nome do réu quando não há réus ou opção Outro">
+                <input type="text" class="width-800 height-md" id="filter-reu" placeholder="Nome do denunciado" maxlength="120" required aria-label="Nome do réu quando não há réus ou opção Outro">
             </div>
         </div>
 
-        <div class="row info padding-tb-md">
+        <div class="row info padding-x-md padding-y-md">
             <span>*Conforme regra de alocação, o envio de Decisões ao Cejusc será alocado automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
         </div>
 

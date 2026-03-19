@@ -143,15 +143,15 @@ try {
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="filter-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-200 height-md" id="filter-processo" placeholder="Digite o número do processo" required>
+                <input type="text" class="width-400 height-md" id="filter-processo" placeholder="Digite o número do processo" required>
             </div>
             <div class="col">
                 <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
-                <input type="text" class="width-400 height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>                
+                <input type="text" class="width-600 height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>                
             </div>
             <div class="col">
                 <label for="filter-tipo">Finalidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <select class="width-400 height-md" id="filter-tipo" required>
+                <select class="width-600 height-md" id="filter-tipo" required>
                     <option value="" selected disabled>Selecione aqui</option>
                     <option value="Intimação para Audiência">Intimação para Audiência</option>
                     <option value="Intimação de Decisão Interlocutória">Intimação de Decisão</option>
@@ -179,7 +179,7 @@ try {
             </div>
             <div class="col">
                 <label for="filter-estado">Estado <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <select class="width-200 height-md" id="filter-estado" required>
+                <select class="width-400 height-md" id="filter-estado" required>
                     <option value="AC">Acre</option>
                     <option value="AL">Alagoas</option>
                     <option value="AP">Amapá</option>
@@ -211,7 +211,7 @@ try {
             </div>            
             <div class="col">
                 <label for="filter-prazo">Prazo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <select class="width-100 height-md" id="filter-prazo" required style="width: 210px;">
+                <select class="width-300 height-md" id="filter-prazo" required>
                     <option value="5 dias">5 dias</option>
                     <option value="10 dias">10 dias</option>
                     <option value="15 dias">15 dias</option>

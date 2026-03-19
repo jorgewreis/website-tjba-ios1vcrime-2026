@@ -31,6 +31,24 @@ function resolveUsuarioNome(PDO $connection, ?string $usuarioId): string
     return $nomeCompleto !== '' ? $nomeCompleto : 'Nome não informado';
 }
 
+/**
+ * Estudantes (perfil ESTUDANTE) não podem ser alocados em regras internas do cartório.
+ */
+function isUsuarioEstudante(PDO $connection, string $usuarioId): bool
+{
+    $usuarioId = trim($usuarioId);
+    if ($usuarioId === '') {
+        return false;
+    }
+
+    $stmt = $connection->prepare('SELECT 1 FROM usuario_perfil WHERE usuario = :usuario_id AND UPPER(TRIM(perfil)) = :perfil LIMIT 1');
+    $stmt->bindValue(':usuario_id', $usuarioId);
+    $stmt->bindValue(':perfil', 'ESTUDANTE');
+    $stmt->execute();
+
+    return $stmt->fetch(PDO::FETCH_ASSOC) !== false;
+}
+
 $connection = Conection::getInstance()->getConnection();
 
 /** Perfis que podem alterar a regra de alocação (tabela usuario_perfil). */
@@ -57,7 +75,17 @@ $ruleUsuarioNome = 'Nenhum usuário definido';
 
 try {
     $usersList = [];
-    $stmtUsers = $connection->prepare('SELECT `id_usuario`, `nome`, `sobrenome` FROM `usuarios` ORDER BY `nome`, `sobrenome`');
+    $stmtUsers = $connection->prepare("
+        SELECT u.`id_usuario`, u.`nome`, u.`sobrenome`
+        FROM `usuarios` u
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM `usuario_perfil` up
+            WHERE up.`usuario` = u.`id_usuario`
+              AND UPPER(TRIM(up.`perfil`)) = 'ESTUDANTE'
+        )
+        ORDER BY u.`nome`, u.`sobrenome`
+    ");
     $stmtUsers->execute();
     while (($row = $stmtUsers->fetch(PDO::FETCH_ASSOC)) !== false) {
         $id = trim((string) ($row['id_usuario'] ?? ''));
@@ -87,20 +115,24 @@ try {
         } elseif (($postedUserId = trim((string) ($_POST['id_user'] ?? ''))) === '') {
             $errors[] = 'Selecione um servidor antes de salvar.';
         } else {
-            try {
-                $usuarioAtualizaId = null;
-                if (isset($_SESSION['id_usuario'])) {
-                    $usuarioAtualizaId = trim((string) $_SESSION['id_usuario']);
+            if (isUsuarioEstudante($connection, $postedUserId)) {
+                $errors[] = 'Não é permitido alocar um estudante em regras internas do cartório.';
+            } else {
+                try {
+                    $usuarioAtualizaId = null;
+                    if (isset($_SESSION['id_usuario'])) {
+                        $usuarioAtualizaId = trim((string) $_SESSION['id_usuario']);
+                    }
+                    $ruleRow = $regrasRepo->save($ruleName, $ruleDescription, $postedUserId, $usuarioAtualizaId !== '' ? $usuarioAtualizaId : null);
+                    $ruleUsuarioId = (string) ($ruleRow['usuario_id'] ?? $postedUserId);
+                    $ruleUsuarioNome = resolveUsuarioNome($connection, $ruleUsuarioId);
+                    $successMessage = 'Regra atualizada com ID ' . ($ruleRow['id'] ?? 'sem ID') . '.';
+                    $selectedUserId = (string) ($ruleRow['usuario_id'] ?? $postedUserId);
+                } catch (\InvalidArgumentException | \RuntimeException $exception) {
+                    $errors[] = $exception->getMessage();
+                } catch (\Throwable $exception) {
+                    $errors[] = 'Erro inesperado ao salvar a regra: ' . $exception->getMessage();
                 }
-                $ruleRow = $regrasRepo->save($ruleName, $ruleDescription, $postedUserId, $usuarioAtualizaId !== '' ? $usuarioAtualizaId : null);
-                $ruleUsuarioId = (string) ($ruleRow['usuario_id'] ?? $postedUserId);
-                $ruleUsuarioNome = resolveUsuarioNome($connection, $ruleUsuarioId);
-                $successMessage = 'Regra atualizada com ID ' . ($ruleRow['id'] ?? 'sem ID') . '.';
-                $selectedUserId = (string) ($ruleRow['usuario_id'] ?? $postedUserId);
-            } catch (\InvalidArgumentException | \RuntimeException $exception) {
-                $errors[] = $exception->getMessage();
-            } catch (\Throwable $exception) {
-                $errors[] = 'Erro inesperado ao salvar a regra: ' . $exception->getMessage();
             }
         }
     }
@@ -165,7 +197,7 @@ try {
                 <div class="display-flex row row-fit justify-start gap-y-md">
                     <div class="col filter">
                         <label for="filter-processo">Servidor</label>
-                        <select class="width-600 height-md" id="filter-processo" name="id_user" <?php echo $podeAlterarRegra ? '' : 'disabled'; ?> required>
+                        <select class="width-600 height-md" id="filter-processo" name="id_user" data-original-user-name="<?php echo htmlspecialchars($ruleUsuarioNome, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $podeAlterarRegra ? '' : 'disabled'; ?> required>
                             <option value="" disabled<?php echo $selectedUserId === '' ? ' selected' : ''; ?>>Selecione um servidor</option>
                             <?php foreach ($usersList as $user): ?>
                                 <option value="<?php echo htmlspecialchars($user['id'], ENT_QUOTES); ?>"<?php echo $selectedUserId === $user['id'] ? ' selected' : ''; ?>>
@@ -190,7 +222,7 @@ try {
             <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
                 <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
                 <?php if ($podeAlterarRegra): ?>
-                    <button type="submit" class="btn btn-primary">Salvar</button>
+                    <button type="submit" class="btn btn-primary" id="salvar-btn" disabled>Salvar</button>
                 <?php endif; ?>
             </div>
 
@@ -231,6 +263,24 @@ try {
                     window.location.href = '/frame.php?page=cartasrecebidas';
                 }, { capture: true });
             }
+        })();
+
+        (() => {
+            const saveBtn = document.getElementById('salvar-btn');
+            const select = document.querySelector('select[name="id_user"]');
+            if (!saveBtn || !select) return;
+
+            const originalName = (select.getAttribute('data-original-user-name') || '').trim();
+
+            const syncSaveButton = () => {
+                const opt = select.options[select.selectedIndex];
+                const selectedName = (opt ? opt.textContent : '').trim();
+                const shouldEnable = selectedName !== originalName;
+                saveBtn.disabled = !shouldEnable;
+            };
+
+            select.addEventListener('change', syncSaveButton);
+            syncSaveButton();
         })();
     </script>
 </body>
