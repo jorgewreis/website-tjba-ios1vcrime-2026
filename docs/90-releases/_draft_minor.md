@@ -168,4 +168,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix: correção nos buttons de subtarefas** `[fd491c3]`
 - **fix: pequenos ajustes de campos** `[50edc9b]`
 - **fix: ajustes de div quebrado** `[e88309a]`
+- **fix: correção de buttons** `[d05b3b6]`
 
