@@ -447,12 +447,10 @@
     
     /* COLUMNS WITH ID FIX */
     .col-finalidade {
-        display: flex;
-        margin-right: 4vw;
+        display: flex;        
     }
     .col-reu {
         display: flex;
-        margin-right: 4vw;
     }
     .col-tipo-edital {
         display: flex;

@@ -277,6 +277,26 @@ if ($totalPages > 0) {
                 $subtarefas = $row['Subtarefas'] ?? [];
                 $numeroProcessoDestinoAtual = trim((string) ($row['NumeroProcessoDestino'] ?? $row['numero_processo_destino'] ?? ''));
                 $varaDestinoAtual = trim((string) ($row['VaraDestino'] ?? $row['vara_destino_nome'] ?? $row['vara_destino'] ?? ''));
+                if (($numeroProcessoDestinoAtual === '' || $varaDestinoAtual === '') && is_array($subtarefas)) {
+                    foreach ($subtarefas as $stInfoTmp) {
+                        if (($stInfoTmp['tipo'] ?? '') !== 'aguardando_informacoes' || empty($stInfoTmp['dados_especificos'])) {
+                            continue;
+                        }
+                        $dadosInfoTmp = json_decode((string) $stInfoTmp['dados_especificos'], true);
+                        if (!is_array($dadosInfoTmp)) {
+                            continue;
+                        }
+                        if ($numeroProcessoDestinoAtual === '') {
+                            $numeroProcessoDestinoAtual = trim((string) ($dadosInfoTmp['numero_processo_destino'] ?? ''));
+                        }
+                        if ($varaDestinoAtual === '') {
+                            $varaDestinoAtual = trim((string) ($dadosInfoTmp['vara_destino'] ?? ''));
+                        }
+                        if ($numeroProcessoDestinoAtual !== '' && $varaDestinoAtual !== '') {
+                            break;
+                        }
+                    }
+                }
             ?>
             <div class="display-flex col col-full register border-bottom" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idCarta); ?>">
 

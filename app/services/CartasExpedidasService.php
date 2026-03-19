@@ -52,7 +52,14 @@ final class CartasExpedidasService
             $idCarta = (string) ($row['IdCarta'] ?? '');
             if ($idCarta !== '') {
                 $this->subtarefasRepository->ensureInformacoesDevolucaoPair($idCarta);
-                $this->sincronizarSubtarefaInformacoesComCarta($idCarta, $row);
+                $cartaCompleta = $this->repository->find($idCarta);
+                if (is_array($cartaCompleta)) {
+                    $rows[$i]['numero_processo_destino'] = $cartaCompleta['numero_processo_destino'] ?? null;
+                    $rows[$i]['vara_destino_nome'] = $cartaCompleta['vara_destino_nome'] ?? null;
+                    $this->sincronizarSubtarefaInformacoesComCarta($idCarta, array_merge($row, $cartaCompleta));
+                } else {
+                    $this->sincronizarSubtarefaInformacoesComCarta($idCarta, $row);
+                }
                 $rows[$i]['Subtarefas'] = $this->subtarefasRepository->findPendenteOuEmAndamentoByCartaId($idCarta);
                 $rows[$i]['SubtarefasAll'] = $this->subtarefasRepository->findByCartaId($idCarta);
                 $alocadosRaw = $this->alocadosRepository->findByCartaId($idCarta);
@@ -86,6 +93,18 @@ final class CartasExpedidasService
 
         if ($ordem5 === null) {
             return;
+        }
+
+        if (($numeroDestino === '' || $varaDestino === '') && !empty($ordem5['dados_especificos'])) {
+            $dadosOrdem5 = json_decode((string) $ordem5['dados_especificos'], true);
+            if (is_array($dadosOrdem5)) {
+                if ($numeroDestino === '') {
+                    $numeroDestino = trim((string) ($dadosOrdem5['numero_processo_destino'] ?? ''));
+                }
+                if ($varaDestino === '') {
+                    $varaDestino = trim((string) ($dadosOrdem5['vara_destino'] ?? ''));
+                }
+            }
         }
 
         $statusOrdem5 = trim((string) ($ordem5['status'] ?? ''));
@@ -310,7 +329,30 @@ final class CartasExpedidasService
                             }
                         }
                         if (!empty($update)) {
-                            $this->repository->update($cartaId, $update);
+                            try {
+                                $this->repository->update($cartaId, $update);
+                            } catch (\PDOException $e) {
+                                $isNumeroDestinoDuplicado = isset($update['numero_processo_destino'])
+                                    && str_contains(strtolower((string) $e->getMessage()), 'numero_processo_destino');
+                                if (!$isNumeroDestinoDuplicado) {
+                                    throw $e;
+                                }
+
+                                // Se o número de processo de destino já existir em outra carta (índice único),
+                                // mantém a conclusão da subtarefa e persiste os dados em dados_especificos.
+                                if (isset($update['vara_destino_id']) || isset($update['vara_destino_nome'])) {
+                                    $fallback = [];
+                                    if (isset($update['vara_destino_id'])) {
+                                        $fallback['vara_destino_id'] = $update['vara_destino_id'];
+                                    }
+                                    if (isset($update['vara_destino_nome'])) {
+                                        $fallback['vara_destino_nome'] = $update['vara_destino_nome'];
+                                    }
+                                    if (!empty($fallback)) {
+                                        $this->repository->update($cartaId, $fallback);
+                                    }
+                                }
+                            }
                         }
                     }
                 }
