@@ -89,10 +89,8 @@ if (isset($_COOKIE['tjba_1vcrime_remember_cpf'])) {
                             </div>
                         </div>
 
-                        <div class="display-flex row row-full justify-start align-center padding-x-sm padding-y-md" id="emailHintLine" style="display: none;">
-                            <div class="col">
-                                <label class="email-hint" id="emailHint" style="margin-bottom: 15px; color: var(--color-gray-600);"></label>
-                            </div>
+                        <div class="display-flex row row-full justify-start align-center padding-x-md padding-y-md" id="emailHintLine" style="display: none;">
+                            <span class="status status-pending padding-x-md row-full" id="emailHint" style="margin-bottom: 15px; color: var(--color-gray-600);"></label>
                         </div>                      
 
                         <div class="display-flex row row-full justify-start align-center padding-x-sm padding-y-md border-bottom">

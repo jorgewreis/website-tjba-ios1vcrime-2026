@@ -184,28 +184,25 @@
     .row.left {
         width: 100%;
     }
-        .col.process-info {
-            width: 300px;
+        .col-process {
+            display: flex;
         }
-        .col.comarca-info {
+        .col-comarca {
             display: none;
         }
-        .col.detalhes-info {
+        .col-finalidade {
+            display: none;
+        }        
+        .col-reu {
             display: none;
         }
-        .col.detalhes-info-tipo {
+        .col-tipo-edital {
             display: none;
         }
-        .col.parte-nome {
-            width: 140px;
-        }
-        .col.parte-tipo {
-            width: 120px;
-        }
-        .col.parte-setor {
+        .col-tipo-guia {
             display: none;
         }
-        .col.parte-cargo {
+        .col-cejusc {
             display: none;
         }
 
@@ -417,17 +414,11 @@
     }
 
     /* COLUMNS WITH ID FIX */    
-    .col.parte-nome {
-        width: 200px;
-    }
-    .col.parte-tipo {
-        width: 160px;
-    }
-    .col.parte-setor {
-        width: 180px;
-    }
-    .col.parte-cargo {
-        width: 180px;
+    .col-comarca {
+        display: flex;
+    }    
+    .col-cejusc {
+        display: flex;
     }
 
     .row.left.info,
@@ -443,22 +434,17 @@
     }
 
     /* COLUMNS WITH ID FIX */
-    .col.comarca-info {
+    .col-finalidade {
         display: flex;
-        width: 200px;
     }
-    .col.parte-nome {
-        width: calc(240px + 3vw);
-    }
-    .col.parte-tipo {
-        width: calc(160px + 3vw);
-    }
-    .col.parte-setor {
+    .col-reu {
         display: flex;
-        width: calc(180px + 3vw);
     }
-    .col.parte-cargo {
-        width: 200px;
+    .col-tipo-edital {
+        display: flex;
+    }
+    .col-tipo-guia {
+        display: flex;
     }
 
     .col.button-table {

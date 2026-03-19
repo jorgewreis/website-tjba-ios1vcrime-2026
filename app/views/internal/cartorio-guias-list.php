@@ -260,7 +260,7 @@ if ($totalPages > 0) {
                                 <i class="fi fi-rr-angle-small-down"></i>
                             </label>
                         </div>
-                        <div class="col width-500 process-info" title="clique para copiar">
+                        <div class="col width-500 col-process" title="clique para copiar">
                             <?php
                                 $classeGuia = !empty($row['Classe']) ? $row['Classe'] : 'Classe não informada';
                                 $classeStyleGuia = $classeGuia !== 'Classe não informada' ? 'style="color: var(--primary-color-active); font-weight: 600;"' : '';
@@ -268,14 +268,14 @@ if ($totalPages > 0) {
                             <span class="minor-info text-ellipsis" title="<?php echo htmlspecialchars($classeGuia, ENT_QUOTES); ?>" <?php echo $classeStyleGuia; ?>><?php echo htmlspecialchars($classeGuia); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars($row['Processo'] ?? ''); ?></span>
                         </div>
-                        <div class="col width-400" title="clique para copiar">
-                            <span class="minor-info">Denunciado</span>
-                            <span class="major-info text-ellipsis"><?php echo htmlspecialchars($row['Denunciado'] ?? '—'); ?></span>
-                        </div>
-                        <div class="col width-300" title="clique para copiar">
+                        <div class="col width-500 col-tipo-guia" title="clique para copiar">
                             <span class="minor-info">Tipo</span>
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars($row['Tipo'] ?? '—'); ?></span>
                         </div>
+                        <div class="col width-600 col-reu" title="clique para copiar">
+                            <span class="minor-info">Denunciado</span>
+                            <span class="major-info text-ellipsis"><?php echo htmlspecialchars($row['Denunciado'] ?? '—'); ?></span>
+                        </div>                        
                     </div>
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">
                         <div class="col button-table button-edit" data-guia-id="<?php echo htmlspecialchars($idGuia, ENT_QUOTES); ?>" title="Editar">
@@ -337,9 +337,9 @@ if ($totalPages > 0) {
                         <div class="col<?php echo $mostrarBarra ? ' status-task' : ''; ?>" title="<?php echo htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES); ?>">
                             <?php
                             if ($st === 'concluída') {
-                                echo '<div class="padding-x-lg status status-finished">Finalizada</div>';
+                                echo '<div class="width-300 padding-x-lg status status-finished">Finalizada</div>';
                             } elseif ($st === 'cancelada') {
-                                echo '<div class="padding-x-lg status status-cancelled">Cancelada</div>';
+                                echo '<div class="width-300 padding-x-lg status status-cancelled">Cancelada</div>';
                             } elseif ($mostrarBarra) {
                                 $concluidosBarra = 1 + count(array_filter($progressStatuses, function ($x) { return $x === 'concluida' || $x === 'cancelada' || $x === 'pulada'; }));
                                 echo '<div class="width-300 status status-current status-with-progress"><span class="status-task-label width-300">Em andamento</span>';
@@ -349,7 +349,7 @@ if ($totalPages > 0) {
                                 }
                                 echo '</div></div>';
                             } else {
-                                echo '<div class="padding-x-lg status status-pending">Pendente</div>';
+                                echo '<div class="width-300 padding-x-lg status status-pending">Pendente</div>';
                             }
                             ?>
                         </div>
@@ -371,7 +371,7 @@ if ($totalPages > 0) {
                     <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
                         <div class="display-flex row row-fit justify-start gap-y-sm align-center subtask-row-fields">
                             <div class="col task-status">
-                                <div class="padding-x-lg height-sm status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
+                                <div class="width-300 padding-x-lg height-sm status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
                             </div>
                             <?php if ($isOrdem1): ?>
                                 <?php $rowDataFato = $row['data_fato'] ?? ''; $rowDiasMulta = isset($row['dias_multa']) && $row['dias_multa'] !== null ? (int) $row['dias_multa'] : ''; ?>

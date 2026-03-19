@@ -286,7 +286,7 @@ if ($totalPages > 0) {
                                 <i class="fi fi-rr-angle-small-down"></i>
                             </label>
                         </div>
-                        <div class="col width-500 process-info" title="clique para copiar">
+                        <div class="col width-500 col-process" title="clique para copiar">
                             <?php
                                 $classeNome = $row['ClasseNome'] ?? 'Classe não informada';
                                 $classeStyle = $classeNome !== 'Classe não informada' ? 'style="color: var(--primary-color-active); font-weight: 600;"' : '';
@@ -294,11 +294,11 @@ if ($totalPages > 0) {
                             <span class="minor-info text-ellipsis" title="<?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?>" <?php echo $classeStyle; ?>><?php echo htmlspecialchars($classeNome); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars($row['Processo']); ?></span>
                         </div>
-                        <div class="col width-400" title="clique para copiar">
+                        <div class="col width-500 col-comarca" title="clique para copiar">
                             <span class="minor-info">Comarca de destino</span>
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars($row['Comarca'] . ' - ' . $row['Estado']); ?></span>
                         </div>
-                        <div class="col width-500" title="clique para copiar">
+                        <div class="col width-600 col-finalidade" title="clique para copiar">
                             <span class="minor-info">Finalidade</span>
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars($row['Finalidade']); ?> — <?php echo htmlspecialchars($row['Prazo'] . ' dias'); ?></span>
                         </div>
@@ -369,9 +369,9 @@ if ($totalPages > 0) {
                         <div class="col<?php echo $mostrarBarraStatus && $st !== 'concluída' && $st !== 'cancelada' ? ' status-task' : ''; ?>" title="<?php echo htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES); ?>">
                             <?php
                             if ($st === 'concluída') {
-                                echo '<div class="padding-x-lg status status-finished">Finalizada</div>';
+                                echo '<div class="width-300 padding-x-lg status status-finished">Finalizada</div>';
                             } elseif ($st === 'cancelada') {
-                                echo '<div class="padding-x-lg status status-cancelled">Cancelada</div>';
+                                echo '<div class="width-300 padding-x-lg status status-cancelled">Cancelada</div>';
                             } elseif ($mostrarBarraStatus) {
                                 $labelStatus = $isEmAndamento ? 'Em andamento' : 'Pendente';
                                 $classStatus = $isEmAndamento ? 'status-current' : 'status-pending';
@@ -385,7 +385,7 @@ if ($totalPages > 0) {
                                 echo '</div>';
                                 echo '</div>';
                             } else {
-                                echo '<div class="padding-x-lg status status-pending">Pendente</div>';
+                                echo '<div class="width-300 padding-x-lg status status-pending">Pendente</div>';
                             }
                             ?>
                         </div>

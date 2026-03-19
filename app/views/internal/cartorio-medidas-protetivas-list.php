@@ -201,7 +201,7 @@ if ($totalPages > 0) {
                                 <i class="fi fi-rr-angle-small-down"></i>
                             </label>
                         </div>
-                        <div class="col width-500 process-info" title="clique para copiar">
+                        <div class="col width-500 col-process" title="clique para copiar">
                             <?php
                                 $classeMedida = (string) ($row['Classe'] ?? '');
                                 if ($classeMedida === '') {
@@ -212,15 +212,14 @@ if ($totalPages > 0) {
                             <span class="minor-info text-ellipsis" title="<?php echo htmlspecialchars($classeMedida, ENT_QUOTES); ?>" <?php echo $classeStyleMedida; ?>><?php echo htmlspecialchars($classeMedida); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars((string) ($row['Processo'] ?? '—')); ?></span>
                         </div>
-                        <div class="col width-400" title="clique para copiar">
+                        <div class="col width-600 col-reu" title="clique para copiar">
                             <span class="minor-info">Réu</span>
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['ReuNome'] ?? '—')); ?></span>
                         </div>
                         <?php if (!empty($row['CejuscTarefaId'])): ?>
-                        <div class="col width-300">
+                        <div class="col width-400 col-cejusc">
                             <span class="minor-info">Cejusc</span>
-                            <a class="major-info" href="/frame.php?page=cejuscedit&id=<?php echo urlencode((string) $row['CejuscTarefaId']); ?>">Abrir tarefa</a>
-                        </div>
+                            <button class="btn btn-primary-outline height-sm" href="/frame.php?page=cejuscedit&id=<?php echo urlencode((string) $row['CejuscTarefaId']); ?>">Abrir tarefa</button>
                         <?php endif; ?>
                     </div>
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">
@@ -244,9 +243,9 @@ if ($totalPages > 0) {
                         </div>
                         <div class="col<?php echo $mostrarBarraStatus && $st !== 'concluída' && $st !== 'cancelada' ? ' status-task' : ''; ?>" title="<?php echo htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES); ?>">
                             <?php if ($st === 'concluída'): ?>
-                                <div class="padding-x-lg status status-finished">Finalizada</div>
+                                <div class="width-300 padding-x-lg status status-finished">Finalizada</div>
                             <?php elseif ($st === 'cancelada'): ?>
-                                <div class="padding-x-lg status status-cancelled">Cancelada</div>
+                                <div class="width-300 padding-x-lg status status-cancelled">Cancelada</div>
                             <?php elseif ($mostrarBarraStatus): ?>
                                 <div class="width-300 status <?php echo $st === 'em_andamento' ? 'status-current' : 'status-pending'; ?> status-with-progress">
                                     <span class="status-task-label width-300"><?php echo $st === 'em_andamento' ? 'Em andamento' : 'Pendente'; ?></span>
@@ -257,7 +256,7 @@ if ($totalPages > 0) {
                                     </div>
                                 </div>
                             <?php else: ?>
-                                <div class="padding-x-lg status status-pending">Pendente</div>
+                                <div class="width-300 padding-x-lg status status-pending">Pendente</div>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -272,7 +271,7 @@ if ($totalPages > 0) {
                         <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
                             <div class="display-flex row row-fit justify-start gap-y-sm align-center">
                                 <div class="col task-status">
-                                    <div class="padding-x-lg height-sm status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
+                                    <div class="width-300 padding-x-lg height-sm status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
                                 </div>
                             </div>
                             <div class="display-flex row row-fit justify-end align-center">

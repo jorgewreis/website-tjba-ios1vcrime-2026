@@ -246,7 +246,7 @@ if ($totalPages > 0) {
                                 <i class="fi fi-rr-angle-small-down"></i>
                             </label>
                         </div>
-                        <div class="col width-500 process-info" title="clique para copiar">
+                        <div class="col width-500 col-process" title="clique para copiar">
                             <?php
                                 $classeEdital = $row['Classe'] ?? 'Classe não informada';
                                 if ($classeEdital === '') {
@@ -257,7 +257,7 @@ if ($totalPages > 0) {
                             <span class="minor-info text-ellipsis" title="<?php echo htmlspecialchars($classeEdital, ENT_QUOTES); ?>" <?php echo $classeStyleEdital; ?>><?php echo htmlspecialchars($classeEdital); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars($row['Processo'] ?? '—'); ?></span>
                         </div>
-                        <div class="col width-500" title="clique para copiar">
+                        <div class="col width-600 col-tipo-edital" title="clique para copiar">
                             <span class="minor-info">Tipo de edital</span>
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['tipo_edital'] ?? $row['TipoEdital'] ?? '—')); ?></span>
                         </div>
@@ -285,9 +285,9 @@ if ($totalPages > 0) {
                         <div class="col<?php echo $mostrarBarraStatus && $st !== 'concluída' && $st !== 'cancelada' ? ' status-task' : ''; ?>" title="<?php echo htmlspecialchars($currentSubtarefaTitle); ?>">
                             <?php
                             if ($st === 'concluída') {
-                                echo '<div class="padding-x-lg status status-finished">Finalizada</div>';
+                                echo '<div class="width-300 padding-x-lg status status-finished">Finalizada</div>';
                             } elseif ($st === 'cancelada') {
-                                echo '<div class="padding-x-lg status status-cancelled">Cancelada</div>';
+                                echo '<div class="width-300 padding-x-lg status status-cancelled">Cancelada</div>';
                             } elseif ($mostrarBarraStatus) {
                                 $labelStatus = $isEmAndamento ? 'Em andamento' : 'Pendente';
                                 $classStatus = $isEmAndamento ? 'status-current' : 'status-pending';
@@ -300,7 +300,7 @@ if ($totalPages > 0) {
                                 }
                                 echo '</div></div>';
                             } else {
-                                echo '<div class="padding-x-lg status status-pending">Pendente</div>';
+                                echo '<div class="width-300 padding-x-lg status status-pending">Pendente</div>';
                             }
                             ?>
                         </div>
@@ -316,7 +316,7 @@ if ($totalPages > 0) {
                     <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
                         <div class="display-flex row row-fit justify-start gap-y-sm align-center">
                             <div class="col task-status">
-                                <div class="padding-x-lg height-sm status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
+                                <div class="width-300 padding-x-lg height-sm status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
                             </div>
                         </div>
                         <div class="display-flex row row-fit justify-end align-center">
