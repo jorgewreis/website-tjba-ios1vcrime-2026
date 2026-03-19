@@ -4,10 +4,170 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **Fix: correcao de validacao cnj** `[00cb0c2]`
-- **Feat: implementacao de sistema para remover alocacao de usuario por regra** `[9bcd73c]`
-- **Fix: correcao de erro na remocao de alocacao** `[46e6215]`
-- **Fix: correcao de feedbacks para toasts** `[f737aa2]`
-- **Fix: correcao de movimentacoes das subtarefas** `[5e8ad8b]`
-- **Fix: correcao de movimentacao de subtarefas** `[dc88dc2]`
+- **feat(app): teste de versionamento [patch]** `[edf966f]`
+- **Fix: tentativa de correção de bumper** `[938a88c]`
+- **Fix: nova tentativa de correção** `[39e3881]`
+- **Fix: nova tentativa de fix** `[8b17dc1]`
+- **Fix: nova correção de sudo** `[5b08510]`
+- **Fix: correção definitiva** `[dc1da88]`
+- **Fix: Correção de inconformidades de css** `[a79caad]`
+- **Feat: nova implementação de toats em todo o sistema** `[1a43361]`
+- **Fix: correção de informações lgpd** `[0dd3fa3]`
+- **Feat: criação de campo senha para estudante** `[3627bff]`
+- **Docs: Novo documento de termo de aceite lgpd** `[cb1cb18]`
+- **Docs: atualização de documento lgpd** `[81c4dbb]`
+- **Fix: correção de bugs 1** `[3f3a3ac]`
+- **Fix: correção de bug 2** `[9677424]`
+- **Fix: correção de bug 3** `[b8eeee8]`
+- **Fix: correção de bug 4** `[aa784ea]`
+- **Fix: correção de bug 5** `[9ae5338]`
+- **Fix: correção de bug 6** `[5e5196c]`
+- **Fix: teste de correção 7** `[38cddc5]`
+- **Fix: tentativa 8** `[de2b7af]`
+- **Fix: correção debug 9** `[2c1a509]`
+- **Fix: correção de campos do form** `[491c54d]`
+- **Feat: implementação de conjunto de páginas de Guias** `[3652d18]`
+- **Feat: implementação nova de cadastro de reu** `[86f5c5e]`
+- **Feat: implementaçao de info de campo obrigatorio** `[14a380c]`
+- **Fix: atualização de classes** `[9b3389b]`
+- **Fix: melhorias de inputs e selects** `[c0386ea]`
+- **Fix: debug test 1** `[a304f3f]`
+- **Fix: debug test 2** `[9292b46]`
+- **Fix: correção mockup toast** `[0ab2548]`
+- **Fix: debug test 4** `[2f135a8]`
+- **Fix: correção de modelo de timeline** `[0b3787b]`
+- **Fix: correções minimas** `[efbd48a]`
+- **Feat: nova implementação de tema claro e escuro** `[36661d6]`
+- **Fix: correção de cores tema escuro** `[94c41b6]`
+- **Fix: correção inicial de cores** `[84b61ab]`
+- **Fix: segunda correção de cores** `[a37eb82]`
+- **Fix: correção de cores 3** `[fabeec8]`
+- **Fix: correção de cores 5** `[5079e85]`
+- **Feat: Migração e unificação de códigos de estilo** `[cbe8194]`
+- **Fix: correção de css** `[216454f]`
+- **Fix: correção de css** `[e6c8726]`
+- **Fix: correção de icones** `[9339281]`
+- **Fix: remoção de arquivos não mais utilizados** `[1a4acfa]`
+- **Fix: pequenos ajustes** `[08ef8a2]`
+- **Fix: correção de layout de subtarefa** `[7956dee]`
+- **Feat: Update das informações de tarefas e subtarefas de cartas expedidas** `[a6c0aa7]`
+- **Feat: modelo tarefas e subtarefas de Cartas Recebidas** `[4aa8285]`
+- **Feat: modelo de tarefas e subtarefas de Guias** `[3862020]`
+- **Fix: correção de inconsistencias** `[b892156]`
+- **Feat: nova função de cópia de numero de processo** `[e4a53e4]`
+- **Fix: refatoração do calculo da pena de multa** `[d356f64]`
+- **Fix: correção do calculo de multa** `[87147e0]`
+- **Fix: correção de toasts** `[9893c21]`
+- **Feat: implementação de função de verificação de duplicidade de guia** `[58c7b6e]`
+- **Feat: submenu de config user** `[1f023b2]`
+- **Feat: form para alterar senha** `[fce8b45]`
+- **Feat: form alterar dados pessoais** `[f3efbb6]`
+- **Fix: correção de informações** `[634ba92]`
+- **Fix: correção de layout** `[b14477f]`
+- **Fix: correção de função** `[8b37369]`
+- **Feat: novo conjunto de páginas - Editais** `[551e051]`
+- **Feat: novo conjunto - medidas protetivas** `[3cbc68e]`
+- **Fix: pequenos ajustes** `[e5a5b95]`
+- **Fix: grande correção de falhas** `[6545fc7]`
+- **Fix: pequenos ajustes** `[e65131d]`
+- **Fix: pequenas correções de css** `[6e6f793]`
+- **Feat: nova página consulta cep** `[7fdfa07]`
+- **Fix: pequenos ajustes** `[ec15581]`
+- **Fix: ajustes de layout** `[8c95bf2]`
+- **Feat: paginação e filtro em cep** `[1d8de0d]`
+- **Fix: correção de layout** `[510cf71]`
+- **Feat: novo modelo Consulta Partes** `[81ffc85]`
+- **Fix: correção de layout** `[81178a2]`
+- **Fix: correções de codigos** `[42402a7]`
+- **Fix: pequenos ajustes** `[13ed3a2]`
+- **Fix: correção de bug** `[eb7ff85]`
+- **Feat: consulta instituicao** `[3995b63]`
+- **Fix: pequenos ajustes de codigo** `[c05d8c8]`
+- **Fix: correção de pessoa** `[ab4287a]`
+- **Fix: correção de formatação** `[c6b9c81]`
+- **Fix: pequenos ajustes** `[f458b84]`
+- **Fix: correção de ajustes** `[05ca497]`
+- **Fix: pequenos ajustes** `[47de02c]`
+- **fix: pequenos ajustes** `[6907a0f]`
+- **Fix: pequenos ajustes** `[1ab82c0]`
+- **fix: correções pequenas** `[d52cd91]`
+- **fix: correção de layout** `[0f878dd]`
+- **Fix: pequenos ajustes** `[f5c60dd]`
+- **fix: pequenos ajustes de table** `[80ef648]`
+- **fix: pequenos ajustes** `[0dd6a76]`
+- **fix: correções e ajustes** `[39ec80e]`
+- **fix: pequenos ajustes** `[3011b5b]`
+- **fix: pequenas correções** `[79dd22d]`
+- **fix: testes de layout** `[7d4283c]`
+- **fix: correção de subtarefas** `[45e750a]`
+- **fix: correção subtask** `[3fcd8ef]`
+- **fix: layout fixed** `[c0989bf]`
+- **fix: correção de layout responsivo** `[897b74b]`
+- **fix: correção de classes** `[4d4dd1d]`
+- **fix: melhorias nas informações** `[f4ae92b]`
+- **fix: pequenos ajustes** `[d8a2264]`
+- **fix: pequenos ajustes** `[55bee89]`
+- **fix: correção de layout** `[18b2c0e]`
+- **Fix: correções multiplas** `[3c3d1f7]`
+- **fix: mais correções de layout** `[19b4788]`
+- **Fix: mais correções agrupadas** `[abda51a]`
+- **fix: correção de consultas** `[d461e18]`
+- **fix: pequenos ajustes** `[6bbae31]`
+- **fix: pequenos ajustes** `[78d22c5]`
+- **fix: pequenos ajustes** `[f1503cb]`
+- **fix: pequenos ajustes** `[6a83de5]`
+- **fix: correction list table** `[e80b086]`
+- **fix: pequenas correções** `[6180fdf]`
+- **fix: pequenos ajustes** `[8093c35]`
+- **fix: correções parciais** `[eac3bfd]`
+- **fix: pequenos ajustes subtasks** `[9eaa428]`
+- **fix: correção de php** `[1858d1c]`
+- **FIX: PEQUENAS MELHORIAS** `[2c20046]`
+- **fix: pequenos ajustes** `[450146b]`
+- **fix: pequenos ajustes** `[956a635]`
+- **fix: correção de telefones** `[0eda73f]`
+- **fix: correções de bugs** `[9d84623]`
+- **fix: correções finas** `[c8d0359]`
+- **fix: correção de select** `[c05193e]`
+- **fix: pequenos ajustes** `[14ec040]`
+- **fix: mais ajustes** `[c98f32d]`
+- **fix: correçao de erros** `[58bbc56]`
+- **Fix: página de usuários criada** `[e5d33ef]`
+- **Feat: criação de página edit de usuarios** `[c16815a]`
+- **fix: correção de função text** `[7adf1c7]`
+- **fix: correção de estilo** `[032c695]`
+- **Feat: criação de pagina de edit de usuarios** `[66ae9b0]`
+- **fix: correção basica de edit** `[b9ddd65]`
+- **fix: mais correcoes** `[5dd7ecc]`
+- **fix: correcao de status na edicao** `[cf607e3]`
+- **fix: correcao de salvamento** `[9e7c6d6]`
+- **fix: pequenos ajustes** `[d245e7f]`
+- **fix: correção de data** `[27751d8]`
+- **fix: pequenos ajustes** `[7b643f2]`
+- **fix: nota tentativa de correcao** `[f5c1adb]`
+- **fix: correcao de seguranca** `[b6f8e6a]`
+- **fix: correcao de obrigatoriedade** `[f962dc0]`
+- **Fix: pequenos ajustes** `[5667101]`
+- **fix: pequenos ajustes** `[c13bae5]`
+- **fix: pequenos ajustes** `[244ed2c]`
+- **fix: pequenos ajustes** `[7e3a8ea]`
+- **Fix: melhorias de codigo** `[b54aa2e]`
+- **Fix: melhorias refeitas** `[4d98aeb]`
+- **Fix: grande correção de estilos** `[f7ed93e]`
+- **Fix: pequenos ajustes** `[4c00228]`
+- **fix: mais alguns ajustes** `[25b7686]`
+- **Fix: mais ajustes para alinhamento** `[a8cec6b]`
+- **Fix: ajustes de tamanhos css** `[1e29458]`
+- **Fix: pequenos ajustes** `[a8efd6a]`
+- **Fix: documentando alterações** `[48733a7]`
+- **Fix: correção de css** `[f0a78ef]`
+- **fix: pequenos ajustes** `[944a84d]`
+- **fix: pequenos ajustes** `[fce0aff]`
+- **fix: pequenos ajustes** `[c6c86d9]`
+- **fix: ajuste de align** `[f4927b2]`
+- **fix: correção nos buttons de subtarefas** `[fd491c3]`
+- **fix: pequenos ajustes de campos** `[50edc9b]`
+- **fix: ajustes de div quebrado** `[e88309a]`
+- **fix: correção de buttons** `[d05b3b6]`
+- **Fix: correcao de subtarefas sem funcionar** `[d681458]`
 
