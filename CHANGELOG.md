@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0003
+
+**Data:** 2026-03-19 17:19:49 | **Commit:** `46e6215` | **Tipo:** `patch`
+
+- Fix: correcao de erro na remocao de alocacao
+
 ## V. 1.04.0002
 
 **Data:** 2026-03-19 17:15:05 | **Commit:** `9bcd73c` | **Tipo:** `patch`
@@ -3306,6 +3312,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

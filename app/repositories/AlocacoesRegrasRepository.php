@@ -129,17 +129,21 @@ final class AlocacoesRegrasRepository
             throw new RuntimeException('Regra não encontrada para remoção de alocação.');
         }
 
+        // A coluna usuario_id pode ser NOT NULL em alguns ambientes.
+        // Para representar "sem alocação por regra", removemos o registro da regra.
         $statement = $this->connection->prepare(
-            sprintf(
-                'UPDATE `%s` SET `usuario_id` = NULL, `usuario_atualiza_id` = :usuario_atualiza_id, `updated_at` = NOW() WHERE `regra` = :regra LIMIT 1',
-                $this->table
-            )
+            sprintf('DELETE FROM `%s` WHERE `regra` = :regra LIMIT 1', $this->table)
         );
-        $statement->bindValue(':usuario_atualiza_id', $usuarioAtualizaId);
         $statement->bindValue(':regra', $regra);
         $statement->execute();
 
         $row = $this->findByRegra($regra);
-        return $row ?? $existing;
+        if ($row !== null) {
+            return $row;
+        }
+
+        $existing['usuario_id'] = '';
+        $existing['usuario_atualiza_id'] = $usuarioAtualizaId;
+        return $existing;
     }
 }
