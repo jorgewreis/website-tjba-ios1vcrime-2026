@@ -80,7 +80,7 @@
 }
 
 .toast.info {
-    background-color: var(--color-background-elevated);
+    background-color: var(--color-primary-bg-light);
     border-color: var(--color-primary);
 }
 
@@ -99,7 +99,7 @@
 }
 
 .toast-full.info {
-    background-color: var(--color-surface-elevated);
+    background-color: var(--color-primary-bg-light);
     border-color: var(--color-primary);
 }
 

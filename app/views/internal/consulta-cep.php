@@ -38,17 +38,17 @@ declare(strict_types=1);
             <div class="display-flex row row-fit justify-start gap-y-md">
                 <div class="col">
                     <label for="filter-busca">CEP ou endereço <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="text" class="width-700 height-md" id="filter-busca" placeholder="CEP ou logradouro, cidade (ex.: jasmin, ilheus)" required>
+                    <input type="text" class="width-800 height-md" id="filter-busca" placeholder="CEP ou logradouro, cidade (ex.: jasmin, ilheus)" required>
                 </div>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-end">
                 <div class="col">
                     <label for="items-per-page">Itens por página</label>
                     <select class="width-300 height-md" id="items-per-page">
-                        <option value="5">5</option>
-                        <option value="10" selected>10</option>
-                        <option value="25">25</option>
+                        <option value="10">10</option>
+                        <option value="25" selected>25</option>
                         <option value="50">50</option>
+                        <option value="100">100</option>
                     </select>
                 </div>
                 <div class="col">

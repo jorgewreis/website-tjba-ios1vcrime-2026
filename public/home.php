@@ -198,7 +198,7 @@ $userProfile = Security::getUserProfile() ?? '';
             {
                 section: 'Gabinete',
                 items: [
-                    { icon: 'fi fi-ss-license', label: 'Ofícios', target: 'oficiosgabinete' },
+                    { icon: 'fi fi-rs-license', label: 'Ofícios', target: 'oficiosgabinete' },
                     { icon: 'fi fi-rs-lock', label: 'Réus Presos', target: 'reuspresos' }
                 ]
             },

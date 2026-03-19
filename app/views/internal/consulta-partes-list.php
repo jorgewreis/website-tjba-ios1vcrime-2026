@@ -138,11 +138,11 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                 <div class="display-flex row row-fit justify-start gap-y-md">
                     <div class="col">
                         <label for="filter-nome">Nome</label>
-                        <input type="text" class="width-500 height-md" id="filter-nome" name="nome" placeholder="Nome da parte" value="<?php echo htmlspecialchars($nomeFilter); ?>">
+                        <input type="text" class="width-600 height-md" id="filter-nome" name="nome" placeholder="Nome da parte" value="<?php echo htmlspecialchars($nomeFilter); ?>">
                     </div>
                     <div class="col">
                         <label for="filter-cpf">CPF</label>
-                        <input type="text" class="width-300 height-md" id="filter-cpf" name="cpf" placeholder="CPF" value="<?php echo htmlspecialchars($cpfFilter); ?>">
+                        <input type="text" class="width-400 height-md" id="filter-cpf" name="cpf" placeholder="CPF" value="<?php echo htmlspecialchars($cpfFilter); ?>">
                     </div>
                 </div>
                 <div class="display-flex row row-fit justify-end gap-y-md align-end">

@@ -113,7 +113,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                 <div class="display-flex row row-fit justify-start gap-y-md">
                     <div class="col">
                         <label for="filter-nome">Nome</label>
-                        <input type="text" class="width-500 height-md" id="filter-nome" name="nome" placeholder="Nome da instituição" value="<?php echo htmlspecialchars($nomeFilter); ?>">
+                        <input type="text" class="width-600 height-md" id="filter-nome" name="nome" placeholder="Nome da instituição" value="<?php echo htmlspecialchars($nomeFilter); ?>">
                     </div>
                 </div>
                 <div class="display-flex row row-fit justify-end gap-y-md align-end">

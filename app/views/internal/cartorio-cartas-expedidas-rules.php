@@ -144,43 +144,56 @@ try {
         </div>
     </div>
 
-    <div class="card-page">
+    <div class="container-full card-page">
         <form method="post" class="rule-form" style="width: 100%">
-            <div class="row table subtitle left padding-tb-lg padding-lr-lg">Regras de alocação automática</div>    
+            <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+                <div class="display-flex row row-fit justify-start">
+                    <h2>Regras de alocação automática</h2>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-md"></div>
+            </div>
+
             <?php if (!$podeAlterarRegra): ?>
-                <div class="row table left padding-tb-md padding-lr-lg border-bottom full-line">
+                <div class="display-flex row row-full padding-x-md padding-y-md border-bottom">
                     <div class="col">
                         <label class="status status-primary-light">Apenas perfis admin, diretora ou magistrada podem alterar esta regra. Você pode visualizar a configuração atual.</label>
                     </div>
                 </div>
             <?php endif; ?>
 
-            <div class="row table buttons left padding-lr-md padding-tb-md full-line">
-                <span class="minor-info" style="font-weight: 600;">Acompanhamento e envio de Cartas Expedidas</span>
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom">
+                <div class="col">
+                    <span class="minor-info" style="font-weight: 600;">Acompanhamento e envio de Cartas Expedidas</span>
+                </div>
             </div>
 
-            <div class="row table left padding-tb-sm padding-lr-lg">
-                <div class="col">
-                    <label for="filter-processo">Responsável</label>
-                    <select class="width-400 height-md" id="filter-processo" name="id_user" <?php echo $podeAlterarRegra ? '' : 'disabled'; ?> required>
-                        <option value="" disabled<?php echo $selectedUserId === '' ? ' selected' : ''; ?>>Selecione um servidor</option>
-                        <?php foreach ($usersList as $user): ?>
-                            <option value="<?php echo htmlspecialchars($user['id'], ENT_QUOTES); ?>"<?php echo $selectedUserId === $user['id'] ? ' selected' : ''; ?>>
-                                <?php echo htmlspecialchars($user['name']); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
+            <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
+                <div class="display-flex row row-fit justify-start gap-y-md">
+                    <div class="col">
+                        <label for="filter-processo">Responsável</label>
+                        <select class="width-400 height-md" id="filter-processo" name="id_user" <?php echo $podeAlterarRegra ? '' : 'disabled'; ?> required>
+                            <option value="" disabled<?php echo $selectedUserId === '' ? ' selected' : ''; ?>>Selecione um servidor</option>
+                            <?php foreach ($usersList as $user): ?>
+                                <option value="<?php echo htmlspecialchars($user['id'], ENT_QUOTES); ?>"<?php echo $selectedUserId === $user['id'] ? ' selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($user['name']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                 </div>
-            </div> 
+                <div class="display-flex row row-fit justify-end gap-y-md"></div>
+            </div>
 
             <?php if (!empty($ruleRow['id'] ?? '')): ?>
-                <div class="row table padding-tb-md <?php if($ruleUsuarioNome === ''){ echo 'info'; } else { echo 'success'; } ?>">
-                    <span><?php echo htmlspecialchars(sprintf('Regra atual: %s - %s', $ruleRow['id'] ?? 'sem ID', $ruleUsuarioNome)); ?></span>
+                <div class="display-flex row row-full padding-x-md padding-y-md border-bottom <?php echo $ruleUsuarioNome === '' ? 'info' : 'success'; ?>">
+                    <div class="col">
+                        <span><?php echo htmlspecialchars(sprintf('Regra atual: %s - %s', $ruleRow['id'] ?? 'sem ID', $ruleUsuarioNome)); ?></span>
+                    </div>
                 </div>
             <?php endif; ?>
 
             <!-- Ações -->
-            <div class="row table right padding-tb-md padding-lr-lg row-gap-10">
+            <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
                 <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
                 <?php if ($podeAlterarRegra): ?>
                     <button type="submit" class="btn btn-primary">Salvar</button>
@@ -189,14 +202,14 @@ try {
 
             <!-- Informações -->
             <?php if ($successMessage): ?>
-                <div class="row table left padding-lr-sm padding-tb-sm">
+                <div class="display-flex row row-full padding-x-md padding-y-md border-bottom">
                     <div class="col">
                         <label class="status status-finished padding-lr-lg"><?php echo htmlspecialchars($successMessage); ?></label>
                     </div>
                 </div>
             <?php endif; ?>
             <?php if (!empty($errors)): ?>
-                <div class="row table left padding-lr-sm padding-tb-sm">
+                <div class="display-flex row row-full padding-x-md padding-y-md border-bottom">
                     <div class="col">
                         <?php foreach ($errors as $error): ?>
                             <label class="status status-cancelled padding-lr-lg"><?php echo htmlspecialchars($error); ?></label>
