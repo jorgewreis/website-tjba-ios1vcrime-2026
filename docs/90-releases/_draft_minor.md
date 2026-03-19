@@ -165,4 +165,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix: pequenos ajustes** `[fce0aff]`
 - **fix: pequenos ajustes** `[c6c86d9]`
 - **fix: ajuste de align** `[f4927b2]`
+- **fix: correção nos buttons de subtarefas** `[fd491c3]`
 
