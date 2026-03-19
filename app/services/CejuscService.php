@@ -92,6 +92,10 @@ final class CejuscService
         $parteId = trim((string) ($payload['parte_id'] ?? $payload['reu_id'] ?? ''));
         $nomeReu = trim((string) ($payload['nome_reu'] ?? ''));
         if ($nomeReu !== '') {
+            // Se o label veio como "Nome - 000.000.000-00", mantém apenas o nome.
+            $nomeReu = preg_replace('/\s*-\s*\d{3}\.?\d{3}\.?\d{3}-?\d{2}\s*$/u', '', $nomeReu) ?? $nomeReu;
+        }
+        if ($nomeReu !== '') {
             $nomeReu = TextFormatter::formatProperName($nomeReu, 120);
         }
 
@@ -111,6 +115,13 @@ final class CejuscService
         }
 
         if ($parteId !== '') {
+            $parteSelecionada = $this->partesRepository->findById($parteId);
+            if ($parteSelecionada !== null) {
+                $nomeParteSelecionada = trim((string) ($parteSelecionada['nome_completo'] ?? ''));
+                if ($nomeParteSelecionada !== '') {
+                    $nomeReu = TextFormatter::formatProperName($nomeParteSelecionada, 120);
+                }
+            }
             if ($processoOrigemId !== null) {
                 $existente = $this->processosPartesRepository->findByProcessoAndParte($processoOrigemId, $parteId);
                 if ($existente === null) {
@@ -127,6 +138,13 @@ final class CejuscService
                 throw new InvalidArgumentException('O nome do réu é obrigatório.');
             }
             $parteId = $this->partesRepository->ensureParteByNomeOuCpf($nomeReu, null);
+            $parteCriadaOuEncontrada = $this->partesRepository->findById($parteId);
+            if ($parteCriadaOuEncontrada !== null) {
+                $nomeParte = trim((string) ($parteCriadaOuEncontrada['nome_completo'] ?? ''));
+                if ($nomeParte !== '') {
+                    $nomeReu = TextFormatter::formatProperName($nomeParte, 120);
+                }
+            }
             if ($processoOrigemId !== null) {
                 $existente = $this->processosPartesRepository->findByProcessoAndParte($processoOrigemId, $parteId);
                 if ($existente === null) {
@@ -234,7 +252,7 @@ final class CejuscService
             $this->repository->updateStatus($cejuscId, 'concluída');
             $tarefa = $this->repository->findById($cejuscId);
             $processo = trim((string) ($tarefa['numero_processo_origem'] ?? ''));
-            $reu = trim((string) ($tarefa['nome_reu'] ?? ''));
+            $reu = trim((string) ($tarefa['reu_nome'] ?? $tarefa['nome_reu'] ?? ''));
             return [
                 'tarefa_principal_concluida' => true,
                 'tarefa_principal_mensagem' => 'Tarefa principal concluída automaticamente: fluxo Cejusc do processo '

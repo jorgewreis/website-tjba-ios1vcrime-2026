@@ -44,7 +44,7 @@ final class CejuscRepository
         $fromClause = $this->buildFromClause();
 
         $sql = sprintf(
-            'SELECT ct.`id` AS `IdCarta`, ct.`numero_processo_origem` AS `Processo`, ct.`status` AS `Status`, ct.`created_at` AS `Data`, p.`nome_completo` AS `ReuNome` FROM %s %s ORDER BY %s, ct.`created_at` DESC LIMIT :limit OFFSET :offset',
+            'SELECT ct.`id` AS `IdCarta`, ct.`numero_processo_origem` AS `Processo`, ct.`status` AS `Status`, ct.`created_at` AS `Data`, COALESCE(p.`nome_completo`, \'\') AS `ReuNome` FROM %s %s ORDER BY %s, ct.`created_at` DESC LIMIT :limit OFFSET :offset',
             $fromClause,
             $whereClause ? 'WHERE ' . $whereClause : '',
             $orderField
@@ -113,8 +113,10 @@ final class CejuscRepository
 
         $statement = $this->connection->prepare(
             sprintf(
-                'INSERT INTO `%s` (`id`, `processo_origem_id`, `numero_processo_origem`, `parte_id`, `status`, `created_at`, `updated_at`) VALUES (:id, :processo_origem_id, :numero_processo_origem, :parte_id, :status, NOW(), NOW())',
-                $this->table
+                'INSERT INTO `%s` (%s, `created_at`, `updated_at`) VALUES (%s, NOW(), NOW())',
+                $this->table,
+                '`id`, `processo_origem_id`, `numero_processo_origem`, `parte_id`, `status`',
+                ':id, :processo_origem_id, :numero_processo_origem, :parte_id, :status'
             )
         );
         $statement->bindValue(':id', $row['id']);
@@ -178,7 +180,7 @@ final class CejuscRepository
 
         $fromClause = $this->buildFromClause();
         $sql = sprintf(
-            'SELECT ct.*, p.`nome_completo` AS `reu_nome` FROM %s WHERE ct.`id` = :id LIMIT 1',
+            'SELECT ct.*, COALESCE(p.`nome_completo`, \'\') AS `reu_nome` FROM %s WHERE ct.`id` = :id LIMIT 1',
             $fromClause
         );
         $statement = $this->connection->prepare($sql);
