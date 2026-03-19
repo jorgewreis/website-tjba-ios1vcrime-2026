@@ -223,74 +223,74 @@ if ($totalPages > 0) {
                         </div>
                         <?php endif; ?>
                     </div>
-                </div>
-                <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                    <div class="col button-table button-edit" data-medida-id="<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>" title="Editar">
-                        <i class="fi fi-rr-file-edit"></i>
-                    </div>
-                    <div class="display-flex row row-fit justify-end gap-y-sm allocate-chips-row">
-                        <?php
-                        $alocados = $row['Alocados'] ?? [];
-                        if (count($alocados) === 0) {
-                            echo '—';
-                        } else {
-                            foreach ($alocados as $alocado) {
-                                $iniciais = $alocado['iniciais'] ?? '—';
-                                $nomeCompleto = $alocado['nome_completo'] ?? '';
-                                $title = 'Alocado: ' . ($nomeCompleto !== '' ? $nomeCompleto : $iniciais);
-                                echo '<span class="user-allocate" title="' . htmlspecialchars($title) . '">' . htmlspecialchars($iniciais) . '</span>';
+                
+                    <div class="display-flex row row-fit justify-end gap-y-sm align-center">
+                        <div class="col button-table button-edit" data-medida-id="<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>" title="Editar">
+                            <i class="fi fi-rr-file-edit"></i>
+                        </div>
+                        <div class="display-flex row row-fit justify-end gap-y-sm allocate-chips-row">
+                            <?php
+                            $alocados = $row['Alocados'] ?? [];
+                            if (count($alocados) === 0) {
+                                echo '—';
+                            } else {
+                                foreach ($alocados as $alocado) {
+                                    $iniciais = $alocado['iniciais'] ?? '—';
+                                    $nomeCompleto = $alocado['nome_completo'] ?? '';
+                                    $title = 'Alocado: ' . ($nomeCompleto !== '' ? $nomeCompleto : $iniciais);
+                                    echo '<span class="user-allocate" title="' . htmlspecialchars($title) . '">' . htmlspecialchars($iniciais) . '</span>';
+                                }
                             }
-                        }
-                        ?>
+                            ?>
+                        </div>
+                        <div class="col<?php echo $mostrarBarraStatus && $st !== 'concluída' && $st !== 'cancelada' ? ' status-task' : ''; ?>" title="<?php echo htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES); ?>">
+                            <?php if ($st === 'concluída'): ?>
+                                <div class="width-300 padding-x-lg status status-finished">Finalizada</div>
+                            <?php elseif ($st === 'cancelada'): ?>
+                                <div class="width-300 padding-x-lg status status-cancelled">Cancelada</div>
+                            <?php elseif ($mostrarBarraStatus): ?>
+                                <div class="width-300 status <?php echo $st === 'em_andamento' ? 'status-current' : 'status-pending'; ?> status-with-progress">
+                                    <span class="status-task-label width-300"><?php echo $st === 'em_andamento' ? 'Em andamento' : 'Pendente'; ?></span>
+                                    <div class="status-task-progress" role="progressbar" aria-valuenow="<?php echo count(array_filter($progressStatuses, static fn ($value) => $value === 'concluida')); ?>" aria-valuemin="0" aria-valuemax="2">
+                                        <?php foreach ($progressStatuses as $index => $statusSeg): ?>
+                                            <div class="status-task-progress-segment <?php echo htmlspecialchars($statusSeg === 'concluida' ? 'concluida' : ($statusSeg === 'em_andamento' ? 'em_andamento' : 'pendente')); ?>" title="<?php echo htmlspecialchars($ordemLabels[$index + 1]); ?>"></div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            <?php else: ?>
+                                <div class="width-300 padding-x-lg status status-pending">Pendente</div>
+                            <?php endif; ?>
+                        </div>
                     </div>
-                    <div class="col<?php echo $mostrarBarraStatus && $st !== 'concluída' && $st !== 'cancelada' ? ' status-task' : ''; ?>" title="<?php echo htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES); ?>">
-                        <?php if ($st === 'concluída'): ?>
-                            <div class="width-300 padding-x-lg status status-finished">Finalizada</div>
-                        <?php elseif ($st === 'cancelada'): ?>
-                            <div class="width-300 padding-x-lg status status-cancelled">Cancelada</div>
-                        <?php elseif ($mostrarBarraStatus): ?>
-                            <div class="width-300 status <?php echo $st === 'em_andamento' ? 'status-current' : 'status-pending'; ?> status-with-progress">
-                                <span class="status-task-label width-300"><?php echo $st === 'em_andamento' ? 'Em andamento' : 'Pendente'; ?></span>
-                                <div class="status-task-progress" role="progressbar" aria-valuenow="<?php echo count(array_filter($progressStatuses, static fn ($value) => $value === 'concluida')); ?>" aria-valuemin="0" aria-valuemax="2">
-                                    <?php foreach ($progressStatuses as $index => $statusSeg): ?>
-                                        <div class="status-task-progress-segment <?php echo htmlspecialchars($statusSeg === 'concluida' ? 'concluida' : ($statusSeg === 'em_andamento' ? 'em_andamento' : 'pendente')); ?>" title="<?php echo htmlspecialchars($ordemLabels[$index + 1]); ?>"></div>
-                                    <?php endforeach; ?>
+                </div>
+
+                <div class="display-flex col col-full subtask subtask-collapsed" id="subtask-<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>" aria-hidden="true">
+                    <?php foreach ($subtarefas as $subtarefa):
+                        $stId = (string) ($subtarefa['id'] ?? '');
+                        $stTipo = (string) ($subtarefa['tipo'] ?? '');
+                        $stLabel = $subtarefaLabels[$stTipo] ?? 'Subtarefa';
+                    ?>
+                        <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
+                            <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                                <div class="col task-status">
+                                    <div class="padding-x-lg height-sm status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
                                 </div>
                             </div>
-                        <?php else: ?>
-                            <div class="width-300 padding-x-lg status status-pending">Pendente</div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-
-            <div class="display-flex col col-full subtask subtask-collapsed" id="subtask-<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>" aria-hidden="true">
-                <?php foreach ($subtarefas as $subtarefa):
-                    $stId = (string) ($subtarefa['id'] ?? '');
-                    $stTipo = (string) ($subtarefa['tipo'] ?? '');
-                    $stLabel = $subtarefaLabels[$stTipo] ?? 'Subtarefa';
-                ?>
-                    <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
-                        <div class="display-flex row row-fit justify-start gap-y-sm align-center">
-                            <div class="col task-status">
-                                <div class="padding-x-lg height-sm status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
+                            <div class="display-flex row row-fit justify-end align-center">
+                                <button type="button" class="btn btn-primary height-sm btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($stLabel, ENT_QUOTES); ?>">
+                                    <span class="value-button"><?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?></span>
+                                </button>
                             </div>
                         </div>
-                        <div class="display-flex row row-fit justify-end align-center">
-                            <button type="button" class="btn btn-primary height-sm btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($stLabel, ENT_QUOTES); ?>">
-                                <span class="value-button"><?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?></span>
-                            </button>
+                    <?php endforeach; ?>
+                    <?php if (empty($subtarefas)): ?>
+                        <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top">
+                            <span class="minor-info">Nenhuma sub-tarefa pendente.</span>
                         </div>
-                    </div>
-                <?php endforeach; ?>
-                <?php if (empty($subtarefas)): ?>
-                    <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top">
-                        <span class="minor-info">Nenhuma sub-tarefa pendente.</span>
-                    </div>
-                <?php endif; ?>
+                    <?php endif; ?>
+                </div>
             </div>
-        </div>
-        <?php endforeach; ?>
+            <?php endforeach; ?>
         <?php else: ?>
             <div class="display-flex col col-full register border-bottom">
                 <div class="display-flex row row-full padding-x-sm padding-y-sm">
