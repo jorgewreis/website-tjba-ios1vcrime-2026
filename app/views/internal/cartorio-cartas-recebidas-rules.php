@@ -166,6 +166,7 @@ try {
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
                 <?php include __DIR__ . '/_internal_head_styles.php'; ?>
+        <?php include __DIR__ . '/_toast_script.php'; ?>
 
 
     </head>
@@ -243,23 +244,6 @@ try {
                 <?php endif; ?>
             </div>
 
-            <!-- Informações -->
-            <?php if ($successMessage): ?>
-                <div class="display-flex row row-full padding-x-md padding-y-md border-bottom">
-                    <div class="col">
-                        <label class="status status-finished"><?php echo htmlspecialchars($successMessage); ?></label>
-                    </div>
-                </div>
-            <?php endif; ?>
-            <?php if (!empty($errors)): ?>
-                <div class="display-flex row row-full padding-x-md padding-y-md border-bottom">
-                    <div class="col">
-                        <?php foreach ($errors as $error): ?>
-                            <label class="status status-cancelled"><?php echo htmlspecialchars($error); ?></label>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            <?php endif; ?>
         </form>
     </div>
 
@@ -272,6 +256,17 @@ try {
         </div>
     </div>
     <script>
+        (() => {
+            const successMessage = <?php echo json_encode($successMessage, JSON_UNESCAPED_UNICODE); ?>;
+            const errors = <?php echo json_encode(array_values($errors), JSON_UNESCAPED_UNICODE); ?>;
+            if (successMessage && typeof showToast === 'function') {
+                showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: successMessage });
+            }
+            if (Array.isArray(errors) && errors.length && typeof showToast === 'function') {
+                errors.forEach((message) => showToast({ type: 'error', variant: 'full', title: 'Erro', message }));
+            }
+        })();
+
         (() => {
             const btn = document.getElementById('voltar-btn');
             if (btn) {

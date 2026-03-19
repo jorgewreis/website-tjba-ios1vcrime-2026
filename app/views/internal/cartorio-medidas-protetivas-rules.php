@@ -223,22 +223,6 @@ try {
                 <?php endif; ?>
             </div>
 
-            <?php if ($successMessage): ?>
-                <div class="display-flex row row-full padding-x-md padding-y-md border-bottom">
-                    <div class="col">
-                        <label class="status status-finished"><?php echo htmlspecialchars($successMessage); ?></label>
-                    </div>
-                </div>
-            <?php endif; ?>
-            <?php if (!empty($errors)): ?>
-                <div class="display-flex row row-full padding-x-md padding-y-md border-bottom">
-                    <div class="col">
-                        <?php foreach ($errors as $error): ?>
-                            <label class="status status-cancelled"><?php echo htmlspecialchars($error); ?></label>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            <?php endif; ?>
         </form>
     </div>
 
@@ -251,6 +235,17 @@ try {
     </div>
 
     <script>
+        (() => {
+            const successMessage = <?php echo json_encode($successMessage, JSON_UNESCAPED_UNICODE); ?>;
+            const errors = <?php echo json_encode(array_values($errors), JSON_UNESCAPED_UNICODE); ?>;
+            if (successMessage && typeof showToast === 'function') {
+                showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: successMessage });
+            }
+            if (Array.isArray(errors) && errors.length && typeof showToast === 'function') {
+                errors.forEach((message) => showToast({ type: 'error', variant: 'full', title: 'Erro', message }));
+            }
+        })();
+
         (function () {
             var btn = document.getElementById('voltar-btn');
             if (btn) {
