@@ -275,6 +275,8 @@ if ($totalPages > 0) {
                 $processo = $row['Processo'];
                 $idCarta = $row['IdCarta'];
                 $subtarefas = $row['Subtarefas'] ?? [];
+                $numeroProcessoDestinoAtual = trim((string) ($row['NumeroProcessoDestino'] ?? $row['numero_processo_destino'] ?? ''));
+                $varaDestinoAtual = trim((string) ($row['VaraDestino'] ?? $row['vara_destino_nome'] ?? $row['vara_destino'] ?? ''));
             ?>
             <div class="display-flex col col-full register border-bottom" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idCarta); ?>">
 
@@ -409,7 +411,7 @@ if ($totalPages > 0) {
                                 </div>
                             <?php elseif ($stTipo === 'aguardando_envio'): ?>
                                 <div class="col">
-                                    <select class="width-200 height-sm subtask-metodo-envio" title="Método de envio">
+                                    <select class="width-400 height-sm subtask-metodo-envio" title="Método de envio">
                                         <option value="">Método de envio</option>
                                         <option value="Email">E-mail</option>
                                         <option value="Malote Digital">Malote Digital</option>
@@ -420,10 +422,10 @@ if ($totalPages > 0) {
                                 </div>
                             <?php elseif ($stTipo === 'aguardando_informacoes'): ?>
                                 <div class="col">
-                                    <input type="text" class="width-400 height-sm subtask-numero-destino" placeholder="Nº processo" title="Número processo destino" />
+                                    <input type="text" class="width-400 height-sm subtask-numero-destino" placeholder="Nº processo" title="Número processo destino" value="<?php echo htmlspecialchars($numeroProcessoDestinoAtual, ENT_QUOTES); ?>" />
                                 </div>
                                 <div class="col">
-                                    <input type="text" class="width-600 height-sm subtask-vara-destino" placeholder="Vara destino" title="Vara destino" />
+                                    <input type="text" class="width-600 height-sm subtask-vara-destino" placeholder="Vara destino" title="Vara destino" value="<?php echo htmlspecialchars($varaDestinoAtual, ENT_QUOTES); ?>" />
                                 </div>
                             <?php elseif ($stTipo === 'aguardando_devolucao'): ?>
                                 <div class="col">

@@ -325,12 +325,25 @@ if ($totalPages > 0) {
                         $stId = $st['id'] ?? '';
                         $stTipo = $st['tipo'] ?? '';
                         $stLabel = $subtarefaLabels[$stTipo] ?? $stTipo;
+                        $dadosEspecificosSt = [];
+                        if (!empty($st['dados_especificos'])) {
+                            $dadosDecode = json_decode((string) $st['dados_especificos'], true);
+                            if (is_array($dadosDecode)) {
+                                $dadosEspecificosSt = $dadosDecode;
+                            }
+                        }
+                        $dataPublicacaoValue = trim((string) ($dadosEspecificosSt['data_publicacao'] ?? ''));
                     ?>
                     <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
-                        <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                        <div class="display-flex row row-fit justify-start gap-y-sm align-center subtask-row-fields">
                             <div class="col task-status">
                                 <div class="padding-x-lg height-sm status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
                             </div>
+                            <?php if ($stTipo === 'certificacao_publicacao'): ?>
+                                <div class="col">
+                                    <input type="date" class="width-300 height-sm subtask-data-publicacao" value="<?php echo htmlspecialchars($dataPublicacaoValue, ENT_QUOTES); ?>" title="Data da publicação no diário">
+                                </div>
+                            <?php endif; ?>
                         </div>
                         <div class="display-flex row row-fit justify-end align-center">
                             <button type="button" class="btn btn-primary height-sm btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($stLabel, ENT_QUOTES); ?>">
@@ -477,8 +490,10 @@ if ($totalPages > 0) {
                     const payload = { subtarefa_id: subtarefaId };
                     const tipo = this.closest('[data-subtarefa-tipo]')?.getAttribute('data-subtarefa-tipo');
                     if (tipo === 'certificacao_publicacao') {
-                        const dataPub = prompt('Informe a data da publicação (AAAA-MM-DD):');
-                        if (!dataPub || !dataPub.trim()) {
+                        const block = this.closest('[data-subtarefa-id][data-subtarefa-tipo]');
+                        const dataInput = block ? block.querySelector('.subtask-data-publicacao') : null;
+                        const dataPub = dataInput ? (dataInput.value || '').trim() : '';
+                        if (!dataPub) {
                             notify('error', 'Atenção', 'A data da publicação é obrigatória para concluir esta subtarefa.');
                             this.disabled = false;
                             return;

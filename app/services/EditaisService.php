@@ -204,6 +204,24 @@ final class EditaisService
             $this->subtarefasRepository->atualizarDadosEspecificos($subtarefaId, $dadosJson);
         }
 
+        if ($ordem === 3) {
+            $dadosArray = [];
+            if ($dadosJson !== null && $dadosJson !== '') {
+                $decoded = json_decode($dadosJson, true);
+                if (is_array($decoded)) {
+                    $dadosArray = $decoded;
+                }
+            }
+            $dataPublicacao = trim((string) ($dadosArray['data_publicacao'] ?? ''));
+            if ($dataPublicacao === '') {
+                throw new InvalidArgumentException('Informe a data da publicação para concluir a certificação da publicação.');
+            }
+            $dtPublicacao = \DateTime::createFromFormat('Y-m-d', $dataPublicacao);
+            if ($dtPublicacao === false || $dtPublicacao->format('Y-m-d') !== $dataPublicacao) {
+                throw new InvalidArgumentException('Data da publicação inválida.');
+            }
+        }
+
         if ($ordem === 4) {
             $this->validarDecursoParaCertificacao($editalId);
         }

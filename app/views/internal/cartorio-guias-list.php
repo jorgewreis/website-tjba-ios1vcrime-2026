@@ -101,7 +101,7 @@ $taskTitleByTipo = [
 $buttonTitleByTipo = [
     GuiasSubtarefasRepository::TIPO_ORDEM_1 => 'Informar data do fato e dias-multa',
     GuiasSubtarefasRepository::TIPO_ORDEM_2 => 'Informar valor da pena de multa',
-    GuiasSubtarefasRepository::TIPO_ORDEM_3 => 'Informar data de expedição da Guia',
+    GuiasSubtarefasRepository::TIPO_ORDEM_3 => 'Informar expedição da Guia',
     GuiasSubtarefasRepository::TIPO_ORDEM_4 => 'Informar assinatura da Juíza',
     GuiasSubtarefasRepository::TIPO_ORDEM_5 => 'Confirmar juntada (automática ou manual)',
     GuiasSubtarefasRepository::TIPO_ORDEM_6 => 'Informar quantidade de documentos em PDF',
@@ -371,6 +371,14 @@ if ($totalPages > 0) {
                         $isOrdem5 = ($stTipo === GuiasSubtarefasRepository::TIPO_ORDEM_5);
                         $isOrdem6 = ($stTipo === GuiasSubtarefasRepository::TIPO_ORDEM_6);
                         $isOrdem7 = ($stTipo === GuiasSubtarefasRepository::TIPO_ORDEM_7);
+                        $dadosEspecificosSt = [];
+                        if (!empty($st['dados_especificos'])) {
+                            $dadosDecode = json_decode((string) $st['dados_especificos'], true);
+                            if (is_array($dadosDecode)) {
+                                $dadosEspecificosSt = $dadosDecode;
+                            }
+                        }
+                        $tipoJuntadaAtual = trim((string) ($dadosEspecificosSt['tipo_juntada'] ?? ''));
                     ?>
                     <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
                         <div class="display-flex row row-fit justify-start gap-y-sm align-center subtask-row-fields">
@@ -379,8 +387,8 @@ if ($totalPages > 0) {
                             </div>
                             <?php if ($isOrdem1): ?>
                                 <?php $rowDataFato = $row['data_fato'] ?? ''; $rowDiasMulta = isset($row['dias_multa']) && $row['dias_multa'] !== null ? (int) $row['dias_multa'] : ''; ?>
-                                <div class="col"><input type="date" class="subtask-data-fato width-100 height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" placeholder="Data do fato" title="Data do fato" value="<?php echo $rowDataFato !== '' ? htmlspecialchars($rowDataFato, ENT_QUOTES) : ''; ?>"></div>
-                                <div class="col"><input type="number" class="subtask-dias-multa width-100 height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" min="0" placeholder="Dias-multa" title="Quantidade de dias-multa" value="<?php echo $rowDiasMulta !== '' ? (int) $rowDiasMulta : ''; ?>"></div>
+                                <div class="col"><input type="date" class="subtask-data-fato width-300 height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" placeholder="Data do fato" title="Data do fato" value="<?php echo $rowDataFato !== '' ? htmlspecialchars($rowDataFato, ENT_QUOTES) : ''; ?>"></div>
+                                <div class="col"><input type="number" class="subtask-dias-multa width-300 height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" min="0" placeholder="Dias-multa" title="Quantidade de dias-multa" value="<?php echo $rowDiasMulta !== '' ? (int) $rowDiasMulta : ''; ?>"></div>
                             <?php endif; ?>
                             <?php if ($isOrdem2): ?>
                                 <?php $valorMultaRow = isset($row['valor_multa']) && $row['valor_multa'] !== null && $row['valor_multa'] !== '' ? 'R$ ' . number_format((float) $row['valor_multa'], 2, ',', '.') : ''; ?>
@@ -390,7 +398,7 @@ if ($totalPages > 0) {
                                 <div class="col"><select class="subtask-tipo-juntada width-300 height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Tipo de juntada">
                                     <option value="">Selecione</option>
                                     <?php foreach ($tipoJuntadaOptions as $val => $label): ?>
-                                        <option value="<?php echo htmlspecialchars($val, ENT_QUOTES); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES); ?></option>
+                                        <option value="<?php echo htmlspecialchars($val, ENT_QUOTES); ?>"<?php echo $tipoJuntadaAtual === $val ? ' selected' : ''; ?>><?php echo htmlspecialchars($label, ENT_QUOTES); ?></option>
                                     <?php endforeach; ?>
                                 </select></div>
                             <?php endif; ?>
@@ -592,7 +600,21 @@ if ($totalPages > 0) {
                     if (tipoEnvio && tipoEnvio.value && tipoEnvio.value.trim()) obj.tipo_envio = tipoEnvio.value.trim();
                     if (destinatario && destinatario.value && destinatario.value.trim()) obj.destinatario = destinatario.value.trim();
                 }
-                if (['juntada_automatica', 'confirmar_juntada', 'juntada_autos'].includes(subtarefaTipo) && !obj.tipo_juntada) {
+                if (subtarefaTipo === 'detalhamento_informacoes') {
+                    var dataFatoValor = (obj.data_fato || '').trim();
+                    if (dataFatoValor !== '') {
+                        var hoje = new Date();
+                        hoje.setHours(0, 0, 0, 0);
+                        var limiteMinimo = new Date(hoje);
+                        limiteMinimo.setDate(limiteMinimo.getDate() - 10);
+                        var dataFatoDate = new Date(dataFatoValor + 'T00:00:00');
+                        if (isNaN(dataFatoDate.getTime()) || dataFatoDate > hoje || dataFatoDate < limiteMinimo) {
+                            notify('error', 'Atenção', 'A data do fato deve estar dentro dos últimos 10 dias e não pode ser futura.');
+                            return;
+                        }
+                    }
+                }
+                if (['juntada_automatica', 'confirmar_juntada', 'juntada_autos', 'juntada_guia_autos', 'juntada_nos_autos'].includes(subtarefaTipo) && !obj.tipo_juntada) {
                     notify('error', 'Atenção', 'Selecione o tipo de juntada (automática ou manual).');
                     return;
                 }

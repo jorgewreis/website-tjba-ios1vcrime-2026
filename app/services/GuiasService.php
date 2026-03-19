@@ -460,6 +460,17 @@ final class GuiasService
         if ($ordem === 1) {
             $dataFato = isset($dadosArray['data_fato']) ? trim((string) $dadosArray['data_fato']) : '';
             $diasMulta = isset($dadosArray['dias_multa']) ? (int) $dadosArray['dias_multa'] : 0;
+            if ($dataFato !== '') {
+                $dtFato = \DateTime::createFromFormat('Y-m-d', $dataFato);
+                if ($dtFato === false) {
+                    throw new InvalidArgumentException('A data do fato informada é inválida.');
+                }
+                $hoje = new \DateTime('today');
+                $limiteInferior = (clone $hoje)->modify('-10 days');
+                if ($dtFato > $hoje || $dtFato < $limiteInferior) {
+                    throw new InvalidArgumentException('A data do fato deve estar dentro dos últimos 10 dias e não pode ser futura.');
+                }
+            }
             $temDados = $dataFato !== '' && $diasMulta > 0;
             $guia = $this->repository->findById($guiaId);
             if ($temDados && $guia !== null) {
@@ -491,6 +502,16 @@ final class GuiasService
         }
 
         if ($ordem < 8) {
+            if ($ordem === 5) {
+                $tipoJuntadaRaw = trim((string) ($dadosArray['tipo_juntada'] ?? ''));
+                if ($tipoJuntadaRaw === '') {
+                    throw new InvalidArgumentException('Selecione o tipo de juntada (automática ou manual).');
+                }
+                $tipoJuntadaNormalizado = str_replace(['á', 'à', 'â', 'ã', 'ä'], 'a', mb_strtolower($tipoJuntadaRaw, 'UTF-8'));
+                if (!in_array($tipoJuntadaNormalizado, ['automatica', 'manual'], true)) {
+                    throw new InvalidArgumentException('Tipo de juntada inválido. Selecione automática ou manual.');
+                }
+            }
             $proximaOrdem = $ordem + 1;
             $proxima = $this->subtarefasRepository->findByGuiaIdEOrdem($guiaId, $proximaOrdem);
             if ($proxima !== null) {

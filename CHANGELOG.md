@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0007
+
+**Data:** 2026-03-19 19:42:43 | **Commit:** `d681458` | **Tipo:** `patch`
+
+- Fix: correcao de subtarefas sem funcionar
+
 ## V. 1.04.0006
 
 **Data:** 2026-03-19 17:48:54 | **Commit:** `dc88dc2` | **Tipo:** `patch`
@@ -3330,6 +3336,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

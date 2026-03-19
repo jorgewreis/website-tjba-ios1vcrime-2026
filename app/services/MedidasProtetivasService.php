@@ -153,12 +153,15 @@ final class MedidasProtetivasService
                     $reuData['data_nascimento']
                 );
             }
-            $this->processosPartesRepository->addParte(
-                $processoId,
-                $parteReuId,
-                ProcessosPartesRepository::TIPO_REU,
-                ProcessosPartesRepository::POLO_PASSIVO
-            );
+            $vinculoReuExistente = $this->processosPartesRepository->findByProcessoAndParte($processoId, $parteReuId);
+            if ($vinculoReuExistente === null) {
+                $this->processosPartesRepository->addParte(
+                    $processoId,
+                    $parteReuId,
+                    ProcessosPartesRepository::TIPO_REU,
+                    ProcessosPartesRepository::POLO_PASSIVO
+                );
+            }
 
             foreach ($vitimas as $index => $vitimaPayload) {
                 if (!is_array($vitimaPayload)) {
@@ -180,13 +183,16 @@ final class MedidasProtetivasService
                 }
 
                 $flags = $this->extractPrioridadeFlags($vitimaPayload);
-                $this->processosPartesRepository->addParte(
-                    $processoId,
-                    $parteVitimaId,
-                    ProcessosPartesRepository::TIPO_VITIMA,
-                    ProcessosPartesRepository::POLO_ATIVO,
-                    $flags
-                );
+                $vinculoVitimaExistente = $this->processosPartesRepository->findByProcessoAndParte($processoId, $parteVitimaId);
+                if ($vinculoVitimaExistente === null) {
+                    $this->processosPartesRepository->addParte(
+                        $processoId,
+                        $parteVitimaId,
+                        ProcessosPartesRepository::TIPO_VITIMA,
+                        ProcessosPartesRepository::POLO_ATIVO,
+                        $flags
+                    );
+                }
 
                 foreach ($this->mapPrioridadesMarcadas($flags) as $prioridade) {
                     $this->processoPrioridadesRepository->insert($processoId, $prioridade);

@@ -166,10 +166,12 @@ final class CartasExpedidasSubtarefasRepository
 
         if ($faseInformacoesDevolucao && ($ordem5Row !== null || $ordem6Row !== null)) {
             $out = [];
-            if ($ordem5Row !== null) {
+            $status5 = trim((string) (($ordem5Row['status'] ?? '')));
+            $status6 = trim((string) (($ordem6Row['status'] ?? '')));
+            if ($ordem5Row !== null && ($status5 === self::STATUS_EM_ANDAMENTO || $status5 === self::STATUS_PENDENTE)) {
                 $out[] = $ordem5Row;
             }
-            if ($ordem6Row !== null) {
+            if ($ordem6Row !== null && ($status6 === self::STATUS_EM_ANDAMENTO || $status6 === self::STATUS_PENDENTE)) {
                 $out[] = $ordem6Row;
             }
             return $out;

@@ -284,7 +284,7 @@ try {
                     if (typeof showToast === 'function') {
                         showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Edital cadastrado.' });
                     }
-                    window.location.href = '/frame.php?page=editaisedit&id=' + encodeURIComponent(id);
+                    window.location.href = '/frame.php?page=editais';
                 })
                 .catch(function (err) {
                     btn.disabled = false;

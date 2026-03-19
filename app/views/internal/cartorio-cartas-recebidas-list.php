@@ -614,7 +614,7 @@ if ($totalPages > 0) {
                             obj.tipo_envio = tipoEnvio.value.trim();
                         }
                     }
-                    if (['juntada_certidao_oficial', 'confirmar_juntada', 'juntada_certidao'].includes(subtarefaTipo) && !(obj.resultado_cumprimento)) {
+                    if (['juntada_certidao_oficial', 'confirmar_juntada', 'juntada_certidao', 'certidao_oficial_justica'].includes(subtarefaTipo) && !(obj.resultado_cumprimento)) {
                         notify('error', 'Atenção', 'Selecione o resultado do cumprimento.');
                         return;
                     }

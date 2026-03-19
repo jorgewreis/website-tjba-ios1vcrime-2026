@@ -52,6 +52,7 @@ final class CartasExpedidasService
             $idCarta = (string) ($row['IdCarta'] ?? '');
             if ($idCarta !== '') {
                 $this->subtarefasRepository->ensureInformacoesDevolucaoPair($idCarta);
+                $this->sincronizarSubtarefaInformacoesComCarta($idCarta, $row);
                 $rows[$i]['Subtarefas'] = $this->subtarefasRepository->findPendenteOuEmAndamentoByCartaId($idCarta);
                 $rows[$i]['SubtarefasAll'] = $this->subtarefasRepository->findByCartaId($idCarta);
                 $alocadosRaw = $this->alocadosRepository->findByCartaId($idCarta);
@@ -75,6 +76,32 @@ final class CartasExpedidasService
             'rows' => $rows,
             'total' => $this->repository->count($filters),
         ];
+    }
+
+    private function sincronizarSubtarefaInformacoesComCarta(string $cartaId, array $row): void
+    {
+        $numeroDestino = trim((string) ($row['NumeroProcessoDestino'] ?? $row['numero_processo_destino'] ?? ''));
+        $varaDestino = trim((string) ($row['VaraDestino'] ?? $row['vara_destino_nome'] ?? $row['vara_destino'] ?? ''));
+        $ordem5 = $this->subtarefasRepository->findByCartaIdEOrdem($cartaId, 5);
+
+        if ($ordem5 === null) {
+            return;
+        }
+
+        $statusOrdem5 = trim((string) ($ordem5['status'] ?? ''));
+        $temNumero = $numeroDestino !== '';
+        $temVara = $varaDestino !== '';
+
+        if ($temNumero && $temVara) {
+            if ($statusOrdem5 !== 'concluida') {
+                $this->subtarefasRepository->marcarConcluida((string) $ordem5['id']);
+            }
+            return;
+        }
+
+        if ($statusOrdem5 === 'concluida') {
+            $this->subtarefasRepository->atualizarStatus((string) $ordem5['id'], 'em_andamento');
+        }
     }
 
     public function getStatusCounts(array $filters): array

@@ -213,7 +213,22 @@ final class CartasRecebidasService
             }
         }
         if ($usuarioIdMovimentacao !== '') {
-            $this->alocadosRepository->addAlocado($cartaId, $usuarioIdMovimentacao);
+            try {
+                $this->alocadosRepository->addAlocado($cartaId, $usuarioIdMovimentacao);
+            } catch (RuntimeException $e) {
+                // limite ou duplicata
+            }
+        }
+
+        if ($ordem === 3) {
+            $dadosArray = [];
+            if ($dadosJson !== null && $dadosJson !== '') {
+                $dadosArray = json_decode($dadosJson, true);
+            }
+            $resultadoCumprimento = trim((string) (($dadosArray['resultado_cumprimento'] ?? $dadosArray['resultado'] ?? '')));
+            if ($resultadoCumprimento === '') {
+                throw new InvalidArgumentException('Selecione o resultado do cumprimento para concluir a juntada da certidão do oficial de justiça.');
+            }
         }
 
         $this->subtarefasRepository->marcarConcluida($subtarefaId);
