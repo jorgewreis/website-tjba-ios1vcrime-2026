@@ -25,4 +25,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correcao de bugs** `[5064596]`
 - **Feat: criacao de novo dashboard para usuario externo** `[cb53908]`
 - **Fix: correcao de perfis** `[b79390d]`
+- **Feat: implementacao de funcao para alterar avatar de usuario** `[b45587b]`
 
