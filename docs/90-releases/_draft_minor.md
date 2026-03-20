@@ -29,4 +29,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: alteracao do modelo de imagens do avatar** `[135be03]`
 - **Fix: pequenos ajustes do avatar** `[a5a0d41]`
 - **Fix: correcao de regra de iniciais de usuario** `[18edf6e]`
+- **Fix: pequeno ajuste de css** `[97d8896]`
 
