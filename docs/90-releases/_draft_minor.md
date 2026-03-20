@@ -22,4 +22,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correcao de input de dados pessoais** `[85b57b5]`
 - **Feat: nova implementacao de paginas de erro melhoradas** `[88bd330]`
 - **Fix: correcao input** `[2dff2b7]`
+- **Fix: correcao de bugs** `[5064596]`
 
