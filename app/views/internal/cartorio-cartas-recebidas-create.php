@@ -201,11 +201,11 @@ try {
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
 
         <?php if ($cnjError): ?>
-            <div class="display-flex row row-full padding-x-sm padding-y-sm">
-                <div class="col">
-                    <label class="status status-cancelled"><?php echo htmlspecialchars($cnjError, ENT_QUOTES); ?></label>
-                </div>
-            </div>
+            <script>
+                if (typeof showToast === 'function') {
+                    showToast({ type: 'error', variant: 'full', title: 'Erro', message: <?php echo json_encode($cnjError, JSON_UNESCAPED_UNICODE); ?> });
+                }
+            </script>
         <?php endif; ?>
 
         <div class="display-flex row row-full info padding-x-md padding-y-md">

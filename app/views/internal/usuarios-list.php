@@ -232,7 +232,7 @@ $statusClasses = [
             <div class="display-flex col col-full register border-bottom">
                 <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                     <div class="display-flex row row-fit justify-start gap-y-sm wrap">
-                            <div class="col width-500 parte-nome text-ellipsis">
+                            <div class="col width-600 parte-nome text-ellipsis">
                                 <span class="minor-info">Nome</span>
                                 <span class="major-info"><?php echo htmlspecialchars($row['nome_completo'] ?? '—'); ?></span>
                             </div>

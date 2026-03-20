@@ -278,41 +278,37 @@ $csrfToken = Security::generateCSRFToken();
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col">
                     <label for="create-nome">Nome <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="text" id="create-nome" name="nome" class="width-200 height-md white" placeholder="Digite o nome completo" required maxlength="100" value="<?php echo htmlspecialchars($formValues['nome'], ENT_QUOTES, 'UTF-8'); ?>">
+                    <input type="text" id="create-nome" name="nome" class="width-600 height-md" placeholder="Digite o nome completo" required maxlength="100" value="<?php echo htmlspecialchars($formValues['nome'], ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
                 <div class="col">
                     <label for="create-sobrenome">Sobrenome <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="text" id="create-sobrenome" name="sobrenome" class="width-400 height-md white" placeholder="Sobrenome" required maxlength="100" value="<?php echo htmlspecialchars($formValues['sobrenome'], ENT_QUOTES, 'UTF-8'); ?>">
+                    <input type="text" id="create-sobrenome" name="sobrenome" class="width-600 height-md" placeholder="Sobrenome" required maxlength="100" value="<?php echo htmlspecialchars($formValues['sobrenome'], ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
             </div>
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col">
                     <label for="create-cpf">CPF <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="text" id="create-cpf" name="cpf" class="width-100 height-md white" placeholder="000.000.000-00" required maxlength="14" value="<?php echo htmlspecialchars($formValues['cpf'], ENT_QUOTES, 'UTF-8'); ?>">
-                    <span class="error-message" id="create-cpf-error" aria-live="polite"></span>
+                    <input type="text" id="create-cpf" name="cpf" class="width-300 height-md" placeholder="000.000.000-00" required maxlength="14" value="<?php echo htmlspecialchars($formValues['cpf'], ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
                 <div class="col">
                     <label for="create-email">E-mail <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="email" id="create-email" name="email" class="width-400 height-md white" placeholder="email@exemplo.com" required maxlength="255" value="<?php echo htmlspecialchars($formValues['email'], ENT_QUOTES, 'UTF-8'); ?>">                    
-                    <span class="error-message" id="create-email-error" aria-live="polite"></span>
+                    <input type="email" id="create-email" name="email" class="width-600 height-md" placeholder="email@exemplo.com" required maxlength="255" value="<?php echo htmlspecialchars($formValues['email'], ENT_QUOTES, 'UTF-8'); ?>">                    
                 </div>
             </div>
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col full-line">
                     <label for="create-data-nascimento">Data de nascimento</label>
-                    <input type="date" id="create-data-nascimento" name="data_nascimento" class="width-200 height-md white" max="<?php echo date('Y-m-d'); ?>" value="<?php echo htmlspecialchars($formValues['data_nascimento'], ENT_QUOTES, 'UTF-8'); ?>">
+                    <input type="date" id="create-data-nascimento" name="data_nascimento" class="width-300 height-md white" max="<?php echo date('Y-m-d'); ?>" value="<?php echo htmlspecialchars($formValues['data_nascimento'], ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
             </div>
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col">
                     <label for="create-senha">Senha <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="password" id="create-senha" name="senha" class="width-200 height-md white" placeholder="Mín. 10 caracteres, 1 maiúscula, 1 minúscula, 1 número, 1 símbolo" required minlength="10" maxlength="255">
-                    <span class="error-message" id="create-senha-error" aria-live="polite"></span>
+                    <input type="password" id="create-senha" name="senha" class="width-300 height-md" placeholder="Mín. 10 caracteres, 1 maiúscula, 1 minúscula, 1 número, 1 símbolo" required minlength="10" maxlength="255">
                 </div>
                 <div class="col">
                     <label for="create-senha-confirm">Confirmar senha <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="password" id="create-senha-confirm" name="senha_confirm" class="width-200 height-md white" placeholder="Repita a senha" required minlength="10" maxlength="255">
-                    <span class="error-message" id="create-senha-confirm-error" aria-live="polite"></span>
+                    <input type="password" id="create-senha-confirm" name="senha_confirm" class="width-300 height-md white" placeholder="Repita a senha" required minlength="10" maxlength="255">
                 </div>
             </div>
 
@@ -325,11 +321,11 @@ $csrfToken = Security::generateCSRFToken();
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col">
                     <label for="create-telefone">Telefone</label>
-                    <input type="text" id="create-telefone" name="telefone" class="width-100 height-md white" placeholder="(00) 00000-0000" maxlength="50" value="<?php echo htmlspecialchars($formValues['telefone'], ENT_QUOTES, 'UTF-8'); ?>">
+                    <input type="text" id="create-telefone" name="telefone" class="width-400 height-md" placeholder="(00) 00000-0000" maxlength="50" value="<?php echo htmlspecialchars($formValues['telefone'], ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
                 <div class="col">
                     <label for="create-tipo">Tipo de usuário</label>
-                    <select id="create-tipo" name="tipo" class="width-300 height-md white">
+                    <select id="create-tipo" name="tipo" class="width-400 height-md white">
                         <option value="interno"<?php echo ($formValues['tipo'] ?? 'interno') === 'interno' ? ' selected' : ''; ?>>Interno</option>
                         <option value="externo"<?php echo ($formValues['tipo'] ?? 'interno') === 'externo' ? ' selected' : ''; ?>>Externo (Estudante)</option>
                     </select>
@@ -339,8 +335,8 @@ $csrfToken = Security::generateCSRFToken();
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col">
                     <label for="create-cargo">Cargo</label>
-                    <select id="create-cargo" name="cargo" class="width-400 height-md white">
-                        <option value="">Selecione (opcional)</option>
+                    <select id="create-cargo" name="cargo" class="width-500 height-md white">
+                        <option value="">Selecione</option>
                         <option value="Estagiário"<?php echo $formValues['cargo'] === 'Estagiário' ? ' selected' : ''; ?>>Estagiário</option>
                         <option value="Técnico Judiciário"<?php echo $formValues['cargo'] === 'Técnico Judiciário' ? ' selected' : ''; ?>>Técnico Judiciário</option>
                         <option value="Analista Judiciário"<?php echo $formValues['cargo'] === 'Analista Judiciário' ? ' selected' : ''; ?>>Analista Judiciário</option>
@@ -353,8 +349,8 @@ $csrfToken = Security::generateCSRFToken();
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col">
                     <label for="create-setor">Setor</label>
-                    <select id="create-setor" name="setor" class="width-400 height-md white">
-                        <option value="">Selecione (opcional)</option>
+                    <select id="create-setor" name="setor" class="width-500 height-md white">
+                        <option value="">Selecione</option>
                         <option value="Cartório"<?php echo $formValues['setor'] === 'Cartório' ? ' selected' : ''; ?>>Cartório</option>
                         <option value="Gabinete"<?php echo $formValues['setor'] === 'Gabinete' ? ' selected' : ''; ?>>Gabinete</option>
                         <option value="Sala de Audiências"<?php echo $formValues['setor'] === 'Sala de Audiências' ? ' selected' : ''; ?>>Sala de Audiências</option>
@@ -363,7 +359,7 @@ $csrfToken = Security::generateCSRFToken();
                 <div class="col">
                     <label for="create-perfil">Perfil</label>
                     <select id="create-perfil" name="perfil" class="width-400 height-md white">
-                        <option value="">Selecione (opcional)</option>
+                        <option value="">Selecione</option>
                         <option value="ESTAGIARIO"<?php echo $formValues['perfil'] === 'ESTAGIARIO' ? ' selected' : ''; ?>>Estagiário</option>
                         <option value="SERVIDOR"<?php echo $formValues['perfil'] === 'SERVIDOR' ? ' selected' : ''; ?>>Servidor</option>
                         <option value="DIRETORA"<?php echo $formValues['perfil'] === 'DIRETORA' ? ' selected' : ''; ?>>Diretora</option>
@@ -374,11 +370,6 @@ $csrfToken = Security::generateCSRFToken();
             </div>
             </div>
 
-            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
-                <div class="col">
-                    <p class="status status-primary-light padding-lr-lg" style="display: flex; flex-direction: row; align-items: center; justify-content: left; max-width: 80vw; flex-wrap: wrap;">O cadastro será criado com status <strong style="margin-left: 3px;"> Pendente</strong>.</p>
-                </div>
-            </div>
 
             <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
                 <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
@@ -517,9 +508,19 @@ $csrfToken = Security::generateCSRFToken();
         var senhaRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{10,}$/;
         function validarSenha(senha) { return senha && senhaRegex.test(senha); }
 
+        var lastFieldToastByKey = {};
         function showFieldError(idSuffix, message) {
-            var el = document.getElementById('create-' + idSuffix + '-error');
-            if (el) { el.textContent = message || ''; el.style.display = message ? 'block' : 'none'; }
+            var key = String(idSuffix || '');
+            var text = (message || '').trim();
+            if (!text) {
+                lastFieldToastByKey[key] = '';
+                return;
+            }
+            if (lastFieldToastByKey[key] === text) return;
+            lastFieldToastByKey[key] = text;
+            if (typeof showToast === 'function') {
+                showToast({ type: 'error', variant: 'full', title: 'Validação', message: text });
+            }
         }
 
         function initCPFMask() {
@@ -605,11 +606,17 @@ $csrfToken = Security::generateCSRFToken();
             form.addEventListener('submit', function (e) {
                 if (!isFormValidForSubmit()) {
                     e.preventDefault();
+                    if (typeof showToast === 'function') {
+                        showToast({ type: 'error', variant: 'full', title: 'Validação', message: 'Revise os campos obrigatórios e corrija os dados informados.' });
+                    }
                     return;
                 }
             });
         }
 
+        if (typeof showToast === 'function') {
+            showToast({ type: 'info', variant: 'full', title: 'Informação', message: 'O cadastro será criado com status Pendente.' });
+        }
         syncTipoFields();
         syncCargoToPerfilAndSetor();
         initTextFormatter();

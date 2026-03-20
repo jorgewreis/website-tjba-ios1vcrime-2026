@@ -157,11 +157,11 @@ $timelineData = $tarefa !== null
 
     <div class="container-full card-page">
         <?php if ($errorMessage !== ''): ?>
-            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
-                <div class="col">
-                    <label class="status status-cancelled"><?php echo htmlspecialchars($errorMessage, ENT_QUOTES); ?></label>
-                </div>
-            </div>
+            <script>
+                if (typeof showToast === 'function') {
+                    showToast({ type: 'error', variant: 'full', title: 'Erro', message: <?php echo json_encode($errorMessage, JSON_UNESCAPED_UNICODE); ?> });
+                }
+            </script>
         <?php else: ?>
             <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Informações</h2></div>
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md" style="justify-content: flex-start;">

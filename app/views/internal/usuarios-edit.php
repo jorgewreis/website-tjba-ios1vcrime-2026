@@ -286,9 +286,16 @@ function deriveUsuarioStatus(array $usuario): string
 
     <div class="container-full card-page">
         <?php if ($mensagemErro !== ''): ?>
-        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom">
-            <p class="status status-cancelled padding-lr-lg"><?php echo htmlspecialchars($mensagemErro, ENT_QUOTES, 'UTF-8'); ?></p>
-        </div>
+        <script>
+            if (typeof showToast === 'function') {
+                showToast({
+                    type: 'error',
+                    variant: 'full',
+                    title: 'Erro',
+                    message: <?php echo json_encode($mensagemErro, JSON_UNESCAPED_UNICODE); ?>
+                });
+            }
+        </script>
         <?php endif; ?>
 
         <form id="form-edit-usuario" method="post" action="" style="width: 100%;">
@@ -301,17 +308,17 @@ function deriveUsuarioStatus(array $usuario): string
                 <div class="display-flex row row-fit justify-start gap-y-md">
                     <div class="col">
                         <label for="edit-cpf">CPF</label>
-                        <input type="text" id="edit-cpf" class="width-100 height-md readonly" value="<?php echo $cpfVal; ?>" readonly>
+                        <input type="text" id="edit-cpf" class="width-400 height-md readonly" value="<?php echo $cpfVal; ?>" readonly>
                     </div>
                     <div class="col">
                         <label for="edit-tipo">Tipo</label>
-                        <input type="text" id="edit-tipo" class="width-100 height-md readonly" value="Interno" readonly>
+                        <input type="text" id="edit-tipo" class="width-300 height-md readonly" value="Interno" readonly>
                     </div>
                 </div>
                 <div class="display-flex row row-fit justify-end">
                     <div class="col">
                         <label for="edit-status">Status</label>
-                        <select id="edit-status" name="status" class="width-200 height-md white">
+                        <select id="edit-status" name="status" class="width-300 height-md">
                             <option value="pendente"<?php echo $statusAtual === 'pendente' ? ' selected' : ''; ?>>Pendente</option>
                             <option value="ativo"<?php echo $statusAtual === 'ativo' ? ' selected' : ''; ?>>Ativo</option>
                             <option value="bloqueado"<?php echo $statusAtual === 'bloqueado' ? ' selected' : ''; ?>>Bloqueado</option>
@@ -324,28 +331,27 @@ function deriveUsuarioStatus(array $usuario): string
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col">
                     <label for="edit-nome">Nome <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="text" id="edit-nome" name="nome" class="width-200 height-md white readonly" placeholder="Digite o nome completo" required maxlength="100" value="<?php echo $nomeVal; ?>" readonly>
+                    <input type="text" id="edit-nome" name="nome" class="width-600 height-md white readonly" placeholder="Digite o nome completo" required maxlength="100" value="<?php echo $nomeVal; ?>" readonly>
                 </div>
                 <div class="col">
                     <label for="edit-sobrenome">Sobrenome <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="text" id="edit-sobrenome" name="sobrenome" class="width-400 height-md white" placeholder="Sobrenome" required maxlength="100" value="<?php echo $sobrenomeVal; ?>">
+                    <input type="text" id="edit-sobrenome" name="sobrenome" class="width-600 height-md white" placeholder="Sobrenome" required maxlength="100" value="<?php echo $sobrenomeVal; ?>">
                 </div>
             </div>
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col">
                     <label for="edit-email">E-mail <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="email" id="edit-email" name="email" class="width-400 height-md white" placeholder="email@exemplo.com" required maxlength="255" value="<?php echo $emailVal; ?>">
-                    <span class="error-message" id="edit-email-error" aria-live="polite"></span>
+                    <input type="email" id="edit-email" name="email" class="width-600 height-md white" placeholder="email@exemplo.com" required maxlength="255" value="<?php echo $emailVal; ?>">
                 </div>
                 <div class="col">
                     <label for="edit-telefone">Telefone</label>
-                    <input type="text" id="edit-telefone" name="telefone" class="width-100 height-md white" placeholder="(00) 00000-0000" maxlength="50" value="<?php echo htmlspecialchars($telefoneVal, ENT_QUOTES, 'UTF-8'); ?>">
+                    <input type="text" id="edit-telefone" name="telefone" class="width-300 height-md white" placeholder="(00) 00000-0000" maxlength="50" value="<?php echo htmlspecialchars($telefoneVal, ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
             </div>
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col full-line">
                     <label for="edit-data-nascimento">Data de nascimento</label>
-                    <input type="date" id="edit-data-nascimento" name="data_nascimento" class="width-200 height-md white" max="<?php echo date('Y-m-d'); ?>" value="<?php echo htmlspecialchars($dataNascimentoVal, ENT_QUOTES, 'UTF-8'); ?>">
+                    <input type="date" id="edit-data-nascimento" name="data_nascimento" class="width-300 height-md white" max="<?php echo date('Y-m-d'); ?>" value="<?php echo htmlspecialchars($dataNascimentoVal, ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
             </div>
 
@@ -354,7 +360,7 @@ function deriveUsuarioStatus(array $usuario): string
                 <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                     <div class="col">
                         <label for="edit-cargo">Cargo</label>
-                        <select id="edit-cargo" name="cargo" class="width-400 height-md white">
+                        <select id="edit-cargo" name="cargo" class="width-500 height-md">
                             <option value="">Selecione (opcional)</option>
                             <option value="Estagiário"<?php echo $cargoVal === 'Estagiário' ? ' selected' : ''; ?>>Estagiário</option>
                             <option value="Técnico Judiciário"<?php echo $cargoVal === 'Técnico Judiciário' ? ' selected' : ''; ?>>Técnico Judiciário</option>
@@ -366,7 +372,7 @@ function deriveUsuarioStatus(array $usuario): string
                     </div>
                     <div class="col">
                         <label for="edit-setor">Setor</label>
-                        <select id="edit-setor" name="setor" class="width-400 height-md white">
+                        <select id="edit-setor" name="setor" class="width-500 height-md">
                             <option value="">Selecione (opcional)</option>
                             <option value="Cartório"<?php echo $setorAtual === 'Cartório' ? ' selected' : ''; ?>>Cartório</option>
                             <option value="Gabinete"<?php echo $setorAtual === 'Gabinete' ? ' selected' : ''; ?>>Gabinete</option>
@@ -487,9 +493,19 @@ function deriveUsuarioStatus(array $usuario): string
             return email && typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
         }
 
+        var lastFieldToastByKey = {};
         function showFieldError(idSuffix, message) {
-            var el = document.getElementById('edit-' + idSuffix + '-error');
-            if (el) { el.textContent = message || ''; el.style.display = message ? 'block' : 'none'; }
+            var key = String(idSuffix || '');
+            var text = (message || '').trim();
+            if (!text) {
+                lastFieldToastByKey[key] = '';
+                return;
+            }
+            if (lastFieldToastByKey[key] === text) return;
+            lastFieldToastByKey[key] = text;
+            if (typeof showToast === 'function') {
+                showToast({ type: 'error', variant: 'full', title: 'Validação', message: text });
+            }
         }
 
         function initEmailValidation() {
@@ -542,6 +558,9 @@ function deriveUsuarioStatus(array $usuario): string
             form.addEventListener('submit', function (e) {
                 if (!isFormValidForSubmit()) {
                     e.preventDefault();
+                    if (typeof showToast === 'function') {
+                        showToast({ type: 'error', variant: 'full', title: 'Validação', message: 'Revise os campos obrigatórios e corrija os dados informados.' });
+                    }
                     return;
                 }
             });

@@ -1,15 +1,22 @@
 ---
-description: Usar sempre o sistema de toast para mensagens ao usuário (erro, sucesso, info). Não usar alert() nem feedback inline.
+description: Usar sempre toast para feedback ao usuário; alert apenas para confirmação de exclusão.
 globs: app/views/**/*.php, public/**/*.php, public/assets/js/**/*.js
-alwaysApply: false
+alwaysApply: true
 ---
 
 # Sistema de Toast
 
-## Regra
+## Regra obrigatória
 
-- **Não use** `alert()` nem blocos de feedback inline (ex.: `feedback.innerHTML = '...'`, `<div class="alert-heading">`) para mensagens ao usuário.
-- **Use sempre** o sistema de toast.
+- **Use sempre** toast para feedback ao usuário (`erro`, `sucesso`, `info`).
+- **Não use** feedback inline por `span`, `label`, `innerHTML` ou blocos HTML para mensagens de retorno de operação.
+- **Não use** `alert()` para feedback geral.
+- **Exceção permitida:** `alert()` somente para confirmação de exclusão, quando necessário pelo fluxo.
+
+## Diretriz de confirmação
+
+- Para exclusão, priorize confirmação em padrão do projeto (ex.: duplo clique + toast de confirmação).
+- Se precisar usar `alert()`, restrinja ao contexto de confirmação de exclusão, sem reutilizar para outros feedbacks.
 
 ## Uso
 
