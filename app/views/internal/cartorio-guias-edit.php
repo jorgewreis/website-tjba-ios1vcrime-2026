@@ -214,7 +214,7 @@ $tiposOptions = [
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md" style="justify-content: flex-start;">
                 <div class="col filter">
                     <label for="edit-processo">Processo</label>
-                    <input type="text" id="edit-processo" class="width-200 height-md readonly" value="<?php echo htmlspecialchars($guia['numero_processo'] ?? '', ENT_QUOTES); ?>" readonly>
+                    <input type="text" id="edit-processo" class="width-400 height-md readonly" value="<?php echo htmlspecialchars($guia['numero_processo'] ?? '', ENT_QUOTES); ?>" readonly>
                 </div>
                 <div class="col filter">
                     <label for="filter-classe">Classe</label>
@@ -241,7 +241,7 @@ $tiposOptions = [
                 </div>
                 <div class="col filter">
                     <label for="edit-data-fato">Data do fato</label>
-                    <input type="date" id="edit-data-fato" class="width-200 height-md" value="<?php echo htmlspecialchars($guia['data_fato'] ?? '', ENT_QUOTES); ?>" max="">
+                    <input type="date" id="edit-data-fato" class="width-300 height-md" value="<?php echo htmlspecialchars($guia['data_fato'] ?? '', ENT_QUOTES); ?>" max="">
                 </div>
             </div>
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
@@ -256,13 +256,13 @@ $tiposOptions = [
                 </div>                
                 <div class="col filter">
                     <label for="edit-dias-multa">Dias-multa</label>
-                    <input type="number" id="edit-dias-multa" class="width-100 height-md" min="0" value="<?php echo isset($guia['dias_multa']) && $guia['dias_multa'] !== null ? (int) $guia['dias_multa'] : ''; ?>">
+                    <input type="number" id="edit-dias-multa" class="width-300 height-md" min="0" value="<?php echo isset($guia['dias_multa']) && $guia['dias_multa'] !== null ? (int) $guia['dias_multa'] : ''; ?>">
                 </div>
             </div>
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col filter">
                     <label for="edit-observacoes">Observações</label>
-                    <input type="text" id="edit-observacoes" class="width-600 height-md" value="<?php echo htmlspecialchars((string) ($guia['observacoes'] ?? ''), ENT_QUOTES); ?>" placeholder="Opcional">
+                    <input type="text" id="edit-observacoes" class="width-800 height-md" value="<?php echo htmlspecialchars((string) ($guia['observacoes'] ?? ''), ENT_QUOTES); ?>" placeholder="Opcional">
                 </div>
             </div>
 
@@ -274,7 +274,7 @@ $tiposOptions = [
                 <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
                 <button type="button" class="btn btn-primary" id="salvar-btn" disabled>Salvar alterações</button>
                 <?php if ($podeCancelar && !$tarefaFinalizadaOuCancelada): ?>
-                    <button type="button" class="btn btn-primary-outline" id="cancelar-tarefa-btn">Cancelar tarefa</button>
+                    <button type="button" class="btn btn-danger-outline" id="cancelar-tarefa-btn">Cancelar tarefa</button>
                 <?php endif; ?>
                 <?php if ($podeExcluir): ?>
                     <button type="button" class="btn btn-danger" id="excluir-btn">Excluir guia</button>

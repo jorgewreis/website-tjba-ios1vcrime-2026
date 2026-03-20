@@ -60,9 +60,11 @@ $csrfToken = Security::generateCSRFToken();
     <link rel="stylesheet" href="/assets/css/shared/color.css">
     <link rel="stylesheet" href="/assets/css/shared/form.css">
     <link rel="stylesheet" href="/assets/css/shared/table.css">
+    <link rel="stylesheet" href="/assets/css/shared/layout.css">
     <link rel="stylesheet" href="/assets/css/shared/login.css">
+    <link rel="stylesheet" href="/assets/css/shared/page.css">
     <link rel="stylesheet" href="/assets/css/shared/toast.css">
-    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-straight/css/uicons-regular-straight.css">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
     <link rel="icon" type="image/x-icon" href="/assets/img/favicon.ico">
     <script>
         (function() {
@@ -103,71 +105,76 @@ $csrfToken = Security::generateCSRFToken();
                     <form class="form-login" id="formAlterarSenha" method="post" action="">
                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
 
-                        <div class="row">
+                        <div class="display-flex row row-full justify-start align-center padding-x-sm">
                             <div class="col">
                                 <label for="senha_atual">Senha atual</label>
-                                <input class="width-200 white" type="password" id="senha_atual" name="senha_atual" autocomplete="current-password" required>
+                                <input class="width-400" type="password" id="senha_atual" name="senha_atual" autocomplete="current-password" required>
                             </div>
                         </div>
 
-                        <div class="row">
+                        <div class="display-flex row row-full justify-start align-center padding-x-sm">
                             <div class="col">
                                 <label for="nova_senha">Nova senha</label>
-                                <input class="width-200 white" type="password" id="nova_senha" name="nova_senha" autocomplete="new-password" minlength="8" required>
+                                <input class="width-400" type="password" id="nova_senha" name="nova_senha" autocomplete="new-password" minlength="8" required>
                             </div>
                         </div>
 
-                        <div class="row">
+                        <div class="display-flex row row-full justify-start align-center padding-x-sm">
                             <div class="col">
                                 <label for="confirmar_senha">Confirmar nova senha</label>
-                                <input class="width-200 white" type="password" id="confirmar_senha" name="confirmar_senha" autocomplete="new-password" minlength="8" required>
+                                <input class="width-400" type="password" id="confirmar_senha" name="confirmar_senha" autocomplete="new-password" minlength="8" required>
                             </div>
                         </div>
 
-                        <?php if ($mensagemErro !== ''): ?>
-                        <div class="row">
-                            <div class="col">
-                                <div class="alert-heading danger width-200" role="alert">
-                                    <div class="alert-header"><span class="text">Aviso</span></div>
-                                    <span class="alert-text"><?php echo htmlspecialchars($mensagemErro, ENT_QUOTES, 'UTF-8'); ?></span>
-                                </div>
-                            </div>
-                        </div>
-                        <?php endif; ?>
-
-                        <div class="row" style="background-color: transparent; padding: 20px 0 10px 0; width: 100%; border-bottom: 1px solid var(--color-gray-400);">
-                            <button class="btn btn-primary width-200" type="submit">Alterar senha</button>
+                        <div class="display-flex row row-full justify-start align-center padding-x-sm padding-y-md border-bottom">
+                            <button class="btn btn-primary" type="submit">Alterar senha</button>
                         </div>
 
-                        <div class="row" style="border: none; padding-top: 10px;">
-                            <div class="col">
-                                <label class="link-login">
-                                    <a href="/home.php">Voltar ao sistema</a>
-                                </label>
-                            </div>
+                        <div class="display-flex row row-full justify-start align-center padding-x-sm padding-y-md">
+                            <button type="button" class="btn btn-secondary" id="voltar-btn" onclick="window.location.href = '/home.php'">Voltar</button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
+        <div class="layout-overlay"></div>
         <div id="toast-container" class="toast-container" aria-live="polite"></div>
     </div>
 
     <script src="/assets/js/shared/toast.js" defer></script>
     <script>
-        document.getElementById('formAlterarSenha').addEventListener('submit', function(e) {
-            var nova = document.getElementById('nova_senha').value;
-            var conf = document.getElementById('confirmar_senha').value;
-            if (nova !== conf) {
-                e.preventDefault();
-                alert('A nova senha e a confirmação não coincidem.');
-                return;
+        document.addEventListener('DOMContentLoaded', function () {
+            var form = document.getElementById('formAlterarSenha');
+            var btn = form ? form.querySelector('button[type="submit"]') : null;
+            var erroServidor = <?php echo json_encode($mensagemErro, JSON_UNESCAPED_UNICODE); ?>;
+
+            if (erroServidor && window.App && App.Toast) {
+                App.Toast.show({ type: 'error', variant: 'full', title: 'Erro', message: erroServidor });
             }
-            if (nova.length < 8) {
-                e.preventDefault();
-                alert('A nova senha deve ter no mínimo 8 caracteres.');
-                return;
-            }
+
+            if (!form) return;
+            form.addEventListener('submit', function(e) {
+                var nova = document.getElementById('nova_senha').value;
+                var conf = document.getElementById('confirmar_senha').value;
+                if (nova !== conf) {
+                    e.preventDefault();
+                    if (window.App && App.Toast) {
+                        App.Toast.show({ type: 'error', variant: 'full', title: 'Erro', message: 'A nova senha e a confirmação não coincidem.' });
+                    }
+                    return;
+                }
+                if (nova.length < 8) {
+                    e.preventDefault();
+                    if (window.App && App.Toast) {
+                        App.Toast.show({ type: 'error', variant: 'full', title: 'Erro', message: 'A nova senha deve ter no mínimo 8 caracteres.' });
+                    }
+                    return;
+                }
+                if (btn) {
+                    btn.disabled = true;
+                    btn.textContent = 'Alterando...';
+                }
+            });
         });
     </script>
 </body>

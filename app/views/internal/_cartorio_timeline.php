@@ -44,7 +44,7 @@ if (!isset($timelineData) || !is_array($timelineData)) {
 </div>
 
 <?php foreach (($timelineData['rows'] ?? []) as $row): ?>
-    <div class="row <?php echo htmlspecialchars((string) ($row['rowClass'] ?? 'timeline'), ENT_QUOTES); ?>">
+    <div class="display-flex row row-full align-start justify-between <?php echo htmlspecialchars((string) ($row['rowClass'] ?? 'timeline'), ENT_QUOTES); ?>">
         <div class="display-flex row row-fit">
             <?php if (!empty($row['circleClass'])): ?>
                 <div class="circle <?php echo htmlspecialchars((string) $row['circleClass'], ENT_QUOTES); ?>"></div>

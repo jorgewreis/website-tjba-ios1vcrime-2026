@@ -284,22 +284,22 @@
 }
 
 .timeline .circle.current {
-    background-color: var(--bs-warning);
+    background-color: var(--color-warning);
 }
 .timeline .circle.finished {
-    background-color: var(--color-accent);
+    background-color: var(--color-primary);
 }
 .timeline .circle.cancelada {
-    background-color: var(--color-gray-500);
+    background-color: var(--color-danger);
 }
 .timeline .circle.pulada {
-    background-color: var(--color-gray-500);
+    background-color: var(--color-secondary);
 }
 .timeline.current:hover{
     background-color: var(--color-warning-bg-light);
 }
 .timeline.finished:hover{
-    background-color: var(--color-surface-elevated);
+    background-color: var(--color-primary-bg-light);
 }
 
 /* Botão de status com barra de progresso (barra 3px na borda, largura total) */
@@ -391,7 +391,7 @@
     display: block;
 }
 .major-info.important {
-    color: var(--color-accent);
+    color: var(--color-primary);
     font-size: 18px;
     font-weight: 600;
 }

@@ -329,7 +329,7 @@ $stateOptions = [
             <?php if ($errorMessage === ''): ?>
                 <button class="btn btn-primary" id="salvar-btn" type="button" disabled>Salvar alterações</button>                
                 <?php if ($podeCancelarTarefa && !$tarefaFinalizadaOuCancelada): ?>
-                    <button class="btn btn-secondary-outline" id="cancelar-tarefa-btn" type="button" title="Alterar status da tarefa para Cancelada (não exclui dados)">Cancelar tarefa</button>
+                    <button class="btn btn-danger-outline" id="cancelar-tarefa-btn" type="button" title="Alterar status da tarefa para Cancelada (não exclui dados)">Cancelar tarefa</button>
                 <?php endif; ?>
                 <?php if ($podeExcluirTarefa): ?>
                     <button class="btn btn-danger" id="excluir-tarefa-btn" type="button" title="Excluir esta tarefa e todas as subtarefas">Excluir tarefa</button>

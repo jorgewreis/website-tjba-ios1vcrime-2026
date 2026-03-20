@@ -125,7 +125,7 @@ $prioridadeLabels = [
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col">
                     <label for="filter-processo">Processo</label>
-                    <input type="text" id="filter-processo" class="width-200 height-md readonly" value="<?php echo htmlspecialchars((string) ($medida['numero_processo'] ?? ''), ENT_QUOTES); ?>" readonly>
+                    <input type="text" id="filter-processo" class="width-400 height-md readonly" value="<?php echo htmlspecialchars((string) ($medida['numero_processo'] ?? ''), ENT_QUOTES); ?>" readonly>
                 </div>
                 <div class="col">
                     <label for="filter-classe">Classe</label>
@@ -142,17 +142,17 @@ $prioridadeLabels = [
                     </div>
                     <div class="col filter">
                         <label>CPF</label>
-                        <input type="text" class="width-200 height-md readonly" value="<?php echo htmlspecialchars((string) ($medida['reu']['cpf'] ?? ''), ENT_QUOTES); ?>" readonly>
+                        <input type="text" class="width-400 height-md readonly" value="<?php echo htmlspecialchars((string) ($medida['reu']['cpf'] ?? ''), ENT_QUOTES); ?>" readonly>
                     </div>
                 </div>
                 <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                     <div class="col filter">
                         <label>Sexo</label>
-                        <input type="text" class="width-200 height-md readonly" value="<?php echo htmlspecialchars((string) ($medida['reu']['sexo'] ?? ''), ENT_QUOTES); ?>" readonly>
+                        <input type="text" class="width-300 height-md readonly" value="<?php echo htmlspecialchars((string) ($medida['reu']['sexo'] ?? ''), ENT_QUOTES); ?>" readonly>
                     </div>
                     <div class="col filter">
                         <label>Data de nascimento</label>
-                        <input type="text" class="width-200 height-md readonly" value="<?php echo htmlspecialchars((string) ($medida['reu']['data_nascimento'] ?? ''), ENT_QUOTES); ?>" readonly>
+                        <input type="text" class="width-300 height-md readonly" value="<?php echo htmlspecialchars((string) ($medida['reu']['data_nascimento'] ?? ''), ENT_QUOTES); ?>" readonly>
                     </div>
                 </div>
             </div>
@@ -168,17 +168,17 @@ $prioridadeLabels = [
                             </div>
                             <div class="col filter">
                                 <label>CPF</label>
-                                <input type="text" class="width-200 height-md readonly" value="<?php echo htmlspecialchars((string) ($vitima['cpf'] ?? ''), ENT_QUOTES); ?>" readonly>
+                                <input type="text" class="width-300 height-md readonly" value="<?php echo htmlspecialchars((string) ($vitima['cpf'] ?? ''), ENT_QUOTES); ?>" readonly>
                             </div>
                         </div>
                         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                             <div class="col filter">
                                 <label>Sexo</label>
-                                <input type="text" class="width-200 height-md readonly" value="<?php echo htmlspecialchars((string) ($vitima['sexo'] ?? ''), ENT_QUOTES); ?>" readonly>
+                                <input type="text" class="width-300 height-md readonly" value="<?php echo htmlspecialchars((string) ($vitima['sexo'] ?? ''), ENT_QUOTES); ?>" readonly>
                             </div>
                             <div class="col filter">
                                 <label>Data de nascimento</label>
-                                <input type="text" class="width-200 height-md readonly" value="<?php echo htmlspecialchars((string) ($vitima['data_nascimento'] ?? ''), ENT_QUOTES); ?>" readonly>
+                                <input type="text" class="width-300 height-md readonly" value="<?php echo htmlspecialchars((string) ($vitima['data_nascimento'] ?? ''), ENT_QUOTES); ?>" readonly>
                             </div>
                         </div>                        
                     </div>
@@ -217,7 +217,7 @@ $prioridadeLabels = [
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col filter">
                     <label for="edit-observacoes">Observações</label>
-                    <input type="text" id="edit-observacoes" class="width-600 height-md" value="<?php echo htmlspecialchars((string) ($medida['observacoes'] ?? ''), ENT_QUOTES); ?>" placeholder="Opcional">
+                    <input type="text" id="edit-observacoes" class="width-800 height-md" value="<?php echo htmlspecialchars((string) ($medida['observacoes'] ?? ''), ENT_QUOTES); ?>" placeholder="Opcional">
                 </div>
             </div>
 
@@ -231,7 +231,7 @@ $prioridadeLabels = [
             <?php if ($errorMessage === ''): ?>
                 <button class="btn btn-primary" id="salvar-btn" type="button">Salvar alterações</button>
                 <?php if ($podeCancelarTarefa && !$tarefaFinalizadaOuCancelada): ?>
-                    <button class="btn btn-secondary-outline" id="cancelar-tarefa-btn" type="button">Cancelar tarefa</button>
+                    <button class="btn btn-danger-outline" id="cancelar-tarefa-btn" type="button">Cancelar tarefa</button>
                 <?php endif; ?>
                 <?php if ($podeExcluirTarefa): ?>
                     <button class="btn btn-danger" id="excluir-tarefa-btn" type="button">Excluir tarefa</button>
