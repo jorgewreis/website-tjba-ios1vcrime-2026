@@ -186,4 +186,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: pequena correção** `[239469a]`
 - **Fix: correções realizadas** `[764f0b7]`
 - **Fix: alteracao do estilo barra superior** `[5baff64]`
+- **Fix: update de avatares** `[2446092]`
 
