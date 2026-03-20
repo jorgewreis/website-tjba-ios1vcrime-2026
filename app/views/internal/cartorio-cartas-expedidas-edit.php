@@ -272,7 +272,7 @@ $stateOptions = [
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col">
                     <label for="filter-processo">Processo</label>
-                    <input type="text" id="filter-processo" class="width-200 height-md readonly" value="<?php echo htmlspecialchars($processoNumero, ENT_QUOTES); ?>" readonly>
+                    <input type="text" id="filter-processo" class="width-400 height-md readonly" value="<?php echo htmlspecialchars($processoNumero, ENT_QUOTES); ?>" readonly>
                 </div>
                 <div class="col">
                     <label for="filter-classe">Classe</label>
@@ -285,7 +285,7 @@ $stateOptions = [
                 </div>
                 <div class="col">
                     <label for="filter-tipo">Finalidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <select class="width-400 height-md" id="filter-tipo" required>
+                    <select class="width-500 height-md" id="filter-tipo" required>
                         <option value="" disabled>Selecione aqui</option>
                         <?php foreach ($finalidadeOptions as $option): ?>
                             <option value="<?php echo htmlspecialchars($option, ENT_QUOTES); ?>"<?php echo $finalidadeValue === $option ? ' selected' : ''; ?>><?php echo htmlspecialchars($option); ?></option>
@@ -300,7 +300,7 @@ $stateOptions = [
                 </div>
                 <div class="col">
                     <label for="filter-estado">Estado <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <select class="width-200 height-md" id="filter-estado" required>
+                    <select class="width-400 height-md" id="filter-estado" required>
                         <?php foreach ($stateOptions as $code => $label): ?>
                             <option value="<?php echo htmlspecialchars($code, ENT_QUOTES); ?>"<?php echo $ufValue === $code ? ' selected' : ''; ?>><?php echo htmlspecialchars($label); ?></option>
                         <?php endforeach; ?>
@@ -308,7 +308,7 @@ $stateOptions = [
                 </div>
                 <div class="col">
                     <label for="filter-prazo">Prazo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <select class="width-100 height-md" id="filter-prazo" required style="width: 210px;">
+                    <select class="width-300 height-md" id="filter-prazo" required>
                         <?php foreach ($deadlineOptions as $option): ?>
                             <?php $digits = preg_replace('/\D+/', '', $option); ?>
                             <option value="<?php echo htmlspecialchars($option, ENT_QUOTES); ?>"<?php echo (int) $digits === $prazoAtual ? ' selected' : ''; ?>><?php echo htmlspecialchars($option); ?></option>

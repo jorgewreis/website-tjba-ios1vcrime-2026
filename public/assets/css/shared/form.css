@@ -409,7 +409,7 @@ button.btn i.fi {
     margin-top: 6px;
 }
 
-btn:disabled {
+button.btn:disabled {
     opacity: 0.2;
     cursor: not-allowed;
     pointer-events: none;
@@ -515,13 +515,12 @@ input[type="date"] {
 }
 
 input[type="text"].readonly{
-    background-color: transparent;
-    border: none;
-    color: var(--color-primary-active);
+    background-color: var(--color-background);
+    border: 1px dashed var(--color-border);
+    color: var(--color-text-secondary);
     font-weight: 500;
-    font-size: 14px;
-    box-shadow: none;
     pointer-events: none;
+    cursor: default;
 }
 
 input[type="text"].status-finished {
