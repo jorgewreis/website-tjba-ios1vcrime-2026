@@ -31,9 +31,26 @@ final class EstudantesListRepository
         $stmt->execute();
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+        $usuariosByCpf = [];
+        $cpfs = array_filter(array_map(static function ($row): string {
+            return trim((string) ($row['cpf'] ?? ''));
+        }, $rows));
+        if ($cpfs !== []) {
+            $placeholders = implode(',', array_fill(0, count($cpfs), '?'));
+            $stUsuarios = $this->connectionStatus
+                ? $this->connectionStatus->prepare("SELECT id_usuario, cpf FROM usuarios WHERE cpf IN ($placeholders)")
+                : $this->connection->prepare("SELECT id_usuario, cpf FROM usuarios WHERE cpf IN ($placeholders)");
+            $stUsuarios->execute(array_values($cpfs));
+            foreach ($stUsuarios->fetchAll(PDO::FETCH_ASSOC) as $uRow) {
+                $cpfKey = trim((string) ($uRow['cpf'] ?? ''));
+                if ($cpfKey !== '') {
+                    $usuariosByCpf[$cpfKey] = trim((string) ($uRow['id_usuario'] ?? ''));
+                }
+            }
+        }
+
         $bloqueados = [];
         if ($this->connectionStatus !== null) {
-            $cpfs = array_filter(array_column($rows, 'cpf'));
             if ($cpfs !== []) {
                 $placeholders = implode(',', array_fill(0, count($cpfs), '?'));
                 $st = $this->connectionStatus->prepare("SELECT cpf FROM tentativas_login WHERE bloqueado = 1 AND cpf IN ($placeholders)");
@@ -48,7 +65,8 @@ final class EstudantesListRepository
             $rows[$i]['cargo'] = 'Estudante';
             $rows[$i]['status'] = isset($bloqueados[$row['cpf'] ?? '']) ? 'bloqueado' : 'ativo';
             $rows[$i]['origem'] = 'estudantes';
-            $rows[$i]['id_usuario'] = $row['id'] ?? '';
+            $cpfKey = trim((string) ($row['cpf'] ?? ''));
+            $rows[$i]['id_usuario'] = $usuariosByCpf[$cpfKey] ?? ($row['id'] ?? '');
         }
 
         return $rows;

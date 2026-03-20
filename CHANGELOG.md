@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0029
+
+**Data:** 2026-03-20 13:54:43 | **Commit:** `c299674` | **Tipo:** `patch`
+
+- Fix: correcao de edit usuario externo
+
 ## V. 1.04.0028
 
 **Data:** 2026-03-20 13:49:14 | **Commit:** `bda95f6` | **Tipo:** `patch`
@@ -3462,6 +3468,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
