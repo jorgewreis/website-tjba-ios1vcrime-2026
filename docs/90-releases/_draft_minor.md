@@ -21,4 +21,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correcao de usuario estagiario** `[b5b24bf]`
 - **Fix: correcao de input de dados pessoais** `[85b57b5]`
 - **Feat: nova implementacao de paginas de erro melhoradas** `[88bd330]`
+- **Fix: correcao input** `[2dff2b7]`
 
