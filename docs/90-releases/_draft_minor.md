@@ -11,4 +11,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correcao de movimentacoes das subtarefas** `[5e8ad8b]`
 - **Fix: correcao de movimentacao de subtarefas** `[dc88dc2]`
 - **Feat: nova implementacao edit pages** `[0db7b91]`
+- **Fix: ajustes de estilo** `[cbc4184]`
 
