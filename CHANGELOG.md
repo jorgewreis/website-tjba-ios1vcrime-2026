@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0020
+
+**Data:** 2026-03-19 22:14:25 | **Commit:** `7e4fd4b` | **Tipo:** `patch`
+
+- Fix: active link no home
+
 ## V. 1.04.0019
 
 **Data:** 2026-03-19 22:10:39 | **Commit:** `708c224` | **Tipo:** `patch`
@@ -3408,6 +3414,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

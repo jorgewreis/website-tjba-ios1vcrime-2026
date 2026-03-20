@@ -537,6 +537,49 @@ $userProfile = Security::getUserProfile() ?? '';
     <script>
         const frame = document.getElementById('frame');
 
+        function normalizeMenuTarget(page) {
+            const p = String(page || '').trim().toLowerCase();
+            if (!p) return '';
+
+            if (p === 'usuarios' || p === 'usuariosedit' || p === 'usuarioscreate') return 'usuarioslist';
+            if (p.startsWith('feriados')) return 'feriadoslist';
+
+            if (p.endsWith('edit')) return p.slice(0, -4);
+            if (p.endsWith('create')) return p.slice(0, -6);
+            if (p.endsWith('rules')) return p.slice(0, -5);
+
+            return p;
+        }
+
+        function setMenuActiveByTarget(target) {
+            const normalized = normalizeMenuTarget(target);
+            if (!normalized) return;
+
+            const menuInner = document.querySelector('.menu-inner');
+            if (!menuInner) return;
+
+            menuInner.querySelectorAll('.menu-item').forEach((item) => item.classList.remove('active'));
+
+            const link = menuInner.querySelector('.menu-link[data-target="' + normalized + '"]');
+            if (!link) return;
+
+            const item = link.closest('.menu-item');
+            if (item) item.classList.add('active');
+
+            const parentSub = link.closest('.menu-sub');
+            const parentItem = parentSub ? parentSub.closest('.menu-item') : null;
+            if (parentItem) parentItem.classList.add('active');
+        }
+
+        function syncMenuFromFrameSrc() {
+            if (!frame || !frame.src) return;
+            try {
+                const url = new URL(frame.src, window.location.origin);
+                const page = url.searchParams.get('page') || '';
+                if (page) setMenuActiveByTarget(page);
+            } catch (e) {}
+        }
+
         document.addEventListener('click', (event) => {
             const link = event.target.closest('[data-target]');
 
@@ -551,6 +594,7 @@ $userProfile = Security::getUserProfile() ?? '';
                 return;
             }
 
+            setMenuActiveByTarget(page);
             frame.src = '/frame.php?page=' + encodeURIComponent(page);
             const layoutWrapper = document.querySelector('.view.layout-wraper');
             const isDesktop = layoutWrapper?.classList.contains('menu-fixed');
@@ -558,7 +602,12 @@ $userProfile = Security::getUserProfile() ?? '';
             if (!isDesktop) {
                 window.menuController?.close?.();
             }
-        });        
+        });
+
+        if (frame) {
+            frame.addEventListener('load', syncMenuFromFrameSrc);
+            setTimeout(syncMenuFromFrameSrc, 0);
+        }
     </script>
     
 </body>
