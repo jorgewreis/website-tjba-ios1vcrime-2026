@@ -184,4 +184,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correção do button do cejusc** `[708c224]`
 - **Fix: active link no home** `[7e4fd4b]`
 - **Fix: pequena correção** `[239469a]`
+- **Fix: correções realizadas** `[764f0b7]`
 
