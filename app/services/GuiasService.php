@@ -430,6 +430,12 @@ final class GuiasService
      */
     public function concluirSubtarefa(string $subtarefaId, ?string $dadosJson = null): array
     {
+        $tiposGuiaPermitidos = [
+            'Guia de Execução Definitiva',
+            'Guia de Recolhimento Provisória',
+            'Guia de Recolhimento Definitiva',
+        ];
+
         $subtarefa = $this->subtarefasRepository->findById($subtarefaId);
         if ($subtarefa === null) {
             throw new InvalidArgumentException('Subtarefa não encontrada.');
@@ -519,6 +525,16 @@ final class GuiasService
         }
 
         if ($ordem < 8) {
+            if ($ordem === 3) {
+                $tipoGuiaRaw = trim((string) ($dadosArray['tipo_guia'] ?? ''));
+                if ($tipoGuiaRaw === '') {
+                    throw new InvalidArgumentException('Selecione o tipo da guia expedida.');
+                }
+                if (!in_array($tipoGuiaRaw, $tiposGuiaPermitidos, true)) {
+                    throw new InvalidArgumentException('Tipo de guia inválido. Selecione uma opção permitida.');
+                }
+                $this->repository->update($guiaId, ['tipo' => $tipoGuiaRaw]);
+            }
             if ($ordem === 5) {
                 $tipoJuntadaRaw = trim((string) ($dadosArray['tipo_juntada'] ?? ''));
                 if ($tipoJuntadaRaw === '') {

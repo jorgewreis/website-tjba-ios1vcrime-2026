@@ -69,14 +69,14 @@ $statusOptions = ['pendente', 'em_andamento', 'concluída', 'cancelada'];
 $statusCounts = array_merge(array_fill_keys($statusOptions, 0), $service->getStatusCounts($filters));
 
 $subtarefaLabels = [
-    GuiasSubtarefasRepository::TIPO_ORDEM_1 => 'Detalhamento: data do fato e dias-multa',
-    GuiasSubtarefasRepository::TIPO_ORDEM_2 => 'Cálculo da pena de multa (valor em R$)',
-    GuiasSubtarefasRepository::TIPO_ORDEM_3 => 'Expedição da Guia ao cartório',
-    GuiasSubtarefasRepository::TIPO_ORDEM_4 => 'Assinatura da Juíza na Guia',
-    GuiasSubtarefasRepository::TIPO_ORDEM_5 => 'Juntada dos autos (automática ou manual)',
-    GuiasSubtarefasRepository::TIPO_ORDEM_6 => 'Geração dos documentos em PDF',
-    GuiasSubtarefasRepository::TIPO_ORDEM_7 => 'Envio da Guia (canal e destinatário)',
-    GuiasSubtarefasRepository::TIPO_ORDEM_8 => 'Juntada do termo de envio aos autos',
+    GuiasSubtarefasRepository::TIPO_ORDEM_1 => 'Detalhar data do fato e dias-multa',
+    GuiasSubtarefasRepository::TIPO_ORDEM_2 => 'Calcular pena de multa',
+    GuiasSubtarefasRepository::TIPO_ORDEM_3 => 'Expedir a Guia',
+    GuiasSubtarefasRepository::TIPO_ORDEM_4 => 'Assinar a Guia no BNMP',
+    GuiasSubtarefasRepository::TIPO_ORDEM_5 => 'Juntar a Guia aos autos',
+    GuiasSubtarefasRepository::TIPO_ORDEM_6 => 'Gerar documentos em PDF',
+    GuiasSubtarefasRepository::TIPO_ORDEM_7 => 'Enviar a Guia',
+    GuiasSubtarefasRepository::TIPO_ORDEM_8 => 'Juntar o termo de envio',
 ];
 $ordemLabels = [
     1 => $subtarefaLabels[GuiasSubtarefasRepository::TIPO_ORDEM_1],
@@ -91,12 +91,12 @@ $ordemLabels = [
 $taskTitleByTipo = [
     GuiasSubtarefasRepository::TIPO_ORDEM_1 => 'Aguardando data do fato e dias-multa (detalhamento)',
     GuiasSubtarefasRepository::TIPO_ORDEM_2 => 'Aguardando valor da pena de multa',
-    GuiasSubtarefasRepository::TIPO_ORDEM_3 => 'Aguardando expedição da Guia ao cartório',
-    GuiasSubtarefasRepository::TIPO_ORDEM_4 => 'Aguardando assinatura da Juíza na Guia',
+    GuiasSubtarefasRepository::TIPO_ORDEM_3 => 'Aguardando expedição da Guia',
+    GuiasSubtarefasRepository::TIPO_ORDEM_4 => 'Aguardando assinatura da Juíza',
     GuiasSubtarefasRepository::TIPO_ORDEM_5 => 'Aguardando confirmação da juntada dos autos',
     GuiasSubtarefasRepository::TIPO_ORDEM_6 => 'Aguardando geração dos documentos em PDF',
-    GuiasSubtarefasRepository::TIPO_ORDEM_7 => 'Aguardando envio da Guia (canal e destinatário)',
-    GuiasSubtarefasRepository::TIPO_ORDEM_8 => 'Aguardando juntada do termo de envio aos autos',
+    GuiasSubtarefasRepository::TIPO_ORDEM_7 => 'Aguardando envio da Guia',
+    GuiasSubtarefasRepository::TIPO_ORDEM_8 => 'Aguardando juntada do termo de envio',
 ];
 $buttonTitleByTipo = [
     GuiasSubtarefasRepository::TIPO_ORDEM_1 => 'Informar data do fato e dias-multa',
@@ -111,6 +111,11 @@ $buttonTitleByTipo = [
 $tipoJuntadaOptions = ['automática' => 'Automática', 'manual' => 'Manual'];
 $tipoEnvioOptions = ['E-mail' => 'E-mail', 'Malote Digital' => 'Malote Digital', 'PJe' => 'PJe', 'eSAJ' => 'eSAJ', 'ePROC' => 'ePROC'];
 $destinatarioOptions = ['VEP' => 'VEP', 'SEEU' => 'SEEU'];
+$tiposGuiaExpedicaoOptions = [
+    'Guia de Execução Definitiva',
+    'Guia de Recolhimento Provisória',
+    'Guia de Recolhimento Definitiva',
+];
 
 $tipoCounts = $service->getTipoCounts($filters);
 $defaultTipos = [
@@ -276,7 +281,7 @@ if ($totalPages > 0) {
                             <span class="minor-info">Tipo</span>
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars($row['Tipo'] ?? '—'); ?></span>
                         </div>
-                        <div class="col width-600 col-reu" title="clique para copiar">
+                        <div class="col width-500 col-reu" title="clique para copiar">
                             <span class="minor-info">Denunciado</span>
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars($row['Denunciado'] ?? '—'); ?></span>
                         </div>                        
@@ -374,6 +379,7 @@ if ($totalPages > 0) {
                         $btnTitle = $buttonTitleByTipo[$stTipo] ?? $stLabel;
                         $isOrdem1 = in_array($stTipoNormalizado, [strtolower(GuiasSubtarefasRepository::TIPO_ORDEM_1), 'informar_detalhes', 'detalhamento'], true);
                         $isOrdem2 = in_array($stTipoNormalizado, [strtolower(GuiasSubtarefasRepository::TIPO_ORDEM_2), 'calcular_multa', 'calculo_multa'], true);
+                        $isOrdem3 = in_array($stTipoNormalizado, [strtolower(GuiasSubtarefasRepository::TIPO_ORDEM_3), 'expedir_guia', 'expedicao'], true);
                         $isOrdem5 = in_array($stTipoNormalizado, [strtolower(GuiasSubtarefasRepository::TIPO_ORDEM_5), 'confirmar_juntada', 'juntada_autos', 'juntada_guia_autos', 'juntada_nos_autos'], true);
                         $isOrdem6 = in_array($stTipoNormalizado, [strtolower(GuiasSubtarefasRepository::TIPO_ORDEM_6), 'geracao_pdf', 'pdf'], true);
                         $isOrdem7 = in_array($stTipoNormalizado, [strtolower(GuiasSubtarefasRepository::TIPO_ORDEM_7), 'enviar_guia', 'envio'], true);
@@ -383,6 +389,10 @@ if ($totalPages > 0) {
                             if (is_array($dadosDecode)) {
                                 $dadosEspecificosSt = $dadosDecode;
                             }
+                        }
+                        $tipoGuiaAtual = trim((string) ($dadosEspecificosSt['tipo_guia'] ?? ''));
+                        if ($tipoGuiaAtual === '') {
+                            $tipoGuiaAtual = trim((string) ($row['Tipo'] ?? ''));
                         }
                         $tipoJuntadaAtual = trim((string) ($dadosEspecificosSt['tipo_juntada'] ?? ''));
                     ?>
@@ -399,6 +409,14 @@ if ($totalPages > 0) {
                             <?php if ($isOrdem2): ?>
                                 <?php $valorMultaRow = isset($row['valor_multa']) && $row['valor_multa'] !== null && $row['valor_multa'] !== '' ? 'R$ ' . number_format((float) $row['valor_multa'], 2, ',', '.') : ''; ?>
                                 <div class="col"><input type="text" class="subtask-valor-multa width-100 height-sm readonly" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" readonly placeholder="Valor (automático)" title="Valor total da pena de multa" value="<?php echo htmlspecialchars($valorMultaRow, ENT_QUOTES); ?>"></div>
+                            <?php endif; ?>
+                            <?php if ($isOrdem3): ?>
+                                <div class="col"><select class="subtask-tipo-guia width-400 height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Tipo da guia expedida">
+                                    <option value="">Selecione o tipo da guia</option>
+                                    <?php foreach ($tiposGuiaExpedicaoOptions as $tipoGuiaOption): ?>
+                                        <option value="<?php echo htmlspecialchars($tipoGuiaOption, ENT_QUOTES); ?>"<?php echo $tipoGuiaAtual === $tipoGuiaOption ? ' selected' : ''; ?>><?php echo htmlspecialchars($tipoGuiaOption, ENT_QUOTES); ?></option>
+                                    <?php endforeach; ?>
+                                </select></div>
                             <?php endif; ?>
                             <?php if ($isOrdem5): ?>
                                 <div class="col"><select class="subtask-tipo-juntada width-300 height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Tipo de juntada">
@@ -595,7 +613,7 @@ if ($totalPages > 0) {
                 const normalizeTipo = (value) => String(value || '').trim().toLowerCase();
                 const hasTipo = (tipo, aliases) => aliases.includes(tipo);
                 if (!subtarefaId) return;
-                const block = this.closest('[data-subtarefa-id][data-subtarefa-tipo]');
+                const block = this.closest('div.subtask[data-subtarefa-id]');
                 const subtarefaTipo = normalizeTipo(
                     this.getAttribute('data-subtarefa-tipo') ||
                     (block ? block.getAttribute('data-subtarefa-tipo') : '')
@@ -605,6 +623,7 @@ if ($totalPages > 0) {
                     const dataFato = block.querySelector('.subtask-data-fato');
                     const diasMulta = block.querySelector('.subtask-dias-multa');
                     const valorMulta = block.querySelector('.subtask-valor-multa');
+                    const tipoGuia = block.querySelector('.subtask-tipo-guia');
                     const tipoJuntada = block.querySelector('.subtask-tipo-juntada');
                     const qtdDocs = block.querySelector('.subtask-qtd-docs');
                     const tipoEnvio = block.querySelector('.subtask-tipo-envio');
@@ -612,6 +631,7 @@ if ($totalPages > 0) {
                     if (dataFato && dataFato.value && dataFato.value.trim()) obj.data_fato = dataFato.value.trim();
                     if (diasMulta && diasMulta.value !== '' && parseInt(diasMulta.value, 10) >= 0) obj.dias_multa = parseInt(diasMulta.value, 10);
                     if (valorMulta && valorMulta.value && valorMulta.value.trim()) obj.valor_multa = valorMulta.value.trim();
+                    if (tipoGuia && tipoGuia.value && tipoGuia.value.trim()) obj.tipo_guia = tipoGuia.value.trim();
                     if (tipoJuntada && tipoJuntada.value && tipoJuntada.value.trim()) obj.tipo_juntada = tipoJuntada.value.trim();
                     if (qtdDocs && qtdDocs.value !== '') { var q = parseInt(qtdDocs.value, 10); if (q >= 4) obj.qtd_docs = q; }
                     if (tipoEnvio && tipoEnvio.value && tipoEnvio.value.trim()) obj.tipo_envio = tipoEnvio.value.trim();
@@ -633,6 +653,10 @@ if ($totalPages > 0) {
                 }
                 if (['juntada_automatica', 'confirmar_juntada', 'juntada_autos', 'juntada_guia_autos', 'juntada_nos_autos'].includes(subtarefaTipo) && !obj.tipo_juntada) {
                     notify('error', 'Atenção', 'Selecione o tipo de juntada (automática ou manual).');
+                    return;
+                }
+                if (hasTipo(subtarefaTipo, ['expedicao_guia', 'expedir_guia', 'expedicao']) && !obj.tipo_guia) {
+                    notify('error', 'Atenção', 'Selecione o tipo da guia expedida.');
                     return;
                 }
                 if (hasTipo(subtarefaTipo, ['gerar_pdf', 'geracao_pdf', 'pdf'])) {

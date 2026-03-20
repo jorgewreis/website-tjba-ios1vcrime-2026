@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0016
+
+**Data:** 2026-03-19 21:52:20 | **Commit:** `613d321` | **Tipo:** `patch`
+
+- Fix: alteração do tipo de guia
+
 ## V. 1.04.0015
 
 **Data:** 2026-03-19 21:34:41 | **Commit:** `862c45e` | **Tipo:** `patch`
@@ -3384,6 +3390,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

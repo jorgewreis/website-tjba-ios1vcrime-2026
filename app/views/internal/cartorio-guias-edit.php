@@ -33,14 +33,14 @@ if ($idGuia === '') {
 }
 
 $subtarefaLabels = [
-    GuiasSubtarefasRepository::TIPO_ORDEM_1 => 'Detalhamento: data do fato e dias-multa',
-    GuiasSubtarefasRepository::TIPO_ORDEM_2 => 'Cálculo da pena de multa (valor em R$)',
-    GuiasSubtarefasRepository::TIPO_ORDEM_3 => 'Expedição da Guia ao cartório',
-    GuiasSubtarefasRepository::TIPO_ORDEM_4 => 'Assinatura da Juíza na Guia',
-    GuiasSubtarefasRepository::TIPO_ORDEM_5 => 'Juntada dos autos (automática ou manual)',
-    GuiasSubtarefasRepository::TIPO_ORDEM_6 => 'Geração dos documentos em PDF',
-    GuiasSubtarefasRepository::TIPO_ORDEM_7 => 'Envio da Guia (canal e destinatário)',
-    GuiasSubtarefasRepository::TIPO_ORDEM_8 => 'Juntada do termo de envio aos autos',
+    GuiasSubtarefasRepository::TIPO_ORDEM_1 => 'Detalhar data do fato e dias-multa',
+    GuiasSubtarefasRepository::TIPO_ORDEM_2 => 'Calcular pena de multa',
+    GuiasSubtarefasRepository::TIPO_ORDEM_3 => 'Expedir a Guia',
+    GuiasSubtarefasRepository::TIPO_ORDEM_4 => 'Assinar a Guia no BNMP',
+    GuiasSubtarefasRepository::TIPO_ORDEM_5 => 'Juntar a Guia aos autos',
+    GuiasSubtarefasRepository::TIPO_ORDEM_6 => 'Gerar documentos em PDF',
+    GuiasSubtarefasRepository::TIPO_ORDEM_7 => 'Enviar a Guia',
+    GuiasSubtarefasRepository::TIPO_ORDEM_8 => 'Juntar o termo de envio',
 ];
 
 $subtarefas = [];
@@ -57,13 +57,13 @@ $ordemParaTipo = [
 ];
 $timelineMinorPendente = [
     GuiasSubtarefasRepository::TIPO_ORDEM_1 => 'Aguardando preenchimento da data do fato e da quantidade de dias-multa para conclusão do detalhamento',
-    GuiasSubtarefasRepository::TIPO_ORDEM_2 => 'Aguardando registro do valor da pena de multa (cálculo automático pelo sistema ou informado manualmente)',
+    GuiasSubtarefasRepository::TIPO_ORDEM_2 => 'Aguardando registro do valor da pena de multa',
     GuiasSubtarefasRepository::TIPO_ORDEM_3 => 'Aguardando informação da data de expedição da Guia ao cartório',
     GuiasSubtarefasRepository::TIPO_ORDEM_4 => 'Aguardando assinatura da Juíza na Guia',
-    GuiasSubtarefasRepository::TIPO_ORDEM_5 => 'Aguardando confirmação da juntada dos autos (informar se automática ou manual)',
+    GuiasSubtarefasRepository::TIPO_ORDEM_5 => 'Aguardando confirmação da juntada dos autos',
     GuiasSubtarefasRepository::TIPO_ORDEM_6 => 'Aguardando informação da quantidade de documentos gerados em PDF',
-    GuiasSubtarefasRepository::TIPO_ORDEM_7 => 'Aguardando informação do envio da Guia (tipo de envio e destinatário)',
-    GuiasSubtarefasRepository::TIPO_ORDEM_8 => 'Aguardando juntada do comprovante/termo de envio da Guia aos autos',
+    GuiasSubtarefasRepository::TIPO_ORDEM_7 => 'Aguardando informação do envio da Guia',
+    GuiasSubtarefasRepository::TIPO_ORDEM_8 => 'Aguardando juntada do termo de envio',
 ];
 $statusCartaLabel = 'Em andamento';
 $statusCartaClass = 'status-current';
