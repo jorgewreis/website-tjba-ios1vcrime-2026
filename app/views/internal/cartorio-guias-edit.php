@@ -147,8 +147,8 @@ if ($guia !== null) {
     }
 }
 
-$perfisExcluir = ['ADMIN', 'DIRETORA', 'MAGISTRADA'];
-$perfisCancelar = ['SERVIDOR', 'ADMIN', 'DIRETORA', 'MAGISTRADA'];
+$perfisExcluir = ['ADMIN', 'CHEFIA'];
+$perfisCancelar = ['ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA'];
 $userPerfis = [];
 $userId = $_SESSION['id_usuario'] ?? null;
 if ($userId !== null && $userId !== '') {

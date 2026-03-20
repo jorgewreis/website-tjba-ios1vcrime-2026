@@ -12,8 +12,8 @@ require_once __DIR__ . '/../../../config/security.php';
 
 Security::requireAuthentication();
 
-/** Só admin, diretora ou magistrada podem editar/excluir */
-$perfisPermitidos = ['ADMIN', 'MAGISTRADA', 'DIRETORA'];
+/** Só admin ou chefia podem editar/excluir */
+$perfisPermitidos = ['ADMIN', 'CHEFIA'];
 $userPerfis = [];
 $userId = Security::getUserId();
 if ($userId !== null && $userId !== '') {
@@ -65,7 +65,7 @@ $stmt = $connection->prepare('SELECT perfil FROM usuario_perfil WHERE usuario = 
 $stmt->execute([$idUsuario]);
 $perfisAtuais = $stmt->fetchAll(PDO::FETCH_COLUMN);
 $perfisAtuais = array_map('strtoupper', array_map('trim', $perfisAtuais));
-$isUsuarioExterno = in_array('ESTAGIARIO', $perfisAtuais, true) || in_array('ESTUDANTE', $perfisAtuais, true);
+$isUsuarioExterno = in_array('ESTUDANTE', $perfisAtuais, true) || in_array('CONSULTOR', $perfisAtuais, true);
 
 $setorRaw = trim((string) ($usuario['instituicao'] ?? ''));
 if ($setorRaw !== '' && $setorRaw !== '-') {
@@ -244,7 +244,7 @@ $cpfVal = htmlspecialchars($usuario['cpf'] ?? '', ENT_QUOTES, 'UTF-8');
 $emailVal = htmlspecialchars($usuario['email'] ?? '', ENT_QUOTES, 'UTF-8');
 $telefoneVal = htmlspecialchars($usuario['telefone'] ?? '', ENT_QUOTES, 'UTF-8');
 $cargoVal = trim((string) ($usuario['cargo'] ?? ''));
-$perfisValidos = ['ESTAGIARIO', 'SERVIDOR', 'DIRETORA', 'MAGISTRADA', 'ADMIN'];
+$perfisValidos = ['ESTAGIARIO', 'SERVIDOR', 'CHEFIA', 'ADMIN'];
 
 function deriveUsuarioStatus(array $usuario): string
 {
@@ -312,7 +312,7 @@ function deriveUsuarioStatus(array $usuario): string
                     </div>
                     <div class="col">
                         <label for="edit-tipo">Tipo</label>
-                        <input type="text" id="edit-tipo" class="width-300 height-md readonly" value="Interno" readonly>
+                        <input type="text" id="edit-tipo" class="width-300 height-md readonly" value="<?php echo $isUsuarioExterno ? 'Externo' : 'Interno'; ?>" readonly>
                     </div>
                 </div>
                 <div class="display-flex row row-fit justify-end">
@@ -388,7 +388,7 @@ function deriveUsuarioStatus(array $usuario): string
                             <label class="row left row-gap-10" style="align-items: center; margin-right: 1rem;">
                                 <input type="checkbox" name="perfil[]" value="<?php echo htmlspecialchars($p, ENT_QUOTES); ?>"<?php echo in_array($p, $perfisAtuais, true) ? ' checked' : ''; ?>>
                                 <?php
-                                $label = $p === 'ESTAGIARIO' ? 'Estagiário' : ($p === 'SERVIDOR' ? 'Servidor' : ($p === 'DIRETORA' ? 'Diretora' : ($p === 'MAGISTRADA' ? 'Magistrada' : 'Admin')));
+                                $label = $p === 'ESTAGIARIO' ? 'Estagiário' : ($p === 'SERVIDOR' ? 'Servidor' : ($p === 'CHEFIA' ? 'Chefia' : 'Admin'));
                                 echo htmlspecialchars($label, ENT_QUOTES);
                                 ?>
                             </label>

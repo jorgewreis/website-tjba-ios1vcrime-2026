@@ -173,7 +173,7 @@ $statusOptions = [
 ];
 
 /** Perfis que podem excluir a tarefa e subtarefas (tabela usuario_perfil). */
-$perfisPermitidosExcluir = ['ADMIN', 'DIRETORA', 'MAGISTRADA'];
+$perfisPermitidosExcluir = ['ADMIN', 'CHEFIA'];
 $userPerfisEdit = [];
 $userIdEdit = $_SESSION['id_usuario'] ?? null;
 if ($userIdEdit !== null && $userIdEdit !== '') {
@@ -184,7 +184,7 @@ if ($userIdEdit !== null && $userIdEdit !== '') {
 $podeExcluirTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosExcluir)) > 0;
 
 /** Perfis que podem cancelar a tarefa (apenas altera status para Cancelada): servidor, admin, diretora, magistrada. */
-$perfisPermitidosCancelar = ['SERVIDOR', 'ADMIN', 'DIRETORA', 'MAGISTRADA'];
+$perfisPermitidosCancelar = ['ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA'];
 $podeCancelarTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosCancelar)) > 0;
 $tarefaFinalizadaOuCancelada = in_array($statusAtual ?? '', ['cancelada', 'concluída'], true);
 $timelineData = $carta !== null

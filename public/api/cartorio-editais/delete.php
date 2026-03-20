@@ -16,7 +16,7 @@ if (!bootstrapRequireTrustedPostRequest()) {
 
 $connection = Conection::getInstance()->getConnection();
 
-$perfisPermitidosExcluir = ['ADMIN', 'DIRETORA', 'MAGISTRADA'];
+$perfisPermitidosExcluir = ['ADMIN', 'CHEFIA'];
 $userPerfis = [];
 $userId = $_SESSION['id_usuario'] ?? null;
 if ($userId !== null && $userId !== '') {
@@ -28,7 +28,7 @@ $podeExcluir = count(array_intersect($userPerfis, $perfisPermitidosExcluir)) > 0
 
 if (!$podeExcluir) {
     http_response_code(403);
-    echo json_encode(['error' => 'Seu perfil não tem permissão para excluir. Apenas admin, diretora ou magistrada.'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Seu perfil não tem permissão para excluir. Apenas admin ou chefia.'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 

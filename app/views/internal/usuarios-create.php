@@ -12,8 +12,8 @@ require_once __DIR__ . '/../../../config/security.php';
 
 Security::requireAuthentication();
 
-/** Acesso apenas para admin, magistrada e diretora */
-$perfisPermitidos = ['ADMIN', 'MAGISTRADA', 'DIRETORA'];
+/** Acesso apenas para admin e chefia */
+$perfisPermitidos = ['ADMIN', 'CHEFIA'];
 $userPerfis = [];
 $userId = Security::getUserId();
 if ($userId !== null && $userId !== '') {
@@ -44,8 +44,7 @@ $cargoToPerfil = [
     'Estagiário' => 'ESTAGIARIO',
     'Técnico Judiciário' => 'SERVIDOR',
     'Analista Judiciário' => 'SERVIDOR',
-    'Diretora de Secretaria' => 'DIRETORA',
-    'Magistrada' => 'MAGISTRADA',
+    'Chefia' => 'CHEFIA',
     'Admin' => 'ADMIN',
 ];
 
@@ -86,12 +85,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($isExterno) {
             $cargo = '';
             $setorLabel = '';
-            $perfil = 'ESTAGIARIO';
+            if ($perfil !== 'ESTUDANTE' && $perfil !== 'CONSULTOR') {
+                $perfil = 'ESTUDANTE';
+            }
         }
         if ($perfil === '' && $cargo !== '' && isset($cargoToPerfil[$cargo])) {
             $perfil = $cargoToPerfil[$cargo];
         }
-        if ($cargo === 'Magistrada' && $setorLabel === '') {
+        if ($cargo === 'Chefia' && $setorLabel === '') {
             $setorLabel = 'Gabinete';
         }
 
@@ -340,8 +341,7 @@ $csrfToken = Security::generateCSRFToken();
                         <option value="Estagiário"<?php echo $formValues['cargo'] === 'Estagiário' ? ' selected' : ''; ?>>Estagiário</option>
                         <option value="Técnico Judiciário"<?php echo $formValues['cargo'] === 'Técnico Judiciário' ? ' selected' : ''; ?>>Técnico Judiciário</option>
                         <option value="Analista Judiciário"<?php echo $formValues['cargo'] === 'Analista Judiciário' ? ' selected' : ''; ?>>Analista Judiciário</option>
-                        <option value="Diretora de Secretaria"<?php echo $formValues['cargo'] === 'Diretora de Secretaria' ? ' selected' : ''; ?>>Diretora de Secretaria</option>
-                        <option value="Magistrada"<?php echo $formValues['cargo'] === 'Magistrada' ? ' selected' : ''; ?>>Magistrada</option>
+                        <option value="Chefia"<?php echo $formValues['cargo'] === 'Chefia' ? ' selected' : ''; ?>>Chefia</option>
                         <option value="Admin"<?php echo $formValues['cargo'] === 'Admin' ? ' selected' : ''; ?>>Admin</option>
                     </select>
                 </div>
@@ -362,9 +362,10 @@ $csrfToken = Security::generateCSRFToken();
                         <option value="">Selecione</option>
                         <option value="ESTAGIARIO"<?php echo $formValues['perfil'] === 'ESTAGIARIO' ? ' selected' : ''; ?>>Estagiário</option>
                         <option value="SERVIDOR"<?php echo $formValues['perfil'] === 'SERVIDOR' ? ' selected' : ''; ?>>Servidor</option>
-                        <option value="DIRETORA"<?php echo $formValues['perfil'] === 'DIRETORA' ? ' selected' : ''; ?>>Diretora</option>
-                        <option value="MAGISTRADA"<?php echo $formValues['perfil'] === 'MAGISTRADA' ? ' selected' : ''; ?>>Magistrada</option>
+                        <option value="CHEFIA"<?php echo $formValues['perfil'] === 'CHEFIA' ? ' selected' : ''; ?>>Chefia</option>
                         <option value="ADMIN"<?php echo $formValues['perfil'] === 'ADMIN' ? ' selected' : ''; ?>>Admin</option>
+                        <option value="ESTUDANTE"<?php echo $formValues['perfil'] === 'ESTUDANTE' ? ' selected' : ''; ?>>Estudante</option>
+                        <option value="CONSULTOR"<?php echo $formValues['perfil'] === 'CONSULTOR' ? ' selected' : ''; ?>>Consultor</option>
                     </select>
                 </div>
             </div>
@@ -414,8 +415,7 @@ $csrfToken = Security::generateCSRFToken();
             'Estagiário': 'ESTAGIARIO',
             'Técnico Judiciário': 'SERVIDOR',
             'Analista Judiciário': 'SERVIDOR',
-            'Diretora de Secretaria': 'DIRETORA',
-            'Magistrada': 'MAGISTRADA',
+            'Chefia': 'CHEFIA',
             'Admin': 'ADMIN'
         };
 
@@ -428,10 +428,21 @@ $csrfToken = Security::generateCSRFToken();
             if (internoFields) {
                 internoFields.style.display = externo ? 'none' : '';
             }
-            if (!externo) return;
-            if (cargoSelect) cargoSelect.value = '';
-            if (setorSelect) setorSelect.value = '';
-            if (perfilSelect) perfilSelect.value = '';
+            if (externo) {
+                if (cargoSelect) cargoSelect.value = '';
+                if (setorSelect) setorSelect.value = '';
+                if (perfilSelect) {
+                    var pe = (perfilSelect.value || '').trim();
+                    if (pe !== 'ESTUDANTE' && pe !== 'CONSULTOR') perfilSelect.value = 'ESTUDANTE';
+                    perfilSelect.disabled = false;
+                    perfilSelect.classList.remove('readonly');
+                }
+                return;
+            }
+            if (perfilSelect) {
+                var pi = (perfilSelect.value || '').trim();
+                if (pi === 'ESTUDANTE' || pi === 'CONSULTOR') perfilSelect.value = '';
+            }
         }
 
         function syncCargoToPerfilAndSetor() {

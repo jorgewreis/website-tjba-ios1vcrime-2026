@@ -53,7 +53,6 @@ $allowed_pages = [
     'cartasrecebidasrules'  => $PAGES . '/cartorio-cartas-recebidas-rules.php',
     'produtividade'         => $PAGES . '/produtividade.php',
     'notificacoes'          => $PAGES . '/notificacoes.php',
-    'usuarios'              => $PAGES . '/usuarios-list.php',
     'usuarioslist'          => $PAGES . '/usuarios-list.php',
     'usuarioscreate'        => $PAGES . '/usuarios-create.php',
     'usuariosedit'          => $PAGES . '/usuarios-edit.php',
@@ -63,8 +62,6 @@ $allowed_pages = [
     'configuracoes'         => $PAGES . '/configuracoes.php',
     'documentos'            => $PAGES . '/documentos.php',
     'alterardados'          => $PAGES . '/alterar-dados-pessoais.php',
-
-    'consultaparte'         => $PAGES . '/consulta-partes-list.php',
     'consultapartes'        => $PAGES . '/consulta-partes-list.php',
     'consultapartescreate'  => $PAGES . '/consulta-partes-create.php',
     'consultapartesedit'    => $PAGES . '/consulta-partes-edit.php',
@@ -120,29 +117,29 @@ $page_to_section = [
     'oficiosgabinete'   => 'Gabinete',
     'produtividade'     => 'Cartório',
     'reuspresos'        => 'Gabinete',
-    'alterardados'      => 'Perfil',
+    'alterardados'      => 'All',
     'consultaparte'     => 'Consultas',
     'consultapartes'    => 'Consultas',
-    'consultapartescreate'  => 'Consultas',
-    'consultapartesedit'    => 'Consultas',
-    'consultaprocessos'     => 'Consultas',
-    'consultaprocessosedit' => 'Consultas',
-    'instituicoespublicas'  => 'Consultas',
-    'instituicoespublicascreate' => 'Consultas',
-    'instituicoespublicasedit'   => 'Consultas',
-    'processospartescreate'     => 'Consultas',
-    'processosparteslist'       => 'Consultas',
-    'processospartesedit'       => 'Consultas',
-    'partesinstituicoeslist'    => 'Consultas',
-    'partesinstituicoescreate'  => 'Consultas',
-    'partesinstituicoesedit'    => 'Consultas',
-    'usuarios'                  => 'Admin',
-    'usuarioslist'              => 'Admin',
-    'usuarioscreate'            => 'Admin',
-    'usuariosedit'              => 'Admin',
-    'feriadoslist'              => 'AdminFeriados',
-    'feriadoscreate'            => 'AdminFeriados',
-    'feriadosedit'              => 'AdminFeriados',
+    'consultapartescreate'  => 'Cartório',
+    'consultapartesedit'    => 'Cartório',
+    'consultaprocessos'     => 'Cartório',
+    'consultaprocessosedit' => 'Cartório',
+    'instituicoespublicas'  => 'Cartório',
+    'instituicoespublicascreate' => 'Cartório',
+    'instituicoespublicasedit'   => 'Cartório',
+    'processospartescreate'     => 'Cartório',
+    'processosparteslist'       => 'Cartório',
+    'processospartesedit'       => 'Cartório',
+    'partesinstituicoeslist'    => 'Cartório',
+    'partesinstituicoescreate'  => 'Cartório',
+    'partesinstituicoesedit'    => 'Cartório',
+    'usuarios'                  => 'Gestão',
+    'usuarioslist'              => 'Gestão',
+    'usuarioscreate'            => 'Gestão',
+    'usuariosedit'              => 'Gestão',
+    'feriadoslist'              => 'All',
+    'feriadoscreate'            => 'Gestão',
+    'feriadosedit'              => 'Gestão',
 ];
 
 /**
@@ -166,21 +163,17 @@ function hasAccessToSection(array $userPerfils, ?string $requiredSection): bool
         return true;
     }
 
+    // Perfis por setor: CARTORIO, AUDIENCIA, GABINETE
+    // Perfis por cargo: CONSULTOR, ESTUDANTE, ESTAGIARIO, SERVIDOR, ADMIN, CHEFIA
+
     // Mapeamento de seções para perfis permitidos.
     $sectionMap = [
-        'All' => ['CONSULTOR', 'CARTORIO', 'AUDIENCIA', 'GABINETE', 'ADMIN', 'SERVIDOR', 'CHEFIA'],
-        'Perfil' => ['ESTUDANTE', 'CONSULTOR', 'CARTORIO', 'AUDIENCIA', 'GABINETE', 'ADMIN', 'SERVIDOR', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'],
-        'Cartório' => ['CARTORIO', 'AUDIENCIA', 'GABINETE', 'ADMIN', 'SERVIDOR', 'CHEFIA'],
-        'Gabinete' => ['GABINETE', 'ADMIN', 'CHEFIA'],
-        'Sala de Audiências' => ['AUDIENCIA', 'GABINETE', 'ADMIN', 'CHEFIA'],
-        'Consultas' => ['CONSULTOR', 'CARTORIO', 'AUDIENCIA', 'GABINETE', 'ADMIN', 'SERVIDOR', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'],
-        // 'Estudantes' e 'Consultor' podem ser removidos se não houver páginas mapeadas para eles.
-        'Estudantes' => ['ADMIN'], // Estudante não tem acesso, mas Admin pode gerenciar.
-        'Consultor'  => ['CONSULTOR', 'ADMIN'],
-        'Admin' => ['ADMIN'],
-        'AdminFeriados' => ['ADMIN', 'DIRETORA'],
-        'Servidor' => ['SERVIDOR', 'CHEFIA', 'ADMIN'], // Adicionado para clareza, se houver páginas específicas.
-        'Chefia' => ['CHEFIA', 'ADMIN'] // Adicionado para clareza, se houver páginas específicas.
+        'All' => ['CONSULTOR', 'ESTUDANTE', 'ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA'],
+        'Cartório' => ['CARTORIO', 'ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA'],
+        'Gabinete' => ['GABINETE', 'SERVIDOR', 'ADMIN', 'CHEFIA'],
+        'Sala de Audiências' => ['AUDIENCIA', 'ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA'],
+        'Consultas' => ['CONSULTOR', 'ESTAGIARIO', 'ESTUDANTE', 'CARTORIO', 'AUDIENCIA', 'GABINETE', 'ADMIN', 'SERVIDOR', 'CHEFIA'],
+        'Gestão' => ['ADMIN', 'CHEFIA']
     ];
 
     $requiredPerfils = $sectionMap[$requiredSection] ?? [];
@@ -193,6 +186,59 @@ function hasAccessToSection(array $userPerfils, ?string $requiredSection): bool
     }
 
     return false;
+}
+
+/**
+ * Retorna seções permitidas para estagiário a partir dos setores cadastrados.
+ *
+ * @param PDO $connection
+ * @param string $userId
+ * @return array<int, string>
+ */
+function getEstagiarioAllowedSections(PDO $connection, string $userId): array
+{
+    $sections = ['Perfil'];
+    $setoresNormalizados = [];
+
+    $stmt = $connection->prepare("
+        SELECT s.nome
+        FROM usuario_setor us
+        INNER JOIN setores s ON s.id_setor = us.setor
+        WHERE us.usuario = ?
+    ");
+    $stmt->execute([$userId]);
+    $setores = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+    if (empty($setores)) {
+        $stFallback = $connection->prepare("SELECT instituicao FROM usuarios WHERE id_usuario = ? LIMIT 1");
+        $stFallback->execute([$userId]);
+        $fallback = trim((string) $stFallback->fetchColumn());
+        if ($fallback !== '' && $fallback !== '-') {
+            $setores = [$fallback];
+        }
+    }
+
+    foreach ($setores as $setor) {
+        $txt = mb_strtolower(trim((string) $setor), 'UTF-8');
+        if ($txt !== '') {
+            $setoresNormalizados[] = $txt;
+        }
+    }
+
+    foreach ($setoresNormalizados as $setor) {
+        if (strpos($setor, 'cart') !== false) {
+            $sections[] = 'Cartório';
+        }
+        if (strpos($setor, 'gab') !== false) {
+            $sections[] = 'Gabinete';
+        }
+        if (strpos($setor, 'audi') !== false) {
+            $sections[] = 'Sala de Audiências';
+        }
+    }
+
+    $sections[] = 'Consultas';
+    return array_values(array_unique($sections));
 }
 
 /**
@@ -220,6 +266,7 @@ function respondWithError(int $status, string $message, string $errorsDir): void
 $usuario = new Usuario();
 $user = null;
 $userPerfils = [];
+$estagiarioAllowedSections = [];
 $pagePath = null;
 $resolved = null;
 $validationStatus = null;
@@ -286,7 +333,19 @@ do {
         $userPerfils = [];
     }
 
+    if (in_array('ESTAGIARIO', $userPerfils, true) && !in_array('ESTUDANTE', $userPerfils, true)) {
+        $estagiarioAllowedSections = getEstagiarioAllowedSections($connection, $userId);
+    }
+
     $requiredSection = $page_to_section[$page] ?? null;
+
+    if (!empty($estagiarioAllowedSections) && $requiredSection !== null) {
+        if (!in_array($requiredSection, $estagiarioAllowedSections, true)) {
+            $validationStatus = 403;
+            $validationMessage = 'Acesso negado. Seção não permitida para o setor do estagiário.';
+            break;
+        }
+    }
 
     if (!hasAccessToSection($userPerfils, $requiredSection)) {
         error_log('Acesso negado: userId=' . $userId . ' perfis=' . implode(',', $userPerfils) . ' page=' . $page);

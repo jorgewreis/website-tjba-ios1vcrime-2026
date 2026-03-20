@@ -2,9 +2,37 @@
 declare(strict_types=1);
 
 $basePath = dirname(__DIR__, 4);
-require_once dirname(__DIR__) . '/_auth_admin_diretora_json.php';
+require_once $basePath . '/config/config.php';
+require_once $basePath . '/config/security.php';
+require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
-$connection = requireAdminOuDiretoraJson($basePath);
+
+header('Content-Type: application/json; charset=UTF-8');
+
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+
+if (!Security::isAuthenticated()) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Não autenticado.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+$connection = Conection::getInstance()->getConnection();
+$userId = $_SESSION['id_usuario'] ?? null;
+$userPerfis = [];
+if ($userId !== null && $userId !== '') {
+    $stmt = $connection->prepare('SELECT DISTINCT UPPER(TRIM(perfil)) AS perfil FROM usuario_perfil WHERE usuario = ? AND perfil IS NOT NULL');
+    $stmt->execute([$userId]);
+    $userPerfis = $stmt->fetchAll(PDO::FETCH_COLUMN);
+}
+$podeExcluir = count(array_intersect($userPerfis, ['ADMIN', 'CHEFIA'])) > 0;
+if (!$podeExcluir) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Seu perfil não tem permissão para excluir. Apenas admin ou chefia.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 if (!bootstrapRequireTrustedPostRequest()) {
     http_response_code(403);

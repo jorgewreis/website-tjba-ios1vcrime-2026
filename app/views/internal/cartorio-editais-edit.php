@@ -93,8 +93,8 @@ if ($edital !== null) {
     }
 }
 
-$perfisPermitidosExcluir = ['ADMIN', 'DIRETORA', 'MAGISTRADA'];
-$perfisPermitidosCancelar = ['SERVIDOR', 'ADMIN', 'DIRETORA', 'MAGISTRADA'];
+$perfisPermitidosExcluir = ['ADMIN', 'CHEFIA'];
+$perfisPermitidosCancelar = ['ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA'];
 $userPerfisEdit = [];
 $userIdEdit = $_SESSION['id_usuario'] ?? null;
 if ($userIdEdit !== null && $userIdEdit !== '') {

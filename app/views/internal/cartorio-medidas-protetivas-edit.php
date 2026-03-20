@@ -34,8 +34,8 @@ if ($idMedida === '') {
     }
 }
 
-$perfisPermitidosExcluir = ['ADMIN', 'DIRETORA', 'MAGISTRADA'];
-$perfisPermitidosCancelar = ['SERVIDOR', 'ADMIN', 'DIRETORA', 'MAGISTRADA'];
+$perfisPermitidosExcluir = ['ADMIN', 'CHEFIA'];
+$perfisPermitidosCancelar = ['ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA'];
 $userPerfis = [];
 $userId = $_SESSION['id_usuario'] ?? null;
 if ($userId !== null && $userId !== '') {

@@ -3,6 +3,7 @@ require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/security.php';
 require_once __DIR__ . '/../app/helpers/bootstrap.php';
 require_once __DIR__ . '/../app/models/Usuario.php';
+require_once __DIR__ . '/../app/helpers/Conection.php';
 
 // Impedir cache: a home só pode ser servida após verificação em cada request
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
@@ -28,6 +29,42 @@ if (!$user) {
 
 $userName = $_SESSION['nome'] ?? ($user['nome'] ?? '');
 $userProfile = Security::getUserProfile() ?? '';
+$userSetores = [];
+
+$sessionUserId = trim((string) ($_SESSION['id_usuario'] ?? ($user['id_usuario'] ?? '')));
+if ($sessionUserId !== '') {
+    try {
+        $connection = Conection::getInstance()->getConnection();
+        $stmtSetores = $connection->prepare("
+            SELECT s.nome
+            FROM usuario_setor us
+            INNER JOIN setores s ON s.id_setor = us.setor
+            WHERE us.usuario = ?
+        ");
+        $stmtSetores->execute([$sessionUserId]);
+        $userSetores = $stmtSetores->fetchAll(PDO::FETCH_COLUMN);
+
+        if (empty($userSetores)) {
+            $stmtFallback = $connection->prepare("SELECT instituicao FROM usuarios WHERE id_usuario = ? LIMIT 1");
+            $stmtFallback->execute([$sessionUserId]);
+            $fallbackSetor = trim((string) $stmtFallback->fetchColumn());
+            if ($fallbackSetor !== '' && $fallbackSetor !== '-') {
+                $userSetores = [$fallbackSetor];
+            }
+        }
+    } catch (Throwable $e) {
+        $userSetores = [];
+    }
+}
+
+$userPerfisDb = [];
+if ($sessionUserId !== '') {
+    try {
+        $userPerfisDb = $usuario->listarPerfisUsuario($sessionUserId);
+    } catch (Throwable $e) {
+        $userPerfisDb = [];
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -165,14 +202,20 @@ $userProfile = Security::getUserProfile() ?? '';
 
     <script>
 
+        /**
+         * Seções exibidas no menu por perfil (alinhado a public/frame.php — sectionMap e regras de estagiário).
+         * Perfis por setor (CARTORIO / GABINETE / AUDIENCIA) vêm de usuario_perfil; cargo (SERVIDOR, ESTAGIARIO, …) idem.
+         */
         const PERFIL_MENU_MAP = {
-            'ESTUDANTE': ['Estudantes'],
-            'CONSULTOR': ['Consultas'],
-            'AUDIENCIA': ['Cartório', 'Sala de Audiências', 'Consultas'],
-            'CARTORIO': ['Cartório', 'Consultas'],
-            'GABINETE': ['Cartório', 'Sala de Audiências', 'Gabinete', 'Consultas'],
             'ADMIN': ['Cartório', 'Gabinete', 'Sala de Audiências', 'Estudantes', 'Consultas', 'Audiências', 'Admin'],
-            'DIRETORA': ['Consultas', 'Admin']
+            'CHEFIA': ['Cartório', 'Gabinete', 'Sala de Audiências', 'Estudantes', 'Consultas', 'Audiências', 'Admin'],
+            'SERVIDOR': ['Cartório', 'Gabinete', 'Sala de Audiências', 'Consultas'],
+            'ESTAGIARIO': ['Cartório', 'Sala de Audiências', 'Consultas'],
+            'ESTUDANTE': ['Consultas'],
+            'CONSULTOR': ['Consultas'],
+            'CARTORIO': ['Cartório'],
+            'GABINETE': ['Gabinete'],
+            'AUDIENCIA': ['Sala de Audiências']
         };
 
         const MENU_SECTIONS = [
@@ -240,45 +283,88 @@ $userProfile = Security::getUserProfile() ?? '';
                 section: 'Admin',
                 items: [
                     { icon: 'fi fi-rs-id-badge', label: 'Usuários', target: 'usuarioslist', allowedPerfis: ['ADMIN'] },
-                    { icon: 'fi fi-rs-calendar', label: 'Feriados', target: 'feriadoslist', allowedPerfis: ['ADMIN', 'DIRETORA'] }
+                    { icon: 'fi fi-rs-calendar', label: 'Feriados', target: 'feriadoslist', allowedPerfis: ['ADMIN', 'CHEFIA', 'DIRETORA'] }
                 ]
             }
         ];
 
+        const INITIAL_USER_PERFIS = <?php echo json_encode(array_values(array_filter(array_map(static function ($p) {
+            return trim((string) $p);
+        }, $userPerfisDb))), JSON_UNESCAPED_UNICODE); ?>;
         const FALLBACK_PERFIS = <?php echo json_encode($userProfile ? [$userProfile] : []); ?>;
+        const USER_SETORES = <?php echo json_encode(array_values(array_filter(array_map(static function ($s) {
+            return trim((string) $s);
+        }, $userSetores))), JSON_UNESCAPED_UNICODE); ?>;
+
+        /**
+         * Unifica fontes de perfil, normaliza maiúsculas e mapeia perfis legados para CHEFIA (mesmo critério do sistema).
+         */
+        function normalizePerfis(perfis) {
+            const out = [];
+            const seen = new Set();
+            (perfis || []).forEach((raw) => {
+                let p = String(raw || '').trim().toUpperCase();
+                if (p === 'DIRETORA' || p === 'MAGISTRADA') {
+                    p = 'CHEFIA';
+                }
+                if (!p || seen.has(p)) {
+                    return;
+                }
+                seen.add(p);
+                out.push(p);
+            });
+            return out;
+        }
 
         async function fetchUserPerfis() {
+            let fromApi = [];
             try {
                 const response = await fetch('/admin/api/getPerfis.php');
 
-                if (!response.ok) {
-                    return FALLBACK_PERFIS;
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success && Array.isArray(result.perfis) && result.perfis.length > 0) {
+                        fromApi = result.perfis;
+                    }
                 }
-
-                const result = await response.json();
-
-                if (result.success && Array.isArray(result.perfis) && result.perfis.length > 0) {
-                    return result.perfis;
-                }
-
-                return FALLBACK_PERFIS;
             } catch (error) {
-                return FALLBACK_PERFIS;
+                fromApi = [];
             }
+
+            return normalizePerfis([].concat(INITIAL_USER_PERFIS || [], fromApi, FALLBACK_PERFIS || []));
         }
 
         function getPermittedSections(perfis) {
             const permittedSections = new Set();
+            const norm = normalizePerfis(perfis);
 
-            perfis.forEach(perfil => {
+            norm.forEach((perfil) => {
                 const sections = PERFIL_MENU_MAP[perfil];
 
                 if (sections && Array.isArray(sections)) {
-                    sections.forEach(section => {
+                    sections.forEach((section) => {
                         permittedSections.add(section);
                     });
                 }
             });
+
+            const isElevated = norm.includes('ADMIN') || norm.includes('CHEFIA');
+            const isEstagiarioNaoEstudante = norm.includes('ESTAGIARIO') && !norm.includes('ESTUDANTE');
+
+            if (isEstagiarioNaoEstudante && !isElevated) {
+                const setorText = USER_SETORES.map((s) => String(s || '').toLowerCase());
+                const hasCartorio = setorText.some((s) => s.includes('cart'));
+                const hasGabinete = setorText.some((s) => s.includes('gab'));
+                const hasAudiencia = setorText.some((s) => s.includes('audi'));
+
+                permittedSections.delete('Cartório');
+                permittedSections.delete('Gabinete');
+                permittedSections.delete('Sala de Audiências');
+
+                if (hasCartorio) permittedSections.add('Cartório');
+                if (hasGabinete) permittedSections.add('Gabinete');
+                if (hasAudiencia) permittedSections.add('Sala de Audiências');
+            }
 
             return permittedSections;
         }
@@ -369,7 +455,12 @@ $userProfile = Security::getUserProfile() ?? '';
             if (!item.allowedPerfis || item.allowedPerfis.length === 0) {
                 return true;
             }
-            return item.allowedPerfis.some(p => perfis.includes(p));
+            const n = normalizePerfis(perfis);
+            return item.allowedPerfis.some((p) => {
+                const u = String(p || '').trim().toUpperCase();
+                const mapped = u === 'DIRETORA' || u === 'MAGISTRADA' ? 'CHEFIA' : u;
+                return n.includes(mapped);
+            });
         }
 
         function buildMenuForSections(permittedSections, perfis) {
@@ -423,7 +514,7 @@ $userProfile = Security::getUserProfile() ?? '';
         async function initDynamicMenu() {
             const perfis = await fetchUserPerfis();
             const permittedSections = getPermittedSections(perfis);
-            buildMenuForSections(permittedSections, perfis);
+            buildMenuForSections(permittedSections, normalizePerfis(perfis));
             appendLogoutItem();
         }
 

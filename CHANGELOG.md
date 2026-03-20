@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0030
+
+**Data:** 2026-03-20 14:43:58 | **Commit:** `56473ed` | **Tipo:** `patch`
+
+- Feat: config de permissoes de usuario
+
 ## V. 1.04.0029
 
 **Data:** 2026-03-20 13:54:43 | **Commit:** `c299674` | **Tipo:** `patch`
@@ -3468,6 +3474,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
