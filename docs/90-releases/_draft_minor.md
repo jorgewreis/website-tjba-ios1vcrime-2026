@@ -176,4 +176,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: nova tentativa de correcao** `[1a59dfc]`
 - **Fix: correcao cejusc reu** `[f92cf3f]`
 - **Feat: implementação de lista de feriados** `[8a321cc]`
+- **Fix: pequenos ajustes na pagina de feriados** `[d5ecaa1]`
 
