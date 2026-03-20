@@ -13,4 +13,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Feat: nova implementacao edit pages** `[0db7b91]`
 - **Fix: ajustes de estilo** `[cbc4184]`
 - **Fix: pequenos ajustes cartas expedidas** `[074f624]`
+- **Fix: correcao de layouts** `[34777a6]`
 
