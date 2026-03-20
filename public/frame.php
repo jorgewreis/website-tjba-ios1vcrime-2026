@@ -57,6 +57,9 @@ $allowed_pages = [
     'usuarioslist'          => $PAGES . '/usuarios-list.php',
     'usuarioscreate'        => $PAGES . '/usuarios-create.php',
     'usuariosedit'          => $PAGES . '/usuarios-edit.php',
+    'feriadoslist'          => $PAGES . '/feriados-list.php',
+    'feriadoscreate'        => $PAGES . '/feriados-create.php',
+    'feriadosedit'          => $PAGES . '/feriados-edit.php',
     'configuracoes'         => $PAGES . '/configuracoes.php',
     'documentos'            => $PAGES . '/documentos.php',
     'alterardados'          => $PAGES . '/alterar-dados-pessoais.php',
@@ -137,6 +140,9 @@ $page_to_section = [
     'usuarioslist'              => 'Admin',
     'usuarioscreate'            => 'Admin',
     'usuariosedit'              => 'Admin',
+    'feriadoslist'              => 'AdminFeriados',
+    'feriadoscreate'            => 'AdminFeriados',
+    'feriadosedit'              => 'AdminFeriados',
 ];
 
 /**
@@ -172,6 +178,7 @@ function hasAccessToSection(array $userPerfils, ?string $requiredSection): bool
         'Estudantes' => ['ADMIN'], // Estudante não tem acesso, mas Admin pode gerenciar.
         'Consultor'  => ['CONSULTOR', 'ADMIN'],
         'Admin' => ['ADMIN'],
+        'AdminFeriados' => ['ADMIN', 'DIRETORA'],
         'Servidor' => ['SERVIDOR', 'CHEFIA', 'ADMIN'], // Adicionado para clareza, se houver páginas específicas.
         'Chefia' => ['CHEFIA', 'ADMIN'] // Adicionado para clareza, se houver páginas específicas.
     ];

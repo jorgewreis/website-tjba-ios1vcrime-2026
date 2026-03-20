@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0013
+
+**Data:** 2026-03-19 21:18:10 | **Commit:** `8a321cc` | **Tipo:** `patch`
+
+- Feat: implementação de lista de feriados
+
 ## V. 1.04.0012
 
 **Data:** 2026-03-19 20:30:26 | **Commit:** `f92cf3f` | **Tipo:** `patch`
@@ -3366,6 +3372,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

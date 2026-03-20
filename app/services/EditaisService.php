@@ -7,6 +7,7 @@ require_once __DIR__ . '/../repositories/EditaisAlocadosRepository.php';
 require_once __DIR__ . '/../repositories/AlocacoesRegrasRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
+require_once __DIR__ . '/../repositories/FeriadosRepository.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
@@ -20,6 +21,7 @@ final class EditaisService
     private AlocacoesRegrasRepository $alocacoesRegrasRepository;
     private ProcessosRepository $processosRepository;
     private ClassesRepository $classesRepository;
+    private FeriadosRepository $feriadosRepository;
 
     private const REGRA_ALOCAR_EDITAIS = 'ALLOCATE-EDITAIS';
 
@@ -32,10 +34,13 @@ final class EditaisService
         $this->alocacoesRegrasRepository = new AlocacoesRegrasRepository($connection);
         $this->processosRepository = new ProcessosRepository($connection);
         $this->classesRepository = new ClassesRepository($connection);
+        $this->feriadosRepository = new FeriadosRepository($connection);
     }
 
     public function listEditais(array $filters, int $limit, int $offset): array
     {
+        // Remove eventos de data única/móvel já vencidos para manter base de feriados enxuta.
+        $this->feriadosRepository->purgeExpiradosUnicosOuMoveis(new \DateTimeImmutable('today'));
         $rows = $this->repository->fetchList($filters, $limit, $offset);
         foreach ($rows as $i => $row) {
             $idEdital = (string) ($row['IdEdital'] ?? '');
@@ -54,10 +59,20 @@ final class EditaisService
                         'tipo' => $this->normalizeTipoAlocado($a['tipo'] ?? ''),
                     ];
                 }
+                $rows[$i]['DecursoInfo'] = $this->getDecursoInfo($idEdital);
             } else {
                 $rows[$i]['Subtarefas'] = [];
                 $rows[$i]['SubtarefasAll'] = [];
                 $rows[$i]['Alocados'] = [];
+                $rows[$i]['DecursoInfo'] = [
+                    'data_publicacao' => '',
+                    'data_inicio_contagem' => '',
+                    'data_decurso_prazo' => '',
+                    'data_limite_formatada' => '',
+                    'prazo_cumprido' => false,
+                    'libera_conclusao' => false,
+                    'dias_restantes' => 0,
+                ];
             }
         }
         return [
@@ -221,6 +236,20 @@ final class EditaisService
             if ($dtPublicacao === false || $dtPublicacao->format('Y-m-d') !== $dataPublicacao) {
                 throw new InvalidArgumentException('Data da publicação inválida.');
             }
+            $edital = $this->repository->findById($editalId);
+            if ($edital === null) {
+                throw new InvalidArgumentException('Edital não encontrado para calcular o decurso.');
+            }
+            $prazoDias = (int) ($edital['prazo_dias'] ?? 0);
+            if ($prazoDias < 1) {
+                throw new InvalidArgumentException('Prazo do edital inválido para calcular o decurso.');
+            }
+            [$inicioContagem, $dataDecurso] = $this->calcularInicioEDataDecurso($dataPublicacao, $prazoDias);
+            $this->repository->update($editalId, [
+                'data_publicacao' => $dataPublicacao,
+                'data_inicio_contagem' => $inicioContagem,
+                'data_decurso_prazo' => $dataDecurso,
+            ]);
         }
 
         if ($ordem === 4) {
@@ -287,27 +316,32 @@ final class EditaisService
             throw new InvalidArgumentException('A certificação da publicação (subtarefa 3) deve estar concluída antes de certificar o decurso do prazo.');
         }
 
-        $dadosJson = $subtarefa3['dados_especificos'] ?? null;
-        $dataPublicacao = null;
-        if ($dadosJson !== null && $dadosJson !== '') {
-            $dados = json_decode($dadosJson, true);
-            if (is_array($dados)) {
-                $dataPublicacao = trim((string) ($dados['data_publicacao'] ?? ''));
+        $dataPublicacao = trim((string) ($edital['data_publicacao'] ?? ''));
+        if ($dataPublicacao === '') {
+            $dadosJson = $subtarefa3['dados_especificos'] ?? null;
+            if ($dadosJson !== null && $dadosJson !== '') {
+                $dados = json_decode($dadosJson, true);
+                if (is_array($dados)) {
+                    $dataPublicacao = trim((string) ($dados['data_publicacao'] ?? ''));
+                }
             }
         }
         if ($dataPublicacao === '') {
             throw new InvalidArgumentException('Data da publicação não informada na subtarefa anterior. Não é possível calcular o decurso do prazo.');
         }
 
-        $dtPub = \DateTime::createFromFormat('Y-m-d', $dataPublicacao);
-        if ($dtPub === false) {
-            throw new InvalidArgumentException('Data da publicação inválida.');
+        $dataDecurso = trim((string) ($edital['data_decurso_prazo'] ?? ''));
+        if ($dataDecurso === '') {
+            throw new InvalidArgumentException('Data de decurso não calculada. Refaça a certificação da publicação.');
         }
-        $dtPub->modify('+' . $prazoDias . ' days');
+        $dtPub = \DateTime::createFromFormat('Y-m-d', $dataDecurso);
+        if ($dtPub === false || $dtPub->format('Y-m-d') !== $dataDecurso) {
+            throw new InvalidArgumentException('Data do decurso inválida.');
+        }
         $hoje = new \DateTime('today');
-        if ($hoje < $dtPub) {
+        if ($hoje <= $dtPub) {
             $decursoFormatado = $dtPub->format('d/m/Y');
-            throw new InvalidArgumentException('O prazo do edital ainda não decorreu. Só é possível certificar o decurso após ' . $decursoFormatado . '.');
+            throw new InvalidArgumentException('O prazo do edital ainda não decorreu. Só é possível certificar o decurso a partir do dia seguinte a ' . $decursoFormatado . '.');
         }
     }
 
@@ -319,41 +353,221 @@ final class EditaisService
     {
         $edital = $this->repository->findById($editalId);
         if ($edital === null) {
-            return ['data_publicacao' => '', 'data_limite_decurso' => '', 'data_limite_formatada' => '', 'prazo_cumprido' => false];
+            return [
+                'data_publicacao' => '',
+                'data_inicio_contagem' => '',
+                'data_limite_decurso' => '',
+                'data_limite_formatada' => '',
+                'prazo_cumprido' => false,
+                'libera_conclusao' => false,
+                'dias_restantes' => 0,
+            ];
         }
         $prazoDias = (int) ($edital['prazo_dias'] ?? 0);
+        $dataPublicacao = $this->resolverDataPublicacaoParaDecurso($edital);
+        $dataInicioContagem = trim((string) ($edital['data_inicio_contagem'] ?? ''));
+        $dataDecurso = trim((string) ($edital['data_decurso_prazo'] ?? ''));
+        if ($dataPublicacao === '' || $prazoDias < 1) {
+            return [
+                'data_publicacao' => $dataPublicacao,
+                'data_inicio_contagem' => '',
+                'data_limite_decurso' => '',
+                'data_limite_formatada' => '',
+                'prazo_cumprido' => false,
+                'libera_conclusao' => false,
+                'dias_restantes' => 0,
+            ];
+        }
+
+        if ($dataInicioContagem === '' || $dataDecurso === '') {
+            [$dataInicioContagem, $dataDecurso] = $this->calcularInicioEDataDecurso($dataPublicacao, $prazoDias);
+            $this->repository->update($editalId, [
+                'data_inicio_contagem' => $dataInicioContagem,
+                'data_decurso_prazo' => $dataDecurso,
+            ]);
+        }
+        $dtDecurso = \DateTime::createFromFormat('Y-m-d', $dataDecurso);
+        if ($dtDecurso === false || $dtDecurso->format('Y-m-d') !== $dataDecurso) {
+            return [
+                'data_publicacao' => $dataPublicacao,
+                'data_inicio_contagem' => $dataInicioContagem,
+                'data_limite_decurso' => '',
+                'data_limite_formatada' => '',
+                'prazo_cumprido' => false,
+                'libera_conclusao' => false,
+                'dias_restantes' => 0,
+            ];
+        }
+        $hoje = new \DateTimeImmutable('today');
+        $dtDecursoImutavel = \DateTimeImmutable::createFromMutable($dtDecurso);
+        $prazoCumprido = $hoje >= $dtDecursoImutavel;
+        $liberaConclusao = $hoje > $dtDecursoImutavel;
+        $diasRestantes = 0;
+        if ($hoje < $dtDecursoImutavel) {
+            $diasRestantes = (int) $hoje->diff($dtDecursoImutavel)->days;
+        }
+        return [
+            'data_publicacao' => $dataPublicacao,
+            'data_inicio_contagem' => $dataInicioContagem,
+            'data_limite_decurso' => $dataDecurso,
+            'data_limite_formatada' => $dtDecursoImutavel->format('d/m/Y'),
+            'prazo_cumprido' => $prazoCumprido,
+            'libera_conclusao' => $liberaConclusao,
+            'dias_restantes' => $diasRestantes,
+        ];
+    }
+
+    /**
+     * Recalcula e persiste `data_inicio_contagem` e `data_decurso_prazo` nos editais em fluxo
+     * cujo intervalo de contagem intercepta o período do feriado (inclusive extremos).
+     */
+    public function recalcularDecursosPorSobreposicaoFeriado(string $ferIni, string $ferFim): int
+    {
+        $ids = $this->repository->findIdsComDecursoPorSobreposicaoFeriado($ferIni, $ferFim);
+
+        return $this->recalcularDecursoParaEditalIds($ids);
+    }
+
+    /**
+     * @param list<array{0:string,1:string}> $intervalos Lista de [data_inicio, data_fim] do feriado (Y-m-d)
+     */
+    public function recalcularDecursosPorIntervalosFeriado(array $intervalos): int
+    {
+        $unicos = [];
+        foreach ($intervalos as $par) {
+            if (!is_array($par) || count($par) < 2) {
+                continue;
+            }
+            $ini = trim((string) ($par[0] ?? ''));
+            $fim = trim((string) ($par[1] ?? ''));
+            if ($ini === '' || $fim === '' || $fim < $ini) {
+                continue;
+            }
+            foreach ($this->repository->findIdsComDecursoPorSobreposicaoFeriado($ini, $fim) as $id) {
+                $id = trim((string) $id);
+                if ($id !== '') {
+                    $unicos[$id] = true;
+                }
+            }
+        }
+
+        return $this->recalcularDecursoParaEditalIds(array_keys($unicos));
+    }
+
+    /**
+     * @param list<string> $ids
+     */
+    public function recalcularDecursoParaEditalIds(array $ids): int
+    {
+        $n = 0;
+        foreach (array_unique(array_map('strval', $ids)) as $id) {
+            $id = trim($id);
+            if ($id === '') {
+                continue;
+            }
+            if ($this->recalcularESalvarDecursoEdital($id)) {
+                $n++;
+            }
+        }
+
+        return $n;
+    }
+
+    private function recalcularESalvarDecursoEdital(string $editalId): bool
+    {
+        $edital = $this->repository->findById($editalId);
+        if ($edital === null) {
+            return false;
+        }
+        $dataPublicacao = $this->resolverDataPublicacaoParaDecurso($edital);
+        $prazoDias = (int) ($edital['prazo_dias'] ?? 0);
+        if ($dataPublicacao === '' || $prazoDias < 1) {
+            return false;
+        }
+        try {
+            [$inicioContagem, $dataDecurso] = $this->calcularInicioEDataDecurso($dataPublicacao, $prazoDias);
+        } catch (InvalidArgumentException $e) {
+            return false;
+        }
+        $this->repository->update($editalId, [
+            'data_inicio_contagem' => $inicioContagem,
+            'data_decurso_prazo' => $dataDecurso,
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Data de publicação na tabela `editais` ou, se vazia, em dados_especificos da subtarefa 3 concluída.
+     */
+    private function resolverDataPublicacaoParaDecurso(array $edital): string
+    {
+        $dataPublicacao = trim((string) ($edital['data_publicacao'] ?? ''));
+        if ($dataPublicacao !== '') {
+            return $dataPublicacao;
+        }
+        $editalId = trim((string) ($edital['id'] ?? ''));
+        if ($editalId === '') {
+            return '';
+        }
         $subtarefas = $this->subtarefasRepository->findByEditalId($editalId);
-        $dataPublicacao = '';
         foreach ($subtarefas as $st) {
             if ((int) ($st['ordem'] ?? 0) === 3 && trim((string) ($st['status'] ?? '')) === 'concluida') {
                 $dadosJson = $st['dados_especificos'] ?? null;
                 if ($dadosJson !== null && $dadosJson !== '') {
-                    $dados = json_decode($dadosJson, true);
+                    $dados = json_decode((string) $dadosJson, true);
                     if (is_array($dados)) {
-                        $dataPublicacao = trim((string) ($dados['data_publicacao'] ?? ''));
+                        return trim((string) ($dados['data_publicacao'] ?? ''));
                     }
                 }
                 break;
             }
         }
-        if ($dataPublicacao === '' || $prazoDias < 1) {
-            return ['data_publicacao' => $dataPublicacao, 'data_limite_decurso' => '', 'data_limite_formatada' => '', 'prazo_cumprido' => false];
+
+        return '';
+    }
+
+    /**
+     * Regras definidas:
+     * - início = dia seguinte da publicação, ajustado para próximo dia útil;
+     * - contagem processual = dia inicial não conta => soma exatamente prazo_dias ao início;
+     * - vencimento ajustado para próximo dia útil se cair em sábado/domingo/feriado.
+     *
+     * @return array{0:string,1:string} [data_inicio_contagem, data_decurso_prazo]
+     */
+    private function calcularInicioEDataDecurso(string $dataPublicacao, int $prazoDias): array
+    {
+        $publicacao = \DateTimeImmutable::createFromFormat('Y-m-d', $dataPublicacao);
+        if ($publicacao === false || $publicacao->format('Y-m-d') !== $dataPublicacao) {
+            throw new InvalidArgumentException('Data da publicação inválida para cálculo do decurso.');
         }
-        $dtPub = \DateTime::createFromFormat('Y-m-d', $dataPublicacao);
-        if ($dtPub === false) {
-            return ['data_publicacao' => $dataPublicacao, 'data_limite_decurso' => '', 'data_limite_formatada' => '', 'prazo_cumprido' => false];
+
+        $inicio = $publicacao->modify('+1 day');
+        $inicio = $this->proximoDiaUtil($inicio);
+
+        $decurso = $inicio->modify('+' . $prazoDias . ' days');
+        $decurso = $this->proximoDiaUtil($decurso);
+
+        return [$inicio->format('Y-m-d'), $decurso->format('Y-m-d')];
+    }
+
+    private function proximoDiaUtil(\DateTimeImmutable $data): \DateTimeImmutable
+    {
+        $cursor = $data;
+        while ($this->isDiaNaoUtil($cursor)) {
+            $cursor = $cursor->modify('+1 day');
         }
-        $dtPub->modify('+' . $prazoDias . ' days');
-        $dataLimite = $dtPub->format('Y-m-d');
-        $dataLimiteFormatada = $dtPub->format('d/m/Y');
-        $hoje = new \DateTime('today');
-        $prazoCumprido = $hoje >= $dtPub;
-        return [
-            'data_publicacao' => $dataPublicacao,
-            'data_limite_decurso' => $dataLimite,
-            'data_limite_formatada' => $dataLimiteFormatada,
-            'prazo_cumprido' => $prazoCumprido,
-        ];
+        return $cursor;
+    }
+
+    private function isDiaNaoUtil(\DateTimeImmutable $data): bool
+    {
+        $diaSemana = (int) $data->format('N');
+        if ($diaSemana >= 6) {
+            return true;
+        }
+
+        return $this->feriadosRepository->isDiaNaoUtil($data);
     }
 
     private function normalizeTipoAlocado(string $tipo): string

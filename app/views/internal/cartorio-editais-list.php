@@ -72,7 +72,7 @@ $subtarefaLabels = [
     'expedicao_edital' => 'Expedição de Edital',
     'envio_djen' => 'Envio para publicação no DJEN',
     'certificacao_publicacao' => 'Certificação da publicação',
-    'certificacao_decurso_prazo' => 'Certificação de decurso do prazo',
+    'certificacao_decurso_prazo' => 'Aguardando decurso do prazo',
 ];
 $ordemLabels = [
     1 => $subtarefaLabels['expedicao_edital'],
@@ -209,6 +209,7 @@ if ($totalPages > 0) {
             <?php foreach ($rows as $row):
                 $idEdital = $row['IdEdital'];
                 $subtarefas = $row['Subtarefas'] ?? [];
+                $decursoInfo = is_array($row['DecursoInfo'] ?? null) ? $row['DecursoInfo'] : [];
                 $statusTarefa = (string) ($row['Status'] ?? '');
                 $tarefaConcluida = in_array($statusTarefa, ['concluída', 'concluida', 'finalizada'], true);
                 $allSt = $row['SubtarefasAll'] ?? [];
@@ -331,6 +332,7 @@ if ($totalPages > 0) {
                             $stTipo = $st['tipo'] ?? '';
                             $stTipoNormalizado = strtolower(trim((string) $stTipo));
                             $isCertificacaoPublicacao = in_array($stTipoNormalizado, ['certificacao_publicacao', 'certificacao_diario', 'publicacao_certificada'], true);
+                            $isCertificacaoDecurso = in_array($stTipoNormalizado, ['certificacao_decurso_prazo', 'decurso_prazo', 'certificar_decurso'], true);
                             $stLabel = $subtarefaLabels[$stTipo] ?? $stTipo;
                             $dadosEspecificosSt = [];
                             if (!empty($st['dados_especificos'])) {
@@ -339,7 +341,13 @@ if ($totalPages > 0) {
                                     $dadosEspecificosSt = $dadosDecode;
                                 }
                             }
-                            $dataPublicacaoValue = trim((string) ($dadosEspecificosSt['data_publicacao'] ?? ''));
+                            $dataPublicacaoValue = trim((string) ($row['DataPublicacao'] ?? $row['data_publicacao'] ?? ''));
+                            if ($dataPublicacaoValue === '') {
+                                $dataPublicacaoValue = trim((string) ($dadosEspecificosSt['data_publicacao'] ?? ''));
+                            }
+                            $liberaDecurso = (bool) ($decursoInfo['libera_conclusao'] ?? false);
+                            $diasRestantesDecurso = (int) ($decursoInfo['dias_restantes'] ?? 0);
+                            $venceHojeDecurso = (!$liberaDecurso && $diasRestantesDecurso === 0 && !empty($decursoInfo['data_limite_decurso']));
                         ?>
                         <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
                             <div class="display-flex row row-fit justify-start gap-y-sm align-center subtask-row-fields">
@@ -351,11 +359,20 @@ if ($totalPages > 0) {
                                         <input type="date" class="width-300 height-sm subtask-data-publicacao" value="<?php echo htmlspecialchars($dataPublicacaoValue, ENT_QUOTES); ?>" title="Data da publicação no diário">
                                     </div>
                                 <?php endif; ?>
+                                <?php if ($isCertificacaoDecurso): ?>
+                                    <div class="col">
+                                        <span class="minor-info">
+                                            <?php echo $venceHojeDecurso ? 'Vence hoje' : ((int) $diasRestantesDecurso . ' dias restantes'); ?>
+                                        </span>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                             <div class="display-flex row row-fit justify-end align-center">
-                                <button type="button" class="btn btn-primary height-sm btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($stLabel, ENT_QUOTES); ?>">
-                                    <span class="value-button"><?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?></span>
-                                </button>
+                                <?php if (!$isCertificacaoDecurso || $liberaDecurso): ?>
+                                    <button type="button" class="btn btn-primary height-sm btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($stLabel, ENT_QUOTES); ?>">
+                                        <span class="value-button"><?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?></span>
+                                    </button>
+                                <?php endif; ?>
                             </div>
                         </div>
                         <?php endforeach; ?>

@@ -44,7 +44,7 @@ final class EditaisRepository
 
         $joinClause = ' LEFT JOIN `processos` p ON p.`id` = e.`processo_id` LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id` ';
         $sql = sprintf(
-            'SELECT e.`id` AS `IdEdital`, COALESCE(p.`numero_processo`, \'\') AS `Processo`, COALESCE(cl.`nome`, \'\') AS `Classe`, e.`tipo_edital` AS `TipoEdital`, e.`prazo_dias` AS `PrazoDias`, e.`status` AS `Status`, e.`created_at` AS `Data`, e.`observacoes` FROM `%s` e %s %s ORDER BY %s, e.`created_at` DESC LIMIT :limit OFFSET :offset',
+            'SELECT e.`id` AS `IdEdital`, COALESCE(p.`numero_processo`, \'\') AS `Processo`, COALESCE(cl.`nome`, \'\') AS `Classe`, e.`tipo_edital` AS `TipoEdital`, e.`prazo_dias` AS `PrazoDias`, e.`data_publicacao` AS `DataPublicacao`, e.`data_inicio_contagem` AS `DataInicioContagem`, e.`data_decurso_prazo` AS `DataDecursoPrazo`, e.`status` AS `Status`, e.`created_at` AS `Data`, e.`observacoes` FROM `%s` e %s %s ORDER BY %s, e.`created_at` DESC LIMIT :limit OFFSET :offset',
             $this->table,
             $joinClause,
             $whereClause ? 'WHERE ' . $whereClause : '',
@@ -115,7 +115,7 @@ final class EditaisRepository
 
         $statement = $this->connection->prepare(
             sprintf(
-                'INSERT INTO `%s` (`id`, `processo_id`, `status`, `tipo_edital`, `prazo_dias`, `observacoes`, `created_at`, `updated_at`) VALUES (:id, :processo_id, :status, :tipo_edital, :prazo_dias, :observacoes, NOW(), NOW())',
+                'INSERT INTO `%s` (`id`, `processo_id`, `status`, `tipo_edital`, `prazo_dias`, `data_publicacao`, `data_inicio_contagem`, `data_decurso_prazo`, `observacoes`, `created_at`, `updated_at`) VALUES (:id, :processo_id, :status, :tipo_edital, :prazo_dias, :data_publicacao, :data_inicio_contagem, :data_decurso_prazo, :observacoes, NOW(), NOW())',
                 $this->table
             )
         );
@@ -124,6 +124,9 @@ final class EditaisRepository
         $statement->bindValue(':status', $row['status']);
         $statement->bindValue(':tipo_edital', $row['tipo_edital'] ?? null);
         $statement->bindValue(':prazo_dias', isset($row['prazo_dias']) ? (int) $row['prazo_dias'] : 0, PDO::PARAM_INT);
+        $statement->bindValue(':data_publicacao', $row['data_publicacao'] ?? null);
+        $statement->bindValue(':data_inicio_contagem', $row['data_inicio_contagem'] ?? null);
+        $statement->bindValue(':data_decurso_prazo', $row['data_decurso_prazo'] ?? null);
         $statement->bindValue(':observacoes', $row['observacoes'] ?? null);
         $statement->execute();
 
@@ -132,7 +135,7 @@ final class EditaisRepository
 
     public function update(string $id, array $payload): bool
     {
-        $allowed = ['processo_id', 'status', 'tipo_edital', 'prazo_dias', 'observacoes'];
+        $allowed = ['processo_id', 'status', 'tipo_edital', 'prazo_dias', 'data_publicacao', 'data_inicio_contagem', 'data_decurso_prazo', 'observacoes'];
         $set = [];
         $params = [':id' => $id];
         foreach ($allowed as $col) {
@@ -230,5 +233,43 @@ final class EditaisRepository
     public function getTableName(): string
     {
         return $this->table;
+    }
+
+    /**
+     * Editais em fluxo (não concluídos nem cancelados) com decurso já calculado e intervalo
+     * [data_inicio_contagem, data_decurso_prazo] interceptando o intervalo do feriado [ferIni, ferFim].
+     *
+     * @return list<string> IDs dos editais
+     */
+    public function findIdsComDecursoPorSobreposicaoFeriado(string $ferIni, string $ferFim): array
+    {
+        $ferIni = trim($ferIni);
+        $ferFim = trim($ferFim);
+        if ($ferIni === '' || $ferFim === '' || $ferFim < $ferIni) {
+            return [];
+        }
+
+        $sql = sprintf(
+            'SELECT e.`id` FROM `%s` e WHERE e.`status` COLLATE %s NOT IN (\'concluída\', \'cancelada\')
+                AND e.`prazo_dias` >= 1
+                AND e.`data_inicio_contagem` IS NOT NULL
+                AND e.`data_decurso_prazo` IS NOT NULL
+                AND e.`data_inicio_contagem` <= :fer_fim
+                AND e.`data_decurso_prazo` >= :fer_ini',
+            $this->table,
+            self::COLLATION
+        );
+
+        $statement = $this->connection->prepare($sql);
+        $statement->bindValue(':fer_ini', $ferIni);
+        $statement->bindValue(':fer_fim', $ferFim);
+        $statement->execute();
+        $rows = $statement->fetchAll(PDO::FETCH_COLUMN, 0);
+
+        if (!is_array($rows)) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map('strval', $rows)));
     }
 }

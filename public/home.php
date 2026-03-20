@@ -171,7 +171,8 @@ $userProfile = Security::getUserProfile() ?? '';
             'AUDIENCIA': ['Cartório', 'Sala de Audiências', 'Consultas'],
             'CARTORIO': ['Cartório', 'Consultas'],
             'GABINETE': ['Cartório', 'Sala de Audiências', 'Gabinete', 'Consultas'],
-            'ADMIN': ['Cartório', 'Gabinete', 'Sala de Audiências', 'Estudantes', 'Consultas', 'Audiências', 'Admin']
+            'ADMIN': ['Cartório', 'Gabinete', 'Sala de Audiências', 'Estudantes', 'Consultas', 'Audiências', 'Admin'],
+            'DIRETORA': ['Consultas', 'Admin']
         };
 
         const MENU_SECTIONS = [
@@ -238,7 +239,8 @@ $userProfile = Security::getUserProfile() ?? '';
             {
                 section: 'Admin',
                 items: [
-                    { icon: 'fi fi-rs-id-badge', label: 'Usuários', target: 'usuarioslist' }
+                    { icon: 'fi fi-rs-id-badge', label: 'Usuários', target: 'usuarioslist', allowedPerfis: ['ADMIN'] },
+                    { icon: 'fi fi-rs-calendar', label: 'Feriados', target: 'feriadoslist', allowedPerfis: ['ADMIN', 'DIRETORA'] }
                 ]
             }
         ];
@@ -363,7 +365,14 @@ $userProfile = Security::getUserProfile() ?? '';
             menuRoot.appendChild(li);
         }
 
-        function buildMenuForSections(permittedSections) {
+        function itemAllowedForUser(item, perfis) {
+            if (!item.allowedPerfis || item.allowedPerfis.length === 0) {
+                return true;
+            }
+            return item.allowedPerfis.some(p => perfis.includes(p));
+        }
+
+        function buildMenuForSections(permittedSections, perfis) {
             const menuRoot = document.querySelector('.menu-inner');
 
             if (!menuRoot) {
@@ -372,6 +381,26 @@ $userProfile = Security::getUserProfile() ?? '';
 
             MENU_SECTIONS.forEach(section => {
                 if (!permittedSections.has(section.section)) {
+                    return;
+                }
+
+                const visibleItems = [];
+                section.items.forEach(item => {
+                    if (!itemAllowedForUser(item, perfis)) {
+                        return;
+                    }
+                    if (item.type === 'submenu') {
+                        const children = (item.children || []).filter(c => itemAllowedForUser(c, perfis));
+                        if (children.length === 0) {
+                            return;
+                        }
+                        visibleItems.push(Object.assign({}, item, { children }));
+                    } else {
+                        visibleItems.push(item);
+                    }
+                });
+
+                if (visibleItems.length === 0) {
                     return;
                 }
 
@@ -385,7 +414,7 @@ $userProfile = Security::getUserProfile() ?? '';
 
                 menuRoot.appendChild(header);
 
-                section.items.forEach(item => {
+                visibleItems.forEach(item => {
                     menuRoot.appendChild(createMenuItem(item));
                 });
             });
@@ -394,7 +423,7 @@ $userProfile = Security::getUserProfile() ?? '';
         async function initDynamicMenu() {
             const perfis = await fetchUserPerfis();
             const permittedSections = getPermittedSections(perfis);
-            buildMenuForSections(permittedSections);
+            buildMenuForSections(permittedSections, perfis);
             appendLogoutItem();
         }
 
