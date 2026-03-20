@@ -592,7 +592,7 @@ if (!function_exists('cartorioTimelineGetConfig')) {
         if ($module === 'medidas_protetivas') {
             $qtd = (int) ($dados['qtd'] ?? 0);
             if ($ordem === 1) {
-                return cartorioTimelineContent(($qtd > 0 ? $qtd : '—') . ' partes cadastradas no PJe', 'Cadastro realizado por ' . $user . ' em ' . $movementDate);
+                return cartorioTimelineContent($qtd . ' partes cadastradas no PJe', 'Cadastro realizado por ' . $user . ' em ' . $movementDate);
             }
             return cartorioTimelineContent(($qtd > 0 ? $qtd : '—') . ' mandados de intimacao expedidos', 'Expedicao realizada por ' . $user . ' em ' . $movementDate);
         }

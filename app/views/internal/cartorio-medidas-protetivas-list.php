@@ -288,16 +288,34 @@ if ($totalPages > 0) {
                                     <div class="padding-x-lg height-sm status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
                                 </div>
                                 <div class="col">
+                                    <?php if ($stTipo === 'cadastro_partes_pje'): ?>
                                     <input
                                         type="number"
                                         class="subtask-qtd width-300 height-sm"
                                         data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>"
-                                        title="Quantidade realizada"
-                                        placeholder="Informar quantidade"
-                                        min="1"
+                                        data-qtd-min="0"
+                                        data-qtd-max="10"
+                                        title="Quantidade de partes cadastradas no PJe (0 a 10)"
+                                        min="0"
+                                        max="10"
+                                        value="2"
                                         step="1"
                                         inputmode="numeric"
                                     >
+                                    <?php else: ?>
+                                    <input
+                                        type="number"
+                                        class="subtask-qtd width-300 height-sm"
+                                        data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>"
+                                        data-qtd-min="1"
+                                        data-qtd-max="10"
+                                        title="Quantidade de mandados de intimação expedidos (1 a 10)"
+                                        min="1"
+                                        max="10"
+                                        step="1"
+                                        inputmode="numeric"
+                                    >
+                                    <?php endif; ?>
                                 </div>
                             </div>
                             <div class="display-flex row row-fit justify-end align-center">
@@ -453,10 +471,26 @@ if ($totalPages > 0) {
                     var block = this.closest('[data-subtarefa-id][data-subtarefa-tipo]');
                     if (!subtarefaId) return;
                     var qtdInput = block ? block.querySelector('.subtask-qtd') : null;
+                    var tipo = block ? (block.getAttribute('data-subtarefa-tipo') || '') : '';
                     var qtdRaw = qtdInput ? String(qtdInput.value || '').trim() : '';
-                    var qtdInt = parseInt(qtdRaw || '0', 10);
-                    if (qtdRaw === '' || isNaN(qtdInt) || qtdInt < 1) {
-                        notify('error', 'Campo obrigatório', 'Informe uma quantidade maior que zero.');
+                    var qtdInt = parseInt(qtdRaw, 10);
+                    var minQ = tipo === 'cadastro_partes_pje' ? 0 : 1;
+                    var maxQ = 10;
+                    if (qtdInput && qtdInput.getAttribute('data-qtd-min') !== null) {
+                        minQ = parseInt(qtdInput.getAttribute('data-qtd-min'), 10);
+                        if (isNaN(minQ)) minQ = tipo === 'cadastro_partes_pje' ? 0 : 1;
+                    }
+                    if (qtdInput && qtdInput.getAttribute('data-qtd-max') !== null) {
+                        maxQ = parseInt(qtdInput.getAttribute('data-qtd-max'), 10);
+                        if (isNaN(maxQ)) maxQ = 10;
+                    }
+                    if (qtdRaw === '' || isNaN(qtdInt)) {
+                        notify('error', 'Campo obrigatório', 'Informe a quantidade.');
+                        if (qtdInput) qtdInput.focus();
+                        return;
+                    }
+                    if (qtdInt < minQ || qtdInt > maxQ) {
+                        notify('error', 'Quantidade inválida', 'Use um valor entre ' + minQ + ' e ' + maxQ + '.');
                         if (qtdInput) qtdInput.focus();
                         return;
                     }

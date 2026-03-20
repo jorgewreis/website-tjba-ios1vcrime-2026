@@ -17,6 +17,10 @@ require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
 
 final class MedidasProtetivasService
 {
+    /** Quantidade na subtarefa «Cadastro de partes no PJe» (0 = nenhuma). Limite superior para todas as subtarefas com campo numérico. */
+    public const QTD_PARTES_PJE_MIN = 0;
+    public const QTD_QUANTIDADE_MAX = 10;
+
     private PDO $connection;
     private MedidasProtetivasRepository $repository;
     private MedidasProtetivasSubtarefasRepository $subtarefasRepository;
@@ -299,9 +303,23 @@ final class MedidasProtetivasService
             if (!is_array($dadosArray)) {
                 throw new InvalidArgumentException('Dados específicos inválidos.');
             }
-            $qtd = isset($dadosArray['qtd']) ? (int) $dadosArray['qtd'] : 0;
-            if ($qtd < 1) {
-                throw new InvalidArgumentException('Informe uma quantidade maior que zero para concluir a subtarefa.');
+            $tipoSub = trim((string) ($subtarefa['tipo'] ?? ''));
+            $qtd = array_key_exists('qtd', $dadosArray) ? (int) $dadosArray['qtd'] : -1;
+
+            if ($tipoSub === MedidasProtetivasSubtarefasRepository::TIPO_ORDEM_1) {
+                if ($qtd < self::QTD_PARTES_PJE_MIN || $qtd > self::QTD_QUANTIDADE_MAX) {
+                    throw new InvalidArgumentException(
+                        'A quantidade de partes cadastradas no PJe deve ser entre '
+                        . self::QTD_PARTES_PJE_MIN . ' e ' . self::QTD_QUANTIDADE_MAX . '.'
+                    );
+                }
+            } else {
+                if ($qtd < 1) {
+                    throw new InvalidArgumentException('Informe uma quantidade maior que zero para concluir a subtarefa.');
+                }
+                if ($qtd > self::QTD_QUANTIDADE_MAX) {
+                    throw new InvalidArgumentException('A quantidade não pode ser maior que ' . self::QTD_QUANTIDADE_MAX . '.');
+                }
             }
 
             $usuarioIdMovimentacao = trim((string) ($dadosArray['usuario_id'] ?? ''));
