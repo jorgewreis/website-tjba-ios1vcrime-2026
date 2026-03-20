@@ -27,4 +27,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correcao de perfis** `[b79390d]`
 - **Feat: implementacao de funcao para alterar avatar de usuario** `[b45587b]`
 - **Fix: alteracao do modelo de imagens do avatar** `[135be03]`
+- **Fix: pequenos ajustes do avatar** `[a5a0d41]`
 
