@@ -21,6 +21,39 @@ final class AvatarCatalog
 
     private const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 
+    /**
+     * Nomes exibidos no select (slugs = nome do ficheiro sem extensão).
+     * H-* = avatares masculinos, M-* = femininos.
+     *
+     * @var array<string, string>
+     */
+    private const VIVID_DISPLAY_NAMES = [
+        'H-001' => 'Rafael',
+        'H-002' => 'Lucas',
+        'H-003' => 'Gabriel',
+        'H-004' => 'Matheus',
+        'H-005' => 'Bruno',
+        'H-006' => 'Thiago',
+        'H-007' => 'André',
+        'H-008' => 'Felipe',
+        'M-001' => 'Ana',
+        'M-002' => 'Beatriz',
+        'M-003' => 'Camila',
+        'M-004' => 'Daniela',
+        'M-005' => 'Eduarda',
+        'M-006' => 'Fernanda',
+        'M-007' => 'Gabriela',
+        'M-008' => 'Helena',
+        'M-009' => 'Isabela',
+        'M-010' => 'Júlia',
+        'M-011' => 'Larissa',
+        'M-012' => 'Mariana',
+        'M-013' => 'Natália',
+        'M-014' => 'Patrícia',
+        'M-015' => 'Renata',
+        'M-016' => 'Sofia',
+    ];
+
     /** @var list<AvatarEntry>|null */
     private static ?array $cached = null;
 
@@ -111,7 +144,7 @@ final class AvatarCatalog
             }
             $slug = $base;
             $url = self::DIR_VIVID_REL . '/' . rawurlencode($file);
-            $label = self::humanLabelFromStem($base);
+            $label = self::vividLabelForStem($base);
             $out[] = ['slug' => $slug, 'url' => $url, 'label' => $label];
         }
 
@@ -173,5 +206,13 @@ final class AvatarCatalog
     {
         $s = str_replace(['_', '-'], ' ', $stem);
         return $s !== '' ? $s : $stem;
+    }
+
+    private static function vividLabelForStem(string $stem): string
+    {
+        if (isset(self::VIVID_DISPLAY_NAMES[$stem])) {
+            return self::VIVID_DISPLAY_NAMES[$stem];
+        }
+        return self::humanLabelFromStem($stem);
     }
 }

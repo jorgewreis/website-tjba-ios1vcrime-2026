@@ -134,7 +134,7 @@ if (!$isUsuarioExterno && $dados !== null) {
             .avatar-edit-row { align-items: flex-start; }
             .avatar-edit-preview-wrap {
                 flex-shrink: 0;
-                width: 96px;
+                width: 160px;
                 height: 96px;
                 border-radius: 8px;
                 overflow: hidden;
@@ -233,7 +233,6 @@ if (!$isUsuarioExterno && $dados !== null) {
                                             <option value="<?php echo htmlspecialchars($av['slug'], ENT_QUOTES, 'UTF-8'); ?>"<?php echo ($currentAvatarSlug === $av['slug']) ? ' selected' : ''; ?>><?php echo htmlspecialchars($av['label'], ENT_QUOTES, 'UTF-8'); ?></option>
                                         <?php endforeach; ?>
                                     </select>
-                                    <p id="avatar-slug-hint" class="minor-info">Escolha uma imagem da lista (arquivos em <code>public/assets/img/avatars/vivid/</code>) ou a opção <strong>Iniciais</strong> (cores sorteadas a cada login).</p>
                                 </div>
                             </div>
                         </div>
