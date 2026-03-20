@@ -16,4 +16,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correcao de layouts** `[34777a6]`
 - **Fix: pequenos ajustes** `[56ad09d]`
 - **Fix: correcao de toasts e alerts** `[bda95f6]`
+- **Fix: correcao de edit usuario externo** `[c299674]`
 
