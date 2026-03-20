@@ -47,16 +47,16 @@ if (!empty($vinculo['instituicao_id'])) {
         <div class="location"><span class="all">Interno - Consultas -</span> <span class="specific">Editar vínculo</span></div>
         <h1 class="title-page">Editar vínculo: <?php echo htmlspecialchars($parteNome); ?> — <?php echo htmlspecialchars($instNome); ?></h1>
     </div>
-    <div class="card-page">
+    <div class="container-full card-page">
         <input type="hidden" id="vinculo-id" value="<?php echo htmlspecialchars($vinculo['id'] ?? ''); ?>">
-        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Dados do vínculo</div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Dados do vínculo</h2></div>
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col"><strong>Pessoa:</strong> <?php echo htmlspecialchars($parteNome); ?> <a href="/frame.php?page=consultapartesedit&id=<?php echo urlencode($vinculo['parte_id'] ?? ''); ?>" class="btn btn-secondary-outline">Ver pessoa</a></div>
         </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col"><strong>Instituição:</strong> <?php echo htmlspecialchars($instNome); ?></div>
         </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="setor_id">Setor</label>
                 <select class="width-200 height-md white" id="setor_id">
@@ -75,7 +75,7 @@ if (!empty($vinculo['instituicao_id'])) {
                 <input type="text" class="width-200 height-md white" id="cargo_funcao" value="<?php echo htmlspecialchars($vinculo['cargo_funcao'] ?? ''); ?>">
             </div>
         </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="data_inclusao">Data de inclusão <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="date" class="width-200 height-md white" id="data_inclusao" value="<?php echo htmlspecialchars($vinculo['data_inclusao'] ?? ''); ?>" required>
@@ -89,18 +89,18 @@ if (!empty($vinculo['instituicao_id'])) {
                 <input type="date" class="width-200 height-md white" id="data_fim" value="<?php echo htmlspecialchars($vinculo['data_fim'] ?? ''); ?>">
             </div>
         </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label><input type="checkbox" id="ativo"<?php echo !empty($vinculo['ativo']) ? ' checked' : ''; ?>> Ativo</label>
             </div>
         </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="observacoes">Observações</label>
                 <textarea class="width-600 height-md white" id="observacoes" rows="2"><?php echo htmlspecialchars($vinculo['observacoes'] ?? ''); ?></textarea>
             </div>
         </div>
-        <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
+        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
             <a href="/frame.php?page=partesinstituicoeslist" class="btn btn-secondary">Voltar</a>
             <button type="button" class="btn btn-primary" id="salvar-btn">Salvar</button>
         </div>

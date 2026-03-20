@@ -138,16 +138,16 @@ $timelineData = $edital !== null
         <p class="description-page">Acompanhe expedição, envio ao DJEN, certificação da publicação e decurso do prazo.</p>
     </div>
 
-    <div class="card-page">
+    <div class="container-full card-page">
         <?php if ($errorMessage !== ''): ?>
-            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col">
                     <label class="status status-cancelled"><?php echo htmlspecialchars($errorMessage, ENT_QUOTES); ?></label>
                 </div>
             </div>
         <?php else: ?>
-            <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Informações</div>
-            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line" style="justify-content: flex-start;">
+            <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Informações</h2></div>
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md" style="justify-content: flex-start;">
                 <div class="col filter">
                     <label for="filter-processo">Processo</label>
                     <input type="text" id="filter-processo" class="width-200 height-md readonly" value="<?php echo htmlspecialchars($processoNumero, ENT_QUOTES); ?>" readonly>
@@ -157,7 +157,7 @@ $timelineData = $edital !== null
                     <input type="text" id="filter-classe" class="width-600 height-md readonly" value="<?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?>" readonly>
                 </div>
             </div>
-            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col filter">
                     <label for="edit-tipo-edital">Tipo de edital</label>
                     <input type="text" id="edit-tipo-edital" class="width-400 height-md readonly" value="<?php echo htmlspecialchars($tipoEditalValue, ENT_QUOTES); ?>" readonly>
@@ -167,7 +167,7 @@ $timelineData = $edital !== null
                     <input type="text" id="edit-prazo-dias" class="width-100 height-md readonly" value="<?php echo $prazoDiasValue > 0 ? (int) $prazoDiasValue : '—'; ?>" readonly>
                 </div>
             </div>
-            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col filter">
                     <label for="edit-observacoes">Observações</label>
                     <input type="text" id="edit-observacoes" class="width-600 height-md" value="<?php echo htmlspecialchars($observacoesValue, ENT_QUOTES); ?>" placeholder="Opcional">
@@ -179,7 +179,7 @@ $timelineData = $edital !== null
             <input type="hidden" id="hidden-edital-id" value="<?php echo htmlspecialchars($idEdital, ENT_QUOTES); ?>">
         <?php endif; ?>
 
-        <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
+        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
             <button class="btn btn-secondary" id="voltar-btn">Voltar</button>
             <?php if ($errorMessage === ''): ?>
                 <button class="btn btn-primary" id="salvar-btn" type="button">Salvar alterações</button>

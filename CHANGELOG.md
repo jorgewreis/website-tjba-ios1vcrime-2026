@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0024
+
+**Data:** 2026-03-20 12:12:36 | **Commit:** `cbc4184` | **Tipo:** `patch`
+
+- Fix: ajustes de estilo
+
 ## V. 1.04.0023
 
 **Data:** 2026-03-20 12:01:00 | **Commit:** `0db7b91` | **Tipo:** `patch`
@@ -3432,6 +3438,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

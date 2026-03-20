@@ -31,16 +31,16 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
         <div class="location"><span class="all">Interno - Instituições -</span> <span class="specific">Editar</span></div>
         <h1 class="title-page"><?php echo htmlspecialchars($inst['nome'] ?? 'Instituição'); ?></h1>
     </div>
-    <div class="card-page">
+    <div class="container-full card-page">
         <input type="hidden" id="inst-id" value="<?php echo htmlspecialchars($inst['id']); ?>">
-        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Dados</div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Dados</h2></div>
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="nome">Nome <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="width-600 height-md white" id="nome" placeholder="Digite o nome completo" value="<?php echo htmlspecialchars($inst['nome'] ?? ''); ?>" required>
             </div>
         </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="nome_fantasia">Nome fantasia / Sigla</label>
                 <input type="text" class="width-200 height-md white" id="nome_fantasia" value="<?php echo htmlspecialchars($inst['nome_fantasia'] ?? ''); ?>">
@@ -53,35 +53,35 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
                 ?>">
             </div>
         </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="observacoes">Observações</label>
                 <textarea class="width-600 height-md white" id="observacoes" rows="2"><?php echo htmlspecialchars($inst['observacoes'] ?? ''); ?></textarea>
             </div>
         </div>
-        <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
+        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
             <a href="/frame.php?page=instituicoespublicas" class="btn btn-secondary">Voltar</a>
             <button type="button" class="btn btn-primary" id="salvar-btn">Salvar</button>
         </div>
 
-        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Endereços</div>
+        <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Endereços</h2></div>
         <div id="enderecos-list">
             <?php foreach ($inst['enderecos'] ?? [] as $e): ?>
-            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line" data-id="<?php echo htmlspecialchars($e['id'] ?? ''); ?>">
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md" data-id="<?php echo htmlspecialchars($e['id'] ?? ''); ?>">
                 <div class="col"><?php echo htmlspecialchars(trim(($e['logradouro'] ?? '') . ($e['numero'] ? ' ' . $e['numero'] : '') . ($e['bairro'] ? ' - ' . $e['bairro'] : '') . ($e['cidade'] ? ' - ' . $e['cidade'] : '') . ($e['uf'] ? '/' . $e['uf'] : ''))); ?></div>
                 <div class="col"><?php echo !empty($e['principal']) ? 'Principal' : '—'; ?></div>
                 <div class="col"><button type="button" class="btn btn-secondary-outline btn-del-end" data-id="<?php echo htmlspecialchars($e['id'] ?? ''); ?>">Excluir</button></div>
             </div>
             <?php endforeach; ?>
         </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="new-end-cep">CEP</label>
                 <input type="text" class="width-100 height-md white" id="new-end-cep" placeholder="00000-000" maxlength="9">
                 <button type="button" class="btn btn-secondary-outline" id="buscar-cep-btn">Buscar CEP</button>
             </div>
         </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="new-end-logradouro">Logradouro</label>
                 <input type="text" class="width-600 height-md white" id="new-end-logradouro" placeholder="Rua, avenida...">
@@ -95,7 +95,7 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
                 <input type="text" class="width-200 height-md white" id="new-end-complemento" placeholder="Sala, andar...">
             </div>
         </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="new-end-bairro">Bairro</label>
                 <input type="text" class="width-200 height-md white" id="new-end-bairro" placeholder="Bairro">
@@ -112,10 +112,10 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
             <button type="button" class="btn btn-secondary-outline" id="add-end-btn">Adicionar endereço</button>
         </div>
 
-        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Telefones</div>
+        <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Telefones</h2></div>
         <div id="telefones-list">
             <?php foreach ($inst['telefones'] ?? [] as $t): ?>
-            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line" data-id="<?php echo htmlspecialchars($t['id'] ?? ''); ?>">
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md" data-id="<?php echo htmlspecialchars($t['id'] ?? ''); ?>">
                 <div class="col"><?php echo htmlspecialchars($t['tipo'] ?? '—'); ?></div>
                 <div class="col"><?php echo htmlspecialchars($t['numero'] ?? ''); ?></div>
                 <div class="col"><?php echo htmlspecialchars($t['ramal'] ?? '—'); ?></div>
@@ -124,7 +124,7 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
             </div>
             <?php endforeach; ?>
         </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <input type="text" class="width-100 height-md white" id="new-tel-tipo" placeholder="Tipo">
             <input type="text" class="width-200 height-md white" id="new-tel-numero" placeholder="(00) 00000-0000">
             <input type="text" class="width-100 height-md white" id="new-tel-ramal" placeholder="Ramal">
@@ -132,17 +132,17 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
             <button type="button" class="btn btn-secondary-outline" id="add-tel-btn">Adicionar telefone</button>
         </div>
 
-        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Setores</div>
+        <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Setores</h2></div>
         <div id="setores-list">
             <?php foreach ($inst['setores'] ?? [] as $s): ?>
-            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line" data-id="<?php echo htmlspecialchars($s['id'] ?? ''); ?>">
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md" data-id="<?php echo htmlspecialchars($s['id'] ?? ''); ?>">
                 <div class="col"><?php echo htmlspecialchars($s['nome_setor'] ?? ''); ?></div>
                 <div class="col"><?php echo htmlspecialchars($s['sigla'] ?? '—'); ?></div>
                 <div class="col"><button type="button" class="btn btn-secondary-outline btn-del-setor" data-id="<?php echo htmlspecialchars($s['id'] ?? ''); ?>">Excluir</button></div>
             </div>
             <?php endforeach; ?>
         </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <input type="text" class="width-600 height-md white" id="new-setor-nome" placeholder="Nome do setor *">
             <input type="text" class="width-100 height-md white" id="new-setor-sigla" placeholder="Sigla">
             <button type="button" class="btn btn-secondary-outline" id="add-setor-btn">Adicionar setor</button>

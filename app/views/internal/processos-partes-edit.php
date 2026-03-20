@@ -37,15 +37,15 @@ $polosValidos = ['ativo' => 'Ativo', 'passivo' => 'Passivo', 'terceiros' => 'Ter
         <div class="location"><span class="all">Interno - Consultas -</span> <span class="specific">Editar vínculo</span></div>
         <h1 class="title-page">Editar vínculo: <?php echo htmlspecialchars($vinculo['numero_processo'] ?? ''); ?> — <?php echo htmlspecialchars($vinculo['nome_completo'] ?? ''); ?></h1>
     </div>
-    <div class="card-page">
+    <div class="container-full card-page">
         <input type="hidden" id="vinculo-id" value="<?php echo htmlspecialchars($vinculo['id'] ?? ''); ?>">
         <input type="hidden" id="processo-id" value="<?php echo htmlspecialchars($vinculo['processo_id'] ?? ''); ?>">
-        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Dados do vínculo</div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Dados do vínculo</h2></div>
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col"><strong>Processo:</strong> <?php echo htmlspecialchars($vinculo['numero_processo'] ?? '—'); ?></div>
             <div class="col"><strong>Parte:</strong> <?php echo htmlspecialchars($vinculo['nome_completo'] ?? '—'); ?> (<?php echo htmlspecialchars($vinculo['cpf'] ?? '—'); ?>)</div>
         </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="tipo_parte">Tipo de parte <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <select class="width-200 height-md white" id="tipo_parte" required>
@@ -65,7 +65,7 @@ $polosValidos = ['ativo' => 'Ativo', 'passivo' => 'Passivo', 'terceiros' => 'Ter
                 </select>
             </div>
         </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label><input type="checkbox" id="prioridade_mulher"<?php echo !empty($vinculo['prioridade_mulher']) ? ' checked' : ''; ?>> Prioridade mulher</label>
             </div>
@@ -79,7 +79,7 @@ $polosValidos = ['ativo' => 'Ativo', 'passivo' => 'Passivo', 'terceiros' => 'Ter
                 <label><input type="checkbox" id="prioridade_pessoa_deficiencia"<?php echo !empty($vinculo['prioridade_pessoa_deficiencia']) ? ' checked' : ''; ?>> Prioridade pessoa com deficiência</label>
             </div>
         </div>
-        <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
+        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
             <a href="/frame.php?page=consultaprocessosedit&id=<?php echo urlencode($vinculo['processo_id'] ?? ''); ?>" class="btn btn-secondary">Voltar</a>
             <button type="button" class="btn btn-primary" id="salvar-btn">Salvar</button>
         </div>

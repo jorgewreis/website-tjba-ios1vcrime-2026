@@ -258,18 +258,18 @@ $stateOptions = [
         </a>
     </div>
 
-    <div class="card-page">
+    <div class="container-full card-page">
         <?php if ($errorMessage !== ''): ?>
-            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col">
                     <label class="status status-cancelled"><?php echo htmlspecialchars($errorMessage, ENT_QUOTES); ?></label>
                 </div>
             </div>
         <?php else: ?>
             
-            <div class="row table subtitle left padding-tb-lg padding-lr-lg">Informações principais</div>
+            <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Informações principais</h2></div>
 
-            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col">
                     <label for="filter-processo">Processo</label>
                     <input type="text" id="filter-processo" class="width-200 height-md readonly" value="<?php echo htmlspecialchars($processoNumero, ENT_QUOTES); ?>" readonly>
@@ -293,7 +293,7 @@ $stateOptions = [
                     </select>
                 </div>
             </div>            
-            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col">
                     <label for="filter-cidade">Cidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="text" class="width-600 height-md" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="120" value="<?php echo htmlspecialchars($cidadeValue, ENT_QUOTES); ?>" required>
@@ -324,7 +324,7 @@ $stateOptions = [
             <input type="hidden" id="hidden-comarca-id" value="<?php echo htmlspecialchars($comarcaDestinoId, ENT_QUOTES); ?>">
 
         <?php endif; ?>
-        <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
+        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
             <button class="btn btn-secondary" id="voltar-btn">Voltar</button>
             <?php if ($errorMessage === ''): ?>
                 <button class="btn btn-primary" id="salvar-btn" type="button" disabled>Salvar alterações</button>                

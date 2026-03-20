@@ -43,10 +43,10 @@ if ($pessoa === null) {
         <h1 class="title-page"><?php echo htmlspecialchars($pessoa['nome_completo'] ?? 'Pessoa'); ?></h1>
         <p class="description-page">Dados básicos, telefones, endereços e vínculos com instituições.</p>
     </div>
-    <div class="card-page">
+    <div class="container-full card-page">
         <input type="hidden" id="parte-id" value="<?php echo htmlspecialchars(trim((string) ($pessoa['id'] ?? $pessoa['ID'] ?? ''))); ?>">
-        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Dados básicos</div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Dados básicos</h2></div>
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="cpf">CPF</label>
                 <input type="text" class="width-200 height-md white readyonl" id="cpf" value="<?php
@@ -59,7 +59,7 @@ if ($pessoa === null) {
                 <input type="text" class="width-600 height-md white" id="nome_completo" placeholder="Digite o nome completo" value="<?php echo htmlspecialchars($pessoa['nome_completo'] ?? ''); ?>">
             </div>
         </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="sexo">Sexo</label>
                 <select class="width-200 height-md white" id="sexo">
@@ -74,22 +74,22 @@ if ($pessoa === null) {
                 <input type="date" class="width-200 height-md white" id="data_nascimento" value="<?php echo htmlspecialchars($pessoa['data_nascimento'] ?? ''); ?>">
             </div>
         </div>
-        <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
+        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
             <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
             <button type="button" class="btn btn-primary" id="salvar-btn">Salvar dados</button>
         </div>
 
-        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Telefones</div>
+        <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Telefones</h2></div>
         <div id="telefones-list">
             <?php foreach ($pessoa['telefones'] ?? [] as $t): ?>
-            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line" data-id="<?php echo htmlspecialchars($t['id'] ?? ''); ?>">
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md" data-id="<?php echo htmlspecialchars($t['id'] ?? ''); ?>">
                 <div class="col"><?php echo htmlspecialchars($t['tipo'] ?? '—'); ?></div>
                 <div class="col"><?php echo htmlspecialchars($t['numero'] ?? ''); ?></div>
                 <div class="col"><button type="button" class="btn btn-secondary-outline btn-del-tel" data-id="<?php echo htmlspecialchars($t['id'] ?? ''); ?>">Excluir</button></div>
             </div>
             <?php endforeach; ?>
         </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="new-tel-tipo">Tipo</label>
                 <select class="width-200 height-md white" id="new-tel-tipo">
@@ -106,16 +106,16 @@ if ($pessoa === null) {
             <button type="button" class="btn btn-secondary-outline" id="add-tel-btn">Adicionar telefone</button>
         </div>
 
-        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Endereços</div>
+        <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Endereços</h2></div>
         <div id="enderecos-list">
             <?php foreach ($pessoa['enderecos'] ?? [] as $e): ?>
-            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line" data-id="<?php echo htmlspecialchars($e['id'] ?? ''); ?>">
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md" data-id="<?php echo htmlspecialchars($e['id'] ?? ''); ?>">
                 <div class="col"><?php echo htmlspecialchars(trim(($e['logradouro'] ?? '') . ' ' . ($e['numero'] ?? '') . ' ' . ($e['bairro'] ?? '') . ' ' . ($e['cidade'] ?? ''))); ?></div>
                 <div class="col"><button type="button" class="btn btn-secondary-outline btn-del-end" data-id="<?php echo htmlspecialchars($e['id'] ?? ''); ?>">Excluir</button></div>
             </div>
             <?php endforeach; ?>
         </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="new-end-cep">CEP</label>
                 <input type="text" class="width-100 height-md white" id="new-end-cep" placeholder="00000-000" maxlength="9">
@@ -125,7 +125,7 @@ if ($pessoa === null) {
                 <button type="button" class="btn btn-secondary-outline" id="buscar-cep-btn">Buscar CEP</button>
             </div>
         </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="new-end-logradouro">Logradouro</label>
                 <input type="text" class="width-600 height-md white" id="new-end-logradouro" placeholder="Rua, avenida...">
@@ -139,7 +139,7 @@ if ($pessoa === null) {
                 <input type="text" class="width-200 height-md white" id="new-end-complemento" placeholder="Sala, andar...">
             </div>
         </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="new-end-bairro">Bairro</label>
                 <input type="text" class="width-200 height-md white" id="new-end-bairro" placeholder="Bairro">
@@ -156,23 +156,23 @@ if ($pessoa === null) {
             <button type="button" class="btn btn-secondary-outline" id="add-end-btn">Adicionar endereço</button>
         </div>
 
-        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Vínculos com processos</div>
+        <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Vínculos com processos</h2></div>
         <div id="vinculos-processos">
             <?php foreach ($pessoa['vinculos_processos'] ?? [] as $vp): ?>
-            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col"><?php echo htmlspecialchars($vp['numero_processo'] ?? $vp['processo_id'] ?? '—'); ?></div>
                 <div class="col"><?php echo htmlspecialchars($vp['tipo_parte'] ?? ''); ?> / <?php echo htmlspecialchars($vp['polo'] ?? ''); ?></div>
             </div>
             <?php endforeach; ?>
             <?php if (empty($pessoa['vinculos_processos'])): ?>
-            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line"><span class="minor-info">Nenhum vínculo com processo.</span></div>
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md"><span class="minor-info">Nenhum vínculo com processo.</span></div>
             <?php endif; ?>
         </div>
 
-        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Vínculos com instituições</div>
+        <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Vínculos com instituições</h2></div>
         <div id="vinculos-inst-list">
             <?php foreach ($pessoa['vinculos_instituicoes'] ?? [] as $vi): ?>
-            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line" data-id="<?php echo htmlspecialchars($vi['id'] ?? ''); ?>">
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md" data-id="<?php echo htmlspecialchars($vi['id'] ?? ''); ?>">
                 <div class="col"><?php echo htmlspecialchars($vi['instituicao_nome'] ?? $vi['instituicao_sigla'] ?? '—'); ?></div>
                 <div class="col"><?php echo htmlspecialchars($vi['cargo_funcao'] ?? '—'); ?></div>
                 <div class="col">
@@ -182,7 +182,7 @@ if ($pessoa === null) {
             </div>
             <?php endforeach; ?>
         </div>
-        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <button type="button" id="vincular-instituicao-btn" class="btn btn-primary">Vincular instituição</button>
         </div>
     </div>

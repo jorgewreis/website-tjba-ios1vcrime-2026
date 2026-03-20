@@ -113,16 +113,16 @@ $prioridadeLabels = [
         <p class="description-page">Acompanhe o cadastro das partes no PJe, a expedição dos mandados e o vínculo automático com o Cejusc.</p>
     </div>
 
-    <div class="card-page">
+    <div class="container-full card-page">
         <?php if ($errorMessage !== ''): ?>
-            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col">
                     <label class="status status-cancelled"><?php echo htmlspecialchars($errorMessage, ENT_QUOTES); ?></label>
                 </div>
             </div>
         <?php else: ?>
-            <div class="row table subtitle left padding-tb-lg padding-lr-md border-bottom">Informações</div>
-            <div class="row table left padding-tb-md padding-lr-md row-gap-10 full-line">
+            <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Informações</h2></div>
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col">
                     <label for="filter-processo">Processo</label>
                     <input type="text" id="filter-processo" class="width-200 height-md readonly" value="<?php echo htmlspecialchars((string) ($medida['numero_processo'] ?? ''), ENT_QUOTES); ?>" readonly>
@@ -133,9 +133,9 @@ $prioridadeLabels = [
                 </div>
             </div>
 
-            <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Réu</div>
+            <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Réu</h2></div>
             <div class="readonly-list">
-                <div class="row table left padding-tb-md padding-lr-md border-bottom row-gap-10 full-line">
+                <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                     <div class="col filter">
                         <label>Nome completo</label>
                         <input type="text" class="width-600 height-md readonly" value="<?php echo htmlspecialchars((string) ($medida['reu']['nome_completo'] ?? ''), ENT_QUOTES); ?>" readonly>
@@ -145,7 +145,7 @@ $prioridadeLabels = [
                         <input type="text" class="width-200 height-md readonly" value="<?php echo htmlspecialchars((string) ($medida['reu']['cpf'] ?? ''), ENT_QUOTES); ?>" readonly>
                     </div>
                 </div>
-                <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+                <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                     <div class="col filter">
                         <label>Sexo</label>
                         <input type="text" class="width-200 height-md readonly" value="<?php echo htmlspecialchars((string) ($medida['reu']['sexo'] ?? ''), ENT_QUOTES); ?>" readonly>
@@ -157,11 +157,11 @@ $prioridadeLabels = [
                 </div>
             </div>
 
-            <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Vítimas</div>
+            <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Vítimas</h2></div>
             <?php if (!empty($medida['vitimas'])): ?>
                 <?php foreach ($medida['vitimas'] as $vitima): ?>
                     <div class="readonly-list">
-                        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+                        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                             <div class="col filter">
                                 <label>Nome completo</label>
                                 <input type="text" class="width-600 height-md readonly" value="<?php echo htmlspecialchars((string) ($vitima['nome_completo'] ?? ''), ENT_QUOTES); ?>" readonly>
@@ -171,7 +171,7 @@ $prioridadeLabels = [
                                 <input type="text" class="width-200 height-md readonly" value="<?php echo htmlspecialchars((string) ($vitima['cpf'] ?? ''), ENT_QUOTES); ?>" readonly>
                             </div>
                         </div>
-                        <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+                        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                             <div class="col filter">
                                 <label>Sexo</label>
                                 <input type="text" class="width-200 height-md readonly" value="<?php echo htmlspecialchars((string) ($vitima['sexo'] ?? ''), ENT_QUOTES); ?>" readonly>
@@ -184,14 +184,14 @@ $prioridadeLabels = [
                     </div>
                 <?php endforeach; ?>
             <?php else: ?>
-                <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+                <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                     <div class="col">
                         <label class="status status-primary-light padding-lr-lg">Nenhuma vítima informada no cadastro inicial.</label>
                     </div>
                 </div>
             <?php endif; ?>
 
-            <div class="row table between padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="display-flex row row-full justify-between padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col filter">
                     <label>Prioridades do processo</label>
                     <div class="badge-line">
@@ -214,7 +214,7 @@ $prioridadeLabels = [
                 <?php endif; ?>
             </div>
 
-            <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col filter">
                     <label for="edit-observacoes">Observações</label>
                     <input type="text" id="edit-observacoes" class="width-600 height-md" value="<?php echo htmlspecialchars((string) ($medida['observacoes'] ?? ''), ENT_QUOTES); ?>" placeholder="Opcional">
@@ -226,7 +226,7 @@ $prioridadeLabels = [
             <input type="hidden" id="hidden-medida-id" value="<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>">
         <?php endif; ?>
 
-        <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
+        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
             <button class="btn btn-secondary" id="voltar-btn">Voltar</button>
             <?php if ($errorMessage === ''): ?>
                 <button class="btn btn-primary" id="salvar-btn" type="button">Salvar alterações</button>

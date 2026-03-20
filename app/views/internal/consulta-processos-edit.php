@@ -32,9 +32,9 @@ $partes = $processo['partes'] ?? [];
         <h1 class="title-page"><?php echo htmlspecialchars($processo['numero_processo'] ?? 'Processo'); ?></h1>
         <p class="description-page">Classe: <?php echo htmlspecialchars($processo['classe_nome'] ?? '—'); ?></p>
     </div>
-    <div class="card-page">
+    <div class="container-full card-page">
         <input type="hidden" id="processo-id" value="<?php echo htmlspecialchars($processo['id'] ?? ''); ?>">
-        <div class="row table subtitle left padding-tb-lg padding-lr-lg border-bottom">Partes vinculadas</div>
+        <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Partes vinculadas</h2></div>
         <?php if (!empty($partes)): ?>
             <table class="table-list">
                 <thead><tr><th>Nome</th><th>CPF</th><th>Tipo</th><th>Polo</th><th>Ações</th></tr></thead>
@@ -56,12 +56,12 @@ $partes = $processo['partes'] ?? [];
             </table>
         <?php else: ?>
             <div class="col subtask subtask-collapsed padding-lr-md full-line">
-                <div class="row table between padding-tb-md border-top">
-                    <div class="col table left no-data"><span class="major-info">Nenhuma parte vinculada.</span></div>
+                <div class="display-flex row row-full justify-between padding-y-md border-top">
+                    <div class="col no-data"><span class="major-info">Nenhuma parte vinculada.</span></div>
                 </div>
             </div>
         <?php endif; ?>
-        <div class="row table right buttons padding-tb-md padding-lr-lg border-top row-gap-10">
+        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
             <a href="/frame.php?page=consultaprocessos" class="btn btn-secondary">Voltar</a>
             <a href="/frame.php?page=processospartescreate&processo_id=<?php echo urlencode($processo['id'] ?? ''); ?>" class="btn btn-primary">Vincular parte</a>
         </div>

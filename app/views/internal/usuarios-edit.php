@@ -281,9 +281,9 @@ function deriveUsuarioStatus(array $usuario): string
         <p class="description-page">Altere os dados do cadastro. CPF e tipo não podem ser alterados. A alteração de status e o salvamento só podem ser feitos por admin, diretora ou magistrada.</p>
     </div>
 
-    <div class="card-page">
+    <div class="container-full card-page">
         <?php if ($mensagemErro !== ''): ?>
-        <div class="row table left padding-lr-lg padding-tb-md border-bottom">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom">
             <p class="status status-cancelled padding-lr-lg"><?php echo htmlspecialchars($mensagemErro, ENT_QUOTES, 'UTF-8'); ?></p>
         </div>
         <?php endif; ?>
@@ -293,9 +293,9 @@ function deriveUsuarioStatus(array $usuario): string
             <input type="hidden" name="action" value="salvar">
             <input type="hidden" name="id_usuario" value="<?php echo htmlspecialchars($idUsuario, ENT_QUOTES, 'UTF-8'); ?>">
 
-            <div class="row table subtitle padding-lr-lg padding-tb-lg">Identificação</div>
-            <div class="row table between padding-lr-md padding-tb-sm full-line">
-                <div class="row table left fit row-gap-10">
+            <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Identificação</h2></div>
+            <div class="display-flex row row-full justify-between padding-x-md padding-y-md full-line">
+                <div class="display-flex row row-fit justify-start gap-y-md">
                     <div class="col">
                         <label for="edit-cpf">CPF</label>
                         <input type="text" id="edit-cpf" class="width-100 height-md readonly" value="<?php echo $cpfVal; ?>" readonly>
@@ -305,7 +305,7 @@ function deriveUsuarioStatus(array $usuario): string
                         <input type="text" id="edit-tipo" class="width-100 height-md readonly" value="Interno" readonly>
                     </div>
                 </div>
-                <div class="row table right fit">
+                <div class="display-flex row row-fit justify-end">
                     <div class="col">
                         <label for="edit-status">Status</label>
                         <select id="edit-status" name="status" class="width-200 height-md white">
@@ -317,8 +317,8 @@ function deriveUsuarioStatus(array $usuario): string
                 </div>
             </div>
 
-            <div class="row table subtitle padding-lr-lg padding-tb-lg border-bottom">Dados obrigatórios</div>
-            <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
+            <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Dados obrigatórios</h2></div>
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col">
                     <label for="edit-nome">Nome <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="text" id="edit-nome" name="nome" class="width-200 height-md white readonly" placeholder="Digite o nome completo" required maxlength="100" value="<?php echo $nomeVal; ?>" readonly>
@@ -328,7 +328,7 @@ function deriveUsuarioStatus(array $usuario): string
                     <input type="text" id="edit-sobrenome" name="sobrenome" class="width-400 height-md white" placeholder="Sobrenome" required maxlength="100" value="<?php echo $sobrenomeVal; ?>">
                 </div>
             </div>
-            <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col">
                     <label for="edit-email">E-mail <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="email" id="edit-email" name="email" class="width-400 height-md white" placeholder="email@exemplo.com" required maxlength="255" value="<?php echo $emailVal; ?>">
@@ -339,15 +339,15 @@ function deriveUsuarioStatus(array $usuario): string
                     <input type="text" id="edit-telefone" name="telefone" class="width-100 height-md white" placeholder="(00) 00000-0000" maxlength="50" value="<?php echo htmlspecialchars($telefoneVal, ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
             </div>
-            <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col full-line">
                     <label for="edit-data-nascimento">Data de nascimento</label>
                     <input type="date" id="edit-data-nascimento" name="data_nascimento" class="width-200 height-md white" max="<?php echo date('Y-m-d'); ?>" value="<?php echo htmlspecialchars($dataNascimentoVal, ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
             </div>
 
-            <div class="row table subtitle padding-lr-lg padding-tb-lg border-bottom">Status e dados complementares</div>
-            <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
+            <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Status e dados complementares</h2></div>
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col">
                     <label for="edit-cargo">Cargo</label>
                     <select id="edit-cargo" name="cargo" class="width-400 height-md white">
@@ -370,10 +370,10 @@ function deriveUsuarioStatus(array $usuario): string
                     </select>
                 </div>
             </div>
-            <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col full-line">
                     <span class="minor-info">Perfis (um usuário pode ter vários)</span>
-                    <div class="row table left padding-tb-sm row-gap-10" style="flex-wrap: wrap;">
+                    <div class="display-flex row row-full justify-start padding-y-sm gap-y-md" style="flex-wrap: wrap;">
                         <?php foreach ($perfisValidos as $p): ?>
                         <label class="row left row-gap-10" style="align-items: center; margin-right: 1rem;">
                             <input type="checkbox" name="perfil[]" value="<?php echo htmlspecialchars($p, ENT_QUOTES); ?>"<?php echo in_array($p, $perfisAtuais, true) ? ' checked' : ''; ?>>
@@ -387,7 +387,7 @@ function deriveUsuarioStatus(array $usuario): string
                 </div>
             </div>
 
-            <div class="row table right padding-lr-lg padding-tb-md border-bottom full-line row-gap-10">
+            <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-bottom">
                 <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
                 <button type="button" class="btn btn-danger" id="excluir-btn">Excluir</button>
                 <button type="submit" class="btn btn-primary" id="salvar-btn">Salvar</button>
