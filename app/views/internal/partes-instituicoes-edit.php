@@ -110,7 +110,7 @@ if (!empty($vinculo['instituicao_id'])) {
         var id = document.getElementById('vinculo-id').value;
         var dataInclusao = (document.getElementById('data_inclusao').value || '').trim();
         if (!dataInclusao) {
-            if (typeof showToast === 'function') showToast({ type: 'error', message: 'Data de inclusão é obrigatória.' });
+            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Data de inclusão é obrigatória.' });
             return;
         }
         var payload = {
@@ -129,10 +129,10 @@ if (!empty($vinculo['instituicao_id'])) {
             .then(function(r) { return r.json(); })
             .then(function(d) {
                 if (d.success) {
-                    if (typeof showToast === 'function') showToast({ type: 'success', message: 'Vínculo atualizado.' });
+                    if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Vínculo atualizado.' });
                     window.location.href = '/frame.php?page=partesinstituicoeslist';
                 } else {
-                    if (typeof showToast === 'function') showToast({ type: 'error', message: d.error || 'Erro.' });
+                    if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: d.error || 'Erro.' });
                     document.getElementById('salvar-btn').disabled = false;
                 }
             })

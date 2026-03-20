@@ -171,12 +171,12 @@ if (function_exists('mb_internal_encoding')) {
         document.getElementById('cadastrar-btn').addEventListener('click', function() {
             var nome = (document.getElementById('nome_completo').value || '').trim();
             if (!nome) {
-                if (typeof showToast === 'function') showToast({ type: 'error', message: 'Nome completo é obrigatório.' });
+                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Nome completo é obrigatório.' });
                 return;
             }
             var cpfRaw = (document.getElementById('cpf').value || '').replace(/\D/g, '');
             if (cpfRaw && cpfRaw.length === 11 && typeof App !== 'undefined' && App.CPF && !App.CPF.validar(cpfRaw)) {
-                if (typeof showToast === 'function') showToast({ type: 'error', message: 'CPF inválido. Verifique os dígitos.' });
+                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'CPF inválido. Verifique os dígitos.' });
                 return;
             }
             var cpf = cpfRaw || null;
@@ -236,15 +236,15 @@ if (function_exists('mb_internal_encoding')) {
             .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
             .then(function(result) {
                 if (result.ok && result.data.id) {
-                    if (typeof showToast === 'function') showToast({ type: 'success', message: 'Pessoa cadastrada.' });
+                    if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Pessoa cadastrada.' });
                     window.location.href = '/frame.php?page=consultapartesedit&id=' + encodeURIComponent(result.data.id);
                 } else {
-                    if (typeof showToast === 'function') showToast({ type: 'error', message: result.data.error || 'Erro ao cadastrar.' });
+                    if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: result.data.error || 'Erro ao cadastrar.' });
                     document.getElementById('cadastrar-btn').disabled = false;
                 }
             })
             .catch(function() {
-                if (typeof showToast === 'function') showToast({ type: 'error', message: 'Erro de conexão.' });
+                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
                 document.getElementById('cadastrar-btn').disabled = false;
             });
         });

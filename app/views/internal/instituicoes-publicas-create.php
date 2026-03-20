@@ -73,10 +73,10 @@ if (function_exists('mb_internal_encoding')) mb_internal_encoding('UTF-8');
     })();
     document.getElementById('cadastrar-btn').addEventListener('click', function() {
         var nome = (document.getElementById('nome').value || '').trim().replace(/\s+/g, ' ').slice(0, 255);
-        if (!nome) { if (typeof showToast === 'function') showToast({ type: 'error', message: 'Nome é obrigatório.' }); return; }
+        if (!nome) { if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Nome é obrigatório.' }); return; }
         var cnpjRaw = (document.getElementById('cnpj').value || '').replace(/\D/g, '');
         if (cnpjRaw && cnpjRaw.length === 14 && typeof App !== 'undefined' && App.CNPJ && !App.CNPJ.validar(cnpjRaw)) {
-            if (typeof showToast === 'function') showToast({ type: 'error', message: 'CNPJ inválido. Verifique os dígitos.' });
+            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'CNPJ inválido. Verifique os dígitos.' });
             return;
         }
         var nomeFantasiaVal = (document.getElementById('nome_fantasia').value || '').trim().toUpperCase().slice(0, 120);
@@ -93,8 +93,8 @@ if (function_exists('mb_internal_encoding')) mb_internal_encoding('UTF-8');
         })
         .then(function(r) { return r.json(); })
         .then(function(d) {
-            if (d.id) { if (typeof showToast === 'function') showToast({ type: 'success', message: 'Cadastrada.' }); window.location.href = '/frame.php?page=instituicoespublicasedit&id=' + encodeURIComponent(d.id); }
-            else { if (typeof showToast === 'function') showToast({ type: 'error', message: d.error || 'Erro.' }); document.getElementById('cadastrar-btn').disabled = false; }
+            if (d.id) { if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Cadastrada.' }); window.location.href = '/frame.php?page=instituicoespublicasedit&id=' + encodeURIComponent(d.id); }
+            else { if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: d.error || 'Erro.' }); document.getElementById('cadastrar-btn').disabled = false; }
         })
         .catch(function() { document.getElementById('cadastrar-btn').disabled = false; });
     });

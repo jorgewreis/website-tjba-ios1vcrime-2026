@@ -221,6 +221,7 @@ $timelineData = $tarefa !== null
         </script>
         <script>
             (function () {
+                var pendingConfirmations = {};
                 function queuePostReloadToast(type, title, message) {
                     try {
                         var key = 'cartorio.postReloadToast';
@@ -230,6 +231,17 @@ $timelineData = $tarefa !== null
                         lista.push({ type: type, title: title, message: message });
                         sessionStorage.setItem(key, JSON.stringify(lista));
                     } catch (e) {}
+                }
+                function requireSecondClick(key, message) {
+                    var now = Date.now();
+                    var validUntil = Number(pendingConfirmations[key] || 0);
+                    if (validUntil > now) {
+                        delete pendingConfirmations[key];
+                        return true;
+                    }
+                    pendingConfirmations[key] = now + 5000;
+                    if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Confirmação', message: message });
+                    return false;
                 }
                 var btn = document.getElementById('voltar-btn');
                 if (btn) {
@@ -251,7 +263,8 @@ $timelineData = $tarefa !== null
                         .then(function (r) { return r.json(); })
                         .then(function (data) {
                             if (data.success) {
-                                window.location.reload();
+                                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Informação', message: 'Tarefa cancelada com sucesso.' });
+                                window.setTimeout(function () { window.location.reload(); }, 250);
                             } else {
                                 if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao cancelar.' });
                                 btnCancelar.disabled = false;
@@ -267,7 +280,7 @@ $timelineData = $tarefa !== null
                 var btnExcluir = document.getElementById('excluir-tarefa-btn');
                 if (btnExcluir && window.__currentCejuscId) {
                     btnExcluir.addEventListener('click', function () {
-                        if (!confirm('Tem certeza que deseja excluir esta tarefa e todas as subtarefas? Esta ação não pode ser desfeita.')) return;
+                        if (!requireSecondClick('excluir-cejusc', 'Clique novamente em Excluir em até 5 segundos para confirmar a exclusão desta tarefa.')) return;
                         btnExcluir.disabled = true;
                         fetch('/api/cartorio-cejusc/delete.php', {
                             method: 'POST',

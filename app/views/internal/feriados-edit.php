@@ -122,6 +122,18 @@ $ativoCur = !empty($row['ativo']);
 
     <script>
     (function() {
+        var pendingConfirmations = {};
+        function requireSecondClick(key, message) {
+            var now = Date.now();
+            var validUntil = Number(pendingConfirmations[key] || 0);
+            if (validUntil > now) {
+                delete pendingConfirmations[key];
+                return true;
+            }
+            pendingConfirmations[key] = now + 5000;
+            if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Confirmação', message: message });
+            return false;
+        }
         var idEl = document.getElementById('feriado-id');
         var fid = idEl ? idEl.value : '';
 
@@ -133,7 +145,7 @@ $ativoCur = !empty($row['ativo']);
                 var vf = (fimEl.value || '').trim();
                 if (vi !== '' && vf !== '' && vf < vi) {
                     if (typeof showToast === 'function') {
-                        showToast({ type: 'error', message: 'A data fim não pode ser anterior à data início.' });
+                        showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'A data fim não pode ser anterior à data início.' });
                     }
                     fimEl.value = vi;
                 }
@@ -152,11 +164,11 @@ $ativoCur = !empty($row['ativo']);
             var ini = (document.getElementById('data_inicio').value || '').trim();
             var fim = (document.getElementById('data_fim').value || '').trim();
             if (!tipo || !regra || !ini || !fim) {
-                if (typeof showToast === 'function') showToast({ type: 'error', message: 'Preencha os campos obrigatórios.' });
+                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Preencha os campos obrigatórios.' });
                 return;
             }
             if (fim < ini) {
-                if (typeof showToast === 'function') showToast({ type: 'error', message: 'A data fim não pode ser anterior à data início.' });
+                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'A data fim não pode ser anterior à data início.' });
                 return;
             }
             var desc = (document.getElementById('descricao').value || '').trim();
@@ -185,10 +197,10 @@ $ativoCur = !empty($row['ativo']);
                     if (!isNaN(nEd) && nEd > 0) {
                         msgOk += ' Decurso de prazo recalculado em ' + nEd + ' ' + (nEd === 1 ? 'edital' : 'editais') + '.';
                     }
-                    if (typeof showToast === 'function') showToast({ type: 'success', message: msgOk });
+                    if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: msgOk });
                     window.location.href = '/frame.php?page=feriadoslist';
                 } else {
-                    if (typeof showToast === 'function') showToast({ type: 'error', message: (o.j && o.j.error) ? o.j.error : 'Erro ao salvar.' });
+                    if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: (o.j && o.j.error) ? o.j.error : 'Erro ao salvar.' });
                     btn.disabled = false;
                 }
             })
@@ -197,7 +209,7 @@ $ativoCur = !empty($row['ativo']);
 
         document.getElementById('excluir-btn').addEventListener('click', function() {
             if (!fid) return;
-            if (!confirm('Excluir este feriado permanentemente?')) return;
+            if (!requireSecondClick('excluir-feriado', 'Clique novamente em Excluir em até 5 segundos para confirmar a exclusão permanente.')) return;
             var btn = this;
             btn.disabled = true;
             fetch('/api/admin/feriados/delete.php?id=' + encodeURIComponent(fid), { method: 'POST', credentials: 'same-origin' })
@@ -209,10 +221,10 @@ $ativoCur = !empty($row['ativo']);
                         if (!isNaN(nEd2) && nEd2 > 0) {
                             msgEx += ' Decurso de prazo recalculado em ' + nEd2 + ' ' + (nEd2 === 1 ? 'edital' : 'editais') + '.';
                         }
-                        if (typeof showToast === 'function') showToast({ type: 'success', message: msgEx });
+                        if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: msgEx });
                         window.location.href = '/frame.php?page=feriadoslist';
                     } else {
-                        if (typeof showToast === 'function') showToast({ type: 'error', message: (o.j && o.j.error) ? o.j.error : 'Erro.' });
+                        if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: (o.j && o.j.error) ? o.j.error : 'Erro.' });
                         btn.disabled = false;
                     }
                 })

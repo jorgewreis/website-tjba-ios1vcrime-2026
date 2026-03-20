@@ -56,7 +56,7 @@ if ($pessoa === null) {
             </div>
             <div class="col">
                 <label for="nome_completo">Nome completo</label>
-                <input type="text" class="width-600 height-md white" id="nome_completo" value="<?php echo htmlspecialchars($pessoa['nome_completo'] ?? ''); ?>">
+                <input type="text" class="width-600 height-md white" id="nome_completo" placeholder="Digite o nome completo" value="<?php echo htmlspecialchars($pessoa['nome_completo'] ?? ''); ?>">
             </div>
         </div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
@@ -197,6 +197,28 @@ if ($pessoa === null) {
 
     <script>
     (function() {
+        function queuePostReloadToast(type, title, message) {
+            try {
+                var key = 'cartorio.postReloadToast';
+                var raw = sessionStorage.getItem(key);
+                var fila = raw ? JSON.parse(raw) : [];
+                var lista = Array.isArray(fila) ? fila : ((fila && fila.message) ? [fila] : []);
+                lista.push({ type: type, title: title, message: message });
+                sessionStorage.setItem(key, JSON.stringify(lista));
+            } catch (e) {}
+        }
+        var pendingConfirmations = {};
+        function requireSecondClick(key, message) {
+            var now = Date.now();
+            var validUntil = Number(pendingConfirmations[key] || 0);
+            if (validUntil > now) {
+                delete pendingConfirmations[key];
+                return true;
+            }
+            pendingConfirmations[key] = now + 5000;
+            if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Confirmação', message: message });
+            return false;
+        }
         var nomeEl = document.getElementById('nome_completo');
         if (nomeEl && typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
             nomeEl.addEventListener('blur', function() {
@@ -226,7 +248,7 @@ if ($pessoa === null) {
         document.getElementById('salvar-btn').addEventListener('click', function() {
             var cpfRaw = (document.getElementById('cpf').value || '').replace(/\D/g, '');
             if (cpfRaw && cpfRaw.length === 11 && typeof App !== 'undefined' && App.CPF && !App.CPF.validar(cpfRaw)) {
-                if (typeof showToast === 'function') showToast({ type: 'error', message: 'CPF inválido. Verifique os dígitos.' });
+                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'CPF inválido. Verifique os dígitos.' });
                 return;
             }
             var nomeVal = (document.getElementById('nome_completo').value || '').trim();
@@ -241,8 +263,8 @@ if ($pessoa === null) {
             fetch('/api/pessoas/update.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
             .then(function(r) { return r.json(); })
             .then(function(d) {
-                if (d.success) { if (typeof showToast === 'function') showToast({ type: 'success', message: 'Dados salvos.' }); }
-                else { if (typeof showToast === 'function') showToast({ type: 'error', message: d.error || 'Erro.' }); }
+                if (d.success) { if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Dados salvos.' }); }
+                else { if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: d.error || 'Erro.' }); }
                 document.getElementById('salvar-btn').disabled = false;
             })
             .catch(function() { document.getElementById('salvar-btn').disabled = false; });
@@ -250,13 +272,13 @@ if ($pessoa === null) {
         document.getElementById('add-tel-btn').addEventListener('click', function() {
             var parteIdAtual = getParteId();
             if (!parteIdAtual) {
-                if (typeof showToast === 'function') showToast({ type: 'error', message: 'ID da pessoa não encontrado. Recarregue a página.' });
+                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'ID da pessoa não encontrado. Recarregue a página.' });
                 return;
             }
             var tipoEl = document.getElementById('new-tel-tipo');
             var numeroEl = document.getElementById('new-tel-numero');
             var numero = (numeroEl && numeroEl.value ? numeroEl.value : '').replace(/\D/g, '').trim();
-            if (!numero) { if (typeof showToast === 'function') showToast({ type: 'error', message: 'Informe o número.' }); return; }
+            if (!numero) { if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Informe o número.' }); return; }
             var tipo = (tipoEl && tipoEl.value ? tipoEl.value : '').trim();
             this.disabled = true;
             fetch('/api/pessoas/telefones/create.php', {
@@ -271,41 +293,54 @@ if ($pessoa === null) {
                 });
             })
             .then(function(result) {
-                if (result.ok && result.data.id) { window.location.reload(); }
+                if (result.ok && result.data.id) {
+                    queuePostReloadToast('success', 'Sucesso', 'Telefone adicionado com sucesso.');
+                    window.location.reload();
+                }
                 else {
                     var errMsg = (result.data && result.data.error) || "Erro ao adicionar telefone.";
-                    if (typeof showToast === 'function') showToast({ type: 'error', message: errMsg });
+                    if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: errMsg });
                     document.getElementById('add-tel-btn').disabled = false;
                 }
             })
             .catch(function(err) {
                 var msg = (err && err.message) ? err.message : 'Erro de conexão.';
-                if (typeof showToast === 'function') showToast({ type: 'error', message: 'Erro ao adicionar telefone: ' + msg });
+                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro ao adicionar telefone: ' + msg });
                 document.getElementById('add-tel-btn').disabled = false;
             });
         });
         document.querySelectorAll('.btn-del-tel').forEach(function(btn) {
             btn.addEventListener('click', function() {
-                if (!confirm('Excluir este telefone?')) return;
                 var id = this.getAttribute('data-id');
+                if (!requireSecondClick('excluir-telefone-parte-' + (id || ''), 'Clique novamente em Excluir em até 5 segundos para confirmar a remoção do telefone.')) return;
                 fetch('/api/pessoas/telefones/delete.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id }) })
                 .then(function(r) { return r.json(); })
-                .then(function(d) { if (d.deleted) window.location.reload(); });
+                .then(function(d) {
+                    if (d.deleted) {
+                        queuePostReloadToast('success', 'Sucesso', 'Telefone removido com sucesso.');
+                        window.location.reload();
+                    }
+                });
             });
         });
         document.querySelectorAll('.btn-del-vinculo').forEach(function(btn) {
             btn.addEventListener('click', function() {
-                if (!confirm('Desvincular esta instituição?')) return;
                 var id = this.getAttribute('data-id');
+                if (!requireSecondClick('desvincular-instituicao-parte-' + (id || ''), 'Clique novamente em Excluir em até 5 segundos para confirmar o desvínculo da instituição.')) return;
                 fetch('/api/pessoas/vinculos-instituicoes/delete.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id }) })
                 .then(function(r) { return r.json(); })
-                .then(function(d) { if (d.deleted) window.location.reload(); });
+                .then(function(d) {
+                    if (d.deleted) {
+                        queuePostReloadToast('success', 'Sucesso', 'Instituição desvinculada com sucesso.');
+                        window.location.reload();
+                    }
+                });
             });
         });
 
         document.getElementById('buscar-cep-btn').addEventListener('click', function() {
             var cep = (document.getElementById('new-end-cep').value || '').replace(/\D/g, '');
-            if (cep.length !== 8) { if (typeof showToast === 'function') showToast({ type: 'error', message: 'Informe um CEP com 8 dígitos.' }); return; }
+            if (cep.length !== 8) { if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Informe um CEP com 8 dígitos.' }); return; }
             this.disabled = true;
             fetch('/api/cep/consulta.php?q=' + encodeURIComponent(cep), { method: 'GET', credentials: 'same-origin' })
             .then(function(r) { return r.json(); })
@@ -315,23 +350,23 @@ if ($pessoa === null) {
                     document.getElementById('new-end-bairro').value = d.data.bairro || '';
                     document.getElementById('new-end-cidade').value = d.data.cidade || '';
                     document.getElementById('new-end-uf').value = (d.data.uf || '').toUpperCase().slice(0, 2);
-                    if (typeof showToast === 'function') showToast({ type: 'success', message: 'CEP encontrado.' });
+                    if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'CEP encontrado.' });
                 } else {
-                    if (typeof showToast === 'function') showToast({ type: 'error', message: (d && d.error) || 'CEP não encontrado.' });
+                    if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: (d && d.error) || 'CEP não encontrado.' });
                 }
             })
-            .catch(function() { if (typeof showToast === 'function') showToast({ type: 'error', message: 'Erro ao consultar CEP.' }); })
+            .catch(function() { if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro ao consultar CEP.' }); })
             .finally(function() { document.getElementById('buscar-cep-btn').disabled = false; });
         });
         document.getElementById('add-end-btn').addEventListener('click', function() {
             var parteIdAtual = getParteId();
             if (!parteIdAtual) {
-                if (typeof showToast === 'function') showToast({ type: 'error', message: 'ID da pessoa não encontrado. Recarregue a página.' });
+                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'ID da pessoa não encontrado. Recarregue a página.' });
                 return;
             }
             var logradouro = (document.getElementById('new-end-logradouro').value || '').trim();
             var cidade = (document.getElementById('new-end-cidade').value || '').trim();
-            if (!logradouro && !cidade) { if (typeof showToast === 'function') showToast({ type: 'error', message: 'Informe ao menos logradouro ou cidade.' }); return; }
+            if (!logradouro && !cidade) { if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Informe ao menos logradouro ou cidade.' }); return; }
             var cepRaw = (document.getElementById('new-end-cep').value || '').replace(/\D/g, '');
             var payload = {
                 parte_id: parteIdAtual,
@@ -353,27 +388,35 @@ if ($pessoa === null) {
                 });
             })
             .then(function(result) {
-                if (result.ok && result.data.id) { window.location.reload(); }
+                if (result.ok && result.data.id) {
+                    queuePostReloadToast('success', 'Sucesso', 'Endereço adicionado com sucesso.');
+                    window.location.reload();
+                }
                 else {
                     var errMsg = (result.data && result.data.error) || "Erro ao adicionar endereco.";
-                    if (typeof showToast === 'function') showToast({ type: 'error', message: errMsg });
+                    if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: errMsg });
                     document.getElementById('add-end-btn').disabled = false;
                 }
             })
             .catch(function(err) {
                 var msg = (err && err.message) ? err.message : 'Erro de conexão.';
-                if (typeof showToast === 'function') showToast({ type: 'error', message: 'Erro ao adicionar endereço: ' + msg });
+                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro ao adicionar endereço: ' + msg });
                 document.getElementById('add-end-btn').disabled = false;
             });
         });
         document.querySelectorAll('.btn-del-end').forEach(function(btn) {
             btn.addEventListener('click', function() {
-                if (!confirm('Excluir este endereço?')) return;
                 var id = this.getAttribute('data-id');
+                if (!requireSecondClick('excluir-endereco-parte-' + (id || ''), 'Clique novamente em Excluir em até 5 segundos para confirmar a remoção do endereço.')) return;
                 if (!id) return;
                 fetch('/api/pessoas/enderecos/delete.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id }) })
                 .then(function(r) { return r.json(); })
-                .then(function(d) { if (d.deleted) window.location.reload(); });
+                .then(function(d) {
+                    if (d.deleted) {
+                        queuePostReloadToast('success', 'Sucesso', 'Endereço removido com sucesso.');
+                        window.location.reload();
+                    }
+                });
             });
         });
     })();

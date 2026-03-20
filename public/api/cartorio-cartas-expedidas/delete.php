@@ -8,6 +8,12 @@ require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/CartasExpedidasService.php';
 
+if (!bootstrapRequireTrustedPostRequest()) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Requisição inválida.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 $connection = Conection::getInstance()->getConnection();
 
 /** Apenas admin, diretora ou magistrada podem excluir tarefa e subtarefas. */

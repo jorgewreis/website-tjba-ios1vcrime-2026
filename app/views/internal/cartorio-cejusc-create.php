@@ -378,7 +378,7 @@ try {
                 }
 
                 btn.disabled = true;
-                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'simple', message: 'Cadastrando...' });
+                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Informação', message: 'Cadastrando...' });
                 else showFeedback('Cadastrando...', 'success');
 
                 var payload = {

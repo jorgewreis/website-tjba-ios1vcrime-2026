@@ -49,6 +49,7 @@ $polosValidos = ['ativo' => 'Ativo', 'passivo' => 'Passivo', 'terceiros' => 'Ter
             <div class="col">
                 <label for="tipo_parte">Tipo de parte <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <select class="width-200 height-md white" id="tipo_parte" required>
+                    <option value="">Selecione o tipo</option>
                     <?php foreach ($tiposValidos as $val => $label): ?>
                         <option value="<?php echo htmlspecialchars($val); ?>"<?php echo (($vinculo['tipo_parte'] ?? '') === $val) ? ' selected' : ''; ?>><?php echo htmlspecialchars($label); ?></option>
                     <?php endforeach; ?>
@@ -57,6 +58,7 @@ $polosValidos = ['ativo' => 'Ativo', 'passivo' => 'Passivo', 'terceiros' => 'Ter
             <div class="col">
                 <label for="polo">Polo <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <select class="width-200 height-md white" id="polo" required>
+                    <option value="">Selecione o polo</option>
                     <?php foreach ($polosValidos as $val => $label): ?>
                         <option value="<?php echo htmlspecialchars($val); ?>"<?php echo (($vinculo['polo'] ?? '') === $val) ? ' selected' : ''; ?>><?php echo htmlspecialchars($label); ?></option>
                     <?php endforeach; ?>
@@ -100,10 +102,10 @@ $polosValidos = ['ativo' => 'Ativo', 'passivo' => 'Passivo', 'terceiros' => 'Ter
             .then(function(r) { return r.json(); })
             .then(function(d) {
                 if (d.success) {
-                    if (typeof showToast === 'function') showToast({ type: 'success', message: 'Vínculo atualizado.' });
+                    if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Vínculo atualizado.' });
                     window.location.href = '/frame.php?page=consultaprocessosedit&id=' + encodeURIComponent(processoId);
                 } else {
-                    if (typeof showToast === 'function') showToast({ type: 'error', message: d.error || 'Erro.' });
+                    if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: d.error || 'Erro.' });
                     document.getElementById('salvar-btn').disabled = false;
                 }
             })

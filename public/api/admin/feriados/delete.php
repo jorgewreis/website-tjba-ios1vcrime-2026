@@ -3,7 +3,15 @@ declare(strict_types=1);
 
 $basePath = dirname(__DIR__, 4);
 require_once dirname(__DIR__) . '/_auth_admin_diretora_json.php';
+require_once $basePath . '/app/helpers/BootstrapHelper.php';
 $connection = requireAdminOuDiretoraJson($basePath);
+
+if (!bootstrapRequireTrustedPostRequest()) {
+    http_response_code(403);
+    header('Content-Type: application/json; charset=UTF-8');
+    echo json_encode(['error' => 'Requisição inválida.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 require_once $basePath . '/app/services/FeriadosService.php';
 

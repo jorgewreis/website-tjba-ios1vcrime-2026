@@ -434,7 +434,7 @@ try {
                 }
 
                 btn.disabled = true;
-                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'simple', message: 'Verificando duplicidade...' });
+                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Informação', message: 'Verificando duplicidade...' });
                 else showFeedback('Verificando duplicidade...', 'success');
 
                 var payload = {
@@ -463,7 +463,7 @@ try {
                 if (diasMultaVal !== null && !isNaN(diasMultaVal)) payload.dias_multa = diasMultaVal;
 
                 function doCreate() {
-                    if (typeof showToast === 'function') showToast({ type: 'info', variant: 'simple', message: 'Enviando dados...' });
+                    if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Informação', message: 'Enviando dados...' });
                     fetch('/api/cartorio-guias/create.php', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },

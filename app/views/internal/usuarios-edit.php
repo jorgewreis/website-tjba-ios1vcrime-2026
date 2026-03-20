@@ -411,6 +411,20 @@ function deriveUsuarioStatus(array $usuario): string
 
     <script>
     (function () {
+        var pendingConfirmations = {};
+        function requireSecondClick(key, message) {
+            var now = Date.now();
+            var validUntil = Number(pendingConfirmations[key] || 0);
+            if (validUntil > now) {
+                delete pendingConfirmations[key];
+                return true;
+            }
+            pendingConfirmations[key] = now + 5000;
+            if (typeof showToast === 'function') {
+                showToast({ type: 'info', variant: 'full', title: 'Confirmação', message: message });
+            }
+            return false;
+        }
         'use strict';
 
         var form = document.getElementById('form-edit-usuario');
@@ -504,9 +518,8 @@ function deriveUsuarioStatus(array $usuario): string
 
         if (excluirBtn && formExcluir) {
             excluirBtn.addEventListener('click', function () {
-                if (window.confirm('Tem certeza que deseja desativar este usuário? Ele não poderá mais acessar o sistema até reativação por admin, diretora ou magistrada.')) {
-                    formExcluir.submit();
-                }
+                if (!requireSecondClick('desativar-usuario', 'Clique novamente em Desativar em até 5 segundos para confirmar.')) return;
+                formExcluir.submit();
             });
         }
 

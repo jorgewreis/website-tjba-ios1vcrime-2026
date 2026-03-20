@@ -334,7 +334,7 @@ try {
                             }
                             const status = (data.status_cidade || '').trim();
                             if (status.toUpperCase() === 'CCM') {
-                                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'simple', message: 'Comarca com Central de Mandados' });
+                                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Informação', message: 'Comarca com Central de Mandados' });
                                 cidadeInput.value = '';
                             } else if (status.toLowerCase() === 'agregada' && data.nome) {
                                 cidadeInput.value = formatCidade(data.nome);
@@ -436,7 +436,7 @@ try {
                 }
 
                 btn.disabled = true;
-                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'simple', message: 'Enviando dados...' });
+                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Informação', message: 'Enviando dados...' });
                 else showFeedback('Enviando dados...', 'success');
 
                 try {

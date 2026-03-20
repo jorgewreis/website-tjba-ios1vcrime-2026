@@ -287,9 +287,21 @@ if ($totalPages > 0) {
                                 <div class="col task-status">
                                     <div class="padding-x-lg height-sm status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
                                 </div>
+                                <div class="col">
+                                    <input
+                                        type="number"
+                                        class="subtask-qtd width-300 height-sm"
+                                        data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>"
+                                        title="Quantidade realizada"
+                                        placeholder="Informar quantidade"
+                                        min="1"
+                                        step="1"
+                                        inputmode="numeric"
+                                    >
+                                </div>
                             </div>
                             <div class="display-flex row row-fit justify-end align-center">
-                                <button type="button" class="btn btn-primary height-sm btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($stLabel, ENT_QUOTES); ?>">
+                                <button type="button" class="btn btn-primary height-sm btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($stLabel, ENT_QUOTES); ?>">
                                     <span class="value-button"><?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?></span>
                                 </button>
                             </div>
@@ -438,11 +450,14 @@ if ($totalPages > 0) {
             document.querySelectorAll('.btn-concluir-subtarefa').forEach(function (btn) {
                 btn.addEventListener('click', function () {
                     var subtarefaId = this.getAttribute('data-subtarefa-id');
+                    var block = this.closest('[data-subtarefa-id][data-subtarefa-tipo]');
                     if (!subtarefaId) return;
-                    var qtd = window.prompt('Informe a quantidade realizada nesta subtarefa:');
-                    var qtdInt = parseInt(qtd || '0', 10);
-                    if (!qtd || isNaN(qtdInt) || qtdInt < 1) {
+                    var qtdInput = block ? block.querySelector('.subtask-qtd') : null;
+                    var qtdRaw = qtdInput ? String(qtdInput.value || '').trim() : '';
+                    var qtdInt = parseInt(qtdRaw || '0', 10);
+                    if (qtdRaw === '' || isNaN(qtdInt) || qtdInt < 1) {
                         notify('error', 'Campo obrigatório', 'Informe uma quantidade maior que zero.');
+                        if (qtdInput) qtdInput.focus();
                         return;
                     }
                     btn.disabled = true;

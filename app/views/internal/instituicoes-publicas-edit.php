@@ -37,7 +37,7 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
             <div class="col">
                 <label for="nome">Nome <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-600 height-md white" id="nome" value="<?php echo htmlspecialchars($inst['nome'] ?? ''); ?>" required>
+                <input type="text" class="width-600 height-md white" id="nome" placeholder="Digite o nome completo" value="<?php echo htmlspecialchars($inst['nome'] ?? ''); ?>" required>
             </div>
         </div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
@@ -47,7 +47,7 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
             </div>
             <div class="col">
                 <label for="cnpj">CNPJ</label>
-                <input type="text" class="width-200 height-md white" id="cnpj" value="<?php
+                <input type="text" class="width-200 height-md white" id="cnpj" placeholder="00.000.000/0000-00" value="<?php
                     $cnpjVal = preg_replace('/\D+/', '', (string) ($inst['cnpj'] ?? ''));
                     echo htmlspecialchars($cnpjVal !== '' && strlen($cnpjVal) === 14 ? Security::formatCNPJ($cnpjVal) : ($inst['cnpj'] ?? ''));
                 ?>">
@@ -149,6 +149,28 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
         </div>
     </div>
     <script>
+    var pendingConfirmations = {};
+    function requireSecondClick(key, message) {
+        var now = Date.now();
+        var validUntil = Number(pendingConfirmations[key] || 0);
+        if (validUntil > now) {
+            delete pendingConfirmations[key];
+            return true;
+        }
+        pendingConfirmations[key] = now + 5000;
+        if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Confirmação', message: message });
+        return false;
+    }
+    function queuePostReloadToast(type, title, message) {
+        try {
+            var key = 'cartorio.postReloadToast';
+            var raw = sessionStorage.getItem(key);
+            var fila = raw ? JSON.parse(raw) : [];
+            var lista = Array.isArray(fila) ? fila : ((fila && fila.message) ? [fila] : []);
+            lista.push({ type: type, title: title, message: message });
+            sessionStorage.setItem(key, JSON.stringify(lista));
+        } catch (e) {}
+    }
     (function() {
         var nomeEl = document.getElementById('nome');
         var nomeFantasiaEl = document.getElementById('nome_fantasia');
@@ -170,7 +192,7 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
         var id = document.getElementById('inst-id').value;
         var cnpjRaw = (document.getElementById('cnpj').value || '').replace(/\D/g, '');
         if (cnpjRaw && cnpjRaw.length === 14 && typeof App !== 'undefined' && App.CNPJ && !App.CNPJ.validar(cnpjRaw)) {
-            if (typeof showToast === 'function') showToast({ type: 'error', message: 'CNPJ inválido. Verifique os dígitos.' });
+            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'CNPJ inválido. Verifique os dígitos.' });
             return;
         }
         var nomeVal = (document.getElementById('nome').value || '').trim().replace(/\s+/g, ' ').slice(0, 255);
@@ -186,8 +208,8 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
         fetch('/api/instituicoes-publicas/update.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
         .then(function(r) { return r.json(); })
         .then(function(d) {
-            if (d.success) { if (typeof showToast === 'function') showToast({ type: 'success', message: 'Salvo.' }); }
-            else { if (typeof showToast === 'function') showToast({ type: 'error', message: d.error || 'Erro.' }); }
+            if (d.success) { if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Salvo.' }); }
+            else { if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: d.error || 'Erro.' }); }
             document.getElementById('salvar-btn').disabled = false;
         })
         .catch(function() { document.getElementById('salvar-btn').disabled = false; });
@@ -196,7 +218,7 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
     var instId = document.getElementById('inst-id').value;
     document.getElementById('add-tel-btn').addEventListener('click', function() {
         var numero = (document.getElementById('new-tel-numero').value || '').trim();
-        if (!numero) { if (typeof showToast === 'function') showToast({ type: 'error', message: 'Informe o número.' }); return; }
+        if (!numero) { if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Informe o número.' }); return; }
         var payload = {
             instituicao_id: instId,
             tipo: (document.getElementById('new-tel-tipo').value || '').trim() || null,
@@ -207,23 +229,31 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
         fetch('/api/instituicoes-publicas/telefones/create.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
         .then(function(r) { return r.json(); })
         .then(function(d) {
-            if (d.id) { window.location.reload(); }
-            else { if (typeof showToast === 'function') showToast({ type: 'error', message: d.error || 'Erro.' }); }
+            if (d.id) {
+                queuePostReloadToast('success', 'Sucesso', 'Telefone adicionado com sucesso.');
+                window.location.reload();
+            }
+            else { if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: d.error || 'Erro.' }); }
         });
     });
     document.querySelectorAll('.btn-del-tel').forEach(function(btn) {
         btn.addEventListener('click', function() {
-            if (!confirm('Excluir este telefone?')) return;
             var id = this.getAttribute('data-id');
+            if (!requireSecondClick('excluir-telefone-instituicao-' + (id || ''), 'Clique novamente em Excluir em até 5 segundos para confirmar a remoção do telefone.')) return;
             fetch('/api/instituicoes-publicas/telefones/delete.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id }) })
             .then(function(r) { return r.json(); })
-            .then(function(d) { if (d.deleted) window.location.reload(); });
+            .then(function(d) {
+                if (d.deleted) {
+                    queuePostReloadToast('success', 'Sucesso', 'Telefone removido com sucesso.');
+                    window.location.reload();
+                }
+            });
         });
     });
 
     document.getElementById('add-setor-btn').addEventListener('click', function() {
         var nomeSetor = (document.getElementById('new-setor-nome').value || '').trim();
-        if (!nomeSetor) { if (typeof showToast === 'function') showToast({ type: 'error', message: 'Informe o nome do setor.' }); return; }
+        if (!nomeSetor) { if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Informe o nome do setor.' }); return; }
         var payload = {
             instituicao_id: instId,
             nome_setor: nomeSetor,
@@ -232,23 +262,31 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
         fetch('/api/instituicoes-publicas/setores/create.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
         .then(function(r) { return r.json(); })
         .then(function(d) {
-            if (d.id) { window.location.reload(); }
-            else { if (typeof showToast === 'function') showToast({ type: 'error', message: d.error || 'Erro.' }); }
+            if (d.id) {
+                queuePostReloadToast('success', 'Sucesso', 'Setor adicionado com sucesso.');
+                window.location.reload();
+            }
+            else { if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: d.error || 'Erro.' }); }
         });
     });
     document.querySelectorAll('.btn-del-setor').forEach(function(btn) {
         btn.addEventListener('click', function() {
-            if (!confirm('Excluir este setor?')) return;
             var id = this.getAttribute('data-id');
+            if (!requireSecondClick('excluir-setor-instituicao-' + (id || ''), 'Clique novamente em Excluir em até 5 segundos para confirmar a remoção do setor.')) return;
             fetch('/api/instituicoes-publicas/setores/delete.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id }) })
             .then(function(r) { return r.json(); })
-            .then(function(d) { if (d.deleted) window.location.reload(); });
+            .then(function(d) {
+                if (d.deleted) {
+                    queuePostReloadToast('success', 'Sucesso', 'Setor removido com sucesso.');
+                    window.location.reload();
+                }
+            });
         });
     });
 
     document.getElementById('buscar-cep-btn').addEventListener('click', function() {
         var cep = (document.getElementById('new-end-cep').value || '').replace(/\D/g, '');
-        if (cep.length !== 8) { if (typeof showToast === 'function') showToast({ type: 'error', message: 'Informe um CEP com 8 dígitos.' }); return; }
+        if (cep.length !== 8) { if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Informe um CEP com 8 dígitos.' }); return; }
         this.disabled = true;
         fetch('/api/cep/consulta.php?q=' + encodeURIComponent(cep), { method: 'GET', credentials: 'same-origin' })
         .then(function(r) { return r.json(); })
@@ -258,18 +296,18 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
                 document.getElementById('new-end-bairro').value = d.data.bairro || '';
                 document.getElementById('new-end-cidade').value = d.data.cidade || '';
                 document.getElementById('new-end-uf').value = (d.data.uf || '').toUpperCase().slice(0, 2);
-                if (typeof showToast === 'function') showToast({ type: 'success', message: 'CEP encontrado.' });
+                if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'CEP encontrado.' });
             } else {
-                if (typeof showToast === 'function') showToast({ type: 'error', message: d.error || 'CEP não encontrado.' });
+                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: d.error || 'CEP não encontrado.' });
             }
         })
-        .catch(function() { if (typeof showToast === 'function') showToast({ type: 'error', message: 'Erro ao consultar CEP.' }); })
+        .catch(function() { if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro ao consultar CEP.' }); })
         .finally(function() { document.getElementById('buscar-cep-btn').disabled = false; });
     });
     document.getElementById('add-end-btn').addEventListener('click', function() {
         var logradouro = (document.getElementById('new-end-logradouro').value || '').trim();
         var cidade = (document.getElementById('new-end-cidade').value || '').trim();
-        if (!logradouro && !cidade) { if (typeof showToast === 'function') showToast({ type: 'error', message: 'Informe ao menos logradouro ou cidade.' }); return; }
+        if (!logradouro && !cidade) { if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Informe ao menos logradouro ou cidade.' }); return; }
         var cepRaw = (document.getElementById('new-end-cep').value || '').replace(/\D/g, '');
         var payload = {
             instituicao_id: instId,
@@ -285,17 +323,25 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
         fetch('/api/instituicoes-publicas/enderecos/create.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
         .then(function(r) { return r.json(); })
         .then(function(d) {
-            if (d.id) { window.location.reload(); }
-            else { if (typeof showToast === 'function') showToast({ type: 'error', message: d.error || 'Erro.' }); }
+            if (d.id) {
+                queuePostReloadToast('success', 'Sucesso', 'Endereço adicionado com sucesso.');
+                window.location.reload();
+            }
+            else { if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: d.error || 'Erro.' }); }
         });
     });
     document.querySelectorAll('.btn-del-end').forEach(function(btn) {
         btn.addEventListener('click', function() {
-            if (!confirm('Excluir este endereço?')) return;
             var id = this.getAttribute('data-id');
+            if (!requireSecondClick('excluir-endereco-instituicao-' + (id || ''), 'Clique novamente em Excluir em até 5 segundos para confirmar a remoção do endereço.')) return;
             fetch('/api/instituicoes-publicas/enderecos/delete.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id }) })
             .then(function(r) { return r.json(); })
-            .then(function(d) { if (d.deleted) window.location.reload(); });
+            .then(function(d) {
+                if (d.deleted) {
+                    queuePostReloadToast('success', 'Sucesso', 'Endereço removido com sucesso.');
+                    window.location.reload();
+                }
+            });
         });
     });
     </script>

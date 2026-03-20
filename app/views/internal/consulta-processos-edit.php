@@ -67,18 +67,43 @@ $partes = $processo['partes'] ?? [];
         </div>
     </div>
     <script>
+    function queuePostReloadToast(type, title, message) {
+        try {
+            var key = 'cartorio.postReloadToast';
+            var raw = sessionStorage.getItem(key);
+            var fila = raw ? JSON.parse(raw) : [];
+            var lista = Array.isArray(fila) ? fila : ((fila && fila.message) ? [fila] : []);
+            lista.push({ type: type, title: title, message: message });
+            sessionStorage.setItem(key, JSON.stringify(lista));
+        } catch (e) {}
+    }
+    var pendingConfirmations = {};
+    function requireSecondClick(key, message) {
+        var now = Date.now();
+        var validUntil = Number(pendingConfirmations[key] || 0);
+        if (validUntil > now) {
+            delete pendingConfirmations[key];
+            return true;
+        }
+        pendingConfirmations[key] = now + 5000;
+        if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Confirmação', message: message });
+        return false;
+    }
     document.querySelectorAll('.btn-desvincular').forEach(function(btn) {
         btn.addEventListener('click', function() {
             var id = this.getAttribute('data-id');
             var processoId = this.getAttribute('data-processo-id');
             if (!id || !processoId) return;
-            if (!confirm('Desvincular esta parte do processo?')) return;
+            if (!requireSecondClick('desvincular-processo-parte-' + id, 'Clique novamente em Desvincular em até 5 segundos para confirmar.')) return;
             this.disabled = true;
             fetch('/api/processos-partes/delete.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id }) })
                 .then(function(r) { return r.json(); })
                 .then(function(d) {
-                    if (d.deleted) { window.location.reload(); }
-                    else { if (typeof showToast === 'function') showToast({ type: 'error', message: d.error || 'Erro.' }); btn.disabled = false; }
+                    if (d.deleted) {
+                        queuePostReloadToast('success', 'Sucesso', 'Vínculo removido com sucesso.');
+                        window.location.reload();
+                    }
+                    else { if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: d.error || 'Erro.' }); btn.disabled = false; }
                 })
                 .catch(function() { btn.disabled = false; });
         });

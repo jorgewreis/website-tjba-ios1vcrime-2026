@@ -213,6 +213,20 @@ $timelineData = $edital !== null
         </script>
         <script>
             (function () {
+                var pendingConfirmations = {};
+                function requireSecondClick(key, message) {
+                    var now = Date.now();
+                    var validUntil = Number(pendingConfirmations[key] || 0);
+                    if (validUntil > now) {
+                        delete pendingConfirmations[key];
+                        return true;
+                    }
+                    pendingConfirmations[key] = now + 5000;
+                    if (typeof showToast === 'function') {
+                        showToast({ type: 'info', variant: 'full', title: 'Confirmação', message: message });
+                    }
+                    return false;
+                }
                 var voltarBtn = document.getElementById('voltar-btn');
                 if (voltarBtn) voltarBtn.addEventListener('click', function (e) { e.preventDefault(); window.location.href = '/frame.php?page=editais'; }, { capture: true });
 
@@ -263,8 +277,10 @@ $timelineData = $edital !== null
                         })
                         .then(function (r) { return r.json(); })
                         .then(function (data) {
-                            if (data.success) window.location.reload();
-                            else {
+                            if (data.success) {
+                                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Informação', message: 'Tarefa cancelada com sucesso.' });
+                                window.setTimeout(function () { window.location.reload(); }, 250);
+                            } else {
                                 if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao cancelar.' });
                                 btnCancelar.disabled = false;
                             }
@@ -289,7 +305,7 @@ $timelineData = $edital !== null
                         } catch (e) {}
                     }
                     btnExcluir.addEventListener('click', function () {
-                        if (!confirm('Tem certeza que deseja excluir este edital e todas as subtarefas? Esta ação não pode ser desfeita.')) return;
+                        if (!requireSecondClick('excluir-edital', 'Clique novamente em Excluir em até 5 segundos para confirmar a exclusão deste edital.')) return;
                         btnExcluir.disabled = true;
                         fetch('/api/cartorio-editais/delete.php', {
                             method: 'POST',

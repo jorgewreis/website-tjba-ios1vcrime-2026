@@ -128,7 +128,7 @@ $instituicoes = $instituicoesList['rows'] ?? [];
         var instituicaoId = (document.getElementById('instituicao_id').value || '').trim();
         var cargoFuncao = (document.getElementById('cargo_funcao').value || '').trim();
         if (!parteId || !instituicaoId) {
-            if (typeof showToast === 'function') showToast({ type: 'error', message: 'Selecione a pessoa e a instituição.' });
+            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Selecione a pessoa e a instituição.' });
             return;
         }
         var payload = {
@@ -144,10 +144,10 @@ $instituicoes = $instituicoesList['rows'] ?? [];
             .then(function(r) { return r.json(); })
             .then(function(d) {
                 if (d.id) {
-                    if (typeof showToast === 'function') showToast({ type: 'success', message: 'Vínculo criado.' });
+                    if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Vínculo criado.' });
                     window.location.href = '/frame.php?page=partesinstituicoeslist';
                 } else {
-                    if (typeof showToast === 'function') showToast({ type: 'error', message: d.error || 'Erro.' });
+                    if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: d.error || 'Erro.' });
                     document.getElementById('salvar-btn').disabled = false;
                 }
             })

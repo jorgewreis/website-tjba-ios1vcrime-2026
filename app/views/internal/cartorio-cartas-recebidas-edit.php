@@ -461,7 +461,7 @@ $stateOptions = [
                             }
                             const status = (data.status_cidade || '').trim();
                             if (status.toUpperCase() === 'CCM') {
-                                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'simple', message: 'Comarca com Central de Mandados' });
+                                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Informação', message: 'Comarca com Central de Mandados' });
                                 cidadeInput.value = '';
                                 if (hiddenComarcaInput) hiddenComarcaInput.value = '';
                             } else {
@@ -502,7 +502,7 @@ $stateOptions = [
                     if (observacoesInput) payload.observacoes = payloadState.observacoes || '';
 
                     salvarBtn.disabled = true;
-                    if (typeof showToast === 'function') showToast({ type: 'info', variant: 'simple', message: 'Atualizando dados...' });
+                    if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Informação', message: 'Atualizando dados...' });
                     else showFeedback('Atualizando dados...', 'success');
 
                     try {
@@ -536,7 +536,8 @@ $stateOptions = [
                             });
                             const data = await res.json().catch(() => ({}));
                             if (res.ok && data.success) {
-                                window.location.reload();
+                                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Informação', message: 'Tarefa cancelada com sucesso.' });
+                                window.setTimeout(() => window.location.reload(), 250);
                                 return;
                             }
                             if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao cancelar a tarefa.' });
@@ -549,6 +550,18 @@ $stateOptions = [
 
                 const btnExcluirTarefa = document.getElementById('excluir-tarefa-btn');
                 if (btnExcluirTarefa && window.__currentCartaId) {
+                    const pendingConfirmations = {};
+                    const requireSecondClick = (key, message) => {
+                        const now = Date.now();
+                        const validUntil = Number(pendingConfirmations[key] || 0);
+                        if (validUntil > now) {
+                            delete pendingConfirmations[key];
+                            return true;
+                        }
+                        pendingConfirmations[key] = now + 5000;
+                        if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Confirmação', message: message });
+                        return false;
+                    };
                     const queuePostReloadToast = (type, title, message) => {
                         try {
                             const key = 'cartorio.postReloadToast';
@@ -560,7 +573,7 @@ $stateOptions = [
                         } catch (e) {}
                     };
                     btnExcluirTarefa.addEventListener('click', async () => {
-                        if (!confirm('Tem certeza que deseja excluir esta tarefa e todas as subtarefas? Esta ação não pode ser desfeita.')) {
+                        if (!requireSecondClick('excluir-carta-recebida', 'Clique novamente em Excluir em até 5 segundos para confirmar a exclusão desta tarefa.')) {
                             return;
                         }
                         btnExcluirTarefa.disabled = true;

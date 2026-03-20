@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0023
+
+**Data:** 2026-03-20 12:01:00 | **Commit:** `0db7b91` | **Tipo:** `patch`
+
+- Feat: nova implementacao edit pages
+
 ## V. 1.04.0022
 
 **Data:** 2026-03-19 22:21:37 | **Commit:** `764f0b7` | **Tipo:** `patch`
@@ -3426,6 +3432,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

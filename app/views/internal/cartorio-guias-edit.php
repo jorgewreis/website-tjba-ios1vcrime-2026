@@ -380,14 +380,14 @@ $tiposOptions = [
             var regimeVal = document.getElementById('edit-regime')?.value?.trim() || '';
             var dataFatoVal = document.getElementById('edit-data-fato')?.value || '';
             if (regimeVal && ['Aberto', 'Semiaberto', 'Fechado'].indexOf(regimeVal) === -1) {
-                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'simple', message: 'Regime inválido. Selecione Aberto, Semiaberto ou Fechado.' });
+                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Regime inválido. Selecione Aberto, Semiaberto ou Fechado.' });
                 return;
             }
             if (dataFatoVal) {
                 var hoje = new Date();
                 hoje.setHours(0, 0, 0, 0);
                 if (new Date(dataFatoVal) >= hoje) {
-                    if (typeof showToast === 'function') showToast({ type: 'error', variant: 'simple', message: 'A data do fato deve ser anterior à data de hoje.' });
+                    if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'A data do fato deve ser anterior à data de hoje.' });
                     return;
                 }
             }
@@ -453,8 +453,21 @@ $tiposOptions = [
             });
         });
 
+        var pendingConfirmations = {};
+        function requireSecondClick(key, message) {
+            var now = Date.now();
+            var validUntil = Number(pendingConfirmations[key] || 0);
+            if (validUntil > now) {
+                delete pendingConfirmations[key];
+                return true;
+            }
+            pendingConfirmations[key] = now + 5000;
+            showToastMsg('info', 'Confirmação', message);
+            return false;
+        }
+
         document.getElementById('excluir-btn')?.addEventListener('click', function () {
-            if (!confirm('Deseja realmente excluir esta guia? Esta ação não pode ser desfeita.')) return;
+            if (!requireSecondClick('excluir-guia', 'Clique novamente em Excluir em até 5 segundos para confirmar a exclusão da guia.')) return;
             var btn = this;
             btn.disabled = true;
             fetch('/api/cartorio-guias/delete.php', {

@@ -112,7 +112,7 @@ $labelsRegra = [
                 var vf = (fimEl.value || '').trim();
                 if (vi !== '' && vf !== '' && vf < vi) {
                     if (typeof showToast === 'function') {
-                        showToast({ type: 'error', message: 'A data fim não pode ser anterior à data início.' });
+                        showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'A data fim não pode ser anterior à data início.' });
                     }
                     fimEl.value = vi;
                 }
@@ -128,11 +128,11 @@ $labelsRegra = [
         var ini = (document.getElementById('data_inicio').value || '').trim();
         var fim = (document.getElementById('data_fim').value || '').trim();
         if (!tipo || !regra || !ini || !fim) {
-            if (typeof showToast === 'function') showToast({ type: 'error', message: 'Preencha os campos obrigatórios.' });
+            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Preencha os campos obrigatórios.' });
             return;
         }
         if (fim < ini) {
-            if (typeof showToast === 'function') showToast({ type: 'error', message: 'A data fim não pode ser anterior à data início.' });
+            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'A data fim não pode ser anterior à data início.' });
             return;
         }
         var desc = (document.getElementById('descricao').value || '').trim();
@@ -160,10 +160,10 @@ $labelsRegra = [
                 if (!isNaN(nEd) && nEd > 0) {
                     msgOk += ' Decurso de prazo recalculado em ' + nEd + ' ' + (nEd === 1 ? 'edital' : 'editais') + '.';
                 }
-                if (typeof showToast === 'function') showToast({ type: 'success', message: msgOk });
+                if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: msgOk });
                 window.location.href = '/frame.php?page=feriadoslist';
             } else {
-                if (typeof showToast === 'function') showToast({ type: 'error', message: (o.j && o.j.error) ? o.j.error : 'Erro ao cadastrar.' });
+                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: (o.j && o.j.error) ? o.j.error : 'Erro ao cadastrar.' });
                 btn.disabled = false;
             }
         })

@@ -255,6 +255,7 @@ $prioridadeLabels = [
         </script>
         <script>
             (function () {
+                var pendingConfirmations = {};
                 function queuePostReloadToast(type, title, message) {
                     try {
                         var key = 'cartorio.postReloadToast';
@@ -264,6 +265,19 @@ $prioridadeLabels = [
                         lista.push({ type: type, title: title, message: message });
                         sessionStorage.setItem(key, JSON.stringify(lista));
                     } catch (e) {}
+                }
+                function requireSecondClick(key, message) {
+                    var now = Date.now();
+                    var validUntil = Number(pendingConfirmations[key] || 0);
+                    if (validUntil > now) {
+                        delete pendingConfirmations[key];
+                        return true;
+                    }
+                    pendingConfirmations[key] = now + 5000;
+                    if (typeof showToast === 'function') {
+                        showToast({ type: 'info', variant: 'full', title: 'Confirmação', message: message });
+                    }
+                    return false;
                 }
                 var voltarBtn = document.getElementById('voltar-btn');
                 if (voltarBtn) {
@@ -335,7 +349,10 @@ $prioridadeLabels = [
                     .then(function (response) { return response.json(); })
                     .then(function (data) {
                         if (data.success) {
-                            window.location.reload();
+                            if (typeof showToast === 'function') {
+                                showToast({ type: 'info', variant: 'full', title: 'Informação', message: 'Tarefa cancelada com sucesso.' });
+                            }
+                            window.setTimeout(function () { window.location.reload(); }, 250);
                             return;
                         }
                         if (typeof showToast === 'function') {
@@ -353,7 +370,7 @@ $prioridadeLabels = [
 
                 var btnExcluir = document.getElementById('excluir-tarefa-btn');
                 btnExcluir?.addEventListener('click', function () {
-                    if (!confirm('Tem certeza que deseja excluir esta medida protetiva e suas subtarefas?')) return;
+                    if (!requireSecondClick('excluir-medida-protetiva', 'Clique novamente em Excluir em até 5 segundos para confirmar a exclusão desta medida protetiva.')) return;
                     btnExcluir.disabled = true;
                     fetch('/api/cartorio-medidas-protetivas/delete.php', {
                         method: 'POST',
