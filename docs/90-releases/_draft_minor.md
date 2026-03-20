@@ -17,4 +17,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: pequenos ajustes** `[56ad09d]`
 - **Fix: correcao de toasts e alerts** `[bda95f6]`
 - **Fix: correcao de edit usuario externo** `[c299674]`
+- **Feat: config de permissoes de usuario** `[56473ed]`
 
