@@ -65,6 +65,7 @@ $stmt = $connection->prepare('SELECT perfil FROM usuario_perfil WHERE usuario = 
 $stmt->execute([$idUsuario]);
 $perfisAtuais = $stmt->fetchAll(PDO::FETCH_COLUMN);
 $perfisAtuais = array_map('strtoupper', array_map('trim', $perfisAtuais));
+$isUsuarioExterno = in_array('ESTAGIARIO', $perfisAtuais, true) || in_array('ESTUDANTE', $perfisAtuais, true);
 
 $setorRaw = trim((string) ($usuario['instituicao'] ?? ''));
 if ($setorRaw !== '' && $setorRaw !== '-') {
@@ -129,11 +130,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $dataNascimentoRaw = trim((string) ($_POST['data_nascimento'] ?? ''));
             $dataNascimentoIso = DateHelper::normalizeIsoDate($dataNascimentoRaw);
             $dataNascimentoVal = $dataNascimentoRaw;
-            $cargo = trim((string) ($_POST['cargo'] ?? ''));
-            $setorLabel = trim((string) ($_POST['setor'] ?? ''));
+            $cargo = $isUsuarioExterno ? trim((string) ($usuario['cargo'] ?? '')) : trim((string) ($_POST['cargo'] ?? ''));
+            $setorLabel = $isUsuarioExterno ? $setorAtual : trim((string) ($_POST['setor'] ?? ''));
             $status = trim((string) ($_POST['status'] ?? 'ativo'));
-            $perfisPost = isset($_POST['perfil']) && is_array($_POST['perfil']) ? $_POST['perfil'] : [];
-            $perfisPost = array_map('trim', array_map('strtoupper', $perfisPost));
+            $perfisPost = $isUsuarioExterno
+                ? $perfisAtuais
+                : (isset($_POST['perfil']) && is_array($_POST['perfil']) ? $_POST['perfil'] : []);
+            $perfisPost = array_values(array_unique(array_map('trim', array_map('strtoupper', $perfisPost))));
             $perfisPost = array_filter($perfisPost);
 
             if ($nome === '' || $sobrenome === '') {
@@ -346,51 +349,53 @@ function deriveUsuarioStatus(array $usuario): string
                 </div>
             </div>
 
-            <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Status e dados complementares</h2></div>
-            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
-                <div class="col">
-                    <label for="edit-cargo">Cargo</label>
-                    <select id="edit-cargo" name="cargo" class="width-400 height-md white">
-                        <option value="">Selecione (opcional)</option>
-                        <option value="Estagiário"<?php echo $cargoVal === 'Estagiário' ? ' selected' : ''; ?>>Estagiário</option>
-                        <option value="Técnico Judiciário"<?php echo $cargoVal === 'Técnico Judiciário' ? ' selected' : ''; ?>>Técnico Judiciário</option>
-                        <option value="Analista Judiciário"<?php echo $cargoVal === 'Analista Judiciário' ? ' selected' : ''; ?>>Analista Judiciário</option>
-                        <option value="Diretora de Secretaria"<?php echo $cargoVal === 'Diretora de Secretaria' ? ' selected' : ''; ?>>Diretora de Secretaria</option>
-                        <option value="Magistrada"<?php echo $cargoVal === 'Magistrada' ? ' selected' : ''; ?>>Magistrada</option>
-                        <option value="Admin"<?php echo $cargoVal === 'Admin' ? ' selected' : ''; ?>>Admin</option>
-                    </select>
-                </div>
-                <div class="col">
-                    <label for="edit-setor">Setor</label>
-                    <select id="edit-setor" name="setor" class="width-400 height-md white">
-                        <option value="">Selecione (opcional)</option>
-                        <option value="Cartório"<?php echo $setorAtual === 'Cartório' ? ' selected' : ''; ?>>Cartório</option>
-                        <option value="Gabinete"<?php echo $setorAtual === 'Gabinete' ? ' selected' : ''; ?>>Gabinete</option>
-                        <option value="Sala de Audiências"<?php echo $setorAtual === 'Sala de Audiências' ? ' selected' : ''; ?>>Sala de Audiências</option>
-                    </select>
-                </div>
-            </div>
-            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
-                <div class="col full-line">
-                    <span class="minor-info">Perfis (um usuário pode ter vários)</span>
-                    <div class="display-flex row row-full justify-start padding-y-sm gap-y-md" style="flex-wrap: wrap;">
-                        <?php foreach ($perfisValidos as $p): ?>
-                        <label class="row left row-gap-10" style="align-items: center; margin-right: 1rem;">
-                            <input type="checkbox" name="perfil[]" value="<?php echo htmlspecialchars($p, ENT_QUOTES); ?>"<?php echo in_array($p, $perfisAtuais, true) ? ' checked' : ''; ?>>
-                            <?php
-                            $label = $p === 'ESTAGIARIO' ? 'Estagiário' : ($p === 'SERVIDOR' ? 'Servidor' : ($p === 'DIRETORA' ? 'Diretora' : ($p === 'MAGISTRADA' ? 'Magistrada' : 'Admin')));
-                            echo htmlspecialchars($label, ENT_QUOTES);
-                            ?>
-                        </label>
-                        <?php endforeach; ?>
+            <?php if (!$isUsuarioExterno): ?>
+                <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Status e dados complementares</h2></div>
+                <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
+                    <div class="col">
+                        <label for="edit-cargo">Cargo</label>
+                        <select id="edit-cargo" name="cargo" class="width-400 height-md white">
+                            <option value="">Selecione (opcional)</option>
+                            <option value="Estagiário"<?php echo $cargoVal === 'Estagiário' ? ' selected' : ''; ?>>Estagiário</option>
+                            <option value="Técnico Judiciário"<?php echo $cargoVal === 'Técnico Judiciário' ? ' selected' : ''; ?>>Técnico Judiciário</option>
+                            <option value="Analista Judiciário"<?php echo $cargoVal === 'Analista Judiciário' ? ' selected' : ''; ?>>Analista Judiciário</option>
+                            <option value="Diretora de Secretaria"<?php echo $cargoVal === 'Diretora de Secretaria' ? ' selected' : ''; ?>>Diretora de Secretaria</option>
+                            <option value="Magistrada"<?php echo $cargoVal === 'Magistrada' ? ' selected' : ''; ?>>Magistrada</option>
+                            <option value="Admin"<?php echo $cargoVal === 'Admin' ? ' selected' : ''; ?>>Admin</option>
+                        </select>
+                    </div>
+                    <div class="col">
+                        <label for="edit-setor">Setor</label>
+                        <select id="edit-setor" name="setor" class="width-400 height-md white">
+                            <option value="">Selecione (opcional)</option>
+                            <option value="Cartório"<?php echo $setorAtual === 'Cartório' ? ' selected' : ''; ?>>Cartório</option>
+                            <option value="Gabinete"<?php echo $setorAtual === 'Gabinete' ? ' selected' : ''; ?>>Gabinete</option>
+                            <option value="Sala de Audiências"<?php echo $setorAtual === 'Sala de Audiências' ? ' selected' : ''; ?>>Sala de Audiências</option>
+                        </select>
                     </div>
                 </div>
-            </div>
+                <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
+                    <div class="col full-line">
+                        <span class="minor-info">Perfis (um usuário pode ter vários)</span>
+                        <div class="display-flex row row-full justify-start padding-y-sm gap-y-md" style="flex-wrap: wrap;">
+                            <?php foreach ($perfisValidos as $p): ?>
+                            <label class="row left row-gap-10" style="align-items: center; margin-right: 1rem;">
+                                <input type="checkbox" name="perfil[]" value="<?php echo htmlspecialchars($p, ENT_QUOTES); ?>"<?php echo in_array($p, $perfisAtuais, true) ? ' checked' : ''; ?>>
+                                <?php
+                                $label = $p === 'ESTAGIARIO' ? 'Estagiário' : ($p === 'SERVIDOR' ? 'Servidor' : ($p === 'DIRETORA' ? 'Diretora' : ($p === 'MAGISTRADA' ? 'Magistrada' : 'Admin')));
+                                echo htmlspecialchars($label, ENT_QUOTES);
+                                ?>
+                            </label>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
 
             <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-bottom">
                 <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
                 <button type="button" class="btn btn-danger" id="excluir-btn">Excluir</button>
-                <button type="submit" class="btn btn-primary" id="salvar-btn">Salvar</button>
+                <button type="submit" class="btn btn-primary" id="salvar-btn" disabled>Salvar</button>
             </div>
         </form>
 
@@ -432,6 +437,8 @@ function deriveUsuarioStatus(array $usuario): string
         var nomeInput = document.getElementById('edit-nome');
         var sobrenomeInput = document.getElementById('edit-sobrenome');
         var emailInput = document.getElementById('edit-email');
+        var telefoneInput = document.getElementById('edit-telefone');
+        var dataNascimentoInput = document.getElementById('edit-data-nascimento');
         var statusSelect = document.getElementById('edit-status');
         var cargoSelect = document.getElementById('edit-cargo');
         var setorSelect = document.getElementById('edit-setor');
@@ -444,6 +451,7 @@ function deriveUsuarioStatus(array $usuario): string
         }
 
         function syncCargoToSetor() {
+            if (!cargoSelect || !setorSelect) return;
             var cargo = (cargoSelect && cargoSelect.value) ? cargoSelect.value.trim() : '';
             if (cargo === 'Magistrada') {
                 setorSelect.value = 'Gabinete';
@@ -503,8 +511,31 @@ function deriveUsuarioStatus(array $usuario): string
             return true;
         }
 
+        function getCurrentState() {
+            var perfisSelecionados = [];
+            document.querySelectorAll('input[name="perfil[]"]:checked').forEach(function (cb) {
+                perfisSelecionados.push((cb.value || '').trim().toUpperCase());
+            });
+            perfisSelecionados.sort();
+            return {
+                sobrenome: sobrenomeInput ? (sobrenomeInput.value || '').trim() : '',
+                email: emailInput ? (emailInput.value || '').trim() : '',
+                telefone: telefoneInput ? (telefoneInput.value || '').trim() : '',
+                dataNascimento: dataNascimentoInput ? (dataNascimentoInput.value || '').trim() : '',
+                status: statusSelect ? (statusSelect.value || '').trim() : '',
+                cargo: cargoSelect ? (cargoSelect.value || '').trim() : '',
+                setor: setorSelect ? (setorSelect.value || '').trim() : '',
+                perfis: perfisSelecionados
+            };
+        }
+
+        var initialState = getCurrentState();
+        function hasChanges() {
+            return JSON.stringify(getCurrentState()) !== JSON.stringify(initialState);
+        }
+
         function updateSalvarButton() {
-            if (salvarBtn) salvarBtn.disabled = !isFormValidForSubmit();
+            if (salvarBtn) salvarBtn.disabled = !isFormValidForSubmit() || !hasChanges();
         }
 
         if (form) {
@@ -526,6 +557,14 @@ function deriveUsuarioStatus(array $usuario): string
         syncCargoToSetor();
         initTextFormatter();
         initEmailValidation();
+        if (telefoneInput) {
+            telefoneInput.addEventListener('input', updateSalvarButton);
+            telefoneInput.addEventListener('change', updateSalvarButton);
+        }
+        if (dataNascimentoInput) {
+            dataNascimentoInput.addEventListener('input', updateSalvarButton);
+            dataNascimentoInput.addEventListener('change', updateSalvarButton);
+        }
         document.querySelectorAll('input[name="perfil[]"]').forEach(function (cb) {
             cb.addEventListener('change', updateSalvarButton);
         });

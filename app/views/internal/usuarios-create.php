@@ -57,6 +57,7 @@ $formValues = [
     'cpf'     => '',
     'email'   => '',
     'telefone' => '',
+    'tipo'    => 'interno',
     'cargo'   => '',
     'setor'   => '',
     'perfil'  => '',
@@ -77,9 +78,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $dataNascimentoIso = DateHelper::normalizeIsoDate($dataNascimentoRaw);
         $senha = (string) ($_POST['senha'] ?? '');
         $senhaConfirm = (string) ($_POST['senha_confirm'] ?? '');
+        $tipo = strtolower(trim((string) ($_POST['tipo'] ?? 'interno')));
+        $isExterno = $tipo === 'externo';
         $cargo = trim((string) ($_POST['cargo'] ?? ''));
         $setorLabel = trim((string) ($_POST['setor'] ?? ''));
         $perfil = trim((string) ($_POST['perfil'] ?? ''));
+        if ($isExterno) {
+            $cargo = '';
+            $setorLabel = '';
+            $perfil = 'ESTAGIARIO';
+        }
         if ($perfil === '' && $cargo !== '' && isset($cargoToPerfil[$cargo])) {
             $perfil = $cargoToPerfil[$cargo];
         }
@@ -93,6 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'cpf'      => strlen($cpf) === 11 ? preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', $cpf) : $_POST['cpf'] ?? '',
             'email'    => $email,
             'telefone' => $telefone,
+            'tipo'     => $isExterno ? 'externo' : 'interno',
             'cargo'    => $cargo,
             'setor'    => $setorLabel,
             'perfil'   => $perfil,
@@ -319,6 +328,16 @@ $csrfToken = Security::generateCSRFToken();
                     <input type="text" id="create-telefone" name="telefone" class="width-100 height-md white" placeholder="(00) 00000-0000" maxlength="50" value="<?php echo htmlspecialchars($formValues['telefone'], ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
                 <div class="col">
+                    <label for="create-tipo">Tipo de usuário</label>
+                    <select id="create-tipo" name="tipo" class="width-300 height-md white">
+                        <option value="interno"<?php echo ($formValues['tipo'] ?? 'interno') === 'interno' ? ' selected' : ''; ?>>Interno</option>
+                        <option value="externo"<?php echo ($formValues['tipo'] ?? 'interno') === 'externo' ? ' selected' : ''; ?>>Externo (Estudante)</option>
+                    </select>
+                </div>
+            </div>
+            <div id="create-interno-fields">
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
+                <div class="col">
                     <label for="create-cargo">Cargo</label>
                     <select id="create-cargo" name="cargo" class="width-400 height-md white">
                         <option value="">Selecione (opcional)</option>
@@ -353,6 +372,7 @@ $csrfToken = Security::generateCSRFToken();
                     </select>
                 </div>
             </div>
+            </div>
 
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col">
@@ -386,6 +406,8 @@ $csrfToken = Security::generateCSRFToken();
         var emailInput = document.getElementById('create-email');
         var senhaInput = document.getElementById('create-senha');
         var senhaConfirmInput = document.getElementById('create-senha-confirm');
+        var tipoSelect = document.getElementById('create-tipo');
+        var internoFields = document.getElementById('create-interno-fields');
         var cargoSelect = document.getElementById('create-cargo');
         var setorSelect = document.getElementById('create-setor');
         var dataNascimentoInput = document.getElementById('create-data-nascimento');
@@ -406,7 +428,24 @@ $csrfToken = Security::generateCSRFToken();
             'Admin': 'ADMIN'
         };
 
+        function isExternoSelected() {
+            return tipoSelect && ((tipoSelect.value || '').trim() === 'externo');
+        }
+
+        function syncTipoFields() {
+            var externo = isExternoSelected();
+            if (internoFields) {
+                internoFields.style.display = externo ? 'none' : '';
+            }
+            if (!externo) return;
+            if (cargoSelect) cargoSelect.value = '';
+            if (setorSelect) setorSelect.value = '';
+            if (perfilSelect) perfilSelect.value = '';
+        }
+
         function syncCargoToPerfilAndSetor() {
+            if (!cargoSelect || !setorSelect || !perfilSelect) return;
+            if (isExternoSelected()) return;
             var cargo = (cargoSelect && cargoSelect.value) ? cargoSelect.value.trim() : '';
             var perfilValue = CARGO_TO_PERFIL[cargo];
             if (perfilValue) {
@@ -429,6 +468,10 @@ $csrfToken = Security::generateCSRFToken();
             }
         }
 
+        if (tipoSelect) tipoSelect.addEventListener('change', function () {
+            syncTipoFields();
+            updateCadastrarButton();
+        });
         if (cargoSelect) cargoSelect.addEventListener('change', syncCargoToPerfilAndSetor);
 
         /** Aplica o formatador padrão do sistema (TextFormatter.formatProperName) em nome e sobrenome no blur. */
@@ -550,6 +593,7 @@ $csrfToken = Security::generateCSRFToken();
             }
             if (!email || !validarEmail(email)) return false;
             if (!validarSenha(senha)) return false;
+            if (isExternoSelected()) return senha === conf;
             return senha === conf;
         }
 
@@ -566,6 +610,7 @@ $csrfToken = Security::generateCSRFToken();
             });
         }
 
+        syncTipoFields();
         syncCargoToPerfilAndSetor();
         initTextFormatter();
         initCPFMask();

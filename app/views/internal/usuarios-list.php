@@ -24,7 +24,7 @@ if ($userId !== null && $userId !== '') {
 $showRowAction = count(array_intersect($userPerfis, $perfisComAcessoRowAction)) > 0;
 
 $routePage = trim((string) ($_GET['page'] ?? 'usuarioslist'));
-$tipoFilter = trim((string) ($_GET['tipo'] ?? ''));
+$tipoFilter = trim((string) ($_GET['tipo'] ?? 'interno'));
 $perfilFilter = trim((string) ($_GET['perfil'] ?? ''));
 $allowedPerPage = [10, 25, 50, 100];
 $itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 25;
@@ -232,29 +232,29 @@ $statusClasses = [
             <div class="display-flex col col-full register border-bottom">
                 <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                     <div class="display-flex row row-fit justify-start gap-y-sm wrap">
-                            <div class="col width-400 parte-nome text-ellipsis">
+                            <div class="col width-500 parte-nome text-ellipsis">
                                 <span class="minor-info">Nome</span>
                                 <span class="major-info"><?php echo htmlspecialchars($row['nome_completo'] ?? '—'); ?></span>
                             </div>
-                            <div class="col width-200 parte-tipo">
+                            <div class="col width-300 parte-tipo">
                                 <span class="minor-info">Tipo</span>
                                 <span class="major-info"><?php echo htmlspecialchars($tipoLabel); ?></span>
                             </div>
-                            <div class="col width-300 parte-setor">
+                            <div class="col width-400 parte-setor">
                                 <span class="minor-info">Setor</span>
                                 <span class="major-info"><?php echo $setoresDisplay !== '' ? htmlspecialchars($setoresDisplay) : '—'; ?></span>
                             </div>
-                            <div class="col width-300 parte-cargo">
+                            <div class="col width-400 parte-cargo">
                                 <span class="minor-info">Cargo</span>
                                 <span class="major-info"><?php echo $cargo !== '' ? htmlspecialchars($cargo) : '—'; ?></span>
                             </div>
                     </div>
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                            <div class="col">
-                                <span class="status padding-x-lg <?php echo htmlspecialchars($statusClass); ?>"><?php echo htmlspecialchars($statusLabel); ?></span>
-                            </div>
                             <div class="col part-edit">
                                 <button type="button" class="" title="Editar" data-edit-id="<?php echo htmlspecialchars($editId); ?>"><i class="fi fi-rr-file-edit"></i></button>
+                            </div>
+                            <div class="col">
+                                <span class="width-300 status padding-x-lg <?php echo htmlspecialchars($statusClass); ?>"><?php echo htmlspecialchars($statusLabel); ?></span>
                             </div>
                     </div>
                 </div>

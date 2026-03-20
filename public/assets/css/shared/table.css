@@ -202,6 +202,18 @@
         .col-cejusc {
             display: none;
         }
+        .parte-nome {
+            display: flex;
+        }
+        .parte-tipo {
+            display: flex;
+        }
+        .parte-setor {
+            display: none;
+        }
+        .parte-cargo {
+            display: none;
+        }
 
     .col.relative {
         position: relative;
@@ -441,6 +453,9 @@
         display: flex;
         margin-right: 4vw;
     }
+    .parte-setor {
+        display: flex;
+    }
 }
 
 @media (min-width: 1280px) {
@@ -459,6 +474,9 @@
     .col-tipo-guia {
         display: flex;
         margin-right: 4vw;
+    }
+    .parte-cargo {
+        display: flex;
     }
 
     .row.allocate-users {
