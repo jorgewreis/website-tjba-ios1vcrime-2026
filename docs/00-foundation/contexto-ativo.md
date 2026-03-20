@@ -59,7 +59,7 @@ authors:
 - `public/assets/js/shared/common.js`
 - `public/assets/js/shared/menu.js`
 - `public/assets/img/avatars/`
-- `public/assets/img/avatars/3d/`
+- `public/assets/img/avatars/vivid/`
 - `public/assets/img/backgrounds/`
 - `public/assets/icons/`
 - `scripts/bump_version.sh`

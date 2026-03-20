@@ -9,6 +9,7 @@ if (function_exists('mb_internal_encoding')) {
 require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
 require_once __DIR__ . '/../../helpers/UserAccessHelper.php';
 require_once __DIR__ . '/../../helpers/AvatarCatalog.php';
+require_once __DIR__ . '/../../helpers/AvatarInitialsPalette.php';
 
 $connection = Conection::getInstance()->getConnection();
 $userId = $userId ?? ($_SESSION['id_usuario'] ?? '');
@@ -63,17 +64,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csrf_token']) && Secu
         }
     }
     if ($resultado['success'] && $avatarResult['success']) {
-        $dados = $usuario->getDadosPessoais($userId);
-        if ($dados !== null && !empty($dados['updated_at'])) {
-            $dt = \DateTime::createFromFormat('Y-m-d H:i:s', $dados['updated_at']);
-            if ($dt === false) {
-                $dt = \DateTime::createFromFormat('Y-m-d H:i:s.u', $dados['updated_at']);
-            }
-            $ultimaAlteracaoDados = $dt ? $dt->format('d/m/Y H:i') : trim($dados['updated_at']);
-        } else {
-            $ultimaAlteracaoDados = 'não registrada';
-        }
-        $mensagemSucesso = 'Dados atualizados com sucesso.';
+        $_SESSION['flash_profile_saved_toast'] = 'Dados atualizados com sucesso.';
+        $dashPage = $isUsuarioExterno ? 'dashboardexterno' : 'dashboard';
+        header('Location: /frame.php?page=' . $dashPage . '&profile_saved=1', true, 302);
+        exit;
     } elseif (!$resultado['success']) {
         $mensagemErro = $resultado['message'] ?? 'Não foi possível atualizar os dados.';
     } else {
@@ -92,9 +86,26 @@ $ultimaAlteracaoDadosLower = function_exists('mb_strtolower') ? mb_strtolower($u
 
 $nomeCompletoLeitura = '';
 $avatarSlugForJs = AvatarCatalog::getDefaultSlug();
+$avatarUiEntries = [];
+$avatarPreviewPalette = ['bg' => '#6b7280', 'fg' => '#ffffff'];
+$avatarPreviewInitials = '?';
 if ($dados !== null) {
     $nomeCompletoLeitura = trim(trim((string) ($dados['nome'] ?? '')) . ' ' . trim((string) ($dados['sobrenome'] ?? '')));
     $avatarSlugForJs = $dados['avatar_slug'] ?? AvatarCatalog::getDefaultSlug();
+    $avatarPreviewPalette = AvatarInitialsPalette::getOrCreate();
+    $avatarPreviewInitials = AvatarCatalog::initialsFromNames(
+        trim((string) ($dados['nome'] ?? '')),
+        trim((string) ($dados['sobrenome'] ?? ''))
+    );
+}
+if (!$isUsuarioExterno && $dados !== null) {
+    foreach (AvatarCatalog::listForUi() as $av) {
+        $avatarUiEntries[] = [
+            'slug' => $av['slug'],
+            'url' => (string) ($av['url'] ?? ''),
+            'is_initial' => !empty($av['is_initial']),
+        ];
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -120,6 +131,31 @@ if ($dados !== null) {
             .regras-alocacao-list .regras-alocacao-item:last-child { border-bottom: none; }
             .regras-alocacao-regra { font-weight: 600; }
             .regras-alocacao-desc { color: var(--color-text-secondary); }
+            .avatar-edit-row { align-items: flex-start; }
+            .avatar-edit-preview-wrap {
+                flex-shrink: 0;
+                width: 96px;
+                height: 96px;
+                border-radius: 8px;
+                overflow: hidden;
+                border: 1px solid var(--color-border);
+                background: var(--color-background-subtle, #f3f4f6);
+            }
+            .avatar-edit-preview-img {
+                display: block;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+            .avatar-edit-preview-initials {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+                height: 100%;
+                font-size: 1.35rem;
+                font-weight: 600;
+            }
         </style>
     </head>
 <body class="page-internal">
@@ -177,28 +213,28 @@ if ($dados !== null) {
                 </div>
 
                 <?php if (!$isUsuarioExterno): ?>
+                    <?php
+                    $currentAvatarSlug = $dados['avatar_slug'] ?? AvatarCatalog::getDefaultSlug();
+                    $previewIsInitials = AvatarCatalog::isInitialsSlug($currentAvatarSlug);
+                    $previewImgUrl = $previewIsInitials ? '' : AvatarCatalog::urlForSlug($currentAvatarSlug);
+                    ?>
                     <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Avatar</h2></div>
-                    <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
+                    <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md avatar-edit-row">
                         <div class="col">
-                            <label for="edit-avatar-slug">Imagem do perfil</label>
-                            <select id="edit-avatar-slug" name="avatar_slug" class="width-400 height-md" aria-describedby="avatar-slug-hint">
-                                <?php
-                                $currentAvatarSlug = $dados['avatar_slug'] ?? AvatarCatalog::getDefaultSlug();
-                                foreach (AvatarCatalog::listForUi() as $av): ?>
-                                    <option value="<?php echo htmlspecialchars($av['slug'], ENT_QUOTES, 'UTF-8'); ?>"<?php echo ($currentAvatarSlug === $av['slug']) ? ' selected' : ''; ?>><?php echo htmlspecialchars($av['label'], ENT_QUOTES, 'UTF-8'); ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                            <p id="avatar-slug-hint" class="minor-info">Imagens disponíveis em <code>public/assets/img/avatars/3d/</code> ou apenas iniciais do nome (cores sorteadas a cada login).</p>
-                            <div class="display-flex row row-full gap-y-md flex-wrap padding-y-sm" style="align-items: center;">
-                                <?php foreach (AvatarCatalog::listForUi() as $av): ?>
-                                    <button type="button" class="btn btn-secondary avatar-preset-thumb" data-slug="<?php echo htmlspecialchars($av['slug'], ENT_QUOTES, 'UTF-8'); ?>" title="<?php echo htmlspecialchars($av['label'], ENT_QUOTES, 'UTF-8'); ?>" style="padding: 4px;">
-                                        <?php if (!empty($av['is_initial'])): ?>
-                                            <span style="display: inline-flex; width: 40px; height: 40px; border-radius: 50%; align-items: center; justify-content: center; background: #6b7280; color: #fff; font-size: 12px; font-weight: 600;">Aa</span>
-                                        <?php else: ?>
-                                            <img src="<?php echo htmlspecialchars($av['url'], ENT_QUOTES, 'UTF-8'); ?>" width="40" height="40" alt="">
-                                        <?php endif; ?>
-                                    </button>
-                                <?php endforeach; ?>
+                            <div class="display-flex row row-full gap-y-md flex-wrap" style="align-items: flex-start; gap: 16px;">
+                                <div class="avatar-edit-preview-wrap" id="avatar-preview-wrap" aria-live="polite">
+                                    <img id="avatar-preview-img" class="avatar-edit-preview-img" src="<?php echo $previewIsInitials ? '' : htmlspecialchars($previewImgUrl, ENT_QUOTES, 'UTF-8'); ?>" alt="" width="96" height="96"<?php echo $previewIsInitials ? ' hidden' : ''; ?>>
+                                    <span id="avatar-preview-initials" class="avatar-edit-preview-initials" style="background-color: <?php echo htmlspecialchars($avatarPreviewPalette['bg'], ENT_QUOTES, 'UTF-8'); ?>; color: <?php echo htmlspecialchars($avatarPreviewPalette['fg'], ENT_QUOTES, 'UTF-8'); ?>;"<?php echo $previewIsInitials ? '' : ' hidden'; ?>><?php echo htmlspecialchars($avatarPreviewInitials, ENT_QUOTES, 'UTF-8'); ?></span>
+                                </div>
+                                <div style="min-width: 0; flex: 1;">
+                                    <label for="edit-avatar-slug">Imagem do perfil</label>
+                                    <select id="edit-avatar-slug" name="avatar_slug" class="width-400 height-md" aria-describedby="avatar-slug-hint">
+                                        <?php foreach (AvatarCatalog::listForUi() as $av): ?>
+                                            <option value="<?php echo htmlspecialchars($av['slug'], ENT_QUOTES, 'UTF-8'); ?>"<?php echo ($currentAvatarSlug === $av['slug']) ? ' selected' : ''; ?>><?php echo htmlspecialchars($av['label'], ENT_QUOTES, 'UTF-8'); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <p id="avatar-slug-hint" class="minor-info">Escolha uma imagem da lista (arquivos em <code>public/assets/img/avatars/vivid/</code>) ou a opção <strong>Iniciais</strong> (cores sorteadas a cada login).</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -338,19 +374,36 @@ if ($dados !== null) {
             }
         });
         var avSel = document.getElementById('edit-avatar-slug');
-        if (avSel) {
-            avSel.addEventListener('change', updateSalvarState);
+        var avatarUiEntries = <?php echo json_encode($avatarUiEntries, JSON_UNESCAPED_UNICODE); ?>;
+        function avatarEntryBySlug(slug) {
+            var s = (slug || '').trim();
+            for (var i = 0; i < avatarUiEntries.length; i++) {
+                if (avatarUiEntries[i].slug === s) return avatarUiEntries[i];
+            }
+            return null;
         }
-        document.querySelectorAll('.avatar-preset-thumb').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                var slug = btn.getAttribute('data-slug');
-                var sel = document.getElementById('edit-avatar-slug');
-                if (sel && slug) {
-                    sel.value = slug;
-                    updateSalvarState();
-                }
+        function syncAvatarPreview() {
+            var img = document.getElementById('avatar-preview-img');
+            var initialsEl = document.getElementById('avatar-preview-initials');
+            if (!img || !initialsEl || !avSel) return;
+            var entry = avatarEntryBySlug(avSel.value);
+            if (!entry || entry.is_initial) {
+                img.setAttribute('hidden', 'hidden');
+                img.removeAttribute('src');
+                initialsEl.removeAttribute('hidden');
+            } else {
+                initialsEl.setAttribute('hidden', 'hidden');
+                img.src = entry.url;
+                img.removeAttribute('hidden');
+            }
+        }
+        if (avSel) {
+            avSel.addEventListener('change', function () {
+                syncAvatarPreview();
+                updateSalvarState();
             });
-        });
+            syncAvatarPreview();
+        }
         updateSalvarState();
     })();
     </script>

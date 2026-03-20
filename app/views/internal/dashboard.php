@@ -47,5 +47,6 @@ Security::requireAuthentication();
             <span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span>
         </div>
     </div>
+    <?php include __DIR__ . '/_profile_saved_reload_parent.php'; ?>
 </body>
 </html>

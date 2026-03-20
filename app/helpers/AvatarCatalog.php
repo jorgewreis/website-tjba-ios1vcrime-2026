@@ -4,7 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/UserInitialsHelper.php';
 
 /**
- * Catálogo de avatares: imagens em public/assets/img/avatars/3d/ (sem upload).
+ * Catálogo de avatares: imagens em public/assets/img/avatars/vivid/ (sem upload).
  * Modo especial "initials": sem imagem — exibe iniciais com paleta de sessão (login).
  *
  * @phpstan-type AvatarEntry array{slug: string, url: string, label: string, is_initial?: bool}
@@ -17,7 +17,7 @@ final class AvatarCatalog
     /** Legado / migração: tratar como initials. */
     private const SLUG_LEGACY_DEFAULT = 'default';
 
-    private const DIR_3D_REL = '/assets/img/avatars/3d';
+    private const DIR_VIVID_REL = '/assets/img/avatars/vivid';
 
     private const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 
@@ -62,7 +62,7 @@ final class AvatarCatalog
     }
 
     /**
-     * Lista para select + miniaturas: primeiro "Iniciais", depois arquivos da pasta 3d.
+     * Lista para select: primeiro "Iniciais", depois arquivos da pasta vivid.
      *
      * @return list<AvatarEntry>
      */
@@ -81,7 +81,7 @@ final class AvatarCatalog
             ],
         ];
 
-        $dir = self::path3dDir();
+        $dir = self::pathVividDir();
         if (!is_dir($dir) || !is_readable($dir)) {
             self::$cached = $out;
             return self::$cached;
@@ -110,7 +110,7 @@ final class AvatarCatalog
                 continue;
             }
             $slug = $base;
-            $url = self::DIR_3D_REL . '/' . rawurlencode($file);
+            $url = self::DIR_VIVID_REL . '/' . rawurlencode($file);
             $label = self::humanLabelFromStem($base);
             $out[] = ['slug' => $slug, 'url' => $url, 'label' => $label];
         }
@@ -159,9 +159,9 @@ final class AvatarCatalog
         return '';
     }
 
-    private static function path3dDir(): string
+    private static function pathVividDir(): string
     {
-        return dirname(__DIR__, 2) . '/public' . self::DIR_3D_REL;
+        return dirname(__DIR__, 2) . '/public' . self::DIR_VIVID_REL;
     }
 
     private static function isSafeFilenameStem(string $stem): bool

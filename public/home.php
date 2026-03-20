@@ -163,6 +163,12 @@ $avatarSummaryTitle = $userDisplayFullName;
 if ($avatarBadgePerfisLine !== '') {
     $avatarSummaryTitle .= ' | ' . $avatarBadgePerfisLine;
 }
+
+$flashProfileSavedToast = null;
+if (!empty($_SESSION['flash_profile_saved_toast'])) {
+    $flashProfileSavedToast = (string) $_SESSION['flash_profile_saved_toast'];
+    unset($_SESSION['flash_profile_saved_toast']);
+}
 ?>
 
 <!DOCTYPE html>
@@ -177,26 +183,82 @@ if ($avatarBadgePerfisLine !== '') {
     <link rel="stylesheet" href="/assets/css/shared/layout.css">
     <link rel="stylesheet" href="/assets/css/shared/toast.css">
     <style>
-        /* Resumo do usuário: fixo na barra (≥1280px), à esquerda do avatar */
+        /* Navbar: avatar + resumo à esquerda (modelo model-page-home-header) */
+        .navbar-nav-left {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            flex: 1;
+            min-width: 0;
+            position: relative;
+        }
+        .nav-avatar-navbar-wrap {
+            position: relative;
+            flex-shrink: 0;
+            outline: none;
+        }
+        .nav-new-avatar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 120px;
+            height: 64px;
+            margin-left: -24px;
+            border-radius: 6px 0 0 6px;
+            overflow: hidden;
+            background: var(--color-border-subtle);
+        }
+        .nav-new-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 6px 0 0 6px;
+        }
+        .nav-new-avatar .nav-new-avatar-initials {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            font-size: 1.25rem;
+            font-weight: 600;
+            border-radius: 6px 0 0 6px;
+        }
+        .navbar-nav-left .layout-menu-toggle {
+            position: absolute;
+            left: 58px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            margin-right: 0;
+            z-index: 2;
+        }
+        .navbar-nav-left .layout-menu-toggle .nav-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            padding: 0;
+        }
         .nav-item-user-summary {
             display: none;
             align-items: center;
             flex: 0 1 auto;
             max-width: 400px;
             margin-left: 10px;
-            margin-right: 10px;
-            padding-left: 15px;
             min-width: 0;
-            border-left: 1px solid var(--color-border);
         }
         .user-summary-inline {
             display: flex;
             flex-direction: column;
-            align-items: flex-end;
+            align-items: flex-start;
             justify-content: center;
             max-width: 400px;
             min-width: 0;
-            text-align: right;
+            text-align: left;
+            margin-left: 10px;
         }
         .user-summary-name {
             font-weight: 600;
@@ -222,21 +284,18 @@ if ($avatarBadgePerfisLine !== '') {
             .nav-item-user-summary {
                 display: flex;
             }
-            .nav-item-avatar {
-                flex-shrink: 0;
-            }
-            /* Com o resumo visível, não exibe o popover no hover */
-            .nav-item-avatar .avatar-popover {
+            /* Com o resumo visível à esquerda, não exibe o popover no hover */
+            .nav-avatar-navbar-wrap .avatar-popover {
                 display: none !important;
             }
         }
 
-        /* Badge do usuário no hover do avatar (<1280px) */
-        .nav-item-avatar .nav-link-avatar { position: relative; }
+        /* Tooltip nome/perfis em telas estreitas */
         .avatar-popover {
             position: absolute;
             inset-block-start: calc(100% + 8px);
-            inset-inline-end: 0;
+            inset-inline-start: 0;
+            inset-inline-end: auto;
             min-width: 220px;
             max-width: min(400px, 92vw);
             padding: 8px 12px;
@@ -250,8 +309,8 @@ if ($avatarBadgePerfisLine !== '') {
             pointer-events: none;
             transition: opacity 0.15s ease, visibility 0.15s ease;
         }
-        .nav-item-avatar:hover .avatar-popover,
-        .nav-item-avatar:focus-within .avatar-popover {
+        .nav-avatar-navbar-wrap:hover .avatar-popover,
+        .nav-avatar-navbar-wrap:focus-within .avatar-popover {
             opacity: 1;
             visibility: visible;
             pointer-events: auto;
@@ -321,10 +380,31 @@ if ($avatarBadgePerfisLine !== '') {
             <div class="layout-page">            
                 <!-- NAVBAR -->
                 <nav class="layout-navbar">
-                    <div class="layout-menu-toggle">
-                        <a class="nav-item nav-link">
-                            <i class="fi fi-br-menu-burger"></i>
-                        </a>
+                    <div class="navbar-nav-left">
+                        <div class="nav-avatar-navbar-wrap" tabindex="0" aria-label="Usuário logado" aria-describedby="user-summary-navbar">
+                            <div class="nav-new-avatar">
+                                <?php if (($avatarNavbarDisplay['mode'] ?? '') === 'image' && !empty($avatarNavbarDisplay['url'])): ?>
+                                    <img src="<?php echo htmlspecialchars((string) $avatarNavbarDisplay['url'], ENT_QUOTES, 'UTF-8'); ?>" alt="">
+                                <?php else: ?>
+                                    <span class="nav-new-avatar-initials" style="background-color: <?php echo htmlspecialchars($avatarPalette['bg'], ENT_QUOTES, 'UTF-8'); ?>; color: <?php echo htmlspecialchars($avatarPalette['fg'], ENT_QUOTES, 'UTF-8'); ?>;"><?php echo htmlspecialchars((string) ($avatarNavbarDisplay['initials'] ?? '?'), ENT_QUOTES, 'UTF-8'); ?></span>
+                                <?php endif; ?>
+                            </div>
+                            <div id="avatar-profile-popover" class="avatar-popover" role="tooltip">
+                                <div class="avatar-popover-name"><?php echo htmlspecialchars($userDisplayFullName !== '' ? $userDisplayFullName : 'Usuário', ENT_QUOTES, 'UTF-8'); ?></div>
+                                <div class="avatar-popover-roles"><?php echo htmlspecialchars($avatarBadgePerfisLine !== '' ? $avatarBadgePerfisLine : '—', ENT_QUOTES, 'UTF-8'); ?></div>
+                            </div>
+                        </div>
+                        <div class="layout-menu-toggle">
+                            <a class="nav-item nav-link">
+                                <i class="fi fi-br-menu-burger"></i>
+                            </a>
+                        </div>
+                        <div class="nav-item nav-item-user-summary">
+                            <div class="user-summary-inline" id="user-summary-navbar" title="<?php echo htmlspecialchars($avatarSummaryTitle !== '' ? $avatarSummaryTitle : 'Usuário', ENT_QUOTES, 'UTF-8'); ?>">
+                                <span class="user-summary-name"><?php echo htmlspecialchars($userDisplayFullName !== '' ? $userDisplayFullName : 'Usuário', ENT_QUOTES, 'UTF-8'); ?></span>
+                                <span class="user-summary-roles"><?php echo htmlspecialchars($avatarBadgePerfisLine !== '' ? $avatarBadgePerfisLine : '—', ENT_QUOTES, 'UTF-8'); ?></span>
+                            </div>
+                        </div>
                     </div>
                     <div class="navbar-nav-right">
                         <ul class="navbar-nav">
@@ -337,12 +417,12 @@ if ($avatarBadgePerfisLine !== '') {
                                 <a class="nav-link" id="themeToggle" href="#" role="button" tabindex="0" aria-label="Alternar tema" title="Alternar tema (claro / escuro / automático)">
                                     <i class="fi fi-rs-eclipse-alt"></i>
                                 </a>
-                            </li>                        
+                            </li>
                             <li class="nav-item">
-                                <a class="nav-link disabled"> <!-- new-message -->
+                                <a class="nav-link disabled">
                                     <i class="fi fi-rs-bell"></i>
                                 </a>
-                            </li>                        
+                            </li>
                             <li class="nav-item nav-item-settings" id="nav-item-settings">
                                 <a class="nav-link" id="settings-menu-trigger" href="#" role="button" aria-expanded="false" aria-haspopup="true" aria-label="Configurações e perfil">
                                     <i class="fi fi-rs-settings"></i>
@@ -362,27 +442,6 @@ if ($avatarBadgePerfisLine !== '') {
                                         </ul>
                                     </div>
                                 </div>
-                            </li>
-                            <li class="nav-item nav-item-user-summary">
-                                <div class="user-summary-inline" id="user-summary-navbar" title="<?php echo htmlspecialchars($avatarSummaryTitle !== '' ? $avatarSummaryTitle : 'Usuário', ENT_QUOTES, 'UTF-8'); ?>">
-                                    <span class="user-summary-name"><?php echo htmlspecialchars($userDisplayFullName !== '' ? $userDisplayFullName : 'Usuário', ENT_QUOTES, 'UTF-8'); ?></span>
-                                    <span class="user-summary-roles"><?php echo htmlspecialchars($avatarBadgePerfisLine !== '' ? $avatarBadgePerfisLine : '—', ENT_QUOTES, 'UTF-8'); ?></span>
-                                </div>
-                            </li>
-                            <li class="nav-item nav-item-avatar">
-                                <a class="nav-link nav-link-avatar" href="#" tabindex="0" aria-label="Usuário logado" aria-describedby="user-summary-navbar" onclick="event.preventDefault();">
-                                    <div class="avatar avatar-online">
-                                        <?php if (($avatarNavbarDisplay['mode'] ?? '') === 'image' && !empty($avatarNavbarDisplay['url'])): ?>
-                                            <img src="<?php echo htmlspecialchars((string) $avatarNavbarDisplay['url'], ENT_QUOTES, 'UTF-8'); ?>" alt="">
-                                        <?php else: ?>
-                                            <span class="avatar-initials" style="background-color: <?php echo htmlspecialchars($avatarPalette['bg'], ENT_QUOTES, 'UTF-8'); ?>; color: <?php echo htmlspecialchars($avatarPalette['fg'], ENT_QUOTES, 'UTF-8'); ?>;"><?php echo htmlspecialchars((string) ($avatarNavbarDisplay['initials'] ?? '?'), ENT_QUOTES, 'UTF-8'); ?></span>
-                                        <?php endif; ?>
-                                    </div>
-                                    <div id="avatar-profile-popover" class="avatar-popover" role="tooltip">
-                                        <div class="avatar-popover-name"><?php echo htmlspecialchars($userDisplayFullName !== '' ? $userDisplayFullName : 'Usuário', ENT_QUOTES, 'UTF-8'); ?></div>
-                                        <div class="avatar-popover-roles"><?php echo htmlspecialchars($avatarBadgePerfisLine !== '' ? $avatarBadgePerfisLine : '—', ENT_QUOTES, 'UTF-8'); ?></div>
-                                    </div>
-                                </a>
                             </li>
                         </ul>
                     </div>
@@ -965,6 +1024,13 @@ if ($avatarBadgePerfisLine !== '') {
             // Backup para mudanças de rota internas no iframe.
             setInterval(syncMenuFromFrameSrc, 500);
         }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var flashMsg = <?php echo json_encode($flashProfileSavedToast, JSON_UNESCAPED_UNICODE); ?>;
+            if (flashMsg && window.App && App.Toast && App.Toast.show) {
+                App.Toast.show({ type: 'success', variant: 'full', title: 'Sucesso', message: flashMsg });
+            }
+        });
     </script>
     
 </body>
