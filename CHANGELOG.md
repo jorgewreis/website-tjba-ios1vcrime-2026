@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0031
+
+**Data:** 2026-03-20 15:07:37 | **Commit:** `b5b24bf` | **Tipo:** `patch`
+
+- Fix: correcao de usuario estagiario
+
 ## V. 1.04.0030
 
 **Data:** 2026-03-20 14:43:58 | **Commit:** `56473ed` | **Tipo:** `patch`
@@ -3474,6 +3480,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

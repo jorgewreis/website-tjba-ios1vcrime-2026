@@ -238,6 +238,7 @@ function getEstagiarioAllowedSections(PDO $connection, string $userId): array
     }
 
     $sections[] = 'Consultas';
+
     return array_values(array_unique($sections));
 }
 
@@ -264,6 +265,7 @@ function respondWithError(int $status, string $message, string $errorsDir): void
 
 // Bloco centralizado de validações para sessão, usuário, página e acesso.
 $usuario = new Usuario();
+$connection = Conection::getInstance()->getConnection();
 $user = null;
 $userPerfils = [];
 $estagiarioAllowedSections = [];
@@ -340,7 +342,13 @@ do {
     $requiredSection = $page_to_section[$page] ?? null;
 
     if (!empty($estagiarioAllowedSections) && $requiredSection !== null) {
-        if (!in_array($requiredSection, $estagiarioAllowedSections, true)) {
+        $sectionAllowed = in_array($requiredSection, $estagiarioAllowedSections, true);
+        // Páginas com seção "All" (dashboard, dados pessoais): liberar só o necessário, sem abrir feriados etc.
+        if (!$sectionAllowed && $requiredSection === 'All') {
+            $estagiarioPaginasAll = ['dashboard', 'alterardados'];
+            $sectionAllowed = in_array($page, $estagiarioPaginasAll, true);
+        }
+        if (!$sectionAllowed) {
             $validationStatus = 403;
             $validationMessage = 'Acesso negado. Seção não permitida para o setor do estagiário.';
             break;

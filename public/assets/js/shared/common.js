@@ -21,24 +21,28 @@
    * @param {boolean} [redirectOnly] - Se true, após a requisição redireciona sem esperar JSON (ex.: logout.php que retorna 302).
    */
   async function performLogout(endpoint = "/logout.php", redirectOnly = true) {
+    const goLogin = () => window.location.replace("/index.php?nocache=" + Date.now());
     try {
       const response = await fetch(endpoint, {
         method: "POST",
-        credentials: "include"
+        credentials: "same-origin",
+        cache: "no-store",
+        redirect: "manual"
       });
       if (redirectOnly) {
-        window.location.replace("/index.php");
+        // Força nova página sem cache (token CSRF no formulário deve bater com a sessão nova).
+        goLogin();
         return;
       }
       const result = await response.json();
       if (result && result.success) {
-        window.location.replace("/index.php");
+        goLogin();
       } else {
-        window.location.replace("/index.php");
+        goLogin();
       }
     } catch (error) {
       console.error("Erro ao fazer logout:", error);
-      window.location.replace("/index.php");
+      goLogin();
     }
   }
 
