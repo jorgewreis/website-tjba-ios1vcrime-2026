@@ -23,4 +23,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Feat: nova implementacao de paginas de erro melhoradas** `[88bd330]`
 - **Fix: correcao input** `[2dff2b7]`
 - **Fix: correcao de bugs** `[5064596]`
+- **Feat: criacao de novo dashboard para usuario externo** `[cb53908]`
 
