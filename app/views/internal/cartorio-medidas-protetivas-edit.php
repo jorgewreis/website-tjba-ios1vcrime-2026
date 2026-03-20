@@ -208,7 +208,7 @@ $prioridadeLabels = [
                     <div class="col filter">
                         <label>Cejusc</label>
                         <div class="badge-line">
-                            <button class="btn btn-secondary-outline" href="/frame.php?page=cejuscedit&id=<?php echo urlencode((string) $medida['cejusc_tarefa_id']); ?>">Abrir tarefa Cejusc</button>
+                            <button type="button" class="btn btn-secondary-outline" id="abrir-cejusc-btn" data-cejusc-id="<?php echo htmlspecialchars((string) $medida['cejusc_tarefa_id'], ENT_QUOTES); ?>">Abrir tarefa Cejusc</button>
                         </div>
                     </div>
                 <?php endif; ?>
@@ -271,6 +271,15 @@ $prioridadeLabels = [
                         e.preventDefault();
                         window.location.href = '/frame.php?page=medidasprotetivas';
                     }, { capture: true });
+                }
+
+                var abrirCejuscBtn = document.getElementById('abrir-cejusc-btn');
+                if (abrirCejuscBtn) {
+                    abrirCejuscBtn.addEventListener('click', function () {
+                        var cejuscId = (abrirCejuscBtn.getAttribute('data-cejusc-id') || '').trim();
+                        if (!cejuscId) return;
+                        window.location.href = '/frame.php?page=cejuscedit&id=' + encodeURIComponent(cejuscId);
+                    });
                 }
 
                 var salvarBtn = document.getElementById('salvar-btn');

@@ -183,7 +183,7 @@ if ($pessoa === null) {
             <?php endforeach; ?>
         </div>
         <div class="row table left padding-tb-md padding-lr-lg border-bottom row-gap-10 full-line">
-            <button href="/frame.php?page=partesinstituicoescreate&parte_id=<?php echo urlencode($pessoa['id'] ?? ''); ?>" class="btn btn-primary">Vincular instituição</button>
+            <button type="button" id="vincular-instituicao-btn" class="btn btn-primary">Vincular instituição</button>
         </div>
     </div>
 
@@ -210,6 +210,14 @@ if ($pessoa === null) {
         document.getElementById('voltar-btn').addEventListener('click', function() {
             window.location.href = '/frame.php?page=consultapartes';
         });
+        var vincularInstBtn = document.getElementById('vincular-instituicao-btn');
+        if (vincularInstBtn) {
+            vincularInstBtn.addEventListener('click', function() {
+                var parteId = getParteId();
+                if (!parteId) return;
+                window.location.href = '/frame.php?page=partesinstituicoescreate&parte_id=' + encodeURIComponent(parteId);
+            });
+        }
         function getParteId() {
             var el = document.getElementById('parte-id');
             return (el && el.value) ? String(el.value).trim() : '';
