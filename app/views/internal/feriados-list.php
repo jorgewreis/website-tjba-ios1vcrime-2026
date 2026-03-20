@@ -85,7 +85,10 @@ $labelsRegra = [
     'movel' => 'Móvel',
 ];
 
-$baseQueryParams = ['page' => $routePage, 'items_per_page' => $itemsPerPage];
+$baseQueryParams = [];
+if ($routePage !== '') {
+    $baseQueryParams['page'] = $routePage;
+}
 if ($tipoFilter !== '') {
     $baseQueryParams['tipo_feriado'] = $tipoFilter;
 }
@@ -95,6 +98,7 @@ if ($qFilter !== '') {
 if ($ativoFilter === '0' || $ativoFilter === '1') {
     $baseQueryParams['ativo'] = $ativoFilter;
 }
+$baseQueryParams['items_per_page'] = $itemsPerPage;
 
 function feriadosFormatDate(?string $ymd): string
 {
@@ -107,10 +111,24 @@ function feriadosFormatDate(?string $ymd): string
 }
 
 $paginationButtons = [];
+$paginationEllipsis = false;
+$trailingPages = [];
 if ($totalPages > 0) {
-    $paginationButtons = $totalPages <= 5 ? range(1, $totalPages) : array_slice(range(1, $totalPages), max(0, $currentPage - 3), 5);
-    if ($totalPages > 5 && $currentPage <= 3) {
-        $paginationButtons = array_merge(range(1, 4), [$totalPages]);
+    if ($totalPages <= 5) {
+        $paginationButtons = range(1, $totalPages);
+    } else {
+        $windowStart = max(1, min($currentPage - 2, $totalPages - 4));
+        $windowEnd = min($totalPages, $windowStart + 4);
+        for ($page = $windowStart; $page <= $windowEnd; $page++) {
+            $paginationButtons[] = $page;
+        }
+        if ($windowEnd < $totalPages) {
+            $paginationEllipsis = true;
+            $extraStart = max($windowEnd + 1, $totalPages - 1);
+            for ($page = $extraStart; $page <= $totalPages; $page++) {
+                $trailingPages[] = $page;
+            }
+        }
     }
 }
 ?>
@@ -149,8 +167,7 @@ if ($totalPages > 0) {
             </div>
         </div>
 
-        <form method="get" action="/frame.php" id="form-filters" class="display-flex col col-full" style="width:100%">
-            <input type="hidden" name="page" value="<?php echo htmlspecialchars($routePage); ?>">
+        <div class="display-flex col col-full" style="width:100%">
             <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="display-flex row row-fit justify-start gap-y-md flex-wrap">
                     <div class="col">
@@ -185,13 +202,9 @@ if ($totalPages > 0) {
                             <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
                         </select>
                     </div>
-                    <div class="col">
-                        <input type="hidden" name="page_number" value="1" id="page-number-reset">
-                        <button type="submit" class="btn btn-primary height-md">Consultar</button>
-                    </div>
                 </div>
             </div>
-        </form>
+        </div>
 
         <?php if (empty($rows)): ?>
         <div class="display-flex col col-full register border-bottom status-current border-bottom" style="margin-bottom: 15px;">
@@ -214,19 +227,19 @@ if ($totalPages > 0) {
                             <span class="minor-info">Período</span>
                             <span class="major-info"><?php echo feriadosFormatDate($row['data_inicio'] ?? null); ?> — <?php echo feriadosFormatDate($row['data_fim'] ?? null); ?></span>
                         </div>
-                        <div class="col width-200">
+                        <div class="col width-300">
                             <span class="minor-info">Tipo</span>
                             <span class="major-info"><?php echo htmlspecialchars($labelsTipo[$tipo] ?? $tipo); ?></span>
                         </div>
-                        <div class="col width-200">
+                        <div class="col width-300">
                             <span class="minor-info">Regra</span>
                             <span class="major-info"><?php echo htmlspecialchars($labelsRegra[$regra] ?? $regra); ?></span>
                         </div>
-                        <div class="col width-400">
+                        <div class="col width-500">
                             <span class="minor-info">Descrição</span>
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['descricao'] ?? '—')); ?></span>
                         </div>
-                        <div class="col width-100">
+                        <div class="col width-200">
                             <span class="minor-info">Situação</span>
                             <span class="major-info"><?php echo $ativoRow ? 'Ativo' : 'Inativo'; ?></span>
                         </div>
@@ -240,49 +253,72 @@ if ($totalPages > 0) {
             <?php endforeach; ?>
         <?php endif; ?>
 
-        <?php if ($totalPages > 0): ?>
-        <div class="display-flex row row-full justify-between align-center padding-x-md padding-y-md border-top">
-            <div class="pagination-summary">
+        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
+            <span class="pagination-info">
                 Mostrando <?php echo (int) $startItem; ?>-<?php echo (int) $endItem; ?> de <?php echo (int) $totalDocuments; ?> <?php echo htmlspecialchars($documentsLabel); ?>
-                · <?php echo (int) $totalPages; ?> <?php echo htmlspecialchars($pagesLabel); ?>
-                · <?php echo (int) $itemsPerPage; ?> <?php echo htmlspecialchars($itemsLabel); ?>
-            </div>
-            <div class="display-flex row row-fit justify-end gap-y-sm pagination-buttons">
-                <?php
-                $buildPageUrl = static function (int $p) use ($baseQueryParams): string {
-                    $q = array_merge($baseQueryParams, ['page_number' => $p]);
-
-                    return '/frame.php?' . http_build_query($q);
-                };
-                ?>
-                <?php if ($currentPage > 1): ?>
-                    <button type="button" class="btn btn-secondary height-md feriados-pag-nav" data-url="<?php echo htmlspecialchars($buildPageUrl($currentPage - 1), ENT_QUOTES, 'UTF-8'); ?>">Anterior</button>
-                <?php endif; ?>
-
-                <?php foreach ($paginationButtons as $btnPage): ?>
-                    <?php if ((int) $btnPage === $currentPage): ?>
-                        <button type="button" class="btn btn-primary height-md" disabled aria-current="page"><?php echo (int) $btnPage; ?></button>
-                    <?php else: ?>
-                        <button type="button" class="btn btn-secondary height-md feriados-pag-nav" data-url="<?php echo htmlspecialchars($buildPageUrl((int) $btnPage), ENT_QUOTES, 'UTF-8'); ?>"><?php echo (int) $btnPage; ?></button>
+                (<?php echo (int) $totalPages; ?> <?php echo htmlspecialchars($pagesLabel); ?>, <?php echo (int) $itemsPerPage; ?> <?php echo htmlspecialchars($itemsLabel); ?> por página)
+            </span>
+            <?php if ($totalPages > 0): ?>
+                <div class="pagination-controls">
+                    <?php
+                    $prevPage = $currentPage > 1 ? $currentPage - 1 : 1;
+                    $prevParams = $baseQueryParams;
+                    $prevParams['page_number'] = $prevPage;
+                    $prevHref = '?' . http_build_query($prevParams);
+                    $nextPage = $currentPage < $totalPages ? $currentPage + 1 : $currentPage;
+                    $nextParams = $baseQueryParams;
+                    $nextParams['page_number'] = $nextPage;
+                    $nextHref = '?' . http_build_query($nextParams);
+                    ?>
+                    <a class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>" <?php if ($currentPage > 1): ?>href="<?php echo htmlspecialchars($prevHref); ?>"<?php else: ?>aria-disabled="true"<?php endif; ?>>
+                        <img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior">
+                    </a>
+                    <?php foreach ($paginationButtons as $page): ?>
+                        <?php $pageParams = $baseQueryParams; $pageParams['page_number'] = $page; ?>
+                        <a class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" href="?<?php echo htmlspecialchars(http_build_query($pageParams)); ?>"><?php echo (int) $page; ?></a>
+                    <?php endforeach; ?>
+                    <?php if ($paginationEllipsis && !empty($trailingPages)): ?>
+                        <a class="pagination-symbol pagination-ellipsis" aria-hidden="true"><img src="/assets/icons/Navigation-Menu-Horizontal--Streamline-Ultimate.png" alt="Mais páginas"></a>
+                        <?php foreach ($trailingPages as $page): ?>
+                            <?php $pageParams = $baseQueryParams; $pageParams['page_number'] = $page; ?>
+                            <a class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" href="?<?php echo htmlspecialchars(http_build_query($pageParams)); ?>"><?php echo (int) $page; ?></a>
+                        <?php endforeach; ?>
                     <?php endif; ?>
-                <?php endforeach; ?>
-
-                <?php if ($currentPage < $totalPages): ?>
-                    <button type="button" class="btn btn-secondary height-md feriados-pag-nav" data-url="<?php echo htmlspecialchars($buildPageUrl($currentPage + 1), ENT_QUOTES, 'UTF-8'); ?>">Próxima</button>
-                <?php endif; ?>
-            </div>
+                    <a class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>" <?php if ($currentPage < $totalPages): ?>href="<?php echo htmlspecialchars($nextHref); ?>"<?php else: ?>aria-disabled="true"<?php endif; ?>>
+                        <img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página">
+                    </a>
+                </div>
+            <?php endif; ?>
         </div>
-        <?php endif; ?>
     </div>
 
     <script>
     (function() {
-        document.querySelectorAll('.feriados-pag-nav').forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                var u = this.getAttribute('data-url');
-                if (u) window.location.href = u;
-            });
+        var applyFilters = function () {
+            var tipo = document.getElementById('filter-tipo')?.value ?? '';
+            var ativo = document.getElementById('filter-ativo')?.value ?? '';
+            var q = document.getElementById('filter-q')?.value?.trim() ?? '';
+            var perPage = document.getElementById('items-per-page')?.value ?? '25';
+            var params = new URLSearchParams(window.location.search);
+            params.set('page', '<?php echo htmlspecialchars($routePage, ENT_QUOTES, 'UTF-8'); ?>');
+            params.set('page_number', '1');
+            params.set('items_per_page', perPage);
+            if (tipo) params.set('tipo_feriado', tipo); else params.delete('tipo_feriado');
+            if (ativo !== '') params.set('ativo', ativo); else params.delete('ativo');
+            if (q) params.set('q', q); else params.delete('q');
+            window.location.href = '?' + params.toString();
+        };
+
+        document.getElementById('filter-tipo')?.addEventListener('change', applyFilters);
+        document.getElementById('filter-ativo')?.addEventListener('change', applyFilters);
+        document.getElementById('items-per-page')?.addEventListener('change', applyFilters);
+        document.getElementById('filter-q')?.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                applyFilters();
+            }
         });
+
         document.getElementById('novo-cadastro-btn')?.addEventListener('click', function() {
             window.location.href = '/frame.php?page=feriadoscreate';
         });
@@ -318,13 +354,6 @@ if ($totalPages > 0) {
                     .catch(function() { el.disabled = false; });
             });
         });
-        var form = document.getElementById('form-filters');
-        if (form) {
-            form.addEventListener('submit', function() {
-                var h = document.getElementById('page-number-reset');
-                if (h) h.value = '1';
-            });
-        }
     })();
     </script>
 </body>

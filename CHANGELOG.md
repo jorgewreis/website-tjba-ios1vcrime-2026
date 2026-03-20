@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0015
+
+**Data:** 2026-03-19 21:34:41 | **Commit:** `862c45e` | **Tipo:** `patch`
+
+- Fix: correção na paginação de feriados
+
 ## V. 1.04.0014
 
 **Data:** 2026-03-19 21:26:56 | **Commit:** `d5ecaa1` | **Tipo:** `patch`
@@ -3378,6 +3384,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

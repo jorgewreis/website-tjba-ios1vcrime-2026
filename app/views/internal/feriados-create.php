@@ -161,7 +161,7 @@ $labelsRegra = [
                     msgOk += ' Decurso de prazo recalculado em ' + nEd + ' ' + (nEd === 1 ? 'edital' : 'editais') + '.';
                 }
                 if (typeof showToast === 'function') showToast({ type: 'success', message: msgOk });
-                window.location.href = '/frame.php?page=feriadosedit&id=' + encodeURIComponent(o.j.id);
+                window.location.href = '/frame.php?page=feriadoslist';
             } else {
                 if (typeof showToast === 'function') showToast({ type: 'error', message: (o.j && o.j.error) ? o.j.error : 'Erro ao cadastrar.' });
                 btn.disabled = false;
