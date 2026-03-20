@@ -182,4 +182,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correcao de edit com id** `[e1d7ce6]`
 - **Fix: correcao de toasts** `[3128bdb]`
 - **Fix: correção do button do cejusc** `[708c224]`
+- **Fix: active link no home** `[7e4fd4b]`
 
