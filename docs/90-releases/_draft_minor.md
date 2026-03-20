@@ -18,4 +18,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correcao de toasts e alerts** `[bda95f6]`
 - **Fix: correcao de edit usuario externo** `[c299674]`
 - **Feat: config de permissoes de usuario** `[56473ed]`
+- **Fix: correcao de usuario estagiario** `[b5b24bf]`
 
