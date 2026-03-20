@@ -319,7 +319,7 @@ if ($totalPages > 0) {
                                 </div>
                             </div>
                             <div class="display-flex row row-fit justify-end align-center">
-                                <button type="button" class="btn btn-primary height-sm btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($stLabel, ENT_QUOTES); ?>">
+                                <button type="button" class="btn btn-primary height-sm btn-concluir-subtarefa" title="<?php echo htmlspecialchars($stLabel, ENT_QUOTES); ?>">
                                     <span class="value-button"><?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?></span>
                                 </button>
                             </div>
@@ -467,8 +467,8 @@ if ($totalPages > 0) {
             });
             document.querySelectorAll('.btn-concluir-subtarefa').forEach(function (btn) {
                 btn.addEventListener('click', function () {
-                    var subtarefaId = this.getAttribute('data-subtarefa-id');
-                    var block = this.closest('[data-subtarefa-id][data-subtarefa-tipo]');
+                    var block = this.closest('.subtask[data-subtarefa-id][data-subtarefa-tipo]');
+                    var subtarefaId = block ? (block.getAttribute('data-subtarefa-id') || '') : '';
                     if (!subtarefaId) return;
                     var qtdInput = block ? block.querySelector('.subtask-qtd') : null;
                     var tipo = block ? (block.getAttribute('data-subtarefa-tipo') || '') : '';
