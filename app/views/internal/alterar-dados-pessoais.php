@@ -7,6 +7,8 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
+require_once __DIR__ . '/../../helpers/UserAccessHelper.php';
+require_once __DIR__ . '/../../helpers/AvatarCatalog.php';
 
 $connection = Conection::getInstance()->getConnection();
 $userId = $userId ?? ($_SESSION['id_usuario'] ?? '');
@@ -34,15 +36,7 @@ if ($userId !== '') {
     }
 }
 
-$isUsuarioExterno = false;
-foreach ($perfis as $perfilItem) {
-    $perfilTexto = trim((string) $perfilItem);
-    $perfilTexto = function_exists('mb_strtolower') ? mb_strtolower($perfilTexto, 'UTF-8') : strtolower($perfilTexto);
-    if (strpos($perfilTexto, 'estudante') !== false || strpos($perfilTexto, 'extern') !== false) {
-        $isUsuarioExterno = true;
-        break;
-    }
-}
+$isUsuarioExterno = UserAccessHelper::isUsuarioExterno($perfis);
 
 if ($isUsuarioExterno) {
     $regrasAlocacao = [];
@@ -61,7 +55,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csrf_token']) && Secu
         'cargo' => $cargo,
         'instituicao' => $instituicao,
     ]);
-    if ($resultado['success']) {
+    $avatarResult = ['success' => true];
+    if (!$isUsuarioExterno && $resultado['success']) {
+        $slugPost = trim((string) ($_POST['avatar_slug'] ?? ''));
+        if ($slugPost !== '') {
+            $avatarResult = $usuario->atualizarAvatarSlug($userId, $slugPost);
+        }
+    }
+    if ($resultado['success'] && $avatarResult['success']) {
         $dados = $usuario->getDadosPessoais($userId);
         if ($dados !== null && !empty($dados['updated_at'])) {
             $dt = \DateTime::createFromFormat('Y-m-d H:i:s', $dados['updated_at']);
@@ -73,8 +74,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csrf_token']) && Secu
             $ultimaAlteracaoDados = 'não registrada';
         }
         $mensagemSucesso = 'Dados atualizados com sucesso.';
-    } else {
+    } elseif (!$resultado['success']) {
         $mensagemErro = $resultado['message'] ?? 'Não foi possível atualizar os dados.';
+    } else {
+        $mensagemErro = $avatarResult['message'] ?? 'Não foi possível atualizar o avatar.';
     }
 }
 
@@ -88,8 +91,10 @@ $perfisTexto = function_exists('mb_strtolower') ? mb_strtolower($perfisTexto, 'U
 $ultimaAlteracaoDadosLower = function_exists('mb_strtolower') ? mb_strtolower($ultimaAlteracaoDados, 'UTF-8') : strtolower($ultimaAlteracaoDados);
 
 $nomeCompletoLeitura = '';
+$avatarSlugForJs = AvatarCatalog::getDefaultSlug();
 if ($dados !== null) {
     $nomeCompletoLeitura = trim(trim((string) ($dados['nome'] ?? '')) . ' ' . trim((string) ($dados['sobrenome'] ?? '')));
+    $avatarSlugForJs = $dados['avatar_slug'] ?? AvatarCatalog::getDefaultSlug();
 }
 ?>
 <!DOCTYPE html>
@@ -170,6 +175,30 @@ if ($dados !== null) {
                         <input type="text" id="edit-telefone" name="telefone" class="width-300 height-md" value="<?php echo htmlspecialchars($dados['telefone'] ?? '', ENT_QUOTES); ?>" maxlength="50">
                     </div>
                 </div>
+
+                <?php if (!$isUsuarioExterno): ?>
+                    <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Avatar</h2></div>
+                    <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
+                        <div class="col">
+                            <label for="edit-avatar-slug">Imagem do perfil</label>
+                            <select id="edit-avatar-slug" name="avatar_slug" class="width-400 height-md" aria-describedby="avatar-slug-hint">
+                                <?php
+                                $currentAvatarSlug = $dados['avatar_slug'] ?? AvatarCatalog::getDefaultSlug();
+                                foreach (AvatarCatalog::listForUi() as $av): ?>
+                                    <option value="<?php echo htmlspecialchars($av['slug'], ENT_QUOTES, 'UTF-8'); ?>"<?php echo ($currentAvatarSlug === $av['slug']) ? ' selected' : ''; ?>><?php echo htmlspecialchars($av['label'], ENT_QUOTES, 'UTF-8'); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <p id="avatar-slug-hint" class="minor-info">Escolha entre imagens pré-definidas (sem envio de arquivo).</p>
+                            <div class="display-flex row row-full gap-y-md flex-wrap padding-y-sm" style="align-items: center;">
+                                <?php foreach (AvatarCatalog::listForUi() as $av): ?>
+                                    <button type="button" class="btn btn-secondary avatar-preset-thumb" data-slug="<?php echo htmlspecialchars($av['slug'], ENT_QUOTES, 'UTF-8'); ?>" title="<?php echo htmlspecialchars($av['label'], ENT_QUOTES, 'UTF-8'); ?>" style="padding: 4px;">
+                                        <img src="<?php echo htmlspecialchars($av['url'], ENT_QUOTES, 'UTF-8'); ?>" width="40" height="40" alt="">
+                                    </button>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    </div>
+                <?php endif; ?>
 
                 <?php if (!$isUsuarioExterno): ?>
                     <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
@@ -256,23 +285,36 @@ if ($dados !== null) {
                 showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: serverSuccess });
             }
         }
+        var interno = <?php echo json_encode(!$isUsuarioExterno, JSON_UNESCAPED_UNICODE); ?>;
         var initial = {
             email: <?php echo json_encode($dados['email'] ?? '', JSON_UNESCAPED_UNICODE); ?>,
             telefone: <?php echo json_encode($dados['telefone'] ?? '', JSON_UNESCAPED_UNICODE); ?>
         };
+        if (interno) {
+            initial.avatarSlug = <?php echo json_encode($avatarSlugForJs, JSON_UNESCAPED_UNICODE); ?>;
+        }
 
         function getCurrent() {
             var emailEl = document.getElementById('edit-email');
             var telEl = document.getElementById('edit-telefone');
-            return {
+            var cur = {
                 email: emailEl ? (emailEl.value || '').trim() : '',
                 telefone: telEl ? (telEl.value || '').trim() : ''
             };
+            if (interno) {
+                var avEl = document.getElementById('edit-avatar-slug');
+                cur.avatarSlug = avEl ? (avEl.value || '').trim() : '';
+            }
+            return cur;
         }
         function hasChanges() {
             var cur = getCurrent();
-            return (initial.email || '') !== (cur.email || '') ||
+            var base = (initial.email || '') !== (cur.email || '') ||
                 (initial.telefone || '') !== (cur.telefone || '');
+            if (interno) {
+                base = base || (initial.avatarSlug || '') !== (cur.avatarSlug || '');
+            }
+            return base;
         }
         function updateSalvarState() {
             var btn = document.getElementById('salvar-btn');
@@ -290,6 +332,20 @@ if ($dados !== null) {
                 el.addEventListener('input', updateSalvarState);
                 el.addEventListener('change', updateSalvarState);
             }
+        });
+        var avSel = document.getElementById('edit-avatar-slug');
+        if (avSel) {
+            avSel.addEventListener('change', updateSalvarState);
+        }
+        document.querySelectorAll('.avatar-preset-thumb').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var slug = btn.getAttribute('data-slug');
+                var sel = document.getElementById('edit-avatar-slug');
+                if (sel && slug) {
+                    sel.value = slug;
+                    updateSalvarState();
+                }
+            });
         });
         updateSalvarState();
     })();

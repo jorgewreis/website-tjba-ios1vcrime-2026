@@ -67,7 +67,12 @@ if ($sessionUserId !== '') {
 }
 
 require_once __DIR__ . '/../app/helpers/UserAccessHelper.php';
+require_once __DIR__ . '/../app/helpers/AvatarCatalog.php';
 $isUsuarioExterno = $sessionUserId !== '' && UserAccessHelper::isUsuarioExterno($userPerfisDb);
+$avatarNavbarUrl = AvatarCatalog::urlForSlug(AvatarCatalog::getDefaultSlug());
+if ($sessionUserId !== '') {
+    $avatarNavbarUrl = $usuario->getAvatarUrlForUsuario($sessionUserId, $isUsuarioExterno);
+}
 $hasPerfilEstudante = false;
 foreach ($userPerfisDb as $p) {
     if (strtoupper(trim((string) $p)) === 'ESTUDANTE') {
@@ -167,8 +172,11 @@ if ($avatarBadgePerfisLine !== '') {
             align-items: center;
             flex: 0 1 auto;
             max-width: 400px;
+            margin-left: 10px;
             margin-right: 10px;
+            padding-left: 15px;
             min-width: 0;
+            border-left: 1px solid var(--color-border);
         }
         .user-summary-inline {
             display: flex;
@@ -219,8 +227,8 @@ if ($avatarBadgePerfisLine !== '') {
             inset-block-start: calc(100% + 8px);
             inset-inline-end: 0;
             min-width: 220px;
-            max-width: min(360px, 92vw);
-            padding: 10px 12px;
+            max-width: min(400px, 92vw);
+            padding: 8px 12px;
             border-radius: 8px;
             background: var(--color-background-elevated);
             border: 1px solid var(--color-border);
@@ -239,14 +247,14 @@ if ($avatarBadgePerfisLine !== '') {
         }
         .avatar-popover-name {
             font-weight: 600;
-            font-size: 14px;
+            font-size: 12px;
             color: var(--color-text-primary);
             line-height: 1.35;
             margin-bottom: 6px;
             word-break: break-word;
         }
         .avatar-popover-roles {
-            font-size: 12px;
+            font-size: 9px;
             color: var(--color-text-secondary);
             line-height: 1.4;
             word-break: break-word;
@@ -353,7 +361,7 @@ if ($avatarBadgePerfisLine !== '') {
                             <li class="nav-item nav-item-avatar">
                                 <a class="nav-link nav-link-avatar" href="#" tabindex="0" aria-label="Usuário logado" aria-describedby="user-summary-navbar" onclick="event.preventDefault();">
                                     <div class="avatar avatar-online">
-                                        <img src="/assets/img/avatars/3d/avatar3d_007.jpg" alt="">
+                                        <img src="<?php echo htmlspecialchars($avatarNavbarUrl, ENT_QUOTES, 'UTF-8'); ?>" alt="">
                                     </div>
                                     <div id="avatar-profile-popover" class="avatar-popover" role="tooltip">
                                         <div class="avatar-popover-name"><?php echo htmlspecialchars($userDisplayFullName !== '' ? $userDisplayFullName : 'Usuário', ENT_QUOTES, 'UTF-8'); ?></div>

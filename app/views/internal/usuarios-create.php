@@ -9,6 +9,7 @@ if (function_exists('mb_internal_encoding')) {
 require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../helpers/DateHelper.php';
 require_once __DIR__ . '/../../helpers/TextFormatter.php';
+require_once __DIR__ . '/../../helpers/AvatarCatalog.php';
 require_once __DIR__ . '/../../../config/security.php';
 
 Security::requireAuthentication();
@@ -139,10 +140,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt = $connection->prepare("
                         INSERT INTO usuarios (
                             id_usuario, nome, sobrenome, data_nascimento, cargo, instituicao, cpf, telefone, email,
-                            senha_hash, meta, ultimo_acesso, token_acesso, token_expira, cadastro_ativo, created_at, updated_at
+                            senha_hash, meta, ultimo_acesso, token_acesso, token_expira, cadastro_ativo, created_at, updated_at,
+                            avatar_slug
                         ) VALUES (
                             ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                            ?, '-', NULL, NULL, NULL, 0, NOW(), NOW()
+                            ?, '-', NULL, NULL, NULL, 0, NOW(), NOW(),
+                            ?
                         )
                     ");
                     $stmt->execute([
@@ -156,6 +159,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $telefone !== '' ? $telefone : null,
                         $email,
                         $senhaHash,
+                        AvatarCatalog::getDefaultSlug(),
                     ]);
 
                     if ($perfil !== '') {

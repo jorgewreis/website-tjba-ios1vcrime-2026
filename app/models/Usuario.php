@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/Conection.php';
+require_once __DIR__ . '/../helpers/AvatarCatalog.php';
 require_once __DIR__ . '/../../config/security.php';
 require_once __DIR__ . '/../services/ExternalUsersCleanupService.php';
 
@@ -279,15 +280,85 @@ final class Usuario
         if ($idUsuario === '') {
             return null;
         }
-        $stmt = $this->pdo->prepare("
-            SELECT id_usuario, nome, sobrenome, cpf, email, telefone, cargo, instituicao, ultimo_acesso, updated_at
-            FROM usuarios
-            WHERE id_usuario = ?
-            LIMIT 1
-        ");
-        $stmt->execute([$idUsuario]);
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT id_usuario, nome, sobrenome, cpf, email, telefone, cargo, instituicao, ultimo_acesso, updated_at,
+                       avatar_slug
+                FROM usuarios
+                WHERE id_usuario = ?
+                LIMIT 1
+            ");
+            $stmt->execute([$idUsuario]);
+        } catch (\PDOException $e) {
+            if (stripos($e->getMessage(), 'avatar_slug') !== false || stripos($e->getMessage(), 'Unknown column') !== false) {
+                $stmt = $this->pdo->prepare("
+                    SELECT id_usuario, nome, sobrenome, cpf, email, telefone, cargo, instituicao, ultimo_acesso, updated_at
+                    FROM usuarios
+                    WHERE id_usuario = ?
+                    LIMIT 1
+                ");
+                $stmt->execute([$idUsuario]);
+            } else {
+                throw $e;
+            }
+        }
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row === false ? null : $row;
+        if ($row === false) {
+            return null;
+        }
+        $slug = trim((string) ($row['avatar_slug'] ?? ''));
+        if ($slug === '' || !AvatarCatalog::isAllowedSlug($slug)) {
+            $row['avatar_slug'] = AvatarCatalog::getDefaultSlug();
+        } else {
+            $row['avatar_slug'] = $slug;
+        }
+        return $row;
+    }
+
+    /**
+     * URL pública do avatar por preset (whitelist em AvatarCatalog).
+     */
+    public function getAvatarUrlForUsuario(string $idUsuario, bool $forceDefault = false): string
+    {
+        if ($forceDefault) {
+            return AvatarCatalog::urlForSlug(AvatarCatalog::getDefaultSlug());
+        }
+        $dados = $this->getDadosPessoais($idUsuario);
+        if ($dados === null) {
+            return AvatarCatalog::urlForSlug(AvatarCatalog::getDefaultSlug());
+        }
+        $slug = trim((string) ($dados['avatar_slug'] ?? ''));
+        return AvatarCatalog::urlForSlug($slug !== '' ? $slug : AvatarCatalog::getDefaultSlug());
+    }
+
+    /**
+     * Persiste avatar por slug (apenas valores permitidos pelo catálogo).
+     *
+     * @return array{success: bool, message?: string}
+     */
+    public function atualizarAvatarSlug(string $idUsuario, string $slug): array
+    {
+        $idUsuario = trim($idUsuario);
+        if ($idUsuario === '') {
+            return ['success' => false, 'message' => 'Usuário não identificado.'];
+        }
+        $slug = trim($slug);
+        if ($slug === '' || !AvatarCatalog::isAllowedSlug($slug)) {
+            return ['success' => false, 'message' => 'Avatar inválido.'];
+        }
+
+        try {
+            $stmt = $this->pdo->prepare('UPDATE usuarios SET `avatar_slug` = :slug, `updated_at` = NOW() WHERE id_usuario = :id LIMIT 1');
+            $stmt->bindValue(':slug', $slug);
+            $stmt->bindValue(':id', $idUsuario);
+            $stmt->execute();
+            return ['success' => true];
+        } catch (\PDOException $e) {
+            if (stripos($e->getMessage(), 'avatar_slug') !== false || stripos($e->getMessage(), 'Unknown column') !== false) {
+                return ['success' => false, 'message' => 'Avatar não disponível nesta instalação. Execute a migração do banco.'];
+            }
+            throw $e;
+        }
     }
 
     /**
@@ -328,7 +399,8 @@ final class Usuario
                 $stmt->bindValue($k, $v);
             }
             $stmt->execute();
-            return ['success' => $stmt->rowCount() >= 1];
+            // rowCount pode ser 0 quando valores não mudam; ainda assim o UPDATE foi aplicado.
+            return ['success' => true];
         } catch (\PDOException $e) {
             if (stripos($e->getMessage(), 'updated_at') !== false || stripos($e->getMessage(), 'Unknown column') !== false) {
                 $stmt = $this->pdo->prepare($sqlWithoutUpdated);
@@ -336,7 +408,7 @@ final class Usuario
                     $stmt->bindValue($k, $v);
                 }
                 $stmt->execute();
-                return ['success' => $stmt->rowCount() >= 1];
+                return ['success' => true];
             }
             throw $e;
         }

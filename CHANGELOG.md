@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0038
+
+**Data:** 2026-03-20 17:09:52 | **Commit:** `b45587b` | **Tipo:** `patch`
+
+- Feat: implementacao de funcao para alterar avatar de usuario
+
 ## V. 1.04.0037
 
 **Data:** 2026-03-20 16:45:27 | **Commit:** `b79390d` | **Tipo:** `patch`
@@ -3516,6 +3522,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
