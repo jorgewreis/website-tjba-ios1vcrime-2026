@@ -179,4 +179,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: pequenos ajustes na pagina de feriados** `[d5ecaa1]`
 - **Fix: correção na paginação de feriados** `[862c45e]`
 - **Fix: alteração do tipo de guia** `[613d321]`
+- **Fix: correcao de edit com id** `[e1d7ce6]`
 
