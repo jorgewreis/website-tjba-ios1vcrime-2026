@@ -294,6 +294,7 @@ body {
         display: flex;
         align-items: center;
         justify-content: center;
+        overflow: hidden;
     }
 
     .nav-link .avatar img {
@@ -304,16 +305,18 @@ body {
         height: 100%;
     }
 
+    /* Preenche o círculo inteiro (evita “quadrado” só no tamanho do texto) */
     .nav-link .avatar .avatar-initials {
+        position: absolute;
+        inset: 0;
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 100%;
-        height: 100%;
-        border-radius: 100%;
-        font-size: 13px;
+        border-radius: 50%;
+        font-size: 15px;
         font-weight: 600;
         line-height: 1;
+        letter-spacing: -0.03em;
         box-sizing: border-box;
         border: 1px solid var(--color-border-subtle);
     }
