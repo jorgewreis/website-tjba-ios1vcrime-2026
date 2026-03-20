@@ -571,13 +571,31 @@ $userProfile = Security::getUserProfile() ?? '';
             if (parentItem) parentItem.classList.add('active');
         }
 
-        function syncMenuFromFrameSrc() {
-            if (!frame || !frame.src) return;
+        function getFramePageParam() {
+            if (!frame) return '';
+
+            // Preferir a URL real do iframe (após redirecionamentos internos).
             try {
-                const url = new URL(frame.src, window.location.origin);
-                const page = url.searchParams.get('page') || '';
-                if (page) setMenuActiveByTarget(page);
-            } catch (e) {}
+                const cw = frame.contentWindow;
+                if (cw && cw.location) {
+                    const page = new URLSearchParams(cw.location.search || '').get('page');
+                    if (page) return page;
+                }
+            } catch (e) {
+                // fallback em caso de restrição de acesso
+            }
+
+            try {
+                const url = new URL(frame.src || '', window.location.origin);
+                return url.searchParams.get('page') || '';
+            } catch (e) {
+                return '';
+            }
+        }
+
+        function syncMenuFromFrameSrc() {
+            const page = getFramePageParam();
+            if (page) setMenuActiveByTarget(page);
         }
 
         document.addEventListener('click', (event) => {
@@ -607,6 +625,8 @@ $userProfile = Security::getUserProfile() ?? '';
         if (frame) {
             frame.addEventListener('load', syncMenuFromFrameSrc);
             setTimeout(syncMenuFromFrameSrc, 0);
+            // Backup para mudanças de rota internas no iframe.
+            setInterval(syncMenuFromFrameSrc, 500);
         }
     </script>
     
