@@ -65,6 +65,77 @@ if ($sessionUserId !== '') {
         $userPerfisDb = [];
     }
 }
+
+/** Nome completo e linha de perfil/lotação para o badge do avatar (navbar). */
+$userDisplayFullName = trim((string) ($userName ?? ''));
+$avatarBadgePerfisLine = '';
+
+if ($sessionUserId !== '') {
+    try {
+        $pdoName = Conection::getInstance()->getConnection();
+        $stName = $pdoName->prepare('SELECT nome, sobrenome FROM usuarios WHERE id_usuario = ? LIMIT 1');
+        $stName->execute([$sessionUserId]);
+        $rowName = $stName->fetch(PDO::FETCH_ASSOC);
+        if ($rowName) {
+            $userDisplayFullName = trim(trim((string) ($rowName['nome'] ?? '')) . ' ' . trim((string) ($rowName['sobrenome'] ?? '')));
+        }
+    } catch (Throwable $e) {
+        // mantém $userName
+    }
+
+    $badgeParts = [];
+    foreach ($userPerfisDb as $p) {
+        $u = strtoupper(trim((string) $p));
+        if ($u === 'DIRETORA' || $u === 'MAGISTRADA') {
+            $u = 'CHEFIA';
+        }
+        if ($u !== '' && !in_array($u, $badgeParts, true)) {
+            $badgeParts[] = $u;
+        }
+    }
+
+    $suppressSetor = in_array('ADMIN', $badgeParts, true) || in_array('CHEFIA', $badgeParts, true);
+    if (!$suppressSetor) {
+        $needSetor = false;
+        foreach (['ESTAGIARIO', 'SERVIDOR'] as $role) {
+            if (in_array($role, $badgeParts, true)) {
+                $needSetor = true;
+                break;
+            }
+        }
+        if ($needSetor) {
+            foreach ($userSetores as $sn) {
+                $nomeSetor = trim((string) $sn);
+                if ($nomeSetor === '') {
+                    continue;
+                }
+                $t = mb_strtolower($nomeSetor, 'UTF-8');
+                $cod = '';
+                if (strpos($t, 'gab') !== false) {
+                    $cod = 'GABINETE';
+                } elseif (strpos($t, 'cart') !== false) {
+                    $cod = 'CARTORIO';
+                } elseif (strpos($t, 'audi') !== false) {
+                    $cod = 'AUDIENCIA';
+                } elseif (strpos($t, 'vara') !== false) {
+                    $cod = 'VARA';
+                } else {
+                    $cod = strtoupper(preg_replace('/\s+/u', ' ', $nomeSetor));
+                }
+                if ($cod !== '' && !in_array($cod, $badgeParts, true)) {
+                    $badgeParts[] = $cod;
+                }
+            }
+        }
+    }
+
+    $avatarBadgePerfisLine = implode(' | ', $badgeParts);
+}
+
+$avatarSummaryTitle = $userDisplayFullName;
+if ($avatarBadgePerfisLine !== '') {
+    $avatarSummaryTitle .= ' | ' . $avatarBadgePerfisLine;
+}
 ?>
 
 <!DOCTYPE html>
@@ -78,6 +149,98 @@ if ($sessionUserId !== '') {
     <link rel="stylesheet" href="/assets/css/shared/color.css">
     <link rel="stylesheet" href="/assets/css/shared/layout.css">
     <link rel="stylesheet" href="/assets/css/shared/toast.css">
+    <style>
+        /* Resumo do usuário: fixo na barra (≥1280px), à esquerda do avatar */
+        .nav-item-user-summary {
+            display: none;
+            align-items: center;
+            flex: 0 1 auto;
+            max-width: 400px;
+            margin-right: 10px;
+            min-width: 0;
+        }
+        .user-summary-inline {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: center;
+            max-width: 400px;
+            min-width: 0;
+            text-align: right;
+        }
+        .user-summary-name {
+            font-weight: 600;
+            font-size: 14px;
+            line-height: 1.25;
+            color: var(--color-text-primary);
+            max-width: 400px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .user-summary-roles {
+            font-size: 11px;
+            line-height: 1.3;
+            color: var(--color-text-secondary);
+            margin-top: 2px;
+            max-width: 400px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        @media (min-width: 1280px) {
+            .nav-item-user-summary {
+                display: flex;
+            }
+            .nav-item-avatar {
+                flex-shrink: 0;
+            }
+            /* Com o resumo visível, não exibe o popover no hover */
+            .nav-item-avatar .avatar-popover {
+                display: none !important;
+            }
+        }
+
+        /* Badge do usuário no hover do avatar (<1280px) */
+        .nav-item-avatar .nav-link-avatar { position: relative; }
+        .avatar-popover {
+            position: absolute;
+            inset-block-start: calc(100% + 8px);
+            inset-inline-end: 0;
+            min-width: 220px;
+            max-width: min(360px, 92vw);
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: var(--color-background-elevated);
+            border: 1px solid var(--color-border);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            z-index: 1100;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.15s ease, visibility 0.15s ease;
+        }
+        .nav-item-avatar:hover .avatar-popover,
+        .nav-item-avatar:focus-within .avatar-popover {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+        .avatar-popover-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--color-text-primary);
+            line-height: 1.35;
+            margin-bottom: 6px;
+            word-break: break-word;
+        }
+        .avatar-popover-roles {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            line-height: 1.4;
+            word-break: break-word;
+        }
+    </style>
     
     <!-- Ícones: fi-rs-* (regular-straight), fi-br-* (bold-rounded) -->
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-straight/css/uicons-regular-straight.css">
@@ -170,10 +333,20 @@ if ($sessionUserId !== '') {
                                     </div>
                                 </div>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link">
-                                    <div class="avatar avatar-online"> <!-- avatar-online -->
-                                        <img src="/assets/img/avatars/3d/avatar3d_007.jpg">
+                            <li class="nav-item nav-item-user-summary">
+                                <div class="user-summary-inline" id="user-summary-navbar" title="<?php echo htmlspecialchars($avatarSummaryTitle !== '' ? $avatarSummaryTitle : 'Usuário', ENT_QUOTES, 'UTF-8'); ?>">
+                                    <span class="user-summary-name"><?php echo htmlspecialchars($userDisplayFullName !== '' ? $userDisplayFullName : 'Usuário', ENT_QUOTES, 'UTF-8'); ?></span>
+                                    <span class="user-summary-roles"><?php echo htmlspecialchars($avatarBadgePerfisLine !== '' ? $avatarBadgePerfisLine : '—', ENT_QUOTES, 'UTF-8'); ?></span>
+                                </div>
+                            </li>
+                            <li class="nav-item nav-item-avatar">
+                                <a class="nav-link nav-link-avatar" href="#" tabindex="0" aria-label="Usuário logado" aria-describedby="user-summary-navbar" onclick="event.preventDefault();">
+                                    <div class="avatar avatar-online">
+                                        <img src="/assets/img/avatars/3d/avatar3d_007.jpg" alt="">
+                                    </div>
+                                    <div id="avatar-profile-popover" class="avatar-popover" role="tooltip">
+                                        <div class="avatar-popover-name"><?php echo htmlspecialchars($userDisplayFullName !== '' ? $userDisplayFullName : 'Usuário', ENT_QUOTES, 'UTF-8'); ?></div>
+                                        <div class="avatar-popover-roles"><?php echo htmlspecialchars($avatarBadgePerfisLine !== '' ? $avatarBadgePerfisLine : '—', ENT_QUOTES, 'UTF-8'); ?></div>
                                     </div>
                                 </a>
                             </li>

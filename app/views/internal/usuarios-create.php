@@ -8,6 +8,7 @@ if (function_exists('mb_internal_encoding')) {
 
 require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../helpers/DateHelper.php';
+require_once __DIR__ . '/../../helpers/TextFormatter.php';
 require_once __DIR__ . '/../../../config/security.php';
 
 Security::requireAuthentication();
@@ -68,8 +69,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!Security::verifyCSRFToken($csrf)) {
         $mensagemErro = 'Token de segurança inválido. Tente novamente.';
     } else {
-        $nome = trim((string) ($_POST['nome'] ?? ''));
-        $sobrenome = trim((string) ($_POST['sobrenome'] ?? ''));
+        $nome = TextFormatter::formatProperName(trim((string) ($_POST['nome'] ?? '')), 100);
+        $sobrenome = TextFormatter::formatProperName(trim((string) ($_POST['sobrenome'] ?? '')), 100);
         $cpf = preg_replace('/\D/', '', trim((string) ($_POST['cpf'] ?? '')));
         $email = trim((string) ($_POST['email'] ?? ''));
         $telefone = trim((string) ($_POST['telefone'] ?? ''));
@@ -613,8 +614,15 @@ $csrfToken = Security::generateCSRFToken();
             if (cadastrarBtn) cadastrarBtn.disabled = !isFormValidForSubmit();
         }
 
+        function aplicarFormatadorNomeSobrenome() {
+            if (typeof TextFormatter === 'undefined' || !TextFormatter.formatProperName) return;
+            if (nomeInput) nomeInput.value = TextFormatter.formatProperName(nomeInput.value || '', 100);
+            if (sobrenomeInput) sobrenomeInput.value = TextFormatter.formatProperName(sobrenomeInput.value || '', 100);
+        }
+
         if (form) {
             form.addEventListener('submit', function (e) {
+                aplicarFormatadorNomeSobrenome();
                 if (!isFormValidForSubmit()) {
                     e.preventDefault();
                     if (typeof showToast === 'function') {

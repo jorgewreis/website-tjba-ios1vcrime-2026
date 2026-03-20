@@ -51,12 +51,9 @@ if ($isUsuarioExterno) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csrf_token']) && Security::verifyCSRFToken($_POST['csrf_token'] ?? null)) {
     $email = trim((string) ($_POST['email'] ?? ''));
     $telefone = trim((string) ($_POST['telefone'] ?? ''));
-    $cargo = $isUsuarioExterno
-        ? trim((string) ($dados['cargo'] ?? ''))
-        : trim((string) ($_POST['cargo'] ?? ''));
-    $instituicao = $isUsuarioExterno
-        ? trim((string) ($dados['instituicao'] ?? ''))
-        : trim((string) ($_POST['setor'] ?? $_POST['instituicao'] ?? ''));
+    // Cargo e setor não são editáveis nesta tela (apenas ADMIN/CHEFIA em usuários).
+    $cargo = trim((string) ($dados['cargo'] ?? ''));
+    $instituicao = trim((string) ($dados['instituicao'] ?? ''));
 
     $resultado = $usuario->atualizarDadosPessoais($userId, [
         'email' => $email,
@@ -89,6 +86,11 @@ $setorOpcoes = ['Cartório', 'Gabinete', 'Sala de Audiências', 'Vara'];
 $perfisTexto = count($perfis) > 0 ? implode(', ', $perfis) : 'nenhum perfil vinculado';
 $perfisTexto = function_exists('mb_strtolower') ? mb_strtolower($perfisTexto, 'UTF-8') : strtolower($perfisTexto);
 $ultimaAlteracaoDadosLower = function_exists('mb_strtolower') ? mb_strtolower($ultimaAlteracaoDados, 'UTF-8') : strtolower($ultimaAlteracaoDados);
+
+$nomeCompletoLeitura = '';
+if ($dados !== null) {
+    $nomeCompletoLeitura = trim(trim((string) ($dados['nome'] ?? '')) . ' ' . trim((string) ($dados['sobrenome'] ?? '')));
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -153,12 +155,8 @@ $ultimaAlteracaoDadosLower = function_exists('mb_strtolower') ? mb_strtolower($u
 
                 <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                     <div class="col">
-                        <label for="edit-nome">Nome</label>
-                        <input type="text" id="edit-nome" class="width-600 height-md readonly" value="<?php echo htmlspecialchars($dados['nome'] ?? '', ENT_QUOTES); ?>" readonly>
-                    </div>
-                    <div class="col">
-                        <label for="edit-sobrenome">Sobrenome</label>
-                        <input type="text" id="edit-sobrenome" class="width-600 height-md readonly" value="<?php echo htmlspecialchars($dados['sobrenome'] ?? '', ENT_QUOTES); ?>" readonly>
+                        <label for="edit-nome-completo">Nome completo</label>
+                        <input type="text" id="edit-nome-completo" class="width-800 height-md readonly" value="<?php echo htmlspecialchars($nomeCompletoLeitura, ENT_QUOTES, 'UTF-8'); ?>" readonly aria-readonly="true" title="Somente leitura">
                     </div>
                 </div>
 
@@ -177,7 +175,8 @@ $ultimaAlteracaoDadosLower = function_exists('mb_strtolower') ? mb_strtolower($u
                     <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                         <div class="col">
                             <label for="edit-cargo">Cargo</label>
-                            <select id="edit-cargo" name="cargo" class="width-400 height-md">
+                            <p class="minor-info" style="margin: 0 0 6px 0;">Alteração apenas por administrador ou chefia (cadastro de usuários).</p>
+                            <select id="edit-cargo" class="width-400 height-md readonly" data-readonly="true" title="Somente leitura" aria-readonly="true" disabled tabindex="-1">
                                 <option value="">Selecione (opcional)</option>
                                 <?php foreach ($cargoOpcoes as $opt): ?>
                                     <option value="<?php echo htmlspecialchars($opt, ENT_QUOTES); ?>"<?php echo ($dados['cargo'] ?? '') === $opt ? ' selected' : ''; ?>><?php echo htmlspecialchars($opt); ?></option>
@@ -186,7 +185,8 @@ $ultimaAlteracaoDadosLower = function_exists('mb_strtolower') ? mb_strtolower($u
                         </div>
                         <div class="col">
                             <label for="edit-setor">Setor</label>
-                            <select id="edit-setor" name="setor" class="width-400 height-md">
+                            <p class="minor-info" style="margin: 0 0 6px 0;">Alteração apenas por administrador ou chefia (cadastro de usuários).</p>
+                            <select id="edit-setor" class="width-400 height-md readonly" data-readonly="true" title="Somente leitura" aria-readonly="true" disabled tabindex="-1">
                                 <option value="">Selecione (opcional)</option>
                                 <?php foreach ($setorOpcoes as $opt): ?>
                                     <option value="<?php echo htmlspecialchars($opt, ENT_QUOTES); ?>"<?php echo ($dados['instituicao'] ?? '') === $opt ? ' selected' : ''; ?>><?php echo htmlspecialchars($opt); ?></option>
@@ -260,29 +260,21 @@ $ultimaAlteracaoDadosLower = function_exists('mb_strtolower') ? mb_strtolower($u
         }
         var initial = {
             email: <?php echo json_encode($dados['email'] ?? '', JSON_UNESCAPED_UNICODE); ?>,
-            telefone: <?php echo json_encode($dados['telefone'] ?? '', JSON_UNESCAPED_UNICODE); ?>,
-            cargo: <?php echo json_encode($isUsuarioExterno ? '' : ($dados['cargo'] ?? ''), JSON_UNESCAPED_UNICODE); ?>,
-            setor: <?php echo json_encode($isUsuarioExterno ? '' : ($dados['instituicao'] ?? ''), JSON_UNESCAPED_UNICODE); ?>
+            telefone: <?php echo json_encode($dados['telefone'] ?? '', JSON_UNESCAPED_UNICODE); ?>
         };
 
         function getCurrent() {
             var emailEl = document.getElementById('edit-email');
             var telEl = document.getElementById('edit-telefone');
-            var cargoEl = document.getElementById('edit-cargo');
-            var setorEl = document.getElementById('edit-setor');
             return {
                 email: emailEl ? (emailEl.value || '').trim() : '',
-                telefone: telEl ? (telEl.value || '').trim() : '',
-                cargo: cargoEl ? (cargoEl.value || '').trim() : '',
-                setor: setorEl ? (setorEl.value || '').trim() : ''
+                telefone: telEl ? (telEl.value || '').trim() : ''
             };
         }
         function hasChanges() {
             var cur = getCurrent();
             return (initial.email || '') !== (cur.email || '') ||
-                (initial.telefone || '') !== (cur.telefone || '') ||
-                (initial.cargo || '') !== (cur.cargo || '') ||
-                (initial.setor || '') !== (cur.setor || '');
+                (initial.telefone || '') !== (cur.telefone || '');
         }
         function updateSalvarState() {
             var btn = document.getElementById('salvar-btn');
@@ -293,7 +285,7 @@ $ultimaAlteracaoDadosLower = function_exists('mb_strtolower') ? mb_strtolower($u
             window.location.href = '/frame.php?page=dashboard';
         });
 
-        var observedFields = ['edit-email', 'edit-telefone'<?php echo $isUsuarioExterno ? '' : ", 'edit-cargo', 'edit-setor'"; ?>];
+        var observedFields = ['edit-email', 'edit-telefone'];
         observedFields.forEach(function (id) {
             var el = document.getElementById(id);
             if (el) {

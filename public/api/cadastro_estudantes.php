@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/security.php';
 require_once __DIR__ . '/../../app/helpers/Conection.php';
+require_once __DIR__ . '/../../app/helpers/TextFormatter.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -26,13 +27,12 @@ $limites = [
     'email'         => 255,
 ];
 
-$nomeCompleto = trim((string) ($payload['nome_completo'] ?? ''));
-$nomeCompleto = mb_convert_case($nomeCompleto, MB_CASE_TITLE, 'UTF-8');
-$nomeCompleto = mb_substr($nomeCompleto, 0, $limites['nome_completo']);
+// Mesma regra do TextFormatter JS (de/da/do etc.) — alinhado a usuarios-create/edit.
+$nomeCompleto = TextFormatter::formatProperName(trim((string) ($payload['nome_completo'] ?? '')), $limites['nome_completo']);
 // Primeiro bloco = nome; blocos seguintes = sobrenome
 $partes = preg_split('/\s+/u', $nomeCompleto, 2, PREG_SPLIT_NO_EMPTY);
 $nome = $partes[0] ?? '';
-$sobrenome = isset($partes[1]) ? mb_substr($partes[1], 0, 200) : '';
+$sobrenome = isset($partes[1]) ? TextFormatter::formatProperName($partes[1], 200) : '';
 
 $cpf       = trim((string) ($payload['cpf'] ?? ''));
 $telefone  = mb_substr(trim((string) ($payload['telefone'] ?? '')), 0, $limites['telefone']);

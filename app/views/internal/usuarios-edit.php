@@ -8,6 +8,7 @@ if (function_exists('mb_internal_encoding')) {
 
 require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../helpers/DateHelper.php';
+require_once __DIR__ . '/../../helpers/TextFormatter.php';
 require_once __DIR__ . '/../../../config/security.php';
 
 Security::requireAuthentication();
@@ -123,8 +124,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $mensagemErro = 'Erro ao desativar. Tente novamente.';
             }
         } elseif ($action === 'salvar') {
-            $nome = trim((string) ($_POST['nome'] ?? ''));
-            $sobrenome = trim((string) ($_POST['sobrenome'] ?? ''));
+            $nome = TextFormatter::formatProperName(trim((string) ($_POST['nome'] ?? '')), 100);
+            $sobrenome = TextFormatter::formatProperName(trim((string) ($_POST['sobrenome'] ?? '')), 100);
             $email = trim((string) ($_POST['email'] ?? ''));
             $telefone = trim((string) ($_POST['telefone'] ?? ''));
             $dataNascimentoRaw = trim((string) ($_POST['data_nascimento'] ?? ''));
@@ -534,6 +535,7 @@ function deriveUsuarioStatus(array $usuario): string
             });
             perfisSelecionados.sort();
             return {
+                nome: nomeInput ? (nomeInput.value || '').trim() : '',
                 sobrenome: sobrenomeInput ? (sobrenomeInput.value || '').trim() : '',
                 email: emailInput ? (emailInput.value || '').trim() : '',
                 telefone: telefoneInput ? (telefoneInput.value || '').trim() : '',
@@ -554,8 +556,15 @@ function deriveUsuarioStatus(array $usuario): string
             if (salvarBtn) salvarBtn.disabled = !isFormValidForSubmit() || !hasChanges();
         }
 
+        function aplicarFormatadorNomeSobrenome() {
+            if (typeof TextFormatter === 'undefined' || !TextFormatter.formatProperName) return;
+            if (nomeInput) nomeInput.value = TextFormatter.formatProperName(nomeInput.value || '', 100);
+            if (sobrenomeInput) sobrenomeInput.value = TextFormatter.formatProperName(sobrenomeInput.value || '', 100);
+        }
+
         if (form) {
             form.addEventListener('submit', function (e) {
+                aplicarFormatadorNomeSobrenome();
                 if (!isFormValidForSubmit()) {
                     e.preventDefault();
                     if (typeof showToast === 'function') {

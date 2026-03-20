@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0032
+
+**Data:** 2026-03-20 15:24:14 | **Commit:** `85b57b5` | **Tipo:** `patch`
+
+- Fix: correcao de input de dados pessoais
+
 ## V. 1.04.0031
 
 **Data:** 2026-03-20 15:07:37 | **Commit:** `b5b24bf` | **Tipo:** `patch`
@@ -3480,6 +3486,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
