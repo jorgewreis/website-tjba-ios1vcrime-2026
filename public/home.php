@@ -68,11 +68,8 @@ if ($sessionUserId !== '') {
 
 require_once __DIR__ . '/../app/helpers/UserAccessHelper.php';
 require_once __DIR__ . '/../app/helpers/AvatarCatalog.php';
+require_once __DIR__ . '/../app/helpers/AvatarInitialsPalette.php';
 $isUsuarioExterno = $sessionUserId !== '' && UserAccessHelper::isUsuarioExterno($userPerfisDb);
-$avatarNavbarUrl = AvatarCatalog::urlForSlug(AvatarCatalog::getDefaultSlug());
-if ($sessionUserId !== '') {
-    $avatarNavbarUrl = $usuario->getAvatarUrlForUsuario($sessionUserId, $isUsuarioExterno);
-}
 $hasPerfilEstudante = false;
 foreach ($userPerfisDb as $p) {
     if (strtoupper(trim((string) $p)) === 'ESTUDANTE') {
@@ -85,6 +82,8 @@ $defaultHomePage = $isUsuarioExterno ? 'dashboardexterno' : 'dashboard';
 /** Nome completo e linha de perfil/lotação para o badge do avatar (navbar). */
 $userDisplayFullName = trim((string) ($userName ?? ''));
 $avatarBadgePerfisLine = '';
+$avatarNomeNav = '';
+$avatarSobrenomeNav = '';
 
 if ($sessionUserId !== '') {
     try {
@@ -93,7 +92,9 @@ if ($sessionUserId !== '') {
         $stName->execute([$sessionUserId]);
         $rowName = $stName->fetch(PDO::FETCH_ASSOC);
         if ($rowName) {
-            $userDisplayFullName = trim(trim((string) ($rowName['nome'] ?? '')) . ' ' . trim((string) ($rowName['sobrenome'] ?? '')));
+            $avatarNomeNav = trim((string) ($rowName['nome'] ?? ''));
+            $avatarSobrenomeNav = trim((string) ($rowName['sobrenome'] ?? ''));
+            $userDisplayFullName = trim($avatarNomeNav . ' ' . $avatarSobrenomeNav);
         }
     } catch (Throwable $e) {
         // mantém $userName
@@ -146,6 +147,16 @@ if ($sessionUserId !== '') {
     }
 
     $avatarBadgePerfisLine = implode(' | ', $badgeParts);
+}
+
+$avatarPalette = AvatarInitialsPalette::getOrCreate();
+$avatarNavbarDisplay = [
+    'mode' => 'initials',
+    'initials' => AvatarCatalog::initialsFromNames($avatarNomeNav, $avatarSobrenomeNav),
+    'url' => null,
+];
+if ($sessionUserId !== '') {
+    $avatarNavbarDisplay = $usuario->getAvatarNavbarDisplay($sessionUserId, $isUsuarioExterno, $avatarNomeNav, $avatarSobrenomeNav);
 }
 
 $avatarSummaryTitle = $userDisplayFullName;
@@ -361,7 +372,11 @@ if ($avatarBadgePerfisLine !== '') {
                             <li class="nav-item nav-item-avatar">
                                 <a class="nav-link nav-link-avatar" href="#" tabindex="0" aria-label="Usuário logado" aria-describedby="user-summary-navbar" onclick="event.preventDefault();">
                                     <div class="avatar avatar-online">
-                                        <img src="<?php echo htmlspecialchars($avatarNavbarUrl, ENT_QUOTES, 'UTF-8'); ?>" alt="">
+                                        <?php if (($avatarNavbarDisplay['mode'] ?? '') === 'image' && !empty($avatarNavbarDisplay['url'])): ?>
+                                            <img src="<?php echo htmlspecialchars((string) $avatarNavbarDisplay['url'], ENT_QUOTES, 'UTF-8'); ?>" alt="">
+                                        <?php else: ?>
+                                            <span class="avatar-initials" style="background-color: <?php echo htmlspecialchars($avatarPalette['bg'], ENT_QUOTES, 'UTF-8'); ?>; color: <?php echo htmlspecialchars($avatarPalette['fg'], ENT_QUOTES, 'UTF-8'); ?>;"><?php echo htmlspecialchars((string) ($avatarNavbarDisplay['initials'] ?? '?'), ENT_QUOTES, 'UTF-8'); ?></span>
+                                        <?php endif; ?>
                                     </div>
                                     <div id="avatar-profile-popover" class="avatar-popover" role="tooltip">
                                         <div class="avatar-popover-name"><?php echo htmlspecialchars($userDisplayFullName !== '' ? $userDisplayFullName : 'Usuário', ENT_QUOTES, 'UTF-8'); ?></div>

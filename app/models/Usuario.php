@@ -307,28 +307,34 @@ final class Usuario
             return null;
         }
         $slug = trim((string) ($row['avatar_slug'] ?? ''));
-        if ($slug === '' || !AvatarCatalog::isAllowedSlug($slug)) {
-            $row['avatar_slug'] = AvatarCatalog::getDefaultSlug();
-        } else {
-            $row['avatar_slug'] = $slug;
-        }
+        $row['avatar_slug'] = AvatarCatalog::normalizeStoredSlug($slug);
         return $row;
     }
 
     /**
-     * URL pública do avatar por preset (whitelist em AvatarCatalog).
+     * Modo navbar: imagem 3d ou iniciais (externos sempre iniciais).
+     *
+     * @return array{mode: string, initials: string, url: ?string}
      */
-    public function getAvatarUrlForUsuario(string $idUsuario, bool $forceDefault = false): string
+    public function getAvatarNavbarDisplay(string $idUsuario, bool $isUsuarioExterno, string $nome, string $sobrenome): array
     {
-        if ($forceDefault) {
-            return AvatarCatalog::urlForSlug(AvatarCatalog::getDefaultSlug());
+        $initials = AvatarCatalog::initialsFromNames($nome, $sobrenome);
+        if ($isUsuarioExterno) {
+            return ['mode' => 'initials', 'initials' => $initials, 'url' => null];
         }
         $dados = $this->getDadosPessoais($idUsuario);
         if ($dados === null) {
-            return AvatarCatalog::urlForSlug(AvatarCatalog::getDefaultSlug());
+            return ['mode' => 'initials', 'initials' => $initials, 'url' => null];
         }
-        $slug = trim((string) ($dados['avatar_slug'] ?? ''));
-        return AvatarCatalog::urlForSlug($slug !== '' ? $slug : AvatarCatalog::getDefaultSlug());
+        $slug = AvatarCatalog::normalizeStoredSlug(trim((string) ($dados['avatar_slug'] ?? '')));
+        if (AvatarCatalog::isInitialsSlug($slug)) {
+            return ['mode' => 'initials', 'initials' => $initials, 'url' => null];
+        }
+        $url = AvatarCatalog::urlForSlug($slug);
+        if ($url !== '') {
+            return ['mode' => 'image', 'initials' => $initials, 'url' => $url];
+        }
+        return ['mode' => 'initials', 'initials' => $initials, 'url' => null];
     }
 
     /**
@@ -342,8 +348,8 @@ final class Usuario
         if ($idUsuario === '') {
             return ['success' => false, 'message' => 'Usuário não identificado.'];
         }
-        $slug = trim($slug);
-        if ($slug === '' || !AvatarCatalog::isAllowedSlug($slug)) {
+        $slug = AvatarCatalog::normalizeStoredSlug(trim($slug));
+        if (!AvatarCatalog::isAllowedSlug($slug)) {
             return ['success' => false, 'message' => 'Avatar inválido.'];
         }
 

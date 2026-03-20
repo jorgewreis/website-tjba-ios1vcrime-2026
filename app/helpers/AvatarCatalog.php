@@ -2,20 +2,79 @@
 declare(strict_types=1);
 
 /**
- * Catálogo de avatares por preset (imagens versionadas em public/, sem upload).
+ * Catálogo de avatares: imagens em public/assets/img/avatars/3d/ (sem upload).
+ * Modo especial "initials": sem imagem — exibe iniciais com paleta de sessão (login).
  *
- * @phpstan-type AvatarEntry array{slug: string, url: string, label: string}
+ * @phpstan-type AvatarEntry array{slug: string, url: string, label: string, is_initial?: bool}
  */
 final class AvatarCatalog
 {
-    private const MANIFEST_REL = '/assets/img/avatars/presets/manifest.json';
+    /** Slug reservado: avatar por iniciais (não usa arquivo). */
+    public const SLUG_INITIALS = 'initials';
 
-    private const DEFAULT_SLUG = 'default';
+    /** Legado / migração: tratar como initials. */
+    private const SLUG_LEGACY_DEFAULT = 'default';
+
+    private const DIR_3D_REL = '/assets/img/avatars/3d';
+
+    private const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 
     /** @var list<AvatarEntry>|null */
     private static ?array $cached = null;
 
+    public static function getDefaultSlug(): string
+    {
+        return self::SLUG_INITIALS;
+    }
+
+    public static function isInitialsSlug(string $slug): bool
+    {
+        return trim($slug) === self::SLUG_INITIALS;
+    }
+
     /**
+     * Normaliza valor vindo do BD (legado default → initials).
+     */
+    public static function normalizeStoredSlug(string $slug): string
+    {
+        $slug = trim($slug);
+        if ($slug === '' || $slug === self::SLUG_LEGACY_DEFAULT) {
+            return self::SLUG_INITIALS;
+        }
+        if (self::isInitialsSlug($slug)) {
+            return self::SLUG_INITIALS;
+        }
+        if (self::isAllowedSlug($slug)) {
+            return $slug;
+        }
+        return self::SLUG_INITIALS;
+    }
+
+    /**
+     * Iniciais a partir de nome e sobrenome (2 caracteres, UTF-8).
+     */
+    public static function initialsFromNames(string $nome, string $sobrenome): string
+    {
+        $nome = trim($nome);
+        $sobrenome = trim($sobrenome);
+        $enc = 'UTF-8';
+        $c1 = $nome !== '' ? mb_substr($nome, 0, 1, $enc) : '';
+        $c2 = $sobrenome !== '' ? mb_substr($sobrenome, 0, 1, $enc) : '';
+        if ($c1 === '' && $c2 === '') {
+            return '?';
+        }
+        if ($c2 === '') {
+            return mb_strtoupper($c1, $enc);
+        }
+        if ($c1 === '') {
+            return mb_strtoupper($c2, $enc);
+        }
+        return mb_strtoupper($c1 . $c2, $enc);
+    }
+
+    /**
+     * Lista para select + miniaturas: primeiro "Iniciais", depois arquivos da pasta 3d.
+     *
      * @return list<AvatarEntry>
      */
     public static function listForUi(): array
@@ -24,44 +83,47 @@ final class AvatarCatalog
             return self::$cached;
         }
 
-        $path = self::manifestPath();
-        if (!is_file($path) || !is_readable($path)) {
-            self::$cached = [self::fallbackEntry()];
+        $out = [
+            [
+                'slug' => self::SLUG_INITIALS,
+                'url' => '',
+                'label' => 'Iniciais (sem imagem)',
+                'is_initial' => true,
+            ],
+        ];
+
+        $dir = self::path3dDir();
+        if (!is_dir($dir) || !is_readable($dir)) {
+            self::$cached = $out;
             return self::$cached;
         }
 
-        $json = file_get_contents($path);
-        if ($json === false) {
-            self::$cached = [self::fallbackEntry()];
+        $files = scandir($dir, SCANDIR_SORT_ASCENDING);
+        if ($files === false) {
+            self::$cached = $out;
             return self::$cached;
         }
 
-        $decoded = json_decode($json, true);
-        if (!is_array($decoded)) {
-            self::$cached = [self::fallbackEntry()];
-            return self::$cached;
-        }
-
-        $out = [];
-        foreach ($decoded as $row) {
-            if (!is_array($row)) {
+        foreach ($files as $file) {
+            if ($file === '.' || $file === '..') {
                 continue;
             }
-            $slug = trim((string) ($row['slug'] ?? ''));
-            $url = trim((string) ($row['url'] ?? ''));
-            $label = trim((string) ($row['label'] ?? ''));
-            if ($slug === '' || $url === '' || $label === '') {
+            $path = $dir . DIRECTORY_SEPARATOR . $file;
+            if (!is_file($path)) {
                 continue;
             }
-            if (!self::isSafePublicUrl($url)) {
+            $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+            if (!in_array($ext, self::IMAGE_EXTENSIONS, true)) {
                 continue;
             }
+            $base = pathinfo($file, PATHINFO_FILENAME);
+            if (!self::isSafeFilenameStem($base)) {
+                continue;
+            }
+            $slug = $base;
+            $url = self::DIR_3D_REL . '/' . rawurlencode($file);
+            $label = self::humanLabelFromStem($base);
             $out[] = ['slug' => $slug, 'url' => $url, 'label' => $label];
-        }
-
-        if ($out === []) {
-            self::$cached = [self::fallbackEntry()];
-            return self::$cached;
         }
 
         self::$cached = $out;
@@ -74,7 +136,13 @@ final class AvatarCatalog
         if ($slug === '') {
             return false;
         }
+        if (self::isInitialsSlug($slug)) {
+            return true;
+        }
         foreach (self::listForUi() as $entry) {
+            if (!empty($entry['is_initial'])) {
+                continue;
+            }
             if ($entry['slug'] === $slug) {
                 return true;
             }
@@ -82,58 +150,39 @@ final class AvatarCatalog
         return false;
     }
 
+    /**
+     * URL pública da imagem ou string vazia se for modo iniciais / desconhecido.
+     */
     public static function urlForSlug(string $slug): string
     {
         $slug = trim($slug);
+        if (self::isInitialsSlug($slug)) {
+            return '';
+        }
         foreach (self::listForUi() as $entry) {
-            if ($entry['slug'] === $slug) {
+            if (!empty($entry['is_initial'])) {
+                continue;
+            }
+            if ($entry['slug'] === $slug && ($entry['url'] ?? '') !== '') {
                 return $entry['url'];
             }
         }
-        foreach (self::listForUi() as $entry) {
-            if ($entry['slug'] === self::DEFAULT_SLUG) {
-                return $entry['url'];
-            }
-        }
-        return '/assets/img/avatars/presets/default.svg';
+        return '';
     }
 
-    public static function getDefaultSlug(): string
+    private static function path3dDir(): string
     {
-        return self::DEFAULT_SLUG;
+        return dirname(__DIR__, 2) . '/public' . self::DIR_3D_REL;
     }
 
-    private static function manifestPath(): string
+    private static function isSafeFilenameStem(string $stem): bool
     {
-        return dirname(__DIR__, 2) . '/public' . self::MANIFEST_REL;
+        return $stem !== '' && (bool) preg_match('/^[a-zA-Z0-9_-]+$/', $stem);
     }
 
-    /**
-     * Apenas URLs relativas ao site, path público (sem esquema, sem ..).
-     */
-    private static function isSafePublicUrl(string $url): bool
+    private static function humanLabelFromStem(string $stem): string
     {
-        if ($url === '' || str_contains($url, '..')) {
-            return false;
-        }
-        if (!str_starts_with($url, '/')) {
-            return false;
-        }
-        if (str_contains($url, "\0") || str_contains($url, '//')) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * @return AvatarEntry
-     */
-    private static function fallbackEntry(): array
-    {
-        return [
-            'slug' => self::DEFAULT_SLUG,
-            'url' => '/assets/img/avatars/presets/default.svg',
-            'label' => 'Padrão',
-        ];
+        $s = str_replace(['_', '-'], ' ', $stem);
+        return $s !== '' ? $s : $stem;
     }
 }

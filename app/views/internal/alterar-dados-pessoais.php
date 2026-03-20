@@ -188,11 +188,15 @@ if ($dados !== null) {
                                     <option value="<?php echo htmlspecialchars($av['slug'], ENT_QUOTES, 'UTF-8'); ?>"<?php echo ($currentAvatarSlug === $av['slug']) ? ' selected' : ''; ?>><?php echo htmlspecialchars($av['label'], ENT_QUOTES, 'UTF-8'); ?></option>
                                 <?php endforeach; ?>
                             </select>
-                            <p id="avatar-slug-hint" class="minor-info">Escolha entre imagens pré-definidas (sem envio de arquivo).</p>
+                            <p id="avatar-slug-hint" class="minor-info">Imagens disponíveis em <code>public/assets/img/avatars/3d/</code> ou apenas iniciais do nome (cores sorteadas a cada login).</p>
                             <div class="display-flex row row-full gap-y-md flex-wrap padding-y-sm" style="align-items: center;">
                                 <?php foreach (AvatarCatalog::listForUi() as $av): ?>
                                     <button type="button" class="btn btn-secondary avatar-preset-thumb" data-slug="<?php echo htmlspecialchars($av['slug'], ENT_QUOTES, 'UTF-8'); ?>" title="<?php echo htmlspecialchars($av['label'], ENT_QUOTES, 'UTF-8'); ?>" style="padding: 4px;">
-                                        <img src="<?php echo htmlspecialchars($av['url'], ENT_QUOTES, 'UTF-8'); ?>" width="40" height="40" alt="">
+                                        <?php if (!empty($av['is_initial'])): ?>
+                                            <span style="display: inline-flex; width: 40px; height: 40px; border-radius: 50%; align-items: center; justify-content: center; background: #6b7280; color: #fff; font-size: 12px; font-weight: 600;">Aa</span>
+                                        <?php else: ?>
+                                            <img src="<?php echo htmlspecialchars($av['url'], ENT_QUOTES, 'UTF-8'); ?>" width="40" height="40" alt="">
+                                        <?php endif; ?>
                                     </button>
                                 <?php endforeach; ?>
                             </div>
