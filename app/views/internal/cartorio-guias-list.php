@@ -287,7 +287,7 @@ if ($totalPages > 0) {
                         </div>                        
                     </div>
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                        <div class="col button-table button-edit" data-guia-id="<?php echo htmlspecialchars($idGuia, ENT_QUOTES); ?>" title="Editar">
+                        <div class="col button-table button-edit" data-edit-id="<?php echo htmlspecialchars($idGuia, ENT_QUOTES); ?>" title="Editar">
                             <i class="fi fi-rr-file-edit"></i>
                         </div>
                         <div class="display-flex row row-fit justify-end gap-y-sm allocate-chips-row allocate-users">
@@ -585,10 +585,14 @@ if ($totalPages > 0) {
             });
         }
 
-        document.querySelectorAll('.button-edit').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                const guiaId = this.dataset.guiaId || btn.closest('[data-guia-id]')?.dataset?.guiaId;
-                if (guiaId) window.location.href = '/frame.php?page=guiasedit&id=' + encodeURIComponent(guiaId);
+        document.querySelectorAll('.button-edit[data-edit-id]').forEach(function (btn) {
+            btn.addEventListener('click', function (event) {
+                const guiaId = (event.currentTarget?.getAttribute('data-edit-id') || '').trim();
+                if (!guiaId) {
+                    notify('error', 'Erro', 'Identificador da guia não encontrado para abrir edição.');
+                    return;
+                }
+                window.location.href = '/frame.php?page=guiasedit&id=' + encodeURIComponent(guiaId);
             });
         });
 
