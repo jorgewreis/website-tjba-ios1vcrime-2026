@@ -68,6 +68,13 @@ if ($sessionUserId !== '') {
 
 require_once __DIR__ . '/../app/helpers/UserAccessHelper.php';
 $isUsuarioExterno = $sessionUserId !== '' && UserAccessHelper::isUsuarioExterno($userPerfisDb);
+$hasPerfilEstudante = false;
+foreach ($userPerfisDb as $p) {
+    if (strtoupper(trim((string) $p)) === 'ESTUDANTE') {
+        $hasPerfilEstudante = true;
+        break;
+    }
+}
 $defaultHomePage = $isUsuarioExterno ? 'dashboardexterno' : 'dashboard';
 
 /** Nome completo e linha de perfil/lotação para o badge do avatar (navbar). */
@@ -380,6 +387,14 @@ if ($avatarBadgePerfisLine !== '') {
     <script>
         /** Página inicial do iframe (dashboard interno ou início externo). Alinhado ao PHP $defaultHomePage. */
         const DEFAULT_HOME_PAGE = <?php echo json_encode($defaultHomePage, JSON_UNESCAPED_UNICODE); ?>;
+        /** Mesmo critério de app/helpers/UserAccessHelper.php — menu não deve exibir rotas internas. */
+        const IS_USUARIO_EXTERNO = <?php echo json_encode($isUsuarioExterno, JSON_UNESCAPED_UNICODE); ?>;
+        /** Perfil ESTUDANTE no cadastro (externo: menu só CEP; ver public/frame.php). */
+        const HAS_PERFIL_ESTUDANTE = <?php echo json_encode($hasPerfilEstudante, JSON_UNESCAPED_UNICODE); ?>;
+        /** Consultor externo: partes, instituições e CEP (alinhado a frame.php — ConsultasPartesInstituicoes + ConsultasCep). */
+        const MENU_TARGETS_CONSULTAS_EXTERNO_CONSULTOR = new Set(['consultapartes', 'instituicoespublicas', 'consultacep']);
+        /** Estudante externo: apenas CEP. */
+        const MENU_TARGETS_CONSULTAS_EXTERNO_ESTUDANTE = new Set(['consultacep']);
 
         /**
          * Seções exibidas no menu por perfil (alinhado a public/frame.php — sectionMap e regras de estagiário).
@@ -514,6 +529,11 @@ if ($avatarBadgePerfisLine !== '') {
         }
 
         function getPermittedSections(perfis) {
+            /** Usuário externo: apenas Consultas no menu (evita vazamento se a API de perfis retornar dados incorretos). */
+            if (IS_USUARIO_EXTERNO) {
+                return new Set(['Consultas']);
+            }
+
             const permittedSections = new Set();
             const norm = normalizePerfis(perfis);
 
@@ -642,6 +662,26 @@ if ($avatarBadgePerfisLine !== '') {
             });
         }
 
+        /**
+         * Visibilidade final do item: perfis admin + filtro de alvos para usuário externo (estudante/consultor).
+         */
+        function itemVisibleForUser(item, perfis) {
+            if (!itemAllowedForUser(item, perfis)) {
+                return false;
+            }
+            if (!IS_USUARIO_EXTERNO) {
+                return true;
+            }
+            const t = (item.target || '').trim();
+            if (!t) {
+                return true;
+            }
+            if (HAS_PERFIL_ESTUDANTE) {
+                return MENU_TARGETS_CONSULTAS_EXTERNO_ESTUDANTE.has(t);
+            }
+            return MENU_TARGETS_CONSULTAS_EXTERNO_CONSULTOR.has(t);
+        }
+
         function buildMenuForSections(permittedSections, perfis) {
             const menuRoot = document.querySelector('.menu-inner');
 
@@ -656,11 +696,11 @@ if ($avatarBadgePerfisLine !== '') {
 
                 const visibleItems = [];
                 section.items.forEach(item => {
-                    if (!itemAllowedForUser(item, perfis)) {
+                    if (!itemVisibleForUser(item, perfis)) {
                         return;
                     }
                     if (item.type === 'submenu') {
-                        const children = (item.children || []).filter(c => itemAllowedForUser(c, perfis));
+                        const children = (item.children || []).filter(c => itemVisibleForUser(c, perfis));
                         if (children.length === 0) {
                             return;
                         }

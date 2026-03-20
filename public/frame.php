@@ -91,7 +91,8 @@ $allowed_pages = [
 $page_to_section = [
     'dashboard'         => 'All',
     'dashboardexterno'  => 'Externo',
-    'consultacep'       => 'Consultas',
+    /** CEP: ferramenta ampla; seção dedicada (não usar só `All`, para não conflitar com o bloqueio de usuário externo). */
+    'consultacep'       => 'ConsultasCep',
     'cartasexpedidas'   => 'Cartório',
     'cartasexpedidasedit'   => 'Cartório',
     'cartasexpedidascreate' => 'Cartório',
@@ -124,19 +125,21 @@ $page_to_section = [
     'notificacoes'      => 'All',
     'configuracoes'     => 'All',
     'documentos'        => 'All',
-    'consultaparte'     => 'Consultas',
-    'consultapartes'    => 'Consultas',
+    /** Listagens de consulta (partes / instituições): consultor externo + internos; sem ESTUDANTE na seção. */
+    'consultaparte'     => 'ConsultasPartesInstituicoes',
+    'consultapartes'    => 'ConsultasPartesInstituicoes',
     'consultapartescreate'  => 'Cartório',
     'consultapartesedit'    => 'Cartório',
-    'consultaprocessos'     => 'Cartório',
-    'consultaprocessosedit' => 'Cartório',
-    'instituicoespublicas'  => 'Cartório',
+    /** Processos: só servidores da vara (não CONSULTOR/ESTUDANTE externos). */
+    'consultaprocessos'     => 'ConsultasProcessos',
+    'consultaprocessosedit' => 'ConsultasProcessos',
+    'instituicoespublicas'  => 'ConsultasPartesInstituicoes',
     'instituicoespublicascreate' => 'Cartório',
     'instituicoespublicasedit'   => 'Cartório',
     'processospartescreate'     => 'Cartório',
     'processosparteslist'       => 'Cartório',
     'processospartesedit'       => 'Cartório',
-    'partesinstituicoeslist'    => 'Cartório',
+    'partesinstituicoeslist'    => 'ConsultasPartesInstituicoes',
     'partesinstituicoescreate'  => 'Cartório',
     'partesinstituicoesedit'    => 'Cartório',
     'usuarios'                  => 'Gestão',
@@ -157,9 +160,19 @@ $page_to_section = [
  */
 function hasAccessToSection(array $userPerfils, ?string $requiredSection): bool
 {
-    // Usuários externos (estudante / consultor sem perfil de servidor): apenas Consultas, Perfil e dashboard externo.
+    // Externo: estudante só ConsultasCep + Perfil + dashboard externo; consultor externo inclui partes/instituições.
     if (UserAccessHelper::isUsuarioExterno($userPerfils)) {
-        $externoAllowed = ['Perfil', 'Consultas', 'Externo'];
+        $externoAllowed = ['Perfil', 'Externo', 'ConsultasCep'];
+        $temEstudante = false;
+        foreach ($userPerfils as $p) {
+            if (strtoupper(trim((string) $p)) === 'ESTUDANTE') {
+                $temEstudante = true;
+                break;
+            }
+        }
+        if (!$temEstudante) {
+            $externoAllowed[] = 'ConsultasPartesInstituicoes';
+        }
         if ($requiredSection === null || !in_array($requiredSection, $externoAllowed, true)) {
             return false;
         }
@@ -180,7 +193,12 @@ function hasAccessToSection(array $userPerfils, ?string $requiredSection): bool
         'Cartório' => ['CARTORIO', 'ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA'],
         'Gabinete' => ['GABINETE', 'SERVIDOR', 'ADMIN', 'CHEFIA'],
         'Sala de Audiências' => ['AUDIENCIA', 'ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA'],
-        'Consultas' => ['CONSULTOR', 'ESTAGIARIO', 'ESTUDANTE', 'CARTORIO', 'AUDIENCIA', 'GABINETE', 'ADMIN', 'SERVIDOR', 'CHEFIA'],
+        /** CEP: inclui ESTUDANTE (única consulta liberada ao estudante externo). */
+        'ConsultasCep' => ['CONSULTOR', 'ESTUDANTE', 'ESTAGIARIO', 'CARTORIO', 'AUDIENCIA', 'GABINETE', 'ADMIN', 'SERVIDOR', 'CHEFIA'],
+        /** Partes e instituições (listagens): sem ESTUDANTE; consultor externo permitido. */
+        'ConsultasPartesInstituicoes' => ['CONSULTOR', 'ESTAGIARIO', 'CARTORIO', 'AUDIENCIA', 'GABINETE', 'ADMIN', 'SERVIDOR', 'CHEFIA'],
+        /** Processos: sem CONSULTOR nem ESTUDANTE (apenas operação interna). */
+        'ConsultasProcessos' => ['CARTORIO', 'ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA', 'GABINETE', 'AUDIENCIA'],
         'Gestão' => ['ADMIN', 'CHEFIA']
     ];
 
@@ -249,7 +267,10 @@ function getEstagiarioAllowedSections(PDO $connection, string $userId): array
         }
     }
 
-    $sections[] = 'Consultas';
+    $sections[] = 'ConsultasCep';
+    $sections[] = 'ConsultasPartesInstituicoes';
+    // Consulta processos (restrita a perfis internos no hasAccessToSection).
+    $sections[] = 'ConsultasProcessos';
 
     return array_values(array_unique($sections));
 }
