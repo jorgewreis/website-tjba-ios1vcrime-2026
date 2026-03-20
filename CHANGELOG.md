@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0019
+
+**Data:** 2026-03-19 22:10:39 | **Commit:** `708c224` | **Tipo:** `patch`
+
+- Fix: correção do button do cejusc
+
 ## V. 1.04.0018
 
 **Data:** 2026-03-19 22:06:44 | **Commit:** `3128bdb` | **Tipo:** `patch`
@@ -3402,6 +3408,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

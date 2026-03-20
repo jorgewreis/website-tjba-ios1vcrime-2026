@@ -223,7 +223,7 @@ if ($totalPages > 0) {
                         <?php if (!empty($row['CejuscTarefaId'])): ?>
                         <div class="col width-400 col-cejusc">
                             <span class="minor-info">Cejusc</span>
-                            <button class="btn btn-primary-outline height-sm" title="Abrir tarefa" href="/frame.php?page=cejuscedit&id=<?php echo urlencode((string) $row['CejuscTarefaId']); ?>">Abrir tarefa</button>
+                            <button type="button" class="btn btn-primary-outline height-sm btn-open-cejusc" title="Abrir tarefa" data-cejusc-id="<?php echo htmlspecialchars((string) $row['CejuscTarefaId'], ENT_QUOTES); ?>">Abrir tarefa</button>
                         </div>
                         <?php endif; ?>
                     </div>
@@ -413,6 +413,16 @@ if ($totalPages > 0) {
                     if (id) {
                         window.location.href = '/frame.php?page=medidasprotetivasedit&id=' + encodeURIComponent(id);
                     }
+                });
+            });
+            document.querySelectorAll('.btn-open-cejusc').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var cejuscId = (this.getAttribute('data-cejusc-id') || '').trim();
+                    if (!cejuscId) {
+                        notify('error', 'Erro', 'Identificador da tarefa do Cejusc não encontrado.');
+                        return;
+                    }
+                    window.location.href = '/frame.php?page=cejuscedit&id=' + encodeURIComponent(cejuscId);
                 });
             });
             document.querySelectorAll('input[name="open-subtask"]').forEach(function (radio) {
