@@ -15,4 +15,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: pequenos ajustes cartas expedidas** `[074f624]`
 - **Fix: correcao de layouts** `[34777a6]`
 - **Fix: pequenos ajustes** `[56ad09d]`
+- **Fix: correcao de toasts e alerts** `[bda95f6]`
 
