@@ -19,4 +19,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correcao de edit usuario externo** `[c299674]`
 - **Feat: config de permissoes de usuario** `[56473ed]`
 - **Fix: correcao de usuario estagiario** `[b5b24bf]`
+- **Fix: correcao de input de dados pessoais** `[85b57b5]`
 
