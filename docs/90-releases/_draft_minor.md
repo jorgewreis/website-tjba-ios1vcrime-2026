@@ -183,4 +183,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correcao de toasts** `[3128bdb]`
 - **Fix: correção do button do cejusc** `[708c224]`
 - **Fix: active link no home** `[7e4fd4b]`
+- **Fix: pequena correção** `[239469a]`
 
