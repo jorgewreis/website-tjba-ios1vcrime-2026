@@ -1,0 +1,11 @@
+---
+description: Dashboard e controle de acesso interno vs usuário externo (estudante/consultor).
+globs: public/frame.php,public/home.php,app/helpers/UserAccessHelper.php,app/views/internal/dashboard*.php
+---
+
+# Dashboard interno / externo
+
+- **Externo**: `UserAccessHelper::isUsuarioExterno` — sem perfis internos (servidor, estagiário lotado, cartório, gabinete, audiência, admin/chefia/diretora/magistrada) e com **ESTUDANTE** e/ou **CONSULTOR**.
+- Rotas: `page=dashboard` (interno), `page=dashboardexterno` (externo). Redirecionamentos cruzados em `frame.php`.
+- Não expor telas internas (Cartório, Gestão, etc.) a usuários externos; novas páginas em `frame.php` devem ter `page_to_section` coerente e checar `hasAccessToSection`.
+- Home: primeiro item do menu e iframe inicial usam `$defaultHomePage` (`dashboard` vs `dashboardexterno`).

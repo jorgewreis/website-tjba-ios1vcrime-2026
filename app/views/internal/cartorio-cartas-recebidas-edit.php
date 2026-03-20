@@ -453,16 +453,11 @@ $stateOptions = [
                                 estadoSelect.value = data.uf;
                             }
                             const status = (data.status_cidade || '').trim();
-                            if (status.toUpperCase() === 'CCM') {
-                                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Informação', message: 'Comarca com Central de Mandados' });
-                                cidadeInput.value = '';
-                                if (hiddenComarcaInput) hiddenComarcaInput.value = '';
-                            } else {
-                                if (status.toLowerCase() === 'agregada' && data.nome) {
-                                    cidadeInput.value = formatCidade(data.nome);
-                                }
-                                if (data.id && hiddenComarcaInput) hiddenComarcaInput.value = data.id;
+                            // Bloqueio por CCM (Central de Mandados) aplica-se apenas a cartas expedidas.
+                            if (status.toLowerCase() === 'agregada' && data.nome) {
+                                cidadeInput.value = formatCidade(data.nome);
                             }
+                            if (data.id && hiddenComarcaInput) hiddenComarcaInput.value = data.id;
                         })
                         .catch(() => {});
                 };

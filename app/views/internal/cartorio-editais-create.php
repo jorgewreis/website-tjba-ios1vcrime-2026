@@ -64,7 +64,7 @@ try {
                 <input type="text" class="width-400 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" required>
             </div>
             <div class="col filter">
-                <label for="filter-classe" id="label-classe">Classe processual <span class="label-hint-automatizado">*automatizado</span></label>
+                <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe processual <span class="label-hint-automatizado">*automatizado</span></label>
                 <input type="text" class="width-600 height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>
             </div>
         </div>
@@ -118,53 +118,7 @@ try {
         }, { capture: true });
     </script>
     <script src="/assets/js/modules/cartorio/cartas-expedidas/cnj.js"></script>
-    <script>
-        (function () {
-            var processoInput = document.getElementById('filter-processo');
-            var classeInput = document.getElementById('filter-classe');
-            var hCod = document.getElementById('hidden-classe-codigo');
-            var hDesc = document.getElementById('hidden-classe-descricao');
-            function limparClasse() {
-                if (classeInput) classeInput.value = '';
-                if (hCod) hCod.value = '';
-                if (hDesc) hDesc.value = '';
-            }
-            function preencherClasse(codigo, descricao) {
-                if (classeInput) classeInput.value = (codigo && descricao) ? (codigo + ' - ' + descricao) : (descricao || codigo || '');
-                if (hCod) hCod.value = codigo || '';
-                if (hDesc) hDesc.value = descricao || '';
-            }
-            if (processoInput) {
-                processoInput.addEventListener('blur', function () {
-                    var digits = (this.value || '').replace(/\D/g, '');
-                    if (digits.length !== 20) {
-                        limparClasse();
-                        return;
-                    }
-                    fetch('/api/datajud/search-processo.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ numero: digits }),
-                        credentials: 'same-origin'
-                    })
-                    .then(function (r) { return r.json(); })
-                    .then(function (data) {
-                        var d = data && data.data;
-                        var classe = d && d.classe;
-                        if (classe && (classe.codigo || classe.descricao)) {
-                            preencherClasse(classe.codigo || '', classe.descricao || '');
-                        } else {
-                            limparClasse();
-                        }
-                    })
-                    .catch(function () { limparClasse(); });
-                });
-                processoInput.addEventListener('input', function () {
-                    if ((this.value || '').replace(/\D/g, '').length !== 20) limparClasse();
-                });
-            }
-        })();
-    </script>
+    <script src="/assets/js/modules/cartorio/cartas-expedidas/datajud-api.js"></script>
     <script>
         (function () {
             var PERFIS_ALTERAR_REGRA = ['ADMIN', 'DIRETORA', 'MAGISTRADA'];
@@ -229,6 +183,11 @@ try {
                         showFeedback('O número do processo está incompleto ou inválido (20 dígitos).', 'error');
                         return;
                     }
+                }
+                var classeVal = (document.getElementById('filter-classe')?.value || '').trim();
+                if (classeVal === 'Aguarde...') {
+                    showFeedback('Aguarde a consulta ao DataJud terminar antes de cadastrar.', 'error');
+                    return;
                 }
                 var tipoEdital = (document.getElementById('filter-tipo-edital')?.value || '').trim();
                 if (!tipoEdital) {

@@ -214,57 +214,6 @@ try {
     <script>
         (function () {
             var processoInput = document.getElementById('filter-processo');
-            var classeInput = document.getElementById('filter-classe');
-            var hCod = document.getElementById('hidden-classe-codigo');
-            var hDesc = document.getElementById('hidden-classe-descricao');
-            function limparClasse() {
-                if (classeInput) classeInput.value = '';
-                if (hCod) hCod.value = '';
-                if (hDesc) hDesc.value = '';
-            }
-            function preencherClasse(codigo, descricao) {
-                if (classeInput) classeInput.value = (codigo && descricao) ? (codigo + ' - ' + descricao) : (descricao || codigo || '');
-                if (hCod) hCod.value = codigo || '';
-                if (hDesc) hDesc.value = descricao || '';
-            }
-            if (processoInput) {
-                processoInput.addEventListener('blur', function () {
-                    var digits = (this.value || '').replace(/\D/g, '');
-                    if (digits.length !== 20) {
-                        limparClasse();
-                        return;
-                    }
-                    if (typeof window.validarCNJ === 'function' && !window.validarCNJ(digits)) {
-                        limparClasse();
-                        return;
-                    }
-                    fetch('/api/datajud/search-processo.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ numero: digits }),
-                        credentials: 'same-origin'
-                    })
-                    .then(function (r) { return r.json(); })
-                    .then(function (data) {
-                        var d = data && data.data;
-                        var classe = d && d.classe;
-                        if (classe && (classe.codigo || classe.descricao)) {
-                            preencherClasse(classe.codigo || '', classe.descricao || '');
-                        } else {
-                            limparClasse();
-                        }
-                    })
-                    .catch(function () { limparClasse(); });
-                });
-                processoInput.addEventListener('input', function () {
-                    if ((this.value || '').replace(/\D/g, '').length !== 20) limparClasse();
-                });
-            }
-        })();
-    </script>
-    <script>
-        (function () {
-            var processoInput = document.getElementById('filter-processo');
             var reuSelect = document.getElementById('reu-select');
             var reuNome = document.getElementById('reu-nome');
             var reuComplementares = document.getElementById('reu-campos-complementares');
@@ -763,6 +712,12 @@ try {
                     processo = normalized.formatted;
                 } else if (onlyDigits(processo).length !== 20) {
                     showFeedback('O número do processo está incompleto ou inválido (20 dígitos).', 'error');
+                    return;
+                }
+
+                var classeVal = (document.getElementById('filter-classe')?.value || '').trim();
+                if (classeVal === 'Aguarde...') {
+                    showFeedback('Aguarde a consulta ao DataJud terminar antes de cadastrar.', 'error');
                     return;
                 }
 

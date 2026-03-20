@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0036
+
+**Data:** 2026-03-20 16:27:16 | **Commit:** `cb53908` | **Tipo:** `patch`
+
+- Feat: criacao de novo dashboard para usuario externo
+
 ## V. 1.04.0035
 
 **Data:** 2026-03-20 16:09:19 | **Commit:** `5064596` | **Tipo:** `patch`
@@ -3504,6 +3510,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

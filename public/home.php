@@ -66,6 +66,10 @@ if ($sessionUserId !== '') {
     }
 }
 
+require_once __DIR__ . '/../app/helpers/UserAccessHelper.php';
+$isUsuarioExterno = $sessionUserId !== '' && UserAccessHelper::isUsuarioExterno($userPerfisDb);
+$defaultHomePage = $isUsuarioExterno ? 'dashboardexterno' : 'dashboard';
+
 /** Nome completo e linha de perfil/lotação para o badge do avatar (navbar). */
 $userDisplayFullName = trim((string) ($userName ?? ''));
 $avatarBadgePerfisLine = '';
@@ -280,9 +284,9 @@ if ($avatarBadgePerfisLine !== '') {
                 </div>
                 <ul class="menu-inner">
                     <li class="menu-item active">
-                        <a class="menu-link" data-target="dashboard">
+                        <a class="menu-link" data-target="<?php echo htmlspecialchars($defaultHomePage, ENT_QUOTES, 'UTF-8'); ?>">
                             <i class="fi fi-rs-home"></i>
-                            <span class="text">Dashboard</span>
+                            <span class="text"><?php echo $isUsuarioExterno ? 'Início' : 'Dashboard'; ?></span>
                         </a>
                     </li>
                 </ul>
@@ -298,7 +302,7 @@ if ($avatarBadgePerfisLine !== '') {
                     </div>
                     <div class="navbar-nav-right">
                         <ul class="navbar-nav">
-                            <li class="nav-item" data-target="dashboard">
+                            <li class="nav-item" data-target="<?php echo htmlspecialchars($defaultHomePage, ENT_QUOTES, 'UTF-8'); ?>">
                                 <a class="nav-link">
                                     <i class="fi fi-br-layout-fluid"></i>
                                 </a>
@@ -357,7 +361,7 @@ if ($avatarBadgePerfisLine !== '') {
                 
                 <!-- CONTENT WRAPER -->
                 <div class="content-wrapper">
-                    <iframe class="target-page" id="frame" src="/frame.php?page=dashboard"></iframe>
+                    <iframe class="target-page" id="frame" src="/frame.php?page=<?php echo htmlspecialchars($defaultHomePage, ENT_QUOTES, 'UTF-8'); ?>"></iframe>
                 </div>
             </div>            
         </div>        
@@ -374,6 +378,8 @@ if ($avatarBadgePerfisLine !== '') {
     <script src="/assets/js/shared/menu.js" defer></script>
 
     <script>
+        /** Página inicial do iframe (dashboard interno ou início externo). Alinhado ao PHP $defaultHomePage. */
+        const DEFAULT_HOME_PAGE = <?php echo json_encode($defaultHomePage, JSON_UNESCAPED_UNICODE); ?>;
 
         /**
          * Seções exibidas no menu por perfil (alinhado a public/frame.php — sectionMap e regras de estagiário).
@@ -804,6 +810,10 @@ if ($avatarBadgePerfisLine !== '') {
         function normalizeMenuTarget(page) {
             const p = String(page || '').trim().toLowerCase();
             if (!p) return '';
+
+            if (p === 'dashboard' || p === 'dashboardexterno') {
+                return String(DEFAULT_HOME_PAGE || 'dashboard').toLowerCase();
+            }
 
             if (p === 'usuarios' || p === 'usuariosedit' || p === 'usuarioscreate') return 'usuarioslist';
             if (p.startsWith('feriados')) return 'feriadoslist';

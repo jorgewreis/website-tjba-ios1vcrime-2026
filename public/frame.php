@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/security.php';
 require_once __DIR__ . '/../app/helpers/bootstrap.php';
+require_once __DIR__ . '/../app/helpers/UserAccessHelper.php';
 require_once __DIR__ . '/../app/models/Usuario.php';
 require_once __DIR__ . '/../app/helpers/Conection.php';
 
@@ -24,6 +25,7 @@ $ERRORS = $PAGES . '/errors';
 // Lista de páginas permitidas e seus caminhos.
 $allowed_pages = [
     'dashboard'             => $PAGES . '/dashboard.php',
+    'dashboardexterno'      => $PAGES . '/dashboard-externo.php',
     'consultacep'          => $PAGES . '/consulta-cep.php',
     'cejusc'                => $PAGES . '/cartorio-cejusc-list.php',
     'cejuscedit'            => $PAGES . '/cartorio-cejusc-edit.php',
@@ -88,6 +90,7 @@ $allowed_pages = [
 // Mapeia páginas para suas seções, usadas no controle de acesso.
 $page_to_section = [
     'dashboard'         => 'All',
+    'dashboardexterno'  => 'Externo',
     'consultacep'       => 'Consultas',
     'cartasexpedidas'   => 'Cartório',
     'cartasexpedidasedit'   => 'Cartório',
@@ -117,7 +120,10 @@ $page_to_section = [
     'oficiosgabinete'   => 'Gabinete',
     'produtividade'     => 'Cartório',
     'reuspresos'        => 'Gabinete',
-    'alterardados'      => 'All',
+    'alterardados'      => 'Perfil',
+    'notificacoes'      => 'All',
+    'configuracoes'     => 'All',
+    'documentos'        => 'All',
     'consultaparte'     => 'Consultas',
     'consultapartes'    => 'Consultas',
     'consultapartescreate'  => 'Cartório',
@@ -151,10 +157,10 @@ $page_to_section = [
  */
 function hasAccessToSection(array $userPerfils, ?string $requiredSection): bool
 {
-    // Estudante não tem acesso à área interna, exceto à seção "Perfil" (alterar dados pessoais / alterar senha).
-    $perfilSectionsAllowedForEstudante = ['Perfil'];
-    if (in_array('ESTUDANTE', $userPerfils, true)) {
-        if ($requiredSection === null || !in_array($requiredSection, $perfilSectionsAllowedForEstudante, true)) {
+    // Usuários externos (estudante / consultor sem perfil de servidor): apenas Consultas, Perfil e dashboard externo.
+    if (UserAccessHelper::isUsuarioExterno($userPerfils)) {
+        $externoAllowed = ['Perfil', 'Consultas', 'Externo'];
+        if ($requiredSection === null || !in_array($requiredSection, $externoAllowed, true)) {
             return false;
         }
     }
@@ -168,7 +174,9 @@ function hasAccessToSection(array $userPerfils, ?string $requiredSection): bool
 
     // Mapeamento de seções para perfis permitidos.
     $sectionMap = [
-        'All' => ['CONSULTOR', 'ESTUDANTE', 'ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA'],
+        'All' => ['CONSULTOR', 'ESTUDANTE', 'ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA', 'CARTORIO', 'GABINETE', 'AUDIENCIA'],
+        'Perfil' => ['CONSULTOR', 'ESTUDANTE', 'ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA', 'CARTORIO', 'GABINETE', 'AUDIENCIA'],
+        'Externo' => ['ESTUDANTE', 'CONSULTOR'],
         'Cartório' => ['CARTORIO', 'ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA'],
         'Gabinete' => ['GABINETE', 'SERVIDOR', 'ADMIN', 'CHEFIA'],
         'Sala de Audiências' => ['AUDIENCIA', 'ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA'],
@@ -180,7 +188,11 @@ function hasAccessToSection(array $userPerfils, ?string $requiredSection): bool
 
     // Se algum perfil do usuário está na lista permitida, libera acesso.
     foreach ($userPerfils as $userPerfil) {
-        if (in_array($userPerfil, $requiredPerfils, true)) {
+        $p = strtoupper(trim((string) $userPerfil));
+        if ($p === 'DIRETORA' || $p === 'MAGISTRADA') {
+            $p = 'CHEFIA';
+        }
+        if (in_array($p, $requiredPerfils, true)) {
             return true;
         }
     }
@@ -333,6 +345,16 @@ do {
     // Garante que $userPerfils é um array, mesmo que listarPerfisUsuario retorne null/false.
     if (!is_array($userPerfils)) {
         $userPerfils = [];
+    }
+
+    $isExterno = UserAccessHelper::isUsuarioExterno($userPerfils);
+    if ($isExterno && $page === 'dashboard') {
+        header('Location: /frame.php?page=dashboardexterno', true, 302);
+        exit;
+    }
+    if (!$isExterno && $page === 'dashboardexterno') {
+        header('Location: /frame.php?page=dashboard', true, 302);
+        exit;
     }
 
     if (in_array('ESTAGIARIO', $userPerfils, true) && !in_array('ESTUDANTE', $userPerfils, true)) {
