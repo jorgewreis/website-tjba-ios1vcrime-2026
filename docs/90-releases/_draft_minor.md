@@ -178,4 +178,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Feat: implementação de lista de feriados** `[8a321cc]`
 - **Fix: pequenos ajustes na pagina de feriados** `[d5ecaa1]`
 - **Fix: correção na paginação de feriados** `[862c45e]`
+- **Fix: alteração do tipo de guia** `[613d321]`
 
