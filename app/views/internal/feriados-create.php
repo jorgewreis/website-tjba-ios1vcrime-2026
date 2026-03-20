@@ -57,7 +57,7 @@ $labelsRegra = [
             </div>
             <div class="col">
                 <label for="regra_data">Regra de data <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <select class="width-260 height-md" id="regra_data" required>
+                <select class="width-400 height-md" id="regra_data" required>
                     <option value="">Selecione</option>
                     <?php foreach (FeriadosService::REGRAS_DATA as $r): ?>
                         <option value="<?php echo htmlspecialchars($r); ?>"><?php echo htmlspecialchars($labelsRegra[$r] ?? $r); ?></option>
@@ -69,13 +69,13 @@ $labelsRegra = [
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md flex-wrap">
             <div class="col">
                 <label for="data_inicio">Data início <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="date" class="width-240 height-md" id="data_inicio" required>
+                <input type="date" class="width-300 height-md" id="data_inicio" required>
             </div>
             <div class="col">
                 <label for="data_fim">Data fim <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="date" class="width-240 height-md" id="data_fim" required>
+                <input type="date" class="width-300 height-md" id="data_fim" required>
             </div>
-            <div class="col display-flex align-center padding-top-lg">
+            <div class="col display-none align-center padding-top-lg">
                 <label class="inline display-flex align-center gap-y-sm">
                     <input type="checkbox" id="ativo" checked>
                     <span>Ativo</span>
@@ -86,17 +86,42 @@ $labelsRegra = [
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col col-full">
                 <label for="descricao">Descrição</label>
-                <input type="text" class="width-600 height-md" id="descricao" maxlength="255" placeholder="Opcional, até 255 caracteres">
+                <input type="text" class="width-700 height-md" id="descricao" maxlength="255" placeholder="Opcional, até 255 caracteres">
             </div>
         </div>
 
         <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
-            <a href="/frame.php?page=feriadoslist" class="btn btn-secondary height-md">Voltar</a>
+            <button type="button" class="btn btn-secondary height-md" id="voltar-btn">Voltar</button>
             <button type="button" class="btn btn-primary height-md" id="cadastrar-btn">Cadastrar</button>
         </div>
     </div>
 
     <script>
+    (function() {
+        var iniEl = document.getElementById('data_inicio');
+        var fimEl = document.getElementById('data_fim');
+        if (iniEl && fimEl) {
+            iniEl.addEventListener('change', function() {
+                var v = (iniEl.value || '').trim();
+                if (v !== '') {
+                    fimEl.value = v;
+                }
+            });
+            fimEl.addEventListener('change', function() {
+                var vi = (iniEl.value || '').trim();
+                var vf = (fimEl.value || '').trim();
+                if (vi !== '' && vf !== '' && vf < vi) {
+                    if (typeof showToast === 'function') {
+                        showToast({ type: 'error', message: 'A data fim não pode ser anterior à data início.' });
+                    }
+                    fimEl.value = vi;
+                }
+            });
+        }
+        document.getElementById('voltar-btn').addEventListener('click', function() {
+            window.location.href = '/frame.php?page=feriadoslist';
+        });
+    })();
     document.getElementById('cadastrar-btn').addEventListener('click', function() {
         var tipo = (document.getElementById('tipo_feriado').value || '').trim();
         var regra = (document.getElementById('regra_data').value || '').trim();
@@ -107,7 +132,7 @@ $labelsRegra = [
             return;
         }
         if (fim < ini) {
-            if (typeof showToast === 'function') showToast({ type: 'error', message: 'A data fim deve ser igual ou posterior à data início.' });
+            if (typeof showToast === 'function') showToast({ type: 'error', message: 'A data fim não pode ser anterior à data início.' });
             return;
         }
         var desc = (document.getElementById('descricao').value || '').trim();

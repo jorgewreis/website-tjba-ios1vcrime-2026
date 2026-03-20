@@ -79,7 +79,7 @@ $ativoCur = !empty($row['ativo']);
             </div>
             <div class="col">
                 <label for="regra_data">Regra de data <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <select class="width-260 height-md" id="regra_data" required>
+                <select class="width-300 height-md" id="regra_data" required>
                     <?php foreach (FeriadosService::REGRAS_DATA as $r): ?>
                         <option value="<?php echo htmlspecialchars($r); ?>"<?php echo $regraCur === $r ? ' selected' : ''; ?>><?php echo htmlspecialchars($labelsRegra[$r] ?? $r); ?></option>
                     <?php endforeach; ?>
@@ -90,11 +90,11 @@ $ativoCur = !empty($row['ativo']);
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md flex-wrap">
             <div class="col">
                 <label for="data_inicio">Data início <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="date" class="width-240 height-md" id="data_inicio" required value="<?php echo htmlspecialchars($iniCur); ?>">
+                <input type="date" class="width-300 height-md" id="data_inicio" required value="<?php echo htmlspecialchars($iniCur); ?>">
             </div>
             <div class="col">
                 <label for="data_fim">Data fim <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="date" class="width-240 height-md" id="data_fim" required value="<?php echo htmlspecialchars($fimCur); ?>">
+                <input type="date" class="width-300 height-md" id="data_fim" required value="<?php echo htmlspecialchars($fimCur); ?>">
             </div>
             <div class="col display-flex align-center padding-top-lg">
                 <label class="inline display-flex align-center gap-y-sm">
@@ -114,7 +114,7 @@ $ativoCur = !empty($row['ativo']);
         <div class="display-flex row row-full justify-between gap-y-md padding-x-md padding-y-md border-top flex-wrap">
             <button type="button" class="btn btn-secondary-outline height-md" id="excluir-btn">Excluir</button>
             <div class="display-flex row row-fit justify-end gap-y-md">
-                <a href="/frame.php?page=feriadoslist" class="btn btn-secondary height-md">Voltar</a>
+                <button type="button" class="btn btn-secondary height-md" id="voltar-btn">Voltar</button>
                 <button type="button" class="btn btn-primary height-md" id="salvar-btn">Salvar</button>
             </div>
         </div>
@@ -124,6 +124,27 @@ $ativoCur = !empty($row['ativo']);
     (function() {
         var idEl = document.getElementById('feriado-id');
         var fid = idEl ? idEl.value : '';
+
+        var iniEl = document.getElementById('data_inicio');
+        var fimEl = document.getElementById('data_fim');
+        if (iniEl && fimEl) {
+            function ajustarDatasCoerentes() {
+                var vi = (iniEl.value || '').trim();
+                var vf = (fimEl.value || '').trim();
+                if (vi !== '' && vf !== '' && vf < vi) {
+                    if (typeof showToast === 'function') {
+                        showToast({ type: 'error', message: 'A data fim não pode ser anterior à data início.' });
+                    }
+                    fimEl.value = vi;
+                }
+            }
+            iniEl.addEventListener('change', ajustarDatasCoerentes);
+            fimEl.addEventListener('change', ajustarDatasCoerentes);
+        }
+
+        document.getElementById('voltar-btn').addEventListener('click', function() {
+            window.location.href = '/frame.php?page=feriadoslist';
+        });
 
         document.getElementById('salvar-btn').addEventListener('click', function() {
             var tipo = (document.getElementById('tipo_feriado').value || '').trim();
@@ -135,7 +156,7 @@ $ativoCur = !empty($row['ativo']);
                 return;
             }
             if (fim < ini) {
-                if (typeof showToast === 'function') showToast({ type: 'error', message: 'A data fim deve ser igual ou posterior à data início.' });
+                if (typeof showToast === 'function') showToast({ type: 'error', message: 'A data fim não pode ser anterior à data início.' });
                 return;
             }
             var desc = (document.getElementById('descricao').value || '').trim();

@@ -164,7 +164,7 @@ if ($totalPages > 0) {
                     </div>
                     <div class="col">
                         <label for="filter-ativo">Situação</label>
-                        <select class="width-240 height-md" name="ativo" id="filter-ativo">
+                        <select class="width-200 height-md" name="ativo" id="filter-ativo">
                             <option value=""<?php echo $ativoFilter === '' ? ' selected' : ''; ?>>Todos</option>
                             <option value="1"<?php echo $ativoFilter === '1' ? ' selected' : ''; ?>>Ativo</option>
                             <option value="0"<?php echo $ativoFilter === '0' ? ' selected' : ''; ?>>Inativo</option>
@@ -218,7 +218,7 @@ if ($totalPages > 0) {
                             <span class="minor-info">Tipo</span>
                             <span class="major-info"><?php echo htmlspecialchars($labelsTipo[$tipo] ?? $tipo); ?></span>
                         </div>
-                        <div class="col width-160">
+                        <div class="col width-200">
                             <span class="minor-info">Regra</span>
                             <span class="major-info"><?php echo htmlspecialchars($labelsRegra[$regra] ?? $regra); ?></span>
                         </div>
@@ -226,7 +226,7 @@ if ($totalPages > 0) {
                             <span class="minor-info">Descrição</span>
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['descricao'] ?? '—')); ?></span>
                         </div>
-                        <div class="col width-120">
+                        <div class="col width-100">
                             <span class="minor-info">Situação</span>
                             <span class="major-info"><?php echo $ativoRow ? 'Ativo' : 'Inativo'; ?></span>
                         </div>
@@ -256,19 +256,19 @@ if ($totalPages > 0) {
                 };
                 ?>
                 <?php if ($currentPage > 1): ?>
-                    <a class="btn btn-secondary height-md" href="<?php echo htmlspecialchars($buildPageUrl($currentPage - 1)); ?>">Anterior</a>
+                    <button type="button" class="btn btn-secondary height-md feriados-pag-nav" data-url="<?php echo htmlspecialchars($buildPageUrl($currentPage - 1), ENT_QUOTES, 'UTF-8'); ?>">Anterior</button>
                 <?php endif; ?>
 
                 <?php foreach ($paginationButtons as $btnPage): ?>
                     <?php if ((int) $btnPage === $currentPage): ?>
-                        <span class="btn btn-primary height-md disabled"><?php echo (int) $btnPage; ?></span>
+                        <button type="button" class="btn btn-primary height-md" disabled aria-current="page"><?php echo (int) $btnPage; ?></button>
                     <?php else: ?>
-                        <a class="btn btn-secondary height-md" href="<?php echo htmlspecialchars($buildPageUrl((int) $btnPage)); ?>"><?php echo (int) $btnPage; ?></a>
+                        <button type="button" class="btn btn-secondary height-md feriados-pag-nav" data-url="<?php echo htmlspecialchars($buildPageUrl((int) $btnPage), ENT_QUOTES, 'UTF-8'); ?>"><?php echo (int) $btnPage; ?></button>
                     <?php endif; ?>
                 <?php endforeach; ?>
 
                 <?php if ($currentPage < $totalPages): ?>
-                    <a class="btn btn-secondary height-md" href="<?php echo htmlspecialchars($buildPageUrl($currentPage + 1)); ?>">Próxima</a>
+                    <button type="button" class="btn btn-secondary height-md feriados-pag-nav" data-url="<?php echo htmlspecialchars($buildPageUrl($currentPage + 1), ENT_QUOTES, 'UTF-8'); ?>">Próxima</button>
                 <?php endif; ?>
             </div>
         </div>
@@ -277,6 +277,12 @@ if ($totalPages > 0) {
 
     <script>
     (function() {
+        document.querySelectorAll('.feriados-pag-nav').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var u = this.getAttribute('data-url');
+                if (u) window.location.href = u;
+            });
+        });
         document.getElementById('novo-cadastro-btn')?.addEventListener('click', function() {
             window.location.href = '/frame.php?page=feriadoscreate';
         });
