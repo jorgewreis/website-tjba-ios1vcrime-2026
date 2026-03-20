@@ -357,7 +357,7 @@ $stateOptions = [
             };
             window.__currentCartaId = <?php echo json_encode($idCarta, JSON_UNESCAPED_UNICODE); ?>;
         </script>
-        <script src="/assets/js/modules/cartorio/cartas-recebidas/text-formatter.js"></script>
+        <script src="/assets/js/shared/text-formatter.js"></script>
         <script>
             (() => {
                 const endpoint = '/api/cartorio-cartas-recebidas/update.php';

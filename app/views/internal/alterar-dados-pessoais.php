@@ -175,7 +175,6 @@ if ($dados !== null) {
                     <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                         <div class="col">
                             <label for="edit-cargo">Cargo</label>
-                            <p class="minor-info" style="margin: 0 0 6px 0;">Alteração apenas por administrador ou chefia (cadastro de usuários).</p>
                             <select id="edit-cargo" class="width-400 height-md readonly" data-readonly="true" title="Somente leitura" aria-readonly="true" disabled tabindex="-1">
                                 <option value="">Selecione (opcional)</option>
                                 <?php foreach ($cargoOpcoes as $opt): ?>
@@ -185,7 +184,6 @@ if ($dados !== null) {
                         </div>
                         <div class="col">
                             <label for="edit-setor">Setor</label>
-                            <p class="minor-info" style="margin: 0 0 6px 0;">Alteração apenas por administrador ou chefia (cadastro de usuários).</p>
                             <select id="edit-setor" class="width-400 height-md readonly" data-readonly="true" title="Somente leitura" aria-readonly="true" disabled tabindex="-1">
                                 <option value="">Selecione (opcional)</option>
                                 <?php foreach ($setorOpcoes as $opt): ?>

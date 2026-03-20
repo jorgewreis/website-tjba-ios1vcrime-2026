@@ -114,7 +114,7 @@ try {
     <!-- Padrão: número do processo = cnj.js (correção/formatação CNJ no blur); DataJud = classe processual; nome de pessoa = text-formatter.js. -->
     <script src="/assets/js/modules/cartorio/cartas-expedidas/cnj.js"></script>
     <script src="/assets/js/modules/cartorio/cartas-expedidas/datajud-api.js"></script>
-    <script src="/assets/js/modules/cartorio/cartas-expedidas/text-formatter.js"></script>
+    <script src="/assets/js/shared/text-formatter.js"></script>
     <script>
         (function () {
             var processoInput = document.getElementById('filter-processo');

@@ -267,7 +267,7 @@ try {
             }
         })();
     </script>
-    <script src="/assets/js/modules/cartorio/cartas-expedidas/text-formatter.js"></script>
+    <script src="/assets/js/shared/text-formatter.js"></script>
     <script>
         (function () {
             var PERFIS_ALTERAR_REGRA = ['ADMIN', 'DIRETORA', 'MAGISTRADA'];

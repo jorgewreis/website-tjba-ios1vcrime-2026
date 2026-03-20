@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0033
+
+**Data:** 2026-03-20 15:53:50 | **Commit:** `88bd330` | **Tipo:** `patch`
+
+- Feat: nova implementacao de paginas de erro melhoradas
+
 ## V. 1.04.0032
 
 **Data:** 2026-03-20 15:24:14 | **Commit:** `85b57b5` | **Tipo:** `patch`
@@ -3486,6 +3492,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
