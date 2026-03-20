@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/IdGenerator.php';
+require_once __DIR__ . '/../helpers/UserInitialsHelper.php';
 
 final class CartasRecebidasAlocadosRepository
 {
@@ -19,18 +20,7 @@ final class CartasRecebidasAlocadosRepository
 
     public static function iniciais(string $nome, string $sobrenome): string
     {
-        $nome = trim($nome);
-        $sobrenome = trim($sobrenome);
-        if ($sobrenome !== '') {
-            $a = mb_substr($nome, 0, 1);
-            $b = mb_substr($sobrenome, 0, 1);
-            return mb_strtoupper($a . $b);
-        }
-        if ($nome === '') {
-            return '—';
-        }
-        $two = mb_substr($nome, 0, 2);
-        return mb_strtoupper(mb_strlen($two) === 2 ? $two : $nome);
+        return UserInitialsHelper::fromNomeSobrenome($nome, $sobrenome);
     }
 
     public const TIPO_RULE = 'rule';

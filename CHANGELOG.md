@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0041
+
+**Data:** 2026-03-20 17:28:11 | **Commit:** `18edf6e` | **Tipo:** `patch`
+
+- Fix: correcao de regra de iniciais de usuario
+
 ## V. 1.04.0040
 
 **Data:** 2026-03-20 17:24:19 | **Commit:** `a5a0d41` | **Tipo:** `patch`
@@ -3534,6 +3540,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/UserInitialsHelper.php';
+
 /**
  * Catálogo de avatares: imagens em public/assets/img/avatars/3d/ (sem upload).
  * Modo especial "initials": sem imagem — exibe iniciais com paleta de sessão (login).
@@ -51,25 +53,12 @@ final class AvatarCatalog
     }
 
     /**
-     * Iniciais a partir de nome e sobrenome (2 caracteres, UTF-8).
+     * Iniciais a partir de nome e sobrenome (mesma regra que alocações: ignora partículas).
      */
     public static function initialsFromNames(string $nome, string $sobrenome): string
     {
-        $nome = trim($nome);
-        $sobrenome = trim($sobrenome);
-        $enc = 'UTF-8';
-        $c1 = $nome !== '' ? mb_substr($nome, 0, 1, $enc) : '';
-        $c2 = $sobrenome !== '' ? mb_substr($sobrenome, 0, 1, $enc) : '';
-        if ($c1 === '' && $c2 === '') {
-            return '?';
-        }
-        if ($c2 === '') {
-            return mb_strtoupper($c1, $enc);
-        }
-        if ($c1 === '') {
-            return mb_strtoupper($c2, $enc);
-        }
-        return mb_strtoupper($c1 . $c2, $enc);
+        $s = UserInitialsHelper::fromNomeSobrenome($nome, $sobrenome);
+        return $s === '—' ? '?' : $s;
     }
 
     /**

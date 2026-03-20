@@ -31,8 +31,14 @@
 
 Em `usuarios-create.php`, o insert usa `AvatarCatalog::getDefaultSlug()` (**`initials`**). Outros `INSERT` podem omitir a coluna se o DEFAULT da base for compatível; o PHP normaliza leituras antigas.
 
+## Iniciais (nome + sobrenome)
+
+- A lógica única está em **`app/helpers/UserInitialsHelper.php`**: junta nome e sobrenome, ignora **partículas** comuns em português (`de`, `da`, `do`, `das`, `dos`, `e`, `em`, `na`, `no`, `nas`, `nos`, `ao`, `aos`, `à`, `às`) e usa a **primeira letra da primeira palavra significativa** e da **última** (ex.: *Ana da Silva* → **AS**).
+- O avatar (`AvatarCatalog::initialsFromNames`) e os repositórios de **alocação** (`*AlocadosRepository::iniciais`) delegam nesse helper.
+
 ## Ficheiros relacionados
 
+- `app/helpers/UserInitialsHelper.php` — regra de iniciais (avatar e alocações).
 - `app/helpers/AvatarCatalog.php` — listagem 3d + slug `initials`.
 - `app/helpers/AvatarInitialsPalette.php` — cores aleatórias com contraste.
 - `app/models/Usuario.php` — `getAvatarNavbarDisplay()`, `atualizarAvatarSlug()`.

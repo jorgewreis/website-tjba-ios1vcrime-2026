@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/IdGenerator.php';
+require_once __DIR__ . '/../helpers/UserInitialsHelper.php';
 
 final class MedidasProtetivasAlocadosRepository
 {
@@ -22,16 +23,7 @@ final class MedidasProtetivasAlocadosRepository
 
     public static function iniciais(string $nome, string $sobrenome): string
     {
-        $nome = trim($nome);
-        $sobrenome = trim($sobrenome);
-        if ($sobrenome !== '') {
-            return mb_strtoupper(mb_substr($nome, 0, 1) . mb_substr($sobrenome, 0, 1));
-        }
-        if ($nome === '') {
-            return '—';
-        }
-        $two = mb_substr($nome, 0, 2);
-        return mb_strtoupper(mb_strlen($two) === 2 ? $two : $nome);
+        return UserInitialsHelper::fromNomeSobrenome($nome, $sobrenome);
     }
 
     public function addAlocado(string $medidaId, string $usuarioId, string $tipo = self::TIPO_SPECIFIC): string
