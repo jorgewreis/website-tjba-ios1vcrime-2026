@@ -39,9 +39,9 @@ try {
     assertCnjFormattedValue($parsed, 'processo', 'Número do processo');
 
     $service = new MedidasProtetivasService($connection);
-    $newId = $service->create($parsed);
+    $result = $service->create($parsed);
     http_response_code(201);
-    echo json_encode(['id' => $newId], JSON_UNESCAPED_UNICODE);
+    echo json_encode($result, JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $exception) {
     http_response_code(400);
     echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);

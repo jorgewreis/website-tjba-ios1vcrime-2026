@@ -199,6 +199,37 @@ final class CejuscService
         return $idTarefa;
     }
 
+    /**
+     * Cria tarefa Cejusc vinculada à Medida Protetiva quando não houver duplicidade
+     * (mesmo número de processo e mesmo réu/parte).
+     *
+     * @return array{id: string, created: bool}
+     */
+    public function createFromMedidaIfNotExists(array $payload): array
+    {
+        $numeroProcesso = trim((string) ($payload['numero_processo_origem'] ?? $payload['processo'] ?? ''));
+        $parteId = trim((string) ($payload['parte_id'] ?? $payload['reu_id'] ?? ''));
+        $digits = preg_replace('/\D+/', '', $numeroProcesso);
+        $numeroFormatado = strlen($digits) === 20 ? $this->formatarCNJ($digits) : $numeroProcesso;
+
+        if ($numeroFormatado !== '' && $parteId !== '') {
+            $existente = $this->repository->findByProcessoEParte($numeroFormatado, $parteId);
+            if ($existente !== null) {
+                return [
+                    'id' => (string) ($existente['id'] ?? ''),
+                    'created' => false,
+                ];
+            }
+        }
+
+        $novoId = $this->create($payload);
+
+        return [
+            'id' => $novoId,
+            'created' => true,
+        ];
+    }
+
     public function concluirSubtarefa(string $subtarefaId, ?string $dadosJson = null): array
     {
         $subtarefa = $this->subtarefasRepository->findById($subtarefaId);

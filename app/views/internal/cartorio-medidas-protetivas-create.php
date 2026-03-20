@@ -844,14 +844,29 @@ try {
                                 throw new Error(body.error || 'Erro ao criar subtarefas');
                             });
                         }
-                        return data.id;
+                        return data;
                     });
                 })
-                .then(function (id) {
+                .then(function (data) {
                     if (typeof showToast === 'function') {
                         showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Medida protetiva cadastrada.' });
+                        if (data && data.cejusc_criada === true) {
+                            showToast({
+                                type: 'info',
+                                variant: 'full',
+                                title: 'Informação',
+                                message: 'Tarefa do Cejusc criada automaticamente e vinculada à medida protetiva.'
+                            });
+                        } else if (data && data.cejusc_criada === false) {
+                            showToast({
+                                type: 'warning',
+                                variant: 'full',
+                                title: 'Atenção',
+                                message: 'Tarefa do Cejusc não foi criada, pois já existe uma tarefa para o mesmo processo e réu.'
+                            });
+                        }
                     }
-                    window.location.href = '/frame.php?page=medidasprotetivasedit&id=' + encodeURIComponent(id);
+                    window.location.href = '/frame.php?page=medidasprotetivas';
                 })
                 .catch(function (error) {
                     btn.disabled = false;

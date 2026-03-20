@@ -197,6 +197,30 @@ final class CejuscRepository
         return $this->table;
     }
 
+    /**
+     * Busca tarefa Cejusc já existente para o mesmo processo e mesmo réu (parte).
+     */
+    public function findByProcessoEParte(string $numeroProcessoOrigem, string $parteId): ?array
+    {
+        $numeroProcessoOrigem = trim($numeroProcessoOrigem);
+        $parteId = trim($parteId);
+        if ($numeroProcessoOrigem === '' || $parteId === '') {
+            return null;
+        }
+
+        $sql = sprintf(
+            'SELECT ct.* FROM `%s` ct WHERE ct.`numero_processo_origem` = :processo AND ct.`parte_id` = :parte LIMIT 1',
+            $this->table
+        );
+        $statement = $this->connection->prepare($sql);
+        $statement->bindValue(':processo', $numeroProcessoOrigem);
+        $statement->bindValue(':parte', $parteId);
+        $statement->execute();
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+
+        return $result === false ? null : $result;
+    }
+
     private function buildFromClause(): string
     {
         return sprintf(

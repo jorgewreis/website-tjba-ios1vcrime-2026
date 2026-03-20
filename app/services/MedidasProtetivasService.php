@@ -109,7 +109,10 @@ final class MedidasProtetivasService
         return $medida;
     }
 
-    public function create(array $payload): string
+    /**
+     * @return array{id: string, cejusc_tarefa_id: string, cejusc_criada: bool}
+     */
+    public function create(array $payload): array
     {
         $numeroProcesso = trim((string) ($payload['processo'] ?? $payload['numero_processo'] ?? ''));
         if ($numeroProcesso === '') {
@@ -229,17 +232,22 @@ final class MedidasProtetivasService
                 }
             }
 
-            $cejuscId = $this->cejuscService->create([
+            $cejuscResult = $this->cejuscService->createFromMedidaIfNotExists([
                 'numero_processo_origem' => $numeroFormatado,
                 'parte_id' => $parteReuId,
                 'classe_codigo' => $classeCodigo,
                 'classe_descricao' => $classeDescricao,
                 'usuario_cadastro_id' => $usuarioCadastroId,
             ]);
+            $cejuscId = trim((string) ($cejuscResult['id'] ?? ''));
             $this->repository->update($medidaId, ['cejusc_tarefa_id' => $cejuscId]);
 
             $this->connection->commit();
-            return $medidaId;
+            return [
+                'id' => $medidaId,
+                'cejusc_tarefa_id' => $cejuscId,
+                'cejusc_criada' => (bool) ($cejuscResult['created'] ?? false),
+            ];
         } catch (Throwable $exception) {
             if ($this->connection->inTransaction()) {
                 $this->connection->rollBack();
