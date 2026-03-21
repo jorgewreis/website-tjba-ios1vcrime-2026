@@ -194,4 +194,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correcao de modelo** `[86d225a]`
 - **Fix: correcao de input e select** `[2315e6d]`
 - **Fix: correcao datajud** `[0c681d0]`
+- **Fix: tentativa de correcao** `[215ee57]`
 
