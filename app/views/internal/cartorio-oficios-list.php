@@ -119,7 +119,7 @@ $anoAtual = (int) date('Y');
 /**
  * @param array<string,mixed> $row
  */
-function oficios_cartorio_label_cumprimento(array $row): string
+function cartorio_oficios_label_cumprimento(array $row): string
 {
     $forma = (string) ($row['FormaCumprimento'] ?? '');
     if ($forma === 'ccm') {
@@ -340,7 +340,7 @@ function oficios_cartorio_label_cumprimento(array $row): string
                         </div>
                         <div class="col width-280">
                             <span class="minor-info">Cumprimento</span>
-                            <span class="major-info text-ellipsis"><?php echo htmlspecialchars(oficios_cartorio_label_cumprimento($row)); ?></span>
+                            <span class="major-info text-ellipsis"><?php echo htmlspecialchars(cartorio_oficios_label_cumprimento($row)); ?></span>
                         </div>
                     </div>
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">

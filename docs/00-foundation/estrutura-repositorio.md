@@ -261,8 +261,10 @@ Arquivos de exemplo (espelhando seus módulos):
 - `app/views/internal/cartorio-medidas-protetivas-create.php`
 - `app/views/internal/cartorio-medidas-protetivas-edit.php`
 - `app/views/internal/cartorio-medidas-protetivas-rules.php`
-- `app/views/internal/oficios_cartorio.php`
-- `app/views/internal/oficios_gabinete.php`
+- `app/views/internal/cartorio-oficios-list.php`
+- `app/views/internal/cartorio-oficios-edit.php`
+- `app/views/internal/gabinete-oficios-list.php`
+- `app/views/internal/gabinete-oficios-edit.php`
 - `app/views/internal/produtividade.php`
 
 Parciais recomendadas:
