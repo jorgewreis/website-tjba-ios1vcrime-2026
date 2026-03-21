@@ -187,4 +187,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correções realizadas** `[764f0b7]`
 - **Fix: alteracao do estilo barra superior** `[5baff64]`
 - **Fix: update de avatares** `[2446092]`
+- **Feat: implementacao de paginas de oficios** `[0919f27]`
 
