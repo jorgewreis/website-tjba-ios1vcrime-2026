@@ -65,13 +65,7 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
                     <input type="text" class="width-800 height-md" id="gab-mon-reu-nome" name="reu_nome_livre" placeholder="Digite o nome completo" maxlength="255" autocomplete="off" aria-label="Nome do réu quando não há réus na lista ou opção Outro">
                 </div>
             </div>
-            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md" id="gab-mon-reu-row-complemento" style="display: none;">
-                <div class="col filter">
-                    <label for="gab-mon-reu-complement">Complemento (opcional)</label>
-                    <input type="text" class="width-800 height-md" id="gab-mon-reu-complement" name="reu_complemento" placeholder="Ex.: alcunha ou qualificação adicional" autocomplete="off">
-                </div>
-            </div>
-            <p class="minor-info" id="gab-mon-reu-hint" style="margin:0;">Com processo válido, o sistema carrega os réus vinculados; se não houver cadastro, informe o nome completo. Complemento só se aplica ao escolher um réu da lista.</p>
+            <p class="minor-info" id="gab-mon-reu-hint" style="margin:0;">Com processo válido, o sistema carrega os réus vinculados; se não houver cadastro, informe o nome completo.</p>
 
             <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
                 <button type="button" class="btn btn-secondary" id="btn-gab-mon-voltar">Voltar</button>
@@ -107,7 +101,6 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
 
             var reuSelect = document.getElementById('gab-mon-reu-select');
             var reuNome = document.getElementById('gab-mon-reu-nome');
-            var reuComplementoRow = document.getElementById('gab-mon-reu-row-complemento');
             var processoInputEl = document.getElementById('gab-mon-processo');
 
             function showReuInput() {
@@ -120,9 +113,6 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
                     reuNome.style.display = '';
                     reuNome.required = true;
                 }
-                if (reuComplementoRow) reuComplementoRow.style.display = 'none';
-                var comp = document.getElementById('gab-mon-reu-complement');
-                if (comp) comp.value = '';
             }
 
             function showReuSelect(reus) {
@@ -142,12 +132,6 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
                 reuNome.style.display = 'none';
                 reuNome.required = false;
                 reuNome.value = '';
-                if (reuComplementoRow) reuComplementoRow.style.display = 'none';
-                var comp = document.getElementById('gab-mon-reu-complement');
-                if (comp) comp.value = '';
-                if (reuComplementoRow && reuSelect.value && reuSelect.value !== 'outro') {
-                    reuComplementoRow.style.display = '';
-                }
             }
 
             function carregarReus(numeroFormatado) {
@@ -196,8 +180,6 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
 
             if (reuSelect) {
                 reuSelect.addEventListener('change', function () {
-                    var compRow = document.getElementById('gab-mon-reu-row-complemento');
-                    var comp = document.getElementById('gab-mon-reu-complement');
                     if (this.value === 'outro') {
                         reuSelect.style.display = 'none';
                         reuSelect.innerHTML = '';
@@ -208,14 +190,11 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
                             reuNome.value = '';
                             reuNome.focus();
                         }
-                        if (compRow) compRow.style.display = 'none';
-                        if (comp) comp.value = '';
                     } else if (this.value !== '') {
                         if (reuNome) {
                             reuNome.style.display = 'none';
                             reuNome.required = false;
                         }
-                        if (compRow) compRow.style.display = '';
                     }
                 });
             }
@@ -272,10 +251,8 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
                 var cd = document.getElementById('hidden-classe-descricao')?.value || '';
                 var selEl = document.getElementById('gab-mon-reu-select');
                 var nomeEl = document.getElementById('gab-mon-reu-nome');
-                var compEl = document.getElementById('gab-mon-reu-complement');
                 var reuSel = selEl && selEl.style.display !== 'none' ? (selEl.value || '') : '';
                 var nomeLivre = nomeEl?.value?.trim() || '';
-                var comp = compEl?.value?.trim() || '';
                 if (!proc) {
                     notify('error', 'Validação', 'Informe o número do processo.');
                     return;
@@ -294,7 +271,6 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
                     body.reu_complemento = nomeLivre;
                 } else if (reuSel !== '') {
                     body.processo_parte_id = reuSel;
-                    body.reu_complemento = comp;
                 } else {
                     if (!nomeLivre) {
                         notify('error', 'Validação', 'Informe o nome completo do réu.');

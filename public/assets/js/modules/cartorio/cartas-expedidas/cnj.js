@@ -113,19 +113,40 @@ function bindProcessoInput(input) {
 
     input.addEventListener('input', function () {
         this.value = formatarCNJParcial(this.value);
+        const result = normalizeAndValidateCNJValue(this.value, { toastOnInvalid: false });
+        if (!result.ok || result.empty) {
+            if (onlyDigits(this.value).length < 20) {
+                delete this.dataset.lastCnjDispatchedDigits;
+            }
+            return;
+        }
+        const prev = this.dataset.lastCnjDispatchedDigits || '';
+        if (prev === result.digits) {
+            return;
+        }
+        this.dataset.lastCnjDispatchedDigits = result.digits;
+        this.value = result.formatted;
+        dispatchCnjValidated(result.formatted);
     });
 
     input.addEventListener('blur', function () {
         const result = normalizeAndValidateCNJValue(this.value, { toastOnInvalid: true });
         if (result.empty) {
             this.value = '';
+            delete this.dataset.lastCnjDispatchedDigits;
             return;
         }
         if (!result.ok) {
             this.value = '';
+            delete this.dataset.lastCnjDispatchedDigits;
             return;
         }
         this.value = result.formatted;
+        const prev = this.dataset.lastCnjDispatchedDigits || '';
+        if (prev === result.digits) {
+            return;
+        }
+        this.dataset.lastCnjDispatchedDigits = result.digits;
         dispatchCnjValidated(result.formatted);
     });
 }
