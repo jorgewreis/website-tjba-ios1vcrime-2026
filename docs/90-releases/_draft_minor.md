@@ -196,4 +196,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correcao datajud** `[0c681d0]`
 - **Fix: tentativa de correcao** `[215ee57]`
 - **Fix: pequenos ajustes** `[4d61e6a]`
+- **Feat: novo modelo de perfis e acesso** `[d8950e4]`
 
