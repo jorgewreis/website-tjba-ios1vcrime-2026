@@ -189,4 +189,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: update de avatares** `[2446092]`
 - **Feat: implementacao de paginas de oficios** `[0919f27]`
 - **Fix: correcao de nomes de arquivos** `[fc72eb7]`
+- **Fix: demais ajustes** `[af2e4fc]`
 
