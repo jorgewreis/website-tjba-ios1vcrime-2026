@@ -14,7 +14,6 @@ $connection = Conection::getInstance()->getConnection();
 $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinete'));
 $statusFilter = trim($_GET['status'] ?? '');
 $processoFilter = trim($_GET['processo'] ?? '');
-$anoFilter = trim($_GET['ano'] ?? '');
 $allowedPerPage = [10, 25, 50, 100];
 $itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 25;
 if (!in_array($itemsPerPage, $allowedPerPage, true)) {
@@ -31,7 +30,6 @@ if ($pageNumberParam !== null && $pageNumberParam !== '') {
 $filters = [
     'status' => $statusFilter,
     'processo' => $processoFilter,
-    'ano' => $anoFilter,
 ];
 $offset = ($currentPage - 1) * $itemsPerPage;
 
@@ -60,7 +58,7 @@ $displayedCount = count($rows);
 $startItem = $displayedCount > 0 ? $offset + 1 : 0;
 $endItem = $displayedCount > 0 ? $offset + $displayedCount : 0;
 
-$documentsLabel = $totalDocuments === 1 ? 'registro' : 'registros';
+$documentsLabel = $totalDocuments === 1 ? 'monitoramento' : 'monitoramentos';
 $pagesLabel = $totalPages === 1 ? 'página' : 'páginas';
 $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
 
@@ -77,9 +75,6 @@ if ($statusFilter !== '') {
 }
 if ($processoFilter !== '') {
     $baseQueryParams['processo'] = $processoFilter;
-}
-if ($anoFilter !== '') {
-    $baseQueryParams['ano'] = $anoFilter;
 }
 $baseQueryParams['items_per_page'] = $itemsPerPage;
 
@@ -105,8 +100,6 @@ if ($totalPages > 0) {
     }
 }
 
-$anoAtual = (int) date('Y');
-
 $subtarefaLabels = [
     GabineteMonitoramentoEletronicoSubtarefasRepository::TIPO_INICIAR => 'Iniciar monitoramento',
     GabineteMonitoramentoEletronicoSubtarefasRepository::TIPO_ENCERRAR => 'Encerrar monitoramento',
@@ -115,6 +108,7 @@ $buttonTitleByTipo = [
     GabineteMonitoramentoEletronicoSubtarefasRepository::TIPO_INICIAR => 'Confirmar início',
     GabineteMonitoramentoEletronicoSubtarefasRepository::TIPO_ENCERRAR => 'Confirmar encerramento',
 ];
+$buttonEncerrarPendenteLabel = 'Encerrar monitoramento';
 
 $statusLabelUi = static function (string $s): string {
     $map = [
@@ -149,15 +143,14 @@ $statusLabelUi = static function (string $s): string {
             <span class="specific">Lista</span>
         </div>
         <h1 class="title-page">Monitoramento Eletrônico</h1>
-        <p class="description-page">Acompanhamento de medidas de monitoramento eletrônico vinculadas ao processo.</p>
+        <p class="description-page">Consulta aos registros de monitoramento eletrônico. Para novo cadastro, use a tela de cadastro.</p>
     </div>
 
     <div class="container-full card-page">
 
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
-            <div class="display-flex row row-fit justify-start align-center gap-y-md" style="gap:12px;">
+            <div class="display-flex row row-fit justify-between align-center gap-y-md" style="gap:12px;">
                 <h2 style="margin:0;">Lista de monitoramentos</h2>
-                <button type="button" class="btn btn-primary" id="btn-novo-monitoramento">Novo monitoramento</button>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md">
                 <input type="text" class="width-400 height-md" id="search-input" placeholder="Pesquisar por processo ou réu..." value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
@@ -167,6 +160,7 @@ $statusLabelUi = static function (string $s): string {
                     <option value="csv">Gerar CSV</option>
                     <option value="print">Imprimir</option>
                 </select>
+                <button type="button" class="btn btn-primary" id="novo-cadastro-btn">Novo cadastro</button>
             </div>
         </div>
 
@@ -180,15 +174,6 @@ $statusLabelUi = static function (string $s): string {
                         <option value="em_andamento"<?php echo $statusFilter === 'em_andamento' ? ' selected' : ''; ?>>Em andamento (<?php echo (int) ($statusCounts['em_andamento'] ?? 0); ?>)</option>
                         <option value="finalizada"<?php echo $statusFilter === 'finalizada' ? ' selected' : ''; ?>>Finalizada (<?php echo (int) ($statusCounts['finalizada'] ?? 0); ?>)</option>
                         <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>Cancelada (<?php echo (int) ($statusCounts['cancelada'] ?? 0); ?>)</option>
-                    </select>
-                </div>
-                <div class="col">
-                    <label for="filter-ano">Ano do registro</label>
-                    <select class="width-300 height-md" id="filter-ano">
-                        <option value=""<?php echo $anoFilter === '' ? ' selected' : ''; ?>>Todos</option>
-                        <?php for ($y = $anoAtual; $y >= $anoAtual - 5; $y--): ?>
-                        <option value="<?php echo $y; ?>"<?php echo $anoFilter === (string) $y ? ' selected' : ''; ?>><?php echo $y; ?></option>
-                        <?php endfor; ?>
                     </select>
                 </div>
             </div>
@@ -259,21 +244,30 @@ $statusLabelUi = static function (string $s): string {
                     $currentSubtarefaTitle = $subtarefaLabels[GabineteMonitoramentoEletronicoSubtarefasRepository::TIPO_INICIAR] ?? '';
                 }
                 $expandir = !empty($subtarefas);
+                $dataInicioRow = $row['DataInicio'] ?? null;
+                $dataInicioBr = '';
+                if ($dataInicioRow !== null && $dataInicioRow !== '') {
+                    $tsDi = strtotime((string) $dataInicioRow);
+                    if ($tsDi !== false) {
+                        $dataInicioBr = date('d/m/Y', $tsDi);
+                    }
+                }
+                $barTitleAttr = ($statusTarefa === 'pendente' && $mostrarBarraStatus)
+                    ? 'Iniciar e encerrar monitoramento'
+                    : $currentSubtarefaTitle;
             ?>
             <div class="display-flex col col-full register border-bottom" data-monitoramento-id="<?php echo htmlspecialchars($idMon, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idMon, ENT_QUOTES); ?>">
 
                 <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                     <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                        <?php if ($expandir): ?>
                         <div class="col">
-                            <?php if ($expandir): ?>
-                                <label class="button-table" title="Expandir subtarefas">
-                                    <input type="radio" name="open-subtask" value="<?php echo htmlspecialchars($idMon, ENT_QUOTES); ?>" aria-controls="subtask-<?php echo htmlspecialchars($idMon, ENT_QUOTES); ?>" aria-expanded="false" />
-                                    <i class="fi fi-rr-angle-small-down"></i>
-                                </label>
-                            <?php else: ?>
-                                <span class="button-table" style="visibility:hidden;" aria-hidden="true"><i class="fi fi-rr-angle-small-down"></i></span>
-                            <?php endif; ?>
+                            <label class="button-table" title="Expandir subtarefas">
+                                <input type="radio" name="open-subtask" value="<?php echo htmlspecialchars($idMon, ENT_QUOTES); ?>" aria-controls="subtask-<?php echo htmlspecialchars($idMon, ENT_QUOTES); ?>" aria-expanded="false" />
+                                <i class="fi fi-rr-angle-small-down"></i>
+                            </label>
                         </div>
+                        <?php endif; ?>
                         <div class="col width-200">
                             <span class="minor-info">Monitoramento</span>
                             <span class="major-info"><?php echo htmlspecialchars($nAno, ENT_QUOTES); ?></span>
@@ -282,11 +276,11 @@ $statusLabelUi = static function (string $s): string {
                             <span class="minor-info text-ellipsis" <?php echo $classeStyle; ?>><?php echo htmlspecialchars($classeNome); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars((string) ($row['Processo'] ?? '')); ?></span>
                         </div>
-                        <div class="col width-260">
+                        <div class="col width-280">
                             <span class="minor-info">Réu</span>
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['ReuNome'] ?? '')); ?></span>
                         </div>
-                        <div class="col width-140">
+                        <div class="col width-160">
                             <span class="minor-info">Duração</span>
                             <span class="major-info"><?php echo htmlspecialchars($duracaoLabel); ?></span>
                         </div>
@@ -301,7 +295,7 @@ $statusLabelUi = static function (string $s): string {
                         </div>
                         <?php elseif ($tarefaFinalizada): ?>
                         <?php elseif ($mostrarBarraStatus): ?>
-                        <div class="col status-task" title="<?php echo htmlspecialchars($currentSubtarefaTitle); ?>">
+                        <div class="col status-task" title="<?php echo htmlspecialchars($barTitleAttr); ?>">
                             <div class="width-300 status status-pending status-with-progress">
                                 <span class="status-task-label width-300"><?php echo htmlspecialchars($barLabel); ?></span>
                                 <div class="status-task-progress" role="progressbar" aria-valuenow="<?php echo (int) count(array_filter($progressStatuses, static function ($x) { return $x === 'concluida'; })); ?>" aria-valuemin="0" aria-valuemax="2">
@@ -317,11 +311,23 @@ $statusLabelUi = static function (string $s): string {
 
                 <?php if ($expandir): ?>
                 <div class="display-flex col col-full subtask subtask-collapsed gme-subtask-panel" id="subtask-<?php echo htmlspecialchars($idMon, ENT_QUOTES); ?>" aria-hidden="true">
+                    <?php if ($statusTarefa === 'em_andamento' && $dataInicioBr !== ''): ?>
+                    <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top">
+                        <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                            <div class="col task-status">
+                                <div class="padding-x-lg height-sm status status-finished"><?php echo htmlspecialchars($subtarefaLabels[GabineteMonitoramentoEletronicoSubtarefasRepository::TIPO_INICIAR] ?? ''); ?></div>
+                            </div>
+                            <span class="minor-info">Início em <?php echo htmlspecialchars($dataInicioBr, ENT_QUOTES); ?></span>
+                        </div>
+                    </div>
+                    <?php endif; ?>
                     <?php foreach ($subtarefas as $st):
                         $stId = (string) ($st['id'] ?? '');
                         $stTipo = (string) ($st['tipo'] ?? '');
                         $stLabel = $subtarefaLabels[$stTipo] ?? $stTipo;
+                        $stStatusSt = (string) ($st['status'] ?? '');
                         $precisaData = ($stTipo === GabineteMonitoramentoEletronicoSubtarefasRepository::TIPO_INICIAR);
+                        $encerrarPendente = ($stTipo === GabineteMonitoramentoEletronicoSubtarefasRepository::TIPO_ENCERRAR && $stStatusSt === 'pendente');
                     ?>
                     <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
                         <div class="display-flex row row-fit justify-start gap-y-sm align-center flex-wrap">
@@ -336,9 +342,15 @@ $statusLabelUi = static function (string $s): string {
                             <?php endif; ?>
                         </div>
                         <div class="display-flex row row-fit justify-end align-center">
-                            <button type="button" class="btn btn-primary height-sm btn-gme-concluir" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-precisa-data="<?php echo $precisaData ? '1' : '0'; ?>" title="<?php echo htmlspecialchars($stLabel, ENT_QUOTES); ?>">
+                            <?php if ($encerrarPendente): ?>
+                            <button type="button" class="btn btn-secondary-outline height-sm" disabled title="Disponível após iniciar o monitoramento">
+                                <span class="value-button"><?php echo htmlspecialchars($buttonEncerrarPendenteLabel, ENT_QUOTES); ?></span>
+                            </button>
+                            <?php else: ?>
+                            <button type="button" class="btn btn-primary height-sm btn-gme-concluir" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-precisa-data="<?php echo $precisaData ? '1' : '0'; ?>" title="<?php echo htmlspecialchars($stTipo === GabineteMonitoramentoEletronicoSubtarefasRepository::TIPO_ENCERRAR ? 'Confirma encerramento e altera status para Finalizada' : 'Confirma início e altera status para Em andamento', ENT_QUOTES); ?>">
                                 <span class="value-button"><?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?></span>
                             </button>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <?php endforeach; ?>
@@ -431,14 +443,13 @@ $statusLabelUi = static function (string $s): string {
             };
             flushPostReloadToast();
 
-            document.getElementById('btn-novo-monitoramento')?.addEventListener('click', function () {
+            document.getElementById('novo-cadastro-btn')?.addEventListener('click', function () {
                 window.location.href = '/frame.php?page=monitoramentogabinetecreate';
             });
 
             const applyFilters = function () {
                 const status = document.getElementById('filter-status')?.value ?? '';
                 const processo = document.getElementById('search-input')?.value?.trim() ?? '';
-                const ano = document.getElementById('filter-ano')?.value ?? '';
                 const perPage = document.getElementById('items-per-page')?.value ?? '25';
                 const params = new URLSearchParams(window.location.search);
                 params.set('page', '<?php echo htmlspecialchars($routePage, ENT_QUOTES); ?>');
@@ -446,12 +457,10 @@ $statusLabelUi = static function (string $s): string {
                 params.set('items_per_page', perPage);
                 if (status) params.set('status', status); else params.delete('status');
                 if (processo) params.set('processo', processo); else params.delete('processo');
-                if (ano) params.set('ano', ano); else params.delete('ano');
                 window.location.href = '?' + params.toString();
             };
 
             document.getElementById('filter-status')?.addEventListener('change', applyFilters);
-            document.getElementById('filter-ano')?.addEventListener('change', applyFilters);
             document.getElementById('items-per-page')?.addEventListener('change', applyFilters);
             document.getElementById('search-input')?.addEventListener('keypress', function (e) {
                 if (e.key === 'Enter') applyFilters();

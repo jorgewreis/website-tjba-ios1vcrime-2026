@@ -13,7 +13,7 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title>Monitoramento Eletrônico - Cadastro</title>
+        <title>Monitoramento Eletrônico (Gabinete) — Cadastro</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <?php include __DIR__ . '/_internal_head_styles.php'; ?>
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
@@ -29,25 +29,24 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
             <span class="specific">Cadastro</span>
         </div>
         <h1 class="title-page">Novo monitoramento eletrônico</h1>
-        <p class="description-page">Informe o processo (classe pelo DataJud), selecione o réu vinculado ou informe o nome no campo complemento.</p>
+        <p class="description-page">Vincule o registro ao processo em contexto e ao réu. Processo e classe são definidos pelo sistema (DataJud).</p>
     </div>
 
     <div class="container-full card-page">
 
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
             <h2>Dados do registro</h2>
-            <button type="button" class="btn btn-secondary-outline" id="btn-voltar-lista">Voltar à lista</button>
         </div>
 
         <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
-                    <label for="filter-processo">Número do processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="text" class="width-400 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off">
+                    <label for="gab-mon-processo">Número do processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <input type="text" class="width-400 height-md" id="gab-mon-processo" name="processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off" data-cnj-input="true">
                 </div>
                 <div class="col">
-                    <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
-                    <input type="text" class="width-600 height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>
+                    <label for="gab-mon-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
+                    <input type="text" class="width-600 height-md readonly" id="gab-mon-classe" name="classe" placeholder="Classe (automático DataJud)" readonly>
                 </div>
             </div>
             <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
@@ -55,21 +54,22 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
 
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
-                    <label for="gme-reu-select">Réu <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <select class="width-700 height-md" id="gme-reu-select">
-                        <option value="">Carregue o processo para listar réus…</option>
-                        <option value="outro">Outro (informar no complemento)</option>
+                    <label for="gab-mon-reu-select">Réu <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <select class="width-700 height-md" id="gab-mon-reu-select" name="reu_id" aria-describedby="gab-mon-reu-hint">
+                        <option value="">Selecione o réu…</option>
+                        <option value="outro">Outro (informar abaixo)</option>
                     </select>
                 </div>
                 <div class="col">
-                    <label for="gme-reu-complemento">Complemento / nome (se necessário)</label>
-                    <input type="text" class="width-700 height-md" id="gme-reu-complemento" placeholder="Obrigatório se &quot;Outro&quot; ou para qualificação adicional" autocomplete="off">
+                    <label for="gab-mon-reu-input">Complemento / nome (se necessário)</label>
+                    <input type="text" class="width-700 height-md" id="gab-mon-reu-input" name="reu_complemento" placeholder="Ex.: alcunha, qualificação adicional ou nome completo se 'Outro'" autocomplete="off" aria-describedby="gab-mon-reu-hint">
                 </div>
             </div>
+            <p class="minor-info" id="gab-mon-reu-hint" style="margin:0;">Implementação: popular o select via API com as partes réus do processo; o input cobre casos não listados ou detalhes.</p>
 
-            <div class="display-flex row row-fit justify-start gap-y-md">
-                <button type="button" class="btn btn-primary" id="btn-gme-registrar">Registrar</button>
-                <button type="button" class="btn btn-secondary-outline" id="btn-gme-limpar">Limpar formulário</button>
+            <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
+                <button type="button" class="btn btn-secondary" id="btn-gab-mon-voltar">Voltar</button>
+                <button type="button" class="btn btn-primary" id="btn-gab-mon-registrar">Registrar</button>
             </div>
         </div>
     </div>
@@ -90,7 +90,7 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
                 if (typeof showToast === 'function') showToast({ type, variant: 'full', title, message });
             };
 
-            document.getElementById('btn-voltar-lista')?.addEventListener('click', function () {
+            document.getElementById('btn-gab-mon-voltar')?.addEventListener('click', function () {
                 window.location.href = '/frame.php?page=monitoramentogabinete';
             });
 
@@ -100,7 +100,7 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
             }
 
             function carregarReus(numeroFormatado) {
-                const sel = document.getElementById('gme-reu-select');
+                const sel = document.getElementById('gab-mon-reu-select');
                 if (!sel) return;
                 sel.innerHTML = '<option value="">Carregando…</option>';
                 fetch('/api/gabinete-monitoramento-eletronico/reus-partes.php?numero_processo=' + encodeURIComponent(numeroFormatado), { credentials: 'same-origin' })
@@ -120,45 +120,30 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
                         });
                         var outro = document.createElement('option');
                         outro.value = 'outro';
-                        outro.textContent = 'Outro (informar no complemento)';
+                        outro.textContent = 'Outro (informar abaixo)';
                         sel.appendChild(outro);
                     })
                     .catch(function () {
-                        sel.innerHTML = '<option value="">Erro ao carregar réus</option><option value="outro">Outro (informar no complemento)</option>';
+                        sel.innerHTML = '<option value="">Erro ao carregar réus</option><option value="outro">Outro (informar abaixo)</option>';
                     });
             }
 
             window.addEventListener('cnjValidated', function (event) {
                 var digits = (event.detail && event.detail.digits) ? String(event.detail.digits).replace(/\D/g, '') : '';
                 if (digits.length !== 20) {
-                    var sel = document.getElementById('gme-reu-select');
-                    if (sel) sel.innerHTML = '<option value="">Informe o processo válido…</option><option value="outro">Outro (informar no complemento)</option>';
+                    var sel = document.getElementById('gab-mon-reu-select');
+                    if (sel) sel.innerHTML = '<option value="">Informe o processo válido…</option><option value="outro">Outro (informar abaixo)</option>';
                     return;
                 }
                 carregarReus(formatCnjFromDigits(digits));
             });
 
-            document.getElementById('btn-gme-limpar')?.addEventListener('click', function () {
-                var p = document.getElementById('filter-processo');
-                var cl = document.getElementById('filter-classe');
-                var sel = document.getElementById('gme-reu-select');
-                var comp = document.getElementById('gme-reu-complemento');
-                if (p) p.value = '';
-                if (cl) cl.value = '';
-                var hcc = document.getElementById('hidden-classe-codigo');
-                var hcd = document.getElementById('hidden-classe-descricao');
-                if (hcc) hcc.value = '';
-                if (hcd) hcd.value = '';
-                if (comp) comp.value = '';
-                if (sel) sel.innerHTML = '<option value="">Carregue o processo para listar réus…</option><option value="outro">Outro (informar no complemento)</option>';
-            });
-
-            document.getElementById('btn-gme-registrar')?.addEventListener('click', function () {
-                var proc = document.getElementById('filter-processo')?.value?.trim() || '';
+            document.getElementById('btn-gab-mon-registrar')?.addEventListener('click', function () {
+                var proc = document.getElementById('gab-mon-processo')?.value?.trim() || '';
                 var cc = document.getElementById('hidden-classe-codigo')?.value || '';
                 var cd = document.getElementById('hidden-classe-descricao')?.value || '';
-                var reuSel = document.getElementById('gme-reu-select')?.value || '';
-                var comp = document.getElementById('gme-reu-complemento')?.value?.trim() || '';
+                var reuSel = document.getElementById('gab-mon-reu-select')?.value || '';
+                var comp = document.getElementById('gab-mon-reu-input')?.value?.trim() || '';
                 if (!proc) {
                     notify('error', 'Validação', 'Informe o número do processo.');
                     return;

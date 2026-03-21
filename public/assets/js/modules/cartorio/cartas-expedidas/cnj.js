@@ -133,7 +133,7 @@ function bindFormSubmitValidation(input) {
     if (!form || form.dataset.cnjBound === '1') return;
 
     form.addEventListener('submit', function (event) {
-        const cnjInputs = form.querySelectorAll('input[id="filter-processo"], input[id="filter-numero"], input[data-cnj-input="true"]');
+        const cnjInputs = form.querySelectorAll('input[id="filter-processo"], input[id="gab-mon-processo"], input[id="filter-numero"], input[data-cnj-input="true"]');
         for (let i = 0; i < cnjInputs.length; i += 1) {
             const input = cnjInputs[i];
             if (input.readOnly || input.disabled) continue;
@@ -153,7 +153,7 @@ function bindFormSubmitValidation(input) {
 }
 
 function bindAllCNJInputs() {
-    const inputs = document.querySelectorAll('input[id="filter-processo"], input[id="filter-numero"], input[data-cnj-input="true"]');
+    const inputs = document.querySelectorAll('input[id="filter-processo"], input[id="gab-mon-processo"], input[id="filter-numero"], input[data-cnj-input="true"]');
     inputs.forEach(function (input) {
         bindProcessoInput(input);
         bindFormSubmitValidation(input);

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0050
+
+**Data:** 2026-03-21 19:02:54 | **Commit:** `86d225a` | **Tipo:** `patch`
+
+- Fix: correcao de modelo
+
 ## V. 1.04.0049
 
 **Data:** 2026-03-21 18:59:09 | **Commit:** `050f222` | **Tipo:** `patch`
@@ -3588,6 +3594,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

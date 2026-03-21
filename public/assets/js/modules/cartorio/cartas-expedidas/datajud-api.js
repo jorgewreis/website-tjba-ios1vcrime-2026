@@ -2,8 +2,8 @@
     const API_ENDPOINT = (typeof window.CARTAS_EXPEDIDAS_DATAJUD_ENDPOINT !== 'undefined' && window.CARTAS_EXPEDIDAS_DATAJUD_ENDPOINT)
         ? window.CARTAS_EXPEDIDAS_DATAJUD_ENDPOINT
         : '/api/datajud/search-processo.php';
-    const classeInput = document.getElementById('filter-classe');
-    const processoInput = document.getElementById('filter-processo');
+    const classeInput = document.getElementById('filter-classe') || document.getElementById('gab-mon-classe');
+    const processoInput = document.getElementById('filter-processo') || document.getElementById('gab-mon-processo');
     const classeCodigoField = document.getElementById('hidden-classe-codigo');
     const classeDescricaoField = document.getElementById('hidden-classe-descricao');
     const statusElement = document.getElementById('processo-ap-info');
