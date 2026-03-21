@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0055
+
+**Data:** 2026-03-21 20:21:12 | **Commit:** `d8950e4` | **Tipo:** `patch`
+
+- Feat: novo modelo de perfis e acesso
+
 ## V. 1.04.0054
 
 **Data:** 2026-03-21 19:23:59 | **Commit:** `4d61e6a` | **Tipo:** `patch`
@@ -3618,6 +3624,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

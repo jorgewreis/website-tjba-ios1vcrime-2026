@@ -9,6 +9,8 @@ if (function_exists('mb_internal_encoding')) {
 require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../helpers/DateHelper.php';
 require_once __DIR__ . '/../../helpers/TextFormatter.php';
+require_once __DIR__ . '/../../helpers/SetoresAccessHelper.php';
+require_once __DIR__ . '/../../access/ProfileNormalizer.php';
 require_once __DIR__ . '/../../../config/security.php';
 
 Security::requireAuthentication();
@@ -37,11 +39,27 @@ if ($idUsuario === '') {
     exit;
 }
 
-/** Mapeamento setor (label) → codigo na tabela setores */
-$setorToCodigo = [
-    'Cartório'           => 'CARTORIO',
-    'Gabinete'           => 'GABINETE',
-    'Sala de Audiências' => 'AUDIENCIA',
+/** Perfis permitidos na edição (compostos + elevados). */
+$allowedPerfisInterno = [
+    'ADMIN',
+    'CHEFIA',
+    'ESTAGIARIO-CARTORIO',
+    'ESTAGIARIO-GABINETE',
+    'ESTAGIARIO-AUDIENCIAS',
+    'SERVIDOR-CARTORIO',
+    'SERVIDOR-GABINETE',
+    'SERVIDOR-AUDIENCIAS',
+];
+
+$opcoesPerfilInterno = [
+    ['ADMIN', 'Admin'],
+    ['CHEFIA', 'Chefia / direção'],
+    ['ESTAGIARIO-CARTORIO', 'Estagiário — Cartório'],
+    ['ESTAGIARIO-GABINETE', 'Estagiário — Gabinete'],
+    ['ESTAGIARIO-AUDIENCIAS', 'Estagiário — Sala de audiências'],
+    ['SERVIDOR-CARTORIO', 'Servidor — Cartório'],
+    ['SERVIDOR-GABINETE', 'Servidor — Gabinete'],
+    ['SERVIDOR-AUDIENCIAS', 'Servidor — Sala de audiências'],
 ];
 
 $mensagemErro = '';
@@ -67,6 +85,9 @@ $stmt->execute([$idUsuario]);
 $perfisAtuais = $stmt->fetchAll(PDO::FETCH_COLUMN);
 $perfisAtuais = array_map('strtoupper', array_map('trim', $perfisAtuais));
 $isUsuarioExterno = in_array('ESTUDANTE', $perfisAtuais, true) || in_array('CONSULTOR', $perfisAtuais, true);
+$perfisFormChecked = $isUsuarioExterno
+    ? []
+    : SetoresAccessHelper::expandPerfisForFormUi($perfisAtuais, $connection, $idUsuario);
 
 $setorRaw = trim((string) ($usuario['instituicao'] ?? ''));
 if ($setorRaw !== '' && $setorRaw !== '-') {
@@ -134,11 +155,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $cargo = $isUsuarioExterno ? trim((string) ($usuario['cargo'] ?? '')) : trim((string) ($_POST['cargo'] ?? ''));
             $setorLabel = $isUsuarioExterno ? $setorAtual : trim((string) ($_POST['setor'] ?? ''));
             $status = trim((string) ($_POST['status'] ?? 'ativo'));
-            $perfisPost = $isUsuarioExterno
-                ? $perfisAtuais
-                : (isset($_POST['perfil']) && is_array($_POST['perfil']) ? $_POST['perfil'] : []);
-            $perfisPost = array_values(array_unique(array_map('trim', array_map('strtoupper', $perfisPost))));
-            $perfisPost = array_filter($perfisPost);
+            if ($isUsuarioExterno) {
+                $perfisPost = $perfisAtuais;
+            } else {
+                $perfisPostRaw = isset($_POST['perfil']) && is_array($_POST['perfil']) ? $_POST['perfil'] : [];
+                $perfisPostRaw = array_values(array_unique(array_map('trim', array_map('strtoupper', $perfisPostRaw))));
+                $perfisPostRaw = array_filter($perfisPostRaw, static fn ($p): bool => trim((string) $p) !== '');
+                $perfisPost = [];
+                foreach ($perfisPostRaw as $p) {
+                    $p = strtoupper(trim((string) $p));
+                    if (in_array($p, $allowedPerfisInterno, true)) {
+                        $perfisPost[] = $p;
+                    }
+                }
+                $perfisPost = ProfileNormalizer::normalize($perfisPost);
+            }
 
             if ($nome === '' || $sobrenome === '') {
                 $mensagemErro = 'Nome e sobrenome são obrigatórios.';
@@ -196,29 +227,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     $stmt = $connection->prepare('DELETE FROM usuario_setor WHERE usuario = ?');
                     $stmt->execute([$idUsuario]);
-                    if ($setorLabel !== '') {
-                        $idSetor = null;
-                        if (isset($setorToCodigo[$setorLabel])) {
-                            $codigo = $setorToCodigo[$setorLabel];
-                            $stmt = $connection->prepare('SELECT id_setor FROM setores WHERE codigo = ? LIMIT 1');
-                            $stmt->execute([$codigo]);
-                            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-                            if ($row && !empty($row['id_setor'])) {
-                                $idSetor = trim($row['id_setor']);
+
+                    $areasLinks = [];
+                    foreach ($perfisPost as $p) {
+                        if (preg_match('/^(ESTAGIARIO|SERVIDOR)-(CARTORIO|GABINETE|AUDIENCIAS)$/', (string) $p, $m) === 1) {
+                            $areasLinks[$m[2]] = true;
+                        }
+                    }
+                    if (!empty($areasLinks)) {
+                        foreach (array_keys($areasLinks) as $area) {
+                            $tuple = SetoresAccessHelper::resolveFromCodigoArea($connection, $area);
+                            if ($tuple !== null) {
+                                $idUsuSetor = 'USO-' . strtoupper(bin2hex(random_bytes(13)));
+                                $stmt = $connection->prepare('INSERT INTO usuario_setor (id_usu_setor, usuario, setor) VALUES (?, ?, ?)');
+                                $stmt->execute([$idUsuSetor, $idUsuario, $tuple['id_setor']]);
                             }
                         }
-                        if ($idSetor === null) {
-                            $stmt = $connection->prepare('SELECT id_setor FROM setores WHERE nome = ? LIMIT 1');
-                            $stmt->execute([$setorLabel]);
-                            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-                            if ($row && !empty($row['id_setor'])) {
-                                $idSetor = trim($row['id_setor']);
-                            }
-                        }
-                        if ($idSetor !== null) {
+                    } elseif ($setorLabel !== '') {
+                        $resolved = SetoresAccessHelper::resolveFromLabel($connection, $setorLabel);
+                        if ($resolved !== null) {
                             $idUsuSetor = 'USO-' . strtoupper(bin2hex(random_bytes(13)));
                             $stmt = $connection->prepare('INSERT INTO usuario_setor (id_usu_setor, usuario, setor) VALUES (?, ?, ?)');
-                            $stmt->execute([$idUsuSetor, $idUsuario, $idSetor]);
+                            $stmt->execute([$idUsuSetor, $idUsuario, $resolved['id_setor']]);
                         }
                     }
 
@@ -238,6 +268,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isUsuarioExterno) {
+    $actionPost = trim((string) ($_POST['action'] ?? ''));
+    if ($actionPost === 'salvar' && $mensagemErro !== '') {
+        $rawPf = isset($_POST['perfil']) && is_array($_POST['perfil']) ? $_POST['perfil'] : [];
+        $perfisFormChecked = array_values(array_unique(array_map('strtoupper', array_map('trim', $rawPf))));
+    }
+}
+
 $csrfToken = Security::generateCSRFToken();
 $nomeVal = htmlspecialchars($usuario['nome'] ?? '', ENT_QUOTES, 'UTF-8');
 $sobrenomeVal = htmlspecialchars($usuario['sobrenome'] ?? '', ENT_QUOTES, 'UTF-8');
@@ -245,7 +283,6 @@ $cpfVal = htmlspecialchars($usuario['cpf'] ?? '', ENT_QUOTES, 'UTF-8');
 $emailVal = htmlspecialchars($usuario['email'] ?? '', ENT_QUOTES, 'UTF-8');
 $telefoneVal = htmlspecialchars($usuario['telefone'] ?? '', ENT_QUOTES, 'UTF-8');
 $cargoVal = trim((string) ($usuario['cargo'] ?? ''));
-$perfisValidos = ['ESTAGIARIO', 'SERVIDOR', 'CHEFIA', 'ADMIN'];
 
 function deriveUsuarioStatus(array $usuario): string
 {
@@ -282,7 +319,7 @@ function deriveUsuarioStatus(array $usuario): string
             <span class="specific">Edição</span>
         </div>
         <h1 class="title-page">Editar usuário</h1>
-        <p class="description-page">Altere os dados do cadastro. CPF e tipo não podem ser alterados. A alteração de status e o salvamento só podem ser feitos por admin, diretora ou magistrada.</p>
+        <p class="description-page">Altere os dados do cadastro. CPF e tipo não podem ser alterados. Perfis internos usam o modelo composto (ex.: SERVIDOR-GABINETE) alinhado ao setor e à política de acesso.</p>
     </div>
 
     <div class="container-full card-page">
@@ -372,7 +409,7 @@ function deriveUsuarioStatus(array $usuario): string
                         </select>
                     </div>
                     <div class="col">
-                        <label for="edit-setor">Setor</label>
+                        <label for="edit-setor">Setor (lotação / exibição)</label>
                         <select id="edit-setor" name="setor" class="width-500 height-md">
                             <option value="">Selecione (opcional)</option>
                             <option value="Cartório"<?php echo $setorAtual === 'Cartório' ? ' selected' : ''; ?>>Cartório</option>
@@ -383,15 +420,12 @@ function deriveUsuarioStatus(array $usuario): string
                 </div>
                 <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                     <div class="col full-line">
-                        <span class="minor-info">Perfis (um usuário pode ter vários)</span>
+                        <span class="minor-info">Perfis de acesso (vários permitidos). Quem não é admin/chefia precisa de pelo menos um perfil ESTAGIARIO-* ou SERVIDOR-* para o painel interno.</span>
                         <div class="display-flex row row-full justify-start padding-y-sm gap-y-md" style="flex-wrap: wrap;">
-                            <?php foreach ($perfisValidos as $p): ?>
+                            <?php foreach ($opcoesPerfilInterno as [$pVal, $pLabel]): ?>
                             <label class="row left row-gap-10" style="align-items: center; margin-right: 1rem;">
-                                <input type="checkbox" name="perfil[]" value="<?php echo htmlspecialchars($p, ENT_QUOTES); ?>"<?php echo in_array($p, $perfisAtuais, true) ? ' checked' : ''; ?>>
-                                <?php
-                                $label = $p === 'ESTAGIARIO' ? 'Estagiário' : ($p === 'SERVIDOR' ? 'Servidor' : ($p === 'CHEFIA' ? 'Chefia' : 'Admin'));
-                                echo htmlspecialchars($label, ENT_QUOTES);
-                                ?>
+                                <input type="checkbox" name="perfil[]" value="<?php echo htmlspecialchars($pVal, ENT_QUOTES, 'UTF-8'); ?>"<?php echo in_array($pVal, $perfisFormChecked, true) ? ' checked' : ''; ?>>
+                                <?php echo htmlspecialchars($pLabel, ENT_QUOTES, 'UTF-8'); ?>
                             </label>
                             <?php endforeach; ?>
                         </div>
@@ -577,7 +611,7 @@ function deriveUsuarioStatus(array $usuario): string
 
         if (excluirBtn && formExcluir) {
             excluirBtn.addEventListener('click', function () {
-                if (!requireSecondClick('desativar-usuario', 'Clique novamente em Desativar em até 5 segundos para confirmar.')) return;
+                if (!requireSecondClick('desativar-usuario', 'Clique novamente em Excluir em até 5 segundos para confirmar a desativação.')) return;
                 formExcluir.submit();
             });
         }

@@ -478,21 +478,8 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
         /** Estudante externo: apenas CEP. */
         const MENU_TARGETS_CONSULTAS_EXTERNO_ESTUDANTE = new Set(['consultacep']);
 
-        /**
-         * Seções exibidas no menu por perfil (alinhado a public/frame.php — sectionMap e regras de estagiário).
-         * Perfis por setor (CARTORIO / GABINETE / AUDIENCIA) vêm de usuario_perfil; cargo (SERVIDOR, ESTAGIARIO, …) idem.
-         */
-        const PERFIL_MENU_MAP = {
-            'ADMIN': ['Cartório', 'Gabinete', 'Sala de Audiências', 'Estudantes', 'Consultas', 'Audiências', 'Admin'],
-            'CHEFIA': ['Cartório', 'Gabinete', 'Sala de Audiências', 'Estudantes', 'Consultas', 'Audiências', 'Admin'],
-            'SERVIDOR': ['Cartório', 'Gabinete', 'Sala de Audiências', 'Consultas'],
-            'ESTAGIARIO': ['Cartório', 'Sala de Audiências', 'Consultas'],
-            'ESTUDANTE': ['Consultas'],
-            'CONSULTOR': ['Consultas'],
-            'CARTORIO': ['Cartório'],
-            'GABINETE': ['Gabinete'],
-            'AUDIENCIA': ['Sala de Audiências']
-        };
+        /** Mesma regra de app/access/AccessEvaluator.php (recalculada no cliente após fetch de perfis). */
+        const COMPOSITE_PROFILE_RE = /^(ESTAGIARIO|SERVIDOR)-(CARTORIO|GABINETE|AUDIENCIAS)$/;
 
         const MENU_SECTIONS = [
             {
@@ -603,44 +590,52 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             return normalizePerfis([].concat(INITIAL_USER_PERFIS || [], fromApi, FALLBACK_PERFIS || []));
         }
 
-        function getPermittedSections(perfis) {
-            /** Usuário externo: apenas Consultas no menu (evita vazamento se a API de perfis retornar dados incorretos). */
-            if (IS_USUARIO_EXTERNO) {
-                return new Set(['Consultas']);
-            }
-
-            const permittedSections = new Set();
+        function computePermittedMenuSectionsFromPerfis(perfis) {
             const norm = normalizePerfis(perfis);
-
-            norm.forEach((perfil) => {
-                const sections = PERFIL_MENU_MAP[perfil];
-
-                if (sections && Array.isArray(sections)) {
-                    sections.forEach((section) => {
-                        permittedSections.add(section);
-                    });
+            if (IS_USUARIO_EXTERNO) {
+                return ['Consultas'];
+            }
+            if (norm.includes('ADMIN') || norm.includes('CHEFIA')) {
+                return ['Cartório', 'Gabinete', 'Sala de Audiências', 'Estudantes', 'Consultas', 'Admin'];
+            }
+            const sections = [];
+            norm.forEach((p) => {
+                const m = COMPOSITE_PROFILE_RE.exec(p);
+                if (m) {
+                    if (m[2] === 'CARTORIO') {
+                        sections.push('Cartório');
+                    } else if (m[2] === 'GABINETE') {
+                        sections.push('Gabinete');
+                    } else {
+                        sections.push('Sala de Audiências');
+                    }
                 }
             });
-
-            const isElevated = norm.includes('ADMIN') || norm.includes('CHEFIA');
-            const isEstagiarioNaoEstudante = norm.includes('ESTAGIARIO') && !norm.includes('ESTUDANTE');
-
-            if (isEstagiarioNaoEstudante && !isElevated) {
-                const setorText = USER_SETORES.map((s) => String(s || '').toLowerCase());
-                const hasCartorio = setorText.some((s) => s.includes('cart'));
-                const hasGabinete = setorText.some((s) => s.includes('gab'));
-                const hasAudiencia = setorText.some((s) => s.includes('audi'));
-
-                permittedSections.delete('Cartório');
-                permittedSections.delete('Gabinete');
-                permittedSections.delete('Sala de Audiências');
-
-                if (hasCartorio) permittedSections.add('Cartório');
-                if (hasGabinete) permittedSections.add('Gabinete');
-                if (hasAudiencia) permittedSections.add('Sala de Audiências');
+            let hasComposite = false;
+            norm.forEach((p) => {
+                if (COMPOSITE_PROFILE_RE.test(p)) {
+                    hasComposite = true;
+                }
+            });
+            if (hasComposite) {
+                sections.push('Consultas');
             }
+            if (norm.some((p) => p.indexOf('SERVIDOR-') === 0)) {
+                sections.push('Estudantes');
+            }
+            const order = ['Cartório', 'Gabinete', 'Sala de Audiências', 'Estudantes', 'Consultas', 'Admin'];
+            const uniq = [...new Set(sections)];
+            const ordered = [];
+            order.forEach((label) => {
+                if (uniq.includes(label)) {
+                    ordered.push(label);
+                }
+            });
+            return ordered;
+        }
 
-            return permittedSections;
+        function getPermittedSections(perfis) {
+            return new Set(computePermittedMenuSectionsFromPerfis(perfis));
         }
 
         function createMenuLink({ icon, label, target }) {

@@ -37,6 +37,9 @@ final class UserAccessHelper
             if (in_array($u, self::PERFIS_INTERNOS, true)) {
                 return false;
             }
+            if (preg_match('/^(ESTAGIARIO|SERVIDOR)-(CARTORIO|GABINETE|AUDIENCIAS)$/', $u) === 1) {
+                return false;
+            }
         }
 
         return in_array('ESTUDANTE', $norm, true) || in_array('CONSULTOR', $norm, true);

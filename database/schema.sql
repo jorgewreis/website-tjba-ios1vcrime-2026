@@ -20,13 +20,15 @@ USE common;
 CREATE TABLE IF NOT EXISTS setores (
     id_setor CHAR(30) NOT NULL COMMENT 'Formato SET- + 26 chars (regra padrão 30 chars)' PRIMARY KEY,
     codigo VARCHAR(10) NOT NULL UNIQUE,
+    codigo_area VARCHAR(20) NULL DEFAULT NULL COMMENT 'CARTORIO | GABINETE | AUDIENCIAS',
     nome VARCHAR(100) NOT NULL,
     descricao TEXT,
     setor_pai VARCHAR(30) DEFAULT NULL,
     ativo TINYINT(1) DEFAULT 1,
     data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_codigo (codigo),
-    INDEX idx_setor_pai (setor_pai)
+    INDEX idx_setor_pai (setor_pai),
+    INDEX idx_setores_codigo_area (codigo_area)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================================

@@ -6,6 +6,8 @@ require_once __DIR__ . '/../app/helpers/bootstrap.php';
 require_once __DIR__ . '/../app/helpers/UserAccessHelper.php';
 require_once __DIR__ . '/../app/models/Usuario.php';
 require_once __DIR__ . '/../app/helpers/Conection.php';
+require_once __DIR__ . '/../app/access/AccessEvaluator.php';
+require_once __DIR__ . '/../app/access/AccessPolicyVersion.php';
 
 // Garante que a sessão esteja ativa antes de acessar dados do usuário.
 if (session_status() !== PHP_SESSION_ACTIVE) {
@@ -52,7 +54,7 @@ $allowed_pages = [
     'monitoramentogabineteedit'   => $PAGES . '/gabinete-monitoramento-eletronico-edit.php',
     'cartasexpedidas'       => $PAGES . '/cartorio-cartas-expedidas-list.php',
     'cartasexpedidasedit'   => $PAGES . '/cartorio-cartas-expedidas-edit.php',
-    'cartasexpedidascreate' => $PAGES . '/cartorio-cartas-expedidas-create.php',    
+    'cartasexpedidascreate' => $PAGES . '/cartorio-cartas-expedidas-create.php',
     'cartasexpedidasrules'  => $PAGES . '/cartorio-cartas-expedidas-rules.php',
     'cartasrecebidas'       => $PAGES . '/cartorio-cartas-recebidas-list.php',
     'cartasrecebidasedit'   => $PAGES . '/cartorio-cartas-recebidas-edit.php',
@@ -91,206 +93,8 @@ $allowed_pages = [
     '503'=> $ERRORS . '/503.php'
 ];
 
-
-// Mapeia páginas para suas seções, usadas no controle de acesso.
-$page_to_section = [
-    'dashboard'         => 'All',
-    'dashboardexterno'  => 'Externo',
-    /** CEP: ferramenta ampla; seção dedicada (não usar só `All`, para não conflitar com o bloqueio de usuário externo). */
-    'consultacep'       => 'ConsultasCep',
-    'cartasexpedidas'   => 'Cartório',
-    'cartasexpedidasedit'   => 'Cartório',
-    'cartasexpedidascreate' => 'Cartório',
-    'cartasexpedidasrules'  => 'Cartório',
-    'cartasrecebidas'       => 'Cartório',
-    'cartasrecebidasedit'   => 'Cartório',
-    'cartasrecebidascreate' => 'Cartório',
-    'cartasrecebidasrules'  => 'Cartório',
-    'cejusc'            => 'Cartório',
-    'cejuscedit'        => 'Cartório',
-    'cejusccreate'      => 'Cartório',
-    'cejuscrules'       => 'Cartório',
-    'editais'           => 'Cartório',
-    'editaisedit'       => 'Cartório',
-    'editaiscreate'     => 'Cartório',
-    'editaisrules'      => 'Cartório',
-    'guias'             => 'Cartório',
-    'guiasedit'         => 'Cartório',
-    'guiascreate'       => 'Cartório',
-    'guiasrules'        => 'Cartório',
-    'medidasprotetivas' => 'Cartório',
-    'medidasprotetivasedit' => 'Cartório',
-    'medidasprotetivascreate' => 'Cartório',
-    'medidasprotetivasrules' => 'Cartório',
-    'oficioscartorio'   => 'Cartório',
-    'oficioscartorioedit' => 'Cartório',
-    'oficiosgabinete'   => 'Gabinete',
-    'oficiosgabineteedit' => 'Gabinete',
-    'monitoramentogabinete' => 'Gabinete',
-    'monitoramentogabinetecreate' => 'Gabinete',
-    'monitoramentogabineteedit' => 'Gabinete',
-    'produtividade'     => 'Cartório',
-    'reuspresos'        => 'Gabinete',
-    'alterardados'      => 'Perfil',
-    'notificacoes'      => 'All',
-    'configuracoes'     => 'All',
-    'documentos'        => 'All',
-    /** Listagens de consulta (partes / instituições): consultor externo + internos; sem ESTUDANTE na seção. */
-    'consultaparte'     => 'ConsultasPartesInstituicoes',
-    'consultapartes'    => 'ConsultasPartesInstituicoes',
-    'consultapartescreate'  => 'Cartório',
-    'consultapartesedit'    => 'Cartório',
-    /** Processos: só servidores da vara (não CONSULTOR/ESTUDANTE externos). */
-    'consultaprocessos'     => 'ConsultasProcessos',
-    'consultaprocessosedit' => 'ConsultasProcessos',
-    'instituicoespublicas'  => 'ConsultasPartesInstituicoes',
-    'instituicoespublicascreate' => 'Cartório',
-    'instituicoespublicasedit'   => 'Cartório',
-    'processospartescreate'     => 'Cartório',
-    'processosparteslist'       => 'Cartório',
-    'processospartesedit'       => 'Cartório',
-    'partesinstituicoeslist'    => 'ConsultasPartesInstituicoes',
-    'partesinstituicoescreate'  => 'Cartório',
-    'partesinstituicoesedit'    => 'Cartório',
-    'usuarios'                  => 'Gestão',
-    'usuarioslist'              => 'Gestão',
-    'usuarioscreate'            => 'Gestão',
-    'usuariosedit'              => 'Gestão',
-    'feriadoslist'              => 'All',
-    'feriadoscreate'            => 'Gestão',
-    'feriadosedit'              => 'Gestão',
-];
-
-/**
- * Verifica se o usuário possui perfil compatível com a seção exigida.
- *
- * @param array  $userPerfils     Array de perfis do usuário logado.
- * @param string|null $requiredSection Seção necessária para acesso.
- * @return bool True se o usuário tem acesso, false caso contrário.
- */
-function hasAccessToSection(array $userPerfils, ?string $requiredSection): bool
-{
-    // Externo: estudante só ConsultasCep + Perfil + dashboard externo; consultor externo inclui partes/instituições.
-    if (UserAccessHelper::isUsuarioExterno($userPerfils)) {
-        $externoAllowed = ['Perfil', 'Externo', 'ConsultasCep'];
-        $temEstudante = false;
-        foreach ($userPerfils as $p) {
-            if (strtoupper(trim((string) $p)) === 'ESTUDANTE') {
-                $temEstudante = true;
-                break;
-            }
-        }
-        if (!$temEstudante) {
-            $externoAllowed[] = 'ConsultasPartesInstituicoes';
-        }
-        if ($requiredSection === null || !in_array($requiredSection, $externoAllowed, true)) {
-            return false;
-        }
-    }
-
-    if ($requiredSection === null) {
-        return true;
-    }
-
-    // Perfis por setor: CARTORIO, AUDIENCIA, GABINETE
-    // Perfis por cargo: CONSULTOR, ESTUDANTE, ESTAGIARIO, SERVIDOR, ADMIN, CHEFIA
-
-    // Mapeamento de seções para perfis permitidos.
-    $sectionMap = [
-        'All' => ['CONSULTOR', 'ESTUDANTE', 'ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA', 'CARTORIO', 'GABINETE', 'AUDIENCIA'],
-        'Perfil' => ['CONSULTOR', 'ESTUDANTE', 'ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA', 'CARTORIO', 'GABINETE', 'AUDIENCIA'],
-        'Externo' => ['ESTUDANTE', 'CONSULTOR'],
-        'Cartório' => ['CARTORIO', 'ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA'],
-        'Gabinete' => ['GABINETE', 'SERVIDOR', 'ADMIN', 'CHEFIA'],
-        'Sala de Audiências' => ['AUDIENCIA', 'ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA'],
-        /** CEP: inclui ESTUDANTE (única consulta liberada ao estudante externo). */
-        'ConsultasCep' => ['CONSULTOR', 'ESTUDANTE', 'ESTAGIARIO', 'CARTORIO', 'AUDIENCIA', 'GABINETE', 'ADMIN', 'SERVIDOR', 'CHEFIA'],
-        /** Partes e instituições (listagens): sem ESTUDANTE; consultor externo permitido. */
-        'ConsultasPartesInstituicoes' => ['CONSULTOR', 'ESTAGIARIO', 'CARTORIO', 'AUDIENCIA', 'GABINETE', 'ADMIN', 'SERVIDOR', 'CHEFIA'],
-        /** Processos: sem CONSULTOR nem ESTUDANTE (apenas operação interna). */
-        'ConsultasProcessos' => ['CARTORIO', 'ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA', 'GABINETE', 'AUDIENCIA'],
-        'Gestão' => ['ADMIN', 'CHEFIA']
-    ];
-
-    $requiredPerfils = $sectionMap[$requiredSection] ?? [];
-
-    // Se algum perfil do usuário está na lista permitida, libera acesso.
-    foreach ($userPerfils as $userPerfil) {
-        $p = strtoupper(trim((string) $userPerfil));
-        if ($p === 'DIRETORA' || $p === 'MAGISTRADA') {
-            $p = 'CHEFIA';
-        }
-        if (in_array($p, $requiredPerfils, true)) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-/**
- * Retorna seções permitidas para estagiário a partir dos setores cadastrados.
- *
- * @param PDO $connection
- * @param string $userId
- * @return array<int, string>
- */
-function getEstagiarioAllowedSections(PDO $connection, string $userId): array
-{
-    $sections = ['Perfil'];
-    $setoresNormalizados = [];
-
-    $stmt = $connection->prepare("
-        SELECT s.nome
-        FROM usuario_setor us
-        INNER JOIN setores s ON s.id_setor = us.setor
-        WHERE us.usuario = ?
-    ");
-    $stmt->execute([$userId]);
-    $setores = $stmt->fetchAll(PDO::FETCH_COLUMN);
-
-    if (empty($setores)) {
-        $stFallback = $connection->prepare("SELECT instituicao FROM usuarios WHERE id_usuario = ? LIMIT 1");
-        $stFallback->execute([$userId]);
-        $fallback = trim((string) $stFallback->fetchColumn());
-        if ($fallback !== '' && $fallback !== '-') {
-            $setores = [$fallback];
-        }
-    }
-
-    foreach ($setores as $setor) {
-        $txt = mb_strtolower(trim((string) $setor), 'UTF-8');
-        if ($txt !== '') {
-            $setoresNormalizados[] = $txt;
-        }
-    }
-
-    foreach ($setoresNormalizados as $setor) {
-        if (strpos($setor, 'cart') !== false) {
-            $sections[] = 'Cartório';
-        }
-        if (strpos($setor, 'gab') !== false) {
-            $sections[] = 'Gabinete';
-        }
-        if (strpos($setor, 'audi') !== false) {
-            $sections[] = 'Sala de Audiências';
-        }
-    }
-
-    $sections[] = 'ConsultasCep';
-    $sections[] = 'ConsultasPartesInstituicoes';
-    // Consulta processos (restrita a perfis internos no hasAccessToSection).
-    $sections[] = 'ConsultasProcessos';
-
-    return array_values(array_unique($sections));
-}
-
 /**
  * Responde com página de erro correspondente ao status HTTP.
- *
- * @param int    $status    Código de status HTTP.
- * @param string $message   Mensagem de erro a ser exibida se a página de erro não for encontrada.
- * @param string $errorsDir Caminho para o diretório das páginas de erro.
  */
 function respondWithError(int $status, string $message, string $errorsDir): void
 {
@@ -311,7 +115,6 @@ $usuario = new Usuario();
 $connection = Conection::getInstance()->getConnection();
 $user = null;
 $userPerfils = [];
-$estagiarioAllowedSections = [];
 $pagePath = null;
 $resolved = null;
 $validationStatus = null;
@@ -324,7 +127,6 @@ do {
         break;
     }
 
-    // O método validarToken deve retornar um objeto ou array consistente com o ID do usuário.
     $user = $usuario->validarToken($_SESSION['token']);
 
     if (!$user) {
@@ -335,18 +137,14 @@ do {
         break;
     }
 
-    // Tenta extrair o ID do usuário de forma mais robusta.
     if (is_array($user)) {
         $userId = $user['id_usuario'] ?? ($user['id'] ?? null);
     } elseif (is_object($user)) {
         $userId = $user->id_usuario ?? ($user->id ?? null);
     } else {
-        // Se $user não é array nem objeto, pode ser um erro ou um ID direto.
-        // Considerar que validarToken deve retornar um formato esperado.
         $userId = null;
     }
 
-    // Fallback para a sessão, mas o ideal é que validarToken seja a fonte primária.
     if ($userId === null) {
         $userId = $_SESSION['id_usuario'] ?? null;
     }
@@ -373,7 +171,6 @@ do {
     }
 
     $userPerfils = $usuario->listarPerfisUsuario($userId);
-    // Garante que $userPerfils é um array, mesmo que listarPerfisUsuario retorne null/false.
     if (!is_array($userPerfils)) {
         $userPerfils = [];
     }
@@ -388,28 +185,12 @@ do {
         exit;
     }
 
-    if (in_array('ESTAGIARIO', $userPerfils, true) && !in_array('ESTUDANTE', $userPerfils, true)) {
-        $estagiarioAllowedSections = getEstagiarioAllowedSections($connection, $userId);
-    }
-
-    $requiredSection = $page_to_section[$page] ?? null;
-
-    if (!empty($estagiarioAllowedSections) && $requiredSection !== null) {
-        $sectionAllowed = in_array($requiredSection, $estagiarioAllowedSections, true);
-        // Páginas com seção "All" (dashboard, dados pessoais): liberar só o necessário, sem abrir feriados etc.
-        if (!$sectionAllowed && $requiredSection === 'All') {
-            $estagiarioPaginasAll = ['dashboard', 'alterardados'];
-            $sectionAllowed = in_array($page, $estagiarioPaginasAll, true);
-        }
-        if (!$sectionAllowed) {
-            $validationStatus = 403;
-            $validationMessage = 'Acesso negado. Seção não permitida para o setor do estagiário.';
-            break;
-        }
-    }
-
-    if (!hasAccessToSection($userPerfils, $requiredSection)) {
-        error_log('Acesso negado: userId=' . $userId . ' perfis=' . implode(',', $userPerfils) . ' page=' . $page);
+    if (!AccessEvaluator::canAccessPage($page, $userPerfils)) {
+        error_log(
+            'Acesso negado v' . AccessPolicyVersion::VERSION
+            . ': userId=' . $userId . ' perfis=' . implode(',', $userPerfils)
+            . ' page=' . $page
+        );
         $validationStatus = 403;
         $validationMessage = 'Acesso negado. Seu perfil não tem permissão para acessar este conteúdo.';
         break;
@@ -419,7 +200,6 @@ do {
     $resolved = realpath($pagePath);
 
     if ($resolved === false || !is_file($resolved)) {
-        // Removida a referência a $BASE, que não estava definida.
         error_log('Arquivo de página não encontrado. page=' . $page . ' path=' . $pagePath);
         $validationStatus = 500;
         $validationMessage = 'Erro interno: página não localizada no servidor.';
@@ -431,5 +211,4 @@ if ($validationStatus !== null) {
     respondWithError($validationStatus, $validationMessage, $ERRORS);
 }
 
-// Inclui a página solicitada.
 require $resolved;

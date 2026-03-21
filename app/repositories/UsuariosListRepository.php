@@ -89,17 +89,48 @@ final class UsuariosListRepository
         unset($reverseMap['ESTUDANTE']);
         $result = array_fill_keys(array_values($reverseMap), 0);
 
-        $sql = "SELECT up.perfil, COUNT(DISTINCT up.usuario) AS cnt
+        $sql = "SELECT up.usuario, up.perfil
                 FROM usuario_perfil up
                 WHERE up.usuario IN (SELECT usuario FROM usuario_perfil WHERE perfil != 'ESTUDANTE')
-                AND up.perfil != 'ESTUDANTE'
-                GROUP BY up.perfil";
+                AND up.perfil != 'ESTUDANTE'";
         $stmt = $this->connection->query($sql);
+        $usuarioBuckets = [];
         while (($row = $stmt->fetch(PDO::FETCH_ASSOC)) !== false) {
-            $perfil = trim((string) ($row['perfil'] ?? ''));
-            $key = $reverseMap[$perfil] ?? strtolower($perfil);
-            if (isset($result[$key])) {
-                $result[$key] = (int) ($row['cnt'] ?? 0);
+            $uid = trim((string) ($row['usuario'] ?? ''));
+            $perfil = strtoupper(trim((string) ($row['perfil'] ?? '')));
+            if ($uid === '' || $perfil === '') {
+                continue;
+            }
+            if (!isset($usuarioBuckets[$uid])) {
+                $usuarioBuckets[$uid] = [
+                    'estagiario' => false,
+                    'servidor' => false,
+                    'diretora' => false,
+                    'magistrada' => false,
+                    'admin' => false,
+                ];
+            }
+            if ($perfil === 'ESTAGIARIO' || strpos($perfil, 'ESTAGIARIO-') === 0) {
+                $usuarioBuckets[$uid]['estagiario'] = true;
+            }
+            if ($perfil === 'SERVIDOR' || strpos($perfil, 'SERVIDOR-') === 0) {
+                $usuarioBuckets[$uid]['servidor'] = true;
+            }
+            if ($perfil === 'DIRETORA') {
+                $usuarioBuckets[$uid]['diretora'] = true;
+            }
+            if ($perfil === 'MAGISTRADA') {
+                $usuarioBuckets[$uid]['magistrada'] = true;
+            }
+            if ($perfil === 'ADMIN') {
+                $usuarioBuckets[$uid]['admin'] = true;
+            }
+        }
+        foreach ($usuarioBuckets as $b) {
+            foreach ($b as $k => $on) {
+                if ($on && isset($result[$k])) {
+                    $result[$k]++;
+                }
             }
         }
         return $result;
@@ -113,8 +144,14 @@ final class UsuariosListRepository
 
         $perfilId = $perfilFilter !== null && $perfilFilter !== '' ? (self::PERFIL_MAP[$perfilFilter] ?? null) : null;
         if ($perfilId !== null) {
-            $conditions[] = 'v.id_usuario IN (SELECT usuario FROM usuario_perfil WHERE perfil = :perfil_filter)';
-            $params[':perfil_filter'] = $perfilId;
+            if ($perfilFilter === 'estagiario') {
+                $conditions[] = "v.id_usuario IN (SELECT usuario FROM usuario_perfil WHERE perfil = 'ESTAGIARIO' OR perfil LIKE 'ESTAGIARIO-%')";
+            } elseif ($perfilFilter === 'servidor') {
+                $conditions[] = "v.id_usuario IN (SELECT usuario FROM usuario_perfil WHERE perfil = 'SERVIDOR' OR perfil LIKE 'SERVIDOR-%')";
+            } else {
+                $conditions[] = 'v.id_usuario IN (SELECT usuario FROM usuario_perfil WHERE perfil = :perfil_filter)';
+                $params[':perfil_filter'] = $perfilId;
+            }
         }
 
         $where = 'WHERE ' . implode(' AND ', $conditions);

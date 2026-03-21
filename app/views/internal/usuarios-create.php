@@ -10,6 +10,7 @@ require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../helpers/DateHelper.php';
 require_once __DIR__ . '/../../helpers/TextFormatter.php';
 require_once __DIR__ . '/../../helpers/AvatarCatalog.php';
+require_once __DIR__ . '/../../helpers/SetoresAccessHelper.php';
 require_once __DIR__ . '/../../../config/security.php';
 
 Security::requireAuthentication();
@@ -33,23 +34,6 @@ if (!$podeCadastrar) {
 
 $connection = Conection::getInstance()->getConnection();
 
-/** Mapeamento setor (label para usuário) → codigo na tabela setores */
-$setorToCodigo = [
-    'Cartório'           => 'CARTORIO',
-    'Gabinete'           => 'GABINETE',
-    'Sala de Audiências' => 'AUDIENCIA',
-    'Vara'               => 'VARA',
-];
-
-/** Cargo → perfil (quando o select perfil vem desabilitado pelo JS, o POST não envia; derivar no servidor) */
-$cargoToPerfil = [
-    'Estagiário' => 'ESTAGIARIO',
-    'Técnico Judiciário' => 'SERVIDOR',
-    'Analista Judiciário' => 'SERVIDOR',
-    'Chefia' => 'CHEFIA',
-    'Admin' => 'ADMIN',
-];
-
 $mensagemErro = '';
 $mensagemSucesso = '';
 $formValues = [
@@ -61,7 +45,7 @@ $formValues = [
     'tipo'    => 'interno',
     'cargo'   => '',
     'setor'   => '',
-    'perfil'  => '',
+    'perfil_externo'  => 'ESTUDANTE',
     'data_nascimento' => '',
 ];
 
@@ -83,19 +67,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $isExterno = $tipo === 'externo';
         $cargo = trim((string) ($_POST['cargo'] ?? ''));
         $setorLabel = trim((string) ($_POST['setor'] ?? ''));
-        $perfil = trim((string) ($_POST['perfil'] ?? ''));
+        $perfilExterno = trim((string) ($_POST['perfil_externo'] ?? ''));
+        $perfil = '';
         if ($isExterno) {
             $cargo = '';
             $setorLabel = '';
-            if ($perfil !== 'ESTUDANTE' && $perfil !== 'CONSULTOR') {
-                $perfil = 'ESTUDANTE';
+            if ($perfilExterno !== 'ESTUDANTE' && $perfilExterno !== 'CONSULTOR') {
+                $perfilExterno = 'ESTUDANTE';
             }
-        }
-        if ($perfil === '' && $cargo !== '' && isset($cargoToPerfil[$cargo])) {
-            $perfil = $cargoToPerfil[$cargo];
-        }
-        if ($cargo === 'Chefia' && $setorLabel === '') {
-            $setorLabel = 'Gabinete';
+            $perfil = strtoupper($perfilExterno);
+        } else {
+            if ($cargo === 'Chefia' && $setorLabel === '') {
+                $setorLabel = 'Gabinete';
+            }
+            if ($cargo === 'Admin') {
+                $perfil = 'ADMIN';
+            } elseif ($cargo === 'Chefia') {
+                $perfil = 'CHEFIA';
+            } elseif ($cargo === 'Estagiário' || $cargo === 'Técnico Judiciário' || $cargo === 'Analista Judiciário') {
+                if ($setorLabel === '') {
+                    $mensagemErro = 'Para estagiário ou servidor (técnico/analista), selecione o setor correspondente à área operacional.';
+                } else {
+                    $setorRow = SetoresAccessHelper::resolveFromLabel($connection, $setorLabel);
+                    if ($setorRow === null || !SetoresAccessHelper::isOperationalCodigoArea($setorRow['codigo_area'])) {
+                        $mensagemErro = 'Setor inválido ou sem codigo_area (CARTORIO, GABINETE ou AUDIENCIAS) na base. Verifique o cadastro de setores.';
+                    } else {
+                        $area = $setorRow['codigo_area'];
+                        $perfil = ($cargo === 'Estagiário') ? ('ESTAGIARIO-' . $area) : ('SERVIDOR-' . $area);
+                    }
+                }
+            }
         }
 
         $formValues = [
@@ -107,11 +108,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'tipo'     => $isExterno ? 'externo' : 'interno',
             'cargo'    => $cargo,
             'setor'    => $setorLabel,
-            'perfil'   => $perfil,
+            'perfil_externo'   => $isExterno ? $perfil : 'ESTUDANTE',
             'data_nascimento' => $dataNascimentoRaw,
         ];
 
-        if ($nome === '' || $sobrenome === '') {
+        if ($mensagemErro !== '') {
+            // já definido (ex.: setor obrigatório para cargo operacional)
+        } elseif ($nome === '' || $sobrenome === '') {
             $mensagemErro = 'Nome e sobrenome são obrigatórios.';
         } elseif (strlen($cpf) !== 11 || !validarCPFPHP($cpf)) {
             $mensagemErro = 'CPF inválido ou incompleto.';
@@ -169,28 +172,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
 
                     if ($setorLabel !== '') {
-                        $idSetor = null;
-                        if (isset($setorToCodigo[$setorLabel])) {
-                            $codigo = $setorToCodigo[$setorLabel];
-                            $stmt = $connection->prepare('SELECT id_setor FROM setores WHERE codigo = ? LIMIT 1');
-                            $stmt->execute([$codigo]);
-                            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-                            if ($row && !empty($row['id_setor'])) {
-                                $idSetor = trim($row['id_setor']);
-                            }
-                        }
-                        if ($idSetor === null) {
-                            $stmt = $connection->prepare('SELECT id_setor FROM setores WHERE nome = ? LIMIT 1');
-                            $stmt->execute([$setorLabel]);
-                            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-                            if ($row && !empty($row['id_setor'])) {
-                                $idSetor = trim($row['id_setor']);
-                            }
-                        }
-                        if ($idSetor !== null) {
+                        $resolved = SetoresAccessHelper::resolveFromLabel($connection, $setorLabel);
+                        if ($resolved !== null) {
                             $idUsuSetor = 'USO-' . strtoupper(bin2hex(random_bytes(13)));
                             $stmt = $connection->prepare('INSERT INTO usuario_setor (id_usu_setor, usuario, setor) VALUES (?, ?, ?)');
-                            $stmt->execute([$idUsuSetor, $idUsuario, $idSetor]);
+                            $stmt->execute([$idUsuSetor, $idUsuario, $resolved['id_setor']]);
                         }
                     }
 
@@ -256,7 +242,7 @@ $csrfToken = Security::generateCSRFToken();
             <span class="specific">Novo cadastro</span>
         </div>
         <h1 class="title-page">Novo cadastro de usuário</h1>
-        <p class="description-page">Cadastre um servidor (tipo interno). O cadastro será criado com status Pendente; setor e perfis podem ser definidos na edição por admin ou diretora para liberar o acesso.</p>
+        <p class="description-page">Cadastre usuário interno ou externo. Internos operacionais recebem perfil composto (ex.: ESTAGIARIO-CARTORIO, SERVIDOR-GABINETE) conforme cargo e setor. O cadastro inicia como Pendente até ativação.</p>
     </div>
 
     <div class="container-full card-page">
@@ -333,7 +319,16 @@ $csrfToken = Security::generateCSRFToken();
                     <label for="create-tipo">Tipo de usuário</label>
                     <select id="create-tipo" name="tipo" class="width-400 height-md white">
                         <option value="interno"<?php echo ($formValues['tipo'] ?? 'interno') === 'interno' ? ' selected' : ''; ?>>Interno</option>
-                        <option value="externo"<?php echo ($formValues['tipo'] ?? 'interno') === 'externo' ? ' selected' : ''; ?>>Externo (Estudante)</option>
+                        <option value="externo"<?php echo ($formValues['tipo'] ?? 'interno') === 'externo' ? ' selected' : ''; ?>>Externo (Estudante / Consultor)</option>
+                    </select>
+                </div>
+            </div>
+            <div id="create-externo-fields" class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md" style="display: none;">
+                <div class="col">
+                    <label for="create-perfil-externo">Perfil externo</label>
+                    <select id="create-perfil-externo" name="perfil_externo" class="width-400 height-md white">
+                        <option value="ESTUDANTE"<?php echo ($formValues['perfil_externo'] ?? 'ESTUDANTE') === 'ESTUDANTE' ? ' selected' : ''; ?>>Estudante</option>
+                        <option value="CONSULTOR"<?php echo ($formValues['perfil_externo'] ?? '') === 'CONSULTOR' ? ' selected' : ''; ?>>Consultor</option>
                     </select>
                 </div>
             </div>
@@ -352,26 +347,15 @@ $csrfToken = Security::generateCSRFToken();
                 </div>
             </div>
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
-                <div class="col">
-                    <label for="create-setor">Setor</label>
+                <div class="col full-line">
+                    <label for="create-setor">Setor (área operacional)</label>
                     <select id="create-setor" name="setor" class="width-500 height-md white">
                         <option value="">Selecione</option>
                         <option value="Cartório"<?php echo $formValues['setor'] === 'Cartório' ? ' selected' : ''; ?>>Cartório</option>
                         <option value="Gabinete"<?php echo $formValues['setor'] === 'Gabinete' ? ' selected' : ''; ?>>Gabinete</option>
                         <option value="Sala de Audiências"<?php echo $formValues['setor'] === 'Sala de Audiências' ? ' selected' : ''; ?>>Sala de Audiências</option>
                     </select>
-                </div>
-                <div class="col">
-                    <label for="create-perfil">Perfil</label>
-                    <select id="create-perfil" name="perfil" class="width-400 height-md white">
-                        <option value="">Selecione</option>
-                        <option value="ESTAGIARIO"<?php echo $formValues['perfil'] === 'ESTAGIARIO' ? ' selected' : ''; ?>>Estagiário</option>
-                        <option value="SERVIDOR"<?php echo $formValues['perfil'] === 'SERVIDOR' ? ' selected' : ''; ?>>Servidor</option>
-                        <option value="CHEFIA"<?php echo $formValues['perfil'] === 'CHEFIA' ? ' selected' : ''; ?>>Chefia</option>
-                        <option value="ADMIN"<?php echo $formValues['perfil'] === 'ADMIN' ? ' selected' : ''; ?>>Admin</option>
-                        <option value="ESTUDANTE"<?php echo $formValues['perfil'] === 'ESTUDANTE' ? ' selected' : ''; ?>>Estudante</option>
-                        <option value="CONSULTOR"<?php echo $formValues['perfil'] === 'CONSULTOR' ? ' selected' : ''; ?>>Consultor</option>
-                    </select>
+                    <span class="minor-info">Obrigatório para estagiário, técnico ou analista: define o perfil composto (ex.: SERVIDOR-GABINETE). Chefia assume Gabinete se vazio; admin pode ficar sem setor.</span>
                 </div>
             </div>
             </div>
@@ -405,10 +389,10 @@ $csrfToken = Security::generateCSRFToken();
         var senhaConfirmInput = document.getElementById('create-senha-confirm');
         var tipoSelect = document.getElementById('create-tipo');
         var internoFields = document.getElementById('create-interno-fields');
+        var externoFields = document.getElementById('create-externo-fields');
         var cargoSelect = document.getElementById('create-cargo');
         var setorSelect = document.getElementById('create-setor');
         var dataNascimentoInput = document.getElementById('create-data-nascimento');
-        var perfilSelect = document.getElementById('create-perfil');
         var cadastrarBtn = document.getElementById('cadastrar-btn');
         var voltarBtn = document.getElementById('voltar-btn');
 
@@ -416,13 +400,7 @@ $csrfToken = Security::generateCSRFToken();
             voltarBtn.addEventListener('click', function () { window.location.href = '/frame.php?page=usuarioslist'; });
         }
 
-        var CARGO_TO_PERFIL = {
-            'Estagiário': 'ESTAGIARIO',
-            'Técnico Judiciário': 'SERVIDOR',
-            'Analista Judiciário': 'SERVIDOR',
-            'Chefia': 'CHEFIA',
-            'Admin': 'ADMIN'
-        };
+        var CARGOS_OPERACIONAIS = { 'Estagiário': true, 'Técnico Judiciário': true, 'Analista Judiciário': true };
 
         function isExternoSelected() {
             return tipoSelect && ((tipoSelect.value || '').trim() === 'externo');
@@ -433,53 +411,32 @@ $csrfToken = Security::generateCSRFToken();
             if (internoFields) {
                 internoFields.style.display = externo ? 'none' : '';
             }
+            if (externoFields) {
+                externoFields.style.display = externo ? '' : 'none';
+            }
             if (externo) {
                 if (cargoSelect) cargoSelect.value = '';
                 if (setorSelect) setorSelect.value = '';
-                if (perfilSelect) {
-                    var pe = (perfilSelect.value || '').trim();
-                    if (pe !== 'ESTUDANTE' && pe !== 'CONSULTOR') perfilSelect.value = 'ESTUDANTE';
-                    perfilSelect.disabled = false;
-                    perfilSelect.classList.remove('readonly');
-                }
                 return;
-            }
-            if (perfilSelect) {
-                var pi = (perfilSelect.value || '').trim();
-                if (pi === 'ESTUDANTE' || pi === 'CONSULTOR') perfilSelect.value = '';
             }
         }
 
-        function syncCargoToPerfilAndSetor() {
-            if (!cargoSelect || !setorSelect || !perfilSelect) return;
+        function syncCargoToSetorRules() {
+            if (!cargoSelect || !setorSelect) return;
             if (isExternoSelected()) return;
-            var cargo = (cargoSelect && cargoSelect.value) ? cargoSelect.value.trim() : '';
-            var perfilValue = CARGO_TO_PERFIL[cargo];
-            if (perfilValue) {
-                perfilSelect.value = perfilValue;
-                perfilSelect.disabled = true;
-                perfilSelect.classList.add('readonly');
-            } else {
-                perfilSelect.value = '';
-                perfilSelect.disabled = false;
-                perfilSelect.classList.remove('readonly');
-            }
-            if (cargo === 'Magistrada') {
+            var cargo = (cargoSelect.value || '').trim();
+            if (cargo === 'Chefia' && !setorSelect.value) {
                 setorSelect.value = 'Gabinete';
-                setorSelect.disabled = true;
-                setorSelect.classList.add('readonly');
-            } else {
-                setorSelect.disabled = false;
-                setorSelect.classList.remove('readonly');
-                if (!setorSelect.value) setorSelect.value = '';
             }
+            setorSelect.disabled = false;
+            setorSelect.classList.remove('readonly');
         }
 
         if (tipoSelect) tipoSelect.addEventListener('change', function () {
             syncTipoFields();
             updateCadastrarButton();
         });
-        if (cargoSelect) cargoSelect.addEventListener('change', syncCargoToPerfilAndSetor);
+        if (cargoSelect) cargoSelect.addEventListener('change', syncCargoToSetorRules);
 
         /** Aplica o formatador padrão do sistema (TextFormatter.formatProperName) em nome e sobrenome no blur. */
         function initTextFormatter() {
@@ -611,6 +568,10 @@ $csrfToken = Security::generateCSRFToken();
             if (!email || !validarEmail(email)) return false;
             if (!validarSenha(senha)) return false;
             if (isExternoSelected()) return senha === conf;
+            var cargo = (cargoSelect && cargoSelect.value) ? cargoSelect.value.trim() : '';
+            if (CARGOS_OPERACIONAIS[cargo] && (!setorSelect || !(setorSelect.value || '').trim())) {
+                return false;
+            }
             return senha === conf;
         }
 
@@ -641,7 +602,8 @@ $csrfToken = Security::generateCSRFToken();
             showToast({ type: 'info', variant: 'full', title: 'Informação', message: 'O cadastro será criado com status Pendente.' });
         }
         syncTipoFields();
-        syncCargoToPerfilAndSetor();
+        syncCargoToSetorRules();
+        if (setorSelect) setorSelect.addEventListener('change', updateCadastrarButton);
         initTextFormatter();
         initCPFMask();
         initEmailValidation();
