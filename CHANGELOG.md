@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0047
+
+**Data:** 2026-03-21 18:01:42 | **Commit:** `fc72eb7` | **Tipo:** `patch`
+
+- Fix: correcao de nomes de arquivos
+
 ## V. 1.04.0046
 
 **Data:** 2026-03-21 17:46:05 | **Commit:** `0919f27` | **Tipo:** `patch`
@@ -3570,6 +3576,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
