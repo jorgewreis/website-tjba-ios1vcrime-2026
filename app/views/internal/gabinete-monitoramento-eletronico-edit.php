@@ -76,9 +76,11 @@ if ($userIdEdit !== null && $userIdEdit !== '') {
     $stmtPerfis->execute([$userIdEdit]);
     $userPerfisEdit = $stmtPerfis->fetchAll(PDO::FETCH_COLUMN);
 }
+/** Botão Excluir: visível apenas para admin/chefia e somente quando for o último número sequencial do ano. */
 $perfisPermitidosExcluir = ['ADMIN', 'CHEFIA'];
 $perfisPermitidosCancelar = ['ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA'];
-$podeExcluirTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosExcluir)) > 0 && $podeExcluirNumero;
+$isAdminOuChefia = count(array_intersect($userPerfisEdit, $perfisPermitidosExcluir)) > 0;
+$podeExcluirTarefa = $isAdminOuChefia && $podeExcluirNumero;
 $podeCancelarTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosCancelar)) > 0;
 $tarefaCancelada = ($statusAtual === 'cancelada');
 $tarefaFinalizada = ($statusAtual === 'finalizada');
@@ -117,6 +119,7 @@ $podeCancelarTarefa = $podeCancelarTarefa && !$tarefaCancelada && !$tarefaFinali
             </script>
         <?php else: ?>
             <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Informações</h2></div>
+            <div id="gab-mon-edit-track">
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md" style="justify-content: flex-start; flex-wrap: wrap;">
                 <div class="col filter">
                     <label for="gab-mon-edit-processo">Processo</label>
@@ -145,6 +148,7 @@ $podeCancelarTarefa = $podeCancelarTarefa && !$tarefaCancelada && !$tarefaFinali
                     <input type="text" id="gab-mon-edit-duracao" class="width-200 height-md readonly" value="<?php echo htmlspecialchars($duracaoTxt, ENT_QUOTES); ?>" readonly>
                 </div>
             </div>
+            </div>
             <input type="hidden" id="hidden-gme-id" value="<?php echo htmlspecialchars($idMon, ENT_QUOTES); ?>">
         <?php endif; ?>
 
@@ -155,9 +159,9 @@ $podeCancelarTarefa = $podeCancelarTarefa && !$tarefaCancelada && !$tarefaFinali
                     <button type="button" class="btn btn-danger-outline" id="gab-mon-cancelar-btn" title="Alterar status para Cancelada">Cancelar monitoramento</button>
                 <?php endif; ?>
                 <?php if ($podeExcluirTarefa): ?>
-                    <button type="button" class="btn btn-danger" id="gab-mon-excluir-btn" title="Excluir somente se for o último número do ano (ajustar regra na implementação)">Excluir registro</button>
+                    <button type="button" class="btn btn-danger" id="gab-mon-excluir-btn" title="Exclusão permitida apenas para admin ou chefia e somente se for o último número sequencial do ano">Excluir registro</button>
                 <?php endif; ?>
-                <button type="button" class="btn btn-primary" id="salvar-btn">Salvar alterações</button>
+                <button type="button" class="btn btn-primary" id="salvar-btn" disabled>Salvar alterações</button>
             <?php endif; ?>
         </div>
     </div>
@@ -187,12 +191,40 @@ $podeCancelarTarefa = $podeCancelarTarefa && !$tarefaCancelada && !$tarefaFinali
                 } catch (e) {}
             };
             const mid = document.getElementById('hidden-gme-id')?.value || '';
+            const saveBtn = document.getElementById('salvar-btn');
+            const trackRoot = document.getElementById('gab-mon-edit-track');
+
+            function snapshotTrackableValues() {
+                if (!trackRoot) return '';
+                const els = Array.from(trackRoot.querySelectorAll('input:not([type="hidden"]), select, textarea')).filter(function (el) {
+                    return !el.readOnly && !el.disabled;
+                });
+                return els.map(function (el) {
+                    return (el.id || el.name || '') + '\t' + String(el.value);
+                }).join('\n');
+            }
+
+            let initialTrackSnapshot = snapshotTrackableValues();
+            function syncSalvarDisabled() {
+                if (!saveBtn) return;
+                saveBtn.disabled = snapshotTrackableValues() === initialTrackSnapshot;
+            }
+
+            if (trackRoot && saveBtn) {
+                Array.from(trackRoot.querySelectorAll('input:not([type="hidden"]), select, textarea')).forEach(function (el) {
+                    if (el.readOnly || el.disabled) return;
+                    el.addEventListener('input', syncSalvarDisabled);
+                    el.addEventListener('change', syncSalvarDisabled);
+                });
+                syncSalvarDisabled();
+            }
 
             document.getElementById('gab-mon-voltar-btn')?.addEventListener('click', function () {
                 window.location.href = '/frame.php?page=monitoramentogabinete';
             });
 
-            document.getElementById('salvar-btn')?.addEventListener('click', function () {
+            saveBtn?.addEventListener('click', function () {
+                if (saveBtn.disabled) return;
                 notify('info', 'Somente leitura', 'Esta tela exibe os dados do registro. Alterações de datas e subtarefas são feitas na lista.');
             });
 

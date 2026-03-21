@@ -267,20 +267,16 @@ $statusLabelUi = static function (string $s): string {
                                 <i class="fi fi-rr-angle-small-down"></i>
                             </label>
                         </div>
-                        <?php endif; ?>
-                        <div class="col width-200">
-                            <span class="minor-info">Monitoramento</span>
-                            <span class="major-info"><?php echo htmlspecialchars($nAno, ENT_QUOTES); ?></span>
-                        </div>
-                        <div class="col width-420 col-process process-info" title="clique para copiar">
+                        <?php endif; ?>                        
+                        <div class="col width-600 col-process process-info" title="clique para copiar">
                             <span class="minor-info text-ellipsis" <?php echo $classeStyle; ?>><?php echo htmlspecialchars($classeNome); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars((string) ($row['Processo'] ?? '')); ?></span>
                         </div>
-                        <div class="col width-280">
+                        <div class="col width-600 col-reu" title="clique para copiar">
                             <span class="minor-info">Réu</span>
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['ReuNome'] ?? '')); ?></span>
                         </div>
-                        <div class="col width-160">
+                        <div class="col width-300 col-duracao">
                             <span class="minor-info">Duração</span>
                             <span class="major-info"><?php echo htmlspecialchars($duracaoLabel); ?></span>
                         </div>
@@ -336,8 +332,7 @@ $statusLabelUi = static function (string $s): string {
                             </div>
                             <?php if ($precisaData): ?>
                             <div class="col">
-                                <label for="data-inicio-<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>">Data de início</label>
-                                <input type="date" class="width-280 height-md gme-data-inicio" id="data-inicio-<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>">
+                                <input type="date" class="width-300 height-md gme-data-inicio" id="data-inicio-<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>">
                             </div>
                             <?php endif; ?>
                         </div>
