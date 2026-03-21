@@ -72,7 +72,7 @@
         }
         setStatusMessage(statusElement, '*Classe obtida via DataJud');
         if (statusElement) statusElement.style.color = 'var(--success-color)';
-        if (processoInput.id === 'gab-mon-processo') {
+        if (processoInput.id === 'gab-mon-processo' || processoInput.id === 'filter-processo') {
             window.dispatchEvent(new CustomEvent('gabineteMonDatajudClassePronta', {
                 detail: { numeroProcesso: processoInput.value },
             }));

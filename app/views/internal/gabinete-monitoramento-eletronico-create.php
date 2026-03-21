@@ -42,12 +42,12 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
         <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
-                    <label for="gab-mon-processo">Número do processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="text" class="width-400 height-md" id="gab-mon-processo" name="processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off" data-cnj-input="true">
+                    <label for="filter-processo">Número do processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <input type="text" class="width-400 height-md" id="filter-processo" name="processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off">
                 </div>
                 <div class="col">
-                    <label for="gab-mon-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
-                    <input type="text" class="width-600 height-md readonly" id="gab-mon-classe" name="classe" placeholder="Classe (automático DataJud)" readonly>
+                    <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
+                    <input type="text" class="width-600 height-md" id="filter-classe" name="classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>
                 </div>
             </div>
             <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
@@ -101,7 +101,7 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
 
             var reuSelect = document.getElementById('gab-mon-reu-select');
             var reuNome = document.getElementById('gab-mon-reu-nome');
-            var processoInputEl = document.getElementById('gab-mon-processo');
+            var processoInputEl = document.getElementById('filter-processo');
 
             function showReuInput() {
                 if (reuSelect) {
@@ -211,7 +211,17 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
 
             if (processoInputEl) {
                 processoInputEl.addEventListener('input', function () {
-                    if ((processoInputEl.value || '').replace(/\D/g, '').length !== 20) {
+                    var digits = (processoInputEl.value || '').replace(/\D/g, '');
+                    if (digits.length !== 20) {
+                        var classeInput = document.getElementById('filter-classe');
+                        if (classeInput) {
+                            classeInput.value = '';
+                            classeInput.readOnly = true;
+                        }
+                        var hCod = document.getElementById('hidden-classe-codigo');
+                        var hDesc = document.getElementById('hidden-classe-descricao');
+                        if (hCod) hCod.value = '';
+                        if (hDesc) hDesc.value = '';
                         showReuInput();
                         if (reuNome) {
                             reuNome.placeholder = 'Digite o nome completo';
@@ -231,18 +241,18 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
             });
 
             window.addEventListener('gabineteMonDatajudClassePronta', function () {
-                var proc = document.getElementById('gab-mon-processo')?.value?.trim() || '';
+                var proc = document.getElementById('filter-processo')?.value?.trim() || '';
                 if (proc) carregarReus(proc);
             });
 
             document.getElementById('btn-gab-mon-registrar')?.addEventListener('click', function () {
-                var procEl = document.getElementById('gab-mon-processo');
+                var procEl = document.getElementById('filter-processo');
                 var proc = procEl?.value?.trim() || '';
                 if (procEl && procEl.disabled) {
                     notify('info', 'Aguarde', 'Aguarde a consulta ao DataJud terminar antes de registrar.');
                     return;
                 }
-                var classeTxt = document.getElementById('gab-mon-classe')?.value?.trim() || '';
+                var classeTxt = document.getElementById('filter-classe')?.value?.trim() || '';
                 if (classeTxt === 'Aguarde...') {
                     notify('info', 'Aguarde', 'Aguarde a consulta ao DataJud terminar antes de registrar.');
                     return;
