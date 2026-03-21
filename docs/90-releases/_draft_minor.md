@@ -190,4 +190,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Feat: implementacao de paginas de oficios** `[0919f27]`
 - **Fix: correcao de nomes de arquivos** `[fc72eb7]`
 - **Fix: demais ajustes** `[af2e4fc]`
+- **Feat: nova implementacao de paginas de monitoramento** `[050f222]`
 
