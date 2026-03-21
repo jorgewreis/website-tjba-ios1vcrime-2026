@@ -164,6 +164,42 @@ final class ProcessosPartesRepository
         return $rows === false ? [] : $rows;
     }
 
+    /**
+     * Réus / acusados vinculados ao processo (polo passivo: réu, indiciado, sentenciado).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findAcusadosByProcessoId(string $processoId): array
+    {
+        $processoId = trim($processoId);
+        if ($processoId === '') {
+            return [];
+        }
+        $tipos = [self::TIPO_REU, self::TIPO_INDICIADO, self::TIPO_SENTENCIADO];
+        $inList = implode(', ', array_fill(0, count($tipos), '?'));
+        $sql = sprintf(
+            'SELECT pp.`id`, pp.`processo_id`, pp.`parte_id`, pp.`tipo_parte`, pp.`polo`, p.`nome_completo`
+             FROM `%s` pp
+             INNER JOIN `partes` p ON p.`id` = pp.`parte_id`
+             WHERE pp.`processo_id` = ? AND pp.`polo` = ? AND pp.`tipo_parte` IN (%s)
+             ORDER BY p.`nome_completo` ASC',
+            $this->table,
+            $inList
+        );
+        $statement = $this->connection->prepare($sql);
+        $statement->bindValue(1, $processoId);
+        $statement->bindValue(2, self::POLO_PASSIVO);
+        $i = 3;
+        foreach ($tipos as $t) {
+            $statement->bindValue($i, $t);
+            $i++;
+        }
+        $statement->execute();
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+        return $rows === false ? [] : $rows;
+    }
+
     public function delete(string $id): bool
     {
         $id = trim($id);

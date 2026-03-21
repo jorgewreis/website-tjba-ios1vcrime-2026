@@ -158,12 +158,10 @@ $anoAtual = (int) date('Y');
                 <div class="col">
                     <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
                     <input type="text" class="width-600 height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>
-                </div>
-            </div>
-            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
+                </div>            
                 <div class="col">
                     <label for="gab-oficio-tipo">Tipo de ofício <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <select class="width-400 height-md" id="gab-oficio-tipo">
+                    <select class="width-600 height-md" id="gab-oficio-tipo">
                         <option value="">Selecione…</option>
                         <option value="Ofício de consultoria">Ofício de consultoria</option>
                         <option value="Ofício de comunicação">Ofício de comunicação</option>

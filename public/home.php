@@ -519,6 +519,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                 section: 'Gabinete',
                 items: [
                     { icon: 'fi fi-rs-license', label: 'Ofícios', target: 'oficiosgabinete' },
+                    { icon: 'fi fi-rs-sensor-on', label: 'Monitoramento Eletrônico', target: 'monitoramentogabinete' },
                     { icon: 'fi fi-rs-lock', label: 'Réus Presos', target: 'reuspresos' }
                 ]
             },
@@ -545,14 +546,6 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                     { icon: 'fi fi-rs-folder-open', label: 'Consulta Processos', target: 'consultaprocessos' },
                     { icon: 'fi fi-rs-building', label: 'Instituições Públicas', target: 'instituicoespublicas' },
                     { icon: 'fi fi-rs-marker', label: 'CEP', target: 'consultacep' }
-                ]
-            },
-            {
-                section: 'Audiências',
-                items: [
-                    { icon: 'fi fi-rs-clipboard-list-check', label: 'Pauta de Audiências', target: 'pauta' },
-                    { icon: 'fi fi-rs-document', label: 'Atas', target: 'atas' },
-                    { icon: 'fi fi-rs-screen', label: 'Painel em tempo real', target: 'painel' }
                 ]
             },
             {

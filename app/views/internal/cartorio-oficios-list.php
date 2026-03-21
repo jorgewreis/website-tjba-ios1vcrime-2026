@@ -190,7 +190,7 @@ function cartorio_oficios_label_cumprimento(array $row): string
                 </div>
                 <div class="col">
                     <label for="oficio-tipo">Tipo de ofício <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <select class="width-400 height-md" id="oficio-tipo" name="tipo_oficio">
+                    <select class="width-600 height-md" id="oficio-tipo" name="tipo_oficio">
                         <option value="">Selecione…</option>
                         <option value="Ofício requisitório">Ofício requisitório</option>
                         <option value="Ofício de comunicação">Ofício de comunicação</option>
@@ -200,7 +200,7 @@ function cartorio_oficios_label_cumprimento(array $row): string
                 </div>
                 <div class="col">
                     <label for="oficio-forma-cumprimento">Forma de cumprimento <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <select class="width-400 height-md" id="oficio-forma-cumprimento" name="forma_cumprimento">
+                    <select class="width-500 height-md" id="oficio-forma-cumprimento" name="forma_cumprimento">
                         <option value="">Selecione…</option>
                         <option value="ccm">por Oficial de Justiça (CCM)</option>
                         <option value="cartorio">pelo Cartório</option>

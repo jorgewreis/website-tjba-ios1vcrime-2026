@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Monitoramento Eletrônico (Gabinete) — Cadastro — Primeira Vara Crime de Ilhéus</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!--
+      MODELO — Cadastro (Gabinete — Monitoramento Eletrônico):
+      - Servidor preenche: número do processo (CNJ), classe (automático via DataJud).
+      - Réu: select (partes do processo) + input (complemento / "Outro").
+      - Após criar: subtarefas na lista — "Iniciar monitoramento" (data) → Em andamento; "Encerrar monitoramento" → Finalizada.
+      - Lista: gabinete-monitoramento-eletronico-list.html | Edição: gabinete-monitoramento-eletronico-edit.html
+      - Na app: rota dedicada (ex.: frame.php?page=...create); este HTML é referência estática.
+    -->
+    <link rel="stylesheet" href="../../public/assets/css/shared/reset.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/color.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/layout.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/page.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/form.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/table.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/toast.css">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+</head>
+<body class="page-internal">
+
+    <div class="spacing-top-page"></div>
+
+    <div class="header-page">
+        <div class="location">
+            <span class="all">Interno - Gabinete - Monitoramento Eletrônico -</span>
+            <span class="specific">Cadastro</span>
+        </div>
+        <h1 class="title-page">Novo monitoramento eletrônico</h1>
+        <p class="description-page">Vincule o registro ao processo em contexto e ao réu. Processo e classe são definidos pelo sistema (DataJud).</p>
+    </div>
+
+    <div class="container-full card-page">
+
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <h2>Dados do registro</h2>
+        </div>
+
+        <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md">
+            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
+                <div class="col">
+                    <label for="gab-mon-processo">Número do processo <span class="label-hint-obrigatorio"></span>*obrigatório</span></label>
+                    <input type="text" class="width-400 height-md" id="gab-mon-processo" name="processo" placeholder="0000000-00.0000.0.00.0000">
+                </div>
+                <div class="col">
+                    <label for="gab-mon-classe">Classe</label>
+                    <input type="text" class="width-600 height-md readonly" id="gab-mon-classe" name="classe" value="Ação Penal - Procedimento Ordinário" placeholder="Classe (automático DataJud)" readonly>
+                </div>
+            </div>
+            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
+                <div class="col">
+                    <label for="gab-mon-reu-select">Réu <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <select class="width-700 height-md" id="gab-mon-reu-select" name="reu_id" aria-describedby="gab-mon-reu-hint">
+                        <option value="">Selecione o réu…</option>
+                        <option value="1">Fulano de Tal (principal)</option>
+                        <option value="2">Beltrano Silva (co-réu)</option>
+                        <option value="outro">Outro (informar abaixo)</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <label for="gab-mon-reu-input">Complemento / nome (se necessário)</label>
+                    <input type="text" class="width-700 height-md" id="gab-mon-reu-input" name="reu_complemento" placeholder="Ex.: alcunha, qualificação adicional ou nome completo se 'Outro'" autocomplete="off" aria-describedby="gab-mon-reu-hint">
+                </div>
+            </div>
+            <p class="minor-info" id="gab-mon-reu-hint" style="margin:0;">Implementação: popular o select via API com as partes réus do processo; o input cobre casos não listados ou detalhes.</p>
+            <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
+                <button type="button" class="btn btn-secondary" id="btn-gab-mon-voltar">Voltar</button>
+                <button type="button" class="btn btn-primary" id="btn-gab-mon-registrar">Registrar</button>                
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-page">
+        <div class="location">
+            <span class="all">Aplicativo web desenvolvido integralmente por </span>
+            <span class="specific">Jorge Reis Develop</span>
+            <span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            document.getElementById('btn-gab-mon-limpar')?.addEventListener('click', function () {
+                var s = document.getElementById('gab-mon-reu-select');
+                var i = document.getElementById('gab-mon-reu-input');
+                if (s) s.selectedIndex = 0;
+                if (i) i.value = '';
+            });
+        })();
+    </script>
+</body>
+</html>
