@@ -192,4 +192,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: demais ajustes** `[af2e4fc]`
 - **Feat: nova implementacao de paginas de monitoramento** `[050f222]`
 - **Fix: correcao de modelo** `[86d225a]`
+- **Fix: correcao de input e select** `[2315e6d]`
 
