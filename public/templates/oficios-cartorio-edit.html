@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Ofícios (Cartório) — Edição — Primeira Vara Crime de Ilhéus</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!--
+      FASE 2: Cancelar ofício e Excluir ofício apenas aqui (regras de perfil e duplo clique na implementação).
+      Exclusão: só último número do ano; cancelamento mantém número e remove subtarefas.
+    -->
+    <link rel="stylesheet" href="../../public/assets/css/shared/reset.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/color.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/layout.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/page.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/form.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/table.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/toast.css">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+</head>
+<body class="page-internal">
+
+    <div class="spacing-top-page"></div>
+
+    <div class="header-page">
+        <div class="location">
+            <span class="all">Interno - Cartório - Ofícios -</span>
+            <span class="specific">Edição</span>
+        </div>
+        <h1 class="title-page">Editar ofício</h1>
+        <p class="description-page">Visualize os dados do ofício, acompanhe subtarefas quando houver. Cancelar ou excluir conforme as regras do cartório.</p>
+    </div>
+
+    <div class="container-full card-page">
+
+        <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom">
+            <h2>Informações</h2>
+        </div>
+
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md" style="justify-content: flex-start; flex-wrap: wrap;">
+            <div class="col filter">
+                <label for="edit-oficio-numero-ano">Ofício (número/ano)</label>
+                <input type="text" id="edit-oficio-numero-ano" class="width-300 height-md readonly" value="334/2026" readonly>
+            </div>
+            <div class="col filter">
+                <label for="edit-oficio-processo">Processo</label>
+                <input type="text" id="edit-oficio-processo" class="width-400 height-md readonly" value="0800234-11.2026.8.05.0103" readonly>
+            </div>
+            <div class="col filter">
+                <label for="edit-oficio-tipo">Tipo de ofício</label>
+                <select id="edit-oficio-tipo" class="width-600 height-md">
+                    <option value="">Selecione…</option>
+                    <option value="oficio_requisitorio">Ofício requisitório</option>
+                    <option value="oficio_comunicacao">Ofício de comunicação</option>
+                    <option value="outro">Outro</option>
+                </select>
+            </div>
+            <div class="col filter">
+                <label for="edit-oficio-forma">Forma de cumprimento</label>
+                <input type="text" id="edit-oficio-forma" class="width-400 height-md readonly" value="pelo Cartório" readonly>
+            </div>
+            <div class="col filter">
+                <label for="edit-oficio-meio">Meio de envio</label>
+                <select id="edit-oficio-meio" class="width-400 height-md">
+                    <option value="">Selecione…</option>
+                    <option value="email">E-mail</option>
+                    <option value="malote_digital">Malote digital</option>
+                    <option value="pessoalmente">Pessoalmente</option>
+                </select>
+            </div>            
+        </div>
+
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom">
+            <p class="minor-info" style="margin:0;">Na implementação: timeline ou lista de subtarefas (Enviar ofício → Juntar termo de envio) quando o modo for envio pelo Cartório; vazio quando CCM ou cancelado.</p>
+        </div>
+
+        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
+            <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
+            <button type="button" class="btn btn-danger-outline" id="cancelar-oficio-btn" title="Alterar status para Cancelada e remover subtarefas">Cancelar ofício</button>
+            <button type="button" class="btn btn-danger" id="excluir-oficio-btn" title="Excluir somente se for o último número do ano">Excluir ofício</button>
+            <button type="button" class="btn btn-primary" id="salvar-btn" type="button">Salvar alterações</button>
+        </div>
+    </div>
+
+    <div class="footer-page">
+        <div class="location">
+            <span class="all">Aplicativo web desenvolvido integralmente por </span>
+            <span class="specific">Jorge Reis Develop</span>
+            <span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            document.getElementById('voltar-btn')?.addEventListener('click', function () {
+                history.back();
+            });
+        })();
+    </script>
+</body>
+</html>

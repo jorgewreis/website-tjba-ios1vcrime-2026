@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Ofícios (Gabinete) — Lista — Primeira Vara Crime de Ilhéus</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!--
+      FASE 2 / API (Gabinete):
+      - Formulário: apenas processo + tipo de ofício (sem modo de cumprimento / meio de envio).
+      - Fluxo equivalente ao CCM: uma tarefa finalizada ao registrar, sem subtarefas.
+      - Numeração n/ano (sequencial anual), mesma convenção de exibição do cartório quando aplicável ao modelo de dados.
+      - IDs sugeridos: gab-oficio-processo, gab-oficio-tipo, btn-gab-oficio-registrar, btn-gab-oficio-limpar.
+      - Lista: button-edit; status finalizada sem badge; filtro: Pendente | Finalizada | Cancelada. Cancelar/Excluir só em oficios-gabinete-edit.html.
+    -->
+    <link rel="stylesheet" href="../../public/assets/css/shared/reset.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/color.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/layout.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/page.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/form.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/table.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/toast.css">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+</head>
+<body class="page-internal">
+
+    <div class="spacing-top-page"></div>
+
+    <div class="header-page">
+        <div class="location">
+            <span class="all">Interno - Gabinete - Ofícios -</span>
+            <span class="specific">Lista e registro</span>
+        </div>
+        <h1 class="title-page">Ofícios</h1>
+        <p class="description-page">Registro de ofícios do gabinete: processo e tipo. Sem fluxo de envio pelo cartório nesta tela.</p>
+    </div>
+
+    <div class="container-full card-page">
+
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-start">
+                <h2>Lista de ofícios</h2>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md">
+                <input type="text" class="width-400 height-md" id="search-input" placeholder="Pesquisar por processo..." autocomplete="off">
+                <select class="width-300 height-md" id="export-type" disabled>
+                    <option value="" selected>Exportar lista</option>
+                    <option value="pdf">Gerar PDF</option>
+                    <option value="csv">Gerar CSV</option>
+                    <option value="print">Imprimir</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Formulário compacto: apenas processo + tipo -->
+        <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md">
+            <h3 class="title-section" style="margin:0;font-size:1rem;font-weight:600;">Registrar ofício</h3>
+            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
+                <div class="col">
+                    <label for="gab-oficio-processo">Número do processo</label>
+                    <input type="text" class="width-400 height-md" id="gab-oficio-processo" name="processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off">
+                </div>
+                <div class="col">
+                    <label for="processo-classe">Classe</label>
+                    <input type="text" class="width-600 height-md readonly" id="processo-classe" name="classe" placeholder="Classe do processo (automático)" readonly>
+                </div>
+                <div class="col">
+                    <label for="gab-oficio-tipo">Tipo de ofício</label>
+                    <select class="width-600 height-md" id="gab-oficio-tipo" name="tipo_oficio">
+                        <option value="">Selecione…</option>
+                        <option value="consultoria">Ofício de consultoria (exemplo)</option>
+                        <option value="comunicacao">Ofício de comunicação (exemplo)</option>
+                        <option value="outro">Outro (ajustar lista na implementação)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="display-flex row row-fit justify-start gap-y-md">
+                <button type="button" class="btn btn-primary" id="btn-gab-oficio-registrar">Registrar</button>
+                <button type="button" class="btn btn-secondary-outline" id="btn-gab-oficio-limpar">Limpar formulário</button>
+            </div>
+        </div>
+
+        <!-- Filtros (sem tipo de envio) -->
+        <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
+            <div class="display-flex row row-fit justify-start gap-y-md flex-wrap">
+                <div class="col">
+                    <label for="filter-status">Filtrar por status</label>
+                    <select class="width-500 height-md" id="filter-status">
+                        <option value="" selected>Mostrar todos</option>
+                        <option value="pendente">Pendente (0)</option>
+                        <option value="finalizada">Finalizada (0)</option>
+                        <option value="cancelada">Cancelada (0)</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <label for="filter-ano">Ano do ofício</label>
+                    <select class="width-300 height-md" id="filter-ano">
+                        <option value="">Todos</option>
+                        <option value="2026" selected>2026</option>
+                        <option value="2025">2025</option>
+                    </select>
+                </div>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md">
+                <div class="col">
+                    <label for="items-per-page">Itens por página</label>
+                    <select class="width-300 height-md" id="items-per-page">
+                        <option value="10">10</option>
+                        <option value="25" selected>25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Linhas mock: finalizadas sem badge de status; cancelada exibe badge -->
+        <div class="display-flex col col-full register border-bottom" data-oficio-id="gab-mock-12">
+            <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
+                <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                    <div class="col width-200">
+                        <span class="minor-info">Ofício</span>
+                        <span class="major-info">12/2026</span>
+                    </div>
+                    <div class="col width-500 col-process process-info" title="clique para copiar">
+                        <span class="minor-info text-ellipsis" style="color: var(--primary-color-active); font-weight: 600;">Ação Penal</span>
+                        <span class="major-info">0800234-11.2026.8.05.0103</span>
+                    </div>
+                    <div class="col width-400">
+                        <span class="minor-info">Tipo</span>
+                        <span class="major-info text-ellipsis">Ofício de consultoria</span>
+                    </div>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-sm align-center">
+                    <div class="col button-table button-edit" data-oficio-id="gab-mock-12" title="Editar">
+                        <i class="fi fi-rr-file-edit"></i>
+                    </div>
+                    <!-- Finalizada: sem badge na lista -->
+                </div>
+            </div>
+        </div>
+
+        <div class="display-flex col col-full register border-bottom" data-oficio-id="gab-mock-11">
+            <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
+                <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                    <div class="col width-200">
+                        <span class="minor-info">Ofício</span>
+                        <span class="major-info">11/2026</span>
+                    </div>
+                    <div class="col width-500 col-process process-info" title="clique para copiar">
+                        <span class="minor-info text-ellipsis" style="color: var(--primary-color-active); font-weight: 600;">Inquérito Policial</span>
+                        <span class="major-info">0001234-56.2026.8.05.0103</span>
+                    </div>
+                    <div class="col width-400">
+                        <span class="minor-info">Tipo</span>
+                        <span class="major-info text-ellipsis">Ofício de comunicação</span>
+                    </div>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-sm align-center">
+                    <div class="col button-table button-edit" data-oficio-id="gab-mock-11" title="Editar">
+                        <i class="fi fi-rr-file-edit"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="display-flex col col-full register border-bottom" data-oficio-id="gab-mock-10">
+            <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
+                <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                    <div class="col width-200">
+                        <span class="minor-info">Ofício</span>
+                        <span class="major-info">10/2026</span>
+                    </div>
+                    <div class="col width-500 col-process process-info" title="clique para copiar">
+                        <span class="minor-info text-ellipsis">Classe não informada</span>
+                        <span class="major-info">0999888-77.2026.8.05.0103</span>
+                    </div>
+                    <div class="col width-400">
+                        <span class="minor-info">Tipo</span>
+                        <span class="major-info text-ellipsis">Outro</span>
+                    </div>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-sm align-center">
+                    <div class="col button-table button-edit" data-oficio-id="gab-mock-10" title="Editar">
+                        <i class="fi fi-rr-file-edit"></i>
+                    </div>
+                    <div class="col">
+                        <div class="width-300 padding-x-lg status status-cancelled">Cancelada</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
+            <span class="pagination-info">Mostrando 1-3 de 3 ofícios (1 página, 10 itens por página)</span>
+            <div class="pagination-controls">
+                <a class="pagination-symbol disabled" aria-disabled="true">
+                    <img src="../../public/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior">
+                </a>
+                <a class="pagination-number active" href="#">1</a>
+                <a class="pagination-symbol disabled" aria-disabled="true">
+                    <img src="../../public/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página">
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-page">
+        <div class="location">
+            <span class="all">Aplicativo web desenvolvido integralmente por </span>
+            <span class="specific">Jorge Reis Develop</span>
+            <span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            document.getElementById('btn-gab-oficio-limpar')?.addEventListener('click', function () {
+                var p = document.getElementById('gab-oficio-processo');
+                var t = document.getElementById('gab-oficio-tipo');
+                if (p) p.value = '';
+                if (t) t.selectedIndex = 0;
+            });
+        })();
+    </script>
+</body>
+</html>

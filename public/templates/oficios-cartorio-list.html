@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Ofícios (Cartório) — Lista — Primeira Vara Crime de Ilhéus</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!--
+      FASE 2 / API (resumo):
+      - Numeração sequencial anual exibida como n/ano; contador reinicia em 1 a cada ano.
+      - CCM: tarefa concluída/finalizada ao criar, sem subtarefas.
+      - Envio pelo Cartório: pendente + subtarefas enviar_oficio → juntar_termo_envio; depois finalizada.
+      - Ordenação: pendentes antes de finalizadas/canceladas.
+      - Exclusão: apenas o maior número do ano (último criado). Cancelamento: mantém número, status cancelado, remove subtarefas.
+      - Filtro de status na UI: Pendente | Finalizada | Cancelada. Na lista, linha finalizada não exibe badge de status.
+      IDs: oficio-processo, oficio-tipo, oficio-forma-cumprimento, oficio-meio-envio; linha data-oficio-id + button-edit; cancelar/excluir na tela de edição.
+    -->
+    <link rel="stylesheet" href="../../public/assets/css/shared/reset.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/color.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/layout.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/page.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/form.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/table.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/toast.css">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+</head>
+<body class="page-internal">
+
+    <div class="spacing-top-page"></div>
+
+    <div class="header-page">
+        <div class="location">
+            <span class="all">Interno - Cartório - Ofícios -</span>
+            <span class="specific">Lista e registro</span>
+        </div>
+        <h1 class="title-page">Ofícios</h1>
+        <p class="description-page">Registro de ofícios expedidos pelo cartório, com cumprimento via CCM ou envio pelo próprio cartório (com acompanhamento de envio e juntada de termo).</p>
+    </div>
+
+    <div class="container-full card-page">
+
+        <!-- Faixa título + busca (sem rota “Novo cadastro”; cadastro fica no bloco abaixo) -->
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-start">
+                <h2>Lista de ofícios</h2>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md">
+                <input type="text" class="width-400 height-md" id="search-input" placeholder="Pesquisar por processo..." autocomplete="off">
+                <select class="width-300 height-md" id="export-type" disabled>
+                    <option value="" selected>Exportar lista</option>
+                    <option value="pdf">Gerar PDF</option>
+                    <option value="csv">Gerar CSV</option>
+                    <option value="print">Imprimir</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Formulário compacto: novo ofício -->
+        <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md">
+            <h3 class="title-section" style="margin:0;font-size:1rem;font-weight:600;">Registrar ofício</h3>
+            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
+                <div class="col">
+                    <label for="oficio-processo">Número do processo</label>
+                    <input type="text" class="width-400 height-md" id="oficio-processo" name="processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off">
+                </div>
+                <div class="col">
+                    <label for="processo-classe">Classe</label>
+                    <input type="text" class="width-600 height-md readonly" id="processo-classe" name="classe" placeholder="Classe do processo (automático)" readonly>
+                </div>
+            </div>
+            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
+                <div class="col">
+                    <label for="oficio-tipo">Tipo de ofício</label>
+                    <select class="width-600 height-md" id="oficio-tipo" name="tipo_oficio">
+                        <option value="">Selecione…</option>
+                        <option value="oficio_requisitorio">Ofício requisitório (exemplo)</option>
+                        <option value="oficio_comunicacao">Ofício de comunicação (exemplo)</option>
+                        <option value="outro">Outro (ajustar lista na implementação)</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <label for="oficio-forma-cumprimento">Forma de cumprimento</label>
+                    <select class="width-400 height-md" id="oficio-forma-cumprimento" name="forma_cumprimento">
+                        <option value="">Selecione…</option>
+                        <option value="ccm">por Oficial de Justiça</option>
+                        <option value="cartorio">pelo Cartório</option>
+                    </select>
+                </div>
+                <!-- Na aplicação: exibir o bloco abaixo somente quando "pelo Cartório" estiver selecionado (toggle via JS). -->
+                <div class="col">
+                    <label for="oficio-meio-envio">Meio de envio</label>
+                    <select class="width-400 height-md" id="oficio-meio-envio" name="meio_envio">
+                        <option value="">Selecione…</option>
+                        <option value="email">E-mail</option>
+                        <option value="malote_digital">Malote digital</option>
+                        <option value="pessoalmente">Pessoalmente</option>
+                    </select>
+                </div>
+            </div>
+            <div class="display-flex row row-fit justify-start gap-y-md">
+                <button type="button" class="btn btn-primary" id="btn-oficio-registrar">Registrar</button>
+                <button type="button" class="btn btn-secondary-outline" id="btn-oficio-limpar">Limpar formulário</button>
+            </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
+            <div class="display-flex row row-fit justify-start gap-y-md flex-wrap">
+                <div class="col">
+                    <label for="filter-status">Filtrar por status</label>
+                    <select class="width-500 height-md" id="filter-status">
+                        <option value="" selected>Mostrar todos</option>
+                        <option value="pendente">Pendente (0)</option>
+                        <option value="finalizada">Finalizada (0)</option>
+                        <option value="cancelada">Cancelada (0)</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <label for="filter-ano">Ano do ofício</label>
+                    <select class="width-300 height-md" id="filter-ano">
+                        <option value="">Todos</option>
+                        <option value="2026" selected>2026</option>
+                        <option value="2025">2025</option>
+                    </select>
+                </div>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md">
+                <div class="col">
+                    <label for="items-per-page">Itens por página</label>
+                    <select class="width-300 height-md" id="items-per-page">
+                        <option value="10">10</option>
+                        <option value="25" selected>25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- MOCK 1: Pendente no topo — envio Cartório, barra com 2 etapas -->
+        <div class="display-flex col col-full register border-bottom" data-oficio-id="mock-334" id="mock-334">
+            <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
+                <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                    <div class="col">
+                        <label class="button-table" title="Expandir detalhes">
+                            <input type="radio" name="open-subtask" value="mock-334" aria-controls="subtask-mock-334" aria-expanded="false">
+                            <i class="fi fi-rr-angle-small-down"></i>
+                        </label>
+                    </div>
+                    <div class="col width-200">
+                        <span class="minor-info">Ofício</span>
+                        <span class="major-info">334/2026</span>
+                    </div>
+                    <div class="col width-500 col-process process-info" title="clique para copiar">
+                        <span class="minor-info text-ellipsis" style="color: var(--primary-color-active); font-weight: 600;">Ação Penal</span>
+                        <span class="major-info">0800234-11.2026.8.05.0103</span>
+                    </div>
+                    <div class="col width-400">
+                        <span class="minor-info">Tipo</span>
+                        <span class="major-info text-ellipsis">Ofício requisitório</span>
+                    </div>
+                    <div class="col width-280">
+                        <span class="minor-info">Cumprimento</span>
+                        <span class="major-info text-ellipsis">Cartório — Malote digital</span>
+                    </div>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-sm align-center">
+                    <div class="col button-table button-edit" data-oficio-id="mock-334" title="Editar">
+                        <i class="fi fi-rr-file-edit"></i>
+                    </div>
+                    <div class="col status-task" title="Enviar ofício">
+                        <div class="width-300 status status-pending status-with-progress">
+                            <span class="status-task-label width-300">Pendente</span>
+                            <div class="status-task-progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="2">
+                                <div class="status-task-progress-segment em_andamento" title="Enviar ofício"></div>
+                                <div class="status-task-progress-segment pendente" title="Juntar termo de envio"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="display-flex col col-full subtask subtask-collapsed" id="subtask-mock-334" aria-hidden="true">
+                <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top" data-subtarefa-tipo="enviar_oficio">
+                    <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                        <div class="col task-status">
+                            <div class="padding-x-lg height-sm status status-pending">Enviar ofício</div>
+                        </div>
+                    </div>
+                    <div class="display-flex row row-fit justify-end align-center">
+                        <button type="button" class="btn btn-primary height-sm" title="Informar envio do ofício">
+                            <span class="value-button">Informar envio do ofício</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top" data-subtarefa-tipo="juntar_termo_envio">
+                    <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                        <div class="col task-status">
+                            <div class="padding-x-lg height-sm status status-pending">Juntar termo de envio</div>
+                        </div>
+                    </div>
+                    <div class="display-flex row row-fit justify-end align-center">
+                        <button type="button" class="btn btn-primary height-sm" disabled title="Disponível após o envio">
+                            <span class="value-button">Informar juntada do termo</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MOCK 2: Finalizada — CCM, sem expansão -->
+        <div class="display-flex col col-full register border-bottom" data-oficio-id="mock-333" id="mock-333">
+            <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
+                <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                    <div class="col" aria-hidden="true"><span class="button-table" style="visibility:hidden;"><i class="fi fi-rr-angle-small-down"></i></span></div>
+                    <div class="col width-200">
+                        <span class="minor-info">Ofício</span>
+                        <span class="major-info">333/2026</span>
+                    </div>
+                    <div class="col width-500 col-process process-info" title="clique para copiar">
+                        <span class="minor-info text-ellipsis" style="color: var(--primary-color-active); font-weight: 600;">Inquérito Policial</span>
+                        <span class="major-info">0001234-56.2026.8.05.0103</span>
+                    </div>
+                    <div class="col width-400">
+                        <span class="minor-info">Tipo</span>
+                        <span class="major-info text-ellipsis">Ofício de comunicação</span>
+                    </div>
+                    <div class="col width-280">
+                        <span class="minor-info">Cumprimento</span>
+                        <span class="major-info text-ellipsis">CCM</span>
+                    </div>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-sm align-center">
+                    <div class="col button-table button-edit" data-oficio-id="mock-333" title="Editar">
+                        <i class="fi fi-rr-file-edit"></i>
+                    </div>
+                    <!-- Finalizada: status oculto na lista (ver filtros: Pendente / Finalizada / Cancelada) -->
+                </div>
+            </div>
+        </div>
+
+        <!-- MOCK 3: Cancelada -->
+        <div class="display-flex col col-full register border-bottom" data-oficio-id="mock-332" id="mock-332">
+            <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
+                <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                    <div class="col" aria-hidden="true"><span class="button-table" style="visibility:hidden;"><i class="fi fi-rr-angle-small-down"></i></span></div>
+                    <div class="col width-200">
+                        <span class="minor-info">Ofício</span>
+                        <span class="major-info">332/2026</span>
+                    </div>
+                    <div class="col width-500 col-process process-info" title="clique para copiar">
+                        <span class="minor-info text-ellipsis">Classe não informada</span>
+                        <span class="major-info">0999888-77.2026.8.05.0103</span>
+                    </div>
+                    <div class="col width-400">
+                        <span class="minor-info">Tipo</span>
+                        <span class="major-info text-ellipsis">Outro</span>
+                    </div>
+                    <div class="col width-280">
+                        <span class="minor-info">Cumprimento</span>
+                        <span class="major-info text-ellipsis">Cartório — E-mail</span>
+                    </div>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-sm align-center">
+                    <div class="col button-table button-edit" data-oficio-id="mock-332" title="Editar">
+                        <i class="fi fi-rr-file-edit"></i>
+                    </div>
+                    <div class="col">
+                        <div class="width-300 padding-x-lg status status-cancelled">Cancelada</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MOCK 4: Pendente simples (2 segmentos, primeira pendente) — ilustra rótulo "Pendente" -->
+        <div class="display-flex col col-full register border-bottom" data-oficio-id="mock-331" id="mock-331">
+            <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
+                <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                    <div class="col">
+                        <label class="button-table" title="Expandir detalhes">
+                            <input type="radio" name="open-subtask" value="mock-331" aria-controls="subtask-mock-331" aria-expanded="false">
+                            <i class="fi fi-rr-angle-small-down"></i>
+                        </label>
+                    </div>
+                    <div class="col width-200">
+                        <span class="minor-info">Ofício</span>
+                        <span class="major-info">331/2026</span>
+                    </div>
+                    <div class="col width-500 col-process process-info" title="clique para copiar">
+                        <span class="minor-info text-ellipsis" style="color: var(--primary-color-active); font-weight: 600;">Ação Penal</span>
+                        <span class="major-info">0111222-33.2026.8.05.0103</span>
+                    </div>
+                    <div class="col width-400">
+                        <span class="minor-info">Tipo</span>
+                        <span class="major-info text-ellipsis">Ofício requisitório</span>
+                    </div>
+                    <div class="col width-280">
+                        <span class="minor-info">Cumprimento</span>
+                        <span class="major-info text-ellipsis">Cartório — Pessoalmente</span>
+                    </div>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-sm align-center">
+                    <div class="col button-table button-edit" data-oficio-id="mock-331" title="Editar">
+                        <i class="fi fi-rr-file-edit"></i>
+                    </div>
+                    <div class="col status-task" title="Enviar ofício">
+                        <div class="width-300 status status-pending status-with-progress">
+                            <span class="status-task-label width-300">Pendente</span>
+                            <div class="status-task-progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="2">
+                                <div class="status-task-progress-segment pendente" title="Enviar ofício"></div>
+                                <div class="status-task-progress-segment pendente" title="Juntar termo de envio"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="display-flex col col-full subtask subtask-collapsed" id="subtask-mock-331" aria-hidden="true">
+                <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top">
+                    <div class="col task-status">
+                        <div class="padding-x-lg height-sm status status-pending">Enviar ofício</div>
+                    </div>
+                    <button type="button" class="btn btn-primary height-sm"><span class="value-button">Informar envio do ofício</span></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
+            <span class="pagination-info">Mostrando 1-4 de 4 ofícios (1 página, 10 itens por página)</span>
+            <div class="pagination-controls">
+                <a class="pagination-symbol disabled" aria-disabled="true">
+                    <img src="../../public/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior">
+                </a>
+                <a class="pagination-number active" href="#">1</a>
+                <a class="pagination-symbol disabled" aria-disabled="true">
+                    <img src="../../public/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página">
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-page">
+        <div class="location">
+            <span class="all">Aplicativo web desenvolvido integralmente por </span>
+            <span class="specific">Jorge Reis Develop</span>
+            <span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span>
+        </div>
+    </div>
+
+    <script>
+        /* Template estático: apenas UX básica. Na app: showToast (iframe) para feedback. */
+        (function () {
+            document.getElementById('btn-oficio-limpar')?.addEventListener('click', function () {
+                var p = document.getElementById('oficio-processo');
+                var t = document.getElementById('oficio-tipo');
+                var m = document.getElementById('oficio-meio-envio');
+                if (p) p.value = '';
+                if (t) t.selectedIndex = 0;
+                if (m) m.selectedIndex = 0;
+                var fc = document.getElementById('oficio-forma-cumprimento');
+                if (fc) fc.selectedIndex = 0;
+            });
+        })();
+    </script>
+</body>
+</html>
