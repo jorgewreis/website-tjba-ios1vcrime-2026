@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0051
+
+**Data:** 2026-03-21 19:08:52 | **Commit:** `2315e6d` | **Tipo:** `patch`
+
+- Fix: correcao de input e select
+
 ## V. 1.04.0050
 
 **Data:** 2026-03-21 19:02:54 | **Commit:** `86d225a` | **Tipo:** `patch`
@@ -3594,6 +3600,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

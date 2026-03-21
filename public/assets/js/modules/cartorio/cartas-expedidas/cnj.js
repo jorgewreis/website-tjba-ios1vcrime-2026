@@ -108,6 +108,8 @@ function dispatchCnjValidated(valor) {
 
 function bindProcessoInput(input) {
     if (!input || input.readOnly || input.disabled) return;
+    if (input.dataset.cnjBound === '1') return;
+    input.dataset.cnjBound = '1';
 
     input.addEventListener('input', function () {
         this.value = formatarCNJParcial(this.value);
@@ -130,7 +132,8 @@ function bindProcessoInput(input) {
 
 function bindFormSubmitValidation(input) {
     const form = input && input.form ? input.form : null;
-    if (!form || form.dataset.cnjBound === '1') return;
+    if (!form) return;
+    if (form.dataset.cnjBound === '1') return;
 
     form.addEventListener('submit', function (event) {
         const cnjInputs = form.querySelectorAll('input[id="filter-processo"], input[id="gab-mon-processo"], input[id="filter-numero"], input[data-cnj-input="true"]');
