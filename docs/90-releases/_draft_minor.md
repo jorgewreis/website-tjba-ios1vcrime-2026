@@ -200,4 +200,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correcoes em oficios** `[71272dc]`
 - **Fix: correcao de erro no bd** `[8bfc6c9]`
 - **Fix: pequenos ajustes** `[09103b5]`
+- **Fix: correcao de qtd de itens por pagina** `[188c02d]`
 
