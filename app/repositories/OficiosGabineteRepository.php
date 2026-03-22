@@ -64,7 +64,7 @@ final class OficiosGabineteRepository
     public function insert(array $row): void
     {
         $sql = sprintf(
-            'INSERT INTO `%s` (`id`, `processo_id`, `numero_processo`, `ano`, `numero_sequencial`, `tipo_oficio`, `status`, `criado_por`, `created_at`, `updated_at`) VALUES (:id, :processo_id, :numero_processo, :ano, :numero_sequencial, :tipo_oficio, :status, :criado_por, NOW(), NOW())',
+            'INSERT INTO `%s` (`id`, `processo_id`, `numero_processo`, `ano`, `numero_sequencial`, `tipo_oficio`, `status`, `criado_por`, `atualizado_por`, `created_at`, `updated_at`) VALUES (:id, :processo_id, :numero_processo, :ano, :numero_sequencial, :tipo_oficio, :status, :criado_por, :atualizado_por, NOW(), NOW())',
             $this->table
         );
         $st = $this->connection->prepare($sql);
@@ -76,18 +76,28 @@ final class OficiosGabineteRepository
         $st->bindValue(':tipo_oficio', $row['tipo_oficio']);
         $st->bindValue(':status', $row['status']);
         $cp = $row['criado_por'] ?? null;
+        $ap = $row['atualizado_por'] ?? $cp;
         $st->bindValue(':criado_por', $cp !== null && $cp !== '' ? $cp : null);
+        $st->bindValue(':atualizado_por', $ap !== null && $ap !== '' ? $ap : null);
         $st->execute();
     }
 
-    public function updateStatus(string $id, string $status): bool
+    public function updateStatus(string $id, string $status, ?string $atualizadoPor = null): bool
     {
-        $st = $this->connection->prepare(
-            sprintf('UPDATE `%s` SET `status` = :status, `updated_at` = NOW() WHERE `id` = :id LIMIT 1', $this->table)
-        );
+        if ($atualizadoPor !== null && $atualizadoPor !== '') {
+            $st = $this->connection->prepare(
+                sprintf('UPDATE `%s` SET `status` = :status, `atualizado_por` = :atualizado_por, `updated_at` = NOW() WHERE `id` = :id LIMIT 1', $this->table)
+            );
+            $st->bindValue(':atualizado_por', $atualizadoPor);
+        } else {
+            $st = $this->connection->prepare(
+                sprintf('UPDATE `%s` SET `status` = :status, `updated_at` = NOW() WHERE `id` = :id LIMIT 1', $this->table)
+            );
+        }
         $st->bindValue(':status', $status);
         $st->bindValue(':id', $id);
         $st->execute();
+
         return $st->rowCount() > 0;
     }
 
@@ -108,9 +118,9 @@ final class OficiosGabineteRepository
             $coll,
             implode(', ', array_map(fn (string $s) => $this->connection->quote($s), self::STATUS_ORDER))
         );
-        $join = ' LEFT JOIN `processos` p ON p.`id` = g.`processo_id` LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id` LEFT JOIN `usuarios` ucr ON ucr.`id_usuario` = g.`criado_por` ';
+        $join = ' LEFT JOIN `processos` p ON p.`id` = g.`processo_id` LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id` LEFT JOIN `usuarios` ucr ON ucr.`id_usuario` = g.`criado_por` LEFT JOIN `usuarios` ued ON ued.`id_usuario` = g.`atualizado_por` ';
         $sql = sprintf(
-            'SELECT g.`id` AS `IdOficio`, g.`numero_processo` AS `Processo`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `ClasseNome`, g.`ano` AS `Ano`, g.`numero_sequencial` AS `NumeroSeq`, g.`tipo_oficio` AS `TipoOficio`, g.`status` AS `Status`, g.`created_at` AS `Data`, TRIM(CONCAT(COALESCE(ucr.`nome`, \'\'), \' \', COALESCE(ucr.`sobrenome`, \'\'))) AS `CriadoPorNome` FROM `%s` g %s %s ORDER BY %s, g.`created_at` DESC LIMIT :limit OFFSET :offset',
+            'SELECT g.`id` AS `IdOficio`, g.`numero_processo` AS `Processo`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `ClasseNome`, g.`ano` AS `Ano`, g.`numero_sequencial` AS `NumeroSeq`, g.`tipo_oficio` AS `TipoOficio`, g.`status` AS `Status`, g.`created_at` AS `Data`, TRIM(CONCAT(COALESCE(ucr.`nome`, \'\'), \' \', COALESCE(ucr.`sobrenome`, \'\'))) AS `CriadoPorNome`, TRIM(CONCAT(COALESCE(ued.`nome`, \'\'), \' \', COALESCE(ued.`sobrenome`, \'\'))) AS `UltimoEditorNome` FROM `%s` g %s %s ORDER BY %s, g.`created_at` DESC LIMIT :limit OFFSET :offset',
             $this->table,
             $join,
             $whereClause ? 'WHERE ' . $whereClause : '',

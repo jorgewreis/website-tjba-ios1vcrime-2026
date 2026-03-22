@@ -139,6 +139,7 @@ final class OficiosCartorioService
                     'meio_envio' => null,
                     'status' => 'finalizada',
                     'criado_por' => $criadoPor,
+                    'atualizado_por' => $criadoPor,
                 ]);
             } else {
                 $this->repository->insert([
@@ -152,6 +153,7 @@ final class OficiosCartorioService
                     'meio_envio' => $meioEnvio,
                     'status' => 'pendente',
                     'criado_por' => $criadoPor,
+                    'atualizado_por' => $criadoPor,
                 ]);
                 $this->subtarefasRepository->create($id, OficiosCartorioSubtarefasRepository::TIPO_ENVIAR, 1, 'em_andamento');
                 $this->subtarefasRepository->create($id, OficiosCartorioSubtarefasRepository::TIPO_JUNTAR, 2, 'pendente');
@@ -165,7 +167,7 @@ final class OficiosCartorioService
         }
     }
 
-    public function concluirSubtarefa(string $subtarefaId): array
+    public function concluirSubtarefa(string $subtarefaId, ?string $atualizadoPor = null): array
     {
         $st = $this->subtarefasRepository->findById($subtarefaId);
         if ($st === null) {
@@ -201,13 +203,13 @@ final class OficiosCartorioService
             return ['tarefa_principal_concluida' => false];
         }
         if ($ordem === 2) {
-            $this->repository->updateStatus($oficioId, 'finalizada');
+            $this->repository->updateStatus($oficioId, 'finalizada', $atualizadoPor);
             return ['tarefa_principal_concluida' => true];
         }
         throw new InvalidArgumentException('Ordem de subtarefa inválida.');
     }
 
-    public function cancel(string $id): bool
+    public function cancel(string $id, ?string $atualizadoPor = null): bool
     {
         $id = trim($id);
         if ($id === '') {
@@ -224,7 +226,7 @@ final class OficiosCartorioService
             return true;
         }
         $this->subtarefasRepository->deleteByOficioId($id);
-        return $this->repository->updateStatus($id, 'cancelada');
+        return $this->repository->updateStatus($id, 'cancelada', $atualizadoPor);
     }
 
     /**

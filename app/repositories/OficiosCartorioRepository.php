@@ -73,7 +73,7 @@ final class OficiosCartorioRepository
     public function insert(array $row): void
     {
         $sql = sprintf(
-            'INSERT INTO `%s` (`id`, `processo_id`, `numero_processo`, `ano`, `numero_sequencial`, `tipo_oficio`, `forma_cumprimento`, `meio_envio`, `status`, `criado_por`, `created_at`, `updated_at`) VALUES (:id, :processo_id, :numero_processo, :ano, :numero_sequencial, :tipo_oficio, :forma_cumprimento, :meio_envio, :status, :criado_por, NOW(), NOW())',
+            'INSERT INTO `%s` (`id`, `processo_id`, `numero_processo`, `ano`, `numero_sequencial`, `tipo_oficio`, `forma_cumprimento`, `meio_envio`, `status`, `criado_por`, `atualizado_por`, `created_at`, `updated_at`) VALUES (:id, :processo_id, :numero_processo, :ano, :numero_sequencial, :tipo_oficio, :forma_cumprimento, :meio_envio, :status, :criado_por, :atualizado_por, NOW(), NOW())',
             $this->table
         );
         $st = $this->connection->prepare($sql);
@@ -87,18 +87,28 @@ final class OficiosCartorioRepository
         $st->bindValue(':meio_envio', $row['meio_envio'] ?? null);
         $st->bindValue(':status', $row['status']);
         $cp = $row['criado_por'] ?? null;
+        $ap = $row['atualizado_por'] ?? $cp;
         $st->bindValue(':criado_por', $cp !== null && $cp !== '' ? $cp : null);
+        $st->bindValue(':atualizado_por', $ap !== null && $ap !== '' ? $ap : null);
         $st->execute();
     }
 
-    public function updateStatus(string $id, string $status): bool
+    public function updateStatus(string $id, string $status, ?string $atualizadoPor = null): bool
     {
-        $st = $this->connection->prepare(
-            sprintf('UPDATE `%s` SET `status` = :status, `updated_at` = NOW() WHERE `id` = :id LIMIT 1', $this->table)
-        );
+        if ($atualizadoPor !== null && $atualizadoPor !== '') {
+            $st = $this->connection->prepare(
+                sprintf('UPDATE `%s` SET `status` = :status, `atualizado_por` = :atualizado_por, `updated_at` = NOW() WHERE `id` = :id LIMIT 1', $this->table)
+            );
+            $st->bindValue(':atualizado_por', $atualizadoPor);
+        } else {
+            $st = $this->connection->prepare(
+                sprintf('UPDATE `%s` SET `status` = :status, `updated_at` = NOW() WHERE `id` = :id LIMIT 1', $this->table)
+            );
+        }
         $st->bindValue(':status', $status);
         $st->bindValue(':id', $id);
         $st->execute();
+
         return $st->rowCount() > 0;
     }
 
@@ -119,9 +129,9 @@ final class OficiosCartorioRepository
             $coll,
             implode(', ', array_map(fn (string $s) => $this->connection->quote($s), self::STATUS_ORDER))
         );
-        $join = ' LEFT JOIN `processos` p ON p.`id` = o.`processo_id` LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id` LEFT JOIN `usuarios` ucr ON ucr.`id_usuario` = o.`criado_por` ';
+        $join = ' LEFT JOIN `processos` p ON p.`id` = o.`processo_id` LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id` LEFT JOIN `usuarios` ucr ON ucr.`id_usuario` = o.`criado_por` LEFT JOIN `usuarios` ued ON ued.`id_usuario` = o.`atualizado_por` ';
         $sql = sprintf(
-            'SELECT o.`id` AS `IdOficio`, o.`numero_processo` AS `Processo`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `ClasseNome`, o.`ano` AS `Ano`, o.`numero_sequencial` AS `NumeroSeq`, o.`tipo_oficio` AS `TipoOficio`, o.`forma_cumprimento` AS `FormaCumprimento`, o.`meio_envio` AS `MeioEnvio`, o.`status` AS `Status`, o.`created_at` AS `Data`, TRIM(CONCAT(COALESCE(ucr.`nome`, \'\'), \' \', COALESCE(ucr.`sobrenome`, \'\'))) AS `CriadoPorNome` FROM `%s` o %s %s ORDER BY %s, o.`created_at` DESC LIMIT :limit OFFSET :offset',
+            'SELECT o.`id` AS `IdOficio`, o.`numero_processo` AS `Processo`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `ClasseNome`, o.`ano` AS `Ano`, o.`numero_sequencial` AS `NumeroSeq`, o.`tipo_oficio` AS `TipoOficio`, o.`forma_cumprimento` AS `FormaCumprimento`, o.`meio_envio` AS `MeioEnvio`, o.`status` AS `Status`, o.`created_at` AS `Data`, TRIM(CONCAT(COALESCE(ucr.`nome`, \'\'), \' \', COALESCE(ucr.`sobrenome`, \'\'))) AS `CriadoPorNome`, TRIM(CONCAT(COALESCE(ued.`nome`, \'\'), \' \', COALESCE(ued.`sobrenome`, \'\'))) AS `UltimoEditorNome` FROM `%s` o %s %s ORDER BY %s, o.`created_at` DESC LIMIT :limit OFFSET :offset',
             $this->table,
             $join,
             $whereClause ? 'WHERE ' . $whereClause : '',

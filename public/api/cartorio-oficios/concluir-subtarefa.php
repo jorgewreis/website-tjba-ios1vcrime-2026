@@ -29,9 +29,11 @@ if ($subtarefaId === '') {
     exit;
 }
 
+$uid = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
+
 try {
     $service = new OficiosCartorioService($connection);
-    $resultado = $service->concluirSubtarefa($subtarefaId);
+    $resultado = $service->concluirSubtarefa($subtarefaId, $uid !== '' ? $uid : null);
     echo json_encode(array_merge(['success' => true], is_array($resultado) ? $resultado : []), JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $exception) {
     http_response_code(400);

@@ -99,6 +99,7 @@ final class OficiosGabineteService
                 'tipo_oficio' => $tipoOficio,
                 'status' => 'finalizada',
                 'criado_por' => $criadoPor,
+                'atualizado_por' => $criadoPor,
             ]);
             $this->connection->commit();
             return $id;
@@ -108,7 +109,7 @@ final class OficiosGabineteService
         }
     }
 
-    public function cancel(string $id): bool
+    public function cancel(string $id, ?string $atualizadoPor = null): bool
     {
         $id = trim($id);
         if ($id === '') {
@@ -121,7 +122,7 @@ final class OficiosGabineteService
         if (($row['status'] ?? '') === 'cancelada') {
             return true;
         }
-        return $this->repository->updateStatus($id, 'cancelada');
+        return $this->repository->updateStatus($id, 'cancelada', $atualizadoPor);
     }
 
     public function delete(string $id): array

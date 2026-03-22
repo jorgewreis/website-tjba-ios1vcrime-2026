@@ -45,9 +45,11 @@ if ($id === '') {
     exit;
 }
 
+$uid = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
+
 try {
     $service = new OficiosCartorioService($connection);
-    $updated = $service->cancel($id);
+    $updated = $service->cancel($id, $uid !== '' ? $uid : null);
     echo json_encode(['success' => $updated], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $exception) {
     http_response_code(400);
