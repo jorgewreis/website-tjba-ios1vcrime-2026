@@ -52,7 +52,13 @@ final class GabineteReusPresosService
     public static function tiposMovimentacao(): array
     {
         return [
-            'decretacao_prisao_preventiva' => 'Decretação de prisão preventiva',
+            'decretacao_prisao_temporaria' => 'Decretação da prisão temporária',
+            'decretacao_prisao_preventiva' => 'Decretação da prisão preventiva',
+            'manutencao_prisao_preventiva' => 'Manutenção da prisão preventiva',
+            'manutencao_prisao_temporaria' => 'Manutenção da prisão temporária',
+            'prisao_em_flagrante' => 'Prisão em flagrante',
+            'conversao_temporaria_para_preventiva' => 'Conversão de prisão temporária para preventiva',
+            'conversao_flagrante_para_preventiva' => 'Conversão de prisão em flagrante para preventiva',
             'soltura' => 'Soltura',
             'revogacao_prisao' => 'Revogação da prisão',
             'outro' => 'Outro',

@@ -166,10 +166,12 @@
                         <label for="grp-new-df">Data do fato</label>
                         <input type="date" class="height-md" id="grp-new-df">
                     </div>
-                    <div class="col display-flex align-center" style="padding-top:20px;">
-                        <label class="display-flex align-center gap-y-sm" style="gap:8px;">
-                            <input type="checkbox" id="grp-new-principal"> Marcar como principal
-                        </label>
+                    <div class="col" style="min-width:140px;">
+                        <label for="grp-new-vinc" class="minor-info">Vinculação</label>
+                        <select class="width-400 height-md" id="grp-new-vinc">
+                            <option value="principal">Principal</option>
+                            <option value="secundario" selected>Secundário</option>
+                        </select>
                     </div>
                 </div>
                 <button type="button" class="btn btn-secondary" id="btn-grp-add-proc" disabled title="Mockup — sem API">Adicionar processo</button>
@@ -189,7 +191,13 @@
                 <div class="col">
                     <label for="grp-mov-tipo">Tipo</label>
                     <select class="width-400 height-md" id="grp-mov-tipo">
-                        <option value="decretacao_prisao_preventiva">Decretação de prisão preventiva</option>
+                        <option value="decretacao_prisao_temporaria">Decretação da prisão temporária</option>
+                        <option value="decretacao_prisao_preventiva">Decretação da prisão preventiva</option>
+                        <option value="manutencao_prisao_preventiva">Manutenção da prisão preventiva</option>
+                        <option value="manutencao_prisao_temporaria">Manutenção da prisão temporária</option>
+                        <option value="prisao_em_flagrante">Prisão em flagrante</option>
+                        <option value="conversao_temporaria_para_preventiva">Conversão de prisão temporária para preventiva</option>
+                        <option value="conversao_flagrante_para_preventiva">Conversão de prisão em flagrante para preventiva</option>
                         <option value="soltura">Soltura</option>
                         <option value="revogacao_prisao">Revogação da prisão</option>
                         <option value="outro">Outro</option>

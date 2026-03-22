@@ -223,10 +223,12 @@ if ($ultimaMov !== null) {
                         <label for="grp-new-df">Data do fato</label>
                         <input type="date" class="height-md" id="grp-new-df">
                     </div>
-                    <div class="col display-flex align-center" style="padding-top:20px;">
-                        <label class="display-flex align-center gap-y-sm" style="gap:8px;">
-                            <input type="checkbox" id="grp-new-principal"> Marcar como principal
-                        </label>
+                    <div class="col" style="min-width:140px;">
+                        <label for="grp-new-vinc" class="minor-info">Vinculação</label>
+                        <select class="width-400 height-md" id="grp-new-vinc">
+                            <option value="principal">Principal</option>
+                            <option value="secundario" selected>Secundário</option>
+                        </select>
                     </div>
                 </div>
                 <button type="button" class="btn btn-secondary" id="btn-grp-add-proc">Adicionar processo</button>
@@ -475,7 +477,7 @@ if ($ultimaMov !== null) {
                 const situacao = document.getElementById('grp-new-sit')?.value || 'preso';
                 const dp = document.getElementById('grp-new-dp')?.value || '';
                 const df = document.getElementById('grp-new-df')?.value || '';
-                const principal = document.getElementById('grp-new-principal')?.checked || false;
+                const principal = (document.getElementById('grp-new-vinc')?.value || 'secundario') === 'principal';
                 if (!proc) {
                     notify('error', 'Validação', 'Informe o número do processo.');
                     return;
