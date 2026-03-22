@@ -197,4 +197,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: tentativa de correcao** `[215ee57]`
 - **Fix: pequenos ajustes** `[4d61e6a]`
 - **Feat: novo modelo de perfis e acesso** `[d8950e4]`
+- **Fix: correcoes em oficios** `[71272dc]`
 
