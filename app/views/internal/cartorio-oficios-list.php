@@ -14,11 +14,10 @@ $connection = Conection::getInstance()->getConnection();
 $routePage = trim((string) ($_GET['page'] ?? 'oficioscartorio'));
 $statusFilter = trim($_GET['status'] ?? '');
 $processoFilter = trim($_GET['processo'] ?? '');
-$anoFilter = trim($_GET['ano'] ?? '');
 $allowedPerPage = [10, 25, 50, 100];
-$itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 10;
+$itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 25;
 if (!in_array($itemsPerPage, $allowedPerPage, true)) {
-    $itemsPerPage = 10;
+    $itemsPerPage = 25;
 }
 
 $pageNumberParam = $_GET['page_number'] ?? null;
@@ -28,15 +27,33 @@ if ($pageNumberParam !== null && $pageNumberParam !== '') {
     $currentPage = 1;
 }
 
+$offset = ($currentPage - 1) * $itemsPerPage;
+
+try {
+    $service = new OficiosCartorioService($connection);
+    /** @var list<int> $anosComOficios */
+    $anosComOficios = $service->listAnosComOficios();
+} catch (Throwable $exception) {
+    die('Erro ao carregar os dados: ' . $exception->getMessage());
+}
+
+$anoAtual = (int) date('Y');
+$anoFromGet = trim($_GET['ano'] ?? '');
+if ($anoFromGet !== '' && ctype_digit($anoFromGet) && in_array((int) $anoFromGet, $anosComOficios, true)) {
+    $anoFilter = $anoFromGet;
+} elseif ($anosComOficios !== []) {
+    $anoFilter = in_array($anoAtual, $anosComOficios, true) ? (string) $anoAtual : (string) $anosComOficios[0];
+} else {
+    $anoFilter = '';
+}
+
 $filters = [
     'status' => $statusFilter,
     'processo' => $processoFilter,
     'ano' => $anoFilter,
 ];
-$offset = ($currentPage - 1) * $itemsPerPage;
 
 try {
-    $service = new OficiosCartorioService($connection);
     $listResult = $service->listOficios($filters, $itemsPerPage, $offset);
 } catch (Throwable $exception) {
     die('Erro ao carregar os dados: ' . $exception->getMessage());
@@ -81,14 +98,15 @@ $baseQueryParams = [];
 if ($routePage !== '') {
     $baseQueryParams['page'] = $routePage;
 }
-if ($statusFilter !== '') {
-    $baseQueryParams['status'] = $statusFilter;
-}
 if ($processoFilter !== '') {
     $baseQueryParams['processo'] = $processoFilter;
-}
-if ($anoFilter !== '') {
-    $baseQueryParams['ano'] = $anoFilter;
+} else {
+    if ($statusFilter !== '') {
+        $baseQueryParams['status'] = $statusFilter;
+    }
+    if ($anoFilter !== '') {
+        $baseQueryParams['ano'] = $anoFilter;
+    }
 }
 $baseQueryParams['items_per_page'] = $itemsPerPage;
 
@@ -114,8 +132,6 @@ if ($totalPages > 0) {
     }
 }
 
-$anoAtual = (int) date('Y');
-
 /**
  * @param array<string,mixed> $row
  */
@@ -132,6 +148,16 @@ function cartorio_oficios_label_cumprimento(array $row): string
         'pessoalmente' => 'Pessoalmente',
     ];
     return 'Cartório — ' . ($map[$meio] ?? $meio);
+}
+
+function oficios_list_formatar_data_hora(?string $mysqlDt): string
+{
+    if ($mysqlDt === null || $mysqlDt === '') {
+        return '—';
+    }
+    $t = strtotime($mysqlDt);
+
+    return $t !== false ? date('d/m/Y H:i', $t) : htmlspecialchars($mysqlDt, ENT_QUOTES, 'UTF-8');
 }
 ?>
 <!DOCTYPE html>
@@ -239,11 +265,14 @@ function cartorio_oficios_label_cumprimento(array $row): string
                 </div>
                 <div class="col">
                     <label for="filter-ano">Ano do ofício</label>
-                    <select class="width-300 height-md" id="filter-ano">
-                        <option value=""<?php echo $anoFilter === '' ? ' selected' : ''; ?>>Todos</option>
-                        <?php for ($y = $anoAtual; $y >= $anoAtual - 5; $y--): ?>
-                        <option value="<?php echo $y; ?>"<?php echo $anoFilter === (string) $y ? ' selected' : ''; ?>><?php echo $y; ?></option>
-                        <?php endfor; ?>
+                    <select class="width-300 height-md" id="filter-ano"<?php echo $anosComOficios === [] ? ' disabled' : ''; ?>>
+                        <?php if ($anosComOficios === []): ?>
+                        <option value="">—</option>
+                        <?php else: ?>
+                        <?php foreach ($anosComOficios as $y): ?>
+                        <option value="<?php echo (int) $y; ?>"<?php echo $anoFilter === (string) $y ? ' selected' : ''; ?>><?php echo (int) $y; ?></option>
+                        <?php endforeach; ?>
+                        <?php endif; ?>
                     </select>
                 </div>
             </div>
@@ -337,6 +366,14 @@ function cartorio_oficios_label_cumprimento(array $row): string
                         <div class="col width-400">
                             <span class="minor-info">Tipo</span>
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['TipoOficio'] ?? '')); ?></span>
+                        </div>
+                        <div class="col width-220">
+                            <?php
+                            $nomeCriadorRow = trim((string) ($row['CriadoPorNome'] ?? ''));
+                            $nomeCriadorRow = $nomeCriadorRow !== '' ? $nomeCriadorRow : '—';
+                            ?>
+                            <span class="minor-info"><?php echo htmlspecialchars(oficios_list_formatar_data_hora($row['Data'] ?? null)); ?></span>
+                            <span class="major-info text-ellipsis" title="<?php echo $nomeCriadorRow !== '—' ? htmlspecialchars($nomeCriadorRow, ENT_QUOTES) : ''; ?>"><?php echo htmlspecialchars($nomeCriadorRow); ?></span>
                         </div>
                         <div class="col width-280">
                             <span class="minor-info">Cumprimento</span>
@@ -557,17 +594,23 @@ function cartorio_oficios_label_cumprimento(array $row): string
             });
 
             const applyFilters = function () {
-                const status = document.getElementById('filter-status')?.value ?? '';
                 const processo = document.getElementById('search-input')?.value?.trim() ?? '';
-                const ano = document.getElementById('filter-ano')?.value ?? '';
-                const perPage = document.getElementById('items-per-page')?.value ?? '10';
+                const perPage = document.getElementById('items-per-page')?.value ?? '25';
                 const params = new URLSearchParams(window.location.search);
                 params.set('page', '<?php echo htmlspecialchars($routePage, ENT_QUOTES); ?>');
                 params.set('page_number', '1');
                 params.set('items_per_page', perPage);
-                if (status) params.set('status', status); else params.delete('status');
-                if (processo) params.set('processo', processo); else params.delete('processo');
-                if (ano) params.set('ano', ano); else params.delete('ano');
+                if (processo) {
+                    params.set('processo', processo);
+                    params.delete('status');
+                    params.delete('ano');
+                } else {
+                    params.delete('processo');
+                    const status = document.getElementById('filter-status')?.value ?? '';
+                    const ano = document.getElementById('filter-ano')?.value ?? '';
+                    if (status) params.set('status', status); else params.delete('status');
+                    if (ano) params.set('ano', ano); else params.delete('ano');
+                }
                 window.location.href = '?' + params.toString();
             };
 

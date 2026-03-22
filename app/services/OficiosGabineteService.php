@@ -35,6 +35,14 @@ final class OficiosGabineteService
         return $this->repository->countByStatus($filters);
     }
 
+    /**
+     * @return list<int>
+     */
+    public function listAnosComOficios(): array
+    {
+        return $this->repository->fetchDistinctAnos();
+    }
+
     public function find(string $id): ?array
     {
         return $this->repository->findById($id);
@@ -69,6 +77,9 @@ final class OficiosGabineteService
 
         $ano = (int) date('Y');
 
+        $criadoPor = trim((string) ($payload['criado_por'] ?? ''));
+        $criadoPor = $criadoPor !== '' ? $criadoPor : null;
+
         $this->connection->beginTransaction();
         try {
             $seq = $this->repository->nextSequencialForYear($ano);
@@ -87,6 +98,7 @@ final class OficiosGabineteService
                 'numero_sequencial' => $seq,
                 'tipo_oficio' => $tipoOficio,
                 'status' => 'finalizada',
+                'criado_por' => $criadoPor,
             ]);
             $this->connection->commit();
             return $id;

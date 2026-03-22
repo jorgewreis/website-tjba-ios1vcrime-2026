@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0056
+
+**Data:** 2026-03-22 08:39:03 | **Commit:** `71272dc` | **Tipo:** `patch`
+
+- Fix: correcoes em oficios
+
 ## V. 1.04.0055
 
 **Data:** 2026-03-21 20:21:12 | **Commit:** `d8950e4` | **Tipo:** `patch`
@@ -3624,6 +3630,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

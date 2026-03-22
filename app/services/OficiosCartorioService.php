@@ -52,6 +52,14 @@ final class OficiosCartorioService
         return $this->repository->countByStatus($filters);
     }
 
+    /**
+     * @return list<int>
+     */
+    public function listAnosComOficios(): array
+    {
+        return $this->repository->fetchDistinctAnos();
+    }
+
     public function find(string $id): ?array
     {
         return $this->repository->findById($id);
@@ -105,6 +113,9 @@ final class OficiosCartorioService
             throw new InvalidArgumentException('Ano inválido.');
         }
 
+        $criadoPor = trim((string) ($payload['criado_por'] ?? ''));
+        $criadoPor = $criadoPor !== '' ? $criadoPor : null;
+
         $this->connection->beginTransaction();
         try {
             $seq = $this->repository->nextSequencialForYear($ano);
@@ -127,6 +138,7 @@ final class OficiosCartorioService
                     'forma_cumprimento' => 'ccm',
                     'meio_envio' => null,
                     'status' => 'finalizada',
+                    'criado_por' => $criadoPor,
                 ]);
             } else {
                 $this->repository->insert([
@@ -139,6 +151,7 @@ final class OficiosCartorioService
                     'forma_cumprimento' => 'cartorio',
                     'meio_envio' => $meioEnvio,
                     'status' => 'pendente',
+                    'criado_por' => $criadoPor,
                 ]);
                 $this->subtarefasRepository->create($id, OficiosCartorioSubtarefasRepository::TIPO_ENVIAR, 1, 'em_andamento');
                 $this->subtarefasRepository->create($id, OficiosCartorioSubtarefasRepository::TIPO_JUNTAR, 2, 'pendente');

@@ -33,6 +33,8 @@ function assertCnjFormattedValue(array $input, string $key, string $fieldLabel):
 try {
     assertCnjFormattedValue($parsed, 'numero_processo', 'Número do processo');
 
+    $parsed['criado_por'] = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
+
     $service = new OficiosGabineteService($connection);
     $newId = $service->create($parsed);
     http_response_code(201);

@@ -14,7 +14,6 @@ $connection = Conection::getInstance()->getConnection();
 $routePage = 'feriadoslist';
 $tipoFilter = trim($_GET['tipo_feriado'] ?? '');
 $qFilter = trim($_GET['q'] ?? '');
-$ativoFilter = isset($_GET['ativo']) ? trim((string) $_GET['ativo']) : '';
 
 $allowedPerPage = [10, 25, 50, 100];
 $itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 25;
@@ -32,9 +31,6 @@ if ($pageNumberParam !== null && $pageNumberParam !== '') {
 $filters = ['q' => $qFilter];
 if ($tipoFilter !== '') {
     $filters['tipo_feriado'] = $tipoFilter;
-}
-if ($ativoFilter === '0' || $ativoFilter === '1') {
-    $filters['ativo'] = (int) $ativoFilter;
 }
 
 $offset = ($currentPage - 1) * $itemsPerPage;
@@ -74,17 +70,11 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
 $labelsTipo = [
     'estadual' => 'Estadual',
     'municipal' => 'Municipal',
-    'federal' => 'Federal',
+    'nacional' => 'Nacional',
     'religioso' => 'Religioso',
     'compensacao' => 'Compensação',
     'recesso' => 'Recesso',
 ];
-$labelsRegra = [
-    'fixa' => 'Fixa',
-    'unica' => 'Única',
-    'movel' => 'Móvel',
-];
-
 $baseQueryParams = [];
 if ($routePage !== '') {
     $baseQueryParams['page'] = $routePage;
@@ -94,9 +84,6 @@ if ($tipoFilter !== '') {
 }
 if ($qFilter !== '') {
     $baseQueryParams['q'] = $qFilter;
-}
-if ($ativoFilter === '0' || $ativoFilter === '1') {
-    $baseQueryParams['ativo'] = $ativoFilter;
 }
 $baseQueryParams['items_per_page'] = $itemsPerPage;
 
@@ -180,14 +167,6 @@ if ($totalPages > 0) {
                         </select>
                     </div>
                     <div class="col">
-                        <label for="filter-ativo">Situação</label>
-                        <select class="width-200 height-md" name="ativo" id="filter-ativo">
-                            <option value=""<?php echo $ativoFilter === '' ? ' selected' : ''; ?>>Todos</option>
-                            <option value="1"<?php echo $ativoFilter === '1' ? ' selected' : ''; ?>>Ativo</option>
-                            <option value="0"<?php echo $ativoFilter === '0' ? ' selected' : ''; ?>>Inativo</option>
-                        </select>
-                    </div>
-                    <div class="col">
                         <label for="filter-q">Descrição</label>
                         <input type="text" class="width-400 height-md" name="q" id="filter-q" placeholder="Parte da descrição" value="<?php echo htmlspecialchars($qFilter); ?>">
                     </div>
@@ -216,14 +195,12 @@ if ($totalPages > 0) {
             <?php foreach ($rows as $row):
                 $fid = (string) ($row['id'] ?? '');
                 $tipo = (string) ($row['tipo_feriado'] ?? '');
-                $regra = (string) ($row['regra_data'] ?? '');
-                $ativoRow = !empty($row['ativo']);
                 ?>
             <div class="display-flex col col-full register border-bottom" data-feriado-id="<?php echo htmlspecialchars($fid, ENT_QUOTES); ?>">
 
                 <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                     <div class="display-flex row row-fit justify-start gap-y-sm align-center flex-wrap">
-                        <div class="col width-400">
+                        <div class="col width-500">
                             <span class="minor-info">Período</span>
                             <span class="major-info"><?php echo feriadosFormatDate($row['data_inicio'] ?? null); ?> — <?php echo feriadosFormatDate($row['data_fim'] ?? null); ?></span>
                         </div>
@@ -231,22 +208,15 @@ if ($totalPages > 0) {
                             <span class="minor-info">Tipo</span>
                             <span class="major-info"><?php echo htmlspecialchars($labelsTipo[$tipo] ?? $tipo); ?></span>
                         </div>
-                        <div class="col width-300">
-                            <span class="minor-info">Regra</span>
-                            <span class="major-info"><?php echo htmlspecialchars($labelsRegra[$regra] ?? $regra); ?></span>
-                        </div>
-                        <div class="col width-500">
+                        <div class="col width-700">
                             <span class="minor-info">Descrição</span>
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['descricao'] ?? '—')); ?></span>
                         </div>
-                        <div class="col width-200">
-                            <span class="minor-info">Situação</span>
-                            <span class="major-info"><?php echo $ativoRow ? 'Ativo' : 'Inativo'; ?></span>
-                        </div>
                     </div>
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                        <button type="button" class="btn btn-secondary-outline height-md btn-editar" data-id="<?php echo htmlspecialchars($fid, ENT_QUOTES); ?>">Editar</button>
-                        <button type="button" class="btn btn-secondary-outline height-md btn-excluir" data-id="<?php echo htmlspecialchars($fid, ENT_QUOTES); ?>">Excluir</button>
+                        <div class="col part-edit">
+                            <button type="button" class="btn-editar" title="Editar" aria-label="Editar" data-id="<?php echo htmlspecialchars($fid, ENT_QUOTES); ?>"><i class="fi fi-rr-file-edit"></i></button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -296,7 +266,6 @@ if ($totalPages > 0) {
     (function() {
         var applyFilters = function () {
             var tipo = document.getElementById('filter-tipo')?.value ?? '';
-            var ativo = document.getElementById('filter-ativo')?.value ?? '';
             var q = document.getElementById('filter-q')?.value?.trim() ?? '';
             var perPage = document.getElementById('items-per-page')?.value ?? '25';
             var params = new URLSearchParams(window.location.search);
@@ -304,13 +273,12 @@ if ($totalPages > 0) {
             params.set('page_number', '1');
             params.set('items_per_page', perPage);
             if (tipo) params.set('tipo_feriado', tipo); else params.delete('tipo_feriado');
-            if (ativo !== '') params.set('ativo', ativo); else params.delete('ativo');
+            params.delete('ativo');
             if (q) params.set('q', q); else params.delete('q');
             window.location.href = '?' + params.toString();
         };
 
         document.getElementById('filter-tipo')?.addEventListener('change', applyFilters);
-        document.getElementById('filter-ativo')?.addEventListener('change', applyFilters);
         document.getElementById('items-per-page')?.addEventListener('change', applyFilters);
         document.getElementById('filter-q')?.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
@@ -326,32 +294,6 @@ if ($totalPages > 0) {
             btn.addEventListener('click', function() {
                 var id = this.getAttribute('data-id');
                 if (id) window.location.href = '/frame.php?page=feriadosedit&id=' + encodeURIComponent(id);
-            });
-        });
-        document.querySelectorAll('.btn-excluir').forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                var id = this.getAttribute('data-id');
-                if (!id) return;
-                if (!confirm('Excluir este feriado permanentemente?')) return;
-                var el = this;
-                el.disabled = true;
-                fetch('/api/admin/feriados/delete.php?id=' + encodeURIComponent(id), { method: 'POST', credentials: 'same-origin' })
-                    .then(function(r) { return r.json().then(function(j) {	return { ok: r.ok, j: j }; }); })
-                    .then(function(o) {
-                        if (o.ok) {
-                            var msgEx = 'Excluído.';
-                            var nEd = parseInt(o.j.editais_decurso_recalculados, 10);
-                            if (!isNaN(nEd) && nEd > 0) {
-                                msgEx += ' Decurso de prazo recalculado em ' + nEd + ' ' + (nEd === 1 ? 'edital' : 'editais') + '.';
-                            }
-                            if (typeof showToast === 'function') showToast({ type: 'success', message: msgEx });
-                            window.location.reload();
-                        } else {
-                            if (typeof showToast === 'function') showToast({ type: 'error', message: (o.j && o.j.error) ? o.j.error : 'Erro ao excluir.' });
-                            el.disabled = false;
-                        }
-                    })
-                    .catch(function() { el.disabled = false; });
             });
         });
     })();

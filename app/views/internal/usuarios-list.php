@@ -232,7 +232,7 @@ $statusClasses = [
             <div class="display-flex col col-full register border-bottom">
                 <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                     <div class="display-flex row row-fit justify-start gap-y-sm wrap">
-                            <div class="col width-600 parte-nome text-ellipsis">
+                            <div class="col width-700 parte-nome text-ellipsis">
                                 <span class="minor-info">Nome</span>
                                 <span class="major-info"><?php echo htmlspecialchars($row['nome_completo'] ?? '—'); ?></span>
                             </div>
@@ -240,11 +240,11 @@ $statusClasses = [
                                 <span class="minor-info">Tipo</span>
                                 <span class="major-info"><?php echo htmlspecialchars($tipoLabel); ?></span>
                             </div>
-                            <div class="col width-400 parte-setor">
+                            <div class="col width-600 parte-setor">
                                 <span class="minor-info">Setor</span>
                                 <span class="major-info"><?php echo $setoresDisplay !== '' ? htmlspecialchars($setoresDisplay) : '—'; ?></span>
                             </div>
-                            <div class="col width-400 parte-cargo">
+                            <div class="col width-500 parte-cargo">
                                 <span class="minor-info">Cargo</span>
                                 <span class="major-info"><?php echo $cargo !== '' ? htmlspecialchars($cargo) : '—'; ?></span>
                             </div>

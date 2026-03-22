@@ -27,15 +27,33 @@ if ($pageNumberParam !== null && $pageNumberParam !== '') {
     $currentPage = 1;
 }
 
+$offset = ($currentPage - 1) * $itemsPerPage;
+
+try {
+    $service = new OficiosGabineteService($connection);
+    /** @var list<int> $anosComOficios */
+    $anosComOficios = $service->listAnosComOficios();
+} catch (Throwable $exception) {
+    die('Erro ao carregar os dados: ' . $exception->getMessage());
+}
+
+$anoAtual = (int) date('Y');
+$anoFromGet = trim($_GET['ano'] ?? '');
+if ($anoFromGet !== '' && ctype_digit($anoFromGet) && in_array((int) $anoFromGet, $anosComOficios, true)) {
+    $anoFilter = $anoFromGet;
+} elseif ($anosComOficios !== []) {
+    $anoFilter = in_array($anoAtual, $anosComOficios, true) ? (string) $anoAtual : (string) $anosComOficios[0];
+} else {
+    $anoFilter = '';
+}
+
 $filters = [
     'status' => $statusFilter,
     'processo' => $processoFilter,
     'ano' => $anoFilter,
 ];
-$offset = ($currentPage - 1) * $itemsPerPage;
 
 try {
-    $service = new OficiosGabineteService($connection);
     $listResult = $service->listOficios($filters, $itemsPerPage, $offset);
 } catch (Throwable $exception) {
     die('Erro ao carregar os dados: ' . $exception->getMessage());
@@ -71,14 +89,15 @@ $baseQueryParams = [];
 if ($routePage !== '') {
     $baseQueryParams['page'] = $routePage;
 }
-if ($statusFilter !== '') {
-    $baseQueryParams['status'] = $statusFilter;
-}
 if ($processoFilter !== '') {
     $baseQueryParams['processo'] = $processoFilter;
-}
-if ($anoFilter !== '') {
-    $baseQueryParams['ano'] = $anoFilter;
+} else {
+    if ($statusFilter !== '') {
+        $baseQueryParams['status'] = $statusFilter;
+    }
+    if ($anoFilter !== '') {
+        $baseQueryParams['ano'] = $anoFilter;
+    }
 }
 $baseQueryParams['items_per_page'] = $itemsPerPage;
 
@@ -104,7 +123,15 @@ if ($totalPages > 0) {
     }
 }
 
-$anoAtual = (int) date('Y');
+function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
+{
+    if ($mysqlDt === null || $mysqlDt === '') {
+        return '—';
+    }
+    $t = strtotime($mysqlDt);
+
+    return $t !== false ? date('d/m/Y H:i', $t) : htmlspecialchars($mysqlDt, ENT_QUOTES, 'UTF-8');
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -163,9 +190,24 @@ $anoAtual = (int) date('Y');
                     <label for="gab-oficio-tipo">Tipo de ofício <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-600 height-md" id="gab-oficio-tipo">
                         <option value="">Selecione…</option>
-                        <option value="Ofício de consultoria">Ofício de consultoria</option>
-                        <option value="Ofício de comunicação">Ofício de comunicação</option>
-                        <option value="Outro">Outro</option>
+                        <optgroup label="Encaminhamento">
+                        <option value="Encaminhando Informações">Encaminhando informações</option>
+                        <option value="Encaminhando Mandado de Busca e Apreensao">Encaminhando Mandado de Busca e Apreensão </option>
+                        <option value="Encaminhando Mandado de Prisao">Encaminhando Mandado de Prisão</option>
+                        <option value="Encaminhando Pecas Processuais">Encaminhando Peças Processuais</option>
+                        </optgroup>
+                        <optgroup label="Solicitação">
+                        <option value="Solicitando Informacoes">Solicitando informações</option>
+                        <option value="Solicitando Pecas Processuais">Solicitando peças processuais</option>
+                        <option value="Solicitando Providencias">Solicitando providências</option>
+                        </optgroup>
+                        <optgroup label="Administrativos">
+                        <option value="Solicitando Afastamento">Solicitando afastamento</option>
+                        <option value="Solicitando Licença Prêmio">Solicitando licença prêmio</option>
+                        <option value="Solicitando Férias">Solicitando férias</option>
+                        <option value="Solicitando Reembolso">Solicitando reembolso</option>                        
+                        <option value="Outros">Outros</option>
+                        </optgroup>
                     </select>
                 </div>
             </div>
@@ -190,11 +232,14 @@ $anoAtual = (int) date('Y');
                 </div>
                 <div class="col">
                     <label for="filter-ano">Ano do ofício</label>
-                    <select class="width-300 height-md" id="filter-ano">
-                        <option value=""<?php echo $anoFilter === '' ? ' selected' : ''; ?>>Todos</option>
-                        <?php for ($y = $anoAtual; $y >= $anoAtual - 5; $y--): ?>
-                        <option value="<?php echo $y; ?>"<?php echo $anoFilter === (string) $y ? ' selected' : ''; ?>><?php echo $y; ?></option>
-                        <?php endfor; ?>
+                    <select class="width-300 height-md" id="filter-ano"<?php echo $anosComOficios === [] ? ' disabled' : ''; ?>>
+                        <?php if ($anosComOficios === []): ?>
+                        <option value="">—</option>
+                        <?php else: ?>
+                        <?php foreach ($anosComOficios as $y): ?>
+                        <option value="<?php echo (int) $y; ?>"<?php echo $anoFilter === (string) $y ? ' selected' : ''; ?>><?php echo (int) $y; ?></option>
+                        <?php endforeach; ?>
+                        <?php endif; ?>
                     </select>
                 </div>
             </div>
@@ -235,6 +280,14 @@ $anoAtual = (int) date('Y');
                         <div class="col width-400">
                             <span class="minor-info">Tipo</span>
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['TipoOficio'] ?? '')); ?></span>
+                        </div>
+                        <div class="col width-400">
+                            <?php
+                            $nomeCriadorGab = trim((string) ($row['CriadoPorNome'] ?? ''));
+                            $nomeCriadorGab = $nomeCriadorGab !== '' ? $nomeCriadorGab : '—';
+                            ?>
+                            <span class="minor-info"><?php echo htmlspecialchars(gabinete_oficios_list_formatar_data_hora($row['Data'] ?? null)); ?></span>
+                            <span class="major-info text-ellipsis" title="<?php echo $nomeCriadorGab !== '—' ? htmlspecialchars($nomeCriadorGab, ENT_QUOTES) : ''; ?>"><?php echo htmlspecialchars($nomeCriadorGab); ?></span>
                         </div>
                     </div>
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">
@@ -380,17 +433,23 @@ $anoAtual = (int) date('Y');
             });
 
             const applyFilters = function () {
-                const status = document.getElementById('filter-status')?.value ?? '';
                 const processo = document.getElementById('search-input')?.value?.trim() ?? '';
-                const ano = document.getElementById('filter-ano')?.value ?? '';
-                const perPage = document.getElementById('items-per-page')?.value ?? '10';
+                const perPage = document.getElementById('items-per-page')?.value ?? '25';
                 const params = new URLSearchParams(window.location.search);
                 params.set('page', '<?php echo htmlspecialchars($routePage, ENT_QUOTES); ?>');
                 params.set('page_number', '1');
                 params.set('items_per_page', perPage);
-                if (status) params.set('status', status); else params.delete('status');
-                if (processo) params.set('processo', processo); else params.delete('processo');
-                if (ano) params.set('ano', ano); else params.delete('ano');
+                if (processo) {
+                    params.set('processo', processo);
+                    params.delete('status');
+                    params.delete('ano');
+                } else {
+                    params.delete('processo');
+                    const status = document.getElementById('filter-status')?.value ?? '';
+                    const ano = document.getElementById('filter-ano')?.value ?? '';
+                    if (status) params.set('status', status); else params.delete('status');
+                    if (ano) params.set('ano', ano); else params.delete('ano');
+                }
                 window.location.href = '?' + params.toString();
             };
 

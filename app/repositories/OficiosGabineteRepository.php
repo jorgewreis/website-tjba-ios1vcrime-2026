@@ -64,7 +64,7 @@ final class OficiosGabineteRepository
     public function insert(array $row): void
     {
         $sql = sprintf(
-            'INSERT INTO `%s` (`id`, `processo_id`, `numero_processo`, `ano`, `numero_sequencial`, `tipo_oficio`, `status`, `created_at`, `updated_at`) VALUES (:id, :processo_id, :numero_processo, :ano, :numero_sequencial, :tipo_oficio, :status, NOW(), NOW())',
+            'INSERT INTO `%s` (`id`, `processo_id`, `numero_processo`, `ano`, `numero_sequencial`, `tipo_oficio`, `status`, `criado_por`, `created_at`, `updated_at`) VALUES (:id, :processo_id, :numero_processo, :ano, :numero_sequencial, :tipo_oficio, :status, :criado_por, NOW(), NOW())',
             $this->table
         );
         $st = $this->connection->prepare($sql);
@@ -75,6 +75,8 @@ final class OficiosGabineteRepository
         $st->bindValue(':numero_sequencial', (int) $row['numero_sequencial'], PDO::PARAM_INT);
         $st->bindValue(':tipo_oficio', $row['tipo_oficio']);
         $st->bindValue(':status', $row['status']);
+        $cp = $row['criado_por'] ?? null;
+        $st->bindValue(':criado_por', $cp !== null && $cp !== '' ? $cp : null);
         $st->execute();
     }
 
@@ -106,9 +108,9 @@ final class OficiosGabineteRepository
             $coll,
             implode(', ', array_map(fn (string $s) => $this->connection->quote($s), self::STATUS_ORDER))
         );
-        $join = ' LEFT JOIN `processos` p ON p.`id` = g.`processo_id` LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id` ';
+        $join = ' LEFT JOIN `processos` p ON p.`id` = g.`processo_id` LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id` LEFT JOIN `usuarios` ucr ON ucr.`id_usuario` = g.`criado_por` ';
         $sql = sprintf(
-            'SELECT g.`id` AS `IdOficio`, g.`numero_processo` AS `Processo`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `ClasseNome`, g.`ano` AS `Ano`, g.`numero_sequencial` AS `NumeroSeq`, g.`tipo_oficio` AS `TipoOficio`, g.`status` AS `Status`, g.`created_at` AS `Data` FROM `%s` g %s %s ORDER BY %s, g.`created_at` DESC LIMIT :limit OFFSET :offset',
+            'SELECT g.`id` AS `IdOficio`, g.`numero_processo` AS `Processo`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `ClasseNome`, g.`ano` AS `Ano`, g.`numero_sequencial` AS `NumeroSeq`, g.`tipo_oficio` AS `TipoOficio`, g.`status` AS `Status`, g.`created_at` AS `Data`, TRIM(CONCAT(COALESCE(ucr.`nome`, \'\'), \' \', COALESCE(ucr.`sobrenome`, \'\'))) AS `CriadoPorNome` FROM `%s` g %s %s ORDER BY %s, g.`created_at` DESC LIMIT :limit OFFSET :offset',
             $this->table,
             $join,
             $whereClause ? 'WHERE ' . $whereClause : '',
@@ -135,6 +137,23 @@ final class OficiosGabineteRepository
         }
         $st->execute();
         return (int) $st->fetchColumn();
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function fetchDistinctAnos(): array
+    {
+        $sql = sprintf('SELECT DISTINCT `ano` FROM `%s` ORDER BY `ano` DESC', $this->table);
+        $st = $this->connection->query($sql);
+        if ($st === false) {
+            return [];
+        }
+        $rows = $st->fetchAll(PDO::FETCH_COLUMN);
+        if ($rows === false) {
+            return [];
+        }
+        return array_map(static fn ($y) => (int) $y, $rows);
     }
 
     public function countByStatus(array $filters): array
@@ -167,6 +186,14 @@ final class OficiosGabineteRepository
         $conditions = [];
         $params = [];
 
+        $processo = trim((string) ($filters['processo'] ?? ''));
+        if ($processo !== '') {
+            $conditions[] = sprintf('%s.`numero_processo` LIKE :f_proc', $alias);
+            $params[':f_proc'] = '%' . $processo . '%';
+
+            return [implode(' AND ', $conditions), $params];
+        }
+
         $status = trim((string) ($filters['status'] ?? ''));
         if ($includeStatusFilter && $status !== '') {
             if (in_array($status, self::STATUS_ORDER, true)) {
@@ -179,12 +206,6 @@ final class OficiosGabineteRepository
         if ($ano !== '' && ctype_digit($ano)) {
             $conditions[] = sprintf('%s.`ano` = :f_ano', $alias);
             $params[':f_ano'] = (int) $ano;
-        }
-
-        $processo = trim((string) ($filters['processo'] ?? ''));
-        if ($processo !== '') {
-            $conditions[] = sprintf('%s.`numero_processo` LIKE :f_proc', $alias);
-            $params[':f_proc'] = '%' . $processo . '%';
         }
 
         return [implode(' AND ', $conditions), $params];
