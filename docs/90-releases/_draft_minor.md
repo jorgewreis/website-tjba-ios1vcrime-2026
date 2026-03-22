@@ -201,4 +201,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correcao de erro no bd** `[8bfc6c9]`
 - **Fix: pequenos ajustes** `[09103b5]`
 - **Fix: correcao de qtd de itens por pagina** `[188c02d]`
+- **Feat: nova implementacao pagina reus presos** `[3cb4dc2]`
 
