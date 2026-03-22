@@ -14,9 +14,9 @@ $statusFilter = trim($_GET['status'] ?? '');
 $finalidadeFilter = trim($_GET['finalidade'] ?? '');
 $processoFilter = trim($_GET['processo'] ?? '');
 $allowedPerPage = [10, 25, 50, 100];
-$itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 10;
+$itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 25;
 if (!in_array($itemsPerPage, $allowedPerPage, true)) {
-    $itemsPerPage = 10;
+    $itemsPerPage = 25;
 }
 $page = isset($_GET['page']) ? max(1, (int) $_GET['page']) : 1;
 $outputFilters = [

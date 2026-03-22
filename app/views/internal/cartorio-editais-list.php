@@ -15,9 +15,9 @@ $statusFilter = trim($_GET['status'] ?? '');
 $processoFilter = trim($_GET['processo'] ?? '');
 $tipoEditalFilter = trim($_GET['tipo_edital'] ?? '');
 $allowedPerPage = [10, 25, 50, 100];
-$itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 10;
+$itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 25;
 if (!in_array($itemsPerPage, $allowedPerPage, true)) {
-    $itemsPerPage = 10;
+    $itemsPerPage = 25;
 }
 
 $pageNumberParam = $_GET['page_number'] ?? null;
@@ -474,7 +474,7 @@ if ($totalPages > 0) {
                 const status = document.getElementById('filter-status')?.value ?? '';
                 const tipoEdital = document.getElementById('filter-tipo-edital')?.value ?? '';
                 const processo = document.getElementById('search-input')?.value?.trim() ?? '';
-                const perPage = document.getElementById('items-per-page')?.value ?? '10';
+                const perPage = document.getElementById('items-per-page')?.value ?? '25';
                 const params = new URLSearchParams(window.location.search);
                 params.set('page', '<?php echo $routePage; ?>');
                 params.set('page_number', '1');

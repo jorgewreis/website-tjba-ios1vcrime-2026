@@ -45,8 +45,8 @@ declare(strict_types=1);
                 <div class="col">
                     <label for="items-per-page">Itens por página</label>
                     <select class="width-300 height-md" id="items-per-page">
-                        <option value="10">10</option>
                         <option value="25" selected>25</option>
+                        <option value="10">10</option>
                         <option value="50">50</option>
                         <option value="100">100</option>
                     </select>
@@ -107,8 +107,8 @@ declare(strict_types=1);
             }
 
             function getItemsPerPage() {
-                var value = parseInt(itemsPerPageSelect && itemsPerPageSelect.value ? itemsPerPageSelect.value : '10', 10);
-                return [5, 10, 25, 50].indexOf(value) !== -1 ? value : 10;
+                var value = parseInt(itemsPerPageSelect && itemsPerPageSelect.value ? itemsPerPageSelect.value : '25', 10);
+                return [5, 10, 25, 50].indexOf(value) !== -1 ? value : 25;
             }
 
             function getPaginationButtons(totalPages, current) {

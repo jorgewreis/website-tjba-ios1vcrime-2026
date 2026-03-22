@@ -12,9 +12,9 @@ $connection = Conection::getInstance()->getConnection();
 $statusFilter = trim((string) ($_GET['status'] ?? ''));
 $processoFilter = trim((string) ($_GET['processo'] ?? ''));
 $allowedPerPage = [10, 25, 50, 100];
-$itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 10;
+$itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 25;
 if (!in_array($itemsPerPage, $allowedPerPage, true)) {
-    $itemsPerPage = 10;
+    $itemsPerPage = 25;
 }
 $page = isset($_GET['page']) ? max(1, (int) $_GET['page']) : 1;
 $pageNumber = isset($_GET['page_number']) ? max(1, (int) $_GET['page_number']) : $page;

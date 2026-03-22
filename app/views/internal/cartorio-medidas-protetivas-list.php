@@ -14,9 +14,9 @@ $routePage = trim((string) ($_GET['page'] ?? 'medidasprotetivas'));
 $statusFilter = trim((string) ($_GET['status'] ?? ''));
 $processoFilter = trim((string) ($_GET['processo'] ?? ''));
 $allowedPerPage = [10, 25, 50, 100];
-$itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 10;
+$itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 25;
 if (!in_array($itemsPerPage, $allowedPerPage, true)) {
-    $itemsPerPage = 10;
+    $itemsPerPage = 25;
 }
 
 $pageNumberParam = $_GET['page_number'] ?? null;
@@ -417,7 +417,7 @@ if ($totalPages > 0) {
             function applyFilters() {
                 var status = document.getElementById('filter-status')?.value || '';
                 var processo = document.getElementById('search-input')?.value?.trim() || '';
-                var perPage = document.getElementById('items-per-page')?.value || '10';
+                var perPage = document.getElementById('items-per-page')?.value || '25';
                 var params = new URLSearchParams(window.location.search);
                 params.set('page', '<?php echo $routePage; ?>');
                 params.set('page_number', '1');
