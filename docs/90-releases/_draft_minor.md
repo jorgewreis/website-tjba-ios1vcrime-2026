@@ -199,4 +199,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Feat: novo modelo de perfis e acesso** `[d8950e4]`
 - **Fix: correcoes em oficios** `[71272dc]`
 - **Fix: correcao de erro no bd** `[8bfc6c9]`
+- **Fix: pequenos ajustes** `[09103b5]`
 
