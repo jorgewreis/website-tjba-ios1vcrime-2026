@@ -202,4 +202,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: pequenos ajustes** `[09103b5]`
 - **Fix: correcao de qtd de itens por pagina** `[188c02d]`
 - **Feat: nova implementacao pagina reus presos** `[3cb4dc2]`
+- **Fix: correcao de reus** `[b8b9330]`
 
