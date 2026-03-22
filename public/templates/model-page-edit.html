@@ -4,142 +4,150 @@
         <meta lang="pt-BR">
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title>Template Model - Page Internal - Edit</title>
+        <title>Editar Carta Expedida</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="./../assets/css/reset.css">
-        <link rel="stylesheet" href="./../assets/css/variables.css">
-        <link rel="stylesheet" href="./../assets/css/page.css">
-        <link rel="stylesheet" href="./../assets/css/form.css">
-        <link rel="stylesheet" href="./../assets/css/table.css">
+        <link rel="stylesheet" href="../../public/assets/css/shared/reset.css">
+        <link rel="stylesheet" href="../../public/assets/css/shared/color.css">
+        <link rel="stylesheet" href="../../public/assets/css/shared/page.css">
+        <link rel="stylesheet" href="../../public/assets/css/shared/form.css">
+        <link rel="stylesheet" href="../../public/assets/css/shared/table.css">
+        <link rel="stylesheet" href="../../public/assets/css/shared/pill-badge.css">
         
+        <!-- IMPORT - FLATICON -->
+        <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
     </head>
 <body class="page-internal">
 
-    <!-- SPACING -->
     <div class="spacing-top-page"></div>
 
     <div class="header-page">
-        <!-- Mapa de navegação do site -->
         <div class="location">
             <span class="all">Internal - Cartório - Cartas Expedidas -</span>
             <span class="specific">Edição</span>
         </div>
-
-        <!-- Título e descrição da página -->
-        <h1 class="title-page">Edição de Carta Expedida</h1>
-        <p class="description-page">Caso tenha alguma dificuldade no preenchimento do cadastro, verifique os arquivos abaixo para obter ajuda.</p>
-        
-        <!-- Badges de arquivos para download -->
+        <h1 class="title-page">Editar Carta Expedida</h1>
+        <p class="description-page">Atualize o cadastro antes de salvar e permita que a carta siga para envio.</p>
         <div class="badge file">
-            <img src="./../assets/icons/Office-File-Pdf-1--Streamline-Ultimate.png" alt="Ícone de arquivo PDF">
-            <span>Passo a passo - Cartas expedidas</span>
+            <img src="../../public/assets/icons/Office-File-Pdf-1--Streamline-Ultimate.png" alt="Ícone de arquivo PDF">
+            <span>Passo a passo - Expedição de Cartas Precatórias</span>
         </div>
     </div>
 
-    <div class="card-page">               
-        <div class="line-pagination">
-            <div class="block-cell" title="clique para copiar">
-                <span class="minor-info">Ação Penal - Procedimento Ordinário</span>
-                <span class="major-info important">08002343-11.2026.8.05.0103</span>
+    <div class="card-page">
+
+        <div class="row table header">Informações obrigatórias</div>
+        <div class="row filter">
+            <div class="col filter">
+                <label for="filter-processo">Processo</label>
+                <input type="text" id="filter-processo" class="width-200 height-md readonly" value="08002343-11.2026.8.05.0103" readonly>
             </div>
-            <div class="block-cell status-task">
-                <div class="width-sm status status-pending">Pendente</div>
+            <div class="col filter">
+                <label for="filter-classe">Classe</label>
+                <input type="text" id="filter-classe" class="width-400 height-md readonly" value="1.003-Classe de Execução" readonly>
             </div>
-        </div>
-        <div class="line-table header">Informações complementares</div>
-        <div class="line-filter">            
-            <div class="block-cell">
+            <div class="col filter">
                 <label for="filter-tipo">Finalidade</label>
-                <select class="width-md height-md" id="filter-tipo">
-                    <option value="" selected disabled>Selecione aqui</option>
-                    <option value="Intimação para Audiência">Intimação para Audiência</option>
-                    <option value="Intimação de Decisão Interlocutória">Intimação de Decisão</option>
+                <select class="width-400 height-md" id="filter-tipo">
+                    <option value="" disabled>Selecione aqui</option>
+                    <option value="Intimação para Audiência" selected>Intimação para Audiência</option>
+                    <option value="Intimação de Decisão Interlocutória">Intimação de Decisão Interlocutória</option>
                     <option value="Intimação da Sentença">Intimação da Sentença</option>
-                    <option value="Citação para apresentar Defesa">Citação para apresentar Defesa</option>                    
-                    <option value="Citação para apresentar Alegações Finais">Citação para apresentar Alegações Finais</option>
-                    <option value="Suspensão Condicional">Suspensão Condicional</option>
-                    <option value="Outra">Outra não listada</option>
+                    <option value="Citação para apresentar Defesa">Citação para apresentar Defesa</option>
                 </select>
             </div>
-            <div class="block-cell">
+        </div>
+        <div class="row filter">
+            <div class="col filter">
+                <label for="filter-cidade">Cidade</label>
+                <input type="text" id="filter-cidade" class="width-600 height-md" value="Ilhéus" required>
+            </div>
+            <div class="col filter">
+                <label for="filter-estado">Estado</label>
+                <select class="width-200 height-md" id="filter-estado" required>
+                    <option value="BA" selected>Bahia</option>
+                    <option value="SP">São Paulo</option>
+                    <option value="RJ">Rio de Janeiro</option>
+                </select>
+            </div>
+            <div class="col filter">
                 <label for="filter-prazo">Prazo cumprimento</label>
-                <select class="width-sm height-md" id="filter-prazo">
+                <select class="width-100 height-md" id="filter-prazo" required>
                     <option value="5 dias">5 dias</option>
                     <option value="10 dias">10 dias</option>
                     <option value="15 dias">15 dias</option>
                     <option value="30 dias" selected>30 dias</option>
-                    <option value="60 dias">60 dias</option>
-                    <option value="90 dias">90 dias</option>
-                </select>
-            </div>        
-            <div class="block-cell">
-                <label for="filter-estado">Estado</label>
-                <select class="width-md height-md" id="filter-estado">
-                    <option value="AC">Acre</option>
-                    <option value="AL">Alagoas</option>
-                    <option value="AP">Amapá</option>
-                    <option value="AM">Amazonas</option>
-                    <option value="BA" selected>Bahia</option>
-                    <option value="CE">Ceará</option>
-                    <option value="DF">Distrito Federal</option>
-                    <option value="ES">Espírito Santo</option>
-                    <option value="GO">Goiás</option>
-                    <option value="MA">Maranhão</option> 
-                    <option value="MT">Mato Grosso</option>
-                    <option value="MS">Mato Grosso do Sul</option>
-                    <option value="MG">Minas Gerais</option>
-                    <option value="PA">Pará</option>
-                    <option value="PB">Paraíba</option>
-                    <option value="PR">Paraná</option>
-                    <option value="PE">Pernambuco</option>
-                    <option value="PI">Piauí</option>
-                    <option value="RJ">Rio de Janeiro</option>
-                    <option value="RN">Rio Grande do Norte</option>
-                    <option value="RS">Rio Grande do Sul</option>
-                    <option value="RO">Rondônia</option>
-                    <option value="RR">Roraima</option>
-                    <option value="SC">Santa Catarina</option>
-                    <option value="SP">São Paulo</option>
-                    <option value="SE">Sergipe</option>
-                    <option value="TO">Tocantins</option>
                 </select>
             </div>
-            <div class="block-cell">
-                <label for="filter-cidade">Cidade</label>
-                <input type="text" class="width-md height-md" id="filter-cidade" placeholder="Digite o nome da cidade"> 
+        </div>
+
+        <!-- Timeline de subtarefas -->
+        <div class="row table header">Subtarefas - Timeline</div>
+        <div class="row buttons">
+            <div class="col filter">
+                <div class="width-100 status status-current" style="border: 1px solid var(--color-gray-500);">Em andamento</div>
             </div>            
         </div>
-        <div class="line-table header">Juízo deprecado</div>
-        <div class="line-filter">
-            <div class="block-cell">
-                <label for="filter-juizo">Vara</label>
-                <input type="text" class="width-lg height-md" id="filter-juizo" placeholder="Digite o nome do juízo deprecado">
+
+        <!-- Subtarefas -->
+        <div class="row timeline">
+            <div class="row">
+                <div class="circle finished"></div>
+                <div class="col filter subtask-status-info">
+                    <span class="minor-info">Carta expedida e cadastrada por</span>
+                    <span class="major-info">Moacir Bastos</span>
+                </div>
             </div>
-            <div class="block-cell">
-                <label for="filter-processo">Número da Carta Precatória</label>
-                <input type="text" class="width-md height-md" id="filter-processo" placeholder="Digite o número da Carta Precatória">
+            <div class="col">
+                <div class="col filter subtask-date">
+                    <span class="minor-info">Cadastro realizado em <strong>10/06/2026 - 14:35</strong></span>
+                </div>
             </div>
-            <div class="block-cell">
-                <label for="filter-status">Status do cumprimento</label>
-                <select class="width-lg height-md" id="filter-status">
-                    <option value="Ag. Expedição" selected>Aguardando expedição de documento</option>
-                    <option value="Ag. Cumprimento">Aguardando cumprimento</option>
-                    <option value="Não cumprida">Não cumprida</option>
-                    <option value="Cumprida positivamente">Cumprida positivamente</option>
-                    <option value="Cumprida negativamente">Cumprida negativamente</option>
-                </select>
+        </div>
+        <div class="row timeline">
+            <div class="row">
+                <div class="circle finished"></div>
+                <div class="col filter subtask-status-info">
+                    <span class="minor-info">3 Documentos em PDF gerados por</span>
+                    <span class="major-info">Moacir Bastos</span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="row subtask-date">
+                    <div class="col button-table button-subtask" title="Reiniciar subtarefa">
+                        <i class="fi fi-rr-refresh"></i>
+                    </div>
+                    <span class="minor-info">Movimentação realizada em <strong>10/06/2026 - 14:38</strong></span>
+                </div>
+            </div>
+        </div>
+        <div class="row timeline">
+            <div class="row">
+                <div class="circle current"></div>
+                <div class="col filter subtask-status-info">
+                    <span class="minor-info">Carta expedida aguardando envio</span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="row subtask-date">                    
+                    <div class="col button-table button-subtask" title="Adicionar subtarefa">
+                        <i class="fi fi-rr-add"></i>
+                    </div>
+                    <span class="minor-info">Aguardando movimentação</span>
+                </div>
             </div>
         </div>
 
-        <!-- Ações -->
-        <div class="line-buttons">
-            <button class="btn btn-secondary">Voltar</button>
-            <button class="btn btn-primary">Salvar</button>
+        <input type="hidden" id="hidden-carta-id" value="CPE000123">
+        <input type="hidden" id="hidden-comarca-id" value="COM123">
+
+        <div class="row buttons">
+            <button class="btn btn-secondary" id="voltar-btn">Voltar</button>
+            <button class="btn btn-primary" id="salvar-btn" type="button" disabled>Salvar</button>
         </div>
+
     </div>
 
-    <!-- Develop Info -->
     <div class="footer-page">
         <div class="location">
             <span class="all">Aplicativo web desenvolvido integralmente por </span>
@@ -147,6 +155,38 @@
             <span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span>
         </div>
     </div>
+
+    <script src="../../public/assets/js/shared/text-formatter.js"></script>
+    <script>
+        (() => {
+            const salvarBtn = document.getElementById('salvar-btn');
+            const cidadeInput = document.getElementById('filter-cidade');
+            const estadoSelect = document.getElementById('filter-estado');
+            const observacoesInput = document.getElementById('filter-observacoes');
+            const feedback = document.createElement('div');
+            feedback.className = 'row filter';
+            feedback.innerHTML = '<div class="col"><label class="status status-placeholder">Modificações não salvas.</label></div>';
+            document.querySelector('.card-page').insertBefore(feedback, document.querySelector('.row.buttons'));
+
+            const normalize = (value) => value.trim().toLowerCase();
+            const updateButton = () => {
+                salvarBtn.disabled = false;
+                feedback.querySelector('label').textContent = 'Alterações pendentes.';
+            };
+
+            [cidadeInput, estadoSelect, observacoesInput].forEach((el) => {
+                if (!el) return;
+                el.addEventListener('input', updateButton);
+                el.addEventListener('change', updateButton);
+            });
+
+            salvarBtn.addEventListener('click', () => {
+                feedback.querySelector('label').textContent = 'Dados enviados com sucesso (simulado).';
+                feedback.querySelector('label').className = 'status status-finished';
+                salvarBtn.disabled = true;
+            });
+        })();
+    </script>
 
 </body>
 </html>

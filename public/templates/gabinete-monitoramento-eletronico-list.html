@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Monitoramento Eletrônico (Gabinete) — Lista — Primeira Vara Crime de Ilhéus</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!--
+      MODELO / API (Gabinete — Monitoramento Eletrônico):
+      - Servidor preenche: número do processo (CNJ), classe (automático via DataJud), identificação do réu.
+      - Réu na UI: select (lista vinda do servidor / partes do processo) + input (complemento ou nome quando "Outro" / livre).
+      - Ao criar o registro: gerar subtarefas (1) "Iniciar monitoramento" com campo de data; ao concluir → status "Em andamento".
+        (2) "Encerrar monitoramento"; ao concluir → status "Finalizada".
+      - Lista: exibir duração em dias (monitoramento encerrado: entre data de início efetivo e data de encerramento;
+        em andamento: opcional mostrar dias corridos até hoje ou "—" conforme regra de negócio).
+      - IDs sugeridos: gab-mon-processo, gab-mon-classe, gab-mon-reu-select, gab-mon-reu-input, btn-gab-mon-registrar.
+      - Integração DataJud/cnj: reutilizar ids filter-processo / processo-classe se o projeto padronizar; aqui prefixo gab-mon- para não colidir em iframe.
+      - Cadastro em página separada: gabinete-monitoramento-eletronico-create.html
+      - Edição: gabinete-monitoramento-eletronico-edit.html
+    -->
+    <link rel="stylesheet" href="../../public/assets/css/shared/reset.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/color.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/layout.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/page.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/form.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/table.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/toast.css">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+</head>
+<body class="page-internal">
+
+    <div class="spacing-top-page"></div>
+
+    <div class="header-page">
+        <div class="location">
+            <span class="all">Interno - Gabinete - Monitoramento Eletrônico -</span>
+            <span class="specific">Lista</span>
+        </div>
+        <h1 class="title-page">Monitoramento Eletrônico</h1>
+        <p class="description-page">Consulta aos registros de monitoramento eletrônico. Para novo cadastro, use a tela de cadastro.</p>
+    </div>
+
+    <div class="container-full card-page">
+
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-between align-center gap-y-md" style="gap:12px;">
+                <h2 style="margin:0;">Lista de monitoramentos</h2>                
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md">
+                <input type="text" class="width-400 height-md" id="search-input" placeholder="Pesquisar por processo ou réu..." autocomplete="off">
+                <select class="width-300 height-md" id="export-type" disabled>
+                    <option value="" selected>Exportar lista</option>
+                    <option value="pdf">Gerar PDF</option>
+                    <option value="csv">Gerar CSV</option>
+                    <option value="print">Imprimir</option>
+                </select>
+                <button type="button" class="btn btn-primary" id="novo-cadastro-btn" onclick="window.location.href='gabinete-monitoramento-eletronico-create.html'">Novo cadastro</button>
+            </div>
+        </div>
+
+        <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
+            <div class="display-flex row row-fit justify-start gap-y-md flex-wrap">
+                <div class="col">
+                    <label for="filter-status">Filtrar por status</label>
+                    <select class="width-500 height-md" id="filter-status">
+                        <option value="" selected>Mostrar todos</option>
+                        <option value="pendente">Pendente (0)</option>
+                        <option value="em_andamento">Em andamento (0)</option>
+                        <option value="finalizada">Finalizada (0)</option>
+                        <option value="cancelada">Cancelada (0)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md">
+                <div class="col">
+                    <label for="items-per-page">Itens por página</label>
+                    <select class="width-300 height-md" id="items-per-page">
+                        <option value="10">10</option>
+                        <option value="25" selected>25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- MOCK 1: Pendente — subtarefa 1 com data para "Iniciar monitoramento" -->
+        <div class="display-flex col col-full register border-bottom" data-monitoramento-id="mon-mock-101" id="mon-mock-101">
+            <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
+                <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                    <div class="col">
+                        <label class="button-table" title="Expandir subtarefas">
+                            <input type="radio" name="open-subtask" value="mon-mock-101" aria-controls="subtask-mon-mock-101" aria-expanded="true">
+                            <i class="fi fi-rr-angle-small-down"></i>
+                        </label>
+                    </div>
+                    <div class="col width-200">
+                        <span class="minor-info">Monitoramento</span>
+                        <span class="major-info">101/2026</span>
+                    </div>
+                    <div class="col width-420 col-process process-info" title="clique para copiar">
+                        <span class="minor-info text-ellipsis" style="color: var(--primary-color-active); font-weight: 600;">Ação Penal - Procedimento Ordinário</span>
+                        <span class="major-info">0800234-11.2026.8.05.0103</span>
+                    </div>
+                    <div class="col width-280">
+                        <span class="minor-info">Réu</span>
+                        <span class="major-info text-ellipsis">Fulano de Tal</span>
+                    </div>
+                    <div class="col width-160">
+                        <span class="minor-info">Duração</span>
+                        <span class="major-info">—</span>
+                    </div>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-sm align-center">
+                    <div class="col button-table button-edit" data-monitoramento-id="mon-mock-101" title="Editar">
+                        <i class="fi fi-rr-file-edit"></i>
+                    </div>
+                    <div class="col status-task" title="Iniciar e encerrar monitoramento">
+                        <div class="width-300 status status-pending status-with-progress">
+                            <span class="status-task-label width-300">Pendente</span>
+                            <div class="status-task-progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="2">
+                                <div class="status-task-progress-segment pendente" title="Iniciar monitoramento"></div>
+                                <div class="status-task-progress-segment pendente" title="Encerrar monitoramento"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="display-flex col col-full subtask" id="subtask-mon-mock-101" aria-hidden="false">
+                <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top" data-subtarefa-tipo="iniciar_monitoramento">
+                    <div class="display-flex row row-fit justify-start gap-y-sm align-center flex-wrap">
+                        <div class="col task-status">
+                            <div class="padding-x-lg height-sm status status-pending">Iniciar monitoramento</div>
+                        </div>
+                        <div class="col">
+                            <label for="mock-101-data-inicio">Data de início</label>
+                            <input type="date" class="width-280 height-md" id="mock-101-data-inicio" name="data_inicio_monitoramento" value="">
+                        </div>
+                    </div>
+                    <div class="display-flex row row-fit justify-end align-center">
+                        <button type="button" class="btn btn-primary height-sm" title="Confirma início e altera status para Em andamento">
+                            <span class="value-button">Confirmar início</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top" data-subtarefa-tipo="encerrar_monitoramento">
+                    <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                        <div class="col task-status">
+                            <div class="padding-x-lg height-sm status status-pending">Encerrar monitoramento</div>
+                        </div>
+                    </div>
+                    <div class="display-flex row row-fit justify-end align-center">
+                        <button type="button" class="btn btn-secondary-outline height-sm" disabled title="Disponível após iniciar o monitoramento">
+                            <span class="value-button">Encerrar monitoramento</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MOCK 2: Em andamento — 1ª subtarefa concluída; duração parcial (ex.: dias desde o início) -->
+        <div class="display-flex col col-full register border-bottom" data-monitoramento-id="mon-mock-100">
+            <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
+                <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                    <div class="col">
+                        <label class="button-table" title="Expandir subtarefas">
+                            <input type="radio" name="open-subtask" value="mon-mock-100" aria-controls="subtask-mon-mock-100" aria-expanded="false">
+                            <i class="fi fi-rr-angle-small-down"></i>
+                        </label>
+                    </div>
+                    <div class="col width-200">
+                        <span class="minor-info">Monitoramento</span>
+                        <span class="major-info">100/2026</span>
+                    </div>
+                    <div class="col width-420 col-process process-info" title="clique para copiar">
+                        <span class="minor-info text-ellipsis" style="color: var(--primary-color-active); font-weight: 600;">Inquérito Policial</span>
+                        <span class="major-info">0001234-56.2026.8.05.0103</span>
+                    </div>
+                    <div class="col width-280">
+                        <span class="minor-info">Réu</span>
+                        <span class="major-info text-ellipsis">Beltrano Silva</span>
+                    </div>
+                    <div class="col width-160">
+                        <span class="minor-info">Duração</span>
+                        <span class="major-info">18 dias</span>
+                    </div>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-sm align-center">
+                    <div class="col button-table button-edit" data-monitoramento-id="mon-mock-100" title="Editar">
+                        <i class="fi fi-rr-file-edit"></i>
+                    </div>
+                    <div class="col status-task">
+                        <div class="width-300 status status-pending status-with-progress">
+                            <span class="status-task-label width-300">Em andamento</span>
+                            <div class="status-task-progress" role="progressbar" aria-valuenow="1" aria-valuemin="0" aria-valuemax="2">
+                                <div class="status-task-progress-segment concluida" title="Iniciar monitoramento"></div>
+                                <div class="status-task-progress-segment em_andamento" title="Encerrar monitoramento"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="display-flex col col-full subtask subtask-collapsed" id="subtask-mon-mock-100" aria-hidden="true">
+                <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top">
+                    <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                        <div class="col task-status">
+                            <div class="padding-x-lg height-sm status status-finished">Iniciar monitoramento</div>
+                        </div>
+                        <span class="minor-info">Início em 01/03/2026</span>
+                    </div>
+                </div>
+                <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top" data-subtarefa-tipo="encerrar_monitoramento">
+                    <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                        <div class="col task-status">
+                            <div class="padding-x-lg height-sm status status-pending">Encerrar monitoramento</div>
+                        </div>
+                    </div>
+                    <div class="display-flex row row-fit justify-end align-center">
+                        <button type="button" class="btn btn-primary height-sm">
+                            <span class="value-button">Confirmar encerramento</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MOCK 3: Finalizada — duração total em dias; sem badge de status na lista (opcional: igual ofícios) -->
+        <div class="display-flex col col-full register border-bottom" data-monitoramento-id="mon-mock-99">
+            <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
+                <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                    <div class="col width-200">
+                        <span class="minor-info">Monitoramento</span>
+                        <span class="major-info">99/2026</span>
+                    </div>
+                    <div class="col width-420 col-process process-info" title="clique para copiar">
+                        <span class="minor-info text-ellipsis" style="color: var(--primary-color-active); font-weight: 600;">Ação Penal</span>
+                        <span class="major-info">0777123-45.2025.8.05.0103</span>
+                    </div>
+                    <div class="col width-280">
+                        <span class="minor-info">Réu</span>
+                        <span class="major-info text-ellipsis">Ciclano de Souza</span>
+                    </div>
+                    <div class="col width-160">
+                        <span class="minor-info">Duração</span>
+                        <span class="major-info">42 dias</span>
+                    </div>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-sm align-center">
+                    <div class="col button-table button-edit" data-monitoramento-id="mon-mock-99" title="Editar">
+                        <i class="fi fi-rr-file-edit"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MOCK 4: Cancelada -->
+        <div class="display-flex col col-full register border-bottom" data-monitoramento-id="mon-mock-98">
+            <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
+                <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                    <div class="col width-200">
+                        <span class="minor-info">Monitoramento</span>
+                        <span class="major-info">98/2026</span>
+                    </div>
+                    <div class="col width-420 col-process process-info">
+                        <span class="minor-info text-ellipsis">Ação Penal</span>
+                        <span class="major-info">0666555-44.2026.8.05.0103</span>
+                    </div>
+                    <div class="col width-280">
+                        <span class="minor-info">Réu</span>
+                        <span class="major-info text-ellipsis">Outro — informado no campo livre</span>
+                    </div>
+                    <div class="col width-160">
+                        <span class="minor-info">Duração</span>
+                        <span class="major-info">—</span>
+                    </div>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-sm align-center">
+                    <div class="col button-table button-edit" data-monitoramento-id="mon-mock-98" title="Editar">
+                        <i class="fi fi-rr-file-edit"></i>
+                    </div>
+                    <div class="col">
+                        <div class="width-300 padding-x-lg status status-cancelled">Cancelada</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
+            <span class="pagination-info">Mostrando 1-4 de 4 monitoramentos (1 página, 25 itens por página)</span>
+            <div class="pagination-controls">
+                <a class="pagination-symbol disabled" aria-disabled="true">
+                    <img src="../../public/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior">
+                </a>
+                <a class="pagination-number active" href="#">1</a>
+                <a class="pagination-symbol disabled" aria-disabled="true">
+                    <img src="../../public/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página">
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-page">
+        <div class="location">
+            <span class="all">Aplicativo web desenvolvido integralmente por </span>
+            <span class="specific">Jorge Reis Develop</span>
+            <span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span>
+        </div>
+    </div>
+
+</body>
+</html>

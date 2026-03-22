@@ -1,0 +1,24 @@
+---
+description: Padronizar confirmação de ações destrutivas com duplo clique e toast.
+globs: app/views/**/*.php, public/**/*.php, public/assets/js/**/*.js
+alwaysApply: true
+---
+
+# Confirmação de ações destrutivas
+
+## Regra obrigatória
+
+- Em ações destrutivas (`excluir`, `cancelar`, `desativar`, `remover`), usar confirmação no padrão do projeto: **duplo clique + toast informativo**.
+- Mensagem de confirmação deve ser exibida via toast (`type: 'info'`, `variant: 'full'`, `title: 'Confirmação'`).
+- Só executar a ação destrutiva na segunda interação dentro da janela de tempo definida.
+
+## Alert como exceção
+
+- `alert()` só pode ser usado para **confirmação de exclusão** quando não houver alternativa viável no fluxo.
+- Nunca usar `alert()` para sucesso, erro, aviso geral, validação de formulário ou progresso.
+
+## Implementação de referência
+
+- Utilizar padrão de helper local como `requireSecondClick(key, message)` para controlar a janela de confirmação.
+- Evitar `confirm()` nativo quando o fluxo já suportar confirmação com toast.
+

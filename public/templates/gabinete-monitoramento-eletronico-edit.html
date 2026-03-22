@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Monitoramento Eletrônico (Gabinete) — Edição — Primeira Vara Crime de Ilhéus</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!--
+      MODELO: tela de detalhe / edição restrita. Dados de processo e classe são somente leitura (servidor).
+      Cadastro em gabinete-monitoramento-eletronico-create.html | Lista em gabinete-monitoramento-eletronico-list.html
+      Subtarefas e datas podem ser repetidas aqui ou apenas na lista — definir na implementação.
+      Ações destrutivas: cancelar monitoramento / excluir (se aplicável) com padrão do projeto (toast + duplo clique).
+    -->
+    <link rel="stylesheet" href="../../public/assets/css/shared/reset.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/color.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/layout.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/page.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/form.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/table.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/toast.css">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+</head>
+<body class="page-internal">
+
+    <div class="spacing-top-page"></div>
+
+    <div class="header-page">
+        <div class="location">
+            <span class="all">Interno - Gabinete - Monitoramento Eletrônico -</span>
+            <span class="specific">Edição</span>
+        </div>
+        <h1 class="title-page">Monitoramento eletrônico</h1>
+        <p class="description-page">Visualização dos dados do registro e das datas de início e encerramento quando concluídas.</p>
+    </div>
+
+    <div class="container-full card-page">
+
+        <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom">
+            <h2>Informações</h2>
+        </div>
+
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md" style="justify-content: flex-start; flex-wrap: wrap;">
+            <div class="col filter">
+                <label for="gab-mon-edit-processo">Processo</label>
+                <input type="text" id="gab-mon-edit-processo" class="width-400 height-md readonly" value="0001234-56.2026.8.05.0103" readonly>
+            </div>
+            <div class="col filter">
+                <label for="gab-mon-edit-classe">Classe</label>
+                <input type="text" id="gab-mon-edit-classe" class="width-600 height-md readonly" value="Inquérito Policial" readonly>
+            </div>
+            <div class="col filter">
+                <label for="gab-mon-edit-reu">Réu</label>
+                <input type="text" id="gab-mon-edit-reu" class="width-700 height-md readonly" value="Beltrano Silva" readonly>
+            </div>
+        </div>
+
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md" style="justify-content: flex-start; flex-wrap: wrap;">
+            <div class="col filter">
+                <label for="gab-mon-edit-data-inicio">Data de início do monitoramento</label>
+                <input type="date" id="gab-mon-edit-data-inicio" class="width-280 height-md readonly" value="2026-03-01" readonly>
+            </div>
+            <div class="col filter">
+                <label for="gab-mon-edit-data-fim">Data de encerramento</label>
+                <input type="text" id="gab-mon-edit-data-fim" class="width-280 height-md readonly" value="—" readonly>
+            </div>
+            <div class="col filter">
+                <label for="gab-mon-edit-duracao">Duração (dias)</label>
+                <input type="text" id="gab-mon-edit-duracao" class="width-200 height-md readonly" value="18 dias (em curso)" readonly>
+            </div>
+        </div>
+
+        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
+            <button type="button" class="btn btn-secondary" id="gab-mon-voltar-btn">Voltar</button>
+            <button type="button" class="btn btn-danger-outline" id="gab-mon-cancelar-btn" title="Alterar status para Cancelada">Cancelar monitoramento</button>
+            <button type="button" class="btn btn-danger" id="gab-mon-excluir-btn" title="Excluir somente se for o último número do ano (ajustar regra na implementação)">Excluir registro</button>
+            <button type="button" class="btn btn-primary" id="salvar-btn" type="button">Salvar alterações</button>
+        </div>
+    </div>
+
+    <div class="footer-page">
+        <div class="location">
+            <span class="all">Aplicativo web desenvolvido integralmente por </span>
+            <span class="specific">Jorge Reis Develop</span>
+            <span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            document.getElementById('gab-mon-voltar-btn')?.addEventListener('click', function () {
+                history.back();
+            });
+        })();
+    </script>
+</body>
+</html>

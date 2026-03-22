@@ -17,28 +17,48 @@
       try {
         const response = await fetch(endpoint, {
           method: "POST",
-          body: formData
+          body: formData,
+          credentials: "include"
         });
 
         const result = await response.json();
 
-        if (result.success) {
-          window.location.href = "/home.php";
+        // Só redireciona se o servidor confirmar sucesso (HTTP 2xx + success).
+        // A home.php fará nova verificação de sessão/token ao carregar.
+        if (response.ok && result && result.success === true) {
+          if (global.App && global.App.Prefs) {
+            const lembrar = form.querySelector("#lembrarUsuario");
+            const cpfInput = form.querySelector('input[name="cpf"]');
+            const cpf = cpfInput ? (cpfInput.value || "").replace(/\D/g, "") : "";
+            if (lembrar && lembrar.checked && cpf.length === 11) {
+              global.App.Prefs.setRememberCpf(cpfInput.value.trim());
+            } else {
+              global.App.Prefs.clearRememberCpf();
+            }
+          }
+          window.location.replace("/home.php");
           return;
         }
 
-        const erroElement = document.getElementById(erroId);
-        if (erroElement) erroElement.textContent = result.message;
-
-        const alertBox = document.getElementById(alertId);
-        if (alertBox) alertBox.style.display = "flex";
-      } catch (error) {
-        const erroElement = document.getElementById(erroId);
-        if (erroElement) {
-          erroElement.textContent = "Erro de conexão. Tente novamente mais tarde.";
+        const message = (result && result.message) ? result.message : "Erro ao entrar.";
+        if (global.App && global.App.Toast) {
+          global.App.Toast.show({ type: "error", variant: "full", title: "Erro", message });
+        } else {
+          const erroElement = document.getElementById(erroId);
+          if (erroElement) erroElement.textContent = message;
+          const alertBox = document.getElementById(alertId);
+          if (alertBox) alertBox.style.display = "flex";
         }
-        const alertBox = document.getElementById(alertId);
-        if (alertBox) alertBox.style.display = "flex";
+      } catch (error) {
+        const message = "Erro de conexão. Tente novamente mais tarde.";
+        if (global.App && global.App.Toast) {
+          global.App.Toast.show({ type: "error", variant: "full", title: "Erro", message });
+        } else {
+          const erroElement = document.getElementById(erroId);
+          if (erroElement) erroElement.textContent = message;
+          const alertBox = document.getElementById(alertId);
+          if (alertBox) alertBox.style.display = "flex";
+        }
       }
     });
   }
@@ -95,12 +115,14 @@
       const email = (emailInput.value || "").trim();
 
       if (cpfDigits.length !== 11) {
-        setAlert("danger", "Erro", "Informe um CPF válido.");
+        if (global.App && global.App.Toast) global.App.Toast.show({ type: "error", variant: "full", title: "Erro", message: "Informe um CPF válido." });
+        else setAlert("danger", "Erro", "Informe um CPF válido.");
         return;
       }
 
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        setAlert("danger", "Erro", "Informe um e-mail válido.");
+        if (global.App && global.App.Toast) global.App.Toast.show({ type: "error", variant: "full", title: "Erro", message: "Informe um e-mail válido." });
+        else setAlert("danger", "Erro", "Informe um e-mail válido.");
         return;
       }
 
@@ -113,7 +135,7 @@
           submitBtn.textContent = "Processando...";
         }
 
-        await fetch(endpoint, {
+        const response = await fetch(endpoint, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -125,15 +147,30 @@
           })
         });
 
-        setAlert(
-          "primary",
-          "Aviso",
-          "Se os dados estiverem corretos, você receberá instruções por e-mail."
-        );
-        form.reset();
+        const result = await response.json().catch(() => ({}));
+        const success = result && result.success === true;
+        const emailSent = result && result.emailSent === true;
+        const message = (result && result.message) || "Não foi possível processar. Tente novamente.";
+
+        if (success) {
+          const toastType = emailSent ? "success" : "info";
+          const toastTitle = emailSent ? "E-mail enviado" : "Senha redefinida";
+          if (global.App && global.App.Toast) global.App.Toast.show({ type: toastType, variant: "full", title: toastTitle, message });
+          else setAlert(emailSent ? "success" : "primary", toastTitle, message);
+          form.reset();
+          if (emailSent) {
+            setTimeout(() => {
+              window.location.replace("/index.php");
+            }, 2000);
+          }
+        } else {
+          if (global.App && global.App.Toast) global.App.Toast.show({ type: "error", variant: "full", title: "Erro", message });
+          else setAlert("danger", "Erro", message);
+        }
       } catch (error) {
         console.error("Falha ao enviar reset:", error);
-        setAlert("danger", "Erro", "Erro de conexão. Tente novamente mais tarde.");
+        if (global.App && global.App.Toast) global.App.Toast.show({ type: "error", variant: "full", title: "Erro", message: "Erro de conexão. Tente novamente mais tarde." });
+        else setAlert("danger", "Erro", "Erro de conexão. Tente novamente mais tarde.");
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;

@@ -1,36 +1,33 @@
 <?php
 declare(strict_types=1);
-$code = '503';
-$title = 'Manutenção Programada';
-$message = 'O sistema encontra-se em manutenção programada. Estamos trabalhando para restabelecer o serviço o quanto antes.';
-$details = ['timestamp' => date('c'), 'expected_return' => 'Em breve'];
-?>
 
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Erro <?php echo htmlspecialchars($code); ?> - Primeira Vara Crime</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/assets/css/shared/reset.css">
-    <link rel="stylesheet" href="/assets/css/custom.css">
-</head>
-<body class="page-internal">
-    <?php
-    // Preparar variáveis para os partials reutilizáveis
-    $error_icon_class = 'icon-warning';
-    $error_text_class = 'text-warning';
-    $error_code = $code;
-    $error_title = $title;
-    $error_message = $message;
-    include __DIR__ . '/_error_header.php';
-    ?>
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 
-    <?php
-    // Carregar mensagens centralizadas e definir $info_text apenas se não houver sobrescrita
-    $error_messages = include __DIR__ . '/error_messages.php';
-    $info_text = $info_text ?? ($error_messages[$code] ?? ''); ?>  
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+require_once __DIR__ . '/error_detail_defaults.php';
+
+$pageTitle = 'Erro 503 — Primeira Vara Crime de Ilhéus';
+$pageHeading = '503 — Manutenção programada';
+$description = 'O sistema encontra-se em manutenção programada. Estamos trabalhando para restabelecer o serviço o quanto antes.';
+$error_code = '503';
+
+$error_messages = include __DIR__ . '/error_messages.php';
+$info_text = $error_messages[$error_code] ?? '';
+
+$icons = include __DIR__ . '/error_icons.php';
+$iconCfg = $icons[$error_code] ?? [];
+$icon_path = $iconCfg['path'] ?? '/assets/icons/Maintenance-Wrench--Streamline-Ultimate.png';
+$icon_alt = $iconCfg['alt'] ?? 'Erro';
+$variant = $iconCfg['variant'] ?? 'maintenance';
+
+$details_override = [];
+$until = getenv('MAINTENANCE_UNTIL');
+if ($until !== false && $until !== '') {
+    $details_override['Previsão'] = $until;
+}
+$details = error_page_merge_details($error_code, $details_override);
+
+include __DIR__ . '/_error_head.php';
+include __DIR__ . '/_error_body.php';
+include __DIR__ . '/_error_footer.php';

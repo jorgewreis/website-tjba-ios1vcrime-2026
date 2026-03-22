@@ -35,6 +35,29 @@ final class AlocacoesRegrasRepository
     }
 
     /**
+     * Retorna todas as regras em que o usuário está definido como alocado (usuario_id = ?).
+     *
+     * @return array<int, array>
+     */
+    public function findByUsuarioId(string $usuarioId): array
+    {
+        $usuarioId = trim($usuarioId);
+        if ($usuarioId === '') {
+            return [];
+        }
+        $statement = $this->connection->prepare(
+            sprintf(
+                'SELECT `id`, `regra`, `descricao`, `usuario_id`, `usuario_atualiza_id`, `created_at`, `updated_at` FROM `%s` WHERE `usuario_id` = :usuario_id ORDER BY `regra`',
+                $this->table
+            )
+        );
+        $statement->bindValue(':usuario_id', $usuarioId);
+        $statement->execute();
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+        return $rows === false ? [] : $rows;
+    }
+
+    /**
      * Cria ou atualiza a regra. Retorna a linha atualizada/inserida.
      * id gerado com IdGenerator prefixo ALR, 30 caracteres.
      */
@@ -89,5 +112,38 @@ final class AlocacoesRegrasRepository
 
         $row = $this->findByRegra($regra);
         return $row ?? ['id' => $id, 'regra' => $regra, 'descricao' => $descricao, 'usuario_id' => $usuarioId, 'usuario_atualiza_id' => $usuarioAtualizaId];
+    }
+
+    /**
+     * Remove a alocação de usuário da regra (mantém a regra existente).
+     */
+    public function clearAllocation(string $regra, ?string $usuarioAtualizaId = null): array
+    {
+        $regra = trim($regra);
+        if ($regra === '') {
+            throw new InvalidArgumentException('Regra é obrigatória.');
+        }
+
+        $existing = $this->findByRegra($regra);
+        if ($existing === null) {
+            throw new RuntimeException('Regra não encontrada para remoção de alocação.');
+        }
+
+        // A coluna usuario_id pode ser NOT NULL em alguns ambientes.
+        // Para representar "sem alocação por regra", removemos o registro da regra.
+        $statement = $this->connection->prepare(
+            sprintf('DELETE FROM `%s` WHERE `regra` = :regra LIMIT 1', $this->table)
+        );
+        $statement->bindValue(':regra', $regra);
+        $statement->execute();
+
+        $row = $this->findByRegra($regra);
+        if ($row !== null) {
+            return $row;
+        }
+
+        $existing['usuario_id'] = '';
+        $existing['usuario_atualiza_id'] = $usuarioAtualizaId;
+        return $existing;
     }
 }

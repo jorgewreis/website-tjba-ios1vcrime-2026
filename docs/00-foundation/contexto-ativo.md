@@ -11,6 +11,7 @@ authors:
 # Contexto Ativo — Estado Atual
 
 ## O que está sendo desenvolvido agora
+- **Cartas Recebidas:** implementação do submódulo espelhando Cartas Expedidas (tabelas, repositórios, serviço, APIs, views list/create/edit/rules). Especificação em `docs/20-modules/specs/cartorio-cartas-recebidas.md`.
 - Consolidar os ativos públicos dentro de `public/assets/{css,js,img,icons}` para obedecer à hierarquia descrita em `docs/00-foundation/estrutura-repositorio.md` (reset/variables/base/components/forms, módulos públicos, imagens/ícones com prefixos semânticos).
 - Criar helpers JavaScript reutilizáveis sob `public/assets/js/shared/` (autenticação, validação de CPF, notificações e menu) e garantir que `public/index.php`, `public/home.php` e `public/recupera_senha.php` carreguem esses utilitários.
 - Migrar a lógica PHP legada do diretório `old/` para as pastas canônicas (`app/models/`, `app/helpers/`, `app/services/`, `public/admin/api/`) e manter os entrypoints (`public/index.php`, `public/login.php`, `public/logout.php`, `public/frame.php`, `public/envia_mail.php`) apontando para os novos arquivos.
@@ -48,17 +49,17 @@ authors:
 - `app/models/Usuario.php`
 - `app/helpers/Conection.php`
 - `app/services/PasswordResetService.php`
-- `public/assets/css/shared/base.css`
+- `public/assets/css/shared/layout.css`
 - `public/assets/css/shared/components.css`
 - `public/assets/css/shared/forms.css`
-- `public/assets/css/shared/variables.css`
+- `public/assets/css/shared/color.css`
 - `public/assets/css/modules/public/login.css`
 - `public/assets/js/shared/auth.js`
 - `public/assets/js/shared/cpf.js`
 - `public/assets/js/shared/common.js`
 - `public/assets/js/shared/menu.js`
 - `public/assets/img/avatars/`
-- `public/assets/img/avatars/3d/`
+- `public/assets/img/avatars/vivid/`
 - `public/assets/img/backgrounds/`
 - `public/assets/icons/`
 - `scripts/bump_version.sh`

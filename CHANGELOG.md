@@ -1,5 +1,1667 @@
 # Changelog
 
+## V. 1.04.0059
+
+**Data:** 2026-03-22 09:02:50 | **Commit:** `188c02d` | **Tipo:** `patch`
+
+- Fix: correcao de qtd de itens por pagina
+
+## V. 1.04.0058
+
+**Data:** 2026-03-22 08:54:21 | **Commit:** `09103b5` | **Tipo:** `patch`
+
+- Fix: pequenos ajustes
+
+## V. 1.04.0057
+
+**Data:** 2026-03-22 08:46:32 | **Commit:** `8bfc6c9` | **Tipo:** `patch`
+
+- Fix: correcao de erro no bd
+
+## V. 1.04.0056
+
+**Data:** 2026-03-22 08:39:03 | **Commit:** `71272dc` | **Tipo:** `patch`
+
+- Fix: correcoes em oficios
+
+## V. 1.04.0055
+
+**Data:** 2026-03-21 20:21:12 | **Commit:** `d8950e4` | **Tipo:** `patch`
+
+- Feat: novo modelo de perfis e acesso
+
+## V. 1.04.0054
+
+**Data:** 2026-03-21 19:23:59 | **Commit:** `4d61e6a` | **Tipo:** `patch`
+
+- Fix: pequenos ajustes
+
+## V. 1.04.0053
+
+**Data:** 2026-03-21 19:15:52 | **Commit:** `215ee57` | **Tipo:** `patch`
+
+- Fix: tentativa de correcao
+
+## V. 1.04.0052
+
+**Data:** 2026-03-21 19:12:44 | **Commit:** `0c681d0` | **Tipo:** `patch`
+
+- Fix: correcao datajud
+
+## V. 1.04.0051
+
+**Data:** 2026-03-21 19:08:52 | **Commit:** `2315e6d` | **Tipo:** `patch`
+
+- Fix: correcao de input e select
+
+## V. 1.04.0050
+
+**Data:** 2026-03-21 19:02:54 | **Commit:** `86d225a` | **Tipo:** `patch`
+
+- Fix: correcao de modelo
+
+## V. 1.04.0049
+
+**Data:** 2026-03-21 18:59:09 | **Commit:** `050f222` | **Tipo:** `patch`
+
+- Feat: nova implementacao de paginas de monitoramento
+
+## V. 1.04.0048
+
+**Data:** 2026-03-21 18:02:05 | **Commit:** `af2e4fc` | **Tipo:** `patch`
+
+- Fix: demais ajustes
+
+## V. 1.04.0047
+
+**Data:** 2026-03-21 18:01:42 | **Commit:** `fc72eb7` | **Tipo:** `patch`
+
+- Fix: correcao de nomes de arquivos
+
+## V. 1.04.0046
+
+**Data:** 2026-03-21 17:46:05 | **Commit:** `0919f27` | **Tipo:** `patch`
+
+- Feat: implementacao de paginas de oficios
+
+## V. 1.04.0045
+
+**Data:** 2026-03-20 20:49:56 | **Commit:** `2446092` | **Tipo:** `patch`
+
+- Fix: update de avatares
+
+## V. 1.04.0044
+
+**Data:** 2026-03-20 19:49:58 | **Commit:** `5baff64` | **Tipo:** `patch`
+
+- Fix: alteracao do estilo barra superior
+
+## V. 1.04.0043
+
+**Data:** 2026-03-20 17:52:44 | **Commit:** `88e22fb` | **Tipo:** `patch`
+
+- Fix: pequenos ajustes css
+
+## V. 1.04.0042
+
+**Data:** 2026-03-20 17:35:16 | **Commit:** `97d8896` | **Tipo:** `patch`
+
+- Fix: pequeno ajuste de css
+
+## V. 1.04.0041
+
+**Data:** 2026-03-20 17:28:11 | **Commit:** `18edf6e` | **Tipo:** `patch`
+
+- Fix: correcao de regra de iniciais de usuario
+
+## V. 1.04.0040
+
+**Data:** 2026-03-20 17:24:19 | **Commit:** `a5a0d41` | **Tipo:** `patch`
+
+- Fix: pequenos ajustes do avatar
+
+## V. 1.04.0039
+
+**Data:** 2026-03-20 17:19:04 | **Commit:** `135be03` | **Tipo:** `patch`
+
+- Fix: alteracao do modelo de imagens do avatar
+
+## V. 1.04.0038
+
+**Data:** 2026-03-20 17:09:52 | **Commit:** `b45587b` | **Tipo:** `patch`
+
+- Feat: implementacao de funcao para alterar avatar de usuario
+
+## V. 1.04.0037
+
+**Data:** 2026-03-20 16:45:27 | **Commit:** `b79390d` | **Tipo:** `patch`
+
+- Fix: correcao de perfis
+
+## V. 1.04.0036
+
+**Data:** 2026-03-20 16:27:16 | **Commit:** `cb53908` | **Tipo:** `patch`
+
+- Feat: criacao de novo dashboard para usuario externo
+
+## V. 1.04.0035
+
+**Data:** 2026-03-20 16:09:19 | **Commit:** `5064596` | **Tipo:** `patch`
+
+- Fix: correcao de bugs
+
+## V. 1.04.0034
+
+**Data:** 2026-03-20 16:05:41 | **Commit:** `2dff2b7` | **Tipo:** `patch`
+
+- Fix: correcao input
+
+## V. 1.04.0033
+
+**Data:** 2026-03-20 15:53:50 | **Commit:** `88bd330` | **Tipo:** `patch`
+
+- Feat: nova implementacao de paginas de erro melhoradas
+
+## V. 1.04.0032
+
+**Data:** 2026-03-20 15:24:14 | **Commit:** `85b57b5` | **Tipo:** `patch`
+
+- Fix: correcao de input de dados pessoais
+
+## V. 1.04.0031
+
+**Data:** 2026-03-20 15:07:37 | **Commit:** `b5b24bf` | **Tipo:** `patch`
+
+- Fix: correcao de usuario estagiario
+
+## V. 1.04.0030
+
+**Data:** 2026-03-20 14:43:58 | **Commit:** `56473ed` | **Tipo:** `patch`
+
+- Feat: config de permissoes de usuario
+
+## V. 1.04.0029
+
+**Data:** 2026-03-20 13:54:43 | **Commit:** `c299674` | **Tipo:** `patch`
+
+- Fix: correcao de edit usuario externo
+
+## V. 1.04.0028
+
+**Data:** 2026-03-20 13:49:14 | **Commit:** `bda95f6` | **Tipo:** `patch`
+
+- Fix: correcao de toasts e alerts
+
+## V. 1.04.0027
+
+**Data:** 2026-03-20 13:26:12 | **Commit:** `56ad09d` | **Tipo:** `patch`
+
+- Fix: pequenos ajustes
+
+## V. 1.04.0026
+
+**Data:** 2026-03-20 13:09:29 | **Commit:** `34777a6` | **Tipo:** `patch`
+
+- Fix: correcao de layouts
+
+## V. 1.04.0025
+
+**Data:** 2026-03-20 12:33:12 | **Commit:** `074f624` | **Tipo:** `patch`
+
+- Fix: pequenos ajustes cartas expedidas
+
+## V. 1.04.0024
+
+**Data:** 2026-03-20 12:12:36 | **Commit:** `cbc4184` | **Tipo:** `patch`
+
+- Fix: ajustes de estilo
+
+## V. 1.04.0023
+
+**Data:** 2026-03-20 12:01:00 | **Commit:** `0db7b91` | **Tipo:** `patch`
+
+- Feat: nova implementacao edit pages
+
+## V. 1.04.0022
+
+**Data:** 2026-03-19 22:21:37 | **Commit:** `764f0b7` | **Tipo:** `patch`
+
+- Fix: correções realizadas
+
+## V. 1.04.0021
+
+**Data:** 2026-03-19 22:16:53 | **Commit:** `239469a` | **Tipo:** `patch`
+
+- Fix: pequena correção
+
+## V. 1.04.0020
+
+**Data:** 2026-03-19 22:14:25 | **Commit:** `7e4fd4b` | **Tipo:** `patch`
+
+- Fix: active link no home
+
+## V. 1.04.0019
+
+**Data:** 2026-03-19 22:10:39 | **Commit:** `708c224` | **Tipo:** `patch`
+
+- Fix: correção do button do cejusc
+
+## V. 1.04.0018
+
+**Data:** 2026-03-19 22:06:44 | **Commit:** `3128bdb` | **Tipo:** `patch`
+
+- Fix: correcao de toasts
+
+## V. 1.04.0017
+
+**Data:** 2026-03-19 21:57:55 | **Commit:** `e1d7ce6` | **Tipo:** `patch`
+
+- Fix: correcao de edit com id
+
+## V. 1.04.0016
+
+**Data:** 2026-03-19 21:52:20 | **Commit:** `613d321` | **Tipo:** `patch`
+
+- Fix: alteração do tipo de guia
+
+## V. 1.04.0015
+
+**Data:** 2026-03-19 21:34:41 | **Commit:** `862c45e` | **Tipo:** `patch`
+
+- Fix: correção na paginação de feriados
+
+## V. 1.04.0014
+
+**Data:** 2026-03-19 21:26:56 | **Commit:** `d5ecaa1` | **Tipo:** `patch`
+
+- Fix: pequenos ajustes na pagina de feriados
+
+## V. 1.04.0013
+
+**Data:** 2026-03-19 21:18:10 | **Commit:** `8a321cc` | **Tipo:** `patch`
+
+- Feat: implementação de lista de feriados
+
+## V. 1.04.0012
+
+**Data:** 2026-03-19 20:30:26 | **Commit:** `f92cf3f` | **Tipo:** `patch`
+
+- Fix: correcao cejusc reu
+
+## V. 1.04.0011
+
+**Data:** 2026-03-19 20:20:38 | **Commit:** `1a59dfc` | **Tipo:** `patch`
+
+- Fix: nova tentativa de correcao
+
+## V. 1.04.0010
+
+**Data:** 2026-03-19 20:15:35 | **Commit:** `c3f5394` | **Tipo:** `patch`
+
+- Fix: correcao de subtarefas
+
+## V. 1.04.0009
+
+**Data:** 2026-03-19 20:08:30 | **Commit:** `db13f5b` | **Tipo:** `patch`
+
+- Fix: correcao de tarefa concluida
+
+## V. 1.04.0008
+
+**Data:** 2026-03-19 19:51:30 | **Commit:** `10498e6` | **Tipo:** `patch`
+
+- Fix: correcao de subtarefa de detalhes
+
+## V. 1.04.0007
+
+**Data:** 2026-03-19 19:42:43 | **Commit:** `d681458` | **Tipo:** `patch`
+
+- Fix: correcao de subtarefas sem funcionar
+
+## V. 1.04.0006
+
+**Data:** 2026-03-19 17:48:54 | **Commit:** `dc88dc2` | **Tipo:** `patch`
+
+- Fix: correcao de movimentacao de subtarefas
+
+## V. 1.04.0005
+
+**Data:** 2026-03-19 17:41:21 | **Commit:** `5e8ad8b` | **Tipo:** `patch`
+
+- Fix: correcao de movimentacoes das subtarefas
+
+## V. 1.04.0004
+
+**Data:** 2026-03-19 17:26:58 | **Commit:** `f737aa2` | **Tipo:** `patch`
+
+- Fix: correcao de feedbacks para toasts
+
+## V. 1.04.0003
+
+**Data:** 2026-03-19 17:19:49 | **Commit:** `46e6215` | **Tipo:** `patch`
+
+- Fix: correcao de erro na remocao de alocacao
+
+## V. 1.04.0002
+
+**Data:** 2026-03-19 17:15:05 | **Commit:** `9bcd73c` | **Tipo:** `patch`
+
+- Feat: implementacao de sistema para remover alocacao de usuario por regra
+
+## V. 1.04.0001
+
+**Data:** 2026-03-19 16:58:43 | **Commit:** `00cb0c2` | **Tipo:** `patch`
+
+- Fix: correcao de validacao cnj
+
+## V. 1.03.0169
+
+**Data:** 2026-03-19 15:47:33 | **Commit:** `ca48b80` | **Tipo:** `patch`
+
+- Fix: correcao de widths em inputs
+
+## V. 1.03.0168
+
+**Data:** 2026-03-19 15:15:16 | **Commit:** `bfbc7f7` | **Tipo:** `patch`
+
+- Feat: nova implementacao em create pages
+
+## V. 1.03.0167
+
+**Data:** 2026-03-19 14:40:02 | **Commit:** `09bef46` | **Tipo:** `patch`
+
+- Feat: nova alteracao em rules style
+
+## V. 1.03.0166
+
+**Data:** 2026-03-19 14:02:34 | **Commit:** `c5b1bcd` | **Tipo:** `patch`
+
+- fix: ajustes finos de css
+
+## V. 1.03.0165
+
+**Data:** 2026-03-19 10:50:52 | **Commit:** `d05b3b6` | **Tipo:** `patch`
+
+- fix: correção de buttons
+
+## V. 1.03.0164
+
+**Data:** 2026-03-19 10:43:05 | **Commit:** `e88309a` | **Tipo:** `patch`
+
+- fix: ajustes de div quebrado
+
+## V. 1.03.0163
+
+**Data:** 2026-03-19 10:39:46 | **Commit:** `50edc9b` | **Tipo:** `patch`
+
+- fix: pequenos ajustes de campos
+
+## V. 1.03.0162
+
+**Data:** 2026-03-19 10:32:11 | **Commit:** `fd491c3` | **Tipo:** `patch`
+
+- fix: correção nos buttons de subtarefas
+
+## V. 1.03.0161
+
+**Data:** 2026-03-19 10:17:15 | **Commit:** `f4927b2` | **Tipo:** `patch`
+
+- fix: ajuste de align
+
+## V. 1.03.0160
+
+**Data:** 2026-03-19 10:10:21 | **Commit:** `c6c86d9` | **Tipo:** `patch`
+
+- fix: pequenos ajustes
+
+## V. 1.03.0159
+
+**Data:** 2026-03-19 09:40:50 | **Commit:** `fce0aff` | **Tipo:** `patch`
+
+- fix: pequenos ajustes
+
+## V. 1.03.0158
+
+**Data:** 2026-03-19 09:35:01 | **Commit:** `944a84d` | **Tipo:** `patch`
+
+- fix: pequenos ajustes
+
+## V. 1.03.0157
+
+**Data:** 2026-03-19 09:21:39 | **Commit:** `f0a78ef` | **Tipo:** `patch`
+
+- Fix: correção de css
+
+## V. 1.03.0156
+
+**Data:** 2026-03-17 23:15:07 | **Commit:** `48733a7` | **Tipo:** `patch`
+
+- Fix: documentando alterações
+
+## V. 1.03.0155
+
+**Data:** 2026-03-17 23:06:04 | **Commit:** `a8efd6a` | **Tipo:** `patch`
+
+- Fix: pequenos ajustes
+
+## V. 1.03.0154
+
+**Data:** 2026-03-17 22:55:24 | **Commit:** `1e29458` | **Tipo:** `patch`
+
+- Fix: ajustes de tamanhos css
+
+## V. 1.03.0153
+
+**Data:** 2026-03-17 22:30:41 | **Commit:** `a8cec6b` | **Tipo:** `patch`
+
+- Fix: mais ajustes para alinhamento
+
+## V. 1.03.0152
+
+**Data:** 2026-03-17 22:17:39 | **Commit:** `25b7686` | **Tipo:** `patch`
+
+- fix: mais alguns ajustes
+
+## V. 1.03.0151
+
+**Data:** 2026-03-17 22:05:32 | **Commit:** `4c00228` | **Tipo:** `patch`
+
+- Fix: pequenos ajustes
+
+## V. 1.03.0150
+
+**Data:** 2026-03-17 21:56:13 | **Commit:** `f7ed93e` | **Tipo:** `patch`
+
+- Fix: grande correção de estilos
+
+## V. 1.03.0149
+
+**Data:** 2026-03-17 21:49:05 | **Commit:** `4d98aeb` | **Tipo:** `patch`
+
+- Fix: melhorias refeitas
+
+## V. 1.03.0148
+
+**Data:** 2026-03-17 21:41:34 | **Commit:** `b54aa2e` | **Tipo:** `patch`
+
+- Fix: melhorias de codigo
+
+## V. 1.03.0147
+
+**Data:** 2026-03-17 09:54:33 | **Commit:** `7e3a8ea` | **Tipo:** `patch`
+
+- fix: pequenos ajustes
+
+## V. 1.03.0146
+
+**Data:** 2026-03-17 09:47:40 | **Commit:** `244ed2c` | **Tipo:** `patch`
+
+- fix: pequenos ajustes
+
+## V. 1.03.0145
+
+**Data:** 2026-03-17 09:38:51 | **Commit:** `c13bae5` | **Tipo:** `patch`
+
+- fix: pequenos ajustes
+
+## V. 1.03.0144
+
+**Data:** 2026-03-17 09:20:33 | **Commit:** `5667101` | **Tipo:** `patch`
+
+- Fix: pequenos ajustes
+
+## V. 1.03.0143
+
+**Data:** 2026-03-15 16:52:41 | **Commit:** `f962dc0` | **Tipo:** `patch`
+
+- fix: correcao de obrigatoriedade
+
+## V. 1.03.0142
+
+**Data:** 2026-03-15 16:49:07 | **Commit:** `b6f8e6a` | **Tipo:** `patch`
+
+- fix: correcao de seguranca
+
+## V. 1.03.0141
+
+**Data:** 2026-03-15 16:37:55 | **Commit:** `f5c1adb` | **Tipo:** `patch`
+
+- fix: nota tentativa de correcao
+
+## V. 1.03.0140
+
+**Data:** 2026-03-15 16:35:34 | **Commit:** `7b643f2` | **Tipo:** `patch`
+
+- fix: pequenos ajustes
+
+## V. 1.03.0139
+
+**Data:** 2026-03-15 16:32:54 | **Commit:** `27751d8` | **Tipo:** `patch`
+
+- fix: correção de data
+
+## V. 1.03.0138
+
+**Data:** 2026-03-15 16:30:34 | **Commit:** `d245e7f` | **Tipo:** `patch`
+
+- fix: pequenos ajustes
+
+## V. 1.03.0137
+
+**Data:** 2026-03-15 16:27:45 | **Commit:** `9e7c6d6` | **Tipo:** `patch`
+
+- fix: correcao de salvamento
+
+## V. 1.03.0136
+
+**Data:** 2026-03-15 16:25:09 | **Commit:** `cf607e3` | **Tipo:** `patch`
+
+- fix: correcao de status na edicao
+
+## V. 1.03.0135
+
+**Data:** 2026-03-15 16:22:20 | **Commit:** `5dd7ecc` | **Tipo:** `patch`
+
+- fix: mais correcoes
+
+## V. 1.03.0134
+
+**Data:** 2026-03-15 16:16:09 | **Commit:** `b9ddd65` | **Tipo:** `patch`
+
+- fix: correção basica de edit
+
+## V. 1.03.0133
+
+**Data:** 2026-03-15 16:06:58 | **Commit:** `66ae9b0` | **Tipo:** `patch`
+
+- Feat: criação de pagina de edit de usuarios
+
+## V. 1.03.0132
+
+**Data:** 2026-03-15 15:33:28 | **Commit:** `032c695` | **Tipo:** `patch`
+
+- fix: correção de estilo
+
+## V. 1.03.0131
+
+**Data:** 2026-03-15 15:21:48 | **Commit:** `7adf1c7` | **Tipo:** `patch`
+
+- fix: correção de função text
+
+## V. 1.03.0130
+
+**Data:** 2026-03-15 12:03:17 | **Commit:** `c16815a` | **Tipo:** `patch`
+
+- Feat: criação de página edit de usuarios
+
+## V. 1.03.0129
+
+**Data:** 2026-03-15 11:12:53 | **Commit:** `e5d33ef` | **Tipo:** `patch`
+
+- Fix: página de usuários criada
+
+## V. 1.03.0128
+
+**Data:** 2026-03-14 20:01:32 | **Commit:** `58bbc56` | **Tipo:** `patch`
+
+- fix: correçao de erros
+
+## V. 1.03.0127
+
+**Data:** 2026-03-14 19:46:02 | **Commit:** `c98f32d` | **Tipo:** `patch`
+
+- fix: mais ajustes
+
+## V. 1.03.0126
+
+**Data:** 2026-03-14 19:45:45 | **Commit:** `14ec040` | **Tipo:** `patch`
+
+- fix: pequenos ajustes
+
+## V. 1.03.0125
+
+**Data:** 2026-03-14 19:39:00 | **Commit:** `c05193e` | **Tipo:** `patch`
+
+- fix: correção de select
+
+## V. 1.03.0124
+
+**Data:** 2026-03-14 19:36:27 | **Commit:** `c8d0359` | **Tipo:** `patch`
+
+- fix: correções finas
+
+## V. 1.03.0123
+
+**Data:** 2026-03-14 19:26:52 | **Commit:** `9d84623` | **Tipo:** `patch`
+
+- fix: correções de bugs
+
+## V. 1.03.0122
+
+**Data:** 2026-03-14 19:20:47 | **Commit:** `0eda73f` | **Tipo:** `patch`
+
+- fix: correção de telefones
+
+## V. 1.03.0121
+
+**Data:** 2026-03-14 19:15:54 | **Commit:** `956a635` | **Tipo:** `patch`
+
+- fix: pequenos ajustes
+
+## V. 1.03.0120
+
+**Data:** 2026-03-14 18:36:53 | **Commit:** `450146b` | **Tipo:** `patch`
+
+- fix: pequenos ajustes
+
+## V. 1.03.0119
+
+**Data:** 2026-03-14 18:32:38 | **Commit:** `2c20046` | **Tipo:** `patch`
+
+- FIX: PEQUENAS MELHORIAS
+
+## V. 1.03.0118
+
+**Data:** 2026-03-14 18:28:44 | **Commit:** `1858d1c` | **Tipo:** `patch`
+
+- fix: correção de php
+
+## V. 1.03.0117
+
+**Data:** 2026-03-14 18:20:58 | **Commit:** `9eaa428` | **Tipo:** `patch`
+
+- fix: pequenos ajustes subtasks
+
+## V. 1.03.0116
+
+**Data:** 2026-03-14 18:09:50 | **Commit:** `eac3bfd` | **Tipo:** `patch`
+
+- fix: correções parciais
+
+## V. 1.03.0115
+
+**Data:** 2026-03-14 18:04:32 | **Commit:** `8093c35` | **Tipo:** `patch`
+
+- fix: pequenos ajustes
+
+## V. 1.03.0114
+
+**Data:** 2026-03-14 17:34:54 | **Commit:** `6180fdf` | **Tipo:** `patch`
+
+- fix: pequenas correções
+
+## V. 1.03.0113
+
+**Data:** 2026-03-14 17:26:08 | **Commit:** `e80b086` | **Tipo:** `patch`
+
+- fix: correction list table
+
+## V. 1.03.0112
+
+**Data:** 2026-03-14 17:21:05 | **Commit:** `6a83de5` | **Tipo:** `patch`
+
+- fix: pequenos ajustes
+
+## V. 1.03.0111
+
+**Data:** 2026-03-14 17:11:01 | **Commit:** `f1503cb` | **Tipo:** `patch`
+
+- fix: pequenos ajustes
+
+## V. 1.03.0110
+
+**Data:** 2026-03-14 16:50:40 | **Commit:** `78d22c5` | **Tipo:** `patch`
+
+- fix: pequenos ajustes
+
+## V. 1.03.0109
+
+**Data:** 2026-03-14 16:45:21 | **Commit:** `6bbae31` | **Tipo:** `patch`
+
+- fix: pequenos ajustes
+
+## V. 1.03.0108
+
+**Data:** 2026-03-14 16:28:08 | **Commit:** `d461e18` | **Tipo:** `patch`
+
+- fix: correção de consultas
+
+## V. 1.03.0107
+
+**Data:** 2026-03-14 16:07:32 | **Commit:** `abda51a` | **Tipo:** `patch`
+
+- Fix: mais correções agrupadas
+
+## V. 1.03.0106
+
+**Data:** 2026-03-14 15:56:04 | **Commit:** `19b4788` | **Tipo:** `patch`
+
+- fix: mais correções de layout
+
+## V. 1.03.0105
+
+**Data:** 2026-03-14 15:48:05 | **Commit:** `3c3d1f7` | **Tipo:** `patch`
+
+- Fix: correções multiplas
+
+## V. 1.03.0104
+
+**Data:** 2026-03-14 15:26:27 | **Commit:** `18b2c0e` | **Tipo:** `patch`
+
+- fix: correção de layout
+
+## V. 1.03.0103
+
+**Data:** 2026-03-14 15:12:19 | **Commit:** `55bee89` | **Tipo:** `patch`
+
+- fix: pequenos ajustes
+
+## V. 1.03.0102
+
+**Data:** 2026-03-14 15:05:14 | **Commit:** `d8a2264` | **Tipo:** `patch`
+
+- fix: pequenos ajustes
+
+## V. 1.03.0101
+
+**Data:** 2026-03-14 14:49:59 | **Commit:** `f4ae92b` | **Tipo:** `patch`
+
+- fix: melhorias nas informações
+
+## V. 1.03.0100
+
+**Data:** 2026-03-14 14:39:53 | **Commit:** `4d4dd1d` | **Tipo:** `patch`
+
+- fix: correção de classes
+
+## V. 1.03.0099
+
+**Data:** 2026-03-14 14:29:04 | **Commit:** `897b74b` | **Tipo:** `patch`
+
+- fix: correção de layout responsivo
+
+## V. 1.03.0098
+
+**Data:** 2026-03-14 14:19:01 | **Commit:** `c0989bf` | **Tipo:** `patch`
+
+- fix: layout fixed
+
+## V. 1.03.0097
+
+**Data:** 2026-03-14 13:56:04 | **Commit:** `3fcd8ef` | **Tipo:** `patch`
+
+- fix: correção subtask
+
+## V. 1.03.0096
+
+**Data:** 2026-03-14 13:50:34 | **Commit:** `45e750a` | **Tipo:** `patch`
+
+- fix: correção de subtarefas
+
+## V. 1.03.0095
+
+**Data:** 2026-03-14 13:46:47 | **Commit:** `7d4283c` | **Tipo:** `patch`
+
+- fix: testes de layout
+
+## V. 1.03.0094
+
+**Data:** 2026-03-14 13:32:57 | **Commit:** `79dd22d` | **Tipo:** `patch`
+
+- fix: pequenas correções
+
+## V. 1.03.0093
+
+**Data:** 2026-03-14 13:23:26 | **Commit:** `3011b5b` | **Tipo:** `patch`
+
+- fix: pequenos ajustes
+
+## V. 1.03.0092
+
+**Data:** 2026-03-14 13:15:34 | **Commit:** `39ec80e` | **Tipo:** `patch`
+
+- fix: correções e ajustes
+
+## V. 1.03.0091
+
+**Data:** 2026-03-14 13:10:26 | **Commit:** `0dd6a76` | **Tipo:** `patch`
+
+- fix: pequenos ajustes
+
+## V. 1.03.0090
+
+**Data:** 2026-03-14 12:54:32 | **Commit:** `80ef648` | **Tipo:** `patch`
+
+- fix: pequenos ajustes de table
+
+## V. 1.03.0089
+
+**Data:** 2026-03-14 11:48:33 | **Commit:** `f5c60dd` | **Tipo:** `patch`
+
+- Fix: pequenos ajustes
+
+## V. 1.03.0088
+
+**Data:** 2026-03-14 11:44:53 | **Commit:** `0f878dd` | **Tipo:** `patch`
+
+- fix: correção de layout
+
+## V. 1.03.0087
+
+**Data:** 2026-03-14 11:35:32 | **Commit:** `d52cd91` | **Tipo:** `patch`
+
+- fix: correções pequenas
+
+## V. 1.03.0086
+
+**Data:** 2026-03-14 11:34:23 | **Commit:** `1ab82c0` | **Tipo:** `patch`
+
+- Fix: pequenos ajustes
+
+## V. 1.03.0085
+
+**Data:** 2026-03-14 11:30:09 | **Commit:** `6907a0f` | **Tipo:** `patch`
+
+- fix: pequenos ajustes
+
+## V. 1.03.0084
+
+**Data:** 2026-03-14 11:00:19 | **Commit:** `47de02c` | **Tipo:** `patch`
+
+- Fix: pequenos ajustes
+
+## V. 1.03.0083
+
+**Data:** 2026-03-10 20:44:50 | **Commit:** `05ca497` | **Tipo:** `patch`
+
+- Fix: correção de ajustes
+
+## V. 1.03.0082
+
+**Data:** 2026-03-10 20:28:13 | **Commit:** `f458b84` | **Tipo:** `patch`
+
+- Fix: pequenos ajustes
+
+## V. 1.03.0081
+
+**Data:** 2026-03-10 20:18:56 | **Commit:** `c6b9c81` | **Tipo:** `patch`
+
+- Fix: correção de formatação
+
+## V. 1.03.0080
+
+**Data:** 2026-03-10 20:07:16 | **Commit:** `ab4287a` | **Tipo:** `patch`
+
+- Fix: correção de pessoa
+
+## V. 1.03.0079
+
+**Data:** 2026-03-10 19:46:37 | **Commit:** `c05d8c8` | **Tipo:** `patch`
+
+- Fix: pequenos ajustes de codigo
+
+## V. 1.03.0078
+
+**Data:** 2026-03-10 19:34:10 | **Commit:** `3995b63` | **Tipo:** `patch`
+
+- Feat: consulta instituicao
+
+## V. 1.03.0077
+
+**Data:** 2026-03-10 19:21:39 | **Commit:** `eb7ff85` | **Tipo:** `patch`
+
+- Fix: correção de bug
+
+## V. 1.03.0076
+
+**Data:** 2026-03-10 19:15:03 | **Commit:** `13ed3a2` | **Tipo:** `patch`
+
+- Fix: pequenos ajustes
+
+## V. 1.03.0075
+
+**Data:** 2026-03-10 18:52:26 | **Commit:** `42402a7` | **Tipo:** `patch`
+
+- Fix: correções de codigos
+
+## V. 1.03.0074
+
+**Data:** 2026-03-10 18:39:17 | **Commit:** `81178a2` | **Tipo:** `patch`
+
+- Fix: correção de layout
+
+## V. 1.03.0073
+
+**Data:** 2026-03-10 18:17:55 | **Commit:** `81ffc85` | **Tipo:** `patch`
+
+- Feat: novo modelo Consulta Partes
+
+## V. 1.03.0072
+
+**Data:** 2026-03-10 17:35:06 | **Commit:** `510cf71` | **Tipo:** `patch`
+
+- Fix: correção de layout
+
+## V. 1.03.0071
+
+**Data:** 2026-03-10 17:31:12 | **Commit:** `1d8de0d` | **Tipo:** `patch`
+
+- Feat: paginação e filtro em cep
+
+## V. 1.03.0070
+
+**Data:** 2026-03-10 17:26:18 | **Commit:** `8c95bf2` | **Tipo:** `patch`
+
+- Fix: ajustes de layout
+
+## V. 1.03.0069
+
+**Data:** 2026-03-10 17:23:50 | **Commit:** `ec15581` | **Tipo:** `patch`
+
+- Fix: pequenos ajustes
+
+## V. 1.03.0068
+
+**Data:** 2026-03-10 17:19:20 | **Commit:** `7fdfa07` | **Tipo:** `patch`
+
+- Feat: nova página consulta cep
+
+## V. 1.03.0067
+
+**Data:** 2026-03-10 16:52:23 | **Commit:** `6e6f793` | **Tipo:** `patch`
+
+- Fix: pequenas correções de css
+
+## V. 1.03.0066
+
+**Data:** 2026-03-10 16:45:11 | **Commit:** `e65131d` | **Tipo:** `patch`
+
+- Fix: pequenos ajustes
+
+## V. 1.03.0065
+
+**Data:** 2026-03-10 16:36:31 | **Commit:** `6545fc7` | **Tipo:** `patch`
+
+- Fix: grande correção de falhas
+
+## V. 1.03.0064
+
+**Data:** 2026-03-09 21:24:12 | **Commit:** `e5a5b95` | **Tipo:** `patch`
+
+- Fix: pequenos ajustes
+
+## V. 1.03.0063
+
+**Data:** 2026-03-09 20:46:00 | **Commit:** `3cbc68e` | **Tipo:** `patch`
+
+- Feat: novo conjunto - medidas protetivas
+
+## V. 1.03.0062
+
+**Data:** 2026-03-09 20:00:00 | **Commit:** `551e051` | **Tipo:** `patch`
+
+- Feat: novo conjunto de páginas - Editais
+
+## V. 1.03.0061
+
+**Data:** 2026-03-08 21:32:34 | **Commit:** `8b37369` | **Tipo:** `patch`
+
+- Fix: correção de função
+
+## V. 1.03.0060
+
+**Data:** 2026-03-08 21:26:00 | **Commit:** `b14477f` | **Tipo:** `patch`
+
+- Fix: correção de layout
+
+## V. 1.03.0059
+
+**Data:** 2026-03-08 21:14:35 | **Commit:** `634ba92` | **Tipo:** `patch`
+
+- Fix: correção de informações
+
+## V. 1.03.0058
+
+**Data:** 2026-03-08 21:00:55 | **Commit:** `f3efbb6` | **Tipo:** `patch`
+
+- Feat: form alterar dados pessoais
+
+## V. 1.03.0057
+
+**Data:** 2026-03-08 20:51:51 | **Commit:** `fce8b45` | **Tipo:** `patch`
+
+- Feat: form para alterar senha
+
+## V. 1.03.0056
+
+**Data:** 2026-03-08 20:47:45 | **Commit:** `1f023b2` | **Tipo:** `patch`
+
+- Feat: submenu de config user
+
+## V. 1.03.0055
+
+**Data:** 2026-03-08 20:43:35 | **Commit:** `58c7b6e` | **Tipo:** `patch`
+
+- Feat: implementação de função de verificação de duplicidade de guia
+
+## V. 1.03.0054
+
+**Data:** 2026-03-08 20:30:38 | **Commit:** `9893c21` | **Tipo:** `patch`
+
+- Fix: correção de toasts
+
+## V. 1.03.0053
+
+**Data:** 2026-03-08 20:27:41 | **Commit:** `87147e0` | **Tipo:** `patch`
+
+- Fix: correção do calculo de multa
+
+## V. 1.03.0052
+
+**Data:** 2026-03-08 20:23:10 | **Commit:** `d356f64` | **Tipo:** `patch`
+
+- Fix: refatoração do calculo da pena de multa
+
+## V. 1.03.0051
+
+**Data:** 2026-03-08 20:12:27 | **Commit:** `e4a53e4` | **Tipo:** `patch`
+
+- Feat: nova função de cópia de numero de processo
+
+## V. 1.03.0050
+
+**Data:** 2026-03-08 20:07:29 | **Commit:** `b892156` | **Tipo:** `patch`
+
+- Fix: correção de inconsistencias
+
+## V. 1.03.0049
+
+**Data:** 2026-03-08 19:56:48 | **Commit:** `3862020` | **Tipo:** `patch`
+
+- Feat: modelo de tarefas e subtarefas de Guias
+
+## V. 1.03.0048
+
+**Data:** 2026-03-08 19:28:27 | **Commit:** `4aa8285` | **Tipo:** `patch`
+
+- Feat: modelo tarefas e subtarefas de Cartas Recebidas
+
+## V. 1.03.0047
+
+**Data:** 2026-03-08 19:11:27 | **Commit:** `a6c0aa7` | **Tipo:** `patch`
+
+- Feat: Update das informações de tarefas e subtarefas de cartas expedidas
+
+## V. 1.03.0046
+
+**Data:** 2026-03-08 17:54:34 | **Commit:** `7956dee` | **Tipo:** `patch`
+
+- Fix: correção de layout de subtarefa
+
+## V. 1.03.0045
+
+**Data:** 2026-03-08 17:07:59 | **Commit:** `08ef8a2` | **Tipo:** `patch`
+
+- Fix: pequenos ajustes
+
+## V. 1.03.0044
+
+**Data:** 2026-03-07 18:50:10 | **Commit:** `1a4acfa` | **Tipo:** `patch`
+
+- Fix: remoção de arquivos não mais utilizados
+
+## V. 1.03.0043
+
+**Data:** 2026-03-07 18:47:28 | **Commit:** `9339281` | **Tipo:** `patch`
+
+- Fix: correção de icones
+
+## V. 1.03.0042
+
+**Data:** 2026-03-07 18:40:26 | **Commit:** `e6c8726` | **Tipo:** `patch`
+
+- Fix: correção de css
+
+## V. 1.03.0041
+
+**Data:** 2026-03-07 18:34:36 | **Commit:** `216454f` | **Tipo:** `patch`
+
+- Fix: correção de css
+
+## V. 1.03.0040
+
+**Data:** 2026-03-07 18:23:08 | **Commit:** `cbe8194` | **Tipo:** `patch`
+
+- Feat: Migração e unificação de códigos de estilo
+
+## V. 1.03.0039
+
+**Data:** 2026-03-07 17:16:40 | **Commit:** `5079e85` | **Tipo:** `patch`
+
+- Fix: correção de cores 5
+
+## V. 1.03.0038
+
+**Data:** 2026-03-07 16:43:10 | **Commit:** `fabeec8` | **Tipo:** `patch`
+
+- Fix: correção de cores 3
+
+## V. 1.03.0037
+
+**Data:** 2026-03-07 16:31:40 | **Commit:** `a37eb82` | **Tipo:** `patch`
+
+- Fix: segunda correção de cores
+
+## V. 1.03.0036
+
+**Data:** 2026-03-07 16:11:40 | **Commit:** `84b61ab` | **Tipo:** `patch`
+
+- Fix: correção inicial de cores
+
+## V. 1.03.0035
+
+**Data:** 2026-03-07 15:55:55 | **Commit:** `94c41b6` | **Tipo:** `patch`
+
+- Fix: correção de cores tema escuro
+
+## V. 1.03.0034
+
+**Data:** 2026-03-07 15:48:01 | **Commit:** `36661d6` | **Tipo:** `patch`
+
+- Feat: nova implementação de tema claro e escuro
+
+## V. 1.03.0033
+
+**Data:** 2026-03-07 15:20:51 | **Commit:** `efbd48a` | **Tipo:** `patch`
+
+- Fix: correções minimas
+
+## V. 1.03.0032
+
+**Data:** 2026-03-07 15:14:59 | **Commit:** `0b3787b` | **Tipo:** `patch`
+
+- Fix: correção de modelo de timeline
+
+## V. 1.03.0031
+
+**Data:** 2026-03-07 15:00:03 | **Commit:** `2f135a8` | **Tipo:** `patch`
+
+- Fix: debug test 4
+
+## V. 1.03.0030
+
+**Data:** 2026-03-07 14:45:57 | **Commit:** `0ab2548` | **Tipo:** `patch`
+
+- Fix: correção mockup toast
+
+## V. 1.03.0029
+
+**Data:** 2026-03-07 14:38:02 | **Commit:** `9292b46` | **Tipo:** `patch`
+
+- Fix: debug test 2
+
+## V. 1.03.0028
+
+**Data:** 2026-03-07 14:34:22 | **Commit:** `a304f3f` | **Tipo:** `patch`
+
+- Fix: debug test 1
+
+## V. 1.03.0027
+
+**Data:** 2026-03-07 14:23:36 | **Commit:** `c0386ea` | **Tipo:** `patch`
+
+- Fix: melhorias de inputs e selects
+
+## V. 1.03.0026
+
+**Data:** 2026-03-07 14:12:19 | **Commit:** `9b3389b` | **Tipo:** `patch`
+
+- Fix: atualização de classes
+
+## V. 1.03.0025
+
+**Data:** 2026-03-07 14:01:18 | **Commit:** `14a380c` | **Tipo:** `patch`
+
+- Feat: implementaçao de info de campo obrigatorio
+
+## V. 1.03.0024
+
+**Data:** 2026-03-07 13:52:37 | **Commit:** `86f5c5e` | **Tipo:** `patch`
+
+- Feat: implementação nova de cadastro de reu
+
+## V. 1.03.0023
+
+**Data:** 2026-03-07 12:29:41 | **Commit:** `3652d18` | **Tipo:** `patch`
+
+- Feat: implementação de conjunto de páginas de Guias
+
+## V. 1.03.0022
+
+**Data:** 2026-03-07 12:04:10 | **Commit:** `491c54d` | **Tipo:** `patch`
+
+- Fix: correção de campos do form
+
+## V. 1.03.0021
+
+**Data:** 2026-03-07 11:56:30 | **Commit:** `2c1a509` | **Tipo:** `patch`
+
+- Fix: correção debug 9
+
+## V. 1.03.0020
+
+**Data:** 2026-03-07 11:53:37 | **Commit:** `de2b7af` | **Tipo:** `patch`
+
+- Fix: tentativa 8
+
+## V. 1.03.0019
+
+**Data:** 2026-03-07 11:48:47 | **Commit:** `38cddc5` | **Tipo:** `patch`
+
+- Fix: teste de correção 7
+
+## V. 1.03.0018
+
+**Data:** 2026-03-07 11:42:25 | **Commit:** `5e5196c` | **Tipo:** `patch`
+
+- Fix: correção de bug 6
+
+## V. 1.03.0017
+
+**Data:** 2026-03-07 11:38:27 | **Commit:** `9ae5338` | **Tipo:** `patch`
+
+- Fix: correção de bug 5
+
+## V. 1.03.0016
+
+**Data:** 2026-03-07 11:34:19 | **Commit:** `aa784ea` | **Tipo:** `patch`
+
+- Fix: correção de bug 4
+
+## V. 1.03.0015
+
+**Data:** 2026-03-07 11:26:02 | **Commit:** `b8eeee8` | **Tipo:** `patch`
+
+- Fix: correção de bug 3
+
+## V. 1.03.0014
+
+**Data:** 2026-03-07 11:24:17 | **Commit:** `9677424` | **Tipo:** `patch`
+
+- Fix: correção de bug 2
+
+## V. 1.03.0013
+
+**Data:** 2026-03-07 11:20:56 | **Commit:** `3f3a3ac` | **Tipo:** `patch`
+
+- Fix: correção de bugs 1
+
+## V. 1.03.0012
+
+**Data:** 2026-03-07 11:16:33 | **Commit:** `81c4dbb` | **Tipo:** `patch`
+
+- Docs: atualização de documento lgpd
+
+## V. 1.03.0011
+
+**Data:** 2026-03-07 11:00:11 | **Commit:** `cb1cb18` | **Tipo:** `patch`
+
+- Docs: Novo documento de termo de aceite lgpd
+
+## V. 1.03.0010
+
+**Data:** 2026-03-07 10:35:28 | **Commit:** `3627bff` | **Tipo:** `patch`
+
+- Feat: criação de campo senha para estudante
+
+## V. 1.03.0009
+
+**Data:** 2026-03-07 08:47:46 | **Commit:** `0dd3fa3` | **Tipo:** `patch`
+
+- Fix: correção de informações lgpd
+
+## V. 1.03.0008
+
+**Data:** 2026-03-07 08:43:26 | **Commit:** `1a43361` | **Tipo:** `patch`
+
+- Feat: nova implementação de toats em todo o sistema
+
+## V. 1.03.0007
+
+**Data:** 2026-03-07 08:18:54 | **Commit:** `a79caad` | **Tipo:** `patch`
+
+- Fix: Correção de inconformidades de css
+
+## V. 1.03.0006
+
+**Data:** 2026-03-06 19:37:44 | **Commit:** `dc1da88` | **Tipo:** `patch`
+
+- Fix: correção definitiva
+
+## V. 1.03.0005
+
+**Data:** 2026-03-06 19:19:46 | **Commit:** `5b08510` | **Tipo:** `patch`
+
+- Fix: nova correção de sudo
+
+## V. 1.03.0004
+
+**Data:** 2026-03-06 19:18:11 | **Commit:** `8b17dc1` | **Tipo:** `patch`
+
+- Fix: nova tentativa de fix
+
+## V. 1.03.0003
+
+**Data:** 2026-03-06 19:13:17 | **Commit:** `39e3881` | **Tipo:** `patch`
+
+- Fix: nova tentativa de correção
+
+## V. 1.03.0002
+
+**Data:** 2026-03-06 19:05:35 | **Commit:** `938a88c` | **Tipo:** `patch`
+
+- Fix: tentativa de correção de bumper
+
+## V. 1.02.0207
+
+**Data:** 2026-03-06 18:49:19 | **Commit:** `d171608` | **Tipo:** `patch`
+
+- Feat: Criação de página de cadastro de estudantes
+
+## V. 1.02.0206
+
+**Data:** 2026-03-06 18:25:21 | **Commit:** `0875cc0` | **Tipo:** `patch`
+
+- Fix: ajustes na mensagem de email
+
+## V. 1.02.0205
+
+**Data:** 2026-03-06 18:17:14 | **Commit:** `30df3c9` | **Tipo:** `patch`
+
+- Fix: recuperação de email configurado
+
+## V. 1.02.0204
+
+**Data:** 2026-03-06 16:48:25 | **Commit:** `bd1f90c` | **Tipo:** `patch`
+
+- Fix: debug tentativa 2
+
+## V. 1.02.0203
+
+**Data:** 2026-03-06 16:43:58 | **Commit:** `a87d9f4` | **Tipo:** `patch`
+
+- Fix: tentativa de debug
+
+## V. 1.02.0202
+
+**Data:** 2026-03-06 16:31:36 | **Commit:** `25fa31c` | **Tipo:** `patch`
+
+- Fix: correção de envio de email
+
+## V. 1.02.0201
+
+**Data:** 2026-03-06 16:27:50 | **Commit:** `2f1019e` | **Tipo:** `patch`
+
+- Feat: implementação de email corporativo
+
+## V. 1.02.0200
+
+**Data:** 2026-03-06 16:11:12 | **Commit:** `403cb51` | **Tipo:** `patch`
+
+- Fix: pequenos ajustes
+
+## V. 1.02.0199
+
+**Data:** 2026-03-06 16:06:28 | **Commit:** `5062974` | **Tipo:** `patch`
+
+- Fix: correção de html
+
+## V. 1.02.0198
+
+**Data:** 2026-03-06 16:03:18 | **Commit:** `3b3dbe7` | **Tipo:** `patch`
+
+- Fix: ajustes no select
+
+## V. 1.02.0197
+
+**Data:** 2026-03-06 16:01:19 | **Commit:** `a7921ad` | **Tipo:** `patch`
+
+- Fix: pequenos ajustes
+
+## V. 1.02.0196
+
+**Data:** 2026-03-06 15:46:22 | **Commit:** `ab6b885` | **Tipo:** `patch`
+
+- Fix: correção de tema e layout
+
+## V. 1.02.0195
+
+**Data:** 2026-03-06 15:27:57 | **Commit:** `99876a4` | **Tipo:** `patch`
+
+- Fix: correção de layout
+
+## V. 1.02.0194
+
+**Data:** 2026-03-06 15:16:30 | **Commit:** `ca7f8d4` | **Tipo:** `patch`
+
+- Fix: correção de layout
+
+## V. 1.02.0193
+
+**Data:** 2026-03-06 15:02:27 | **Commit:** `4f5aa49` | **Tipo:** `patch`
+
+- Fix: correção de classes
+
+## V. 1.02.0192
+
+**Data:** 2026-03-06 14:57:19 | **Commit:** `29c261b` | **Tipo:** `patch`
+
+- Feat: nova página de recuperação de senha
+
+## V. 1.02.0191
+
+**Data:** 2026-03-06 14:42:40 | **Commit:** `f97de51` | **Tipo:** `patch`
+
+- Feat: Novo sistema de logout
+
+## V. 1.02.0190
+
+**Data:** 2026-03-05 20:32:37 | **Commit:** `5e890ec` | **Tipo:** `patch`
+
+- Fix: Ajustes iniciais
+
+## V. 1.02.0189
+
+**Data:** 2026-03-05 20:22:43 | **Commit:** `cdc733f` | **Tipo:** `patch`
+
+- Feat: implementação de conjunto de páginas Cejusc
+
+## V. 1.02.0188
+
+**Data:** 2026-03-05 19:47:06 | **Commit:** `742db72` | **Tipo:** `patch`
+
+- Fix: correções pontuais
+
+## V. 1.02.0187
+
+**Data:** 2026-03-05 19:28:33 | **Commit:** `a2ea38d` | **Tipo:** `patch`
+
+- Feat: correção de layout
+
+## V. 1.02.0186
+
+**Data:** 2026-03-05 19:24:46 | **Commit:** `d3b5c75` | **Tipo:** `patch`
+
+- Feat: novas implementações e alterações
+
+## V. 1.02.0185
+
+**Data:** 2026-03-05 18:53:33 | **Commit:** `eb2ce95` | **Tipo:** `patch`
+
+- Feat: nova página completa criada - Cartas Recebidas
+
+## V. 1.02.0184
+
+**Data:** 2026-03-02 18:39:07 | **Commit:** `e8f1ed8` | **Tipo:** `patch`
+
+- Fix: correção de visibilidade dos buttons cancelar tarefa
+
+## V. 1.02.0183
+
+**Data:** 2026-03-02 18:34:01 | **Commit:** `75688e4` | **Tipo:** `patch`
+
+- Fix: correção de linha de timelina
+
+## V. 1.02.0182
+
+**Data:** 2026-03-02 18:23:45 | **Commit:** `11617d7` | **Tipo:** `patch`
+
+- Fix: correção de regra de alocação de carta expedida
+
+## V. 1.02.0181
+
+**Data:** 2026-03-02 18:16:46 | **Commit:** `d6fe513` | **Tipo:** `patch`
+
+- Feat: Botões de cancelar e excluir tarefa
+
+## V. 1.02.0180
+
+**Data:** 2026-03-02 18:03:59 | **Commit:** `aa94e96` | **Tipo:** `patch`
+
+- Fix: correção quase pronta
+
+## V. 1.02.0179
+
+**Data:** 2026-03-02 17:57:54 | **Commit:** `b2c1f2f` | **Tipo:** `patch`
+
+- Fix: correção de alocação por tipo
+
+## V. 1.02.0178
+
+**Data:** 2026-03-02 17:47:17 | **Commit:** `bf3841a` | **Tipo:** `patch`
+
+- Fix: correção de alocação
+
+## V. 1.02.0177
+
+**Data:** 2026-03-02 17:38:58 | **Commit:** `8889f44` | **Tipo:** `patch`
+
+- Fix: correção de lista concluida
+
+## V. 1.02.0176
+
+**Data:** 2026-03-02 17:34:14 | **Commit:** `5eafedc` | **Tipo:** `patch`
+
+- Fix: correção de collate
+
+## V. 1.02.0175
+
+**Data:** 2026-03-02 17:32:09 | **Commit:** `332aaa1` | **Tipo:** `patch`
+
+- Feat: Implementação de alocação de usuários
+
+## V. 1.02.0174
+
+**Data:** 2026-03-02 16:56:10 | **Commit:** `acb37a3` | **Tipo:** `patch`
+
+- Fix: correção de dados de cadastro
+
+## V. 1.02.0173
+
+**Data:** 2026-03-01 20:33:10 | **Commit:** `bc1c165` | **Tipo:** `patch`
+
+- Test: tentativa de correção de informação
+
+## V. 1.02.0172
+
+**Data:** 2026-03-01 20:17:00 | **Commit:** `f14b2ce` | **Tipo:** `patch`
+
+- Fix: corrigido status de metodo
+
+## V. 1.02.0171
+
+**Data:** 2026-03-01 20:11:37 | **Commit:** `91aa9e5` | **Tipo:** `patch`
+
+- Fix: complementação de informações
+
+## V. 1.02.0170
+
+**Data:** 2026-03-01 20:02:43 | **Commit:** `04d6071` | **Tipo:** `patch`
+
+- Fix: correção de bug de data
+
+## V. 1.02.0169
+
+**Data:** 2026-03-01 19:59:50 | **Commit:** `b70506f` | **Tipo:** `patch`
+
+- Fix: correção de nomes dos tribunais
+
+## V. 1.02.0168
+
+**Data:** 2026-03-01 19:49:19 | **Commit:** `a1c2ab1` | **Tipo:** `patch`
+
+- Fix: correção de informacões
+
+## V. 1.02.0167
+
+**Data:** 2026-03-01 19:18:45 | **Commit:** `63e6d09` | **Tipo:** `patch`
+
+- Fix: nova correção de bug css
+
+## V. 1.02.0166
+
+**Data:** 2026-03-01 19:16:11 | **Commit:** `1e9b097` | **Tipo:** `patch`
+
+- Fix: correção de css
+
+## V. 1.02.0165
+
+**Data:** 2026-03-01 19:01:42 | **Commit:** `82e2c7e` | **Tipo:** `patch`
+
+- Fix: correção de bugs
+
+## V. 1.02.0164
+
+**Data:** 2026-03-01 18:52:11 | **Commit:** `63feea8` | **Tipo:** `patch`
+
+- Fix: correções de status de subtarefas
+
+## V. 1.02.0163
+
+**Data:** 2026-03-01 18:37:47 | **Commit:** `83a2387` | **Tipo:** `patch`
+
+- Fix: correção no css de subtarefas
+
+## V. 1.02.0162
+
+**Data:** 2026-03-01 18:30:10 | **Commit:** `2373882` | **Tipo:** `patch`
+
+- Fix: correção da barra de status das subtarefas
+
+## V. 1.02.0161
+
+**Data:** 2026-03-01 18:16:19 | **Commit:** `7f9b614` | **Tipo:** `patch`
+
+- Fix: melhorias e implementações
+
+## V. 1.02.0160
+
+**Data:** 2026-03-01 18:07:42 | **Commit:** `64bc844` | **Tipo:** `patch`
+
+- Fix: correção de nomenclaturas e melhorias de status
+
+## V. 1.02.0159
+
+**Data:** 2026-03-01 17:38:03 | **Commit:** `dd88a60` | **Tipo:** `patch`
+
+- Feat: Implementação de subtarefas
+
+## V. 1.02.0158
+
+**Data:** 2026-03-01 16:41:12 | **Commit:** `7c96420` | **Tipo:** `patch`
+
+- Feat: Implementação de subtarefas
+
 ## V. 1.02.0157
 
 **Data:** 2026-03-01 14:40:42 | **Commit:** `aa20605` | **Tipo:** `patch`
@@ -1986,6 +3648,283 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

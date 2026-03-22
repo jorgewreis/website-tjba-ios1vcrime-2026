@@ -1,0 +1,22 @@
+[
+  {
+    "slug": "default",
+    "url": "/assets/img/avatars/presets/default.svg",
+    "label": "Padrão"
+  },
+  {
+    "slug": "style_blue",
+    "url": "/assets/img/avatars/presets/style-blue.svg",
+    "label": "Estilo azul"
+  },
+  {
+    "slug": "style_green",
+    "url": "/assets/img/avatars/presets/style-green.svg",
+    "label": "Estilo verde"
+  },
+  {
+    "slug": "style_violet",
+    "url": "/assets/img/avatars/presets/style-violet.svg",
+    "label": "Estilo violeta"
+  }
+]

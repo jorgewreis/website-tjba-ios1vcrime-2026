@@ -7,3 +7,4 @@ PS_SCRIPT="$SCRIPT_DIR/commit-msg.ps1"
 
 # Executa o PowerShell 7 passando os argumentos
 exec pwsh.exe -NoProfile -ExecutionPolicy Bypass -File "$PS_SCRIPT" "$@"
+

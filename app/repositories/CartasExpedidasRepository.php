@@ -12,6 +12,8 @@ final class CartasExpedidasRepository
     private const COLLATION = 'utf8mb4_unicode_ci';
 
     private const STATUS_ORDER = [
+        'pendente',
+        'em_andamento',
         'aguardando assinatura',
         'aguardando envio',
         'aguardando juntada do termo',
@@ -28,7 +30,7 @@ final class CartasExpedidasRepository
 
     public function fetchList(array $filters, int $limit, int $offset): array
     {
-        [$whereClause, $params] = $this->buildFilterClause($filters, 'ce');
+        [$whereClause, $params] = $this->buildFilterClause($filters, 'ce', true);
 
         $coll = self::COLLATION;
         $orderField = sprintf(
@@ -65,7 +67,7 @@ final class CartasExpedidasRepository
 
     public function count(array $filters): int
     {
-        [$whereClause, $params] = $this->buildFilterClause($filters, 'ce');
+        [$whereClause, $params] = $this->buildFilterClause($filters, 'ce', true);
         $fromClause = $this->buildFromClause();
         $sql = sprintf('SELECT COUNT(*) AS total FROM %s %s', $fromClause, $whereClause ? 'WHERE ' . $whereClause : '');
         $statement = $this->connection->prepare($sql);
@@ -79,7 +81,7 @@ final class CartasExpedidasRepository
 
     public function countByStatus(array $filters): array
     {
-        [$whereClause, $params] = $this->buildFilterClause($filters, 'ce');
+        [$whereClause, $params] = $this->buildFilterClause($filters, 'ce', false);
         $fromClause = $this->buildFromClause();
         $sql = sprintf(
             'SELECT ce.`status` AS `Status`, COUNT(*) AS total FROM %s %s GROUP BY ce.`status`',
@@ -260,7 +262,10 @@ final class CartasExpedidasRepository
         );
     }
 
-    private function buildFilterClause(array $filters, string $alias = ''): array
+    /**
+     * @param bool $excludeConcluidaCanceladaQuandoStatusVazio Quando true e status não informado, exclui concluída e cancelada da lista.
+     */
+    private function buildFilterClause(array $filters, string $alias = '', bool $excludeConcluidaCanceladaQuandoStatusVazio = true): array
     {
         $clauses = [];
         $params = [];
@@ -286,8 +291,25 @@ final class CartasExpedidasRepository
         }
 
         if (isset($filters['status']) && $filters['status'] !== '') {
-            $clauses[] = $prefix . "`status` COLLATE {$coll} = :status";
-            $params[':status'] = trim($filters['status']);
+            $statusVal = trim($filters['status']);
+            if ($statusVal === 'em_andamento') {
+                $statusList = ['em_andamento', 'aguardando assinatura', 'aguardando envio', 'aguardando juntada do termo', 'aguardando juntada de termo', 'aguardando cumprimento'];
+                $placeholders = [];
+                foreach ($statusList as $i => $s) {
+                    $key = ':status_' . $i;
+                    $placeholders[] = $prefix . "`status` COLLATE {$coll} = {$key}";
+                    $params[$key] = $s;
+                }
+                $clauses[] = '(' . implode(' OR ', $placeholders) . ')';
+            } else {
+                $clauses[] = $prefix . "`status` COLLATE {$coll} = :status";
+                $params[':status'] = $statusVal;
+            }
+        } elseif ($excludeConcluidaCanceladaQuandoStatusVazio) {
+            // Por padrão não listar Concluída e Cancelada; usuário escolhe no filtro se quiser ver.
+            $clauses[] = $prefix . "`status` COLLATE {$coll} NOT IN (:status_exclude_1, :status_exclude_2)";
+            $params[':status_exclude_1'] = 'concluída';
+            $params[':status_exclude_2'] = 'cancelada';
         }
 
         return [implode(' AND ', $clauses), $params];

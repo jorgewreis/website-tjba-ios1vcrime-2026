@@ -2,6 +2,9 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
+require_once __DIR__ . '/../../repositories/CartasExpedidasSubtarefasRepository.php';
+require_once __DIR__ . '/../../repositories/TribunaisRepository.php';
+require_once __DIR__ . '/../../helpers/CartorioTimelineHelper.php';
 require_once __DIR__ . '/../../services/CartasExpedidasService.php';
 
 $connection = Conection::getInstance()->getConnection();
@@ -71,6 +74,56 @@ if ($carta !== null) {
     }
     $observacoesValue = trim((string) ($carta['observacoes'] ?? ''));
     $comarcaDestinoId = trim((string) ($carta['comarca_destino_id'] ?? ''));
+
+    $subtarefasRepo = new CartasExpedidasSubtarefasRepository($connection);
+    $subtarefasRepo->ensureInformacoesDevolucaoPair($idCarta);
+    $subtarefas = $subtarefasRepo->findByCartaId($idCarta);
+    $tribunaisRepo = new TribunaisRepository($connection);
+    $subtarefasPorOrdem = [];
+    foreach ($subtarefas as $st) {
+        $subtarefasPorOrdem[(int) $st['ordem']] = $st;
+    }
+    $subtarefaLabels = [
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1 => 'Aguardando assinatura',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_2 => 'Gerar PDF',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_3 => 'Aguardando envio',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_4 => 'Juntada de termo de envio',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_5 => 'Aguardando cumprimento',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6 => 'Devolução',
+    ];
+    $taskTitleByTipo = [
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1 => 'Carta aguardando assinatura',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_2 => 'Aguardando impressão de documentos em PDF',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_3 => 'Aguardando envio de Carta',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_4 => 'Aguardando comprovante de envio',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_5 => 'Aguardando cumprimento',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6 => 'Aguardando cumprimento',
+    ];
+    $ordemParaTipo = [
+        1 => CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1,
+        2 => CartasExpedidasSubtarefasRepository::TIPO_ORDEM_2,
+        3 => CartasExpedidasSubtarefasRepository::TIPO_ORDEM_3,
+        4 => CartasExpedidasSubtarefasRepository::TIPO_ORDEM_4,
+        5 => CartasExpedidasSubtarefasRepository::TIPO_ORDEM_5,
+        6 => CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6,
+    ];
+    $temSubtarefas = count($subtarefas) > 0;
+    $temEmAndamentoOuPendente = false;
+    foreach ($subtarefas as $st) {
+        $s = trim((string) ($st['status'] ?? ''));
+        if ($s === 'em_andamento' || $s === 'pendente') {
+            $temEmAndamentoOuPendente = true;
+            break;
+        }
+    }
+    $timelineMinorPendente = [
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1 => 'Aguardando assinatura pela juíza',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_2 => 'Aguardando impressão de documentos em PDF',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_3 => 'Aguardando envio de documentos',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_4 => 'Aguardando juntada de termo de envio',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_5 => 'Aguardando juntada de informações',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6 => 'Aguardando devolução da Carta',
+    ];
 }
 
 $ruleServidor = '?';
@@ -117,6 +170,31 @@ $statusOptions = [
     'cancelada' => 'Cancelada',
 ];
 
+/** Perfis que podem excluir a tarefa e subtarefas (tabela usuario_perfil). */
+$perfisPermitidosExcluir = ['ADMIN', 'CHEFIA'];
+$userPerfisEdit = [];
+$userIdEdit = $_SESSION['id_usuario'] ?? null;
+if ($userIdEdit !== null && $userIdEdit !== '') {
+    $stmtPerfis = $connection->prepare('SELECT DISTINCT UPPER(TRIM(perfil)) AS perfil FROM usuario_perfil WHERE usuario = ? AND perfil IS NOT NULL');
+    $stmtPerfis->execute([$userIdEdit]);
+    $userPerfisEdit = $stmtPerfis->fetchAll(PDO::FETCH_COLUMN);
+}
+$podeExcluirTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosExcluir)) > 0;
+
+/** Perfis que podem cancelar a tarefa (apenas altera status para Cancelada): servidor, admin, diretora, magistrada. */
+$perfisPermitidosCancelar = ['ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA'];
+$podeCancelarTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosCancelar)) > 0;
+$tarefaFinalizadaOuCancelada = in_array($statusAtual ?? '', ['cancelada', 'concluída'], true);
+$timelineData = $carta !== null
+    ? cartorioTimelineBuildViewData('cartas_expedidas', [
+        'task' => $carta,
+        'task_status' => $statusAtual,
+        'subtarefas' => $subtarefas ?? [],
+        'ruleServidor' => $ruleServidor,
+        'tribunaisRepo' => $tribunaisRepo ?? null,
+    ])
+    : [];
+
 $stateOptions = [
     'AC' => 'Acre',
     'AL' => 'Alagoas',
@@ -156,11 +234,10 @@ $stateOptions = [
         <title>Edição de Carta Expedida - Primeira Vara Crime de Ilhéus</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="/assets/css/shared/reset.css">
-        <link rel="stylesheet" href="/assets/css/shared/variables.css">
-        <link rel="stylesheet" href="/assets/css/shared/page.css">
-        <link rel="stylesheet" href="/assets/css/shared/form.css">
-        <link rel="stylesheet" href="/assets/css/shared/table.css">
+                <?php include __DIR__ . '/_internal_head_styles.php'; ?>
+
+        <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+        <?php include __DIR__ . '/_toast_script.php'; ?>
     </head>
 <body class="page-internal">
 
@@ -181,27 +258,34 @@ $stateOptions = [
         </a>
     </div>
 
-    <div class="card-page">
+    <div class="container-full card-page">
         <?php if ($errorMessage !== ''): ?>
-            <div class="row filter">
-                <div class="col">
-                    <label class="status status-cancelled"><?php echo htmlspecialchars($errorMessage, ENT_QUOTES); ?></label>
-                </div>
-            </div>
+            <script>
+                if (typeof showToast === 'function') {
+                    showToast({ type: 'error', variant: 'full', title: 'Erro', message: <?php echo json_encode($errorMessage, JSON_UNESCAPED_UNICODE); ?> });
+                }
+            </script>
         <?php else: ?>
-            <div class="row table header">Informações obrigatórias</div>
-            <div class="row filter">
-                <div class="col filter">
+            
+            <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Informações principais</h2></div>
+
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
+                <div class="col">
                     <label for="filter-processo">Processo</label>
-                    <input type="text" id="filter-processo" class="width-md height-md readonly" value="<?php echo htmlspecialchars($processoNumero, ENT_QUOTES); ?>" readonly>
+                    <input type="text" id="filter-processo" class="width-400 height-md readonly" value="<?php echo htmlspecialchars($processoNumero, ENT_QUOTES); ?>" readonly>
                 </div>
-                <div class="col filter">
+                <div class="col">
                     <label for="filter-classe">Classe</label>
-                    <input type="text" id="filter-classe" class="width-lg height-md readonly" value="<?php echo htmlspecialchars($classeCodigo !== '' ? ($classeCodigo . ' - ' . $classeNome) : $classeNome, ENT_QUOTES); ?>" readonly>
+                    <?php
+                    $classeReadonly = ($classeNome !== 'Classe não informada');
+                    $classeValue = $classeReadonly ? $classeNome : '';
+                    $classeClass = 'width-600 height-md' . ($classeReadonly ? ' readonly' : '');
+                    ?>
+                    <input type="text" id="filter-classe" class="<?php echo htmlspecialchars($classeClass, ENT_QUOTES); ?>" value="<?php echo htmlspecialchars($classeValue, ENT_QUOTES); ?>"<?php echo $classeReadonly ? ' readonly' : ' placeholder="Preenchido automaticamente pelo DataJud"'; ?>>
                 </div>
-                <div class="col filter">
-                    <label for="filter-tipo">Finalidade</label>
-                    <select class="width-lg height-md" id="filter-tipo" required>
+                <div class="col">
+                    <label for="filter-tipo">Finalidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <select class="width-500 height-md" id="filter-tipo" required>
                         <option value="" disabled>Selecione aqui</option>
                         <?php foreach ($finalidadeOptions as $option): ?>
                             <option value="<?php echo htmlspecialchars($option, ENT_QUOTES); ?>"<?php echo $finalidadeValue === $option ? ' selected' : ''; ?>><?php echo htmlspecialchars($option); ?></option>
@@ -209,44 +293,47 @@ $stateOptions = [
                     </select>
                 </div>
             </div>            
-            <div class="row filter">
-                <div class="col filter">
-                    <label for="filter-cidade">Cidade</label>
-                    <input type="text" class="width-xl height-md" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="120" value="<?php echo htmlspecialchars($cidadeValue, ENT_QUOTES); ?>" required>
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
+                <div class="col">
+                    <label for="filter-cidade">Cidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <input type="text" class="width-600 height-md" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="120" value="<?php echo htmlspecialchars($cidadeValue, ENT_QUOTES); ?>" required>
                 </div>
-                <div class="col filter">
-                    <label for="filter-estado">Estado</label>
-                    <select class="width-md height-md" id="filter-estado" required>
+                <div class="col">
+                    <label for="filter-estado">Estado <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <select class="width-400 height-md" id="filter-estado" required>
                         <?php foreach ($stateOptions as $code => $label): ?>
                             <option value="<?php echo htmlspecialchars($code, ENT_QUOTES); ?>"<?php echo $ufValue === $code ? ' selected' : ''; ?>><?php echo htmlspecialchars($label); ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="col filter">
-                    <label for="filter-prazo">Prazo cumprimento</label>
-                    <select class="width-sm height-md" id="filter-prazo" required>
+                <div class="col">
+                    <label for="filter-prazo">Prazo <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <select class="width-300 height-md" id="filter-prazo" required>
                         <?php foreach ($deadlineOptions as $option): ?>
                             <?php $digits = preg_replace('/\D+/', '', $option); ?>
                             <option value="<?php echo htmlspecialchars($option, ENT_QUOTES); ?>"<?php echo (int) $digits === $prazoAtual ? ' selected' : ''; ?>><?php echo htmlspecialchars($option); ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
-            </div>            
-            <!-- <div class="row filter">
-                <div class="col filter">
-                    <label for="filter-observacoes">Observações</label>
-                    <textarea id="filter-observacoes" class="width-xl" rows="4"><?php echo htmlspecialchars($observacoesValue, ENT_QUOTES); ?></textarea>
-                </div>
-            </div> -->
+            </div>
+
+            <!-- Timeline de subtarefas -->
+            <?php include __DIR__ . '/_cartorio_timeline.php'; ?>
 
             <input type="hidden" id="hidden-carta-id" value="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>">
             <input type="hidden" id="hidden-comarca-id" value="<?php echo htmlspecialchars($comarcaDestinoId, ENT_QUOTES); ?>">
 
         <?php endif; ?>
-        <div class="row buttons">
+        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
             <button class="btn btn-secondary" id="voltar-btn">Voltar</button>
             <?php if ($errorMessage === ''): ?>
-                <button class="btn btn-primary" id="salvar-btn" type="button" disabled>Salvar</button>
+                <button class="btn btn-primary" id="salvar-btn" type="button" disabled>Salvar alterações</button>                
+                <?php if ($podeCancelarTarefa && !$tarefaFinalizadaOuCancelada): ?>
+                    <button class="btn btn-danger-outline" id="cancelar-tarefa-btn" type="button" title="Alterar status da tarefa para Cancelada (não exclui dados)">Cancelar tarefa</button>
+                <?php endif; ?>
+                <?php if ($podeExcluirTarefa): ?>
+                    <button class="btn btn-danger" id="excluir-tarefa-btn" type="button" title="Excluir esta tarefa e todas as subtarefas">Excluir tarefa</button>
+                <?php endif; ?>
             <?php endif; ?>
         </div>
     </div>
@@ -271,12 +358,11 @@ $stateOptions = [
             };
             window.__currentCartaId = <?php echo json_encode($idCarta, JSON_UNESCAPED_UNICODE); ?>;
         </script>
-        <script src="/assets/js/modules/cartorio/cartas-expedidas/text-formatter.js"></script>
+        <script src="/assets/js/shared/text-formatter.js"></script>
         <script>
             (() => {
                 const endpoint = '/api/cartorio-cartas-expedidas/update.php';
                 const salvarBtn = document.getElementById('salvar-btn');
-                const feedback = document.getElementById('cadastro-feedback');
                 const cidadeInput = document.getElementById('filter-cidade');
                 const estadoSelect = document.getElementById('filter-estado');
                 const finalidadeSelect = document.getElementById('filter-tipo');
@@ -286,14 +372,14 @@ $stateOptions = [
                 const hiddenComarcaInput = document.getElementById('hidden-comarca-id');
                 const initialData = window.__initialCartaData || {};
 
-                if (!salvarBtn || !finalidadeSelect || !prazoSelect || !statusSelect || !cidadeInput || !estadoSelect || !observacoesInput) {
+                if (!salvarBtn || !finalidadeSelect || !prazoSelect || !cidadeInput || !estadoSelect) {
                     return;
                 }
 
                 const showFeedback = (message, type = 'success') => {
-                    if (!feedback) return;
-                    const variant = type === 'error' ? 'status-cancelled' : 'status-finished';
-                    feedback.innerHTML = `<label class="status ${variant}">${message}</label>`;
+                    if (typeof showToast === 'function') {
+                        showToast({ type: type === 'error' ? 'error' : 'success', variant: 'full', title: type === 'error' ? 'Erro' : 'Sucesso', message });
+                    }
                 };
 
                 const sanitizePrazo = (value) => {
@@ -317,14 +403,17 @@ $stateOptions = [
                     return value;
                 };
 
-                const getCurrentState = () => ({
-                    finalidade: (finalidadeSelect.value || '').trim(),
-                    prazo: sanitizePrazo(prazoSelect.value),
-                    cidade: cidadeInput.value.trim(),
-                    estado: (estadoSelect.value || '').trim(),
-                    status: (statusSelect.value || '').trim(),
-                    observacoes: observacoesInput.value.trim(),
-                });
+                const getCurrentState = () => {
+                    const state = {
+                        finalidade: (finalidadeSelect.value || '').trim(),
+                        prazo: sanitizePrazo(prazoSelect.value),
+                        cidade: cidadeInput.value.trim(),
+                        estado: (estadoSelect.value || '').trim(),
+                    };
+                    if (statusSelect) state.status = (statusSelect.value || '').trim();
+                    if (observacoesInput) state.observacoes = observacoesInput.value.trim();
+                    return state;
+                };
 
                 const hasChanges = () => {
                     const current = getCurrentState();
@@ -332,8 +421,8 @@ $stateOptions = [
                     if ((initialData.prazoDias || '0').toString() !== current.prazo) return true;
                     if (normalizeCidadeForCompare(initialData.cidade) !== normalizeCidadeForCompare(current.cidade)) return true;
                     if ((initialData.estado || '') !== current.estado) return true;
-                    if ((initialData.status || '') !== current.status) return true;
-                    if ((initialData.observacoes || '') !== current.observacoes) return true;
+                    if (statusSelect && (initialData.status || '') !== (current.status || '')) return true;
+                    if (observacoesInput && (initialData.observacoes || '') !== (current.observacoes || '')) return true;
                     return false;
                 };
 
@@ -341,11 +430,12 @@ $stateOptions = [
                     salvarBtn.disabled = !hasChanges();
                 };
 
+                const formElements = [finalidadeSelect, prazoSelect, cidadeInput, estadoSelect];
+                if (statusSelect) formElements.push(statusSelect);
+                if (observacoesInput) formElements.push(observacoesInput);
                 ['input', 'change'].forEach((eventName) => {
-                    [finalidadeSelect, prazoSelect, statusSelect, cidadeInput, estadoSelect, observacoesInput].forEach((element) => {
-                        if (element) {
-                            element.addEventListener(eventName, updateButtonState);
-                        }
+                    formElements.forEach((element) => {
+                        if (element) element.addEventListener(eventName, updateButtonState);
                     });
                 });
 
@@ -365,7 +455,7 @@ $stateOptions = [
                             }
                             const status = (data.status_cidade || '').trim();
                             if (status.toUpperCase() === 'CCM') {
-                                alert('Comarca com Central de Mandados');
+                                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Informação', message: 'Comarca com Central de Mandados' });
                                 cidadeInput.value = '';
                                 if (hiddenComarcaInput) hiddenComarcaInput.value = '';
                             } else {
@@ -403,13 +493,14 @@ $stateOptions = [
                         prazo_dias: parseInt(payloadState.prazo, 10) || 0,
                         cidade_destino: formatCidade(payloadState.cidade),
                         uf_destino: payloadState.estado,
-                        status: payloadState.status,
-                        observacoes: payloadState.observacoes,
                         comarca_destino_id: hiddenComarcaInput.value.trim(),
                     };
+                    if (statusSelect) payload.status = payloadState.status || '';
+                    if (observacoesInput) payload.observacoes = payloadState.observacoes || '';
 
                     salvarBtn.disabled = true;
-                    showFeedback('Atualizando dados...', 'success');
+                    if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Informação', message: 'Atualizando dados...' });
+                    else showFeedback('Atualizando dados...', 'success');
 
                     try {
                         const response = await fetch(endpoint, {
@@ -429,6 +520,84 @@ $stateOptions = [
                 });
 
                 updateButtonState();
+
+                const btnCancelarTarefa = document.getElementById('cancelar-tarefa-btn');
+                if (btnCancelarTarefa && window.__currentCartaId) {
+                    btnCancelarTarefa.addEventListener('click', async () => {
+                        btnCancelarTarefa.disabled = true;
+                        try {
+                            const res = await fetch('/api/cartorio-cartas-expedidas/cancel.php', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ id: window.__currentCartaId })
+                            });
+                            const data = await res.json().catch(() => ({}));
+                            if (res.ok && data.success) {
+                                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Informação', message: 'Tarefa cancelada com sucesso.' });
+                                window.setTimeout(() => window.location.reload(), 250);
+                                return;
+                            }
+                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao cancelar a tarefa.' });
+                        } catch (e) {
+                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão ao cancelar.' });
+                        }
+                        btnCancelarTarefa.disabled = false;
+                    });
+                }
+
+                const btnExcluirTarefa = document.getElementById('excluir-tarefa-btn');
+                if (btnExcluirTarefa && window.__currentCartaId) {
+                    const pendingConfirmations = {};
+                    const requireSecondClick = (key, message) => {
+                        const now = Date.now();
+                        const validUntil = Number(pendingConfirmations[key] || 0);
+                        if (validUntil > now) {
+                            delete pendingConfirmations[key];
+                            return true;
+                        }
+                        pendingConfirmations[key] = now + 5000;
+                        if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Confirmação', message: message });
+                        return false;
+                    };
+                    const queuePostReloadToast = (type, title, message) => {
+                        try {
+                            const key = 'cartorio.postReloadToast';
+                            const raw = sessionStorage.getItem(key);
+                            const fila = raw ? JSON.parse(raw) : [];
+                            const lista = Array.isArray(fila) ? fila : (fila && fila.message ? [fila] : []);
+                            lista.push({ type, title, message });
+                            sessionStorage.setItem(key, JSON.stringify(lista));
+                        } catch (e) {}
+                    };
+                    btnExcluirTarefa.addEventListener('click', async () => {
+                        if (!requireSecondClick('excluir-carta-expedida', 'Clique novamente em Excluir em até 5 segundos para confirmar a exclusão desta tarefa.')) {
+                            return;
+                        }
+                        btnExcluirTarefa.disabled = true;
+                        try {
+                            const res = await fetch('/api/cartorio-cartas-expedidas/delete.php', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ id: window.__currentCartaId })
+                            });
+                            const data = await res.json().catch(() => ({}));
+                            if (res.ok && data.deleted) {
+                                (Array.isArray(data.subtarefas_toasts) ? data.subtarefas_toasts : []).forEach((msg) => {
+                                    queuePostReloadToast('info', 'Subtarefa excluída', msg);
+                                });
+                                if (data.tarefa_toast) {
+                                    queuePostReloadToast('success', 'Sucesso', data.tarefa_toast);
+                                }
+                                window.location.href = '/frame.php?page=cartasexpedidas';
+                                return;
+                            }
+                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao excluir a tarefa.' });
+                        } catch (e) {
+                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão ao excluir.' });
+                        }
+                        btnExcluirTarefa.disabled = false;
+                    });
+                }
             })();
         </script>
     <?php endif; ?>

@@ -3,8 +3,11 @@
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/security.php';
 require_once __DIR__ . '/../app/helpers/bootstrap.php';
+require_once __DIR__ . '/../app/helpers/UserAccessHelper.php';
 require_once __DIR__ . '/../app/models/Usuario.php';
 require_once __DIR__ . '/../app/helpers/Conection.php';
+require_once __DIR__ . '/../app/access/AccessEvaluator.php';
+require_once __DIR__ . '/../app/access/AccessPolicyVersion.php';
 
 // Garante que a sessão esteja ativa antes de acessar dados do usuário.
 if (session_status() !== PHP_SESSION_ACTIVE) {
@@ -24,22 +27,64 @@ $ERRORS = $PAGES . '/errors';
 // Lista de páginas permitidas e seus caminhos.
 $allowed_pages = [
     'dashboard'             => $PAGES . '/dashboard.php',
-    'cejusc'                => $PAGES . '/cejusc.php',
-    'editais'               => $PAGES . '/editais.php',
-    'guias'                 => $PAGES . '/guias.php',
-    'medidasprotetivas'     => $PAGES . '/medidas_protetivas.php',
-    'oficioscartorio'       => $PAGES . '/oficios_cartorio.php',
-    'oficiosgabinete'       => $PAGES . '/oficios_gabinete.php',
+    'dashboardexterno'      => $PAGES . '/dashboard-externo.php',
+    'consultacep'          => $PAGES . '/consulta-cep.php',
+    'cejusc'                => $PAGES . '/cartorio-cejusc-list.php',
+    'cejuscedit'            => $PAGES . '/cartorio-cejusc-edit.php',
+    'cejusccreate'          => $PAGES . '/cartorio-cejusc-create.php',
+    'cejuscrules'           => $PAGES . '/cartorio-cejusc-rules.php',
+    'editais'               => $PAGES . '/cartorio-editais-list.php',
+    'editaisedit'           => $PAGES . '/cartorio-editais-edit.php',
+    'editaiscreate'         => $PAGES . '/cartorio-editais-create.php',
+    'editaisrules'          => $PAGES . '/cartorio-editais-rules.php',
+    'guias'                 => $PAGES . '/cartorio-guias-list.php',
+    'guiasedit'             => $PAGES . '/cartorio-guias-edit.php',
+    'guiascreate'           => $PAGES . '/cartorio-guias-create.php',
+    'guiasrules'             => $PAGES . '/cartorio-guias-rules.php',
+    'medidasprotetivas'     => $PAGES . '/cartorio-medidas-protetivas-list.php',
+    'medidasprotetivasedit' => $PAGES . '/cartorio-medidas-protetivas-edit.php',
+    'medidasprotetivascreate' => $PAGES . '/cartorio-medidas-protetivas-create.php',
+    'medidasprotetivasrules' => $PAGES . '/cartorio-medidas-protetivas-rules.php',
+    'oficioscartorio'       => $PAGES . '/cartorio-oficios-list.php',
+    'oficioscartorioedit'   => $PAGES . '/cartorio-oficios-edit.php',
+    'oficiosgabinete'       => $PAGES . '/gabinete-oficios-list.php',
+    'oficiosgabineteedit'   => $PAGES . '/gabinete-oficios-edit.php',
+    'monitoramentogabinete' => $PAGES . '/gabinete-monitoramento-eletronico-list.php',
+    'monitoramentogabinetecreate' => $PAGES . '/gabinete-monitoramento-eletronico-create.php',
+    'monitoramentogabineteedit'   => $PAGES . '/gabinete-monitoramento-eletronico-edit.php',
     'cartasexpedidas'       => $PAGES . '/cartorio-cartas-expedidas-list.php',
     'cartasexpedidasedit'   => $PAGES . '/cartorio-cartas-expedidas-edit.php',
-    'cartasexpedidascreate' => $PAGES . '/cartorio-cartas-expedidas-create.php',    
+    'cartasexpedidascreate' => $PAGES . '/cartorio-cartas-expedidas-create.php',
     'cartasexpedidasrules'  => $PAGES . '/cartorio-cartas-expedidas-rules.php',
-    'cartasrecebidas'       => $PAGES . '/cartas_recebidas.php',
+    'cartasrecebidas'       => $PAGES . '/cartorio-cartas-recebidas-list.php',
+    'cartasrecebidasedit'   => $PAGES . '/cartorio-cartas-recebidas-edit.php',
+    'cartasrecebidascreate' => $PAGES . '/cartorio-cartas-recebidas-create.php',
+    'cartasrecebidasrules'  => $PAGES . '/cartorio-cartas-recebidas-rules.php',
     'produtividade'         => $PAGES . '/produtividade.php',
     'notificacoes'          => $PAGES . '/notificacoes.php',
-    'usuarios'              => $PAGES . '/usuarios.php',
+    'usuarioslist'          => $PAGES . '/usuarios-list.php',
+    'usuarioscreate'        => $PAGES . '/usuarios-create.php',
+    'usuariosedit'          => $PAGES . '/usuarios-edit.php',
+    'feriadoslist'          => $PAGES . '/feriados-list.php',
+    'feriadoscreate'        => $PAGES . '/feriados-create.php',
+    'feriadosedit'          => $PAGES . '/feriados-edit.php',
     'configuracoes'         => $PAGES . '/configuracoes.php',
     'documentos'            => $PAGES . '/documentos.php',
+    'alterardados'          => $PAGES . '/alterar-dados-pessoais.php',
+    'consultapartes'        => $PAGES . '/consulta-partes-list.php',
+    'consultapartescreate'  => $PAGES . '/consulta-partes-create.php',
+    'consultapartesedit'    => $PAGES . '/consulta-partes-edit.php',
+    'consultaprocessos'     => $PAGES . '/consulta-processos-list.php',
+    'consultaprocessosedit' => $PAGES . '/consulta-processos-edit.php',
+    'instituicoespublicas'  => $PAGES . '/instituicoes-publicas-list.php',
+    'instituicoespublicascreate' => $PAGES . '/instituicoes-publicas-create.php',
+    'instituicoespublicasedit'   => $PAGES . '/instituicoes-publicas-edit.php',
+    'processospartescreate'     => $PAGES . '/processos-partes-create.php',
+    'processosparteslist'       => $PAGES . '/processos-partes-list.php',
+    'processospartesedit'      => $PAGES . '/processos-partes-edit.php',
+    'partesinstituicoeslist'    => $PAGES . '/partes-instituicoes-list.php',
+    'partesinstituicoescreate'  => $PAGES . '/partes-instituicoes-create.php',
+    'partesinstituicoesedit'    => $PAGES . '/partes-instituicoes-edit.php',
 
     '401'=> $ERRORS . '/401.php',
     '403'=> $ERRORS . '/403.php',
@@ -48,77 +93,8 @@ $allowed_pages = [
     '503'=> $ERRORS . '/503.php'
 ];
 
-
-// Mapeia páginas para suas seções, usadas no controle de acesso.
-$page_to_section = [
-    'dashboard'         => 'All',
-    'cartasexpedidas'   => 'Cartório',
-    'cartasexpedidasedit'   => 'Cartório',
-    'cartasexpedidascreate' => 'Cartório',
-    'cartasexpedidasrules'  => 'Cartório',
-    'cartasrecebidas'   => 'Cartório',    
-    'cejusc'            => 'Cartório',
-    'editais'           => 'Cartório',
-    'guias'             => 'Cartório',
-    'medidasprotetivas' => 'Cartório',
-    'oficioscartorio'   => 'Cartório',
-    'oficiosgabinete'   => 'Gabinete',
-    'produtividade'     => 'Cartório',
-    'reuspresos'        => 'Gabinete' // 'reuspresos' não está em $allowed_pages, será ignorado.
-];
-
-/**
- * Verifica se o usuário possui perfil compatível com a seção exigida.
- *
- * @param array  $userPerfils     Array de perfis do usuário logado.
- * @param string|null $requiredSection Seção necessária para acesso.
- * @return bool True se o usuário tem acesso, false caso contrário.
- */
-function hasAccessToSection(array $userPerfils, ?string $requiredSection): bool
-{
-    // De acordo com as memórias do usuário, "Estudante não tem acesso à área interna em nenhuma hipótese."
-    // Portanto, se o usuário tiver o perfil 'ESTUDANTE', o acesso é negado imediatamente.
-    if (in_array('ESTUDANTE', $userPerfils, true)) {
-        return false;
-    }
-
-    if ($requiredSection === null) {
-        return true; // Se nenhuma seção é requerida, o acesso é permitido (após a verificação de ESTUDANTE).
-    }
-
-    // Mapeamento de seções para perfis permitidos.
-    $sectionMap = [
-        // Removido 'ESTUDANTE' de 'All' para cumprir a restrição.
-        'All' => ['CONSULTOR', 'CARTORIO', 'AUDIENCIA', 'GABINETE', 'ADMIN', 'SERVIDOR', 'CHEFIA'],
-        'Cartório' => ['CARTORIO', 'AUDIENCIA', 'GABINETE', 'ADMIN', 'SERVIDOR', 'CHEFIA'],
-        'Gabinete' => ['GABINETE', 'ADMIN', 'CHEFIA'],
-        'Sala de Audiências' => ['AUDIENCIA', 'GABINETE', 'ADMIN', 'CHEFIA'],
-        // 'Estudantes' e 'Consultor' podem ser removidos se não houver páginas mapeadas para eles.
-        'Estudantes' => ['ADMIN'], // Estudante não tem acesso, mas Admin pode gerenciar.
-        'Consultor'  => ['CONSULTOR', 'ADMIN'],
-        'Admin' => ['ADMIN'],
-        'Servidor' => ['SERVIDOR', 'CHEFIA', 'ADMIN'], // Adicionado para clareza, se houver páginas específicas.
-        'Chefia' => ['CHEFIA', 'ADMIN'] // Adicionado para clareza, se houver páginas específicas.
-    ];
-
-    $requiredPerfils = $sectionMap[$requiredSection] ?? [];
-
-    // Se algum perfil do usuário está na lista permitida, libera acesso.
-    foreach ($userPerfils as $userPerfil) {
-        if (in_array($userPerfil, $requiredPerfils, true)) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 /**
  * Responde com página de erro correspondente ao status HTTP.
- *
- * @param int    $status    Código de status HTTP.
- * @param string $message   Mensagem de erro a ser exibida se a página de erro não for encontrada.
- * @param string $errorsDir Caminho para o diretório das páginas de erro.
  */
 function respondWithError(int $status, string $message, string $errorsDir): void
 {
@@ -136,6 +112,7 @@ function respondWithError(int $status, string $message, string $errorsDir): void
 
 // Bloco centralizado de validações para sessão, usuário, página e acesso.
 $usuario = new Usuario();
+$connection = Conection::getInstance()->getConnection();
 $user = null;
 $userPerfils = [];
 $pagePath = null;
@@ -150,7 +127,6 @@ do {
         break;
     }
 
-    // O método validarToken deve retornar um objeto ou array consistente com o ID do usuário.
     $user = $usuario->validarToken($_SESSION['token']);
 
     if (!$user) {
@@ -161,18 +137,14 @@ do {
         break;
     }
 
-    // Tenta extrair o ID do usuário de forma mais robusta.
     if (is_array($user)) {
         $userId = $user['id_usuario'] ?? ($user['id'] ?? null);
     } elseif (is_object($user)) {
         $userId = $user->id_usuario ?? ($user->id ?? null);
     } else {
-        // Se $user não é array nem objeto, pode ser um erro ou um ID direto.
-        // Considerar que validarToken deve retornar um formato esperado.
         $userId = null;
     }
 
-    // Fallback para a sessão, mas o ideal é que validarToken seja a fonte primária.
     if ($userId === null) {
         $userId = $_SESSION['id_usuario'] ?? null;
     }
@@ -199,15 +171,26 @@ do {
     }
 
     $userPerfils = $usuario->listarPerfisUsuario($userId);
-    // Garante que $userPerfils é um array, mesmo que listarPerfisUsuario retorne null/false.
     if (!is_array($userPerfils)) {
         $userPerfils = [];
     }
 
-    $requiredSection = $page_to_section[$page] ?? null;
+    $isExterno = UserAccessHelper::isUsuarioExterno($userPerfils);
+    if ($isExterno && $page === 'dashboard') {
+        header('Location: /frame.php?page=dashboardexterno', true, 302);
+        exit;
+    }
+    if (!$isExterno && $page === 'dashboardexterno') {
+        header('Location: /frame.php?page=dashboard', true, 302);
+        exit;
+    }
 
-    if (!hasAccessToSection($userPerfils, $requiredSection)) {
-        error_log('Acesso negado: userId=' . $userId . ' perfis=' . implode(',', $userPerfils) . ' page=' . $page);
+    if (!AccessEvaluator::canAccessPage($page, $userPerfils)) {
+        error_log(
+            'Acesso negado v' . AccessPolicyVersion::VERSION
+            . ': userId=' . $userId . ' perfis=' . implode(',', $userPerfils)
+            . ' page=' . $page
+        );
         $validationStatus = 403;
         $validationMessage = 'Acesso negado. Seu perfil não tem permissão para acessar este conteúdo.';
         break;
@@ -217,7 +200,6 @@ do {
     $resolved = realpath($pagePath);
 
     if ($resolved === false || !is_file($resolved)) {
-        // Removida a referência a $BASE, que não estava definida.
         error_log('Arquivo de página não encontrado. page=' . $page . ' path=' . $pagePath);
         $validationStatus = 500;
         $validationMessage = 'Erro interno: página não localizada no servidor.';
@@ -229,5 +211,4 @@ if ($validationStatus !== null) {
     respondWithError($validationStatus, $validationMessage, $ERRORS);
 }
 
-// Inclui a página solicitada.
 require $resolved;

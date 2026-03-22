@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Editar usuário - Usuários</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../assets/css/shared/reset.css">
+        <link rel="stylesheet" href="../assets/css/shared/color.css">
+        <link rel="stylesheet" href="../assets/css/shared/page.css">
+        <link rel="stylesheet" href="../assets/css/shared/form.css">
+        <link rel="stylesheet" href="../assets/css/shared/table.css">
+        <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+    </head>
+<body class="page-internal">
+
+    <div class="header-page">
+        <div class="location">
+            <span class="all">Interno - Usuários -</span>
+            <span class="specific">Edição</span>
+        </div>
+        <h1 class="title-page">Editar usuário</h1>
+        <p class="description-page">Altere os dados do cadastro. CPF e tipo não podem ser alterados. A alteração de status e o salvamento só podem ser feitos por admin, diretora ou magistrada.</p>
+    </div>
+
+    <div class="card-page">
+        <form id="form-edit-usuario" method="post" action="" style="width: 100%;">
+            <div class="row table subtitle padding-lr-lg padding-tb-lg">Identificação</div>
+
+            <div class="row table between padding-lr-md padding-tb-sm full-line">
+                <div class="row table left fit row-gap-10">
+                    <div class="col">
+                        <label for="edit-cpf">CPF</label>
+                        <input type="text" id="edit-cpf" class="width-100 height-md readonly" value="123.456.789-00" readonly>
+                    </div>
+                    <div class="col">
+                        <label for="edit-tipo">Tipo</label>
+                        <input type="text" id="edit-tipo" class="width-100 height-md readonly" value="Interno" readonly>
+                    </div>
+                </div>
+                <div class="row table right fit">
+                    <div class="col">
+                        <select id="edit-status" name="status" class="width-200 height-md white">
+                            <option value="pendente">Pendente</option>
+                            <option value="ativo" selected>Ativo</option>
+                            <option value="bloqueado">Bloqueado</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row table subtitle padding-lr-lg padding-tb-lg border-bottom">Dados obrigatórios</div>
+            <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
+                <div class="col">
+                    <label for="edit-nome">Nome <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <input type="text" id="edit-nome" name="nome" class="readonly width-200 height-md white" placeholder="Nome" required maxlength="100" value="Maria" readonly>
+                </div>
+                <div class="col">
+                    <label for="edit-sobrenome">Sobrenome <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <input type="text" id="edit-sobrenome" name="sobrenome" class="width-400 height-md white" placeholder="Sobrenome" required maxlength="100" value="Silva Santos">
+                </div>
+            </div>
+            <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
+                <div class="col">
+                    <label for="edit-email">E-mail <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <input type="email" id="edit-email" name="email" class="width-400 height-md white" placeholder="email@exemplo.com" required maxlength="255" value="maria.silva@exemplo.com">
+                    <span class="error-message" id="edit-email-error" aria-live="polite"></span>
+                </div>
+                <div class="col">
+                    <label for="edit-telefone">Telefone</label>
+                    <input type="text" id="edit-telefone" name="telefone" class="width-100 height-md white" placeholder="(00) 00000-0000" maxlength="50" value="(73) 99999-0000">
+                </div>
+            </div>
+
+            <div class="row table subtitle padding-lr-lg padding-tb-lg border-bottom">Status e dados complementares</div>
+            <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">                
+                <div class="col">
+                    <label for="edit-cargo">Cargo</label>
+                    <select id="edit-cargo" name="cargo" class="width-400 height-md white">
+                        <option value="">Selecione (opcional)</option>
+                        <option value="Estagiário">Estagiário</option>
+                        <option value="Técnico Judiciário">Técnico Judiciário</option>
+                        <option value="Analista Judiciário">Analista Judiciário</option>
+                        <option value="Diretora de Secretaria">Diretora de Secretaria</option>
+                        <option value="Magistrada">Magistrada</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                </div>            
+                <div class="col">
+                    <label for="edit-setor">Setor</label>
+                    <select id="edit-setor" name="setor" class="width-400 height-md white">
+                        <option value="">Selecione (opcional)</option>
+                        <option value="Cartório">Cartório</option>
+                        <option value="Gabinete">Gabinete</option>
+                        <option value="Sala de Audiências">Sala de Audiências</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
+                <div class="col full-line">
+                    <span class="minor-info">Perfis (um usuário pode ter vários)</span>
+                    <div class="row table left padding-tb-sm row-gap-10" style="flex-wrap: wrap;">
+                        <label class="row left row-gap-10" style="align-items: center; margin-right: 1rem;"><input type="checkbox" name="perfil[]" value="ESTAGIARIO"> Estagiário</label>
+                        <label class="row left row-gap-10" style="align-items: center; margin-right: 1rem;"><input type="checkbox" name="perfil[]" value="SERVIDOR" checked> Servidor</label>
+                        <label class="row left row-gap-10" style="align-items: center; margin-right: 1rem;"><input type="checkbox" name="perfil[]" value="DIRETORA"> Diretora</label>
+                        <label class="row left row-gap-10" style="align-items: center; margin-right: 1rem;"><input type="checkbox" name="perfil[]" value="MAGISTRADA"> Magistrada</label>
+                        <label class="row left row-gap-10" style="align-items: center; margin-right: 1rem;"><input type="checkbox" name="perfil[]" value="ADMIN"> Admin</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row table right padding-lr-lg padding-tb-md border-bottom full-line row-gap-10">
+                <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
+                <button type="button" class="btn btn-danger" id="excluir-btn">Excluir</button>
+                <button type="submit" class="btn btn-primary" id="salvar-btn">Salvar</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="footer-page">
+        <div class="location">
+            <span class="all">Aplicativo web desenvolvido integralmente por </span>
+            <span class="specific">Jorge Reis Develop</span>
+            <span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span>
+        </div>
+    </div>
+
+    <script src="../assets/js/shared/text-formatter.js"></script>
+    <script>
+    (function () {
+        'use strict';
+
+        var form = document.getElementById('form-edit-usuario');
+        var nomeInput = document.getElementById('edit-nome');
+        var sobrenomeInput = document.getElementById('edit-sobrenome');
+        var emailInput = document.getElementById('edit-email');
+        var cargoSelect = document.getElementById('edit-cargo');
+        var setorSelect = document.getElementById('edit-setor');
+        var salvarBtn = document.getElementById('salvar-btn');
+        var voltarBtn = document.getElementById('voltar-btn');
+
+        if (voltarBtn) {
+            voltarBtn.addEventListener('click', function () { window.location.href = '/frame.php?page=usuarioslist'; });
+        }
+
+        function syncCargoToSetor() {
+            var cargo = (cargoSelect && cargoSelect.value) ? cargoSelect.value.trim() : '';
+            if (cargo === 'Magistrada') {
+                setorSelect.value = 'Gabinete';
+                setorSelect.disabled = true;
+                setorSelect.classList.add('readonly');
+            } else {
+                setorSelect.disabled = false;
+                setorSelect.classList.remove('readonly');
+                if (!setorSelect.value) setorSelect.value = '';
+            }
+        }
+
+        if (cargoSelect) cargoSelect.addEventListener('change', syncCargoToSetor);
+
+        function initTextFormatter() {
+            [nomeInput, sobrenomeInput].forEach(function (el) {
+                if (!el) return;
+                el.addEventListener('blur', function () {
+                    if (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
+                        this.value = TextFormatter.formatProperName(this.value, 100);
+                    }
+                    updateSalvarButton();
+                });
+                el.addEventListener('input', function () { updateSalvarButton(); });
+            });
+        }
+
+        function validarEmail(email) {
+            return email && typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+        }
+
+        function showFieldError(idSuffix, message) {
+            var el = document.getElementById('edit-' + idSuffix + '-error');
+            if (el) { el.textContent = message || ''; el.style.display = message ? 'block' : 'none'; }
+        }
+
+        function initEmailValidation() {
+            if (!emailInput) return;
+            emailInput.addEventListener('blur', function () {
+                var v = this.value.trim();
+                showFieldError('email', !v ? '' : (validarEmail(v) ? '' : 'E-mail inválido.'));
+                updateSalvarButton();
+            });
+            emailInput.addEventListener('input', function () { updateSalvarButton(); });
+        }
+
+        function isFormValidForSubmit() {
+            var nome = (nomeInput && nomeInput.value) ? nomeInput.value.trim() : '';
+            var sobrenome = (sobrenomeInput && sobrenomeInput.value) ? sobrenomeInput.value.trim() : '';
+            var email = (emailInput && emailInput.value) ? emailInput.value.trim() : '';
+            if (!nome || !sobrenome) return false;
+            if (!email || !validarEmail(email)) return false;
+            return true;
+        }
+
+        function updateSalvarButton() {
+            if (salvarBtn) salvarBtn.disabled = !isFormValidForSubmit();
+        }
+
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                if (!isFormValidForSubmit()) return;
+                alert('Alterações salvas com sucesso (modelo).');
+            });
+        }
+
+        syncCargoToSetor();
+        initTextFormatter();
+        initEmailValidation();
+        updateSalvarButton();
+    })();
+    </script>
+</body>
+</html>

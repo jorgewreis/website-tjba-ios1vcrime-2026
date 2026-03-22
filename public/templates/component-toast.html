@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta lang="pt-BR">
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Template Model - Components - Buttons</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="./../assets/css/shared/reset.css">
+        <link rel="stylesheet" href="./../assets/css/shared/color.css">
+        <link rel="stylesheet" href="./../assets/css/shared/form.css">
+        <link rel="stylesheet" href="./../assets/css/shared/toast.css">
+
+        <!-- IMPORT - FLATICON -->
+        <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+    </head>
+    <body>
+
+    <!-- Estrutura -->
+     <div class="toast-full success">
+        <div class="toast-header">
+            <strong class="toast-title">Sucesso!</strong>
+            <button class="toast-close" aria-label="Fechar">&times;</button>
+        </div>
+        <div class="toast-body">
+            <div class="toast-icon">
+                <i class="fi fi-rr-check-circle"></i>
+            </div>
+            <div class="toast-message">
+                <span class="toast-subtitle">Cadastro de Carta Expedida</span>
+                <p class="toast-information">Documento cadastrado com sucesso!</p>
+                <p class="toast-timestamp">Agora mesmo</p>
+            </div>
+        </div>
+    </div>
+    <div class="toast-full error">
+        <div class="toast-header">
+            <strong class="toast-title">Erro!</strong>
+            <button class="toast-close" aria-label="Fechar">&times;</button>
+        </div>
+        <div class="toast-body">
+            <div class="toast-icon">
+                <i class="fi fi-rr-circle-xmark"></i>
+            </div>
+            <div class="toast-message">
+                <span class="toast-subtitle">Cadastro de Carta Expedida</span>
+                <p class="toast-information">Ocorreu um erro ao cadastrar o documento.</p>
+                <p class="toast-timestamp">Agora mesmo</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast info">        
+        <div class="toast-body">            
+            <div class="toast-message">
+                <span class="toast-subtitle">Informação!</span>
+                <p class="toast-information">Dica de cadastramento</p>
+            </div>
+        </div>
+    </div>
+    <div class="toast success">        
+        <div class="toast-body">            
+            <div class="toast-message">
+                <span class="toast-subtitle">Sucesso!</span>
+                <p class="toast-information">Documento cadastrado com sucesso!</p>
+            </div>
+        </div>
+    </div>
+    <div class="toast error">        
+        <div class="toast-body">            
+            <div class="toast-message">
+                <span class="toast-subtitle">Erro!</span>
+                <p class="toast-information">Documento não cadastrado!</p>
+            </div>
+        </div>
+    </div>
+
+    </body>
+</html>

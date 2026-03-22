@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Novo cadastro - Usuários</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../assets/css/shared/reset.css">
+        <link rel="stylesheet" href="../assets/css/shared/color.css">
+        <link rel="stylesheet" href="../assets/css/shared/page.css">
+        <link rel="stylesheet" href="../assets/css/shared/form.css">
+        <link rel="stylesheet" href="../assets/css/shared/table.css">
+        <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+    </head>
+<body class="page-internal">
+    <div class="header-page">
+        <div class="location">
+            <span class="all">Interno - Usuários -</span>
+            <span class="specific">Novo cadastro</span>
+        </div>
+        <h1 class="title-page">Novo cadastro de usuário</h1>
+        <p class="description-page">Cadastre um servidor (tipo interno). O cadastro será criado com status Pendente; setor e perfis podem ser definidos na edição por admin ou diretora para liberar o acesso.</p>
+    </div>
+
+    <div class="card-page">
+        <form id="form-create-usuario" method="post" action="" style="width: 100%;">
+            <div class="row table subtitle padding-lr-lg padding-tb-lg">Dados obrigatórios</div>
+            <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
+                <div class="col">
+                    <label for="create-nome">Nome *obrigatório</label>
+                    <input type="text" id="create-nome" name="nome" class="width-200 height-md white" placeholder="Nome" required maxlength="100">
+                </div>
+                <div class="col">
+                    <label for="create-sobrenome">Sobrenome *obrigatório</label>
+                    <input type="text" id="create-sobrenome" name="sobrenome" class="width-400 height-md white" placeholder="Sobrenome" required maxlength="100">
+                </div>
+            </div>
+            <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
+                <div class="col">
+                    <label for="create-cpf">CPF *obrigatório</label>
+                    <input type="text" id="create-cpf" name="cpf" class="width-100 height-md white" placeholder="000.000.000-00" required maxlength="14">
+                    <span class="error-message" id="create-cpf-error" aria-live="polite"></span>
+                </div>
+                <div class="col">
+                    <label for="create-email">E-mail *obrigatório</label>
+                    <input type="email" id="create-email" name="email" class="width-400 height-md white" placeholder="email@exemplo.com" required maxlength="255">
+                    <span class="error-message" id="create-email-error" aria-live="polite"></span>
+                </div>
+            </div>
+            <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
+                <div class="col">
+                    <label for="create-senha">Senha *obrigatório</label>
+                    <input type="password" id="create-senha" name="senha" class="width-200 height-md white" placeholder="Mín. 10 caracteres, 1 maiúscula, 1 minúscula, 1 número, 1 símbolo" required minlength="10" maxlength="255">
+                    <span class="error-message" id="create-senha-error" aria-live="polite"></span>
+                </div>
+                <div class="col">
+                    <label for="create-senha-confirm">Confirmar senha *obrigatório</label>
+                    <input type="password" id="create-senha-confirm" name="senha_confirm" class="width-200 height-md white" placeholder="Repita a senha" required minlength="10" maxlength="255">
+                    <span class="error-message" id="create-senha-confirm-error" aria-live="polite"></span>
+                </div>
+            </div>
+
+            <div class="row table subtitle padding-lr-lg padding-tb-lg border-bottom">Dados complementares</div>
+            <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
+                <div class="col">
+                    <label for="create-telefone">Telefone</label>
+                    <input type="text" id="create-telefone" name="telefone" class="width-100 height-md white" placeholder="(00) 00000-0000" maxlength="50">
+                </div>
+                <div class="col">
+                    <label for="create-cargo">Cargo</label>
+                    <select id="create-cargo" name="cargo" class="width-400 height-md white">
+                        <option value="">Selecione (opcional)</option>
+                        <option value="Estagiário">Estagiário</option>
+                        <option value="Técnico Judiciário">Técnico Judiciário</option>
+                        <option value="Analista Judiciário">Analista Judiciário</option>
+                        <option value="Diretora de Secretaria">Diretora de Secretaria</option>
+                        <option value="Magistrada">Magistrada</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row table left padding-lr-lg padding-tb-sm border-bottom full-line row-gap-10">
+                <div class="col">
+                    <label for="create-setor">Setor</label>
+                    <select id="create-setor" name="setor" class="width-400 height-md white">
+                        <option value="">Selecione (opcional)</option>
+                        <option value="Cartório">Cartório</option>
+                        <option value="Gabinete">Gabinete</option>
+                        <option value="Sala de Audiências">Sala de Audiências</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <label for="create-perfil">Perfil</label>
+                    <select id="create-perfil" name="perfil" class="width-400 height-md white">
+                        <option value="">Selecione (opcional)</option>
+                        <option value="ESTAGIARIO">Estagiário</option>
+                        <option value="SERVIDOR">Servidor</option>
+                        <option value="DIRETORA">Diretora</option>
+                        <option value="MAGISTRADA">Magistrada</option>
+                        <option value="ADMIN">Admin</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row table left padding-lr-lg padding-tb-md border-bottom full-line row-gap-10">
+                <div class="col">
+                    <p class="status status-primary-light padding-lr-lg" style="display: flex; flex-direction: row; align-items: center; justify-content: left; max-width: 80vw; flex-wrap: wrap;">O cadastro será criado com status <strong style="margin-left: 3px;"> Pendente</strong>.</p>
+                </div>
+            </div>
+
+            <div class="row table right padding-lr-lg padding-tb-md border-bottom full-line row-gap-10">
+                <button type="button" class="btn btn-secondary" id="voltar-btn" onclick="window.location.href='/frame.php?page=usuarioslist'">Voltar</button>
+                <button type="submit" class="btn btn-primary" id="cadastrar-btn" disabled>Cadastrar</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="footer-page">
+        <div class="location">
+            <span class="all">Aplicativo web desenvolvido integralmente por </span>
+            <span class="specific">Jorge Reis Develop</span>
+            <span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        'use strict';
+
+        var form = document.getElementById('form-create-usuario');
+        var nomeInput = document.getElementById('create-nome');
+        var sobrenomeInput = document.getElementById('create-sobrenome');
+        var cpfInput = document.getElementById('create-cpf');
+        var emailInput = document.getElementById('create-email');
+        var senhaInput = document.getElementById('create-senha');
+        var senhaConfirmInput = document.getElementById('create-senha-confirm');
+        var cargoSelect = document.getElementById('create-cargo');
+        var setorSelect = document.getElementById('create-setor');
+        var perfilSelect = document.getElementById('create-perfil');
+        var cadastrarBtn = document.getElementById('cadastrar-btn');
+
+        /** Cargo → Perfil: valor fixo e bloqueio. */
+        var CARGO_TO_PERFIL = {
+            'Estagiário': 'ESTAGIARIO',
+            'Técnico Judiciário': 'SERVIDOR',
+            'Analista Judiciário': 'SERVIDOR',
+            'Diretora de Secretaria': 'DIRETORA',
+            'Magistrada': 'MAGISTRADA',
+            'Admin': 'ADMIN'
+        };
+
+        function syncCargoToPerfilAndSetor() {
+            var cargo = (cargoSelect && cargoSelect.value) ? cargoSelect.value.trim() : '';
+            var perfilValue = CARGO_TO_PERFIL[cargo];
+            if (perfilValue) {
+                perfilSelect.value = perfilValue;
+                perfilSelect.disabled = true;
+                perfilSelect.classList.add('readonly');
+            } else {
+                perfilSelect.value = '';
+                perfilSelect.disabled = false;
+                perfilSelect.classList.remove('readonly');
+            }
+            if (cargo === 'Magistrada') {
+                setorSelect.value = 'Gabinete';
+                setorSelect.disabled = true;
+                setorSelect.classList.add('readonly');
+            } else {
+                setorSelect.disabled = false;
+                setorSelect.classList.remove('readonly');
+                if (!setorSelect.value) setorSelect.value = '';
+            }
+        }
+
+        if (cargoSelect) {
+            cargoSelect.addEventListener('change', syncCargoToPerfilAndSetor);
+        }
+
+        /** Formata texto para título (primeira letra de cada palavra maiúscula). */
+        function textFormatterTitle(value) {
+            if (typeof value !== 'string') return '';
+            return value.trim().replace(/\s+/g, ' ').split(' ').map(function (word) {
+                if (word.length === 0) return word;
+                return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+            }).join(' ');
+        }
+
+        /** Aplica formatador em nome e sobrenome ao sair do campo. */
+        function initTextFormatter() {
+            [nomeInput, sobrenomeInput].forEach(function (el) {
+                if (!el) return;
+                el.addEventListener('blur', function () {
+                    this.value = textFormatterTitle(this.value);
+                    updateCadastrarButton();
+                });
+                el.addEventListener('input', function () { updateCadastrarButton(); });
+            });
+        }
+
+        /** Remove não dígitos de CPF e aplica máscara 000.000.000-00. */
+        function formatCPF(value) {
+            var digits = (value || '').replace(/\D/g, '');
+            if (digits.length <= 3) return digits;
+            if (digits.length <= 6) return digits.slice(0, 3) + '.' + digits.slice(3);
+            if (digits.length <= 9) return digits.slice(0, 3) + '.' + digits.slice(3, 6) + '.' + digits.slice(6);
+            return digits.slice(0, 3) + '.' + digits.slice(3, 6) + '.' + digits.slice(6, 9) + '-' + digits.slice(9, 11);
+        }
+
+        /** Valida CPF (11 dígitos e dígitos verificadores). */
+        function validarCPF(cpf) {
+            var digits = (cpf || '').replace(/\D/g, '');
+            if (digits.length !== 11) return false;
+            if (/^(\d)\1{10}$/.test(digits)) return false;
+            var sum = 0;
+            for (var i = 0; i < 9; i++) sum += parseInt(digits.charAt(i), 10) * (10 - i);
+            var d1 = (sum * 10) % 11; if (d1 === 10) d1 = 0;
+            if (parseInt(digits.charAt(9), 10) !== d1) return false;
+            sum = 0;
+            for (var j = 0; j < 10; j++) sum += parseInt(digits.charAt(j), 10) * (11 - j);
+            var d2 = (sum * 10) % 11; if (d2 === 10) d2 = 0;
+            return parseInt(digits.charAt(10), 10) === d2;
+        }
+
+        /** Validação de e-mail (formato básico). */
+        function validarEmail(email) {
+            if (!email || typeof email !== 'string') return false;
+            var trimmed = email.trim();
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
+        }
+
+        /** Senha: pelo menos 10 caracteres, 1 maiúscula, 1 minúscula, 1 número, 1 símbolo. */
+        var senhaRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{10,}$/;
+        function validarSenha(senha) {
+            return senha && senhaRegex.test(senha);
+        }
+
+        function showFieldError(idSuffix, message) {
+            var el = document.getElementById('create-' + idSuffix + '-error');
+            if (el) { el.textContent = message || ''; el.style.display = message ? 'block' : 'none'; }
+        }
+
+        function initCPFMask() {
+            if (!cpfInput) return;
+            cpfInput.addEventListener('input', function () {
+                this.value = formatCPF(this.value);
+            });
+            cpfInput.addEventListener('blur', function () {
+                var raw = this.value.replace(/\D/g, '');
+                if (raw.length === 11) {
+                    if (validarCPF(this.value)) showFieldError('cpf', '');
+                    else showFieldError('cpf', 'CPF inválido.');
+                } else {
+                    showFieldError('cpf', raw.length > 0 ? 'CPF deve ter 11 dígitos.' : '');
+                }
+                updateCadastrarButton();
+            });
+            cpfInput.addEventListener('input', function () { updateCadastrarButton(); });
+        }
+
+        function initEmailValidation() {
+            if (!emailInput) return;
+            emailInput.addEventListener('blur', function () {
+                var v = this.value.trim();
+                if (!v) { showFieldError('email', ''); return; }
+                showFieldError('email', validarEmail(v) ? '' : 'E-mail inválido.');
+                updateCadastrarButton();
+            });
+            emailInput.addEventListener('input', function () { updateCadastrarButton(); });
+        }
+
+        function initPasswordValidation() {
+            if (!senhaInput) return;
+            senhaInput.addEventListener('blur', function () {
+                var v = this.value;
+                if (!v) { showFieldError('senha', ''); return; }
+                if (v.length < 10) {
+                    showFieldError('senha', 'Mínimo 10 caracteres.');
+                    return;
+                }
+                if (!validarSenha(v)) {
+                    showFieldError('senha', 'Use pelo menos 1 maiúscula, 1 minúscula, 1 número e 1 símbolo.');
+                    return;
+                }
+                showFieldError('senha', '');
+                updateCadastrarButton();
+            });
+            senhaInput.addEventListener('input', function () { updateCadastrarButton(); });
+            if (senhaConfirmInput) {
+                senhaConfirmInput.addEventListener('blur', function () {
+                    var senha = (senhaInput && senhaInput.value) || '';
+                    var conf = this.value;
+                    if (!conf) { showFieldError('senha-confirm', ''); return; }
+                    showFieldError('senha-confirm', senha === conf ? '' : 'As senhas não coincidem.');
+                    updateCadastrarButton();
+                });
+                senhaConfirmInput.addEventListener('input', function () { updateCadastrarButton(); });
+            }
+        }
+
+        function clearErrors() {
+            ['cpf', 'email', 'senha', 'senha-confirm'].forEach(function (s) { showFieldError(s, ''); });
+        }
+
+        /** Habilita o botão Cadastrar somente quando todas as validações obrigatórias passarem. */
+        function isFormValidForSubmit() {
+            var nome = (nomeInput && nomeInput.value) ? nomeInput.value.trim() : '';
+            var sobrenome = (sobrenomeInput && sobrenomeInput.value) ? sobrenomeInput.value.trim() : '';
+            var cpf = (cpfInput && cpfInput.value) ? cpfInput.value : '';
+            var email = (emailInput && emailInput.value) ? emailInput.value.trim() : '';
+            var senha = (senhaInput && senhaInput.value) ? senhaInput.value : '';
+            var conf = (senhaConfirmInput && senhaConfirmInput.value) ? senhaConfirmInput.value : '';
+            if (!nome || !sobrenome) return false;
+            if (cpf.replace(/\D/g, '').length !== 11 || !validarCPF(cpf)) return false;
+            if (!email || !validarEmail(email)) return false;
+            if (!validarSenha(senha)) return false;
+            if (senha !== conf) return false;
+            return true;
+        }
+
+        function updateCadastrarButton() {
+            if (cadastrarBtn) {
+                cadastrarBtn.disabled = !isFormValidForSubmit();
+            }
+        }
+
+        function validateFormSubmit() {
+            clearErrors();
+            var ok = true;
+            var cpf = (cpfInput && cpfInput.value) || '';
+            if (cpf.replace(/\D/g, '').length !== 11 || !validarCPF(cpf)) {
+                showFieldError('cpf', cpf ? 'CPF inválido.' : 'CPF é obrigatório.');
+                ok = false;
+            }
+            var email = (emailInput && emailInput.value) || '';
+            if (!email.trim()) {
+                showFieldError('email', 'E-mail é obrigatório.');
+                ok = false;
+            } else if (!validarEmail(email)) {
+                showFieldError('email', 'E-mail inválido.');
+                ok = false;
+            }
+            var senha = (senhaInput && senhaInput.value) || '';
+            if (!senha) {
+                showFieldError('senha', 'Senha é obrigatória.');
+                ok = false;
+            } else if (!validarSenha(senha)) {
+                showFieldError('senha', 'Senha deve ter pelo menos 10 caracteres, 1 maiúscula, 1 minúscula, 1 número e 1 símbolo.');
+                ok = false;
+            }
+            var conf = (senhaConfirmInput && senhaConfirmInput.value) || '';
+            if (senha !== conf) {
+                showFieldError('senha-confirm', 'As senhas não coincidem.');
+                ok = false;
+            }
+            return ok;
+        }
+
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                if (!validateFormSubmit()) return;
+                // Modelo: sem envio real; em produção aqui seria fetch/action do form
+                alert('Cadastro enviado com sucesso (modelo). Em produção este formulário será enviado ao servidor.');
+            });
+        }
+
+        syncCargoToPerfilAndSetor();
+        initTextFormatter();
+        initCPFMask();
+        initEmailValidation();
+        initPasswordValidation();
+        updateCadastrarButton();
+    })();
+    </script>
+</body>
+</html>

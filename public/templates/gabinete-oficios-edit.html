@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Ofícios (Gabinete) — Edição — Primeira Vara Crime de Ilhéus</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- FASE 2: Cancelar / Excluir com mesmas convenções do cartório quando aplicável ao modelo de dados do gabinete. -->
+    <link rel="stylesheet" href="../../public/assets/css/shared/reset.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/color.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/layout.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/page.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/form.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/table.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/toast.css">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+</head>
+<body class="page-internal">
+
+    <div class="spacing-top-page"></div>
+
+    <div class="header-page">
+        <div class="location">
+            <span class="all">Interno - Gabinete - Ofícios -</span>
+            <span class="specific">Edição</span>
+        </div>
+        <h1 class="title-page">Editar ofício</h1>
+        <p class="description-page">Dados do ofício do gabinete. Sem fluxo de envio pelo cartório nesta tela.</p>
+    </div>
+
+    <div class="container-full card-page">
+
+        <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom">
+            <h2>Informações</h2>
+        </div>
+
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md" style="justify-content: flex-start; flex-wrap: wrap;">
+            <div class="col filter">
+                <label for="gab-edit-oficio-numero-ano">Ofício (número/ano)</label>
+                <input type="text" id="gab-edit-oficio-numero-ano" class="width-300 height-md readonly" value="12/2026" readonly>
+            </div>
+            <div class="col filter">
+                <label for="gab-edit-oficio-processo">Processo</label>
+                <input type="text" id="gab-edit-oficio-processo" class="width-400 height-md readonly" value="0800234-11.2026.8.05.0103" readonly>
+            </div>
+            <div class="col filter">
+                <label for="gab-edit-oficio-tipo">Tipo de ofício</label>
+                <select id="gab-edit-oficio-tipo" class="width-600 height-md">
+                    <option value="">Selecione…</option>
+                    <option value="consultoria">Ofício de consultoria</option>
+                    <option value="comunicacao">Ofício de comunicação</option>
+                    <option value="outro">Outro</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
+            <button type="button" class="btn btn-secondary" id="gab-voltar-btn">Voltar</button>
+            <button type="button" class="btn btn-danger-outline" id="gab-cancelar-oficio-btn" title="Alterar status para Cancelada">Cancelar ofício</button>
+            <button type="button" class="btn btn-danger" id="gab-excluir-oficio-btn" title="Excluir somente se for o último número do ano">Excluir ofício</button>
+            <button type="button" class="btn btn-primary" id="salvar-btn" type="button">Salvar alterações</button>
+        </div>
+    </div>
+
+    <div class="footer-page">
+        <div class="location">
+            <span class="all">Aplicativo web desenvolvido integralmente por </span>
+            <span class="specific">Jorge Reis Develop</span>
+            <span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            document.getElementById('gab-voltar-btn')?.addEventListener('click', function () {
+                history.back();
+            });
+        })();
+    </script>
+</body>
+</html>

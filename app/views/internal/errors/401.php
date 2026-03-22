@@ -1,36 +1,28 @@
 <?php
 declare(strict_types=1);
-$code = '401';
-$title = 'Acesso não autorizado';
-$message = 'A página que você está tentando acessar requer autenticação.';
-$details = ['timestamp' => date('c'), 'request' => $_SERVER['REQUEST_URI'] ?? '', 'user_id' => $_SESSION['id_usuario'] ?? ''];
-?>
 
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Erro <?php echo htmlspecialchars($code); ?> - Primeira Vara Crime</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/assets/css/shared/reset.css">
-    <link rel="stylesheet" href="/assets/css/custom.css">
-</head>
-<body class="page-internal">
-    <?php
-    // Preparar variáveis para os partials reutilizáveis
-    $error_icon_class = 'icon-warning';
-    $error_text_class = 'text-warning';
-    $error_code = $code;
-    $error_title = $title;
-    $error_message = $message;
-    include __DIR__ . '/_error_header.php';
-    ?>
-    <?php
-    // Carregar mensagens centralizadas e definir $info_text apenas se não houver sobrescrita
-    $error_messages = include __DIR__ . '/error_messages.php';
-    $info_text = $info_text ?? ($error_messages[$code] ?? '');
-    $details = $details; include __DIR__ . '/_error_details.php'; ?>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+
+require_once __DIR__ . '/error_detail_defaults.php';
+
+$pageTitle = 'Erro 401 — Primeira Vara Crime de Ilhéus';
+$pageHeading = '401 — Acesso não autorizado';
+$description = 'A página que você está tentando acessar requer autenticação.';
+$error_code = '401';
+
+$error_messages = include __DIR__ . '/error_messages.php';
+$info_text = $error_messages[$error_code] ?? '';
+
+$icons = include __DIR__ . '/error_icons.php';
+$iconCfg = $icons[$error_code] ?? [];
+$icon_path = $iconCfg['path'] ?? '/assets/icons/Alert-Triangle--Streamline-Ultimate.png';
+$icon_alt = $iconCfg['alt'] ?? 'Erro';
+$variant = $iconCfg['variant'] ?? 'warning';
+
+$details = error_page_merge_details($error_code, $details_override ?? []);
+
+include __DIR__ . '/_error_head.php';
+include __DIR__ . '/_error_body.php';
+include __DIR__ . '/_error_footer.php';

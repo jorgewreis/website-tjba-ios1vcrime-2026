@@ -91,6 +91,7 @@ debug() {
 }
 
 # Rotaciona arquivo de log se exceder tamanho máximo
+# Compatível com Linux, macOS e Windows (Git Bash: stat pode não existir ou ter sintaxe diferente)
 rotate_log() {
   local log="$1"
 
@@ -98,18 +99,17 @@ rotate_log() {
     return 0
   fi
 
-  # Obtém tamanho do arquivo em bytes
-  local size
+  local size="0"
   if command -v stat >/dev/null 2>&1; then
-    # Linux/Mac compatível
-    size="$(stat -f%z "$log" 2>/dev/null || stat -c%s "$log" 2>/dev/null || echo "0")"
-  else
-    size="$(wc -c < "$log" 2>/dev/null | tr -d ' ' || echo "0")"
+    size="$(stat -c%s "$log" 2>/dev/null)" || size="$(stat -f%z "$log" 2>/dev/null)" || true
   fi
+  if [ -z "$size" ] || ! [ "$size" -eq "$size" ] 2>/dev/null; then
+    size="$(wc -c < "$log" 2>/dev/null | tr -d ' \r\n' || echo "0")"
+  fi
+  [ -z "$size" ] || ! [ "$size" -ge 0 ] 2>/dev/null && size="0"
 
   debug "Tamanho do log: $size bytes (máximo: $MAX_LOG_SIZE)"
 
-  # Se exceder tamanho máximo, cria backup e trunca
   if [ "$size" -gt "$MAX_LOG_SIZE" ] 2>/dev/null; then
     debug "Rotacionando log..."
     mv "$log" "${log}.old" 2>/dev/null || true
@@ -140,7 +140,8 @@ log_ps_error() {
   rotate_log "$log_file"
 }
 
-# Executa script PowerShell com logging e timeout
+# Executa script PowerShell com logging e timeout.
+# Retorna 0 em sucesso, 1 em falha (para o hook não fazer amend quando o bump falhar).
 run_powershell_logged() {
   # $1 = label, $2.. = args
   local label="$1"
@@ -150,7 +151,7 @@ run_powershell_logged() {
   if ! command -v "$PSH" >/dev/null 2>&1; then
     log_ps_error "$label (PowerShell não encontrado: $PSH)" "/dev/null" "$PSH"
     warn "PowerShell não encontrado. Versionamento manual pode ser necessário."
-    return 0
+    return 1
   fi
 
   # Cria arquivo temporário
@@ -161,7 +162,7 @@ run_powershell_logged() {
   # Define trap para limpeza
   trap 'rm -f "${tmp:-}" 2>/dev/null || true' EXIT INT TERM
 
-  # Monta linha de comando para log
+  # Monta linha de comando para log (sem conteúdo de arquivos sensíveis)
   local cmdline="$PSH -NoProfile -ExecutionPolicy Bypass"
   for a in "$@"; do
     case "$a" in
@@ -182,7 +183,7 @@ run_powershell_logged() {
       error "$label (timeout após ${PS_TIMEOUT}s)"
       log_ps_error "$label (timeout)" "$tmp" "$cmdline"
       set -e
-      return 0
+      return 1
     fi
   else
     "$PSH" -NoProfile -ExecutionPolicy Bypass "$@" >"$tmp" 2>&1
@@ -194,12 +195,12 @@ run_powershell_logged() {
   if [ "$rc" -ne 0 ]; then
     error "$label (exit=$rc)"
     log_ps_error "$label (exit=$rc)" "$tmp" "$cmdline"
-  else
-    debug "$label executado com sucesso"
+    rm -f "$tmp" 2>/dev/null || true
+    return 1
   fi
 
-  # Remove arquivo temporário
   rm -f "$tmp" 2>/dev/null || true
+  debug "$label executado com sucesso"
   return 0
 }
 
@@ -480,41 +481,54 @@ info "Tipo de bump determinado: ${bump} (tipo: $type, arquivos: $file_count, bre
 
 
 # -----------------------------------------------------------------------------
+# ARQUIVO TEMPORÁRIO PARA MENSAGEM (evita quebra por aspas/quebras de linha)
+# -----------------------------------------------------------------------------
+commit_msg_file=""
+commit_msg_file="$(mktemp 2>/dev/null || echo "${TMPDIR:-/tmp}/.commit-msg-$$")"
+printf '%s' "$commit_msg" > "$commit_msg_file" 2>/dev/null || true
+trap 'rm -f "${commit_msg_file}" 2>/dev/null || true' EXIT INT TERM
+
+# -----------------------------------------------------------------------------
 # ETAPA 1: BUMP DE VERSÃO
 # -----------------------------------------------------------------------------
 
 info "Executando bump-version.ps1..."
 
+bump_rc=1
 if [ -f "$bump_ps1" ]; then
-  run_powershell_logged "bump-version.ps1" \
+  if run_powershell_logged "bump-version.ps1" \
     -File "$bump_ps1" \
-    -CommitMessage "$commit_msg" \
+    -CommitMessagePath "$commit_msg_file" \
     -Bump "$bump" \
     -FileCount "$file_count" \
-    -CommitHash "$commit_hash"
+    -CommitHash "$commit_hash"; then
+    bump_rc=0
+  fi
 else
   error "Script não encontrado: $bump_ps1"
   log_ps_error "bump-version.ps1 not found at: $bump_ps1" "/dev/null" ""
   warn "Versionamento manual será necessário"
 fi
 
-# Adiciona arquivos gerenciados ao staging
-debug "Adicionando arquivos gerenciados ao staging..."
-git add VERSION CHANGELOG.md docs/90-releases/_draft_minor.md >/dev/null 2>&1 || true
-git add docs/90-releases/notes/*.md >/dev/null 2>&1 || true
+# Só adiciona e faz amend se o bump foi executado com sucesso
+if [ "$bump_rc" -eq 0 ]; then
+  debug "Adicionando arquivos gerenciados ao staging..."
+  git add VERSION CHANGELOG.md docs/90-releases/_draft_minor.md >/dev/null 2>&1 || true
+  git add docs/90-releases/notes/*.md >/dev/null 2>&1 || true
 
-# Se há alterações, faz amend no commit
-if ! git diff --cached --quiet; then
-  info "Fazendo amend no commit para incluir VERSION e CHANGELOG..."
+  if ! git diff --cached --quiet; then
+    info "Fazendo amend no commit para incluir VERSION e CHANGELOG..."
 
-  # ✅ CORREÇÃO: Usa variável de ambiente para prevenir loop
-  IN_POST_COMMIT_HOOK=1 git commit --amend --no-edit --no-verify >/dev/null 2>&1 || {
-    warn "Não foi possível fazer amend no commit"
-  }
+    IN_POST_COMMIT_HOOK=1 git commit --amend --no-edit --no-verify >/dev/null 2>&1 || {
+      warn "Não foi possível fazer amend no commit"
+    }
 
-  success "Commit atualizado com VERSION e CHANGELOG"
+    success "Commit atualizado com VERSION e CHANGELOG"
+  else
+    debug "Nenhuma alteração para incluir no commit"
+  fi
 else
-  debug "Nenhuma alteração para incluir no commit"
+  warn "Bump de versão falhou; amend não realizado. Verifique .git/version-bump.log"
 fi
 
 # -----------------------------------------------------------------------------
@@ -556,7 +570,7 @@ if [ -f "$draft_ps1" ]; then
   run_powershell_logged "update-draft-minor.ps1" \
     -File "$draft_ps1" \
     -CommitHash "$commit_hash" \
-    -CommitMessage "$commit_msg" \
+    -CommitMessagePath "$commit_msg_file" \
     -Bump "$bump" \
     -Impact "$impact" \
     -RepoRoot "$repo_root"

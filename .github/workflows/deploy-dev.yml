@@ -53,9 +53,12 @@ jobs:
             --exclude "scripts/" \
             --exclude ".config/" \
             --exclude ".githooks/" \
+            --exclude "vendor/" \
             ./ "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEV_PATH }}/"
 
 
+      # Se composer falhar com "Permission denied" em vendor: no servidor, rode uma vez:
+      #   sudo chown -R DEPLOY_USER: DEV_PATH
       - name: Post-deploy (DEV)
         run: |
           ssh -i ~/.ssh/id_ed25519 \
@@ -71,6 +74,7 @@ jobs:
             fi
 
             if [ -f composer.json ]; then
+              rm -rf vendor 2>/dev/null || true
               composer install --no-dev --optimize-autoloader
             fi
 

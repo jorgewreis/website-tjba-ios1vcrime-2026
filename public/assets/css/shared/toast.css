@@ -1,0 +1,303 @@
+/* Padrão visual: mockup component-toast.html – fonte Poppins e variáveis do design system */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+/* Container fixo: canto inferior direito, z-index máximo, empilhamento vertical */
+.toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 2147483647;
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: flex-end;
+    gap: 12px;
+    pointer-events: none;
+}
+
+.toast-container .toast-item {
+    pointer-events: auto;
+    max-width: min(400px, calc(100vw - 48px));
+}
+
+/* Animações: entrada suave pela direita; saída mais lenta pela direita */
+@keyframes toast-enter {
+    from {
+        opacity: 0;
+        transform: translateX(120%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes toast-exit {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(120%);
+    }
+}
+
+.toast-item.toast-visible {
+    animation: toast-enter 0.35s ease-out forwards;
+}
+
+.toast-item.toast-exiting {
+    animation: toast-exit 0.9s ease-in forwards;
+}
+
+/* Base: semitransparente, sombra, bordas – fonte e cores do mockup */
+.toast,
+.toast-full {
+    width: 400px;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--color-border);
+    box-shadow: 4px 8px 24px var(--color-shadow), 0 2px 8px var(--color-shadow-subtle);
+    border-radius: 6px;
+    gap: 0;
+    overflow: hidden;
+    font-family: 'Poppins', sans-serif;
+}
+
+.toast {
+    background-color: var(--color-background-elevated);
+}
+
+.toast.success {
+    background-color: var(--color-success-bg-light);
+    border-color: var(--color-success);
+}
+
+.toast.error {
+    background-color: var(--color-danger-bg-light);
+    border-color: var(--color-danger);
+}
+
+.toast.info {
+    background-color: var(--color-primary-bg-light);
+    border-color: var(--color-primary);
+}
+
+.toast-full {
+    background-color: var(--color-background-elevated);
+}
+
+.toast-full.success {
+    background-color: var(--color-success-bg-light);
+    border-color: var(--color-success);
+}
+
+.toast-full.error {
+    background-color: var(--color-danger-bg-light);
+    border-color: var(--color-danger);
+}
+
+.toast-full.info {
+    background-color: var(--color-primary-bg-light);
+    border-color: var(--color-primary);
+}
+
+/* Modelo 1: barra de título + botão fechar + conteúdo (mockup) */
+.toast-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 6px 6px 0 0;
+    padding: 10px 15px;
+    background-color: var(--color-background-elevated);
+    border-bottom: 1px solid var(--color-border);
+    font-family: 'Poppins', sans-serif;
+}
+
+.toast-full.success .toast-header {
+    background-color: var(--color-success);
+}
+
+.toast-full.error .toast-header {
+    background-color: var(--color-danger);
+}
+
+.toast-full.info .toast-header {
+    background-color: var(--color-primary);
+}
+
+.toast-header .toast-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.toast-full.success .toast-header .toast-title,
+.toast-full.error .toast-header .toast-title,
+.toast-full.info .toast-header .toast-title {
+    color: var(--color-background-elevated);
+}
+
+.toast-header .toast-close {
+    font-size: 20px;
+    line-height: 1;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0 4px;
+    transition: color 0.2s ease;
+}
+
+.toast-full.success .toast-header .toast-close,
+.toast-full.error .toast-header .toast-close,
+.toast-full.info .toast-header .toast-close {
+    color: var(--color-background-elevated);
+}
+
+.toast-header .toast-close:hover {
+    color: var(--color-text-primary);
+}
+
+.toast-full.success .toast-header .toast-close:hover,
+.toast-full.error .toast-header .toast-close:hover,
+.toast-full.info .toast-header .toast-close:hover {
+    color: var(--color-background-elevated);
+}
+
+/* Corpo do toast */
+.toast .toast-body {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 15px 20px;
+}
+
+.toast-full .toast-body {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 12px 16px 16px;
+}
+
+.toast-body .toast-icon {
+    padding: 0 10px;
+    font-size: 22px;
+    margin-right: 10px;
+    flex-shrink: 0;
+    color: inherit;
+}
+
+.toast-full.success .toast-body .toast-icon { color: var(--color-success); }
+.toast-full.error .toast-body .toast-icon { color: var(--color-danger); }
+.toast-full.info .toast-body .toast-icon { color: var(--color-primary); }
+
+.toast-body .toast-message {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    font-family: 'Poppins', sans-serif;
+}
+
+.toast-body .toast-message .toast-subtitle {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+}
+
+.toast-body .toast-message .toast-information {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--color-text-secondary);
+    margin: 0;
+    line-height: 1.4;
+}
+
+.toast-full .toast-body .toast-message .toast-information {
+    margin-bottom: 4px;
+}
+
+.toast-body .toast-message .toast-timestamp {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--color-text-secondary);
+}
+
+/* Modelo 2 (informativo): barra de tempo regressivo interna, semitransparente */
+.toast .toast-countdown-wrap {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--color-border);
+    border-radius: 0 0 6px 6px;
+    overflow: hidden;
+}
+
+.toast .toast-countdown-bar {
+    height: 100%;
+    width: 100%;
+    background: var(--color-border);
+    border-radius: 0 0 0 6px;
+    transform-origin: right;
+    transition: none;
+}
+
+.toast.success .toast-countdown-bar {
+    background: var(--color-success);
+}
+
+.toast.error .toast-countdown-bar {
+    background: var(--color-danger);
+}
+
+.toast.info .toast-countdown-bar {
+    background: var(--color-primary);
+}
+
+/* Toast simples e full precisam de position relative para o countdown */
+.toast,
+.toast-full {
+    position: relative;
+}
+
+.toast .toast-body {
+    padding-bottom: 20px;
+}
+
+/* Barra de countdown também no modelo full */
+.toast-full .toast-countdown-wrap {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--color-border);
+    border-radius: 0 0 6px 6px;
+    overflow: hidden;
+}
+
+.toast-full .toast-countdown-bar {
+    height: 100%;
+    width: 100%;
+    border-radius: 0 0 0 6px;
+    transform-origin: right;
+    transition: none;
+}
+
+.toast-full.success .toast-countdown-bar {
+    background: var(--color-success);
+}
+
+.toast-full.error .toast-countdown-bar {
+    background: var(--color-danger);
+}
+
+.toast-full.info .toast-countdown-bar {
+    background: var(--color-primary);
+}

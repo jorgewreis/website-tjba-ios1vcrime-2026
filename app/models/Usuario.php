@@ -2,10 +2,15 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/Conection.php';
+require_once __DIR__ . '/../helpers/AvatarCatalog.php';
 require_once __DIR__ . '/../../config/security.php';
+require_once __DIR__ . '/../services/ExternalUsersCleanupService.php';
 
 final class Usuario
 {
+    private const LAST_ACCESS_SESSION_KEY = 'last_access_touch';
+    private const LAST_ACCESS_REFRESH_SECONDS = 300;
+
     private PDO $pdo;
 
     public function __construct()
@@ -19,6 +24,9 @@ final class Usuario
 
     public function autenticar(string $cpf, string $senha): array
     {
+        $cleanupService = new ExternalUsersCleanupService($this->pdo);
+        $cleanupService->purgeInactiveStudents();
+
         $cpfNumerico = Security::normalizeCPF($cpf);
 
         if (!Security::validarCPF($cpfNumerico) || $senha === '') {
@@ -28,7 +36,7 @@ final class Usuario
         $cpfFormatado = Security::formatCPF($cpfNumerico);
 
         $stmt = $this->pdo->prepare("
-            SELECT id_usuario, nome, senha_hash
+            SELECT id_usuario, nome, senha_hash, COALESCE(cadastro_ativo, 1) AS cadastro_ativo
             FROM usuarios
             WHERE cpf = ?
             LIMIT 1
@@ -42,6 +50,10 @@ final class Usuario
             !Security::verifyPassword($senha, $usuario['senha_hash'])
         ) {
             return ['success' => false];
+        }
+
+        if (empty($usuario['cadastro_ativo'])) {
+            return ['success' => false, 'inactive' => true, 'message' => 'Seu cadastro está pendente de validação. Entre em contato com a diretoria ou o administrador do sistema.'];
         }
 
         $perfis = $this->getPerfisUsuario($usuario['id_usuario']);
@@ -171,6 +183,17 @@ final class Usuario
         $stmt->execute([$token, $expira, $idUsuario]);
     }
 
+    public function registrarUltimoAcesso(string $idUsuario): void
+    {
+        $stmt = $this->pdo->prepare("
+            UPDATE usuarios
+            SET ultimo_acesso = NOW()
+            WHERE id_usuario = ?
+        ");
+        $stmt->execute([$idUsuario]);
+        $this->markLastAccessRefresh($idUsuario);
+    }
+
     public function validarToken(string $token): ?array
     {
         $stmt = $this->pdo->prepare("
@@ -178,10 +201,250 @@ final class Usuario
             FROM usuarios
             WHERE token_acesso = ?
               AND token_expira > NOW()
+              AND COALESCE(cadastro_ativo, 1) = 1
             LIMIT 1
         ");
         $stmt->execute([$token]);
 
-        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        $usuario = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        if ($usuario !== null) {
+            $idUsuario = trim((string) ($usuario['id_usuario'] ?? ''));
+            if ($idUsuario !== '' && $this->shouldRefreshLastAccess($idUsuario)) {
+                $this->registrarUltimoAcesso($idUsuario);
+            }
+        }
+
+        return $usuario;
+    }
+
+    /**
+     * Altera a senha do usuário. Exige senha atual correta.
+     * Nova senha: mínimo 8 caracteres.
+     *
+     * @return array{success: bool, message?: string}
+     */
+    public function alterarSenha(string $idUsuario, string $senhaAtual, string $novaSenha): array
+    {
+        $idUsuario = trim($idUsuario);
+        if ($idUsuario === '') {
+            return ['success' => false, 'message' => 'Usuário não identificado.'];
+        }
+
+        $stmt = $this->pdo->prepare("
+            SELECT senha_hash FROM usuarios WHERE id_usuario = ? LIMIT 1
+        ");
+        $stmt->execute([$idUsuario]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$row || empty($row['senha_hash'])) {
+            return ['success' => false, 'message' => 'Usuário não encontrado.'];
+        }
+
+        if (!Security::verifyPassword($senhaAtual, $row['senha_hash'])) {
+            return ['success' => false, 'message' => 'Senha atual incorreta.'];
+        }
+
+        $novaSenha = trim($novaSenha);
+        if (strlen($novaSenha) < 8) {
+            return ['success' => false, 'message' => 'A nova senha deve ter no mínimo 8 caracteres.'];
+        }
+
+        $novoHash = Security::hashPassword($novaSenha);
+        try {
+            $stmt = $this->pdo->prepare("
+                UPDATE usuarios SET senha_hash = ?, updated_at = NOW() WHERE id_usuario = ?
+            ");
+            $stmt->execute([$novoHash, $idUsuario]);
+        } catch (\PDOException $e) {
+            if (stripos($e->getMessage(), 'updated_at') !== false || stripos($e->getMessage(), 'Unknown column') !== false) {
+                $stmt = $this->pdo->prepare("UPDATE usuarios SET senha_hash = ? WHERE id_usuario = ?");
+                $stmt->execute([$novoHash, $idUsuario]);
+            } else {
+                throw $e;
+            }
+        }
+
+        if ($stmt->rowCount() < 1) {
+            return ['success' => false, 'message' => 'Não foi possível atualizar a senha. Tente novamente.'];
+        }
+
+        return ['success' => true];
+    }
+
+    /**
+     * Retorna os dados pessoais do usuário para exibição/edição (sem senha_hash).
+     * Retorna null se não encontrado.
+     */
+    public function getDadosPessoais(string $idUsuario): ?array
+    {
+        $idUsuario = trim($idUsuario);
+        if ($idUsuario === '') {
+            return null;
+        }
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT id_usuario, nome, sobrenome, cpf, email, telefone, cargo, instituicao, ultimo_acesso, updated_at,
+                       avatar_slug
+                FROM usuarios
+                WHERE id_usuario = ?
+                LIMIT 1
+            ");
+            $stmt->execute([$idUsuario]);
+        } catch (\PDOException $e) {
+            if (stripos($e->getMessage(), 'avatar_slug') !== false || stripos($e->getMessage(), 'Unknown column') !== false) {
+                $stmt = $this->pdo->prepare("
+                    SELECT id_usuario, nome, sobrenome, cpf, email, telefone, cargo, instituicao, ultimo_acesso, updated_at
+                    FROM usuarios
+                    WHERE id_usuario = ?
+                    LIMIT 1
+                ");
+                $stmt->execute([$idUsuario]);
+            } else {
+                throw $e;
+            }
+        }
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($row === false) {
+            return null;
+        }
+        $slug = trim((string) ($row['avatar_slug'] ?? ''));
+        $row['avatar_slug'] = AvatarCatalog::normalizeStoredSlug($slug);
+        return $row;
+    }
+
+    /**
+     * Modo navbar: imagem 3d ou iniciais (externos sempre iniciais).
+     *
+     * @return array{mode: string, initials: string, url: ?string}
+     */
+    public function getAvatarNavbarDisplay(string $idUsuario, bool $isUsuarioExterno, string $nome, string $sobrenome): array
+    {
+        $initials = AvatarCatalog::initialsFromNames($nome, $sobrenome);
+        if ($isUsuarioExterno) {
+            return ['mode' => 'initials', 'initials' => $initials, 'url' => null];
+        }
+        $dados = $this->getDadosPessoais($idUsuario);
+        if ($dados === null) {
+            return ['mode' => 'initials', 'initials' => $initials, 'url' => null];
+        }
+        $slug = AvatarCatalog::normalizeStoredSlug(trim((string) ($dados['avatar_slug'] ?? '')));
+        if (AvatarCatalog::isInitialsSlug($slug)) {
+            return ['mode' => 'initials', 'initials' => $initials, 'url' => null];
+        }
+        $url = AvatarCatalog::urlForSlug($slug);
+        if ($url !== '') {
+            return ['mode' => 'image', 'initials' => $initials, 'url' => $url];
+        }
+        return ['mode' => 'initials', 'initials' => $initials, 'url' => null];
+    }
+
+    /**
+     * Persiste avatar por slug (apenas valores permitidos pelo catálogo).
+     *
+     * @return array{success: bool, message?: string}
+     */
+    public function atualizarAvatarSlug(string $idUsuario, string $slug): array
+    {
+        $idUsuario = trim($idUsuario);
+        if ($idUsuario === '') {
+            return ['success' => false, 'message' => 'Usuário não identificado.'];
+        }
+        $slug = AvatarCatalog::normalizeStoredSlug(trim($slug));
+        if (!AvatarCatalog::isAllowedSlug($slug)) {
+            return ['success' => false, 'message' => 'Avatar inválido.'];
+        }
+
+        try {
+            $stmt = $this->pdo->prepare('UPDATE usuarios SET `avatar_slug` = :slug, `updated_at` = NOW() WHERE id_usuario = :id LIMIT 1');
+            $stmt->bindValue(':slug', $slug);
+            $stmt->bindValue(':id', $idUsuario);
+            $stmt->execute();
+            return ['success' => true];
+        } catch (\PDOException $e) {
+            if (stripos($e->getMessage(), 'avatar_slug') !== false || stripos($e->getMessage(), 'Unknown column') !== false) {
+                return ['success' => false, 'message' => 'Avatar não disponível nesta instalação. Execute a migração do banco.'];
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * Atualiza dados pessoais permitidos (email, telefone, cargo, instituicao/setor).
+     * Nome e sobrenome não podem ser alterados por esta função. CPF e id_usuario também não.
+     *
+     * @return array{success: bool, message?: string}
+     */
+    public function atualizarDadosPessoais(string $idUsuario, array $dados): array
+    {
+        $idUsuario = trim($idUsuario);
+        if ($idUsuario === '') {
+            return ['success' => false, 'message' => 'Usuário não identificado.'];
+        }
+
+        $allowed = ['email', 'telefone', 'cargo', 'instituicao'];
+        $set = [];
+        $params = [':id' => $idUsuario];
+        foreach ($allowed as $campo) {
+            if (!array_key_exists($campo, $dados)) {
+                continue;
+            }
+            $valor = trim((string) $dados[$campo]);
+            $set[] = "`{$campo}` = :{$campo}";
+            $params[":{$campo}"] = $valor === '' ? null : $valor;
+        }
+        if (empty($set)) {
+            return ['success' => false, 'message' => 'Nenhum dado permitido para atualização.'];
+        }
+
+        $setWithUpdated = array_merge($set, ['`updated_at` = NOW()']);
+        $sqlWithUpdated = 'UPDATE usuarios SET ' . implode(', ', $setWithUpdated) . ' WHERE id_usuario = :id LIMIT 1';
+        $sqlWithoutUpdated = 'UPDATE usuarios SET ' . implode(', ', $set) . ' WHERE id_usuario = :id LIMIT 1';
+
+        try {
+            $stmt = $this->pdo->prepare($sqlWithUpdated);
+            foreach ($params as $k => $v) {
+                $stmt->bindValue($k, $v);
+            }
+            $stmt->execute();
+            // rowCount pode ser 0 quando valores não mudam; ainda assim o UPDATE foi aplicado.
+            return ['success' => true];
+        } catch (\PDOException $e) {
+            if (stripos($e->getMessage(), 'updated_at') !== false || stripos($e->getMessage(), 'Unknown column') !== false) {
+                $stmt = $this->pdo->prepare($sqlWithoutUpdated);
+                foreach ($params as $k => $v) {
+                    $stmt->bindValue($k, $v);
+                }
+                $stmt->execute();
+                return ['success' => true];
+            }
+            throw $e;
+        }
+    }
+
+    private function shouldRefreshLastAccess(string $idUsuario): bool
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            return true;
+        }
+
+        $registry = $_SESSION[self::LAST_ACCESS_SESSION_KEY] ?? [];
+        if (!is_array($registry)) {
+            return true;
+        }
+
+        $lastTouch = isset($registry[$idUsuario]) ? (int) $registry[$idUsuario] : 0;
+        return $lastTouch <= 0 || (time() - $lastTouch) >= self::LAST_ACCESS_REFRESH_SECONDS;
+    }
+
+    private function markLastAccessRefresh(string $idUsuario): void
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            return;
+        }
+
+        if (!isset($_SESSION[self::LAST_ACCESS_SESSION_KEY]) || !is_array($_SESSION[self::LAST_ACCESS_SESSION_KEY])) {
+            $_SESSION[self::LAST_ACCESS_SESSION_KEY] = [];
+        }
+
+        $_SESSION[self::LAST_ACCESS_SESSION_KEY][$idUsuario] = time();
     }
 }

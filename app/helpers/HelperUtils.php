@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/UserInitialsHelper.php';
+
 class Helper
 {
     /**
@@ -49,26 +51,11 @@ class Helper
     }
 
     /**
-     * Gera as iniciais de um nome completo (sempre 2 letras)
-     * Para nomes simples (1 palavra), retorna as 2 primeiras letras
-     * Para nomes compostos (2+ palavras), retorna primeira letra do primeiro e último nome
+     * Iniciais a partir de nome completo em uma string (mesma regra que UserInitialsHelper).
      */
     public static function getInitials(string $name): string
     {
-        $name = trim($name);
-        if ($name === '') return '??';
-        
-        $parts = preg_split('/\s+/', $name);
-        $parts = array_filter($parts);
-        
-        if (count($parts) === 0) return '??';
-        if (count($parts) === 1) {
-            return strtoupper(substr($parts[0], 0, 2));
-        }
-        
-        // Primeira letra do primeiro e último nome
-        $first = reset($parts);
-        $last = end($parts);
-        return strtoupper(substr($first, 0, 1) . substr($last, 0, 1));
+        $s = UserInitialsHelper::fromFullName($name);
+        return $s === '—' ? '??' : $s;
     }
 }

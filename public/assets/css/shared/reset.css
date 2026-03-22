@@ -1,10 +1,17 @@
-/* reset.css */
+/* reset.css – normalização para páginas public (index, home, etc.). */
 
-/* Box sizing reset */
+/* Box sizing */
 *,
 *::before,
 *::after {
     box-sizing: border-box;
+}
+
+html {
+    font-size: 100%;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    scroll-behavior: smooth;
 }
 
 /* Remove default margin and padding */
@@ -57,10 +64,17 @@ table {
     border-spacing: 0;
 }
 
-/* Set base font */
+/* Base body */
 body {
     font-family: 'Poppins', sans-serif;
-    line-height: 1;
-    background: #fff;
-    color: #222;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    background: var(--color-surface-elevated, #fff);
+    color: var(--color-text-primary, #222);
+}
+
+a {
+    -webkit-tap-highlight-color: transparent;
 }

@@ -18,6 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 header('Content-Type: application/json; charset=utf-8');
 
 require_once __DIR__ . '/../app/models/Usuario.php';
+require_once __DIR__ . '/../app/helpers/AvatarInitialsPalette.php';
 
 $cpf   = $_POST['cpf'] ?? '';
 $senha = $_POST['senha'] ?? '';
@@ -66,9 +67,12 @@ if (($resultado['success'] ?? false) !== true) {
     $attempts[] = $now;
     $_SESSION['login_attempts'] = $attempts;
 
+    $message = !empty($resultado['inactive']) && !empty($resultado['message'])
+        ? $resultado['message']
+        : 'CPF ou senha inválidos.';
     echo json_encode([
         'success' => false,
-        'message' => 'CPF ou senha inválidos.'
+        'message' => $message
     ]);
     exit;
 }
@@ -89,6 +93,9 @@ $usuario->atualizarToken(
     $_SESSION['token'],
     TOKEN_EXPIRATION_HOURS
 );
+$usuario->registrarUltimoAcesso($resultado['id_usuario']);
+
+AvatarInitialsPalette::regenerateOnLogin();
 
 // login bem-sucedido: limpa registros de tentativa
 unset($_SESSION['login_attempts']);

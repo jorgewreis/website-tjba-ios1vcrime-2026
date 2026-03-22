@@ -5,9 +5,33 @@ header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
+require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/CartasExpedidasService.php';
 
+if (!bootstrapRequireTrustedPostRequest()) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Requisição inválida.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 $connection = Conection::getInstance()->getConnection();
+
+/** Apenas admin, diretora ou magistrada podem excluir tarefa e subtarefas. */
+$perfisPermitidosExcluir = ['ADMIN', 'CHEFIA'];
+$userPerfis = [];
+$userId = $_SESSION['id_usuario'] ?? null;
+if ($userId !== null && $userId !== '') {
+    $stmt = $connection->prepare('SELECT DISTINCT UPPER(TRIM(perfil)) AS perfil FROM usuario_perfil WHERE usuario = ? AND perfil IS NOT NULL');
+    $stmt->execute([$userId]);
+    $userPerfis = $stmt->fetchAll(PDO::FETCH_COLUMN);
+}
+$podeExcluir = count(array_intersect($userPerfis, $perfisPermitidosExcluir)) > 0;
+
+if (!$podeExcluir) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Seu perfil não tem permissão para excluir. Apenas admin ou chefia.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 $rawPayload = file_get_contents('php://input') ?: '';
 $parsed = json_decode($rawPayload, true);
@@ -24,8 +48,8 @@ if ($id === '') {
 
 try {
     $service = new CartasExpedidasService($connection);
-    $removed = $service->delete($id);
-    echo json_encode(['deleted' => $removed], JSON_UNESCAPED_UNICODE);
+    $resultado = $service->delete($id);
+    echo json_encode(is_array($resultado) ? $resultado : ['deleted' => (bool) $resultado], JSON_UNESCAPED_UNICODE);
 } catch (\InvalidArgumentException $exception) {
     http_response_code(400);
     echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);

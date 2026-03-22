@@ -31,6 +31,24 @@ function resolveUsuarioNome(PDO $connection, ?string $usuarioId): string
     return $nomeCompleto !== '' ? $nomeCompleto : 'Nome não informado';
 }
 
+/**
+ * Estudantes (perfil ESTUDANTE) não podem ser alocados em regras internas do cartório.
+ */
+function isUsuarioEstudante(PDO $connection, string $usuarioId): bool
+{
+    $usuarioId = trim($usuarioId);
+    if ($usuarioId === '') {
+        return false;
+    }
+
+    $stmt = $connection->prepare('SELECT 1 FROM usuario_perfil WHERE usuario = :usuario_id AND UPPER(TRIM(perfil)) = :perfil LIMIT 1');
+    $stmt->bindValue(':usuario_id', $usuarioId);
+    $stmt->bindValue(':perfil', 'ESTUDANTE');
+    $stmt->execute();
+
+    return $stmt->fetch(PDO::FETCH_ASSOC) !== false;
+}
+
 $connection = Conection::getInstance()->getConnection();
 
 /** Perfis que podem alterar a regra de alocação (tabela usuario_perfil). */
@@ -50,14 +68,24 @@ $ruleDescription = 'Alocação automática - Envio de Cartas Expedidas';
 $errors = [];
 $successMessage = '';
 $usersList = [];
-$selectedUserId = '1';
+$selectedUserId = '';
 $ruleRow = null;
 $ruleUsuarioId = '';
 $ruleUsuarioNome = 'Nenhum usuário definido';
 
 try {
     $usersList = [];
-    $stmtUsers = $connection->prepare('SELECT `id_usuario`, `nome`, `sobrenome` FROM `usuarios` ORDER BY `nome`, `sobrenome`');
+    $stmtUsers = $connection->prepare("
+        SELECT u.`id_usuario`, u.`nome`, u.`sobrenome`
+        FROM `usuarios` u
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM `usuario_perfil` up
+            WHERE up.`usuario` = u.`id_usuario`
+              AND UPPER(TRIM(up.`perfil`)) = 'ESTUDANTE'
+        )
+        ORDER BY u.`nome`, u.`sobrenome`
+    ");
     $stmtUsers->execute();
     while (($row = $stmtUsers->fetch(PDO::FETCH_ASSOC)) !== false) {
         $id = trim((string) ($row['id_usuario'] ?? ''));
@@ -82,25 +110,48 @@ try {
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $action = trim((string) ($_POST['action'] ?? 'save'));
         if (!$podeAlterarRegra) {
             $errors[] = 'Seu perfil não tem permissão para alterar esta regra. Apenas admin, diretora ou magistrada podem alterar.';
-        } elseif (($postedUserId = trim((string) ($_POST['id_user'] ?? ''))) === '') {
-            $errors[] = 'Selecione um servidor antes de salvar.';
-        } else {
+        } elseif ($action === 'clear') {
             try {
                 $usuarioAtualizaId = null;
                 if (isset($_SESSION['id_usuario'])) {
                     $usuarioAtualizaId = trim((string) $_SESSION['id_usuario']);
                 }
-                $ruleRow = $regrasRepo->save($ruleName, $ruleDescription, $postedUserId, $usuarioAtualizaId !== '' ? $usuarioAtualizaId : null);
-                $ruleUsuarioId = (string) ($ruleRow['usuario_id'] ?? $postedUserId);
-                $ruleUsuarioNome = resolveUsuarioNome($connection, $ruleUsuarioId);
-                $successMessage = 'Regra atualizada com ID ' . ($ruleRow['id'] ?? 'sem ID') . '.';
-                $selectedUserId = (string) ($ruleRow['usuario_id'] ?? $postedUserId);
+                $ruleRow = $regrasRepo->clearAllocation($ruleName, $usuarioAtualizaId !== '' ? $usuarioAtualizaId : null);
+                $ruleUsuarioId = '';
+                $ruleUsuarioNome = resolveUsuarioNome($connection, null);
+                $successMessage = 'Alocação removida com sucesso. A tarefa ficará sem alocação automática por regra.';
+                $selectedUserId = '';
             } catch (\InvalidArgumentException | \RuntimeException $exception) {
                 $errors[] = $exception->getMessage();
             } catch (\Throwable $exception) {
-                $errors[] = 'Erro inesperado ao salvar a regra: ' . $exception->getMessage();
+                $errors[] = 'Erro inesperado ao remover a alocação: ' . $exception->getMessage();
+            }
+        } else {
+            if (($postedUserId = trim((string) ($_POST['id_user'] ?? ''))) === '') {
+                $errors[] = 'Selecione um servidor antes de salvar.';
+            } else {
+                if (isUsuarioEstudante($connection, $postedUserId)) {
+                    $errors[] = 'Não é permitido alocar um estudante em regras internas do cartório.';
+                } else {
+                    try {
+                        $usuarioAtualizaId = null;
+                        if (isset($_SESSION['id_usuario'])) {
+                            $usuarioAtualizaId = trim((string) $_SESSION['id_usuario']);
+                        }
+                        $ruleRow = $regrasRepo->save($ruleName, $ruleDescription, $postedUserId, $usuarioAtualizaId !== '' ? $usuarioAtualizaId : null);
+                        $ruleUsuarioId = (string) ($ruleRow['usuario_id'] ?? $postedUserId);
+                        $ruleUsuarioNome = resolveUsuarioNome($connection, $ruleUsuarioId);
+                        $successMessage = 'Regra atualizada com ID ' . ($ruleRow['id'] ?? 'sem ID') . '.';
+                        $selectedUserId = (string) ($ruleRow['usuario_id'] ?? $postedUserId);
+                    } catch (\InvalidArgumentException | \RuntimeException $exception) {
+                        $errors[] = $exception->getMessage();
+                    } catch (\Throwable $exception) {
+                        $errors[] = 'Erro inesperado ao salvar a regra: ' . $exception->getMessage();
+                    }
+                }
             }
         }
     }
@@ -117,11 +168,9 @@ try {
         <title>Cartas Expedidas - Primeira Vara Crime de Ilhéus</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="/assets/css/shared/reset.css">
-        <link rel="stylesheet" href="/assets/css/shared/variables.css">
-        <link rel="stylesheet" href="/assets/css/shared/page.css">
-        <link rel="stylesheet" href="/assets/css/shared/form.css">
-        <link rel="stylesheet" href="/assets/css/shared/table.css">
+                <?php include __DIR__ . '/_internal_head_styles.php'; ?>
+        <?php include __DIR__ . '/_toast_script.php'; ?>
+
 
     </head>
 <body class="page-internal">
@@ -147,60 +196,63 @@ try {
         </div>
     </div>
 
-    <div class="card-page">
+    <div class="container-full card-page">
         <form method="post" class="rule-form" style="width: 100%">
-            <div class="row table header">Regras de alocação automática</div>
+            <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+                <div class="display-flex row row-fit justify-start">
+                    <h2>Regras de alocação automática</h2>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-md"></div>
+            </div>
+
             <?php if (!$podeAlterarRegra): ?>
-                <div class="row filter">
+                <div class="display-flex row row-full padding-x-md padding-y-md border-bottom">
                     <div class="col">
                         <label class="status status-primary-light">Apenas perfis admin, diretora ou magistrada podem alterar esta regra. Você pode visualizar a configuração atual.</label>
                     </div>
                 </div>
             <?php endif; ?>
-            <div class="row filter">
-                <div class="col filter">
-                    <label for="filter-processo">Servidor</label>
-                    <select class="width-lg height-md" id="filter-processo" name="id_user" <?php echo $podeAlterarRegra ? '' : 'disabled'; ?> required>
-                        <option value="" disabled<?php echo $selectedUserId === '' ? ' selected' : ''; ?>>Selecione um servidor</option>
-                        <?php foreach ($usersList as $user): ?>
-                            <option value="<?php echo htmlspecialchars($user['id'], ENT_QUOTES); ?>"<?php echo $selectedUserId === $user['id'] ? ' selected' : ''; ?>>
-                                <?php echo htmlspecialchars($user['name']); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
+
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom">
+                <div class="col">
+                    <span class="minor-info" style="font-weight: 600;">Acompanhamento e envio de Cartas Expedidas</span>
                 </div>
-            </div> 
+            </div>
+
+            <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
+                <div class="display-flex row row-fit justify-start gap-y-md">
+                    <div class="col">
+                        <label for="filter-processo">Responsável</label>
+                        <select class="width-600 height-md" id="filter-processo" name="id_user" data-original-user-name="<?php echo htmlspecialchars($ruleUsuarioNome, ENT_QUOTES, 'UTF-8'); ?>" data-original-user-id="<?php echo htmlspecialchars($selectedUserId, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $podeAlterarRegra ? '' : 'disabled'; ?>>
+                            <option value=""<?php echo $selectedUserId === '' ? ' selected' : ''; ?>>Sem alocação automática</option>
+                            <?php foreach ($usersList as $user): ?>
+                                <option value="<?php echo htmlspecialchars($user['id'], ENT_QUOTES); ?>"<?php echo $selectedUserId === $user['id'] ? ' selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($user['name']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-md"></div>
+            </div>
+
             <?php if (!empty($ruleRow['id'] ?? '')): ?>
-                <div class="row <?php if($ruleUsuarioNome === ''){ echo 'info'; } else { echo 'success'; } ?>">
-                    <span><?php echo htmlspecialchars(sprintf('Envio de Cartas Expedidas: %s - %s', $ruleRow['id'] ?? 'sem ID', $ruleUsuarioNome)); ?></span>
+                <div class="display-flex row row-full padding-x-md padding-y-md border-bottom <?php echo $ruleUsuarioNome === '' ? 'info' : 'success'; ?>">
+                    <div class="col">
+                        <span><?php echo htmlspecialchars(sprintf('Regra atual: %s - %s', $ruleRow['id'] ?? 'sem ID', $ruleUsuarioNome)); ?></span>
+                    </div>
                 </div>
             <?php endif; ?>
 
             <!-- Ações -->
-            <div class="row buttons">
+            <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
                 <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
                 <?php if ($podeAlterarRegra): ?>
-                    <button type="submit" class="btn btn-primary">Salvar</button>
+                    <button type="submit" class="btn btn-danger-outline" id="remover-alocacao-btn" name="action" value="clear" formnovalidate disabled>Remover alocação</button>
+                    <button type="submit" class="btn btn-primary" id="salvar-btn" name="action" value="save" disabled>Salvar</button>
                 <?php endif; ?>
             </div>
 
-            <!-- Informações -->
-            <?php if ($successMessage): ?>
-                <div class="row filter">
-                    <div class="col">
-                        <label class="status status-finished"><?php echo htmlspecialchars($successMessage); ?></label>
-                    </div>
-                </div>
-            <?php endif; ?>
-            <?php if (!empty($errors)): ?>
-                <div class="row filter">
-                    <div class="col">
-                        <?php foreach ($errors as $error): ?>
-                            <label class="status status-cancelled"><?php echo htmlspecialchars($error); ?></label>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            <?php endif; ?>
         </form>
     </div>
 
@@ -214,6 +266,17 @@ try {
     </div>
     <script>
         (() => {
+            const successMessage = <?php echo json_encode($successMessage, JSON_UNESCAPED_UNICODE); ?>;
+            const errors = <?php echo json_encode(array_values($errors), JSON_UNESCAPED_UNICODE); ?>;
+            if (successMessage && typeof showToast === 'function') {
+                showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: successMessage });
+            }
+            if (Array.isArray(errors) && errors.length && typeof showToast === 'function') {
+                errors.forEach((message) => showToast({ type: 'error', variant: 'full', title: 'Erro', message }));
+            }
+        })();
+
+        (() => {
             const btn = document.getElementById('voltar-btn');
             if (btn) {
                 btn.addEventListener('click', (event) => {
@@ -221,6 +284,32 @@ try {
                     window.location.href = '/frame.php?page=cartasexpedidascreate';
                 }, { capture: true });
             }
+        })();
+
+        (() => {
+            const saveBtn = document.getElementById('salvar-btn');
+            const clearBtn = document.getElementById('remover-alocacao-btn');
+            const select = document.querySelector('select[name="id_user"]');
+            if (!saveBtn || !select) return;
+
+            const originalId = (select.getAttribute('data-original-user-id') || '').trim();
+
+            const syncSaveButton = () => {
+                const currentId = (select.value || '').trim();
+                const effectiveOriginalId = originalId !== '' ? originalId : currentId;
+                const changed = currentId !== effectiveOriginalId;
+
+                if (changed) saveBtn.removeAttribute('disabled');
+                else saveBtn.setAttribute('disabled', '');
+
+                if (clearBtn) {
+                    if (effectiveOriginalId !== '') clearBtn.removeAttribute('disabled');
+                    else clearBtn.setAttribute('disabled', '');
+                }
+            };
+
+            select.addEventListener('change', syncSaveButton);
+            syncSaveButton();
         })();
     </script>
 </body>

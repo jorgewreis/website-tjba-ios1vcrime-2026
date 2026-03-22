@@ -1,0 +1,64 @@
+---
+description: Usar sempre toast para feedback ao usuário; alert apenas para confirmação de exclusão.
+globs: app/views/**/*.php, public/**/*.php, public/assets/js/**/*.js
+alwaysApply: true
+---
+
+# Sistema de Toast
+
+## Regra obrigatória
+
+- **Use sempre** toast para feedback ao usuário (`erro`, `sucesso`, `info`).
+- **Não use** feedback inline por `span`, `label`, `innerHTML` ou blocos HTML para mensagens de retorno de operação.
+- **Não use** `alert()` para feedback geral.
+- **Exceção permitida:** `alert()` somente para confirmação de exclusão, quando necessário pelo fluxo.
+
+## Diretriz de confirmação
+
+- Para exclusão, priorize confirmação em padrão do projeto (ex.: duplo clique + toast de confirmação).
+- Se precisar usar `alert()`, restrinja ao contexto de confirmação de exclusão, sem reutilizar para outros feedbacks.
+
+## Uso
+
+### Páginas principais (index, home, cadastro, recupera_senha)
+
+O container e `App.Toast` já estão disponíveis. Use:
+
+```javascript
+App.Toast.show({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Operação concluída.' });
+App.Toast.show({ type: 'error', variant: 'full', title: 'Erro', message: 'Falha ao salvar.' });
+App.Toast.show({ type: 'info', variant: 'simple', message: 'Texto informativo.' });
+```
+
+### Views internas (carregadas no iframe por frame.php)
+
+1. Inclua o script do toast no `<head>` da view:
+
+```php
+<?php include __DIR__ . '/_toast_script.php'; ?>
+```
+
+2. Use a função global `showToast()` (envia a mensagem ao parent para exibir o toast):
+
+```javascript
+showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Mensagem de erro.' });
+showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Salvo com sucesso.' });
+showToast({ type: 'info', variant: 'simple', message: 'Enviando dados...' });
+```
+
+### Parâmetros
+
+| Parâmetro  | Valores                    | Descrição |
+|-----------|----------------------------|-----------|
+| `type`    | `'success'`, `'error'`, `'info'` | Tipo visual do toast |
+| `variant` | `'full'`                   | Barra de título + botão fechar + conteúdo |
+| `variant` | `'simple'`                 | Só conteúdo + barra de tempo regressiva (informativo) |
+| `title`   | string                     | Título (recomendado em `full`) |
+| `message` | string                     | Mensagem principal (obrigatório) |
+| `subtitle`| string                     | Opcional |
+
+### Arquivos de referência
+
+- `public/assets/js/shared/toast.js` – lógica do toast (App.Toast)
+- `public/assets/js/shared/toast-helper.js` – helper para iframe (showToast)
+- `app/views/internal/_toast_script.php` – include para views internas

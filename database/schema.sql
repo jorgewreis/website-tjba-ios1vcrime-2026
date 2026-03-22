@@ -1,8 +1,12 @@
-﻿-- ============================================================================
+-- ============================================================================
 -- SCHEMA.SQL - Sistema de Gestão Criminal de Ilhéus
 -- Banco de Dados: common
 -- Versão: 1.0.0
 -- Data: 2026-02-03
+-- ============================================================================
+-- REGRA DE ID: Todas as chaves primárias de tabela seguem o padrão de 30
+-- caracteres: prefixo de 3 letras + hífen + código de 26 caracteres (ex.: SET-xxx).
+-- Documentação: docs/00-foundation/id-padrao-banco-dados.md
 -- ============================================================================
 
 USE common;
@@ -14,15 +18,17 @@ USE common;
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS setores (
-    id_setor VARCHAR(30) NOT NULL PRIMARY KEY,
+    id_setor CHAR(30) NOT NULL COMMENT 'Formato SET- + 26 chars (regra padrão 30 chars)' PRIMARY KEY,
     codigo VARCHAR(10) NOT NULL UNIQUE,
+    codigo_area VARCHAR(20) NULL DEFAULT NULL COMMENT 'CARTORIO | GABINETE | AUDIENCIAS',
     nome VARCHAR(100) NOT NULL,
     descricao TEXT,
     setor_pai VARCHAR(30) DEFAULT NULL,
     ativo TINYINT(1) DEFAULT 1,
     data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_codigo (codigo),
-    INDEX idx_setor_pai (setor_pai)
+    INDEX idx_setor_pai (setor_pai),
+    INDEX idx_setores_codigo_area (codigo_area)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================================
@@ -32,9 +38,9 @@ CREATE TABLE IF NOT EXISTS setores (
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS usuario_setor (
-    id_usu_setor VARCHAR(30) NOT NULL PRIMARY KEY,
-    usuario VARCHAR(30) NOT NULL,
-    setor VARCHAR(30) NOT NULL,
+    id_usu_setor CHAR(30) NOT NULL COMMENT 'Formato USO- + 26 chars (regra padrão 30 chars)' PRIMARY KEY,
+    usuario CHAR(30) NOT NULL,
+    setor CHAR(30) NOT NULL,
     data_alocacao DATETIME DEFAULT CURRENT_TIMESTAMP,
     alocado_por VARCHAR(30) DEFAULT NULL,
     INDEX idx_usuario (usuario),
@@ -50,8 +56,8 @@ CREATE TABLE IF NOT EXISTS usuario_setor (
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS logs_acesso (
-    id_log VARCHAR(30) NOT NULL PRIMARY KEY,
-    usuario VARCHAR(30) DEFAULT NULL,
+    id_log CHAR(30) NOT NULL COMMENT 'Formato LOG- + 26 chars (regra padrão 30 chars)' PRIMARY KEY,
+    usuario CHAR(30) DEFAULT NULL,
     cpf VARCHAR(15) DEFAULT NULL,
     acao VARCHAR(50) NOT NULL,
     ip VARCHAR(45) NOT NULL,
@@ -72,12 +78,12 @@ CREATE TABLE IF NOT EXISTS logs_acesso (
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS logs_sistema (
-    id_log_sistema VARCHAR(30) NOT NULL PRIMARY KEY,
-    usuario VARCHAR(30) NOT NULL,
+    id_log_sistema CHAR(30) NOT NULL COMMENT 'Formato LGS- + 26 chars (regra padrão 30 chars)' PRIMARY KEY,
+    usuario CHAR(30) NOT NULL,
     modulo VARCHAR(50) NOT NULL,
     acao VARCHAR(50) NOT NULL,
     tabela_afetada VARCHAR(50) DEFAULT NULL,
-    registro_id VARCHAR(30) DEFAULT NULL,
+    registro_id CHAR(30) DEFAULT NULL,
     dados_anteriores TEXT,
     dados_novos TEXT,
     ip VARCHAR(45) NOT NULL,
@@ -97,7 +103,7 @@ CREATE TABLE IF NOT EXISTS logs_sistema (
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS tentativas_login (
-    id_tentativa VARCHAR(30) NOT NULL PRIMARY KEY,
+    id_tentativa CHAR(30) NOT NULL COMMENT 'Formato TNT- + 26 chars (regra padrão 30 chars)' PRIMARY KEY,
     cpf VARCHAR(15) NOT NULL,
     tentativas INT DEFAULT 0,
     bloqueado TINYINT(1) DEFAULT 0,
@@ -117,8 +123,8 @@ CREATE TABLE IF NOT EXISTS tentativas_login (
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS recuperacao_senha (
-    id_recuperacao VARCHAR(30) NOT NULL PRIMARY KEY,
-    usuario VARCHAR(30) NOT NULL,
+    id_recuperacao CHAR(30) NOT NULL COMMENT 'Formato REC- + 26 chars (regra padrão 30 chars)' PRIMARY KEY,
+    usuario CHAR(30) NOT NULL,
     token VARCHAR(100) NOT NULL UNIQUE,
     expira_em DATETIME NOT NULL,
     usado TINYINT(1) DEFAULT 0,
@@ -136,8 +142,8 @@ CREATE TABLE IF NOT EXISTS recuperacao_senha (
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS historico_senha (
-    id_historico VARCHAR(30) NOT NULL PRIMARY KEY,
-    usuario VARCHAR(30) NOT NULL,
+    id_historico CHAR(30) NOT NULL COMMENT 'Formato HIS- + 26 chars (regra padrão 30 chars)' PRIMARY KEY,
+    usuario CHAR(30) NOT NULL,
     senha_hash VARCHAR(200) NOT NULL,
     data_alteracao DATETIME DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_usuario (usuario),

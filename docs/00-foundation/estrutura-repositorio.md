@@ -257,9 +257,14 @@ Arquivos de exemplo (espelhando seus módulos):
 - `app/views/internal/cejusc.php`
 - `app/views/internal/editais.php`
 - `app/views/internal/guias.php`
-- `app/views/internal/medidas_protetivas.php`
-- `app/views/internal/oficios_cartorio.php`
-- `app/views/internal/oficios_gabinete.php`
+- `app/views/internal/cartorio-medidas-protetivas-list.php`
+- `app/views/internal/cartorio-medidas-protetivas-create.php`
+- `app/views/internal/cartorio-medidas-protetivas-edit.php`
+- `app/views/internal/cartorio-medidas-protetivas-rules.php`
+- `app/views/internal/cartorio-oficios-list.php`
+- `app/views/internal/cartorio-oficios-edit.php`
+- `app/views/internal/gabinete-oficios-list.php`
+- `app/views/internal/gabinete-oficios-edit.php`
 - `app/views/internal/produtividade.php`
 
 Parciais recomendadas:
@@ -336,8 +341,8 @@ Parciais recomendadas:
 - ### public/assets/css/
 - #### Arquivos compartilhados
 - - `public/assets/css/shared/reset.css` — redefinição e reset global.
-- - `public/assets/css/shared/base.css` — tipografia, corpo e blocos principais.
-- - `public/assets/css/shared/variables.css` — constantes de cor, espaçamento, tipografia.
+- - `public/assets/css/shared/color.css` — design system: cores, temas (claro/escuro/auto), variáveis de formulários e tipografia (Poppins).
+- - `public/assets/css/shared/layout.css` — layout da home (shell: menu lateral, navbar, content wrapper, iframe).
 - - `public/assets/css/shared/themes.css` — variações de tema (claro, escuro, feedback).
 - - `public/assets/css/shared/components.css` — componentes reutilizáveis.
 - - `public/assets/css/shared/forms.css` — formulários, inputs, mascaramento e helpers visuais.

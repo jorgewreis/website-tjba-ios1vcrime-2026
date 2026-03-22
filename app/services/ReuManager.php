@@ -1,73 +1,114 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../helpers/Helper.php';
+/**
+ * Adaptador legado: expõe réu como partes + processos_partes para compatibilidade com Guias (api/guia).
+ * Não usa mais tabelas reus/processoReus.
+ */
+require_once __DIR__ . '/../repositories/PartesRepository.php';
+require_once __DIR__ . '/../repositories/ProcessosRepository.php';
+require_once __DIR__ . '/../repositories/ProcessosPartesRepository.php';
 
 class ReuManager
 {
     private PDO $pdo;
+    private PartesRepository $partesRepository;
+    private ProcessosRepository $processosRepository;
+    private ProcessosPartesRepository $processosPartesRepository;
 
     public function __construct(PDO $pdo)
     {
         $this->pdo = $pdo;
+        $this->partesRepository = new PartesRepository($pdo);
+        $this->processosRepository = new ProcessosRepository($pdo);
+        $this->processosPartesRepository = new ProcessosPartesRepository($pdo);
     }
 
     /**
-     * Busca um réu pelo nome
+     * Busca uma parte (réu) pelo nome – compatível com retorno antigo (id_reu, nome, cpf, statusPrisao).
      */
     public function buscarReu(string $nome): ?array
     {
-        $sql = "SELECT id_reu, nome, cpf, statusPrisao FROM reus WHERE nome = ? LIMIT 1";
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([$nome]);
-        
-        $reu = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $reu ?: null;
+        $parte = $this->partesRepository->findByNomeCompleto($nome);
+        if ($parte === null) {
+            return null;
+        }
+        return [
+            'id_reu' => (string) $parte['id'],
+            'nome' => (string) ($parte['nome_completo'] ?? ''),
+            'cpf' => (string) ($parte['cpf'] ?? ''),
+            'statusPrisao' => 0,
+        ];
     }
 
     /**
-     * Cadastra um novo réu
+     * Garante parte por nome e opcional CPF; retorna id da parte (compatível com id_reu).
      */
     public function cadastrarReu(string $nome, ?string $cpf = null): ?string
     {
-        $existe = $this->buscarReu($nome);
-        if ($existe) {
-            if ($cpf !== null && $cpf !== '' && (empty($existe['cpf']) || $existe['cpf'] !== $cpf)) {
-                $sqlUpdate = "UPDATE reus SET cpf = ? WHERE id_reu = ?";
-                $stmtUpdate = $this->pdo->prepare($sqlUpdate);
-                $stmtUpdate->execute([$cpf, $existe['id_reu']]);
-            }
-            return $existe['id_reu'];
+        try {
+            return $this->partesRepository->ensureParteByNomeOuCpf($nome, $cpf);
+        } catch (Throwable $e) {
+            return null;
         }
-
-        $novoId = Helper::gerarId();
-        $sql = "INSERT INTO reus (id_reu, nome, cpf) VALUES (?, ?, ?)";
-        $stmt = $this->pdo->prepare($sql);
-        
-        $cpfValue = $cpf ?? '';
-        $sucesso = $stmt->execute([$novoId, $nome, $cpfValue]);
-
-        return $sucesso ? $novoId : null;
     }
 
     /**
-     * Vincula um réu a um processo
+     * Lista partes do polo passivo vinculadas ao processo (numero CNJ).
+     *
+     * @return array<int, array{id_reu: string, nome: string}>
+     */
+    public function listarReusPorProcesso(string $numeroProcesso): array
+    {
+        $numero = trim($numeroProcesso);
+        if ($numero === '') {
+            return [];
+        }
+        $processo = $this->processosRepository->findByNumero($numero);
+        if ($processo === null) {
+            return [];
+        }
+        $partes = $this->processosPartesRepository->findByProcessoId((string) $processo['id']);
+        $tiposPassivos = ['reu', 'indiciado', 'sentenciado', 'requerido'];
+        $out = [];
+        foreach ($partes as $pp) {
+            $tipo = trim((string) ($pp['tipo_parte'] ?? ''));
+            if (!in_array($tipo, $tiposPassivos, true)) {
+                continue;
+            }
+            $nome = trim((string) ($pp['nome_completo'] ?? ''));
+            if ($nome !== '') {
+                $out[] = ['id_reu' => (string) ($pp['parte_id'] ?? ''), 'nome' => $nome];
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * Vincula parte (réu) ao processo no polo passivo como Sentenciado.
      */
     public function vincularReuProcesso(string $idReu, string $numeroProcesso): bool
     {
-        $sql = "SELECT 1 FROM processoReus WHERE id_reu = ? AND numero = ? LIMIT 1";
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([$idReu, $numeroProcesso]);
-        
-        if ($stmt->fetch()) {
-            return true;
+        $idReu = trim($idReu);
+        $numeroProcesso = trim($numeroProcesso);
+        if ($idReu === '' || $numeroProcesso === '') {
+            return false;
         }
-
-        $novoId = Helper::gerarId();
-        $agora = (new DateTime('now', new DateTimeZone('America/Bahia')))->format('Y-m-d H:i:s');
-        $sql = "INSERT INTO processoReus (id_proc_reus, numero, id_reu, data_cadastro) VALUES (?, ?, ?, ?)";
-        $stmt = $this->pdo->prepare($sql);
-        
-        return $stmt->execute([$novoId, $numeroProcesso, $idReu, $agora]);
+        try {
+            $processoId = $this->processosRepository->ensureProcess($numeroProcesso, null, null, false);
+            $existente = $this->processosPartesRepository->findByProcessoAndParte($processoId, $idReu);
+            if ($existente !== null) {
+                return true;
+            }
+            $this->processosPartesRepository->addParte(
+                $processoId,
+                $idReu,
+                ProcessosPartesRepository::TIPO_SENTENCIADO,
+                ProcessosPartesRepository::POLO_PASSIVO
+            );
+            return true;
+        } catch (Throwable $e) {
+            return false;
+        }
     }
 }

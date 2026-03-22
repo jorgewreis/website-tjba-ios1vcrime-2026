@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Gera Release Notes estilizados automaticamente para cada versão.
 
@@ -34,9 +34,11 @@ param(
     [ValidateNotNullOrEmpty()]
     [string]$CommitHash,
 
-    [Parameter(Mandatory=$true)]
-    [ValidateNotNullOrEmpty()]
-    [string]$CommitMessage,
+    [Parameter(Mandatory=$false)]
+    [string]$CommitMessage = "",
+
+    [Parameter(Mandatory=$false)]
+    [string]$CommitMessagePath = "",
 
     [Parameter(Mandatory=$true)]
     [ValidateSet("major", "minor", "patch")]
@@ -56,7 +58,10 @@ param(
     [string]$BufferMinorPath = "docs/90-releases/_buffer_minor.txt",
 
     [Parameter(Mandatory=$false)]
-    [string]$NotesDir = "docs/90-releases/notes"
+    [string]$NotesDir = "docs/90-releases/notes",
+
+    [Parameter(Mandatory=$false)]
+    [string]$DraftMinorPath = "docs/90-releases/_draft_minor.md"
 )
 
 # =============================================================================
@@ -176,17 +181,17 @@ function Get-ChangeType {
 
     $normalized = $FirstLine.Trim().ToLowerInvariant()
 
-    # Conventional commits
-    if ($normalized -match '^\s*(feat|feature)(|$[^)]+$|)?(!)?:') { return "Feature" }
-    if ($normalized -match '^\s*(fix|bugfix)(|$[^)]+$|)?(!)?:') { return "Correção" }
-    if ($normalized -match '^\s*refactor(|$[^)]+$|)?(!)?:') { return "Refatoração" }
-    if ($normalized -match '^\s*perf(|$[^)]+$|)?(!)?:') { return "Performance" }
-    if ($normalized -match '^\s*(security|sec)(|$[^)]+$|)?(!)?:') { return "Segurança" }
-    if ($normalized -match '^\s*docs(|$[^)]+$|)?(!)?:') { return "Documentação" }
-    if ($normalized -match '^\s*test(|$[^)]+$|)?(!)?:') { return "Testes" }
-    if ($normalized -match '^\s*build(|$[^)]+$|)?(!)?:') { return "Build" }
-    if ($normalized -match '^\s*(ci|cd)(|$[^)]+$|)?(!)?:') { return "CI/CD" }
-    if ($normalized -match '^\s*chore(|$[^)]+$|)?(!)?:') { return "Manutenção" }
+    # Conventional commits (escopo opcional: tipo(escopo):)
+    if ($normalized -match '^\s*(feat|feature)(\([^)]+\))?(!)?:') { return "Feature" }
+    if ($normalized -match '^\s*(fix|bugfix)(\([^)]+\))?(!)?:') { return "Correção" }
+    if ($normalized -match '^\s*refactor(\([^)]+\))?(!)?:') { return "Refatoração" }
+    if ($normalized -match '^\s*perf(\([^)]+\))?(!)?:') { return "Performance" }
+    if ($normalized -match '^\s*(security|sec)(\([^)]+\))?(!)?:') { return "Segurança" }
+    if ($normalized -match '^\s*docs(\([^)]+\))?(!)?:') { return "Documentação" }
+    if ($normalized -match '^\s*test(\([^)]+\))?(!)?:') { return "Testes" }
+    if ($normalized -match '^\s*build(\([^)]+\))?(!)?:') { return "Build" }
+    if ($normalized -match '^\s*(ci|cd)(\([^)]+\))?(!)?:') { return "CI/CD" }
+    if ($normalized -match '^\s*chore(\([^)]+\))?(!)?:') { return "Manutenção" }
 
     return "Geral"
 }
@@ -248,7 +253,7 @@ function Get-BufferEntries {
             }
 
             # Parse: TYPE|MESSAGE|HASH|AUTHOR|TIMESTAMP
-            $parts = $line -split "\|"
+            $parts = @($line -split "\|")
             if ($parts.Count -ge 3) {
                 $entry = [PSCustomObject]@{
                     Type      = $parts[0].Trim()
@@ -267,6 +272,55 @@ function Get-BufferEntries {
     catch {
         Write-Err "Erro ao ler buffer: $_"
         return @()
+    }
+}
+
+# =============================================================================
+# ATUALIZAÇÃO DO ARQUIVO _draft_minor.md (Entradas Pendentes)
+# =============================================================================
+
+function Update-DraftMinorMarkdown {
+    param(
+        [string]$BufferPath,
+        [string]$DraftPath
+    )
+
+    if ([string]::IsNullOrWhiteSpace($DraftPath)) { return }
+
+    $directory = Split-Path -Path $DraftPath -Parent
+    Ensure-Directory -Path $directory
+
+    $entries = @(Get-BufferEntries -BufferPath $BufferPath)
+
+    $content = @()
+    $content += "# Draft - Release Notes (Minor)"
+    $content += ""
+    $content += "Este arquivo acumula mudanças incrementais para a próxima release MINOR."
+    $content += ""
+    $content += "## Entradas Pendentes"
+    $content += ""
+
+    if ($entries.Count -eq 0) {
+        $content += "_Nenhuma entrada pendente._"
+    }
+    else {
+        foreach ($item in $entries) {
+            $line = "- **$($item.Message)**"
+            if (![string]::IsNullOrWhiteSpace($item.Hash)) {
+                $line += " ``[$($item.Hash)]``"
+            }
+            $content += $line
+        }
+    }
+
+    $content += ""
+
+    try {
+        $content | Out-File -LiteralPath $DraftPath -Encoding UTF8 -Force -ErrorAction Stop
+        Write-Debug-Custom "Draft atualizado: $DraftPath ($($entries.Count) entradas)"
+    }
+    catch {
+        Write-Warn "Não foi possível atualizar o draft: $_"
     }
 }
 
@@ -331,12 +385,13 @@ function New-SimpleReleaseNote {
         $content += ""
     }
 
-    # Entradas
-    if ($Entries.Count -gt 0) {
+    # Entradas (garante array para evitar falha de .Count em objeto único ou $null)
+    $entriesList = @($Entries)
+    if ($entriesList.Count -gt 0) {
         $content += "## Alterações"
         $content += ""
 
-        foreach ($item in $Entries) {
+        foreach ($item in $entriesList) {
             $line = "- **$($item.Message)**"
             if (![string]::IsNullOrWhiteSpace($item.Hash)) {
                 $line += " ``[$($item.Hash)]``"
@@ -369,6 +424,18 @@ function New-SimpleReleaseNote {
 # =============================================================================
 
 try {
+    if ([string]::IsNullOrWhiteSpace($CommitMessage) -and [string]::IsNullOrWhiteSpace($CommitMessagePath) -eq $false -and (Test-Path -LiteralPath $CommitMessagePath -PathType Leaf)) {
+        try {
+            $CommitMessage = Get-Content -Raw -LiteralPath $CommitMessagePath -Encoding UTF8 -ErrorAction Stop
+            $CommitMessage = $CommitMessage.TrimEnd()
+        } catch {
+            Write-Warn "Não foi possível ler CommitMessagePath: $_"
+        }
+    }
+    if ([string]::IsNullOrWhiteSpace($CommitMessage)) {
+        $CommitMessage = "chore: atualização automática"
+    }
+
     Write-Info "========================================="
     Write-Info "update-draft-minor.ps1 iniciado"
     Write-Info "========================================="
@@ -402,9 +469,11 @@ try {
     # Define caminhos absolutos
     $bufferPath = Join-Path $RepoRoot $BufferMinorPath
     $notesPath = Join-Path $RepoRoot $NotesDir
+    $draftPath = Join-Path $RepoRoot $DraftMinorPath
 
     Write-Debug-Custom "Buffer path: $bufferPath"
     Write-Debug-Custom "Notes path: $notesPath"
+    Write-Debug-Custom "Draft path: $draftPath"
 
     # Processa baseado no bump
     switch ($Bump) {
@@ -417,6 +486,8 @@ try {
                 -Message $firstLine `
                 -CommitHash $CommitHash `
                 -Author "Unknown"
+
+            Update-DraftMinorMarkdown -BufferPath $bufferPath -DraftPath $draftPath
 
             Write-Host ""
             Write-Host "✅ PATCH REGISTRADO NO BUFFER" -ForegroundColor Green
@@ -439,8 +510,8 @@ try {
                 -CommitHash $CommitHash `
                 -Author "Unknown"
 
-            # Lê buffer
-            $entries = Get-BufferEntries -BufferPath $bufferPath
+            # Lê buffer (garante array para .Count)
+            $entries = @(Get-BufferEntries -BufferPath $bufferPath)
 
             if ($entries.Count -eq 0) {
                 Write-Warn "Buffer vazio - gerando documento apenas com commit atual"
@@ -472,10 +543,11 @@ try {
                 -Entries $entries `
                 -ImpactLevel $Impact
 
-            # Limpa buffer se sucesso
+            # Limpa buffer se sucesso e atualiza draft para "nenhuma entrada"
             if ($success -and (Test-Path -LiteralPath $outputFile)) {
                 Write-Info "Limpando buffer..."
                 Remove-Item -LiteralPath $bufferPath -Force -ErrorAction SilentlyContinue
+                Update-DraftMinorMarkdown -BufferPath $bufferPath -DraftPath $draftPath
 
                 Write-Host ""
                 Write-Host "✅ VERSÃO MINOR PROCESSADA" -ForegroundColor Green

@@ -3,8 +3,6 @@ declare(strict_types=1);
 
 final class IdGenerator
 {
-    private const DEFAULT_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-
     public static function generateUniquePrefixedId(PDO $connection, string $table, string $column, string $prefix, int $totalLength = 30, int $maxAttempts = 10): string
     {
         if ($maxAttempts < 1) {
@@ -33,6 +31,10 @@ final class IdGenerator
         throw new RuntimeException('Não foi possível gerar um identificador único após ' . $maxAttempts . ' tentativas.');
     }
 
+    /**
+     * Gera um ID no padrão do sistema: prefixo (3 letras) + hífen + 26 caracteres hex = 30 caracteres.
+     * Ver docs/00-foundation/id-padrao-banco-dados.md
+     */
     private static function buildCandidate(string $prefix, int $totalLength): string
     {
         $prefix = strtoupper(trim((string) $prefix));
@@ -40,34 +42,13 @@ final class IdGenerator
             throw new InvalidArgumentException('O prefixo não pode ser vazio.');
         }
 
-        $base = sprintf('%s-', $prefix);
-        $payloadLimit = max(1, $totalLength - strlen($base));
-
-        $timestamp = (string) (int) (microtime(true) * 1000);
-        if (strlen($timestamp) > $payloadLimit) {
-            $timestamp = substr($timestamp, -$payloadLimit);
+        $payloadLength = max(1, $totalLength - strlen($prefix) - 1);
+        if ($payloadLength === 26) {
+            return $prefix . '-' . strtoupper(bin2hex(random_bytes(13)));
         }
 
-        $remaining = $payloadLimit - strlen($timestamp);
-        $randomLength = $remaining > 0 ? min(max(1, $remaining), 8) : 1;
-        $random = self::generateRandomSegment($randomLength);
-
-        $payload = $timestamp . $random;
-        if (strlen($payload) > $payloadLimit) {
-            $payload = substr($payload, 0, $payloadLimit);
-        }
-
-        return $base . $payload;
-    }
-
-    private static function generateRandomSegment(int $length, string $alphabet = self::DEFAULT_ALPHABET): string
-    {
-        $result = '';
-        $maxIndex = strlen($alphabet) - 1;
-        for ($i = 0; $i < $length; $i++) {
-            $result .= $alphabet[random_int(0, $maxIndex)];
-        }
-        return $result;
+        $payload = strtoupper(bin2hex(random_bytes((int) ceil($payloadLength / 2))));
+        return $prefix . '-' . substr($payload, 0, $payloadLength);
     }
 
     public static function validateIdentifier(string $value): string

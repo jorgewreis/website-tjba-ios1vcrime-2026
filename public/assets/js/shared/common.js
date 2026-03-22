@@ -15,18 +15,34 @@
     }
   }
 
-  async function performLogout(endpoint = "/admin/api/logout.php") {
+  /**
+   * Faz logout com segurança: invalida sessão/token no servidor e redireciona para a tela de login.
+   * @param {string} [endpoint] - URL do logout. Use "/logout.php" para a área pública.
+   * @param {boolean} [redirectOnly] - Se true, após a requisição redireciona sem esperar JSON (ex.: logout.php que retorna 302).
+   */
+  async function performLogout(endpoint = "/logout.php", redirectOnly = true) {
+    const goLogin = () => window.location.replace("/index.php?nocache=" + Date.now());
     try {
-      const response = await fetch(endpoint, { method: "POST" });
+      const response = await fetch(endpoint, {
+        method: "POST",
+        credentials: "same-origin",
+        cache: "no-store",
+        redirect: "manual"
+      });
+      if (redirectOnly) {
+        // Força nova página sem cache (token CSRF no formulário deve bater com a sessão nova).
+        goLogin();
+        return;
+      }
       const result = await response.json();
-      if (result.success) {
-        window.location.href = "/index.php";
+      if (result && result.success) {
+        goLogin();
       } else {
-        window.location.href = "/index.php";
+        goLogin();
       }
     } catch (error) {
       console.error("Erro ao fazer logout:", error);
-      window.location.href = "/index.php";
+      goLogin();
     }
   }
 

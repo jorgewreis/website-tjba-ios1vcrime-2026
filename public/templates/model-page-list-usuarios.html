@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Usuários - Lista</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="./../../public/assets/css/shared/reset.css"> <!-- -->
+        <link rel="stylesheet" href="./../../public/assets/css/shared/color.css">
+        <link rel="stylesheet" href="./../../public/assets/css/shared/page.css">
+        <link rel="stylesheet" href="./../../public/assets/css/shared/form.css">
+        <link rel="stylesheet" href="./../../public/assets/css/shared/table.css">
+        <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+    </head>
+<body class="page-internal">
+
+    <div class="spacing-top-page"></div>
+
+    <div class="header-page">
+        <div class="location">
+            <span class="all">Interno -</span>
+            <span class="specific">Usuários</span>
+        </div>
+        <h1 class="title-page">Usuários</h1>
+        <p class="description-page">Listagem de servidores internos (estagiários, servidores, diretora, admin, magistrada) e externos (estudantes). Use os filtros e clique em Consultar.</p>
+    </div>
+
+    <div class="card-page">
+
+        <!-- FILTROS -->
+        <form method="get" id="form-filters" style="width: 100%">
+            <input type="hidden" name="page" value="usuarioslist">
+            <div class="row table between padding-tb-lg padding-lr-md border-bottom full-line">
+                <div class="row left row-gap-10">
+                    <div class="col">
+                        <label for="filter-tipo">Tipo</label>
+                        <select class="width-200 height-md white" id="filter-tipo" name="tipo">
+                            <option value="">Todos</option>
+                            <option value="interno">Interno</option>
+                            <option value="externo">Externo</option>
+                        </select>
+                    </div>
+                    <div class="col">
+                        <label for="filter-perfil">Perfil</label>
+                        <select class="width-200 height-md white" id="filter-perfil" name="perfil">
+                            <option value="">Todos</option>
+                            <option value="estagiario">Estagiário</option>
+                            <option value="servidor">Servidor</option>
+                            <option value="diretora">Diretora</option>
+                            <option value="magistrada">Magistrada</option>
+                            <option value="admin">Admin</option>
+                            <option value="estudante">Estudante</option>
+                        </select>
+                    </div>
+                    <div class="col">
+                        <label for="items-per-page">Itens por página</label>
+                        <select class="width-100 height-md white" id="items-per-page" name="items_per_page">
+                            <option value="10">10</option>
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row right">
+                    <div class="col">
+                        <label for="filter-perfil">-</label>
+                        <button type="submit" class="btn btn-primary">Consultar</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <!-- ROW ACTIONS -->
+        <div class="row table buttons right padding-lr-md padding-tb-md row-gap-10">
+            <button type="button" class="btn btn-primary" id="novo-cadastro-btn">Novo cadastro</button>
+        </div>
+
+        <!-- SUBTITLE TABLE -->
+        <div class="row table subtitle left padding-tb-md padding-lr-lg border-bottom">Lista de usuários</div>
+
+        <div class="col full-line border-bottom">
+            <!-- Ordem: tipo (interno primeiro), setor (Cartório > Gabinete > Sala de audiências), cargo -->
+            <!-- Interno, Cartório, Servidor -->
+            <div class="row table between padding-lr-md padding-tb-md border-bottom">
+                <div class="row table left fit">
+                    <div class="col parte-nome text-ellipsis">
+                        <span class="minor-info">Nome</span>
+                        <span class="major-info">Maria Silva Santos</span>
+                    </div>
+                    <div class="col parte-tipo">
+                        <span class="minor-info">Tipo</span>
+                        <span class="major-info">Interno</span>
+                    </div>
+                    <div class="col parte-setor">
+                        <span class="minor-info">Setor</span>
+                        <span class="major-info">Cartório</span>
+                    </div>
+                    <div class="col parte-cargo">
+                        <span class="minor-info">Cargo</span>
+                        <span class="major-info">Servidor</span>
+                    </div>
+                </div>
+                <div class="row table right fit">
+                    <div class="col part-edit">
+                        <button type="button" class="" title="Editar" data-edit-id="USR-001"><i class="fi fi-rr-file-edit"></i></button>
+                    </div>
+                    <div class="col">
+                        <span class="major-info"><span class="width-100 status status-success">Ativo</span></span>
+                    </div>                    
+                </div>
+            </div>
+            <!-- Interno, Gabinete, Diretora -->
+            <div class="row table between padding-lr-md padding-tb-md border-bottom">
+                <div class="row table left fit">
+                    <div class="col parte-nome text-ellipsis">
+                        <span class="minor-info">Nome</span>
+                        <span class="major-info">Ana Paula Mendes</span>
+                    </div>
+                    <div class="col parte-tipo">
+                        <span class="minor-info">Tipo</span>
+                        <span class="major-info">Interno</span>
+                    </div>
+                    <div class="col parte-setor">
+                        <span class="minor-info">Setor</span>
+                        <span class="major-info">Gabinete</span>
+                    </div>
+                    <div class="col parte-cargo">
+                        <span class="minor-info">Cargo</span>
+                        <span class="major-info">Diretora</span>
+                    </div>
+                </div>
+                <div class="row table right fit">
+                    <div class="col part-edit">
+                        <button type="button" class="" title="Editar" data-edit-id="USR-003"><i class="fi fi-rr-file-edit"></i></button>
+                    </div>
+                    <div class="col">
+                        <span class="major-info"><span class="width-100 status status-cancelled">Bloqueado</span></span>
+                    </div>                    
+                </div>
+            </div>
+            <!-- Interno, Sala de audiências, Magistrada -->
+            <div class="row table between padding-lr-md padding-tb-md border-bottom">
+                <div class="row table left fit">
+                    <div class="col parte-nome text-ellipsis">
+                        <span class="minor-info">Nome</span>
+                        <span class="major-info">Carlos Eduardo Lima</span>
+                    </div>
+                    <div class="col parte-tipo">
+                        <span class="minor-info">Tipo</span>
+                        <span class="major-info">Interno</span>
+                    </div>
+                    <div class="col parte-setor">
+                        <span class="minor-info">Setor</span>
+                        <span class="major-info">Sala de audiências</span>
+                    </div>
+                    <div class="col parte-cargo">
+                        <span class="minor-info">Cargo</span>
+                        <span class="major-info">Magistrada</span>
+                    </div>
+                    </div>
+                    <div class="row table right fit">
+                    <div class="col part-edit">
+                        <button type="button" class="" title="Editar" data-edit-id="USR-004"><i class="fi fi-rr-file-edit"></i></button>
+                    </div>
+                    <div class="col">
+                        <span class="major-info"><span class="width-100 status status-success">Ativo</span></span>
+                    </div>                    
+                </div>
+            </div>
+            <!-- Externo, —, Estudante -->
+            <div class="row table between padding-lr-md padding-tb-md border-bottom">
+                <div class="row table left fit">
+                    <div class="col parte-nome text-ellipsis">
+                        <span class="minor-info">Nome</span>
+                        <span class="major-info">João Oliveira Costa</span>
+                    </div>
+                    <div class="col parte-tipo">
+                        <span class="minor-info">Tipo</span>
+                        <span class="major-info">Externo</span>
+                    </div>
+                    <div class="col parte-setor">
+                        <span class="minor-info">Setor</span>
+                        <span class="major-info">—</span>
+                    </div>
+                    <div class="col parte-cargo">
+                        <span class="minor-info">Cargo</span>
+                        <span class="major-info">Estudante</span>
+                    </div>
+                </div>
+                <div class="row table right fit">
+                    <div class="col part-edit">
+                        <button type="button" class="" title="Editar" data-edit-id="USR-002"><i class="fi fi-rr-file-edit"></i></button>
+                    </div>
+                    <div class="col">
+                        <span class="major-info"><span class="width-100 status status-pending">Pendente</span></span>
+                    </div>                    
+                </div>
+            </div>
+        </div>
+
+        <!-- Paginação (padrão: X-Y de Z, N páginas, M itens por página) -->
+        <div class="row table between padding-tb-lg padding-lr-md">
+            <span class="left pagination-info">
+                Mostrando 1-4 de 100 usuários (4 páginas, 25 itens por página)
+            </span>
+            <div class="right pagination-controls">
+                <a class="pagination-symbol disabled" aria-disabled="true">‹</a>
+                <a class="pagination-number active" href="?page=usuarioslist&items_per_page=25&page_number=1">1</a>
+                <a class="pagination-number" href="?page=usuarioslist&items_per_page=25&page_number=2">2</a>
+                <a class="pagination-number" href="?page=usuarioslist&items_per_page=25&page_number=3">3</a>
+                <a class="pagination-number" href="?page=usuarioslist&items_per_page=25&page_number=4">4</a>
+                <a class="pagination-symbol" href="?page=usuarioslist&items_per_page=25&page_number=2">›</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-page">
+        <div class="location">
+            <span class="all">Aplicativo web desenvolvido integralmente por </span>
+            <span class="specific">Jorge Reis Develop</span>
+            <span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span>
+        </div>
+    </div>
+
+    <!-- Etapa 2: JS – filtros (submit ao alterar), paginação (itens por página), novo cadastro e editar -->
+    <script>
+    (function () {
+        var form = document.getElementById('form-filters');
+        if (!form) return;
+
+        var itemsPerPage = document.getElementById('items-per-page');
+        var filterTipo = document.getElementById('filter-tipo');
+        var filterPerfil = document.getElementById('filter-perfil');
+
+        if (itemsPerPage) {
+            itemsPerPage.addEventListener('change', function () {
+                form.submit();
+            });
+        }
+        if (filterTipo) {
+            filterTipo.addEventListener('change', function () {
+                form.submit();
+            });
+        }
+        if (filterPerfil) {
+            filterPerfil.addEventListener('change', function () {
+                form.submit();
+            });
+        }
+
+        var novoBtn = document.getElementById('novo-cadastro-btn');
+        if (novoBtn) {
+            novoBtn.addEventListener('click', function () {
+                window.location.href = '/frame.php?page=usuarioscreate';
+            });
+        }
+
+        document.querySelectorAll('button[data-edit-id]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var id = this.getAttribute('data-edit-id');
+                if (id) {
+                    window.location.href = '/frame.php?page=usuariosedit&id=' + encodeURIComponent(id);
+                }
+            });
+        });
+    })();
+    </script>
+</body>
+</html>

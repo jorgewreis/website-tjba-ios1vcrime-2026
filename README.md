@@ -174,7 +174,7 @@ Padrão de navegação do sistema:
 
 ### Usuários
 
-- **Chave primária:** `id_usuario`
+- **Chave primária:** `id_usuario` (padrão de ID: 30 caracteres = 3 letras + hífen + 26 chars; ver [docs/00-foundation/id-padrao-banco-dados.md](docs/00-foundation/id-padrao-banco-dados.md))
 
 ---
 
@@ -244,6 +244,58 @@ Diretrizes práticas para manter consistência visual (com base na paleta acima)
 
 - Fundo branco, borda em tom médio.
 - No foco, borda em azul forte e (se usar) sombra bem discreta.
+
+### Listas internas (padrão de página)
+
+As páginas internas de listagem (cartório, consultas, etc.) compartilham o mesmo esqueleto visual:
+
+- **Container principal:** `container-full card-page`.
+- **Faixa de título:** `display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom`
+  - Esquerda: `<h2>` com o título da lista.
+  - Direita: busca, select de export (quando existir) e/ou botão principal (ex.: `Novo cadastro`), usando larguras numéricas (`width-300`, `width-400`, etc.) e `height-md`.
+- **Bloco de filtros:** `display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md`
+  - Campos agrupados em colunas (`div.col`) com larguras fixas via utilitários `width-XXX`.
+  - Select “Itens por página” à direita, alinhado em `align-end`.
+- **Registros:** cada item como bloco:
+  - Container: `display-flex col col-full register border-bottom`.
+  - Linha principal: `display-flex row row-full justify-between padding-x-sm padding-y-sm align-center`.
+  - Conteúdo à esquerda em `row-fit`, ações / status à direita em `row-fit`.
+- **Subtarefas (quando existirem):**
+  - Container: `display-flex col col-full subtask subtask-collapsed` controlado por input/radio.
+  - Linhas: `display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top`.
+  - Rótulo de status de subtarefa: `padding-x-lg height-sm status status-*` para chips compactos.
+- **Estado vazio:** usa `register border-bottom` com mensagem em `major-info`.
+- **Paginação:** `display-flex row row-full justify-between padding-x-sm padding-y-sm`, com `pagination-info` + `pagination-controls` (símbolos ‹ / ›).
+
+### Utilitários de largura (inputs/listas)
+
+Para campos de formulário e colunas em listas, o projeto usa utilitários numéricos definidos em `public/assets/css/shared/form.css`:
+
+- **Classe base:** `.width-XXX`, onde `XXX` é um múltiplo de 100 (de `width-100` até `width-999`).
+- **Equivalência aproximada com o grid antigo:**
+  - `width-100` ≃ antigo `width-sm` (50px).
+  - `width-200` ≃ antigo `width-md` (100px).
+  - `width-400` ≃ antigo `width-lg` (200px).
+  - `width-600` ≃ antigo `width-xl` (300px).
+- **Uso típico em listas internas:**
+  - Campos curtos (ex.: prazo, CPF, CEP): `width-100` ou `width-200`.
+  - Campos médios (ex.: tipo, setor, CNPJ): `width-300` ou `width-400`.
+  - Campos longos (ex.: nome, logradouro, observações): `width-500` a `width-700`.
+  - Campos muito amplos (ex.: observações extensas): `width-800` ou `width-900`.
+
+> As classes **`width-sm`**, **`width-md`**, **`width-lg`**, **`width-xl`** e **`width-xxl`** foram descontinuadas em favor de `width-100`…`width-999`. Novos componentes devem sempre usar o padrão numérico.
+
+### Status de tarefas e subtarefas
+
+- **Classes base de status:** `status-pending`, `status-current`, `status-finished`, `status-cancelled`, `status-success`, `status-warning`, etc.
+- **Chips de status em tarefas principais** (linha da lista ou timeline):
+  - Usam apenas `status` + a classe semântica (`status-current`, `status-finished`, etc.) e espaçamento horizontal (`padding-x-lg` quando aplicável).
+  - **Não** utilizam `height-sm` por padrão.
+- **Subtarefas nas listas (cartas expedidas/recebidas, guias, medidas, cejusc):**
+  - Cada subtarefa é renderizada em uma linha `subtask` com um chip de status compacto.
+  - Estes chips usam `padding-x-lg height-sm status status-*` para manter altura consistente nos blocos de subtarefa.
+
+Esse padrão unifica o comportamento visual de todas as páginas internas de lista, facilitando manutenção e criação de novos módulos.
 
 ---
 

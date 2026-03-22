@@ -72,7 +72,8 @@ if ($currentUserId !== null && $currentUserId !== '') {
     }
 }
 
-$ruleServidor = '?';
+$ruleServidor = '';
+$hasRuleAllocation = false;
 $ruleName = 'ALLOCATE-CARTASEXPEDIDAS';
 try {
     $regrasRepo = new AlocacoesRegrasRepository($connection);
@@ -86,9 +87,7 @@ try {
             $nome = trim((string) ($u['nome'] ?? ''));
             $sobrenome = trim((string) ($u['sobrenome'] ?? ''));
             $ruleServidor = $sobrenome !== '' ? $nome . ' ' . $sobrenome : $nome;
-            if ($ruleServidor === '') {
-                $ruleServidor = '?';
-            }
+            $hasRuleAllocation = $ruleServidor !== '';
         }
     }
 } catch (\Throwable $exception) {
@@ -104,12 +103,9 @@ try {
         <title>Cartas Expedidas - Primeira Vara Crime de Ilhéus</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="/assets/css/shared/reset.css">
-        <link rel="stylesheet" href="/assets/css/shared/variables.css">
-        <link rel="stylesheet" href="/assets/css/shared/page.css">
-        <link rel="stylesheet" href="/assets/css/shared/form.css">
-        <link rel="stylesheet" href="/assets/css/shared/table.css">
-        
+                <?php include __DIR__ . '/_internal_head_styles.php'; ?>
+
+        <?php include __DIR__ . '/_toast_script.php'; ?>
     </head>
 <body class="page-internal">
 
@@ -136,20 +132,25 @@ try {
         </a>
     </div>
 
-    <div class="card-page">       
-        <div class="row table header">Informações obrigatórias</div>
-        <div class="row filter">
-            <div class="col filter">
-                <label for="filter-processo">Processo</label>
-                <input type="text" class="width-md height-md" id="filter-processo" placeholder="Digite o número do processo" required>
+    <div class="container-full card-page">       
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-start">
+                <h2>Informações obrigatórias para o cadastro</h2>
             </div>
-            <div class="col filter">
-                <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe</label>
-                <input type="text" class="width-lg height-md" id="filter-classe" placeholder="Classe processual" required>                
+            <div class="display-flex row row-fit justify-end gap-y-md"></div>
+        </div>
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
+            <div class="col">
+                <label for="filter-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <input type="text" class="width-400 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" required>
             </div>
-            <div class="col filter">
-                <label for="filter-tipo">Finalidade</label>
-                <select class="width-lg height-md" id="filter-tipo" required>
+            <div class="col">
+                <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
+                <input type="text" class="width-600 height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>                
+            </div>
+            <div class="col">
+                <label for="filter-tipo">Finalidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <select class="width-600 height-md" id="filter-tipo" required>
                     <option value="" selected disabled>Selecione aqui</option>
                     <option value="Intimação para Audiência">Intimação para Audiência</option>
                     <option value="Intimação de Decisão Interlocutória">Intimação de Decisão</option>
@@ -159,23 +160,25 @@ try {
                     <option value="Suspensão Condicional">Suspensão Condicional</option>
                     <option value="Outra">Outra não listada</option>
                 </select>
-            </div>            
+            </div>
         </div>
+
         <?php if ($cnjError): ?>
-            <div class="row filter">
-                <div class="col">
-                    <label class="status status-cancelled"><?php echo htmlspecialchars($cnjError, ENT_QUOTES); ?></label>
-                </div>
-            </div>
+            <script>
+                if (typeof showToast === 'function') {
+                    showToast({ type: 'error', variant: 'full', title: 'Erro', message: <?php echo json_encode($cnjError, JSON_UNESCAPED_UNICODE); ?> });
+                }
+            </script>
         <?php endif; ?>
-        <div class="row filter">
-            <div class="col filter">
-                <label for="filter-cidade">Cidade</label>
-                <input type="text" class="width-xl height-md" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="50" required>
+
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
+            <div class="col">
+                <label for="filter-cidade">Cidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <input type="text" class="width-600 height-md" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="50" required>
             </div>
-            <div class="col filter">
-                <label for="filter-estado">Estado</label>
-                <select class="width-md height-md" id="filter-estado" required>
+            <div class="col">
+                <label for="filter-estado">Estado <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <select class="width-400 height-md" id="filter-estado" required>
                     <option value="AC">Acre</option>
                     <option value="AL">Alagoas</option>
                     <option value="AP">Amapá</option>
@@ -205,38 +208,35 @@ try {
                     <option value="TO">Tocantins</option>
                 </select>
             </div>            
-            <div class="col filter">
-                <label for="filter-prazo">Prazo cumprimento</label>
-                <select class="width-sm height-md" id="filter-prazo" required>
+            <div class="col">
+                <label for="filter-prazo">Prazo <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <select class="width-300 height-md" id="filter-prazo" required>
                     <option value="5 dias">5 dias</option>
                     <option value="10 dias">10 dias</option>
                     <option value="15 dias">15 dias</option>
-                    <option value="30 dias" selected>30 dias</option>
-                    <option value="60 dias">60 dias</option>
+                    <option value="30 dias">30 dias</option>
+                    <option value="60 dias" selected>60 dias</option>
                     <option value="90 dias">90 dias</option>
                 </select>
             </div>
         </div>
-        <div class="row info">
-            <span>*Conforme regra de divisão de tarefas, todas as Cartas Expedidas serão alocadas automaticamente e deverão ser remetidas por <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
-        </div>
 
+        <div class="display-flex row row-full info padding-x-md padding-y-md">
+            <?php if ($hasRuleAllocation): ?>
+                <span>*Conforme regra de divisão de tarefas, todas as Cartas Expedidas serão alocadas automaticamente e deverão ser remetidas por <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
+            <?php else: ?>
+                <span>*Não existe nenhum usuário alocado automaticamente para esta tarefa no momento.</span>
+            <?php endif; ?>
+        </div>
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
 
         <!-- Ações -->
-        <div class="row buttons">
+        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
             <button class="btn btn-primary-outline" id="alterar-regra-btn" style="display: none;">Alterar regra de envio</button> <!-- visível apenas para usuários com permissão de administrador -->
             <button class="btn btn-secondary" id="voltar-btn">Voltar</button>
             <button class="btn btn-primary" id="cadastrar-btn" type="button">Cadastrar</button>
         </div>        
-
-        <!-- Informações -->
-        <div class="row pagination">
-            <div class="col">
-                <label id="cadastro-feedback" class="status-placeholder" aria-live="polite"></label>
-            </div>
-        </div>
     </div>
         
     <!-- Develop Info -->
@@ -261,21 +261,41 @@ try {
     </script>
     <script src="/assets/js/modules/cartorio/cartas-expedidas/cnj.js"></script>
     <script src="/assets/js/modules/cartorio/cartas-expedidas/datajud-api.js"></script>
+    <script>
+        (function () {
+            var processoInput = document.getElementById('filter-processo');
+            if (processoInput) {
+                processoInput.addEventListener('input', function () {
+                    var digits = (this.value || '').replace(/\D/g, '');
+                    if (digits.length !== 20) {
+                        var classeInput = document.getElementById('filter-classe');
+                        if (classeInput) {
+                            classeInput.value = '';
+                            classeInput.readOnly = true;
+                        }
+                        var hCod = document.getElementById('hidden-classe-codigo');
+                        var hDesc = document.getElementById('hidden-classe-descricao');
+                        if (hCod) hCod.value = '';
+                        if (hDesc) hDesc.value = '';
+                    }
+                });
+            }
+        })();
+    </script>
     <script src="/assets/js/modules/cartorio/cartas-expedidas/user.js"></script>
-    <script src="/assets/js/modules/cartorio/cartas-expedidas/text-formatter.js"></script>
+    <script src="/assets/js/shared/text-formatter.js"></script>
     <script>
         window.__currentUserName = <?php echo json_encode($currentUserName, JSON_UNESCAPED_UNICODE); ?>;
     </script>
     <script>
         (() => {
             const btn = document.getElementById('cadastrar-btn');
-            const feedback = document.getElementById('cadastro-feedback');
             const classeCodigoField = document.getElementById('hidden-classe-codigo');
             const classeDescricaoField = document.getElementById('hidden-classe-descricao');
             const showFeedback = (message, type = 'success') => {
-                if (!feedback) return;
-                const variant = type === 'error' ? 'status-cancelled' : 'status-finished';
-                feedback.innerHTML = `<label class="status ${variant}">${message}</label>`;
+                if (typeof showToast === 'function') {
+                    showToast({ type: type === 'error' ? 'error' : 'success', variant: 'full', title: type === 'error' ? 'Erro' : 'Sucesso', message });
+                }
             };
 
             const getValue = (id) => document.getElementById(id)?.value.trim() || '';
@@ -314,7 +334,7 @@ try {
                             }
                             const status = (data.status_cidade || '').trim();
                             if (status.toUpperCase() === 'CCM') {
-                                alert('Comarca com Central de Mandados');
+                                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Informação', message: 'Comarca com Central de Mandados' });
                                 cidadeInput.value = '';
                             } else if (status.toLowerCase() === 'agregada' && data.nome) {
                                 cidadeInput.value = formatCidade(data.nome);
@@ -331,7 +351,6 @@ try {
 
             const requiredFields = [
                 { id: 'filter-processo', label: 'Número do processo' },
-                { id: 'filter-classe', label: 'Classe processual' },
                 { id: 'filter-tipo', label: 'Finalidade' },
                 { id: 'filter-prazo', label: 'Prazo de cumprimento' },
                 { id: 'filter-estado', label: 'Estado' },
@@ -358,12 +377,23 @@ try {
                 if (btn.disabled) {
                     return;
                 }
+                // Dispara blur para aplicar correção automática (CNJ no processo; maiúsculas/minúsculas na cidade)
+                document.getElementById('filter-processo')?.blur();
+                document.getElementById('filter-cidade')?.blur();
+
+                const processoInputEl = document.getElementById('filter-processo');
                 const processoRaw = getValue('filter-processo');
                 if (processoRaw === '') {
                     return showFeedback('Informe o número do processo antes de cadastrar.', 'error');
                 }
-                if (typeof window.validarCNJ === 'function' && !window.validarCNJ(processoRaw)) {
-                    return showFeedback('O número do processo é inválido. Verifique os dígitos e o dígito verificador.', 'error');
+                if (processoInputEl && typeof window.normalizeAndValidateCNJValue === 'function') {
+                    const normalized = window.normalizeAndValidateCNJValue(processoRaw, { toastOnInvalid: true });
+                    if (!normalized.ok) {
+                        processoInputEl.value = '';
+                        processoInputEl.focus();
+                        return;
+                    }
+                    processoInputEl.value = normalized.formatted;
                 }
                 if (!validateRequiredFields()) {
                     return;
@@ -380,25 +410,34 @@ try {
                     return showFeedback('Não foi possível identificar o usuário logado.', 'error');
                 }
 
+                const classeVal = getValue('filter-classe');
+                if (classeVal === 'Aguarde...') {
+                    return showFeedback('Aguarde a consulta ao DataJud terminar antes de cadastrar.', 'error');
+                }
                 const payload = {
-                    numero_processo: processoRaw,
-                    classe: getValue('filter-classe'),
+                    numero_processo: getValue('filter-processo'),
+                    classe: classeVal || '',
                     finalidade: getValue('filter-tipo'),
                     prazo: sanitizePrazo(getValue('filter-prazo')),
                     estado: getValue('filter-estado'),
                     cidade: formatCidade(getValue('filter-cidade')),
                     usuario: usuarioAtual,
                 };
-
                 if (classeCodigoField?.value.trim()) {
                     payload.classe_codigo = classeCodigoField.value.trim();
                 }
                 if (classeDescricaoField?.value.trim()) {
                     payload.classe_descricao = classeDescricaoField.value.trim();
+                } else if (classeVal && classeVal !== 'Classe não informada' && classeVal !== 'Aguarde...') {
+                    payload.classe_descricao = classeVal;
+                    if (!payload.classe_codigo) {
+                        payload.classe_codigo = classeVal.replace(/\s+/g, '').substring(0, 20);
+                    }
                 }
 
                 btn.disabled = true;
-                showFeedback('Enviando dados...', 'success');
+                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Informação', message: 'Enviando dados...' });
+                else showFeedback('Enviando dados...', 'success');
 
                 try {
                     const response = await fetch(endpoint, {
