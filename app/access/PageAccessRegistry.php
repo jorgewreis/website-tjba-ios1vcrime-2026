@@ -74,6 +74,9 @@ final class PageAccessRegistry
             'monitoramentogabinete' => $areaGabinete,
             'monitoramentogabinetecreate' => $areaGabinete,
             'monitoramentogabineteedit' => $areaGabinete,
+            'reuspresos' => $areaGabinete,
+            'reuspresoscreate' => $areaGabinete,
+            'reuspresosedit' => $areaGabinete,
 
             'notificacoes' => ['kind' => 'all_internal'],
             'configuracoes' => ['kind' => 'all_internal'],

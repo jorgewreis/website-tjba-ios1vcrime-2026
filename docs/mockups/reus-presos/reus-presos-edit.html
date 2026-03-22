@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Réus Presos (Gabinete) — Edição (mockup)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="../../../public/assets/css/shared/reset.css">
+    <link rel="stylesheet" href="../../../public/assets/css/shared/color.css">
+    <link rel="stylesheet" href="../../../public/assets/css/shared/layout.css">
+    <link rel="stylesheet" href="../../../public/assets/css/shared/page.css">
+    <link rel="stylesheet" href="../../../public/assets/css/shared/form.css">
+    <link rel="stylesheet" href="../../../public/assets/css/shared/toast.css">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+</head>
+<body class="page-internal">
+
+    <div class="spacing-top-page"></div>
+
+    <div class="header-page">
+        <div class="location">
+            <span class="all">Interno - Gabinete - Réus Presos -</span>
+            <span class="specific">Edição</span>
+        </div>
+        <h1 class="title-page">Editar réu preso</h1>
+        <p class="description-page">Vincule processos (prioridade reu-preso quando preso), informe datas e movimentações que alimentam prazos.</p>
+    </div>
+
+    <div class="container-full card-page">
+
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <h2 style="margin:0;">Resumo</h2>
+        </div>
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md flex-wrap" style="gap:24px;">
+            <div class="col">
+                <span class="minor-info">Próxima reavaliação (90 dias após decretada)</span>
+                <span class="major-info" style="color:var(--primary-color-active);font-weight:600;">12/06/2026</span>
+            </div>
+            <div class="col">
+                <span class="minor-info">Última movimentação</span>
+                <span class="major-info">Decretação de prisão preventiva — 14/03/2026</span>
+            </div>
+        </div>
+
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <h2 style="margin:0;">Dados gerais</h2>
+        </div>
+        <div class="display-flex col col-full padding-x-md padding-y-md gap-y-md border-bottom">
+            <div class="col">
+                <label for="grp-edit-nome">Nome completo do réu <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <input type="text" class="width-800 height-md" id="grp-edit-nome" value="João da Silva Teste" maxlength="255">
+            </div>
+            <div class="display-flex row row-full justify-end">
+                <button type="button" class="btn btn-primary height-md" id="btn-grp-salvar-nome">Salvar nome</button>
+            </div>
+        </div>
+
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <h2 style="margin:0;">Processos vinculados</h2>
+        </div>
+        <div class="display-flex col col-full padding-x-md padding-y-md gap-y-md border-bottom">
+            <p class="minor-info" style="margin:0;">Um processo deve ser o <strong>principal</strong> (lista). Com situação <em>preso</em>, o sistema aplica a prioridade <strong>reu-preso</strong> naquele processo.</p>
+
+            <div class="display-flex col col-full gap-y-sm">
+                <div class="display-flex col col-full register border-bottom grp-proc-link" data-link-id="GPP-MOCK-1">
+                    <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-start flex-wrap gap-y-md">
+                        <div class="display-flex row row-fit flex-wrap gap-y-md align-end" style="flex:1 1 auto;min-width:0;">
+                            <div class="col" style="min-width:72px;">
+                                <span class="minor-info">Principal</span>
+                                <div class="display-flex align-center" style="min-height:32px;">
+                                    <input type="radio" name="principal_radio" class="grp-principal-radio" value="GPP-MOCK-1" checked aria-label="Marcar como processo principal">
+                                </div>
+                            </div>
+                            <div class="col" style="min-width:200px;max-width:100%;">
+                                <span class="minor-info">Processo</span>
+                                <span class="major-info text-ellipsis grp-numero-processo" title="0001234-56.2024.8.05.0001">0001234-56.2024.8.05.0001</span>
+                            </div>
+                            <div class="col" style="min-width:140px;">
+                                <span class="minor-info">Situação</span>
+                                <select class="width-full height-md grp-situacao" data-link-id="GPP-MOCK-1">
+                                    <option value="preso" selected>Preso</option>
+                                    <option value="solto">Solto</option>
+                                </select>
+                            </div>
+                            <div class="col" style="min-width:150px;">
+                                <span class="minor-info">Data da prisão</span>
+                                <input type="date" class="width-full height-md grp-dp" data-link-id="GPP-MOCK-1" value="2025-10-25">
+                            </div>
+                            <div class="col" style="min-width:150px;">
+                                <span class="minor-info">Data do fato</span>
+                                <input type="date" class="width-full height-md grp-df" data-link-id="GPP-MOCK-1" value="2024-08-10">
+                            </div>
+                        </div>
+                        <div class="display-flex row row-fit justify-end gap-y-sm align-center" style="flex-shrink:0;align-self:flex-start;">
+                            <button type="button" class="btn btn-primary height-sm grp-save-link" data-link-id="GPP-MOCK-1">Salvar</button>
+                            <button type="button" class="btn btn-danger-outline height-sm grp-unlink" data-link-id="GPP-MOCK-1">Remover</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="display-flex col col-full register border-bottom grp-proc-link" data-link-id="GPP-MOCK-2">
+                    <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-start flex-wrap gap-y-md">
+                        <div class="display-flex row row-fit flex-wrap gap-y-md align-end" style="flex:1 1 auto;min-width:0;">
+                            <div class="col" style="min-width:72px;">
+                                <span class="minor-info">Principal</span>
+                                <div class="display-flex align-center" style="min-height:32px;">
+                                    <input type="radio" name="principal_radio" class="grp-principal-radio" value="GPP-MOCK-2" aria-label="Marcar como processo principal">
+                                </div>
+                            </div>
+                            <div class="col" style="min-width:200px;max-width:100%;">
+                                <span class="minor-info">Processo</span>
+                                <span class="major-info text-ellipsis grp-numero-processo" title="0009876-54.2023.8.05.0002">0009876-54.2023.8.05.0002</span>
+                            </div>
+                            <div class="col" style="min-width:140px;">
+                                <span class="minor-info">Situação</span>
+                                <select class="width-full height-md grp-situacao" data-link-id="GPP-MOCK-2">
+                                    <option value="preso">Preso</option>
+                                    <option value="solto" selected>Solto</option>
+                                </select>
+                            </div>
+                            <div class="col" style="min-width:150px;">
+                                <span class="minor-info">Data da prisão</span>
+                                <input type="date" class="width-full height-md grp-dp" data-link-id="GPP-MOCK-2" value="">
+                            </div>
+                            <div class="col" style="min-width:150px;">
+                                <span class="minor-info">Data do fato</span>
+                                <input type="date" class="width-full height-md grp-df" data-link-id="GPP-MOCK-2" value="">
+                            </div>
+                        </div>
+                        <div class="display-flex row row-fit justify-end gap-y-sm align-center" style="flex-shrink:0;align-self:flex-start;">
+                            <button type="button" class="btn btn-primary height-sm grp-save-link" data-link-id="GPP-MOCK-2">Salvar</button>
+                            <button type="button" class="btn btn-danger-outline height-sm grp-unlink" data-link-id="GPP-MOCK-2">Remover</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="display-flex col col-full gap-y-md border-top padding-top-md">
+                <h3 style="margin:0;font-size:1rem;">Incluir processo</h3>
+                <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
+                    <div class="col">
+                        <label for="filter-processo">Número do processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                        <input type="text" class="width-400 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off">
+                    </div>
+                    <div class="col">
+                        <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
+                        <input type="text" class="width-500 height-md" id="filter-classe" placeholder="Preenchido pelo DataJud" readonly>
+                    </div>
+                </div>
+                <input type="hidden" id="hidden-classe-codigo">
+                <input type="hidden" id="hidden-classe-descricao">
+                <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
+                    <div class="col">
+                        <label for="grp-new-sit">Situação neste processo</label>
+                        <select class="width-300 height-md" id="grp-new-sit">
+                            <option value="preso">Preso</option>
+                            <option value="solto">Solto</option>
+                        </select>
+                    </div>
+                    <div class="col">
+                        <label for="grp-new-dp">Data da prisão</label>
+                        <input type="date" class="height-md" id="grp-new-dp">
+                    </div>
+                    <div class="col">
+                        <label for="grp-new-df">Data do fato</label>
+                        <input type="date" class="height-md" id="grp-new-df">
+                    </div>
+                    <div class="col display-flex align-center" style="padding-top:20px;">
+                        <label class="display-flex align-center gap-y-sm" style="gap:8px;">
+                            <input type="checkbox" id="grp-new-principal"> Marcar como principal
+                        </label>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-secondary" id="btn-grp-add-proc" disabled title="Mockup — sem API">Adicionar processo</button>
+            </div>
+        </div>
+
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <h2 style="margin:0;">Movimentações processuais</h2>
+        </div>
+        <div class="display-flex col col-full padding-x-md padding-y-md gap-y-md border-bottom">
+            <ul class="minor-info" style="margin:0;padding-left:1.2rem;">
+                <li>Decretação de prisão preventiva — 14/03/2026</li>
+                <li>Outro — 01/02/2026</li>
+            </ul>
+
+            <div class="display-flex row row-full flex-wrap align-end gap-y-md border-top padding-top-md" style="gap:12px;">
+                <div class="col">
+                    <label for="grp-mov-tipo">Tipo</label>
+                    <select class="width-400 height-md" id="grp-mov-tipo">
+                        <option value="decretacao_prisao_preventiva">Decretação de prisão preventiva</option>
+                        <option value="soltura">Soltura</option>
+                        <option value="revogacao_prisao">Revogação da prisão</option>
+                        <option value="outro">Outro</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <label for="grp-mov-data">Data</label>
+                    <input type="date" class="height-md" id="grp-mov-data">
+                </div>
+                <div class="col" style="flex:1;min-width:200px;">
+                    <label for="grp-mov-obs">Observações</label>
+                    <input type="text" class="width-full height-md" id="grp-mov-obs" placeholder="Opcional" maxlength="2000">
+                </div>
+                <div class="col">
+                    <label for="grp-mov-link">Vínculo (opcional)</label>
+                    <select class="width-400 height-md" id="grp-mov-link">
+                        <option value="">—</option>
+                        <option value="GPP-MOCK-1">0001234-56.2024.8.05.0001</option>
+                        <option value="GPP-MOCK-2">0009876-54.2023.8.05.0002</option>
+                    </select>
+                </div>
+                <button type="button" class="btn btn-primary height-md" id="btn-grp-add-mov" style="margin-top:22px;" disabled title="Mockup — sem API">Registrar movimentação</button>
+            </div>
+        </div>
+
+        <div class="display-flex row row-full justify-between padding-x-md padding-y-md gap-y-md flex-wrap">
+            <button type="button" class="btn btn-danger-outline" id="btn-grp-arquivar" disabled title="Mockup — use a tela PHP para arquivar">Arquivar</button>
+            <div class="display-flex row row-fit justify-end gap-y-md" style="gap:12px;margin-left:auto;">
+                <button type="button" class="btn btn-secondary" id="btn-grp-voltar" onclick="window.location.href='reus-presos-list.html'">Voltar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-page">
+        <div class="location">
+            <span class="all">Aplicativo web desenvolvido integralmente por </span>
+            <span class="specific">Jorge Reis Develop</span>
+            <span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span>
+        </div>
+    </div>
+</body>
+</html>

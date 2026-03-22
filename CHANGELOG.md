@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0060
+
+**Data:** 2026-03-22 10:39:10 | **Commit:** `3cb4dc2` | **Tipo:** `patch`
+
+- Feat: nova implementacao pagina reus presos
+
 ## V. 1.04.0059
 
 **Data:** 2026-03-22 09:02:50 | **Commit:** `188c02d` | **Tipo:** `patch`
@@ -3648,6 +3654,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

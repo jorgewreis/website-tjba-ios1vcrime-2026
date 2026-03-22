@@ -73,6 +73,22 @@ final class ProcessoPrioridadesRepository
         $statement->execute();
     }
 
+    public function deleteByProcessoIdAndPrioridade(string $processoId, string $prioridade): void
+    {
+        $processoId = trim($processoId);
+        $prioridade = trim($prioridade);
+        if ($processoId === '' || $prioridade === '') {
+            return;
+        }
+
+        $statement = $this->connection->prepare(
+            sprintf('DELETE FROM `%s` WHERE `processo_id` = :processo_id AND `prioridade` = :prioridade', $this->table)
+        );
+        $statement->bindValue(':processo_id', $processoId);
+        $statement->bindValue(':prioridade', $prioridade);
+        $statement->execute();
+    }
+
     private function findOne(string $processoId, string $prioridade): ?array
     {
         $statement = $this->connection->prepare(
