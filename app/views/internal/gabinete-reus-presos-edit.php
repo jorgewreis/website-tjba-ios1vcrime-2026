@@ -135,24 +135,28 @@ if ($ultimaMov !== null) {
             <h2 style="margin:0;">Processos vinculados</h2>
         </div>
         <div class="display-flex col col-full padding-x-md padding-y-md gap-y-md border-bottom">
-            <p class="minor-info" style="margin:0;">Um processo deve ser o <strong>principal</strong> (lista). Com situação <em>preso</em>, o sistema aplica a prioridade <strong>reu-preso</strong> naquele processo.</p>
+            <p class="minor-info" style="margin:0;">Um processo deve ser o <strong>principal</strong> (lista); os demais são <strong>secundários</strong>. Com situação <em>preso</em>, o sistema aplica a prioridade <strong>reu-preso</strong> naquele processo.</p>
 
             <?php if (!empty($processos)): ?>
+            <?php $grpProcCount = count($processos); ?>
             <div class="display-flex col col-full gap-y-sm">
                 <?php foreach ($processos as $p):
-                    $lid = htmlspecialchars((string) ($p['id'] ?? ''), ENT_QUOTES);
+                    $lidRaw = (string) ($p['id'] ?? '');
+                    $lid = htmlspecialchars($lidRaw, ENT_QUOTES);
+                    $vid = htmlspecialchars(preg_replace('/[^a-zA-Z0-9_-]/', '_', $lidRaw), ENT_QUOTES);
                     $num = htmlspecialchars((string) ($p['numero_processo'] ?? ''), ENT_QUOTES);
                     $sit = (string) ($p['situacao'] ?? 'preso');
                     $isPrin = !empty($p['principal']);
                     ?>
-                <div class="display-flex col col-full register border-bottom grp-proc-link" data-link-id="<?php echo $lid; ?>">
+                <div class="display-flex col col-full register border-bottom grp-proc-link" data-link-id="<?php echo $lid; ?>" data-is-principal="<?php echo $isPrin ? '1' : '0'; ?>">
                     <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-start flex-wrap gap-y-md">
                         <div class="display-flex row row-fit flex-wrap gap-y-md align-end" style="flex:1 1 auto;min-width:0;">
-                            <div class="col" style="min-width:72px;">
-                                <span class="minor-info">Principal</span>
-                                <div class="display-flex align-center" style="min-height:32px;">
-                                    <input type="radio" name="principal_radio" class="grp-principal-radio" value="<?php echo $lid; ?>" <?php echo $isPrin ? 'checked' : ''; ?> <?php echo $arquivado ? 'disabled' : ''; ?> aria-label="Marcar como processo principal">
-                                </div>
+                            <div class="col" style="min-width:140px;">
+                                <label for="grp-vinc-<?php echo $vid; ?>" class="minor-info">Vinculação</label>
+                                <select class="width-full height-md grp-principal-select" id="grp-vinc-<?php echo $vid; ?>" data-link-id="<?php echo $lid; ?>" <?php echo $arquivado ? 'disabled' : ''; ?>>
+                                    <option value="principal"<?php echo $isPrin ? ' selected' : ''; ?>>Principal</option>
+                                    <option value="secundario"<?php echo !$isPrin ? ' selected' : ''; ?><?php echo $grpProcCount === 1 ? ' disabled' : ''; ?>>Secundário</option>
+                                </select>
                             </div>
                             <div class="col" style="min-width:200px;max-width:100%;">
                                 <span class="minor-info">Processo</span>
@@ -337,19 +341,53 @@ if ($ultimaMov !== null) {
                 }).catch(function () { notify('error', 'Erro', 'Erro de conexão.'); });
             });
 
-            document.querySelectorAll('.grp-principal-radio').forEach(function (radio) {
-                radio.addEventListener('change', function () {
-                    if (!this.checked) return;
-                    postJson('/api/gabinete-reus-presos/set-principal.php', {
-                        reu_preso_id: reuId,
-                        link_id: this.value
-                    }).then(function (res) {
-                        if (res.ok && res.j && res.j.success) {
-                            notify('success', 'Sucesso', 'Processo principal atualizado.');
-                        } else {
-                            notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha.');
+            document.querySelectorAll('select.grp-principal-select').forEach(function (sel) {
+                sel.setAttribute('data-prev', sel.value);
+                sel.addEventListener('focus', function () {
+                    sel.setAttribute('data-prev', sel.value);
+                });
+                sel.addEventListener('change', function () {
+                    var old = sel.getAttribute('data-prev') || sel.value;
+                    var next = sel.value;
+                    var linkId = sel.getAttribute('data-link-id');
+                    var row = sel.closest('.grp-proc-link');
+                    var isPrincipalRow = row && row.getAttribute('data-is-principal') === '1';
+                    var totalLinks = document.querySelectorAll('.grp-proc-link').length;
+                    if (next === 'secundario') {
+                        if (totalLinks < 2) {
+                            sel.value = 'principal';
+                            sel.setAttribute('data-prev', sel.value);
+                            notify('error', 'Validação', 'O único processo vinculado deve ser o principal.');
+                            return;
                         }
-                    }).catch(function () { notify('error', 'Erro', 'Erro de conexão.'); });
+                        if (isPrincipalRow) {
+                            sel.value = old;
+                            sel.setAttribute('data-prev', old);
+                            notify('info', 'Validação', 'Defina outro processo como principal antes de marcar este como secundário.');
+                            return;
+                        }
+                        sel.setAttribute('data-prev', next);
+                        return;
+                    }
+                    if (next === 'principal' && linkId) {
+                        postJson('/api/gabinete-reus-presos/set-principal.php', {
+                            reu_preso_id: reuId,
+                            link_id: linkId
+                        }).then(function (res) {
+                            if (res.ok && res.j && res.j.success) {
+                                notify('success', 'Sucesso', 'Processo principal atualizado. Os demais vínculos passam a ser secundários.');
+                                window.location.reload();
+                            } else {
+                                notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha.');
+                                sel.value = old;
+                                sel.setAttribute('data-prev', old);
+                            }
+                        }).catch(function () {
+                            notify('error', 'Erro', 'Erro de conexão.');
+                            sel.value = old;
+                            sel.setAttribute('data-prev', old);
+                        });
+                    }
                 });
             });
 
@@ -357,7 +395,7 @@ if ($ultimaMov !== null) {
                 const sit = document.querySelector('.grp-situacao[data-link-id="' + linkId + '"]');
                 const dp = document.querySelector('.grp-dp[data-link-id="' + linkId + '"]');
                 const df = document.querySelector('.grp-df[data-link-id="' + linkId + '"]');
-                const prin = document.querySelector('.grp-principal-radio[value="' + linkId + '"]');
+                const vSel = document.querySelector('select.grp-principal-select[data-link-id="' + linkId + '"]');
                 return {
                     reu_preso_id: reuId,
                     link_id: linkId,
@@ -367,7 +405,7 @@ if ($ultimaMov !== null) {
                     situacao: sit ? sit.value : 'preso',
                     data_prisao: dp && dp.value ? dp.value : null,
                     data_fato: df && df.value ? df.value : null,
-                    principal: prin && prin.checked
+                    principal: !!(vSel && vSel.value === 'principal')
                 };
             }
 

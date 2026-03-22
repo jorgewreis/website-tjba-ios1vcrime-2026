@@ -59,17 +59,18 @@
             <h2 style="margin:0;">Processos vinculados</h2>
         </div>
         <div class="display-flex col col-full padding-x-md padding-y-md gap-y-md border-bottom">
-            <p class="minor-info" style="margin:0;">Um processo deve ser o <strong>principal</strong> (lista). Com situação <em>preso</em>, o sistema aplica a prioridade <strong>reu-preso</strong> naquele processo.</p>
+            <p class="minor-info" style="margin:0;">Um processo deve ser o <strong>principal</strong> (lista); os demais são <strong>secundários</strong>. Com situação <em>preso</em>, o sistema aplica a prioridade <strong>reu-preso</strong> naquele processo.</p>
 
             <div class="display-flex col col-full gap-y-sm">
-                <div class="display-flex col col-full register border-bottom grp-proc-link" data-link-id="GPP-MOCK-1">
+                <div class="display-flex col col-full register border-bottom grp-proc-link" data-link-id="GPP-MOCK-1" data-is-principal="1">
                     <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-start flex-wrap gap-y-md">
                         <div class="display-flex row row-fit flex-wrap gap-y-md align-end" style="flex:1 1 auto;min-width:0;">
-                            <div class="col" style="min-width:72px;">
-                                <span class="minor-info">Principal</span>
-                                <div class="display-flex align-center" style="min-height:32px;">
-                                    <input type="radio" name="principal_radio" class="grp-principal-radio" value="GPP-MOCK-1" checked aria-label="Marcar como processo principal">
-                                </div>
+                            <div class="col" style="min-width:140px;">
+                                <label for="grp-vinc-mock-1" class="minor-info">Vinculação</label>
+                                <select class="width-full height-md grp-principal-select" id="grp-vinc-mock-1" data-link-id="GPP-MOCK-1">
+                                    <option value="principal" selected>Principal</option>
+                                    <option value="secundario">Secundário</option>
+                                </select>
                             </div>
                             <div class="col" style="min-width:200px;max-width:100%;">
                                 <span class="minor-info">Processo</span>
@@ -97,14 +98,15 @@
                         </div>
                     </div>
                 </div>
-                <div class="display-flex col col-full register border-bottom grp-proc-link" data-link-id="GPP-MOCK-2">
+                <div class="display-flex col col-full register border-bottom grp-proc-link" data-link-id="GPP-MOCK-2" data-is-principal="0">
                     <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-start flex-wrap gap-y-md">
                         <div class="display-flex row row-fit flex-wrap gap-y-md align-end" style="flex:1 1 auto;min-width:0;">
-                            <div class="col" style="min-width:72px;">
-                                <span class="minor-info">Principal</span>
-                                <div class="display-flex align-center" style="min-height:32px;">
-                                    <input type="radio" name="principal_radio" class="grp-principal-radio" value="GPP-MOCK-2" aria-label="Marcar como processo principal">
-                                </div>
+                            <div class="col" style="min-width:140px;">
+                                <label for="grp-vinc-mock-2" class="minor-info">Vinculação</label>
+                                <select class="width-full height-md grp-principal-select" id="grp-vinc-mock-2" data-link-id="GPP-MOCK-2">
+                                    <option value="principal">Principal</option>
+                                    <option value="secundario" selected>Secundário</option>
+                                </select>
                             </div>
                             <div class="col" style="min-width:200px;max-width:100%;">
                                 <span class="minor-info">Processo</span>
