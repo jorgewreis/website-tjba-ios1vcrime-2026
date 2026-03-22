@@ -9,6 +9,18 @@ require_once __DIR__ . '/../helpers/TextFormatter.php';
 
 final class OficiosGabineteService
 {
+    /** Valores do optgroup "Administrativos" em gabinete-oficios-list (processo opcional). */
+    private const TIPOS_OFICIO_ADMINISTRATIVOS = [
+        'Solicitando Afastamento',
+        'Solicitando Licença Prêmio',
+        'Solicitando Férias',
+        'Solicitando Reembolso',
+        'Outros',
+    ];
+
+    /** Exibido em `numero_processo` quando não há vínculo com processo judicial. */
+    private const NUMERO_PROCESSO_SEM_VINCULO = '—';
+
     private PDO $connection;
     private OficiosGabineteRepository $repository;
     private ProcessosRepository $processosRepository;
@@ -50,30 +62,38 @@ final class OficiosGabineteService
 
     public function create(array $payload): string
     {
-        $numeroProcesso = trim((string) ($payload['numero_processo'] ?? $payload['processo'] ?? ''));
-        if ($numeroProcesso === '') {
-            throw new InvalidArgumentException('O número do processo é obrigatório.');
-        }
-        $digits = preg_replace('/\D+/', '', $numeroProcesso);
-        if (strlen($digits) !== 20) {
-            throw new InvalidArgumentException('Número do processo deve ter 20 dígitos (formato CNJ).');
-        }
-        $numeroFormatado = $this->formatarCNJ($digits);
-
-        $tipoOficio = trim((string) ($payload['tipo_oficio'] ?? ''));
-        if ($tipoOficio === '') {
+        $tipoOficioRaw = trim((string) ($payload['tipo_oficio'] ?? ''));
+        if ($tipoOficioRaw === '') {
             throw new InvalidArgumentException('O tipo de ofício é obrigatório.');
         }
-        $tipoOficio = TextFormatter::formatProperName($tipoOficio, 255);
+        $esAdministrativo = $this->isTipoOficioAdministrativo($tipoOficioRaw);
 
-        $classeId = null;
-        $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
-        $classeDescricao = trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? ''));
-        if ($classeCodigo !== '') {
-            $classeNome = $classeDescricao !== '' ? TextFormatter::formatProperName($classeDescricao, 200) : $classeCodigo;
-            $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
+        $numeroProcesso = trim((string) ($payload['numero_processo'] ?? $payload['processo'] ?? ''));
+        if (!$esAdministrativo && $numeroProcesso === '') {
+            throw new InvalidArgumentException('O número do processo é obrigatório.');
         }
-        $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, false);
+
+        $processoOrigemId = null;
+        $numeroFormatado = self::NUMERO_PROCESSO_SEM_VINCULO;
+
+        if ($numeroProcesso !== '') {
+            $digits = preg_replace('/\D+/', '', $numeroProcesso);
+            if (strlen($digits) !== 20) {
+                throw new InvalidArgumentException('Número do processo deve ter 20 dígitos (formato CNJ).');
+            }
+            $numeroFormatado = $this->formatarCNJ($digits);
+
+            $classeId = null;
+            $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
+            $classeDescricao = trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? ''));
+            if ($classeCodigo !== '') {
+                $classeNome = $classeDescricao !== '' ? TextFormatter::formatProperName($classeDescricao, 200) : $classeCodigo;
+                $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
+            }
+            $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, false);
+        }
+
+        $tipoOficio = TextFormatter::formatProperName($tipoOficioRaw, 255);
 
         $ano = (int) date('Y');
 
@@ -162,5 +182,10 @@ final class OficiosGabineteService
             substr($digits, 14, 2),
             substr($digits, 16, 4)
         );
+    }
+
+    private function isTipoOficioAdministrativo(string $tipoOficioRaw): bool
+    {
+        return in_array($tipoOficioRaw, self::TIPOS_OFICIO_ADMINISTRATIVOS, true);
     }
 }

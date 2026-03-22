@@ -116,7 +116,7 @@ $statusLabel = $statusAtual === 'finalizada' ? 'Finalizada' : ($statusAtual === 
                 </div>
                 <div class="col filter">
                     <label for="gab-ro-tipo">Tipo de ofício</label>
-                    <input type="text" id="gab-ro-tipo" class="width-400 height-md readonly" value="<?php echo htmlspecialchars($tipoOficio, ENT_QUOTES); ?>" readonly>
+                    <input type="text" id="gab-ro-tipo" class="width-600 height-md" value="<?php echo htmlspecialchars($tipoOficio, ENT_QUOTES); ?>">
                 </div>
                 <div class="col filter">
                     <label for="gab-ro-status">Status</label>

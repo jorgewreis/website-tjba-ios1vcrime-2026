@@ -179,7 +179,7 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
             <h3 class="title-section" style="margin:0;font-size:1rem;font-weight:600;">Registrar ofício</h3>
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
-                    <label for="filter-processo">Número do processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <label for="filter-processo">Número do processo <span id="gab-processo-hint" class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="text" class="width-400 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off">
                 </div>
                 <div class="col">
@@ -202,11 +202,11 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
                         <option value="Solicitando Providencias">Solicitando providências</option>
                         </optgroup>
                         <optgroup label="Administrativos">
-                        <option value="Solicitando Afastamento">Solicitando afastamento</option>
-                        <option value="Solicitando Licença Prêmio">Solicitando licença prêmio</option>
-                        <option value="Solicitando Férias">Solicitando férias</option>
-                        <option value="Solicitando Reembolso">Solicitando reembolso</option>                        
-                        <option value="Outros">Outros</option>
+                        <option value="Solicitando Afastamento" data-oficio-grupo="administrativo">Solicitando afastamento</option>
+                        <option value="Solicitando Licença Prêmio" data-oficio-grupo="administrativo">Solicitando licença prêmio</option>
+                        <option value="Solicitando Férias" data-oficio-grupo="administrativo">Solicitando férias</option>
+                        <option value="Solicitando Reembolso" data-oficio-grupo="administrativo">Solicitando reembolso</option>
+                        <option value="Outros" data-oficio-grupo="administrativo">Outros</option>
                         </optgroup>
                     </select>
                 </div>
@@ -277,11 +277,11 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
                             <span class="minor-info text-ellipsis" <?php echo $classeStyle; ?>><?php echo htmlspecialchars($classeNome); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars((string) ($row['Processo'] ?? '')); ?></span>
                         </div>
-                        <div class="col width-400">
+                        <div class="col width-600">
                             <span class="minor-info">Tipo</span>
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['TipoOficio'] ?? '')); ?></span>
                         </div>
-                        <div class="col width-400">
+                        <div class="col width-600">
                             <?php
                             $nomeCriadorGab = trim((string) ($row['CriadoPorNome'] ?? ''));
                             $nomeCriadorGab = $nomeCriadorGab !== '' ? $nomeCriadorGab : '—';
@@ -385,6 +385,31 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
             };
             flushPostReloadToast();
 
+            const gabineteTipoSelect = document.getElementById('gab-oficio-tipo');
+            const gabProcessoHint = document.getElementById('gab-processo-hint');
+            const gabProcessoLabel = document.querySelector('label[for="filter-processo"]');
+
+            function gabineteOficioEhAdministrativo() {
+                const opt = gabineteTipoSelect?.selectedOptions?.[0];
+                return opt && opt.getAttribute('data-oficio-grupo') === 'administrativo';
+            }
+
+            function atualizarRegraProcessoGabinete() {
+                const admin = gabineteOficioEhAdministrativo();
+                if (gabProcessoHint) {
+                    gabProcessoHint.textContent = admin ? 'opcional' : '*obrigatório';
+                    gabProcessoHint.className = admin ? 'label-hint-automatizado' : 'label-hint-obrigatorio';
+                }
+                if (gabProcessoLabel) {
+                    gabProcessoLabel.title = admin
+                        ? 'Para tipos administrativos o número do processo pode ficar em branco.'
+                        : '';
+                }
+            }
+
+            gabineteTipoSelect?.addEventListener('change', atualizarRegraProcessoGabinete);
+            atualizarRegraProcessoGabinete();
+
             document.getElementById('btn-gab-oficio-limpar')?.addEventListener('click', function () {
                 const p = document.getElementById('filter-processo');
                 const t = document.getElementById('gab-oficio-tipo');
@@ -396,6 +421,7 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
                 const hcd = document.getElementById('hidden-classe-descricao');
                 if (hcc) hcc.value = '';
                 if (hcd) hcd.value = '';
+                atualizarRegraProcessoGabinete();
             });
 
             document.getElementById('btn-gab-oficio-registrar')?.addEventListener('click', function () {
@@ -403,8 +429,13 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
                 const tipo = document.getElementById('gab-oficio-tipo')?.value || '';
                 const cc = document.getElementById('hidden-classe-codigo')?.value || '';
                 const cd = document.getElementById('hidden-classe-descricao')?.value || '';
-                if (!proc || !tipo) {
-                    notify('error', 'Validação', 'Preencha processo e tipo de ofício.');
+                const admin = gabineteOficioEhAdministrativo();
+                if (!tipo) {
+                    notify('error', 'Validação', 'Selecione o tipo de ofício.');
+                    return;
+                }
+                if (!admin && !proc) {
+                    notify('error', 'Validação', 'Preencha o número do processo.');
                     return;
                 }
                 fetch('/api/gabinete-oficios/create.php', {
@@ -413,8 +444,8 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
                     body: JSON.stringify({
                         numero_processo: proc,
                         tipo_oficio: tipo,
-                        classe_codigo: cc,
-                        classe_descricao: cd
+                        classe_codigo: admin && !proc ? '' : cc,
+                        classe_descricao: admin && !proc ? '' : cd
                     }),
                     credentials: 'same-origin'
                 })
