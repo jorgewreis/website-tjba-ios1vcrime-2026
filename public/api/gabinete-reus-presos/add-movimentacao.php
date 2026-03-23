@@ -20,8 +20,8 @@ $parsed['user_cadastro'] = isset($_SESSION['id_usuario']) ? trim((string) $_SESS
 
 try {
     $service = new GabineteReusPresosService($connection);
-    $mid = $service->addMovimentacao($parsed);
-    echo json_encode(['id' => $mid], JSON_UNESCAPED_UNICODE);
+    $inserted = $service->addMovimentacao($parsed);
+    echo json_encode(['success' => true, 'inserted' => $inserted], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $exception) {
     http_response_code(400);
     echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);

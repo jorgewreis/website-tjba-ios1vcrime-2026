@@ -94,6 +94,93 @@ final class GabineteReuPresoMovimentacaoRepository
     }
 
     /**
+     * @return list<array<string, mixed>>
+     */
+    public function findByReuPresoProcessoIdOrderDesc(string $linkId, int $limit = 200): array
+    {
+        $linkId = trim($linkId);
+        if ($linkId === '') {
+            return [];
+        }
+        $st = $this->connection->prepare(
+            sprintf(
+                'SELECT * FROM `%s` WHERE `reu_preso_processo_id` = :lid ORDER BY `data_movimentacao` DESC, `created_at` DESC LIMIT %d',
+                $this->table,
+                $limit
+            )
+        );
+        $st->bindValue(':lid', $linkId);
+        $st->execute();
+        $rows = $st->fetchAll(PDO::FETCH_ASSOC);
+
+        return $rows === false ? [] : $rows;
+    }
+
+    public function existsByLinkTipoData(string $linkId, string $tipoCodigo, string $dataMovimentacao): bool
+    {
+        $linkId = trim($linkId);
+        $tipoCodigo = trim($tipoCodigo);
+        $dataMovimentacao = trim($dataMovimentacao);
+        if ($linkId === '' || $tipoCodigo === '' || $dataMovimentacao === '') {
+            return false;
+        }
+        $st = $this->connection->prepare(
+            sprintf(
+                'SELECT 1 FROM `%s`
+                 WHERE `reu_preso_processo_id` = :lid AND `tipo_codigo` = :tipo AND `data_movimentacao` = :dt
+                 LIMIT 1',
+                $this->table
+            )
+        );
+        $st->bindValue(':lid', $linkId);
+        $st->bindValue(':tipo', $tipoCodigo);
+        $st->bindValue(':dt', $dataMovimentacao);
+        $st->execute();
+
+        return $st->fetchColumn() !== false;
+    }
+
+    /**
+     * @param list<string> $prefixes
+     */
+    public function maxDataMovimentacaoForTipoPrefixes(string $reuPresoId, array $prefixes): ?string
+    {
+        $reuPresoId = trim($reuPresoId);
+        $prefixes = array_values(array_filter(array_map(static function ($p) {
+            return trim((string) $p);
+        }, $prefixes), static function ($p) {
+            return $p !== '';
+        }));
+        if ($reuPresoId === '' || $prefixes === []) {
+            return null;
+        }
+
+        $whereLike = [];
+        $params = [':rid' => $reuPresoId];
+        foreach ($prefixes as $i => $prefix) {
+            $k = ':pf' . $i;
+            $whereLike[] = '`tipo_codigo` LIKE ' . $k;
+            $params[$k] = $prefix . '%';
+        }
+        $sql = sprintf(
+            'SELECT MAX(`data_movimentacao`) FROM `%s` WHERE `reu_preso_id` = :rid AND (%s)',
+            $this->table,
+            implode(' OR ', $whereLike)
+        );
+        $st = $this->connection->prepare($sql);
+        foreach ($params as $k => $v) {
+            $st->bindValue($k, $v);
+        }
+        $st->execute();
+        $v = $st->fetchColumn();
+        if ($v === null || $v === false || $v === '') {
+            return null;
+        }
+
+        return (string) $v;
+    }
+
+    /**
      * Última movimentação por vínculo processo (reu_preso_processo_id).
      *
      * @param list<string> $linkIds ids de gabinete_reu_preso_processo

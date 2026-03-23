@@ -14,9 +14,11 @@ final class GabineteReusPresosService
 {
     public const PRIORIDADE_REU_PRESO = 'reu-preso';
 
-    /** Tipos que disparam prazo de 90 dias para próxima revisão (CPP art. 316 — referência operacional). */
-    public const TIPOS_MOVIMENTACAO_REVISAO_90_DIAS = [
-        'decretacao_prisao_preventiva',
+    /** Prefixos de tipos que disparam prazo de 90 dias para próxima revisão (CPP art. 316 — referência operacional). */
+    public const PREFIXOS_MOVIMENTACAO_REVISAO_90_DIAS = [
+        'prisao',
+        'manutencao',
+        'conversao',
     ];
 
     public const DIAS_PARA_REVISAO = 90;
@@ -57,10 +59,21 @@ final class GabineteReusPresosService
             'manutencao_prisao_preventiva' => 'Manutenção da prisão preventiva',
             'manutencao_prisao_temporaria' => 'Manutenção da prisão temporária',
             'prisao_em_flagrante' => 'Prisão em flagrante',
+            'cumprimento_mandado_prisao' => 'Cumprimento de mandado de prisão',
             'conversao_temporaria_para_preventiva' => 'Conversão de prisão temporária para preventiva',
             'conversao_flagrante_para_preventiva' => 'Conversão de prisão em flagrante para preventiva',
             'soltura' => 'Soltura',
             'revogacao_prisao' => 'Revogação da prisão',
+            'oferecimento_denuncia' => 'Oferecimento de denúncia',
+            'recebimento_denuncia' => 'Recebimento de denúncia',
+            'despacho' => 'Despacho',
+            'decisao_interlocutoria' => 'Decisão interlocutória',
+            'defesa_previa' => 'Defesa prévia',
+            'alegacoes_finais' => 'Alegacões finais',
+            'citacao_reu' => 'Citação do réu',
+            'designacao_audiencia' => 'Designação de audiência',
+            'sentenca' => 'Sentença',
+            'anotacao' => 'Anotação',
             'outro' => 'Outro',
         ];
     }
@@ -209,7 +222,19 @@ final class GabineteReusPresosService
         foreach ($processos as $j => $p) {
             $processos[$j]['situacao_label'] = (($p['situacao'] ?? '') === 'solto') ? 'Solto' : 'Preso';
         }
-        $movs = $this->movRepo->findByReuPresoIdOrderDesc($id, 200);
+        $principalLinkId = '';
+        foreach ($processos as $p) {
+            if (!empty($p['principal'])) {
+                $principalLinkId = trim((string) ($p['id'] ?? ''));
+                break;
+            }
+        }
+        if ($principalLinkId === '' && !empty($processos)) {
+            $principalLinkId = trim((string) ($processos[0]['id'] ?? ''));
+        }
+        $movs = $principalLinkId !== ''
+            ? $this->movRepo->findByReuPresoProcessoIdOrderDesc($principalLinkId, 200)
+            : [];
         foreach ($movs as $k => $m) {
             $movs[$k]['tipo_label'] = $this->labelTipoMovimentacao((string) ($m['tipo_codigo'] ?? ''));
         }
@@ -381,13 +406,12 @@ final class GabineteReusPresosService
     /**
      * @param array<string, mixed> $input
      */
-    public function addMovimentacao(array $input): string
+    public function addMovimentacao(array $input): int
     {
         $reuId = trim((string) ($input['reu_preso_id'] ?? ''));
         $tipo = trim((string) ($input['tipo_codigo'] ?? ''));
         $dataMov = $this->normalizeDateOrNull($input['data_movimentacao'] ?? null);
         $obs = trim((string) ($input['observacoes'] ?? ''));
-        $linkId = trim((string) ($input['reu_preso_processo_id'] ?? ''));
         $user = trim((string) ($input['user_cadastro'] ?? ''));
 
         if ($reuId === '') {
@@ -407,29 +431,38 @@ final class GabineteReusPresosService
             throw new InvalidArgumentException('Data da movimentação é obrigatória.');
         }
 
-        $linkFk = null;
-        if ($linkId !== '') {
-            $lk = $this->procRepo->findById($linkId);
-            if ($lk === null || (string) ($lk['reu_preso_id'] ?? '') !== $reuId) {
-                throw new InvalidArgumentException('Vínculo processual inválido.');
-            }
-            $linkFk = $linkId;
+        $links = $this->procRepo->findByReuPresoId($reuId);
+        if ($links === []) {
+            throw new InvalidArgumentException('Nenhum processo vinculado para registrar movimentação.');
         }
 
-        $mid = IdGenerator::generateUniquePrefixedId($this->connection, 'gabinete_reu_preso_movimentacao', 'id', 'GPM', 30);
-        $this->movRepo->insert([
-            'id' => $mid,
-            'reu_preso_id' => $reuId,
-            'reu_preso_processo_id' => $linkFk,
-            'tipo_codigo' => $tipo,
-            'data_movimentacao' => $dataMov,
-            'observacoes' => $obs !== '' ? $obs : null,
-            'user_cadastro' => $user !== '' ? $user : null,
-        ]);
+        $inserted = 0;
+        foreach ($links as $link) {
+            $linkFk = trim((string) ($link['id'] ?? ''));
+            if ($linkFk === '') {
+                continue;
+            }
+            if ($this->movRepo->existsByLinkTipoData($linkFk, $tipo, $dataMov)) {
+                continue;
+            }
+            $mid = IdGenerator::generateUniquePrefixedId($this->connection, 'gabinete_reu_preso_movimentacao', 'id', 'GPM', 30);
+            $this->movRepo->insert([
+                'id' => $mid,
+                'reu_preso_id' => $reuId,
+                'reu_preso_processo_id' => $linkFk,
+                'tipo_codigo' => $tipo,
+                'data_movimentacao' => $dataMov,
+                'observacoes' => $obs !== '' ? $obs : null,
+                'user_cadastro' => $user !== '' ? $user : null,
+            ]);
+            $inserted++;
+        }
 
-        $this->recalcProximaRevisao($reuId);
+        if ($inserted > 0) {
+            $this->recalcProximaRevisao($reuId);
+        }
 
-        return $mid;
+        return $inserted;
     }
 
     public function archive(string $id): void
@@ -465,7 +498,7 @@ final class GabineteReusPresosService
         if ($reuId === '') {
             return;
         }
-        $max = $this->movRepo->maxDataMovimentacaoForTipos($reuId, self::TIPOS_MOVIMENTACAO_REVISAO_90_DIAS);
+        $max = $this->movRepo->maxDataMovimentacaoForTipoPrefixes($reuId, self::PREFIXOS_MOVIMENTACAO_REVISAO_90_DIAS);
         if ($max === null) {
             $this->reuRepo->updateProximaRevisao($reuId, null);
 

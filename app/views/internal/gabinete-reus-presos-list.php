@@ -199,7 +199,7 @@ if ($totalPages > 0) {
             <div class="display-flex row row-fit justify-start gap-y-md flex-wrap">
                 <div class="col">
                     <label for="filter-nome">Nome do réu</label>
-                    <input type="text" class="width-400 height-md" id="filter-nome" placeholder="Parte do nome" value="<?php echo htmlspecialchars($nomeFilter, ENT_QUOTES); ?>">
+                    <input type="text" class="width-600 height-md" id="filter-nome" placeholder="Parte do nome" value="<?php echo htmlspecialchars($nomeFilter, ENT_QUOTES); ?>">
                 </div>
                 <div class="col">
                     <label for="filter-processo">Processo (CNJ)</label>
@@ -245,20 +245,16 @@ if ($totalPages > 0) {
                                 <i class="fi fi-rr-angle-small-down"></i>
                             </label>
                         </div>
-                        <div class="col width-400">
+                        <div class="col width-600">
                             <span class="minor-info">Réu</span>
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['nome'] ?? ''), ENT_QUOTES); ?></span>
                         </div>
-                        <div class="col width-400 col-process">
-                            <span class="minor-info">Processo principal</span>
-                            <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['ProcessoPrincipalLabel'] ?? '—'), ENT_QUOTES); ?></span>
-                        </div>
-                        <div class="col width-200">
+                        <div class="col width-400">
                             <span class="minor-info">Tempo em custódia</span>
                             <span class="major-info"><?php echo htmlspecialchars((string) ($row['TempoCustodiaLabel'] ?? '—'), ENT_QUOTES); ?></span>
                         </div>
-                        <div class="col width-260">
-                            <span class="minor-info">Próxima reavaliação</span>
+                        <div class="col width-400">
+                            <span class="minor-info">Preso em <?php echo htmlspecialchars((string) ($row['PresoEm'] ?? '—'), ENT_QUOTES); ?></span>
                             <span class="major-info text-ellipsis grp-revisao-wrap <?php echo htmlspecialchars($revClass, ENT_QUOTES); ?>" <?php echo $revTitle !== '' ? ' title="' . htmlspecialchars($revTitle, ENT_QUOTES) . '"' : ''; ?>><?php echo htmlspecialchars($prox, ENT_QUOTES); ?></span>
                         </div>
                     </div>
@@ -281,22 +277,18 @@ if ($totalPages > 0) {
                     <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top align-start flex-wrap grp-sub-line grp-sub-line-primary">
                         <div class="display-flex row row-fit justify-start gap-y-md flex-wrap grp-sub-left">
                             <div class="col" style="min-width: 160px; max-width: 100%;">
-                                <span class="minor-info">Número</span>
+                                <span class="minor-info"><?php echo htmlspecialchars((string) ($sl['classe_nome'] ?? '—'), ENT_QUOTES); ?></span>
                                 <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($sl['numero_processo'] ?? '—'), ENT_QUOTES); ?></span>
-                            </div>
-                            <div class="col" style="min-width: 120px; max-width: 100%;">
-                                <span class="minor-info">Classe</span>
-                                <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($sl['classe_nome'] ?? '—'), ENT_QUOTES); ?></span>
                             </div>
                         </div>
                         <div class="display-flex row row-fit justify-end gap-y-md flex-wrap grp-sub-right">
-                            <div class="col" style="min-width: 140px; max-width: 100%;">
+                            <div class="col">
                                 <span class="minor-info">Última movimentação</span>
-                                <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($sl['ultima_movimentacao'] ?? '—'), ENT_QUOTES); ?></span>
+                                <span class="width-500 major-info text-ellipsis"><?php echo htmlspecialchars((string) ($sl['ultima_movimentacao'] ?? '—'), ENT_QUOTES); ?></span>
                             </div>
-                            <div class="col" style="min-width: 96px;">
+                            <div class="col">
                                 <span class="minor-info">Data</span>
-                                <span class="major-info"><?php echo htmlspecialchars((string) ($sl['ultima_movimentacao_data'] ?? '—'), ENT_QUOTES); ?></span>
+                                <span class="width-300 major-info text-ellipsis"><?php echo htmlspecialchars((string) ($sl['ultima_movimentacao_data'] ?? '—'), ENT_QUOTES); ?></span>
                             </div>
                         </div>
                     </div>

@@ -195,6 +195,11 @@ if ($ultimaMov !== null) {
             <?php if (!$arquivado): ?>
             <div class="display-flex col col-full gap-y-md border-top padding-top-md">
                 <h3 style="margin:0;font-size:1rem;">Incluir processo</h3>
+                <?php if (!empty($processos)): ?>
+                <p class="minor-info" style="margin:0;">
+                    Situação, data da prisão e data do fato serão copiadas automaticamente do processo principal já vinculado.
+                </p>
+                <?php endif; ?>
                 <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                     <div class="col">
                         <label for="filter-processo">Número do processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
@@ -210,18 +215,18 @@ if ($ultimaMov !== null) {
                 <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                     <div class="col">
                         <label for="grp-new-sit">Situação neste processo</label>
-                        <select class="width-300 height-md" id="grp-new-sit">
+                        <select class="width-300 height-md" id="grp-new-sit" <?php echo !empty($processos) ? 'disabled' : ''; ?>>
                             <option value="preso">Preso</option>
                             <option value="solto">Solto</option>
                         </select>
                     </div>
                     <div class="col">
                         <label for="grp-new-dp">Data da prisão</label>
-                        <input type="date" class="height-md" id="grp-new-dp">
+                        <input type="date" class="height-md" id="grp-new-dp" <?php echo !empty($processos) ? 'disabled' : ''; ?>>
                     </div>
                     <div class="col">
                         <label for="grp-new-df">Data do fato</label>
-                        <input type="date" class="height-md" id="grp-new-df">
+                        <input type="date" class="height-md" id="grp-new-df" <?php echo !empty($processos) ? 'disabled' : ''; ?>>
                     </div>
                     <div class="col" style="min-width:140px;">
                         <label for="grp-new-vinc" class="minor-info">Vinculação</label>
@@ -267,15 +272,6 @@ if ($ultimaMov !== null) {
                 <div class="col" style="flex:1;min-width:200px;">
                     <label for="grp-mov-obs">Observações</label>
                     <input type="text" class="width-full height-md" id="grp-mov-obs" placeholder="Opcional" maxlength="2000">
-                </div>
-                <div class="col">
-                    <label for="grp-mov-link">Vínculo (opcional)</label>
-                    <select class="width-400 height-md" id="grp-mov-link">
-                        <option value="">—</option>
-                        <?php foreach ($processos as $p): ?>
-                        <option value="<?php echo htmlspecialchars((string) ($p['id'] ?? ''), ENT_QUOTES); ?>"><?php echo htmlspecialchars((string) ($p['numero_processo'] ?? ''), ENT_QUOTES); ?></option>
-                        <?php endforeach; ?>
-                    </select>
                 </div>
                 <button type="button" class="btn btn-primary height-md" id="btn-grp-add-mov" style="margin-top:22px;">Registrar movimentação</button>
             </div>
@@ -474,10 +470,17 @@ if ($ultimaMov !== null) {
                 const proc = (document.getElementById('filter-processo')?.value || '').trim();
                 const cc = document.getElementById('hidden-classe-codigo')?.value || '';
                 const cd = document.getElementById('hidden-classe-descricao')?.value || '';
-                const situacao = document.getElementById('grp-new-sit')?.value || 'preso';
-                const dp = document.getElementById('grp-new-dp')?.value || '';
-                const df = document.getElementById('grp-new-df')?.value || '';
+                const hasLinkedProcess = document.querySelectorAll('.grp-proc-link').length > 0;
+                let situacao = document.getElementById('grp-new-sit')?.value || 'preso';
+                let dp = document.getElementById('grp-new-dp')?.value || '';
+                let df = document.getElementById('grp-new-df')?.value || '';
                 const principal = (document.getElementById('grp-new-vinc')?.value || 'secundario') === 'principal';
+                if (hasLinkedProcess) {
+                    const inherited = getInheritedLinkData();
+                    situacao = inherited.situacao || situacao;
+                    dp = inherited.dataPrisao || dp;
+                    df = inherited.dataFato || df;
+                }
                 if (!proc) {
                     notify('error', 'Validação', 'Informe o número do processo.');
                     return;
@@ -501,11 +504,54 @@ if ($ultimaMov !== null) {
                 }).catch(function () { notify('error', 'Erro', 'Erro de conexão.'); });
             });
 
+            function getLinkSourceRowForInheritance() {
+                const principalRow = document.querySelector('.grp-proc-link[data-is-principal="1"]');
+                if (principalRow) {
+                    return principalRow;
+                }
+                return document.querySelector('.grp-proc-link');
+            }
+
+            function getInheritedLinkData() {
+                const row = getLinkSourceRowForInheritance();
+                if (!row) {
+                    return { situacao: 'preso', dataPrisao: '', dataFato: '' };
+                }
+                const situacao = row.querySelector('.grp-situacao')?.value || 'preso';
+                const dataPrisao = row.querySelector('.grp-dp')?.value || '';
+                const dataFato = row.querySelector('.grp-df')?.value || '';
+                return { situacao: situacao, dataPrisao: dataPrisao, dataFato: dataFato };
+            }
+
+            function syncNewProcessInheritedFields() {
+                const sitEl = document.getElementById('grp-new-sit');
+                const dpEl = document.getElementById('grp-new-dp');
+                const dfEl = document.getElementById('grp-new-df');
+                if (!sitEl || !dpEl || !dfEl) {
+                    return;
+                }
+                const hasLinkedProcess = document.querySelectorAll('.grp-proc-link').length > 0;
+                if (!hasLinkedProcess) {
+                    sitEl.disabled = false;
+                    dpEl.disabled = false;
+                    dfEl.disabled = false;
+                    return;
+                }
+                const inherited = getInheritedLinkData();
+                sitEl.value = inherited.situacao || 'preso';
+                dpEl.value = inherited.dataPrisao || '';
+                dfEl.value = inherited.dataFato || '';
+                sitEl.disabled = true;
+                dpEl.disabled = true;
+                dfEl.disabled = true;
+            }
+
+            syncNewProcessInheritedFields();
+
             document.getElementById('btn-grp-add-mov')?.addEventListener('click', function () {
                 const tipo = document.getElementById('grp-mov-tipo')?.value || '';
                 const data = document.getElementById('grp-mov-data')?.value || '';
                 const obs = (document.getElementById('grp-mov-obs')?.value || '').trim();
-                const link = (document.getElementById('grp-mov-link')?.value || '').trim();
                 if (!data) {
                     notify('error', 'Validação', 'Informe a data da movimentação.');
                     return;
@@ -516,9 +562,8 @@ if ($ultimaMov !== null) {
                     data_movimentacao: data,
                     observacoes: obs || undefined
                 };
-                if (link) body.reu_preso_processo_id = link;
                 postJson('/api/gabinete-reus-presos/add-movimentacao.php', body).then(function (res) {
-                    if (res.ok && res.j && res.j.id) {
+                    if (res.ok && res.j && res.j.success) {
                         notify('success', 'Sucesso', 'Movimentação registrada.');
                         window.location.reload();
                     } else {
