@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0066
+
+**Data:** 2026-03-23 09:57:12 | **Commit:** `687ec43` | **Tipo:** `patch`
+
+- Fix: correcao de datas de mov
+
 ## V. 1.04.0065
 
 **Data:** 2026-03-23 09:45:52 | **Commit:** `f42fe04` | **Tipo:** `patch`
@@ -3684,6 +3690,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

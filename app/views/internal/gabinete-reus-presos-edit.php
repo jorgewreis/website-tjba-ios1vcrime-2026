@@ -264,7 +264,19 @@ if ($ultimaMov !== null) {
             <?php if (!empty($movimentacoes)): ?>
             <ul class="minor-info" style="margin:0;padding-left:1.2rem;">
                 <?php foreach ($movimentacoes as $m): ?>
-                <li><?php echo htmlspecialchars(($m['tipo_label'] ?? '') . ' — ' . grpFmtBr($m['data_movimentacao'] ?? null), ENT_QUOTES); ?></li>
+                <li class="display-flex row row-fit align-center gap-y-sm" style="gap:8px;">
+                    <span><?php echo htmlspecialchars(($m['tipo_label'] ?? '') . ' — ' . grpFmtBr($m['data_movimentacao'] ?? null), ENT_QUOTES); ?></span>
+                    <?php if (!$arquivado): ?>
+                    <button
+                        type="button"
+                        class="btn btn-danger-outline height-sm grp-del-mov"
+                        data-mov-id="<?php echo htmlspecialchars((string) ($m['id'] ?? ''), ENT_QUOTES); ?>"
+                        title="Excluir movimentação"
+                        aria-label="Excluir movimentação"
+                        style="min-width:32px;padding:0 8px;line-height:1;"
+                    >x</button>
+                    <?php endif; ?>
+                </li>
                 <?php endforeach; ?>
             </ul>
             <?php else: ?>
@@ -584,6 +596,28 @@ if ($ultimaMov !== null) {
                         notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha.');
                     }
                 }).catch(function () { notify('error', 'Erro', 'Erro de conexão.'); });
+            });
+
+            document.querySelectorAll('.grp-del-mov').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    const movId = this.getAttribute('data-mov-id') || '';
+                    if (!movId) {
+                        notify('error', 'Erro', 'Movimentação inválida.');
+                        return;
+                    }
+                    if (!requireSecondClick('del-mov-' + movId, 'Clique novamente no x em até 5 segundos para confirmar a exclusão da movimentação.')) return;
+                    postJson('/api/gabinete-reus-presos/delete-movimentacao.php', {
+                        reu_preso_id: reuId,
+                        movimentacao_id: movId
+                    }).then(function (res) {
+                        if (res.ok && res.j && res.j.success) {
+                            notify('success', 'Sucesso', 'Movimentação excluída.');
+                            window.location.reload();
+                        } else {
+                            notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha.');
+                        }
+                    }).catch(function () { notify('error', 'Erro', 'Erro de conexão.'); });
+                });
             });
 
             document.getElementById('btn-grp-arquivar')?.addEventListener('click', function () {

@@ -93,6 +93,60 @@ final class GabineteReuPresoMovimentacaoRepository
         return $rows[0] ?? null;
     }
 
+    public function clearLinkByReuPresoProcessoId(string $linkId): void
+    {
+        $linkId = trim($linkId);
+        if ($linkId === '') {
+            return;
+        }
+        $st = $this->connection->prepare(
+            sprintf(
+                'UPDATE `%s` SET `reu_preso_processo_id` = NULL WHERE `reu_preso_processo_id` = :lid',
+                $this->table
+            )
+        );
+        $st->bindValue(':lid', $linkId);
+        $st->execute();
+    }
+
+    public function findById(string $id): ?array
+    {
+        $id = trim($id);
+        if ($id === '') {
+            return null;
+        }
+        $st = $this->connection->prepare(
+            sprintf('SELECT * FROM `%s` WHERE `id` = :id LIMIT 1', $this->table)
+        );
+        $st->bindValue(':id', $id);
+        $st->execute();
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+
+        return $row === false ? null : $row;
+    }
+
+    public function deleteByReuTipoData(string $reuPresoId, string $tipoCodigo, string $dataMovimentacao): int
+    {
+        $reuPresoId = trim($reuPresoId);
+        $tipoCodigo = trim($tipoCodigo);
+        $dataMovimentacao = trim($dataMovimentacao);
+        if ($reuPresoId === '' || $tipoCodigo === '' || $dataMovimentacao === '') {
+            return 0;
+        }
+        $st = $this->connection->prepare(
+            sprintf(
+                'DELETE FROM `%s` WHERE `reu_preso_id` = :rid AND `tipo_codigo` = :tipo AND `data_movimentacao` = :dt',
+                $this->table
+            )
+        );
+        $st->bindValue(':rid', $reuPresoId);
+        $st->bindValue(':tipo', $tipoCodigo);
+        $st->bindValue(':dt', $dataMovimentacao);
+        $st->execute();
+
+        return (int) $st->rowCount();
+    }
+
     /**
      * @return list<array<string, mixed>>
      */

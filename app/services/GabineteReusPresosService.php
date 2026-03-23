@@ -321,6 +321,7 @@ final class GabineteReusPresosService
             if ($principal) {
                 $this->setPrincipalInternal($reuId, $linkId);
             }
+            $this->recalcProximaRevisao($reuId);
 
             return $linkId;
         }
@@ -354,6 +355,7 @@ final class GabineteReusPresosService
             $this->procRepo->clearPrincipalForReu($reuId);
             $this->procRepo->update($newId, ['principal' => 1]);
         }
+        $this->recalcProximaRevisao($reuId);
 
         return $newId;
     }
@@ -379,6 +381,8 @@ final class GabineteReusPresosService
         $wasPrincipal = !empty($link['principal']);
 
         $this->removePrioridadeIfPreso($processoId, $situacao);
+        // Preserva o histórico de movimentações ao remover apenas o vínculo do processo.
+        $this->movRepo->clearLinkByReuPresoProcessoId($linkId);
         $this->procRepo->deleteById($linkId);
 
         $remaining = $this->procRepo->findByReuPresoId($reuId);
@@ -467,11 +471,43 @@ final class GabineteReusPresosService
             $inserted++;
         }
 
-        if ($inserted > 0) {
+        if ($inserted > 0 && $this->tipoAfetaRevisao($tipo)) {
             $this->recalcProximaRevisao($reuId);
         }
 
         return $inserted;
+    }
+
+    public function deleteMovimentacao(string $reuId, string $movId): int
+    {
+        $reuId = trim($reuId);
+        $movId = trim($movId);
+        if ($reuId === '' || $movId === '') {
+            throw new InvalidArgumentException('Dados incompletos.');
+        }
+        $reu = $this->reuRepo->findById($reuId);
+        if ($reu === null) {
+            throw new InvalidArgumentException('Réu não encontrado.');
+        }
+        if (($reu['status'] ?? '') !== 'ativo') {
+            throw new InvalidArgumentException('Não é possível excluir movimentação de registro arquivado.');
+        }
+        $mov = $this->movRepo->findById($movId);
+        if ($mov === null || (string) ($mov['reu_preso_id'] ?? '') !== $reuId) {
+            throw new InvalidArgumentException('Movimentação inválida.');
+        }
+        $tipo = trim((string) ($mov['tipo_codigo'] ?? ''));
+        $data = trim((string) ($mov['data_movimentacao'] ?? ''));
+        if ($tipo === '' || $data === '') {
+            throw new InvalidArgumentException('Movimentação inválida.');
+        }
+
+        $deleted = $this->movRepo->deleteByReuTipoData($reuId, $tipo, $data);
+        if ($deleted > 0 && $this->tipoAfetaRevisao($tipo)) {
+            $this->recalcProximaRevisao($reuId);
+        }
+
+        return $deleted;
     }
 
     public function archive(string $id): void
@@ -509,13 +545,50 @@ final class GabineteReusPresosService
         }
         $max = $this->movRepo->maxDataMovimentacaoForTipoPrefixes($reuId, self::PREFIXOS_MOVIMENTACAO_REVISAO_90_DIAS);
         if ($max === null) {
-            $this->reuRepo->updateProximaRevisao($reuId, null);
+            $basePrisao = null;
+            $links = $this->procRepo->findByReuPresoIdWithNumero($reuId);
+            foreach ($links as $ln) {
+                if (!empty($ln['principal'])) {
+                    $basePrisao = $this->normalizeDateOrNull($ln['data_prisao'] ?? null);
+                    break;
+                }
+            }
+            if ($basePrisao === null) {
+                foreach ($links as $ln) {
+                    $basePrisao = $this->normalizeDateOrNull($ln['data_prisao'] ?? null);
+                    if ($basePrisao !== null) {
+                        break;
+                    }
+                }
+            }
+            if ($basePrisao === null) {
+                $this->reuRepo->updateProximaRevisao($reuId, null);
+                return;
+            }
+            $dBase = new DateTimeImmutable($basePrisao . ' 00:00:00');
+            $proxBase = $dBase->modify('+' . self::DIAS_PARA_REVISAO . ' days')->format('Y-m-d');
+            $this->reuRepo->updateProximaRevisao($reuId, $proxBase);
 
             return;
         }
         $d = new DateTimeImmutable($max . ' 00:00:00');
         $prox = $d->modify('+' . self::DIAS_PARA_REVISAO . ' days')->format('Y-m-d');
         $this->reuRepo->updateProximaRevisao($reuId, $prox);
+    }
+
+    private function tipoAfetaRevisao(string $tipoCodigo): bool
+    {
+        $tipo = mb_strtolower(trim($tipoCodigo), 'UTF-8');
+        if ($tipo === '') {
+            return false;
+        }
+        foreach (self::PREFIXOS_MOVIMENTACAO_REVISAO_90_DIAS as $prefixo) {
+            if (str_contains($tipo, mb_strtolower((string) $prefixo, 'UTF-8'))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function applyPrioridadeForProcesso(string $processoId, string $situacao): void
