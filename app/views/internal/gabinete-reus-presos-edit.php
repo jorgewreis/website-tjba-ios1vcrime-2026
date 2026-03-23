@@ -121,22 +121,15 @@ if ($ultimaMov !== null) {
         </div>
         <div class="display-flex col col-full padding-x-md padding-y-md gap-y-md border-bottom">
             <div class="col">
-                <label for="grp-edit-nome">Nome completo do réu <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-800 height-md" id="grp-edit-nome" value="<?php echo htmlspecialchars((string) ($reu['nome'] ?? ''), ENT_QUOTES); ?>" maxlength="255" <?php echo $arquivado ? 'disabled' : ''; ?>>
+                <label for="grp-edit-nome">Nome do réu</label>
+                <input type="text" class="width-800 height-md readonly" id="grp-edit-nome" value="<?php echo htmlspecialchars((string) ($reu['nome'] ?? ''), ENT_QUOTES); ?>" maxlength="255" <?php echo $arquivado ? 'disabled' : ''; ?> readonly>
             </div>
-            <?php if (!$arquivado): ?>
-            <div class="display-flex row row-full justify-end">
-                <button type="button" class="btn btn-primary height-md" id="btn-grp-salvar-nome">Salvar nome</button>
-            </div>
-            <?php endif; ?>
         </div>
 
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
             <h2 style="margin:0;">Processos vinculados</h2>
         </div>
         <div class="display-flex col col-full padding-x-md padding-y-md gap-y-md border-bottom">
-            <p class="minor-info" style="margin:0;">Um processo deve ser o <strong>principal</strong> (lista); os demais são <strong>secundários</strong>. Com situação <em>preso</em>, o sistema aplica a prioridade <strong>reu-preso</strong> naquele processo.</p>
-
             <?php if (!empty($processos)): ?>
             <?php $grpProcCount = count($processos); ?>
             <div class="display-flex col col-full gap-y-sm">
@@ -152,7 +145,6 @@ if ($ultimaMov !== null) {
                     <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-start flex-wrap gap-y-md">
                         <div class="display-flex row row-fit flex-wrap gap-y-md align-end" style="flex:1 1 auto;min-width:0;">
                             <div class="col" style="min-width:140px;">
-                                <label for="grp-vinc-<?php echo $vid; ?>" class="minor-info">Vinculação</label>
                                 <select class="width-full height-md grp-principal-select" id="grp-vinc-<?php echo $vid; ?>" data-link-id="<?php echo $lid; ?>" <?php echo $arquivado ? 'disabled' : ''; ?>>
                                     <option value="principal"<?php echo $isPrin ? ' selected' : ''; ?>>Principal</option>
                                     <option value="secundario"<?php echo !$isPrin ? ' selected' : ''; ?><?php echo $grpProcCount === 1 ? ' disabled' : ''; ?>>Secundário</option>
@@ -179,10 +171,6 @@ if ($ultimaMov !== null) {
                                 <input type="date" class="width-full height-md grp-df" data-link-id="<?php echo $lid; ?>" value="<?php echo htmlspecialchars(grpFmtYmd($p['data_fato'] ?? null), ENT_QUOTES); ?>" <?php echo $arquivado ? 'disabled' : ''; ?>>
                             </div>
                             <?php else: ?>
-                            <div class="col" style="min-width:240px;">
-                                <span class="minor-info">Dados de custódia</span>
-                                <span class="major-info">Mesmos dados do processo principal.</span>
-                            </div>
                             <?php endif; ?>
                         </div>
                         <?php if (!$arquivado): ?>
@@ -205,9 +193,6 @@ if ($ultimaMov !== null) {
             <div class="display-flex col col-full gap-y-md border-top padding-top-md">
                 <h3 style="margin:0;font-size:1rem;">Incluir processo</h3>
                 <?php if (!empty($processos)): ?>
-                <p class="minor-info" style="margin:0;">
-                    Situação, data da prisão e data do fato serão copiadas automaticamente do processo principal já vinculado.
-                </p>
                 <?php endif; ?>
                 <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                     <div class="col">
@@ -245,14 +230,13 @@ if ($ultimaMov !== null) {
                             <option value="secundario" selected>Secundário</option>
                         </select>
                     </div>
-                </div>
-                <?php else: ?>
-                <input type="hidden" id="grp-new-sit" value="preso">
-                <input type="hidden" id="grp-new-dp" value="">
-                <input type="hidden" id="grp-new-df" value="">
-                <input type="hidden" id="grp-new-vinc" value="secundario">
-                <?php endif; ?>
-                <button type="button" class="btn btn-secondary" id="btn-grp-add-proc">Adicionar processo</button>
+                    <?php else: ?>
+                    <input type="hidden" id="grp-new-sit" value="preso">
+                    <input type="hidden" id="grp-new-dp" value="">
+                    <input type="hidden" id="grp-new-df" value="">
+                    <input type="hidden" id="grp-new-vinc" value="secundario">
+                    <?php endif; ?>
+                    <button type="button" class="btn btn-secondary" id="btn-grp-add-proc">Adicionar processo</button>
             </div>
             <?php endif; ?>
         </div>
@@ -262,20 +246,30 @@ if ($ultimaMov !== null) {
         </div>
         <div class="display-flex col col-full padding-x-md padding-y-md gap-y-md border-bottom">
             <?php if (!empty($movimentacoes)): ?>
-            <ul class="minor-info" style="margin:0;padding-left:1.2rem;">
-                <?php foreach ($movimentacoes as $m): ?>
-                <li class="display-flex row row-fit align-center gap-y-sm" style="gap:8px;">
-                    <span><?php echo htmlspecialchars(($m['tipo_label'] ?? '') . ' — ' . grpFmtBr($m['data_movimentacao'] ?? null), ENT_QUOTES); ?></span>
-                    <?php if (!$arquivado): ?>
-                    <button
-                        type="button"
-                        class="btn btn-danger-outline height-sm grp-del-mov"
-                        data-mov-id="<?php echo htmlspecialchars((string) ($m['id'] ?? ''), ENT_QUOTES); ?>"
-                        title="Excluir movimentação"
-                        aria-label="Excluir movimentação"
-                        style="min-width:32px;padding:0 8px;line-height:1;"
-                    >x</button>
-                    <?php endif; ?>
+            <ul class="minor-info" style="margin:0;padding:0;list-style:none;">
+                <?php foreach ($movimentacoes as $m):
+                    $movTipo = trim((string) ($m['tipo_label'] ?? ''));
+                    $movObs = trim((string) ($m['observacoes'] ?? ''));
+                    $movTexto = $movTipo;
+                    if ($movObs !== '') {
+                        $movTexto .= ' (' . $movObs . ')';
+                    }
+                    ?>
+                <li class="display-flex row row-full align-center justify-between border-bottom padding-y-sm" style="gap:12px;">
+                    <span class="minor-info text-ellipsis"><?php echo htmlspecialchars($movTexto, ENT_QUOTES); ?></span>
+                    <div class="display-flex row row-fit align-center justify-end" style="gap:8px;flex-shrink:0;">
+                        <span class="minor-info"><?php echo htmlspecialchars(grpFmtBr($m['data_movimentacao'] ?? null), ENT_QUOTES); ?></span>
+                        <?php if (!$arquivado): ?>
+                        <button
+                            type="button"
+                            class="btn btn-danger-outline height-sm grp-del-mov"
+                            data-mov-id="<?php echo htmlspecialchars((string) ($m['id'] ?? ''), ENT_QUOTES); ?>"
+                            title="Excluir movimentação"
+                            aria-label="Excluir movimentação"
+                            style="width: 25px; padding: 5px; border-radius: 2px; border: none; box-shadow: none;"
+                        >x</button>
+                        <?php endif; ?>
+                    </div>
                 </li>
                 <?php endforeach; ?>
             </ul>
@@ -287,7 +281,7 @@ if ($ultimaMov !== null) {
             <div class="display-flex row row-full flex-wrap align-end gap-y-md border-top padding-top-md" style="gap:12px;">
                 <div class="col">
                     <label for="grp-mov-tipo">Tipo</label>
-                    <select class="width-400 height-md" id="grp-mov-tipo">
+                    <select class="width-600 height-md" id="grp-mov-tipo">
                         <?php foreach ($tiposMov as $cod => $lab): ?>
                         <option value="<?php echo htmlspecialchars($cod, ENT_QUOTES); ?>"><?php echo htmlspecialchars($lab, ENT_QUOTES); ?></option>
                         <?php endforeach; ?>
@@ -297,7 +291,7 @@ if ($ultimaMov !== null) {
                     <label for="grp-mov-data">Data</label>
                     <input type="date" class="height-md" id="grp-mov-data">
                 </div>
-                <div class="col" style="flex:1;min-width:200px;">
+                <div class="col">
                     <label for="grp-mov-obs">Observações</label>
                     <input type="text" class="width-full height-md" id="grp-mov-obs" placeholder="Opcional" maxlength="2000">
                 </div>
