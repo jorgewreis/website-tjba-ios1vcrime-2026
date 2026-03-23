@@ -38,4 +38,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: pequenos ajustes** `[2a21b8e]`
 - **Fix: correcao de classes** `[b714740]`
 - **Fix: pequenas correcoes** `[28372be]`
+- **Fix: correcao de bd** `[6e43043]`
 
