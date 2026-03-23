@@ -36,4 +36,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: pequenos ajustes** `[f42fe04]`
 - **Fix: correcao de datas de mov** `[687ec43]`
 - **Fix: pequenos ajustes** `[2a21b8e]`
+- **Fix: correcao de classes** `[b714740]`
 
