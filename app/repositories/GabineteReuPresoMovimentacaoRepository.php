@@ -160,7 +160,7 @@ final class GabineteReuPresoMovimentacaoRepository
         foreach ($prefixes as $i => $prefix) {
             $k = ':pf' . $i;
             $whereLike[] = '`tipo_codigo` LIKE ' . $k;
-            $params[$k] = $prefix . '%';
+            $params[$k] = '%' . $prefix . '%';
         }
         $sql = sprintf(
             'SELECT MAX(`data_movimentacao`) FROM `%s` WHERE `reu_preso_id` = :rid AND (%s)',

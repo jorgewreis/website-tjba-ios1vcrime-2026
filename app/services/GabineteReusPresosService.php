@@ -144,6 +144,7 @@ final class GabineteReusPresosService
 
         foreach ($rows as $i => $r) {
             $rid = trim((string) ($r['id'] ?? ''));
+            $rows[$i]['DataPrisao'] = $this->formatDataMovimentoBr((string) ($r['principal_data_prisao'] ?? ''));
             $rows[$i]['TempoCustodiaLabel'] = $this->formatDuracaoCustodia($r['principal_data_prisao'] ?? null);
             $rows[$i]['UltimaMovimentacaoLabel'] = $this->formatUltimaMovLabel($r['ultima_mov_raw'] ?? null);
             $rows[$i]['ProcessoPrincipalLabel'] = trim((string) ($r['processo_principal_numero'] ?? '')) !== ''
@@ -625,7 +626,7 @@ final class GabineteReusPresosService
             $numero = trim((string) ($pr['numero_processo'] ?? ''));
             $classe = trim((string) ($pr['classe_nome'] ?? ''));
             $numeroLabel = $numero !== '' ? $numero : '—';
-            $classeLabel = $classe !== '' ? $classe : '—';
+            $classeLabel = $classe !== '' ? $classe : 'Classe não informada';
             $mov = $ultMap[$lid] ?? null;
             $tipoLabel = $mov !== null ? $this->labelTipoMovimentacao((string) ($mov['tipo_codigo'] ?? '')) : '—';
             $dataBr = $mov !== null ? $this->formatDataMovimentoBr((string) ($mov['data_movimentacao'] ?? '')) : '—';
