@@ -398,8 +398,6 @@ final class GabineteReusPresosService
         $wasPrincipal = !empty($link['principal']);
 
         $this->removePrioridadeIfPreso($processoId, $situacao);
-        // Preserva o histórico de movimentações ao remover apenas o vínculo do processo.
-        $this->movRepo->clearLinkByReuPresoProcessoId($linkId);
         $this->procRepo->deleteById($linkId);
 
         $remaining = $this->procRepo->findByReuPresoId($reuId);
@@ -517,20 +515,23 @@ final class GabineteReusPresosService
         }
         $tipo = trim((string) ($mov['tipo_codigo'] ?? ''));
         $data = trim((string) ($mov['data_movimentacao'] ?? ''));
+        $processoId = trim((string) ($mov['processo_id'] ?? ''));
+        if ($processoId === '') {
+            $linkFk = trim((string) ($mov['reu_preso_processo_id'] ?? ''));
+            if ($linkFk !== '') {
+                $lk = $this->procRepo->findById($linkFk);
+                if ($lk !== null) {
+                    $processoId = trim((string) ($lk['processo_id'] ?? ''));
+                }
+            }
+        }
         if ($tipo === '' || $data === '') {
             throw new InvalidArgumentException('Movimentação inválida.');
         }
-        $linkFk = trim((string) ($mov['reu_preso_processo_id'] ?? ''));
-        $processoId = '';
-        if ($linkFk !== '') {
-            $lk = $this->procRepo->findById($linkFk);
-            if ($lk !== null) {
-                $processoId = trim((string) ($lk['processo_id'] ?? ''));
-            }
+        if ($processoId === '') {
+            throw new InvalidArgumentException('Movimentação sem processo vinculado.');
         }
-        $deleted = $processoId !== ''
-            ? $this->movRepo->deleteByProcessoTipoData($processoId, $tipo, $data)
-            : $this->movRepo->deleteByReuTipoData($reuId, $tipo, $data);
+        $deleted = $this->movRepo->deleteByProcessoTipoData($processoId, $tipo, $data);
         if ($deleted > 0 && $this->tipoAfetaRevisao($tipo)) {
             $this->recalcProximaRevisao($reuId);
         }

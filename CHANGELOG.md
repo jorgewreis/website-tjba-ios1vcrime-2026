@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0070
+
+**Data:** 2026-03-23 11:54:35 | **Commit:** `6e43043` | **Tipo:** `patch`
+
+- Fix: correcao de bd
+
 ## V. 1.04.0069
 
 **Data:** 2026-03-23 11:43:31 | **Commit:** `28372be` | **Tipo:** `patch`
@@ -3708,6 +3714,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
