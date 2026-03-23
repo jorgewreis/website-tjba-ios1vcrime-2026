@@ -246,7 +246,7 @@ if ($ultimaMov !== null) {
         </div>
         <div class="display-flex col col-full padding-x-md padding-y-md gap-y-md border-bottom">
             <?php if (!empty($movimentacoes)): ?>
-            <ul class="minor-info" style="margin:0;padding:0;list-style:none;">
+            <ul class="row row-full display-flex" style="margin:0;padding:0;list-style:none;">
                 <?php foreach ($movimentacoes as $m):
                     $movTipo = trim((string) ($m['tipo_label'] ?? ''));
                     $movObs = trim((string) ($m['observacoes'] ?? ''));
@@ -266,7 +266,7 @@ if ($ultimaMov !== null) {
                             data-mov-id="<?php echo htmlspecialchars((string) ($m['id'] ?? ''), ENT_QUOTES); ?>"
                             title="Excluir movimentação"
                             aria-label="Excluir movimentação"
-                            style="width: 25px; padding: 5px; border-radius: 2px; border: none; box-shadow: none;"
+                            style="width: 25px; height: 20px !important; padding: 5px; border-radius: 2px; border: none; box-shadow: none;"
                         >x</button>
                         <?php endif; ?>
                     </div>
@@ -293,7 +293,7 @@ if ($ultimaMov !== null) {
                 </div>
                 <div class="col">
                     <label for="grp-mov-obs">Observações</label>
-                    <input type="text" class="width-full height-md" id="grp-mov-obs" placeholder="Opcional" maxlength="2000">
+                    <input type="text" class="width-700 height-md" id="grp-mov-obs" placeholder="Opcional" maxlength="2000">
                 </div>
                 <button type="button" class="btn btn-primary height-md" id="btn-grp-add-mov" style="margin-top:22px;">Registrar movimentação</button>
             </div>
