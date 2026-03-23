@@ -162,6 +162,7 @@ if ($ultimaMov !== null) {
                                 <span class="minor-info">Processo</span>
                                 <span class="major-info text-ellipsis grp-numero-processo" title="<?php echo $num; ?>"><?php echo $num; ?></span>
                             </div>
+                            <?php if ($isPrin): ?>
                             <div class="col" style="min-width:140px;">
                                 <span class="minor-info">Situação</span>
                                 <select class="width-full height-md grp-situacao" data-link-id="<?php echo $lid; ?>" <?php echo $arquivado ? 'disabled' : ''; ?>>
@@ -177,10 +178,18 @@ if ($ultimaMov !== null) {
                                 <span class="minor-info">Data do fato</span>
                                 <input type="date" class="width-full height-md grp-df" data-link-id="<?php echo $lid; ?>" value="<?php echo htmlspecialchars(grpFmtYmd($p['data_fato'] ?? null), ENT_QUOTES); ?>" <?php echo $arquivado ? 'disabled' : ''; ?>>
                             </div>
+                            <?php else: ?>
+                            <div class="col" style="min-width:240px;">
+                                <span class="minor-info">Dados de custódia</span>
+                                <span class="major-info">Mesmos dados do processo principal.</span>
+                            </div>
+                            <?php endif; ?>
                         </div>
                         <?php if (!$arquivado): ?>
                         <div class="display-flex row row-fit justify-end gap-y-sm align-center" style="flex-shrink:0;align-self:flex-start;">
+                            <?php if ($isPrin): ?>
                             <button type="button" class="btn btn-primary height-sm grp-save-link" data-link-id="<?php echo $lid; ?>">Salvar</button>
+                            <?php endif; ?>
                             <button type="button" class="btn btn-danger-outline height-sm grp-unlink" data-link-id="<?php echo $lid; ?>">Remover</button>
                         </div>
                         <?php endif; ?>
@@ -212,21 +221,22 @@ if ($ultimaMov !== null) {
                 </div>
                 <input type="hidden" id="hidden-classe-codigo">
                 <input type="hidden" id="hidden-classe-descricao">
+                <?php if (empty($processos)): ?>
                 <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                     <div class="col">
                         <label for="grp-new-sit">Situação neste processo</label>
-                        <select class="width-300 height-md" id="grp-new-sit" <?php echo !empty($processos) ? 'disabled' : ''; ?>>
+                        <select class="width-300 height-md" id="grp-new-sit">
                             <option value="preso">Preso</option>
                             <option value="solto">Solto</option>
                         </select>
                     </div>
                     <div class="col">
                         <label for="grp-new-dp">Data da prisão</label>
-                        <input type="date" class="height-md" id="grp-new-dp" <?php echo !empty($processos) ? 'disabled' : ''; ?>>
+                        <input type="date" class="height-md" id="grp-new-dp">
                     </div>
                     <div class="col">
                         <label for="grp-new-df">Data do fato</label>
-                        <input type="date" class="height-md" id="grp-new-df" <?php echo !empty($processos) ? 'disabled' : ''; ?>>
+                        <input type="date" class="height-md" id="grp-new-df">
                     </div>
                     <div class="col" style="min-width:140px;">
                         <label for="grp-new-vinc" class="minor-info">Vinculação</label>
@@ -236,6 +246,12 @@ if ($ultimaMov !== null) {
                         </select>
                     </div>
                 </div>
+                <?php else: ?>
+                <input type="hidden" id="grp-new-sit" value="preso">
+                <input type="hidden" id="grp-new-dp" value="">
+                <input type="hidden" id="grp-new-df" value="">
+                <input type="hidden" id="grp-new-vinc" value="secundario">
+                <?php endif; ?>
                 <button type="button" class="btn btn-secondary" id="btn-grp-add-proc">Adicionar processo</button>
             </div>
             <?php endif; ?>
@@ -278,13 +294,11 @@ if ($ultimaMov !== null) {
             <?php endif; ?>
         </div>
 
-        <div class="display-flex row row-full justify-between padding-x-md padding-y-md gap-y-md flex-wrap">
+        <div class="display-flex row row-full justify-end padding-x-md padding-y-md gap-y-md flex-wrap">
             <?php if (!$arquivado): ?>
-            <button type="button" class="btn btn-danger-outline" id="btn-grp-arquivar">Arquivar</button>
+            <button type="button" class="btn btn-secondary" id="btn-grp-voltar" onclick="window.location.href='/frame.php?page=reuspresos'">Voltar</button>
+            <button type="button" class="btn btn-danger-outline" id="btn-grp-arquivar">Excluir</button>
             <?php endif; ?>
-            <div class="display-flex row row-fit justify-end gap-y-md" style="gap:12px;margin-left:auto;">
-                <button type="button" class="btn btn-secondary" id="btn-grp-voltar" onclick="window.location.href='/frame.php?page=reuspresos'">Voltar</button>
-            </div>
         </div>
     </div>
     <?php endif; ?>

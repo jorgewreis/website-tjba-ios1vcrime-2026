@@ -124,6 +124,23 @@ final class GabineteReuPresoProcessoRepository
         $st->execute();
     }
 
+    public function updateDadosCustodiaByReuPresoId(string $reuPresoId, string $situacao, ?string $dataPrisao, ?string $dataFato): void
+    {
+        $st = $this->connection->prepare(
+            sprintf(
+                'UPDATE `%s`
+                 SET `situacao` = :situacao, `data_prisao` = :data_prisao, `data_fato` = :data_fato, `updated_at` = NOW()
+                 WHERE `reu_preso_id` = :rid',
+                $this->table
+            )
+        );
+        $st->bindValue(':rid', $reuPresoId);
+        $st->bindValue(':situacao', $situacao);
+        $st->bindValue(':data_prisao', $dataPrisao);
+        $st->bindValue(':data_fato', $dataFato);
+        $st->execute();
+    }
+
     public function countByReuPresoId(string $reuPresoId): int
     {
         $st = $this->connection->prepare(

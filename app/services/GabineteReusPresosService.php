@@ -303,12 +303,20 @@ final class GabineteReusPresosService
                 'data_prisao' => $dataPrisao,
                 'data_fato' => $dataFato,
             ]);
+            // Situação e datas são compartilhadas entre todos os processos vinculados do mesmo réu preso.
+            $this->procRepo->updateDadosCustodiaByReuPresoId($reuId, $situacao, $dataPrisao, $dataFato);
             if ($oldProc !== $processoId) {
                 $this->removePrioridadeIfPreso($oldProc, $oldSituacao);
             } elseif ($oldSituacao !== $situacao) {
                 $this->removePrioridadeIfPreso($processoId, $oldSituacao);
             }
-            $this->applyPrioridadeForProcesso($processoId, $situacao);
+            $allByReu = $this->procRepo->findByReuPresoId($reuId);
+            foreach ($allByReu as $ln) {
+                $pid = trim((string) ($ln['processo_id'] ?? ''));
+                if ($pid !== '') {
+                    $this->applyPrioridadeForProcesso($pid, $situacao);
+                }
+            }
             if ($principal) {
                 $this->setPrincipalInternal($reuId, $linkId);
             }

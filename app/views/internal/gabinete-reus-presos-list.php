@@ -250,11 +250,11 @@ if ($totalPages > 0) {
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['nome'] ?? ''), ENT_QUOTES); ?></span>
                         </div>
                         <div class="col width-400">
-                            <span class="minor-info">Tempo em custódia</span>
-                            <span class="major-info"><?php echo htmlspecialchars((string) ($row['TempoCustodiaLabel'] ?? '—'), ENT_QUOTES); ?></span>
+                            <span class="minor-info">Preso desde <?php echo htmlspecialchars((string) ($row['DataPrisao'] ?? '—'), ENT_QUOTES); ?></span>
+                            <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['TempoCustodiaLabel'] ?? '—'), ENT_QUOTES); ?></span>
                         </div>
                         <div class="col width-400">
-                            <span class="minor-info">Preso em <?php echo htmlspecialchars((string) ($row['PresoEm'] ?? '—'), ENT_QUOTES); ?></span>
+                            <span class="minor-info">Próxima reavaliação</span>
                             <span class="major-info text-ellipsis grp-revisao-wrap <?php echo htmlspecialchars($revClass, ENT_QUOTES); ?>" <?php echo $revTitle !== '' ? ' title="' . htmlspecialchars($revTitle, ENT_QUOTES) . '"' : ''; ?>><?php echo htmlspecialchars($prox, ENT_QUOTES); ?></span>
                         </div>
                     </div>
@@ -276,15 +276,15 @@ if ($totalPages > 0) {
                             if ($isPrincipal): ?>
                     <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top align-start flex-wrap grp-sub-line grp-sub-line-primary">
                         <div class="display-flex row row-fit justify-start gap-y-md flex-wrap grp-sub-left">
-                            <div class="col" style="min-width: 160px; max-width: 100%;">
+                            <div class="col">
                                 <span class="minor-info"><?php echo htmlspecialchars((string) ($sl['classe_nome'] ?? '—'), ENT_QUOTES); ?></span>
-                                <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($sl['numero_processo'] ?? '—'), ENT_QUOTES); ?></span>
+                                <span class="width-600 major-info text-ellipsis"><?php echo htmlspecialchars((string) ($sl['numero_processo'] ?? '—'), ENT_QUOTES); ?></span>
                             </div>
                         </div>
-                        <div class="display-flex row row-fit justify-end gap-y-md flex-wrap grp-sub-right">
+                        <div class="display-flex row row-fit justify-end gap-y-md">
                             <div class="col">
                                 <span class="minor-info">Última movimentação</span>
-                                <span class="width-500 major-info text-ellipsis"><?php echo htmlspecialchars((string) ($sl['ultima_movimentacao'] ?? '—'), ENT_QUOTES); ?></span>
+                                <span class="width-600 major-info text-ellipsis"><?php echo htmlspecialchars((string) ($sl['ultima_movimentacao'] ?? '—'), ENT_QUOTES); ?></span>
                             </div>
                             <div class="col">
                                 <span class="minor-info">Data</span>
@@ -293,8 +293,8 @@ if ($totalPages > 0) {
                         </div>
                     </div>
                             <?php else: ?>
-                    <div class="display-flex row row-full subtask padding-x-sm padding-y-sm border-top grp-sub-line grp-sub-line-compact">
-                        <span class="major-info text-ellipsis" title="<?php echo htmlspecialchars((string) ($sl['texto_compacto'] ?? ''), ENT_QUOTES); ?>"><?php echo htmlspecialchars((string) ($sl['texto_compacto'] ?? '—'), ENT_QUOTES); ?></span>
+                    <div class="display-flex row row-full subtask padding-x-sm padding-y-sm border-top">
+                        <span class="width-700 minor-info text-ellipsis" title="<?php echo htmlspecialchars((string) ($sl['texto_compacto'] ?? ''), ENT_QUOTES); ?>"><?php echo htmlspecialchars((string) ($sl['texto_compacto'] ?? '—'), ENT_QUOTES); ?></span>
                     </div>
                             <?php endif; ?>
                         <?php endforeach; ?>
