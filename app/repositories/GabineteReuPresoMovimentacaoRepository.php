@@ -17,14 +17,15 @@ final class GabineteReuPresoMovimentacaoRepository
     public function insert(array $row): void
     {
         $sql = sprintf(
-            'INSERT INTO `%s` (`id`, `reu_preso_id`, `reu_preso_processo_id`, `tipo_codigo`, `data_movimentacao`, `observacoes`, `created_at`, `user_cadastro`)
-             VALUES (:id, :reu_preso_id, :reu_preso_processo_id, :tipo_codigo, :data_movimentacao, :observacoes, NOW(), :user_cadastro)',
+            'INSERT INTO `%s` (`id`, `reu_preso_id`, `reu_preso_processo_id`, `processo_id`, `tipo_codigo`, `data_movimentacao`, `observacoes`, `created_at`, `user_cadastro`)
+             VALUES (:id, :reu_preso_id, :reu_preso_processo_id, :processo_id, :tipo_codigo, :data_movimentacao, :observacoes, NOW(), :user_cadastro)',
             $this->table
         );
         $st = $this->connection->prepare($sql);
         $st->bindValue(':id', $row['id']);
         $st->bindValue(':reu_preso_id', $row['reu_preso_id']);
         $st->bindValue(':reu_preso_processo_id', $row['reu_preso_processo_id'] ?? null);
+        $st->bindValue(':processo_id', $row['processo_id'] ?? null);
         $st->bindValue(':tipo_codigo', $row['tipo_codigo']);
         $st->bindValue(':data_movimentacao', $row['data_movimentacao']);
         $st->bindValue(':observacoes', $row['observacoes'] ?? null);
@@ -194,6 +195,31 @@ final class GabineteReuPresoMovimentacaoRepository
         return $st->fetchColumn() !== false;
     }
 
+    public function existsByProcessoTipoData(string $processoId, string $tipoCodigo, string $dataMovimentacao): bool
+    {
+        $processoId = trim($processoId);
+        $tipoCodigo = trim($tipoCodigo);
+        $dataMovimentacao = trim($dataMovimentacao);
+        if ($processoId === '' || $tipoCodigo === '' || $dataMovimentacao === '') {
+            return false;
+        }
+        $st = $this->connection->prepare(
+            sprintf(
+                'SELECT 1
+                 FROM `%s` m
+                 WHERE m.`processo_id` = :pid AND m.`tipo_codigo` = :tipo AND m.`data_movimentacao` = :dt
+                 LIMIT 1',
+                $this->table
+            )
+        );
+        $st->bindValue(':pid', $processoId);
+        $st->bindValue(':tipo', $tipoCodigo);
+        $st->bindValue(':dt', $dataMovimentacao);
+        $st->execute();
+
+        return $st->fetchColumn() !== false;
+    }
+
     /**
      * @param list<string> $prefixes
      */
@@ -232,6 +258,83 @@ final class GabineteReuPresoMovimentacaoRepository
         }
 
         return (string) $v;
+    }
+
+    /**
+     * @param list<string> $processoIds
+     * @param list<string> $prefixes
+     */
+    public function maxDataMovimentacaoForTipoPrefixesByProcessos(array $processoIds, array $prefixes): ?string
+    {
+        $processoIds = array_values(array_filter(array_map(static function ($id) {
+            return trim((string) $id);
+        }, $processoIds), static function ($id) {
+            return $id !== '';
+        }));
+        $prefixes = array_values(array_filter(array_map(static function ($p) {
+            return trim((string) $p);
+        }, $prefixes), static function ($p) {
+            return $p !== '';
+        }));
+        if ($processoIds === [] || $prefixes === []) {
+            return null;
+        }
+        $pidPlaceholders = [];
+        $params = [];
+        foreach ($processoIds as $i => $pid) {
+            $k = ':pid' . $i;
+            $pidPlaceholders[] = $k;
+            $params[$k] = $pid;
+        }
+        $whereLike = [];
+        foreach ($prefixes as $i => $prefix) {
+            $k = ':pf' . $i;
+            $whereLike[] = 'm.`tipo_codigo` LIKE ' . $k;
+            $params[$k] = '%' . $prefix . '%';
+        }
+        $sql = sprintf(
+            'SELECT MAX(m.`data_movimentacao`)
+             FROM `%s` m
+             WHERE m.`processo_id` IN (%s) AND (%s)',
+            $this->table,
+            implode(',', $pidPlaceholders),
+            implode(' OR ', $whereLike)
+        );
+        $st = $this->connection->prepare($sql);
+        foreach ($params as $k => $v) {
+            $st->bindValue($k, $v);
+        }
+        $st->execute();
+        $v = $st->fetchColumn();
+        if ($v === null || $v === false || $v === '') {
+            return null;
+        }
+
+        return (string) $v;
+    }
+
+    public function deleteByProcessoTipoData(string $processoId, string $tipoCodigo, string $dataMovimentacao): int
+    {
+        $processoId = trim($processoId);
+        $tipoCodigo = trim($tipoCodigo);
+        $dataMovimentacao = trim($dataMovimentacao);
+        if ($processoId === '' || $tipoCodigo === '' || $dataMovimentacao === '') {
+            return 0;
+        }
+        $st = $this->connection->prepare(
+            sprintf(
+                'DELETE m
+                 FROM `%s` m
+                 WHERE m.`processo_id` = :pid AND m.`tipo_codigo` = :tipo AND m.`data_movimentacao` = :dt',
+                $this->table
+            )
+        );
+        $st->bindValue(':pid', $processoId);
+        $st->bindValue(':tipo', $tipoCodigo);
+        $st->bindValue(':dt', $dataMovimentacao);
+        $st->execute();
+
+        return (int) $st->rowCount();
     }
 
     /**
@@ -286,5 +389,80 @@ final class GabineteReuPresoMovimentacaoRepository
         }
 
         return $out;
+    }
+
+    /**
+     * @param list<string> $processoIds
+     * @return array<string, array<string, mixed>> processo_id => linha da movimentação
+     */
+    public function fetchUltimaPorProcessoIds(array $processoIds): array
+    {
+        $processoIds = array_values(array_filter(array_map(static function ($id) {
+            return trim((string) $id);
+        }, $processoIds), static function ($id) {
+            return $id !== '';
+        }));
+        if ($processoIds === []) {
+            return [];
+        }
+
+        $placeholders = [];
+        $params = [];
+        foreach ($processoIds as $i => $id) {
+            $k = ':p' . $i;
+            $placeholders[] = $k;
+            $params[$k] = $id;
+        }
+        $in = implode(',', $placeholders);
+        $sql = sprintf(
+            'SELECT `id`, `processo_id`, `tipo_codigo`, `data_movimentacao`, `observacoes`
+             FROM `%s`
+             WHERE `processo_id` IN (%s)
+             ORDER BY `processo_id` ASC, `data_movimentacao` DESC, `created_at` DESC',
+            $this->table,
+            $in
+        );
+        $st = $this->connection->prepare($sql);
+        foreach ($params as $k => $v) {
+            $st->bindValue($k, $v);
+        }
+        $st->execute();
+        $rows = $st->fetchAll(PDO::FETCH_ASSOC);
+        if ($rows === false) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($rows as $row) {
+            $pid = trim((string) ($row['processo_id'] ?? ''));
+            if ($pid !== '' && !isset($out[$pid])) {
+                $out[$pid] = $row;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function findByProcessoIdOrderDesc(string $processoId, int $limit = 200): array
+    {
+        $processoId = trim($processoId);
+        if ($processoId === '') {
+            return [];
+        }
+        $st = $this->connection->prepare(
+            sprintf(
+                'SELECT * FROM `%s` WHERE `processo_id` = :pid ORDER BY `data_movimentacao` DESC, `created_at` DESC LIMIT %d',
+                $this->table,
+                $limit
+            )
+        );
+        $st->bindValue(':pid', $processoId);
+        $st->execute();
+        $rows = $st->fetchAll(PDO::FETCH_ASSOC);
+
+        return $rows === false ? [] : $rows;
     }
 }

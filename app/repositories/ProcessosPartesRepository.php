@@ -165,6 +165,57 @@ final class ProcessosPartesRepository
     }
 
     /**
+     * @param list<string> $processoIds
+     * @return array<string, int> processo_id => total_partes
+     */
+    public function countByProcessoIds(array $processoIds): array
+    {
+        $processoIds = array_values(array_filter(array_map(static function ($id) {
+            return trim((string) $id);
+        }, $processoIds), static function ($id) {
+            return $id !== '';
+        }));
+        if ($processoIds === []) {
+            return [];
+        }
+
+        $placeholders = [];
+        $params = [];
+        foreach ($processoIds as $i => $id) {
+            $k = ':p' . $i;
+            $placeholders[] = $k;
+            $params[$k] = $id;
+        }
+        $sql = sprintf(
+            'SELECT `processo_id`, COUNT(*) AS `total`
+             FROM `%s`
+             WHERE `processo_id` IN (%s)
+             GROUP BY `processo_id`',
+            $this->table,
+            implode(', ', $placeholders)
+        );
+        $statement = $this->connection->prepare($sql);
+        foreach ($params as $k => $v) {
+            $statement->bindValue($k, $v);
+        }
+        $statement->execute();
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+        if ($rows === false) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($rows as $row) {
+            $pid = trim((string) ($row['processo_id'] ?? ''));
+            if ($pid !== '') {
+                $out[$pid] = (int) ($row['total'] ?? 0);
+            }
+        }
+
+        return $out;
+    }
+
+    /**
      * Réus / acusados vinculados ao processo (polo passivo: réu, indiciado, sentenciado).
      *
      * @return list<array<string, mixed>>

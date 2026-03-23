@@ -253,7 +253,7 @@ final class GabineteReuPresoProcessoRepository
         }
         $in = implode(',', $placeholders);
         $sql = sprintf(
-            'SELECT gpp.`id`, gpp.`reu_preso_id`, gpp.`principal`, p.`numero_processo`,
+            'SELECT gpp.`id`, gpp.`reu_preso_id`, gpp.`processo_id`, gpp.`principal`, p.`numero_processo`,
                     COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'\') AS `classe_nome`
              FROM `%s` gpp
              INNER JOIN `processos` p ON p.`id` = gpp.`processo_id`

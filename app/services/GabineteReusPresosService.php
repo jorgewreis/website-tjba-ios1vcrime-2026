@@ -7,6 +7,8 @@ require_once __DIR__ . '/../repositories/GabineteReuPresoMovimentacaoRepository.
 require_once __DIR__ . '/../repositories/ProcessoPrioridadesRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
+require_once __DIR__ . '/../repositories/PartesRepository.php';
+require_once __DIR__ . '/../repositories/ProcessosPartesRepository.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 
@@ -36,6 +38,8 @@ final class GabineteReusPresosService
     private ProcessoPrioridadesRepository $prioridadesRepo;
     private ProcessosRepository $processosRepository;
     private ClassesRepository $classesRepository;
+    private PartesRepository $partesRepository;
+    private ProcessosPartesRepository $processosPartesRepository;
 
     public function __construct(PDO $connection)
     {
@@ -46,6 +50,8 @@ final class GabineteReusPresosService
         $this->prioridadesRepo = new ProcessoPrioridadesRepository($connection);
         $this->processosRepository = new ProcessosRepository($connection);
         $this->classesRepository = new ClassesRepository($connection);
+        $this->partesRepository = new PartesRepository($connection);
+        $this->processosPartesRepository = new ProcessosPartesRepository($connection);
     }
 
     /**
@@ -233,8 +239,17 @@ final class GabineteReusPresosService
         if ($principalLinkId === '' && !empty($processos)) {
             $principalLinkId = trim((string) ($processos[0]['id'] ?? ''));
         }
-        $movs = $principalLinkId !== ''
-            ? $this->movRepo->findByReuPresoProcessoIdOrderDesc($principalLinkId, 200)
+        $principalProcessoId = '';
+        if ($principalLinkId !== '') {
+            foreach ($processos as $p) {
+                if ((string) ($p['id'] ?? '') === $principalLinkId) {
+                    $principalProcessoId = trim((string) ($p['processo_id'] ?? ''));
+                    break;
+                }
+            }
+        }
+        $movs = $principalProcessoId !== ''
+            ? $this->movRepo->findByProcessoIdOrderDesc($principalProcessoId, 200)
             : [];
         foreach ($movs as $k => $m) {
             $movs[$k]['tipo_label'] = $this->labelTipoMovimentacao((string) ($m['tipo_codigo'] ?? ''));
@@ -321,6 +336,7 @@ final class GabineteReusPresosService
             if ($principal) {
                 $this->setPrincipalInternal($reuId, $linkId);
             }
+            $this->ensureReuParteVinculadaAoProcesso($reuId, $processoId);
             $this->recalcProximaRevisao($reuId);
 
             return $linkId;
@@ -355,6 +371,7 @@ final class GabineteReusPresosService
             $this->procRepo->clearPrincipalForReu($reuId);
             $this->procRepo->update($newId, ['principal' => 1]);
         }
+        $this->ensureReuParteVinculadaAoProcesso($reuId, $processoId);
         $this->recalcProximaRevisao($reuId);
 
         return $newId;
@@ -452,10 +469,11 @@ final class GabineteReusPresosService
         $inserted = 0;
         foreach ($links as $link) {
             $linkFk = trim((string) ($link['id'] ?? ''));
+            $processoId = trim((string) ($link['processo_id'] ?? ''));
             if ($linkFk === '') {
                 continue;
             }
-            if ($this->movRepo->existsByLinkTipoData($linkFk, $tipo, $dataMov)) {
+            if ($processoId !== '' && $this->movRepo->existsByProcessoTipoData($processoId, $tipo, $dataMov)) {
                 continue;
             }
             $mid = IdGenerator::generateUniquePrefixedId($this->connection, 'gabinete_reu_preso_movimentacao', 'id', 'GPM', 30);
@@ -463,6 +481,7 @@ final class GabineteReusPresosService
                 'id' => $mid,
                 'reu_preso_id' => $reuId,
                 'reu_preso_processo_id' => $linkFk,
+                'processo_id' => $processoId !== '' ? $processoId : null,
                 'tipo_codigo' => $tipo,
                 'data_movimentacao' => $dataMov,
                 'observacoes' => $obs !== '' ? $obs : null,
@@ -501,8 +520,17 @@ final class GabineteReusPresosService
         if ($tipo === '' || $data === '') {
             throw new InvalidArgumentException('Movimentação inválida.');
         }
-
-        $deleted = $this->movRepo->deleteByReuTipoData($reuId, $tipo, $data);
+        $linkFk = trim((string) ($mov['reu_preso_processo_id'] ?? ''));
+        $processoId = '';
+        if ($linkFk !== '') {
+            $lk = $this->procRepo->findById($linkFk);
+            if ($lk !== null) {
+                $processoId = trim((string) ($lk['processo_id'] ?? ''));
+            }
+        }
+        $deleted = $processoId !== ''
+            ? $this->movRepo->deleteByProcessoTipoData($processoId, $tipo, $data)
+            : $this->movRepo->deleteByReuTipoData($reuId, $tipo, $data);
         if ($deleted > 0 && $this->tipoAfetaRevisao($tipo)) {
             $this->recalcProximaRevisao($reuId);
         }
@@ -543,18 +571,26 @@ final class GabineteReusPresosService
         if ($reuId === '') {
             return;
         }
-        $max = $this->movRepo->maxDataMovimentacaoForTipoPrefixes($reuId, self::PREFIXOS_MOVIMENTACAO_REVISAO_90_DIAS);
+        $links = $this->procRepo->findByReuPresoId($reuId);
+        $processoIds = [];
+        foreach ($links as $ln) {
+            $pid = trim((string) ($ln['processo_id'] ?? ''));
+            if ($pid !== '') {
+                $processoIds[] = $pid;
+            }
+        }
+        $max = $this->movRepo->maxDataMovimentacaoForTipoPrefixesByProcessos($processoIds, self::PREFIXOS_MOVIMENTACAO_REVISAO_90_DIAS);
         if ($max === null) {
             $basePrisao = null;
-            $links = $this->procRepo->findByReuPresoIdWithNumero($reuId);
-            foreach ($links as $ln) {
+            $linksWithNumero = $this->procRepo->findByReuPresoIdWithNumero($reuId);
+            foreach ($linksWithNumero as $ln) {
                 if (!empty($ln['principal'])) {
                     $basePrisao = $this->normalizeDateOrNull($ln['data_prisao'] ?? null);
                     break;
                 }
             }
             if ($basePrisao === null) {
-                foreach ($links as $ln) {
+                foreach ($linksWithNumero as $ln) {
                     $basePrisao = $this->normalizeDateOrNull($ln['data_prisao'] ?? null);
                     if ($basePrisao !== null) {
                         break;
@@ -680,18 +716,19 @@ final class GabineteReusPresosService
         }
 
         $procRows = $this->procRepo->fetchProcessosSubtarefaPorReuIds(array_keys($byReu));
-        $linkIds = [];
+        $processoIds = [];
         foreach ($procRows as $pr) {
-            $lid = trim((string) ($pr['id'] ?? ''));
-            if ($lid !== '') {
-                $linkIds[] = $lid;
+            $pid = trim((string) ($pr['processo_id'] ?? ''));
+            if ($pid !== '') {
+                $processoIds[] = $pid;
             }
         }
-        $ultMap = $this->movRepo->fetchUltimaPorReuPresoProcessoIds($linkIds);
+        $ultMap = $this->movRepo->fetchUltimaPorProcessoIds($processoIds);
 
         foreach ($procRows as $pr) {
             $rid = trim((string) ($pr['reu_preso_id'] ?? ''));
             $lid = trim((string) ($pr['id'] ?? ''));
+            $pid = trim((string) ($pr['processo_id'] ?? ''));
             if ($rid === '' || $lid === '' || !isset($byReu[$rid])) {
                 continue;
             }
@@ -700,7 +737,7 @@ final class GabineteReusPresosService
             $classe = trim((string) ($pr['classe_nome'] ?? ''));
             $numeroLabel = $numero !== '' ? $numero : '—';
             $classeLabel = $classe !== '' ? $classe : 'Classe não informada';
-            $mov = $ultMap[$lid] ?? null;
+            $mov = $pid !== '' ? ($ultMap[$pid] ?? null) : null;
             $tipoLabel = $mov !== null ? $this->labelTipoMovimentacao((string) ($mov['tipo_codigo'] ?? '')) : '—';
             $dataBr = $mov !== null ? $this->formatDataMovimentoBr((string) ($mov['data_movimentacao'] ?? '')) : '—';
             $compacto = $numero !== '' && $classe !== ''
@@ -729,5 +766,28 @@ final class GabineteReusPresosService
         $t = strtotime($ymd);
 
         return $t !== false ? date('d/m/Y', $t) : '—';
+    }
+
+    private function ensureReuParteVinculadaAoProcesso(string $reuId, string $processoId): void
+    {
+        $reu = $this->reuRepo->findById($reuId);
+        if ($reu === null) {
+            return;
+        }
+        $nomeReu = trim((string) ($reu['nome'] ?? ''));
+        if ($nomeReu === '') {
+            return;
+        }
+        $parteId = $this->partesRepository->ensureParteByNomeOuCpf($nomeReu, null);
+        $existente = $this->processosPartesRepository->findByProcessoAndParte($processoId, $parteId);
+        if ($existente !== null) {
+            return;
+        }
+        $this->processosPartesRepository->addParte(
+            $processoId,
+            $parteId,
+            ProcessosPartesRepository::TIPO_REU,
+            ProcessosPartesRepository::POLO_PASSIVO
+        );
     }
 }
