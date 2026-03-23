@@ -226,8 +226,8 @@ if ($ultimaMov !== null) {
                     <div class="col" style="min-width:140px;">
                         <label for="grp-new-vinc" class="minor-info">Vinculação</label>
                         <select class="width-400 height-md" id="grp-new-vinc">
-                            <option value="principal">Principal</option>
-                            <option value="secundario" selected>Secundário</option>
+                            <option value="principal" selected>Principal</option>
+                            <option value="secundario">Secundário</option>
                         </select>
                     </div>
                     <?php else: ?>
@@ -489,6 +489,38 @@ if ($ultimaMov !== null) {
             });
 
             const procInput = document.getElementById('filter-processo');
+            function applyProcessMetadata(meta) {
+                const classeInput = document.getElementById('filter-classe');
+                const hCod = document.getElementById('hidden-classe-codigo');
+                const hDesc = document.getElementById('hidden-classe-descricao');
+                if (classeInput) classeInput.value = meta.classe_descricao || '';
+                if (hCod) hCod.value = meta.classe_codigo || '';
+                if (hDesc) hDesc.value = meta.classe_descricao || '';
+
+                const hasLinkedProcess = document.querySelectorAll('.grp-proc-link').length > 0;
+                if (hasLinkedProcess) return;
+
+                const sitEl = document.getElementById('grp-new-sit');
+                const dpEl = document.getElementById('grp-new-dp');
+                const dfEl = document.getElementById('grp-new-df');
+                const vincEl = document.getElementById('grp-new-vinc');
+                if (sitEl && meta.situacao) sitEl.value = meta.situacao;
+                if (dpEl && meta.data_prisao) dpEl.value = meta.data_prisao;
+                if (dfEl && meta.data_fato) dfEl.value = meta.data_fato;
+                if (vincEl) vincEl.value = 'principal';
+            }
+
+            function loadProcessMetadataIfExists() {
+                const procVal = (document.getElementById('filter-processo')?.value || '').trim();
+                const digits = procVal.replace(/\D/g, '');
+                if (digits.length !== 20) return Promise.resolve();
+                return postJson('/api/gabinete-reus-presos/processo-meta.php', { numero_processo: procVal }).then(function (res) {
+                    if (res.ok && res.j && res.j.found) {
+                        applyProcessMetadata(res.j);
+                    }
+                }).catch(function () {});
+            }
+
             if (procInput) {
                 procInput.addEventListener('input', function () {
                     var digits = (procInput.value || '').replace(/\D/g, '');
@@ -500,6 +532,9 @@ if ($ultimaMov !== null) {
                         if (h1) h1.value = '';
                         if (h2) h2.value = '';
                     }
+                });
+                procInput.addEventListener('blur', function () {
+                    loadProcessMetadataIfExists();
                 });
             }
 
@@ -522,23 +557,30 @@ if ($ultimaMov !== null) {
                     notify('error', 'Validação', 'Informe o número do processo.');
                     return;
                 }
-                postJson('/api/gabinete-reus-presos/save-processo.php', {
-                    reu_preso_id: reuId,
-                    numero_processo: proc,
-                    classe_codigo: cc,
-                    classe_descricao: cd,
-                    situacao: situacao,
-                    data_prisao: dp || null,
-                    data_fato: df || null,
-                    principal: principal
-                }).then(function (res) {
-                    if (res.ok && res.j && res.j.link_id) {
-                        notify('success', 'Sucesso', 'Processo vinculado.');
-                        window.location.reload();
-                    } else {
-                        notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha.');
-                    }
-                }).catch(function () { notify('error', 'Erro', 'Erro de conexão.'); });
+                const sendAddProcess = function () {
+                    postJson('/api/gabinete-reus-presos/save-processo.php', {
+                        reu_preso_id: reuId,
+                        numero_processo: proc,
+                        classe_codigo: cc,
+                        classe_descricao: cd,
+                        situacao: situacao,
+                        data_prisao: dp || null,
+                        data_fato: df || null,
+                        principal: principal
+                    }).then(function (res) {
+                        if (res.ok && res.j && res.j.link_id) {
+                            notify('success', 'Sucesso', 'Processo vinculado.');
+                            window.location.reload();
+                        } else {
+                            notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha.');
+                        }
+                    }).catch(function () { notify('error', 'Erro', 'Erro de conexão.'); });
+                };
+                if (!cc && !cd) {
+                    loadProcessMetadataIfExists().finally(sendAddProcess);
+                    return;
+                }
+                sendAddProcess();
             });
 
             function getLinkSourceRowForInheritance() {
