@@ -210,4 +210,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correção de select de defensor** `[6d8572f]`
 - **Fix: pequenos ajustes e implementacoes** `[223add7]`
 - **Feat: nova pagina para pauta de audiencia para estudante** `[765df86]`
+- **Feat: novo modelo de pagina de atas** `[30599fe]`
 
