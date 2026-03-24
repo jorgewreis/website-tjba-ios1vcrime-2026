@@ -5,4 +5,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 ## Entradas Pendentes
 
 - **Fix: correcao de badge** `[afc3427]`
+- **Fix: pequenos ajustes** `[2ec963e]`
 
