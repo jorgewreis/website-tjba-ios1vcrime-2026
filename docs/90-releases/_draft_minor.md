@@ -205,4 +205,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correcao de reus** `[b8b9330]`
 - **Fix: pequenos ajustes** `[e104855]`
 - **Fix: correcao do modelo de consulta partes** `[f66fafd]`
+- **Fix: correcao de conexao com o bd** `[fc5d50d]`
 
