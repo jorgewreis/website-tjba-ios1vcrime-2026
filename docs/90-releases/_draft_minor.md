@@ -44,4 +44,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correcao no banco de dados** `[c0d1964]`
 - **Fix: correcao de inputs** `[b2f5a12]`
 - **Fix: correcao de cadastro de parte** `[66276c9]`
+- **Fix: pequenos ajustes** `[1bf1223]`
 
