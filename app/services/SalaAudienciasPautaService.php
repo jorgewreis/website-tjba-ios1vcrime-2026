@@ -177,6 +177,74 @@ final class SalaAudienciasPautaService
         return $ok;
     }
 
+    /**
+     * Ações rápidas na lista da pauta: reiniciar → designada, iniciar → em_andamento, encerrar → finalizada.
+     * Atualiza `data_hora_inicio_efetivo` / `data_hora_fim_efetivo` conforme a ação.
+     * Só permitido no dia da audiência; com outra em andamento no mesmo dia, demais ficam bloqueadas na UI.
+     *
+     * @param 'reiniciar'|'iniciar'|'encerrar' $acao
+     */
+    public function setStatusPainel(string $idPauta, string $acao, ?string $usuarioId): void
+    {
+        $idPauta = trim($idPauta);
+        $acao = strtolower(trim($acao));
+        if (!in_array($acao, ['reiniciar', 'iniciar', 'encerrar'], true)) {
+            throw new InvalidArgumentException('Ação inválida.');
+        }
+        $hoje = date('Y-m-d');
+        $pauta = $this->pautaRepository->findById($idPauta);
+        if ($pauta === null) {
+            throw new InvalidArgumentException('Audiência não encontrada.');
+        }
+        $dataAud = trim((string) ($pauta['data_audiencia'] ?? ''));
+        if ($dataAud !== $hoje) {
+            throw new InvalidArgumentException('O painel só pode ser usado no dia da audiência.');
+        }
+        $stAtual = trim((string) ($pauta['status'] ?? ''));
+        if ($stAtual === 'agendada') {
+            $stAtual = 'designada';
+        }
+        if ($stAtual === 'adiada') {
+            $stAtual = 'redesignada';
+        }
+
+        $outroEmAndamento = $this->pautaRepository->findIdEmAndamentoNaData($hoje);
+        if ($outroEmAndamento !== null && $outroEmAndamento !== $idPauta) {
+            throw new InvalidArgumentException('Já existe uma audiência em andamento. Conclua ou reinicie-a antes de movimentar outras.');
+        }
+
+        if ($acao === 'iniciar') {
+            if ($stAtual !== 'designada') {
+                throw new InvalidArgumentException('Só é possível iniciar audiências com status Designada.');
+            }
+        } elseif ($acao === 'reiniciar') {
+            if ($stAtual !== 'em_andamento') {
+                throw new InvalidArgumentException('Só é possível reiniciar uma audiência que estiver em andamento.');
+            }
+            $horaBruta = trim((string) ($pauta['hora_audiencia'] ?? ''));
+            $this->assertDataAudienciaNaoPassada($dataAud);
+            $horaNorm = $this->normalizarHoraNaGradeCadastro($horaBruta);
+            if ($this->pautaRepository->existsActiveSlotEm($dataAud, $horaNorm, $idPauta)) {
+                throw new InvalidArgumentException('Já existe audiência designada neste dia e horário. Não é possível reiniciar para Designada.');
+            }
+        } elseif ($acao === 'encerrar') {
+            if ($stAtual !== 'em_andamento') {
+                throw new InvalidArgumentException('Só é possível encerrar uma audiência em andamento.');
+            }
+        }
+
+        $ok = $this->pautaRepository->applyPainelAcao($idPauta, $acao, $usuarioId);
+        if (!$ok) {
+            throw new RuntimeException('Não foi possível atualizar a audiência.');
+        }
+        $this->sincronizarDuracaoEHorariosPauta($idPauta);
+    }
+
+    public function findIdEmAndamentoNaData(string $dataYmd): ?string
+    {
+        return $this->pautaRepository->findIdEmAndamentoNaData($dataYmd);
+    }
+
     public function cancel(string $id, ?string $usuarioId): bool
     {
         return $this->pautaRepository->setStatus($id, 'cancelada', $usuarioId);
@@ -437,7 +505,7 @@ final class SalaAudienciasPautaService
     }
 
     /**
-     * @return 'designada'|'realizada'|'redesignada'|'cancelada'
+     * @return 'designada'|'realizada'|'redesignada'|'cancelada'|'em_andamento'|'finalizada'
      */
     private function finalizeStatusPauta(string $statusIn, string $whenEmpty): string
     {
@@ -446,7 +514,7 @@ final class SalaAudienciasPautaService
             $s = trim($whenEmpty);
         }
         $s = $this->normalizeLegacyStatus($s);
-        if (!in_array($s, ['designada', 'realizada', 'redesignada', 'cancelada'], true)) {
+        if (!in_array($s, ['designada', 'realizada', 'redesignada', 'cancelada', 'em_andamento', 'finalizada'], true)) {
             return 'designada';
         }
 

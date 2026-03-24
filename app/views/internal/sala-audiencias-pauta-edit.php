@@ -88,6 +88,8 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
             }
             $statusOpcoesEdit = [
                 'designada' => 'Designada',
+                'em_andamento' => 'Em andamento',
+                'finalizada' => 'Finalizada',
                 'realizada' => 'Realizada',
                 'redesignada' => 'Redesignada',
                 'cancelada' => 'Cancelada',

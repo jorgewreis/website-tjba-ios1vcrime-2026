@@ -91,8 +91,8 @@ final class SalaAudienciasAtaService
         if ($st === 'agendada') {
             $st = 'designada';
         }
-        if ($st !== 'realizada') {
-            throw new InvalidArgumentException('Só é permitido enviar ata para audiência com status Realizada.');
+        if ($st !== 'realizada' && $st !== 'finalizada') {
+            throw new InvalidArgumentException('Só é permitido enviar ata para audiência com status Realizada ou Finalizada.');
         }
 
         if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {

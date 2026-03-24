@@ -107,7 +107,7 @@ final class SalaAudienciasAtaRepository
              LEFT JOIN `processos` p ON p.`id` = a.`processo`
              LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id`
              LEFT JOIN `%s` ata ON ata.`pauta` = a.`id_pauta`
-             WHERE a.`ativo` = 1 AND a.`status` = \'realizada\'
+             WHERE a.`ativo` = 1 AND a.`status` IN (\'realizada\', \'finalizada\')
              ORDER BY a.`data_audiencia` DESC, a.`hora_audiencia` DESC
              LIMIT :limit OFFSET :offset',
             $this->table
@@ -122,7 +122,7 @@ final class SalaAudienciasAtaRepository
 
     public function countRealizadas(): int
     {
-        $sql = 'SELECT COUNT(*) FROM `sala_audiencias_pauta` a WHERE a.`ativo` = 1 AND a.`status` = \'realizada\'';
+        $sql = 'SELECT COUNT(*) FROM `sala_audiencias_pauta` a WHERE a.`ativo` = 1 AND a.`status` IN (\'realizada\', \'finalizada\')';
         $st = $this->connection->query($sql);
         if ($st === false) {
             return 0;

@@ -101,6 +101,78 @@ final class SalaAudienciasPautaRepository
         return $st->rowCount() > 0;
     }
 
+    /**
+     * Retorna o id da audiência em andamento na data (ou null).
+     */
+    public function findIdEmAndamentoNaData(string $dataYmd): ?string
+    {
+        $dataYmd = trim($dataYmd);
+        if ($dataYmd === '' || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dataYmd)) {
+            return null;
+        }
+        $sql = sprintf(
+            'SELECT `id_pauta` FROM `%s` WHERE `ativo` = 1 AND `status` = \'em_andamento\' AND `data_audiencia` = :d LIMIT 1',
+            $this->table
+        );
+        $st = $this->connection->prepare($sql);
+        $st->bindValue(':d', $dataYmd);
+        $st->execute();
+        $id = $st->fetchColumn();
+
+        return $id !== false ? trim((string) $id) : null;
+    }
+
+    /**
+     * Ações do painel: atualiza status e timestamps efetivos num único UPDATE.
+     *
+     * @param 'iniciar'|'reiniciar'|'encerrar' $acao
+     */
+    public function applyPainelAcao(string $id, string $acao, ?string $atualizadoPor): bool
+    {
+        $acao = strtolower(trim($acao));
+        $now = date('Y-m-d H:i:s');
+        if ($acao === 'iniciar') {
+            $sql = sprintf(
+                'UPDATE `%s` SET `status`=\'em_andamento\',`atualizado_por`=:u,`data_hora_inicio_efetivo`=:now,`data_hora_fim_efetivo`=NULL WHERE `id_pauta`=:id AND `ativo`=1 LIMIT 1',
+                $this->table
+            );
+            $st = $this->connection->prepare($sql);
+            $st->bindValue(':id', $id);
+            $st->bindValue(':u', $atualizadoPor);
+            $st->bindValue(':now', $now);
+            $st->execute();
+
+            return true;
+        }
+        if ($acao === 'reiniciar') {
+            $sql = sprintf(
+                'UPDATE `%s` SET `status`=\'designada\',`atualizado_por`=:u,`data_hora_inicio_efetivo`=NULL,`data_hora_fim_efetivo`=NULL WHERE `id_pauta`=:id AND `ativo`=1 LIMIT 1',
+                $this->table
+            );
+            $st = $this->connection->prepare($sql);
+            $st->bindValue(':id', $id);
+            $st->bindValue(':u', $atualizadoPor);
+            $st->execute();
+
+            return true;
+        }
+        if ($acao === 'encerrar') {
+            $sql = sprintf(
+                'UPDATE `%s` SET `status`=\'finalizada\',`atualizado_por`=:u,`data_hora_fim_efetivo`=:now WHERE `id_pauta`=:id AND `ativo`=1 LIMIT 1',
+                $this->table
+            );
+            $st = $this->connection->prepare($sql);
+            $st->bindValue(':id', $id);
+            $st->bindValue(':u', $atualizadoPor);
+            $st->bindValue(':now', $now);
+            $st->execute();
+
+            return true;
+        }
+
+        return false;
+    }
+
     public function softDelete(string $id, ?string $atualizadoPor): bool
     {
         $sql = sprintf('UPDATE `%s` SET `ativo`=0,`atualizado_por`=:atualizado_por WHERE `id_pauta`=:id AND `ativo`=1 LIMIT 1', $this->table);
@@ -192,7 +264,7 @@ final class SalaAudienciasPautaRepository
             $st->bindValue($k, $v);
         }
         $st->execute();
-        $out = ['designada' => 0, 'realizada' => 0, 'redesignada' => 0, 'cancelada' => 0];
+        $out = ['designada' => 0, 'realizada' => 0, 'redesignada' => 0, 'cancelada' => 0, 'em_andamento' => 0, 'finalizada' => 0];
         while (($row = $st->fetch(PDO::FETCH_ASSOC)) !== false) {
             $key = (string) $row['st'];
             if ($key === 'agendada') {

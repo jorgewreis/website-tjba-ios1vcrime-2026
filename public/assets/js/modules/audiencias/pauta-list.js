@@ -17,8 +17,60 @@
         window.location.href = '/frame.php?' + params.toString();
     }
 
+    function postStatusPainel(idAudiencia, acao, successMessage) {
+        return fetch('/api/sala-audiencias-pauta/set-status-painel.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ id: idAudiencia, acao: acao })
+        })
+            .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+            .then(function (res) {
+                if (res.ok && res.j && res.j.success) {
+                    try {
+                        sessionStorage.setItem('salapauta.postReloadToast', JSON.stringify([
+                            { type: 'success', title: 'Sucesso', message: successMessage }
+                        ]));
+                    } catch (e) {}
+                    window.location.reload();
+                    return;
+                }
+                notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Não foi possível atualizar o status.');
+            })
+            .catch(function () {
+                notify('error', 'Erro', 'Erro de conexão.');
+            });
+    }
+
+    function setupPainelButtons() {
+        document.querySelectorAll('[data-audiencia-reiniciar]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                if (btn.disabled) return;
+                var id = String(btn.getAttribute('data-audiencia-reiniciar') || '').trim();
+                if (!id) return;
+                postStatusPainel(id, 'reiniciar', 'Status atualizado para Designada.');
+            });
+        });
+        document.querySelectorAll('[data-audiencia-iniciar]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                if (btn.disabled) return;
+                var id = String(btn.getAttribute('data-audiencia-iniciar') || '').trim();
+                if (!id) return;
+                postStatusPainel(id, 'iniciar', 'Status atualizado para Em andamento.');
+            });
+        });
+        document.querySelectorAll('[data-audiencia-encerrar]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                if (btn.disabled) return;
+                var id = String(btn.getAttribute('data-audiencia-encerrar') || '').trim();
+                if (!id) return;
+                postStatusPainel(id, 'encerrar', 'Status atualizado para Finalizada.');
+            });
+        });
+    }
+
     function setupEditButtons() {
-        document.querySelectorAll('.button-edit[data-audiencia-edit]').forEach(function (btn) {
+        document.querySelectorAll('[data-audiencia-edit]').forEach(function (btn) {
             btn.addEventListener('click', function () {
                 var idAudiencia = String(btn.getAttribute('data-audiencia-edit') || '').trim();
                 if (!idAudiencia) return;
@@ -51,4 +103,5 @@
     })();
 
     setupEditButtons();
+    setupPainelButtons();
 })();

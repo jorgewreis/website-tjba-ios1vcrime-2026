@@ -9,6 +9,8 @@ if (function_exists('mb_internal_encoding')) {
 require_once __DIR__ . '/../../services/SalaAudienciasPautaService.php';
 
 $service = new SalaAudienciasPautaService(Conection::getInstance()->getConnection());
+$hoje = date('Y-m-d');
+$idEmAndamentoHoje = $service->findIdEmAndamentoNaData($hoje);
 $statusFilter = trim((string) ($_GET['status'] ?? ''));
 if ($statusFilter === 'agendada') {
     $statusFilter = 'designada';
@@ -34,7 +36,7 @@ $result = $service->list([
 $tipos = $service->listTiposAtivos();
 $rows = $result['rows'] ?? [];
 $total = (int) ($result['total'] ?? 0);
-$statusCounts = $result['statusCounts'] ?? ['designada' => 0, 'realizada' => 0, 'redesignada' => 0, 'cancelada' => 0];
+$statusCounts = $result['statusCounts'] ?? ['designada' => 0, 'realizada' => 0, 'redesignada' => 0, 'cancelada' => 0, 'em_andamento' => 0, 'finalizada' => 0];
 $totalPages = max(1, (int) ceil(max(1, $total) / $itemsPerPage));
 $startItem = $total > 0 ? $offset + 1 : 0;
 $endItem = min($offset + count($rows), $total);
@@ -85,6 +87,8 @@ $endItem = min($offset + count($rows), $total);
                     <select class="width-400 height-md" id="filter-status">
                         <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Mostrar todos</option>
                         <option value="designada"<?php echo $statusFilter === 'designada' ? ' selected' : ''; ?>>Designada (<?php echo (int) ($statusCounts['designada'] ?? 0); ?>)</option>
+                        <option value="em_andamento"<?php echo $statusFilter === 'em_andamento' ? ' selected' : ''; ?>>Em andamento (<?php echo (int) ($statusCounts['em_andamento'] ?? 0); ?>)</option>
+                        <option value="finalizada"<?php echo $statusFilter === 'finalizada' ? ' selected' : ''; ?>>Finalizada (<?php echo (int) ($statusCounts['finalizada'] ?? 0); ?>)</option>
                         <option value="realizada"<?php echo $statusFilter === 'realizada' ? ' selected' : ''; ?>>Realizada (<?php echo (int) ($statusCounts['realizada'] ?? 0); ?>)</option>
                         <option value="redesignada"<?php echo $statusFilter === 'redesignada' ? ' selected' : ''; ?>>Redesignada (<?php echo (int) ($statusCounts['redesignada'] ?? 0); ?>)</option>
                         <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>Cancelada (<?php echo (int) ($statusCounts['cancelada'] ?? 0); ?>)</option>
@@ -163,34 +167,71 @@ $endItem = min($offset + count($rows), $total);
                         </span>
                     </div>
                 </div>
-                <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-
-                    <div class="display-flex row row-fit justify-end gap-y-sm align-center padding-y-sm">
-                        <button type="button" class="btn-editar" data-audiencia-iniciar="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>" title="Reiniciar audiência">
-                            <i class="fi fi-rr-rotate-square"></i>
-                        </button>
-                        <button type="button" class="btn-editar" data-audiencia-reagendar="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>" title="Iniciar audiência">
-                            <i class="fi fi-rr-arrow-square-right"></i>
-                        </button>
-                        <button type="button" class="btn-editar" data-audiencia-encerrar="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>" title="Encerrar audiência">
-                            <i class="fi fi-rr-stop-square"></i>
-                        </button>
-                        <button type="button" class="btn-editar" data-audiencia-edit="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>" title="Editar audiência">
-                            <i class="fi fi-rr-pen-square"></i>
-                        </button>
-                    </div>
-                    
-                    <div class="col">
+                <div class="display-flex row row-fit justify-end gap-y-sm align-center padding-y-sm">
                         <?php
-                            $stRow = (string) ($row['status'] ?? '');
+                            $idPautaRow = (string) ($row['id_pauta'] ?? '');
+                            $dataAudRow = substr((string) ($row['data_audiencia'] ?? ''), 0, 10);
+                            $stRaw = trim((string) ($row['status'] ?? ''));
+                            $mostrarPainelAcao = ($dataAudRow === $hoje) && ($stRaw !== 'finalizada');
+                            $bloqueioOutroEmAndamento = ($idEmAndamentoHoje !== null && $idEmAndamentoHoje !== $idPautaRow);
+                            $stRow = $stRaw;
                             if ($stRow === 'agendada') {
                                 $stRow = 'designada';
                             } elseif ($stRow === 'adiada') {
                                 $stRow = 'redesignada';
                             }
+                            $labelsStatus = [
+                                'designada' => 'Designada',
+                                'em_andamento' => 'Em andamento',
+                                'finalizada' => 'Finalizada',
+                                'realizada' => 'Realizada',
+                                'redesignada' => 'Redesignada',
+                                'cancelada' => 'Cancelada',
+                            ];
+                            $textoStatus = $labelsStatus[$stRow] ?? ucfirst(str_replace('_', ' ', $stRow));
+                            $classeStatus = 'status-pending';
+                            if ($stRow === 'cancelada') {
+                                $classeStatus = 'status-cancelled';
+                            } elseif ($stRow === 'em_andamento') {
+                                $classeStatus = 'status-pending';
+                            } elseif (in_array($stRow, ['realizada', 'finalizada'], true)) {
+                                $classeStatus = 'status-finished';
+                            }
+                            $titBloqueio = 'Já existe uma audiência em andamento hoje. Conclua ou reinicie-a antes de movimentar outras.';
+                            $disIniciar = true;
+                            $disReiniciar = true;
+                            $disEncerrar = true;
+                            if ($mostrarPainelAcao) {
+                                if ($bloqueioOutroEmAndamento) {
+                                    $disIniciar = $disReiniciar = $disEncerrar = true;
+                                } else {
+                                    if ($stRow === 'designada') {
+                                        $disIniciar = false;
+                                    }
+                                    if ($stRow === 'em_andamento') {
+                                        $disReiniciar = false;
+                                        $disEncerrar = false;
+                                    }
+                                }
+                            }
                         ?>
-                        <div class="width-300 padding-x-lg status <?php echo $stRow === 'realizada' ? 'status-finished' : ($stRow === 'cancelada' ? 'status-cancelled' : 'status-pending'); ?>">
-                            <?php echo htmlspecialchars(ucfirst($stRow), ENT_QUOTES); ?>
+                        <?php if ($mostrarPainelAcao): ?>
+                        <button type="button" class="btn-editar" data-audiencia-reiniciar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo $bloqueioOutroEmAndamento ? htmlspecialchars($titBloqueio, ENT_QUOTES) : 'Reiniciar (volta para Designada)'; ?>"<?php echo $disReiniciar ? ' disabled' : ''; ?>>
+                            <i class="fi fi-rr-rotate-square"></i>
+                        </button>
+                        <button type="button" class="btn-editar" data-audiencia-iniciar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo $bloqueioOutroEmAndamento ? htmlspecialchars($titBloqueio, ENT_QUOTES) : 'Iniciar (Em andamento)'; ?>"<?php echo $disIniciar ? ' disabled' : ''; ?>>
+                            <i class="fi fi-rr-arrow-square-right"></i>
+                        </button>
+                        <button type="button" class="btn-editar" data-audiencia-encerrar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo $bloqueioOutroEmAndamento ? htmlspecialchars($titBloqueio, ENT_QUOTES) : 'Encerrar (Finalizada)'; ?>"<?php echo $disEncerrar ? ' disabled' : ''; ?>>
+                            <i class="fi fi-rr-stop-square"></i>
+                        </button>
+                        <?php endif; ?>
+                        <button type="button" class="btn-editar" data-audiencia-edit="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="Editar audiência">
+                            <i class="fi fi-rr-pen-square"></i>
+                        </button>
+                    <div class="col">
+                        <div class="width-300 padding-x-lg status <?php echo htmlspecialchars($classeStatus, ENT_QUOTES); ?>">
+                            <?php echo htmlspecialchars($textoStatus, ENT_QUOTES); ?>
                         </div>
                     </div>
                 </div>

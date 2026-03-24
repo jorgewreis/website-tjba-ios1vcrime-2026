@@ -34,7 +34,7 @@ $result = $service->list([
 $tipos = $service->listTiposAtivos();
 $rows = $result['rows'] ?? [];
 $total = (int) ($result['total'] ?? 0);
-$statusCounts = $result['statusCounts'] ?? ['designada' => 0, 'realizada' => 0, 'redesignada' => 0, 'cancelada' => 0];
+$statusCounts = $result['statusCounts'] ?? ['designada' => 0, 'realizada' => 0, 'redesignada' => 0, 'cancelada' => 0, 'em_andamento' => 0, 'finalizada' => 0];
 $totalPages = max(1, (int) ceil(max(1, $total) / $itemsPerPage));
 $startItem = $total > 0 ? $offset + 1 : 0;
 $endItem = min($offset + count($rows), $total);
@@ -84,6 +84,8 @@ $endItem = min($offset + count($rows), $total);
                     <select class="width-400 height-md" id="filter-status">
                         <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Mostrar todos</option>
                         <option value="designada"<?php echo $statusFilter === 'designada' ? ' selected' : ''; ?>>Designada (<?php echo (int) ($statusCounts['designada'] ?? 0); ?>)</option>
+                        <option value="em_andamento"<?php echo $statusFilter === 'em_andamento' ? ' selected' : ''; ?>>Em andamento (<?php echo (int) ($statusCounts['em_andamento'] ?? 0); ?>)</option>
+                        <option value="finalizada"<?php echo $statusFilter === 'finalizada' ? ' selected' : ''; ?>>Finalizada (<?php echo (int) ($statusCounts['finalizada'] ?? 0); ?>)</option>
                         <option value="realizada"<?php echo $statusFilter === 'realizada' ? ' selected' : ''; ?>>Realizada (<?php echo (int) ($statusCounts['realizada'] ?? 0); ?>)</option>
                         <option value="redesignada"<?php echo $statusFilter === 'redesignada' ? ' selected' : ''; ?>>Redesignada (<?php echo (int) ($statusCounts['redesignada'] ?? 0); ?>)</option>
                         <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>Cancelada (<?php echo (int) ($statusCounts['cancelada'] ?? 0); ?>)</option>
@@ -168,9 +170,24 @@ $endItem = min($offset + count($rows), $total);
                             } elseif ($stRow === 'adiada') {
                                 $stRow = 'redesignada';
                             }
+                            $labelsStatusEst = [
+                                'designada' => 'Designada',
+                                'em_andamento' => 'Em andamento',
+                                'finalizada' => 'Finalizada',
+                                'realizada' => 'Realizada',
+                                'redesignada' => 'Redesignada',
+                                'cancelada' => 'Cancelada',
+                            ];
+                            $textoStatusEst = $labelsStatusEst[$stRow] ?? ucfirst(str_replace('_', ' ', $stRow));
+                            $classeStatusEst = 'status-pending';
+                            if ($stRow === 'cancelada') {
+                                $classeStatusEst = 'status-cancelled';
+                            } elseif (in_array($stRow, ['realizada', 'finalizada'], true)) {
+                                $classeStatusEst = 'status-finished';
+                            }
                         ?>
-                        <div class="width-300 padding-x-lg status <?php echo $stRow === 'realizada' ? 'status-finished' : ($stRow === 'cancelada' ? 'status-cancelled' : 'status-pending'); ?>">
-                            <?php echo htmlspecialchars(ucfirst($stRow), ENT_QUOTES); ?>
+                        <div class="width-300 padding-x-lg status <?php echo htmlspecialchars($classeStatusEst, ENT_QUOTES); ?>">
+                            <?php echo htmlspecialchars($textoStatusEst, ENT_QUOTES); ?>
                         </div>
                     </div>
                 </div>
