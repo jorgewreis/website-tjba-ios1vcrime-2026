@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Pauta de Audiências — Edição — Primeira Vara Crime de Ilhéus</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="../../public/assets/css/shared/reset.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/color.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/layout.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/page.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/form.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/table.css">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+</head>
+<body class="page-internal">
+
+    <div class="spacing-top-page"></div>
+
+    <div class="header-page">
+        <div class="location">
+            <span class="all">Interno - Cartório - Audiências -</span>
+            <span class="specific">Edição</span>
+        </div>
+        <h1 class="title-page">Editar audiência</h1>
+        <p class="description-page">Atualize os dados da audiência e gerencie as partes vinculadas à pauta.</p>
+    </div>
+
+    <div class="container-full card-page">
+
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <h2>Dados da audiência</h2>
+        </div>
+
+        <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md">
+            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
+                <div class="col">
+                    <label for="audiencia-edit-processo">Número do processo</label>
+                    <input type="text" class="width-400 height-md readonly" id="audiencia-edit-processo" value="0800234-11.2026.8.05.0103" autocomplete="off" readonly>
+                </div>
+                <div class="col">
+                    <label for="audiencia-edit-classe">Classe</label>
+                    <input type="text" class="width-600 height-md readonly" id="audiencia-edit-classe" value="Ação Penal - Procedimento Ordinário" readonly>
+                </div>
+            </div>
+
+            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
+                <div class="col">
+                    <label for="audiencia-edit-tipo">Tipo de audiência <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <select class="width-500 height-md" id="audiencia-edit-tipo">
+                        <option value="instrucao" selected>Instrução e Julgamento</option>
+                        <option value="custodia">Custódia</option>
+                        <option value="conciliacao">Conciliação</option>
+                        <option value="justificacao">Justificação</option>
+                        <option value="vitima">Oitiva de Vítima</option>
+                        <option value="testemunha">Inquirição de Testemunha</option>
+                        <option value="julgamento">Interrogatório</option>
+                        <option value="suspensao">Proposta de Suspensão Condicional</option>
+                        <option value="outra">Outra</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <label for="audiencia-edit-data">Data <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <input type="date" class="width-300 height-md" id="audiencia-edit-data" value="2026-03-26">
+                </div>
+                <div class="col">
+                    <label for="audiencia-edit-hora">Hora <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <input type="time" class="width-300 height-md" id="audiencia-edit-hora" value="09:00">
+                </div>
+                <div class="col">
+                    <label for="audiencia-edit-sala">Localização <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <select class="width-300 height-md" id="audiencia-edit-sala">
+                        <option value="presencial">Presencial</option>
+                        <option value="lifesize" selected>Lifesize</option>
+                        <option value="audin">Audin</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <h2>Adicionar parte</h2>
+        </div>
+
+        <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md">
+            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
+                <div class="col">
+                    <label for="parte-nome">Nome da parte <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <input type="text" class="width-700 height-md" id="parte-nome" placeholder="Digite o nome da parte" autocomplete="off">
+                </div>
+                <div class="col">
+                    <label for="parte-tipo">Tipo de parte <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <select class="width-400 height-md" id="parte-tipo">
+                        <option value="">Selecione...</option>
+                        <option value="reu">Réu</option>
+                        <option value="vitima">Vítima</option>
+                        <option value="testemunha">Testemunha da Defesa</option>
+                        <option value="testemunha">Testemunha da Denúncia</option>
+                        <option value="advogado">Advogado</option>
+                        <option value="ministerio_publico">Ministério Público</option>
+                        <option value="defensoria">Defensoria Pública</option>
+                        <option value="outro">Outro</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <label for="parte-maioridade">Maioridade <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <select class="width-300 height-md" id="parte-maioridade">
+                        <option value="">Selecione...</option>
+                        <option value="adulto" selected>Adulto</option>
+                        <option value="menor">Menor</option>
+                    </select>
+                </div>
+                <button type="button" class="btn btn-primary" id="btn-parte-adicionar">Adicionar parte</button>
+            </div>
+        </div>
+
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <h2>Partes cadastradas</h2>
+        </div>
+
+        <div class="display-flex col col-full register border-bottom" data-parte-id="parte-001">
+            <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
+                <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                    <div class="col width-500">
+                        <div class="minor-info">Réu solto</div>
+                        <span class="major-info text-ellipsis">Fernando Alves de Souza</span> <!-- Se menor, exibir (Menor)-->
+                        <span class="minor-info-defesa">Dr. Edivaldo Alencar (OAB/BA 123456)</span>
+                    </div>
+                    <div class="col width-600">
+                        <div class="minor-info">Documento expedido - ID: <span class="id-info">#789873</span></div>
+                        <span class="major-info text-ellipsis">Mandado de Intimação</span>
+                    </div>
+                    <div class="col width-400">
+                        <span class="minor-info">Status</span>
+                        <div class="major-info"><span class="mini-status status-pending"></span>Aguardando cumprimento</div>
+                    </div>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-sm align-center">
+                    <div class="col button-table button-edit" title="Editar parte">
+                        <i class="fi fi-rr-file-edit"></i>
+                    </div>
+                    <div class="col button-table" title="Remover parte">
+                        <i class="fi fi-rr-trash"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="display-flex col col-full register border-bottom" data-parte-id="parte-001">
+            <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
+                <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                    <div class="col width-500">
+                        <div class="minor-info">Réu <span class="id-preso">preso</span></div>
+                        <span class="major-info text-ellipsis">Gustavo Pereira Lima</span> <!-- Se menor, exibir (Menor)-->
+                        <span class="minor-info-defesa">Defensoria Pública</span>
+                    </div>
+                    <div class="col width-600">
+                        <div class="minor-info">Documento expedido - ID: <span class="id-info">#789899</span></div>
+                        <span class="major-info text-ellipsis">Ofício Requisitando</span>
+                    </div>
+                    <div class="col width-400">
+                        <div class="minor-info">Status - ID: <span class="id-info">#789922</span></div>
+                        <div class="major-info"><span class="mini-status status-finished"></span>Cumprido</div>
+                    </div>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-sm align-center">
+                    <div class="col button-table button-edit" title="Editar parte">
+                        <i class="fi fi-rr-file-edit"></i>
+                    </div>
+                    <div class="col button-table" title="Remover parte">
+                        <i class="fi fi-rr-trash"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="display-flex col col-full register border-bottom" data-parte-id="parte-001">
+            <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
+                <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                    <div class="col width-500">
+                        <div class="minor-info">Vítima</div>
+                        <span class="major-info text-ellipsis menor">Maria Aparecida da Silva (Menor)</span> <!-- Se menor, exibir (Menor)-->
+                    </div>
+                    <div class="col width-600">
+                        <div class="minor-info">Documento expedido - ID: <span class="id-info">#789877</span></div>
+                        <span class="major-info text-ellipsis">Mandado de Intimação</span>
+                    </div>
+                    <div class="col width-400">
+                        <div class="minor-info">Status - ID: <span class="id-info">#789977</span></div>
+                        <div class="major-info"><span class="mini-status status-cancelled"></span>Não localizada</div>
+                    </div>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-sm align-center">
+                    <div class="col button-table button-edit" title="Editar parte">
+                        <i class="fi fi-rr-file-edit"></i>
+                    </div>
+                    <div class="col button-table" title="Remover parte">
+                        <i class="fi fi-rr-trash"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
+            <button type="button" class="btn btn-secondary" id="btn-audiencia-edit-voltar">Voltar</button>
+            <button type="button" class="btn btn-danger-outline" id="btn-audiencia-edit-cancelar">Cancelar audiência</button>
+            <button type="button" class="btn btn-danger" id="btn-audiencia-edit-excluir">Excluir audiência</button>
+            <button type="button" class="btn btn-primary" id="btn-audiencia-edit-salvar">Salvar alterações</button>
+        </div>
+    </div>
+
+    <div class="footer-page">
+        <div class="location">
+            <span class="all">Aplicativo web desenvolvido integralmente por </span>
+            <span class="specific">Jorge Reis Develop</span>
+            <span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span>
+        </div>
+    </div>
+
+</body>
+</html>

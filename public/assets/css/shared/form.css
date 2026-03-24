@@ -500,7 +500,8 @@ input[type="text"],
 input[type="email"],
 input[type="password"],
 input[type="number"],
-input[type="date"] {
+input[type="date"], 
+input[type="time"] {
     height: 40px;
     padding: 0 1em;
     
@@ -512,6 +513,30 @@ input[type="date"] {
     color: var(--color-text-primary);
     font-size: 12px;
     font-family: "Poppins", sans-serif;
+}
+
+.id-info {
+    font-weight: 600;
+    font-family: "Poppins", sans-serif;
+    color: var(--color-primary);
+    margin-left: 1px;
+}
+
+.id-preso {
+    font-weight: 600;
+    font-family: "Poppins", sans-serif;
+    color: var(--color-danger);
+    text-transform: uppercase;
+    margin-left: 1px;
+}
+.minor-info-defesa {
+    font-size: 10px;
+    font-weight: 500;
+    font-family: "Poppins", sans-serif;
+    color: var(--color-text-secondary);
+    margin-left: 30px;
+    margin-top: -2px;
+    display: block;
 }
 
 input[type="text"].readonly{
@@ -572,6 +597,27 @@ input[type="radio"] {
     }
 }
 
+.mini-status {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    display: inline-block;
+    vertical-align: middle;
+    background-color: var(--color-text-secondary);
+    margin: 0 5px 2px 0;
+}
+
+.mini-status.status-finished {
+    background-color: var(--color-success);
+}
+
+.mini-status.status-pending {
+    background-color: var(--color-primary);
+}
+
+.mini-status.status-cancelled {
+    background-color: var(--color-danger);
+}
 
 
 /* BUTTONS - STATUS */

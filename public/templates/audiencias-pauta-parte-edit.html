@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Pauta de Audiências — Editar Parte — Primeira Vara Crime de Ilhéus</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="../../public/assets/css/shared/reset.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/color.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/layout.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/page.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/form.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/table.css">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+</head>
+<body class="page-internal">
+
+    <div class="spacing-top-page"></div>
+
+    <div class="header-page">
+        <div class="location">
+            <span class="all">Interno - Cartório - Audiências -</span>
+            <span class="specific">Editar parte cadastrada</span>
+        </div>
+        <h1 class="title-page">Editar parte cadastrada</h1>
+        <p class="description-page">Atualize os dados da parte vinculada à audiência e os identificadores de expedição e cumprimento.</p>
+    </div>
+
+    <div class="container-full card-page">
+
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <h2>Contexto da audiência</h2>
+        </div>
+
+        <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md">
+            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
+                <div class="col">
+                    <label for="parte-edit-processo">Número do processo</label>
+                    <input type="text" class="width-400 height-md readonly" id="parte-edit-processo" value="0800234-11.2026.8.05.0103" readonly>
+                </div>
+                <div class="col">
+                    <label for="parte-edit-tipo-audiencia">Tipo da audiência</label>
+                    <input type="text" class="width-600 height-md readonly" id="parte-edit-tipo-audiencia" value="Instrução e Julgamento" readonly>
+                </div>
+            </div>
+        </div>
+
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <h2>Dados da parte</h2>
+        </div>
+
+        <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md">
+            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
+                <div class="col">
+                    <label for="parte-edit-nome">Nome da parte <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <input type="text" class="width-700 height-md" id="parte-edit-nome" value="Fernando Alves de Souza" autocomplete="off">
+                </div>
+                <div class="col">
+                    <label for="parte-edit-tipo">Tipo de parte <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <select class="width-400 height-md" id="parte-edit-tipo" required>
+                        <option value="">Selecione o tipo</option>
+                        <option value="reu" selected>Réu</option>
+                        <option value="vitima">Vítima</option>
+                        <option value="testemunha_defesa">Testemunha da Defesa</option>
+                        <option value="testemunha_denuncia">Testemunha da Denúncia</option>
+                        <option value="outro">Outro</option>
+                    </select>
+                </div>
+
+                <!-- SE FOR REU, MOSTRAR CAMPO DE INSERIR DEFENSOR-->
+                <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
+                    <div class="col">
+                        <label for="parte-edit-defensor">Tipo de defensor</label>
+                        <select class="width-400 height-md" id="parte-edit-tipo-defensor">
+                            <option value="">Selecione o tipo</option>
+                            <option value="publico" selected>Defensor público</option>
+                            <option value="privado">Defensor privado</option>
+                        </select>
+                    </div>
+                    <!-- SE FOR DEFENSOR PUBLICO, MOSTRAR SELECT COM OS DEFENSORIA PÚBLICOS CADASTRADOS-->
+                    <div class="col">
+                        <label for="parte-edit-defensor">Defensor Público <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                        <select class="width-600 height-md" id="parte-edit-defensor-publico">
+                            <option value="">Selecione...</option>
+                            <?php foreach ($defensoriasPublicas as $defensoriaPublica): ?>
+                                <option value="<?php echo $defensoriaPublica['id']; ?>"><?php echo $defensoriaPublica['nome']; ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <!-- SE FOR DEFENSOR PRIVADO, MOSTRAR SELECT COM OS ADVOGADOS CADASTRADOS DENTRE AS PARTES CADASTRADAS-->
+                    <div class="col">
+                        <label for="parte-edit-defensor">Defensor</label>
+                        <select class="width-600 height-md" id="parte-edit-defensor-privado">
+                            <option value="">Selecione o defensor</option>
+                            <?php foreach ($advogados as $advogado): ?>
+                                <option value="<?php echo $advogado['id']; ?>"><?php echo $advogado['nome']; ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <!-- CASO SEJA SELECIONADA A OPÇÃO "OUTRO", MOSTRAR INPUT PARA INSERIR O NOME DO DEFENSOR-->
+                        <div class="col">
+                            <label for="parte-edit-defensor-privado-outro">Outro</label>
+                            <input type="text" class="width-600 height-md" id="parte-edit-defensor-privado-outro" value="" placeholder="Digite o nome do defensor" autocomplete="off">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col">
+                    <label for="parte-edit-maioridade">Maioridade <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <select class="width-300 height-md" id="parte-edit-maioridade">
+                        <option value="">Selecione...</option>
+                        <option value="adulto" selected>Adulto</option>
+                        <option value="menor">Menor</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
+                <div class="col">
+                    <label for="parte-edit-expedicao">Expedição <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <select class="width-500 height-md" id="parte-edit-expedicao">
+                        <option value="">Selecione...</option>
+                        <option value="nao_expedido">Não expedido</option>
+                        <option value="mandado" selected>Mandado de Intimação</option>
+                        <option value="oficio">Ofício</option>
+                        <option value="carta_precatoria">Carta precatória</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <label for="parte-edit-id-expedido">ID</label>
+                    <input type="text" class="width-300 height-md" id="parte-edit-id-expedido" value="789873" autocomplete="off">
+                </div>
+            </div>
+            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
+                <div class="col">
+                    <label for="parte-edit-cumprimento">Cumprimento <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <select class="width-500 height-md" id="parte-edit-cumprimento">
+                        <option value="">Selecione...</option>
+                        <option value="pendente" selected>Aguardando cumprimento</option>
+                        <option value="cumprido">Cumprido</option>
+                        <option value="nao_cumprido">Não cumprido</option>
+                        <option value="parcial">Parcialmente cumprido</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <label for="parte-edit-id-cumprido">ID</label>
+                    <input type="text" class="width-300 height-md" id="parte-edit-id-cumprido" value="" placeholder="Preencher quando houver cumprimento" autocomplete="off">
+                </div>
+            </div>
+        </div>
+
+        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
+            <button type="button" class="btn btn-secondary" id="btn-parte-edit-voltar">Voltar</button>
+            <button type="button" class="btn btn-danger-outline" id="btn-parte-edit-remover">Remover parte</button>
+            <button type="button" class="btn btn-primary" id="btn-parte-edit-salvar">Salvar alterações</button>
+        </div>
+    </div>
+
+    <div class="footer-page">
+        <div class="location">
+            <span class="all">Aplicativo web desenvolvido integralmente por </span>
+            <span class="specific">Jorge Reis Develop</span>
+            <span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span>
+        </div>
+    </div>
+
+</body>
+</html>

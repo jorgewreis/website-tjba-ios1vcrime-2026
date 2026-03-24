@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0072
+
+**Data:** 2026-03-24 11:11:33 | **Commit:** `6dec536` | **Tipo:** `patch`
+
+- Feat: novo modelo pauta de audiencias
+
 ## V. 1.04.0071
 
 **Data:** 2026-03-23 12:23:27 | **Commit:** `6fc0755` | **Tipo:** `patch`
@@ -3720,6 +3726,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

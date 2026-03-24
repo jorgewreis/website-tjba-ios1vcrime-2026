@@ -35,6 +35,7 @@ final class PageAccessRegistry
 
         static $areaCartorio = ['kind' => 'area_a', 'area' => AccessAreas::CARTORIO];
         static $areaGabinete = ['kind' => 'area_a', 'area' => AccessAreas::GABINETE];
+        static $areaAudiencias = ['kind' => 'area_a', 'area' => AccessAreas::AUDIENCIAS];
 
         $map = [
             'dashboard' => ['kind' => 'all_internal'],
@@ -74,6 +75,10 @@ final class PageAccessRegistry
             'monitoramentogabinete' => $areaGabinete,
             'monitoramentogabinetecreate' => $areaGabinete,
             'monitoramentogabineteedit' => $areaGabinete,
+            'salapauta' => $areaAudiencias,
+            'salapautacreate' => $areaAudiencias,
+            'salapautaedit' => $areaAudiencias,
+            'salapautaparteedit' => $areaAudiencias,
             'reuspresos' => $areaGabinete,
             'reuspresoscreate' => $areaGabinete,
             'reuspresosedit' => $areaGabinete,
