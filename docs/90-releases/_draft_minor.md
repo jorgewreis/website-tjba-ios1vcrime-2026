@@ -50,4 +50,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Feat: mini status de cumprimento de partes** `[eb8966c]`
 - **Fix: pequeno ajuste de tamanho** `[4944bc9]`
 - **Fix: correcao de erros** `[c0e71c4]`
+- **Fix: correcao de function** `[5c29143]`
 
