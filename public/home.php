@@ -476,7 +476,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
         /** Consultor externo: partes, instituições e CEP (alinhado a frame.php — ConsultasPartesInstituicoes + ConsultasCep). */
         const MENU_TARGETS_CONSULTAS_EXTERNO_CONSULTOR = new Set(['consultapartes', 'instituicoespublicas', 'consultacep']);
         /** Estudante externo: apenas CEP. */
-        const MENU_TARGETS_CONSULTAS_EXTERNO_ESTUDANTE = new Set(['consultacep']);
+        const MENU_TARGETS_CONSULTAS_EXTERNO_ESTUDANTE = new Set(['consultacep', 'estudapauta']);
 
         /** Mesma regra de app/access/AccessEvaluator.php (recalculada no cliente após fetch de perfis). */
         const COMPOSITE_PROFILE_RE = /^(ESTAGIARIO|SERVIDOR)-(CARTORIO|GABINETE|AUDIENCIAS)$/;
@@ -593,6 +593,9 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
         function computePermittedMenuSectionsFromPerfis(perfis) {
             const norm = normalizePerfis(perfis);
             if (IS_USUARIO_EXTERNO) {
+                if (HAS_PERFIL_ESTUDANTE) {
+                    return ['Consultas', 'Estudantes'];
+                }
                 return ['Consultas'];
             }
             if (norm.includes('ADMIN') || norm.includes('CHEFIA')) {

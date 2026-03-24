@@ -76,6 +76,7 @@ final class PageAccessRegistry
             'monitoramentogabinetecreate' => $areaGabinete,
             'monitoramentogabineteedit' => $areaGabinete,
             'salapauta' => $areaAudiencias,
+            'estudapauta' => ['kind' => 'estudantes_readonly'],
             'salapautacreate' => $areaAudiencias,
             'salapautaedit' => $areaAudiencias,
             'salapautaparteedit' => $areaAudiencias,

@@ -53,6 +53,7 @@ $allowed_pages = [
     'monitoramentogabinetecreate' => $PAGES . '/gabinete-monitoramento-eletronico-create.php',
     'monitoramentogabineteedit'   => $PAGES . '/gabinete-monitoramento-eletronico-edit.php',
     'salapauta'             => $PAGES . '/sala-audiencias-pauta-list.php',
+    'estudapauta'           => $PAGES . '/sala-audiencias-pauta-list-estudantes.php',
     'salapautacreate'       => $PAGES . '/sala-audiencias-pauta-create.php',
     'salapautaedit'         => $PAGES . '/sala-audiencias-pauta-edit.php',
     'salapautaparteedit'    => $PAGES . '/sala-audiencias-pauta-parte-edit.php',
