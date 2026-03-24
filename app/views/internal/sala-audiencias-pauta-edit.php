@@ -126,7 +126,7 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                     <input type="date" class="width-300 height-md" id="audiencia-edit-data" min="<?php echo htmlspecialchars($dataMinimaCadastro, ENT_QUOTES); ?>" value="<?php echo htmlspecialchars((string) ($row['data_audiencia'] ?? ''), ENT_QUOTES); ?>" required>
                 </div>
                 <div class="col filter">
-                    <label for="audiencia-edit-hora">Hora (09:00–16:00, a cada 10 min, se designada) <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <label for="audiencia-edit-hora">Hora <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-300 height-md" id="audiencia-edit-hora" required>
                         <option value="" disabled<?php echo $horaAtualEdit === '' ? ' selected' : ''; ?>>Selecione a hora</option>
                         <?php if (!$horaNaGradeEdit && $horaAtualEdit !== ''): ?>

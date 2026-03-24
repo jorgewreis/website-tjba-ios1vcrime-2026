@@ -44,7 +44,7 @@ if ($parteId !== '') {
     <div class="header-page">
         <div class="location"><span class="all">Interno - Consultas -</span> <span class="specific">Vínculos pessoa-instituição</span></div>
         <h1 class="title-page">Vínculos pessoa-instituição</h1>
-        <p class="description-page">Consulte por pessoa (parte) ou por instituição.</p>
+        <p class="description-page">Consulte por pessoa ou por instituição.</p>
     </div>
     <div class="container-full card-page">
 

@@ -181,12 +181,12 @@ if ($pessoa === null) {
                 </div>
             </div>
             <?php endforeach; ?>        
-            <div class="display-flex row row-fit justify-start">
+            <div class="display-flex row row-fit justify-start padding-x-md padding-y-md">
                 <button type="button" id="vincular-instituicao-btn" class="btn btn-primary-outline">Vincular instituição</button>
             </div>
         </div>
-        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
-            <div class="display-flex row row-fit justify-end">
+        <div class="display-flex row row-full justify-end padding-x-md padding-y-md border-top">
+            <div class="display-flex row row-fit justify-end gap-y-md">
                 <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
                 <button type="button" class="btn btn-primary" id="salvar-btn">Salvar dados</button>
             </div>
