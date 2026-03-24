@@ -123,7 +123,7 @@ $endItem = min($offset + count($rows), $total);
                         <span class="minor-info">Data e hora</span>
                         <span class="major-info"><?php echo htmlspecialchars(date('d/m/Y', strtotime((string) $row['data_audiencia'])) . ' - ' . substr((string) $row['hora_audiencia'], 0, 5), ENT_QUOTES); ?></span>
                     </div>
-                    <div class="col width-500 col-process process-info" title="clique para copiar">
+                    <div class="col width-400 col-process process-info" title="clique para copiar">
                         <span class="minor-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['classe_nome'] ?? 'Classe não informada'), ENT_QUOTES); ?></span>
                         <span class="major-info"><?php echo htmlspecialchars((string) ($row['numero_processo'] ?? '—'), ENT_QUOTES); ?></span>
                     </div>
@@ -131,7 +131,7 @@ $endItem = min($offset + count($rows), $total);
                         <span class="minor-info">Tipo</span>
                         <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) $row['tipo_audiencia'], ENT_QUOTES); ?></span>
                     </div>
-                    <div class="col width-500">
+                    <div class="col width-300">
                         <span class="minor-info">Intimações</span>
                         <span class="major-info">
                             <?php

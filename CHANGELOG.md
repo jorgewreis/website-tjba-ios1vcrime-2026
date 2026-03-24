@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0080
+
+**Data:** 2026-03-24 12:43:42 | **Commit:** `4944bc9` | **Tipo:** `patch`
+
+- Fix: pequeno ajuste de tamanho
+
 ## V. 1.04.0079
 
 **Data:** 2026-03-24 12:40:17 | **Commit:** `eb8966c` | **Tipo:** `patch`
@@ -3768,6 +3774,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
