@@ -303,6 +303,9 @@ final class SalaAudienciasPautaRepository
                 $conds[] = 'a.`status` = :status';
                 $params[':status'] = $status;
             }
+        } elseif ($includeStatus && $status === '') {
+            // "Mostrar todos": não listar finalizadas; para vê-las, usar o filtro Status = Finalizada.
+            $conds[] = 'a.`status` <> \'finalizada\'';
         }
         $tipo = trim((string) ($filters['tipo'] ?? ''));
         if ($tipo !== '') {

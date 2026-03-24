@@ -50,7 +50,8 @@ final class SalaAudienciasDuracaoEstimadaHelper
     }
 
     /**
-     * Soma dos minutos de todas as partes ativas vinculadas à audiência.
+     * Soma dos minutos das partes ativas com cumprimento "cumprido" (intimação cumprida).
+     * Partes pendentes, não cumpridas ou parciais não entram na estimativa de duração.
      *
      * @param list<array<string, mixed>> $partesLinhas
      */
@@ -59,6 +60,10 @@ final class SalaAudienciasDuracaoEstimadaHelper
         $total = 0;
         foreach ($partesLinhas as $p) {
             if (isset($p['ativo']) && (int) $p['ativo'] !== 1) {
+                continue;
+            }
+            $cumpr = strtolower(trim((string) ($p['cumprimento'] ?? '')));
+            if ($cumpr !== 'cumprido') {
                 continue;
             }
             $tipo = trim((string) ($p['tipo_parte'] ?? ''));

@@ -11,7 +11,7 @@
             if (!pauta || btn.disabled) return;
             btn.disabled = true;
 
-            fetch('/api/sala-audiencias-ata/inscrever.php', {
+            fetch('api/sala-audiencias-ata/inscrever.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'same-origin',

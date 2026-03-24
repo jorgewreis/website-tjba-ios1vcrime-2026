@@ -108,9 +108,7 @@ final class SalaAudienciasAtaService
             throw new InvalidArgumentException('Upload inválido.');
         }
 
-        $finfo = new finfo(FILEINFO_MIME_TYPE);
-        $mime = $finfo->file($tmp);
-        if ($mime !== 'application/pdf') {
+        if (!$this->isPdfUpload($tmp)) {
             throw new InvalidArgumentException('Envie apenas arquivo PDF.');
         }
 
@@ -156,6 +154,33 @@ final class SalaAudienciasAtaService
             'uploaded_at' => $now,
             'expires_at' => $expires,
         ]);
+    }
+
+    /**
+     * Valida PDF por MIME (fileinfo), com fallback para assinatura %PDF (Windows / servidores sem fileinfo).
+     */
+    private function isPdfUpload(string $tmpPath): bool
+    {
+        if (extension_loaded('fileinfo') && class_exists('finfo')) {
+            try {
+                $finfo = new \finfo(FILEINFO_MIME_TYPE);
+                $mime = $finfo->file($tmpPath);
+                if (in_array($mime, ['application/pdf', 'application/x-pdf'], true)) {
+                    return true;
+                }
+            } catch (\Throwable $e) {
+                // segue para assinatura
+            }
+        }
+
+        $fh = fopen($tmpPath, 'rb');
+        if ($fh === false) {
+            return false;
+        }
+        $head = fread($fh, 5);
+        fclose($fh);
+
+        return is_string($head) && strncmp($head, '%PDF', 4) === 0;
     }
 
     public function inscreverEstudante(string $idPauta, string $usuarioId): void

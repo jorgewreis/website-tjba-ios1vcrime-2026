@@ -193,7 +193,7 @@ $endItem = min($offset + count($rows), $total);
                             if ($stRow === 'cancelada') {
                                 $classeStatus = 'status-cancelled';
                             } elseif ($stRow === 'em_andamento') {
-                                $classeStatus = 'status-pending';
+                                $classeStatus = 'status-current';
                             } elseif (in_array($stRow, ['realizada', 'finalizada'], true)) {
                                 $classeStatus = 'status-finished';
                             }

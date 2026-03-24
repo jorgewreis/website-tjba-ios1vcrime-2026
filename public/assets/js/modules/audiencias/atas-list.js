@@ -1,20 +1,41 @@
 (function () {
+    'use strict';
+
+    function getFramePhpHref() {
+        var path = window.location.pathname || '/frame.php';
+        var slash = path.lastIndexOf('/');
+        var dir = slash >= 0 ? path.slice(0, slash + 1) : '/';
+        return dir + 'frame.php';
+    }
+
     function notify(type, title, message) {
         if (typeof showToast === 'function') {
             showToast({ type: type, variant: 'full', title: title, message: message });
         }
     }
 
+    function parseJsonSafe(r) {
+        return r.text().then(function (text) {
+            try {
+                return { ok: r.ok, j: text ? JSON.parse(text) : {} };
+            } catch (e) {
+                return { ok: false, j: { error: text ? text.slice(0, 200) : 'Resposta inválida do servidor.' } };
+            }
+        });
+    }
+
     function changePageSize() {
-        var n = String(document.getElementById('items-per-page')?.value || '25').trim();
-        var params = new URLSearchParams(window.location.search);
+        var el = document.getElementById('items-per-page');
+        var n = el ? String(el.value || '25').trim() : '25';
+        var params = new URLSearchParams();
         params.set('page', 'salaata');
         params.set('page_number', '1');
         params.set('items_per_page', n);
-        window.location.href = '/frame.php?' + params.toString();
+        window.location.href = getFramePhpHref() + '?' + params.toString();
     }
 
-    document.getElementById('items-per-page')?.addEventListener('change', changePageSize);
+    var ipp = document.getElementById('items-per-page');
+    if (ipp) ipp.addEventListener('change', changePageSize);
 
     document.querySelectorAll('.btn-upload-ata').forEach(function (btn) {
         btn.addEventListener('click', function () {
@@ -36,12 +57,13 @@
             fd.append('pauta', pauta);
             fd.append('arquivo', file, file.name);
 
-            fetch('/api/sala-audiencias-ata/upload.php', {
+            var apiPath = 'api/sala-audiencias-ata/upload.php';
+            fetch(apiPath, {
                 method: 'POST',
                 body: fd,
                 credentials: 'same-origin'
             })
-                .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+                .then(parseJsonSafe)
                 .then(function (res) {
                     if (res.ok && res.j && res.j.success) {
                         notify('success', 'Sucesso', 'Ata enviada com sucesso.');
