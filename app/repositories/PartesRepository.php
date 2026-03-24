@@ -13,6 +13,8 @@ final class PartesRepository
     public const PROFISSAO_DEFENSOR_PUBLICO = 'Defensor Público';
     public const PROFISSAO_DEFENSORA_PUBLICA = 'Defensora Pública';
 
+    private const TABELA_PARTES_INSTITUICOES = 'partes_instituicoes';
+
     private PDO $connection;
     private string $table;
 
@@ -109,6 +111,37 @@ final class PartesRepository
     }
 
     /**
+     * Profissões distintas já usadas em `partes` ou em vínculos ativos com instituições.
+     *
+     * @return list<string>
+     */
+    public function listProfissoesDistintas(): array
+    {
+        $sql = sprintf(
+            '(SELECT DISTINCT TRIM(`profissao`) AS `p` FROM `%s` WHERE `profissao` IS NOT NULL AND TRIM(`profissao`) != \'\')
+             UNION
+             (SELECT DISTINCT TRIM(`profissao`) AS `p` FROM `%s` WHERE `profissao` IS NOT NULL AND TRIM(`profissao`) != \'\' AND `ativo` = 1)
+             ORDER BY `p` ASC',
+            $this->table,
+            self::TABELA_PARTES_INSTITUICOES
+        );
+        $statement = $this->connection->query($sql);
+        if ($statement === false) {
+            return [];
+        }
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+        $out = [];
+        foreach ($rows as $row) {
+            $p = trim((string) ($row['p'] ?? ''));
+            if ($p !== '' && !in_array($p, $out, true)) {
+                $out[] = $p;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
      * Lista pessoas cadastradas com a profissão indicada (ex.: Advogado, Defensor Público).
      *
      * @return list<array<string, mixed>>
@@ -122,9 +155,10 @@ final class PartesRepository
      * Lista pessoas cujo campo `profissao` coincide com uma das variações (ex.: Advogado e Advogada).
      *
      * @param list<string> $profissoes
+     * @param bool $incluirProfissaoVinculoInstituicao Se true, inclui também quem só informou a profissão no vínculo `partes_instituicoes` (cadastro por instituição).
      * @return list<array<string, mixed>>
      */
-    public function listByProfissoes(array $profissoes, int $limit = 500): array
+    public function listByProfissoes(array $profissoes, int $limit = 500, bool $incluirProfissaoVinculoInstituicao = false): array
     {
         $vals = [];
         foreach ($profissoes as $p) {
@@ -133,6 +167,7 @@ final class PartesRepository
                 $vals[] = $t;
             }
         }
+        $vals = $this->expandSinonimosProfissaoParaFiltro($vals);
         if ($vals === []) {
             return [];
         }
@@ -142,21 +177,81 @@ final class PartesRepository
             $placeholders[] = ':p' . $i;
         }
         $inList = implode(', ', $placeholders);
-        $statement = $this->connection->prepare(
-            sprintf(
-                'SELECT `id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `profissao`, `created_at`, `updated_at` FROM `%s` WHERE `profissao` IN (%s) ORDER BY `nome_completo` ASC LIMIT :lim',
-                $this->table,
-                $inList
-            )
-        );
+
+        if ($incluirProfissaoVinculoInstituicao) {
+            $placeholdersV = [];
+            foreach ($vals as $i => $_) {
+                $placeholdersV[] = ':pv' . $i;
+            }
+            $inListV = implode(', ', $placeholdersV);
+            $statement = $this->connection->prepare(
+                sprintf(
+                    'SELECT DISTINCT `id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `profissao`, `created_at`, `updated_at` FROM (
+                        SELECT `id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `profissao`, `created_at`, `updated_at` FROM `%s` WHERE `profissao` IN (%s)
+                        UNION
+                        SELECT p.`id`, p.`cpf`, p.`nome_completo`, p.`sexo`, p.`data_nascimento`, p.`profissao`, p.`created_at`, p.`updated_at`
+                        FROM `%s` p
+                        INNER JOIN `%s` pi ON pi.`parte_id` = p.`id` AND pi.`ativo` = 1
+                        WHERE pi.`profissao` IN (%s)
+                    ) AS u
+                    ORDER BY `nome_completo` ASC
+                    LIMIT :lim',
+                    $this->table,
+                    $inList,
+                    $this->table,
+                    self::TABELA_PARTES_INSTITUICOES,
+                    $inListV
+                )
+            );
+        } else {
+            $statement = $this->connection->prepare(
+                sprintf(
+                    'SELECT `id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `profissao`, `created_at`, `updated_at` FROM `%s` WHERE `profissao` IN (%s) ORDER BY `nome_completo` ASC LIMIT :lim',
+                    $this->table,
+                    $inList
+                )
+            );
+        }
         foreach ($vals as $i => $v) {
             $statement->bindValue(':p' . $i, $v);
+            if ($incluirProfissaoVinculoInstituicao) {
+                $statement->bindValue(':pv' . $i, $v);
+            }
         }
         $statement->bindValue(':lim', $limit, PDO::PARAM_INT);
         $statement->execute();
         $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
 
         return $rows === false ? [] : $rows;
+    }
+
+    /**
+     * Inclui grafias comuns no cadastro livre (sem acento, etc.) para o filtro IN (...).
+     *
+     * @param list<string> $vals
+     * @return list<string>
+     */
+    private function expandSinonimosProfissaoParaFiltro(array $vals): array
+    {
+        $extra = [];
+        foreach ($vals as $v) {
+            if ($v === self::PROFISSAO_DEFENSORA_PUBLICA) {
+                $extra[] = 'Defensora Publica';
+            }
+            if ($v === self::PROFISSAO_DEFENSOR_PUBLICO) {
+                $extra[] = 'Defensor Publico';
+            }
+        }
+        $merged = array_merge($vals, $extra);
+        $out = [];
+        foreach ($merged as $s) {
+            $s = trim((string) $s);
+            if ($s !== '' && !in_array($s, $out, true)) {
+                $out[] = $s;
+            }
+        }
+
+        return $out;
     }
 
     /**

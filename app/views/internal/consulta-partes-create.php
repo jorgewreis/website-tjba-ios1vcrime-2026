@@ -5,6 +5,12 @@ header('Content-Type: text/html; charset=UTF-8');
 if (function_exists('mb_internal_encoding')) {
     mb_internal_encoding('UTF-8');
 }
+
+require_once __DIR__ . '/../../helpers/Conection.php';
+require_once __DIR__ . '/../../repositories/PartesRepository.php';
+$__connPartes = Conection::getInstance()->getConnection();
+$profissoesLista = (new PartesRepository($__connPartes))->listProfissoesDistintas();
+$profissaoAtual = '';
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -63,6 +69,8 @@ if (function_exists('mb_internal_encoding')) {
                 <input type="date" class="width-200 height-md white" id="data_nascimento" name="data_nascimento">
             </div>
         </div>
+
+        <?php include __DIR__ . '/_partes_profissao_fields.php'; ?>
 
         <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom">
             <div class="display-flex row row-fit justify-start">
@@ -139,6 +147,28 @@ if (function_exists('mb_internal_encoding')) {
         }
         if (typeof App !== 'undefined' && App.CPF && App.CPF.init) {
             App.CPF.init('#cpf');
+        }
+
+        function syncProfissaoOutra() {
+            var sel = document.getElementById('profissao_selecao');
+            var wrap = document.getElementById('profissao-outra-wrap');
+            var outraEl = document.getElementById('profissao_outra');
+            if (!sel || !wrap) return;
+            var outraToken = window.PROFISSAO_SELECT_OUTRA || '__OUTRA__';
+            var show = sel.value === outraToken;
+            wrap.style.display = show ? 'block' : 'none';
+            if (!show && outraEl) outraEl.value = '';
+        }
+        var profSelEl = document.getElementById('profissao_selecao');
+        if (profSelEl) {
+            profSelEl.addEventListener('change', syncProfissaoOutra);
+            syncProfissaoOutra();
+        }
+        var profOutraEl = document.getElementById('profissao_outra');
+        if (profOutraEl && typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
+            profOutraEl.addEventListener('blur', function() {
+                this.value = TextFormatter.formatProperName(this.value, 120);
+            });
         }
 
         document.getElementById('voltar-btn').addEventListener('click', function() {
@@ -219,11 +249,27 @@ if (function_exists('mb_internal_encoding')) {
             });
 
             this.disabled = true;
+            var outraToken = window.PROFISSAO_SELECT_OUTRA || '__OUTRA__';
+            var ps = document.getElementById('profissao_selecao');
+            var po = document.getElementById('profissao_outra');
+            function formatProfissaoDigitada(v) {
+                if (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
+                    return TextFormatter.formatProperName(v || '', 120);
+                }
+                return (v || '').trim();
+            }
+            var profissaoOutraFmt = '';
+            if (ps && ps.value === outraToken && po) {
+                profissaoOutraFmt = formatProfissaoDigitada(po.value);
+                po.value = profissaoOutraFmt;
+            }
             var payload = {
                 nome_completo: (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) ? TextFormatter.formatProperName(nome, 255) : nome,
                 cpf: cpf,
                 sexo: sexo || null,
-                data_nascimento: data || null
+                data_nascimento: data || null,
+                profissao_selecao: ps ? (ps.value || '').trim() : '',
+                profissao_outra: profissaoOutraFmt
             };
             if (telefones.length > 0) payload.telefones = telefones;
             if (enderecos.length > 0) payload.enderecos = enderecos;
@@ -231,6 +277,7 @@ if (function_exists('mb_internal_encoding')) {
             fetch('/api/pessoas/create.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
                 body: JSON.stringify(payload)
             })
             .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })

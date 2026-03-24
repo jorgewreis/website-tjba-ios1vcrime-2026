@@ -85,7 +85,7 @@ $instituicoes = $instituicoesList['rows'] ?? [];
             </div>
             <div class="col">
                 <label for="profissao">Profissão</label>
-                <input type="text" class="width-400 height-md white" id="profissao" placeholder="Ex: Policial">
+                <input type="text" class="width-400 height-md white" id="profissao" maxlength="120" placeholder="Ex: Policial">
             </div>
             <div class="col">
                 <label for="cargo_funcao">Cargo / Função <span class="label-hint-obrigatorio">*obrigatório</span></label>
@@ -104,6 +104,26 @@ $instituicoes = $instituicoesList['rows'] ?? [];
         </div>
     </div>
     <script>
+    function formatProfissaoCampo(el) {
+        if (!el) return '';
+        var v = el.value || '';
+        if (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
+            v = TextFormatter.formatProperName(v, 120);
+        } else {
+            v = v.trim();
+        }
+        el.value = v;
+        return v || null;
+    }
+    var profissaoEl = document.getElementById('profissao');
+    if (profissaoEl && typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
+        profissaoEl.addEventListener('blur', function() {
+            var t = (this.value || '').trim();
+            if (t === '') return;
+            this.value = TextFormatter.formatProperName(this.value, 120);
+        });
+    }
+
     document.getElementById('voltar-btn').addEventListener('click', function() { window.location.href = '/frame.php?page=partesinstituicoeslist'; });
     document.getElementById('btn-buscar-pessoa').addEventListener('click', function() { window.open('/frame.php?page=consultapartes', '_blank'); });
     document.getElementById('btn-buscar-instituicao').addEventListener('click', function() { window.open('/frame.php?page=instituicoespublicas', '_blank'); });
@@ -136,11 +156,13 @@ $instituicoes = $instituicoesList['rows'] ?? [];
             if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Validação', message: 'Informe o cargo ou função.' });
             return;
         }
+        var profEl = document.getElementById('profissao');
+        var profFmt = profEl ? formatProfissaoCampo(profEl) : null;
         var payload = {
             parte_id: parteId,
             instituicao_id: instituicaoId,
             setor_id: (document.getElementById('setor_id').value || '').trim() || null,
-            profissao: (document.getElementById('profissao').value || '').trim() || null,
+            profissao: profFmt,
             cargo_funcao: cargoFuncao,
             observacoes: (document.getElementById('observacoes').value || '').trim() || null
         };

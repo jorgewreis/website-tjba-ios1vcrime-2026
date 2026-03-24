@@ -68,7 +68,7 @@ if (!empty($vinculo['instituicao_id'])) {
             </div>
             <div class="col">
                 <label for="profissao">Profissão</label>
-                <input type="text" class="width-200 height-md white" id="profissao" value="<?php echo htmlspecialchars($vinculo['profissao'] ?? ''); ?>">
+                <input type="text" class="width-200 height-md white" id="profissao" maxlength="120" value="<?php echo htmlspecialchars($vinculo['profissao'] ?? ''); ?>">
             </div>
             <div class="col">
                 <label for="cargo_funcao">Cargo / Função</label>
@@ -106,6 +106,26 @@ if (!empty($vinculo['instituicao_id'])) {
         </div>
     </div>
     <script>
+    function formatProfissaoCampo(el) {
+        if (!el) return '';
+        var v = el.value || '';
+        if (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
+            v = TextFormatter.formatProperName(v, 120);
+        } else {
+            v = v.trim();
+        }
+        el.value = v;
+        return v || null;
+    }
+    var profissaoEl = document.getElementById('profissao');
+    if (profissaoEl && typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
+        profissaoEl.addEventListener('blur', function() {
+            var t = (this.value || '').trim();
+            if (t === '') return;
+            this.value = TextFormatter.formatProperName(this.value, 120);
+        });
+    }
+
     document.getElementById('salvar-btn').addEventListener('click', function() {
         var id = document.getElementById('vinculo-id').value;
         var dataInclusao = (document.getElementById('data_inclusao').value || '').trim();
@@ -113,10 +133,12 @@ if (!empty($vinculo['instituicao_id'])) {
             if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Data de inclusão é obrigatória.' });
             return;
         }
+        var profEl = document.getElementById('profissao');
+        var profFmt = profEl ? formatProfissaoCampo(profEl) : null;
         var payload = {
             id: id,
             setor_id: (document.getElementById('setor_id').value || '').trim() || null,
-            profissao: (document.getElementById('profissao').value || '').trim() || null,
+            profissao: profFmt,
             cargo_funcao: (document.getElementById('cargo_funcao').value || '').trim() || null,
             data_inclusao: dataInclusao,
             data_inicio: (document.getElementById('data_inicio').value || '').trim() || null,

@@ -7,6 +7,7 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 require_once __DIR__ . '/../../helpers/Conection.php';
+require_once __DIR__ . '/../../repositories/PartesRepository.php';
 require_once __DIR__ . '/../../services/PessoasService.php';
 require_once __DIR__ . '/../../../config/security.php';
 
@@ -23,6 +24,10 @@ if ($pessoa === null) {
     header('Location: /frame.php?page=consultapartes');
     exit;
 }
+
+$partesRepoProf = new PartesRepository($connection);
+$profissoesLista = $partesRepoProf->listProfissoesDistintas();
+$profissaoAtual = trim((string) ($pessoa['profissao'] ?? ''));
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -72,6 +77,9 @@ if ($pessoa === null) {
                 <input type="date" class="width-300 height-md white" id="data_nascimento" value="<?php echo htmlspecialchars($pessoa['data_nascimento'] ?? ''); ?>">
             </div>
         </div>
+
+        <?php include __DIR__ . '/_partes_profissao_fields.php'; ?>
+
         <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Telefones</h2></div>
         <div id="telefones-list">
             <?php foreach ($pessoa['telefones'] ?? [] as $t): ?>
@@ -235,6 +243,28 @@ if ($pessoa === null) {
             App.CPF.init('#cpf');
         }
 
+        function syncProfissaoOutra() {
+            var sel = document.getElementById('profissao_selecao');
+            var wrap = document.getElementById('profissao-outra-wrap');
+            var outraEl = document.getElementById('profissao_outra');
+            if (!sel || !wrap) return;
+            var outraToken = window.PROFISSAO_SELECT_OUTRA || '__OUTRA__';
+            var show = sel.value === outraToken;
+            wrap.style.display = show ? 'block' : 'none';
+            if (!show && outraEl) outraEl.value = '';
+        }
+        var profSelEdit = document.getElementById('profissao_selecao');
+        if (profSelEdit) {
+            profSelEdit.addEventListener('change', syncProfissaoOutra);
+            syncProfissaoOutra();
+        }
+        var profOutraEdit = document.getElementById('profissao_outra');
+        if (profOutraEdit && typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
+            profOutraEdit.addEventListener('blur', function() {
+                this.value = TextFormatter.formatProperName(this.value, 120);
+            });
+        }
+
         document.getElementById('voltar-btn').addEventListener('click', function() {
             window.location.href = '/frame.php?page=consultapartes';
         });
@@ -258,22 +288,50 @@ if ($pessoa === null) {
                 return;
             }
             var nomeVal = (document.getElementById('nome_completo').value || '').trim();
+            var outraToken = window.PROFISSAO_SELECT_OUTRA || '__OUTRA__';
+            var ps = document.getElementById('profissao_selecao');
+            var po = document.getElementById('profissao_outra');
+            function formatProfissaoDigitada(v) {
+                if (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
+                    return TextFormatter.formatProperName(v || '', 120);
+                }
+                return (v || '').trim();
+            }
+            var profissaoOutraFmt = '';
+            if (ps && ps.value === outraToken && po) {
+                profissaoOutraFmt = formatProfissaoDigitada(po.value);
+                po.value = profissaoOutraFmt;
+            }
             var payload = {
                 id: parteId,
                 cpf: cpfRaw || '',
                 nome_completo: (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) ? TextFormatter.formatProperName(nomeVal, 255) : nomeVal,
                 sexo: (document.getElementById('sexo').value || '').trim(),
-                data_nascimento: (document.getElementById('data_nascimento').value || '').trim()
+                data_nascimento: (document.getElementById('data_nascimento').value || '').trim(),
+                profissao_selecao: ps ? (ps.value || '').trim() : '',
+                profissao_outra: profissaoOutraFmt
             };
             this.disabled = true;
-            fetch('/api/pessoas/update.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-            .then(function(r) { return r.json(); })
-            .then(function(d) {
-                if (d.success) { if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Dados salvos.' }); }
-                else { if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: d.error || 'Erro.' }); }
+            fetch('/api/pessoas/update.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify(payload)
+            })
+            .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+            .then(function(result) {
+                var d = result.data;
+                if (result.ok && d.success) {
+                    if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Dados salvos.' });
+                } else {
+                    if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: (d && d.error) ? d.error : 'Erro.' });
+                }
                 document.getElementById('salvar-btn').disabled = false;
             })
-            .catch(function() { document.getElementById('salvar-btn').disabled = false; });
+            .catch(function() {
+                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
+                document.getElementById('salvar-btn').disabled = false;
+            });
         });
         document.getElementById('add-tel-btn').addEventListener('click', function() {
             var parteIdAtual = getParteId();

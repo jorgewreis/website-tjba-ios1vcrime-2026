@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0089
+
+**Data:** 2026-03-24 15:53:59 | **Commit:** `223add7` | **Tipo:** `patch`
+
+- Fix: pequenos ajustes e implementacoes
+
 ## V. 1.04.0088
 
 **Data:** 2026-03-24 15:45:02 | **Commit:** `6d8572f` | **Tipo:** `patch`
@@ -3822,6 +3828,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

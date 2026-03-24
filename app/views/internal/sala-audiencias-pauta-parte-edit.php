@@ -22,11 +22,11 @@ $partesRepoNome = new PartesRepository(Conection::getInstance()->getConnection()
 $defensoresPublicosProcesso = $partesRepoNome->listByProfissoes([
     PartesRepository::PROFISSAO_DEFENSOR_PUBLICO,
     PartesRepository::PROFISSAO_DEFENSORA_PUBLICA,
-]);
+], 500, true);
 $advogadosProcesso = $partesRepoNome->listByProfissoes([
     PartesRepository::PROFISSAO_ADVOGADO,
     PartesRepository::PROFISSAO_ADVOGADA,
-]);
+], 500, true);
 $defPublicoEhOutro = ($defensorPublicoAtual === 'outro');
 $defPrivadoEhOutro = ($defensorPrivadoAtual === 'outro');
 ?>
