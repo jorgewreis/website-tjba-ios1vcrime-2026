@@ -48,4 +48,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: pequena correcao de valores** `[f190481]`
 - **Fix: correcao no cadastro de parte** `[dcac95d]`
 - **Feat: mini status de cumprimento de partes** `[eb8966c]`
+- **Fix: pequeno ajuste de tamanho** `[4944bc9]`
 
