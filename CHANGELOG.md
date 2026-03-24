@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0088
+
+**Data:** 2026-03-24 15:45:02 | **Commit:** `6d8572f` | **Tipo:** `patch`
+
+- Fix: correção de select de defensor
+
 ## V. 1.04.0087
 
 **Data:** 2026-03-24 15:38:46 | **Commit:** `f3ad5e2` | **Tipo:** `patch`
@@ -3816,6 +3822,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

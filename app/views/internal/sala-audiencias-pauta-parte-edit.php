@@ -19,8 +19,14 @@ $defensorPrivadoOutroAtual = (string) ($parte['defensor_privado_outro'] ?? '');
 $defensorPublicoOutroAtual = (string) ($parte['defensor_publico_outro'] ?? '');
 $processoIdParte = $parte !== null ? trim((string) ($parte['processo'] ?? '')) : '';
 $partesRepoNome = new PartesRepository(Conection::getInstance()->getConnection());
-$defensoresPublicosProcesso = $partesRepoNome->listByProfissao(PartesRepository::PROFISSAO_DEFENSOR_PUBLICO);
-$advogadosProcesso = $partesRepoNome->listByProfissao(PartesRepository::PROFISSAO_ADVOGADO);
+$defensoresPublicosProcesso = $partesRepoNome->listByProfissoes([
+    PartesRepository::PROFISSAO_DEFENSOR_PUBLICO,
+    PartesRepository::PROFISSAO_DEFENSORA_PUBLICA,
+]);
+$advogadosProcesso = $partesRepoNome->listByProfissoes([
+    PartesRepository::PROFISSAO_ADVOGADO,
+    PartesRepository::PROFISSAO_ADVOGADA,
+]);
 $defPublicoEhOutro = ($defensorPublicoAtual === 'outro');
 $defPrivadoEhOutro = ($defensorPrivadoAtual === 'outro');
 ?>

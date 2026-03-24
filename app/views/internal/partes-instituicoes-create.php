@@ -79,7 +79,7 @@ $instituicoes = $instituicoesList['rows'] ?? [];
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="setor_id">Setor (opcional)</label>
-                <select class="width-200 height-md white" id="setor_id">
+                <select class="width-500 height-md white" id="setor_id">
                     <option value="">— Selecione a instituição primeiro —</option>
                 </select>
             </div>
@@ -89,7 +89,7 @@ $instituicoes = $instituicoesList['rows'] ?? [];
             </div>
             <div class="col">
                 <label for="cargo_funcao">Cargo / Função <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-300 height-md white" id="cargo_funcao" placeholder="Ex: Investigador">
+                <input type="text" class="width-400 height-md white" id="cargo_funcao" placeholder="Ex: Investigador">
             </div>
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">

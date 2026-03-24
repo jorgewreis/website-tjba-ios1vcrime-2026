@@ -9,7 +9,9 @@ final class PartesRepository
 {
     /** Valores usados nos filtros de defensor (audiências) e ao sincronizar vínculo processo-parte. */
     public const PROFISSAO_ADVOGADO = 'Advogado';
+    public const PROFISSAO_ADVOGADA = 'Advogada';
     public const PROFISSAO_DEFENSOR_PUBLICO = 'Defensor Público';
+    public const PROFISSAO_DEFENSORA_PUBLICA = 'Defensora Pública';
 
     private PDO $connection;
     private string $table;
@@ -113,18 +115,43 @@ final class PartesRepository
      */
     public function listByProfissao(string $profissao, int $limit = 500): array
     {
-        $profissao = trim($profissao);
-        if ($profissao === '') {
+        return $this->listByProfissoes([$profissao], $limit);
+    }
+
+    /**
+     * Lista pessoas cujo campo `profissao` coincide com uma das variações (ex.: Advogado e Advogada).
+     *
+     * @param list<string> $profissoes
+     * @return list<array<string, mixed>>
+     */
+    public function listByProfissoes(array $profissoes, int $limit = 500): array
+    {
+        $vals = [];
+        foreach ($profissoes as $p) {
+            $t = trim((string) $p);
+            if ($t !== '' && !in_array($t, $vals, true)) {
+                $vals[] = $t;
+            }
+        }
+        if ($vals === []) {
             return [];
         }
         $limit = max(1, min(2000, $limit));
+        $placeholders = [];
+        foreach ($vals as $i => $_) {
+            $placeholders[] = ':p' . $i;
+        }
+        $inList = implode(', ', $placeholders);
         $statement = $this->connection->prepare(
             sprintf(
-                'SELECT `id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `profissao`, `created_at`, `updated_at` FROM `%s` WHERE `profissao` = :prof ORDER BY `nome_completo` ASC LIMIT :lim',
-                $this->table
+                'SELECT `id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `profissao`, `created_at`, `updated_at` FROM `%s` WHERE `profissao` IN (%s) ORDER BY `nome_completo` ASC LIMIT :lim',
+                $this->table,
+                $inList
             )
         );
-        $statement->bindValue(':prof', $profissao);
+        foreach ($vals as $i => $v) {
+            $statement->bindValue(':p' . $i, $v);
+        }
         $statement->bindValue(':lim', $limit, PDO::PARAM_INT);
         $statement->execute();
         $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
