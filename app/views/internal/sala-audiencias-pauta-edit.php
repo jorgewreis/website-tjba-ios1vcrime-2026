@@ -17,10 +17,19 @@ $reusPresosMap = [];
 if ($row !== null) {
     $processoId = trim((string) ($row['processo'] ?? ''));
     if ($processoId !== '') {
-        $repoReuPresoProcesso = new GabineteReuPresoProcessoRepository(Conection::getInstance()->getConnection());
-        $nomesReusPresos = $repoReuPresoProcesso->listReusPresosNomesByProcessoId($processoId);
-        foreach ($nomesReusPresos as $nomeReuPreso) {
-            $reusPresosMap[mb_strtolower(trim((string) $nomeReuPreso))] = true;
+        try {
+            $repoReuPresoProcesso = new GabineteReuPresoProcessoRepository(Conection::getInstance()->getConnection());
+            $nomesReusPresos = $repoReuPresoProcesso->listReusPresosNomesByProcessoId($processoId);
+            foreach ($nomesReusPresos as $nomeReuPreso) {
+                $nomeNorm = trim((string) $nomeReuPreso);
+                $key = function_exists('mb_strtolower')
+                    ? mb_strtolower($nomeNorm, 'UTF-8')
+                    : strtolower($nomeNorm);
+                $reusPresosMap[$key] = true;
+            }
+        } catch (Throwable $e) {
+            // Ambiente sem tabelas do módulo gabinete ou falha pontual: não bloqueia a edição da pauta.
+            $reusPresosMap = [];
         }
     }
 }
@@ -153,7 +162,10 @@ $tipos = $service->listTiposAtivos();
             $tipoParteAtual = (string) ($parte['tipo_parte'] ?? '');
             $minorInfoParte = (string) ucfirst(str_replace('_', ' ', $tipoParteAtual));
             if ($tipoParteAtual === 'reu') {
-                $nomeParteAtualKey = mb_strtolower(trim((string) ($parte['nome_parte'] ?? '')));
+                $nomeParteRaw = trim((string) ($parte['nome_parte'] ?? ''));
+                $nomeParteAtualKey = function_exists('mb_strtolower')
+                    ? mb_strtolower($nomeParteRaw, 'UTF-8')
+                    : strtolower($nomeParteRaw);
                 $isReuPreso = $nomeParteAtualKey !== '' && isset($reusPresosMap[$nomeParteAtualKey]);
                 $minorInfoParte = $isReuPreso ? 'Réu <span class="id-preso">PRESO</span>' : 'Réu';
 

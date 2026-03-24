@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0084
+
+**Data:** 2026-03-24 13:03:02 | **Commit:** `dff7692` | **Tipo:** `patch`
+
+- Fix: correcao reu preso
+
 ## V. 1.04.0083
 
 **Data:** 2026-03-24 12:59:35 | **Commit:** `6146c71` | **Tipo:** `patch`
@@ -3792,6 +3798,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
