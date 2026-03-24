@@ -18,14 +18,20 @@ final class SalaAudienciasPautaParteRepository
     {
         $id = IdGenerator::generateUniquePrefixedId($this->connection, $this->table, 'id_parte', 'SPP', 30);
         $sql = sprintf(
-            'INSERT INTO `%s` (`id_parte`,`pauta`,`nome_parte`,`tipo_parte`,`maioridade`,`expedicao`,`cumprimento`,`id_documento_expedido`,`id_documento_cumprido`,`criado_por`,`atualizado_por`,`ativo`) VALUES (:id,:pauta,:nome,:tipo,:maioridade,:expedicao,:cumprimento,:idexp,:idcum,:criado,:atualizado,1)',
+            'INSERT INTO `%s` (`id_parte`,`pauta`,`parte_id_global`,`processo_parte_id`,`nome_parte`,`tipo_parte`,`tipo_defensor`,`defensor_publico_id`,`defensor_privado_id`,`defensor_privado_outro`,`maioridade`,`expedicao`,`cumprimento`,`id_documento_expedido`,`id_documento_cumprido`,`criado_por`,`atualizado_por`,`ativo`) VALUES (:id,:pauta,:parte_global,:processo_parte,:nome,:tipo,:tipo_defensor,:def_publico,:def_privado,:def_outro,:maioridade,:expedicao,:cumprimento,:idexp,:idcum,:criado,:atualizado,1)',
             $this->table
         );
         $st = $this->connection->prepare($sql);
         $st->bindValue(':id', $id);
         $st->bindValue(':pauta', $row['pauta']);
+        $st->bindValue(':parte_global', $row['parte_id_global'] ?? null);
+        $st->bindValue(':processo_parte', $row['processo_parte_id'] ?? null);
         $st->bindValue(':nome', $row['nome_parte']);
         $st->bindValue(':tipo', $row['tipo_parte']);
+        $st->bindValue(':tipo_defensor', $row['tipo_defensor'] ?? null);
+        $st->bindValue(':def_publico', $row['defensor_publico_id'] ?? null);
+        $st->bindValue(':def_privado', $row['defensor_privado_id'] ?? null);
+        $st->bindValue(':def_outro', $row['defensor_privado_outro'] ?? null);
         $st->bindValue(':maioridade', $row['maioridade']);
         $st->bindValue(':expedicao', $row['expedicao']);
         $st->bindValue(':cumprimento', $row['cumprimento']);
@@ -40,13 +46,19 @@ final class SalaAudienciasPautaParteRepository
     public function update(string $idParte, array $row): bool
     {
         $sql = sprintf(
-            'UPDATE `%s` SET `nome_parte`=:nome,`tipo_parte`=:tipo,`maioridade`=:maioridade,`expedicao`=:expedicao,`cumprimento`=:cumprimento,`id_documento_expedido`=:idexp,`id_documento_cumprido`=:idcum,`atualizado_por`=:atualizado WHERE `id_parte`=:id AND `ativo`=1 LIMIT 1',
+            'UPDATE `%s` SET `parte_id_global`=:parte_global,`processo_parte_id`=:processo_parte,`nome_parte`=:nome,`tipo_parte`=:tipo,`tipo_defensor`=:tipo_defensor,`defensor_publico_id`=:def_publico,`defensor_privado_id`=:def_privado,`defensor_privado_outro`=:def_outro,`maioridade`=:maioridade,`expedicao`=:expedicao,`cumprimento`=:cumprimento,`id_documento_expedido`=:idexp,`id_documento_cumprido`=:idcum,`atualizado_por`=:atualizado WHERE `id_parte`=:id AND `ativo`=1 LIMIT 1',
             $this->table
         );
         $st = $this->connection->prepare($sql);
         $st->bindValue(':id', $idParte);
+        $st->bindValue(':parte_global', $row['parte_id_global'] ?? null);
+        $st->bindValue(':processo_parte', $row['processo_parte_id'] ?? null);
         $st->bindValue(':nome', $row['nome_parte']);
         $st->bindValue(':tipo', $row['tipo_parte']);
+        $st->bindValue(':tipo_defensor', $row['tipo_defensor'] ?? null);
+        $st->bindValue(':def_publico', $row['defensor_publico_id'] ?? null);
+        $st->bindValue(':def_privado', $row['defensor_privado_id'] ?? null);
+        $st->bindValue(':def_outro', $row['defensor_privado_outro'] ?? null);
         $st->bindValue(':maioridade', $row['maioridade']);
         $st->bindValue(':expedicao', $row['expedicao']);
         $st->bindValue(':cumprimento', $row['cumprimento']);
@@ -70,7 +82,7 @@ final class SalaAudienciasPautaParteRepository
     public function findById(string $idParte): ?array
     {
         $sql = sprintf(
-            'SELECT p.*, a.`id_pauta`, pr.`numero_processo`, a.`tipo_audiencia`
+            'SELECT p.*, a.`id_pauta`, a.`processo`, pr.`numero_processo`, a.`tipo_audiencia`
              FROM `%s` p
              INNER JOIN `sala_audiencias_pauta` a ON a.`id_pauta` = p.`pauta`
              LEFT JOIN `processos` pr ON pr.`id` = a.`processo`

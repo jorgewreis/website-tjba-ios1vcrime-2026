@@ -6,6 +6,8 @@ require_once __DIR__ . '/../repositories/SalaAudienciasPautaParteRepository.php'
 require_once __DIR__ . '/../repositories/SalaAudienciasTiposRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
+require_once __DIR__ . '/../repositories/PartesRepository.php';
+require_once __DIR__ . '/../repositories/ProcessosPartesRepository.php';
 
 final class SalaAudienciasPautaService
 {
@@ -15,6 +17,8 @@ final class SalaAudienciasPautaService
     private SalaAudienciasTiposRepository $tiposRepository;
     private ProcessosRepository $processosRepository;
     private ClassesRepository $classesRepository;
+    private PartesRepository $partesRepository;
+    private ProcessosPartesRepository $processosPartesRepository;
 
     public function __construct(PDO $connection)
     {
@@ -24,6 +28,8 @@ final class SalaAudienciasPautaService
         $this->tiposRepository = new SalaAudienciasTiposRepository($connection);
         $this->processosRepository = new ProcessosRepository($connection);
         $this->classesRepository = new ClassesRepository($connection);
+        $this->partesRepository = new PartesRepository($connection);
+        $this->processosPartesRepository = new ProcessosPartesRepository($connection);
     }
 
     public function listTiposAtivos(): array
@@ -148,6 +154,15 @@ final class SalaAudienciasPautaService
 
     public function addParte(string $idPauta, array $payload, ?string $usuarioId): string
     {
+        $pauta = $this->pautaRepository->findById($idPauta);
+        if ($pauta === null) {
+            throw new InvalidArgumentException('Audiência não encontrada.');
+        }
+        $processoId = trim((string) ($pauta['processo'] ?? ''));
+        if ($processoId === '') {
+            throw new InvalidArgumentException('Processo vinculado à audiência é inválido.');
+        }
+
         $nome = trim((string) ($payload['nome_parte'] ?? ''));
         $tipo = trim((string) ($payload['tipo_parte'] ?? ''));
         $maioridade = trim((string) ($payload['maioridade'] ?? ''));
@@ -156,22 +171,56 @@ final class SalaAudienciasPautaService
         if ($nome === '' || $tipo === '' || $maioridade === '') {
             throw new InvalidArgumentException('Preencha os campos obrigatórios da parte.');
         }
-        return $this->parteRepository->insert([
-            'pauta' => $idPauta,
-            'nome_parte' => $nome,
-            'tipo_parte' => $tipo,
-            'maioridade' => $maioridade,
-            'expedicao' => $expedicao,
-            'cumprimento' => $cumprimento,
-            'id_documento_expedido' => trim((string) ($payload['id_documento_expedido'] ?? '')) ?: null,
-            'id_documento_cumprido' => trim((string) ($payload['id_documento_cumprido'] ?? '')) ?: null,
-            'criado_por' => $usuarioId,
-            'atualizado_por' => $usuarioId,
-        ]);
+
+        $this->connection->beginTransaction();
+        try {
+            $parteGlobalId = $this->partesRepository->ensureParteByNomeOuCpf($nome, null);
+            [$tipoProcesso, $poloProcesso] = $this->mapPautaTipoToProcessoTipoEPolo($tipo);
+            $processoParte = $this->processosPartesRepository->findByProcessoAndParte($processoId, $parteGlobalId);
+            if ($processoParte === null) {
+                $processoParteId = $this->processosPartesRepository->addParte($processoId, $parteGlobalId, $tipoProcesso, $poloProcesso);
+            } else {
+                $processoParteId = (string) ($processoParte['id'] ?? '');
+                $this->processosPartesRepository->update($processoParteId, [
+                    'tipo_parte' => $tipoProcesso,
+                    'polo' => $poloProcesso,
+                ]);
+            }
+
+            $idPartePauta = $this->parteRepository->insert([
+                'pauta' => $idPauta,
+                'parte_id_global' => $parteGlobalId,
+                'processo_parte_id' => $processoParteId,
+                'nome_parte' => $nome,
+                'tipo_parte' => $tipo,
+                'tipo_defensor' => trim((string) ($payload['tipo_defensor'] ?? '')) ?: null,
+                'defensor_publico_id' => trim((string) ($payload['defensor_publico_id'] ?? '')) ?: null,
+                'defensor_privado_id' => trim((string) ($payload['defensor_privado_id'] ?? '')) ?: null,
+                'defensor_privado_outro' => trim((string) ($payload['defensor_privado_outro'] ?? '')) ?: null,
+                'maioridade' => $maioridade,
+                'expedicao' => $expedicao,
+                'cumprimento' => $cumprimento,
+                'id_documento_expedido' => trim((string) ($payload['id_documento_expedido'] ?? '')) ?: null,
+                'id_documento_cumprido' => trim((string) ($payload['id_documento_cumprido'] ?? '')) ?: null,
+                'criado_por' => $usuarioId,
+                'atualizado_por' => $usuarioId,
+            ]);
+
+            $this->connection->commit();
+            return $idPartePauta;
+        } catch (Throwable $e) {
+            $this->connection->rollBack();
+            throw $e;
+        }
     }
 
     public function updateParte(string $idParte, array $payload, ?string $usuarioId): bool
     {
+        $parteAtual = $this->parteRepository->findById($idParte);
+        if ($parteAtual === null) {
+            throw new InvalidArgumentException('Parte da audiência não encontrada.');
+        }
+
         $nome = trim((string) ($payload['nome_parte'] ?? ''));
         $tipo = trim((string) ($payload['tipo_parte'] ?? ''));
         $maioridade = trim((string) ($payload['maioridade'] ?? ''));
@@ -180,16 +229,94 @@ final class SalaAudienciasPautaService
         if ($nome === '' || $tipo === '' || $maioridade === '' || $expedicao === '' || $cumprimento === '') {
             throw new InvalidArgumentException('Preencha os campos obrigatórios da parte.');
         }
-        return $this->parteRepository->update($idParte, [
-            'nome_parte' => $nome,
-            'tipo_parte' => $tipo,
-            'maioridade' => $maioridade,
-            'expedicao' => $expedicao,
-            'cumprimento' => $cumprimento,
-            'id_documento_expedido' => trim((string) ($payload['id_documento_expedido'] ?? '')) ?: null,
-            'id_documento_cumprido' => trim((string) ($payload['id_documento_cumprido'] ?? '')) ?: null,
-            'atualizado_por' => $usuarioId,
-        ]);
+
+        $this->connection->beginTransaction();
+        try {
+            $parteGlobalId = trim((string) ($payload['parte_id_global'] ?? ''));
+            if ($parteGlobalId === '') {
+                $parteGlobalId = trim((string) ($parteAtual['parte_id_global'] ?? ''));
+            }
+            $processoParteId = trim((string) ($payload['processo_parte_id'] ?? ''));
+            if ($processoParteId === '') {
+                $processoParteId = trim((string) ($parteAtual['processo_parte_id'] ?? ''));
+            }
+            if ($parteGlobalId === '') {
+                $parteGlobalId = $this->partesRepository->ensureParteByNomeOuCpf($nome, null);
+            } else {
+                $this->partesRepository->update($parteGlobalId, ['nome_completo' => $nome]);
+            }
+
+            [$tipoProcesso, $poloProcesso] = $this->mapPautaTipoToProcessoTipoEPolo($tipo);
+            if ($processoParteId !== '') {
+                $this->processosPartesRepository->update($processoParteId, [
+                    'tipo_parte' => $tipoProcesso,
+                    'polo' => $poloProcesso,
+                ]);
+            } else {
+                $processoId = trim((string) ($parteAtual['processo'] ?? ''));
+                if ($processoId !== '') {
+                    $vinculoAtual = $this->processosPartesRepository->findByProcessoAndParte($processoId, $parteGlobalId);
+                    if ($vinculoAtual === null) {
+                        $processoParteId = $this->processosPartesRepository->addParte($processoId, $parteGlobalId, $tipoProcesso, $poloProcesso);
+                    } else {
+                        $processoParteId = (string) ($vinculoAtual['id'] ?? '');
+                        $this->processosPartesRepository->update($processoParteId, [
+                            'tipo_parte' => $tipoProcesso,
+                            'polo' => $poloProcesso,
+                        ]);
+                    }
+                }
+            }
+
+            $ok = $this->parteRepository->update($idParte, [
+                'parte_id_global' => $parteGlobalId,
+                'processo_parte_id' => $processoParteId !== '' ? $processoParteId : null,
+                'nome_parte' => $nome,
+                'tipo_parte' => $tipo,
+                'tipo_defensor' => trim((string) ($payload['tipo_defensor'] ?? '')) ?: null,
+                'defensor_publico_id' => trim((string) ($payload['defensor_publico_id'] ?? '')) ?: null,
+                'defensor_privado_id' => trim((string) ($payload['defensor_privado_id'] ?? '')) ?: null,
+                'defensor_privado_outro' => trim((string) ($payload['defensor_privado_outro'] ?? '')) ?: null,
+                'maioridade' => $maioridade,
+                'expedicao' => $expedicao,
+                'cumprimento' => $cumprimento,
+                'id_documento_expedido' => trim((string) ($payload['id_documento_expedido'] ?? '')) ?: null,
+                'id_documento_cumprido' => trim((string) ($payload['id_documento_cumprido'] ?? '')) ?: null,
+                'atualizado_por' => $usuarioId,
+            ]);
+
+            $this->connection->commit();
+            return $ok;
+        } catch (Throwable $e) {
+            $this->connection->rollBack();
+            throw $e;
+        }
+    }
+
+    /** @return array{0:string,1:string} */
+    private function mapPautaTipoToProcessoTipoEPolo(string $tipoPauta): array
+    {
+        $tipo = strtolower(trim($tipoPauta));
+        if ($tipo === 'reu') {
+            return [ProcessosPartesRepository::TIPO_REU, ProcessosPartesRepository::POLO_PASSIVO];
+        }
+        if ($tipo === 'advogado') {
+            return [ProcessosPartesRepository::TIPO_ADVOGADO, ProcessosPartesRepository::POLO_TERCEIROS];
+        }
+        if ($tipo === 'defensor_publico' || $tipo === 'defensoria_publica') {
+            return [ProcessosPartesRepository::TIPO_DEFENSOR_PUBLICO, ProcessosPartesRepository::POLO_TERCEIROS];
+        }
+        if ($tipo === 'vitima') {
+            return [ProcessosPartesRepository::TIPO_VITIMA, ProcessosPartesRepository::POLO_ATIVO];
+        }
+        if ($tipo === 'testemunha_denuncia') {
+            return [ProcessosPartesRepository::TIPO_TESTEMUNHA_DENUNCIA, ProcessosPartesRepository::POLO_TERCEIROS];
+        }
+        if ($tipo === 'testemunha_defesa') {
+            return [ProcessosPartesRepository::TIPO_TESTEMUNHA_DEFESA, ProcessosPartesRepository::POLO_TERCEIROS];
+        }
+
+        return [ProcessosPartesRepository::TIPO_REQUERENTE, ProcessosPartesRepository::POLO_ATIVO];
     }
 
     public function deleteParte(string $idParte, ?string $usuarioId): bool

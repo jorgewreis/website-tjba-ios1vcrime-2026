@@ -29,6 +29,56 @@
         return value;
     }
 
+    function toggleDefensorFields() {
+        var tipoParte = String(document.getElementById('parte-edit-tipo')?.value || '').trim();
+        var wrapper = document.getElementById('parte-edit-defensor-wrapper');
+        var tipoDefensor = document.getElementById('parte-edit-tipo-defensor');
+        var publicoWrap = document.getElementById('parte-edit-defensor-publico-wrapper');
+        var privadoWrap = document.getElementById('parte-edit-defensor-privado-wrapper');
+        var outroWrap = document.getElementById('parte-edit-defensor-privado-outro-wrapper');
+        var defensorPublico = document.getElementById('parte-edit-defensor-publico');
+        var defensorPrivado = document.getElementById('parte-edit-defensor-privado');
+        var defensorOutro = document.getElementById('parte-edit-defensor-privado-outro');
+
+        if (!wrapper || !tipoDefensor || !publicoWrap || !privadoWrap || !outroWrap) return;
+
+        if (tipoParte === 'reu') {
+            wrapper.style.display = '';
+        } else {
+            wrapper.style.display = 'none';
+            tipoDefensor.value = '';
+            if (defensorPublico) defensorPublico.value = '';
+            if (defensorPrivado) defensorPrivado.value = '';
+            if (defensorOutro) defensorOutro.value = '';
+            publicoWrap.style.display = 'none';
+            privadoWrap.style.display = 'none';
+            outroWrap.style.display = 'none';
+            return;
+        }
+
+        var td = String(tipoDefensor.value || '').trim();
+        if (td === 'publico') {
+            publicoWrap.style.display = '';
+            privadoWrap.style.display = 'none';
+            outroWrap.style.display = 'none';
+            if (defensorPrivado) defensorPrivado.value = '';
+            if (defensorOutro) defensorOutro.value = '';
+        } else if (td === 'privado') {
+            publicoWrap.style.display = 'none';
+            privadoWrap.style.display = '';
+            var valPrivado = String(defensorPrivado?.value || '').trim();
+            outroWrap.style.display = valPrivado === 'outro' ? '' : 'none';
+            if (defensorPublico) defensorPublico.value = '';
+        } else {
+            publicoWrap.style.display = 'none';
+            privadoWrap.style.display = 'none';
+            outroWrap.style.display = 'none';
+            if (defensorPublico) defensorPublico.value = '';
+            if (defensorPrivado) defensorPrivado.value = '';
+            if (defensorOutro) defensorOutro.value = '';
+        }
+    }
+
     document.getElementById('btn-parte-edit-voltar')?.addEventListener('click', function () {
         history.back();
     });
@@ -66,6 +116,23 @@
         var cumprimento = requiredValue('parte-edit-cumprimento', 'Cumprimento');
         if (!cumprimento) return;
 
+        var tipoParte = String(document.getElementById('parte-edit-tipo')?.value || '').trim();
+        if (tipoParte === 'reu') {
+            var tipoDefensor = requiredValue('parte-edit-tipo-defensor', 'Tipo de defensor');
+            if (!tipoDefensor) return;
+            if (tipoDefensor === 'publico') {
+                var defensorPublico = requiredValue('parte-edit-defensor-publico', 'Defensor Público');
+                if (!defensorPublico) return;
+            } else if (tipoDefensor === 'privado') {
+                var defensorPrivado = requiredValue('parte-edit-defensor-privado', 'Defensor');
+                if (!defensorPrivado) return;
+                if (defensorPrivado === 'outro') {
+                    var defensorOutro = requiredValue('parte-edit-defensor-privado-outro', 'Outro defensor');
+                    if (!defensorOutro) return;
+                }
+            }
+        }
+
         var idParte = String(document.getElementById('parte-edit-id')?.value || '').trim();
         fetch('/api/sala-audiencias-pauta/partes-update.php', {
             method: 'POST',
@@ -73,8 +140,14 @@
             credentials: 'same-origin',
             body: JSON.stringify({
                 id_parte: idParte,
+                parte_id_global: String(document.getElementById('parte-edit-parte-global-id')?.value || '').trim(),
+                processo_parte_id: String(document.getElementById('parte-edit-processo-parte-id')?.value || '').trim(),
                 nome_parte: nome,
                 tipo_parte: tipo,
+                tipo_defensor: String(document.getElementById('parte-edit-tipo-defensor')?.value || '').trim(),
+                defensor_publico_id: String(document.getElementById('parte-edit-defensor-publico')?.value || '').trim(),
+                defensor_privado_id: String(document.getElementById('parte-edit-defensor-privado')?.value || '').trim(),
+                defensor_privado_outro: String(document.getElementById('parte-edit-defensor-privado-outro')?.value || '').trim(),
                 maioridade: maioridade,
                 expedicao: expedicao,
                 cumprimento: cumprimento,
@@ -92,4 +165,9 @@
             })
             .catch(function () { notify('error', 'Erro', 'Erro de conexão.'); });
     });
+
+    document.getElementById('parte-edit-tipo')?.addEventListener('change', toggleDefensorFields);
+    document.getElementById('parte-edit-tipo-defensor')?.addEventListener('change', toggleDefensorFields);
+    document.getElementById('parte-edit-defensor-privado')?.addEventListener('change', toggleDefensorFields);
+    toggleDefensorFields();
 })();
