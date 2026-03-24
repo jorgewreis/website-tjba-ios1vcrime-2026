@@ -11,4 +11,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: ajuste de theme** `[af5071e]`
 - **Fix: pequenos ajustes de cor** `[7fbc0ae]`
 - **Feat: nova implementação de upload de ata** `[88a31b2]`
+- **Fix: Correção do button de editar** `[390c6f2]`
 
