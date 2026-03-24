@@ -258,6 +258,6 @@ $endItem = min($offset + count($rows), $total);
         </div>
     </div>
 
-    <script src="/assets/js/modules/audiencias/pauta-list.js"></script>
+    <script src="/assets/js/modules/audiencias/pauta-list.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-list.js') ?: time(); ?>"></script>
 </body>
 </html>
