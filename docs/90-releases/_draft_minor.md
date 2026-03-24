@@ -52,4 +52,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correcao de erros** `[c0e71c4]`
 - **Fix: correcao de function** `[5c29143]`
 - **Fix: correcao de input classe** `[6146c71]`
+- **Fix: correcao reu preso** `[dff7692]`
 
