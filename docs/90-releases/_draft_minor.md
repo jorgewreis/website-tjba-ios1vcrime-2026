@@ -207,4 +207,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correcao do modelo de consulta partes** `[f66fafd]`
 - **Fix: correcao de conexao com o bd** `[fc5d50d]`
 - **Fix: correcao de erros de buttons** `[f3ad5e2]`
+- **Fix: correção de select de defensor** `[6d8572f]`
 
