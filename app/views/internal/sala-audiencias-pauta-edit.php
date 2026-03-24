@@ -170,6 +170,7 @@ $tipos = $service->listTiposAtivos();
         </div>
     </div>
 
-    <script src="/assets/js/modules/audiencias/pauta-edit.js"></script>
+    <script src="/assets/js/shared/text-formatter.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/shared/text-formatter.js') ?: time(); ?>"></script>
+    <script src="/assets/js/modules/audiencias/pauta-edit.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-edit.js') ?: time(); ?>"></script>
 </body>
 </html>

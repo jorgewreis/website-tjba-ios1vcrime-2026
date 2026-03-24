@@ -34,6 +34,16 @@
         return '';
     }
 
+    function normalizePartNameInput() {
+        var nomeInput = document.getElementById('parte-nome');
+        if (!nomeInput) return;
+        var nome = String(nomeInput.value || '').trim();
+        if (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
+            nome = TextFormatter.formatProperName(nome, 255);
+        }
+        nomeInput.value = nome;
+    }
+
     function clearPartForm() {
         [
             'parte-nome',
@@ -57,6 +67,7 @@
     document.getElementById('btn-parte-limpar')?.addEventListener('click', clearPartForm);
 
     document.getElementById('btn-parte-adicionar')?.addEventListener('click', function () {
+        normalizePartNameInput();
         var payload = readPartPayload();
         var missing = validatePart(payload);
         if (missing) {
@@ -138,6 +149,7 @@
     });
 
     document.getElementById('btn-audiencia-edit-salvar')?.addEventListener('click', function () {
+        normalizePartNameInput();
         var id = String(document.getElementById('audiencia-edit-id')?.value || '').trim();
         fetch('/api/sala-audiencias-pauta/update.php', {
             method: 'POST',
@@ -162,4 +174,6 @@
             })
             .catch(function () { notify('error', 'Erro', 'Erro de conexão.'); });
     });
+
+    document.getElementById('parte-nome')?.addEventListener('blur', normalizePartNameInput);
 })();

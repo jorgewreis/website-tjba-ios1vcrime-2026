@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0075
+
+**Data:** 2026-03-24 11:53:21 | **Commit:** `66276c9` | **Tipo:** `patch`
+
+- Fix: correcao de cadastro de parte
+
 ## V. 1.04.0074
 
 **Data:** 2026-03-24 11:49:44 | **Commit:** `b2f5a12` | **Tipo:** `patch`
@@ -3738,6 +3744,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
