@@ -9,4 +9,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correcao de pauta com buttons** `[6d786ac]`
 - **Fix: correção de buttons** `[8f18f23]`
 - **Fix: ajuste de theme** `[af5071e]`
+- **Fix: pequenos ajustes de cor** `[7fbc0ae]`
 
