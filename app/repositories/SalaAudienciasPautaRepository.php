@@ -57,7 +57,7 @@ final class SalaAudienciasPautaRepository
     public function findById(string $id): ?array
     {
         $sql = sprintf(
-            'SELECT a.*, p.`numero_processo`, COALESCE(cl.`nome`, \'\') AS classe_nome
+            'SELECT a.*, p.`numero_processo`, COALESCE(p.`sigiloso`, 0) AS processo_sigiloso, COALESCE(cl.`nome`, \'\') AS classe_nome
              FROM `%s` a
              LEFT JOIN `processos` p ON p.`id` = a.`processo`
              LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id`

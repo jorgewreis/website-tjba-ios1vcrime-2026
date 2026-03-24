@@ -1,0 +1,287 @@
+<?php
+declare(strict_types=1);
+
+require_once __DIR__ . '/../repositories/SalaAudienciasPautaRepository.php';
+require_once __DIR__ . '/../repositories/SalaAudienciasAtaRepository.php';
+require_once __DIR__ . '/../repositories/SalaAudienciasEstudanteInscricaoRepository.php';
+
+final class SalaAudienciasAtaService
+{
+    /** Limite definido pela magistratura: no máximo este número de estudantes inscritos por audiência. */
+    public const MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA = 5;
+
+    private const DIAS_VALIDADE_ATA = 30;
+    private const MAX_UPLOAD_BYTES = 30 * 1024 * 1024;
+
+    private PDO $connection;
+    private SalaAudienciasPautaRepository $pautaRepository;
+    private SalaAudienciasAtaRepository $ataRepository;
+    private SalaAudienciasEstudanteInscricaoRepository $inscricaoRepository;
+
+    public function __construct(PDO $connection)
+    {
+        $this->connection = $connection;
+        $this->pautaRepository = new SalaAudienciasPautaRepository($connection);
+        $this->ataRepository = new SalaAudienciasAtaRepository($connection);
+        $this->inscricaoRepository = new SalaAudienciasEstudanteInscricaoRepository($connection);
+    }
+
+    /**
+     * @return array{rows: list<array<string, mixed>>, total: int}
+     */
+    public function listRealizadasParaUpload(int $limit, int $offset): array
+    {
+        $limit = max(1, min(200, $limit));
+        $offset = max(0, $offset);
+
+        return [
+            'rows' => $this->ataRepository->listRealizadasComAta($limit, $offset),
+            'total' => $this->ataRepository->countRealizadas(),
+        ];
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function listHojeParaInscricaoEstudante(string $usuarioId): array
+    {
+        $rows = $this->inscricaoRepository->listHojeDesignadasElegiveis($usuarioId);
+        $out = [];
+        foreach ($rows as $row) {
+            if ((int) ($row['processo_sigiloso'] ?? 0) !== 0) {
+                continue;
+            }
+            if ((int) ($row['qtd_menor'] ?? 0) > 0) {
+                continue;
+            }
+            $total = (int) ($row['total_inscritos_pauta'] ?? 0);
+            $jaInscrito = (int) ($row['ja_inscrito'] ?? 0) === 1;
+            $row['vagas_esgotadas'] = $total >= self::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA;
+            $row['pode_inscrever'] = !$jaInscrito && !$row['vagas_esgotadas'];
+            $out[] = $row;
+        }
+
+        return $out;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function listMinhasInscricoesEstudante(string $usuarioId): array
+    {
+        return $this->inscricaoRepository->listInscricoesVisiveisParaUsuario($usuarioId);
+    }
+
+    /**
+     * @param array{name: string, type: string, tmp_name: string, error: int, size: int} $file
+     */
+    public function uploadPdf(string $idPauta, array $file, string $usuarioId): void
+    {
+        $idPauta = trim($idPauta);
+        $usuarioId = trim($usuarioId);
+        if ($idPauta === '' || $usuarioId === '') {
+            throw new InvalidArgumentException('Dados inválidos.');
+        }
+
+        $pauta = $this->pautaRepository->findById($idPauta);
+        if ($pauta === null) {
+            throw new InvalidArgumentException('Audiência não encontrada.');
+        }
+        $st = trim((string) ($pauta['status'] ?? ''));
+        if ($st === 'agendada') {
+            $st = 'designada';
+        }
+        if ($st !== 'realizada') {
+            throw new InvalidArgumentException('Só é permitido enviar ata para audiência com status Realizada.');
+        }
+
+        if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+            throw new InvalidArgumentException('Falha no envio do arquivo.');
+        }
+        $size = (int) ($file['size'] ?? 0);
+        if ($size <= 0 || $size > self::MAX_UPLOAD_BYTES) {
+            throw new InvalidArgumentException('Arquivo inválido ou muito grande (máx. 30 MB).');
+        }
+
+        $tmp = (string) ($file['tmp_name'] ?? '');
+        if ($tmp === '' || !is_uploaded_file($tmp)) {
+            throw new InvalidArgumentException('Upload inválido.');
+        }
+
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $mime = $finfo->file($tmp);
+        if ($mime !== 'application/pdf') {
+            throw new InvalidArgumentException('Envie apenas arquivo PDF.');
+        }
+
+        $basePath = dirname(__DIR__, 2);
+        $dir = $basePath . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . 'sala-audiencias-atas';
+        if (!is_dir($dir) && !mkdir($dir, 0750, true) && !is_dir($dir)) {
+            throw new RuntimeException('Não foi possível criar o diretório de armazenamento.');
+        }
+
+        $existing = $this->ataRepository->findByPauta($idPauta);
+        if ($existing !== null && !empty($existing['arquivo_relativo'])) {
+            $oldFull = $basePath . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, (string) $existing['arquivo_relativo']);
+            if (is_file($oldFull)) {
+                @unlink($oldFull);
+            }
+        }
+
+        $basename = bin2hex(random_bytes(16)) . '.pdf';
+        $relative = 'sala-audiencias-atas/' . $basename;
+        $dest = $dir . DIRECTORY_SEPARATOR . $basename;
+        if (!move_uploaded_file($tmp, $dest)) {
+            throw new RuntimeException('Falha ao salvar o PDF.');
+        }
+
+        $nomeOriginal = (string) ($file['name'] ?? 'ata.pdf');
+        $nomeOriginal = preg_replace('/[^\p{L}\p{N}._\-\s\(\)]/u', '', $nomeOriginal) ?: 'ata.pdf';
+        if (function_exists('mb_substr')) {
+            $nomeOriginal = mb_substr($nomeOriginal, 0, 255, 'UTF-8');
+        } else {
+            $nomeOriginal = substr($nomeOriginal, 0, 255);
+        }
+
+        $now = date('Y-m-d H:i:s');
+        $expires = date('Y-m-d H:i:s', strtotime('+' . self::DIAS_VALIDADE_ATA . ' days'));
+
+        $this->ataRepository->upsertForPauta([
+            'pauta' => $idPauta,
+            'arquivo_relativo' => $relative,
+            'nome_original' => $nomeOriginal,
+            'mime' => 'application/pdf',
+            'tamanho_bytes' => $size,
+            'uploaded_by' => $usuarioId,
+            'uploaded_at' => $now,
+            'expires_at' => $expires,
+        ]);
+    }
+
+    public function inscreverEstudante(string $idPauta, string $usuarioId): void
+    {
+        $idPauta = trim($idPauta);
+        $usuarioId = trim($usuarioId);
+        if ($idPauta === '' || $usuarioId === '') {
+            throw new InvalidArgumentException('Dados inválidos.');
+        }
+
+        if ($this->inscricaoRepository->exists($idPauta, $usuarioId)) {
+            throw new InvalidArgumentException('Você já está inscrito nesta audiência.');
+        }
+
+        $pauta = $this->pautaRepository->findById($idPauta);
+        if ($pauta === null) {
+            throw new InvalidArgumentException('Audiência não encontrada.');
+        }
+
+        $st = trim((string) ($pauta['status'] ?? ''));
+        if ($st === 'agendada') {
+            $st = 'designada';
+        }
+        if ($st !== 'designada') {
+            throw new InvalidArgumentException('Inscrição só é permitida para audiências designadas.');
+        }
+
+        $dataAud = trim((string) ($pauta['data_audiencia'] ?? ''));
+        if ($dataAud === '') {
+            throw new InvalidArgumentException('Data da audiência inválida.');
+        }
+        $hoje = date('Y-m-d');
+        if ($dataAud !== $hoje) {
+            throw new InvalidArgumentException('Inscrição só é permitida no dia da audiência.');
+        }
+
+        $sigiloso = (int) ($pauta['processo_sigiloso'] ?? 0);
+        if ($sigiloso !== 0) {
+            throw new InvalidArgumentException('Esta audiência não está disponível para inscrição de estudantes.');
+        }
+
+        $sqlMenor = 'SELECT COUNT(*) FROM `sala_audiencias_pauta_parte` WHERE `pauta` = :p AND `ativo` = 1 AND `maioridade` = \'menor\'';
+        $stc = $this->connection->prepare($sqlMenor);
+        $stc->bindValue(':p', $idPauta);
+        $stc->execute();
+        if ((int) $stc->fetchColumn() > 0) {
+            throw new InvalidArgumentException('Esta audiência envolve menor e não permite inscrição de estudantes.');
+        }
+
+        $totalInscritos = $this->inscricaoRepository->countInscritosPorPauta($idPauta);
+        if ($totalInscritos >= self::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA) {
+            throw new InvalidArgumentException(
+                'O limite de ' . self::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA . ' estudantes por audiência foi atingido. Não é possível efetuar novas inscrições.'
+            );
+        }
+
+        $this->inscricaoRepository->insert($idPauta, $usuarioId);
+    }
+
+    /**
+     * @return array{full_path: string, nome_original: string, mime: string}
+     */
+    public function getDownloadPayloadForEstudante(string $idPauta, string $usuarioId): array
+    {
+        $idPauta = trim($idPauta);
+        $usuarioId = trim($usuarioId);
+        if ($idPauta === '' || $usuarioId === '') {
+            throw new InvalidArgumentException('Dados inválidos.');
+        }
+
+        if (!$this->inscricaoRepository->exists($idPauta, $usuarioId)) {
+            throw new InvalidArgumentException('Acesso negado: inscrição não encontrada.');
+        }
+
+        $ata = $this->ataRepository->findByPauta($idPauta);
+        if ($ata === null) {
+            throw new InvalidArgumentException('Ata ainda não disponível.');
+        }
+
+        $expires = trim((string) ($ata['expires_at'] ?? ''));
+        if ($expires === '' || strtotime($expires) <= time()) {
+            throw new InvalidArgumentException('O prazo para download desta ata expirou.');
+        }
+
+        $rel = trim((string) ($ata['arquivo_relativo'] ?? ''));
+        if ($rel === '') {
+            throw new RuntimeException('Arquivo não localizado.');
+        }
+
+        $basePath = dirname(__DIR__, 2);
+        $full = $basePath . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $rel);
+        if (!is_file($full)) {
+            throw new RuntimeException('Arquivo não encontrado no servidor.');
+        }
+
+        return [
+            'full_path' => $full,
+            'nome_original' => (string) ($ata['nome_original'] ?? 'ata.pdf'),
+            'mime' => (string) ($ata['mime'] ?? 'application/pdf'),
+        ];
+    }
+
+    /**
+     * Remove atas expiradas do banco e arquivos no disco.
+     *
+     * @return int número de registros removidos
+     */
+    public function purgeAtasExpiradas(): int
+    {
+        $rows = $this->ataRepository->fetchExpiredBeforeNow();
+        $basePath = dirname(__DIR__, 2);
+        $n = 0;
+        foreach ($rows as $row) {
+            $rel = trim((string) ($row['arquivo_relativo'] ?? ''));
+            if ($rel !== '') {
+                $full = $basePath . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $rel);
+                if (is_file($full)) {
+                    @unlink($full);
+                }
+            }
+            $idAta = trim((string) ($row['id_ata'] ?? ''));
+            if ($idAta !== '' && $this->ataRepository->deleteByIdAta($idAta)) {
+                $n++;
+            }
+        }
+
+        return $n;
+    }
+}

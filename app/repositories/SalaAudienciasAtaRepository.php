@@ -1,0 +1,133 @@
+<?php
+declare(strict_types=1);
+
+require_once __DIR__ . '/../helpers/IdGenerator.php';
+
+final class SalaAudienciasAtaRepository
+{
+    private PDO $connection;
+    private string $table;
+
+    public function __construct(PDO $connection, string $table = 'sala_audiencias_ata')
+    {
+        $this->connection = $connection;
+        $this->table = $table;
+    }
+
+    public function findByPauta(string $idPauta): ?array
+    {
+        $st = $this->connection->prepare(sprintf('SELECT * FROM `%s` WHERE `pauta` = :p LIMIT 1', $this->table));
+        $st->bindValue(':p', $idPauta);
+        $st->execute();
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+
+        return $row === false ? null : $row;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function fetchExpiredBeforeNow(): array
+    {
+        $sql = sprintf('SELECT * FROM `%s` WHERE `expires_at` < NOW()', $this->table);
+        $st = $this->connection->query($sql);
+        if ($st === false) {
+            return [];
+        }
+
+        return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    public function deleteByIdAta(string $idAta): bool
+    {
+        $st = $this->connection->prepare(sprintf('DELETE FROM `%s` WHERE `id_ata` = :id LIMIT 1', $this->table));
+        $st->bindValue(':id', $idAta);
+        $st->execute();
+
+        return $st->rowCount() > 0;
+    }
+
+    /**
+     * Substitui ata existente da pauta (uma linha por pauta).
+     *
+     * @param array{id_ata?: string, pauta: string, arquivo_relativo: string, nome_original: string, mime: string, tamanho_bytes: int, uploaded_by: ?string, uploaded_at: string, expires_at: string} $row
+     */
+    public function upsertForPauta(array $row): string
+    {
+        $existing = $this->findByPauta(trim((string) $row['pauta']));
+        if ($existing !== null) {
+            $st = $this->connection->prepare(sprintf(
+                'UPDATE `%s` SET `arquivo_relativo`=:rel,`nome_original`=:nome,`mime`=:mime,`tamanho_bytes`=:tam,`uploaded_at`=:up,`uploaded_by`=:upby,`expires_at`=:ex WHERE `id_ata`=:id LIMIT 1',
+                $this->table
+            ));
+            $st->bindValue(':rel', $row['arquivo_relativo']);
+            $st->bindValue(':nome', $row['nome_original']);
+            $st->bindValue(':mime', $row['mime']);
+            $st->bindValue(':tam', (int) $row['tamanho_bytes'], PDO::PARAM_INT);
+            $st->bindValue(':up', $row['uploaded_at']);
+            $st->bindValue(':upby', $row['uploaded_by'] ?? null);
+            $st->bindValue(':ex', $row['expires_at']);
+            $st->bindValue(':id', $existing['id_ata']);
+            $st->execute();
+
+            return (string) $existing['id_ata'];
+        }
+
+        $id = IdGenerator::generateUniquePrefixedId($this->connection, $this->table, 'id_ata', 'SAT', 30);
+        $st = $this->connection->prepare(sprintf(
+            'INSERT INTO `%s` (`id_ata`,`pauta`,`arquivo_relativo`,`nome_original`,`mime`,`tamanho_bytes`,`uploaded_at`,`uploaded_by`,`expires_at`) VALUES (:id,:pauta,:rel,:nome,:mime,:tam,:up,:upby,:ex)',
+            $this->table
+        ));
+        $st->bindValue(':id', $id);
+        $st->bindValue(':pauta', $row['pauta']);
+        $st->bindValue(':rel', $row['arquivo_relativo']);
+        $st->bindValue(':nome', $row['nome_original']);
+        $st->bindValue(':mime', $row['mime']);
+        $st->bindValue(':tam', (int) $row['tamanho_bytes'], PDO::PARAM_INT);
+        $st->bindValue(':up', $row['uploaded_at']);
+        $st->bindValue(':upby', $row['uploaded_by'] ?? null);
+        $st->bindValue(':ex', $row['expires_at']);
+        $st->execute();
+
+        return $id;
+    }
+
+    /**
+     * Audiências realizadas com metadados de processo e ata (lista interna upload).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function listRealizadasComAta(int $limit, int $offset): array
+    {
+        $sql = sprintf(
+            'SELECT a.`id_pauta`, a.`tipo_audiencia`, a.`data_audiencia`, a.`hora_audiencia`, a.`localizacao`, a.`status`,
+                    p.`numero_processo`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `classe_nome`,
+                    ata.`id_ata`, ata.`expires_at`, ata.`nome_original`, ata.`uploaded_at`, ata.`arquivo_relativo`
+             FROM `sala_audiencias_pauta` a
+             LEFT JOIN `processos` p ON p.`id` = a.`processo`
+             LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id`
+             LEFT JOIN `%s` ata ON ata.`pauta` = a.`id_pauta`
+             WHERE a.`ativo` = 1 AND a.`status` = \'realizada\'
+             ORDER BY a.`data_audiencia` DESC, a.`hora_audiencia` DESC
+             LIMIT :limit OFFSET :offset',
+            $this->table
+        );
+        $st = $this->connection->prepare($sql);
+        $st->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $st->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $st->execute();
+
+        return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    public function countRealizadas(): int
+    {
+        $sql = 'SELECT COUNT(*) FROM `sala_audiencias_pauta` a WHERE a.`ativo` = 1 AND a.`status` = \'realizada\'';
+        $st = $this->connection->query($sql);
+        if ($st === false) {
+            return 0;
+        }
+
+        return (int) $st->fetchColumn();
+    }
+}
