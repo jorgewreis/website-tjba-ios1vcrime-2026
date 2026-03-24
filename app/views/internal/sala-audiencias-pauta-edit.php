@@ -12,6 +12,15 @@ $id = trim((string) ($_GET['id'] ?? ''));
 $service = new SalaAudienciasPautaService(Conection::getInstance()->getConnection());
 $row = $id !== '' ? $service->find($id) : null;
 $partes = $row !== null ? $service->listPartes((string) $row['id_pauta']) : [];
+$advogadosCadastrados = [];
+foreach ($partes as $parteItem) {
+    if ((string) ($parteItem['tipo_parte'] ?? '') === 'advogado') {
+        $nomeAdv = trim((string) ($parteItem['nome_parte'] ?? ''));
+        if ($nomeAdv !== '') {
+            $advogadosCadastrados[] = $nomeAdv;
+        }
+    }
+}
 $tipos = $service->listTiposAtivos();
 ?>
 <!DOCTYPE html>
@@ -127,13 +136,35 @@ $tipos = $service->listTiposAtivos();
             <h2>Partes cadastradas</h2>
         </div>
         <?php foreach ($partes as $parte): ?>
+        <?php
+            $defensorTexto = 'Nenhum defensor vinculado';
+            $tipoParteAtual = (string) ($parte['tipo_parte'] ?? '');
+            if ($tipoParteAtual === 'reu') {
+                $tipoDefensor = trim((string) ($parte['tipo_defensor'] ?? ''));
+                $defensorPublico = trim((string) ($parte['defensor_publico_id'] ?? ''));
+                $defensorPrivado = trim((string) ($parte['defensor_privado_id'] ?? ''));
+                $defensorPrivadoOutro = trim((string) ($parte['defensor_privado_outro'] ?? ''));
+
+                if ($tipoDefensor === 'privado') {
+                    if ($defensorPrivado === 'outro' && $defensorPrivadoOutro !== '') {
+                        $defensorTexto = 'Advogado: ' . $defensorPrivadoOutro;
+                    } elseif ($defensorPrivado !== '') {
+                        $defensorTexto = 'Advogado: ' . $defensorPrivado;
+                    }
+                } elseif ($tipoDefensor === 'publico' && $defensorPublico !== '') {
+                    $defensorTexto = 'Defensor público: ' . $defensorPublico;
+                } elseif ($advogadosCadastrados !== []) {
+                    $defensorTexto = 'Advogado: ' . implode(' / ', $advogadosCadastrados);
+                }
+            }
+        ?>
         <div class="display-flex col col-full register border-bottom" data-parte-id="<?php echo htmlspecialchars((string) $parte['id_parte'], ENT_QUOTES); ?>">
             <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                 <div class="display-flex row row-fit justify-start gap-y-sm align-center">
                     <div class="col width-700">
                         <div class="minor-info"><?php echo htmlspecialchars((string) ucfirst(str_replace('_', ' ', (string) $parte['tipo_parte'])), ENT_QUOTES); ?></div>
                         <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) $parte['nome_parte'], ENT_QUOTES); ?><?php echo (string) $parte['maioridade'] === 'menor' ? ' (Menor)' : ''; ?></span>
-                        <span class="minor-info-defesa">Nenhum defensor vinculado</span>
+                        <span class="minor-info-defesa"><?php echo htmlspecialchars($defensorTexto, ENT_QUOTES); ?></span>
                     </div>
                     <div class="col width-600">
                         <div class="minor-info">Documento expedido - ID: <span class="id-info">#<?php echo htmlspecialchars((string) ($parte['id_documento_expedido'] ?? '—'), ENT_QUOTES); ?></span></div>

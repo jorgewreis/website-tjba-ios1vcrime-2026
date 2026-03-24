@@ -64,6 +64,7 @@ $defensorPrivadoOutroAtual = (string) ($parte['defensor_privado_outro'] ?? '');
                 <div class="col">
                     <label for="parte-edit-nome">Nome da parte <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="hidden" id="parte-edit-id" value="<?php echo htmlspecialchars((string) ($parte['id_parte'] ?? ''), ENT_QUOTES); ?>">
+                    <input type="hidden" id="parte-edit-pauta-id" value="<?php echo htmlspecialchars((string) ($parte['id_pauta'] ?? ''), ENT_QUOTES); ?>">
                     <input type="hidden" id="parte-edit-parte-global-id" value="<?php echo htmlspecialchars((string) ($parte['parte_id_global'] ?? ''), ENT_QUOTES); ?>">
                     <input type="hidden" id="parte-edit-processo-parte-id" value="<?php echo htmlspecialchars((string) ($parte['processo_parte_id'] ?? ''), ENT_QUOTES); ?>">
                     <input type="text" class="width-700 height-md" id="parte-edit-nome" value="<?php echo htmlspecialchars((string) ($parte['nome_parte'] ?? ''), ENT_QUOTES); ?>" autocomplete="off">

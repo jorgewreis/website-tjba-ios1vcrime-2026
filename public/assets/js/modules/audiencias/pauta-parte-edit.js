@@ -159,6 +159,14 @@
             .then(function (res) {
                 if (res.ok && res.j && res.j.success) {
                     notify('success', 'Sucesso', 'Parte atualizada.');
+                    setTimeout(function () {
+                        var idPauta = String(document.getElementById('parte-edit-pauta-id')?.value || '').trim();
+                        if (idPauta) {
+                            window.location.href = '/frame.php?page=salapautaedit&id=' + encodeURIComponent(idPauta);
+                        } else {
+                            history.back();
+                        }
+                    }, 250);
                 } else {
                     notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao atualizar parte.');
                 }
