@@ -7,11 +7,16 @@
 
     function getDom() {
         return {
-            classeInput: document.getElementById('gab-mon-classe') || document.getElementById('filter-classe'),
-            processoInput: document.getElementById('gab-mon-processo') || document.getElementById('filter-processo'),
+            classeInput: document.getElementById('audiencia-classe')
+                || document.getElementById('gab-mon-classe')
+                || document.getElementById('filter-classe'),
+            processoInput: document.getElementById('audiencia-processo')
+                || document.getElementById('gab-mon-processo')
+                || document.getElementById('filter-processo'),
             classeCodigoField: document.getElementById('hidden-classe-codigo'),
             classeDescricaoField: document.getElementById('hidden-classe-descricao'),
-            statusElement: document.getElementById('processo-ap-info'),
+            statusElement: document.getElementById('audiencia-classe-status')
+                || document.getElementById('processo-ap-info'),
         };
     }
 
@@ -72,7 +77,7 @@
         }
         setStatusMessage(statusElement, '*Classe obtida via DataJud');
         if (statusElement) statusElement.style.color = 'var(--success-color)';
-        if (processoInput.id === 'gab-mon-processo' || processoInput.id === 'filter-processo') {
+        if (processoInput.id === 'gab-mon-processo' || processoInput.id === 'filter-processo' || processoInput.id === 'audiencia-processo') {
             window.dispatchEvent(new CustomEvent('gabineteMonDatajudClassePronta', {
                 detail: { numeroProcesso: processoInput.value },
             }));

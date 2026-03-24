@@ -45,8 +45,11 @@ $tipos = (new SalaAudienciasPautaService(Conection::getInstance()->getConnection
                     <input type="text" class="width-400 height-md" id="audiencia-processo" data-cnj-input="true" placeholder="0000000-00.0000.0.00.0000" autocomplete="off">
                 </div>
                 <div class="col">
-                    <label for="audiencia-classe">Classe</label>
-                    <input type="text" class="width-600 height-md" id="audiencia-classe" placeholder="Classe automática do processo (ou informe manualmente)" autocomplete="off">
+                    <label for="audiencia-classe">Classe <span class="label-hint-automatizado">*DataJud</span></label>
+                    <span id="audiencia-classe-status" class="minor-info" aria-live="polite"></span>
+                    <input type="text" class="width-600 height-md" id="audiencia-classe" placeholder="Preenchido pelo DataJud ou informe manualmente" autocomplete="off">
+                    <input type="hidden" id="hidden-classe-codigo" name="classe_codigo" value="">
+                    <input type="hidden" id="hidden-classe-descricao" name="classe_descricao" value="">
                 </div>
                 <div class="col">
                     <label for="audiencia-tipo">Tipo de audiência <span class="label-hint-obrigatorio">*obrigatório</span></label>
@@ -101,6 +104,7 @@ $tipos = (new SalaAudienciasPautaService(Conection::getInstance()->getConnection
     </div>
 
     <script src="/assets/js/modules/cartorio/cartas-expedidas/cnj.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/cartorio/cartas-expedidas/cnj.js') ?: time(); ?>"></script>
+    <script src="/assets/js/modules/cartorio/cartas-expedidas/datajud-api.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/cartorio/cartas-expedidas/datajud-api.js') ?: time(); ?>"></script>
     <script src="/assets/js/modules/audiencias/pauta-create.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-create.js') ?: time(); ?>"></script>
 </body>
 </html>

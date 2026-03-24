@@ -6,57 +6,6 @@
         return String(value || '').replace(/\D+/g, '');
     }
 
-    function setClasseFieldReadOnly(readOnly) {
-        var classeInput = document.getElementById('audiencia-classe');
-        if (!classeInput) return;
-        if (readOnly) {
-            classeInput.setAttribute('readonly', 'readonly');
-            classeInput.classList.add('readonly');
-        } else {
-            classeInput.removeAttribute('readonly');
-            classeInput.classList.remove('readonly');
-        }
-    }
-
-    function loadClasseByProcesso() {
-        var processoInput = document.getElementById('audiencia-processo');
-        var classeInput = document.getElementById('audiencia-classe');
-        if (!processoInput || !classeInput) return Promise.resolve(null);
-
-        var digits = onlyDigits(processoInput.value);
-        if (digits.length !== 20) {
-            classeInput.value = '';
-            setClasseFieldReadOnly(false);
-            return Promise.resolve(null);
-        }
-
-        var numeroFormatado = formatCNJ(digits);
-        processoInput.value = numeroFormatado;
-
-        return fetch('/api/consulta-processos/list.php?numero=' + encodeURIComponent(numeroFormatado) + '&items_per_page=10&page=1', {
-            method: 'GET',
-            credentials: 'same-origin'
-        })
-            .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
-            .then(function (res) {
-                var data = (res.j && Array.isArray(res.j.data)) ? res.j.data : [];
-                if (res.ok && data.length > 0) {
-                    var classeNome = String(data[0].classe_nome || '').trim();
-                    classeInput.value = classeNome;
-                    setClasseFieldReadOnly(classeNome !== '');
-                    return data[0];
-                }
-                classeInput.value = '';
-                setClasseFieldReadOnly(false);
-                return null;
-            })
-            .catch(function () {
-                classeInput.value = '';
-                setClasseFieldReadOnly(false);
-                return null;
-            });
-    }
-
     function notify(type, title, message) {
         if (typeof showToast === 'function') {
             showToast({ type: type, variant: 'full', title: title, message: message });
@@ -104,9 +53,12 @@
         var sala = requiredValue('audiencia-sala', 'Localizacao');
         if (!sala) return;
         var status = String(document.getElementById('audiencia-status')?.value || 'designada').trim();
-        var classeDescricao = String(document.getElementById('audiencia-classe')?.value || '').trim();
+        var classeCodigo = String(document.getElementById('hidden-classe-codigo')?.value || '').trim();
+        var classeDescricaoHidden = String(document.getElementById('hidden-classe-descricao')?.value || '').trim();
+        var classeDescricaoCampo = String(document.getElementById('audiencia-classe')?.value || '').trim();
+        var classeDescricao = classeDescricaoHidden || classeDescricaoCampo;
         if (!classeDescricao) {
-            notify('error', 'Validacao', 'Informe: Classe.');
+            notify('error', 'Validacao', 'Informe: Classe (aguarde o DataJud ou preencha manualmente).');
             return;
         }
 
@@ -121,6 +73,7 @@
                 hora_audiencia: hora,
                 localizacao: sala,
                 status: status,
+                classe_codigo: classeCodigo,
                 classe_descricao: classeDescricao
             })
         })
@@ -138,29 +91,5 @@
             .catch(function () {
                 notify('error', 'Erro', 'Erro de conexão.');
             });
-    });
-
-    document.getElementById('audiencia-processo')?.addEventListener('blur', function () {
-        if (typeof window.normalizeAndValidateCNJValue === 'function') {
-            var result = window.normalizeAndValidateCNJValue(this.value, { toastOnInvalid: true });
-            if (result.empty || !result.ok) {
-                this.value = '';
-                var classeInputInvalid = document.getElementById('audiencia-classe');
-                if (classeInputInvalid) {
-                    classeInputInvalid.value = '';
-                    setClasseFieldReadOnly(false);
-                }
-                return;
-            }
-            this.value = result.formatted;
-        }
-
-        loadClasseByProcesso().then(function (row) {
-            if (row) return;
-            var digits = onlyDigits(document.getElementById('audiencia-processo')?.value || '');
-            if (digits.length === 20) {
-                notify('info', 'Informação', 'Processo não encontrado. Informe a classe para cadastrar o processo.');
-            }
-        });
     });
 })();
