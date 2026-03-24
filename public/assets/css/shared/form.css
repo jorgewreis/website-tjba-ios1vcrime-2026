@@ -397,18 +397,23 @@ hr {
     font-family: 'Poppins', sans-serif;
     background-color: var(--color-background-menu);
     color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all 0.5s ease;
 }
-    .btn-editar.reload {
-        background-color: var(--color-);
-        color: var(--color-text-on-primary);
+    .btn-editar.reload:hover {
+        background-color: var(--color-primary-bg-light);
+        color: var(--color-primary-active);
+        transition: all 0.2s ease;
     }
-    .btn-editar.start {
-        background-color: var(--color-success);
-        color: var(--color-text-on-primary);
+    .btn-editar.start:hover {
+        background-color: var(--color-success-bg-light);
+        color: var(--color-success-active);
+        transition: all 0.2s ease;
     }
-    .btn-editar.stop {
-        background-color: var(--color-danger);
-        color: var(--color-text-on-primary);
+    .btn-editar.stop:hover {
+        background-color: var(--color-danger-bg-light);
+        color: var(--color-danger-active);
+        transition: all 0.2s ease;
     }
 .btn-editar:hover {
     background-color: var(--color-background-menu-hover);
