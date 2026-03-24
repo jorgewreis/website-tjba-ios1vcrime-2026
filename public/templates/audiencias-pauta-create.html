@@ -46,15 +46,16 @@
                 <div class="col">
                     <label for="audiencia-tipo">Tipo de audiência <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-500 height-md" id="audiencia-tipo" name="tipo_audiencia">
-                        <option value="">Selecione...</option>
-                        <option value="instrucao">Instrução e julgamento</option>
-                        <option value="custodia">Custódia</option>
+                        <option value="" selected disabled>Selecione o tipo</option>
                         <option value="conciliacao">Conciliação</option>
+                        <option value="custodia">Custódia</option>
+                        <option value="testemunha">Inquirição de Testemunha</option>
+                        <option value="instrucao">Instrução e Julgamento</option>
+                        <option value="julgamento">Interrogatório</option>
                         <option value="justificacao">Justificação</option>
                         <option value="vitima">Oitiva de Vítima</option>
-                        <option value="testemunha">Inquirição de Testemunha</option>
-                        <option value="julgamento">Interrogatório</option>
                         <option value="suspensao">Proposta de Suspensão Condicional</option>
+                        <option value="anpp">Proposta de Acordo de Não Persecução Penal</option>
                         <option value="outra">Outra</option>
                     </select>
                 </div>
@@ -73,9 +74,9 @@
                     <label for="audiencia-sala">Localização <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-400 height-md" id="audiencia-sala" name="sala">
                         <option value="">Selecione...</option>
-                        <option value="presencial">Presencial</option>
-                        <option value="lifesize" selected>Lifesize</option>
-                        <option value="audin">Audin</option>
+                        <option value="presencial">Presencial - Fórum</option>
+                        <option value="lifesize" selected>Virtual - Lifesize</option>
+                        <option value="audin">Virtual - Audin</option>
                     </select>
                 </div>
                 <div class="col">

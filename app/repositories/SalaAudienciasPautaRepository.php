@@ -115,9 +115,10 @@ final class SalaAudienciasPautaRepository
     {
         [$where, $params] = $this->buildWhere($filters);
         $sql = sprintf(
-            'SELECT a.`id_pauta`, a.`tipo_audiencia`, a.`data_audiencia`, a.`hora_audiencia`, a.`localizacao`, a.`status`, p.`numero_processo`
+            'SELECT a.`id_pauta`, a.`tipo_audiencia`, a.`data_audiencia`, a.`hora_audiencia`, a.`localizacao`, a.`status`, p.`numero_processo`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `classe_nome`
              FROM `%s` a
              LEFT JOIN `processos` p ON p.`id` = a.`processo`
+             LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id`
              %s
              ORDER BY a.`data_audiencia` ASC, a.`hora_audiencia` ASC
              LIMIT :limit OFFSET :offset',

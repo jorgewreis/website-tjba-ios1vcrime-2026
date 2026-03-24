@@ -48,15 +48,17 @@
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
                     <label for="audiencia-edit-tipo">Tipo de audiência <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <select class="width-500 height-md" id="audiencia-edit-tipo">
-                        <option value="instrucao" selected>Instrução e Julgamento</option>
-                        <option value="custodia">Custódia</option>
+                    <select class="width-500 height-md" id="audiencia-edit-tipo">                
+                        <option value="" selected disabled>Selecione o tipo</option>
                         <option value="conciliacao">Conciliação</option>
+                        <option value="custodia">Custódia</option>
+                        <option value="testemunha">Inquirição de Testemunha</option>
+                        <option value="instrucao">Instrução e Julgamento</option>
+                        <option value="julgamento">Interrogatório</option>
                         <option value="justificacao">Justificação</option>
                         <option value="vitima">Oitiva de Vítima</option>
-                        <option value="testemunha">Inquirição de Testemunha</option>
-                        <option value="julgamento">Interrogatório</option>
                         <option value="suspensao">Proposta de Suspensão Condicional</option>
+                        <option value="anpp">Proposta de Acordo de Não Persecução Penal</option>
                         <option value="outra">Outra</option>
                     </select>
                 </div>
@@ -71,9 +73,10 @@
                 <div class="col">
                     <label for="audiencia-edit-sala">Localização <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-300 height-md" id="audiencia-edit-sala">
-                        <option value="presencial">Presencial</option>
-                        <option value="lifesize" selected>Lifesize</option>
-                        <option value="audin">Audin</option>
+                        <option value="" selected disabled>Selecione a localização</option>
+                        <option value="presencial">Presencial - Fórum</option>
+                        <option value="lifesize" selected>Virtual - Lifesize</option>
+                        <option value="audin">Virtual - Audin</option>
                     </select>
                 </div>
             </div>
@@ -92,21 +95,18 @@
                 <div class="col">
                     <label for="parte-tipo">Tipo de parte <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-400 height-md" id="parte-tipo">
-                        <option value="">Selecione...</option>
+                        <option value="" selected disabled>Selecione o tipo</option>
                         <option value="reu">Réu</option>
                         <option value="vitima">Vítima</option>
                         <option value="testemunha">Testemunha da Defesa</option>
                         <option value="testemunha">Testemunha da Denúncia</option>
-                        <option value="advogado">Advogado</option>
-                        <option value="ministerio_publico">Ministério Público</option>
-                        <option value="defensoria">Defensoria Pública</option>
                         <option value="outro">Outro</option>
                     </select>
                 </div>
                 <div class="col">
                     <label for="parte-maioridade">Maioridade <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-300 height-md" id="parte-maioridade">
-                        <option value="">Selecione...</option>
+                        <option value="" selected disabled>Selecione a maioridade</option>
                         <option value="adulto" selected>Adulto</option>
                         <option value="menor">Menor</option>
                     </select>

@@ -5,6 +5,7 @@ header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
+require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/SalaAudienciasPautaService.php';
 
 $connection = Conection::getInstance()->getConnection();
@@ -21,8 +22,14 @@ if ($id === '') {
 }
 
 try {
+    $usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
+    if ($usuarioId === '') {
+        http_response_code(401);
+        echo json_encode(['error' => 'Sessão expirada. Faça login novamente.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     $service = new SalaAudienciasPautaService($connection);
-    $ok = $service->update($id, $payload, isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : null);
+    $ok = $service->update($id, $payload, $usuarioId);
     echo json_encode(['success' => $ok], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
     http_response_code(400);

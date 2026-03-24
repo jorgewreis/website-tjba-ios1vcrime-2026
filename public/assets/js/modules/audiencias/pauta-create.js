@@ -36,6 +36,7 @@
         var sala = requiredValue('audiencia-sala', 'Localizacao');
         if (!sala) return;
         var status = String(document.getElementById('audiencia-status')?.value || 'designada').trim();
+        var classeDescricao = String(document.getElementById('audiencia-classe')?.value || '').trim();
 
         fetch('/api/sala-audiencias-pauta/create.php', {
             method: 'POST',
@@ -47,7 +48,8 @@
                 data_audiencia: data,
                 hora_audiencia: hora,
                 localizacao: sala.charAt(0).toUpperCase() + sala.slice(1),
-                status: status
+                status: status,
+                classe_descricao: classeDescricao
             })
         })
             .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })

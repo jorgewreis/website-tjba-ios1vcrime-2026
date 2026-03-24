@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0074
+
+**Data:** 2026-03-24 11:49:44 | **Commit:** `b2f5a12` | **Tipo:** `patch`
+
+- Fix: correcao de inputs
+
 ## V. 1.04.0073
 
 **Data:** 2026-03-24 11:33:35 | **Commit:** `c0d1964` | **Tipo:** `patch`
@@ -3732,6 +3738,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

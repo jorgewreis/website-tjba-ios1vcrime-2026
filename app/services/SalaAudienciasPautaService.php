@@ -5,6 +5,7 @@ require_once __DIR__ . '/../repositories/SalaAudienciasPautaRepository.php';
 require_once __DIR__ . '/../repositories/SalaAudienciasPautaParteRepository.php';
 require_once __DIR__ . '/../repositories/SalaAudienciasTiposRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
+require_once __DIR__ . '/../repositories/ClassesRepository.php';
 
 final class SalaAudienciasPautaService
 {
@@ -13,6 +14,7 @@ final class SalaAudienciasPautaService
     private SalaAudienciasPautaParteRepository $parteRepository;
     private SalaAudienciasTiposRepository $tiposRepository;
     private ProcessosRepository $processosRepository;
+    private ClassesRepository $classesRepository;
 
     public function __construct(PDO $connection)
     {
@@ -21,6 +23,7 @@ final class SalaAudienciasPautaService
         $this->parteRepository = new SalaAudienciasPautaParteRepository($connection);
         $this->tiposRepository = new SalaAudienciasTiposRepository($connection);
         $this->processosRepository = new ProcessosRepository($connection);
+        $this->classesRepository = new ClassesRepository($connection);
     }
 
     public function listTiposAtivos(): array
@@ -66,7 +69,18 @@ final class SalaAudienciasPautaService
             throw new InvalidArgumentException('Preencha os campos obrigatórios da audiência.');
         }
 
-        $processoId = $this->processosRepository->ensureProcess($numeroProcesso, null, null, false);
+        $classeId = null;
+        $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
+        $classeDescricao = trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? ''));
+        if ($classeDescricao !== '' || $classeCodigo !== '') {
+            if ($classeCodigo === '') {
+                $classeCodigo = strtoupper(substr(md5($classeDescricao), 0, 10));
+            }
+            $classeNome = $classeDescricao !== '' ? $classeDescricao : $classeCodigo;
+            $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
+        }
+
+        $processoId = $this->processosRepository->ensureProcess($numeroProcesso, $classeId, null, false);
         $ano = (int) date('Y');
         $statusIn = trim((string) ($payload['status'] ?? 'agendada'));
         $status = $statusIn === 'designada' ? 'agendada' : $statusIn;
