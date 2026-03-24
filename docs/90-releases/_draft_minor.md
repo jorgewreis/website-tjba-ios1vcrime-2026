@@ -46,4 +46,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correcao de cadastro de parte** `[66276c9]`
 - **Fix: pequenos ajustes** `[1bf1223]`
 - **Fix: pequena correcao de valores** `[f190481]`
+- **Fix: correcao no cadastro de parte** `[dcac95d]`
 
