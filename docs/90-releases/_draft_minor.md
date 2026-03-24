@@ -43,4 +43,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Feat: novo modelo pauta de audiencias** `[6dec536]`
 - **Fix: correcao no banco de dados** `[c0d1964]`
 - **Fix: correcao de inputs** `[b2f5a12]`
+- **Fix: correcao de cadastro de parte** `[66276c9]`
 
