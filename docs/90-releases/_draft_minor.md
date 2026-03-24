@@ -41,4 +41,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correcao de bd** `[6e43043]`
 - **Fix: ajustes de codigo** `[6fc0755]`
 - **Feat: novo modelo pauta de audiencias** `[6dec536]`
+- **Fix: correcao no banco de dados** `[c0d1964]`
 
