@@ -7,11 +7,23 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 require_once __DIR__ . '/../../services/SalaAudienciasPautaService.php';
+require_once __DIR__ . '/../../repositories/GabineteReuPresoProcessoRepository.php';
 
 $id = trim((string) ($_GET['id'] ?? ''));
 $service = new SalaAudienciasPautaService(Conection::getInstance()->getConnection());
 $row = $id !== '' ? $service->find($id) : null;
 $partes = $row !== null ? $service->listPartes((string) $row['id_pauta']) : [];
+$reusPresosMap = [];
+if ($row !== null) {
+    $processoId = trim((string) ($row['processo'] ?? ''));
+    if ($processoId !== '') {
+        $repoReuPresoProcesso = new GabineteReuPresoProcessoRepository(Conection::getInstance()->getConnection());
+        $nomesReusPresos = $repoReuPresoProcesso->listReusPresosNomesByProcessoId($processoId);
+        foreach ($nomesReusPresos as $nomeReuPreso) {
+            $reusPresosMap[mb_strtolower(trim((string) $nomeReuPreso))] = true;
+        }
+    }
+}
 $advogadosCadastrados = [];
 foreach ($partes as $parteItem) {
     if ((string) ($parteItem['tipo_parte'] ?? '') === 'advogado') {
@@ -139,7 +151,12 @@ $tipos = $service->listTiposAtivos();
         <?php
             $defensorTexto = 'Nenhum defensor vinculado';
             $tipoParteAtual = (string) ($parte['tipo_parte'] ?? '');
+            $minorInfoParte = (string) ucfirst(str_replace('_', ' ', $tipoParteAtual));
             if ($tipoParteAtual === 'reu') {
+                $nomeParteAtualKey = mb_strtolower(trim((string) ($parte['nome_parte'] ?? '')));
+                $isReuPreso = $nomeParteAtualKey !== '' && isset($reusPresosMap[$nomeParteAtualKey]);
+                $minorInfoParte = $isReuPreso ? 'Réu <span class="id-preso">PRESO</span>' : 'Réu';
+
                 $tipoDefensor = trim((string) ($parte['tipo_defensor'] ?? ''));
                 $defensorPublico = trim((string) ($parte['defensor_publico_id'] ?? ''));
                 $defensorPrivado = trim((string) ($parte['defensor_privado_id'] ?? ''));
@@ -162,7 +179,7 @@ $tipos = $service->listTiposAtivos();
             <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                 <div class="display-flex row row-fit justify-start gap-y-sm align-center">
                     <div class="col width-700">
-                        <div class="minor-info"><?php echo htmlspecialchars((string) ucfirst(str_replace('_', ' ', (string) $parte['tipo_parte'])), ENT_QUOTES); ?></div>
+                        <div class="minor-info"><?php echo $minorInfoParte; ?></div>
                         <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) $parte['nome_parte'], ENT_QUOTES); ?><?php echo (string) $parte['maioridade'] === 'menor' ? ' (Menor)' : ''; ?></span>
                         <span class="minor-info-defesa"><?php echo htmlspecialchars($defensorTexto, ENT_QUOTES); ?></span>
                     </div>

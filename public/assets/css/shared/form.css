@@ -612,7 +612,7 @@ input[type="radio"] {
 }
 
 .mini-status.status-pending {
-    background-color: var(--color-primary);
+    background-color: var(--color-secondary-bg-light);
 }
 
 .mini-status.status-cancelled {

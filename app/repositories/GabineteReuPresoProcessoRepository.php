@@ -168,6 +168,49 @@ final class GabineteReuPresoProcessoRepository
     }
 
     /**
+     * Lista nomes de réus com situação "preso" vinculados ao processo informado.
+     *
+     * @return list<string>
+     */
+    public function listReusPresosNomesByProcessoId(string $processoId): array
+    {
+        $processoId = trim($processoId);
+        if ($processoId === '') {
+            return [];
+        }
+
+        $sql = sprintf(
+            'SELECT DISTINCT TRIM(grp.`nome`) AS `nome`
+             FROM `%s` gpp
+             INNER JOIN `gabinete_reu_preso` grp ON grp.`id` = gpp.`reu_preso_id`
+             WHERE gpp.`processo_id` = :processo_id
+               AND gpp.`situacao` = :situacao
+               AND grp.`status` = :status_ativo
+             ORDER BY grp.`nome` ASC',
+            $this->table
+        );
+        $st = $this->connection->prepare($sql);
+        $st->bindValue(':processo_id', $processoId);
+        $st->bindValue(':situacao', 'preso');
+        $st->bindValue(':status_ativo', 'ativo');
+        $st->execute();
+        $rows = $st->fetchAll(PDO::FETCH_ASSOC);
+        if ($rows === false) {
+            return [];
+        }
+
+        $nomes = [];
+        foreach ($rows as $row) {
+            $nome = trim((string) ($row['nome'] ?? ''));
+            if ($nome !== '') {
+                $nomes[] = $nome;
+            }
+        }
+
+        return $nomes;
+    }
+
+    /**
      * Processos vinculados ao réu que não são o principal (lista na subtarefa da listagem).
      *
      * @param list<string> $reuIds

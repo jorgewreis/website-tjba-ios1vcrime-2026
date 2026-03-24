@@ -104,5 +104,63 @@ final class SalaAudienciasPautaParteRepository
         $st->execute();
         return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
+
+    /**
+     * @param list<string> $pautaIds
+     * @return array<string, list<string>> id_pauta => lista de cumprimento das partes
+     */
+    public function listCumprimentosByPautaIds(array $pautaIds): array
+    {
+        $pautaIds = array_values(array_filter(array_map(static function ($id): string {
+            return trim((string) $id);
+        }, $pautaIds), static function ($id): bool {
+            return $id !== '';
+        }));
+
+        if ($pautaIds === []) {
+            return [];
+        }
+
+        $placeholders = [];
+        $params = [];
+        foreach ($pautaIds as $idx => $id) {
+            $key = ':p' . $idx;
+            $placeholders[] = $key;
+            $params[$key] = $id;
+        }
+
+        $sql = sprintf(
+            'SELECT `pauta`, `cumprimento`
+             FROM `%s`
+             WHERE `ativo` = 1
+               AND `pauta` IN (%s)
+             ORDER BY `id_parte` ASC',
+            $this->table,
+            implode(',', $placeholders)
+        );
+        $st = $this->connection->prepare($sql);
+        foreach ($params as $k => $v) {
+            $st->bindValue($k, $v);
+        }
+        $st->execute();
+        $rows = $st->fetchAll(PDO::FETCH_ASSOC);
+        if ($rows === false) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($rows as $row) {
+            $pautaId = trim((string) ($row['pauta'] ?? ''));
+            if ($pautaId === '') {
+                continue;
+            }
+            if (!isset($out[$pautaId])) {
+                $out[$pautaId] = [];
+            }
+            $out[$pautaId][] = trim((string) ($row['cumprimento'] ?? ''));
+        }
+
+        return $out;
+    }
 }
 

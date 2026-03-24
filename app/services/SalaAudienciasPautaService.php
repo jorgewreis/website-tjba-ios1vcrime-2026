@@ -39,8 +39,20 @@ final class SalaAudienciasPautaService
 
     public function list(array $filters, int $limit, int $offset): array
     {
+        $rows = $this->pautaRepository->fetchList($filters, $limit, $offset);
+        $pautaIds = array_values(array_filter(array_map(static function (array $row): string {
+            return trim((string) ($row['id_pauta'] ?? ''));
+        }, $rows), static function (string $id): bool {
+            return $id !== '';
+        }));
+        $cumprimentosByPauta = $this->parteRepository->listCumprimentosByPautaIds($pautaIds);
+        foreach ($rows as $idx => $row) {
+            $idPauta = trim((string) ($row['id_pauta'] ?? ''));
+            $rows[$idx]['partes_cumprimento'] = $idPauta !== '' ? ($cumprimentosByPauta[$idPauta] ?? []) : [];
+        }
+
         return [
-            'rows' => $this->pautaRepository->fetchList($filters, $limit, $offset),
+            'rows' => $rows,
             'total' => $this->pautaRepository->count($filters),
             'statusCounts' => $this->pautaRepository->countByStatus($filters),
         ];

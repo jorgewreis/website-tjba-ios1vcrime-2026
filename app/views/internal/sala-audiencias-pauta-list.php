@@ -131,6 +131,21 @@ $endItem = min($offset + count($rows), $total);
                         <span class="minor-info">Tipo</span>
                         <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) $row['tipo_audiencia'], ENT_QUOTES); ?></span>
                     </div>
+                    <div class="col width-500">
+                        <span class="minor-info">Intimações</span>
+                        <span class="major-info">
+                            <?php
+                                $cumprimentos = is_array($row['partes_cumprimento'] ?? null) ? $row['partes_cumprimento'] : [];
+                                foreach ($cumprimentos as $cumprimentoParte):
+                                    $cumprimentoParte = (string) $cumprimentoParte;
+                                    $miniClass = $cumprimentoParte === 'cumprido'
+                                        ? 'status-finished'
+                                        : ($cumprimentoParte === 'nao_cumprido' ? 'status-cancelled' : 'status-pending');
+                            ?>
+                                <div class="mini-status <?php echo $miniClass; ?>"></div>
+                            <?php endforeach; ?>
+                        </span>
+                    </div>
                 </div>
                 <div class="display-flex row row-fit justify-end gap-y-sm align-center">
                     <div class="col button-table button-edit" data-audiencia-edit="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>" title="Editar">
