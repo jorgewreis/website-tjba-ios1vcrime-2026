@@ -1,5 +1,6 @@
 (function () {
     var pendingConfirmations = {};
+    var initialAudienciaSnapshot = '';
 
     function notify(type, title, message) {
         if (typeof showToast === 'function') {
@@ -44,6 +45,56 @@
         nomeInput.value = nome;
     }
 
+    function currentAudienciaSnapshot() {
+        return JSON.stringify({
+            tipo: String(document.getElementById('audiencia-edit-tipo')?.value || '').trim(),
+            data: String(document.getElementById('audiencia-edit-data')?.value || '').trim(),
+            hora: String(document.getElementById('audiencia-edit-hora')?.value || '').trim(),
+            localizacao: String(document.getElementById('audiencia-edit-sala')?.value || '').trim(),
+            classe: String(document.getElementById('audiencia-edit-classe')?.value || '').trim()
+        });
+    }
+
+    function isAudienciaDirty() {
+        return currentAudienciaSnapshot() !== initialAudienciaSnapshot;
+    }
+
+    function saveAudiencia(autoMessage) {
+        var id = String(document.getElementById('audiencia-edit-id')?.value || '').trim();
+        return fetch('/api/sala-audiencias-pauta/update.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({
+                id: id,
+                tipo_audiencia: String(document.getElementById('audiencia-edit-tipo')?.value || '').trim(),
+                data_audiencia: String(document.getElementById('audiencia-edit-data')?.value || '').trim(),
+                hora_audiencia: String(document.getElementById('audiencia-edit-hora')?.value || '').trim(),
+                localizacao: String(document.getElementById('audiencia-edit-sala')?.value || '').trim(),
+                classe: String(document.getElementById('audiencia-edit-classe')?.value || '').trim(),
+                status: 'agendada'
+            })
+        })
+            .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+            .then(function (res) {
+                if (res.ok && res.j && res.j.success) {
+                    initialAudienciaSnapshot = currentAudienciaSnapshot();
+                    if (autoMessage) {
+                        notify('info', 'Atualização automática', 'Dados da audiência salvos antes de adicionar a parte.');
+                    } else {
+                        notify('success', 'Sucesso', 'Alterações salvas.');
+                    }
+                    return true;
+                }
+                notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao salvar.');
+                return false;
+            })
+            .catch(function () {
+                notify('error', 'Erro', 'Erro de conexão.');
+                return false;
+            });
+    }
+
     function clearPartForm() {
         [
             'parte-nome',
@@ -67,32 +118,40 @@
     document.getElementById('btn-parte-limpar')?.addEventListener('click', clearPartForm);
 
     document.getElementById('btn-parte-adicionar')?.addEventListener('click', function () {
-        normalizePartNameInput();
-        var payload = readPartPayload();
-        var missing = validatePart(payload);
-        if (missing) {
-            notify('error', 'Validacao', 'Informe: ' + missing + '.');
-            return;
+        var continueFlow = Promise.resolve(true);
+        if (isAudienciaDirty()) {
+            continueFlow = saveAudiencia(true);
         }
-        var idPauta = String(document.getElementById('audiencia-edit-id')?.value || '').trim();
-        fetch('/api/sala-audiencias-pauta/partes-create.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'same-origin',
-            body: JSON.stringify(Object.assign({ id_pauta: idPauta }, payload))
-        })
-            .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
-            .then(function (res) {
-                if (res.ok && res.j && res.j.id) {
-                    try {
-                        sessionStorage.setItem('salapauta.postReloadToast', JSON.stringify([{ type: 'success', title: 'Sucesso', message: 'Parte adicionada.' }]));
-                    } catch (e) {}
-                    window.location.reload();
-                } else {
-                    notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao adicionar parte.');
-                }
+
+        continueFlow.then(function (saved) {
+            if (!saved) return;
+            normalizePartNameInput();
+            var payload = readPartPayload();
+            var missing = validatePart(payload);
+            if (missing) {
+                notify('error', 'Validacao', 'Informe: ' + missing + '.');
+                return;
+            }
+            var idPauta = String(document.getElementById('audiencia-edit-id')?.value || '').trim();
+            fetch('/api/sala-audiencias-pauta/partes-create.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify(Object.assign({ id_pauta: idPauta }, payload))
             })
-            .catch(function () { notify('error', 'Erro', 'Erro de conexão.'); });
+                .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+                .then(function (res) {
+                    if (res.ok && res.j && res.j.id) {
+                        try {
+                            sessionStorage.setItem('salapauta.postReloadToast', JSON.stringify([{ type: 'success', title: 'Sucesso', message: 'Parte adicionada.' }]));
+                        } catch (e) {}
+                        window.location.reload();
+                    } else {
+                        notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao adicionar parte.');
+                    }
+                })
+                .catch(function () { notify('error', 'Erro', 'Erro de conexão.'); });
+        });
     });
 
     document.querySelectorAll('.button-edit[data-parte-edit]').forEach(function (btn) {
@@ -150,30 +209,9 @@
 
     document.getElementById('btn-audiencia-edit-salvar')?.addEventListener('click', function () {
         normalizePartNameInput();
-        var id = String(document.getElementById('audiencia-edit-id')?.value || '').trim();
-        fetch('/api/sala-audiencias-pauta/update.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'same-origin',
-            body: JSON.stringify({
-                id: id,
-                tipo_audiencia: String(document.getElementById('audiencia-edit-tipo')?.value || '').trim(),
-                data_audiencia: String(document.getElementById('audiencia-edit-data')?.value || '').trim(),
-                hora_audiencia: String(document.getElementById('audiencia-edit-hora')?.value || '').trim(),
-                localizacao: String(document.getElementById('audiencia-edit-sala')?.value || '').trim(),
-                status: 'agendada'
-            })
-        })
-            .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
-            .then(function (res) {
-                if (res.ok && res.j && res.j.success) {
-                    notify('success', 'Sucesso', 'Alterações salvas.');
-                } else {
-                    notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao salvar.');
-                }
-            })
-            .catch(function () { notify('error', 'Erro', 'Erro de conexão.'); });
+        saveAudiencia(false);
     });
 
     document.getElementById('parte-nome')?.addEventListener('blur', normalizePartNameInput);
+    initialAudienciaSnapshot = currentAudienciaSnapshot();
 })();

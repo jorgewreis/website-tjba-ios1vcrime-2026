@@ -51,7 +51,7 @@ $tipos = (new SalaAudienciasPautaService(Conection::getInstance()->getConnection
                 <div class="col">
                     <label for="audiencia-tipo">Tipo de audiência <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-500 height-md" id="audiencia-tipo">
-                        <option value="">Selecione...</option>
+                        <option value="" selected disabled>Selecione o tipo</option>
                         <?php foreach ($tipos as $tp): ?>
                             <option value="<?php echo htmlspecialchars((string) ($tp['codigo'] ?? ''), ENT_QUOTES); ?>"><?php echo htmlspecialchars((string) ($tp['nome'] ?? ''), ENT_QUOTES); ?></option>
                         <?php endforeach; ?>
@@ -71,10 +71,10 @@ $tipos = (new SalaAudienciasPautaService(Conection::getInstance()->getConnection
                 <div class="col">
                     <label for="audiencia-sala">Localização <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-400 height-md" id="audiencia-sala">
-                        <option value="">Selecione...</option>
-                        <option value="presencial">Presencial</option>
-                        <option value="lifesize" selected>Lifesize</option>
-                        <option value="audin">Audin</option>
+                        <option value="" selected disabled>Selecione a localização</option>
+                        <option value="presencial">Presencial - Fórum</option>
+                        <option value="lifesize" selected>Virtual - Lifesize</option>
+                        <option value="audin">Virtual - Audin</option>
                     </select>
                 </div>
                 <div class="col">

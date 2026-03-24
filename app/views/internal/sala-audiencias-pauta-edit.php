@@ -56,7 +56,8 @@ $tipos = $service->listTiposAtivos();
                 </div>
                 <div class="col">
                     <label for="audiencia-edit-classe">Classe</label>
-                    <input type="text" class="width-600 height-md readonly" id="audiencia-edit-classe" value="<?php echo htmlspecialchars((string) ($row['classe_nome'] ?? ''), ENT_QUOTES); ?>" readonly>
+                    <?php $classeValor = trim((string) ($row['classe_nome'] ?? '')); ?>
+                    <input type="text" class="width-600 height-md<?php echo $classeValor !== '' ? ' readonly' : ''; ?>" id="audiencia-edit-classe" value="<?php echo htmlspecialchars($classeValor, ENT_QUOTES); ?>"<?php echo $classeValor !== '' ? ' readonly' : ''; ?>>
                 </div>
             </div>
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
@@ -81,9 +82,10 @@ $tipos = $service->listTiposAtivos();
                     <label for="audiencia-edit-sala">Localização <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <?php $locAtual = (string) ($row['localizacao'] ?? ''); ?>
                     <select class="width-300 height-md" id="audiencia-edit-sala">
-                        <option value="Presencial"<?php echo $locAtual === 'Presencial' ? ' selected' : ''; ?>>Presencial</option>
-                        <option value="Lifesize"<?php echo $locAtual === 'Lifesize' ? ' selected' : ''; ?>>Lifesize</option>
-                        <option value="Audin"<?php echo $locAtual === 'Audin' ? ' selected' : ''; ?>>Audin</option>
+                        <option value="" selected disabled>Selecione a localização</option>
+                        <option value="presencial"<?php echo $locAtual === 'presencial' ? ' selected' : ''; ?>>Presencial - Fórum</option>
+                        <option value="lifesize"<?php echo $locAtual === 'lifesize' ? ' selected' : ''; ?>>Virtual - Lifesize</option>
+                        <option value="audin"<?php echo $locAtual === 'audin' ? ' selected' : ''; ?>>Virtual - Audin</option>
                     </select>
                 </div>
             </div>
@@ -101,14 +103,11 @@ $tipos = $service->listTiposAtivos();
                 <div class="col">
                     <label for="parte-tipo">Tipo de parte <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-400 height-md" id="parte-tipo">
-                        <option value="">Selecione...</option>
+                        <option value="" selected disabled>Selecione o tipo</option>
                         <option value="reu">Réu</option>
                         <option value="vitima">Vítima</option>
                         <option value="testemunha_defesa">Testemunha da Defesa</option>
                         <option value="testemunha_denuncia">Testemunha da Denúncia</option>
-                        <option value="advogado">Advogado</option>
-                        <option value="ministerio_publico">Ministério Público</option>
-                        <option value="defensoria">Defensoria Pública</option>
                         <option value="outro">Outro</option>
                     </select>
                 </div>
@@ -131,10 +130,10 @@ $tipos = $service->listTiposAtivos();
         <div class="display-flex col col-full register border-bottom" data-parte-id="<?php echo htmlspecialchars((string) $parte['id_parte'], ENT_QUOTES); ?>">
             <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                 <div class="display-flex row row-fit justify-start gap-y-sm align-center">
-                    <div class="col width-500">
+                    <div class="col width-700">
                         <div class="minor-info"><?php echo htmlspecialchars((string) ucfirst(str_replace('_', ' ', (string) $parte['tipo_parte'])), ENT_QUOTES); ?></div>
                         <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) $parte['nome_parte'], ENT_QUOTES); ?><?php echo (string) $parte['maioridade'] === 'menor' ? ' (Menor)' : ''; ?></span>
-                        <span class="minor-info-defesa"><?php echo htmlspecialchars((string) ucfirst((string) $parte['maioridade']), ENT_QUOTES); ?></span>
+                        <span class="minor-info-defesa">Nenhum defensor vinculado</span>
                     </div>
                     <div class="col width-600">
                         <div class="minor-info">Documento expedido - ID: <span class="id-info">#<?php echo htmlspecialchars((string) ($parte['id_documento_expedido'] ?? '—'), ENT_QUOTES); ?></span></div>
