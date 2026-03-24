@@ -111,6 +111,42 @@ final class SalaAudienciasPautaRepository
         return $st->rowCount() > 0;
     }
 
+    /**
+     * Verifica se o horário está ocupado por outra audiência **designada** (único status que reserva o slot).
+     * Cancelada, redesignada e realizada liberam o horário para nova designação.
+     *
+     * @param string|null $exceptIdPauta Ao editar, exclui o próprio registro da verificação.
+     */
+    public function existsActiveSlotEm(string $dataAudiencia, string $horaAudiencia, ?string $exceptIdPauta = null): bool
+    {
+        $dataAudiencia = trim($dataAudiencia);
+        $horaAudiencia = trim($horaAudiencia);
+        if ($dataAudiencia === '' || $horaAudiencia === '') {
+            return false;
+        }
+        $sql = sprintf(
+            'SELECT 1 FROM `%s` WHERE `ativo` = 1 AND `status` IN (:designada, :legacy_agendada)
+             AND `data_audiencia` = :data AND TIME(`hora_audiencia`) = TIME(:hora)',
+            $this->table
+        );
+        $exceptIdPauta = $exceptIdPauta !== null ? trim($exceptIdPauta) : '';
+        if ($exceptIdPauta !== '') {
+            $sql .= ' AND `id_pauta` <> :exc';
+        }
+        $sql .= ' LIMIT 1';
+        $st = $this->connection->prepare($sql);
+        $st->bindValue(':designada', 'designada');
+        $st->bindValue(':legacy_agendada', 'agendada');
+        $st->bindValue(':data', $dataAudiencia);
+        $st->bindValue(':hora', $horaAudiencia);
+        if ($exceptIdPauta !== '') {
+            $st->bindValue(':exc', $exceptIdPauta);
+        }
+        $st->execute();
+
+        return $st->fetchColumn() !== false;
+    }
+
     public function fetchList(array $filters, int $limit, int $offset): array
     {
         [$where, $params] = $this->buildWhere($filters);
@@ -156,9 +192,18 @@ final class SalaAudienciasPautaRepository
             $st->bindValue($k, $v);
         }
         $st->execute();
-        $out = ['agendada' => 0, 'realizada' => 0, 'adiada' => 0, 'cancelada' => 0];
+        $out = ['designada' => 0, 'realizada' => 0, 'redesignada' => 0, 'cancelada' => 0];
         while (($row = $st->fetch(PDO::FETCH_ASSOC)) !== false) {
-            $out[(string) $row['st']] = (int) $row['total'];
+            $key = (string) $row['st'];
+            if ($key === 'agendada') {
+                $key = 'designada';
+            } elseif ($key === 'adiada') {
+                $key = 'redesignada';
+            }
+            if (!array_key_exists($key, $out)) {
+                $out[$key] = 0;
+            }
+            $out[$key] += (int) $row['total'];
         }
         return $out;
     }
@@ -174,8 +219,18 @@ final class SalaAudienciasPautaRepository
         }
         $status = trim((string) ($filters['status'] ?? ''));
         if ($includeStatus && $status !== '') {
-            $conds[] = 'a.`status` = :status';
-            $params[':status'] = $status;
+            if ($status === 'designada') {
+                $conds[] = 'a.`status` IN (:st1, :st2)';
+                $params[':st1'] = 'designada';
+                $params[':st2'] = 'agendada';
+            } elseif ($status === 'redesignada') {
+                $conds[] = 'a.`status` IN (:st1, :st2)';
+                $params[':st1'] = 'redesignada';
+                $params[':st2'] = 'adiada';
+            } else {
+                $conds[] = 'a.`status` = :status';
+                $params[':status'] = $status;
+            }
         }
         $tipo = trim((string) ($filters['tipo'] ?? ''));
         if ($tipo !== '') {

@@ -513,16 +513,16 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             {
                 section: 'Sala de Audiências',
                 items: [                    
-                    { icon: 'fi fi-rs-clipboard-list-check', label: 'Pauta', target: 'salapauta' },
-                    { icon: 'fi fi-rs-document', label: 'Atas', target: 'salaata' },
-                    { icon: 'fi fi-rs-screen', label: 'Painel', target: 'salapainel' }
+                    { icon: 'fi fi-rs-clipboard-list-check', label: 'Pauta de Audiências', target: 'salapauta' },
+                    { icon: 'fi fi-rs-document', label: 'Atas de Audiências', target: 'salaata' },
+                    { icon: 'fi fi-rs-screen', label: 'Painel em tempo real', target: 'salapainel' }
                 ]
             },
             {
                 section: 'Estudantes',
                 items: [
                     { icon: 'fi fi-rs-clipboard-list-check', label: 'Pauta de Audiências', target: 'estudapauta' },
-                    { icon: 'fi fi-rs-document', label: 'Atas', target: 'estudaata' },
+                    { icon: 'fi fi-rs-document', label: 'Atas de Audiências', target: 'estudaata' },
                     { icon: 'fi fi-rs-screen', label: 'Painel em tempo real', target: 'estudapainel' }
                 ]
             },

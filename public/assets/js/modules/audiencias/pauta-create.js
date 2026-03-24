@@ -22,6 +22,23 @@
         return value;
     }
 
+    function setupDataMinimaAudiencia() {
+        var dataEl = document.getElementById('audiencia-data');
+        if (!dataEl) return;
+        var minD = String(dataEl.getAttribute('min') || '').trim();
+        function clampData() {
+            var v = String(dataEl.value || '').trim();
+            if (v && minD && v < minD) {
+                dataEl.value = minD;
+                notify('info', 'Data', 'Datas anteriores a hoje não são permitidas.');
+            }
+        }
+        dataEl.addEventListener('change', clampData);
+        dataEl.addEventListener('blur', clampData);
+    }
+
+    setupDataMinimaAudiencia();
+
     document.getElementById('btn-audiencia-voltar')?.addEventListener('click', function () {
         window.location.href = '/frame.php?page=salapauta';
     });
@@ -48,6 +65,11 @@
         if (!tipo) return;
         var data = requiredValue('audiencia-data', 'Data');
         if (!data) return;
+        var minData = String(document.getElementById('audiencia-data')?.getAttribute('min') || '').trim();
+        if (minData && data < minData) {
+            notify('error', 'Validacao', 'A data da audiência não pode ser anterior a hoje.');
+            return;
+        }
         var hora = requiredValue('audiencia-hora', 'Hora');
         if (!hora) return;
         var sala = requiredValue('audiencia-sala', 'Localizacao');

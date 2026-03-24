@@ -8,7 +8,10 @@ if (function_exists('mb_internal_encoding')) {
 ?>
 <?php
 require_once __DIR__ . '/../../services/SalaAudienciasPautaService.php';
-$tipos = (new SalaAudienciasPautaService(Conection::getInstance()->getConnection()))->listTiposAtivos();
+$servicePautaTipos = new SalaAudienciasPautaService(Conection::getInstance()->getConnection());
+$tipos = $servicePautaTipos->listTiposAtivos();
+$dataMinimaCadastro = date('Y-m-d');
+$horariosGrade = SalaAudienciasPautaService::horariosGradeCadastroAudiencia();
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -38,20 +41,22 @@ $tipos = (new SalaAudienciasPautaService(Conection::getInstance()->getConnection
             <h2>Dados da audiência</h2>
         </div>
 
-        <form id="audiencia-create-form" class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md">
-            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
-                <div class="col">
-                    <label for="audiencia-processo">Número do processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
+        <form id="audiencia-create-form" class="display-flex col col-full">
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
+                <div class="col filter">
+                    <label for="audiencia-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="text" class="width-400 height-md" id="audiencia-processo" data-cnj-input="true" placeholder="0000000-00.0000.0.00.0000" autocomplete="off">
                 </div>
-                <div class="col">
-                    <label for="audiencia-classe">Classe <span class="label-hint-automatizado">*DataJud</span></label>
-                    <span id="audiencia-classe-status" class="minor-info" aria-live="polite"></span>
-                    <input type="text" class="width-600 height-md" id="audiencia-classe" placeholder="Preenchido pelo DataJud ou informe manualmente" autocomplete="off">
-                    <input type="hidden" id="hidden-classe-codigo" name="classe_codigo" value="">
-                    <input type="hidden" id="hidden-classe-descricao" name="classe_descricao" value="">
+                <div class="col filter">
+                    <label for="audiencia-classe" id="processo-ap-info" aria-live="polite">Classe processual <span class="label-hint-automatizado">*automatizado</span></label>
+                    <input type="text" class="width-600 height-md" id="audiencia-classe" placeholder="Preenchido automaticamente pelo DataJud" readonly autocomplete="off">
                 </div>
-                <div class="col">
+            </div>
+            <input type="hidden" id="hidden-classe-codigo" name="classe_codigo" value="">
+            <input type="hidden" id="hidden-classe-descricao" name="classe_descricao" value="">
+
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
+                <div class="col filter">
                     <label for="audiencia-tipo">Tipo de audiência <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-500 height-md" id="audiencia-tipo">
                         <option value="" selected disabled>Selecione o tipo</option>
@@ -60,18 +65,20 @@ $tipos = (new SalaAudienciasPautaService(Conection::getInstance()->getConnection
                         <?php endforeach; ?>
                     </select>
                 </div>
-            </div>
-
-            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
-                <div class="col">
+                <div class="col filter">
                     <label for="audiencia-data">Data <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="date" class="width-300 height-md" id="audiencia-data">
+                    <input type="date" class="width-300 height-md" id="audiencia-data" min="<?php echo htmlspecialchars($dataMinimaCadastro, ENT_QUOTES); ?>" required>
                 </div>
-                <div class="col">
-                    <label for="audiencia-hora">Hora <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="time" class="width-300 height-md" id="audiencia-hora">
+                <div class="col filter">
+                    <label for="audiencia-hora">Hora (09:00–16:00, a cada 10 min) <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <select class="width-300 height-md" id="audiencia-hora" required>
+                        <option value="" selected disabled>Selecione a hora</option>
+                        <?php foreach ($horariosGrade as $hm): ?>
+                            <option value="<?php echo htmlspecialchars($hm, ENT_QUOTES); ?>"><?php echo htmlspecialchars($hm, ENT_QUOTES); ?></option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
-                <div class="col">
+                <div class="col filter">
                     <label for="audiencia-sala">Localização <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-400 height-md" id="audiencia-sala">
                         <option value="" selected disabled>Selecione a localização</option>
@@ -80,7 +87,7 @@ $tipos = (new SalaAudienciasPautaService(Conection::getInstance()->getConnection
                         <option value="audin">Virtual - Audin</option>
                     </select>
                 </div>
-                <div class="col">
+                <div class="col filter">
                     <label for="audiencia-status">Status inicial</label>
                     <select class="width-400 height-md" id="audiencia-status">
                         <option value="designada" selected>Designada</option>

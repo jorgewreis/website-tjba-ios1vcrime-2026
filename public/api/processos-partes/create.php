@@ -7,6 +7,7 @@ $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/repositories/ProcessosPartesRepository.php';
+require_once $basePath . '/app/repositories/PartesRepository.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -36,6 +37,8 @@ $prioridades = [
 try {
     $repository = new ProcessosPartesRepository($connection);
     $newId = $repository->addParte($processoId, $parteId, $tipoParte, $polo, $prioridades);
+    $partesRepo = new PartesRepository($connection);
+    $partesRepo->syncProfissaoFromTipoProcessoParte($parteId, $tipoParte);
     http_response_code(201);
     echo json_encode(['id' => $newId], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $exception) {

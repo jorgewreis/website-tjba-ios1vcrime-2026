@@ -34,9 +34,11 @@
         var wrapper = document.getElementById('parte-edit-defensor-wrapper');
         var tipoDefensor = document.getElementById('parte-edit-tipo-defensor');
         var publicoWrap = document.getElementById('parte-edit-defensor-publico-wrapper');
+        var publicoOutroWrap = document.getElementById('parte-edit-defensor-publico-outro-wrapper');
         var privadoWrap = document.getElementById('parte-edit-defensor-privado-wrapper');
         var outroWrap = document.getElementById('parte-edit-defensor-privado-outro-wrapper');
         var defensorPublico = document.getElementById('parte-edit-defensor-publico');
+        var defensorPublicoOutro = document.getElementById('parte-edit-defensor-publico-outro');
         var defensorPrivado = document.getElementById('parte-edit-defensor-privado');
         var defensorOutro = document.getElementById('parte-edit-defensor-privado-outro');
 
@@ -48,9 +50,11 @@
             wrapper.style.display = 'none';
             tipoDefensor.value = '';
             if (defensorPublico) defensorPublico.value = '';
+            if (defensorPublicoOutro) defensorPublicoOutro.value = '';
             if (defensorPrivado) defensorPrivado.value = '';
             if (defensorOutro) defensorOutro.value = '';
             publicoWrap.style.display = 'none';
+            if (publicoOutroWrap) publicoOutroWrap.style.display = 'none';
             privadoWrap.style.display = 'none';
             outroWrap.style.display = 'none';
             return;
@@ -58,22 +62,40 @@
 
         var td = String(tipoDefensor.value || '').trim();
         if (td === 'publico') {
-            publicoWrap.style.display = '';
             privadoWrap.style.display = 'none';
             outroWrap.style.display = 'none';
             if (defensorPrivado) defensorPrivado.value = '';
             if (defensorOutro) defensorOutro.value = '';
+            var pubVal = String(defensorPublico?.value || '').trim();
+            if (pubVal === 'outro') {
+                publicoWrap.style.display = 'none';
+                if (publicoOutroWrap) publicoOutroWrap.style.display = '';
+            } else {
+                publicoWrap.style.display = '';
+                if (publicoOutroWrap) publicoOutroWrap.style.display = 'none';
+                if (defensorPublicoOutro) defensorPublicoOutro.value = '';
+            }
         } else if (td === 'privado') {
             publicoWrap.style.display = 'none';
-            privadoWrap.style.display = '';
-            var valPrivado = String(defensorPrivado?.value || '').trim();
-            outroWrap.style.display = valPrivado === 'outro' ? '' : 'none';
+            if (publicoOutroWrap) publicoOutroWrap.style.display = 'none';
             if (defensorPublico) defensorPublico.value = '';
+            if (defensorPublicoOutro) defensorPublicoOutro.value = '';
+            var valPrivado = String(defensorPrivado?.value || '').trim();
+            if (valPrivado === 'outro') {
+                privadoWrap.style.display = 'none';
+                outroWrap.style.display = '';
+            } else {
+                privadoWrap.style.display = '';
+                outroWrap.style.display = 'none';
+                if (defensorOutro) defensorOutro.value = '';
+            }
         } else {
             publicoWrap.style.display = 'none';
+            if (publicoOutroWrap) publicoOutroWrap.style.display = 'none';
             privadoWrap.style.display = 'none';
             outroWrap.style.display = 'none';
             if (defensorPublico) defensorPublico.value = '';
+            if (defensorPublicoOutro) defensorPublicoOutro.value = '';
             if (defensorPrivado) defensorPrivado.value = '';
             if (defensorOutro) defensorOutro.value = '';
         }
@@ -121,14 +143,22 @@
             var tipoDefensor = requiredValue('parte-edit-tipo-defensor', 'Tipo de defensor');
             if (!tipoDefensor) return;
             if (tipoDefensor === 'publico') {
-                var defensorPublico = requiredValue('parte-edit-defensor-publico', 'Defensor Público');
-                if (!defensorPublico) return;
+                var pubSel = String(document.getElementById('parte-edit-defensor-publico')?.value || '').trim();
+                if (pubSel === 'outro') {
+                    var nomePub = requiredValue('parte-edit-defensor-publico-outro', 'Nome do defensor publico');
+                    if (!nomePub) return;
+                } else if (!pubSel) {
+                    notify('error', 'Validacao', 'Selecione o defensor publico ou Outro.');
+                    return;
+                }
             } else if (tipoDefensor === 'privado') {
-                var defensorPrivado = requiredValue('parte-edit-defensor-privado', 'Defensor');
-                if (!defensorPrivado) return;
-                if (defensorPrivado === 'outro') {
-                    var defensorOutro = requiredValue('parte-edit-defensor-privado-outro', 'Outro defensor');
-                    if (!defensorOutro) return;
+                var privSel = String(document.getElementById('parte-edit-defensor-privado')?.value || '').trim();
+                if (privSel === 'outro') {
+                    var nomePriv = requiredValue('parte-edit-defensor-privado-outro', 'Nome do advogado');
+                    if (!nomePriv) return;
+                } else if (!privSel) {
+                    notify('error', 'Validacao', 'Selecione o advogado ou Outro.');
+                    return;
                 }
             }
         }
@@ -146,6 +176,7 @@
                 tipo_parte: tipo,
                 tipo_defensor: String(document.getElementById('parte-edit-tipo-defensor')?.value || '').trim(),
                 defensor_publico_id: String(document.getElementById('parte-edit-defensor-publico')?.value || '').trim(),
+                defensor_publico_outro: String(document.getElementById('parte-edit-defensor-publico-outro')?.value || '').trim(),
                 defensor_privado_id: String(document.getElementById('parte-edit-defensor-privado')?.value || '').trim(),
                 defensor_privado_outro: String(document.getElementById('parte-edit-defensor-privado-outro')?.value || '').trim(),
                 maioridade: maioridade,
@@ -177,5 +208,6 @@
     document.getElementById('parte-edit-tipo')?.addEventListener('change', toggleDefensorFields);
     document.getElementById('parte-edit-tipo-defensor')?.addEventListener('change', toggleDefensorFields);
     document.getElementById('parte-edit-defensor-privado')?.addEventListener('change', toggleDefensorFields);
+    document.getElementById('parte-edit-defensor-publico')?.addEventListener('change', toggleDefensorFields);
     toggleDefensorFields();
 })();

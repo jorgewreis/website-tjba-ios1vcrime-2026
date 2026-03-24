@@ -8,6 +8,7 @@ if (function_exists('mb_internal_encoding')) {
 
 require_once __DIR__ . '/../../services/SalaAudienciasPautaService.php';
 require_once __DIR__ . '/../../repositories/GabineteReuPresoProcessoRepository.php';
+require_once __DIR__ . '/../../repositories/PartesRepository.php';
 
 $id = trim((string) ($_GET['id'] ?? ''));
 $service = new SalaAudienciasPautaService(Conection::getInstance()->getConnection());
@@ -43,6 +44,7 @@ foreach ($partes as $parteItem) {
     }
 }
 $tipos = $service->listTiposAtivos();
+$partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection());
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -73,25 +75,44 @@ $tipos = $service->listTiposAtivos();
                 <span class="major-info">Audiência não encontrada.</span>
             </div>
         <?php else: ?>
+        <?php
+            $dataMinimaCadastro = date('Y-m-d');
+            $horariosGrade = SalaAudienciasPautaService::horariosGradeCadastroAudiencia();
+            $horaAtualEdit = substr((string) ($row['hora_audiencia'] ?? '00:00:00'), 0, 5);
+            $statusAtualEdit = (string) ($row['status'] ?? 'designada');
+            if ($statusAtualEdit === 'agendada') {
+                $statusAtualEdit = 'designada';
+            }
+            if ($statusAtualEdit === 'adiada') {
+                $statusAtualEdit = 'redesignada';
+            }
+            $statusOpcoesEdit = [
+                'designada' => 'Designada',
+                'realizada' => 'Realizada',
+                'redesignada' => 'Redesignada',
+                'cancelada' => 'Cancelada',
+            ];
+            $horaNaGradeEdit = in_array($horaAtualEdit, $horariosGrade, true);
+        ?>
         <input type="hidden" id="audiencia-edit-id" value="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>">
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
             <h2>Dados da audiência</h2>
         </div>
 
         <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md">
-            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
-                <div class="col">
-                    <label for="audiencia-edit-processo">Número do processo</label>
+            <div class="display-flex row row-full gap-y-md">
+                <div class="col filter">
+                    <label for="audiencia-edit-processo">Processo</label>
                     <input type="text" class="width-400 height-md readonly" id="audiencia-edit-processo" value="<?php echo htmlspecialchars((string) ($row['numero_processo'] ?? ''), ENT_QUOTES); ?>" autocomplete="off" readonly>
                 </div>
-                <div class="col">
-                    <label for="audiencia-edit-classe">Classe</label>
+                <div class="col filter">
                     <?php $classeValor = trim((string) ($row['classe_nome'] ?? '')); ?>
-                    <input type="text" class="width-600 height-md<?php echo $classeValor !== '' ? ' readonly' : ''; ?>" id="audiencia-edit-classe" value="<?php echo htmlspecialchars($classeValor, ENT_QUOTES); ?>"<?php echo $classeValor !== '' ? ' readonly' : ''; ?>>
+                    <label for="audiencia-edit-classe">Classe processual<?php echo $classeValor !== '' ? ' <span class="label-hint-automatizado">*automatizado</span>' : ''; ?></label>
+                    <input type="text" class="width-600 height-md<?php echo $classeValor !== '' ? ' readonly' : ''; ?>" id="audiencia-edit-classe" value="<?php echo htmlspecialchars($classeValor, ENT_QUOTES); ?>" placeholder="Preencha se ainda não houver classe vinculada ao processo"<?php echo $classeValor !== '' ? ' readonly' : ''; ?> autocomplete="off">
                 </div>
             </div>
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
-                <div class="col">
+                <div class="col filter">
                     <label for="audiencia-edit-tipo">Tipo de audiência <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-500 height-md" id="audiencia-edit-tipo">
                         <?php $tipoAtual = (string) ($row['tipo_audiencia'] ?? ''); ?>
@@ -100,22 +121,38 @@ $tipos = $service->listTiposAtivos();
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="col">
+                <div class="col filter">
                     <label for="audiencia-edit-data">Data <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="date" class="width-300 height-md" id="audiencia-edit-data" value="<?php echo htmlspecialchars((string) ($row['data_audiencia'] ?? ''), ENT_QUOTES); ?>">
+                    <input type="date" class="width-300 height-md" id="audiencia-edit-data" min="<?php echo htmlspecialchars($dataMinimaCadastro, ENT_QUOTES); ?>" value="<?php echo htmlspecialchars((string) ($row['data_audiencia'] ?? ''), ENT_QUOTES); ?>" required>
                 </div>
-                <div class="col">
-                    <label for="audiencia-edit-hora">Hora <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="time" class="width-300 height-md" id="audiencia-edit-hora" value="<?php echo htmlspecialchars(substr((string) ($row['hora_audiencia'] ?? '00:00:00'), 0, 5), ENT_QUOTES); ?>">
+                <div class="col filter">
+                    <label for="audiencia-edit-hora">Hora (09:00–16:00, a cada 10 min, se designada) <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <select class="width-300 height-md" id="audiencia-edit-hora" required>
+                        <option value="" disabled<?php echo $horaAtualEdit === '' ? ' selected' : ''; ?>>Selecione a hora</option>
+                        <?php if (!$horaNaGradeEdit && $horaAtualEdit !== ''): ?>
+                            <option value="<?php echo htmlspecialchars($horaAtualEdit, ENT_QUOTES); ?>" selected><?php echo htmlspecialchars($horaAtualEdit); ?> (registro atual)</option>
+                        <?php endif; ?>
+                        <?php foreach ($horariosGrade as $hm): ?>
+                            <option value="<?php echo htmlspecialchars($hm, ENT_QUOTES); ?>"<?php echo $horaNaGradeEdit && $horaAtualEdit === $hm ? ' selected' : ''; ?>><?php echo htmlspecialchars($hm, ENT_QUOTES); ?></option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
-                <div class="col">
+                <div class="col filter">
                     <label for="audiencia-edit-sala">Localização <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <?php $locAtual = (string) ($row['localizacao'] ?? ''); ?>
-                    <select class="width-300 height-md" id="audiencia-edit-sala">
+                    <select class="width-400 height-md" id="audiencia-edit-sala">
                         <option value="" selected disabled>Selecione a localização</option>
                         <option value="presencial"<?php echo $locAtual === 'presencial' ? ' selected' : ''; ?>>Presencial - Fórum</option>
                         <option value="lifesize"<?php echo $locAtual === 'lifesize' ? ' selected' : ''; ?>>Virtual - Lifesize</option>
                         <option value="audin"<?php echo $locAtual === 'audin' ? ' selected' : ''; ?>>Virtual - Audin</option>
+                    </select>
+                </div>
+                <div class="col filter">
+                    <label for="audiencia-edit-status">Situação</label>
+                    <select class="width-400 height-md" id="audiencia-edit-status">
+                        <?php foreach ($statusOpcoesEdit as $valSt => $labelSt): ?>
+                            <option value="<?php echo htmlspecialchars($valSt, ENT_QUOTES); ?>"<?php echo $statusAtualEdit === $valSt ? ' selected' : ''; ?>><?php echo htmlspecialchars($labelSt, ENT_QUOTES); ?></option>
+                        <?php endforeach; ?>
                     </select>
                 </div>
             </div>
@@ -171,6 +208,7 @@ $tipos = $service->listTiposAtivos();
 
                 $tipoDefensor = trim((string) ($parte['tipo_defensor'] ?? ''));
                 $defensorPublico = trim((string) ($parte['defensor_publico_id'] ?? ''));
+                $defensorPublicoOutroLista = trim((string) ($parte['defensor_publico_outro'] ?? ''));
                 $defensorPrivado = trim((string) ($parte['defensor_privado_id'] ?? ''));
                 $defensorPrivadoOutro = trim((string) ($parte['defensor_privado_outro'] ?? ''));
 
@@ -178,10 +216,28 @@ $tipos = $service->listTiposAtivos();
                     if ($defensorPrivado === 'outro' && $defensorPrivadoOutro !== '') {
                         $defensorTexto = 'Advogado: ' . $defensorPrivadoOutro;
                     } elseif ($defensorPrivado !== '') {
-                        $defensorTexto = 'Advogado: ' . $defensorPrivado;
+                        $rotuloAdv = $defensorPrivado;
+                        if (preg_match('/^[A-Z]{3}-[a-f0-9]{26}$/i', $defensorPrivado)) {
+                            $pAdv = $partesRepoLista->findById($defensorPrivado);
+                            if ($pAdv !== null) {
+                                $rotuloAdv = trim((string) ($pAdv['nome_completo'] ?? $defensorPrivado));
+                            }
+                        }
+                        $defensorTexto = 'Advogado: ' . $rotuloAdv;
                     }
                 } elseif ($tipoDefensor === 'publico' && $defensorPublico !== '') {
-                    $defensorTexto = 'Defensor público: ' . $defensorPublico;
+                    if ($defensorPublico === 'outro' && $defensorPublicoOutroLista !== '') {
+                        $defensorTexto = 'Defensor público: ' . $defensorPublicoOutroLista;
+                    } else {
+                        $rotuloDp = $defensorPublico;
+                        if (preg_match('/^[A-Z]{3}-[a-f0-9]{26}$/i', $defensorPublico)) {
+                            $pDp = $partesRepoLista->findById($defensorPublico);
+                            if ($pDp !== null) {
+                                $rotuloDp = trim((string) ($pDp['nome_completo'] ?? $defensorPublico));
+                            }
+                        }
+                        $defensorTexto = 'Defensor público: ' . $rotuloDp;
+                    }
                 } elseif ($advogadosCadastrados !== []) {
                     $defensorTexto = 'Advogado: ' . implode(' / ', $advogadosCadastrados);
                 }

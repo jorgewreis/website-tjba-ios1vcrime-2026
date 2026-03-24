@@ -154,7 +154,7 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
             <span class="all">Interno - Gabinete - Ofícios -</span>
             <span class="specific">Lista e registro</span>
         </div>
-        <h1 class="title-page">Ofícios</h1>
+        <h1 class="title-page">Ofícios (Gabinete)</h1>
         <p class="description-page">Registro de ofícios do gabinete (processo e tipo).</p>
     </div>
 

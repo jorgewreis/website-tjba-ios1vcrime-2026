@@ -49,7 +49,7 @@ if ($pessoa === null) {
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="cpf">CPF</label>
-                <input type="text" class="width-200 height-md white readyonl" id="cpf" value="<?php
+                <input type="text" class="width-300 height-md white readyonl" id="cpf" value="<?php
                     $cpfVal = $pessoa['cpf'] ?? '';
                     echo htmlspecialchars(strlen($cpfVal) === 11 ? Security::formatCPF($cpfVal) : $cpfVal);
                 ?>" readonly>
@@ -58,8 +58,6 @@ if ($pessoa === null) {
                 <label for="nome_completo">Nome completo</label>
                 <input type="text" class="width-600 height-md white" id="nome_completo" placeholder="Digite o nome completo" value="<?php echo htmlspecialchars($pessoa['nome_completo'] ?? ''); ?>">
             </div>
-        </div>
-        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="sexo">Sexo</label>
                 <select class="width-200 height-md white" id="sexo">
@@ -71,14 +69,9 @@ if ($pessoa === null) {
             </div>
             <div class="col">
                 <label for="data_nascimento">Data de nascimento</label>
-                <input type="date" class="width-200 height-md white" id="data_nascimento" value="<?php echo htmlspecialchars($pessoa['data_nascimento'] ?? ''); ?>">
+                <input type="date" class="width-300 height-md white" id="data_nascimento" value="<?php echo htmlspecialchars($pessoa['data_nascimento'] ?? ''); ?>">
             </div>
         </div>
-        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
-            <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
-            <button type="button" class="btn btn-primary" id="salvar-btn">Salvar dados</button>
-        </div>
-
         <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Telefones</h2></div>
         <div id="telefones-list">
             <?php foreach ($pessoa['telefones'] ?? [] as $t): ?>
@@ -92,7 +85,7 @@ if ($pessoa === null) {
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="new-tel-tipo">Tipo</label>
-                <select class="width-200 height-md white" id="new-tel-tipo">
+                <select class="width-300 height-md white" id="new-tel-tipo">
                     <option value="">Selecione</option>
                     <option value="Telefone fixo">Telefone fixo</option>
                     <option value="Celular">Celular</option>
@@ -100,10 +93,12 @@ if ($pessoa === null) {
             </div>
             <div class="col">
                 <label for="new-tel-numero">Número</label>
-                <input type="text" class="width-200 height-md white" id="new-tel-numero" placeholder="(00) 00000-0000">
+                <input type="text" class="width-300 height-md white" id="new-tel-numero" placeholder="(00) 00000-0000">
             </div>
-            <label for="add-tel-btn">-</label>
-            <button type="button" class="btn btn-secondary-outline" id="add-tel-btn">Adicionar telefone</button>
+            <div class="col">
+                <label for="add-tel-btn" style="color: transparent;">-</label>
+                <button type="button" class="btn btn-secondary-outline" id="add-tel-btn">Adicionar telefone</button>
+            </div>
         </div>
 
         <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Endereços</h2></div>
@@ -111,18 +106,18 @@ if ($pessoa === null) {
             <?php foreach ($pessoa['enderecos'] ?? [] as $e): ?>
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md" data-id="<?php echo htmlspecialchars($e['id'] ?? ''); ?>">
                 <div class="col"><?php echo htmlspecialchars(trim(($e['logradouro'] ?? '') . ' ' . ($e['numero'] ?? '') . ' ' . ($e['bairro'] ?? '') . ' ' . ($e['cidade'] ?? ''))); ?></div>
-                <div class="col"><button type="button" class="btn btn-secondary-outline btn-del-end" data-id="<?php echo htmlspecialchars($e['id'] ?? ''); ?>">Excluir</button></div>
+                <div class="col"><button type="button" class="btn btn-primary-outline btn-del-end" data-id="<?php echo htmlspecialchars($e['id'] ?? ''); ?>">Excluir</button></div>
             </div>
             <?php endforeach; ?>
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="new-end-cep">CEP</label>
-                <input type="text" class="width-100 height-md white" id="new-end-cep" placeholder="00000-000" maxlength="9">
+                <input type="text" class="width-200 height-md white" id="new-end-cep" placeholder="00000-000" maxlength="9">
             </div>
             <div class="col">
-                <label for="buscar-cep-btn">-</label>
-                <button type="button" class="btn btn-secondary-outline" id="buscar-cep-btn">Buscar CEP</button>
+                <label for="buscar-cep-btn" style="color: transparent;">-</label>
+                <button type="button" class="btn btn-primary-outline" id="buscar-cep-btn">Buscar CEP</button>
             </div>
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
@@ -132,32 +127,37 @@ if ($pessoa === null) {
             </div>
             <div class="col">
                 <label for="new-end-numero">Número</label>
-                <input type="text" class="width-100 height-md white" id="new-end-numero" placeholder="Nº">
+                <input type="text" class="width-200 height-md white" id="new-end-numero" placeholder="Nº">
             </div>
             <div class="col">
                 <label for="new-end-complemento">Complemento</label>
-                <input type="text" class="width-200 height-md white" id="new-end-complemento" placeholder="Sala, andar...">
+                <input type="text" class="width-400 height-md white" id="new-end-complemento" placeholder="Sala, andar...">
             </div>
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="new-end-bairro">Bairro</label>
-                <input type="text" class="width-200 height-md white" id="new-end-bairro" placeholder="Bairro">
+                <input type="text" class="width-400 height-md white" id="new-end-bairro" placeholder="Bairro">
             </div>
             <div class="col">
                 <label for="new-end-cidade">Cidade</label>
-                <input type="text" class="width-200 height-md white" id="new-end-cidade" placeholder="Cidade">
+                <input type="text" class="width-300 height-md white" id="new-end-cidade" placeholder="Cidade">
             </div>
             <div class="col">
                 <label for="new-end-uf">UF</label>
-                <input type="text" class="width-xs height-md white" id="new-end-uf" placeholder="UF" maxlength="2">
+                <input type="text" class="width-200 height-md white" id="new-end-uf" placeholder="UF" maxlength="2">
             </div>
-            <label class="inline"><input type="checkbox" id="new-end-principal"> Principal</label>
-            <button type="button" class="btn btn-secondary-outline" id="add-end-btn">Adicionar endereço</button>
+            <div class="col">
+                <label class="inline"><input type="checkbox" id="new-end-principal"> Principal</label>
+            </div>
+            <div class="col">
+                <label for="add-end-btn" style="color: transparent;">-</label>
+                <button type="button" class="btn btn-primary-outline" id="add-end-btn">Adicionar endereço</button>
+            </div>
         </div>
 
         <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Vínculos com processos</h2></div>
-        <div id="vinculos-processos">
+        <div class="display-flex col col-full" id="vinculos-processos">
             <?php foreach ($pessoa['vinculos_processos'] ?? [] as $vp): ?>
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col"><?php echo htmlspecialchars($vp['numero_processo'] ?? $vp['processo_id'] ?? '—'); ?></div>
@@ -169,8 +169,8 @@ if ($pessoa === null) {
             <?php endif; ?>
         </div>
 
-        <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Vínculos com instituições</h2></div>
-        <div id="vinculos-inst-list">
+        <div class="display-flex row row-full align-center padding-x-md padding-y-md border-top"><h2>Vínculos com instituições</h2></div>
+        <div class="display-flex col col-full" id="vinculos-inst-list">
             <?php foreach ($pessoa['vinculos_instituicoes'] ?? [] as $vi): ?>
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md" data-id="<?php echo htmlspecialchars($vi['id'] ?? ''); ?>">
                 <div class="col"><?php echo htmlspecialchars($vi['instituicao_nome'] ?? $vi['instituicao_sigla'] ?? '—'); ?></div>
@@ -180,10 +180,16 @@ if ($pessoa === null) {
                     <button type="button" class="btn btn-secondary-outline btn-del-vinculo" data-id="<?php echo htmlspecialchars($vi['id'] ?? ''); ?>">Excluir</button>
                 </div>
             </div>
-            <?php endforeach; ?>
+            <?php endforeach; ?>        
+            <div class="display-flex row row-fit justify-start">
+                <button type="button" id="vincular-instituicao-btn" class="btn btn-primary-outline">Vincular instituição</button>
+            </div>
         </div>
-        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
-            <button type="button" id="vincular-instituicao-btn" class="btn btn-primary">Vincular instituição</button>
+        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
+            <div class="display-flex row row-fit justify-end">
+                <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
+                <button type="button" class="btn btn-primary" id="salvar-btn">Salvar dados</button>
+            </div>
         </div>
     </div>
 

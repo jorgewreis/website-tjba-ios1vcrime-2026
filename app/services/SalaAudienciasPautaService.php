@@ -87,6 +87,13 @@ final class SalaAudienciasPautaService
             throw new InvalidArgumentException('Preencha os campos obrigatórios da audiência.');
         }
 
+        $this->assertDataAudienciaNaoPassada($data);
+        $hora = $this->normalizarHoraNaGradeCadastro($hora);
+
+        if ($this->pautaRepository->existsActiveSlotEm($data, $hora, null)) {
+            throw new InvalidArgumentException('Já existe audiência designada neste dia e horário. Escolha outro horário.');
+        }
+
         $classeId = null;
         $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
         $classeDescricao = trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? ''));
@@ -100,11 +107,7 @@ final class SalaAudienciasPautaService
 
         $processoId = $this->processosRepository->ensureProcess($numeroProcesso, $classeId, null, false);
         $ano = (int) date('Y');
-        $statusIn = trim((string) ($payload['status'] ?? 'agendada'));
-        $status = $statusIn === 'designada' ? 'agendada' : $statusIn;
-        if (!in_array($status, ['agendada', 'realizada', 'adiada', 'cancelada'], true)) {
-            $status = 'agendada';
-        }
+        $status = $this->finalizeStatusPauta(trim((string) ($payload['status'] ?? '')), 'designada');
 
         $this->connection->beginTransaction();
         try {
@@ -136,13 +139,26 @@ final class SalaAudienciasPautaService
         $data = trim((string) ($payload['data_audiencia'] ?? ''));
         $hora = trim((string) ($payload['hora_audiencia'] ?? ''));
         $local = trim((string) ($payload['localizacao'] ?? ''));
-        $status = trim((string) ($payload['status'] ?? 'agendada'));
+        $statusIn = trim((string) ($payload['status'] ?? ''));
         if ($tipo === '' || $data === '' || $hora === '' || $local === '') {
             throw new InvalidArgumentException('Preencha os campos obrigatórios da audiência.');
         }
-        if (!in_array($status, ['agendada', 'realizada', 'adiada', 'cancelada'], true)) {
-            $status = 'agendada';
+        $atual = $this->pautaRepository->findById($id);
+        if ($atual === null) {
+            throw new InvalidArgumentException('Audiência não encontrada.');
         }
+        $status = $this->finalizeStatusPauta($statusIn, trim((string) ($atual['status'] ?? 'designada')));
+
+        if ($status === 'designada') {
+            $this->assertDataAudienciaNaoPassada($data);
+            $hora = $this->normalizarHoraNaGradeCadastro($hora);
+            if ($this->pautaRepository->existsActiveSlotEm($data, $hora, $id)) {
+                throw new InvalidArgumentException('Já existe audiência designada neste dia e horário. Escolha outro horário.');
+            }
+        } else {
+            $hora = $this->normalizarHoraAudienciaArmazenamento($hora);
+        }
+
         return $this->pautaRepository->update($id, [
             'tipo_audiencia' => $tipo,
             'data_audiencia' => $data,
@@ -184,6 +200,8 @@ final class SalaAudienciasPautaService
             throw new InvalidArgumentException('Preencha os campos obrigatórios da parte.');
         }
 
+        $this->normalizeDefensorPayloadForSave($payload, $tipo);
+
         $this->connection->beginTransaction();
         try {
             $parteGlobalId = $this->partesRepository->ensureParteByNomeOuCpf($nome, null);
@@ -199,6 +217,14 @@ final class SalaAudienciasPautaService
                 ]);
             }
 
+            $tipoDef = trim((string) ($payload['tipo_defensor'] ?? ''));
+            if ($tipo === 'reu' && ($tipoDef === 'publico' || $tipoDef === 'privado')) {
+                $defId = $tipoDef === 'publico'
+                    ? trim((string) ($payload['defensor_publico_id'] ?? ''))
+                    : trim((string) ($payload['defensor_privado_id'] ?? ''));
+                $this->ensureDefensorVinculadoAoProcesso($processoId, $tipoDef, $defId);
+            }
+
             $idPartePauta = $this->parteRepository->insert([
                 'pauta' => $idPauta,
                 'parte_id_global' => $parteGlobalId,
@@ -207,6 +233,7 @@ final class SalaAudienciasPautaService
                 'tipo_parte' => $tipo,
                 'tipo_defensor' => trim((string) ($payload['tipo_defensor'] ?? '')) ?: null,
                 'defensor_publico_id' => trim((string) ($payload['defensor_publico_id'] ?? '')) ?: null,
+                'defensor_publico_outro' => trim((string) ($payload['defensor_publico_outro'] ?? '')) ?: null,
                 'defensor_privado_id' => trim((string) ($payload['defensor_privado_id'] ?? '')) ?: null,
                 'defensor_privado_outro' => trim((string) ($payload['defensor_privado_outro'] ?? '')) ?: null,
                 'maioridade' => $maioridade,
@@ -241,6 +268,8 @@ final class SalaAudienciasPautaService
         if ($nome === '' || $tipo === '' || $maioridade === '' || $expedicao === '' || $cumprimento === '') {
             throw new InvalidArgumentException('Preencha os campos obrigatórios da parte.');
         }
+
+        $this->normalizeDefensorPayloadForSave($payload, $tipo);
 
         $this->connection->beginTransaction();
         try {
@@ -280,6 +309,15 @@ final class SalaAudienciasPautaService
                 }
             }
 
+            $processoId = trim((string) ($parteAtual['processo'] ?? ''));
+            $tipoDef = trim((string) ($payload['tipo_defensor'] ?? ''));
+            if ($tipo === 'reu' && $processoId !== '' && ($tipoDef === 'publico' || $tipoDef === 'privado')) {
+                $defId = $tipoDef === 'publico'
+                    ? trim((string) ($payload['defensor_publico_id'] ?? ''))
+                    : trim((string) ($payload['defensor_privado_id'] ?? ''));
+                $this->ensureDefensorVinculadoAoProcesso($processoId, $tipoDef, $defId);
+            }
+
             $ok = $this->parteRepository->update($idParte, [
                 'parte_id_global' => $parteGlobalId,
                 'processo_parte_id' => $processoParteId !== '' ? $processoParteId : null,
@@ -287,6 +325,7 @@ final class SalaAudienciasPautaService
                 'tipo_parte' => $tipo,
                 'tipo_defensor' => trim((string) ($payload['tipo_defensor'] ?? '')) ?: null,
                 'defensor_publico_id' => trim((string) ($payload['defensor_publico_id'] ?? '')) ?: null,
+                'defensor_publico_outro' => trim((string) ($payload['defensor_publico_outro'] ?? '')) ?: null,
                 'defensor_privado_id' => trim((string) ($payload['defensor_privado_id'] ?? '')) ?: null,
                 'defensor_privado_outro' => trim((string) ($payload['defensor_privado_outro'] ?? '')) ?: null,
                 'maioridade' => $maioridade,
@@ -303,6 +342,176 @@ final class SalaAudienciasPautaService
             $this->connection->rollBack();
             throw $e;
         }
+    }
+
+    /**
+     * Ajusta IDs de defensor (incl. opção "outro" → cadastro em `partes`) e zera campos não usados.
+     */
+    private function normalizeDefensorPayloadForSave(array &$payload, string $tipoParte): void
+    {
+        $tipoDef = trim((string) ($payload['tipo_defensor'] ?? ''));
+        if ($tipoParte !== 'reu') {
+            $payload['tipo_defensor'] = null;
+            $payload['defensor_publico_id'] = null;
+            $payload['defensor_publico_outro'] = null;
+            $payload['defensor_privado_id'] = null;
+            $payload['defensor_privado_outro'] = null;
+
+            return;
+        }
+        if ($tipoDef === 'publico') {
+            $id = trim((string) ($payload['defensor_publico_id'] ?? ''));
+            $outro = trim((string) ($payload['defensor_publico_outro'] ?? ''));
+            if ($id === 'outro') {
+                if ($outro === '') {
+                    throw new InvalidArgumentException('Informe o nome do defensor público.');
+                }
+                $payload['defensor_publico_id'] = $this->partesRepository->ensureParteByNomeOuCpf($outro, null, PartesRepository::PROFISSAO_DEFENSOR_PUBLICO);
+                $payload['defensor_publico_outro'] = null;
+            } else {
+                $payload['defensor_publico_outro'] = null;
+            }
+            $payload['defensor_privado_id'] = null;
+            $payload['defensor_privado_outro'] = null;
+        } elseif ($tipoDef === 'privado') {
+            $id = trim((string) ($payload['defensor_privado_id'] ?? ''));
+            $outro = trim((string) ($payload['defensor_privado_outro'] ?? ''));
+            if ($id === 'outro') {
+                if ($outro === '') {
+                    throw new InvalidArgumentException('Informe o nome do defensor privado (advogado).');
+                }
+                $payload['defensor_privado_id'] = $this->partesRepository->ensureParteByNomeOuCpf($outro, null, PartesRepository::PROFISSAO_ADVOGADO);
+                $payload['defensor_privado_outro'] = null;
+            } else {
+                $payload['defensor_privado_outro'] = null;
+            }
+            $payload['defensor_publico_id'] = null;
+            $payload['defensor_publico_outro'] = null;
+        } else {
+            $payload['defensor_publico_id'] = null;
+            $payload['defensor_publico_outro'] = null;
+            $payload['defensor_privado_id'] = null;
+            $payload['defensor_privado_outro'] = null;
+        }
+    }
+
+    /**
+     * Garante em `processos_partes` o vínculo do defensor/advogado ao processo (polo terceiros).
+     */
+    private function ensureDefensorVinculadoAoProcesso(string $processoId, string $tipoDefensor, string $defensorParteId): void
+    {
+        $defensorParteId = trim($defensorParteId);
+        if ($processoId === '' || $defensorParteId === '' || $defensorParteId === 'outro') {
+            return;
+        }
+        if (!$this->isParteGlobalId($defensorParteId)) {
+            return;
+        }
+        $tipo = $tipoDefensor === 'publico'
+            ? ProcessosPartesRepository::TIPO_DEFENSOR_PUBLICO
+            : ProcessosPartesRepository::TIPO_ADVOGADO;
+        $polo = ProcessosPartesRepository::POLO_TERCEIROS;
+        $v = $this->processosPartesRepository->findByProcessoAndParte($processoId, $defensorParteId);
+        if ($v === null) {
+            $this->processosPartesRepository->addParte($processoId, $defensorParteId, $tipo, $polo);
+        } else {
+            $this->processosPartesRepository->update((string) $v['id'], ['tipo_parte' => $tipo, 'polo' => $polo]);
+        }
+    }
+
+    private function isParteGlobalId(string $id): bool
+    {
+        return (bool) preg_match('/^[A-Z]{3}-[a-f0-9]{26}$/i', $id);
+    }
+
+    /**
+     * @return 'designada'|'realizada'|'redesignada'|'cancelada'
+     */
+    private function finalizeStatusPauta(string $statusIn, string $whenEmpty): string
+    {
+        $s = trim($statusIn);
+        if ($s === '') {
+            $s = trim($whenEmpty);
+        }
+        $s = $this->normalizeLegacyStatus($s);
+        if (!in_array($s, ['designada', 'realizada', 'redesignada', 'cancelada'], true)) {
+            return 'designada';
+        }
+
+        return $s;
+    }
+
+    /** Compatível com valores antigos armazenados ou enviados pelo cliente (agendada / adiada). */
+    private function normalizeLegacyStatus(string $s): string
+    {
+        if ($s === 'agendada') {
+            return 'designada';
+        }
+        if ($s === 'adiada') {
+            return 'redesignada';
+        }
+
+        return $s;
+    }
+
+    /**
+     * Horários permitidos no cadastro: 09:00 a 16:00, de 10 em 10 minutos (24 h, formato HH:MM).
+     *
+     * @return list<string>
+     */
+    public static function horariosGradeCadastroAudiencia(): array
+    {
+        $slots = [];
+        for ($min = 9 * 60; $min <= 16 * 60; $min += 10) {
+            $slots[] = sprintf('%02d:%02d', intdiv($min, 60), $min % 60);
+        }
+        return $slots;
+    }
+
+    private function assertDataAudienciaNaoPassada(string $data): void
+    {
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $data)) {
+            throw new InvalidArgumentException('Data da audiência inválida.');
+        }
+        $informada = \DateTimeImmutable::createFromFormat('Y-m-d', $data);
+        if ($informada === false || $informada->format('Y-m-d') !== $data) {
+            throw new InvalidArgumentException('Data da audiência inválida.');
+        }
+        $hoje = new \DateTimeImmutable('today');
+        if ($informada < $hoje) {
+            throw new InvalidArgumentException('A data da audiência não pode ser anterior a hoje.');
+        }
+    }
+
+    private function normalizarHoraNaGradeCadastro(string $hora): string
+    {
+        $hora = trim($hora);
+        $hm = null;
+        if (preg_match('/^(\d{1,2}):(\d{2})$/', $hora, $m)) {
+            $hm = sprintf('%02d:%02d', (int) $m[1], (int) $m[2]);
+        } elseif (preg_match('/^(\d{1,2}):(\d{2}):(\d{2})$/', $hora, $m)) {
+            $hm = sprintf('%02d:%02d', (int) $m[1], (int) $m[2]);
+        }
+        if ($hm === null) {
+            throw new InvalidArgumentException('Hora da audiência inválida.');
+        }
+        if (!in_array($hm, self::horariosGradeCadastroAudiencia(), true)) {
+            throw new InvalidArgumentException('Selecione um horário entre 09:00 e 16:00, em intervalos de 10 minutos.');
+        }
+        return $hm . ':00';
+    }
+
+    /** Normaliza hora para TIME no BD quando o status não exige a grade (redesignada, cancelada, realizada). */
+    private function normalizarHoraAudienciaArmazenamento(string $hora): string
+    {
+        $hora = trim($hora);
+        if (preg_match('/^(\d{1,2}):(\d{2})$/', $hora, $m)) {
+            return sprintf('%02d:%02d:00', (int) $m[1], (int) $m[2]);
+        }
+        if (preg_match('/^(\d{1,2}):(\d{2}):(\d{2})$/', $hora, $m)) {
+            return sprintf('%02d:%02d:%02d', (int) $m[1], (int) $m[2], (int) $m[3]);
+        }
+        throw new InvalidArgumentException('Hora da audiência inválida.');
     }
 
     /** @return array{0:string,1:string} */

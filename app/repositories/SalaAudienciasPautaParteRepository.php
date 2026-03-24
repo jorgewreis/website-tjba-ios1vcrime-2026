@@ -18,7 +18,7 @@ final class SalaAudienciasPautaParteRepository
     {
         $id = IdGenerator::generateUniquePrefixedId($this->connection, $this->table, 'id_parte', 'SPP', 30);
         $sql = sprintf(
-            'INSERT INTO `%s` (`id_parte`,`pauta`,`parte_id_global`,`processo_parte_id`,`nome_parte`,`tipo_parte`,`tipo_defensor`,`defensor_publico_id`,`defensor_privado_id`,`defensor_privado_outro`,`maioridade`,`expedicao`,`cumprimento`,`id_documento_expedido`,`id_documento_cumprido`,`criado_por`,`atualizado_por`,`ativo`) VALUES (:id,:pauta,:parte_global,:processo_parte,:nome,:tipo,:tipo_defensor,:def_publico,:def_privado,:def_outro,:maioridade,:expedicao,:cumprimento,:idexp,:idcum,:criado,:atualizado,1)',
+            'INSERT INTO `%s` (`id_parte`,`pauta`,`parte_id_global`,`processo_parte_id`,`nome_parte`,`tipo_parte`,`tipo_defensor`,`defensor_publico_id`,`defensor_publico_outro`,`defensor_privado_id`,`defensor_privado_outro`,`maioridade`,`expedicao`,`cumprimento`,`id_documento_expedido`,`id_documento_cumprido`,`criado_por`,`atualizado_por`,`ativo`) VALUES (:id,:pauta,:parte_global,:processo_parte,:nome,:tipo,:tipo_defensor,:def_publico,:def_publico_outro,:def_privado,:def_outro,:maioridade,:expedicao,:cumprimento,:idexp,:idcum,:criado,:atualizado,1)',
             $this->table
         );
         $st = $this->connection->prepare($sql);
@@ -30,6 +30,7 @@ final class SalaAudienciasPautaParteRepository
         $st->bindValue(':tipo', $row['tipo_parte']);
         $st->bindValue(':tipo_defensor', $row['tipo_defensor'] ?? null);
         $st->bindValue(':def_publico', $row['defensor_publico_id'] ?? null);
+        $st->bindValue(':def_publico_outro', $row['defensor_publico_outro'] ?? null);
         $st->bindValue(':def_privado', $row['defensor_privado_id'] ?? null);
         $st->bindValue(':def_outro', $row['defensor_privado_outro'] ?? null);
         $st->bindValue(':maioridade', $row['maioridade']);
@@ -46,7 +47,7 @@ final class SalaAudienciasPautaParteRepository
     public function update(string $idParte, array $row): bool
     {
         $sql = sprintf(
-            'UPDATE `%s` SET `parte_id_global`=:parte_global,`processo_parte_id`=:processo_parte,`nome_parte`=:nome,`tipo_parte`=:tipo,`tipo_defensor`=:tipo_defensor,`defensor_publico_id`=:def_publico,`defensor_privado_id`=:def_privado,`defensor_privado_outro`=:def_outro,`maioridade`=:maioridade,`expedicao`=:expedicao,`cumprimento`=:cumprimento,`id_documento_expedido`=:idexp,`id_documento_cumprido`=:idcum,`atualizado_por`=:atualizado WHERE `id_parte`=:id AND `ativo`=1 LIMIT 1',
+            'UPDATE `%s` SET `parte_id_global`=:parte_global,`processo_parte_id`=:processo_parte,`nome_parte`=:nome,`tipo_parte`=:tipo,`tipo_defensor`=:tipo_defensor,`defensor_publico_id`=:def_publico,`defensor_publico_outro`=:def_publico_outro,`defensor_privado_id`=:def_privado,`defensor_privado_outro`=:def_outro,`maioridade`=:maioridade,`expedicao`=:expedicao,`cumprimento`=:cumprimento,`id_documento_expedido`=:idexp,`id_documento_cumprido`=:idcum,`atualizado_por`=:atualizado WHERE `id_parte`=:id AND `ativo`=1 LIMIT 1',
             $this->table
         );
         $st = $this->connection->prepare($sql);
@@ -57,6 +58,7 @@ final class SalaAudienciasPautaParteRepository
         $st->bindValue(':tipo', $row['tipo_parte']);
         $st->bindValue(':tipo_defensor', $row['tipo_defensor'] ?? null);
         $st->bindValue(':def_publico', $row['defensor_publico_id'] ?? null);
+        $st->bindValue(':def_publico_outro', $row['defensor_publico_outro'] ?? null);
         $st->bindValue(':def_privado', $row['defensor_privado_id'] ?? null);
         $st->bindValue(':def_outro', $row['defensor_privado_outro'] ?? null);
         $st->bindValue(':maioridade', $row['maioridade']);
@@ -107,7 +109,7 @@ final class SalaAudienciasPautaParteRepository
 
     /**
      * @param list<string> $pautaIds
-     * @return array<string, list<string>> id_pauta => lista de cumprimento das partes
+     * @return array<string, list<array{nome_parte: string, cumprimento: string}>> id_pauta => partes com cumprimento
      */
     public function listCumprimentosByPautaIds(array $pautaIds): array
     {
@@ -130,7 +132,7 @@ final class SalaAudienciasPautaParteRepository
         }
 
         $sql = sprintf(
-            'SELECT `pauta`, `cumprimento`
+            'SELECT `pauta`, `nome_parte`, `cumprimento`
              FROM `%s`
              WHERE `ativo` = 1
                AND `pauta` IN (%s)
@@ -157,7 +159,10 @@ final class SalaAudienciasPautaParteRepository
             if (!isset($out[$pautaId])) {
                 $out[$pautaId] = [];
             }
-            $out[$pautaId][] = trim((string) ($row['cumprimento'] ?? ''));
+            $out[$pautaId][] = [
+                'nome_parte' => trim((string) ($row['nome_parte'] ?? '')),
+                'cumprimento' => trim((string) ($row['cumprimento'] ?? '')),
+            ];
         }
 
         return $out;

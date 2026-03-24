@@ -51,7 +51,8 @@
             data: String(document.getElementById('audiencia-edit-data')?.value || '').trim(),
             hora: String(document.getElementById('audiencia-edit-hora')?.value || '').trim(),
             localizacao: String(document.getElementById('audiencia-edit-sala')?.value || '').trim(),
-            classe: String(document.getElementById('audiencia-edit-classe')?.value || '').trim()
+            classe: String(document.getElementById('audiencia-edit-classe')?.value || '').trim(),
+            status: String(document.getElementById('audiencia-edit-status')?.value || '').trim()
         });
     }
 
@@ -72,7 +73,7 @@
                 hora_audiencia: String(document.getElementById('audiencia-edit-hora')?.value || '').trim(),
                 localizacao: String(document.getElementById('audiencia-edit-sala')?.value || '').trim(),
                 classe: String(document.getElementById('audiencia-edit-classe')?.value || '').trim(),
-                status: 'agendada'
+                status: String(document.getElementById('audiencia-edit-status')?.value || '').trim()
             })
         })
             .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })

@@ -7,6 +7,7 @@ $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/repositories/ProcessosPartesRepository.php';
+require_once $basePath . '/app/repositories/PartesRepository.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -32,7 +33,19 @@ if ($data === []) {
 
 try {
     $repository = new ProcessosPartesRepository($connection);
+    $vinculo = $repository->findById($id);
+    if ($vinculo === null) {
+        http_response_code(404);
+        echo json_encode(['error' => 'Vínculo não encontrado.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     $repository->update($id, $data);
+    $tipoAtual = trim((string) (array_key_exists('tipo_parte', $data) ? $data['tipo_parte'] : ($vinculo['tipo_parte'] ?? '')));
+    $parteIdVinculo = trim((string) ($vinculo['parte_id'] ?? ''));
+    if ($parteIdVinculo !== '') {
+        $partesRepo = new PartesRepository($connection);
+        $partesRepo->syncProfissaoFromTipoProcessoParte($parteIdVinculo, $tipoAtual);
+    }
     echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $exception) {
     http_response_code(400);

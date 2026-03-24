@@ -604,7 +604,7 @@ input[type="radio"] {
     display: inline-block;
     vertical-align: middle;
     background-color: var(--color-text-secondary);
-    margin: 0 5px 2px 0;
+    margin: 0 2px 2px 0;
 }
 
 .mini-status.status-finished {

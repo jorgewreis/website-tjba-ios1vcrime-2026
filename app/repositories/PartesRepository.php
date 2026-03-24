@@ -7,6 +7,10 @@ require_once __DIR__ . '/../../config/security.php';
 
 final class PartesRepository
 {
+    /** Valores usados nos filtros de defensor (audiências) e ao sincronizar vínculo processo-parte. */
+    public const PROFISSAO_ADVOGADO = 'Advogado';
+    public const PROFISSAO_DEFENSOR_PUBLICO = 'Defensor Público';
+
     private PDO $connection;
     private string $table;
 
@@ -24,7 +28,7 @@ final class PartesRepository
         }
 
         $statement = $this->connection->prepare(
-            sprintf('SELECT `id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `created_at`, `updated_at` FROM `%s` WHERE `id` = :id LIMIT 1', $this->table)
+            sprintf('SELECT `id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `profissao`, `created_at`, `updated_at` FROM `%s` WHERE `id` = :id LIMIT 1', $this->table)
         );
         $statement->bindValue(':id', $id);
         $statement->execute();
@@ -41,7 +45,7 @@ final class PartesRepository
         }
 
         $statement = $this->connection->prepare(
-            sprintf('SELECT `id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `created_at`, `updated_at` FROM `%s` WHERE `cpf` = :cpf LIMIT 1', $this->table)
+            sprintf('SELECT `id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `profissao`, `created_at`, `updated_at` FROM `%s` WHERE `cpf` = :cpf LIMIT 1', $this->table)
         );
         $statement->bindValue(':cpf', $cpf);
         $statement->execute();
@@ -58,7 +62,7 @@ final class PartesRepository
         }
 
         $statement = $this->connection->prepare(
-            sprintf('SELECT `id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `created_at`, `updated_at` FROM `%s` WHERE `nome_completo` = :nome_completo LIMIT 1', $this->table)
+            sprintf('SELECT `id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `profissao`, `created_at`, `updated_at` FROM `%s` WHERE `nome_completo` = :nome_completo LIMIT 1', $this->table)
         );
         $statement->bindValue(':nome_completo', $nomeCompleto);
         $statement->execute();
@@ -73,7 +77,7 @@ final class PartesRepository
         [$whereClause, $params, $joinClause] = $this->buildListFilter($filters);
 
         $sql = sprintf(
-            'SELECT p.`id`, p.`cpf`, p.`nome_completo`, p.`sexo`, p.`data_nascimento`, p.`created_at`, p.`updated_at` FROM `%s` p %s %s ORDER BY p.`nome_completo` ASC LIMIT :limit OFFSET :offset',
+            'SELECT p.`id`, p.`cpf`, p.`nome_completo`, p.`sexo`, p.`data_nascimento`, p.`profissao`, p.`created_at`, p.`updated_at` FROM `%s` p %s %s ORDER BY p.`nome_completo` ASC LIMIT :limit OFFSET :offset',
             $this->table,
             $joinClause,
             $whereClause ? 'WHERE ' . $whereClause : ''
@@ -100,6 +104,49 @@ final class PartesRepository
         $statement->execute();
 
         return (int) $statement->fetchColumn();
+    }
+
+    /**
+     * Lista pessoas cadastradas com a profissão indicada (ex.: Advogado, Defensor Público).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function listByProfissao(string $profissao, int $limit = 500): array
+    {
+        $profissao = trim($profissao);
+        if ($profissao === '') {
+            return [];
+        }
+        $limit = max(1, min(2000, $limit));
+        $statement = $this->connection->prepare(
+            sprintf(
+                'SELECT `id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `profissao`, `created_at`, `updated_at` FROM `%s` WHERE `profissao` = :prof ORDER BY `nome_completo` ASC LIMIT :lim',
+                $this->table
+            )
+        );
+        $statement->bindValue(':prof', $profissao);
+        $statement->bindValue(':lim', $limit, PDO::PARAM_INT);
+        $statement->execute();
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+        return $rows === false ? [] : $rows;
+    }
+
+    /**
+     * Quando a parte é vinculada ao processo como advogado ou defensor público, grava a profissão em `partes`.
+     */
+    public function syncProfissaoFromTipoProcessoParte(string $parteId, string $tipoParte): void
+    {
+        $parteId = trim($parteId);
+        if ($parteId === '') {
+            return;
+        }
+        $tipo = strtolower(trim($tipoParte));
+        if ($tipo === 'advogado') {
+            $this->update($parteId, ['profissao' => self::PROFISSAO_ADVOGADO]);
+        } elseif ($tipo === 'defensor_publico') {
+            $this->update($parteId, ['profissao' => self::PROFISSAO_DEFENSOR_PUBLICO]);
+        }
     }
 
     /** @return array{0: string, 1: array<string, mixed>, 2: string} */
@@ -157,9 +204,16 @@ final class PartesRepository
             $id = IdGenerator::generateUniquePrefixedId($this->connection, $this->table, 'id', 'PRT', 30);
         }
 
+        $profissao = trim((string) ($row['profissao'] ?? ''));
+        if ($profissao !== '') {
+            $profissao = function_exists('mb_substr') ? mb_substr($profissao, 0, 120, 'UTF-8') : substr($profissao, 0, 120);
+        } else {
+            $profissao = null;
+        }
+
         $statement = $this->connection->prepare(
             sprintf(
-                'INSERT INTO `%s` (`id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `created_at`, `updated_at`) VALUES (:id, :cpf, :nome_completo, :sexo, :data_nascimento, NOW(), NOW())',
+                'INSERT INTO `%s` (`id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `profissao`, `created_at`, `updated_at`) VALUES (:id, :cpf, :nome_completo, :sexo, :data_nascimento, :profissao, NOW(), NOW())',
                 $this->table
             )
         );
@@ -168,6 +222,7 @@ final class PartesRepository
         $statement->bindValue(':nome_completo', $nomeCompleto);
         $statement->bindValue(':sexo', $sexo === '' ? null : $sexo);
         $statement->bindValue(':data_nascimento', $dataNascimento === '' ? null : $dataNascimento);
+        $statement->bindValue(':profissao', $profissao);
         $statement->execute();
 
         return $id;
@@ -176,7 +231,7 @@ final class PartesRepository
     public function update(string $id, array $payload): bool
     {
         $id = trim($id);
-        $allowed = ['cpf', 'nome_completo', 'sexo', 'data_nascimento'];
+        $allowed = ['cpf', 'nome_completo', 'sexo', 'data_nascimento', 'profissao'];
         $set = [];
         $params = [':id' => $id];
 
@@ -199,6 +254,13 @@ final class PartesRepository
                 }
             } elseif ($column === 'nome_completo') {
                 $value = TextFormatter::formatProperName((string) $value, 255);
+            } elseif ($column === 'profissao') {
+                $value = trim((string) $value);
+                if ($value === '') {
+                    $value = null;
+                } else {
+                    $value = function_exists('mb_substr') ? mb_substr($value, 0, 120, 'UTF-8') : substr($value, 0, 120);
+                }
             } else {
                 $value = trim((string) $value);
                 if (in_array($column, ['sexo', 'data_nascimento'], true)) {
@@ -259,12 +321,15 @@ final class PartesRepository
      * Se CPF informado: busca por CPF; se não achar, insere com nome e CPF.
      * Se só nome: busca por nome_completo exato; se não achar, insere só com nome.
      */
-    public function ensureParteByNomeOuCpf(string $nomeCompleto, ?string $cpf = null): string
+    public function ensureParteByNomeOuCpf(string $nomeCompleto, ?string $cpf = null, ?string $profissao = null): string
     {
         $nomeCompleto = TextFormatter::formatProperName(trim($nomeCompleto), 255);
         if ($nomeCompleto === '') {
             throw new InvalidArgumentException('Nome completo é obrigatório.');
         }
+
+        $profRaw = $profissao !== null && trim($profissao) !== '' ? trim($profissao) : '';
+        $profissaoNorm = $profRaw === '' ? null : (function_exists('mb_substr') ? mb_substr($profRaw, 0, 120, 'UTF-8') : substr($profRaw, 0, 120));
 
         $cpfNormalized = $cpf !== null && $cpf !== '' ? $this->normalizeCpf($cpf) : '';
         if ($cpfNormalized !== '') {
@@ -273,7 +338,11 @@ final class PartesRepository
             }
             $existing = $this->findByCpf($cpfNormalized);
             if ($existing !== null) {
-                $this->update((string) $existing['id'], ['nome_completo' => $nomeCompleto]);
+                $up = ['nome_completo' => $nomeCompleto];
+                if ($profissaoNorm !== null) {
+                    $up['profissao'] = $profissaoNorm;
+                }
+                $this->update((string) $existing['id'], $up);
                 return (string) $existing['id'];
             }
             return $this->insert([
@@ -281,11 +350,15 @@ final class PartesRepository
                 'cpf' => $cpfNormalized,
                 'sexo' => null,
                 'data_nascimento' => null,
+                'profissao' => $profissaoNorm,
             ]);
         }
 
         $existing = $this->findByNomeCompleto($nomeCompleto);
         if ($existing !== null) {
+            if ($profissaoNorm !== null) {
+                $this->update((string) $existing['id'], ['profissao' => $profissaoNorm]);
+            }
             return (string) $existing['id'];
         }
         return $this->insert([
@@ -293,6 +366,7 @@ final class PartesRepository
             'cpf' => null,
             'sexo' => null,
             'data_nascimento' => null,
+            'profissao' => $profissaoNorm,
         ]);
     }
 

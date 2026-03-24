@@ -10,6 +10,12 @@ require_once __DIR__ . '/../../services/SalaAudienciasPautaService.php';
 
 $service = new SalaAudienciasPautaService(Conection::getInstance()->getConnection());
 $statusFilter = trim((string) ($_GET['status'] ?? ''));
+if ($statusFilter === 'agendada') {
+    $statusFilter = 'designada';
+}
+if ($statusFilter === 'adiada') {
+    $statusFilter = 'redesignada';
+}
 $periodoFilter = trim((string) ($_GET['periodo'] ?? ''));
 $tipoFilter = trim((string) ($_GET['tipo'] ?? ''));
 $search = trim((string) ($_GET['search'] ?? ''));
@@ -28,7 +34,7 @@ $result = $service->list([
 $tipos = $service->listTiposAtivos();
 $rows = $result['rows'] ?? [];
 $total = (int) ($result['total'] ?? 0);
-$statusCounts = $result['statusCounts'] ?? ['agendada' => 0, 'realizada' => 0, 'adiada' => 0, 'cancelada' => 0];
+$statusCounts = $result['statusCounts'] ?? ['designada' => 0, 'realizada' => 0, 'redesignada' => 0, 'cancelada' => 0];
 $totalPages = max(1, (int) ceil(max(1, $total) / $itemsPerPage));
 $startItem = $total > 0 ? $offset + 1 : 0;
 $endItem = min($offset + count($rows), $total);
@@ -78,9 +84,9 @@ $endItem = min($offset + count($rows), $total);
                     <label for="filter-status">Status</label>
                     <select class="width-400 height-md" id="filter-status">
                         <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Mostrar todos</option>
-                        <option value="agendada"<?php echo $statusFilter === 'agendada' ? ' selected' : ''; ?>>Agendada (<?php echo (int) ($statusCounts['agendada'] ?? 0); ?>)</option>
+                        <option value="designada"<?php echo $statusFilter === 'designada' ? ' selected' : ''; ?>>Designada (<?php echo (int) ($statusCounts['designada'] ?? 0); ?>)</option>
                         <option value="realizada"<?php echo $statusFilter === 'realizada' ? ' selected' : ''; ?>>Realizada (<?php echo (int) ($statusCounts['realizada'] ?? 0); ?>)</option>
-                        <option value="adiada"<?php echo $statusFilter === 'adiada' ? ' selected' : ''; ?>>Adiada (<?php echo (int) ($statusCounts['adiada'] ?? 0); ?>)</option>
+                        <option value="redesignada"<?php echo $statusFilter === 'redesignada' ? ' selected' : ''; ?>>Redesignada (<?php echo (int) ($statusCounts['redesignada'] ?? 0); ?>)</option>
                         <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>Cancelada (<?php echo (int) ($statusCounts['cancelada'] ?? 0); ?>)</option>
                     </select>
                 </div>
@@ -119,16 +125,20 @@ $endItem = min($offset + count($rows), $total);
         <div class="display-flex col col-full register border-bottom" data-audiencia-id="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>">
             <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                 <div class="display-flex row row-fit justify-start gap-y-sm align-center">
-                    <div class="col width-280">
+                    <div class="col width-300">
                         <span class="minor-info">Data e hora</span>
                         <span class="major-info"><?php echo htmlspecialchars(date('d/m/Y', strtotime((string) $row['data_audiencia'])) . ' - ' . substr((string) $row['hora_audiencia'], 0, 5), ENT_QUOTES); ?></span>
                     </div>
                     <div class="col width-400 col-process process-info" title="clique para copiar">
-                        <span class="minor-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['classe_nome'] ?? 'Classe não informada'), ENT_QUOTES); ?></span>
+                        <?php
+                            $classeAudiencia = !empty($row['classe_nome']) ? $row['classe_nome'] : 'Classe não informada';
+                            $classeStyleAudiencia = $classeAudiencia !== 'Classe não informada' ? 'style="color: var(--primary-color-active); font-weight: 600;"' : '';
+                        ?>  
+                        <span class="minor-info text-ellipsis" <?php echo $classeStyleAudiencia; ?>><?php echo htmlspecialchars($classeAudiencia, ENT_QUOTES); ?></span>
                         <span class="major-info"><?php echo htmlspecialchars((string) ($row['numero_processo'] ?? '—'), ENT_QUOTES); ?></span>
                     </div>
-                    <div class="col width-500">
-                        <span class="minor-info">Tipo</span>
+                    <div class="col width-400">
+                        <span class="minor-info">Tipo de audiência</span>
                         <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) $row['tipo_audiencia'], ENT_QUOTES); ?></span>
                     </div>
                     <div class="col width-300">
@@ -137,12 +147,18 @@ $endItem = min($offset + count($rows), $total);
                             <?php
                                 $cumprimentos = is_array($row['partes_cumprimento'] ?? null) ? $row['partes_cumprimento'] : [];
                                 foreach ($cumprimentos as $cumprimentoParte):
-                                    $cumprimentoParte = (string) $cumprimentoParte;
-                                    $miniClass = $cumprimentoParte === 'cumprido'
+                                    $cp = is_array($cumprimentoParte)
+                                        ? $cumprimentoParte
+                                        : ['nome_parte' => '', 'cumprimento' => (string) $cumprimentoParte];
+                                    $nomeParte = trim((string) ($cp['nome_parte'] ?? ''));
+                                    $statusCumpr = (string) ($cp['cumprimento'] ?? '');
+                                    $miniClass = $statusCumpr === 'cumprido'
                                         ? 'status-finished'
-                                        : ($cumprimentoParte === 'nao_cumprido' ? 'status-cancelled' : 'status-pending');
+                                        : ($statusCumpr === 'nao_cumprido' ? 'status-cancelled' : 'status-pending');
+                                    $labelCumprimento = ucfirst(str_replace('_', ' ', $statusCumpr !== '' ? $statusCumpr : 'pendente'));
+                                    $titleIntimacao = ($nomeParte !== '' ? $nomeParte : 'Parte') . ' — ' . $labelCumprimento;
                             ?>
-                                <div class="mini-status <?php echo $miniClass; ?>"></div>
+                                <div class="mini-status <?php echo $miniClass; ?>" title="<?php echo htmlspecialchars($titleIntimacao, ENT_QUOTES); ?>"></div>
                             <?php endforeach; ?>
                         </span>
                     </div>
@@ -152,8 +168,16 @@ $endItem = min($offset + count($rows), $total);
                         <i class="fi fi-rr-file-edit"></i>
                     </div>
                     <div class="col">
-                        <div class="width-300 padding-x-lg status <?php echo $row['status'] === 'realizada' ? 'status-finished' : ($row['status'] === 'cancelada' ? 'status-cancelled' : 'status-pending'); ?>">
-                            <?php echo htmlspecialchars(ucfirst((string) $row['status']), ENT_QUOTES); ?>
+                        <?php
+                            $stRow = (string) ($row['status'] ?? '');
+                            if ($stRow === 'agendada') {
+                                $stRow = 'designada';
+                            } elseif ($stRow === 'adiada') {
+                                $stRow = 'redesignada';
+                            }
+                        ?>
+                        <div class="width-300 padding-x-lg status <?php echo $stRow === 'realizada' ? 'status-finished' : ($stRow === 'cancelada' ? 'status-cancelled' : 'status-pending'); ?>">
+                            <?php echo htmlspecialchars(ucfirst($stRow), ENT_QUOTES); ?>
                         </div>
                     </div>
                 </div>
