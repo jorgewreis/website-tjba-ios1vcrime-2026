@@ -42,7 +42,7 @@ $tipos = (new SalaAudienciasPautaService(Conection::getInstance()->getConnection
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
                     <label for="audiencia-processo">Número do processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="text" class="width-400 height-md" id="audiencia-processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off">
+                    <input type="text" class="width-400 height-md" id="audiencia-processo" data-cnj-input="true" placeholder="0000000-00.0000.0.00.0000" autocomplete="off">
                 </div>
                 <div class="col">
                     <label for="audiencia-classe">Classe</label>
@@ -100,6 +100,7 @@ $tipos = (new SalaAudienciasPautaService(Conection::getInstance()->getConnection
         </div>
     </div>
 
+    <script src="/assets/js/modules/cartorio/cartas-expedidas/cnj.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/cartorio/cartas-expedidas/cnj.js') ?: time(); ?>"></script>
     <script src="/assets/js/modules/audiencias/pauta-create.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-create.js') ?: time(); ?>"></script>
 </body>
 </html>

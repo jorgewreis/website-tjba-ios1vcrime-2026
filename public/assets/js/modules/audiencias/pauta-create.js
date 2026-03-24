@@ -1,24 +1,9 @@
 (function () {
     function onlyDigits(value) {
+        if (typeof window.onlyDigitsCNJ === 'function') {
+            return window.onlyDigitsCNJ(value);
+        }
         return String(value || '').replace(/\D+/g, '');
-    }
-
-    function formatCNJ(digits) {
-        var d = onlyDigits(digits);
-        if (d.length !== 20) return String(digits || '');
-        return d.slice(0, 7) + '-' + d.slice(7, 9) + '.' + d.slice(9, 13) + '.' + d.slice(13, 14) + '.' + d.slice(14, 16) + '.' + d.slice(16, 20);
-    }
-
-    function formatCNJPartial(value) {
-        var d = onlyDigits(value).slice(0, 20);
-        var out = '';
-        if (d.length > 0) out += d.slice(0, 7);
-        if (d.length > 7) out += '-' + d.slice(7, 9);
-        if (d.length > 9) out += '.' + d.slice(9, 13);
-        if (d.length > 13) out += '.' + d.slice(13, 14);
-        if (d.length > 14) out += '.' + d.slice(14, 16);
-        if (d.length > 16) out += '.' + d.slice(16, 20);
-        return out;
     }
 
     function setClasseFieldReadOnly(readOnly) {
@@ -95,12 +80,14 @@
     document.getElementById('btn-audiencia-cadastrar')?.addEventListener('click', function () {
         var processo = requiredValue('audiencia-processo', 'Numero do processo');
         if (!processo) return;
-        var processoDigits = onlyDigits(processo);
-        if (processoDigits.length !== 20) {
+        var cnjResult = typeof window.normalizeAndValidateCNJValue === 'function'
+            ? window.normalizeAndValidateCNJValue(processo, { toastOnInvalid: true })
+            : { ok: onlyDigits(processo).length === 20, formatted: processo };
+        if (!cnjResult.ok) {
             notify('error', 'Validacao', 'Número do processo inválido. Informe no padrão CNJ.');
             return;
         }
-        processo = formatCNJ(processoDigits);
+        processo = String(cnjResult.formatted || processo).trim();
         var processoInput = document.getElementById('audiencia-processo');
         if (processoInput) processoInput.value = processo;
         var tipoRaw = requiredValue('audiencia-tipo', 'Tipo de audiencia');
@@ -153,11 +140,21 @@
             });
     });
 
-    document.getElementById('audiencia-processo')?.addEventListener('input', function () {
-        this.value = formatCNJPartial(this.value);
-    });
-
     document.getElementById('audiencia-processo')?.addEventListener('blur', function () {
+        if (typeof window.normalizeAndValidateCNJValue === 'function') {
+            var result = window.normalizeAndValidateCNJValue(this.value, { toastOnInvalid: true });
+            if (result.empty || !result.ok) {
+                this.value = '';
+                var classeInputInvalid = document.getElementById('audiencia-classe');
+                if (classeInputInvalid) {
+                    classeInputInvalid.value = '';
+                    setClasseFieldReadOnly(false);
+                }
+                return;
+            }
+            this.value = result.formatted;
+        }
+
         loadClasseByProcesso().then(function (row) {
             if (row) return;
             var digits = onlyDigits(document.getElementById('audiencia-processo')?.value || '');
