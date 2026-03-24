@@ -398,6 +398,18 @@ hr {
     background-color: var(--color-background-menu);
     color: var(--color-text-secondary);
 }
+    .btn-editar.reload {
+        background-color: var(--color-);
+        color: var(--color-text-on-primary);
+    }
+    .btn-editar.start {
+        background-color: var(--color-success);
+        color: var(--color-text-on-primary);
+    }
+    .btn-editar.stop {
+        background-color: var(--color-danger);
+        color: var(--color-text-on-primary);
+    }
 .btn-editar:hover {
     background-color: var(--color-background-menu-hover);
     color: var(--color-text-primary);
@@ -405,6 +417,12 @@ hr {
 .btn-editar:active {
     background-color: var(--color-background-menu-active);
     color: var(--color-text-primary);
+}
+.btn-editar:disabled {
+    opacity: 0.2;
+    cursor: not-allowed;
+    pointer-events: none;
+    filter: grayscale(100%);
 }
 
 .button-table{

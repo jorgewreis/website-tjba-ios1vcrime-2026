@@ -171,7 +171,7 @@ $endItem = min($offset + count($rows), $total);
                         <?php
                             $idPautaRow = (string) ($row['id_pauta'] ?? '');
                             $dataAudRow = substr((string) ($row['data_audiencia'] ?? ''), 0, 10);
-                            $stRaw = trim((string) ($row['status'] ?? ''));
+                            $stRaw = strtolower(preg_replace('/[\s-]+/', '_', trim((string) ($row['status'] ?? ''))));
                             $mostrarPainelAcao = ($dataAudRow === $hoje) && ($stRaw !== 'finalizada');
                             $bloqueioOutroEmAndamento = ($idEmAndamentoHoje !== null && $idEmAndamentoHoje !== $idPautaRow);
                             $stRow = $stRaw;
@@ -198,6 +198,7 @@ $endItem = min($offset + count($rows), $total);
                                 $classeStatus = 'status-finished';
                             }
                             $titBloqueio = 'Já existe uma audiência em andamento hoje. Conclua ou reinicie-a antes de movimentar outras.';
+                            $titSoEmAndamento = 'Só disponível quando a audiência estiver em andamento.';
                             $disIniciar = true;
                             $disReiniciar = true;
                             $disEncerrar = true;
@@ -205,9 +206,11 @@ $endItem = min($offset + count($rows), $total);
                                 if ($bloqueioOutroEmAndamento) {
                                     $disIniciar = $disReiniciar = $disEncerrar = true;
                                 } else {
+                                    // Iniciar: só audiência designada (ainda não começou).
                                     if ($stRow === 'designada') {
                                         $disIniciar = false;
                                     }
+                                    // Reiniciar e encerrar: só quando já estiver em andamento.
                                     if ($stRow === 'em_andamento') {
                                         $disReiniciar = false;
                                         $disEncerrar = false;
@@ -216,13 +219,24 @@ $endItem = min($offset + count($rows), $total);
                             }
                         ?>
                         <?php if ($mostrarPainelAcao): ?>
-                        <button type="button" class="btn-editar" data-audiencia-reiniciar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo $bloqueioOutroEmAndamento ? htmlspecialchars($titBloqueio, ENT_QUOTES) : 'Reiniciar (volta para Designada)'; ?>"<?php echo $disReiniciar ? ' disabled' : ''; ?>>
+                        <?php
+                            $titleReiniciar = $bloqueioOutroEmAndamento
+                                ? $titBloqueio
+                                : ($stRow === 'em_andamento' ? 'Reiniciar (volta para Designada)' : $titSoEmAndamento);
+                            $titleIniciar = $bloqueioOutroEmAndamento
+                                ? $titBloqueio
+                                : ($stRow === 'designada' ? 'Iniciar (Em andamento)' : 'Só disponível quando a audiência estiver designada.');
+                            $titleEncerrar = $bloqueioOutroEmAndamento
+                                ? $titBloqueio
+                                : ($stRow === 'em_andamento' ? 'Encerrar (Finalizada)' : $titSoEmAndamento);
+                        ?>
+                        <button type="button" class="btn-editar" data-audiencia-reiniciar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($titleReiniciar, ENT_QUOTES); ?>"<?php echo $disReiniciar ? ' disabled' : ''; ?>>
                             <i class="fi fi-rr-rotate-square"></i>
                         </button>
-                        <button type="button" class="btn-editar" data-audiencia-iniciar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo $bloqueioOutroEmAndamento ? htmlspecialchars($titBloqueio, ENT_QUOTES) : 'Iniciar (Em andamento)'; ?>"<?php echo $disIniciar ? ' disabled' : ''; ?>>
+                        <button type="button" class="btn-editar" data-audiencia-iniciar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($titleIniciar, ENT_QUOTES); ?>"<?php echo $disIniciar ? ' disabled' : ''; ?>>
                             <i class="fi fi-rr-arrow-square-right"></i>
                         </button>
-                        <button type="button" class="btn-editar" data-audiencia-encerrar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo $bloqueioOutroEmAndamento ? htmlspecialchars($titBloqueio, ENT_QUOTES) : 'Encerrar (Finalizada)'; ?>"<?php echo $disEncerrar ? ' disabled' : ''; ?>>
+                        <button type="button" class="btn-editar" data-audiencia-encerrar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($titleEncerrar, ENT_QUOTES); ?>"<?php echo $disEncerrar ? ' disabled' : ''; ?>>
                             <i class="fi fi-rr-stop-square"></i>
                         </button>
                         <?php endif; ?>
