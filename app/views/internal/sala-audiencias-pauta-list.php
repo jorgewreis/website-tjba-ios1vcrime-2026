@@ -164,9 +164,22 @@ $endItem = min($offset + count($rows), $total);
                     </div>
                 </div>
                 <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                    <div class="col button-table button-edit" data-audiencia-edit="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>" title="Editar">
-                        <i class="fi fi-rr-file-edit"></i>
+
+                    <div class="display-flex row row-fit justify-end gap-y-sm align-center padding-y-sm">
+                        <button type="button" class="btn-editar" data-audiencia-iniciar="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>" title="Reiniciar audiência">
+                            <i class="fi fi-rr-rotate-square"></i>
+                        </button>
+                        <button type="button" class="btn-editar" data-audiencia-reagendar="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>" title="Iniciar audiência">
+                            <i class="fi fi-rr-arrow-square-right"></i>
+                        </button>
+                        <button type="button" class="btn-editar" data-audiencia-encerrar="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>" title="Encerrar audiência">
+                            <i class="fi fi-rr-stop-square"></i>
+                        </button>
+                        <button type="button" class="btn-editar" data-audiencia-edit="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>" title="Editar audiência">
+                            <i class="fi fi-rr-pen-square"></i>
+                        </button>
                     </div>
+                    
                     <div class="col">
                         <?php
                             $stRow = (string) ($row['status'] ?? '');

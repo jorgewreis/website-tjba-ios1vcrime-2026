@@ -151,7 +151,7 @@ final class SalaAudienciasPautaRepository
     {
         [$where, $params] = $this->buildWhere($filters);
         $sql = sprintf(
-            'SELECT a.`id_pauta`, a.`tipo_audiencia`, a.`data_audiencia`, a.`hora_audiencia`, a.`localizacao`, a.`status`, p.`numero_processo`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `classe_nome`
+            'SELECT a.`id_pauta`, a.`tipo_audiencia`, a.`data_audiencia`, a.`hora_audiencia`, a.`data_hora_designacao`, a.`hora_inicio`, a.`hora_fim`, a.`duracao_estimada_minutos`, a.`localizacao`, a.`status`, p.`numero_processo`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `classe_nome`
              FROM `%s` a
              LEFT JOIN `processos` p ON p.`id` = a.`processo`
              LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id`
@@ -246,6 +246,35 @@ final class SalaAudienciasPautaRepository
             $conds[] = 'YEAR(a.`data_audiencia`) = YEAR(CURDATE()) AND MONTH(a.`data_audiencia`) = MONTH(CURDATE())';
         }
         return [implode(' AND ', $conds), $params];
+    }
+
+    public function updateTimingEstimado(string $id, ?string $dataHoraDesignacao, ?string $horaInicio, ?string $horaFim, int $duracaoMin): bool
+    {
+        $sql = sprintf(
+            'UPDATE `%s` SET `data_hora_designacao`=:dtdes,`hora_inicio`=:hi,`hora_fim`=:hf,`duracao_estimada_minutos`=:dur WHERE `id_pauta`=:id AND `ativo`=1 LIMIT 1',
+            $this->table
+        );
+        $st = $this->connection->prepare($sql);
+        $st->bindValue(':id', $id);
+        if ($dataHoraDesignacao === null || $dataHoraDesignacao === '') {
+            $st->bindValue(':dtdes', null, PDO::PARAM_NULL);
+        } else {
+            $st->bindValue(':dtdes', $dataHoraDesignacao);
+        }
+        if ($horaInicio === null || $horaInicio === '') {
+            $st->bindValue(':hi', null, PDO::PARAM_NULL);
+        } else {
+            $st->bindValue(':hi', $horaInicio);
+        }
+        if ($horaFim === null || $horaFim === '') {
+            $st->bindValue(':hf', null, PDO::PARAM_NULL);
+        } else {
+            $st->bindValue(':hf', $horaFim);
+        }
+        $st->bindValue(':dur', $duracaoMin, PDO::PARAM_INT);
+        $st->execute();
+
+        return true;
     }
 }
 

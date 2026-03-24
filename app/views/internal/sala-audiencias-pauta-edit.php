@@ -93,6 +93,19 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                 'cancelada' => 'Cancelada',
             ];
             $horaNaGradeEdit = in_array($horaAtualEdit, $horariosGrade, true);
+            $dtdesFmt = '—';
+            if (!empty($row['data_hora_designacao'])) {
+                $dtdesFmt = date('d/m/Y H:i', strtotime((string) $row['data_hora_designacao']));
+            }
+            $hiFmt = '—';
+            if (!empty($row['hora_inicio'])) {
+                $hiFmt = substr((string) $row['hora_inicio'], 0, 5);
+            }
+            $hfFmt = '—';
+            if (!empty($row['hora_fim'])) {
+                $hfFmt = substr((string) $row['hora_fim'], 0, 5);
+            }
+            $durMin = (int) ($row['duracao_estimada_minutos'] ?? 0);
         ?>
         <input type="hidden" id="audiencia-edit-id" value="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>">
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
@@ -154,6 +167,24 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                             <option value="<?php echo htmlspecialchars($valSt, ENT_QUOTES); ?>"<?php echo $statusAtualEdit === $valSt ? ' selected' : ''; ?>><?php echo htmlspecialchars($labelSt, ENT_QUOTES); ?></option>
                         <?php endforeach; ?>
                     </select>
+                </div>
+            </div>
+            <div class="display-flex row row-full flex-wrap gap-y-md" style="margin-top:8px;padding-top:12px;border-top:1px solid rgba(0,0,0,.08);">
+                <div class="col filter">
+                    <label>Data/hora designação (pauta)</label>
+                    <input type="text" class="width-280 height-md readonly" readonly value="<?php echo htmlspecialchars($dtdesFmt, ENT_QUOTES); ?>" title="Derivado da data e hora da audiência">
+                </div>
+                <div class="col filter">
+                    <label>Hora início (prevista)</label>
+                    <input type="text" class="width-200 height-md readonly" readonly value="<?php echo htmlspecialchars($hiFmt, ENT_QUOTES); ?>">
+                </div>
+                <div class="col filter">
+                    <label>Hora fim (prevista)</label>
+                    <input type="text" class="width-200 height-md readonly" readonly value="<?php echo htmlspecialchars($hfFmt, ENT_QUOTES); ?>">
+                </div>
+                <div class="col filter">
+                    <label>Duração estimada</label>
+                    <input type="text" class="width-220 height-md readonly" readonly value="<?php echo htmlspecialchars($durMin . ' min (soma por tipo de parte)', ENT_QUOTES); ?>" title="Atualizado ao salvar a audiência ou ao alterar partes">
                 </div>
             </div>
         </div>

@@ -8,6 +8,7 @@ require_once __DIR__ . '/../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../repositories/PartesRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosPartesRepository.php';
+require_once __DIR__ . '/../helpers/SalaAudienciasDuracaoEstimadaHelper.php';
 
 final class SalaAudienciasPautaService
 {
@@ -125,6 +126,7 @@ final class SalaAudienciasPautaService
                 'criado_por' => $usuarioId,
                 'atualizado_por' => $usuarioId,
             ]);
+            $this->sincronizarDuracaoEHorariosPauta($id);
             $this->connection->commit();
             return $id;
         } catch (Throwable $e) {
@@ -159,7 +161,7 @@ final class SalaAudienciasPautaService
             $hora = $this->normalizarHoraAudienciaArmazenamento($hora);
         }
 
-        return $this->pautaRepository->update($id, [
+        $ok = $this->pautaRepository->update($id, [
             'tipo_audiencia' => $tipo,
             'data_audiencia' => $data,
             'hora_audiencia' => $hora,
@@ -168,6 +170,11 @@ final class SalaAudienciasPautaService
             'observacoes' => trim((string) ($payload['observacoes'] ?? '')) ?: null,
             'atualizado_por' => $usuarioId,
         ]);
+        if ($ok) {
+            $this->sincronizarDuracaoEHorariosPauta($id);
+        }
+
+        return $ok;
     }
 
     public function cancel(string $id, ?string $usuarioId): bool
@@ -246,6 +253,7 @@ final class SalaAudienciasPautaService
             ]);
 
             $this->connection->commit();
+            $this->sincronizarDuracaoEHorariosPauta($idPauta);
             return $idPartePauta;
         } catch (Throwable $e) {
             $this->connection->rollBack();
@@ -337,6 +345,10 @@ final class SalaAudienciasPautaService
             ]);
 
             $this->connection->commit();
+            $idPautaSync = trim((string) ($parteAtual['pauta'] ?? ''));
+            if ($idPautaSync !== '') {
+                $this->sincronizarDuracaoEHorariosPauta($idPautaSync);
+            }
             return $ok;
         } catch (Throwable $e) {
             $this->connection->rollBack();
@@ -542,7 +554,44 @@ final class SalaAudienciasPautaService
 
     public function deleteParte(string $idParte, ?string $usuarioId): bool
     {
-        return $this->parteRepository->softDelete($idParte, $usuarioId);
+        $parte = $this->parteRepository->findById($idParte);
+        if ($parte === null) {
+            return false;
+        }
+        $idPauta = trim((string) ($parte['pauta'] ?? ''));
+        $ok = $this->parteRepository->softDelete($idParte, $usuarioId);
+        if ($ok && $idPauta !== '') {
+            $this->sincronizarDuracaoEHorariosPauta($idPauta);
+        }
+
+        return $ok;
+    }
+
+    /** Recalcula duração estimada e horários derivados (útil após migração ou ajuste manual). */
+    public function refreshDuracaoEstimadaPauta(string $idPauta): void
+    {
+        $this->sincronizarDuracaoEHorariosPauta($idPauta);
+    }
+
+    private function sincronizarDuracaoEHorariosPauta(string $idPauta): void
+    {
+        $idPauta = trim($idPauta);
+        if ($idPauta === '') {
+            return;
+        }
+        $pauta = $this->pautaRepository->findById($idPauta);
+        if ($pauta === null) {
+            return;
+        }
+        $partes = $this->parteRepository->listByPauta($idPauta);
+        $tipoAud = trim((string) ($pauta['tipo_audiencia'] ?? ''));
+        $dur = SalaAudienciasDuracaoEstimadaHelper::totalEstimadoMinutos($tipoAud, $partes);
+        $data = trim((string) ($pauta['data_audiencia'] ?? ''));
+        $hora = trim((string) ($pauta['hora_audiencia'] ?? ''));
+        $dataHoraDes = SalaAudienciasDuracaoEstimadaHelper::montarDataHoraDesignacao($data, $hora);
+        $horaInicio = SalaAudienciasDuracaoEstimadaHelper::normalizarHoraParaSql($hora);
+        $horaFim = SalaAudienciasDuracaoEstimadaHelper::horaFimApartirDeInicio($data, $horaInicio, $dur);
+        $this->pautaRepository->updateTimingEstimado($idPauta, $dataHoraDes, $horaInicio, $horaFim, $dur);
     }
 }
 
