@@ -5,12 +5,6 @@
         }
     }
 
-    function clearForm() {
-        var form = document.getElementById('audiencia-create-form');
-        if (!form) return;
-        form.reset();
-    }
-
     function requiredValue(id, label) {
         var el = document.getElementById(id);
         var value = String(el && el.value ? el.value : '').trim();
@@ -25,12 +19,15 @@
         window.location.href = '/frame.php?page=salapauta';
     });
 
-    document.getElementById('btn-audiencia-limpar')?.addEventListener('click', clearForm);
-
-    document.getElementById('btn-audiencia-registrar')?.addEventListener('click', function () {
+    document.getElementById('btn-audiencia-cadastrar')?.addEventListener('click', function () {
         var processo = requiredValue('audiencia-processo', 'Numero do processo');
         if (!processo) return;
-        var tipo = requiredValue('audiencia-tipo', 'Tipo de audiencia');
+        var tipoRaw = requiredValue('audiencia-tipo', 'Tipo de audiencia');
+        if (!tipoRaw) return;
+        var tipoSelect = document.getElementById('audiencia-tipo');
+        var tipo = tipoSelect && tipoSelect.options && tipoSelect.selectedIndex >= 0
+            ? String(tipoSelect.options[tipoSelect.selectedIndex].text || '').trim()
+            : tipoRaw;
         if (!tipo) return;
         var data = requiredValue('audiencia-data', 'Data');
         if (!data) return;
@@ -38,7 +35,34 @@
         if (!hora) return;
         var sala = requiredValue('audiencia-sala', 'Localizacao');
         if (!sala) return;
+        var status = String(document.getElementById('audiencia-status')?.value || 'designada').trim();
 
-        notify('success', 'Sucesso', 'Audiencia validada para cadastro. Integracao com API pendente.');
+        fetch('/api/sala-audiencias-pauta/create.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({
+                numero_processo: processo,
+                tipo_audiencia: tipo,
+                data_audiencia: data,
+                hora_audiencia: hora,
+                localizacao: sala.charAt(0).toUpperCase() + sala.slice(1),
+                status: status
+            })
+        })
+            .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+            .then(function (res) {
+                if (res.ok && res.j && res.j.id) {
+                    try {
+                        sessionStorage.setItem('salapauta.postReloadToast', JSON.stringify([{ type: 'success', title: 'Sucesso', message: 'Audiência cadastrada.' }]));
+                    } catch (e) {}
+                    window.location.href = '/frame.php?page=salapauta';
+                } else {
+                    notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao cadastrar audiência.');
+                }
+            })
+            .catch(function () {
+                notify('error', 'Erro', 'Erro de conexão.');
+            });
     });
 })();

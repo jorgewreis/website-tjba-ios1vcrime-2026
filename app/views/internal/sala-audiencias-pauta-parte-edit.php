@@ -5,6 +5,12 @@ header('Content-Type: text/html; charset=UTF-8');
 if (function_exists('mb_internal_encoding')) {
     mb_internal_encoding('UTF-8');
 }
+
+require_once __DIR__ . '/../../services/SalaAudienciasPautaService.php';
+
+$idParte = trim((string) ($_GET['id_parte'] ?? ''));
+$service = new SalaAudienciasPautaService(Conection::getInstance()->getConnection());
+$parte = $idParte !== '' ? $service->findParte($idParte) : null;
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -22,7 +28,7 @@ if (function_exists('mb_internal_encoding')) {
 
     <div class="header-page">
         <div class="location">
-            <span class="all">Interno - Sala de Audiências - Pauta -</span>
+            <span class="all">Interno - Cartório - Audiências -</span>
             <span class="specific">Editar parte</span>
         </div>
         <h1 class="title-page">Editar parte cadastrada</h1>
@@ -37,11 +43,11 @@ if (function_exists('mb_internal_encoding')) {
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
                     <label for="parte-edit-audiencia">Audiência</label>
-                    <input type="text" class="width-300 height-md readonly" id="parte-edit-audiencia" value="001/2026" readonly>
+                    <input type="text" class="width-300 height-md readonly" id="parte-edit-audiencia" value="<?php echo htmlspecialchars((string) ($parte['id_pauta'] ?? ''), ENT_QUOTES); ?>" readonly>
                 </div>
                 <div class="col">
                     <label for="parte-edit-processo">Número do processo</label>
-                    <input type="text" class="width-500 height-md readonly" id="parte-edit-processo" value="0800234-11.2026.8.05.0103" readonly>
+                    <input type="text" class="width-500 height-md readonly" id="parte-edit-processo" value="<?php echo htmlspecialchars((string) ($parte['numero_processo'] ?? ''), ENT_QUOTES); ?>" readonly>
                 </div>
             </div>
         </div>
@@ -53,22 +59,24 @@ if (function_exists('mb_internal_encoding')) {
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
                     <label for="parte-edit-nome">Nome da parte <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="text" class="width-700 height-md" id="parte-edit-nome" value="Fernando Alves de Souza">
+                    <input type="hidden" id="parte-edit-id" value="<?php echo htmlspecialchars((string) ($parte['id_parte'] ?? ''), ENT_QUOTES); ?>">
+                    <input type="text" class="width-700 height-md" id="parte-edit-nome" value="<?php echo htmlspecialchars((string) ($parte['nome_parte'] ?? ''), ENT_QUOTES); ?>">
                 </div>
                 <div class="col">
                     <label for="parte-edit-tipo">Tipo de parte <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-400 height-md" id="parte-edit-tipo">
-                        <option value="reu" selected>Réu</option>
-                        <option value="vitima">Vítima</option>
-                        <option value="testemunha_defesa">Testemunha da Defesa</option>
-                        <option value="testemunha_denuncia">Testemunha da Denúncia</option>
+                        <?php $tipo = (string) ($parte['tipo_parte'] ?? ''); ?>
+                        <option value="reu"<?php echo $tipo === 'reu' ? ' selected' : ''; ?>>Réu</option>
+                        <option value="vitima"<?php echo $tipo === 'vitima' ? ' selected' : ''; ?>>Vítima</option>
+                        <option value="testemunha_defesa"<?php echo $tipo === 'testemunha_defesa' ? ' selected' : ''; ?>>Testemunha da Defesa</option>
+                        <option value="testemunha_denuncia"<?php echo $tipo === 'testemunha_denuncia' ? ' selected' : ''; ?>>Testemunha da Denúncia</option>
                     </select>
                 </div>
                 <div class="col">
                     <label for="parte-edit-maioridade">Maioridade <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-300 height-md" id="parte-edit-maioridade">
-                        <option value="adulto" selected>Adulto</option>
-                        <option value="menor">Menor</option>
+                        <option value="adulto"<?php echo (string) ($parte['maioridade'] ?? '') === 'adulto' ? ' selected' : ''; ?>>Adulto</option>
+                        <option value="menor"<?php echo (string) ($parte['maioridade'] ?? '') === 'menor' ? ' selected' : ''; ?>>Menor</option>
                     </select>
                 </div>
             </div>
@@ -77,26 +85,28 @@ if (function_exists('mb_internal_encoding')) {
                 <div class="col">
                     <label for="parte-edit-expedicao">Expedição <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-400 height-md" id="parte-edit-expedicao">
-                        <option value="mandado" selected>Mandado de Intimação</option>
-                        <option value="oficio">Ofício</option>
-                        <option value="edital">Edital</option>
+                        <?php $exp = (string) ($parte['expedicao'] ?? ''); ?>
+                        <option value="Mandado de Intimação"<?php echo $exp === 'Mandado de Intimação' ? ' selected' : ''; ?>>Mandado de Intimação</option>
+                        <option value="Ofício"<?php echo $exp === 'Ofício' ? ' selected' : ''; ?>>Ofício</option>
+                        <option value="Edital"<?php echo $exp === 'Edital' ? ' selected' : ''; ?>>Edital</option>
                     </select>
                 </div>
                 <div class="col">
                     <label for="parte-edit-cumprimento">Cumprimento <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-400 height-md" id="parte-edit-cumprimento">
-                        <option value="pendente" selected>Aguardando cumprimento</option>
-                        <option value="cumprido">Cumprido</option>
-                        <option value="nao_cumprido">Não cumprido</option>
+                        <?php $cum = (string) ($parte['cumprimento'] ?? ''); ?>
+                        <option value="pendente"<?php echo $cum === 'pendente' ? ' selected' : ''; ?>>Aguardando cumprimento</option>
+                        <option value="cumprido"<?php echo $cum === 'cumprido' ? ' selected' : ''; ?>>Cumprido</option>
+                        <option value="nao_cumprido"<?php echo $cum === 'nao_cumprido' ? ' selected' : ''; ?>>Não cumprido</option>
                     </select>
                 </div>
                 <div class="col">
                     <label for="parte-edit-id-expedido">ID do documento expedido</label>
-                    <input type="text" class="width-300 height-md" id="parte-edit-id-expedido" value="789873">
+                    <input type="text" class="width-300 height-md" id="parte-edit-id-expedido" value="<?php echo htmlspecialchars((string) ($parte['id_documento_expedido'] ?? ''), ENT_QUOTES); ?>">
                 </div>
                 <div class="col">
                     <label for="parte-edit-id-cumprido">ID do documento cumprido</label>
-                    <input type="text" class="width-300 height-md" id="parte-edit-id-cumprido" value="">
+                    <input type="text" class="width-300 height-md" id="parte-edit-id-cumprido" value="<?php echo htmlspecialchars((string) ($parte['id_documento_cumprido'] ?? ''), ENT_QUOTES); ?>">
                 </div>
             </div>
         </div>

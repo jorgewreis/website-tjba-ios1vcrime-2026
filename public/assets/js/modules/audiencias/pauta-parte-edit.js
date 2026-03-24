@@ -30,12 +30,28 @@
     }
 
     document.getElementById('btn-parte-edit-voltar')?.addEventListener('click', function () {
-        window.location.href = '/frame.php?page=salapautaedit';
+        history.back();
     });
 
     document.getElementById('btn-parte-edit-remover')?.addEventListener('click', function () {
         if (!requireSecondClick('parte-edit-remover', 'Clique novamente em Remover parte em ate 5 segundos para confirmar.')) return;
-        notify('success', 'Sucesso', 'Remocao da parte confirmada. Integracao com API pendente.');
+        var idParte = String(document.getElementById('parte-edit-id')?.value || '').trim();
+        fetch('/api/sala-audiencias-pauta/partes-delete.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ id_parte: idParte })
+        })
+            .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+            .then(function (res) {
+                if (res.ok && res.j && res.j.success) {
+                    notify('success', 'Sucesso', 'Parte removida.');
+                    setTimeout(function () { history.back(); }, 300);
+                } else {
+                    notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao remover parte.');
+                }
+            })
+            .catch(function () { notify('error', 'Erro', 'Erro de conexão.'); });
     });
 
     document.getElementById('btn-parte-edit-salvar')?.addEventListener('click', function () {
@@ -50,6 +66,30 @@
         var cumprimento = requiredValue('parte-edit-cumprimento', 'Cumprimento');
         if (!cumprimento) return;
 
-        notify('success', 'Sucesso', 'Dados da parte validados para salvamento. Integracao com API pendente.');
+        var idParte = String(document.getElementById('parte-edit-id')?.value || '').trim();
+        fetch('/api/sala-audiencias-pauta/partes-update.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({
+                id_parte: idParte,
+                nome_parte: nome,
+                tipo_parte: tipo,
+                maioridade: maioridade,
+                expedicao: expedicao,
+                cumprimento: cumprimento,
+                id_documento_expedido: String(document.getElementById('parte-edit-id-expedido')?.value || '').trim(),
+                id_documento_cumprido: String(document.getElementById('parte-edit-id-cumprido')?.value || '').trim()
+            })
+        })
+            .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+            .then(function (res) {
+                if (res.ok && res.j && res.j.success) {
+                    notify('success', 'Sucesso', 'Parte atualizada.');
+                } else {
+                    notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao atualizar parte.');
+                }
+            })
+            .catch(function () { notify('error', 'Erro', 'Erro de conexão.'); });
     });
 })();

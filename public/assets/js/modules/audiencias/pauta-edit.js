@@ -21,22 +21,16 @@
 
     function readPartPayload() {
         return {
-            nome: String(document.getElementById('parte-nome')?.value || '').trim(),
-            tipo: String(document.getElementById('parte-tipo')?.value || '').trim(),
-            maioridade: String(document.getElementById('parte-maioridade')?.value || '').trim(),
-            expedicao: String(document.getElementById('parte-expedicao')?.value || '').trim(),
-            cumprimento: String(document.getElementById('parte-cumprimento')?.value || '').trim(),
-            idDocumentoExpedido: String(document.getElementById('parte-id-doc-expedido')?.value || '').trim(),
-            idDocumentoCumprido: String(document.getElementById('parte-id-doc-cumprido')?.value || '').trim()
+            nome_parte: String(document.getElementById('parte-nome')?.value || '').trim(),
+            tipo_parte: String(document.getElementById('parte-tipo')?.value || '').trim(),
+            maioridade: String(document.getElementById('parte-maioridade')?.value || '').trim()
         };
     }
 
     function validatePart(payload) {
-        if (!payload.nome) return 'Nome da parte';
-        if (!payload.tipo) return 'Tipo de parte';
+        if (!payload.nome_parte) return 'Nome da parte';
+        if (!payload.tipo_parte) return 'Tipo de parte';
         if (!payload.maioridade) return 'Maioridade';
-        if (!payload.expedicao) return 'Expedicao';
-        if (!payload.cumprimento) return 'Cumprimento';
         return '';
     }
 
@@ -45,10 +39,6 @@
             'parte-nome',
             'parte-tipo',
             'parte-maioridade',
-            'parte-expedicao',
-            'parte-cumprimento',
-            'parte-id-doc-expedido',
-            'parte-id-doc-cumprido'
         ].forEach(function (id) {
             var el = document.getElementById(id);
             if (!el) return;
@@ -73,7 +63,25 @@
             notify('error', 'Validacao', 'Informe: ' + missing + '.');
             return;
         }
-        notify('success', 'Sucesso', 'Parte validada para inclusao. Integracao com API pendente.');
+        var idPauta = String(document.getElementById('audiencia-edit-id')?.value || '').trim();
+        fetch('/api/sala-audiencias-pauta/partes-create.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify(Object.assign({ id_pauta: idPauta }, payload))
+        })
+            .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+            .then(function (res) {
+                if (res.ok && res.j && res.j.id) {
+                    try {
+                        sessionStorage.setItem('salapauta.postReloadToast', JSON.stringify([{ type: 'success', title: 'Sucesso', message: 'Parte adicionada.' }]));
+                    } catch (e) {}
+                    window.location.reload();
+                } else {
+                    notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao adicionar parte.');
+                }
+            })
+            .catch(function () { notify('error', 'Erro', 'Erro de conexão.'); });
     });
 
     document.querySelectorAll('.button-edit[data-parte-edit]').forEach(function (btn) {
@@ -87,21 +95,71 @@
     document.querySelectorAll('.button-table[data-parte-remove]').forEach(function (btn) {
         btn.addEventListener('click', function () {
             if (!requireSecondClick('pauta-remover-parte-' + btn.getAttribute('data-parte-remove'), 'Clique novamente em Remover parte em ate 5 segundos para confirmar.')) return;
-            notify('success', 'Sucesso', 'Remocao da parte confirmada. Integracao com API pendente.');
+            fetch('/api/sala-audiencias-pauta/partes-delete.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify({ id_parte: btn.getAttribute('data-parte-remove') })
+            })
+                .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+                .then(function (res) {
+                    if (res.ok && res.j && res.j.success) {
+                        window.location.reload();
+                    } else {
+                        notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao remover parte.');
+                    }
+                })
+                .catch(function () { notify('error', 'Erro', 'Erro de conexão.'); });
         });
     });
 
     document.getElementById('btn-audiencia-edit-cancelar')?.addEventListener('click', function () {
         if (!requireSecondClick('pauta-cancelar-audiencia', 'Clique novamente em Cancelar audiencia em ate 5 segundos para confirmar.')) return;
-        notify('success', 'Sucesso', 'Cancelamento confirmado. Integracao com API pendente.');
+        var id = String(document.getElementById('audiencia-edit-id')?.value || '').trim();
+        fetch('/api/sala-audiencias-pauta/cancel.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ id: id })
+        }).then(function () { window.location.reload(); }).catch(function () { notify('error', 'Erro', 'Erro de conexão.'); });
     });
 
     document.getElementById('btn-audiencia-edit-excluir')?.addEventListener('click', function () {
         if (!requireSecondClick('pauta-excluir-audiencia', 'Clique novamente em Excluir audiencia em ate 5 segundos para confirmar.')) return;
-        notify('success', 'Sucesso', 'Exclusao confirmada. Integracao com API pendente.');
+        var id = String(document.getElementById('audiencia-edit-id')?.value || '').trim();
+        fetch('/api/sala-audiencias-pauta/delete.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ id: id })
+        }).then(function () {
+            window.location.href = '/frame.php?page=salapauta';
+        }).catch(function () { notify('error', 'Erro', 'Erro de conexão.'); });
     });
 
     document.getElementById('btn-audiencia-edit-salvar')?.addEventListener('click', function () {
-        notify('success', 'Sucesso', 'Alteracoes validadas para salvamento. Integracao com API pendente.');
+        var id = String(document.getElementById('audiencia-edit-id')?.value || '').trim();
+        fetch('/api/sala-audiencias-pauta/update.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({
+                id: id,
+                tipo_audiencia: String(document.getElementById('audiencia-edit-tipo')?.value || '').trim(),
+                data_audiencia: String(document.getElementById('audiencia-edit-data')?.value || '').trim(),
+                hora_audiencia: String(document.getElementById('audiencia-edit-hora')?.value || '').trim(),
+                localizacao: String(document.getElementById('audiencia-edit-sala')?.value || '').trim(),
+                status: 'agendada'
+            })
+        })
+            .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+            .then(function (res) {
+                if (res.ok && res.j && res.j.success) {
+                    notify('success', 'Sucesso', 'Alterações salvas.');
+                } else {
+                    notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao salvar.');
+                }
+            })
+            .catch(function () { notify('error', 'Erro', 'Erro de conexão.'); });
     });
 })();

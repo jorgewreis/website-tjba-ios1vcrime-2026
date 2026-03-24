@@ -5,6 +5,14 @@ header('Content-Type: text/html; charset=UTF-8');
 if (function_exists('mb_internal_encoding')) {
     mb_internal_encoding('UTF-8');
 }
+
+require_once __DIR__ . '/../../services/SalaAudienciasPautaService.php';
+
+$id = trim((string) ($_GET['id'] ?? ''));
+$service = new SalaAudienciasPautaService(Conection::getInstance()->getConnection());
+$row = $id !== '' ? $service->find($id) : null;
+$partes = $row !== null ? $service->listPartes((string) $row['id_pauta']) : [];
+$tipos = $service->listTiposAtivos();
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -22,14 +30,20 @@ if (function_exists('mb_internal_encoding')) {
 
     <div class="header-page">
         <div class="location">
-            <span class="all">Interno - Sala de Audiências - Pauta -</span>
+            <span class="all">Interno - Cartório - Audiências -</span>
             <span class="specific">Edição</span>
         </div>
         <h1 class="title-page">Editar audiência</h1>
-        <p class="description-page">Atualização de audiência, partes vinculadas e documentos de expedição/cumprimento.</p>
+        <p class="description-page">Atualize os dados da audiência e gerencie as partes vinculadas à pauta.</p>
     </div>
 
     <div class="container-full card-page">
+        <?php if ($row === null): ?>
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom">
+                <span class="major-info">Audiência não encontrada.</span>
+            </div>
+        <?php else: ?>
+        <input type="hidden" id="audiencia-edit-id" value="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>">
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
             <h2>Dados da audiência</h2>
         </div>
@@ -38,36 +52,38 @@ if (function_exists('mb_internal_encoding')) {
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
                     <label for="audiencia-edit-processo">Número do processo</label>
-                    <input type="text" class="width-400 height-md readonly" id="audiencia-edit-processo" value="0800234-11.2026.8.05.0103" readonly>
+                    <input type="text" class="width-400 height-md readonly" id="audiencia-edit-processo" value="<?php echo htmlspecialchars((string) ($row['numero_processo'] ?? ''), ENT_QUOTES); ?>" autocomplete="off" readonly>
                 </div>
                 <div class="col">
                     <label for="audiencia-edit-classe">Classe</label>
-                    <input type="text" class="width-600 height-md readonly" id="audiencia-edit-classe" value="Ação Penal - Procedimento Ordinário" readonly>
+                    <input type="text" class="width-600 height-md readonly" id="audiencia-edit-classe" value="<?php echo htmlspecialchars((string) ($row['classe_nome'] ?? ''), ENT_QUOTES); ?>" readonly>
                 </div>
             </div>
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
                     <label for="audiencia-edit-tipo">Tipo de audiência <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-500 height-md" id="audiencia-edit-tipo">
-                        <option value="instrucao" selected>Instrução e Julgamento</option>
-                        <option value="custodia">Custódia</option>
-                        <option value="conciliacao">Conciliação</option>
+                        <?php $tipoAtual = (string) ($row['tipo_audiencia'] ?? ''); ?>
+                        <?php foreach ($tipos as $tp): $tpNome = (string) ($tp['nome'] ?? ''); ?>
+                            <option value="<?php echo htmlspecialchars($tpNome, ENT_QUOTES); ?>"<?php echo $tipoAtual === $tpNome ? ' selected' : ''; ?>><?php echo htmlspecialchars($tpNome, ENT_QUOTES); ?></option>
+                        <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="col">
                     <label for="audiencia-edit-data">Data <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="date" class="width-300 height-md" id="audiencia-edit-data" value="2026-03-26">
+                    <input type="date" class="width-300 height-md" id="audiencia-edit-data" value="<?php echo htmlspecialchars((string) ($row['data_audiencia'] ?? ''), ENT_QUOTES); ?>">
                 </div>
                 <div class="col">
                     <label for="audiencia-edit-hora">Hora <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="time" class="width-300 height-md" id="audiencia-edit-hora" value="09:00">
+                    <input type="time" class="width-300 height-md" id="audiencia-edit-hora" value="<?php echo htmlspecialchars(substr((string) ($row['hora_audiencia'] ?? '00:00:00'), 0, 5), ENT_QUOTES); ?>">
                 </div>
                 <div class="col">
                     <label for="audiencia-edit-sala">Localização <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <?php $locAtual = (string) ($row['localizacao'] ?? ''); ?>
                     <select class="width-300 height-md" id="audiencia-edit-sala">
-                        <option value="presencial">Presencial</option>
-                        <option value="lifesize" selected>Lifesize</option>
-                        <option value="audin">Audin</option>
+                        <option value="Presencial"<?php echo $locAtual === 'Presencial' ? ' selected' : ''; ?>>Presencial</option>
+                        <option value="Lifesize"<?php echo $locAtual === 'Lifesize' ? ' selected' : ''; ?>>Lifesize</option>
+                        <option value="Audin"<?php echo $locAtual === 'Audin' ? ' selected' : ''; ?>>Audin</option>
                     </select>
                 </div>
             </div>
@@ -80,7 +96,7 @@ if (function_exists('mb_internal_encoding')) {
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
                     <label for="parte-nome">Nome da parte <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="text" class="width-700 height-md" id="parte-nome" placeholder="Digite o nome da parte">
+                    <input type="text" class="width-700 height-md" id="parte-nome" placeholder="Digite o nome da parte" autocomplete="off">
                 </div>
                 <div class="col">
                     <label for="parte-tipo">Tipo de parte <span class="label-hint-obrigatorio">*obrigatório</span></label>
@@ -90,48 +106,20 @@ if (function_exists('mb_internal_encoding')) {
                         <option value="vitima">Vítima</option>
                         <option value="testemunha_defesa">Testemunha da Defesa</option>
                         <option value="testemunha_denuncia">Testemunha da Denúncia</option>
+                        <option value="advogado">Advogado</option>
+                        <option value="ministerio_publico">Ministério Público</option>
+                        <option value="defensoria">Defensoria Pública</option>
+                        <option value="outro">Outro</option>
                     </select>
                 </div>
                 <div class="col">
                     <label for="parte-maioridade">Maioridade <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-300 height-md" id="parte-maioridade">
                         <option value="">Selecione...</option>
-                        <option value="adulto">Adulto</option>
+                        <option value="adulto" selected>Adulto</option>
                         <option value="menor">Menor</option>
                     </select>
                 </div>
-            </div>
-
-            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
-                <div class="col">
-                    <label for="parte-expedicao">Expedição <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <select class="width-400 height-md" id="parte-expedicao">
-                        <option value="">Selecione...</option>
-                        <option value="mandado">Mandado de Intimação</option>
-                        <option value="oficio">Ofício</option>
-                        <option value="edital">Edital</option>
-                    </select>
-                </div>
-                <div class="col">
-                    <label for="parte-cumprimento">Cumprimento <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <select class="width-400 height-md" id="parte-cumprimento">
-                        <option value="">Selecione...</option>
-                        <option value="pendente">Aguardando cumprimento</option>
-                        <option value="cumprido">Cumprido</option>
-                        <option value="nao_cumprido">Não cumprido</option>
-                    </select>
-                </div>
-                <div class="col">
-                    <label for="parte-id-doc-expedido">ID do documento expedido</label>
-                    <input type="text" class="width-300 height-md" id="parte-id-doc-expedido" placeholder="Ex.: 789873">
-                </div>
-                <div class="col">
-                    <label for="parte-id-doc-cumprido">ID do documento cumprido</label>
-                    <input type="text" class="width-300 height-md" id="parte-id-doc-cumprido" placeholder="Ex.: 789977">
-                </div>
-            </div>
-            <div class="display-flex row row-full justify-end gap-y-md">
-                <button type="button" class="btn btn-secondary-outline" id="btn-parte-limpar">Limpar parte</button>
                 <button type="button" class="btn btn-primary" id="btn-parte-adicionar">Adicionar parte</button>
             </div>
         </div>
@@ -139,28 +127,31 @@ if (function_exists('mb_internal_encoding')) {
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
             <h2>Partes cadastradas</h2>
         </div>
-        <div class="display-flex col col-full register border-bottom">
+        <?php foreach ($partes as $parte): ?>
+        <div class="display-flex col col-full register border-bottom" data-parte-id="<?php echo htmlspecialchars((string) $parte['id_parte'], ENT_QUOTES); ?>">
             <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                 <div class="display-flex row row-fit justify-start gap-y-sm align-center">
                     <div class="col width-500">
-                        <div class="minor-info">Réu</div>
-                        <span class="major-info text-ellipsis">Fernando Alves de Souza</span>
+                        <div class="minor-info"><?php echo htmlspecialchars((string) ucfirst(str_replace('_', ' ', (string) $parte['tipo_parte'])), ENT_QUOTES); ?></div>
+                        <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) $parte['nome_parte'], ENT_QUOTES); ?><?php echo (string) $parte['maioridade'] === 'menor' ? ' (Menor)' : ''; ?></span>
+                        <span class="minor-info-defesa"><?php echo htmlspecialchars((string) ucfirst((string) $parte['maioridade']), ENT_QUOTES); ?></span>
                     </div>
                     <div class="col width-600">
-                        <div class="minor-info">Documento expedido - ID: <span class="id-info">#789873</span></div>
-                        <span class="major-info text-ellipsis">Mandado de Intimação</span>
+                        <div class="minor-info">Documento expedido - ID: <span class="id-info">#<?php echo htmlspecialchars((string) ($parte['id_documento_expedido'] ?? '—'), ENT_QUOTES); ?></span></div>
+                        <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($parte['expedicao'] ?? 'Não expedido'), ENT_QUOTES); ?></span>
                     </div>
                     <div class="col width-400">
-                        <span class="minor-info">Status</span>
-                        <div class="major-info"><span class="mini-status status-pending"></span>Aguardando cumprimento</div>
+                        <div class="minor-info">Status<?php if (!empty($parte['id_documento_cumprido'])): ?> - ID: <span class="id-info">#<?php echo htmlspecialchars((string) $parte['id_documento_cumprido'], ENT_QUOTES); ?></span><?php endif; ?></div>
+                        <div class="major-info"><span class="mini-status <?php echo (string) $parte['cumprimento'] === 'cumprido' ? 'status-finished' : ((string) $parte['cumprimento'] === 'nao_cumprido' ? 'status-cancelled' : 'status-pending'); ?>"></span><?php echo htmlspecialchars((string) ucfirst(str_replace('_', ' ', (string) $parte['cumprimento'])), ENT_QUOTES); ?></div>
                     </div>
                 </div>
                 <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                    <div class="col button-table button-edit" data-parte-edit="PARTE-001" title="Editar parte"><i class="fi fi-rr-file-edit"></i></div>
-                    <div class="col button-table" data-parte-remove="PARTE-001" title="Remover parte"><i class="fi fi-rr-trash"></i></div>
+                    <div class="col button-table button-edit" data-parte-edit="<?php echo htmlspecialchars((string) $parte['id_parte'], ENT_QUOTES); ?>" title="Editar parte"><i class="fi fi-rr-file-edit"></i></div>
+                    <div class="col button-table" data-parte-remove="<?php echo htmlspecialchars((string) $parte['id_parte'], ENT_QUOTES); ?>" title="Remover parte"><i class="fi fi-rr-trash"></i></div>
                 </div>
             </div>
         </div>
+        <?php endforeach; ?>
 
         <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
             <button type="button" class="btn btn-secondary" id="btn-audiencia-edit-voltar">Voltar</button>
@@ -168,6 +159,7 @@ if (function_exists('mb_internal_encoding')) {
             <button type="button" class="btn btn-danger" id="btn-audiencia-edit-excluir">Excluir audiência</button>
             <button type="button" class="btn btn-primary" id="btn-audiencia-edit-salvar">Salvar alterações</button>
         </div>
+        <?php endif; ?>
     </div>
 
     <div class="footer-page">

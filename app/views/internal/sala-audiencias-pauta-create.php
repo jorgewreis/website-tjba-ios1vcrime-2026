@@ -6,6 +6,10 @@ if (function_exists('mb_internal_encoding')) {
     mb_internal_encoding('UTF-8');
 }
 ?>
+<?php
+require_once __DIR__ . '/../../services/SalaAudienciasPautaService.php';
+$tipos = (new SalaAudienciasPautaService(Conection::getInstance()->getConnection()))->listTiposAtivos();
+?>
 <!DOCTYPE html>
 <html lang="pt-BR">
     <head>
@@ -22,11 +26,11 @@ if (function_exists('mb_internal_encoding')) {
 
     <div class="header-page">
         <div class="location">
-            <span class="all">Interno - Sala de Audiências - Pauta -</span>
+            <span class="all">Interno - Cartório - Audiências -</span>
             <span class="specific">Cadastro</span>
         </div>
         <h1 class="title-page">Nova audiência</h1>
-        <p class="description-page">Preencha os dados para inclusão de uma nova audiência na pauta.</p>
+        <p class="description-page">Preencha os dados para incluir uma nova audiência na pauta do cartório.</p>
     </div>
 
     <div class="container-full card-page">
@@ -48,11 +52,9 @@ if (function_exists('mb_internal_encoding')) {
                     <label for="audiencia-tipo">Tipo de audiência <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-500 height-md" id="audiencia-tipo">
                         <option value="">Selecione...</option>
-                        <option value="instrucao">Instrução e Julgamento</option>
-                        <option value="custodia">Custódia</option>
-                        <option value="conciliacao">Conciliação</option>
-                        <option value="justificacao">Justificação</option>
-                        <option value="outra">Outra</option>
+                        <?php foreach ($tipos as $tp): ?>
+                            <option value="<?php echo htmlspecialchars((string) ($tp['codigo'] ?? ''), ENT_QUOTES); ?>"><?php echo htmlspecialchars((string) ($tp['nome'] ?? ''), ENT_QUOTES); ?></option>
+                        <?php endforeach; ?>
                     </select>
                 </div>
             </div>
@@ -68,33 +70,24 @@ if (function_exists('mb_internal_encoding')) {
                 </div>
                 <div class="col">
                     <label for="audiencia-sala">Localização <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <select class="width-300 height-md" id="audiencia-sala">
+                    <select class="width-400 height-md" id="audiencia-sala">
                         <option value="">Selecione...</option>
                         <option value="presencial">Presencial</option>
-                        <option value="lifesize">Lifesize</option>
+                        <option value="lifesize" selected>Lifesize</option>
                         <option value="audin">Audin</option>
                     </select>
                 </div>
                 <div class="col">
                     <label for="audiencia-status">Status inicial</label>
-                    <select class="width-300 height-md" id="audiencia-status">
-                        <option value="agendada" selected>Agendada</option>
-                        <option value="cancelada">Cancelada</option>
+                    <select class="width-400 height-md" id="audiencia-status">
+                        <option value="designada" selected>Designada</option>
                     </select>
-                </div>
-            </div>
-
-            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
-                <div class="col">
-                    <label for="audiencia-observacoes">Observações</label>
-                    <textarea class="width-1200" id="audiencia-observacoes" rows="4" placeholder="Informações adicionais sobre a pauta"></textarea>
                 </div>
             </div>
 
             <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
                 <button type="button" class="btn btn-secondary" id="btn-audiencia-voltar">Voltar</button>
-                <button type="button" class="btn btn-secondary-outline" id="btn-audiencia-limpar">Limpar formulário</button>
-                <button type="button" class="btn btn-primary" id="btn-audiencia-registrar">Registrar audiência</button>
+                <button type="button" class="btn btn-primary" id="btn-audiencia-cadastrar">Cadastrar</button>
             </div>
         </form>
     </div>

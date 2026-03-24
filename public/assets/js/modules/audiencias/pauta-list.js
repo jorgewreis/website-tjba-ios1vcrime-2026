@@ -6,18 +6,18 @@
     }
 
     function applyFilters() {
-        notify('info', 'Filtros', 'Aplicacao de filtros sera conectada na API da pauta.');
+        var params = new URLSearchParams(window.location.search);
+        params.set('page', 'salapauta');
+        params.set('page_number', '1');
+        params.set('status', String(document.getElementById('filter-status')?.value || '').trim());
+        params.set('periodo', String(document.getElementById('filter-periodo')?.value || '').trim());
+        params.set('tipo', String(document.getElementById('filter-tipo')?.value || '').trim());
+        params.set('search', String(document.getElementById('search-input')?.value || '').trim());
+        params.set('items_per_page', String(document.getElementById('items-per-page')?.value || '25').trim());
+        window.location.href = '/frame.php?' + params.toString();
     }
 
     function setupEditButtons() {
-        document.querySelectorAll('.button-edit[data-parte-edit]').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                var idParte = String(btn.getAttribute('data-parte-edit') || '').trim();
-                if (!idParte) return;
-                window.location.href = '/frame.php?page=salapautaparteedit&id_parte=' + encodeURIComponent(idParte);
-            });
-        });
-
         document.querySelectorAll('.button-edit[data-audiencia-edit]').forEach(function (btn) {
             btn.addEventListener('click', function () {
                 var idAudiencia = String(btn.getAttribute('data-audiencia-edit') || '').trim();
@@ -37,6 +37,18 @@
     document.getElementById('search-input')?.addEventListener('keydown', function (ev) {
         if (ev.key === 'Enter') applyFilters();
     });
+
+    (function flushPostReloadToast() {
+        try {
+            var raw = sessionStorage.getItem('salapauta.postReloadToast');
+            if (!raw) return;
+            sessionStorage.removeItem('salapauta.postReloadToast');
+            var data = JSON.parse(raw);
+            (Array.isArray(data) ? data : []).forEach(function (item) {
+                if (item && item.message) notify(item.type || 'success', item.title || 'Sucesso', item.message);
+            });
+        } catch (e) {}
+    })();
 
     setupEditButtons();
 })();
