@@ -140,30 +140,41 @@ if ($totalPages > 0) {
         /* Destaque da próxima reavaliação (lista Gabinete — réus presos) */
         .grp-revisao-wrap { display: inline-block; max-width: 100%; }
         .grp-revisao-sem { color: var(--color-gray-600); font-weight: 600; }
-        .grp-revisao-normal { color: var(--color-primary-active); font-weight: 600; }
+        .grp-revisao-normal { 
+            width: fit-content !important;
+            color: var(--color-gray-800);
+            font-size: 11px;
+            font-weight: 500;
+            background: var(--color-gray-200);
+            padding: 2px 5px 1px 5px;
+            border-radius: 3px;
+        }
         .grp-revisao-atencao {
-            color: var(--color-yellow-800);
+            width: fit-content !important;
+            color: var(--color-gray-800);
+            font-size: 11px;
             font-weight: 700;
-            background: var(--color-yellow-100);
-            padding: 2px 8px;
-            border-radius: 6px;
-            border: 1px solid var(--color-yellow-400);
+            background: var(--color-warning);
+            padding: 2px 5px 1px 5px;
+            border-radius: 3px;
         }
         .grp-revisao-urgente {
-            color: var(--color-red-800);
+            width: fit-content !important;
+            color: var(--color-gray-000);
+            font-size: 11px;
             font-weight: 700;
-            background: var(--color-red-100);
-            padding: 2px 8px;
-            border-radius: 6px;
-            border: 1px solid var(--color-red-400);
+            background: var(--color-red-500);
+            padding: 2px 5px 1px 5px;
+            border-radius: 3px;
         }
         .grp-revisao-atrasada {
-            color: var(--color-red-900);
+            width: fit-content !important;
+            color: var(--color-gray-000);
+            font-size: 11px;
             font-weight: 700;
-            background: var(--color-red-200);
-            padding: 2px 8px;
-            border-radius: 6px;
-            border: 1px solid var(--color-red-500);
+            background: var(--color-gray-800);
+            padding: 2px 5px 1px 5px;
+            border-radius: 3px;
         }
         .grp-sub-line-primary .grp-sub-left { flex: 1 1 auto; min-width: 0; max-width: 55%; }
         .grp-sub-line-primary .grp-sub-right { flex: 1 1 auto; min-width: 0; max-width: 45%; justify-content: flex-end; text-align: right; }
