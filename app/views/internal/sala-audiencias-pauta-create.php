@@ -46,7 +46,7 @@ $tipos = (new SalaAudienciasPautaService(Conection::getInstance()->getConnection
                 </div>
                 <div class="col">
                     <label for="audiencia-classe">Classe</label>
-                    <input type="text" class="width-600 height-md readonly" id="audiencia-classe" placeholder="Classe automática do processo" readonly>
+                    <input type="text" class="width-600 height-md" id="audiencia-classe" placeholder="Classe automática do processo (ou informe manualmente)" autocomplete="off">
                 </div>
                 <div class="col">
                     <label for="audiencia-tipo">Tipo de audiência <span class="label-hint-obrigatorio">*obrigatório</span></label>
@@ -100,6 +100,6 @@ $tipos = (new SalaAudienciasPautaService(Conection::getInstance()->getConnection
         </div>
     </div>
 
-    <script src="/assets/js/modules/audiencias/pauta-create.js"></script>
+    <script src="/assets/js/modules/audiencias/pauta-create.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-create.js') ?: time(); ?>"></script>
 </body>
 </html>

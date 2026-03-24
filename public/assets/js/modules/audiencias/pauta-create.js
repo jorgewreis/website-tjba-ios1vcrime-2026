@@ -1,4 +1,77 @@
 (function () {
+    function onlyDigits(value) {
+        return String(value || '').replace(/\D+/g, '');
+    }
+
+    function formatCNJ(digits) {
+        var d = onlyDigits(digits);
+        if (d.length !== 20) return String(digits || '');
+        return d.slice(0, 7) + '-' + d.slice(7, 9) + '.' + d.slice(9, 13) + '.' + d.slice(13, 14) + '.' + d.slice(14, 16) + '.' + d.slice(16, 20);
+    }
+
+    function formatCNJPartial(value) {
+        var d = onlyDigits(value).slice(0, 20);
+        var out = '';
+        if (d.length > 0) out += d.slice(0, 7);
+        if (d.length > 7) out += '-' + d.slice(7, 9);
+        if (d.length > 9) out += '.' + d.slice(9, 13);
+        if (d.length > 13) out += '.' + d.slice(13, 14);
+        if (d.length > 14) out += '.' + d.slice(14, 16);
+        if (d.length > 16) out += '.' + d.slice(16, 20);
+        return out;
+    }
+
+    function setClasseFieldReadOnly(readOnly) {
+        var classeInput = document.getElementById('audiencia-classe');
+        if (!classeInput) return;
+        if (readOnly) {
+            classeInput.setAttribute('readonly', 'readonly');
+            classeInput.classList.add('readonly');
+        } else {
+            classeInput.removeAttribute('readonly');
+            classeInput.classList.remove('readonly');
+        }
+    }
+
+    function loadClasseByProcesso() {
+        var processoInput = document.getElementById('audiencia-processo');
+        var classeInput = document.getElementById('audiencia-classe');
+        if (!processoInput || !classeInput) return Promise.resolve(null);
+
+        var digits = onlyDigits(processoInput.value);
+        if (digits.length !== 20) {
+            classeInput.value = '';
+            setClasseFieldReadOnly(false);
+            return Promise.resolve(null);
+        }
+
+        var numeroFormatado = formatCNJ(digits);
+        processoInput.value = numeroFormatado;
+
+        return fetch('/api/consulta-processos/list.php?numero=' + encodeURIComponent(numeroFormatado) + '&items_per_page=10&page=1', {
+            method: 'GET',
+            credentials: 'same-origin'
+        })
+            .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+            .then(function (res) {
+                var data = (res.j && Array.isArray(res.j.data)) ? res.j.data : [];
+                if (res.ok && data.length > 0) {
+                    var classeNome = String(data[0].classe_nome || '').trim();
+                    classeInput.value = classeNome;
+                    setClasseFieldReadOnly(classeNome !== '');
+                    return data[0];
+                }
+                classeInput.value = '';
+                setClasseFieldReadOnly(false);
+                return null;
+            })
+            .catch(function () {
+                classeInput.value = '';
+                setClasseFieldReadOnly(false);
+                return null;
+            });
+    }
+
     function notify(type, title, message) {
         if (typeof showToast === 'function') {
             showToast({ type: type, variant: 'full', title: title, message: message });
@@ -22,6 +95,14 @@
     document.getElementById('btn-audiencia-cadastrar')?.addEventListener('click', function () {
         var processo = requiredValue('audiencia-processo', 'Numero do processo');
         if (!processo) return;
+        var processoDigits = onlyDigits(processo);
+        if (processoDigits.length !== 20) {
+            notify('error', 'Validacao', 'Número do processo inválido. Informe no padrão CNJ.');
+            return;
+        }
+        processo = formatCNJ(processoDigits);
+        var processoInput = document.getElementById('audiencia-processo');
+        if (processoInput) processoInput.value = processo;
         var tipoRaw = requiredValue('audiencia-tipo', 'Tipo de audiencia');
         if (!tipoRaw) return;
         var tipoSelect = document.getElementById('audiencia-tipo');
@@ -37,6 +118,10 @@
         if (!sala) return;
         var status = String(document.getElementById('audiencia-status')?.value || 'designada').trim();
         var classeDescricao = String(document.getElementById('audiencia-classe')?.value || '').trim();
+        if (!classeDescricao) {
+            notify('error', 'Validacao', 'Informe: Classe.');
+            return;
+        }
 
         fetch('/api/sala-audiencias-pauta/create.php', {
             method: 'POST',
@@ -47,7 +132,7 @@
                 tipo_audiencia: tipo,
                 data_audiencia: data,
                 hora_audiencia: hora,
-                localizacao: sala.charAt(0).toUpperCase() + sala.slice(1),
+                localizacao: sala,
                 status: status,
                 classe_descricao: classeDescricao
             })
@@ -66,5 +151,19 @@
             .catch(function () {
                 notify('error', 'Erro', 'Erro de conexão.');
             });
+    });
+
+    document.getElementById('audiencia-processo')?.addEventListener('input', function () {
+        this.value = formatCNJPartial(this.value);
+    });
+
+    document.getElementById('audiencia-processo')?.addEventListener('blur', function () {
+        loadClasseByProcesso().then(function (row) {
+            if (row) return;
+            var digits = onlyDigits(document.getElementById('audiencia-processo')?.value || '');
+            if (digits.length === 20) {
+                notify('info', 'Informação', 'Processo não encontrado. Informe a classe para cadastrar o processo.');
+            }
+        });
     });
 })();
