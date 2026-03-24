@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.04.0087
+
+**Data:** 2026-03-24 15:38:46 | **Commit:** `f3ad5e2` | **Tipo:** `patch`
+
+- Fix: correcao de erros de buttons
+
 ## V. 1.04.0086
 
 **Data:** 2026-03-24 15:32:25 | **Commit:** `fc5d50d` | **Tipo:** `patch`
@@ -3810,6 +3816,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

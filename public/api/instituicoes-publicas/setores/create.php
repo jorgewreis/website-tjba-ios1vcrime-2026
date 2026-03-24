@@ -4,6 +4,9 @@ declare(strict_types=1);
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
+if (!is_file($basePath . '/app/helpers/Conection.php')) {
+    $basePath = dirname(__DIR__, 4);
+}
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/InstituicoesPublicasService.php';

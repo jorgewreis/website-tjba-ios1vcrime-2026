@@ -43,25 +43,15 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="nome_fantasia">Nome fantasia / Sigla</label>
-                <input type="text" class="width-200 height-md white" id="nome_fantasia" value="<?php echo htmlspecialchars($inst['nome_fantasia'] ?? ''); ?>">
+                <input type="text" class="width-300 height-md white" id="nome_fantasia" value="<?php echo htmlspecialchars($inst['nome_fantasia'] ?? ''); ?>">
             </div>
             <div class="col">
                 <label for="cnpj">CNPJ</label>
-                <input type="text" class="width-200 height-md white" id="cnpj" placeholder="00.000.000/0000-00" value="<?php
+                <input type="text" class="width-400 height-md white" id="cnpj" placeholder="00.000.000/0000-00" value="<?php
                     $cnpjVal = preg_replace('/\D+/', '', (string) ($inst['cnpj'] ?? ''));
                     echo htmlspecialchars($cnpjVal !== '' && strlen($cnpjVal) === 14 ? Security::formatCNPJ($cnpjVal) : ($inst['cnpj'] ?? ''));
                 ?>">
             </div>
-        </div>
-        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
-            <div class="col">
-                <label for="observacoes">Observações</label>
-                <textarea class="width-600 height-md white" id="observacoes" rows="2"><?php echo htmlspecialchars($inst['observacoes'] ?? ''); ?></textarea>
-            </div>
-        </div>
-        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
-            <a href="/frame.php?page=instituicoespublicas" class="btn btn-secondary">Voltar</a>
-            <button type="button" class="btn btn-primary" id="salvar-btn">Salvar</button>
         </div>
 
         <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Endereços</h2></div>
@@ -70,15 +60,18 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md" data-id="<?php echo htmlspecialchars($e['id'] ?? ''); ?>">
                 <div class="col"><?php echo htmlspecialchars(trim(($e['logradouro'] ?? '') . ($e['numero'] ? ' ' . $e['numero'] : '') . ($e['bairro'] ? ' - ' . $e['bairro'] : '') . ($e['cidade'] ? ' - ' . $e['cidade'] : '') . ($e['uf'] ? '/' . $e['uf'] : ''))); ?></div>
                 <div class="col"><?php echo !empty($e['principal']) ? 'Principal' : '—'; ?></div>
-                <div class="col"><button type="button" class="btn btn-secondary-outline btn-del-end" data-id="<?php echo htmlspecialchars($e['id'] ?? ''); ?>">Excluir</button></div>
+                <div class="col"><button type="button" class="btn btn-primary-outline btn-del-end" data-id="<?php echo htmlspecialchars($e['id'] ?? ''); ?>">Excluir</button></div>
             </div>
             <?php endforeach; ?>
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="new-end-cep">CEP</label>
-                <input type="text" class="width-100 height-md white" id="new-end-cep" placeholder="00000-000" maxlength="9">
-                <button type="button" class="btn btn-secondary-outline" id="buscar-cep-btn">Buscar CEP</button>
+                <input type="text" class="width-400 height-md white" id="new-end-cep" placeholder="00000-000" maxlength="9">
+            </div>
+            <div class="col">
+                <label for="buscar-cep-btn" style="color: transparent;">-</label>
+                <button type="button" class="btn btn-primary-outline" id="buscar-cep-btn">Buscar CEP</button>
             </div>
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
@@ -88,25 +81,25 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
             </div>
             <div class="col">
                 <label for="new-end-numero">Número</label>
-                <input type="text" class="width-100 height-md white" id="new-end-numero" placeholder="Nº">
+                <input type="text" class="width-200 height-md white" id="new-end-numero" placeholder="Nº">
             </div>
             <div class="col">
                 <label for="new-end-complemento">Complemento</label>
-                <input type="text" class="width-200 height-md white" id="new-end-complemento" placeholder="Sala, andar...">
+                <input type="text" class="width-400 height-md white" id="new-end-complemento" placeholder="Sala, andar...">
             </div>
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="new-end-bairro">Bairro</label>
-                <input type="text" class="width-200 height-md white" id="new-end-bairro" placeholder="Bairro">
+                <input type="text" class="width-400 height-md white" id="new-end-bairro" placeholder="Bairro">
             </div>
             <div class="col">
                 <label for="new-end-cidade">Cidade</label>
-                <input type="text" class="width-200 height-md white" id="new-end-cidade" placeholder="Cidade">
+                <input type="text" class="width-300 height-md white" id="new-end-cidade" placeholder="Cidade">
             </div>
             <div class="col">
                 <label for="new-end-uf">UF</label>
-                <input type="text" class="width-xs height-md white" id="new-end-uf" placeholder="UF" maxlength="2">
+                <input type="text" class="width-100 height-md white" id="new-end-uf" placeholder="UF" maxlength="2">
             </div>
             <label class="inline"><input type="checkbox" id="new-end-principal"> Principal</label>
             <button type="button" class="btn btn-secondary-outline" id="add-end-btn">Adicionar endereço</button>
@@ -125,11 +118,11 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
             <?php endforeach; ?>
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
-            <input type="text" class="width-100 height-md white" id="new-tel-tipo" placeholder="Tipo">
-            <input type="text" class="width-200 height-md white" id="new-tel-numero" placeholder="(00) 00000-0000">
-            <input type="text" class="width-100 height-md white" id="new-tel-ramal" placeholder="Ramal">
+            <input type="text" class="width-300 height-md white" id="new-tel-tipo" placeholder="Tipo">
+            <input type="text" class="width-300 height-md white" id="new-tel-numero" placeholder="(00) 00000-0000">
+            <input type="text" class="width-300 height-md white" id="new-tel-ramal" placeholder="Ramal">
             <label class="inline"><input type="checkbox" id="new-tel-principal"> Principal</label>
-            <button type="button" class="btn btn-secondary-outline" id="add-tel-btn">Adicionar telefone</button>
+            <button type="button" class="btn btn-primary-outline" id="add-tel-btn">Adicionar telefone</button>
         </div>
 
         <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Setores</h2></div>
@@ -144,9 +137,15 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <input type="text" class="width-600 height-md white" id="new-setor-nome" placeholder="Nome do setor *">
-            <input type="text" class="width-100 height-md white" id="new-setor-sigla" placeholder="Sigla">
-            <button type="button" class="btn btn-secondary-outline" id="add-setor-btn">Adicionar setor</button>
+            <input type="text" class="width-300 height-md white" id="new-setor-sigla" placeholder="Sigla">
+            <button type="button" class="btn btn-primary-outline" id="add-setor-btn">Adicionar setor</button>
         </div>
+
+        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
+            <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
+            <button type="button" class="btn btn-primary" id="salvar-btn">Salvar</button>
+        </div>
+
     </div>
     <script>
     var pendingConfirmations = {};
@@ -320,14 +319,29 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
             uf: (document.getElementById('new-end-uf').value || '').trim().toUpperCase().slice(0, 2) || null,
             principal: document.getElementById('new-end-principal').checked ? 1 : 0
         };
-        fetch('/api/instituicoes-publicas/enderecos/create.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-        .then(function(r) { return r.json(); })
-        .then(function(d) {
-            if (d.id) {
+        fetch('/api/instituicoes-publicas/enderecos/create.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify(payload)
+        })
+        .then(function(r) {
+            return r.text().then(function(t) {
+                var j = {};
+                try { j = t ? JSON.parse(t) : {}; } catch (e) {}
+                return { ok: r.ok, j: j };
+            });
+        })
+        .then(function(res) {
+            if (res.ok && res.j && res.j.id) {
                 queuePostReloadToast('success', 'Sucesso', 'Endereço adicionado com sucesso.');
                 window.location.reload();
+                return;
             }
-            else { if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: d.error || 'Erro.' }); }
+            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: (res.j && res.j.error) ? res.j.error : 'Não foi possível adicionar o endereço.' });
+        })
+        .catch(function() {
+            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Falha de conexão ou resposta inválida.' });
         });
     });
     document.querySelectorAll('.btn-del-end').forEach(function(btn) {
