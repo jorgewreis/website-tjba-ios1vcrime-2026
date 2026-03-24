@@ -126,9 +126,9 @@
                     </div>
                 </div>                
                 <div class="display-flex row row-fit justify-end gap-y-sm">
-                    <div class="col button-table button-edit" title="Editar">
-                        <i class="fi fi-rr-file-edit"></i>
-                    </div>
+                    <button type="button" class="btn-editar" title="Editar">
+                        <i class="fi fi-rr-pen-square"></i>
+                    </button>
                     <div class="col" title="aguardando cumprimento">
                         <div class="padding-x-lg status status-current">Em andamento</div>
                     </div>                
@@ -209,7 +209,7 @@
                 });
             });
 
-            document.querySelectorAll('.button-edit').forEach(function (button) {
+            document.querySelectorAll('.btn-editar').forEach(function (button) {
                 button.addEventListener('click', function () {
                     // troca para o comportamento real na aplicação
                 });

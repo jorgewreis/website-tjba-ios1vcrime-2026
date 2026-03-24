@@ -156,7 +156,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                     </div>
                     <div class="display-flex row row-fit justify-end">
                         <div class="col process-edit">
-                            <button type="button" class="" title="Abrir" data-edit-id="<?php echo htmlspecialchars($row['id'] ?? ''); ?>"><i class="fi fi-rr-file-edit"></i></button>
+                            <button type="button" class="btn-editar" title="Abrir processo" data-edit-id="<?php echo htmlspecialchars($row['id'] ?? ''); ?>"><i class="fi fi-rr-pen-square"></i></button>
                         </div>
                     </div>
                 </div>

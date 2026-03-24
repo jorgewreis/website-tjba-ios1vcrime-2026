@@ -252,9 +252,9 @@ if ($totalPages > 0) {
                         </div>
                     </div>
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                        <div class="col button-table button-edit" data-carta-id="<?php echo htmlspecialchars($idCarta); ?>" title="Editar">
-                            <i class="fi fi-rr-file-edit"></i>
-                        </div>
+                        <button type="button" class="btn-editar" data-carta-id="<?php echo htmlspecialchars($idCarta); ?>" title="Editar">
+                            <i class="fi fi-rr-pen-square"></i>
+                        </button>
                         <div class="display-flex row row-fit justify-end gap-y-sm allocate-chips-row allocate-users">
                         <?php
                             $alocados = $row['Alocados'] ?? [];
@@ -440,7 +440,7 @@ if ($totalPages > 0) {
                 window.location.href = '/frame.php?page=cejusccreate';
             });
 
-            document.querySelectorAll('.button-edit').forEach(function (btn) {
+            document.querySelectorAll('.btn-editar[data-carta-id]').forEach(function (btn) {
                 btn.addEventListener('click', function () {
                     const id = this.dataset.cartaId;
                     if (id) window.location.href = '/frame.php?page=cejuscedit&id=' + encodeURIComponent(id);

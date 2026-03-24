@@ -251,7 +251,7 @@ $statusClasses = [
                     </div>
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">
                             <div class="col part-edit">
-                                <button type="button" class="" title="Editar" data-edit-id="<?php echo htmlspecialchars($editId); ?>"><i class="fi fi-rr-file-edit"></i></button>
+                                <button type="button" class="btn-editar" title="Editar" data-edit-id="<?php echo htmlspecialchars($editId); ?>"><i class="fi fi-rr-pen-square"></i></button>
                             </div>
                             <div class="col">
                                 <span class="width-300 status padding-x-lg <?php echo htmlspecialchars($statusClass); ?>"><?php echo htmlspecialchars($statusLabel); ?></span>

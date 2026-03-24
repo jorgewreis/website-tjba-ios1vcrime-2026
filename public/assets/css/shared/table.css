@@ -429,7 +429,8 @@
 }
 
 @media (min-width: 1024px) {    
-    .button-edit {
+    .button-edit,
+    .btn-editar {
         visibility: visible;
         margin-top: 7px;
     }

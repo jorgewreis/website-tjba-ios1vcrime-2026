@@ -14,7 +14,7 @@
       - Ordenação: pendentes antes de finalizadas/canceladas.
       - Exclusão: apenas o maior número do ano (último criado). Cancelamento: mantém número, status cancelado, remove subtarefas.
       - Filtro de status na UI: Pendente | Finalizada | Cancelada. Na lista, linha finalizada não exibe badge de status.
-      IDs: oficio-processo, oficio-tipo, oficio-forma-cumprimento, oficio-meio-envio; linha data-oficio-id + button-edit; cancelar/excluir na tela de edição.
+      IDs: oficio-processo, oficio-tipo, oficio-forma-cumprimento, oficio-meio-envio; linha data-oficio-id + btn-editar; cancelar/excluir na tela de edição.
     -->
     <link rel="stylesheet" href="../../public/assets/css/shared/reset.css">
     <link rel="stylesheet" href="../../public/assets/css/shared/color.css">
@@ -166,9 +166,9 @@
                     </div>
                 </div>
                 <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                    <div class="col button-table button-edit" data-oficio-id="mock-334" title="Editar">
-                        <i class="fi fi-rr-file-edit"></i>
-                    </div>
+                    <button type="button" class="btn-editar" data-oficio-id="mock-334" title="Editar">
+                        <i class="fi fi-rr-pen-square"></i>
+                    </button>
                     <div class="col status-task" title="Enviar ofício">
                         <div class="width-300 status status-pending status-with-progress">
                             <span class="status-task-label width-300">Pendente</span>
@@ -231,9 +231,9 @@
                     </div>
                 </div>
                 <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                    <div class="col button-table button-edit" data-oficio-id="mock-333" title="Editar">
-                        <i class="fi fi-rr-file-edit"></i>
-                    </div>
+                    <button type="button" class="btn-editar" data-oficio-id="mock-333" title="Editar">
+                        <i class="fi fi-rr-pen-square"></i>
+                    </button>
                     <!-- Finalizada: status oculto na lista (ver filtros: Pendente / Finalizada / Cancelada) -->
                 </div>
             </div>
@@ -262,9 +262,9 @@
                     </div>
                 </div>
                 <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                    <div class="col button-table button-edit" data-oficio-id="mock-332" title="Editar">
-                        <i class="fi fi-rr-file-edit"></i>
-                    </div>
+                    <button type="button" class="btn-editar" data-oficio-id="mock-332" title="Editar">
+                        <i class="fi fi-rr-pen-square"></i>
+                    </button>
                     <div class="col">
                         <div class="width-300 padding-x-lg status status-cancelled">Cancelada</div>
                     </div>
@@ -300,9 +300,9 @@
                     </div>
                 </div>
                 <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                    <div class="col button-table button-edit" data-oficio-id="mock-331" title="Editar">
-                        <i class="fi fi-rr-file-edit"></i>
-                    </div>
+                    <button type="button" class="btn-editar" data-oficio-id="mock-331" title="Editar">
+                        <i class="fi fi-rr-pen-square"></i>
+                    </button>
                     <div class="col status-task" title="Enviar ofício">
                         <div class="width-300 status status-pending status-with-progress">
                             <span class="status-task-label width-300">Pendente</span>

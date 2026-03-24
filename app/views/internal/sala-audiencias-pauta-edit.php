@@ -294,7 +294,7 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                     </div>
                 </div>
                 <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                    <div class="col button-table button-edit" data-parte-edit="<?php echo htmlspecialchars((string) $parte['id_parte'], ENT_QUOTES); ?>" title="Editar parte"><i class="fi fi-rr-file-edit"></i></div>
+                    <button type="button" class="btn-editar" data-parte-edit="<?php echo htmlspecialchars((string) $parte['id_parte'], ENT_QUOTES); ?>" title="Editar parte"><i class="fi fi-rr-pen-square"></i></button>
                     <div class="col button-table" data-parte-remove="<?php echo htmlspecialchars((string) $parte['id_parte'], ENT_QUOTES); ?>" title="Remover parte"><i class="fi fi-rr-trash"></i></div>
                 </div>
             </div>

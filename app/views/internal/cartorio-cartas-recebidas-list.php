@@ -318,9 +318,9 @@ if ($totalPages > 0) {
                         </div>
                     </div>
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                        <div class="col button-table button-edit" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" title="Editar">
-                            <i class="fi fi-rr-file-edit"></i>
-                        </div>
+                        <button type="button" class="btn-editar" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" title="Editar">
+                            <i class="fi fi-rr-pen-square"></i>
+                        </button>
                         <div class="display-flex row row-fit justify-end gap-y-sm allocate-chips-row allocate-users">
                             <?php
                             $alocados = $row['Alocados'] ?? [];
@@ -602,7 +602,7 @@ if ($totalPages > 0) {
                 });
             }
 
-            document.querySelectorAll('.button-edit').forEach(function (button) {
+            document.querySelectorAll('.btn-editar[data-carta-id]').forEach(function (button) {
                 button.addEventListener('click', function () {
                     const cartaId = button.dataset.cartaId;
                     if (!cartaId) return;

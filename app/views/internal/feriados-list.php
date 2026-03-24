@@ -215,7 +215,7 @@ if ($totalPages > 0) {
                     </div>
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">
                         <div class="col part-edit">
-                            <button type="button" class="btn-editar" title="Editar" aria-label="Editar" data-id="<?php echo htmlspecialchars($fid, ENT_QUOTES); ?>"><i class="fi fi-rr-file-edit"></i></button>
+                            <button type="button" class="btn-editar" title="Editar" aria-label="Editar" data-id="<?php echo htmlspecialchars($fid, ENT_QUOTES); ?>"><i class="fi fi-rr-pen-square"></i></button>
                         </div>
                     </div>
                 </div>

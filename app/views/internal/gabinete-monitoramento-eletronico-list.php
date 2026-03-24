@@ -282,9 +282,9 @@ $statusLabelUi = static function (string $s): string {
                         </div>
                     </div>
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                        <div class="col button-table button-edit" data-monitoramento-id="<?php echo htmlspecialchars($idMon, ENT_QUOTES); ?>" title="Editar">
-                            <i class="fi fi-rr-file-edit"></i>
-                        </div>
+                        <button type="button" class="btn-editar" data-monitoramento-id="<?php echo htmlspecialchars($idMon, ENT_QUOTES); ?>" title="Editar">
+                            <i class="fi fi-rr-pen-square"></i>
+                        </button>
                         <?php if ($tarefaCancelada): ?>
                         <div class="col">
                             <div class="width-300 padding-x-lg status status-cancelled"><?php echo htmlspecialchars($statusLabelUi('cancelada')); ?></div>
@@ -461,7 +461,7 @@ $statusLabelUi = static function (string $s): string {
                 if (e.key === 'Enter') applyFilters();
             });
 
-            document.querySelectorAll('.button-edit').forEach(function (btn) {
+            document.querySelectorAll('.btn-editar[data-monitoramento-id]').forEach(function (btn) {
                 btn.addEventListener('click', function () {
                     const id = this.dataset.monitoramentoId;
                     if (id) window.location.href = '/frame.php?page=monitoramentogabineteedit&id=' + encodeURIComponent(id);

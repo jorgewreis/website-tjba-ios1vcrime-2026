@@ -275,9 +275,9 @@ if ($totalPages > 0) {
                         </div>
                     </div>
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                        <div class="col button-table button-edit" data-edital-id="<?php echo htmlspecialchars($idEdital); ?>" title="Editar">
-                            <i class="fi fi-rr-file-edit"></i>
-                        </div>
+                        <button type="button" class="btn-editar" data-edital-id="<?php echo htmlspecialchars($idEdital); ?>" title="Editar">
+                            <i class="fi fi-rr-pen-square"></i>
+                        </button>
                         <div class="display-flex row row-fit justify-end gap-y-sm allocate-chips-row allocate-users">
                         <?php
                             $alocados = $row['Alocados'] ?? [];
@@ -497,7 +497,7 @@ if ($totalPages > 0) {
                 window.location.href = '/frame.php?page=editaiscreate';
             });
 
-            document.querySelectorAll('.button-edit').forEach(function (btn) {
+            document.querySelectorAll('.btn-editar[data-edital-id]').forEach(function (btn) {
                 btn.addEventListener('click', function () {
                     const id = this.dataset.editalId;
                     if (id) window.location.href = '/frame.php?page=editaisedit&id=' + encodeURIComponent(id);

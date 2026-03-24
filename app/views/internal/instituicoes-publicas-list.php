@@ -160,7 +160,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                     </div>
                     <div class="display-flex row row-fit justify-end">
                         <div class="col inst-edit">
-                            <button type="button" class="" title="Editar" data-edit-id="<?php echo htmlspecialchars($row['id'] ?? ''); ?>"><i class="fi fi-rr-file-edit"></i></button>
+                            <button type="button" class="btn-editar" title="Editar" data-edit-id="<?php echo htmlspecialchars($row['id'] ?? ''); ?>"><i class="fi fi-rr-pen-square"></i></button>
                         </div>
                     </div>
                 </div>

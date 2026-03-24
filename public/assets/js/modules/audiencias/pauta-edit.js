@@ -155,7 +155,7 @@
         });
     });
 
-    document.querySelectorAll('.button-edit[data-parte-edit]').forEach(function (btn) {
+    document.querySelectorAll('.btn-editar[data-parte-edit]').forEach(function (btn) {
         btn.addEventListener('click', function () {
             var idParte = String(btn.getAttribute('data-parte-edit') || '').trim();
             if (!idParte) return;

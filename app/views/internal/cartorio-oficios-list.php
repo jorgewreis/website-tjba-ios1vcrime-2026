@@ -381,9 +381,9 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                         </div>
                     </div>
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                        <div class="col button-table button-edit" data-oficio-id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" title="Editar">
-                            <i class="fi fi-rr-file-edit"></i>
-                        </div>
+                        <button type="button" class="btn-editar" data-oficio-id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" title="Editar">
+                            <i class="fi fi-rr-pen-square"></i>
+                        </button>
                         <?php if ($tarefaCancelada): ?>
                         <div class="col">
                             <div class="width-300 padding-x-lg status status-cancelled">Cancelada</div>
@@ -621,7 +621,7 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                 if (e.key === 'Enter') applyFilters();
             });
 
-            document.querySelectorAll('.button-edit').forEach(function (btn) {
+            document.querySelectorAll('.btn-editar[data-oficio-id]').forEach(function (btn) {
                 btn.addEventListener('click', function () {
                     const id = this.dataset.oficioId;
                     if (id) window.location.href = '/frame.php?page=oficioscartorioedit&id=' + encodeURIComponent(id);
