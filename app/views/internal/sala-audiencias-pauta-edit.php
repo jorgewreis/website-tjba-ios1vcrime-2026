@@ -16,8 +16,44 @@ $row = $id !== '' ? $service->find($id) : null;
 $partes = $row !== null ? $service->listPartes((string) $row['id_pauta']) : [];
 $reusPresosMap = [];
 $reusPresosSigMap = [];
+
+// Normalização usada para comparar o nome do "reu" na audiência
+// com os nomes cadastrados em "réus presos" (reduz variações por espaços, acentos e pontuação).
+$normalizeNomeParte = static function (string $s): string {
+    $s = trim($s);
+    $s = str_replace("\xC2\xA0", ' ', $s); // NBSP
+    $s = preg_replace('/\p{Z}+/u', ' ', $s) ?: $s;
+    $s = preg_replace('/[[:space:]]+/u', ' ', $s) ?: $s;
+    $s = function_exists('mb_strtolower') ? mb_strtolower($s, 'UTF-8') : strtolower($s);
+
+    try {
+        if (class_exists('Normalizer')) {
+            $s = \Normalizer::normalize($s, \Normalizer::FORM_D);
+            $s = preg_replace('/\p{Mn}/u', '', $s) ?: $s;
+        }
+    } catch (Throwable $e) {
+        // fallback ignora
+    }
+
+    if (function_exists('iconv')) {
+        $trans = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $s);
+        if ($trans !== false && $trans !== null) {
+            $s = $trans;
+        }
+    }
+
+    $s = preg_replace('/[^\p{L}\p{N} ]/u', '', $s) ?: $s;
+    $s = preg_replace('/[[:space:]]+/u', ' ', $s) ?: $s;
+    return trim($s);
+};
+
+// Assinatura (somente letras/números, sem espaços) para comparação mais tolerante.
+$signatureNomeParte = static function (string $normalized): string {
+    return preg_replace('/[^\p{L}\p{N}]+/u', '', $normalized) ?: '';
+};
 if ($row !== null) {
     $processoId = trim((string) ($row['processo'] ?? ''));
+    $numeroProcesso = trim((string) ($row['numero_processo'] ?? ''));
     if ($processoId !== '') {
         try {
             $repoReuPresoProcesso = new GabineteReuPresoProcessoRepository(Conection::getInstance()->getConnection());
@@ -78,8 +114,6 @@ if ($row !== null) {
                 }
             }
 
-            // Também tenta fallback por CNJ (`numero_processo`) para cobrir divergências entre módulos.
-            $numeroProcesso = trim((string) ($row['numero_processo'] ?? ''));
             if ($numeroProcesso !== '') {
                 $nomesFallback = $repoReuPresoProcesso->listReusPresosNomesByNumeroProcesso($numeroProcesso);
                 foreach ($nomesFallback as $nomeReuPreso) {
@@ -95,6 +129,27 @@ if ($row !== null) {
             }
         } catch (Throwable $e) {
             // Ambiente sem tabelas do módulo gabinete ou falha pontual: não bloqueia a edição da pauta.
+            $reusPresosMap = [];
+            $reusPresosSigMap = [];
+        }
+    }
+
+    // Se por algum motivo o processo_id estiver vazio, ainda assim tenta por CNJ (numero_processo).
+    if ($processoId === '' && $numeroProcesso !== '') {
+        try {
+            $repoReuPresoProcesso = new GabineteReuPresoProcessoRepository(Conection::getInstance()->getConnection());
+            $nomesFallback = $repoReuPresoProcesso->listReusPresosNomesByNumeroProcesso($numeroProcesso);
+            foreach ($nomesFallback as $nomeReuPreso) {
+                $key = $normalizeNomeParte((string) $nomeReuPreso);
+                if ($key !== '') {
+                    $reusPresosMap[$key] = true;
+                    $sig = $signatureNomeParte($key);
+                    if ($sig !== '') {
+                        $reusPresosSigMap[$sig] = true;
+                    }
+                }
+            }
+        } catch (Throwable $e) {
             $reusPresosMap = [];
             $reusPresosSigMap = [];
         }
@@ -274,11 +329,17 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                     <select
                         class="width-700 height-md white"
                         id="parte-nome-selecao"
-                        style="display:none;"
                     >
                         <option value="__OUTRO__" selected>Outro (digite abaixo)</option>
                     </select>
-                    <input type="text" class="width-700 height-md" id="parte-nome" placeholder="Digite o nome da parte" autocomplete="off">
+                    <input
+                        type="text"
+                        class="width-700 height-md"
+                        id="parte-nome"
+                        placeholder="Digite o nome da parte"
+                        autocomplete="off"
+                        style="display:none;"
+                    >
                 </div>
                 <div class="col">
                     <label for="parte-tipo">Tipo de parte <span class="label-hint-obrigatorio">*obrigatório</span></label>
@@ -491,6 +552,34 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
             <span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span>
         </div>
     </div>
+
+    <?php
+        // Para filtrar o select DataJud: não mostrar nomes que já existem na lista de partes desta audiência.
+        // Assinatura = apenas letras/números (remove espaços e pontuação), para reduzir diferenças de formatação.
+        $existingPartSignatures = [];
+        foreach ($partes as $pItem) {
+            $nome = (string) ($pItem['nome_parte'] ?? '');
+            $nome = trim(str_replace("\xC2\xA0", ' ', $nome));
+            $norm = mb_strtolower($nome, 'UTF-8');
+            // Remove acentos e pontuação/espaços, mantendo apenas letras/números.
+            try {
+                if (class_exists('Normalizer')) {
+                    $norm = \Normalizer::normalize($norm, \Normalizer::FORM_D);
+                    $norm = preg_replace('/\p{Mn}/u', '', $norm) ?: $norm;
+                }
+            } catch (Throwable $e) {
+                // ignora
+            }
+            $sig = preg_replace('/[^\p{L}\p{N}]+/u', '', $norm) ?: '';
+            if ($sig !== '') {
+                $existingPartSignatures[$sig] = true;
+            }
+        }
+        $existingPartSignatures = array_keys($existingPartSignatures);
+    ?>
+    <script>
+        window.PAUTA_EXISTING_PART_NAMES_SIGS = <?php echo json_encode($existingPartSignatures, JSON_UNESCAPED_UNICODE); ?>;
+    </script>
 
     <script src="/assets/js/shared/text-formatter.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/shared/text-formatter.js') ?: time(); ?>"></script>
     <script src="/assets/js/modules/audiencias/pauta-edit.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-edit.js') ?: time(); ?>"></script>

@@ -224,21 +224,19 @@ function formatarPrioridades($prioridades): array
 
 function formatarPolo($polos): array
 {
-    $passivo = [];
+    $partes = [];
     foreach ((array) $polos as $polo) {
-        $tipo = $polo['polo'] ?? ($polo['tipoPolo'] ?? null);
-        if ($tipo !== 'PA' && strtolower($tipo ?? '') !== 'polo passivo') {
-            continue;
-        }
         $partes = (array) ($polo['parte'] ?? $polo['partes'] ?? []);
         foreach ($partes as $parte) {
             $nome = $parte['nome'] ?? ($parte['descricao'] ?? null);
             if ($nome) {
-                $passivo[] = trim($nome);
+                $partes[] = trim($nome);
             }
         }
     }
-    return array_values(array_unique($passivo));
+    // Observação: mantemos o nome da chave "polo_passivo" na resposta,
+    // mas aqui retornamos os nomes de todas as partes encontradas no processo.
+    return array_values(array_unique($partes));
 }
 
 function respond(array $payload, int $status = 200): void

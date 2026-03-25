@@ -47,6 +47,14 @@
         nomeInput.value = nome;
     }
 
+    function normalizeSelectedName(val) {
+        var s = String(val || '').trim();
+        if (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
+            s = TextFormatter.formatProperName(s, 255);
+        }
+        return s;
+    }
+
     function currentAudienciaSnapshot() {
         return JSON.stringify({
             tipo: String(document.getElementById('audiencia-edit-tipo')?.value || '').trim(),
@@ -99,9 +107,8 @@
     }
 
     function clearPartForm() {
+        // Limpa tipo/maioridade.
         [
-            'parte-nome',
-            'parte-nome-selecao',
             'parte-tipo',
             'parte-maioridade',
         ].forEach(function (id) {
@@ -109,17 +116,45 @@
             if (!el) return;
             if (el.tagName === 'SELECT') {
                 el.selectedIndex = 0;
-            } else {
-                el.value = '';
             }
         });
-        var parteNome = document.getElementById('parte-nome');
-        if (parteNome) {
-            parteNome.readOnly = false;
-        }
+
         var selectParteNome = document.getElementById('parte-nome-selecao');
-        if (selectParteNome) {
-            selectParteNome.value = '__OUTRO__';
+        var input = document.getElementById('parte-nome');
+        if (!selectParteNome || !input) return;
+
+        input.value = '';
+        input.placeholder = 'Digite o nome da parte';
+
+        var has = String(selectParteNome.dataset.hasDatajudParts || '0');
+        if (has === '1') {
+            // Volta ao padrão: mostra só select (com o primeiro nome).
+            selectParteNome.style.display = '';
+            selectParteNome.disabled = false;
+
+            var firstVal = String(selectParteNome.dataset.firstDatajudValue || '');
+            if (firstVal && selectParteNome.querySelector('option[value="' + firstVal + '"]')) {
+                selectParteNome.value = firstVal;
+            } else {
+                // fallback: pega primeira opção diferente de __OUTRO__
+                var opts = selectParteNome.querySelectorAll('option');
+                var picked = '';
+                opts.forEach(function (o) {
+                    if (picked) return;
+                    if ((o.value || '') !== '__OUTRO__') picked = o.value;
+                });
+                if (picked) selectParteNome.value = picked;
+            }
+
+            input.value = String(selectParteNome.value || '');
+            input.style.display = 'none';
+            input.readOnly = true;
+        } else {
+            // Sem nomes no DataJud: mostra input e oculta select.
+            selectParteNome.style.display = 'none';
+            selectParteNome.disabled = true;
+            input.style.display = '';
+            input.readOnly = false;
         }
     }
 
@@ -260,33 +295,34 @@
         if (select.dataset.loaded === '1') return;
         select.dataset.loaded = '1';
 
-        function setInputFromSelection(val) {
+        select.addEventListener('change', function () {
+            var val = String(select.value || '').trim();
             if (val === '__OUTRO__') {
+                // Selecionou "Outro": mostra input e oculta select.
+                input.style.display = '';
                 input.readOnly = false;
-                if (input.value === input.getAttribute('data-last-datajud-value')) {
-                    input.value = '';
-                }
-                input.removeAttribute('data-last-datajud-value');
+                input.focus();
+                select.style.display = 'none';
                 return;
             }
-            input.value = val;
-            input.setAttribute('data-last-datajud-value', val);
-            input.readOnly = true;
-        }
 
-        select.addEventListener('change', function () {
-            setInputFromSelection(String(select.value || '').trim());
-            if (!input.readOnly) {
-                input.focus();
-            }
+            // Selecionou nome da lista: oculta input (mantém select visível).
+            input.value = normalizeSelectedName(val);
+            input.style.display = 'none';
+            input.readOnly = true;
         });
 
-        // Default: liberar digitação.
+        // Estado inicial: mostra só o select; input fica oculto.
         select.value = '__OUTRO__';
         select.disabled = true;
         select.style.display = '';
-        input.readOnly = false;
+        input.style.display = 'none';
+        input.readOnly = true;
         input.placeholder = 'Digite o nome da parte';
+        input.value = '';
+
+        select.dataset.hasDatajudParts = '0';
+        select.dataset.firstDatajudValue = '';
 
         var digits = String(processoInput.value || '').replace(/\D/g, '');
         if (digits.length !== 20) {
@@ -313,37 +349,78 @@
                 }
                 nomes = dedupeStrings(nomes).sort(function (a, b) { return a.localeCompare(b, 'pt-BR'); });
 
-                // Monta opções: (1) Outro (2) DataJud.
-                var options = '';
-                options += '<option value="__OUTRO__">Outro (digite abaixo)</option>';
+                // Filtra do select apenas nomes que ainda não existem na lista de partes.
+                // Regra pedida: se já existir na audiência/processo, não deve aparecer no select.
+                var existingSigs = Array.isArray(window.PAUTA_EXISTING_PART_NAMES_SIGS) ? window.PAUTA_EXISTING_PART_NAMES_SIGS : [];
+                var existingSet = new Set(existingSigs);
+                function signatureNome(n) {
+                    var s = String(n || '').trim().toLowerCase();
+                    try {
+                        // Unicode property escapes (modern browsers).
+                        s = s.replace(/[^\p{L}\p{N}]+/gu, '');
+                    } catch (e) {
+                        // fallback simples (ASCII).
+                        s = s.replace(/[^a-z0-9]+/gi, '');
+                    }
+                    return s;
+                }
+                nomes = nomes.filter(function (nome) {
+                    var sig = signatureNome(nome);
+                    return sig && !existingSet.has(sig);
+                });
+
                 if (nomes.length > 0) {
-                    // Mostra só quando houver retorno.
+                    // Lista encontrada: mostra só select e oculta input.
+                    var options = '';
                     nomes.forEach(function (n) {
                         var safeVal = escapeHtml(n);
                         options += '<option value="' + safeVal + '">' + safeVal + '</option>';
                     });
+                    options += '<option value="__OUTRO__">Outro (digite abaixo)</option>';
                     select.innerHTML = options;
-                    select.value = '__OUTRO__';
+
+                    select.dataset.hasDatajudParts = '1';
+                    select.dataset.firstDatajudValue = nomes[0] || '';
+
+                    select.value = nomes[0] || '';
+                    input.value = normalizeSelectedName(select.value || '');
+
+                    select.disabled = false;
                     select.style.display = '';
+                    input.style.display = 'none';
+                    input.readOnly = true;
                 } else {
-                    // Se não encontrou nomes no DataJud, ainda mantemos o select visível
-                    // para o usuário perceber que pode digitar manualmente.
+                    // Nenhuma parte retornada: oculta select e mostra input.
+                    select.dataset.hasDatajudParts = '0';
+                    select.dataset.firstDatajudValue = '';
+
                     select.innerHTML = '<option value="__OUTRO__" selected>Outro (digite abaixo)</option>';
                     select.value = '__OUTRO__';
-                    select.style.display = '';
+                    select.disabled = true;
+                    select.style.display = 'none';
+
+                    input.value = '';
+                    input.style.display = '';
+                    input.readOnly = false;
+                    input.placeholder = 'Digite o nome da parte';
                 }
-                setInputFromSelection('__OUTRO__');
-                select.disabled = false;
             })
             .catch(function () {
                 // Se falhar, mantém o input livre (sem bloquear usuário).
                 if (typeof showToast === 'function') {
                     showToast({ type: 'info', variant: 'full', title: 'DataJud', message: 'Nao foi possivel consultar nomes do processo no DataJud. Voce pode digitar manualmente.' });
                 }
-                select.style.display = '';
+                select.dataset.hasDatajudParts = '0';
+                select.dataset.firstDatajudValue = '';
+                select.innerHTML = '<option value="__OUTRO__" selected>Outro (digite abaixo)</option>';
                 select.value = '__OUTRO__';
+                select.disabled = true;
+                select.style.display = 'none';
+
+                input.value = '';
+                input.style.display = '';
                 input.readOnly = false;
-                select.disabled = false;
+                input.placeholder = 'Digite o nome da parte';
             });
     }
 
