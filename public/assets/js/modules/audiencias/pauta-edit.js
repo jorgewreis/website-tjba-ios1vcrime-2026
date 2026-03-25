@@ -492,5 +492,25 @@
     }
 
     initParteNomeDatajudSelect();
+    // #region agent log J2: debug values from server
+    try {
+        var dbg = window.PAUTA_DEBUG_REUS_PRESOS || null;
+        if (dbg) {
+            fetch('http://127.0.0.1:7798/ingest/64db24e1-3fcf-482a-aa07-c0ab6247ae38', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'b44cef' },
+                body: JSON.stringify({
+                    sessionId: 'b44cef',
+                    runId: 'pre3',
+                    hypothesisId: 'J2',
+                    location: 'pauta-edit.js:debug-reus-presos',
+                    message: 'PAUTA_DEBUG_REUS_PRESOS payload',
+                    data: dbg,
+                    timestamp: Date.now()
+                })
+            }).catch(function () {});
+        }
+    } catch (e) {}
+    // #endregion
     initialAudienciaSnapshot = currentAudienciaSnapshot();
 })();

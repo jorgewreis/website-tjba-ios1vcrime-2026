@@ -424,6 +424,7 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
             <h2>Partes cadastradas</h2>
         </div>
         <?php $__debugLoggedReuPresoMatch = false; ?>
+        <?php $__dbgFirstReuPresoData = null; ?>
         <?php foreach ($partesOrdenadas as $parte): ?>
         <?php
             $defensorTexto = 'Nenhum defensor vinculado';
@@ -513,6 +514,7 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                         ],
                         'timestamp' => (int) round(microtime(true) * 1000),
                     ];
+                    $__dbgFirstReuPresoData = $payload['data'];
                     @file_put_contents($__dbgLogPath, json_encode($payload, JSON_UNESCAPED_UNICODE) . PHP_EOL, FILE_APPEND);
                     $__debugLoggedReuPresoMatch = true;
                 }
@@ -617,6 +619,19 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
             </div>
         </div>
         <?php endforeach; ?>
+
+        <?php
+            // Evidência para o debug via JS (evita dependência de file_put_contents).
+            $dbgReusPresosScript = [
+                'mapSize' => count($reusPresosMap),
+                'sigMapSize' => count($reusPresosSigMap),
+                'firstReuComputed' => $__dbgFirstReuPresoData !== null ? 1 : 0,
+                'firstReuData' => $__dbgFirstReuPresoData ?? (object)[],
+            ];
+        ?>
+        <script>
+            window.PAUTA_DEBUG_REUS_PRESOS = <?php echo json_encode($dbgReusPresosScript, JSON_UNESCAPED_UNICODE); ?>;
+        </script>
 
         <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
             <button type="button" class="btn btn-secondary" id="btn-audiencia-edit-voltar">Voltar</button>
