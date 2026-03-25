@@ -351,6 +351,7 @@
 
                 // Filtra do select apenas nomes que ainda não existem na lista de partes.
                 // Regra pedida: se já existir na audiência/processo, não deve aparecer no select.
+                var nomesAntesFiltro = nomes.length;
                 var existingSigs = Array.isArray(window.PAUTA_EXISTING_PART_NAMES_SIGS) ? window.PAUTA_EXISTING_PART_NAMES_SIGS : [];
                 var existingSet = new Set(existingSigs);
                 function signatureNome(n) {
@@ -368,6 +369,32 @@
                     var sig = signatureNome(nome);
                     return sig && !existingSet.has(sig);
                 });
+
+                // #region agent log H1:DataJud response & filter
+                fetch('http://127.0.0.1:7798/ingest/64db24e1-3fcf-482a-aa07-c0ab6247ae38', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Debug-Session-Id': 'b44cef'
+                    },
+                    body: JSON.stringify({
+                        sessionId: 'b44cef',
+                        runId: 'pre',
+                        hypothesisId: 'H1',
+                        location: 'pauta-edit.js:datajud-filter',
+                        message: 'DataJud nomes count (antes/depois do filtro)',
+                        data: {
+                            digitsLen: String(digits || '').replace(/\\D/g, '').length,
+                            poloPassivoIsArray: Boolean(data && Array.isArray(data.polo_passivo)),
+                            poloPassivoLen: data && Array.isArray(data.polo_passivo) ? data.polo_passivo.length : null,
+                            nomesAntesFiltro: nomesAntesFiltro,
+                            nomesDepoisFiltro: nomes.length,
+                            existingSignaturesCount: existingSet ? existingSet.size : null
+                        },
+                        timestamp: Date.now()
+                    })
+                }).catch(function () {});
+                // #endregion
 
                 if (nomes.length > 0) {
                     // Lista encontrada: mostra só select e oculta input.

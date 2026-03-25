@@ -16,6 +16,7 @@ $row = $id !== '' ? $service->find($id) : null;
 $partes = $row !== null ? $service->listPartes((string) $row['id_pauta']) : [];
 $reusPresosMap = [];
 $reusPresosSigMap = [];
+$__dbgLogPath = dirname(__DIR__, 3) . '/debug-b44cef.log';
 
 // Normalização usada para comparar o nome do "reu" na audiência
 // com os nomes cadastrados em "réus presos" (reduz variações por espaços, acentos e pontuação).
@@ -58,6 +59,8 @@ if ($row !== null) {
         try {
             $repoReuPresoProcesso = new GabineteReuPresoProcessoRepository(Conection::getInstance()->getConnection());
             $nomesReusPresos = $repoReuPresoProcesso->listReusPresosNomesByProcessoId($processoId);
+            $dbgCountProcesso = is_array($nomesReusPresos) ? count($nomesReusPresos) : 0;
+            $dbgCountCnj = 0;
 
             // Normaliza nomes para comparação (acentos/espacos não-padrão/pontuação/maiúsculas).
             $normalizeNomeParte = static function (string $s): string {
@@ -116,6 +119,7 @@ if ($row !== null) {
 
             if ($numeroProcesso !== '') {
                 $nomesFallback = $repoReuPresoProcesso->listReusPresosNomesByNumeroProcesso($numeroProcesso);
+                $dbgCountCnj = is_array($nomesFallback) ? count($nomesFallback) : 0;
                 foreach ($nomesFallback as $nomeReuPreso) {
                     $key = $normalizeNomeParte((string) $nomeReuPreso);
                     if ($key !== '') {
@@ -127,6 +131,26 @@ if ($row !== null) {
                     }
                 }
             }
+
+            // #region agent log H2:reusPresosMap build counts
+            $payload = [
+                'sessionId' => 'b44cef',
+                'runId' => 'pre',
+                'hypothesisId' => 'H2',
+                'location' => 'sala-audiencias-pauta-edit.php:reusPresosMapBuild',
+                'message' => 'Contagem BD para reus presos (por processo e CNJ) + tamanho dos mapas',
+                'data' => [
+                    'processoIdProvided' => $processoId !== '' ? 1 : 0,
+                    'numeroProcessoProvided' => $numeroProcesso !== '' ? 1 : 0,
+                    'countByProcessoId' => (int) ($dbgCountProcesso ?? 0),
+                    'countByCnj' => (int) ($dbgCountCnj ?? 0),
+                    'reusPresosMapSize' => count($reusPresosMap),
+                    'reusPresosSigMapSize' => count($reusPresosSigMap),
+                ],
+                'timestamp' => (int) round(microtime(true) * 1000),
+            ];
+            @file_put_contents($__dbgLogPath, json_encode($payload, JSON_UNESCAPED_UNICODE) . PHP_EOL, FILE_APPEND);
+            // #endregion
         } catch (Throwable $e) {
             // Ambiente sem tabelas do módulo gabinete ou falha pontual: não bloqueia a edição da pauta.
             $reusPresosMap = [];
@@ -367,6 +391,7 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
             <h2>Partes cadastradas</h2>
         </div>
+        <?php $__debugLoggedReuPresoMatch = false; ?>
         <?php foreach ($partesOrdenadas as $parte): ?>
         <?php
             $defensorTexto = 'Nenhum defensor vinculado';
@@ -435,6 +460,31 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                     }
                 }
                 // "Réu preso" deve ficar colorido (color-danger).
+                // #region agent log H3:H4:match reu preso
+                if (!$__debugLoggedReuPresoMatch) {
+                    $hasExactInMap = ($nomeParteAtualKey !== '' && isset($reusPresosMap[$nomeParteAtualKey]));
+                    $hasSigInSigMap = ($nomeParteAtualSig !== '' && isset($reusPresosSigMap[$nomeParteAtualSig]));
+                    $payload = [
+                        'sessionId' => 'b44cef',
+                        'runId' => 'pre',
+                        'hypothesisId' => 'H3',
+                        'location' => 'sala-audiencias-pauta-edit.php:reuPresoMatch',
+                        'message' => 'Match reu preso por chaves/assinaturas',
+                        'data' => [
+                            'tipoParte' => $tipoParteAtual,
+                            'nomeSigComputed' => $nomeParteAtualSig !== '' ? 1 : 0,
+                            'hasExactInMap' => $hasExactInMap ? 1 : 0,
+                            'hasSigInSigMap' => $hasSigInSigMap ? 1 : 0,
+                            'isReuPresoAfterComparisons' => $isReuPreso ? 1 : 0,
+                            'reusPresosMapSize' => count($reusPresosMap),
+                            'reusPresosSigMapSize' => count($reusPresosSigMap),
+                        ],
+                        'timestamp' => (int) round(microtime(true) * 1000),
+                    ];
+                    @file_put_contents($__dbgLogPath, json_encode($payload, JSON_UNESCAPED_UNICODE) . PHP_EOL, FILE_APPEND);
+                    $__debugLoggedReuPresoMatch = true;
+                }
+                // #endregion
                 $minorInfoParte = $isReuPreso
                     ? '<span style="color: var(--color-danger); font-weight: 600;">Réu preso</span>'
                     : 'Réu solto';
