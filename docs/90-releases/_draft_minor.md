@@ -65,4 +65,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: ultima tentativa padrao de correcao** `[e78cb6d]`
 - **Fix: tentativa de correcao com debug** `[18b60f1]`
 - **Fix: nova tentativa de correcao debug** `[95a7f18]`
+- **Fix: correcao parte 1 debug** `[10e06c3]`
 
