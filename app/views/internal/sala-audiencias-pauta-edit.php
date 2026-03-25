@@ -274,8 +274,8 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                 $isReuPreso = $nomeParteAtualKey !== '' && isset($reusPresosMap[$nomeParteAtualKey]);
                 // "Réu preso" deve ficar colorido (color-danger).
                 $minorInfoParte = $isReuPreso
-                    ? 'Réu <span style="color: var(--color-danger); font-weight: 600;">preso</span>'
-                    : 'Réu';
+                    ? '<span style="color: var(--color-danger); font-weight: 600;">Réu preso</span>'
+                    : 'Réu solto';
             }
 
             // Defensor/advogado só deve existir e ser exibido para reu ou vitima.
