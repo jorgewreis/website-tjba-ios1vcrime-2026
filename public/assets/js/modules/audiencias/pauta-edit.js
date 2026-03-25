@@ -392,7 +392,7 @@
                 });
 
                 // #region agent log H4 frontend counts
-                fetch('http://127.0.0.1:7798/ingest/64db24e1-3fcf-482a-aa07-c0ab6247ae38',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b44cef'},body:JSON.stringify({sessionId:'b44cef',runId:'run-datajud-1',hypothesisId:'H4',location:'pauta-edit.js:datajudCounts',message:'Contagens de nomes no frontend',data:{poloPassivoLen:data&&Array.isArray(data.polo_passivo)?data.polo_passivo.length:0,nomesAntesFiltro:nomesAntesFiltro,nomesDepoisFiltro:nomes.length},timestamp:Date.now()})}).catch(()=>{});
+                fetch('http://127.0.0.1:7798/ingest/64db24e1-3fcf-482a-aa07-c0ab6247ae38',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b44cef'},body:JSON.stringify({sessionId:'b44cef',runId:'run-datajud-1',hypothesisId:'H4',location:'pauta-edit.js:datajudCounts',message:'Contagens de nomes no frontend',data:{poloPassivoLen:data&&Array.isArray(data.polo_passivo)?data.polo_passivo.length:0,nomesAntesFiltro:nomesAntesFiltro,nomesDepoisFiltro:nomes.length,nomesSample:(nomes||[]).slice(0,8)},timestamp:Date.now()})}).catch(()=>{});
                 // #endregion
 
 

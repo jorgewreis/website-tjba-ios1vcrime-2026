@@ -197,13 +197,7 @@ if (!is_array($decoded) || !isset($decoded['hits']['hits'][0]['_source'])) {
 $source = $decoded['hits']['hits'][0]['_source'];
 
 $poloRaw = $source['polo'] ?? [];
-$poloPassivo = formatarPolo($poloRaw);
-if (count($poloPassivo) === 0) {
-    $poloPassivo = extractPartNamesFromSource($source);
-}
-if (count($poloPassivo) === 0) {
-    $poloPassivo = extractLikelyPersonNamesFromAnySource($source);
-}
+$poloPassivo = extractPartNamesFromPolos($source);
 
 // #region agent log H2/H3 source parts shape
 $partesDiretas = is_array($source['partes'] ?? null) ? count((array) $source['partes']) : 0;
@@ -265,7 +259,8 @@ $result = [
         'partes_count' => is_array($source['partes'] ?? null) ? count((array) $source['partes']) : null,
         'nivel_sigilo' => $source['nivelSigilo'] ?? null,
         'polo_passivo_out_count' => count($poloPassivo),
-        'any_source_names_count' => count(extractLikelyPersonNamesFromAnySource($source)),
+        'polo_passivo_out_sample' => array_slice($poloPassivo, 0, 8),
+        'polo_only_mode' => true,
         'polo_first_item' => is_array($source['polo'] ?? null) ? (($source['polo'][0] ?? null)) : null,
         'poloAtivo_first_item' => is_array($source['poloAtivo'] ?? null) ? (($source['poloAtivo'][0] ?? null)) : null,
         'poloPassivo_first_item' => is_array($source['poloPassivo'] ?? null) ? (($source['poloPassivo'][0] ?? null)) : null,
@@ -427,137 +422,19 @@ function formatarPolo($polos): array
     return array_values(array_unique($nomes));
 }
 
-function extractPartNamesFromSource(array $source): array
+function extractPartNamesFromPolos(array $source): array
 {
     $nomes = [];
-    $collections = [
-        $source['polo'] ?? null,
-        $source['poloAtivo'] ?? null,
-        $source['poloPassivo'] ?? null,
-        $source['partes'] ?? null,
-        $source['participantes'] ?? null,
-    ];
-
-    foreach ($collections as $collection) {
-        collectPartNames($collection, $nomes);
-    }
-
-    return array_values(array_keys($nomes));
-}
-
-function collectPartNames($node, array &$nomes): void
-{
-    if (is_string($node)) {
-        $v = trim($node);
-        if ($v !== '' && looksLikePersonName($v)) {
-            $nomes[$v] = true;
-        }
-        return;
-    }
-
-    if (!is_array($node)) {
-        return;
-    }
-
-    // Captura nomes em chaves comuns.
-    foreach (['nome', 'descricao', 'nomeParte', 'nomePessoa'] as $k) {
-        if (isset($node[$k]) && is_string($node[$k])) {
-            $v = trim((string) $node[$k]);
-            if ($v !== '' && looksLikePersonName($v)) {
+    foreach (['polo', 'poloAtivo', 'poloPassivo'] as $campo) {
+        $extraidos = formatarPolo($source[$campo] ?? []);
+        foreach ($extraidos as $nome) {
+            $v = trim((string) $nome);
+            if ($v !== '') {
                 $nomes[$v] = true;
             }
         }
     }
-
-    // Percorre recursivamente estruturas típicas de partes.
-    foreach ($node as $key => $value) {
-        $keyStr = '';
-        if (is_string($key)) {
-            $keyStr = function_exists('mb_strtolower') ? mb_strtolower($key, 'UTF-8') : strtolower($key);
-        }
-        if (
-            $keyStr === '' ||
-            strpos($keyStr, 'polo') !== false ||
-            strpos($keyStr, 'parte') !== false ||
-            strpos($keyStr, 'particip') !== false ||
-            strpos($keyStr, 'represent') !== false ||
-            strpos($keyStr, 'advog') !== false ||
-            is_numeric($key)
-        ) {
-            collectPartNames($value, $nomes);
-        }
-    }
-}
-
-function looksLikePersonName(string $v): bool
-{
-    // Evita coletar textos curtos/códigos e rótulos do processo.
-    $s = trim(preg_replace('/\s+/u', ' ', $v) ?: $v);
-    $len = function_exists('mb_strlen') ? mb_strlen($s, 'UTF-8') : strlen($s);
-    if ($s === '' || $len < 5) {
-        return false;
-    }
-    $tokens = preg_split('/\s+/u', $s) ?: [];
-    return count($tokens) >= 2;
-}
-
-function extractLikelyPersonNamesFromAnySource(array $source): array
-{
-    $nomes = [];
-    collectLikelyPersonNamesRecursive($source, $nomes);
     return array_values(array_keys($nomes));
-}
-
-function collectLikelyPersonNamesRecursive($node, array &$nomes): void
-{
-    if (is_string($node)) {
-        $v = sanitizeNameCandidate($node);
-        if ($v !== '' && looksLikeLikelyPersonNameLoose($v)) {
-            $nomes[$v] = true;
-        }
-        return;
-    }
-    if (!is_array($node)) {
-        return;
-    }
-    foreach ($node as $value) {
-        collectLikelyPersonNamesRecursive($value, $nomes);
-    }
-}
-
-function sanitizeNameCandidate(string $value): string
-{
-    $s = trim((string) (preg_replace('/\s+/u', ' ', $value) ?: $value));
-    $s = trim((string) (preg_replace('/[^\p{L}\p{N}\s\-\']/u', '', $s) ?: $s));
-    return $s;
-}
-
-function looksLikeLikelyPersonNameLoose(string $value): bool
-{
-    $s = trim($value);
-    if ($s === '') {
-        return false;
-    }
-    $len = function_exists('mb_strlen') ? mb_strlen($s, 'UTF-8') : strlen($s);
-    if ($len < 8 || $len > 90) {
-        return false;
-    }
-    $tokens = preg_split('/\s+/u', $s) ?: [];
-    if (count($tokens) < 2 || count($tokens) > 8) {
-        return false;
-    }
-    $lower = function_exists('mb_strtolower') ? mb_strtolower($s, 'UTF-8') : strtolower($s);
-    $blocked = [
-        'processo', 'audi', 'movimento', 'procedimento', 'trafico', 'lei', 'vara',
-        'justica', 'tribunal', 'classe', 'assunto', 'orgao', 'julgador', 'eletronico',
-        'fisico', 'cumprimento', 'expedicao', 'denuncia', 'defesa'
-    ];
-    foreach ($blocked as $b) {
-        if (strpos($lower, $b) !== false) {
-            return false;
-        }
-    }
-    return (bool) preg_match('/\p{L}/u', $s);
 }
 
 function respond(array $payload, int $status = 200): void

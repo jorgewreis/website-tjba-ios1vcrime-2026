@@ -63,13 +63,7 @@ final class DataJudService
 
         $source = $decoded['hits']['hits'][0]['_source'];
 
-        $poloPassivo = $this->formatarPolo($source['polo'] ?? []);
-        if (count($poloPassivo) === 0) {
-            $poloPassivo = $this->extractPartNamesFromSource($source);
-        }
-        if (count($poloPassivo) === 0) {
-            $poloPassivo = $this->extractLikelyPersonNamesFromAnySource($source);
-        }
+        $poloPassivo = $this->extractPartNamesFromPolos($source);
 
         return [
             'numero' => $source['numeroProcesso'] ?? $numero,
@@ -216,128 +210,18 @@ final class DataJudService
         return array_values(array_unique($passivo));
     }
 
-    private function extractPartNamesFromSource(array $source): array
+    private function extractPartNamesFromPolos(array $source): array
     {
         $nomes = [];
-        $collections = [
-            $source['polo'] ?? null,
-            $source['poloAtivo'] ?? null,
-            $source['poloPassivo'] ?? null,
-            $source['partes'] ?? null,
-            $source['participantes'] ?? null,
-        ];
-        foreach ($collections as $collection) {
-            $this->collectPartNames($collection, $nomes);
-        }
-        return array_values(array_keys($nomes));
-    }
-
-    private function collectPartNames($node, array &$nomes): void
-    {
-        if (is_string($node)) {
-            $v = trim($node);
-            if ($v !== '' && $this->looksLikePersonName($v)) {
-                $nomes[$v] = true;
-            }
-            return;
-        }
-        if (!is_array($node)) {
-            return;
-        }
-        foreach (['nome', 'descricao', 'nomeParte', 'nomePessoa'] as $k) {
-            if (isset($node[$k]) && is_string($node[$k])) {
-                $v = trim((string) $node[$k]);
-                if ($v !== '' && $this->looksLikePersonName($v)) {
+        foreach (['polo', 'poloAtivo', 'poloPassivo'] as $campo) {
+            $extraidos = $this->formatarPolo((array) ($source[$campo] ?? []));
+            foreach ($extraidos as $nome) {
+                $v = trim((string) $nome);
+                if ($v !== '') {
                     $nomes[$v] = true;
                 }
             }
         }
-        foreach ($node as $key => $value) {
-            $keyStr = '';
-            if (is_string($key)) {
-                $keyStr = function_exists('mb_strtolower') ? mb_strtolower($key, 'UTF-8') : strtolower($key);
-            }
-            if (
-                $keyStr === '' ||
-                strpos($keyStr, 'polo') !== false ||
-                strpos($keyStr, 'parte') !== false ||
-                strpos($keyStr, 'particip') !== false ||
-                strpos($keyStr, 'represent') !== false ||
-                strpos($keyStr, 'advog') !== false ||
-                is_numeric($key)
-            ) {
-                $this->collectPartNames($value, $nomes);
-            }
-        }
-    }
-
-    private function looksLikePersonName(string $v): bool
-    {
-        $s = trim((string) (preg_replace('/\s+/u', ' ', $v) ?: $v));
-        $len = function_exists('mb_strlen') ? mb_strlen($s, 'UTF-8') : strlen($s);
-        if ($s === '' || $len < 5) {
-            return false;
-        }
-        $tokens = preg_split('/\s+/u', $s) ?: [];
-        return count($tokens) >= 2;
-    }
-
-    private function extractLikelyPersonNamesFromAnySource(array $source): array
-    {
-        $nomes = [];
-        $this->collectLikelyPersonNamesRecursive($source, $nomes);
         return array_values(array_keys($nomes));
-    }
-
-    private function collectLikelyPersonNamesRecursive($node, array &$nomes): void
-    {
-        if (is_string($node)) {
-            $v = $this->sanitizeNameCandidate($node);
-            if ($v !== '' && $this->looksLikeLikelyPersonNameLoose($v)) {
-                $nomes[$v] = true;
-            }
-            return;
-        }
-        if (!is_array($node)) {
-            return;
-        }
-        foreach ($node as $value) {
-            $this->collectLikelyPersonNamesRecursive($value, $nomes);
-        }
-    }
-
-    private function sanitizeNameCandidate(string $value): string
-    {
-        $s = trim((string) (preg_replace('/\s+/u', ' ', $value) ?: $value));
-        $s = trim((string) (preg_replace('/[^\p{L}\p{N}\s\-\']/u', '', $s) ?: $s));
-        return $s;
-    }
-
-    private function looksLikeLikelyPersonNameLoose(string $value): bool
-    {
-        $s = trim($value);
-        if ($s === '') {
-            return false;
-        }
-        $len = function_exists('mb_strlen') ? mb_strlen($s, 'UTF-8') : strlen($s);
-        if ($len < 8 || $len > 90) {
-            return false;
-        }
-        $tokens = preg_split('/\s+/u', $s) ?: [];
-        if (count($tokens) < 2 || count($tokens) > 8) {
-            return false;
-        }
-        $lower = function_exists('mb_strtolower') ? mb_strtolower($s, 'UTF-8') : strtolower($s);
-        $blocked = [
-            'processo', 'audi', 'movimento', 'procedimento', 'trafico', 'lei', 'vara',
-            'justica', 'tribunal', 'classe', 'assunto', 'orgao', 'julgador', 'eletronico',
-            'fisico', 'cumprimento', 'expedicao', 'denuncia', 'defesa'
-        ];
-        foreach ($blocked as $b) {
-            if (strpos($lower, $b) !== false) {
-                return false;
-            }
-        }
-        return (bool) preg_match('/\p{L}/u', $s);
     }
 }
