@@ -109,7 +109,7 @@ final class SalaAudienciasPautaParteRepository
 
     /**
      * @param list<string> $pautaIds
-     * @return array<string, list<array{nome_parte: string, cumprimento: string}>> id_pauta => partes com cumprimento
+     * @return array<string, list<array{nome_parte: string, tipo_parte: string, expedicao: string, cumprimento: string}>> id_pauta => partes com status
      */
     public function listCumprimentosByPautaIds(array $pautaIds): array
     {
@@ -132,7 +132,7 @@ final class SalaAudienciasPautaParteRepository
         }
 
         $sql = sprintf(
-            'SELECT `pauta`, `nome_parte`, `cumprimento`
+            'SELECT `pauta`, `nome_parte`, `tipo_parte`, `expedicao`, `cumprimento`
              FROM `%s`
              WHERE `ativo` = 1
                AND `pauta` IN (%s)
@@ -161,6 +161,8 @@ final class SalaAudienciasPautaParteRepository
             }
             $out[$pautaId][] = [
                 'nome_parte' => trim((string) ($row['nome_parte'] ?? '')),
+                'tipo_parte' => trim((string) ($row['tipo_parte'] ?? '')),
+                'expedicao' => trim((string) ($row['expedicao'] ?? 'Não expedido')),
                 'cumprimento' => trim((string) ($row['cumprimento'] ?? '')),
             ];
         }

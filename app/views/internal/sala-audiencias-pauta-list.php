@@ -149,20 +149,54 @@ $endItem = min($offset + count($rows), $total);
                         <span class="minor-info">Intimações</span>
                         <span class="major-info">
                             <?php
-                                $cumprimentos = is_array($row['partes_cumprimento'] ?? null) ? $row['partes_cumprimento'] : [];
-                                foreach ($cumprimentos as $cumprimentoParte):
-                                    $cp = is_array($cumprimentoParte)
-                                        ? $cumprimentoParte
-                                        : ['nome_parte' => '', 'cumprimento' => (string) $cumprimentoParte];
+                                $partesStatus = is_array($row['partes_cumprimento'] ?? null) ? $row['partes_cumprimento'] : [];
+                                $ordemTipos = [
+                                    'reu' => 0,
+                                    'vitima' => 1,
+                                    'testemunha_denuncia' => 2,
+                                    'testemunha_defesa' => 3,
+                                ];
+                                usort($partesStatus, static function ($a, $b) use ($ordemTipos): int {
+                                    $ta = (string) (($a['tipo_parte'] ?? '') === '' ? ($a['tipo'] ?? '') : ($a['tipo_parte'] ?? ''));
+                                    $tb = (string) (($b['tipo_parte'] ?? '') === '' ? ($b['tipo'] ?? '') : ($b['tipo_parte'] ?? ''));
+                                    $ia = $ordemTipos[$ta] ?? 4;
+                                    $ib = $ordemTipos[$tb] ?? 4;
+                                    if ($ia === $ib) {
+                                        return 0;
+                                    }
+                                    return $ia <=> $ib;
+                                });
+
+                                foreach ($partesStatus as $parteStatus):
+                                    $cp = is_array($parteStatus)
+                                        ? $parteStatus
+                                        : ['nome_parte' => '', 'tipo_parte' => '', 'expedicao' => 'Não expedido', 'cumprimento' => (string) $parteStatus];
+
                                     $nomeParte = trim((string) ($cp['nome_parte'] ?? ''));
-                                    $statusCumpr = (string) ($cp['cumprimento'] ?? '');
-                                    $miniClass = $statusCumpr === 'cumprido'
-                                        ? 'status-finished'
-                                        : ($statusCumpr === 'nao_cumprido' ? 'status-cancelled' : 'status-pending');
-                                    $labelCumprimento = ucfirst(str_replace('_', ' ', $statusCumpr !== '' ? $statusCumpr : 'pendente'));
-                                    $titleIntimacao = ($nomeParte !== '' ? $nomeParte : 'Parte') . ' — ' . $labelCumprimento;
+                                    $expVal = trim((string) ($cp['expedicao'] ?? 'Não expedido'));
+                                    $cumVal = trim((string) ($cp['cumprimento'] ?? ''));
+
+                                    // Metade esquerda = expedição. "Não expedido" fica em status pendente; qualquer outro em concluído.
+                                    $leftColor = ($expVal === '' || $expVal === 'Não expedido')
+                                        ? 'var(--color-secondary-bg-light)'
+                                        : 'var(--color-success)';
+
+                                    // Metade direita = cumprimento (mantém as mesmas cores do mini-status original).
+                                    $rightColor = $cumVal === 'cumprido'
+                                        ? 'var(--color-success)'
+                                        : ($cumVal === 'nao_cumprido' ? 'var(--color-danger)' : 'var(--color-secondary-bg-light)');
+
+                                    $labelCumprimento = ucfirst(str_replace('_', ' ', $cumVal !== '' ? $cumVal : 'pendente'));
+                                    $labelExpedicao = $expVal !== '' ? $expVal : 'Não expedido';
+                                    $titleIntimacao = ($nomeParte !== '' ? $nomeParte : 'Parte')
+                                        . ' — Expedição: ' . $labelExpedicao
+                                        . ' | Cumprimento: ' . $labelCumprimento;
                             ?>
-                                <div class="mini-status <?php echo $miniClass; ?>" title="<?php echo htmlspecialchars($titleIntimacao, ENT_QUOTES); ?>"></div>
+                                <div
+                                    class="mini-status mini-status-dual"
+                                    style="--left-color: <?php echo htmlspecialchars($leftColor, ENT_QUOTES); ?>; --right-color: <?php echo htmlspecialchars($rightColor, ENT_QUOTES); ?>"
+                                    title="<?php echo htmlspecialchars($titleIntimacao, ENT_QUOTES); ?>"
+                                ></div>
                             <?php endforeach; ?>
                         </span>
                     </div>

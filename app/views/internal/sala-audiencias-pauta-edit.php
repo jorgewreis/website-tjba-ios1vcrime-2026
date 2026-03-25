@@ -43,6 +43,25 @@ foreach ($partes as $parteItem) {
         }
     }
 }
+
+$ordemTiposPartes = [
+    'reu' => 0,
+    'vitima' => 1,
+    'testemunha_denuncia' => 2,
+    'testemunha_defesa' => 3,
+];
+$partesOrdenadas = $partes;
+usort($partesOrdenadas, static function (array $a, array $b) use ($ordemTiposPartes): int {
+    $ta = (string) ($a['tipo_parte'] ?? '');
+    $tb = (string) ($b['tipo_parte'] ?? '');
+    $ia = $ordemTiposPartes[$ta] ?? 4;
+    $ib = $ordemTiposPartes[$tb] ?? 4;
+    if ($ia === $ib) {
+        return strcmp((string) ($a['id_parte'] ?? ''), (string) ($b['id_parte'] ?? ''));
+    }
+    return $ia <=> $ib;
+});
+
 $tipos = $service->listTiposAtivos();
 $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection());
 ?>
@@ -173,20 +192,8 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
             </div>
             <div class="display-flex row row-full flex-wrap gap-y-md" style="margin-top:8px;padding-top:12px;border-top:1px solid rgba(0,0,0,.08);">
                 <div class="col filter">
-                    <label>Data/hora designação (pauta)</label>
-                    <input type="text" class="width-280 height-md readonly" readonly value="<?php echo htmlspecialchars($dtdesFmt, ENT_QUOTES); ?>" title="Derivado da data e hora da audiência">
-                </div>
-                <div class="col filter">
-                    <label>Hora início (prevista)</label>
-                    <input type="text" class="width-200 height-md readonly" readonly value="<?php echo htmlspecialchars($hiFmt, ENT_QUOTES); ?>">
-                </div>
-                <div class="col filter">
-                    <label>Hora fim (prevista)</label>
-                    <input type="text" class="width-200 height-md readonly" readonly value="<?php echo htmlspecialchars($hfFmt, ENT_QUOTES); ?>">
-                </div>
-                <div class="col filter">
                     <label>Duração estimada</label>
-                    <input type="text" class="width-220 height-md readonly" readonly value="<?php echo htmlspecialchars($durMin . ' min (soma por tipo de parte)', ENT_QUOTES); ?>" title="Atualizado ao salvar a audiência ou ao alterar partes">
+                    <input type="text" class="width-400 height-md readonly" readonly value="<?php echo htmlspecialchars($durMin . ' min', ENT_QUOTES); ?>" title="Atualizado ao salvar a audiência ou ao alterar partes">
                 </div>
             </div>
         </div>
@@ -226,11 +233,14 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
             <h2>Partes cadastradas</h2>
         </div>
-        <?php foreach ($partes as $parte): ?>
+        <?php foreach ($partesOrdenadas as $parte): ?>
         <?php
             $defensorTexto = 'Nenhum defensor vinculado';
             $tipoParteAtual = (string) ($parte['tipo_parte'] ?? '');
+            $mostrarDefensor = in_array($tipoParteAtual, ['reu', 'vitima'], true);
             $minorInfoParte = (string) ucfirst(str_replace('_', ' ', $tipoParteAtual));
+
+            // Só "Réu PRESO" depende do nome da parte.
             if ($tipoParteAtual === 'reu') {
                 $nomeParteRaw = trim((string) ($parte['nome_parte'] ?? ''));
                 $nomeParteAtualKey = function_exists('mb_strtolower')
@@ -238,7 +248,10 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                     : strtolower($nomeParteRaw);
                 $isReuPreso = $nomeParteAtualKey !== '' && isset($reusPresosMap[$nomeParteAtualKey]);
                 $minorInfoParte = $isReuPreso ? 'Réu <span class="id-preso">PRESO</span>' : 'Réu';
+            }
 
+            // Defensor/advogado só deve existir e ser exibido para reu ou vitima.
+            if ($mostrarDefensor) {
                 $tipoDefensor = trim((string) ($parte['tipo_defensor'] ?? ''));
                 $defensorPublico = trim((string) ($parte['defensor_publico_id'] ?? ''));
                 $defensorPublicoOutroLista = trim((string) ($parte['defensor_publico_outro'] ?? ''));
@@ -275,6 +288,18 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                     $defensorTexto = 'Advogado: ' . implode(' / ', $advogadosCadastrados);
                 }
             }
+
+            // Mini-status dual: metade esquerda = expedição, metade direita = cumprimento.
+            $expedicaoVal = trim((string) ($parte['expedicao'] ?? 'Não expedido'));
+            $cumprVal = trim((string) ($parte['cumprimento'] ?? ''));
+            $leftColor = ($expedicaoVal === '' || $expedicaoVal === 'Não expedido')
+                ? 'var(--color-secondary-bg-light)'
+                : 'var(--color-success)';
+            $rightColor = $cumprVal === 'cumprido'
+                ? 'var(--color-success)'
+                : ($cumprVal === 'nao_cumprido' ? 'var(--color-danger)' : 'var(--color-secondary-bg-light)');
+            $labelCumprimento = ucfirst(str_replace('_', ' ', $cumprVal !== '' ? $cumprVal : 'pendente'));
+            $titleMiniStatus = 'Expedição: ' . ($expedicaoVal !== '' ? $expedicaoVal : 'Não expedido') . ' | Cumprimento: ' . $labelCumprimento;
         ?>
         <div class="display-flex col col-full register border-bottom" data-parte-id="<?php echo htmlspecialchars((string) $parte['id_parte'], ENT_QUOTES); ?>">
             <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
@@ -282,7 +307,9 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                     <div class="col width-700">
                         <div class="minor-info"><?php echo $minorInfoParte; ?></div>
                         <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) $parte['nome_parte'], ENT_QUOTES); ?><?php echo (string) $parte['maioridade'] === 'menor' ? ' (Menor)' : ''; ?></span>
-                        <span class="minor-info-defesa"><?php echo htmlspecialchars($defensorTexto, ENT_QUOTES); ?></span>
+                        <?php if ($mostrarDefensor): ?>
+                            <span class="minor-info-defesa"><?php echo htmlspecialchars($defensorTexto, ENT_QUOTES); ?></span>
+                        <?php endif; ?>
                     </div>
                     <div class="col width-600">
                         <div class="minor-info">Documento expedido - ID: <span class="id-info">#<?php echo htmlspecialchars((string) ($parte['id_documento_expedido'] ?? '—'), ENT_QUOTES); ?></span></div>
@@ -290,12 +317,19 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                     </div>
                     <div class="col width-400">
                         <div class="minor-info">Status<?php if (!empty($parte['id_documento_cumprido'])): ?> - ID: <span class="id-info">#<?php echo htmlspecialchars((string) $parte['id_documento_cumprido'], ENT_QUOTES); ?></span><?php endif; ?></div>
-                        <div class="major-info"><span class="mini-status <?php echo (string) $parte['cumprimento'] === 'cumprido' ? 'status-finished' : ((string) $parte['cumprimento'] === 'nao_cumprido' ? 'status-cancelled' : 'status-pending'); ?>"></span><?php echo htmlspecialchars((string) ucfirst(str_replace('_', ' ', (string) $parte['cumprimento'])), ENT_QUOTES); ?></div>
+                        <div class="major-info">
+                            <span
+                                class="mini-status mini-status-dual"
+                                style="--left-color: <?php echo htmlspecialchars($leftColor, ENT_QUOTES); ?>; --right-color: <?php echo htmlspecialchars($rightColor, ENT_QUOTES); ?>"
+                                title="<?php echo htmlspecialchars($titleMiniStatus, ENT_QUOTES); ?>"
+                            ></span>
+                            <?php echo htmlspecialchars((string) $labelCumprimento, ENT_QUOTES); ?>
+                        </div>
                     </div>
                 </div>
                 <div class="display-flex row row-fit justify-end gap-y-sm align-center">
                     <button type="button" class="btn-editar" data-parte-edit="<?php echo htmlspecialchars((string) $parte['id_parte'], ENT_QUOTES); ?>" title="Editar parte"><i class="fi fi-rr-pen-square"></i></button>
-                    <div class="col button-table" data-parte-remove="<?php echo htmlspecialchars((string) $parte['id_parte'], ENT_QUOTES); ?>" title="Remover parte"><i class="fi fi-rr-trash"></i></div>
+                    <button type="button" class="btn-editar stop" data-parte-remove="<?php echo htmlspecialchars((string) $parte['id_parte'], ENT_QUOTES); ?>" title="Remover parte"><i class="fi fi-rr-cross-circle"></i></button>
                 </div>
             </div>
         </div>

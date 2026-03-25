@@ -44,7 +44,7 @@
 
         if (!wrapper || !tipoDefensor || !publicoWrap || !privadoWrap || !outroWrap) return;
 
-        if (tipoParte === 'reu') {
+        if (tipoParte === 'reu' || tipoParte === 'vitima') {
             wrapper.style.display = '';
         } else {
             wrapper.style.display = 'none';
@@ -139,7 +139,7 @@
         if (!cumprimento) return;
 
         var tipoParte = String(document.getElementById('parte-edit-tipo')?.value || '').trim();
-        if (tipoParte === 'reu') {
+        if (tipoParte === 'reu' || tipoParte === 'vitima') {
             var tipoDefensor = requiredValue('parte-edit-tipo-defensor', 'Tipo de defensor');
             if (!tipoDefensor) return;
             if (tipoDefensor === 'publico') {

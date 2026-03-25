@@ -393,7 +393,7 @@ hr {
     width: 30px;
     padding: 4px 0 0 0;
     border-radius: 4px;
-    font-size: 14px;
+    font-size: 16px;
     font-family: 'Poppins', sans-serif;
     background-color: var(--color-background-menu);
     color: var(--color-text-secondary);
@@ -659,6 +659,18 @@ input[type="radio"] {
 
 .mini-status.status-cancelled {
     background-color: var(--color-danger);
+}
+
+.mini-status.mini-status-dual {
+    /* Mantém o mesmo tamanho/formato do mini-status, mas pinta metade esquerda e metade direita. */
+    background-color: transparent;
+    background: linear-gradient(
+        to right,
+        var(--left-color, var(--color-secondary-bg-light)) 0%,
+        var(--left-color, var(--color-secondary-bg-light)) 50%,
+        var(--right-color, var(--color-secondary-bg-light)) 50%,
+        var(--right-color, var(--color-secondary-bg-light)) 100%
+    );
 }
 
 

@@ -293,7 +293,7 @@ final class SalaAudienciasPautaService
             }
 
             $tipoDef = trim((string) ($payload['tipo_defensor'] ?? ''));
-            if ($tipo === 'reu' && ($tipoDef === 'publico' || $tipoDef === 'privado')) {
+            if (($tipo === 'reu' || $tipo === 'vitima') && ($tipoDef === 'publico' || $tipoDef === 'privado')) {
                 $defId = $tipoDef === 'publico'
                     ? trim((string) ($payload['defensor_publico_id'] ?? ''))
                     : trim((string) ($payload['defensor_privado_id'] ?? ''));
@@ -387,7 +387,7 @@ final class SalaAudienciasPautaService
 
             $processoId = trim((string) ($parteAtual['processo'] ?? ''));
             $tipoDef = trim((string) ($payload['tipo_defensor'] ?? ''));
-            if ($tipo === 'reu' && $processoId !== '' && ($tipoDef === 'publico' || $tipoDef === 'privado')) {
+            if (($tipo === 'reu' || $tipo === 'vitima') && $processoId !== '' && ($tipoDef === 'publico' || $tipoDef === 'privado')) {
                 $defId = $tipoDef === 'publico'
                     ? trim((string) ($payload['defensor_publico_id'] ?? ''))
                     : trim((string) ($payload['defensor_privado_id'] ?? ''));
@@ -430,7 +430,7 @@ final class SalaAudienciasPautaService
     private function normalizeDefensorPayloadForSave(array &$payload, string $tipoParte): void
     {
         $tipoDef = trim((string) ($payload['tipo_defensor'] ?? ''));
-        if ($tipoParte !== 'reu') {
+        if ($tipoParte !== 'reu' && $tipoParte !== 'vitima') {
             $payload['tipo_defensor'] = null;
             $payload['defensor_publico_id'] = null;
             $payload['defensor_publico_outro'] = null;
