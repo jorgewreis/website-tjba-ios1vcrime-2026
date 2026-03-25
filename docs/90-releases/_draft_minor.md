@@ -83,4 +83,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: debug parte 7** `[bc55ff1]`
 - **Fix: ajustes finais debug** `[dfc7c3b]`
 - **Fix: ajustes de buttons** `[64cac9c]`
+- **Fix: correcao de modelos buttons** `[5f1ceb8]`
 
