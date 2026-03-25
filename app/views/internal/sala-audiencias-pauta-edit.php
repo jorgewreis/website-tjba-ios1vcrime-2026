@@ -21,12 +21,28 @@ if ($row !== null) {
         try {
             $repoReuPresoProcesso = new GabineteReuPresoProcessoRepository(Conection::getInstance()->getConnection());
             $nomesReusPresos = $repoReuPresoProcesso->listReusPresosNomesByProcessoId($processoId);
+
+            // Normaliza nomes para comparação (acentos/espacos extras/maiúsculas).
+            $normalizeNomeParte = static function (string $s): string {
+                $s = trim($s);
+                $s = preg_replace('/\s+/u', ' ', $s) ?: $s;
+                $s = function_exists('mb_strtolower') ? mb_strtolower($s, 'UTF-8') : strtolower($s);
+
+                if (function_exists('iconv')) {
+                    $trans = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $s);
+                    if ($trans !== false && $trans !== null) {
+                        $s = $trans;
+                    }
+                }
+
+                return $s;
+            };
+
             foreach ($nomesReusPresos as $nomeReuPreso) {
-                $nomeNorm = trim((string) $nomeReuPreso);
-                $key = function_exists('mb_strtolower')
-                    ? mb_strtolower($nomeNorm, 'UTF-8')
-                    : strtolower($nomeNorm);
-                $reusPresosMap[$key] = true;
+                $key = $normalizeNomeParte((string) $nomeReuPreso);
+                if ($key !== '') {
+                    $reusPresosMap[$key] = true;
+                }
             }
         } catch (Throwable $e) {
             // Ambiente sem tabelas do módulo gabinete ou falha pontual: não bloqueia a edição da pauta.
@@ -243,9 +259,18 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
             // Só "Réu PRESO" depende do nome da parte.
             if ($tipoParteAtual === 'reu') {
                 $nomeParteRaw = trim((string) ($parte['nome_parte'] ?? ''));
-                $nomeParteAtualKey = function_exists('mb_strtolower')
-                    ? mb_strtolower($nomeParteRaw, 'UTF-8')
-                    : strtolower($nomeParteRaw);
+                $nomeParteAtualKey = (function (string $s): string {
+                    $s = trim($s);
+                    $s = preg_replace('/\s+/u', ' ', $s) ?: $s;
+                    $s = function_exists('mb_strtolower') ? mb_strtolower($s, 'UTF-8') : strtolower($s);
+                    if (function_exists('iconv')) {
+                        $trans = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $s);
+                        if ($trans !== false && $trans !== null) {
+                            $s = $trans;
+                        }
+                    }
+                    return $s;
+                })($nomeParteRaw);
                 $isReuPreso = $nomeParteAtualKey !== '' && isset($reusPresosMap[$nomeParteAtualKey]);
                 // "Réu preso" deve ficar colorido (color-danger).
                 $minorInfoParte = $isReuPreso
@@ -335,11 +360,7 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                 <div class="display-flex row row-fit justify-end gap-y-sm align-center">
                     <button type="button" class="btn-editar" data-parte-edit="<?php echo htmlspecialchars((string) $parte['id_parte'], ENT_QUOTES); ?>" title="Editar parte"><i class="fi fi-rr-pen-square"></i></button>
                     <?php if (in_array($tipoParteAtual, ['testemunha_denuncia', 'testemunha_defesa'], true)): ?>
-                        <a
-                            class="btn-editar"
-                            href="/frame.php?page=consultapartesedit&id=<?php echo urlencode((string) ($parte['parte_id_global'] ?? '')); ?>"
-                            title="Ir para o cadastro da parte"
-                        ><i class="fi fi-rr-user-link"></i></a>
+                        <button type="button" class="btn-editar" data-parte-link="<?php echo urlencode((string) ($parte['parte_id_global'] ?? '')); ?>" title="Ir para o cadastro da parte"><i class="fi fi-rr-user-link"></i></button>
                     <?php endif; ?>
                     <button type="button" class="btn-editar stop" data-parte-remove="<?php echo htmlspecialchars((string) $parte['id_parte'], ENT_QUOTES); ?>" title="Remover parte"><i class="fi fi-rr-cross-circle"></i></button>
                 </div>
