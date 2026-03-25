@@ -68,4 +68,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correcao parte 1 debug** `[10e06c3]`
 - **Fix: correcao parte 2 debug** `[a7951ea]`
 - **Fix: tentativa parte 3 debug** `[d79c533]`
+- **Fix: nova tentativa parte 4 debug** `[f0975e4]`
 
