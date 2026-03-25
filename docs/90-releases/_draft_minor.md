@@ -56,4 +56,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correção de mini status de audiencias** `[f5aa79b]`
 - **Fix: melhorias no cadastro** `[349cb30]`
 - **Fix: pequenos ajustes** `[3bb7905]`
+- **Fix: melhorias no codigo** `[28c9d0b]`
 
