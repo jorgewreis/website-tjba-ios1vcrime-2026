@@ -249,7 +249,10 @@ final class DataJudService
             }
         }
         foreach ($node as $key => $value) {
-            $keyStr = is_string($key) ? mb_strtolower($key, 'UTF-8') : '';
+            $keyStr = '';
+            if (is_string($key)) {
+                $keyStr = function_exists('mb_strtolower') ? mb_strtolower($key, 'UTF-8') : strtolower($key);
+            }
             if (
                 $keyStr === '' ||
                 strpos($keyStr, 'polo') !== false ||
@@ -267,7 +270,8 @@ final class DataJudService
     private function looksLikePersonName(string $v): bool
     {
         $s = trim((string) (preg_replace('/\s+/u', ' ', $v) ?: $v));
-        if ($s === '' || mb_strlen($s, 'UTF-8') < 5) {
+        $len = function_exists('mb_strlen') ? mb_strlen($s, 'UTF-8') : strlen($s);
+        if ($s === '' || $len < 5) {
             return false;
         }
         $tokens = preg_split('/\s+/u', $s) ?: [];

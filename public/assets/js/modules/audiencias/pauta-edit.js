@@ -342,11 +342,23 @@
             credentials: 'same-origin',
             body: JSON.stringify(body)
         })
-            .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+            .then(function (r) {
+                return r.text().then(function (txt) {
+                    var parsed = null;
+                    var parseError = null;
+                    try {
+                        parsed = txt ? JSON.parse(txt) : null;
+                    } catch (e) {
+                        parseError = e ? (e.message || 'json-parse-error') : 'json-parse-error';
+                    }
+                    return { ok: r.ok, status: r.status, statusText: r.statusText, j: parsed, raw: txt, parseError: parseError };
+                });
+            })
             .then(function (res) {
                 // #region agent log H4 frontend response status
-                fetch('http://127.0.0.1:7798/ingest/64db24e1-3fcf-482a-aa07-c0ab6247ae38',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b44cef'},body:JSON.stringify({sessionId:'b44cef',runId:'run-datajud-1',hypothesisId:'H4',location:'pauta-edit.js:datajudResponse',message:'Status da resposta DataJud',data:{ok:!!res.ok,hasBody:!!(res&&res.j),bodyKeys:res&&res.j&&res.j.data&&typeof res.j.data==='object'?Object.keys(res.j.data):[]},timestamp:Date.now()})}).catch(()=>{});
+                fetch('http://127.0.0.1:7798/ingest/64db24e1-3fcf-482a-aa07-c0ab6247ae38',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b44cef'},body:JSON.stringify({sessionId:'b44cef',runId:'run-datajud-1',hypothesisId:'H4',location:'pauta-edit.js:datajudResponse',message:'Status da resposta DataJud',data:{ok:!!res.ok,status:res&&res.status,statusText:res&&res.statusText,hasBody:!!(res&&res.j),parseError:res&&res.parseError,rawStart:res&&typeof res.raw==='string'?res.raw.slice(0,200):'',bodyKeys:res&&res.j&&res.j.data&&typeof res.j.data==='object'?Object.keys(res.j.data):[]},timestamp:Date.now()})}).catch(()=>{});
                 // #endregion
+                if (res.parseError) throw new Error('Resposta inválida da API local de DataJud.');
                 if (!res.ok) throw new Error((res.j && res.j.error) ? res.j.error : 'Erro ao consultar DataJud.');
                 var data = res.j && res.j.data ? res.j.data : null;
                 var nomes = [];
