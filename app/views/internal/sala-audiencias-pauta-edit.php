@@ -324,6 +324,28 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                             }
                         }
                     }
+
+                    // Fallback final: match fuzzy (similaridade) para diferenças pequenas.
+                    if (!$isReuPreso) {
+                        $bestPercent = 0;
+                        foreach ($reusPresosMap as $k => $_) {
+                            $presoKey = (string) $k;
+                            if ($presoKey === '') continue;
+                            if (function_exists('similar_text')) {
+                                $percent = 0.0;
+                                similar_text($nomeParteAtualKey, $presoKey, $percent);
+                                if ($percent > $bestPercent) $bestPercent = $percent;
+                                // Threshold mais alto para reduzir falsos positivos.
+                                if ($percent >= 90) {
+                                    $isReuPreso = true;
+                                    break;
+                                }
+                            } else {
+                                // Se similar_text não existir, não faz fuzzy.
+                                break;
+                            }
+                        }
+                    }
                 }
                 // "Réu preso" deve ficar colorido (color-danger).
                 $minorInfoParte = $isReuPreso
@@ -388,7 +410,13 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                     <div class="col width-700">
                         <div class="minor-info"><?php echo $minorInfoParte; ?></div>
                         <span class="major-info text-ellipsis" <?php echo $tipoParteAtual === 'reu' ? 'style="font-weight: 600;"' : ''; ?>>
-                            <?php echo htmlspecialchars((string) $parte['nome_parte'], ENT_QUOTES); ?><?php echo (string) $parte['maioridade'] === 'menor' ? ' (Menor)' : ''; ?>
+                            <?php
+                                $nomeParteDisplay = (string) ($parte['nome_parte'] ?? '');
+                                // Remove espaços invisíveis que podem vir do BD (ex.: &nbsp; e espaços extras).
+                                $nomeParteDisplay = str_replace("\xC2\xA0", ' ', $nomeParteDisplay);
+                                $nomeParteDisplay = trim(preg_replace('/\s+/u', ' ', $nomeParteDisplay) ?: $nomeParteDisplay);
+                            ?>
+                            <?php echo htmlspecialchars($nomeParteDisplay, ENT_QUOTES); ?><?php echo (string) $parte['maioridade'] === 'menor' ? ' (Menor)' : ''; ?>
                         </span>
                         <?php if ($mostrarDefensor): ?>
                             <span class="minor-info-defesa"><?php echo htmlspecialchars($defensorTexto, ENT_QUOTES); ?></span>
