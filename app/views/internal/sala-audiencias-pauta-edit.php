@@ -16,7 +16,7 @@ $row = $id !== '' ? $service->find($id) : null;
 $partes = $row !== null ? $service->listPartes((string) $row['id_pauta']) : [];
 $reusPresosMap = [];
 $reusPresosSigMap = [];
-$__dbgLogPath = dirname(__DIR__, 3) . '/debug-b44cef.log';
+$__dbgLogPath = dirname(__DIR__, 3) . '/.cursor/debug-b44cef.log';
 
 // Normalização usada para comparar o nome do "reu" na audiência
 // com os nomes cadastrados em "réus presos" (reduz variações por espaços, acentos e pontuação).
