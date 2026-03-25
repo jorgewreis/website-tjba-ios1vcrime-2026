@@ -25,9 +25,11 @@ final class DataJudService
         $body = [
             'query' => [
                 'bool' => [
-                    'must' => [
+                    'should' => [
+                        ['match' => ['numeroProcesso' => $numero]],
                         ['term' => ['numeroProcesso' => $numero]],
                     ],
+                    'minimum_should_match' => 1,
                 ],
             ],
             'size' => 1,
@@ -49,7 +51,6 @@ final class DataJudService
 
         $response = curl_exec($ch);
         $error = curl_error($ch);
-        curl_close($ch);
 
         if ($response === false) {
             throw new RuntimeException('Falha ao contatar o DataJud: ' . $error);

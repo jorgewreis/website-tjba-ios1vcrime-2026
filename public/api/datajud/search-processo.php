@@ -6,6 +6,9 @@ header('Access-Control-Allow-Origin: *');
 $config = require __DIR__ . '/config.php';
 
 set_error_handler(static function (int $severity, string $message, string $file, int $line): bool {
+    if ($severity === E_DEPRECATED || $severity === E_USER_DEPRECATED) {
+        return true;
+    }
     throw new ErrorException($message, 0, $severity, $file, $line);
 });
 
@@ -90,9 +93,12 @@ if ($numero === '' || strlen($numero) !== 20) {
 $body = [
     'query' => [
         'bool' => [
-            'must' => [
+            // DataJud (Elastic): match é o método documentado; term é mantido como fallback.
+            'should' => [
+                ['match' => ['numeroProcesso' => $numero]],
                 ['term' => ['numeroProcesso' => $numero]],
             ],
+            'minimum_should_match' => 1,
         ],
     ],
     'size' => 1,
@@ -139,7 +145,6 @@ curl_setopt_array($ch, [
 $response = curl_exec($ch);
 $error = curl_error($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
 
 // #region agent log H1 backend http result
 @file_put_contents(
