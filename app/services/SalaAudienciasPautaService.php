@@ -279,13 +279,47 @@ final class SalaAudienciasPautaService
 
         $this->connection->beginTransaction();
         try {
-            $parteGlobalId = $this->partesRepository->ensureParteByNomeOuCpf($nome, null);
             [$tipoProcesso, $poloProcesso] = $this->mapPautaTipoToProcessoTipoEPolo($tipo);
-            $processoParte = $this->processosPartesRepository->findByProcessoAndParte($processoId, $parteGlobalId);
-            if ($processoParte === null) {
-                $processoParteId = $this->processosPartesRepository->addParte($processoId, $parteGlobalId, $tipoProcesso, $poloProcesso);
+            $isTestemunha = $tipo === 'testemunha_defesa' || $tipo === 'testemunha_denuncia';
+
+            // Para testemunhas: se já existir vínculo (processo↔parte) para esse nome,
+            // reutilizamos o `parte_id` existente em vez de criar um novo cadastro global.
+            $nomeNormRaw = function_exists('mb_strtolower') ? mb_strtolower($nome, 'UTF-8') : strtolower($nome);
+            $nomeNorm = preg_replace('/\s+/u', ' ', trim($nomeNormRaw));
+            $parteGlobalId = '';
+            $processoParteId = '';
+
+            if ($isTestemunha) {
+                $vinculos = $this->processosPartesRepository->findByProcessoId($processoId, $tipoProcesso);
+                foreach ($vinculos as $v) {
+                    $vNome = trim((string) ($v['nome_completo'] ?? ''));
+                    $vNomeNormRaw = function_exists('mb_strtolower') ? mb_strtolower($vNome, 'UTF-8') : strtolower($vNome);
+                    $vNomeNorm = preg_replace('/\s+/u', ' ', trim($vNomeNormRaw));
+                    if ($vNomeNorm !== '' && $nomeNorm !== '' && $vNomeNorm === $nomeNorm) {
+                        $parteGlobalId = trim((string) ($v['parte_id'] ?? ''));
+                        $processoParteId = trim((string) ($v['id'] ?? ''));
+                        break;
+                    }
+                }
+            }
+
+            if ($parteGlobalId === '') {
+                $parteGlobalId = $this->partesRepository->ensureParteByNomeOuCpf($nome, null);
+            }
+
+            if ($processoParteId === '') {
+                $processoParte = $this->processosPartesRepository->findByProcessoAndParte($processoId, $parteGlobalId);
+                if ($processoParte === null) {
+                    $processoParteId = $this->processosPartesRepository->addParte($processoId, $parteGlobalId, $tipoProcesso, $poloProcesso);
+                } else {
+                    $processoParteId = (string) ($processoParte['id'] ?? '');
+                    $this->processosPartesRepository->update($processoParteId, [
+                        'tipo_parte' => $tipoProcesso,
+                        'polo' => $poloProcesso,
+                    ]);
+                }
             } else {
-                $processoParteId = (string) ($processoParte['id'] ?? '');
+                // Mesmo reaproveitando, garantimos o tipo/polo corretos no vínculo.
                 $this->processosPartesRepository->update($processoParteId, [
                     'tipo_parte' => $tipoProcesso,
                     'polo' => $poloProcesso,

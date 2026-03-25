@@ -247,7 +247,10 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                     ? mb_strtolower($nomeParteRaw, 'UTF-8')
                     : strtolower($nomeParteRaw);
                 $isReuPreso = $nomeParteAtualKey !== '' && isset($reusPresosMap[$nomeParteAtualKey]);
-                $minorInfoParte = $isReuPreso ? 'Réu <span class="id-preso">PRESO</span>' : 'Réu';
+                // "Réu preso" deve ficar colorido (color-danger).
+                $minorInfoParte = $isReuPreso
+                    ? 'Réu <span style="color: var(--color-danger); font-weight: 600;">preso</span>'
+                    : 'Réu';
             }
 
             // Defensor/advogado só deve existir e ser exibido para reu ou vitima.
@@ -306,7 +309,9 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                 <div class="display-flex row row-fit justify-start gap-y-sm align-center">
                     <div class="col width-700">
                         <div class="minor-info"><?php echo $minorInfoParte; ?></div>
-                        <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) $parte['nome_parte'], ENT_QUOTES); ?><?php echo (string) $parte['maioridade'] === 'menor' ? ' (Menor)' : ''; ?></span>
+                        <span class="major-info text-ellipsis" <?php echo $tipoParteAtual === 'reu' ? 'style="font-weight: 600;"' : ''; ?>>
+                            <?php echo htmlspecialchars((string) $parte['nome_parte'], ENT_QUOTES); ?><?php echo (string) $parte['maioridade'] === 'menor' ? ' (Menor)' : ''; ?>
+                        </span>
                         <?php if ($mostrarDefensor): ?>
                             <span class="minor-info-defesa"><?php echo htmlspecialchars($defensorTexto, ENT_QUOTES); ?></span>
                         <?php endif; ?>
@@ -329,6 +334,13 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                 </div>
                 <div class="display-flex row row-fit justify-end gap-y-sm align-center">
                     <button type="button" class="btn-editar" data-parte-edit="<?php echo htmlspecialchars((string) $parte['id_parte'], ENT_QUOTES); ?>" title="Editar parte"><i class="fi fi-rr-pen-square"></i></button>
+                    <?php if (in_array($tipoParteAtual, ['testemunha_denuncia', 'testemunha_defesa'], true)): ?>
+                        <a
+                            class="btn-editar"
+                            href="/frame.php?page=consultapartesedit&id=<?php echo urlencode((string) ($parte['parte_id_global'] ?? '')); ?>"
+                            title="Ir para o cadastro da parte"
+                        ><i class="fi fi-rr-user-link"></i></a>
+                    <?php endif; ?>
                     <button type="button" class="btn-editar stop" data-parte-remove="<?php echo htmlspecialchars((string) $parte['id_parte'], ENT_QUOTES); ?>" title="Remover parte"><i class="fi fi-rr-cross-circle"></i></button>
                 </div>
             </div>
