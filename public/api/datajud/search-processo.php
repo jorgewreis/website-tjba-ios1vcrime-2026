@@ -76,13 +76,35 @@ if (!is_array($decoded) || !isset($decoded['hits']['hits'][0]['_source'])) {
 
 $source = $decoded['hits']['hits'][0]['_source'];
 
+$poloRaw = $source['polo'] ?? [];
+$poloPassivo = formatarPolo($poloRaw);
+
+$dbgLogPath = dirname(__DIR__, 3) . '/.cursor/debug-b44cef.log';
+@file_put_contents(
+    $dbgLogPath,
+    json_encode([
+        'sessionId' => 'b44cef',
+        'runId' => 'pre2',
+        'hypothesisId' => 'H1b',
+        'location' => 'search-processo.php:polo-shape',
+        'message' => 'Contagem polo e polo_passivo retornado (sem nomes)',
+        'data' => [
+            'poloRawIsArray' => is_array($poloRaw) ? 1 : 0,
+            'poloRawCount' => is_array($poloRaw) ? count($poloRaw) : null,
+            'poloPassivoCount' => is_array($poloPassivo) ? count($poloPassivo) : null,
+        ],
+        'timestamp' => (int) round(microtime(true) * 1000),
+    ], JSON_UNESCAPED_UNICODE) . PHP_EOL,
+    FILE_APPEND
+);
+
 $result = [
     'numero' => $source['numeroProcesso'] ?? $numero,
     'tribunal' => $source['tribunal'] ?? 'TJBA',
     'classe' => formatarClasse($source),
     'assuntos' => formatarAssuntos($source['assuntos'] ?? []),
     'prioridades' => formatarPrioridades($source['prioridade'] ?? []),
-    'polo_passivo' => formatarPolo($source['polo'] ?? []),
+    'polo_passivo' => $poloPassivo,
     'movimentos' => formatarMovimentos($source['movimentos'] ?? []),
     'orgao_julgador' => formatarOrgao($source['orgaoJulgador'] ?? []),
     'nivel_sigilo' => $source['nivelSigilo'] ?? null,

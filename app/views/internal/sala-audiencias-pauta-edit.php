@@ -55,6 +55,38 @@ $signatureNomeParte = static function (string $normalized): string {
 if ($row !== null) {
     $processoId = trim((string) ($row['processo'] ?? ''));
     $numeroProcesso = trim((string) ($row['numero_processo'] ?? ''));
+    $tipoCounts = [
+        'reu' => 0,
+        'vitima' => 0,
+        'testemunha_denuncia' => 0,
+        'testemunha_defesa' => 0,
+        'outros' => 0,
+    ];
+    foreach ($partes as $pTmp) {
+        $tp = (string) ($pTmp['tipo_parte'] ?? '');
+        if (array_key_exists($tp, $tipoCounts)) {
+            $tipoCounts[$tp] += 1;
+        } else {
+            $tipoCounts['outros'] += 1;
+        }
+    }
+    // #region agent log H0:process identifiers + tipo counts
+    $payload = [
+        'sessionId' => 'b44cef',
+        'runId' => 'pre2',
+        'hypothesisId' => 'H0',
+        'location' => 'sala-audiencias-pauta-edit.php:ids-and-types',
+        'message' => 'Identificadores processo/audiência e contagem de tipos de partes',
+        'data' => [
+            'processoIdLen' => $processoId !== '' ? mb_strlen($processoId) : 0,
+            'numeroProcessoLen' => $numeroProcesso !== '' ? mb_strlen($numeroProcesso) : 0,
+            'partesTotal' => count($partes),
+            'tipoCounts' => $tipoCounts,
+        ],
+        'timestamp' => (int) round(microtime(true) * 1000),
+    ];
+    @file_put_contents($__dbgLogPath, json_encode($payload, JSON_UNESCAPED_UNICODE) . PHP_EOL, FILE_APPEND);
+    // #endregion
     if ($processoId !== '') {
         try {
             $repoReuPresoProcesso = new GabineteReuPresoProcessoRepository(Conection::getInstance()->getConnection());
