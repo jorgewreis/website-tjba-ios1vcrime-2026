@@ -74,4 +74,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: debug 7 premium** `[6f9a07f]`
 - **Fix: debug premium 8** `[3ddba76]`
 - **Fix: debug parcial ok** `[075047e]`
+- **Fix: novo debug p 1** `[7af4f47]`
 
