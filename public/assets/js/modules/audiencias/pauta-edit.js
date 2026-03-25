@@ -2,6 +2,26 @@
     var pendingConfirmations = {};
     var initialAudienciaSnapshot = '';
 
+    // #region agent log J0:JS module loaded
+    fetch('http://127.0.0.1:7798/ingest/64db24e1-3fcf-482a-aa07-c0ab6247ae38', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'b44cef' },
+        body: JSON.stringify({
+            sessionId: 'b44cef',
+            runId: 'pre3',
+            hypothesisId: 'J0',
+            location: 'pauta-edit.js:init',
+            message: 'pauta-edit.js carregado',
+            data: {
+                hasParteNome: !!document.getElementById('parte-nome'),
+                hasSelectParteNome: !!document.getElementById('parte-nome-selecao'),
+                hasAudienciaProcesso: !!document.getElementById('audiencia-edit-processo')
+            },
+            timestamp: Date.now()
+        })
+    }).catch(function () {});
+    // #endregion
+
     function notify(type, title, message) {
         if (typeof showToast === 'function') {
             showToast({ type: type, variant: 'full', title: title, message: message });
@@ -325,6 +345,26 @@
         select.dataset.firstDatajudValue = '';
 
         var digits = String(processoInput.value || '').replace(/\D/g, '');
+        // #region agent log J1:process digits + ready state
+        fetch('http://127.0.0.1:7798/ingest/64db24e1-3fcf-482a-aa07-c0ab6247ae38', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'b44cef' },
+            body: JSON.stringify({
+                sessionId: 'b44cef',
+                runId: 'pre3',
+                hypothesisId: 'J1',
+                location: 'pauta-edit.js:initParteNomeDatajudSelect',
+                message: 'Digits do processo e estado de UI',
+                data: {
+                    digitsLen: String(digits || '').length,
+                    processoInputValLen: String(processoInput.value || '').length,
+                    selectDisplay: select.style.display || null,
+                    inputDisplay: input.style.display || null
+                },
+                timestamp: Date.now()
+            })
+        }).catch(function () {});
+        // #endregion
         if (digits.length !== 20) {
             select.disabled = false;
             return;
