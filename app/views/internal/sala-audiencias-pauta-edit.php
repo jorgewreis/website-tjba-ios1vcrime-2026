@@ -15,6 +15,7 @@ $service = new SalaAudienciasPautaService(Conection::getInstance()->getConnectio
 $row = $id !== '' ? $service->find($id) : null;
 $partes = $row !== null ? $service->listPartes((string) $row['id_pauta']) : [];
 $reusPresosMap = [];
+$reusPresosSigMap = [];
 if ($row !== null) {
     $processoId = trim((string) ($row['processo'] ?? ''));
     if ($processoId !== '') {
@@ -61,22 +62,33 @@ if ($row !== null) {
                 return trim($s);
             };
 
+            // Assinatura: somente letras/números (sem espaços) para tolerar caracteres invisíveis.
+            $signatureNomeParte = static function (string $normalized): string {
+                return preg_replace('/[^\p{L}\p{N}]+/u', '', $normalized) ?: '';
+            };
+
             foreach ($nomesReusPresos as $nomeReuPreso) {
                 $key = $normalizeNomeParte((string) $nomeReuPreso);
                 if ($key !== '') {
                     $reusPresosMap[$key] = true;
+                    $sig = $signatureNomeParte($key);
+                    if ($sig !== '') {
+                        $reusPresosSigMap[$sig] = true;
+                    }
                 }
             }
 
-            // Se não achou por `processo_id`, tenta fallback por CNJ (`numero_processo`).
-            if ($reusPresosMap === []) {
-                $numeroProcesso = trim((string) ($row['numero_processo'] ?? ''));
-                if ($numeroProcesso !== '') {
-                    $nomesFallback = $repoReuPresoProcesso->listReusPresosNomesByNumeroProcesso($numeroProcesso);
-                    foreach ($nomesFallback as $nomeReuPreso) {
-                        $key = $normalizeNomeParte((string) $nomeReuPreso);
-                        if ($key !== '') {
-                            $reusPresosMap[$key] = true;
+            // Também tenta fallback por CNJ (`numero_processo`) para cobrir divergências entre módulos.
+            $numeroProcesso = trim((string) ($row['numero_processo'] ?? ''));
+            if ($numeroProcesso !== '') {
+                $nomesFallback = $repoReuPresoProcesso->listReusPresosNomesByNumeroProcesso($numeroProcesso);
+                foreach ($nomesFallback as $nomeReuPreso) {
+                    $key = $normalizeNomeParte((string) $nomeReuPreso);
+                    if ($key !== '') {
+                        $reusPresosMap[$key] = true;
+                        $sig = $signatureNomeParte($key);
+                        if ($sig !== '') {
+                            $reusPresosSigMap[$sig] = true;
                         }
                     }
                 }
@@ -84,6 +96,7 @@ if ($row !== null) {
         } catch (Throwable $e) {
             // Ambiente sem tabelas do módulo gabinete ou falha pontual: não bloqueia a edição da pauta.
             $reusPresosMap = [];
+            $reusPresosSigMap = [];
         }
     }
 }
@@ -258,6 +271,13 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
                     <label for="parte-nome">Nome da parte <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <select
+                        class="width-700 height-md white"
+                        id="parte-nome-selecao"
+                        style="display:none;"
+                    >
+                        <option value="__OUTRO__" selected>Outro (digite abaixo)</option>
+                    </select>
                     <input type="text" class="width-700 height-md" id="parte-nome" placeholder="Digite o nome da parte" autocomplete="off">
                 </div>
                 <div class="col">
@@ -299,7 +319,13 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                 $nomeParteAtualKey = isset($normalizeNomeParte)
                     ? $normalizeNomeParte($nomeParteRaw)
                     : $nomeParteRaw;
-                $isReuPreso = $nomeParteAtualKey !== '' && isset($reusPresosMap[$nomeParteAtualKey]);
+                $nomeParteAtualSig = '';
+                if ($nomeParteAtualKey !== '' && isset($signatureNomeParte)) {
+                    $nomeParteAtualSig = $signatureNomeParte($nomeParteAtualKey);
+                }
+                $isReuPreso = $nomeParteAtualKey !== ''
+                    && (isset($reusPresosMap[$nomeParteAtualKey])
+                        || ($nomeParteAtualSig !== '' && isset($reusPresosSigMap[$nomeParteAtualSig])));
 
                 // Fallback: comparação por palavras (tolerante a variações pequenas).
                 if (!$isReuPreso && $nomeParteAtualKey !== '') {

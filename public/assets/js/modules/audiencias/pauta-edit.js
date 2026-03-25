@@ -38,6 +38,8 @@
     function normalizePartNameInput() {
         var nomeInput = document.getElementById('parte-nome');
         if (!nomeInput) return;
+        // Se o nome foi selecionado via DataJud (readOnly), não altere o texto.
+        if (nomeInput.readOnly) return;
         var nome = String(nomeInput.value || '').trim();
         if (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
             nome = TextFormatter.formatProperName(nome, 255);
@@ -99,6 +101,7 @@
     function clearPartForm() {
         [
             'parte-nome',
+            'parte-nome-selecao',
             'parte-tipo',
             'parte-maioridade',
         ].forEach(function (id) {
@@ -110,6 +113,14 @@
                 el.value = '';
             }
         });
+        var parteNome = document.getElementById('parte-nome');
+        if (parteNome) {
+            parteNome.readOnly = false;
+        }
+        var selectParteNome = document.getElementById('parte-nome-selecao');
+        if (selectParteNome) {
+            selectParteNome.value = '__OUTRO__';
+        }
     }
 
     document.getElementById('btn-audiencia-edit-voltar')?.addEventListener('click', function () {
@@ -215,5 +226,127 @@
     });
 
     document.getElementById('parte-nome')?.addEventListener('blur', normalizePartNameInput);
+
+    function dedupeStrings(arr) {
+        var out = [];
+        var seen = new Set();
+        (arr || []).forEach(function (v) {
+            var s = String(v || '').trim();
+            if (!s) return;
+            var key = s.toLowerCase();
+            if (seen.has(key)) return;
+            seen.add(key);
+            out.push(s);
+        });
+        return out;
+    }
+
+    function initParteNomeDatajudSelect() {
+        var processoInput = document.getElementById('audiencia-edit-processo');
+        var select = document.getElementById('parte-nome-selecao');
+        var input = document.getElementById('parte-nome');
+        if (!processoInput || !select || !input) return;
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        // Evita múltiplas consultas.
+        if (select.dataset.loaded === '1') return;
+        select.dataset.loaded = '1';
+
+        function setInputFromSelection(val) {
+            if (val === '__OUTRO__') {
+                input.readOnly = false;
+                if (input.value === input.getAttribute('data-last-datajud-value')) {
+                    input.value = '';
+                }
+                input.removeAttribute('data-last-datajud-value');
+                return;
+            }
+            input.value = val;
+            input.setAttribute('data-last-datajud-value', val);
+            input.readOnly = true;
+        }
+
+        select.addEventListener('change', function () {
+            setInputFromSelection(String(select.value || '').trim());
+            if (!input.readOnly) {
+                input.focus();
+            }
+        });
+
+        // Default: liberar digitação.
+        select.value = '__OUTRO__';
+        select.disabled = true;
+        select.style.display = '';
+        input.readOnly = false;
+        input.placeholder = 'Digite o nome da parte';
+
+        var digits = String(processoInput.value || '').replace(/\D/g, '');
+        if (digits.length !== 20) {
+            select.disabled = false;
+            return;
+        }
+
+        var API_ENDPOINT = '/api/datajud/search-processo.php';
+        var body = { numero: digits };
+
+        fetch(API_ENDPOINT, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify(body)
+        })
+            .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+            .then(function (res) {
+                if (!res.ok) throw new Error((res.j && res.j.error) ? res.j.error : 'Erro ao consultar DataJud.');
+                var data = res.j && res.j.data ? res.j.data : null;
+                var nomes = [];
+                if (data && Array.isArray(data.polo_passivo)) {
+                    nomes = data.polo_passivo;
+                }
+                nomes = dedupeStrings(nomes).sort(function (a, b) { return a.localeCompare(b, 'pt-BR'); });
+
+                // Monta opções: (1) Outro (2) DataJud.
+                var options = '';
+                options += '<option value="__OUTRO__">Outro (digite abaixo)</option>';
+                if (nomes.length > 0) {
+                    // Mostra só quando houver retorno.
+                    nomes.forEach(function (n) {
+                        var safeVal = escapeHtml(n);
+                        options += '<option value="' + safeVal + '">' + safeVal + '</option>';
+                    });
+                    select.innerHTML = options;
+                    select.value = '__OUTRO__';
+                    select.style.display = '';
+                } else {
+                    // Se não encontrou nomes no DataJud, ainda mantemos o select visível
+                    // para o usuário perceber que pode digitar manualmente.
+                    select.innerHTML = '<option value="__OUTRO__" selected>Outro (digite abaixo)</option>';
+                    select.value = '__OUTRO__';
+                    select.style.display = '';
+                }
+                setInputFromSelection('__OUTRO__');
+                select.disabled = false;
+            })
+            .catch(function () {
+                // Se falhar, mantém o input livre (sem bloquear usuário).
+                if (typeof showToast === 'function') {
+                    showToast({ type: 'info', variant: 'full', title: 'DataJud', message: 'Nao foi possivel consultar nomes do processo no DataJud. Voce pode digitar manualmente.' });
+                }
+                select.style.display = '';
+                select.value = '__OUTRO__';
+                input.readOnly = false;
+                select.disabled = false;
+            });
+    }
+
+    initParteNomeDatajudSelect();
     initialAudienciaSnapshot = currentAudienciaSnapshot();
 })();

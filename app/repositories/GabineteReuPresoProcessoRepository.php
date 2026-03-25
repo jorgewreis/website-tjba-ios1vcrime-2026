@@ -232,7 +232,7 @@ final class GabineteReuPresoProcessoRepository
              INNER JOIN `gabinete_reu_preso` grp ON grp.`id` = gpp.`reu_preso_id`
              INNER JOIN `processos` pr ON pr.`id` = gpp.`processo_id`
              WHERE pr.`numero_processo` IS NOT NULL
-               AND REPLACE(REPLACE(pr.`numero_processo`, '-', ''), '.', '') LIKE :proc_digits
+               AND REPLACE(REPLACE(REPLACE(REPLACE(TRIM(pr.`numero_processo`), '-', ''), '.', ''), '/', ''), ' ', '') LIKE :proc_digits
                AND grp.`status` = :status_ativo
              ORDER BY grp.`nome` ASC",
             $this->table
