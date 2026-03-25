@@ -54,4 +54,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correcao de input classe** `[6146c71]`
 - **Fix: correcao reu preso** `[dff7692]`
 - **Fix: correção de mini status de audiencias** `[f5aa79b]`
+- **Fix: melhorias no cadastro** `[349cb30]`
 
