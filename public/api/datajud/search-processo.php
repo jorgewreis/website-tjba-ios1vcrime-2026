@@ -201,6 +201,9 @@ $poloPassivo = formatarPolo($poloRaw);
 if (count($poloPassivo) === 0) {
     $poloPassivo = extractPartNamesFromSource($source);
 }
+if (count($poloPassivo) === 0) {
+    $poloPassivo = extractLikelyPersonNamesFromAnySource($source);
+}
 
 // #region agent log H2/H3 source parts shape
 $partesDiretas = is_array($source['partes'] ?? null) ? count((array) $source['partes']) : 0;
@@ -262,6 +265,7 @@ $result = [
         'partes_count' => is_array($source['partes'] ?? null) ? count((array) $source['partes']) : null,
         'nivel_sigilo' => $source['nivelSigilo'] ?? null,
         'polo_passivo_out_count' => count($poloPassivo),
+        'any_source_names_count' => count(extractLikelyPersonNamesFromAnySource($source)),
         'polo_first_item' => is_array($source['polo'] ?? null) ? (($source['polo'][0] ?? null)) : null,
         'poloAtivo_first_item' => is_array($source['poloAtivo'] ?? null) ? (($source['poloAtivo'][0] ?? null)) : null,
         'poloPassivo_first_item' => is_array($source['poloPassivo'] ?? null) ? (($source['poloPassivo'][0] ?? null)) : null,
@@ -495,6 +499,65 @@ function looksLikePersonName(string $v): bool
     }
     $tokens = preg_split('/\s+/u', $s) ?: [];
     return count($tokens) >= 2;
+}
+
+function extractLikelyPersonNamesFromAnySource(array $source): array
+{
+    $nomes = [];
+    collectLikelyPersonNamesRecursive($source, $nomes);
+    return array_values(array_keys($nomes));
+}
+
+function collectLikelyPersonNamesRecursive($node, array &$nomes): void
+{
+    if (is_string($node)) {
+        $v = sanitizeNameCandidate($node);
+        if ($v !== '' && looksLikeLikelyPersonNameLoose($v)) {
+            $nomes[$v] = true;
+        }
+        return;
+    }
+    if (!is_array($node)) {
+        return;
+    }
+    foreach ($node as $value) {
+        collectLikelyPersonNamesRecursive($value, $nomes);
+    }
+}
+
+function sanitizeNameCandidate(string $value): string
+{
+    $s = trim((string) (preg_replace('/\s+/u', ' ', $value) ?: $value));
+    $s = trim((string) (preg_replace('/[^\p{L}\p{N}\s\-\']/u', '', $s) ?: $s));
+    return $s;
+}
+
+function looksLikeLikelyPersonNameLoose(string $value): bool
+{
+    $s = trim($value);
+    if ($s === '') {
+        return false;
+    }
+    $len = function_exists('mb_strlen') ? mb_strlen($s, 'UTF-8') : strlen($s);
+    if ($len < 8 || $len > 90) {
+        return false;
+    }
+    $tokens = preg_split('/\s+/u', $s) ?: [];
+    if (count($tokens) < 2 || count($tokens) > 8) {
+        return false;
+    }
+    $lower = function_exists('mb_strtolower') ? mb_strtolower($s, 'UTF-8') : strtolower($s);
+    $blocked = [
+        'processo', 'audi', 'movimento', 'procedimento', 'trafico', 'lei', 'vara',
+        'justica', 'tribunal', 'classe', 'assunto', 'orgao', 'julgador', 'eletronico',
+        'fisico', 'cumprimento', 'expedicao', 'denuncia', 'defesa'
+    ];
+    foreach ($blocked as $b) {
+        if (strpos($lower, $b) !== false) {
+            return false;
+        }
+    }
+    return (bool) preg_match('/\p{L}/u', $s);
 }
 
 function respond(array $payload, int $status = 200): void

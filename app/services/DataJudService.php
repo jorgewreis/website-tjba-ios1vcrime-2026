@@ -67,6 +67,9 @@ final class DataJudService
         if (count($poloPassivo) === 0) {
             $poloPassivo = $this->extractPartNamesFromSource($source);
         }
+        if (count($poloPassivo) === 0) {
+            $poloPassivo = $this->extractLikelyPersonNamesFromAnySource($source);
+        }
 
         return [
             'numero' => $source['numeroProcesso'] ?? $numero,
@@ -277,5 +280,64 @@ final class DataJudService
         }
         $tokens = preg_split('/\s+/u', $s) ?: [];
         return count($tokens) >= 2;
+    }
+
+    private function extractLikelyPersonNamesFromAnySource(array $source): array
+    {
+        $nomes = [];
+        $this->collectLikelyPersonNamesRecursive($source, $nomes);
+        return array_values(array_keys($nomes));
+    }
+
+    private function collectLikelyPersonNamesRecursive($node, array &$nomes): void
+    {
+        if (is_string($node)) {
+            $v = $this->sanitizeNameCandidate($node);
+            if ($v !== '' && $this->looksLikeLikelyPersonNameLoose($v)) {
+                $nomes[$v] = true;
+            }
+            return;
+        }
+        if (!is_array($node)) {
+            return;
+        }
+        foreach ($node as $value) {
+            $this->collectLikelyPersonNamesRecursive($value, $nomes);
+        }
+    }
+
+    private function sanitizeNameCandidate(string $value): string
+    {
+        $s = trim((string) (preg_replace('/\s+/u', ' ', $value) ?: $value));
+        $s = trim((string) (preg_replace('/[^\p{L}\p{N}\s\-\']/u', '', $s) ?: $s));
+        return $s;
+    }
+
+    private function looksLikeLikelyPersonNameLoose(string $value): bool
+    {
+        $s = trim($value);
+        if ($s === '') {
+            return false;
+        }
+        $len = function_exists('mb_strlen') ? mb_strlen($s, 'UTF-8') : strlen($s);
+        if ($len < 8 || $len > 90) {
+            return false;
+        }
+        $tokens = preg_split('/\s+/u', $s) ?: [];
+        if (count($tokens) < 2 || count($tokens) > 8) {
+            return false;
+        }
+        $lower = function_exists('mb_strtolower') ? mb_strtolower($s, 'UTF-8') : strtolower($s);
+        $blocked = [
+            'processo', 'audi', 'movimento', 'procedimento', 'trafico', 'lei', 'vara',
+            'justica', 'tribunal', 'classe', 'assunto', 'orgao', 'julgador', 'eletronico',
+            'fisico', 'cumprimento', 'expedicao', 'denuncia', 'defesa'
+        ];
+        foreach ($blocked as $b) {
+            if (strpos($lower, $b) !== false) {
+                return false;
+            }
+        }
+        return (bool) preg_match('/\p{L}/u', $s);
     }
 }
