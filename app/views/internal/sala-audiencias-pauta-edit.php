@@ -17,7 +17,6 @@ $row = $id !== '' ? $service->find($id) : null;
 $partes = $row !== null ? $service->listPartes((string) $row['id_pauta']) : [];
 $reusPresosMap = [];
 $reusPresosSigMap = [];
-$__dbgLogPath = dirname(__DIR__, 3) . '/.cursor/debug-b44cef.log';
 
 // Normalização usada para comparar o nome do "reu" na audiência
 // com os nomes cadastrados em "réus presos" (reduz variações por espaços, acentos e pontuação).
@@ -87,77 +86,22 @@ $addNomeToReuMap = static function (string $nome, array &$map, array &$sigMap) u
 if ($row !== null) {
     $processoId = trim((string) ($row['processo'] ?? ''));
     $numeroProcesso = trim((string) ($row['numero_processo'] ?? ''));
-    $dbgGlobalReusPresosCount = 0;
-    $dbgTotalReusPresosRows = 0;
-    $dbgStatusAtivoRows = 0;
-    $dbgRepoGlobalErro = 0;
-    $dbgRepoProcessoErro = 0;
-    $dbgRepoCnjFallbackErro = 0;
-
-    try {
-        $cnDbg = Conection::getInstance()->getConnection();
-        $stAll = $cnDbg->query('SELECT COUNT(*) FROM `gabinete_reu_preso`');
-        $dbgTotalReusPresosRows = (int) ($stAll ? $stAll->fetchColumn() : 0);
-        $stAt = $cnDbg->prepare('SELECT COUNT(*) FROM `gabinete_reu_preso` WHERE LOWER(TRIM(`status`)) = :st');
-        $stAt->bindValue(':st', 'ativo');
-        $stAt->execute();
-        $dbgStatusAtivoRows = (int) $stAt->fetchColumn();
-    } catch (Throwable $e) {
-        $dbgTotalReusPresosRows = -1;
-        $dbgStatusAtivoRows = -1;
-    }
 
     // Monta mapa global de "réus presos" apenas pelo cadastro ativo,
     // para evitar falhas de resolução por processo_id/CNJ.
     try {
         $repoReuPreso = new GabineteReuPresoRepository(Conection::getInstance()->getConnection());
         $nomesGlobais = $repoReuPreso->listAtivosNomes();
-        $dbgGlobalReusPresosCount = count($nomesGlobais);
         foreach ($nomesGlobais as $nomeGlobal) {
             $addNomeToReuMap((string) $nomeGlobal, $reusPresosMap, $reusPresosSigMap);
         }
     } catch (Throwable $e) {
-        $dbgGlobalReusPresosCount = 0;
-        $dbgRepoGlobalErro = 1;
+        // Não bloqueia a edição da pauta.
     }
-    $tipoCounts = [
-        'reu' => 0,
-        'vitima' => 0,
-        'testemunha_denuncia' => 0,
-        'testemunha_defesa' => 0,
-        'outros' => 0,
-    ];
-    foreach ($partes as $pTmp) {
-        $tp = (string) ($pTmp['tipo_parte'] ?? '');
-        if (array_key_exists($tp, $tipoCounts)) {
-            $tipoCounts[$tp] += 1;
-        } else {
-            $tipoCounts['outros'] += 1;
-        }
-    }
-    // #region agent log H0:process identifiers + tipo counts
-    $payload = [
-        'sessionId' => 'b44cef',
-        'runId' => 'pre2',
-        'hypothesisId' => 'H0',
-        'location' => 'sala-audiencias-pauta-edit.php:ids-and-types',
-        'message' => 'Identificadores processo/audiência e contagem de tipos de partes',
-        'data' => [
-            'processoIdLen' => $processoId !== '' ? mb_strlen($processoId) : 0,
-            'numeroProcessoLen' => $numeroProcesso !== '' ? mb_strlen($numeroProcesso) : 0,
-            'partesTotal' => count($partes),
-            'tipoCounts' => $tipoCounts,
-        ],
-        'timestamp' => (int) round(microtime(true) * 1000),
-    ];
-    @file_put_contents($__dbgLogPath, json_encode($payload, JSON_UNESCAPED_UNICODE) . PHP_EOL, FILE_APPEND);
-    // #endregion
     if ($processoId !== '') {
         try {
             $repoReuPresoProcesso = new GabineteReuPresoProcessoRepository(Conection::getInstance()->getConnection());
             $nomesReusPresos = $repoReuPresoProcesso->listReusPresosNomesByProcessoId($processoId);
-            $dbgCountProcesso = is_array($nomesReusPresos) ? count($nomesReusPresos) : 0;
-            $dbgCountCnj = 0;
 
             // Normaliza nomes para comparação (acentos/espacos não-padrão/pontuação/maiúsculas).
             $normalizeNomeParte = static function (string $s): string {
@@ -209,34 +153,12 @@ if ($row !== null) {
 
             if ($numeroProcesso !== '') {
                 $nomesFallback = $repoReuPresoProcesso->listReusPresosNomesByNumeroProcesso($numeroProcesso);
-                $dbgCountCnj = is_array($nomesFallback) ? count($nomesFallback) : 0;
                 foreach ($nomesFallback as $nomeReuPreso) {
                     $addNomeToReuMap((string) $nomeReuPreso, $reusPresosMap, $reusPresosSigMap);
                 }
             }
-
-            // #region agent log H2:reusPresosMap build counts
-            $payload = [
-                'sessionId' => 'b44cef',
-                'runId' => 'pre',
-                'hypothesisId' => 'H2',
-                'location' => 'sala-audiencias-pauta-edit.php:reusPresosMapBuild',
-                'message' => 'Contagem BD para reus presos (por processo e CNJ) + tamanho dos mapas',
-                'data' => [
-                    'processoIdProvided' => $processoId !== '' ? 1 : 0,
-                    'numeroProcessoProvided' => $numeroProcesso !== '' ? 1 : 0,
-                    'countByProcessoId' => (int) ($dbgCountProcesso ?? 0),
-                    'countByCnj' => (int) ($dbgCountCnj ?? 0),
-                    'reusPresosMapSize' => count($reusPresosMap),
-                    'reusPresosSigMapSize' => count($reusPresosSigMap),
-                ],
-                'timestamp' => (int) round(microtime(true) * 1000),
-            ];
-            @file_put_contents($__dbgLogPath, json_encode($payload, JSON_UNESCAPED_UNICODE) . PHP_EOL, FILE_APPEND);
-            // #endregion
         } catch (Throwable $e) {
             // Ambiente sem tabelas do módulo gabinete ou falha pontual: não bloqueia a edição da pauta.
-            $dbgRepoProcessoErro = 1;
         }
     }
 
@@ -249,7 +171,7 @@ if ($row !== null) {
                 $addNomeToReuMap((string) $nomeReuPreso, $reusPresosMap, $reusPresosSigMap);
             }
         } catch (Throwable $e) {
-            $dbgRepoCnjFallbackErro = 1;
+            // Não bloqueia a edição da pauta.
         }
     }
 }
@@ -465,10 +387,6 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
             <h2>Partes cadastradas</h2>
         </div>
-        <?php $__debugLoggedReuPresoMatch = false; ?>
-        <?php $__dbgFirstReuPresoData = null; ?>
-        <?php $__dbgTotalReusListados = 0; ?>
-        <?php $__dbgTotalReusMarcadosPresos = 0; ?>
         <?php foreach ($partesOrdenadas as $parte): ?>
         <?php
             $defensorTexto = 'Nenhum defensor vinculado';
@@ -478,7 +396,6 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
 
             // Só "Réu PRESO" depende do nome da parte.
             if ($tipoParteAtual === 'reu') {
-                $__dbgTotalReusListados++;
                 $nomeParteRaw = trim((string) ($parte['nome_parte'] ?? ''));
                 $nomeParteAtualKey = isset($normalizeNomeParte)
                     ? $normalizeNomeParte($nomeParteRaw)
@@ -538,38 +455,9 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                     }
                 }
                 // "Réu preso" deve ficar colorido (color-danger).
-                // #region agent log H3:H4:match reu preso
-                if (!$__debugLoggedReuPresoMatch) {
-                    $hasExactInMap = ($nomeParteAtualKey !== '' && isset($reusPresosMap[$nomeParteAtualKey]));
-                    $hasSigInSigMap = ($nomeParteAtualSig !== '' && isset($reusPresosSigMap[$nomeParteAtualSig]));
-                    $payload = [
-                        'sessionId' => 'b44cef',
-                        'runId' => 'pre',
-                        'hypothesisId' => 'H3',
-                        'location' => 'sala-audiencias-pauta-edit.php:reuPresoMatch',
-                        'message' => 'Match reu preso por chaves/assinaturas',
-                        'data' => [
-                            'tipoParte' => $tipoParteAtual,
-                            'nomeSigComputed' => $nomeParteAtualSig !== '' ? 1 : 0,
-                            'hasExactInMap' => $hasExactInMap ? 1 : 0,
-                            'hasSigInSigMap' => $hasSigInSigMap ? 1 : 0,
-                            'isReuPresoAfterComparisons' => $isReuPreso ? 1 : 0,
-                            'reusPresosMapSize' => count($reusPresosMap),
-                            'reusPresosSigMapSize' => count($reusPresosSigMap),
-                        ],
-                        'timestamp' => (int) round(microtime(true) * 1000),
-                    ];
-                    $__dbgFirstReuPresoData = $payload['data'];
-                    @file_put_contents($__dbgLogPath, json_encode($payload, JSON_UNESCAPED_UNICODE) . PHP_EOL, FILE_APPEND);
-                    $__debugLoggedReuPresoMatch = true;
-                }
-                // #endregion
                 $minorInfoParte = $isReuPreso
                     ? '<span style="color: var(--color-danger); font-weight: 600;">Réu preso</span>'
                     : 'Réu solto';
-                if ($isReuPreso) {
-                    $__dbgTotalReusMarcadosPresos++;
-                }
             }
 
             // Defensor/advogado só deve existir e ser exibido para reu ou vitima.
@@ -667,27 +555,6 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
             </div>
         </div>
         <?php endforeach; ?>
-
-        <?php
-            // Evidência para o debug via JS (evita dependência de file_put_contents).
-            $dbgReusPresosScript = [
-                'mapSize' => count($reusPresosMap),
-                'sigMapSize' => count($reusPresosSigMap),
-                'dbgGlobalReusPresosCount' => (int) ($dbgGlobalReusPresosCount ?? 0),
-                'dbgTotalReusPresosRows' => (int) ($dbgTotalReusPresosRows ?? 0),
-                'dbgStatusAtivoRows' => (int) ($dbgStatusAtivoRows ?? 0),
-                'dbgRepoGlobalErro' => (int) ($dbgRepoGlobalErro ?? 0),
-                'dbgRepoProcessoErro' => (int) ($dbgRepoProcessoErro ?? 0),
-                'dbgRepoCnjFallbackErro' => (int) ($dbgRepoCnjFallbackErro ?? 0),
-                'dbgTotalReusListados' => (int) $__dbgTotalReusListados,
-                'dbgTotalReusMarcadosPresos' => (int) $__dbgTotalReusMarcadosPresos,
-                'firstReuComputed' => $__dbgFirstReuPresoData !== null ? 1 : 0,
-                'firstReuData' => $__dbgFirstReuPresoData ?? (object)[],
-            ];
-        ?>
-        <script>
-        window.PAUTA_DEBUG_REUS_PRESOS = <?php echo json_encode($dbgReusPresosScript, JSON_UNESCAPED_UNICODE); ?>;
-        </script>
 
         <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
             <button type="button" class="btn btn-secondary" id="btn-audiencia-edit-voltar">Voltar</button>

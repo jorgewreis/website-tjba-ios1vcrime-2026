@@ -2,26 +2,6 @@
     var pendingConfirmations = {};
     var initialAudienciaSnapshot = '';
 
-    // #region agent log J0:JS module loaded
-    fetch('http://127.0.0.1:7798/ingest/64db24e1-3fcf-482a-aa07-c0ab6247ae38', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'b44cef' },
-        body: JSON.stringify({
-            sessionId: 'b44cef',
-            runId: 'pre3',
-            hypothesisId: 'J0',
-            location: 'pauta-edit.js:init',
-            message: 'pauta-edit.js carregado',
-            data: {
-                hasParteNome: !!document.getElementById('parte-nome'),
-                hasSelectParteNome: !!document.getElementById('parte-nome-selecao'),
-                hasAudienciaProcesso: !!document.getElementById('audiencia-edit-processo')
-            },
-            timestamp: Date.now()
-        })
-    }).catch(function () {});
-    // #endregion
-
     function notify(type, title, message) {
         if (typeof showToast === 'function') {
             showToast({ type: type, variant: 'full', title: title, message: message });
@@ -345,25 +325,8 @@
         select.dataset.firstDatajudValue = '';
 
         var digits = String(processoInput.value || '').replace(/\D/g, '');
-        // #region agent log J1:process digits + ready state
-        fetch('http://127.0.0.1:7798/ingest/64db24e1-3fcf-482a-aa07-c0ab6247ae38', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'b44cef' },
-            body: JSON.stringify({
-                sessionId: 'b44cef',
-                runId: 'pre3',
-                hypothesisId: 'J1',
-                location: 'pauta-edit.js:initParteNomeDatajudSelect',
-                message: 'Digits do processo e estado de UI',
-                data: {
-                    digitsLen: String(digits || '').length,
-                    processoInputValLen: String(processoInput.value || '').length,
-                    selectDisplay: select.style.display || null,
-                    inputDisplay: input.style.display || null
-                },
-                timestamp: Date.now()
-            })
-        }).catch(function () {});
+        // #region agent log H4 frontend init
+        fetch('http://127.0.0.1:7798/ingest/64db24e1-3fcf-482a-aa07-c0ab6247ae38',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b44cef'},body:JSON.stringify({sessionId:'b44cef',runId:'run-datajud-1',hypothesisId:'H4',location:'pauta-edit.js:initDatajud',message:'Init consulta DataJud',data:{digitsLen:String(digits||'').length,existingSigCount:Array.isArray(window.PAUTA_EXISTING_PART_NAMES_SIGS)?window.PAUTA_EXISTING_PART_NAMES_SIGS.length:0},timestamp:Date.now()})}).catch(()=>{});
         // #endregion
         if (digits.length !== 20) {
             select.disabled = false;
@@ -381,6 +344,9 @@
         })
             .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
             .then(function (res) {
+                // #region agent log H4 frontend response status
+                fetch('http://127.0.0.1:7798/ingest/64db24e1-3fcf-482a-aa07-c0ab6247ae38',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b44cef'},body:JSON.stringify({sessionId:'b44cef',runId:'run-datajud-1',hypothesisId:'H4',location:'pauta-edit.js:datajudResponse',message:'Status da resposta DataJud',data:{ok:!!res.ok,hasBody:!!(res&&res.j),bodyKeys:res&&res.j&&res.j.data&&typeof res.j.data==='object'?Object.keys(res.j.data):[]},timestamp:Date.now()})}).catch(()=>{});
+                // #endregion
                 if (!res.ok) throw new Error((res.j && res.j.error) ? res.j.error : 'Erro ao consultar DataJud.');
                 var data = res.j && res.j.data ? res.j.data : null;
                 var nomes = [];
@@ -410,32 +376,10 @@
                     return sig && !existingSet.has(sig);
                 });
 
-                // #region agent log H1:DataJud response & filter
-                fetch('http://127.0.0.1:7798/ingest/64db24e1-3fcf-482a-aa07-c0ab6247ae38', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Debug-Session-Id': 'b44cef'
-                    },
-                    body: JSON.stringify({
-                        sessionId: 'b44cef',
-                        runId: 'pre',
-                        hypothesisId: 'H1',
-                        location: 'pauta-edit.js:datajud-filter',
-                        message: 'DataJud nomes count (antes/depois do filtro)',
-                        data: {
-                            digitsLen: String(digits || '').replace(/\\D/g, '').length,
-                            dataKeys: data && typeof data === 'object' ? Object.keys(data) : [],
-                            poloPassivoIsArray: Boolean(data && Array.isArray(data.polo_passivo)),
-                            poloPassivoLen: data && Array.isArray(data.polo_passivo) ? data.polo_passivo.length : null,
-                            nomesAntesFiltro: nomesAntesFiltro,
-                            nomesDepoisFiltro: nomes.length,
-                            existingSignaturesCount: existingSet ? existingSet.size : null
-                        },
-                        timestamp: Date.now()
-                    })
-                }).catch(function () {});
+                // #region agent log H4 frontend counts
+                fetch('http://127.0.0.1:7798/ingest/64db24e1-3fcf-482a-aa07-c0ab6247ae38',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b44cef'},body:JSON.stringify({sessionId:'b44cef',runId:'run-datajud-1',hypothesisId:'H4',location:'pauta-edit.js:datajudCounts',message:'Contagens de nomes no frontend',data:{poloPassivoLen:data&&Array.isArray(data.polo_passivo)?data.polo_passivo.length:0,nomesAntesFiltro:nomesAntesFiltro,nomesDepoisFiltro:nomes.length},timestamp:Date.now()})}).catch(()=>{});
                 // #endregion
+
 
                 if (nomes.length > 0) {
                     // Lista encontrada: mostra só select e oculta input.
@@ -474,6 +418,9 @@
                 }
             })
             .catch(function () {
+                // #region agent log H4 frontend catch
+                fetch('http://127.0.0.1:7798/ingest/64db24e1-3fcf-482a-aa07-c0ab6247ae38',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b44cef'},body:JSON.stringify({sessionId:'b44cef',runId:'run-datajud-1',hypothesisId:'H4',location:'pauta-edit.js:datajudCatch',message:'Erro no fluxo DataJud (catch)',data:{digitsLen:String(digits||'').length},timestamp:Date.now()})}).catch(()=>{});
+                // #endregion
                 // Se falhar, mantém o input livre (sem bloquear usuário).
                 if (typeof showToast === 'function') {
                     showToast({ type: 'info', variant: 'full', title: 'DataJud', message: 'Nao foi possivel consultar nomes do processo no DataJud. Voce pode digitar manualmente.' });
@@ -493,25 +440,6 @@
     }
 
     initParteNomeDatajudSelect();
-    // #region agent log J2: debug values from server
-    try {
-        var dbg = window.PAUTA_DEBUG_REUS_PRESOS || null;
-        if (dbg) {
-            fetch('http://127.0.0.1:7798/ingest/64db24e1-3fcf-482a-aa07-c0ab6247ae38', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'b44cef' },
-                body: JSON.stringify({
-                    sessionId: 'b44cef',
-                    runId: 'pre3',
-                    hypothesisId: 'J2',
-                    location: 'pauta-edit.js:debug-reus-presos',
-                    message: 'PAUTA_DEBUG_REUS_PRESOS payload',
-                    data: dbg,
-                    timestamp: Date.now()
-                })
-            }).catch(function () {});
-        }
-    } catch (e) {}
-    // #endregion
+
     initialAudienciaSnapshot = currentAudienciaSnapshot();
 })();

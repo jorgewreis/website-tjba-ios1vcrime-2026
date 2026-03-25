@@ -47,6 +47,26 @@ $body = [
     ],
 ];
 
+// #region agent log H1/H2 backend request payload
+@file_put_contents(
+    __DIR__ . '/../../../debug-b44cef.log',
+    json_encode([
+        'sessionId' => 'b44cef',
+        'runId' => 'run-datajud-1',
+        'hypothesisId' => 'H1',
+        'location' => 'search-processo.php:request',
+        'message' => 'Consulta DataJud iniciada',
+        'data' => [
+            'numeroLen' => strlen($numero),
+            'queryMode' => 'term',
+            'sourceFieldCount' => count($body['_source'] ?? []),
+        ],
+        'timestamp' => (int) round(microtime(true) * 1000),
+    ], JSON_UNESCAPED_UNICODE) . PHP_EOL,
+    FILE_APPEND
+);
+// #endregion
+
 $ch = curl_init($config['endpoint']);
 curl_setopt_array($ch, [
     CURLOPT_POST => true,
@@ -65,11 +85,50 @@ $error = curl_error($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 curl_close($ch);
 
+// #region agent log H1 backend http result
+@file_put_contents(
+    __DIR__ . '/../../../debug-b44cef.log',
+    json_encode([
+        'sessionId' => 'b44cef',
+        'runId' => 'run-datajud-1',
+        'hypothesisId' => 'H1',
+        'location' => 'search-processo.php:http-result',
+        'message' => 'Resposta HTTP do DataJud',
+        'data' => [
+            'httpCode' => (int) $httpCode,
+            'curlError' => $error !== '' ? 1 : 0,
+            'responseLen' => is_string($response) ? strlen($response) : 0,
+        ],
+        'timestamp' => (int) round(microtime(true) * 1000),
+    ], JSON_UNESCAPED_UNICODE) . PHP_EOL,
+    FILE_APPEND
+);
+// #endregion
+
 if ($response === false) {
     respond(['error' => 'Falha ao contatar o DataJud: ' . $error], 502);
 }
 
 $decoded = json_decode($response, true);
+// #region agent log H2 backend decoded shape
+@file_put_contents(
+    __DIR__ . '/../../../debug-b44cef.log',
+    json_encode([
+        'sessionId' => 'b44cef',
+        'runId' => 'run-datajud-1',
+        'hypothesisId' => 'H2',
+        'location' => 'search-processo.php:decoded-shape',
+        'message' => 'Estrutura decodificada do DataJud',
+        'data' => [
+            'decodedIsArray' => is_array($decoded) ? 1 : 0,
+            'hasHits' => (is_array($decoded) && isset($decoded['hits'])) ? 1 : 0,
+            'hitsCount' => (int) (is_array($decoded) ? count((array) ($decoded['hits']['hits'] ?? [])) : 0),
+        ],
+        'timestamp' => (int) round(microtime(true) * 1000),
+    ], JSON_UNESCAPED_UNICODE) . PHP_EOL,
+    FILE_APPEND
+);
+// #endregion
 if (!is_array($decoded) || !isset($decoded['hits']['hits'][0]['_source'])) {
     respond(['error' => 'Processo não encontrado na base do DataJud.'], 404);
 }
@@ -79,24 +138,33 @@ $source = $decoded['hits']['hits'][0]['_source'];
 $poloRaw = $source['polo'] ?? [];
 $poloPassivo = formatarPolo($poloRaw);
 
-$dbgLogPath = dirname(__DIR__, 3) . '/.cursor/debug-b44cef.log';
+// #region agent log H2/H3 source parts shape
+$partesDiretas = is_array($source['partes'] ?? null) ? count((array) $source['partes']) : 0;
+$poloAtivoRaw = is_array($source['poloAtivo'] ?? null) ? count((array) $source['poloAtivo']) : 0;
+$poloPassivoRaw = is_array($source['poloPassivo'] ?? null) ? count((array) $source['poloPassivo']) : 0;
 @file_put_contents(
-    $dbgLogPath,
+    __DIR__ . '/../../../debug-b44cef.log',
     json_encode([
         'sessionId' => 'b44cef',
-        'runId' => 'pre2',
-        'hypothesisId' => 'H1b',
-        'location' => 'search-processo.php:polo-shape',
-        'message' => 'Contagem polo e polo_passivo retornado (sem nomes)',
+        'runId' => 'run-datajud-1',
+        'hypothesisId' => 'H2',
+        'location' => 'search-processo.php:source-parts-shape',
+        'message' => 'Campos de partes no _source',
         'data' => [
-            'poloRawIsArray' => is_array($poloRaw) ? 1 : 0,
-            'poloRawCount' => is_array($poloRaw) ? count($poloRaw) : null,
-            'poloPassivoCount' => is_array($poloPassivo) ? count($poloPassivo) : null,
+            'sourceKeyCount' => count((array) $source),
+            'hasPolo' => isset($source['polo']) ? 1 : 0,
+            'poloRawCount' => is_array($poloRaw) ? count($poloRaw) : 0,
+            'poloPassivoCountOut' => is_array($poloPassivo) ? count($poloPassivo) : 0,
+            'partesDiretasCount' => $partesDiretas,
+            'poloAtivoCount' => $poloAtivoRaw,
+            'poloPassivoRawCount' => $poloPassivoRaw,
+            'nivelSigilo' => isset($source['nivelSigilo']) ? (int) $source['nivelSigilo'] : null,
         ],
         'timestamp' => (int) round(microtime(true) * 1000),
     ], JSON_UNESCAPED_UNICODE) . PHP_EOL,
     FILE_APPEND
 );
+// #endregion
 
 $result = [
     'numero' => $source['numeroProcesso'] ?? $numero,
