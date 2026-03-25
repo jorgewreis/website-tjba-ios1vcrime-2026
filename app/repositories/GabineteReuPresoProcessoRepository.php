@@ -184,14 +184,12 @@ final class GabineteReuPresoProcessoRepository
              FROM `%s` gpp
              INNER JOIN `gabinete_reu_preso` grp ON grp.`id` = gpp.`reu_preso_id`
              WHERE gpp.`processo_id` = :processo_id
-               AND gpp.`situacao` = :situacao
                AND grp.`status` = :status_ativo
              ORDER BY grp.`nome` ASC',
             $this->table
         );
         $st = $this->connection->prepare($sql);
         $st->bindValue(':processo_id', $processoId);
-        $st->bindValue(':situacao', 'preso');
         $st->bindValue(':status_ativo', 'ativo');
         $st->execute();
         $rows = $st->fetchAll(PDO::FETCH_ASSOC);

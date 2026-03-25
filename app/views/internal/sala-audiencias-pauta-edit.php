@@ -22,20 +22,34 @@ if ($row !== null) {
             $repoReuPresoProcesso = new GabineteReuPresoProcessoRepository(Conection::getInstance()->getConnection());
             $nomesReusPresos = $repoReuPresoProcesso->listReusPresosNomesByProcessoId($processoId);
 
-            // Normaliza nomes para comparação (acentos/espacos extras/maiúsculas).
+            // Normaliza nomes para comparação (acentos/espacos não-padrão/pontuação/maiúsculas).
             $normalizeNomeParte = static function (string $s): string {
                 $s = trim($s);
-                $s = preg_replace('/\s+/u', ' ', $s) ?: $s;
+                // NBSP comum vindo de HTML/DB.
+                $s = str_replace("\xC2\xA0", ' ', $s);
+
+                // Colapsa qualquer tipo de espaço para " ".
+                $s = preg_replace('/\p{Z}+/u', ' ', $s) ?: $s;
+                $s = preg_replace('/[[:space:]]+/u', ' ', $s) ?: $s;
+
                 $s = function_exists('mb_strtolower') ? mb_strtolower($s, 'UTF-8') : strtolower($s);
 
-                if (function_exists('iconv')) {
-                    $trans = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $s);
-                    if ($trans !== false && $trans !== null) {
-                        $s = $trans;
+                // Remove acentos de forma robusta (se intl estiver disponível).
+                try {
+                    if (class_exists('Normalizer')) {
+                        $s = \Normalizer::normalize($s, \Normalizer::FORM_D);
+                        // Remove marcas diacríticas (acentos).
+                        $s = preg_replace('/\p{Mn}/u', '', $s) ?: $s;
                     }
+                } catch (Throwable $e) {
+                    // fallback: ignora
                 }
 
-                return $s;
+                // Remove pontuação/símbolos (mantendo letras/numeros/espaços).
+                $s = preg_replace('/[^\p{L}\p{N} ]/u', '', $s) ?: $s;
+
+                $s = preg_replace('/[[:space:]]+/u', ' ', $s) ?: $s;
+                return trim($s);
             };
 
             foreach ($nomesReusPresos as $nomeReuPreso) {
@@ -259,19 +273,35 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
             // Só "Réu PRESO" depende do nome da parte.
             if ($tipoParteAtual === 'reu') {
                 $nomeParteRaw = trim((string) ($parte['nome_parte'] ?? ''));
-                $nomeParteAtualKey = (function (string $s): string {
-                    $s = trim($s);
-                    $s = preg_replace('/\s+/u', ' ', $s) ?: $s;
-                    $s = function_exists('mb_strtolower') ? mb_strtolower($s, 'UTF-8') : strtolower($s);
-                    if (function_exists('iconv')) {
-                        $trans = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $s);
-                        if ($trans !== false && $trans !== null) {
-                            $s = $trans;
+                $nomeParteAtualKey = isset($normalizeNomeParte)
+                    ? $normalizeNomeParte($nomeParteRaw)
+                    : $nomeParteRaw;
+                $isReuPreso = $nomeParteAtualKey !== '' && isset($reusPresosMap[$nomeParteAtualKey]);
+
+                // Fallback: comparação por palavras (tolerante a variações pequenas).
+                if (!$isReuPreso && $nomeParteAtualKey !== '') {
+                    $wordsReu = array_values(array_filter(explode(' ', $nomeParteAtualKey)));
+                    if ($wordsReu !== []) {
+                        foreach ($reusPresosMap as $k => $_) {
+                            $wordsPreso = array_values(array_filter(explode(' ', (string) $k)));
+                            if ($wordsPreso === []) {
+                                continue;
+                            }
+                            $allWordsExist = true;
+                            foreach ($wordsReu as $w) {
+                                if ($w === '') continue;
+                                if (!in_array($w, $wordsPreso, true) && strpos((string) $k, (string) $w) === false) {
+                                    $allWordsExist = false;
+                                    break;
+                                }
+                            }
+                            if ($allWordsExist) {
+                                $isReuPreso = true;
+                                break;
+                            }
                         }
                     }
-                    return $s;
-                })($nomeParteRaw);
-                $isReuPreso = $nomeParteAtualKey !== '' && isset($reusPresosMap[$nomeParteAtualKey]);
+                }
                 // "Réu preso" deve ficar colorido (color-danger).
                 $minorInfoParte = $isReuPreso
                     ? '<span style="color: var(--color-danger); font-weight: 600;">Réu preso</span>'
