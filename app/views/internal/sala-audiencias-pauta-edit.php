@@ -45,6 +45,15 @@ if ($row !== null) {
                     // fallback: ignora
                 }
 
+                // Fallback adicional: se `Normalizer` não estiver disponível (ou não funcionar),
+                // translitera para ASCII removendo acentos.
+                if (function_exists('iconv')) {
+                    $trans = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $s);
+                    if ($trans !== false && $trans !== null) {
+                        $s = $trans;
+                    }
+                }
+
                 // Remove pontuação/símbolos (mantendo letras/numeros/espaços).
                 $s = preg_replace('/[^\p{L}\p{N} ]/u', '', $s) ?: $s;
 
@@ -56,6 +65,20 @@ if ($row !== null) {
                 $key = $normalizeNomeParte((string) $nomeReuPreso);
                 if ($key !== '') {
                     $reusPresosMap[$key] = true;
+                }
+            }
+
+            // Se não achou por `processo_id`, tenta fallback por CNJ (`numero_processo`).
+            if ($reusPresosMap === []) {
+                $numeroProcesso = trim((string) ($row['numero_processo'] ?? ''));
+                if ($numeroProcesso !== '') {
+                    $nomesFallback = $repoReuPresoProcesso->listReusPresosNomesByNumeroProcesso($numeroProcesso);
+                    foreach ($nomesFallback as $nomeReuPreso) {
+                        $key = $normalizeNomeParte((string) $nomeReuPreso);
+                        if ($key !== '') {
+                            $reusPresosMap[$key] = true;
+                        }
+                    }
                 }
             }
         } catch (Throwable $e) {

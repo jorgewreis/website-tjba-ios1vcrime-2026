@@ -163,7 +163,8 @@
         });
     });
 
-    document.querySelectorAll('.button-table[data-parte-remove]').forEach(function (btn) {
+    // Some UIs use `.button-table` while others use `.btn-editar stop`; handler must be generic.
+    document.querySelectorAll('[data-parte-remove]').forEach(function (btn) {
         btn.addEventListener('click', function () {
             if (!requireSecondClick('pauta-remover-parte-' + btn.getAttribute('data-parte-remove'), 'Clique novamente em Remover parte em ate 5 segundos para confirmar.')) return;
             fetch('/api/sala-audiencias-pauta/partes-delete.php', {

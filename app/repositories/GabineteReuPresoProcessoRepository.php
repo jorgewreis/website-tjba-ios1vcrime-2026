@@ -209,6 +209,57 @@ final class GabineteReuPresoProcessoRepository
     }
 
     /**
+     * Fallback: lista nomes de réus presos ativos vinculados ao mesmo CNJ
+     * (útil quando o `processo_id` diverge entre módulos, mas o CNJ é o mesmo).
+     *
+     * @return list<string>
+     */
+    public function listReusPresosNomesByNumeroProcesso(string $numeroProcesso): array
+    {
+        $numeroProcesso = trim($numeroProcesso);
+        if ($numeroProcesso === '') {
+            return [];
+        }
+
+        $digits = preg_replace('/\D+/', '', $numeroProcesso);
+        if ($digits === '') {
+            return [];
+        }
+
+        $sql = sprintf(
+            'SELECT DISTINCT TRIM(grp.`nome`) AS `nome`
+             FROM `%s` gpp
+             INNER JOIN `gabinete_reu_preso` grp ON grp.`id` = gpp.`reu_preso_id`
+             INNER JOIN `processos` pr ON pr.`id` = gpp.`processo_id`
+             WHERE pr.`numero_processo` IS NOT NULL
+               AND REPLACE(REPLACE(pr.`numero_processo`, ''-'', ''''), ''.'', '''') LIKE :proc_digits
+               AND grp.`status` = :status_ativo
+             ORDER BY grp.`nome` ASC',
+            $this->table
+        );
+
+        $st = $this->connection->prepare($sql);
+        $st->bindValue(':proc_digits', '%' . $digits . '%');
+        $st->bindValue(':status_ativo', 'ativo');
+        $st->execute();
+
+        $rows = $st->fetchAll(PDO::FETCH_ASSOC);
+        if ($rows === false) {
+            return [];
+        }
+
+        $nomes = [];
+        foreach ($rows as $row) {
+            $nome = trim((string) ($row['nome'] ?? ''));
+            if ($nome !== '') {
+                $nomes[] = $nome;
+            }
+        }
+
+        return $nomes;
+    }
+
+    /**
      * Processos vinculados ao réu que não são o principal (lista na subtarefa da listagem).
      *
      * @param list<string> $reuIds
