@@ -185,4 +185,27 @@ final class GabineteReuPresoRepository
 
         return (int) $st->fetchColumn();
     }
+
+    /**
+     * @return list<string> nomes distintos e normalizados apenas com trim.
+     */
+    public function listAtivosNomes(): array
+    {
+        $sql = sprintf('SELECT DISTINCT TRIM(`nome`) AS `nome` FROM `%s` WHERE `status` = :status_ativo ORDER BY `nome` ASC', $this->table);
+        $st = $this->connection->prepare($sql);
+        $st->bindValue(':status_ativo', 'ativo');
+        $st->execute();
+        $rows = $st->fetchAll(PDO::FETCH_ASSOC);
+        if ($rows === false) {
+            return [];
+        }
+        $nomes = [];
+        foreach ($rows as $row) {
+            $nome = trim((string) ($row['nome'] ?? ''));
+            if ($nome !== '') {
+                $nomes[] = $nome;
+            }
+        }
+        return array_values(array_unique($nomes));
+    }
 }

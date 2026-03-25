@@ -8,6 +8,7 @@ if (function_exists('mb_internal_encoding')) {
 
 require_once __DIR__ . '/../../services/SalaAudienciasPautaService.php';
 require_once __DIR__ . '/../../repositories/GabineteReuPresoProcessoRepository.php';
+require_once __DIR__ . '/../../repositories/GabineteReuPresoRepository.php';
 require_once __DIR__ . '/../../repositories/PartesRepository.php';
 
 $id = trim((string) ($_GET['id'] ?? ''));
@@ -55,6 +56,27 @@ $signatureNomeParte = static function (string $normalized): string {
 if ($row !== null) {
     $processoId = trim((string) ($row['processo'] ?? ''));
     $numeroProcesso = trim((string) ($row['numero_processo'] ?? ''));
+    $dbgGlobalReusPresosCount = 0;
+
+    // Monta mapa global de "réus presos" apenas pelo cadastro ativo,
+    // para evitar falhas de resolução por processo_id/CNJ.
+    try {
+        $repoReuPreso = new GabineteReuPresoRepository(Conection::getInstance()->getConnection());
+        $nomesGlobais = $repoReuPreso->listAtivosNomes();
+        $dbgGlobalReusPresosCount = count($nomesGlobais);
+        foreach ($nomesGlobais as $nomeGlobal) {
+            $keyGlobal = $normalizeNomeParte($nomeGlobal);
+            if ($keyGlobal !== '') {
+                $reusPresosMap[$keyGlobal] = true;
+                $sigGlobal = $signatureNomeParte($keyGlobal);
+                if ($sigGlobal !== '') {
+                    $reusPresosSigMap[$sigGlobal] = true;
+                }
+            }
+        }
+    } catch (Throwable $e) {
+        $dbgGlobalReusPresosCount = 0;
+    }
     $tipoCounts = [
         'reu' => 0,
         'vitima' => 0,
@@ -630,7 +652,7 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
             ];
         ?>
         <script>
-            window.PAUTA_DEBUG_REUS_PRESOS = <?php echo json_encode($dbgReusPresosScript, JSON_UNESCAPED_UNICODE); ?>;
+        window.PAUTA_DEBUG_REUS_PRESOS = <?php echo json_encode($dbgReusPresosScript, JSON_UNESCAPED_UNICODE); ?>;
         </script>
 
         <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
