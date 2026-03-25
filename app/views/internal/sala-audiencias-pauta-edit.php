@@ -91,6 +91,8 @@ if ($row !== null) {
     $dbgTotalReusPresosRows = 0;
     $dbgStatusAtivoRows = 0;
     $dbgRepoGlobalErro = 0;
+    $dbgRepoProcessoErro = 0;
+    $dbgRepoCnjFallbackErro = 0;
 
     try {
         $cnDbg = Conection::getInstance()->getConnection();
@@ -234,8 +236,7 @@ if ($row !== null) {
             // #endregion
         } catch (Throwable $e) {
             // Ambiente sem tabelas do módulo gabinete ou falha pontual: não bloqueia a edição da pauta.
-            $reusPresosMap = [];
-            $reusPresosSigMap = [];
+            $dbgRepoProcessoErro = 1;
         }
     }
 
@@ -248,8 +249,7 @@ if ($row !== null) {
                 $addNomeToReuMap((string) $nomeReuPreso, $reusPresosMap, $reusPresosSigMap);
             }
         } catch (Throwable $e) {
-            $reusPresosMap = [];
-            $reusPresosSigMap = [];
+            $dbgRepoCnjFallbackErro = 1;
         }
     }
 }
@@ -671,6 +671,8 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                 'dbgTotalReusPresosRows' => (int) ($dbgTotalReusPresosRows ?? 0),
                 'dbgStatusAtivoRows' => (int) ($dbgStatusAtivoRows ?? 0),
                 'dbgRepoGlobalErro' => (int) ($dbgRepoGlobalErro ?? 0),
+                'dbgRepoProcessoErro' => (int) ($dbgRepoProcessoErro ?? 0),
+                'dbgRepoCnjFallbackErro' => (int) ($dbgRepoCnjFallbackErro ?? 0),
                 'firstReuComputed' => $__dbgFirstReuPresoData !== null ? 1 : 0,
                 'firstReuData' => $__dbgFirstReuPresoData ?? (object)[],
             ];
