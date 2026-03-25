@@ -57,6 +57,22 @@ if ($row !== null) {
     $processoId = trim((string) ($row['processo'] ?? ''));
     $numeroProcesso = trim((string) ($row['numero_processo'] ?? ''));
     $dbgGlobalReusPresosCount = 0;
+    $dbgTotalReusPresosRows = 0;
+    $dbgStatusAtivoRows = 0;
+    $dbgRepoGlobalErro = 0;
+
+    try {
+        $cnDbg = Conection::getInstance()->getConnection();
+        $stAll = $cnDbg->query('SELECT COUNT(*) FROM `gabinete_reu_preso`');
+        $dbgTotalReusPresosRows = (int) ($stAll ? $stAll->fetchColumn() : 0);
+        $stAt = $cnDbg->prepare('SELECT COUNT(*) FROM `gabinete_reu_preso` WHERE LOWER(TRIM(`status`)) = :st');
+        $stAt->bindValue(':st', 'ativo');
+        $stAt->execute();
+        $dbgStatusAtivoRows = (int) $stAt->fetchColumn();
+    } catch (Throwable $e) {
+        $dbgTotalReusPresosRows = -1;
+        $dbgStatusAtivoRows = -1;
+    }
 
     // Monta mapa global de "réus presos" apenas pelo cadastro ativo,
     // para evitar falhas de resolução por processo_id/CNJ.
@@ -76,6 +92,7 @@ if ($row !== null) {
         }
     } catch (Throwable $e) {
         $dbgGlobalReusPresosCount = 0;
+        $dbgRepoGlobalErro = 1;
     }
     $tipoCounts = [
         'reu' => 0,
@@ -647,6 +664,10 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
             $dbgReusPresosScript = [
                 'mapSize' => count($reusPresosMap),
                 'sigMapSize' => count($reusPresosSigMap),
+                'dbgGlobalReusPresosCount' => (int) ($dbgGlobalReusPresosCount ?? 0),
+                'dbgTotalReusPresosRows' => (int) ($dbgTotalReusPresosRows ?? 0),
+                'dbgStatusAtivoRows' => (int) ($dbgStatusAtivoRows ?? 0),
+                'dbgRepoGlobalErro' => (int) ($dbgRepoGlobalErro ?? 0),
                 'firstReuComputed' => $__dbgFirstReuPresoData !== null ? 1 : 0,
                 'firstReuData' => $__dbgFirstReuPresoData ?? (object)[],
             ];

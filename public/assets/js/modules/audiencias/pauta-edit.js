@@ -425,6 +425,7 @@
                         message: 'DataJud nomes count (antes/depois do filtro)',
                         data: {
                             digitsLen: String(digits || '').replace(/\\D/g, '').length,
+                            dataKeys: data && typeof data === 'object' ? Object.keys(data) : [],
                             poloPassivoIsArray: Boolean(data && Array.isArray(data.polo_passivo)),
                             poloPassivoLen: data && Array.isArray(data.polo_passivo) ? data.polo_passivo.length : null,
                             nomesAntesFiltro: nomesAntesFiltro,
