@@ -78,4 +78,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: debug p2 premium** `[3681fd2]`
 - **Fix: debug premium 3** `[b582174]`
 - **Fix: debug premium 4** `[0363f20]`
+- **Fix: debug premium 5** `[ddd05f8]`
 
