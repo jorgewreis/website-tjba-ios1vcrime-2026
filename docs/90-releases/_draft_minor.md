@@ -60,4 +60,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correcao de bug** `[4c020fa]`
 - **Fix: tentativa de correcao** `[8236c27]`
 - **Fix: nova tentativa** `[fbb328a]`
+- **Fix: mais uma tentativa** `[1b268f6]`
 
