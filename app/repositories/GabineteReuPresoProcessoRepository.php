@@ -221,6 +221,16 @@ final class GabineteReuPresoProcessoRepository
             return [];
         }
 
+        // Resolve o processo pelo CNJ usando as mesmas regras do ProcessosRepository
+        // (evita falhas por formato/mascara do numero_processo no banco).
+        require_once __DIR__ . '/ProcessosRepository.php';
+        $procRepo = new ProcessosRepository($this->connection);
+        $proc = $procRepo->findByNumero($numeroProcesso);
+        if ($proc !== null && isset($proc['id']) && trim((string) $proc['id']) !== '') {
+            return $this->listReusPresosNomesByProcessoId((string) $proc['id']);
+        }
+
+        // Fallback legado (se o processo não for localizado):
         $digits = preg_replace('/\D+/', '', $numeroProcesso);
         if ($digits === '') {
             return [];
