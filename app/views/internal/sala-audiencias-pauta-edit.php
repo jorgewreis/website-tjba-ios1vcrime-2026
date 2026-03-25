@@ -467,6 +467,8 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
         </div>
         <?php $__debugLoggedReuPresoMatch = false; ?>
         <?php $__dbgFirstReuPresoData = null; ?>
+        <?php $__dbgTotalReusListados = 0; ?>
+        <?php $__dbgTotalReusMarcadosPresos = 0; ?>
         <?php foreach ($partesOrdenadas as $parte): ?>
         <?php
             $defensorTexto = 'Nenhum defensor vinculado';
@@ -476,6 +478,7 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
 
             // Só "Réu PRESO" depende do nome da parte.
             if ($tipoParteAtual === 'reu') {
+                $__dbgTotalReusListados++;
                 $nomeParteRaw = trim((string) ($parte['nome_parte'] ?? ''));
                 $nomeParteAtualKey = isset($normalizeNomeParte)
                     ? $normalizeNomeParte($nomeParteRaw)
@@ -564,6 +567,9 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                 $minorInfoParte = $isReuPreso
                     ? '<span style="color: var(--color-danger); font-weight: 600;">Réu preso</span>'
                     : 'Réu solto';
+                if ($isReuPreso) {
+                    $__dbgTotalReusMarcadosPresos++;
+                }
             }
 
             // Defensor/advogado só deve existir e ser exibido para reu ou vitima.
@@ -673,6 +679,8 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                 'dbgRepoGlobalErro' => (int) ($dbgRepoGlobalErro ?? 0),
                 'dbgRepoProcessoErro' => (int) ($dbgRepoProcessoErro ?? 0),
                 'dbgRepoCnjFallbackErro' => (int) ($dbgRepoCnjFallbackErro ?? 0),
+                'dbgTotalReusListados' => (int) $__dbgTotalReusListados,
+                'dbgTotalReusMarcadosPresos' => (int) $__dbgTotalReusMarcadosPresos,
                 'firstReuComputed' => $__dbgFirstReuPresoData !== null ? 1 : 0,
                 'firstReuData' => $__dbgFirstReuPresoData ?? (object)[],
             ];
