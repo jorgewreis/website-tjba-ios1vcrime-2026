@@ -27,24 +27,9 @@ $body = [
         ],
     ],
     'size' => 1,
-    '_source' => [
-        'numeroProcesso',
-        'classeProcessual',
-        'classe',
-        'assuntos',
-        'polo',
-        'prioridade',
-        'tribunal',
-        'movimentos',
-        'orgaoJulgador',
-        'nivelSigilo',
-        'grau',
-        'formato',
-        'sistema',
-        'dataHoraUltimaAtualizacao',
-        'dataAjuizamento',
-        'id',
-    ],
+    // Retorna _source completo para suportar variações de schema entre tribunais.
+    // A resposta segue size=1, então o impacto é baixo.
+    '_source' => true,
 ];
 
 // #region agent log H1/H2 backend request payload
@@ -137,6 +122,9 @@ $source = $decoded['hits']['hits'][0]['_source'];
 
 $poloRaw = $source['polo'] ?? [];
 $poloPassivo = formatarPolo($poloRaw);
+if (count($poloPassivo) === 0) {
+    $poloPassivo = extractPartNamesFromSource($source);
+}
 
 // #region agent log H2/H3 source parts shape
 $partesDiretas = is_array($source['partes'] ?? null) ? count((array) $source['partes']) : 0;
@@ -357,6 +345,76 @@ function formatarPolo($polos): array
         return trim((string) $v) !== '';
     }));
     return array_values(array_unique($nomes));
+}
+
+function extractPartNamesFromSource(array $source): array
+{
+    $nomes = [];
+    $collections = [
+        $source['polo'] ?? null,
+        $source['poloAtivo'] ?? null,
+        $source['poloPassivo'] ?? null,
+        $source['partes'] ?? null,
+        $source['participantes'] ?? null,
+    ];
+
+    foreach ($collections as $collection) {
+        collectPartNames($collection, $nomes);
+    }
+
+    return array_values(array_keys($nomes));
+}
+
+function collectPartNames($node, array &$nomes): void
+{
+    if (is_string($node)) {
+        $v = trim($node);
+        if ($v !== '' && looksLikePersonName($v)) {
+            $nomes[$v] = true;
+        }
+        return;
+    }
+
+    if (!is_array($node)) {
+        return;
+    }
+
+    // Captura nomes em chaves comuns.
+    foreach (['nome', 'descricao', 'nomeParte', 'nomePessoa'] as $k) {
+        if (isset($node[$k]) && is_string($node[$k])) {
+            $v = trim((string) $node[$k]);
+            if ($v !== '' && looksLikePersonName($v)) {
+                $nomes[$v] = true;
+            }
+        }
+    }
+
+    // Percorre recursivamente estruturas típicas de partes.
+    foreach ($node as $key => $value) {
+        $keyStr = is_string($key) ? mb_strtolower($key, 'UTF-8') : '';
+        if (
+            $keyStr === '' ||
+            strpos($keyStr, 'polo') !== false ||
+            strpos($keyStr, 'parte') !== false ||
+            strpos($keyStr, 'particip') !== false ||
+            strpos($keyStr, 'represent') !== false ||
+            strpos($keyStr, 'advog') !== false ||
+            is_numeric($key)
+        ) {
+            collectPartNames($value, $nomes);
+        }
+    }
+}
+
+function looksLikePersonName(string $v): bool
+{
+    // Evita coletar textos curtos/códigos e rótulos do processo.
+    $s = trim(preg_replace('/\s+/u', ' ', $v) ?: $v);
+    if ($s === '' || mb_strlen($s, 'UTF-8') < 5) {
+        return false;
+    }
+    $tokens = preg_split('/\s+/u', $s) ?: [];
+    return count($tokens) >= 2;
 }
 
 function respond(array $payload, int $status = 200): void

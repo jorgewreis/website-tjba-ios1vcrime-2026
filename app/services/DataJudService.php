@@ -31,24 +31,7 @@ final class DataJudService
                 ],
             ],
             'size' => 1,
-            '_source' => [
-                'numeroProcesso',
-                'classeProcessual',
-                'classe',
-                'assuntos',
-                'polo',
-                'prioridade',
-                'tribunal',
-                'movimentos',
-                'orgaoJulgador',
-                'nivelSigilo',
-                'grau',
-                'formato',
-                'sistema',
-                'dataHoraUltimaAtualizacao',
-                'dataAjuizamento',
-                'id',
-            ],
+            '_source' => true,
         ];
 
         $ch = curl_init($this->config['endpoint']);
@@ -79,13 +62,18 @@ final class DataJudService
 
         $source = $decoded['hits']['hits'][0]['_source'];
 
+        $poloPassivo = $this->formatarPolo($source['polo'] ?? []);
+        if (count($poloPassivo) === 0) {
+            $poloPassivo = $this->extractPartNamesFromSource($source);
+        }
+
         return [
             'numero' => $source['numeroProcesso'] ?? $numero,
             'tribunal' => $source['tribunal'] ?? 'TJBA',
             'classe' => $this->formatarClasse($source),
             'assuntos' => $this->formatarAssuntos($source['assuntos'] ?? []),
             'prioridades' => $this->formatarPrioridades($source['prioridade'] ?? []),
-            'polo_passivo' => $this->formatarPolo($source['polo'] ?? []),
+            'polo_passivo' => $poloPassivo,
             'movimentos' => $this->formatarMovimentos($source['movimentos'] ?? []),
             'orgao_julgador' => $this->formatarOrgao($source['orgaoJulgador'] ?? []),
             'nivel_sigilo' => $source['nivelSigilo'] ?? null,
@@ -222,5 +210,67 @@ final class DataJudService
             }
         }
         return array_values(array_unique($passivo));
+    }
+
+    private function extractPartNamesFromSource(array $source): array
+    {
+        $nomes = [];
+        $collections = [
+            $source['polo'] ?? null,
+            $source['poloAtivo'] ?? null,
+            $source['poloPassivo'] ?? null,
+            $source['partes'] ?? null,
+            $source['participantes'] ?? null,
+        ];
+        foreach ($collections as $collection) {
+            $this->collectPartNames($collection, $nomes);
+        }
+        return array_values(array_keys($nomes));
+    }
+
+    private function collectPartNames($node, array &$nomes): void
+    {
+        if (is_string($node)) {
+            $v = trim($node);
+            if ($v !== '' && $this->looksLikePersonName($v)) {
+                $nomes[$v] = true;
+            }
+            return;
+        }
+        if (!is_array($node)) {
+            return;
+        }
+        foreach (['nome', 'descricao', 'nomeParte', 'nomePessoa'] as $k) {
+            if (isset($node[$k]) && is_string($node[$k])) {
+                $v = trim((string) $node[$k]);
+                if ($v !== '' && $this->looksLikePersonName($v)) {
+                    $nomes[$v] = true;
+                }
+            }
+        }
+        foreach ($node as $key => $value) {
+            $keyStr = is_string($key) ? mb_strtolower($key, 'UTF-8') : '';
+            if (
+                $keyStr === '' ||
+                strpos($keyStr, 'polo') !== false ||
+                strpos($keyStr, 'parte') !== false ||
+                strpos($keyStr, 'particip') !== false ||
+                strpos($keyStr, 'represent') !== false ||
+                strpos($keyStr, 'advog') !== false ||
+                is_numeric($key)
+            ) {
+                $this->collectPartNames($value, $nomes);
+            }
+        }
+    }
+
+    private function looksLikePersonName(string $v): bool
+    {
+        $s = trim((string) (preg_replace('/\s+/u', ' ', $v) ?: $v));
+        if ($s === '' || mb_strlen($s, 'UTF-8') < 5) {
+            return false;
+        }
+        $tokens = preg_split('/\s+/u', $s) ?: [];
+        return count($tokens) >= 2;
     }
 }
