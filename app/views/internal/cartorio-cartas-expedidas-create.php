@@ -124,12 +124,10 @@ try {
         <p class="description-page">Caso tenha alguma dificuldade no preenchimento do cadastro, verifique os arquivos abaixo para obter ajuda.</p>
         
         <!-- Badges de arquivos para download -->
-        <a href="/documents/pdf/PJBA - 1VCR - POP - Expedição e Envio de Cartas Precatórias.pdf" target="_blank" rel="noopener noreferrer">
-            <div class="badge file">
-                <img src="/assets/icons/Office-File-Pdf-1--Streamline-Ultimate.png" alt="Ícone de arquivo PDF">
-                <span>Passo a passo - Expedição de Cartas Precatórias</span>
-            </div>
-        </a>
+        <button type="button" class="badge file" data-nav-href="/documents/pdf/PJBA - 1VCR - POP - Expedição e Envio de Cartas Precatórias.pdf" data-nav-target="_blank">
+            <img src="/assets/icons/Office-File-Pdf-1--Streamline-Ultimate.png" alt="Ícone de arquivo PDF">
+            <span>Passo a passo - Expedição de Cartas Precatórias</span>
+        </button>
     </div>
 
     <div class="container-full card-page">       

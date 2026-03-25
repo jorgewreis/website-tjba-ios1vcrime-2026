@@ -184,7 +184,7 @@ $profissaoAtual = trim((string) ($pessoa['profissao'] ?? ''));
                 <div class="col"><?php echo htmlspecialchars($vi['instituicao_nome'] ?? $vi['instituicao_sigla'] ?? '—'); ?></div>
                 <div class="col"><?php echo htmlspecialchars($vi['cargo_funcao'] ?? '—'); ?></div>
                 <div class="col">
-                    <a href="/frame.php?page=partesinstituicoesedit&id=<?php echo urlencode($vi['id'] ?? ''); ?>" class="btn btn-secondary-outline">Editar</a>
+                    <button type="button" class="btn btn-secondary-outline" data-nav-href="/frame.php?page=partesinstituicoesedit&id=<?php echo urlencode($vi['id'] ?? ''); ?>">Editar</button>
                     <button type="button" class="btn btn-secondary-outline btn-del-vinculo" data-id="<?php echo htmlspecialchars($vi['id'] ?? ''); ?>">Excluir</button>
                 </div>
             </div>

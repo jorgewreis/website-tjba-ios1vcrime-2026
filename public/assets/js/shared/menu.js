@@ -185,8 +185,13 @@
         const parentHeading = parentSub?.closest(".menu-item");
         parentHeading?.classList.add("active");
 
+        const target = link.getAttribute("data-target");
+        if (target && iframe) {
+          iframe.src = "/frame.php?page=" + encodeURIComponent(target);
+          return;
+        }
         const href = link.getAttribute("href");
-        if (href && iframe) {
+        if (href && href !== "#" && iframe) {
           iframe.src = href;
         }
       });

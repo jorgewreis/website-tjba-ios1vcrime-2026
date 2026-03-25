@@ -46,8 +46,8 @@ $partes = $processo['partes'] ?? [];
                         <td><?php echo htmlspecialchars($p['tipo_parte'] ?? '—'); ?></td>
                         <td><?php echo htmlspecialchars($p['polo'] ?? '—'); ?></td>
                         <td>
-                            <a href="/frame.php?page=consultapartesedit&id=<?php echo urlencode($p['parte_id'] ?? ''); ?>" class="btn btn-secondary-outline">Ver pessoa</a>
-                            <a href="/frame.php?page=processospartesedit&id=<?php echo urlencode($p['id'] ?? ''); ?>" class="btn btn-secondary-outline">Editar vínculo</a>
+                            <button type="button" class="btn btn-secondary-outline" data-nav-href="/frame.php?page=consultapartesedit&id=<?php echo urlencode($p['parte_id'] ?? ''); ?>">Ver pessoa</button>
+                            <button type="button" class="btn btn-secondary-outline" data-nav-href="/frame.php?page=processospartesedit&id=<?php echo urlencode($p['id'] ?? ''); ?>">Editar vínculo</button>
                             <button type="button" class="btn btn-secondary-outline btn-desvincular" data-id="<?php echo htmlspecialchars($p['id'] ?? ''); ?>" data-processo-id="<?php echo htmlspecialchars($processo['id'] ?? ''); ?>">Desvincular</button>
                         </td>
                     </tr>
@@ -62,8 +62,8 @@ $partes = $processo['partes'] ?? [];
             </div>
         <?php endif; ?>
         <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
-            <a href="/frame.php?page=consultaprocessos" class="btn btn-secondary">Voltar</a>
-            <a href="/frame.php?page=processospartescreate&processo_id=<?php echo urlencode($processo['id'] ?? ''); ?>" class="btn btn-primary">Vincular parte</a>
+            <button type="button" class="btn btn-secondary" data-nav-href="/frame.php?page=consultaprocessos">Voltar</button>
+            <button type="button" class="btn btn-primary" data-nav-href="/frame.php?page=processospartescreate&processo_id=<?php echo urlencode($processo['id'] ?? ''); ?>">Vincular parte</button>
         </div>
     </div>
     <script>

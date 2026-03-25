@@ -143,7 +143,7 @@ $maxVagas = SalaAudienciasAtaService::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA;
             </div>
             <div class="display-flex row row-fit justify-end">
                 <?php if ($temAta && $podeInscricaoComoEstudante): ?>
-                <a class="btn btn-primary" href="api/sala-audiencias-ata/download.php?pauta=<?php echo urlencode((string) $m['pauta']); ?>" target="_blank" rel="noopener">Baixar PDF</a>
+                <button type="button" class="btn btn-primary" data-nav-href="api/sala-audiencias-ata/download.php?pauta=<?php echo urlencode((string) $m['pauta']); ?>" data-nav-target="_blank">Baixar PDF</button>
                 <?php elseif ($temAta): ?>
                 <span class="minor-info">Download exclusivo para estudantes.</span>
                 <?php else: ?>

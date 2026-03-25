@@ -393,6 +393,28 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
             $tipoParteAtual = (string) ($parte['tipo_parte'] ?? '');
             $mostrarDefensor = in_array($tipoParteAtual, ['reu', 'vitima'], true);
             $minorInfoParte = (string) ucfirst(str_replace('_', ' ', $tipoParteAtual));
+            $parteGlobalLinkId = '';
+
+            // Botão de vínculo global da parte (somente quando houver cadastro global válido).
+            // Regra: exibir apenas para testemunhas e quando existir correspondência real no cadastro de partes.
+            if (in_array($tipoParteAtual, ['testemunha_denuncia', 'testemunha_defesa'], true)) {
+                $parteIdGlobalRaw = trim((string) ($parte['parte_id_global'] ?? ''));
+                if ($parteIdGlobalRaw !== '') {
+                    $parteGlobal = $partesRepoLista->findById($parteIdGlobalRaw);
+                    if ($parteGlobal !== null) {
+                        $parteGlobalLinkId = (string) ($parteGlobal['id'] ?? '');
+                    }
+                }
+                if ($parteGlobalLinkId === '') {
+                    $nomeParteLookup = trim((string) ($parte['nome_parte'] ?? ''));
+                    if ($nomeParteLookup !== '') {
+                        $parteGlobalPorNome = $partesRepoLista->findByNomeCompleto($nomeParteLookup);
+                        if ($parteGlobalPorNome !== null) {
+                            $parteGlobalLinkId = (string) ($parteGlobalPorNome['id'] ?? '');
+                        }
+                    }
+                }
+            }
 
             // Só "Réu PRESO" depende do nome da parte.
             if ($tipoParteAtual === 'reu') {
@@ -546,9 +568,9 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                     </div>
                 </div>
                 <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                    <button type="button" class="btn-editar" data-parte-edit="<?php echo htmlspecialchars((string) $parte['id_parte'], ENT_QUOTES); ?>" title="Editar parte"><i class="fi fi-rr-pen-square"></i></button>
-                    <?php if (in_array($tipoParteAtual, ['testemunha_denuncia', 'testemunha_defesa'], true)): ?>
-                        <button type="button" class="btn-editar" data-parte-link="<?php echo urlencode((string) ($parte['parte_id_global'] ?? '')); ?>" title="Ir para o cadastro da parte"><i class="fi fi-rr-user-link"></i></button>
+                    <button type="button" class="btn btn-editar" data-parte-edit="<?php echo htmlspecialchars((string) $parte['id_parte'], ENT_QUOTES); ?>" title="Editar parte"><i class="fi fi-rr-pen-square"></i></button>
+                    <?php if ($parteGlobalLinkId !== ''): ?>
+                        <button type="button" class="btn btn-editar" data-parte-global-id="<?php echo htmlspecialchars($parteGlobalLinkId, ENT_QUOTES); ?>" title="Ir para o cadastro da parte"><i class="fi fi-rr-user-link"></i></button>
                     <?php endif; ?>
                     <button type="button" class="btn-editar stop" data-parte-remove="<?php echo htmlspecialchars((string) $parte['id_parte'], ENT_QUOTES); ?>" title="Remover parte"><i class="fi fi-rr-cross-circle"></i></button>
                 </div>

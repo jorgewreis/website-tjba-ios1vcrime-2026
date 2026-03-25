@@ -154,11 +154,59 @@ hr {
     transition: all 0.2s ease;
 }
 
+button.pagination-symbol,
+button.pagination-number {
+    font: inherit;
+    font-family: inherit;
+    color: inherit;
+    appearance: none;
+    -webkit-appearance: none;
+    border: none;
+    margin: 0;
+    text-decoration: none;
+    background-color: var(--color-background-elevated);
+}
+
+.link-login button.link-like {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
 .link-login a{
     font-family: 'Montserrat', sans-serif;
     font-size: 13px;
     font-weight: 500;
     color: var(--color-text-primary);
+}
+
+button.btn-link-badge {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    text-align: inherit;
+}
+
+button.link-inline {
+    font: inherit;
+    color: var(--color-primary-active, var(--color-text-primary));
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    text-decoration: underline;
+    display: inline;
 }
 
 
@@ -388,10 +436,11 @@ hr {
     color: var(--color-text-on-primary);
 }
 
+/* Ícone de edição na tabela: sempre use .btn.btn-editar (base + variante) */
 .btn-editar {
     height: 30px;
     width: 30px;
-    padding: 6px 0 0 0;
+    padding: 5px 0 0 0;
     border-radius: 4px;
     font-size: 16px;
     font-family: 'Poppins', sans-serif;
@@ -399,6 +448,10 @@ hr {
     color: var(--color-text-secondary);
     cursor: pointer;
     transition: all 0.5s ease;
+}
+.btn.btn-editar {
+    border: none;
+    box-shadow: none;
 }
     .btn-editar.reload:hover {
         background-color: var(--color-primary-bg-light);
@@ -426,6 +479,7 @@ hr {
 .btn-editar:disabled {
     opacity: 0.2;
     cursor: not-allowed;
+    box-shadow: none;
     pointer-events: none;
     filter: grayscale(100%);
 }
@@ -481,6 +535,12 @@ button.btn:disabled {
     color: var(--color-text-secondary);
     text-transform: none;
     cursor: pointer;
+}
+button.badge.file {
+    font: inherit;
+    border: none;
+    background: transparent;
+    box-sizing: border-box;
 }
 .badge.file:hover {
     background-color: var(--color-background-elevated);

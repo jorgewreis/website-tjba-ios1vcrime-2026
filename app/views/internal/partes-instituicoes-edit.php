@@ -51,7 +51,7 @@ if (!empty($vinculo['instituicao_id'])) {
         <input type="hidden" id="vinculo-id" value="<?php echo htmlspecialchars($vinculo['id'] ?? ''); ?>">
         <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Dados do vínculo</h2></div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
-            <div class="col"><strong>Pessoa:</strong> <?php echo htmlspecialchars($parteNome); ?> <a href="/frame.php?page=consultapartesedit&id=<?php echo urlencode($vinculo['parte_id'] ?? ''); ?>" class="btn btn-secondary-outline">Ver pessoa</a></div>
+            <div class="col"><strong>Pessoa:</strong> <?php echo htmlspecialchars($parteNome); ?> <button type="button" class="btn btn-secondary-outline" data-nav-href="/frame.php?page=consultapartesedit&id=<?php echo urlencode($vinculo['parte_id'] ?? ''); ?>">Ver pessoa</button></div>
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col"><strong>Instituição:</strong> <?php echo htmlspecialchars($instNome); ?></div>
@@ -101,7 +101,7 @@ if (!empty($vinculo['instituicao_id'])) {
             </div>
         </div>
         <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
-            <a href="/frame.php?page=partesinstituicoeslist" class="btn btn-secondary">Voltar</a>
+            <button type="button" class="btn btn-secondary" data-nav-href="/frame.php?page=partesinstituicoeslist">Voltar</button>
             <button type="button" class="btn btn-primary" id="salvar-btn">Salvar</button>
         </div>
     </div>

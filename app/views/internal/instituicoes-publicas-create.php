@@ -49,7 +49,7 @@ if (function_exists('mb_internal_encoding')) mb_internal_encoding('UTF-8');
             </div>
         </div>
         <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
-            <a href="/frame.php?page=instituicoespublicas" class="btn btn-secondary">Voltar</a>
+            <button type="button" class="btn btn-secondary" data-nav-href="/frame.php?page=instituicoespublicas">Voltar</button>
             <button type="button" class="btn btn-primary" id="cadastrar-btn">Cadastrar</button>
         </div>
     </div>

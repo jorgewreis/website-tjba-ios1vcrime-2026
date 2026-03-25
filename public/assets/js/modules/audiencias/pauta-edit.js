@@ -209,6 +209,14 @@
         });
     });
 
+    document.querySelectorAll('.btn-editar[data-parte-global-id]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var idGlobal = String(btn.getAttribute('data-parte-global-id') || '').trim();
+            if (!idGlobal) return;
+            window.location.href = '/frame.php?page=consultapartesedit&id=' + encodeURIComponent(idGlobal);
+        });
+    });
+
     // Some UIs use `.button-table` while others use `.btn-editar stop`; handler must be generic.
     document.querySelectorAll('[data-parte-remove]').forEach(function (btn) {
         btn.addEventListener('click', function () {
@@ -325,9 +333,6 @@
         select.dataset.firstDatajudValue = '';
 
         var digits = String(processoInput.value || '').replace(/\D/g, '');
-        // #region agent log H4 frontend init
-        fetch('http://127.0.0.1:7798/ingest/64db24e1-3fcf-482a-aa07-c0ab6247ae38',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b44cef'},body:JSON.stringify({sessionId:'b44cef',runId:'run-datajud-1',hypothesisId:'H4',location:'pauta-edit.js:initDatajud',message:'Init consulta DataJud',data:{digitsLen:String(digits||'').length,existingSigCount:Array.isArray(window.PAUTA_EXISTING_PART_NAMES_SIGS)?window.PAUTA_EXISTING_PART_NAMES_SIGS.length:0},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
         if (digits.length !== 20) {
             select.disabled = false;
             return;
@@ -355,9 +360,6 @@
                 });
             })
             .then(function (res) {
-                // #region agent log H4 frontend response status
-                fetch('http://127.0.0.1:7798/ingest/64db24e1-3fcf-482a-aa07-c0ab6247ae38',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b44cef'},body:JSON.stringify({sessionId:'b44cef',runId:'run-datajud-1',hypothesisId:'H4',location:'pauta-edit.js:datajudResponse',message:'Status da resposta DataJud',data:{ok:!!res.ok,status:res&&res.status,statusText:res&&res.statusText,hasBody:!!(res&&res.j),parseError:res&&res.parseError,rawStart:res&&typeof res.raw==='string'?res.raw.slice(0,200):'',bodyKeys:res&&res.j&&res.j.data&&typeof res.j.data==='object'?Object.keys(res.j.data):[]},timestamp:Date.now()})}).catch(()=>{});
-                // #endregion
                 if (res.parseError) throw new Error('Resposta inválida da API local de DataJud.');
                 if (!res.ok) throw new Error((res.j && res.j.error) ? res.j.error : 'Erro ao consultar DataJud.');
                 var data = res.j && res.j.data ? res.j.data : null;
@@ -365,9 +367,6 @@
                 if (data && Array.isArray(data.polo_passivo)) {
                     nomes = data.polo_passivo;
                 }
-                // #region agent log H5 backend debug payload observed in frontend
-                fetch('http://127.0.0.1:7798/ingest/64db24e1-3fcf-482a-aa07-c0ab6247ae38',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b44cef'},body:JSON.stringify({sessionId:'b44cef',runId:'run-datajud-1',hypothesisId:'H5',location:'pauta-edit.js:datajudBackendDebug',message:'Debug da estrutura de partes retornada pela API local',data:{debugDatajud:data&&data._debug_datajud?data._debug_datajud:null},timestamp:Date.now()})}).catch(()=>{});
-                // #endregion
                 nomes = dedupeStrings(nomes).sort(function (a, b) { return a.localeCompare(b, 'pt-BR'); });
 
                 // Filtra do select apenas nomes que ainda não existem na lista de partes.
@@ -390,10 +389,6 @@
                     var sig = signatureNome(nome);
                     return sig && !existingSet.has(sig);
                 });
-
-                // #region agent log H4 frontend counts
-                fetch('http://127.0.0.1:7798/ingest/64db24e1-3fcf-482a-aa07-c0ab6247ae38',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b44cef'},body:JSON.stringify({sessionId:'b44cef',runId:'run-datajud-1',hypothesisId:'H4',location:'pauta-edit.js:datajudCounts',message:'Contagens de nomes no frontend',data:{poloPassivoLen:data&&Array.isArray(data.polo_passivo)?data.polo_passivo.length:0,nomesAntesFiltro:nomesAntesFiltro,nomesDepoisFiltro:nomes.length,nomesSample:(nomes||[]).slice(0,8)},timestamp:Date.now()})}).catch(()=>{});
-                // #endregion
 
 
                 if (nomes.length > 0) {
@@ -433,9 +428,6 @@
                 }
             })
             .catch(function () {
-                // #region agent log H4 frontend catch
-                fetch('http://127.0.0.1:7798/ingest/64db24e1-3fcf-482a-aa07-c0ab6247ae38',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b44cef'},body:JSON.stringify({sessionId:'b44cef',runId:'run-datajud-1',hypothesisId:'H4',location:'pauta-edit.js:datajudCatch',message:'Erro no fluxo DataJud (catch)',data:{digitsLen:String(digits||'').length},timestamp:Date.now()})}).catch(()=>{});
-                // #endregion
                 // Se falhar, mantém o input livre (sem bloquear usuário).
                 if (typeof showToast === 'function') {
                     showToast({ type: 'info', variant: 'full', title: 'DataJud', message: 'Nao foi possivel consultar nomes do processo no DataJud. Voce pode digitar manualmente.' });

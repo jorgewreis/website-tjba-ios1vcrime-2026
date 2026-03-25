@@ -359,20 +359,20 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
 
             <div class="layout-menu">
                 <div class="brand-name">
-                    <a class="brand-name-link">
+                    <button type="button" class="brand-name-link">
                         <span class="name-primary">Sistema de Gestão</span>
                         <span class="name-secondary">Primeira Vara Crime</span>
-                    </a>
-                    <a class="layout-menu-toggle">
+                    </button>
+                    <button type="button" class="layout-menu-toggle">
                         <i class="fi fi-rs-angle-circle-left"></i>
-                    </a>
+                    </button>
                 </div>
                 <ul class="menu-inner">
                     <li class="menu-item active">
-                        <a class="menu-link" data-target="<?php echo htmlspecialchars($defaultHomePage, ENT_QUOTES, 'UTF-8'); ?>">
+                        <button type="button" class="menu-link" data-target="<?php echo htmlspecialchars($defaultHomePage, ENT_QUOTES, 'UTF-8'); ?>">
                             <i class="fi fi-rs-home"></i>
                             <span class="text"><?php echo $isUsuarioExterno ? 'Início' : 'Dashboard'; ?></span>
-                        </a>
+                        </button>
                     </li>
                 </ul>
             </div>
@@ -395,9 +395,9 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                             </div>
                         </div>
                         <div class="layout-menu-toggle">
-                            <a class="nav-item nav-link">
+                            <button type="button" class="nav-item nav-link">
                                 <i class="fi fi-br-menu-burger"></i>
-                            </a>
+                            </button>
                         </div>
                         <div class="nav-item nav-item-user-summary">
                             <div class="user-summary-inline" id="user-summary-navbar" title="<?php echo htmlspecialchars($avatarSummaryTitle !== '' ? $avatarSummaryTitle : 'Usuário', ENT_QUOTES, 'UTF-8'); ?>">
@@ -409,24 +409,24 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                     <div class="navbar-nav-right">
                         <ul class="navbar-nav">
                             <li class="nav-item" data-target="<?php echo htmlspecialchars($defaultHomePage, ENT_QUOTES, 'UTF-8'); ?>">
-                                <a class="nav-link">
+                                <button type="button" class="nav-link">
                                     <i class="fi fi-br-layout-fluid"></i>
-                                </a>
+                                </button>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" id="themeToggle" href="#" role="button" tabindex="0" aria-label="Alternar tema" title="Alternar tema (claro / escuro / automático)">
+                                <button type="button" class="nav-link" id="themeToggle" tabindex="0" aria-label="Alternar tema" title="Alternar tema (claro / escuro / automático)">
                                     <i class="fi fi-rs-eclipse-alt"></i>
-                                </a>
+                                </button>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link disabled">
+                                <button type="button" class="nav-link disabled" disabled aria-disabled="true">
                                     <i class="fi fi-rs-bell"></i>
-                                </a>
+                                </button>
                             </li>
                             <li class="nav-item nav-item-settings" id="nav-item-settings">
-                                <a class="nav-link" id="settings-menu-trigger" href="#" role="button" aria-expanded="false" aria-haspopup="true" aria-label="Configurações e perfil">
+                                <button type="button" class="nav-link" id="settings-menu-trigger" aria-expanded="false" aria-haspopup="true" aria-label="Configurações e perfil">
                                     <i class="fi fi-rs-settings"></i>
-                                </a>
+                                </button>
                                 <div class="settings-dropdown" id="settings-dropdown" role="menu" aria-label="Menu Perfil" hidden>
                                     <div class="settings-dropdown-inner">
                                         <div class="menu-header">
@@ -434,10 +434,10 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                                         </div>
                                         <ul class="settings-dropdown-list">
                                             <li class="menu-item">
-                                                <a class="menu-link" href="#" role="menuitem" data-settings="alterar-senha">Alterar senha</a>
+                                                <button type="button" class="menu-link" role="menuitem" data-settings="alterar-senha">Alterar senha</button>
                                             </li>
                                             <li class="menu-item">
-                                                <a class="menu-link" href="#" role="menuitem" data-settings="alterar-dados">Alterar dados pessoais</a>
+                                                <button type="button" class="menu-link" role="menuitem" data-settings="alterar-dados">Alterar dados pessoais</button>
                                             </li>
                                         </ul>
                                     </div>
@@ -463,6 +463,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
 
     <script src="/assets/js/shared/prefs.js" defer></script>
     <script src="/assets/js/shared/toast.js" defer></script>
+    <script src="/assets/js/shared/navigate-buttons.js" defer></script>
     <script src="/assets/js/shared/common.js" defer></script>
     <script src="/assets/js/shared/menu.js" defer></script>
 
@@ -642,7 +643,8 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
         }
 
         function createMenuLink({ icon, label, target }) {
-            const link = document.createElement('a');
+            const link = document.createElement('button');
+            link.type = 'button';
             link.className = 'menu-link';
 
             if (target) {
@@ -668,7 +670,8 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             menuItem.className = 'menu-item';
 
             if (item.type === 'submenu') {
-                const link = document.createElement('a');
+                const link = document.createElement('button');
+                link.type = 'button';
                 link.className = 'menu-link menu-toggle';
 
                 if (item.icon) {
@@ -708,8 +711,8 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
 
             const li = document.createElement('li');
             li.className = 'menu-item menu-item-logout';
-            const link = document.createElement('a');
-            link.href = '#';
+            const link = document.createElement('button');
+            link.type = 'button';
             link.className = 'menu-link';
             link.id = 'logout-btn';
             link.dataset.logout = '';

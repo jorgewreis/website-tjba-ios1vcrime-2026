@@ -252,12 +252,10 @@ $stateOptions = [
         </div>
         <h1 class="title-page">Editar Carta Recebida</h1>
         <p class="description-page">Altere os dados cadastrados e salve para atualizar a carta recebida.</p>
-        <a href="/documents/pdf/PJBA - 1VCR - POP - Expedição e Envio de Cartas Precatórias.pdf" target="_blank" rel="noopener noreferrer">
-            <div class="badge file">
-                <img src="/assets/icons/Office-File-Pdf-1--Streamline-Ultimate.png" alt="Ícone de arquivo PDF">
-                <span>Passo a passo - Expedição de Cartas Precatórias</span>
-            </div>
-        </a>
+        <button type="button" class="badge file" data-nav-href="/documents/pdf/PJBA - 1VCR - POP - Expedição e Envio de Cartas Precatórias.pdf" data-nav-target="_blank">
+            <img src="/assets/icons/Office-File-Pdf-1--Streamline-Ultimate.png" alt="Ícone de arquivo PDF">
+            <span>Passo a passo - Expedição de Cartas Precatórias</span>
+        </button>
     </div>
 
     <div class="container-full card-page">

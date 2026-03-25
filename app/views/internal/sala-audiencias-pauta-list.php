@@ -274,7 +274,7 @@ $endItem = min($offset + count($rows), $total);
                             <i class="fi fi-rr-stop-square"></i>
                         </button>
                         <?php endif; ?>
-                        <button type="button" class="btn-editar" data-audiencia-edit="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="Editar audiência">
+                        <button type="button" class="btn btn-editar" data-audiencia-edit="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="Editar audiência">
                             <i class="fi fi-rr-pen-square"></i>
                         </button>
                     <div class="col">
@@ -291,9 +291,13 @@ $endItem = min($offset + count($rows), $total);
             <span class="pagination-info">Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $total; ?> audiências (<?php echo $totalPages; ?> página(s), <?php echo $itemsPerPage; ?> itens por página)</span>
             <div class="pagination-controls">
                 <?php $prev = max(1, $pageNumber - 1); $next = min($totalPages, $pageNumber + 1); ?>
-                <a class="pagination-symbol<?php echo $pageNumber <= 1 ? ' disabled' : ''; ?>" href="?page=salapauta&page_number=<?php echo $prev; ?>&items_per_page=<?php echo $itemsPerPage; ?>&status=<?php echo urlencode($statusFilter); ?>&periodo=<?php echo urlencode($periodoFilter); ?>&tipo=<?php echo urlencode($tipoFilter); ?>&search=<?php echo urlencode($search); ?>"><img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior"></a>
-                <a class="pagination-number active" href="#"><?php echo $pageNumber; ?></a>
-                <a class="pagination-symbol<?php echo $pageNumber >= $totalPages ? ' disabled' : ''; ?>" href="?page=salapauta&page_number=<?php echo $next; ?>&items_per_page=<?php echo $itemsPerPage; ?>&status=<?php echo urlencode($statusFilter); ?>&periodo=<?php echo urlencode($periodoFilter); ?>&tipo=<?php echo urlencode($tipoFilter); ?>&search=<?php echo urlencode($search); ?>"><img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página"></a>
+                <?php
+                $qPrev = $pageNumber > 1 ? '?page=salapauta&page_number=' . $prev . '&items_per_page=' . $itemsPerPage . '&status=' . urlencode($statusFilter) . '&periodo=' . urlencode($periodoFilter) . '&tipo=' . urlencode($tipoFilter) . '&search=' . urlencode($search) : '';
+                $qNext = $pageNumber < $totalPages ? '?page=salapauta&page_number=' . $next . '&items_per_page=' . $itemsPerPage . '&status=' . urlencode($statusFilter) . '&periodo=' . urlencode($periodoFilter) . '&tipo=' . urlencode($tipoFilter) . '&search=' . urlencode($search) : '';
+                ?>
+                <button type="button" class="pagination-symbol<?php echo $pageNumber <= 1 ? ' disabled' : ''; ?>" <?php echo $qPrev !== '' ? 'data-nav-href="' . htmlspecialchars($qPrev, ENT_QUOTES) . '"' : 'disabled aria-disabled="true"'; ?>><img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior"></button>
+                <button type="button" class="pagination-number active" disabled><?php echo $pageNumber; ?></button>
+                <button type="button" class="pagination-symbol<?php echo $pageNumber >= $totalPages ? ' disabled' : ''; ?>" <?php echo $qNext !== '' ? 'data-nav-href="' . htmlspecialchars($qNext, ENT_QUOTES) . '"' : 'disabled aria-disabled="true"'; ?>><img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página"></button>
             </div>
         </div>
     </div>

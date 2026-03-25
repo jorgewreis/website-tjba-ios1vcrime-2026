@@ -12,3 +12,8 @@
 <link rel="stylesheet" href="/assets/css/shared/form.css">
 <link rel="stylesheet" href="/assets/css/shared/table.css">
 <link rel="stylesheet" href="/assets/css/shared/toast.css">
+<?php
+$__navBtn = dirname(__DIR__, 3) . '/public/assets/js/shared/navigate-buttons.js';
+$__navBtnV = @filemtime($__navBtn) ?: time();
+?>
+<script src="/assets/js/shared/navigate-buttons.js?v=<?php echo (int) $__navBtnV; ?>" defer></script>

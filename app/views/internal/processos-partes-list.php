@@ -97,15 +97,15 @@ if ($processoId !== '') {
                         </div>
                     </div>
                     <div class="display-flex row row-fit justify-end gap-y-sm">
-                        <a href="/frame.php?page=consultapartesedit&id=<?php echo urlencode($p['parte_id'] ?? ''); ?>" class="btn btn-secondary-outline height-sm">Ver pessoa</a>
-                        <a href="/frame.php?page=processospartesedit&id=<?php echo urlencode($p['id'] ?? ''); ?>" class="btn btn-secondary-outline height-sm">Editar vínculo</a>
+                        <button type="button" class="btn btn-secondary-outline height-sm" data-nav-href="/frame.php?page=consultapartesedit&id=<?php echo urlencode($p['parte_id'] ?? ''); ?>">Ver pessoa</button>
+                        <button type="button" class="btn btn-secondary-outline height-sm" data-nav-href="/frame.php?page=processospartesedit&id=<?php echo urlencode($p['id'] ?? ''); ?>">Editar vínculo</button>
                     </div>
                 </div>
             </div>
             <?php endforeach; ?>
             <div class="display-flex row row-full justify-end gap-y-sm padding-x-sm padding-y-sm border-top">
-                <a href="/frame.php?page=consultaprocessosedit&id=<?php echo urlencode($processoId); ?>" class="btn btn-primary height-md">Abrir processo</a>
-                <a href="/frame.php?page=processospartescreate&processo_id=<?php echo urlencode($processoId); ?>" class="btn btn-secondary height-md">Vincular parte</a>
+                <button type="button" class="btn btn-primary height-md" data-nav-href="/frame.php?page=consultaprocessosedit&id=<?php echo urlencode($processoId); ?>">Abrir processo</button>
+                <button type="button" class="btn btn-secondary height-md" data-nav-href="/frame.php?page=processospartescreate&processo_id=<?php echo urlencode($processoId); ?>">Vincular parte</button>
             </div>
         <?php elseif ($processoId !== ''): ?>
             <div class="display-flex col col-full register border-bottom">
@@ -114,7 +114,7 @@ if ($processoId !== '') {
                 </div>
             </div>
             <div class="display-flex row row-full justify-end gap-y-sm padding-x-sm padding-y-sm border-top">
-                <a href="/frame.php?page=processospartescreate&processo_id=<?php echo urlencode($processoId); ?>" class="btn btn-primary height-md">Vincular parte</a>
+                <button type="button" class="btn btn-primary height-md" data-nav-href="/frame.php?page=processospartescreate&processo_id=<?php echo urlencode($processoId); ?>">Vincular parte</button>
             </div>
         <?php else: ?>
             <div class="display-flex col col-full register border-bottom">

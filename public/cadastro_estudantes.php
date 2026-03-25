@@ -77,12 +77,12 @@ $faculdades = [
                     <div class="title-page">
                         <span class="title">Cadastro de estudantes</span>
                         <span class="info-title">Antes de se cadastrar, leia os termos sobre uso dos dados pessoais (LGPD).</span>
-                        <a href="<?php echo htmlspecialchars($termosLgpdPdfUrl, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer" style="text-decoration: none; display: inline-block; margin-top: 8px;">
+                        <button type="button" class="btn-link-badge" data-nav-href="<?php echo htmlspecialchars($termosLgpdPdfUrl, ENT_QUOTES, 'UTF-8'); ?>" data-nav-target="_blank" style="text-decoration: none; display: inline-block; margin-top: 8px;">
                             <span class="badge file">
                                 <img src="/assets/icons/Office-File-Pdf-1--Streamline-Ultimate.png" alt="PDF">
                                 <span>Termos sobre LGPD – Cadastro de estudantes</span>
                             </span>
-                        </a>
+                        </button>
                     </div>
 
                     <form class="form-login" id="formEstudante">
@@ -146,7 +146,7 @@ $faculdades = [
                             <div class="col">
                                 <label class="checkbox-label">
                                     <input type="checkbox" id="aceite_termos_lgpd" name="aceite_termos_lgpd" value="1" required>
-                                    <span>Li e aceito os <a href="<?php echo htmlspecialchars($termosLgpdPdfUrl, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">termos sobre LGPD</a></span>
+                                    <span>Li e aceito os <button type="button" class="link-inline" data-nav-href="<?php echo htmlspecialchars($termosLgpdPdfUrl, ENT_QUOTES, 'UTF-8'); ?>" data-nav-target="_blank">termos sobre LGPD</button></span>
                                 </label>
                             </div>
                         </div>
@@ -165,6 +165,7 @@ $faculdades = [
         <div id="toast-container" class="toast-container" aria-live="polite"></div>
     </div>
 
+    <script src="/assets/js/shared/navigate-buttons.js" defer></script>
     <script src="/assets/js/shared/cpf.js" defer></script>
     <script src="/assets/js/shared/toast.js" defer></script>
     <script src="/assets/js/shared/text-formatter.js"></script>

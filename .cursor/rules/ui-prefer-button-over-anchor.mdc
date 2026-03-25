@@ -1,0 +1,28 @@
+---
+description: Preferir <button> em vez de <a> para navegação e ações de interface; usar data-nav-href quando precisar ir a outra URL.
+---
+
+# UI: botões em vez de âncoras
+
+## Regra obrigatória
+
+- **Não use** `<a href="...">` para navegação interna, ações de formulário, menus, paginação ou botões estilizados.
+- **Use sempre** `<button type="button">` (ou submit quando for envio de formulário).
+- Quando o botão deve levar a outra página ou abrir URL, use:
+  - `data-nav-href="/caminho"` ou URL completa
+  - opcional: `data-nav-target="_blank"` para nova aba (PDFs, links externos)
+
+O script global `public/assets/js/shared/navigate-buttons.js` trata cliques em `button[data-nav-href]` (incluído em telas internas via `_internal_head_styles.php`).
+
+## Exceções raras
+
+- **Apenas** quando o HTML for semântico de hipertexto puro em documentação estática externa (ex.: README) — não se aplica a views PHP/JS do app.
+
+## Padrão de estilo
+
+- Reaproveite as classes existentes (ex.: `btn`, `nav-link`, `menu-link`, `pagination-symbol`); o CSS em `layout.css` / `form.css` inclui reset para `button` com essas classes.
+
+## Referência
+
+- `public/assets/js/shared/navigate-buttons.js`
+- `app/views/internal/_internal_head_styles.php` (inclusão do script nas views do iframe)
