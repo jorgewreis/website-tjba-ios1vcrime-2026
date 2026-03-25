@@ -182,6 +182,27 @@ $result = [
     'data_ajuizamento' => $source['dataAjuizamento'] ?? null,
     'ultima_atualizacao' => $source['dataHoraUltimaAtualizacao'] ?? null,
     'id' => $source['id'] ?? null,
+    '_debug_datajud' => [
+        'source_keys' => array_slice(array_keys((array) $source), 0, 40),
+        'has_polo' => isset($source['polo']),
+        'polo_type' => gettype($source['polo'] ?? null),
+        'polo_count' => is_array($source['polo'] ?? null) ? count((array) $source['polo']) : null,
+        'has_poloAtivo' => isset($source['poloAtivo']),
+        'poloAtivo_type' => gettype($source['poloAtivo'] ?? null),
+        'poloAtivo_count' => is_array($source['poloAtivo'] ?? null) ? count((array) $source['poloAtivo']) : null,
+        'has_poloPassivo' => isset($source['poloPassivo']),
+        'poloPassivo_type' => gettype($source['poloPassivo'] ?? null),
+        'poloPassivo_count' => is_array($source['poloPassivo'] ?? null) ? count((array) $source['poloPassivo']) : null,
+        'has_partes' => isset($source['partes']),
+        'partes_type' => gettype($source['partes'] ?? null),
+        'partes_count' => is_array($source['partes'] ?? null) ? count((array) $source['partes']) : null,
+        'nivel_sigilo' => $source['nivelSigilo'] ?? null,
+        'polo_passivo_out_count' => count($poloPassivo),
+        'polo_first_item' => is_array($source['polo'] ?? null) ? (($source['polo'][0] ?? null)) : null,
+        'poloAtivo_first_item' => is_array($source['poloAtivo'] ?? null) ? (($source['poloAtivo'][0] ?? null)) : null,
+        'poloPassivo_first_item' => is_array($source['poloPassivo'] ?? null) ? (($source['poloPassivo'][0] ?? null)) : null,
+        'partes_first_item' => is_array($source['partes'] ?? null) ? (($source['partes'][0] ?? null)) : null,
+    ],
 ];
 
 respond(['data' => $result]);

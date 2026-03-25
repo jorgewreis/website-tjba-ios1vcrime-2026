@@ -353,6 +353,9 @@
                 if (data && Array.isArray(data.polo_passivo)) {
                     nomes = data.polo_passivo;
                 }
+                // #region agent log H5 backend debug payload observed in frontend
+                fetch('http://127.0.0.1:7798/ingest/64db24e1-3fcf-482a-aa07-c0ab6247ae38',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b44cef'},body:JSON.stringify({sessionId:'b44cef',runId:'run-datajud-1',hypothesisId:'H5',location:'pauta-edit.js:datajudBackendDebug',message:'Debug da estrutura de partes retornada pela API local',data:{debugDatajud:data&&data._debug_datajud?data._debug_datajud:null},timestamp:Date.now()})}).catch(()=>{});
+                // #endregion
                 nomes = dedupeStrings(nomes).sort(function (a, b) { return a.localeCompare(b, 'pt-BR'); });
 
                 // Filtra do select apenas nomes que ainda não existem na lista de partes.
