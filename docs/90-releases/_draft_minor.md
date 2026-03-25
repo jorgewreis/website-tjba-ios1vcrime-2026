@@ -80,4 +80,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: debug premium 4** `[0363f20]`
 - **Fix: debug premium 5** `[ddd05f8]`
 - **Fix: debug parte 6** `[b74f4f3]`
+- **Fix: debug parte 7** `[bc55ff1]`
 
