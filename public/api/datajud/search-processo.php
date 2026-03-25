@@ -5,6 +5,75 @@ header('Content-Type: application/json; charset=UTF-8');
 header('Access-Control-Allow-Origin: *');
 $config = require __DIR__ . '/config.php';
 
+set_error_handler(static function (int $severity, string $message, string $file, int $line): bool {
+    throw new ErrorException($message, 0, $severity, $file, $line);
+});
+
+set_exception_handler(static function (Throwable $e): void {
+    @file_put_contents(
+        __DIR__ . '/../../../debug-b44cef.log',
+        json_encode([
+            'sessionId' => 'b44cef',
+            'runId' => 'run-datajud-1',
+            'hypothesisId' => 'H6',
+            'location' => 'search-processo.php:exception',
+            'message' => 'Excecao no endpoint DataJud',
+            'data' => [
+                'type' => get_class($e),
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ],
+            'timestamp' => (int) round(microtime(true) * 1000),
+        ], JSON_UNESCAPED_UNICODE) . PHP_EOL,
+        FILE_APPEND
+    );
+    respond([
+        'error' => 'Falha interna no endpoint DataJud.',
+        '_debug' => [
+            'type' => get_class($e),
+            'message' => $e->getMessage(),
+            'file' => basename($e->getFile()),
+            'line' => $e->getLine(),
+        ],
+    ], 500);
+});
+
+register_shutdown_function(static function (): void {
+    $lastError = error_get_last();
+    if (!is_array($lastError)) {
+        return;
+    }
+    $fatalTypes = [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR];
+    if (!in_array((int) ($lastError['type'] ?? 0), $fatalTypes, true)) {
+        return;
+    }
+    @file_put_contents(
+        __DIR__ . '/../../../debug-b44cef.log',
+        json_encode([
+            'sessionId' => 'b44cef',
+            'runId' => 'run-datajud-1',
+            'hypothesisId' => 'H6',
+            'location' => 'search-processo.php:shutdown-fatal',
+            'message' => 'Fatal error no endpoint DataJud',
+            'data' => $lastError,
+            'timestamp' => (int) round(microtime(true) * 1000),
+        ], JSON_UNESCAPED_UNICODE) . PHP_EOL,
+        FILE_APPEND
+    );
+    if (!headers_sent()) {
+        http_response_code(500);
+        echo json_encode([
+            'error' => 'Falha fatal no endpoint DataJud.',
+            '_debug' => [
+                'message' => (string) ($lastError['message'] ?? ''),
+                'file' => basename((string) ($lastError['file'] ?? '')),
+                'line' => (int) ($lastError['line'] ?? 0),
+            ],
+        ], JSON_UNESCAPED_UNICODE);
+    }
+});
+
 $rawInput = file_get_contents('php://input') ?: '';
 $payload = json_decode($rawInput, true);
 if (!is_array($payload)) {
@@ -33,6 +102,7 @@ $body = [
 ];
 
 // #region agent log H1/H2 backend request payload
+$sourceConfig = $body['_source'] ?? null;
 @file_put_contents(
     __DIR__ . '/../../../debug-b44cef.log',
     json_encode([
@@ -44,7 +114,8 @@ $body = [
         'data' => [
             'numeroLen' => strlen($numero),
             'queryMode' => 'term',
-            'sourceFieldCount' => count($body['_source'] ?? []),
+            'sourceFieldCount' => is_array($sourceConfig) ? count($sourceConfig) : null,
+            'sourceMode' => is_bool($sourceConfig) ? ($sourceConfig ? 'all' : 'none') : 'subset',
         ],
         'timestamp' => (int) round(microtime(true) * 1000),
     ], JSON_UNESCAPED_UNICODE) . PHP_EOL,
