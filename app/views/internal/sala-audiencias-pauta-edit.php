@@ -53,6 +53,37 @@ $normalizeNomeParte = static function (string $s): string {
 $signatureNomeParte = static function (string $normalized): string {
     return preg_replace('/[^\p{L}\p{N}]+/u', '', $normalized) ?: '';
 };
+
+// Fallback para cenários de encoding inconsistente: evita descartar nomes válidos quando a
+// normalização Unicode retorna vazio.
+$normalizeNomeParteFallback = static function (string $s): string {
+    $s = trim(str_replace("\xC2\xA0", ' ', $s));
+    $s = preg_replace('/\s+/', ' ', $s) ?: $s;
+    $s = strtolower($s);
+    // Mantém letras/números/espaços em ASCII como fallback seguro.
+    $s = preg_replace('/[^a-z0-9 ]+/', '', $s) ?: $s;
+    $s = preg_replace('/\s+/', ' ', $s) ?: $s;
+    return trim($s);
+};
+
+// Helper centralizado para alimentar os mapas com fallback robusto.
+$addNomeToReuMap = static function (string $nome, array &$map, array &$sigMap) use ($normalizeNomeParte, $signatureNomeParte, $normalizeNomeParteFallback): void {
+    $key = $normalizeNomeParte($nome);
+    if ($key === '') {
+        $key = $normalizeNomeParteFallback($nome);
+    }
+    if ($key === '') {
+        return;
+    }
+    $map[$key] = true;
+    $sig = $signatureNomeParte($key);
+    if ($sig === '') {
+        $sig = preg_replace('/[^a-z0-9]+/', '', strtolower($key)) ?: '';
+    }
+    if ($sig !== '') {
+        $sigMap[$sig] = true;
+    }
+};
 if ($row !== null) {
     $processoId = trim((string) ($row['processo'] ?? ''));
     $numeroProcesso = trim((string) ($row['numero_processo'] ?? ''));
@@ -81,14 +112,7 @@ if ($row !== null) {
         $nomesGlobais = $repoReuPreso->listAtivosNomes();
         $dbgGlobalReusPresosCount = count($nomesGlobais);
         foreach ($nomesGlobais as $nomeGlobal) {
-            $keyGlobal = $normalizeNomeParte($nomeGlobal);
-            if ($keyGlobal !== '') {
-                $reusPresosMap[$keyGlobal] = true;
-                $sigGlobal = $signatureNomeParte($keyGlobal);
-                if ($sigGlobal !== '') {
-                    $reusPresosSigMap[$sigGlobal] = true;
-                }
-            }
+            $addNomeToReuMap((string) $nomeGlobal, $reusPresosMap, $reusPresosSigMap);
         }
     } catch (Throwable $e) {
         $dbgGlobalReusPresosCount = 0;
@@ -178,28 +202,14 @@ if ($row !== null) {
             };
 
             foreach ($nomesReusPresos as $nomeReuPreso) {
-                $key = $normalizeNomeParte((string) $nomeReuPreso);
-                if ($key !== '') {
-                    $reusPresosMap[$key] = true;
-                    $sig = $signatureNomeParte($key);
-                    if ($sig !== '') {
-                        $reusPresosSigMap[$sig] = true;
-                    }
-                }
+                $addNomeToReuMap((string) $nomeReuPreso, $reusPresosMap, $reusPresosSigMap);
             }
 
             if ($numeroProcesso !== '') {
                 $nomesFallback = $repoReuPresoProcesso->listReusPresosNomesByNumeroProcesso($numeroProcesso);
                 $dbgCountCnj = is_array($nomesFallback) ? count($nomesFallback) : 0;
                 foreach ($nomesFallback as $nomeReuPreso) {
-                    $key = $normalizeNomeParte((string) $nomeReuPreso);
-                    if ($key !== '') {
-                        $reusPresosMap[$key] = true;
-                        $sig = $signatureNomeParte($key);
-                        if ($sig !== '') {
-                            $reusPresosSigMap[$sig] = true;
-                        }
-                    }
+                    $addNomeToReuMap((string) $nomeReuPreso, $reusPresosMap, $reusPresosSigMap);
                 }
             }
 
@@ -235,14 +245,7 @@ if ($row !== null) {
             $repoReuPresoProcesso = new GabineteReuPresoProcessoRepository(Conection::getInstance()->getConnection());
             $nomesFallback = $repoReuPresoProcesso->listReusPresosNomesByNumeroProcesso($numeroProcesso);
             foreach ($nomesFallback as $nomeReuPreso) {
-                $key = $normalizeNomeParte((string) $nomeReuPreso);
-                if ($key !== '') {
-                    $reusPresosMap[$key] = true;
-                    $sig = $signatureNomeParte($key);
-                    if ($sig !== '') {
-                        $reusPresosSigMap[$sig] = true;
-                    }
-                }
+                $addNomeToReuMap((string) $nomeReuPreso, $reusPresosMap, $reusPresosSigMap);
             }
         } catch (Throwable $e) {
             $reusPresosMap = [];
