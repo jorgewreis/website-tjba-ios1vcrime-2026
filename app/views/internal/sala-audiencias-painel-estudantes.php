@@ -139,18 +139,14 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
                         data-fim="<?php echo htmlspecialchars((string) ($row['data_hora_fim_efetivo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
                         data-duracao-estimada="<?php echo (int) ($row['duracao_estimada_minutos'] ?? 0); ?>"
                     >
-                        <span class="minor-info">Data e hora</span>
+                        <span class="minor-info">Horario</span>
                         <div class="js-time-lines">
                         <?php if ($statusRow === 'em_andamento' && $inicioTs !== false): ?>
-                        <span class="major-info">Inicio: <?php echo htmlspecialchars(date('d/m/Y H:i', $inicioTs), ENT_QUOTES, 'UTF-8'); ?></span>
-                        <?php if ($previsaoTs !== false): ?>
-                        <span class="minor-info">Previsao de termino: <?php echo htmlspecialchars(date('d/m/Y H:i', $previsaoTs), ENT_QUOTES, 'UTF-8'); ?></span>
-                        <?php endif; ?>
+                        <span class="major-info"><?php echo htmlspecialchars(date('H:i', $inicioTs), ENT_QUOTES, 'UTF-8'); ?> - <?php echo htmlspecialchars($previsaoTs !== false ? date('H:i', $previsaoTs) : '--:--', ENT_QUOTES, 'UTF-8'); ?> (prev.)</span>
                         <?php elseif ($statusRow === 'finalizada' && $inicioTs !== false && $fimTs !== false): ?>
-                        <span class="major-info">Inicio: <?php echo htmlspecialchars(date('d/m/Y H:i', $inicioTs), ENT_QUOTES, 'UTF-8'); ?></span>
-                        <span class="minor-info">Fim: <?php echo htmlspecialchars(date('d/m/Y H:i', $fimTs), ENT_QUOTES, 'UTF-8'); ?> (<?php echo (int) $duracaoRealMin; ?> min)</span>
+                        <span class="major-info"><?php echo htmlspecialchars(date('H:i', $inicioTs), ENT_QUOTES, 'UTF-8'); ?> - <?php echo htmlspecialchars(date('H:i', $fimTs), ENT_QUOTES, 'UTF-8'); ?> (<?php echo (int) $duracaoRealMin; ?>min)</span>
                         <?php else: ?>
-                        <span class="major-info"><?php echo htmlspecialchars(date('d/m/Y', strtotime((string) $row['data_audiencia'])) . ' - ' . substr((string) $row['hora_audiencia'], 0, 5), ENT_QUOTES, 'UTF-8'); ?></span>
+                        <span class="major-info"><?php echo htmlspecialchars(substr((string) $row['hora_audiencia'], 0, 5), ENT_QUOTES, 'UTF-8'); ?></span>
                         <?php endif; ?>
                         </div>
                     </div>
@@ -166,12 +162,12 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
                         <span class="minor-info">Tipo</span>
                         <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) $row['tipo_audiencia'], ENT_QUOTES, 'UTF-8'); ?></span>
                     </div>
-                    <div class="col width-300">
+                    <div class="col width-300" data-vagas-pauta="<?php echo htmlspecialchars($idPautaRaw, ENT_QUOTES, 'UTF-8'); ?>" data-max-vagas="<?php echo (int) $maxVagas; ?>">
                         <span class="minor-info">Vagas</span>
-                        <span class="major-info"><?php echo $totalIns; ?> / <?php echo (int) $maxVagas; ?><?php echo $lotado ? ' (lotado)' : ''; ?></span>
+                        <span class="major-info js-vagas-text"><?php echo $totalIns; ?> / <?php echo (int) $maxVagas; ?><?php echo $lotado ? ' (lotado)' : ''; ?></span>
                     </div>
                 </div>
-                <div class="display-flex row row-fit justify-end gap-y-sm align-center">
+                <div class="display-flex row row-fit justify-end gap-y-sm align-center" data-inscricao-ui="<?php echo htmlspecialchars($idPautaRaw, ENT_QUOTES, 'UTF-8'); ?>">
                     <?php if ($ja): ?>
                     <span class="minor-info text-success">Voce esta inscrito.</span>
                     <?php elseif ($lotado): ?>
@@ -279,18 +275,14 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
                     data-fim="<?php echo htmlspecialchars((string) ($m['data_hora_fim_efetivo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
                     data-duracao-estimada="<?php echo (int) ($m['duracao_estimada_minutos'] ?? 0); ?>"
                 >
-                    <span class="minor-info">Data e hora</span>
+                    <span class="minor-info">Horario</span>
                     <div class="js-time-lines">
                     <?php if ($stRow === 'em_andamento' && $inicioTs !== false): ?>
-                    <span class="major-info">Inicio: <?php echo htmlspecialchars(date('d/m/Y H:i', $inicioTs), ENT_QUOTES, 'UTF-8'); ?></span>
-                    <?php if ($previsaoTs !== false): ?>
-                    <span class="minor-info">Previsao de termino: <?php echo htmlspecialchars(date('d/m/Y H:i', $previsaoTs), ENT_QUOTES, 'UTF-8'); ?></span>
-                    <?php endif; ?>
+                    <span class="major-info"><?php echo htmlspecialchars(date('H:i', $inicioTs), ENT_QUOTES, 'UTF-8'); ?> - <?php echo htmlspecialchars($previsaoTs !== false ? date('H:i', $previsaoTs) : '--:--', ENT_QUOTES, 'UTF-8'); ?> (prev.)</span>
                     <?php elseif ($stRow === 'finalizada' && $inicioTs !== false && $fimTs !== false): ?>
-                    <span class="major-info">Inicio: <?php echo htmlspecialchars(date('d/m/Y H:i', $inicioTs), ENT_QUOTES, 'UTF-8'); ?></span>
-                    <span class="minor-info">Fim: <?php echo htmlspecialchars(date('d/m/Y H:i', $fimTs), ENT_QUOTES, 'UTF-8'); ?> (<?php echo (int) $duracaoRealMin; ?> min)</span>
+                    <span class="major-info"><?php echo htmlspecialchars(date('H:i', $inicioTs), ENT_QUOTES, 'UTF-8'); ?> - <?php echo htmlspecialchars(date('H:i', $fimTs), ENT_QUOTES, 'UTF-8'); ?> (<?php echo (int) $duracaoRealMin; ?>min)</span>
                     <?php else: ?>
-                    <span class="major-info"><?php echo htmlspecialchars(date('d/m/Y', strtotime((string) $m['data_audiencia'])) . ' · ' . substr((string) $m['hora_audiencia'], 0, 5), ENT_QUOTES, 'UTF-8'); ?></span>
+                    <span class="major-info"><?php echo htmlspecialchars(substr((string) $m['hora_audiencia'], 0, 5), ENT_QUOTES, 'UTF-8'); ?></span>
                     <?php endif; ?>
                     </div>
                 </div>
@@ -340,10 +332,10 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
             var t = Date.parse(iso);
             return isNaN(t) ? NaN : t;
         }
-        function fmtDateTime(ts) {
+        function fmtTime(ts) {
             var d = new Date(ts);
             if (isNaN(d.getTime())) return '';
-            return pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+            return pad2(d.getHours()) + ':' + pad2(d.getMinutes());
         }
         function getFramePhpHref() {
             var path = window.location.pathname || '/frame.php';
@@ -382,18 +374,14 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
             var fimTs = parseDateTime(fimRaw);
             var html = '';
             if (status === 'em_andamento' && !isNaN(inicioTs)) {
-                html += '<span class="major-info">Inicio: ' + fmtDateTime(inicioTs) + '</span>';
-                if (!isNaN(previsaoTs)) {
-                    html += '<span class="minor-info">Previsao de termino: ' + fmtDateTime(previsaoTs) + '</span>';
-                }
+                html += '<span class="major-info">' + fmtTime(inicioTs) + ' - ' + (isNaN(previsaoTs) ? '--:--' : fmtTime(previsaoTs)) + ' (prev.)</span>';
             } else if (status === 'finalizada' && !isNaN(inicioTs) && !isNaN(fimTs) && fimTs >= inicioTs) {
                 var durReal = Math.floor((fimTs - inicioTs) / 60000);
-                html += '<span class="major-info">Inicio: ' + fmtDateTime(inicioTs) + '</span>';
-                html += '<span class="minor-info">Fim: ' + fmtDateTime(fimTs) + ' (' + durReal + ' min)</span>';
+                html += '<span class="major-info">' + fmtTime(inicioTs) + ' - ' + fmtTime(fimTs) + ' (' + durReal + 'min)</span>';
             } else {
                 var agendadaTs = parseDateTime((dataAud + ' ' + horaAud).trim());
                 if (!isNaN(agendadaTs)) {
-                    html += '<span class="major-info">' + fmtDateTime(agendadaTs) + '</span>';
+                    html += '<span class="major-info">' + fmtTime(agendadaTs) + '</span>';
                 }
             }
             lines.innerHTML = html;
@@ -415,6 +403,55 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
             };
             return map[status] || status;
         }
+        function escapeHtml(value) {
+            return String(value == null ? '' : value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+        function renderInscricaoUI(wrapper, item) {
+            var lotado = !!item.vagas_esgotadas;
+            var ja = !!item.ja_inscrito;
+            var sigiloso = !!item.processo_sigiloso;
+            var menor = !!item.envolve_menor;
+            var pode = !!item.pode_inscrever;
+            var pauta = String(item.id_pauta || wrapper.getAttribute('data-inscricao-ui') || '').trim();
+            if (ja) {
+                wrapper.innerHTML = '<span class="minor-info text-success">Voce esta inscrito.</span>';
+            } else if (lotado) {
+                wrapper.innerHTML = '<span class="minor-info text-error">Vagas esgotadas.</span>';
+            } else if (sigiloso) {
+                wrapper.innerHTML = '<span class="minor-info text-error">Processo sigiloso.</span>';
+            } else if (menor) {
+                wrapper.innerHTML = '<span class="minor-info text-error">Audiencia com menor envolvido.</span>';
+            } else if (pode && pauta) {
+                wrapper.innerHTML = '<button type="button" class="btn btn-primary btn-inscrever-ata" data-pauta="' + escapeHtml(pauta) + '">Inscrever-me</button>';
+            } else {
+                wrapper.innerHTML = '<span class="minor-info">Inscricao indisponivel.</span>';
+            }
+        }
+        function renderVagas(item) {
+            var pauta = String(item.id_pauta || '').trim();
+            if (!pauta) return;
+            var wrap = null;
+            document.querySelectorAll('[data-vagas-pauta]').forEach(function (el) {
+                if (wrap) return;
+                if (String(el.getAttribute('data-vagas-pauta') || '').trim() === pauta) {
+                    wrap = el;
+                }
+            });
+            if (!wrap) return;
+            var text = wrap.querySelector('.js-vagas-text');
+            if (!text) return;
+            var max = parseInt(wrap.getAttribute('data-max-vagas') || '5', 10);
+            if (!Number.isFinite(max) || max <= 0) max = 5;
+            var total = parseInt(item.total_inscritos_pauta || 0, 10);
+            if (!Number.isFinite(total) || total < 0) total = 0;
+            var suffix = item.vagas_esgotadas ? ' (lotado)' : '';
+            text.textContent = total + ' / ' + max + suffix;
+        }
         function collectPautas() {
             var ids = {};
             document.querySelectorAll('.js-time-block[data-pauta]').forEach(function (el) {
@@ -435,6 +472,15 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
                 var status = String(items[id].status || '').trim();
                 statusEl.className = 'width-300 padding-x-lg status ' + statusClass(status);
                 statusEl.textContent = statusLabel(status);
+            });
+            document.querySelectorAll('[data-inscricao-ui]').forEach(function (uiWrap) {
+                var id = String(uiWrap.getAttribute('data-inscricao-ui') || '').trim();
+                if (!id || !items[id]) return;
+                renderInscricaoUI(uiWrap, items[id]);
+            });
+            Object.keys(items).forEach(function (id) {
+                if (!items[id]) return;
+                renderVagas(items[id]);
             });
         }
         function refreshStatusAndTime() {
@@ -459,6 +505,7 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
         }
         bindItemsPerPage('items-per-page-hoje');
         bindItemsPerPage('items-per-page-minhas');
+        refreshStatusAndTime();
         window.setInterval(refreshStatusAndTime, 60000);
     })();
     </script>
