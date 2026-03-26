@@ -90,4 +90,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: tentativa de envio de pdf** `[3801252]`
 - **Fix: nova tentativa** `[53c9802]`
 - **Fix: melhorias na pagina de atas** `[4fd0f3d]`
+- **Fix: melhorias de dashboard** `[4428525]`
 
