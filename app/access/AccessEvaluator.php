@@ -46,10 +46,13 @@ final class AccessEvaluator
         $temEstudante = ProfileNormalizer::hasEstudante($norm);
         $temConsultor = ProfileNormalizer::hasConsultor($norm);
 
+        if ($page === 'alterardados') {
+            return true;
+        }
         if ($page === 'consultacep') {
             return true;
         }
-        if (($page === 'estudapauta' || $page === 'estudaata') && $temEstudante) {
+        if (($page === 'estudapauta' || $page === 'estudaata' || $page === 'estudapainel') && $temEstudante) {
             return true;
         }
         if ($page === 'consultapartes' || $page === 'instituicoespublicas' || $page === 'partesinstituicoeslist') {

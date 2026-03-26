@@ -11,7 +11,7 @@ final class SalaAudienciasAtaService
     public const MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA = 5;
 
     private const DIAS_VALIDADE_ATA = 30;
-    private const MAX_UPLOAD_BYTES = 30 * 1024 * 1024;
+    private const MAX_UPLOAD_BYTES = 2 * 1024 * 1024;
 
     private PDO $connection;
     private SalaAudienciasPautaRepository $pautaRepository;
@@ -100,7 +100,7 @@ final class SalaAudienciasAtaService
         }
         $size = (int) ($file['size'] ?? 0);
         if ($size <= 0 || $size > self::MAX_UPLOAD_BYTES) {
-            throw new InvalidArgumentException('Arquivo inválido ou muito grande (máx. 30 MB).');
+            throw new InvalidArgumentException('Arquivo inválido ou muito grande (máx. 2 MB).');
         }
 
         $tmp = (string) ($file['tmp_name'] ?? '');

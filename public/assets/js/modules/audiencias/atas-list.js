@@ -1,5 +1,6 @@
 (function () {
     'use strict';
+    var MAX_UPLOAD_BYTES = 2 * 1024 * 1024;
 
     function getFramePhpHref() {
         var path = window.location.pathname || '/frame.php';
@@ -53,11 +54,20 @@
             inp.value = '';
             if (!file || !pauta) return;
 
+            if (file.type && file.type !== 'application/pdf') {
+                notify('error', 'Erro', 'Selecione um arquivo PDF válido.');
+                return;
+            }
+            if (file.size <= 0 || file.size > MAX_UPLOAD_BYTES) {
+                notify('error', 'Erro', 'O arquivo deve ter no máximo 2 MB.');
+                return;
+            }
+
             var fd = new FormData();
             fd.append('pauta', pauta);
             fd.append('arquivo', file, file.name);
 
-            var apiPath = 'api/sala-audiencias-ata/upload.php';
+            var apiPath = '/api/sala-audiencias-ata/upload.php';
             fetch(apiPath, {
                 method: 'POST',
                 body: fd,

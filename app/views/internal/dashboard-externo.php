@@ -42,7 +42,7 @@ $dashIsEstudanteExterno = UserAccessHelper::isUsuarioExterno($dashPerfis) && $da
         </div>
         <h1 class="title-page">Bem-vindo(a)</h1>
         <p class="description-page"><?php echo $dashIsEstudanteExterno
-            ? 'Este é o seu painel de acesso. Pelo menu lateral você pode utilizar a consulta de CEP e, nas configurações, seus dados pessoais.'
+            ? 'Este é o seu painel de acesso. Pelo menu lateral você pode consultar CEP, acompanhar a pauta/atas de audiências para estudantes e, nas configurações, atualizar seus dados pessoais.'
             : 'Este é o seu painel de acesso ao sistema. Utilize o menu para as consultas liberadas ao seu perfil (partes, instituições públicas, CEP) e seus dados pessoais nas configurações.'; ?></p>
     </div>
 
@@ -55,6 +55,7 @@ $dashIsEstudanteExterno = UserAccessHelper::isUsuarioExterno($dashPerfis) && $da
                 <ul class="minor-info" style="margin: 0; padding-left: 1.25rem; line-height: 1.6;">
                     <?php if ($dashIsEstudanteExterno): ?>
                     <li><strong>Consulta CEP:</strong> disponível no menu lateral, seção <em>Consultas</em>.</li>
+                    <li><strong>Audiências (estudante):</strong> acompanhe pauta, atas e painel em tempo real na seção <em>Estudantes</em>.</li>
                     <li><strong>Dados pessoais:</strong> no ícone de configurações (engrenagem), altere senha ou dados cadastrais quando necessário.</li>
                     <li><strong>Limitação:</strong> perfil <em>estudante</em> não inclui consulta de partes, instituições ou processos; tarefas de cartório e gabinete também não estão disponíveis.</li>
                     <?php else: ?>
