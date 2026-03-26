@@ -99,4 +99,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: melhorias nas atas** `[a04aa5d]`
 - **Fix: ajuste de paginacao** `[03f09ba]`
 - **Feat: implementacao de data de inicio e fim** `[5c81b28]`
+- **Feat: melhoria na atualização de status** `[ffcf20e]`
 
