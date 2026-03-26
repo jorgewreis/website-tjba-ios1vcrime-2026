@@ -59,7 +59,10 @@
     document.querySelectorAll('.btn-upload-ata').forEach(function (btn) {
         btn.addEventListener('click', function (event) {
             event.preventDefault();
-            var wrap = btn.closest('[data-pauta]');
+            var wrap = btn.closest('.register[data-pauta]');
+            if (!wrap && btn.parentElement) {
+                wrap = btn.parentElement.closest('[data-pauta]');
+            }
             var inp = wrap ? wrap.querySelector('input.ata-file-input') : null;
             if (!openFilePicker(inp)) {
                 notify('error', 'Erro', 'Não foi possível abrir o seletor de arquivos.');
