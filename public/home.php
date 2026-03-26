@@ -210,6 +210,8 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
         }
         .nav-new-avatar.is-initials {
             background: transparent;
+            justify-content: flex-start;
+            padding-left: 10px;
         }
         .nav-new-avatar img {
             width: 100%;
@@ -225,8 +227,8 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             height: 44px;
             font-size: 1rem;
             font-weight: 600;
-            border-radius: 10px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+            border-radius: 5px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
         }
         .navbar-nav-left .layout-menu-toggle {
             position: absolute;
