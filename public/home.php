@@ -208,6 +208,9 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             overflow: hidden;
             background: var(--color-border-subtle);
         }
+        .nav-new-avatar.is-initials {
+            background: transparent;
+        }
         .nav-new-avatar img {
             width: 100%;
             height: 100%;
@@ -218,11 +221,12 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 100%;
-            height: 100%;
-            font-size: 1.25rem;
+            width: 44px;
+            height: 44px;
+            font-size: 1rem;
             font-weight: 600;
-            border-radius: 6px 0 0 6px;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
         }
         .navbar-nav-left .layout-menu-toggle {
             position: absolute;
@@ -382,7 +386,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                 <nav class="layout-navbar">
                     <div class="navbar-nav-left">
                         <div class="nav-avatar-navbar-wrap" tabindex="0" aria-label="Usuário logado" aria-describedby="user-summary-navbar">
-                            <div class="nav-new-avatar">
+                            <div class="nav-new-avatar <?php echo (($avatarNavbarDisplay['mode'] ?? '') === 'image' && !empty($avatarNavbarDisplay['url'])) ? 'is-image' : 'is-initials'; ?>">
                                 <?php if (($avatarNavbarDisplay['mode'] ?? '') === 'image' && !empty($avatarNavbarDisplay['url'])): ?>
                                     <img src="<?php echo htmlspecialchars((string) $avatarNavbarDisplay['url'], ENT_QUOTES, 'UTF-8'); ?>" alt="">
                                 <?php else: ?>
