@@ -87,4 +87,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: pequenos ajustes** `[184c4ef]`
 - **Fix: regra de bloqueio de exclusao** `[0f36484]`
 - **Fix: correcao no envio de pdf** `[a2c8ad8]`
+- **Fix: tentativa de envio de pdf** `[3801252]`
 
