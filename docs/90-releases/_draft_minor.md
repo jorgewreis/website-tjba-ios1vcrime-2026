@@ -95,4 +95,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: melhorias no dashboard externo** `[1c7f6f4]`
 - **Feat: form sexo user** `[e8c9bbc]`
 - **Fix: melhorias no edit user** `[cc5fed6]`
+- **Fix: correcao de layout** `[689b74f]`
 
