@@ -280,28 +280,29 @@ final class Usuario
         if ($idUsuario === '') {
             return null;
         }
-        try {
-            $stmt = $this->pdo->prepare("
-                SELECT id_usuario, nome, sobrenome, cpf, email, telefone, cargo, instituicao, ultimo_acesso, updated_at,
-                       avatar_slug
-                FROM usuarios
-                WHERE id_usuario = ?
-                LIMIT 1
-            ");
-            $stmt->execute([$idUsuario]);
-        } catch (\PDOException $e) {
-            if (stripos($e->getMessage(), 'avatar_slug') !== false || stripos($e->getMessage(), 'Unknown column') !== false) {
-                $stmt = $this->pdo->prepare("
-                    SELECT id_usuario, nome, sobrenome, cpf, email, telefone, cargo, instituicao, ultimo_acesso, updated_at
-                    FROM usuarios
-                    WHERE id_usuario = ?
-                    LIMIT 1
-                ");
-                $stmt->execute([$idUsuario]);
-            } else {
-                throw $e;
-            }
+        $fields = [
+            'id_usuario',
+            'nome',
+            'sobrenome',
+            'cpf',
+            'email',
+            'telefone',
+            'cargo',
+            'instituicao',
+            'ultimo_acesso',
+            'updated_at',
+        ];
+        if ($this->hasUsuariosColumn('sexo')) {
+            $fields[] = 'sexo';
         }
+        if ($this->hasUsuariosColumn('avatar_slug')) {
+            $fields[] = 'avatar_slug';
+        }
+
+        $stmt = $this->pdo->prepare(
+            'SELECT ' . implode(', ', $fields) . ' FROM usuarios WHERE id_usuario = ? LIMIT 1'
+        );
+        $stmt->execute([$idUsuario]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($row === false) {
             return null;
@@ -381,6 +382,9 @@ final class Usuario
         }
 
         $allowed = ['email', 'telefone', 'cargo', 'instituicao'];
+        if ($this->hasUsuariosColumn('sexo')) {
+            $allowed[] = 'sexo';
+        }
         $set = [];
         $params = [':id' => $idUsuario];
         foreach ($allowed as $campo) {
@@ -418,6 +422,21 @@ final class Usuario
             }
             throw $e;
         }
+    }
+
+    private function hasUsuariosColumn(string $column): bool
+    {
+        $column = trim($column);
+        if ($column === '') {
+            return false;
+        }
+        $stmt = $this->pdo->prepare(
+            "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usuarios' AND COLUMN_NAME = :column"
+        );
+        $stmt->bindValue(':column', $column);
+        $stmt->execute();
+
+        return ((int) $stmt->fetchColumn()) > 0;
     }
 
     private function shouldRefreshLastAccess(string $idUsuario): bool

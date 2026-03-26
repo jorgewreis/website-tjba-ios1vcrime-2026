@@ -10,6 +10,7 @@ require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../helpers/DateHelper.php';
 require_once __DIR__ . '/../../helpers/TextFormatter.php';
 require_once __DIR__ . '/../../helpers/SetoresAccessHelper.php';
+require_once __DIR__ . '/../../helpers/SexoHelper.php';
 require_once __DIR__ . '/../../access/ProfileNormalizer.php';
 require_once __DIR__ . '/../../../config/security.php';
 
@@ -155,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $sobrenome = TextFormatter::formatProperName(trim((string) ($_POST['sobrenome'] ?? '')), 100);
             $email = trim((string) ($_POST['email'] ?? ''));
             $telefone = trim((string) ($_POST['telefone'] ?? ''));
-            $sexo = trim((string) ($_POST['sexo'] ?? ''));
+            $sexo = SexoHelper::normalize(trim((string) ($_POST['sexo'] ?? '')));
             $dataNascimentoRaw = trim((string) ($_POST['data_nascimento'] ?? ''));
             $dataNascimentoIso = DateHelper::normalizeIsoDate($dataNascimentoRaw);
             $dataNascimentoVal = $dataNascimentoRaw;
@@ -182,7 +183,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $mensagemErro = 'Nome e sobrenome são obrigatórios.';
             } elseif ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $mensagemErro = 'E-mail obrigatório e válido.';
-            } elseif (!in_array($sexo, ['Feminino', 'Masculino', 'Outro'], true)) {
+            } elseif (!SexoHelper::isValid($sexo)) {
                 $mensagemErro = 'Selecione o sexo.';
             } else {
                 if ($cargo === 'Magistrada' && $setorLabel === '') {

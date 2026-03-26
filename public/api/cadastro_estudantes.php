@@ -5,6 +5,7 @@ require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/security.php';
 require_once __DIR__ . '/../../app/helpers/Conection.php';
 require_once __DIR__ . '/../../app/helpers/TextFormatter.php';
+require_once __DIR__ . '/../../app/helpers/SexoHelper.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -36,7 +37,7 @@ $sobrenome = isset($partes[1]) ? TextFormatter::formatProperName($partes[1], 200
 
 $cpf       = trim((string) ($payload['cpf'] ?? ''));
 $telefone  = mb_substr(trim((string) ($payload['telefone'] ?? '')), 0, $limites['telefone']);
-$sexo      = trim((string) ($payload['sexo'] ?? ''));
+$sexo      = SexoHelper::normalize(trim((string) ($payload['sexo'] ?? '')));
 $whatsapp  = !empty($payload['telefone_whatsapp']);
 $faculdade = mb_substr(trim((string) ($payload['faculdade'] ?? '')), 0, $limites['faculdade']);
 $email     = mb_strtolower(trim((string) ($payload['email'] ?? '')), 'UTF-8');
@@ -55,8 +56,7 @@ if (strlen($telefoneNumerico) < 10) {
     exit;
 }
 
-$sexoPermitido = ['Feminino', 'Masculino', 'Outro'];
-if (!in_array($sexo, $sexoPermitido, true)) {
+if (!SexoHelper::isValid($sexo)) {
     echo json_encode(['success' => false, 'message' => 'Selecione o sexo.']);
     exit;
 }

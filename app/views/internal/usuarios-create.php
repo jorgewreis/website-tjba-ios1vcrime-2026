@@ -11,6 +11,7 @@ require_once __DIR__ . '/../../helpers/DateHelper.php';
 require_once __DIR__ . '/../../helpers/TextFormatter.php';
 require_once __DIR__ . '/../../helpers/AvatarCatalog.php';
 require_once __DIR__ . '/../../helpers/SetoresAccessHelper.php';
+require_once __DIR__ . '/../../helpers/SexoHelper.php';
 require_once __DIR__ . '/../../../config/security.php';
 
 Security::requireAuthentication();
@@ -63,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $cpf = preg_replace('/\D/', '', trim((string) ($_POST['cpf'] ?? '')));
         $email = trim((string) ($_POST['email'] ?? ''));
         $telefone = trim((string) ($_POST['telefone'] ?? ''));
-        $sexo = trim((string) ($_POST['sexo'] ?? ''));
+        $sexo = SexoHelper::normalize(trim((string) ($_POST['sexo'] ?? '')));
         $dataNascimentoRaw = trim((string) ($_POST['data_nascimento'] ?? ''));
         $dataNascimentoIso = DateHelper::normalizeIsoDate($dataNascimentoRaw);
         $senha = (string) ($_POST['senha'] ?? '');
@@ -126,7 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $mensagemErro = 'CPF inválido ou incompleto.';
         } elseif ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $mensagemErro = 'E-mail obrigatório e válido.';
-        } elseif (!in_array($sexo, ['Feminino', 'Masculino', 'Outro'], true)) {
+        } elseif (!SexoHelper::isValid($sexo)) {
             $mensagemErro = 'Selecione o sexo.';
         } elseif ($dataNascimentoRaw !== '' && $dataNascimentoIso === null) {
             $mensagemErro = 'Informe a data de nascimento no formato AAAA-MM-DD.';

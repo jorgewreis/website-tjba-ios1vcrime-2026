@@ -4,6 +4,7 @@ declare(strict_types=1);
 Security::requireAuthentication();
 
 require_once __DIR__ . '/../../helpers/UserAccessHelper.php';
+require_once __DIR__ . '/../../helpers/SexoHelper.php';
 require_once __DIR__ . '/../../models/Usuario.php';
 require_once __DIR__ . '/../../helpers/Conection.php';
 
@@ -51,11 +52,11 @@ if ($dashUserId !== '') {
     }
 }
 
-$dashSexoNorm = mb_strtolower($dashSexoUsuario, 'UTF-8');
+$dashSexoNorm = SexoHelper::normalize($dashSexoUsuario);
 $dashSaudacaoBase = 'Bem-vindo(a)';
-if (in_array($dashSexoNorm, ['feminino', 'f', 'mulher'], true)) {
+if ($dashSexoNorm === SexoHelper::FEMININO) {
     $dashSaudacaoBase = 'Bem-vinda';
-} elseif (in_array($dashSexoNorm, ['masculino', 'm', 'homem'], true)) {
+} elseif ($dashSexoNorm === SexoHelper::MASCULINO) {
     $dashSaudacaoBase = 'Bem-vindo';
 }
 $dashTituloBoasVindas = $dashSaudacaoBase . ($dashPrimeiroNome !== '' ? ', ' . $dashPrimeiroNome : '');
