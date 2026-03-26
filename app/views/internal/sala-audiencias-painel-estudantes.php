@@ -113,13 +113,33 @@ $maxVagas = SalaAudienciasAtaService::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA;
         </div>
         <?php if (count($minhasRows) === 0): ?>
         <div class="padding-x-md padding-y-lg">
-            <p class="description-page">Nenhuma inscrição ativa com ata disponível ou aguardando publicação.</p>
+            <p class="description-page">Nenhuma inscrição ativa encontrada.</p>
         </div>
         <?php endif; ?>
         <?php foreach ($minhasRows as $m):
-            $temAta = !empty($m['id_ata']);
-            $expira = trim((string) ($m['expires_at'] ?? ''));
-            $expiraFmt = $expira !== '' ? date('d/m/Y H:i', strtotime($expira)) : '';
+            $stRow = (string) ($m['status'] ?? '');
+            if ($stRow === 'agendada') {
+                $stRow = 'designada';
+            } elseif ($stRow === 'adiada') {
+                $stRow = 'redesignada';
+            }
+            $labelsStatusEst = [
+                'designada' => 'Designada',
+                'em_andamento' => 'Em andamento',
+                'finalizada' => 'Finalizada',
+                'realizada' => 'Realizada',
+                'redesignada' => 'Redesignada',
+                'cancelada' => 'Cancelada',
+            ];
+            $textoStatusEst = $labelsStatusEst[$stRow] ?? ucfirst(str_replace('_', ' ', $stRow));
+            $classeStatusEst = 'status-pending';
+            if ($stRow === 'cancelada') {
+                $classeStatusEst = 'status-cancelled';
+            } elseif ($stRow === 'em_andamento') {
+                $classeStatusEst = 'status-current';
+            } elseif (in_array($stRow, ['realizada', 'finalizada'], true)) {
+                $classeStatusEst = 'status-finished';
+            }
             ?>
         <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm border-bottom align-center flex-wrap gap-y-sm">
             <div class="display-flex row row-fit justify-start gap-y-sm align-center flex-wrap">
@@ -132,21 +152,11 @@ $maxVagas = SalaAudienciasAtaService::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA;
                     <span class="major-info"><?php echo htmlspecialchars((string) ($m['numero_processo'] ?? '—'), ENT_QUOTES, 'UTF-8'); ?></span>
                 </div>
                 <div class="col width-360">
-                    <span class="minor-info">Situacao da ata</span>
-                    <span class="major-info"><?php echo $temAta ? 'Disponivel para download' : 'Aguardando publicacao'; ?></span>
-                    <?php if ($temAta && $expiraFmt !== ''): ?>
-                    <span class="minor-info">Valida ate <?php echo htmlspecialchars($expiraFmt, ENT_QUOTES, 'UTF-8'); ?></span>
-                    <?php endif; ?>
+                    <span class="minor-info">Status da audiencia</span>
+                    <div class="width-300 padding-x-lg status <?php echo htmlspecialchars($classeStatusEst, ENT_QUOTES); ?>">
+                        <?php echo htmlspecialchars($textoStatusEst, ENT_QUOTES); ?>
+                    </div>
                 </div>
-            </div>
-            <div class="display-flex row row-fit justify-end">
-                <?php if ($temAta && $podeInscricaoComoEstudante): ?>
-                <button type="button" class="btn btn-primary" data-nav-href="/api/sala-audiencias-ata/download.php?pauta=<?php echo urlencode((string) $m['pauta']); ?>" data-nav-target="_blank">Baixar PDF</button>
-                <?php elseif ($temAta): ?>
-                <span class="minor-info">Download exclusivo para estudantes.</span>
-                <?php else: ?>
-                <button type="button" class="btn btn-secondary" disabled>Aguardando ata</button>
-                <?php endif; ?>
             </div>
         </div>
         <?php endforeach; ?>

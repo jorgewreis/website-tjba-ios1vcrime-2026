@@ -161,38 +161,6 @@ $endItem = min($offset + count($rows), $total);
                         </span>
                     </div>
                 </div>
-                <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                    <div class="col">
-                        <?php
-                            $stRow = (string) ($row['status'] ?? '');
-                            if ($stRow === 'agendada') {
-                                $stRow = 'designada';
-                            } elseif ($stRow === 'adiada') {
-                                $stRow = 'redesignada';
-                            }
-                            $labelsStatusEst = [
-                                'designada' => 'Designada',
-                                'em_andamento' => 'Em andamento',
-                                'finalizada' => 'Finalizada',
-                                'realizada' => 'Realizada',
-                                'redesignada' => 'Redesignada',
-                                'cancelada' => 'Cancelada',
-                            ];
-                            $textoStatusEst = $labelsStatusEst[$stRow] ?? ucfirst(str_replace('_', ' ', $stRow));
-                            $classeStatusEst = 'status-pending';
-                            if ($stRow === 'cancelada') {
-                                $classeStatusEst = 'status-cancelled';
-                            } elseif ($stRow === 'em_andamento') {
-                                $classeStatusEst = 'status-current';
-                            } elseif (in_array($stRow, ['realizada', 'finalizada'], true)) {
-                                $classeStatusEst = 'status-finished';
-                            }
-                        ?>
-                        <div class="width-300 padding-x-lg status <?php echo htmlspecialchars($classeStatusEst, ENT_QUOTES); ?>">
-                            <?php echo htmlspecialchars($textoStatusEst, ENT_QUOTES); ?>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
         <?php endforeach; ?>
