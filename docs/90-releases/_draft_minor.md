@@ -101,4 +101,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Feat: implementacao de data de inicio e fim** `[5c81b28]`
 - **Feat: melhoria na atualização de status** `[ffcf20e]`
 - **Fix: correcao e ajustes** `[cac89bd]`
+- **Fix: correcao de classe** `[c82359b]`
 
