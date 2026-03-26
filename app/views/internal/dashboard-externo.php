@@ -25,19 +25,17 @@ $dashSexoUsuario = '';
 if ($dashUserId !== '') {
     try {
         $dashPdo = Conection::getInstance()->getConnection();
-        $stHasSexo = $dashPdo->prepare(
-            "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usuarios' AND COLUMN_NAME = 'sexo'"
-        );
-        $stHasSexo->execute();
-        $hasSexoColumn = ((int) $stHasSexo->fetchColumn()) > 0;
-
-        $sqlUser = $hasSexoColumn
-            ? 'SELECT `nome`, `sexo` FROM `usuarios` WHERE `id_usuario` = :id LIMIT 1'
-            : 'SELECT `nome` FROM `usuarios` WHERE `id_usuario` = :id LIMIT 1';
-        $stUser = $dashPdo->prepare($sqlUser);
-        $stUser->bindValue(':id', $dashUserId);
-        $stUser->execute();
-        $dashRowUser = $stUser->fetch(PDO::FETCH_ASSOC);
+        try {
+            $stUser = $dashPdo->prepare('SELECT `nome`, `sexo` FROM `usuarios` WHERE `id_usuario` = :id LIMIT 1');
+            $stUser->bindValue(':id', $dashUserId);
+            $stUser->execute();
+            $dashRowUser = $stUser->fetch(PDO::FETCH_ASSOC);
+        } catch (Throwable $e) {
+            $stUser = $dashPdo->prepare('SELECT `nome` FROM `usuarios` WHERE `id_usuario` = :id LIMIT 1');
+            $stUser->bindValue(':id', $dashUserId);
+            $stUser->execute();
+            $dashRowUser = $stUser->fetch(PDO::FETCH_ASSOC);
+        }
 
         if (is_array($dashRowUser)) {
             $nomeCompleto = trim((string) ($dashRowUser['nome'] ?? ''));
@@ -90,11 +88,11 @@ $dashTituloBoasVindas = $dashSaudacaoBase . ($dashPrimeiroNome !== '' ? ', ' . $
             border-radius: 8px;
             line-height: 1.6;
             background: var(--color-background-elevated);
-            color: var(--color-text-primary);
+            transition: background 0.7s ease;
         }
         .external-dashboard-list li:hover {
             background: var(--color-primary-bg-light);
-            color: var(--color-primary-text);
+            transition: background 0.3s ease;
         }
         .external-dashboard-note {
             margin: 0;
@@ -102,8 +100,8 @@ $dashTituloBoasVindas = $dashSaudacaoBase . ($dashPrimeiroNome !== '' ? ', ' . $
             border: 1px solid transparent;
             border-radius: 8px;
             background: var(--color-warning-bg-light);
-            color: var(--color-warning-text);
             line-height: 1.5;
+            width: 100%;
         }
     </style>
 </head>

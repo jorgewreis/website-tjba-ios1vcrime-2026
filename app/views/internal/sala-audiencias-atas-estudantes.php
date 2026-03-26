@@ -22,9 +22,6 @@ $podeInscricaoComoEstudante = UserAccessHelper::isUsuarioExterno($perfilsUsuario
 
 $service = new SalaAudienciasAtaService(Conection::getInstance()->getConnection());
 $minhasRows = $userId !== '' ? $service->listMinhasInscricoesEstudante($userId) : [];
-$participadasComAta = array_values(array_filter($minhasRows, static function ($row): bool {
-    return !empty($row['id_ata']);
-}));
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -47,45 +44,45 @@ $participadasComAta = array_values(array_filter($minhasRows, static function ($r
             <span class="specific">Atas de audiências</span>
         </div>
         <h1 class="title-page">Atas de Audiências</h1>
-        <p class="description-page">Lista das audiências em que você participou e que já possuem ata vinculada para download.</p>
+        <p class="description-page">Lista das audiências em que você se inscreveu, com situação de disponibilidade da ata para download.</p>
     </div>
 
     <div class="container-full card-page">
-        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
-            <div class="display-flex row row-fit justify-start"><h2>Minhas audiências com ata</h2></div>
+        <div class="display-flex row row-full align-center justify-between padding-x-lg padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-start padding-x-md"><h2>Minhas audiências</h2></div>
         </div>
-        <?php if (count($participadasComAta) === 0): ?>
+        <?php if (count($minhasRows) === 0): ?>
         <div class="padding-x-md padding-y-lg">
-            <p class="description-page">Nenhuma ata vinculada encontrada para suas participações.</p>
+            <p class="description-page">Nenhuma inscrição encontrada.</p>
         </div>
         <?php endif; ?>
-        <?php foreach ($participadasComAta as $m):
+        <?php foreach ($minhasRows as $m):
             $idPauta = htmlspecialchars((string) ($m['pauta'] ?? ''), ENT_QUOTES, 'UTF-8');
+            $temAta = !empty($m['id_ata']);
             $expira = trim((string) ($m['expires_at'] ?? ''));
-            $expiraFmt = $expira !== '' ? date('d/m/Y H:i', strtotime($expira)) : '';
+            $expiraFmt = $expira !== '' ? date('d/m', strtotime($expira)) : '';
             ?>
         <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm border-bottom align-center flex-wrap gap-y-sm">
             <div class="display-flex row row-fit justify-start gap-y-sm align-center flex-wrap">
-                <div class="col width-280">
+                <div class="col width-300">
                     <span class="minor-info">Data</span>
                     <span class="major-info"><?php echo htmlspecialchars(date('d/m/Y', strtotime((string) $m['data_audiencia'])) . ' · ' . substr((string) $m['hora_audiencia'], 0, 5), ENT_QUOTES, 'UTF-8'); ?></span>
                 </div>
-                <div class="col width-400">
+                <div class="col width-500">
                     <span class="minor-info">Processo</span>
                     <span class="major-info"><?php echo htmlspecialchars((string) ($m['numero_processo'] ?? '—'), ENT_QUOTES, 'UTF-8'); ?></span>
                 </div>
-                <div class="col width-360">
-                    <span class="minor-info">Situação da ata</span>
-                    <span class="major-info">Disponível para download</span>
-                    <?php if ($expiraFmt !== ''): ?>
-                    <span class="minor-info">Válida até <?php echo htmlspecialchars($expiraFmt, ENT_QUOTES, 'UTF-8'); ?></span>
-                    <?php endif; ?>
+                <div class="col width-400">
+                    <span class="minor-info">Ata para download</span>
+                    <span class="major-info">
+                        <?php echo $temAta ? 'Disponível até ' . htmlspecialchars($expiraFmt, ENT_QUOTES, 'UTF-8') : 'Ainda não disponível'; ?>
+                    </span>
                 </div>
             </div>
-            <div class="display-flex row row-fit justify-end">
-                <?php if ($podeInscricaoComoEstudante): ?>
-                <button type="button" class="btn btn-primary" data-nav-href="/api/sala-audiencias-ata/download.php?pauta=<?php echo urlencode((string) $m['pauta']); ?>" data-nav-target="_blank">Baixar PDF</button>
-                <?php else: ?>
+            <div class="display-flex row row-fit justify-end padding-x-md">
+                <?php if ($temAta && $podeInscricaoComoEstudante): ?>
+                <button type="button" class="btn btn-primary" data-nav-href="/api/sala-audiencias-ata/download.php?pauta=<?php echo urlencode((string) $m['pauta']); ?>" data-nav-target="_blank">Baixar Ata (PDF)</button>
+                <?php elseif ($temAta): ?>
                 <span class="minor-info">Download exclusivo para estudantes.</span>
                 <?php endif; ?>
             </div>

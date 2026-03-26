@@ -43,12 +43,12 @@ $endItem = min($offset + count($rows), $total);
             <span class="specific">Atas de audiências</span>
         </div>
         <h1 class="title-page">Atas de Audiências</h1>
-        <p class="description-page">Envio do PDF da ata somente para audiências com status <strong>Realizada</strong>. O arquivo fica disponível aos estudantes inscritos por 30 dias.</p>
+        <p class="description-page">Envio do PDF da ata para audiências realizadas. O arquivo fica disponível aos estudantes inscritos por 30 dias.</p>
     </div>
 
     <div class="container-full card-page">
-        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
-            <div class="display-flex row row-fit justify-start"><h2>Audiências realizadas</h2></div>
+        <div class="display-flex row row-full align-center justify-between padding-x-lg padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-start padding-x-md"><h2>Audiências realizadas</h2></div>
             <div class="display-flex row row-fit justify-end gap-y-md">
                 <div class="col">
                     <label for="items-per-page">Itens por página</label>
@@ -87,21 +87,16 @@ $endItem = min($offset + count($rows), $total);
                         <span class="minor-info text-ellipsis" <?php echo $classeStyleAudiencia; ?>><?php echo htmlspecialchars($classeAudiencia, ENT_QUOTES, 'UTF-8'); ?></span>
                         <span class="major-info"><?php echo htmlspecialchars((string) ($row['numero_processo'] ?? '—'), ENT_QUOTES, 'UTF-8'); ?></span>
                     </div>
-                    <div class="col width-400">
+                    <div class="col width-500">
                         <span class="minor-info">Tipo de audiência</span>
                         <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) $row['tipo_audiencia'], ENT_QUOTES, 'UTF-8'); ?></span>
                     </div>
-                    <div class="col width-300">
-                        <span class="minor-info">Ata (PDF)</span>
+                    <div class="col width-500">
+                        <span class="minor-info">Ata para download</span>
                         <?php if ($temAta): ?>
-                        <button
-                            type="button"
-                            class="link-inline ata-status-text"
-                            data-nav-href="/api/sala-audiencias-ata/download-interno.php?pauta=<?php echo urlencode((string) ($row['id_pauta'] ?? '')); ?>"
-                            data-nav-target="_blank"
-                        >Ata vinculada</button>
+                        <span class="major-info text-ellipsis ata-status-text">Disponível para download</span>
                         <?php else: ?>
-                        <span class="major-info text-ellipsis ata-status-text">Não enviada</span>
+                        <span class="major-info text-ellipsis ata-status-text">Nenhum arquivo enviado</span>
                         <?php endif; ?>
                     </div>
                 </div>
