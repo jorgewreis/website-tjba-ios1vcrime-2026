@@ -16,6 +16,30 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+/**
+ * Converte códigos de erro nativos de upload em mensagem amigável.
+ */
+function uploadErrorMessage(int $errorCode): string
+{
+    switch ($errorCode) {
+        case UPLOAD_ERR_INI_SIZE:
+        case UPLOAD_ERR_FORM_SIZE:
+            return 'Arquivo excede o limite permitido pelo servidor.';
+        case UPLOAD_ERR_PARTIAL:
+            return 'Upload incompleto. Tente novamente.';
+        case UPLOAD_ERR_NO_FILE:
+            return 'Nenhum arquivo enviado.';
+        case UPLOAD_ERR_NO_TMP_DIR:
+            return 'Servidor sem diretório temporário de upload.';
+        case UPLOAD_ERR_CANT_WRITE:
+            return 'Falha ao gravar o arquivo no servidor.';
+        case UPLOAD_ERR_EXTENSION:
+            return 'Upload bloqueado por extensão de servidor.';
+        default:
+            return 'Falha no envio do arquivo.';
+    }
+}
+
 try {
     $usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
     if ($usuarioId === '') {
@@ -39,6 +63,12 @@ try {
     if (!is_array($file)) {
         http_response_code(400);
         echo json_encode(['success' => false, 'error' => 'Nenhum arquivo enviado.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    $uploadErr = (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE);
+    if ($uploadErr !== UPLOAD_ERR_OK) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => uploadErrorMessage($uploadErr)], JSON_UNESCAPED_UNICODE);
         exit;
     }
 

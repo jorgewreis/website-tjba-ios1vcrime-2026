@@ -18,9 +18,9 @@
     function parseJsonSafe(r) {
         return r.text().then(function (text) {
             try {
-                return { ok: r.ok, j: text ? JSON.parse(text) : {} };
+                return { ok: r.ok, status: r.status, j: text ? JSON.parse(text) : {} };
             } catch (e) {
-                return { ok: false, j: { error: text ? text.slice(0, 200) : 'Resposta inválida do servidor.' } };
+                return { ok: false, status: r.status, j: { error: text ? text.slice(0, 200) : 'Resposta inválida do servidor.' } };
             }
         });
     }
@@ -51,33 +51,45 @@
             var file = inp.files && inp.files[0];
             var wrap = inp.closest('[data-pauta]');
             var pauta = wrap ? String(wrap.getAttribute('data-pauta') || '').trim() : '';
-            inp.value = '';
             if (!file || !pauta) return;
 
-            if (file.type && file.type !== 'application/pdf') {
+            var fileName = String(file.name || '').trim();
+            var isPdfMime = !file.type || file.type === 'application/pdf';
+            var isPdfName = /\.pdf$/i.test(fileName);
+            if (!isPdfMime && !isPdfName) {
                 notify('error', 'Erro', 'Selecione um arquivo PDF válido.');
+                inp.value = '';
                 return;
             }
             if (file.size <= 0 || file.size > MAX_UPLOAD_BYTES) {
                 notify('error', 'Erro', 'O arquivo deve ter no máximo 2 MB.');
+                inp.value = '';
                 return;
             }
 
             var fd = new FormData();
             fd.append('pauta', pauta);
             fd.append('arquivo', file, file.name);
+            inp.value = '';
 
             var apiPath = '/api/sala-audiencias-ata/upload.php';
             fetch(apiPath, {
                 method: 'POST',
                 body: fd,
-                credentials: 'same-origin'
+                credentials: 'same-origin',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
             })
                 .then(parseJsonSafe)
                 .then(function (res) {
                     if (res.ok && res.j && res.j.success) {
                         notify('success', 'Sucesso', 'Ata enviada com sucesso.');
                         window.location.reload();
+                        return;
+                    }
+                    if (!res.ok && (!res.j || !res.j.error)) {
+                        notify('error', 'Erro', 'Falha no envio (HTTP ' + String(res.status || '') + ').');
                         return;
                     }
                     notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao enviar o arquivo.');

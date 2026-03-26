@@ -27,7 +27,26 @@ foreach ($__currentUserPerfis as $__perfilRaw) {
         break;
     }
 }
+$__currentPage = trim((string) ($_GET['page'] ?? ''));
+$__isEditPage = $__currentPage !== '' && (bool) preg_match('/edit$/i', $__currentPage);
 ?>
 <script src="/assets/js/shared/navigate-buttons.js?v=<?php echo (int) $__navBtnV; ?>" defer></script>
 <script>window.__IS_ESTAGIARIO_PROFILE = <?php echo $__isEstagiarioProfile ? 'true' : 'false'; ?>;</script>
-<script src="/assets/js/shared/hide-delete-for-estagiario.js?v=<?php echo (int) $__hideDeleteV; ?>" defer></script>
+<?php if ($__isEstagiarioProfile && $__isEditPage): ?>
+<style>
+    button[id*="excluir"],
+    button[id*="delete"],
+    button[class*="excluir"],
+    button[class*="delete"],
+    button[data-action*="excluir"],
+    button[data-action*="delete"],
+    [data-parte-remove],
+    .btn-del-end,
+    .btn-del-tel,
+    .btn-del-setor {
+        display: none !important;
+        visibility: hidden !important;
+    }
+</style>
+<?php endif; ?>
+<script src="/assets/js/shared/hide-delete-for-estagiario.js?v=<?php echo (int) $__hideDeleteV; ?>"></script>
