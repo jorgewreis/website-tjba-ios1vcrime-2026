@@ -130,7 +130,13 @@ final class SalaAudienciasAtaRepository
              LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id`
              LEFT JOIN `%s` ata ON ata.`pauta` = a.`id_pauta`
              WHERE a.`ativo` = 1 AND a.`status` IN (\'realizada\', \'finalizada\')
-             ORDER BY a.`data_audiencia` DESC, a.`hora_audiencia` DESC
+             ORDER BY
+                CASE
+                    WHEN ata.`id_ata` IS NULL OR ata.`arquivo_relativo` IS NULL OR TRIM(ata.`arquivo_relativo`) = \'\' THEN 0
+                    ELSE 1
+                END ASC,
+                a.`data_audiencia` DESC,
+                a.`hora_audiencia` DESC
              LIMIT :limit OFFSET :offset',
             $this->table
         );

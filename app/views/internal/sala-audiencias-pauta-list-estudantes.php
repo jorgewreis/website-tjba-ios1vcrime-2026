@@ -64,8 +64,8 @@ $endItem = min($offset + count($rows), $total);
     </div>
 
     <div class="container-full card-page">
-        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
-            <div class="display-flex row row-fit justify-start"><h2>Lista de audiências</h2></div>
+        <div class="display-flex row row-full align-center justify-between padding-x-lg padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-start padding-x-md"><h2>Lista de audiências</h2></div>
             <div class="display-flex row row-fit justify-end gap-y-md">
                 <input type="text" class="width-400 height-md" id="search-input" placeholder="Pesquisar por processo, parte ou sala..." autocomplete="off" value="<?php echo htmlspecialchars($search, ENT_QUOTES); ?>">
                 <select class="width-300 height-md" id="export-type" disabled>
@@ -165,7 +165,7 @@ $endItem = min($offset + count($rows), $total);
         </div>
         <?php endforeach; ?>
 
-        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-lg">
             <span class="pagination-info">Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $total; ?> audiências (<?php echo $totalPages; ?> página(s), <?php echo $itemsPerPage; ?> itens por página)</span>
             <div class="pagination-controls">
                 <?php $prev = max(1, $pageNumber - 1); $next = min($totalPages, $pageNumber + 1); ?>

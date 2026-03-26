@@ -22,6 +22,20 @@ $podeInscricaoComoEstudante = UserAccessHelper::isUsuarioExterno($perfilsUsuario
 
 $service = new SalaAudienciasAtaService(Conection::getInstance()->getConnection());
 $minhasRows = $userId !== '' ? $service->listMinhasInscricoesEstudante($userId) : [];
+$itemsPerPage = (int) ($_GET['items_per_page'] ?? 25);
+if (!in_array($itemsPerPage, [10, 25, 50, 100], true)) {
+    $itemsPerPage = 25;
+}
+$pageNumber = max(1, (int) ($_GET['page_number'] ?? 1));
+$total = count($minhasRows);
+$totalPages = max(1, (int) ceil(max(1, $total) / $itemsPerPage));
+if ($pageNumber > $totalPages) {
+    $pageNumber = $totalPages;
+}
+$offset = ($pageNumber - 1) * $itemsPerPage;
+$rowsPage = array_slice($minhasRows, $offset, $itemsPerPage);
+$startItem = $total > 0 ? $offset + 1 : 0;
+$endItem = min($offset + count($rowsPage), $total);
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -51,12 +65,25 @@ $minhasRows = $userId !== '' ? $service->listMinhasInscricoesEstudante($userId) 
         <div class="display-flex row row-full align-center justify-between padding-x-lg padding-y-md border-bottom">
             <div class="display-flex row row-fit justify-start padding-x-md"><h2>Minhas audiências</h2></div>
         </div>
-        <?php if (count($minhasRows) === 0): ?>
+        <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
+            <div class="display-flex row row-fit justify-end gap-y-md">
+                <div class="col">
+                    <label for="items-per-page">Itens por página</label>
+                    <select class="width-300 height-md" id="items-per-page">
+                        <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
+                        <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
+                        <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
+                        <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <?php if (count($rowsPage) === 0): ?>
         <div class="padding-x-md padding-y-lg">
             <p class="description-page">Nenhuma inscrição encontrada.</p>
         </div>
         <?php endif; ?>
-        <?php foreach ($minhasRows as $m):
+        <?php foreach ($rowsPage as $m):
             $idPauta = htmlspecialchars((string) ($m['pauta'] ?? ''), ENT_QUOTES, 'UTF-8');
             $temAta = !empty($m['id_ata']);
             $expira = trim((string) ($m['expires_at'] ?? ''));
@@ -88,6 +115,19 @@ $minhasRows = $userId !== '' ? $service->listMinhasInscricoesEstudante($userId) 
             </div>
         </div>
         <?php endforeach; ?>
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-lg">
+            <span class="pagination-info">Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $total; ?> audiências (<?php echo $totalPages; ?> página(s), <?php echo $itemsPerPage; ?> itens por página)</span>
+            <div class="pagination-controls">
+                <?php $prev = max(1, $pageNumber - 1); $next = min($totalPages, $pageNumber + 1); ?>
+                <?php
+                $qPrevE = $pageNumber > 1 ? '?page=estudaata&page_number=' . $prev . '&items_per_page=' . $itemsPerPage : '';
+                $qNextE = $pageNumber < $totalPages ? '?page=estudaata&page_number=' . $next . '&items_per_page=' . $itemsPerPage : '';
+                ?>
+                <button type="button" class="pagination-symbol<?php echo $pageNumber <= 1 ? ' disabled' : ''; ?>" <?php echo $qPrevE !== '' ? 'data-nav-href="' . htmlspecialchars($qPrevE, ENT_QUOTES) . '"' : 'disabled aria-disabled="true"'; ?>><img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior"></button>
+                <button type="button" class="pagination-number active" disabled><?php echo $pageNumber; ?></button>
+                <button type="button" class="pagination-symbol<?php echo $pageNumber >= $totalPages ? ' disabled' : ''; ?>" <?php echo $qNextE !== '' ? 'data-nav-href="' . htmlspecialchars($qNextE, ENT_QUOTES) . '"' : 'disabled aria-disabled="true"'; ?>><img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página"></button>
+            </div>
+        </div>
     </div>
 
     <div class="footer-page">
@@ -97,6 +137,27 @@ $minhasRows = $userId !== '' ? $service->listMinhasInscricoesEstudante($userId) 
             <span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span>
         </div>
     </div>
+
+    <script>
+    (function () {
+        var el = document.getElementById('items-per-page');
+        if (!el) return;
+        function getFramePhpHref() {
+            var path = window.location.pathname || '/frame.php';
+            var slash = path.lastIndexOf('/');
+            var dir = slash >= 0 ? path.slice(0, slash + 1) : '/';
+            return dir + 'frame.php';
+        }
+        el.addEventListener('change', function () {
+            var n = String(el.value || '25').trim();
+            var params = new URLSearchParams();
+            params.set('page', 'estudaata');
+            params.set('page_number', '1');
+            params.set('items_per_page', n);
+            window.location.href = getFramePhpHref() + '?' + params.toString();
+        });
+    })();
+    </script>
 
 </body>
 </html>

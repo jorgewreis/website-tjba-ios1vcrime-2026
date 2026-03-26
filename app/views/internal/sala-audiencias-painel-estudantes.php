@@ -24,6 +24,32 @@ $service = new SalaAudienciasAtaService(Conection::getInstance()->getConnection(
 $hojeRows = $userId !== '' ? $service->listHojeParaInscricaoEstudante($userId) : [];
 $minhasRows = $userId !== '' ? $service->listMinhasInscricoesEstudante($userId) : [];
 $maxVagas = SalaAudienciasAtaService::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA;
+$itemsPerPage = (int) ($_GET['items_per_page'] ?? 25);
+if (!in_array($itemsPerPage, [10, 25, 50, 100], true)) {
+    $itemsPerPage = 25;
+}
+$hojePage = max(1, (int) ($_GET['hoje_page'] ?? 1));
+$minhasPage = max(1, (int) ($_GET['minhas_page'] ?? 1));
+
+$hojeTotal = count($hojeRows);
+$hojeTotalPages = max(1, (int) ceil(max(1, $hojeTotal) / $itemsPerPage));
+if ($hojePage > $hojeTotalPages) {
+    $hojePage = $hojeTotalPages;
+}
+$hojeOffset = ($hojePage - 1) * $itemsPerPage;
+$hojePageRows = array_slice($hojeRows, $hojeOffset, $itemsPerPage);
+$hojeStartItem = $hojeTotal > 0 ? $hojeOffset + 1 : 0;
+$hojeEndItem = min($hojeOffset + count($hojePageRows), $hojeTotal);
+
+$minhasTotal = count($minhasRows);
+$minhasTotalPages = max(1, (int) ceil(max(1, $minhasTotal) / $itemsPerPage));
+if ($minhasPage > $minhasTotalPages) {
+    $minhasPage = $minhasTotalPages;
+}
+$minhasOffset = ($minhasPage - 1) * $itemsPerPage;
+$minhasPageRows = array_slice($minhasRows, $minhasOffset, $itemsPerPage);
+$minhasStartItem = $minhasTotal > 0 ? $minhasOffset + 1 : 0;
+$minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -50,15 +76,28 @@ $maxVagas = SalaAudienciasAtaService::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA;
     </div>
 
     <div class="container-full card-page">
-        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
-            <div class="display-flex row row-fit justify-start"><h2>Audiências de hoje (inscrição)</h2></div>
+        <div class="display-flex row row-full align-center justify-between padding-x-lg padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-start padding-x-md"><h2>Audiências de hoje</h2></div>
         </div>
-        <?php if (count($hojeRows) === 0): ?>
-        <div class="padding-x-md padding-y-lg">
-            <p class="description-page">Não há audiências elegíveis para inscrição hoje ou você já está inscrito em todas as opções disponíveis.</p>
+        <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
+            <div class="display-flex row row-fit justify-end gap-y-md">
+                <div class="col">
+                    <label for="items-per-page-hoje">Itens por página</label>
+                    <select class="width-300 height-md" id="items-per-page-hoje">
+                        <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
+                        <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
+                        <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
+                        <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <?php if (count($hojePageRows) === 0): ?>
+        <div class="padding-x-lg padding-y-lg">
+            <p class="description-page">Não há audiências designadas para inscrição hoje ou você já está inscrito em todas as opções disponíveis.</p>
         </div>
         <?php endif; ?>
-        <?php foreach ($hojeRows as $row):
+        <?php foreach ($hojePageRows as $row):
             $idPauta = htmlspecialchars((string) ($row['id_pauta'] ?? ''), ENT_QUOTES, 'UTF-8');
             $pode = !empty($row['pode_inscrever']);
             $ja = !empty($row['ja_inscrito']);
@@ -68,7 +107,7 @@ $maxVagas = SalaAudienciasAtaService::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA;
         <div class="display-flex col col-full register border-bottom" data-pauta="<?php echo $idPauta; ?>">
             <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center flex-wrap gap-y-sm">
                 <div class="display-flex row row-fit justify-start gap-y-sm align-center flex-wrap">
-                    <div class="col width-280">
+                    <div class="col width-300">
                         <span class="minor-info">Horario</span>
                         <span class="major-info"><?php echo htmlspecialchars(substr((string) $row['hora_audiencia'], 0, 5), ENT_QUOTES, 'UTF-8'); ?></span>
                     </div>
@@ -80,11 +119,11 @@ $maxVagas = SalaAudienciasAtaService::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA;
                         <span class="minor-info text-ellipsis" <?php echo $classeStyleAudiencia; ?>><?php echo htmlspecialchars($classeAudiencia, ENT_QUOTES, 'UTF-8'); ?></span>
                         <span class="major-info"><?php echo htmlspecialchars((string) ($row['numero_processo'] ?? '—'), ENT_QUOTES, 'UTF-8'); ?></span>
                     </div>
-                    <div class="col width-360">
+                    <div class="col width-400">
                         <span class="minor-info">Tipo</span>
                         <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) $row['tipo_audiencia'], ENT_QUOTES, 'UTF-8'); ?></span>
                     </div>
-                    <div class="col width-220">
+                    <div class="col width-300">
                         <span class="minor-info">Vagas</span>
                         <span class="major-info"><?php echo $totalIns; ?> / <?php echo (int) $maxVagas; ?><?php echo $lotado ? ' (lotado)' : ''; ?></span>
                     </div>
@@ -105,18 +144,44 @@ $maxVagas = SalaAudienciasAtaService::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA;
             </div>
         </div>
         <?php endforeach; ?>
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-lg">
+            <span class="pagination-info">Mostrando <?php echo $hojeStartItem; ?>-<?php echo $hojeEndItem; ?> de <?php echo $hojeTotal; ?> audiências (<?php echo $hojeTotalPages; ?> página(s), <?php echo $itemsPerPage; ?> itens por página)</span>
+            <div class="pagination-controls">
+                <?php $prevHoje = max(1, $hojePage - 1); $nextHoje = min($hojeTotalPages, $hojePage + 1); ?>
+                <?php
+                $qPrevHoje = $hojePage > 1 ? '?page=estudapainel&hoje_page=' . $prevHoje . '&minhas_page=' . $minhasPage . '&items_per_page=' . $itemsPerPage : '';
+                $qNextHoje = $hojePage < $hojeTotalPages ? '?page=estudapainel&hoje_page=' . $nextHoje . '&minhas_page=' . $minhasPage . '&items_per_page=' . $itemsPerPage : '';
+                ?>
+                <button type="button" class="pagination-symbol<?php echo $hojePage <= 1 ? ' disabled' : ''; ?>" <?php echo $qPrevHoje !== '' ? 'data-nav-href="' . htmlspecialchars($qPrevHoje, ENT_QUOTES) . '"' : 'disabled aria-disabled="true"'; ?>><img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior"></button>
+                <button type="button" class="pagination-number active" disabled><?php echo $hojePage; ?></button>
+                <button type="button" class="pagination-symbol<?php echo $hojePage >= $hojeTotalPages ? ' disabled' : ''; ?>" <?php echo $qNextHoje !== '' ? 'data-nav-href="' . htmlspecialchars($qNextHoje, ENT_QUOTES) . '"' : 'disabled aria-disabled="true"'; ?>><img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página"></button>
+            </div>
+        </div>
     </div>
 
     <div class="container-full card-page">
-        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
-            <div class="display-flex row row-fit justify-start"><h2>Minhas inscricoes</h2></div>
+        <div class="display-flex row row-full align-center justify-between padding-x-lg padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-start padding-x-md"><h2>Minhas inscrições</h2></div>
         </div>
-        <?php if (count($minhasRows) === 0): ?>
+        <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
+            <div class="display-flex row row-fit justify-end gap-y-md">
+                <div class="col">
+                    <label for="items-per-page-minhas">Itens por página</label>
+                    <select class="width-300 height-md" id="items-per-page-minhas">
+                        <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
+                        <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
+                        <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
+                        <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <?php if (count($minhasPageRows) === 0): ?>
         <div class="padding-x-md padding-y-lg">
-            <p class="description-page">Nenhuma inscrição ativa encontrada.</p>
+            <p class="description-page">Nenhuma inscrição encontrada.</p>
         </div>
         <?php endif; ?>
-        <?php foreach ($minhasRows as $m):
+        <?php foreach ($minhasPageRows as $m):
             $stRow = (string) ($m['status'] ?? '');
             if ($stRow === 'agendada') {
                 $stRow = 'designada';
@@ -143,23 +208,35 @@ $maxVagas = SalaAudienciasAtaService::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA;
             ?>
         <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm border-bottom align-center flex-wrap gap-y-sm">
             <div class="display-flex row row-fit justify-start gap-y-sm align-center flex-wrap">
-                <div class="col width-280">
+                <div class="col width-300">
                     <span class="minor-info">Data</span>
                     <span class="major-info"><?php echo htmlspecialchars(date('d/m/Y', strtotime((string) $m['data_audiencia'])) . ' · ' . substr((string) $m['hora_audiencia'], 0, 5), ENT_QUOTES, 'UTF-8'); ?></span>
                 </div>
-                <div class="col width-400">
+                <div class="col width-500">
                     <span class="minor-info">Processo</span>
                     <span class="major-info"><?php echo htmlspecialchars((string) ($m['numero_processo'] ?? '—'), ENT_QUOTES, 'UTF-8'); ?></span>
                 </div>
-                <div class="col width-360">
-                    <span class="minor-info">Status da audiencia</span>
-                    <div class="width-300 padding-x-lg status <?php echo htmlspecialchars($classeStatusEst, ENT_QUOTES); ?>">
-                        <?php echo htmlspecialchars($textoStatusEst, ENT_QUOTES); ?>
-                    </div>
+            </div>
+            <div class="display-flex row row-fit justify-end padding-x-md">
+                <div class="width-300 padding-x-lg status <?php echo htmlspecialchars($classeStatusEst, ENT_QUOTES); ?>">
+                    <?php echo htmlspecialchars($textoStatusEst, ENT_QUOTES); ?>
                 </div>
             </div>
         </div>
         <?php endforeach; ?>
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-lg">
+            <span class="pagination-info">Mostrando <?php echo $minhasStartItem; ?>-<?php echo $minhasEndItem; ?> de <?php echo $minhasTotal; ?> audiências (<?php echo $minhasTotalPages; ?> página(s), <?php echo $itemsPerPage; ?> itens por página)</span>
+            <div class="pagination-controls">
+                <?php $prevMinhas = max(1, $minhasPage - 1); $nextMinhas = min($minhasTotalPages, $minhasPage + 1); ?>
+                <?php
+                $qPrevMinhas = $minhasPage > 1 ? '?page=estudapainel&hoje_page=' . $hojePage . '&minhas_page=' . $prevMinhas . '&items_per_page=' . $itemsPerPage : '';
+                $qNextMinhas = $minhasPage < $minhasTotalPages ? '?page=estudapainel&hoje_page=' . $hojePage . '&minhas_page=' . $nextMinhas . '&items_per_page=' . $itemsPerPage : '';
+                ?>
+                <button type="button" class="pagination-symbol<?php echo $minhasPage <= 1 ? ' disabled' : ''; ?>" <?php echo $qPrevMinhas !== '' ? 'data-nav-href="' . htmlspecialchars($qPrevMinhas, ENT_QUOTES) . '"' : 'disabled aria-disabled="true"'; ?>><img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior"></button>
+                <button type="button" class="pagination-number active" disabled><?php echo $minhasPage; ?></button>
+                <button type="button" class="pagination-symbol<?php echo $minhasPage >= $minhasTotalPages ? ' disabled' : ''; ?>" <?php echo $qNextMinhas !== '' ? 'data-nav-href="' . htmlspecialchars($qNextMinhas, ENT_QUOTES) . '"' : 'disabled aria-disabled="true"'; ?>><img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página"></button>
+            </div>
+        </div>
     </div>
 
     <div class="footer-page">
@@ -171,5 +248,30 @@ $maxVagas = SalaAudienciasAtaService::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA;
     </div>
 
     <script src="/assets/js/modules/audiencias/atas-estudantes.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/atas-estudantes.js') ?: time(); ?>"></script>
+    <script>
+    (function () {
+        function getFramePhpHref() {
+            var path = window.location.pathname || '/frame.php';
+            var slash = path.lastIndexOf('/');
+            var dir = slash >= 0 ? path.slice(0, slash + 1) : '/';
+            return dir + 'frame.php';
+        }
+        function bindItemsPerPage(id) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            el.addEventListener('change', function () {
+                var n = String(el.value || '25').trim();
+                var params = new URLSearchParams();
+                params.set('page', 'estudapainel');
+                params.set('hoje_page', '1');
+                params.set('minhas_page', '1');
+                params.set('items_per_page', n);
+                window.location.href = getFramePhpHref() + '?' + params.toString();
+            });
+        }
+        bindItemsPerPage('items-per-page-hoje');
+        bindItemsPerPage('items-per-page-minhas');
+    })();
+    </script>
 </body>
 </html>
