@@ -86,17 +86,21 @@ $endItem = min($offset + count($rowsPage), $total);
         <?php foreach ($rowsPage as $m):
             $idPauta = htmlspecialchars((string) ($m['pauta'] ?? ''), ENT_QUOTES, 'UTF-8');
             $temAta = !empty($m['id_ata']);
+            $classeAudiencia = !empty($m['classe_nome']) ? (string) $m['classe_nome'] : 'Classe não informada';
             $expira = trim((string) ($m['expires_at'] ?? ''));
             $expiraFmt = $expira !== '' ? date('d/m', strtotime($expira)) : '';
+            $inicioEfetivoRaw = trim((string) ($m['data_hora_inicio_efetivo'] ?? ''));
+            $inicioEfetivoTs = $inicioEfetivoRaw !== '' ? strtotime($inicioEfetivoRaw) : false;
+            $horaExibicao = $inicioEfetivoTs !== false ? date('H:i', $inicioEfetivoTs) : substr((string) ($m['hora_audiencia'] ?? ''), 0, 5);
             ?>
         <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm border-bottom align-center flex-wrap gap-y-sm">
             <div class="display-flex row row-fit justify-start gap-y-sm align-center flex-wrap">
                 <div class="col width-300">
                     <span class="minor-info">Data</span>
-                    <span class="major-info"><?php echo htmlspecialchars(date('d/m/Y', strtotime((string) $m['data_audiencia'])) . ' · ' . substr((string) $m['hora_audiencia'], 0, 5), ENT_QUOTES, 'UTF-8'); ?></span>
+                    <span class="major-info"><?php echo htmlspecialchars(date('d/m/Y', strtotime((string) $m['data_audiencia'])) . ' · ' . $horaExibicao, ENT_QUOTES, 'UTF-8'); ?></span>
                 </div>
                 <div class="col width-500">
-                    <span class="minor-info">Processo</span>
+                    <span class="minor-info text-ellipsis"><?php echo htmlspecialchars($classeAudiencia, ENT_QUOTES, 'UTF-8'); ?></span>
                     <span class="major-info"><?php echo htmlspecialchars((string) ($m['numero_processo'] ?? '—'), ENT_QUOTES, 'UTF-8'); ?></span>
                 </div>
                 <div class="col width-400">

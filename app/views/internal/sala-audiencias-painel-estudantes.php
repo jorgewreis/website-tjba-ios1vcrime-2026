@@ -226,6 +226,7 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
         <?php endif; ?>
         <?php foreach ($minhasPageRows as $m):
             $idPautaMinhasRaw = trim((string) ($m['pauta'] ?? ''));
+            $classeAudienciaMinhas = !empty($m['classe_nome']) ? (string) $m['classe_nome'] : 'Classe não informada';
             $stRow = (string) ($m['status'] ?? '');
             if ($stRow === 'agendada') {
                 $stRow = 'designada';
@@ -266,7 +267,7 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
         <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm border-bottom align-center flex-wrap gap-y-sm">
             <div class="display-flex row row-fit justify-start gap-y-sm align-center flex-wrap">
                 <div
-                    class="col width-300 js-time-block"
+                    class="col width-500 js-time-block"
                     data-pauta="<?php echo htmlspecialchars($idPautaMinhasRaw, ENT_QUOTES, 'UTF-8'); ?>"
                     data-status="<?php echo htmlspecialchars($stRow, ENT_QUOTES, 'UTF-8'); ?>"
                     data-data-audiencia="<?php echo htmlspecialchars((string) ($m['data_audiencia'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
@@ -287,7 +288,7 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
                     </div>
                 </div>
                 <div class="col width-500">
-                    <span class="minor-info">Processo</span>
+                    <span class="minor-info text-ellipsis"><?php echo htmlspecialchars($classeAudienciaMinhas, ENT_QUOTES, 'UTF-8'); ?></span>
                     <span class="major-info"><?php echo htmlspecialchars((string) ($m['numero_processo'] ?? '—'), ENT_QUOTES, 'UTF-8'); ?></span>
                 </div>
             </div>
