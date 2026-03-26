@@ -92,4 +92,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: melhorias na pagina de atas** `[4fd0f3d]`
 - **Fix: melhorias de dashboard** `[4428525]`
 - **Fix: alteracao do visual do card** `[fe67ce7]`
+- **Fix: melhorias no dashboard externo** `[1c7f6f4]`
 
