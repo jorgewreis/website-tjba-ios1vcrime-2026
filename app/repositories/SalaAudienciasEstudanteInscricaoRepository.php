@@ -58,6 +58,7 @@ final class SalaAudienciasEstudanteInscricaoRepository
         $sql = sprintf(
             'SELECT i.`pauta`, i.`created_at` AS inscrito_em,
                     a.`tipo_audiencia`, a.`data_audiencia`, a.`hora_audiencia`, a.`status`,
+                    a.`data_hora_inicio_efetivo`, a.`data_hora_fim_efetivo`, a.`duracao_estimada_minutos`,
                     p.`numero_processo`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `classe_nome`,
                     ata.`id_ata`, ata.`expires_at`, ata.`nome_original`, ata.`uploaded_at`
              FROM `%s` i

@@ -98,7 +98,8 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
         </div>
         <?php endif; ?>
         <?php foreach ($hojePageRows as $row):
-            $idPauta = htmlspecialchars((string) ($row['id_pauta'] ?? ''), ENT_QUOTES, 'UTF-8');
+            $idPautaRaw = trim((string) ($row['id_pauta'] ?? ''));
+            $idPauta = htmlspecialchars($idPautaRaw, ENT_QUOTES, 'UTF-8');
             $pode = !empty($row['pode_inscrever']);
             $ja = !empty($row['ja_inscrito']);
             $lotado = !empty($row['vagas_esgotadas']);
@@ -128,8 +129,18 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
         <div class="display-flex col col-full register border-bottom" data-pauta="<?php echo $idPauta; ?>">
             <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center flex-wrap gap-y-sm">
                 <div class="display-flex row row-fit justify-start gap-y-sm align-center flex-wrap">
-                    <div class="col width-500">
+                    <div
+                        class="col width-500 js-time-block"
+                        data-pauta="<?php echo htmlspecialchars($idPautaRaw, ENT_QUOTES, 'UTF-8'); ?>"
+                        data-status="<?php echo htmlspecialchars($statusRow, ENT_QUOTES, 'UTF-8'); ?>"
+                        data-data-audiencia="<?php echo htmlspecialchars((string) ($row['data_audiencia'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                        data-hora-audiencia="<?php echo htmlspecialchars((string) ($row['hora_audiencia'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                        data-inicio="<?php echo htmlspecialchars((string) ($row['data_hora_inicio_efetivo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                        data-fim="<?php echo htmlspecialchars((string) ($row['data_hora_fim_efetivo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                        data-duracao-estimada="<?php echo (int) ($row['duracao_estimada_minutos'] ?? 0); ?>"
+                    >
                         <span class="minor-info">Data e hora</span>
+                        <div class="js-time-lines">
                         <?php if ($statusRow === 'em_andamento' && $inicioTs !== false): ?>
                         <span class="major-info">Inicio: <?php echo htmlspecialchars(date('d/m/Y H:i', $inicioTs), ENT_QUOTES, 'UTF-8'); ?></span>
                         <?php if ($previsaoTs !== false): ?>
@@ -141,6 +152,7 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
                         <?php else: ?>
                         <span class="major-info"><?php echo htmlspecialchars(date('d/m/Y', strtotime((string) $row['data_audiencia'])) . ' - ' . substr((string) $row['hora_audiencia'], 0, 5), ENT_QUOTES, 'UTF-8'); ?></span>
                         <?php endif; ?>
+                        </div>
                     </div>
                     <div class="col width-400 col-process process-info" title="clique para copiar">
                         <?php
@@ -217,6 +229,7 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
         </div>
         <?php endif; ?>
         <?php foreach ($minhasPageRows as $m):
+            $idPautaMinhasRaw = trim((string) ($m['pauta'] ?? ''));
             $stRow = (string) ($m['status'] ?? '');
             if ($stRow === 'agendada') {
                 $stRow = 'designada';
@@ -256,8 +269,18 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
             ?>
         <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm border-bottom align-center flex-wrap gap-y-sm">
             <div class="display-flex row row-fit justify-start gap-y-sm align-center flex-wrap">
-                <div class="col width-300">
+                <div
+                    class="col width-300 js-time-block"
+                    data-pauta="<?php echo htmlspecialchars($idPautaMinhasRaw, ENT_QUOTES, 'UTF-8'); ?>"
+                    data-status="<?php echo htmlspecialchars($stRow, ENT_QUOTES, 'UTF-8'); ?>"
+                    data-data-audiencia="<?php echo htmlspecialchars((string) ($m['data_audiencia'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                    data-hora-audiencia="<?php echo htmlspecialchars((string) ($m['hora_audiencia'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                    data-inicio="<?php echo htmlspecialchars((string) ($m['data_hora_inicio_efetivo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                    data-fim="<?php echo htmlspecialchars((string) ($m['data_hora_fim_efetivo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                    data-duracao-estimada="<?php echo (int) ($m['duracao_estimada_minutos'] ?? 0); ?>"
+                >
                     <span class="minor-info">Data e hora</span>
+                    <div class="js-time-lines">
                     <?php if ($stRow === 'em_andamento' && $inicioTs !== false): ?>
                     <span class="major-info">Inicio: <?php echo htmlspecialchars(date('d/m/Y H:i', $inicioTs), ENT_QUOTES, 'UTF-8'); ?></span>
                     <?php if ($previsaoTs !== false): ?>
@@ -269,6 +292,7 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
                     <?php else: ?>
                     <span class="major-info"><?php echo htmlspecialchars(date('d/m/Y', strtotime((string) $m['data_audiencia'])) . ' · ' . substr((string) $m['hora_audiencia'], 0, 5), ENT_QUOTES, 'UTF-8'); ?></span>
                     <?php endif; ?>
+                    </div>
                 </div>
                 <div class="col width-500">
                     <span class="minor-info">Processo</span>
@@ -276,7 +300,7 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
                 </div>
             </div>
             <div class="display-flex row row-fit justify-end padding-x-md">
-                <div class="width-300 padding-x-lg status <?php echo htmlspecialchars($classeStatusEst, ENT_QUOTES); ?>">
+                <div class="width-300 padding-x-lg status <?php echo htmlspecialchars($classeStatusEst, ENT_QUOTES); ?>" data-status-pauta="<?php echo htmlspecialchars($idPautaMinhasRaw, ENT_QUOTES, 'UTF-8'); ?>">
                     <?php echo htmlspecialchars($textoStatusEst, ENT_QUOTES); ?>
                 </div>
             </div>
@@ -308,6 +332,19 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
     <script src="/assets/js/modules/audiencias/atas-estudantes.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/atas-estudantes.js') ?: time(); ?>"></script>
     <script>
     (function () {
+        function pad2(n) { return n < 10 ? '0' + n : String(n); }
+        function parseDateTime(v) {
+            var s = String(v || '').trim();
+            if (!s) return NaN;
+            var iso = s.replace(' ', 'T');
+            var t = Date.parse(iso);
+            return isNaN(t) ? NaN : t;
+        }
+        function fmtDateTime(ts) {
+            var d = new Date(ts);
+            if (isNaN(d.getTime())) return '';
+            return pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+        }
         function getFramePhpHref() {
             var path = window.location.pathname || '/frame.php';
             var slash = path.lastIndexOf('/');
@@ -327,11 +364,102 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
                 window.location.href = getFramePhpHref() + '?' + params.toString();
             });
         }
+        function renderTimeBlock(block, item) {
+            var lines = block.querySelector('.js-time-lines');
+            if (!lines) return;
+            var status = String(item.status || '').trim();
+            var dataAud = String(item.data_audiencia || '').trim();
+            var horaAud = String(item.hora_audiencia || '').trim();
+            var inicioRaw = String(item.data_hora_inicio_efetivo || '').trim();
+            var fimRaw = String(item.data_hora_fim_efetivo || '').trim();
+            var inicioTs = parseDateTime(inicioRaw);
+            if (isNaN(inicioTs)) {
+                inicioTs = parseDateTime((dataAud + ' ' + horaAud).trim());
+            }
+            var duracao = parseInt(item.duracao_estimada_minutos || 0, 10);
+            if (!Number.isFinite(duracao) || duracao < 5) duracao = 5;
+            var previsaoTs = isNaN(inicioTs) ? NaN : (inicioTs + duracao * 60000);
+            var fimTs = parseDateTime(fimRaw);
+            var html = '';
+            if (status === 'em_andamento' && !isNaN(inicioTs)) {
+                html += '<span class="major-info">Inicio: ' + fmtDateTime(inicioTs) + '</span>';
+                if (!isNaN(previsaoTs)) {
+                    html += '<span class="minor-info">Previsao de termino: ' + fmtDateTime(previsaoTs) + '</span>';
+                }
+            } else if (status === 'finalizada' && !isNaN(inicioTs) && !isNaN(fimTs) && fimTs >= inicioTs) {
+                var durReal = Math.floor((fimTs - inicioTs) / 60000);
+                html += '<span class="major-info">Inicio: ' + fmtDateTime(inicioTs) + '</span>';
+                html += '<span class="minor-info">Fim: ' + fmtDateTime(fimTs) + ' (' + durReal + ' min)</span>';
+            } else {
+                var agendadaTs = parseDateTime((dataAud + ' ' + horaAud).trim());
+                if (!isNaN(agendadaTs)) {
+                    html += '<span class="major-info">' + fmtDateTime(agendadaTs) + '</span>';
+                }
+            }
+            lines.innerHTML = html;
+        }
+        function statusClass(status) {
+            if (status === 'cancelada') return 'status-cancelled';
+            if (status === 'em_andamento') return 'status-current';
+            if (status === 'realizada' || status === 'finalizada') return 'status-finished';
+            return 'status-pending';
+        }
+        function statusLabel(status) {
+            var map = {
+                designada: 'Designada',
+                em_andamento: 'Em andamento',
+                finalizada: 'Finalizada',
+                realizada: 'Realizada',
+                redesignada: 'Redesignada',
+                cancelada: 'Cancelada'
+            };
+            return map[status] || status;
+        }
+        function collectPautas() {
+            var ids = {};
+            document.querySelectorAll('.js-time-block[data-pauta]').forEach(function (el) {
+                var id = String(el.getAttribute('data-pauta') || '').trim();
+                if (id) ids[id] = true;
+            });
+            return Object.keys(ids);
+        }
+        function applyUpdates(items) {
+            document.querySelectorAll('.js-time-block[data-pauta]').forEach(function (block) {
+                var id = String(block.getAttribute('data-pauta') || '').trim();
+                if (!id || !items[id]) return;
+                renderTimeBlock(block, items[id]);
+            });
+            document.querySelectorAll('[data-status-pauta]').forEach(function (statusEl) {
+                var id = String(statusEl.getAttribute('data-status-pauta') || '').trim();
+                if (!id || !items[id]) return;
+                var status = String(items[id].status || '').trim();
+                statusEl.className = 'width-300 padding-x-lg status ' + statusClass(status);
+                statusEl.textContent = statusLabel(status);
+            });
+        }
+        function refreshStatusAndTime() {
+            var pautas = collectPautas();
+            if (!pautas.length) return;
+            fetch('/api/sala-audiencias-pauta/status-bulk.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify({ pautas: pautas })
+            })
+                .then(function (r) {
+                    return r.json().then(function (j) {
+                        return { ok: r.ok, body: j || {} };
+                    });
+                })
+                .then(function (res) {
+                    if (!res.ok || !res.body.success || !res.body.items) return;
+                    applyUpdates(res.body.items);
+                })
+                .catch(function () { /* erro silencioso de polling */ });
+        }
         bindItemsPerPage('items-per-page-hoje');
         bindItemsPerPage('items-per-page-minhas');
-        window.setInterval(function () {
-            window.location.reload();
-        }, 60000);
+        window.setInterval(refreshStatusAndTime, 60000);
     })();
     </script>
 </body>
