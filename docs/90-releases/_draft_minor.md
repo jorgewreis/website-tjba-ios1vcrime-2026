@@ -98,4 +98,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correcao de layout** `[689b74f]`
 - **Fix: melhorias nas atas** `[a04aa5d]`
 - **Fix: ajuste de paginacao** `[03f09ba]`
+- **Feat: implementacao de data de inicio e fim** `[5c81b28]`
 
