@@ -126,7 +126,12 @@ final class SalaAudienciasAtaService
             }
         }
 
-        $basename = bin2hex(random_bytes(16)) . '.pdf';
+        $pautaIdSafe = preg_replace('/[^A-Za-z0-9_-]/', '', $idPauta) ?: 'pauta';
+        $auditDateRaw = trim((string) ($pauta['data_audiencia'] ?? ''));
+        $auditDateSafe = preg_replace('/[^0-9]/', '', $auditDateRaw) ?: date('Ymd');
+        $uniqueToken = strtoupper(substr(bin2hex(random_bytes(8)), 0, 12));
+        $identificadorArquivo = 'ATA-' . $pautaIdSafe . '-' . $auditDateSafe . '-' . date('YmdHis') . '-' . $uniqueToken;
+        $basename = 'ata_' . $pautaIdSafe . '_' . $auditDateSafe . '_' . date('YmdHis') . '_' . $uniqueToken . '.pdf';
         $relative = 'sala-audiencias-atas/' . $basename;
         $dest = $dir . DIRECTORY_SEPARATOR . $basename;
         if (!move_uploaded_file($tmp, $dest)) {
@@ -153,6 +158,7 @@ final class SalaAudienciasAtaService
             'uploaded_by' => $usuarioId,
             'uploaded_at' => $now,
             'expires_at' => $expires,
+            'identificador_arquivo' => $identificadorArquivo,
         ]);
     }
 

@@ -7,11 +7,27 @@ final class SalaAudienciasAtaRepository
 {
     private PDO $connection;
     private string $table;
+    private bool $hasIdentificadorArquivo;
 
     public function __construct(PDO $connection, string $table = 'sala_audiencias_ata')
     {
         $this->connection = $connection;
         $this->table = $table;
+        $this->hasIdentificadorArquivo = $this->detectIdentificadorArquivoColumn();
+    }
+
+    private function detectIdentificadorArquivoColumn(): bool
+    {
+        try {
+            $sql = 'SELECT COUNT(*) FROM `information_schema`.`COLUMNS` WHERE `TABLE_SCHEMA` = DATABASE() AND `TABLE_NAME` = :table AND `COLUMN_NAME` = :column';
+            $st = $this->connection->prepare($sql);
+            $st->bindValue(':table', $this->table);
+            $st->bindValue(':column', 'identificador_arquivo');
+            $st->execute();
+            return ((int) $st->fetchColumn()) > 0;
+        } catch (Throwable $e) {
+            return false;
+        }
     }
 
     public function findByPauta(string $idPauta): ?array
@@ -50,16 +66,16 @@ final class SalaAudienciasAtaRepository
     /**
      * Substitui ata existente da pauta (uma linha por pauta).
      *
-     * @param array{id_ata?: string, pauta: string, arquivo_relativo: string, nome_original: string, mime: string, tamanho_bytes: int, uploaded_by: ?string, uploaded_at: string, expires_at: string} $row
+     * @param array{id_ata?: string, pauta: string, arquivo_relativo: string, nome_original: string, mime: string, tamanho_bytes: int, uploaded_by: ?string, uploaded_at: string, expires_at: string, identificador_arquivo?: string} $row
      */
     public function upsertForPauta(array $row): string
     {
         $existing = $this->findByPauta(trim((string) $row['pauta']));
         if ($existing !== null) {
-            $st = $this->connection->prepare(sprintf(
-                'UPDATE `%s` SET `arquivo_relativo`=:rel,`nome_original`=:nome,`mime`=:mime,`tamanho_bytes`=:tam,`uploaded_at`=:up,`uploaded_by`=:upby,`expires_at`=:ex WHERE `id_ata`=:id LIMIT 1',
-                $this->table
-            ));
+            $updateSql = $this->hasIdentificadorArquivo
+                ? 'UPDATE `%s` SET `arquivo_relativo`=:rel,`nome_original`=:nome,`mime`=:mime,`tamanho_bytes`=:tam,`uploaded_at`=:up,`uploaded_by`=:upby,`expires_at`=:ex,`identificador_arquivo`=:ident WHERE `id_ata`=:id LIMIT 1'
+                : 'UPDATE `%s` SET `arquivo_relativo`=:rel,`nome_original`=:nome,`mime`=:mime,`tamanho_bytes`=:tam,`uploaded_at`=:up,`uploaded_by`=:upby,`expires_at`=:ex WHERE `id_ata`=:id LIMIT 1';
+            $st = $this->connection->prepare(sprintf($updateSql, $this->table));
             $st->bindValue(':rel', $row['arquivo_relativo']);
             $st->bindValue(':nome', $row['nome_original']);
             $st->bindValue(':mime', $row['mime']);
@@ -67,6 +83,9 @@ final class SalaAudienciasAtaRepository
             $st->bindValue(':up', $row['uploaded_at']);
             $st->bindValue(':upby', $row['uploaded_by'] ?? null);
             $st->bindValue(':ex', $row['expires_at']);
+            if ($this->hasIdentificadorArquivo) {
+                $st->bindValue(':ident', (string) ($row['identificador_arquivo'] ?? ''));
+            }
             $st->bindValue(':id', $existing['id_ata']);
             $st->execute();
 
@@ -74,10 +93,10 @@ final class SalaAudienciasAtaRepository
         }
 
         $id = IdGenerator::generateUniquePrefixedId($this->connection, $this->table, 'id_ata', 'SAT', 30);
-        $st = $this->connection->prepare(sprintf(
-            'INSERT INTO `%s` (`id_ata`,`pauta`,`arquivo_relativo`,`nome_original`,`mime`,`tamanho_bytes`,`uploaded_at`,`uploaded_by`,`expires_at`) VALUES (:id,:pauta,:rel,:nome,:mime,:tam,:up,:upby,:ex)',
-            $this->table
-        ));
+        $insertSql = $this->hasIdentificadorArquivo
+            ? 'INSERT INTO `%s` (`id_ata`,`pauta`,`arquivo_relativo`,`nome_original`,`mime`,`tamanho_bytes`,`uploaded_at`,`uploaded_by`,`expires_at`,`identificador_arquivo`) VALUES (:id,:pauta,:rel,:nome,:mime,:tam,:up,:upby,:ex,:ident)'
+            : 'INSERT INTO `%s` (`id_ata`,`pauta`,`arquivo_relativo`,`nome_original`,`mime`,`tamanho_bytes`,`uploaded_at`,`uploaded_by`,`expires_at`) VALUES (:id,:pauta,:rel,:nome,:mime,:tam,:up,:upby,:ex)';
+        $st = $this->connection->prepare(sprintf($insertSql, $this->table));
         $st->bindValue(':id', $id);
         $st->bindValue(':pauta', $row['pauta']);
         $st->bindValue(':rel', $row['arquivo_relativo']);
@@ -87,6 +106,9 @@ final class SalaAudienciasAtaRepository
         $st->bindValue(':up', $row['uploaded_at']);
         $st->bindValue(':upby', $row['uploaded_by'] ?? null);
         $st->bindValue(':ex', $row['expires_at']);
+        if ($this->hasIdentificadorArquivo) {
+            $st->bindValue(':ident', (string) ($row['identificador_arquivo'] ?? ''));
+        }
         $st->execute();
 
         return $id;
