@@ -99,6 +99,18 @@ $faculdades = [
                                 <input class="width-400" type="text" id="cpf" name="cpf" required maxlength="14" placeholder="000.000.000-00">
                             </div>
                         </div>
+                        
+                        <div class="display-flex row row-full justify-start align-center padding-x-sm">
+                            <div class="col">
+                                <label for="sexo">Sexo *</label>
+                                <select class="width-300" id="sexo" name="sexo" required>
+                                    <option value="">Selecione</option>
+                                    <option value="Feminino">Feminino</option>
+                                    <option value="Masculino">Masculino</option>
+                                    <option value="Outro">Outro</option>
+                                </select>
+                            </div>
+                        </div>
 
                         <div class="display-flex row row-full justify-start align-center padding-x-sm">
                             <div class="col">
@@ -228,6 +240,7 @@ $faculdades = [
                         cpf: cpfDigits,
                         senha: senha,
                         telefone: (formData.get("telefone") || "").trim().slice(0, 20),
+                        sexo: (formData.get("sexo") || "").trim(),
                         telefone_whatsapp: form.querySelector("#telefone_whatsapp").checked,
                         faculdade: formData.get("faculdade") || "",
                         email: (formData.get("email") || "").trim().toLowerCase().slice(0, 255),
