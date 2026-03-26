@@ -290,6 +290,39 @@ final class SalaAudienciasAtaService
     }
 
     /**
+     * @return array{full_path: string, nome_original: string, mime: string}
+     */
+    public function getDownloadPayloadInterno(string $idPauta): array
+    {
+        $idPauta = trim($idPauta);
+        if ($idPauta === '') {
+            throw new InvalidArgumentException('Dados inválidos.');
+        }
+
+        $ata = $this->ataRepository->findByPauta($idPauta);
+        if ($ata === null) {
+            throw new InvalidArgumentException('Ata ainda não disponível.');
+        }
+
+        $rel = trim((string) ($ata['arquivo_relativo'] ?? ''));
+        if ($rel === '') {
+            throw new RuntimeException('Arquivo não localizado.');
+        }
+
+        $basePath = dirname(__DIR__, 2);
+        $full = $basePath . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $rel);
+        if (!is_file($full)) {
+            throw new RuntimeException('Arquivo não encontrado no servidor.');
+        }
+
+        return [
+            'full_path' => $full,
+            'nome_original' => (string) ($ata['nome_original'] ?? 'ata.pdf'),
+            'mime' => (string) ($ata['mime'] ?? 'application/pdf'),
+        ];
+    }
+
+    /**
      * Remove atas expiradas do banco e arquivos no disco.
      *
      * @return int número de registros removidos

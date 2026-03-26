@@ -30,6 +30,32 @@ $dashIsEstudanteExterno = UserAccessHelper::isUsuarioExterno($dashPerfis) && $da
 
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
     <?php include __DIR__ . '/_toast_script.php'; ?>
+    <style>
+        .external-dashboard-list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .external-dashboard-list li {
+            margin: 0;
+            padding: 12px 14px;
+            border: 1px solid var(--color-border-subtle);
+            border-radius: 8px;
+            line-height: 1.6;
+            background: var(--color-surface-soft);
+        }
+        .external-dashboard-note {
+            margin: 0;
+            padding: 12px 14px;
+            border: 1px solid var(--color-border-subtle);
+            border-radius: 8px;
+            background: var(--color-surface-soft);
+            line-height: 1.5;
+        }
+    </style>
 </head>
 <body class="page-internal">
 
@@ -42,7 +68,7 @@ $dashIsEstudanteExterno = UserAccessHelper::isUsuarioExterno($dashPerfis) && $da
         </div>
         <h1 class="title-page">Bem-vindo(a)</h1>
         <p class="description-page"><?php echo $dashIsEstudanteExterno
-            ? 'Este é o seu painel de acesso. Pelo menu lateral você pode consultar CEP, acompanhar a pauta/atas de audiências para estudantes e, nas configurações, atualizar seus dados pessoais.'
+            ? 'Este é o seu painel de acesso. Pelo menu lateral você pode consultar CEP, realizar inscrições e acompanhar suas participações no Painel em tempo real, acessar downloads em Atas de Audiências e, nas configurações, atualizar seus dados pessoais.'
             : 'Este é o seu painel de acesso ao sistema. Utilize o menu para as consultas liberadas ao seu perfil (partes, instituições públicas, CEP) e seus dados pessoais nas configurações.'; ?></p>
     </div>
 
@@ -52,10 +78,11 @@ $dashIsEstudanteExterno = UserAccessHelper::isUsuarioExterno($dashPerfis) && $da
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md gap-y-md">
             <div class="col full-line">
-                <ul class="minor-info" style="margin: 0; padding-left: 1.25rem; line-height: 1.6;">
+                <ul class="minor-info external-dashboard-list">
                     <?php if ($dashIsEstudanteExterno): ?>
                     <li><strong>Consulta CEP:</strong> disponível no menu lateral, seção <em>Consultas</em>.</li>
-                    <li><strong>Audiências (estudante):</strong> acompanhe pauta, atas e painel em tempo real na seção <em>Estudantes</em>.</li>
+                    <li><strong>Painel em tempo real (estudante):</strong> faça inscrições e acompanhe suas participações na seção <em>Estudantes</em>.</li>
+                    <li><strong>Atas de Audiências:</strong> acesse os links de download das atas vinculadas na seção <em>Estudantes</em>.</li>
                     <li><strong>Dados pessoais:</strong> no ícone de configurações (engrenagem), altere senha ou dados cadastrais quando necessário.</li>
                     <li><strong>Limitação:</strong> perfil <em>estudante</em> não inclui consulta de partes, instituições ou processos; tarefas de cartório e gabinete também não estão disponíveis.</li>
                     <?php else: ?>
@@ -68,7 +95,7 @@ $dashIsEstudanteExterno = UserAccessHelper::isUsuarioExterno($dashPerfis) && $da
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md gap-y-md border-top">
             <div class="col full-line">
-                <p class="minor-info" style="margin: 0;">Em caso de dúvida sobre liberação de acesso, procure a diretoria ou o administrador do sistema.</p>
+                <p class="minor-info external-dashboard-note">Em caso de dúvida sobre liberação de acesso, procure a diretoria ou o administrador do sistema.</p>
             </div>
         </div>
     </div>

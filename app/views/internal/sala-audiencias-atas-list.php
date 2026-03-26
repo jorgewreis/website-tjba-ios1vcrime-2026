@@ -71,9 +71,6 @@ $endItem = min($offset + count($rows), $total);
         <?php foreach ($rows as $row):
             $idPauta = htmlspecialchars((string) ($row['id_pauta'] ?? ''), ENT_QUOTES, 'UTF-8');
             $temAta = !empty($row['id_ata']) && !empty($row['arquivo_relativo']);
-            $nomeArq = trim((string) ($row['nome_original'] ?? ''));
-            $expira = trim((string) ($row['expires_at'] ?? ''));
-            $expiraFmt = $expira !== '' ? date('d/m/Y H:i', strtotime($expira)) : '—';
             ?>
         <div class="display-flex col col-full register border-bottom" data-pauta="<?php echo $idPauta; ?>">
             <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center flex-wrap gap-y-sm">
@@ -96,9 +93,15 @@ $endItem = min($offset + count($rows), $total);
                     </div>
                     <div class="col width-300">
                         <span class="minor-info">Ata (PDF)</span>
-                        <span class="major-info text-ellipsis ata-status-text"><?php echo $temAta ? htmlspecialchars($nomeArq, ENT_QUOTES, 'UTF-8') : 'Não enviada'; ?></span>
                         <?php if ($temAta): ?>
-                        <span class="minor-info">Válida até <?php echo htmlspecialchars($expiraFmt, ENT_QUOTES, 'UTF-8'); ?></span>
+                        <button
+                            type="button"
+                            class="link-inline ata-status-text"
+                            data-nav-href="/api/sala-audiencias-ata/download-interno.php?pauta=<?php echo urlencode((string) ($row['id_pauta'] ?? '')); ?>"
+                            data-nav-target="_blank"
+                        >Ata vinculada</button>
+                        <?php else: ?>
+                        <span class="major-info text-ellipsis ata-status-text">Não enviada</span>
                         <?php endif; ?>
                     </div>
                 </div>

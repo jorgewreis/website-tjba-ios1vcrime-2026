@@ -21,9 +21,10 @@ $normPerfis = ProfileNormalizer::normalize($perfilsUsuario);
 $podeInscricaoComoEstudante = UserAccessHelper::isUsuarioExterno($perfilsUsuario) && ProfileNormalizer::hasEstudante($normPerfis);
 
 $service = new SalaAudienciasAtaService(Conection::getInstance()->getConnection());
-$hojeRows = $userId !== '' ? $service->listHojeParaInscricaoEstudante($userId) : [];
 $minhasRows = $userId !== '' ? $service->listMinhasInscricoesEstudante($userId) : [];
-$maxVagas = SalaAudienciasAtaService::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA;
+$participadasComAta = array_values(array_filter($minhasRows, static function ($row): bool {
+    return !empty($row['id_ata']);
+}));
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -46,80 +47,20 @@ $maxVagas = SalaAudienciasAtaService::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA;
             <span class="specific">Atas de audiências</span>
         </div>
         <h1 class="title-page">Atas de Audiências</h1>
-        <p class="description-page">Inscrição no <strong>dia</strong> da audiência (status designada), processo não sigiloso e sem menores. No máximo <strong><?php echo (int) $maxVagas; ?> estudantes</strong> por audiência. Download do PDF disponível após publicação, com validade de 30 dias.</p>
+        <p class="description-page">Lista das audiências em que você participou e que já possuem ata vinculada para download.</p>
     </div>
 
     <div class="container-full card-page">
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
-            <div class="display-flex row row-fit justify-start"><h2>Audiências de hoje (inscrição)</h2></div>
+            <div class="display-flex row row-fit justify-start"><h2>Minhas audiências com ata</h2></div>
         </div>
-        <?php if (count($hojeRows) === 0): ?>
+        <?php if (count($participadasComAta) === 0): ?>
         <div class="padding-x-md padding-y-lg">
-            <p class="description-page">Não há audiências elegíveis para inscrição hoje ou você já está inscrito em todas as opções disponíveis.</p>
+            <p class="description-page">Nenhuma ata vinculada encontrada para suas participações.</p>
         </div>
         <?php endif; ?>
-        <?php foreach ($hojeRows as $row):
-            $idPauta = htmlspecialchars((string) ($row['id_pauta'] ?? ''), ENT_QUOTES, 'UTF-8');
-            $pode = !empty($row['pode_inscrever']);
-            $ja = !empty($row['ja_inscrito']);
-            $lotado = !empty($row['vagas_esgotadas']);
-            $totalIns = (int) ($row['total_inscritos_pauta'] ?? 0);
-            ?>
-        <div class="display-flex col col-full register border-bottom" data-pauta="<?php echo $idPauta; ?>">
-            <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center flex-wrap gap-y-sm">
-                <div class="display-flex row row-fit justify-start gap-y-sm align-center flex-wrap">
-                    <div class="col width-280">
-                        <span class="minor-info">Horário</span>
-                        <span class="major-info"><?php echo htmlspecialchars(substr((string) $row['hora_audiencia'], 0, 5), ENT_QUOTES, 'UTF-8'); ?></span>
-                    </div>
-                    <div class="col width-400 col-process process-info" title="clique para copiar">
-                        <?php
-                            $classeAudiencia = !empty($row['classe_nome']) ? $row['classe_nome'] : 'Classe não informada';
-                            $classeStyleAudiencia = $classeAudiencia !== 'Classe não informada' ? 'style="color: var(--primary-color-active); font-weight: 600;"' : '';
-                        ?>
-                        <span class="minor-info text-ellipsis" <?php echo $classeStyleAudiencia; ?>><?php echo htmlspecialchars($classeAudiencia, ENT_QUOTES, 'UTF-8'); ?></span>
-                        <span class="major-info"><?php echo htmlspecialchars((string) ($row['numero_processo'] ?? '—'), ENT_QUOTES, 'UTF-8'); ?></span>
-                    </div>
-                    <div class="col width-360">
-                        <span class="minor-info">Tipo</span>
-                        <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) $row['tipo_audiencia'], ENT_QUOTES, 'UTF-8'); ?></span>
-                    </div>
-                    <div class="col width-220">
-                        <span class="minor-info">Vagas</span>
-                        <span class="major-info"><?php echo $totalIns; ?> / <?php echo (int) $maxVagas; ?><?php echo $lotado ? ' (lotado)' : ''; ?></span>
-                    </div>
-                </div>
-                <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                    <?php if ($ja): ?>
-                    <span class="minor-info">Você está inscrito.</span>
-                    <?php elseif ($lotado): ?>
-                    <span class="minor-info">Vagas esgotadas.</span>
-                    <?php elseif ($podeInscricaoComoEstudante && $pode): ?>
-                    <button type="button" class="btn btn-primary btn-inscrever-ata" data-pauta="<?php echo $idPauta; ?>">Inscrever-me</button>
-                    <?php elseif (!$podeInscricaoComoEstudante): ?>
-                    <span class="minor-info">Inscrição exclusiva para estudantes.</span>
-                    <?php else: ?>
-                    <button type="button" class="btn btn-primary" disabled>Inscrever-me</button>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-        <?php endforeach; ?>
-    </div>
-
-    <div class="container-full card-page">
-        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
-            <div class="display-flex row row-fit justify-start"><h2>Minhas inscrições</h2></div>
-        </div>
-        <?php if (count($minhasRows) === 0): ?>
-        <div class="padding-x-md padding-y-lg">
-            <p class="description-page">Nenhuma inscrição ativa com ata disponível ou aguardando publicação.</p>
-        </div>
-        <?php endif; ?>
-        <?php foreach ($minhasRows as $m):
-            $pid = htmlspecialchars((string) ($m['pauta'] ?? ''), ENT_QUOTES, 'UTF-8');
-            $temAta = !empty($m['id_ata']);
-            $nomeAta = trim((string) ($m['nome_original'] ?? ''));
+        <?php foreach ($participadasComAta as $m):
+            $idPauta = htmlspecialchars((string) ($m['pauta'] ?? ''), ENT_QUOTES, 'UTF-8');
             $expira = trim((string) ($m['expires_at'] ?? ''));
             $expiraFmt = $expira !== '' ? date('d/m/Y H:i', strtotime($expira)) : '';
             ?>
@@ -135,19 +76,17 @@ $maxVagas = SalaAudienciasAtaService::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA;
                 </div>
                 <div class="col width-360">
                     <span class="minor-info">Situação da ata</span>
-                    <span class="major-info"><?php echo $temAta ? 'Disponível para download' : 'Aguardando publicação'; ?></span>
-                    <?php if ($temAta && $expiraFmt !== ''): ?>
+                    <span class="major-info">Disponível para download</span>
+                    <?php if ($expiraFmt !== ''): ?>
                     <span class="minor-info">Válida até <?php echo htmlspecialchars($expiraFmt, ENT_QUOTES, 'UTF-8'); ?></span>
                     <?php endif; ?>
                 </div>
             </div>
             <div class="display-flex row row-fit justify-end">
-                <?php if ($temAta && $podeInscricaoComoEstudante): ?>
+                <?php if ($podeInscricaoComoEstudante): ?>
                 <button type="button" class="btn btn-primary" data-nav-href="/api/sala-audiencias-ata/download.php?pauta=<?php echo urlencode((string) $m['pauta']); ?>" data-nav-target="_blank">Baixar PDF</button>
-                <?php elseif ($temAta): ?>
-                <span class="minor-info">Download exclusivo para estudantes.</span>
                 <?php else: ?>
-                <button type="button" class="btn btn-secondary" disabled>Aguardando ata</button>
+                <span class="minor-info">Download exclusivo para estudantes.</span>
                 <?php endif; ?>
             </div>
         </div>
@@ -162,6 +101,5 @@ $maxVagas = SalaAudienciasAtaService::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA;
         </div>
     </div>
 
-    <script src="/assets/js/modules/audiencias/atas-estudantes.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/atas-estudantes.js') ?: time(); ?>"></script>
 </body>
 </html>
