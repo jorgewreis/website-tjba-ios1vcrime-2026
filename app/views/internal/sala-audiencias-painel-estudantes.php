@@ -102,14 +102,45 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
             $pode = !empty($row['pode_inscrever']);
             $ja = !empty($row['ja_inscrito']);
             $lotado = !empty($row['vagas_esgotadas']);
+            $sigiloso = !empty($row['processo_sigiloso']);
+            $menor = !empty($row['envolve_menor']);
             $totalIns = (int) ($row['total_inscritos_pauta'] ?? 0);
+            $statusRow = trim((string) ($row['status'] ?? ''));
+            if ($statusRow === 'agendada') {
+                $statusRow = 'designada';
+            } elseif ($statusRow === 'adiada') {
+                $statusRow = 'redesignada';
+            }
+            $inicioEfetivoRaw = trim((string) ($row['data_hora_inicio_efetivo'] ?? ''));
+            $fimEfetivoRaw = trim((string) ($row['data_hora_fim_efetivo'] ?? ''));
+            $inicioTs = $inicioEfetivoRaw !== '' ? strtotime($inicioEfetivoRaw) : false;
+            if ($inicioTs === false) {
+                $inicioFallback = trim((string) ($row['data_audiencia'] ?? '')) . ' ' . trim((string) ($row['hora_audiencia'] ?? ''));
+                $inicioTs = strtotime($inicioFallback);
+            }
+            $duracaoEstimada = max(5, (int) ($row['duracao_estimada_minutos'] ?? 0));
+            $previsaoTs = $inicioTs !== false ? ($inicioTs + ($duracaoEstimada * 60)) : false;
+            $fimTs = $fimEfetivoRaw !== '' ? strtotime($fimEfetivoRaw) : false;
+            $duracaoRealMin = ($inicioTs !== false && $fimTs !== false && $fimTs >= $inicioTs)
+                ? (int) floor(($fimTs - $inicioTs) / 60)
+                : $duracaoEstimada;
             ?>
         <div class="display-flex col col-full register border-bottom" data-pauta="<?php echo $idPauta; ?>">
             <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center flex-wrap gap-y-sm">
                 <div class="display-flex row row-fit justify-start gap-y-sm align-center flex-wrap">
-                    <div class="col width-300">
-                        <span class="minor-info">Horario</span>
-                        <span class="major-info"><?php echo htmlspecialchars(substr((string) $row['hora_audiencia'], 0, 5), ENT_QUOTES, 'UTF-8'); ?></span>
+                    <div class="col width-500">
+                        <span class="minor-info">Data e hora</span>
+                        <?php if ($statusRow === 'em_andamento' && $inicioTs !== false): ?>
+                        <span class="major-info">Inicio: <?php echo htmlspecialchars(date('d/m/Y H:i', $inicioTs), ENT_QUOTES, 'UTF-8'); ?></span>
+                        <?php if ($previsaoTs !== false): ?>
+                        <span class="minor-info">Previsao de termino: <?php echo htmlspecialchars(date('d/m/Y H:i', $previsaoTs), ENT_QUOTES, 'UTF-8'); ?></span>
+                        <?php endif; ?>
+                        <?php elseif ($statusRow === 'finalizada' && $inicioTs !== false && $fimTs !== false): ?>
+                        <span class="major-info">Inicio: <?php echo htmlspecialchars(date('d/m/Y H:i', $inicioTs), ENT_QUOTES, 'UTF-8'); ?></span>
+                        <span class="minor-info">Fim: <?php echo htmlspecialchars(date('d/m/Y H:i', $fimTs), ENT_QUOTES, 'UTF-8'); ?> (<?php echo (int) $duracaoRealMin; ?> min)</span>
+                        <?php else: ?>
+                        <span class="major-info"><?php echo htmlspecialchars(date('d/m/Y', strtotime((string) $row['data_audiencia'])) . ' - ' . substr((string) $row['hora_audiencia'], 0, 5), ENT_QUOTES, 'UTF-8'); ?></span>
+                        <?php endif; ?>
                     </div>
                     <div class="col width-400 col-process process-info" title="clique para copiar">
                         <?php
@@ -130,15 +161,19 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
                 </div>
                 <div class="display-flex row row-fit justify-end gap-y-sm align-center">
                     <?php if ($ja): ?>
-                    <span class="minor-info">Voce esta inscrito.</span>
+                    <span class="minor-info text-success">Voce esta inscrito.</span>
                     <?php elseif ($lotado): ?>
-                    <span class="minor-info">Vagas esgotadas.</span>
+                    <span class="minor-info text-error">Vagas esgotadas.</span>
+                    <?php elseif ($sigiloso): ?>
+                    <span class="minor-info text-error">Processo sigiloso.</span>
+                    <?php elseif ($menor): ?>
+                    <span class="minor-info text-error">Audiencia com menor envolvido.</span>
                     <?php elseif ($podeInscricaoComoEstudante && $pode): ?>
                     <button type="button" class="btn btn-primary btn-inscrever-ata" data-pauta="<?php echo $idPauta; ?>">Inscrever-me</button>
                     <?php elseif (!$podeInscricaoComoEstudante): ?>
                     <span class="minor-info">Inscricao exclusiva para estudantes.</span>
                     <?php else: ?>
-                    <button type="button" class="btn btn-primary" disabled>Inscrever-me</button>
+                    <span class="minor-info">Inscricao indisponivel.</span>
                     <?php endif; ?>
                 </div>
             </div>
@@ -188,6 +223,19 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
             } elseif ($stRow === 'adiada') {
                 $stRow = 'redesignada';
             }
+            $inicioEfetivoRaw = trim((string) ($m['data_hora_inicio_efetivo'] ?? ''));
+            $fimEfetivoRaw = trim((string) ($m['data_hora_fim_efetivo'] ?? ''));
+            $inicioTs = $inicioEfetivoRaw !== '' ? strtotime($inicioEfetivoRaw) : false;
+            if ($inicioTs === false) {
+                $inicioFallback = trim((string) ($m['data_audiencia'] ?? '')) . ' ' . trim((string) ($m['hora_audiencia'] ?? ''));
+                $inicioTs = strtotime($inicioFallback);
+            }
+            $duracaoEstimada = max(5, (int) ($m['duracao_estimada_minutos'] ?? 0));
+            $previsaoTs = $inicioTs !== false ? ($inicioTs + ($duracaoEstimada * 60)) : false;
+            $fimTs = $fimEfetivoRaw !== '' ? strtotime($fimEfetivoRaw) : false;
+            $duracaoRealMin = ($inicioTs !== false && $fimTs !== false && $fimTs >= $inicioTs)
+                ? (int) floor(($fimTs - $inicioTs) / 60)
+                : $duracaoEstimada;
             $labelsStatusEst = [
                 'designada' => 'Designada',
                 'em_andamento' => 'Em andamento',
@@ -209,8 +257,18 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
         <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm border-bottom align-center flex-wrap gap-y-sm">
             <div class="display-flex row row-fit justify-start gap-y-sm align-center flex-wrap">
                 <div class="col width-300">
-                    <span class="minor-info">Data</span>
+                    <span class="minor-info">Data e hora</span>
+                    <?php if ($stRow === 'em_andamento' && $inicioTs !== false): ?>
+                    <span class="major-info">Inicio: <?php echo htmlspecialchars(date('d/m/Y H:i', $inicioTs), ENT_QUOTES, 'UTF-8'); ?></span>
+                    <?php if ($previsaoTs !== false): ?>
+                    <span class="minor-info">Previsao de termino: <?php echo htmlspecialchars(date('d/m/Y H:i', $previsaoTs), ENT_QUOTES, 'UTF-8'); ?></span>
+                    <?php endif; ?>
+                    <?php elseif ($stRow === 'finalizada' && $inicioTs !== false && $fimTs !== false): ?>
+                    <span class="major-info">Inicio: <?php echo htmlspecialchars(date('d/m/Y H:i', $inicioTs), ENT_QUOTES, 'UTF-8'); ?></span>
+                    <span class="minor-info">Fim: <?php echo htmlspecialchars(date('d/m/Y H:i', $fimTs), ENT_QUOTES, 'UTF-8'); ?> (<?php echo (int) $duracaoRealMin; ?> min)</span>
+                    <?php else: ?>
                     <span class="major-info"><?php echo htmlspecialchars(date('d/m/Y', strtotime((string) $m['data_audiencia'])) . ' · ' . substr((string) $m['hora_audiencia'], 0, 5), ENT_QUOTES, 'UTF-8'); ?></span>
+                    <?php endif; ?>
                 </div>
                 <div class="col width-500">
                     <span class="minor-info">Processo</span>
@@ -271,6 +329,9 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
         }
         bindItemsPerPage('items-per-page-hoje');
         bindItemsPerPage('items-per-page-minhas');
+        window.setInterval(function () {
+            window.location.reload();
+        }, 60000);
     })();
     </script>
 </body>

@@ -48,16 +48,15 @@ final class SalaAudienciasAtaService
         $rows = $this->inscricaoRepository->listHojeDesignadasElegiveis($usuarioId);
         $out = [];
         foreach ($rows as $row) {
-            if ((int) ($row['processo_sigiloso'] ?? 0) !== 0) {
-                continue;
-            }
-            if ((int) ($row['qtd_menor'] ?? 0) > 0) {
-                continue;
-            }
+            $processoSigiloso = (int) ($row['processo_sigiloso'] ?? 0) !== 0;
+            $envolveMenor = (int) ($row['qtd_menor'] ?? 0) > 0;
             $total = (int) ($row['total_inscritos_pauta'] ?? 0);
             $jaInscrito = (int) ($row['ja_inscrito'] ?? 0) === 1;
             $row['vagas_esgotadas'] = $total >= self::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA;
-            $row['pode_inscrever'] = !$jaInscrito && !$row['vagas_esgotadas'];
+            $row['processo_sigiloso'] = $processoSigiloso;
+            $row['envolve_menor'] = $envolveMenor;
+            $row['ja_inscrito'] = $jaInscrito;
+            $row['pode_inscrever'] = !$jaInscrito && !$row['vagas_esgotadas'] && !$processoSigiloso && !$envolveMenor;
             $out[] = $row;
         }
 
