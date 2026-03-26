@@ -38,11 +38,32 @@
     var ipp = document.getElementById('items-per-page');
     if (ipp) ipp.addEventListener('change', changePageSize);
 
+    function openFilePicker(inp) {
+        if (!inp) return false;
+        try {
+            if (typeof inp.showPicker === 'function') {
+                inp.showPicker();
+                return true;
+            }
+        } catch (e) {
+            // fallback para click()
+        }
+        try {
+            inp.click();
+            return true;
+        } catch (e2) {
+            return false;
+        }
+    }
+
     document.querySelectorAll('.btn-upload-ata').forEach(function (btn) {
-        btn.addEventListener('click', function () {
+        btn.addEventListener('click', function (event) {
+            event.preventDefault();
             var wrap = btn.closest('[data-pauta]');
             var inp = wrap ? wrap.querySelector('input.ata-file-input') : null;
-            if (inp) inp.click();
+            if (!openFilePicker(inp)) {
+                notify('error', 'Erro', 'Não foi possível abrir o seletor de arquivos.');
+            }
         });
     });
 
