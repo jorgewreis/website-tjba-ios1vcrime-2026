@@ -102,4 +102,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Feat: melhoria na atualização de status** `[ffcf20e]`
 - **Fix: correcao e ajustes** `[cac89bd]`
 - **Fix: correcao de classe** `[c82359b]`
+- **Feat: add CEAPA functionality and improve reu selection in forms** `[009c32e]`
 
