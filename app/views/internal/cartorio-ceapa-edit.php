@@ -90,10 +90,10 @@ $lockClasse = trim($classeNome) !== '' && $classeNome !== 'Classe não informada
 
     <div class="header-page">
         <div class="location">
-            <span class="all">Interno - Cartório - CEAPA -</span>
+            <span class="all">Interno - Cartório - Ceapa -</span>
             <span class="specific">Edição</span>
         </div>
-        <h1 class="title-page">Editar cadastro CEAPA</h1>
+        <h1 class="title-page">Editar cadastro Ceapa</h1>
         <p class="description-page">Atualize o andamento de cumprimento da decisão e observações relacionadas ao acompanhamento.</p>
     </div>
 
@@ -158,14 +158,14 @@ $lockClasse = trim($classeNome) !== '' && $classeNome !== 'Classe não informada
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col filter">
                     <label for="filter-decisao-cumprir">Decisão a cumprir <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="text" class="width-100 height-md" id="filter-decisao-cumprir" value="<?php echo htmlspecialchars($decisaoCumprir, ENT_QUOTES); ?>" placeholder="Informe a pena definida na decisão" maxlength="500" required>
+                    <input type="text" class="width-800 height-md" id="filter-decisao-cumprir" value="<?php echo htmlspecialchars($decisaoCumprir, ENT_QUOTES); ?>" placeholder="Informe a pena definida na decisão" maxlength="500" required>
                 </div>
             </div>
 
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col filter">
                     <label for="filter-observacoes-cumprimento">Observações acerca do cumprimento da decisão</label>
-                    <textarea class="width-100 height-md" id="filter-observacoes-cumprimento" placeholder="Descreva observações sobre o cumprimento"><?php echo htmlspecialchars($observacoesCumprimento, ENT_QUOTES); ?></textarea>
+                    <textarea class="width-800 height-md" id="filter-observacoes-cumprimento" placeholder="Descreva observações sobre o cumprimento"><?php echo htmlspecialchars($observacoesCumprimento, ENT_QUOTES); ?></textarea>
                 </div>
             </div>
 

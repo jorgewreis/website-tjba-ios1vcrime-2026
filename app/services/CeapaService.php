@@ -41,6 +41,11 @@ final class CeapaService
         return $this->repository->countByStatus($filters);
     }
 
+    public function getTipoSuspensaoCounts(array $filters): array
+    {
+        return $this->repository->countByTipoSuspensao($filters);
+    }
+
     public function find(string $id): ?array
     {
         return $this->repository->findById($id);

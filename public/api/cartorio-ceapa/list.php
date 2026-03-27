@@ -11,6 +11,7 @@ $connection = Conection::getInstance()->getConnection();
 
 $statusFilter = trim((string) ($_GET['status'] ?? ''));
 $processoFilter = trim((string) ($_GET['processo'] ?? ''));
+$tipoSuspensaoFilter = trim((string) ($_GET['tipo_suspensao'] ?? ''));
 $allowedPerPage = [10, 25, 50, 100];
 $itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 25;
 if (!in_array($itemsPerPage, $allowedPerPage, true)) {
@@ -21,6 +22,7 @@ $offset = ($page - 1) * $itemsPerPage;
 $filters = [
     'status' => $statusFilter,
     'processo' => $processoFilter,
+    'tipo_suspensao' => $tipoSuspensaoFilter,
 ];
 
 try {

@@ -13,6 +13,7 @@ $connection = Conection::getInstance()->getConnection();
 $routePage = trim((string) ($_GET['page'] ?? 'ceapa'));
 $statusFilter = trim((string) ($_GET['status'] ?? ''));
 $processoFilter = trim((string) ($_GET['processo'] ?? ''));
+$tipoSuspensaoFilter = trim((string) ($_GET['tipo_suspensao'] ?? ''));
 $allowedPerPage = [10, 25, 50, 100];
 $itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 25;
 if (!in_array($itemsPerPage, $allowedPerPage, true)) {
@@ -30,6 +31,7 @@ if ($pageNumberParam !== null && $pageNumberParam !== '') {
 $filters = [
     'status' => $statusFilter,
     'processo' => $processoFilter,
+    'tipo_suspensao' => $tipoSuspensaoFilter,
 ];
 $offset = ($currentPage - 1) * $itemsPerPage;
 
@@ -63,6 +65,15 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
 
 $statusOptions = ['pendente', 'em_andamento', 'finalizada'];
 $statusCounts = array_merge(array_fill_keys($statusOptions, 0), $service->getStatusCounts($filters));
+$tipoSuspensaoOptions = [
+    'Acordo de não Persecução Penal',
+    'Suspensão Condicional do Processo',
+];
+$tipoSuspensaoCounts = array_merge(
+    array_fill_keys($tipoSuspensaoOptions, 0),
+    $service->getTipoSuspensaoCounts($filters)
+);
+$tipoSuspensaoTotal = array_sum($tipoSuspensaoCounts);
 
 $baseQueryParams = [];
 if ($routePage !== '') {
@@ -73,6 +84,9 @@ if ($statusFilter !== '') {
 }
 if ($processoFilter !== '') {
     $baseQueryParams['processo'] = $processoFilter;
+}
+if ($tipoSuspensaoFilter !== '') {
+    $baseQueryParams['tipo_suspensao'] = $tipoSuspensaoFilter;
 }
 $baseQueryParams['items_per_page'] = $itemsPerPage;
 
@@ -117,16 +131,16 @@ if ($totalPages > 0) {
 
     <div class="header-page">
         <div class="location">
-            <span class="all">Interno - Cartório - CEAPA -</span>
-            <span class="specific">Lista de cadastros</span>
+            <span class="all">Interno - Cartório - Ceapa -</span>
+            <span class="specific">Lista de registros</span>
         </div>
-        <h1 class="title-page">CEAPA</h1>
+        <h1 class="title-page">Ceapa</h1>
         <p class="description-page">Acompanhamento de cumprimento de decisão com controle de status e observações.</p>
     </div>
 
     <div class="container-full card-page">
-        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
-            <div class="display-flex row row-fit justify-start">
+        <div class="display-flex row row-full align-center justify-between padding-x-lg padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-start padding-x-md">
                 <h2>Lista de registros</h2>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md">
@@ -144,6 +158,14 @@ if ($totalPages > 0) {
                         <option value="pendente"<?php echo $statusFilter === 'pendente' ? ' selected' : ''; ?>>Pendente (<?php echo (int) ($statusCounts['pendente'] ?? 0); ?>)</option>
                         <option value="em_andamento"<?php echo $statusFilter === 'em_andamento' ? ' selected' : ''; ?>>Em andamento (<?php echo (int) ($statusCounts['em_andamento'] ?? 0); ?>)</option>
                         <option value="finalizada"<?php echo $statusFilter === 'finalizada' ? ' selected' : ''; ?>>Finalizada (<?php echo (int) ($statusCounts['finalizada'] ?? 0); ?>)</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <label for="filter-tipo-suspensao">Filtrar por tipo de suspensão</label>
+                    <select class="width-500 height-md" id="filter-tipo-suspensao">
+                        <option value=""<?php echo $tipoSuspensaoFilter === '' ? ' selected' : ''; ?>>Mostrar todos (<?php echo (int) $tipoSuspensaoTotal; ?>)</option>
+                        <option value="Acordo de não Persecução Penal"<?php echo $tipoSuspensaoFilter === 'Acordo de não Persecução Penal' ? ' selected' : ''; ?>>Acordo de não Persecução Penal (<?php echo (int) ($tipoSuspensaoCounts['Acordo de não Persecução Penal'] ?? 0); ?>)</option>
+                        <option value="Suspensão Condicional do Processo"<?php echo $tipoSuspensaoFilter === 'Suspensão Condicional do Processo' ? ' selected' : ''; ?>>Suspensão Condicional do Processo (<?php echo (int) ($tipoSuspensaoCounts['Suspensão Condicional do Processo'] ?? 0); ?>)</option>
                     </select>
                 </div>
             </div>
@@ -276,6 +298,7 @@ if ($totalPages > 0) {
             const applyFilters = function () {
                 const status = document.getElementById('filter-status')?.value ?? '';
                 const processo = document.getElementById('search-input')?.value?.trim() ?? '';
+                const tipoSuspensao = document.getElementById('filter-tipo-suspensao')?.value ?? '';
                 const perPage = document.getElementById('items-per-page')?.value ?? '25';
                 const params = new URLSearchParams(window.location.search);
                 params.set('page', '<?php echo $routePage; ?>');
@@ -283,10 +306,12 @@ if ($totalPages > 0) {
                 params.set('items_per_page', perPage);
                 if (status) params.set('status', status); else params.delete('status');
                 if (processo) params.set('processo', processo); else params.delete('processo');
+                if (tipoSuspensao) params.set('tipo_suspensao', tipoSuspensao); else params.delete('tipo_suspensao');
                 window.location.href = '?' + params.toString();
             };
 
             document.getElementById('filter-status')?.addEventListener('change', applyFilters);
+            document.getElementById('filter-tipo-suspensao')?.addEventListener('change', applyFilters);
             document.getElementById('items-per-page')?.addEventListener('change', applyFilters);
             document.getElementById('search-input')?.addEventListener('keypress', function (e) {
                 if (e.key === 'Enter') applyFilters();

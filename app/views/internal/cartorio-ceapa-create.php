@@ -18,10 +18,10 @@ declare(strict_types=1);
 
     <div class="header-page">
         <div class="location">
-            <span class="all">Interno - Cartório - CEAPA -</span>
+            <span class="all">Interno - Cartório - Ceapa -</span>
             <span class="specific">Cadastro</span>
         </div>
-        <h1 class="title-page">Cadastro CEAPA</h1>
+        <h1 class="title-page">Cadastro Ceapa</h1>
         <p class="description-page">Registre os dados para acompanhamento do cumprimento de decisão no CEAPA.</p>
     </div>
 
@@ -70,7 +70,7 @@ declare(strict_types=1);
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter">
                 <label for="filter-decisao-cumprir">Decisão a cumprir <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-100 height-md" id="filter-decisao-cumprir" placeholder="Informe a pena definida na decisão" maxlength="500" required>
+                <input type="text" class="width-800 height-md" id="filter-decisao-cumprir" placeholder="Informe a pena definida na decisão" maxlength="500" required>
             </div>
         </div>
 

@@ -92,6 +92,37 @@ final class CeapaRepository
         return $summary;
     }
 
+    public function countByTipoSuspensao(array $filters): array
+    {
+        // Para o filtro de tipo, não restringe por tipo atual.
+        $filtersForCount = $filters;
+        unset($filtersForCount['tipo_suspensao']);
+
+        [$whereClause, $params] = $this->buildFilterClause($filtersForCount, 'ct', false);
+        $fromClause = $this->buildFromClause();
+        $sql = sprintf(
+            'SELECT ct.`tipo_suspensao` AS `TipoSuspensao`, COUNT(*) AS total FROM %s %s GROUP BY ct.`tipo_suspensao`',
+            $fromClause,
+            $whereClause !== '' ? 'WHERE ' . $whereClause : ''
+        );
+        $statement = $this->connection->prepare($sql);
+        foreach ($params as $key => $value) {
+            $statement->bindValue($key, $value);
+        }
+        $statement->execute();
+
+        $summary = [];
+        while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+            $tipo = trim((string) ($row['TipoSuspensao'] ?? ''));
+            if ($tipo === '') {
+                continue;
+            }
+            $summary[$tipo] = (int) ($row['total'] ?? 0);
+        }
+
+        return $summary;
+    }
+
     public function insert(array $row): string
     {
         $required = [
@@ -206,6 +237,14 @@ final class CeapaRepository
             if ($processo !== '') {
                 $clauses[] = $prefix . '`numero_processo_origem` LIKE :processo';
                 $params[':processo'] = '%' . $processo . '%';
+            }
+        }
+
+        if (isset($filters['tipo_suspensao'])) {
+            $tipoSuspensao = trim((string) ($filters['tipo_suspensao'] ?? ''));
+            if ($tipoSuspensao !== '') {
+                $clauses[] = $prefix . '`tipo_suspensao` = :tipo_suspensao';
+                $params[':tipo_suspensao'] = $tipoSuspensao;
             }
         }
 
