@@ -103,4 +103,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correcao e ajustes** `[cac89bd]`
 - **Fix: correcao de classe** `[c82359b]`
 - **Feat: add CEAPA functionality and improve reu selection in forms** `[009c32e]`
+- **Fix: corrigir referência de chave estrangeira na cláusula FROM do CeapaRepository** `[9c2d8ff]`
 
