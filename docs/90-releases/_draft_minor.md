@@ -107,4 +107,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: correct label casing for CEAPA in home.php** `[8bd4883]`
 - **Feat: add countByTipoSuspensao method in CeapaRepository and corresponding service method; update views and API to support tipo_suspensao filtering** `[304f8ed]`
 - **Refactor: update cartorio-ceapa-list view layout and add textarea styles in form.css** `[6f1dfee]`
+- **Feat: implement delete functionality in CeapaRepository and CeapaService; update views to support task deletion with confirmation** `[fbcb410]`
 
