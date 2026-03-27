@@ -15,6 +15,10 @@ $parsed = json_decode($payload, true);
 if (!is_array($parsed)) {
     $parsed = $_POST;
 }
+$usuarioCadastroId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
+if ($usuarioCadastroId !== '') {
+    $parsed['usuario_cadastro_id'] = $usuarioCadastroId;
+}
 
 function assertCnjFormattedValueCeapa(array $input, string $key, string $fieldLabel): void
 {

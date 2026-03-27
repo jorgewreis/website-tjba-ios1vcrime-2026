@@ -59,6 +59,7 @@ final class CeapaService
         $dataDecisao = trim((string) ($payload['data_decisao'] ?? ''));
         $observacoes = trim((string) ($payload['observacoes_cumprimento'] ?? ''));
         $statusCumprimento = trim((string) ($payload['status_cumprimento'] ?? 'pendente'));
+        $usuarioCadastroId = trim((string) ($payload['usuario_cadastro_id'] ?? ''));
 
         if ($numeroProcesso === '') {
             throw new InvalidArgumentException('O número do processo é obrigatório.');
@@ -97,6 +98,7 @@ final class CeapaService
             'data_decisao' => $dataDecisao,
             'observacoes_cumprimento' => $observacoes !== '' ? $observacoes : null,
             'status_cumprimento' => $statusCumprimento,
+            'usuario_cadastro_id' => $usuarioCadastroId !== '' ? $usuarioCadastroId : null,
         ]);
 
         return $id;
@@ -184,6 +186,16 @@ final class CeapaService
         }
 
         return $this->repository->update($id, $updates);
+    }
+
+    public function delete(string $id): bool
+    {
+        $id = trim($id);
+        if ($id === '') {
+            throw new InvalidArgumentException('Identificador inválido para exclusão.');
+        }
+
+        return $this->repository->delete($id);
     }
 
     private function resolveProcessoAndClasse(string $numeroFormatado, array $payload): array

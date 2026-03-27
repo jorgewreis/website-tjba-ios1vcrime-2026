@@ -141,7 +141,7 @@ final class CeapaRepository
         }
 
         $sql = sprintf(
-            'INSERT INTO `%s` (`id`, `processo_origem_id`, `numero_processo_origem`, `parte_id`, `tipo_suspensao`, `decisao_cumprir`, `data_decisao`, `observacoes_cumprimento`, `status_cumprimento`, `created_at`, `updated_at`) VALUES (:id, :processo_origem_id, :numero_processo_origem, :parte_id, :tipo_suspensao, :decisao_cumprir, :data_decisao, :observacoes_cumprimento, :status_cumprimento, NOW(), NOW())',
+            'INSERT INTO `%s` (`id`, `processo_origem_id`, `numero_processo_origem`, `parte_id`, `tipo_suspensao`, `decisao_cumprir`, `data_decisao`, `observacoes_cumprimento`, `status_cumprimento`, `usuario_cadastro_id`, `created_at`, `updated_at`) VALUES (:id, :processo_origem_id, :numero_processo_origem, :parte_id, :tipo_suspensao, :decisao_cumprir, :data_decisao, :observacoes_cumprimento, :status_cumprimento, :usuario_cadastro_id, NOW(), NOW())',
             $this->table
         );
         $statement = $this->connection->prepare($sql);
@@ -154,6 +154,7 @@ final class CeapaRepository
         $statement->bindValue(':data_decisao', $row['data_decisao']);
         $statement->bindValue(':observacoes_cumprimento', $row['observacoes_cumprimento'] ?? null);
         $statement->bindValue(':status_cumprimento', $row['status_cumprimento']);
+        $statement->bindValue(':usuario_cadastro_id', $row['usuario_cadastro_id'] ?? null);
         $statement->execute();
 
         return (string) $row['id'];
@@ -211,6 +212,20 @@ final class CeapaRepository
         $row = $statement->fetch(PDO::FETCH_ASSOC);
 
         return $row === false ? null : $row;
+    }
+
+    public function delete(string $id): bool
+    {
+        $id = trim($id);
+        if ($id === '') {
+            return false;
+        }
+        $sql = sprintf('DELETE FROM `%s` WHERE `id` = :id LIMIT 1', $this->table);
+        $statement = $this->connection->prepare($sql);
+        $statement->bindValue(':id', $id);
+        $statement->execute();
+
+        return $statement->rowCount() > 0;
     }
 
     public function getTableName(): string

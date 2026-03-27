@@ -72,6 +72,16 @@ if ($tarefa !== null) {
 
 $lockProcesso = trim($processoNumero) !== '';
 $lockClasse = trim($classeNome) !== '' && $classeNome !== 'Classe não informada';
+$userPerfisEdit = [];
+$userIdEdit = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
+if ($userIdEdit !== '') {
+    $stmtPerfis = $connection->prepare('SELECT DISTINCT UPPER(TRIM(perfil)) AS perfil FROM usuario_perfil WHERE usuario = ? AND perfil IS NOT NULL');
+    $stmtPerfis->execute([$userIdEdit]);
+    $userPerfisEdit = $stmtPerfis->fetchAll(PDO::FETCH_COLUMN);
+}
+$isEstagiarioEdit = in_array('ESTAGIARIO', $userPerfisEdit, true);
+$isCriadorTarefa = $tarefa !== null && trim((string) ($tarefa['usuario_cadastro_id'] ?? '')) === $userIdEdit;
+$podeExcluirTarefa = !$isEstagiarioEdit || $isCriadorTarefa;
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -175,6 +185,9 @@ $lockClasse = trim($classeNome) !== '' && $classeNome !== 'Classe não informada
         <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
             <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
             <?php if ($errorMessage === ''): ?>
+                <?php if ($podeExcluirTarefa): ?>
+                    <button type="button" class="btn btn-danger-outline" id="excluir-btn">Excluir</button>
+                <?php endif; ?>
                 <button type="button" class="btn btn-primary" id="salvar-btn">Salvar alterações</button>
             <?php endif; ?>
         </div>
@@ -374,11 +387,25 @@ $lockClasse = trim($classeNome) !== '' && $classeNome !== 'Classe não informada
     </script>
     <script>
         (function () {
+            const pendingConfirmations = {};
             const showFeedback = function (message, type) {
                 if (typeof showToast === 'function') {
                     showToast({ type: type === 'error' ? 'error' : 'success', variant: 'full', title: type === 'error' ? 'Erro' : 'Sucesso', message: message });
                 }
             };
+            function requireSecondClick(key, message) {
+                const now = Date.now();
+                const validUntil = Number(pendingConfirmations[key] || 0);
+                if (validUntil > now) {
+                    delete pendingConfirmations[key];
+                    return true;
+                }
+                pendingConfirmations[key] = now + 5000;
+                if (typeof showToast === 'function') {
+                    showToast({ type: 'info', variant: 'full', title: 'Confirmação', message: message });
+                }
+                return false;
+            }
             const getValue = function (id) {
                 const el = document.getElementById(id);
                 return (el && el.value) ? el.value.trim() : '';
@@ -471,6 +498,34 @@ $lockClasse = trim($classeNome) !== '' && $classeNome !== 'Classe não informada
                 .catch(function () {
                     showFeedback('Erro de conexão.', 'error');
                     salvarBtn.disabled = false;
+                });
+            });
+
+            const excluirBtn = document.getElementById('excluir-btn');
+            excluirBtn?.addEventListener('click', function () {
+                const id = getValue('hidden-ceapa-id');
+                if (!id) return showFeedback('Identificador do cadastro não informado.', 'error');
+                if (!requireSecondClick('excluir-ceapa', 'Clique novamente em Excluir em até 5 segundos para confirmar a exclusão.')) return;
+                excluirBtn.disabled = true;
+                fetch('/api/cartorio-ceapa/delete.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: id }),
+                    credentials: 'same-origin'
+                })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data.deleted) {
+                        showFeedback('Cadastro CEAPA excluído com sucesso.', 'success');
+                        window.location.href = '/frame.php?page=ceapa';
+                    } else {
+                        showFeedback(data.error || 'Não foi possível excluir.', 'error');
+                        excluirBtn.disabled = false;
+                    }
+                })
+                .catch(function () {
+                    showFeedback('Erro de conexão.', 'error');
+                    excluirBtn.disabled = false;
                 });
             });
 
