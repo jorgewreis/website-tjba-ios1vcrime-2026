@@ -214,9 +214,9 @@ if ($totalPages > 0) {
                             </div>
                             <div class="col width-600">
                                 <span class="minor-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['TipoSuspensao'] ?? '—'), ENT_QUOTES); ?></span>
-                                <span class="major-info"><?php echo "Decisão exarada em " . date('d/m/Y', strtotime((string) ($row['DataDecisao'] ?? '—'))) . " - " . htmlspecialchars((string) ($row['DataDecisao'] ?? '—'), ENT_QUOTES); ?></span>
+                                <span class="major-info"><?php echo "Decisão exarada em " . date('d/m/Y', strtotime((string) ($row['DataDecisao'] ?? '—'))); ?></span>
                             </div>
-                            <div class="col width-500">
+                            <div class="col width-700">
                                 <span class="minor-info">Decisão a cumprir</span>
                                 <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['DecisaoCumprir'] ?? '—'), ENT_QUOTES); ?></span>
                             </div>
