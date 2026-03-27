@@ -1,0 +1,50 @@
+# Padrão Sistêmico: Processo + Classe + Réu (Create Interno)
+
+## Escopo
+
+- Aplica-se a todas as telas `app/views/internal/*-create.php`.
+- Regra condicional por presença de campos:
+  - Se houver input de **número do processo**, este padrão de processo/classe é obrigatório.
+  - Se houver campo de **réu/denunciado**, este padrão de vínculo e cadastro de parte é obrigatório.
+
+## Processo e classe (obrigatório quando existe input de processo)
+
+1. Campo de processo deve usar máscara/normalização CNJ e validação estrutural.
+2. Campo de classe processual deve existir na mesma tela e ser preenchido automaticamente por DataJud.
+3. O fluxo deve persistir processo/classe no banco (reaproveitando mecanismos já existentes no projeto).
+4. Não permitir cadastro final enquanto classe estiver em estado de carregamento (`Aguarde...`).
+5. Ao invalidar processo (menos de 20 dígitos), limpar classe e metadados associados.
+
+## Réu/denunciado (obrigatório quando existe campo de parte passiva)
+
+1. Com processo válido, consultar vínculos de réu no processo.
+2. Se houver vínculos:
+   - Exibir `select` com os nomes encontrados.
+   - Incluir opção `Outro`.
+3. Se não houver vínculos:
+   - Exibir input de texto para nome livre.
+4. Se usuário escolher `Outro`, exibir input para cadastro do nome.
+5. Em nome livre, aplicar `TextFormatter.formatProperName`.
+6. Sempre que possível, sugerir partes já cadastradas por busca automática (`/api/pessoas/search-by-name.php`) com opção de voltar para cadastro manual.
+
+## Reaproveitamento técnico obrigatório
+
+- Priorizar componentes/fluxos já consolidados no projeto:
+  - `cnj.js`
+  - `datajud-api.js`
+  - `text-formatter.js`
+  - Endpoints de vínculo processo-réu e busca de pessoas já existentes no domínio.
+- Evitar criação de variações locais quando já houver fluxo estável equivalente.
+
+## Contratos de UX e feedback
+
+- Feedback operacional deve usar toast (`showToast` / `App.Toast`), sem mensagens inline para retorno de operação.
+- Botões devem seguir contrato de botões do projeto (`btn` + variante, com `type` explícito em `<button>`).
+
+## Checklist rápido por tela create
+
+- [ ] Possui processo? Se sim: CNJ + DataJud + classe + persistência processo/classe.
+- [ ] Possui réu/denunciado? Se sim: select por vínculos + opção Outro + input livre.
+- [ ] Nome livre formatado por TextFormatter.
+- [ ] Bloqueio de cadastro enquanto DataJud está pendente.
+- [ ] Fluxo de feedback em toast.

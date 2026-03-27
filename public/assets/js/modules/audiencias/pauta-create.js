@@ -80,7 +80,7 @@
         var classeDescricaoCampo = String(document.getElementById('audiencia-classe')?.value || '').trim();
         var classeDescricao = classeDescricaoHidden || classeDescricaoCampo;
         if (!classeDescricao) {
-            notify('error', 'Validacao', 'Informe: Classe (aguarde o DataJud ou preencha manualmente).');
+            notify('error', 'Validacao', 'Informe: Classe (aguarde o DataJud finalizar o preenchimento automático).');
             return;
         }
 
