@@ -108,4 +108,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Feat: add countByTipoSuspensao method in CeapaRepository and corresponding service method; update views and API to support tipo_suspensao filtering** `[304f8ed]`
 - **Refactor: update cartorio-ceapa-list view layout and add textarea styles in form.css** `[6f1dfee]`
 - **Feat: implement delete functionality in CeapaRepository and CeapaService; update views to support task deletion with confirmation** `[fbcb410]`
+- **Fix: update layout of cartorio-ceapa-list view by adjusting column widths and removing redundant date display** `[7cbd896]`
 
