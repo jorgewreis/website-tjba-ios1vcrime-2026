@@ -213,12 +213,12 @@ if ($totalPages > 0) {
                                 <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['ReuNome'] ?? '—'), ENT_QUOTES); ?></span>
                             </div>
                             <div class="col width-500">
-                                <span class="minor-info">Tipo de suspensão</span>
-                                <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['TipoSuspensao'] ?? '—'), ENT_QUOTES); ?></span>
+                                <span class="minor-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['TipoSuspensao'] ?? '—'), ENT_QUOTES); ?></span>
+                                <span class="major-info"><?php echo "Decisão exarada em " . htmlspecialchars((string) ($row['DataDecisao'] ?? '—'), ENT_QUOTES); ?></span>
                             </div>
-                            <div class="col width-300">
-                                <span class="minor-info">Data da decisão</span>
-                                <span class="major-info"><?php echo htmlspecialchars((string) ($row['DataDecisao'] ?? '—'), ENT_QUOTES); ?></span>
+                            <div class="col width-500">
+                                <span class="minor-info">Decisão a cumprir</span>
+                                <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['DecisaoCumprir'] ?? '—'), ENT_QUOTES); ?></span>
                             </div>
                         </div>
                         <div class="display-flex row row-fit justify-end gap-y-sm align-center">
@@ -230,12 +230,7 @@ if ($totalPages > 0) {
                             </div>
                         </div>
                     </div>
-                    <div class="display-flex row row-full padding-x-sm padding-y-sm border-top">
-                        <div class="col width-100">
-                            <span class="minor-info">Decisão a cumprir</span>
-                            <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['DecisaoCumprir'] ?? '—'), ENT_QUOTES); ?></span>
-                        </div>
-                    </div>
+
                 </div>
             <?php endforeach; ?>
         <?php else: ?>
