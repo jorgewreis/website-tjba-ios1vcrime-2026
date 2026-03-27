@@ -106,4 +106,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: corrigir referência de chave estrangeira na cláusula FROM do CeapaRepository** `[9c2d8ff]`
 - **Fix: correct label casing for CEAPA in home.php** `[8bd4883]`
 - **Feat: add countByTipoSuspensao method in CeapaRepository and corresponding service method; update views and API to support tipo_suspensao filtering** `[304f8ed]`
+- **Refactor: update cartorio-ceapa-list view layout and add textarea styles in form.css** `[6f1dfee]`
 
