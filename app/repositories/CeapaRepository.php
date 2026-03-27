@@ -190,7 +190,7 @@ final class CeapaRepository
     private function buildFromClause(): string
     {
         return sprintf(
-            '`%s` ct LEFT JOIN `partes` p ON p.`id` = ct.`parte_id` LEFT JOIN `processos` pr ON pr.`id` = ct.`processo_origem_id` LEFT JOIN `classes` cl ON cl.`id_classe` = pr.`classe_id`',
+            '`%s` ct LEFT JOIN `partes` p ON p.`id` = ct.`parte_id` LEFT JOIN `processos` pr ON pr.`id` = ct.`processo_origem_id` LEFT JOIN `classes` cl ON cl.`id` = pr.`classe_id`',
             $this->table
         );
     }
