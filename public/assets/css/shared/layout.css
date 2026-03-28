@@ -545,6 +545,7 @@ body {
 
     /* Menu Link States */
     .menu-inner .menu-item .menu-link {
+        width: 220px;
         background-color: var(--color-background-elevated);
         color: var(--color-text-primary);
     }

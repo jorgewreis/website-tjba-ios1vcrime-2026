@@ -502,6 +502,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                         ]
                     },
                     { icon: 'fi fi-rs-money-check-edit', label: 'Cejusc', target: 'cejusc' },
+                    { icon: 'fi fi-rs-hand-holding-heart', label: 'Ceapa', target: 'ceapa' },
                     { icon: 'fi fi-rs-document', label: 'Editais', target: 'editais' },
                     { icon: 'fi fi-rs-blog-text', label: 'Guias', target: 'guias' },
                     { icon: 'fi fi-rs-user-shield', label: 'Medidas protetivas', target: 'medidasprotetivas' },
