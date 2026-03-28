@@ -17,4 +17,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(cartas-expedidas): corrige conclusao de subtarefas que sempre retornava erro - try-catch em addAlocado e update atomico** `[d3ad998]`
 - **fix(services): try-catch em addAlocado no concluirSubtarefa de Medidas, Editais e Cejusc** `[8096c51]`
 - **fix(GabineteReuPresoRepository): enhance ordering logic in query to prioritize review dates and prison dates** `[82106de]`
+- **fix(GabineteReusPresosService): update prefix handling for 90-day review and adjust string matching logic; update labels in cartorio-editais-list view** `[7c8835c]`
 
