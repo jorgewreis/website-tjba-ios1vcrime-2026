@@ -14,4 +14,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: Correção do button de editar** `[390c6f2]`
 - **Refactor: improve handling of user allocation and result validation in CartasRecebidasService and update titles in the view** `[cf8f1f9]`
 - **fix(cartas-recebidas): update atomico subtarefa, protecao reativacao e timeline sempre visivel** `[6ac461a]`
+- **fix(cartas-expedidas): corrige conclusao de subtarefas que sempre retornava erro - try-catch em addAlocado e update atomico** `[d3ad998]`
 
