@@ -206,13 +206,15 @@ final class CartasRecebidasService
             throw new InvalidArgumentException('Carta da subtarefa não identificada.');
         }
 
-        $usuarioIdMovimentacao = null;
+        $dadosArray = [];
         if ($dadosJson !== null && $dadosJson !== '') {
-            $dadosArray = json_decode($dadosJson, true);
-            if (is_array($dadosArray)) {
-                $usuarioIdMovimentacao = trim((string) ($dadosArray['usuario_id'] ?? ''));
+            $decoded = json_decode($dadosJson, true);
+            if (is_array($decoded)) {
+                $dadosArray = $decoded;
             }
         }
+
+        $usuarioIdMovimentacao = trim((string) ($dadosArray['usuario_id'] ?? ''));
         if ($usuarioIdMovimentacao !== '') {
             try {
                 $this->alocadosRepository->addAlocado($cartaId, $usuarioIdMovimentacao);
@@ -221,14 +223,34 @@ final class CartasRecebidasService
             }
         }
 
-        if ($ordem === 3) {
-            $dadosArray = [];
-            if ($dadosJson !== null && $dadosJson !== '') {
-                $dadosArray = json_decode($dadosJson, true);
-            }
-            $resultadoCumprimento = trim((string) (($dadosArray['resultado_cumprimento'] ?? $dadosArray['resultado'] ?? '')));
+        $tipo = trim((string) ($subtarefa['tipo'] ?? ''));
+
+        $tiposJuntadaCertidao = [
+            CartasRecebidasSubtarefasRepository::TIPO_ORDEM_3,
+            'certidao_oficial_justica',
+            'juntada_certidao',
+            'confirmar_juntada',
+            'juntada_certidao_oficial_justica',
+        ];
+        $tiposEnvioDevolucao = [
+            CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5,
+            'envio_processo',
+            'enviar_processo',
+            'devolucao_origem',
+            'devolução_origem',
+        ];
+
+        if (in_array($tipo, $tiposJuntadaCertidao, true)) {
+            $resultadoCumprimento = trim((string) ($dadosArray['resultado_cumprimento'] ?? $dadosArray['resultado'] ?? ''));
             if ($resultadoCumprimento === '') {
                 throw new InvalidArgumentException('Selecione o resultado do cumprimento para concluir a juntada da certidão do oficial de justiça.');
+            }
+        }
+
+        if (in_array($tipo, $tiposEnvioDevolucao, true)) {
+            $tipoEnvio = trim((string) ($dadosArray['tipo_envio'] ?? ''));
+            if ($tipoEnvio === '') {
+                throw new InvalidArgumentException('Selecione o tipo de envio para informar a devolução.');
             }
         }
 

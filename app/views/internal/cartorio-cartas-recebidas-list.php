@@ -331,9 +331,9 @@ if ($totalPages > 0) {
                                     $nomeCompleto = $alocado['nome_completo'] ?? '';
                                     $userLabel = $nomeCompleto !== '' ? $nomeCompleto : $iniciais;
                                     if ($tipo === 'rule') {
-                                        $title = 'Carta recebida alocada para ' . ($nomeCompleto !== '' ? $nomeCompleto : $iniciais);
+                                        $title = 'Alocado por regra para ' . ($nomeCompleto !== '' ? $nomeCompleto : $iniciais);
                                     } elseif ($tipo === 'all') {
-                                        $title = 'Usuário alocado para a tarefa: ' . ($nomeCompleto !== '' ? $nomeCompleto : $iniciais);
+                                        $title = 'Alocado para ' . ($nomeCompleto !== '' ? $nomeCompleto : $iniciais);
                                     } else {
                                         $title = 'Alocação voluntária: ' . ($nomeCompleto !== '' ? $nomeCompleto : $iniciais);
                                     }
@@ -431,6 +431,8 @@ if ($totalPages > 0) {
                                 'envio_processo',
                                 'enviar_processo',
                                 'envio',
+                                'devolucao_origem',
+                                'devolução_origem',
                             ],
                             true
                         );
@@ -658,7 +660,7 @@ if ($totalPages > 0) {
                         notify('error', 'Atenção', 'Selecione o resultado do cumprimento.');
                         return;
                     }
-                    if (['envio_processo', 'enviar_processo', 'envio'].includes(subtarefaTipo) && !(obj.tipo_envio)) {
+                    if (['envio_processo', 'enviar_processo', 'envio', 'devolucao_origem', 'devolução_origem'].includes(subtarefaTipo) && !(obj.tipo_envio)) {
                         notify('error', 'Atenção', 'Selecione o tipo de envio.');
                         return;
                     }
