@@ -130,7 +130,12 @@ final class GabineteReuPresoRepository
              LEFT JOIN `gabinete_reu_preso_processo` pp ON pp.`reu_preso_id` = g.`id` AND pp.`principal` = 1
              LEFT JOIN `processos` pr ON pr.`id` = pp.`processo_id`
              WHERE %s
-             ORDER BY g.`nome` ASC
+             ORDER BY
+                 (g.`proxima_revisao` IS NULL) ASC,
+                 g.`proxima_revisao` ASC,
+                 (pp.`data_prisao` IS NULL) ASC,
+                 pp.`data_prisao` ASC,
+                 g.`nome` ASC
              LIMIT %d OFFSET %d',
             $lastMovSql,
             $this->table,
