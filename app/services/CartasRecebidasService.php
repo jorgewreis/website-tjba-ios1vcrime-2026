@@ -254,21 +254,15 @@ final class CartasRecebidasService
             }
         }
 
-        $this->subtarefasRepository->marcarConcluida($subtarefaId);
-
-        if ($dadosJson !== null && $dadosJson !== '') {
-            $stmt = $this->connection->prepare(
-                'UPDATE `cartas_recebidas_subtarefas` SET `dados_especificos` = :dados, `updated_at` = NOW() WHERE `id` = :id LIMIT 1'
-            );
-            $stmt->bindValue(':dados', $dadosJson);
-            $stmt->bindValue(':id', $subtarefaId);
-            $stmt->execute();
-        }
+        $this->subtarefasRepository->marcarConcluidaComDados($subtarefaId, $dadosJson);
 
         if ($ordem < 7) {
             $proxima = $this->subtarefasRepository->findByCartaIdEOrdem($cartaId, $ordem + 1);
-            if ($proxima !== null) {
-                $this->subtarefasRepository->atualizarStatus((string) $proxima['id'], 'em_andamento');
+            if ($proxima !== null && trim((string) ($proxima['status'] ?? '')) !== CartasRecebidasSubtarefasRepository::STATUS_CANCELADA) {
+                $statusProxima = trim((string) ($proxima['status'] ?? ''));
+                if ($statusProxima !== 'concluida') {
+                    $this->subtarefasRepository->atualizarStatus((string) $proxima['id'], 'em_andamento');
+                }
             }
             $this->repository->update($cartaId, ['status' => 'em_andamento']);
             return ['tarefa_principal_concluida' => false];
