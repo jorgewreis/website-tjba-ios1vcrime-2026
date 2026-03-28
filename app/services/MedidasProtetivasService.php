@@ -324,7 +324,11 @@ final class MedidasProtetivasService
 
             $usuarioIdMovimentacao = trim((string) ($dadosArray['usuario_id'] ?? ''));
             if ($usuarioIdMovimentacao !== '') {
-                $this->alocadosRepository->addAlocado($medidaId, $usuarioIdMovimentacao, MedidasProtetivasAlocadosRepository::TIPO_SPECIFIC);
+                try {
+                    $this->alocadosRepository->addAlocado($medidaId, $usuarioIdMovimentacao, MedidasProtetivasAlocadosRepository::TIPO_SPECIFIC);
+                } catch (\RuntimeException $e) {
+                    // limite ou duplicata — não impede a conclusão da subtarefa
+                }
             }
             $this->subtarefasRepository->atualizarDadosEspecificos($subtarefaId, $dadosJson);
         } else {

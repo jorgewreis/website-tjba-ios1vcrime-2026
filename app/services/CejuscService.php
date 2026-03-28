@@ -252,7 +252,11 @@ final class CejuscService
             }
         }
         if ($usuarioIdMovimentacao !== null && $usuarioIdMovimentacao !== '') {
-            $this->alocadosRepository->addAlocado($cejuscId, $usuarioIdMovimentacao);
+            try {
+                $this->alocadosRepository->addAlocado($cejuscId, $usuarioIdMovimentacao);
+            } catch (\RuntimeException $e) {
+                // limite ou duplicata — não impede a conclusão da subtarefa
+            }
         }
 
         if ($dadosJson !== null && $dadosJson !== '') {

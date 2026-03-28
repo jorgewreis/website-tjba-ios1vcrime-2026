@@ -213,7 +213,11 @@ final class EditaisService
             }
         }
         if ($usuarioIdMovimentacao !== null && $usuarioIdMovimentacao !== '') {
-            $this->alocadosRepository->addAlocado($editalId, $usuarioIdMovimentacao, EditaisAlocadosRepository::TIPO_SPECIFIC);
+            try {
+                $this->alocadosRepository->addAlocado($editalId, $usuarioIdMovimentacao, EditaisAlocadosRepository::TIPO_SPECIFIC);
+            } catch (\RuntimeException $e) {
+                // limite ou duplicata — não impede a conclusão da subtarefa
+            }
         }
 
         if ($dadosJson !== null && $dadosJson !== '') {
