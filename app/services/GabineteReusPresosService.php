@@ -18,8 +18,9 @@ final class GabineteReusPresosService
 
     /** Prefixos de tipos que disparam prazo de 90 dias para próxima revisão (CPP art. 316 — referência operacional). */
     public const PREFIXOS_MOVIMENTACAO_REVISAO_90_DIAS = [
-        'prisao',
+        'decretacao',
         'manutencao',
+        'prisao',
         'conversao',
     ];
 
@@ -620,7 +621,7 @@ final class GabineteReusPresosService
             return false;
         }
         foreach (self::PREFIXOS_MOVIMENTACAO_REVISAO_90_DIAS as $prefixo) {
-            if (str_contains($tipo, mb_strtolower((string) $prefixo, 'UTF-8'))) {
+            if (str_starts_with($tipo, mb_strtolower((string) $prefixo, 'UTF-8'))) {
                 return true;
             }
         }

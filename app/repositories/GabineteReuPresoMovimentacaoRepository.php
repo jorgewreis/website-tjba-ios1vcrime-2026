@@ -122,7 +122,7 @@ final class GabineteReuPresoMovimentacaoRepository
         foreach ($prefixes as $i => $prefix) {
             $k = ':pf' . $i;
             $whereLike[] = 'm.`tipo_codigo` LIKE ' . $k;
-            $params[$k] = '%' . $prefix . '%';
+            $params[$k] = $prefix . '%';
         }
         $sql = $this->hasProcessoIdColumn()
             ? sprintf(

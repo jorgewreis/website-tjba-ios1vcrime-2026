@@ -71,7 +71,7 @@ $statusCounts = array_merge(array_fill_keys($statusOptions, 0), $service->getSta
 $subtarefaLabels = [
     'expedicao_edital' => 'Expedição de Edital',
     'envio_djen' => 'Envio para publicação no DJEN',
-    'certificacao_publicacao' => 'Certificação da publicação',
+    'certificacao_publicacao' => 'Data da publicação',
     'certificacao_decurso_prazo' => 'Aguardando decurso do prazo',
 ];
 $ordemLabels = [
@@ -84,7 +84,7 @@ $ordemLabels = [
 $buttonTitleByTipo = [
     'expedicao_edital' => 'Informar expedição do edital',
     'envio_djen' => 'Informar envio para publicação no DJEN',
-    'certificacao_publicacao' => 'Informar certificação da publicação',
+    'certificacao_publicacao' => 'Informar data da publicação',
     'certificacao_decurso_prazo' => 'Informar decurso do prazo',
 ];
 
