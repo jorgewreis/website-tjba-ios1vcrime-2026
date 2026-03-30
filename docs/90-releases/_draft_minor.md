@@ -28,4 +28,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(audiencias): enhance process priority handling in services and views, including UI updates for defensor management** `[5f89cdf]`
 - **refactor(audiencias): improve DataJud caching mechanism with enhanced storage handling and legacy support** `[f85722d]`
 - **fix(form): update badge-black background color to match surface text color for improved accessibility** `[bf7122c]`
+- **feat(audiencias): add functionality to list occupied and available time slots for hearings, enhancing scheduling capabilities in services and views** `[50b2156]`
 
