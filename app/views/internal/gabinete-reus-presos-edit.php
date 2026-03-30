@@ -55,6 +55,16 @@ function grpFmtBr(?string $d): string
     return $t !== false ? date('d/m/Y', $t) : '—';
 }
 
+function grpFmtDateTimeBr(?string $d): string
+{
+    if ($d === null || $d === '') {
+        return '—';
+    }
+    $t = strtotime((string) $d);
+
+    return $t !== false ? date('d/m/Y H:i', $t) : '—';
+}
+
 $proxLabel = grpFmtBr($reu['proxima_revisao'] ?? null);
 $ultimaMov = $movimentacoes[0] ?? null;
 $ultimaMovLabel = '—';
@@ -88,7 +98,7 @@ if ($ultimaMov !== null) {
             <span class="specific">Edição</span>
         </div>
         <h1 class="title-page">Editar réu preso</h1>
-        <p class="description-page">Vincule processos (prioridade reu-preso quando preso), informe datas e movimentações que alimentam prazos.</p>
+        <p class="description-page">Vincule processos, informe datas e movimentações.</p>
     </div>
 
     <?php if ($errorMessage !== '' || $reu === null): ?>
@@ -107,7 +117,7 @@ if ($ultimaMov !== null) {
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md flex-wrap" style="gap:24px;">
             <div class="col">
-                <span class="minor-info">Próxima reavaliação (90 dias após decretada)</span>
+                <span class="minor-info">Próxima reavaliação</span>
                 <span class="major-info" style="color:var(--primary-color-active);font-weight:600;"><?php echo htmlspecialchars($proxLabel, ENT_QUOTES); ?></span>
             </div>
             <div class="col">
@@ -245,37 +255,25 @@ if ($ultimaMov !== null) {
             <h2 style="margin:0;">Movimentações processuais</h2>
         </div>
         <div class="display-flex col col-full padding-x-md padding-y-md gap-y-md border-bottom">
-            <div class="display-flex row row-full justify-end">
-                <div class="col">
-                    <label for="grp-mov-filter-tipo">Filtro rápido por tipo</label>
-                    <select class="width-600 height-md" id="grp-mov-filter-tipo">
-                        <option value="">Todos</option>
-                        <?php foreach ($tiposMov as $cod => $lab): ?>
-                        <option value="<?php echo htmlspecialchars($cod, ENT_QUOTES); ?>"><?php echo htmlspecialchars($lab, ENT_QUOTES); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-            </div>
             <?php if (!empty($movimentacoes)): ?>
             <div class="row row-full border-bottom">
                 <div class="display-flex row row-full align-center justify-between padding-y-sm" style="gap:12px;">
-                    <span class="minor-info" style="min-width:0;flex:1;">Tipo</span>
-                    <span class="minor-info width-500">Observação</span>
-                    <span class="minor-info width-200">Data</span>
+                    <span class="minor-info" style="min-width:0;flex:1;">Movimentação</span>
+                    <span class="minor-info width-200">Cadastro</span>
                     <span class="minor-info width-100 text-right">Ações</span>
                 </div>
             </div>
             <ul class="row row-full display-flex" id="grp-mov-table-body" style="margin:0;padding:0;list-style:none;">
                 <?php foreach ($movimentacoes as $m):
                     $movTipo = trim((string) ($m['tipo_label'] ?? ''));
-                    $movTipoCodigo = trim((string) ($m['tipo_codigo'] ?? ''));
                     $movObs = trim((string) ($m['observacoes'] ?? ''));
+                    $movBase = grpFmtBr($m['data_movimentacao'] ?? null) . ' - ' . $movTipo;
+                    $movLabel = $movObs !== '' ? ($movBase . ' (' . $movObs . ')') : $movBase;
                     ?>
-                <li class="display-flex row row-full align-center justify-between border-bottom padding-y-sm grp-mov-row" data-tipo="<?php echo htmlspecialchars($movTipoCodigo, ENT_QUOTES); ?>" style="gap:12px;">
-                    <span class="minor-info text-ellipsis" style="min-width:0;flex:1;"><?php echo htmlspecialchars($movTipo, ENT_QUOTES); ?></span>
-                    <span class="minor-info width-500 text-ellipsis"><?php echo htmlspecialchars($movObs, ENT_QUOTES); ?></span>
-                    <span class="minor-info width-200"><?php echo htmlspecialchars(grpFmtBr($m['data_movimentacao'] ?? null), ENT_QUOTES); ?></span>
-                    <div class="display-flex row row-fit align-center justify-end width-100" style="gap:8px;flex-shrink:0;">
+                <li class="display-flex row row-full align-center justify-between border-bottom padding-y-sm grp-mov-row" style="gap:12px;">
+                    <span class="minor-info text-ellipsis" style="min-width:0;flex:1;"><?php echo htmlspecialchars($movLabel, ENT_QUOTES); ?></span>
+                    <span class="minor-info width-200"><?php echo htmlspecialchars(grpFmtDateTimeBr($m['created_at'] ?? null), ENT_QUOTES); ?></span>
+                    <div class="display-flex row row-fit align-center justify-end">
                         <?php if (!$arquivado): ?>
                         <button
                             type="button"
@@ -283,7 +281,7 @@ if ($ultimaMov !== null) {
                             data-mov-id="<?php echo htmlspecialchars((string) ($m['id'] ?? ''), ENT_QUOTES); ?>"
                             title="Excluir movimentação"
                             aria-label="Excluir movimentação"
-                            style="width: 25px; height: 20px !important; padding: 5px; border-radius: 2px; border: none; box-shadow: none;"
+                            style="display: flex; align-items: center; justify-content: center; width: 20px; height: 20px !important; padding: 5px; border-radius: 2px; border: none; box-shadow: none;"
                         >x</button>
                         <?php endif; ?>
                     </div>
@@ -626,14 +624,6 @@ if ($ultimaMov !== null) {
             }
 
             syncNewProcessInheritedFields();
-
-            document.getElementById('grp-mov-filter-tipo')?.addEventListener('change', function () {
-                const selected = (this.value || '').trim();
-                document.querySelectorAll('.grp-mov-row').forEach(function (row) {
-                    const tipo = (row.getAttribute('data-tipo') || '').trim();
-                    row.style.display = (selected === '' || tipo === selected) ? '' : 'none';
-                });
-            });
 
             document.getElementById('btn-grp-add-mov')?.addEventListener('click', function () {
                 const tipo = document.getElementById('grp-mov-tipo')?.value || '';
