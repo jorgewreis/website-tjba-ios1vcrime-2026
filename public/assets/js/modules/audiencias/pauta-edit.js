@@ -285,33 +285,58 @@
     }
 
     /**
-     * Cache DataJud de partes por sessão (por aba). Evita re-consulta a cada reload após adicionar parte.
-     * Estrutura: { "20digits": null | ["Nome1", ...] }
-     *   null  → DataJud retornou sem polo passivo
-     *   array → nomes encontrados (antes do filtro de partes já cadastradas)
+     * Cache DataJud de partes (sessionStorage + localStorage). Evita re-consulta a cada reload após adicionar parte.
+     * Uma chave por CNJ (20 dígitos): valor JSON = null | ["Nome1", ...]
+     *   null  → sem polo passivo ou falha já registrada (UI manual; não refaz fetch a cada F5)
+     *   array → nomes brutos (antes do filtro de partes já cadastradas)
      */
-    var STORAGE_KEY_DATAJUD_POLO = 'salapauta.datajudPoloPassivo';
+    var STORAGE_KEY_DATAJUD_POLO_LEGACY = 'salapauta.datajudPoloPassivo';
+    var STORAGE_PREFIX_DATAJUD_POLO = 'salapauta.datajudPoloByCnj.v1.';
 
-    function readDatajudCache(processDigits) {
+    function datajudStorageKey(processDigits) {
+        return STORAGE_PREFIX_DATAJUD_POLO + processDigits;
+    }
+
+    function readLegacyDatajudObjectCache(processDigits) {
         try {
-            var raw = sessionStorage.getItem(STORAGE_KEY_DATAJUD_POLO);
+            var raw = sessionStorage.getItem(STORAGE_KEY_DATAJUD_POLO_LEGACY)
+                || localStorage.getItem(STORAGE_KEY_DATAJUD_POLO_LEGACY);
             if (!raw) return undefined;
             var o = JSON.parse(raw);
-            if (!o || typeof o !== 'object') return undefined;
+            if (!o || typeof o !== 'object' || Array.isArray(o)) return undefined;
             if (!(processDigits in o)) return undefined;
-            return o[processDigits]; // null ou array
+            return o[processDigits];
         } catch (e) {
             return undefined;
         }
     }
 
-    function writeDatajudCache(processDigits, nomes) {
+    function readDatajudCache(processDigits) {
+        var key = datajudStorageKey(processDigits);
         try {
-            var raw = sessionStorage.getItem(STORAGE_KEY_DATAJUD_POLO);
-            var o = (raw ? JSON.parse(raw) : null) || {};
-            if (typeof o !== 'object') o = {};
-            o[processDigits] = Array.isArray(nomes) ? nomes : null;
-            sessionStorage.setItem(STORAGE_KEY_DATAJUD_POLO, JSON.stringify(o));
+            var raw = sessionStorage.getItem(key) || localStorage.getItem(key);
+            if (raw != null && raw !== '') {
+                return JSON.parse(raw);
+            }
+        } catch (e) {
+            // continua para legado
+        }
+        var legacy = readLegacyDatajudObjectCache(processDigits);
+        if (legacy !== undefined) {
+            writeDatajudCache(processDigits, legacy);
+        }
+        return legacy;
+    }
+
+    function writeDatajudCache(processDigits, nomes) {
+        var key = datajudStorageKey(processDigits);
+        var payload = Array.isArray(nomes) ? nomes : null;
+        var s = JSON.stringify(payload);
+        try {
+            sessionStorage.setItem(key, s);
+        } catch (e) {}
+        try {
+            localStorage.setItem(key, s);
         } catch (e) {}
     }
 
@@ -580,6 +605,7 @@
                             return fetchAttempt(attemptIndex + 1);
                         }
                         if (reason === 'timeout') {
+                            writeDatajudCache(digits, null);
                             applyManualFallback(typeof showToast === 'function' ? {
                                 type: 'info',
                                 variant: 'simple',
@@ -590,6 +616,7 @@
                     }
                     console.error('DataJud (partes) falhou', err);
                     if (err && err.code === 'parse') {
+                        writeDatajudCache(digits, null);
                         applyManualFallback(typeof showToast === 'function' ? {
                             type: 'error',
                             variant: 'simple',
@@ -598,6 +625,7 @@
                         return;
                     }
                     if (err && err.isHttp) {
+                        writeDatajudCache(digits, null);
                         applyManualFallback(typeof showToast === 'function' ? {
                             type: 'error',
                             variant: 'simple',
@@ -605,6 +633,7 @@
                         } : null);
                         return;
                     }
+                    writeDatajudCache(digits, null);
                     applyManualFallback(typeof showToast === 'function' ? {
                         type: 'info',
                         variant: 'simple',

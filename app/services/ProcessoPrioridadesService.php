@@ -58,7 +58,10 @@ final class ProcessoPrioridadesService
      *   has_parte_menor: bool,
      *   has_reu_preso: bool,
      *   codigo_bloqueado_menor: string,
-     *   codigo_bloqueado_reu_preso: string
+     *   codigo_bloqueado_reu_preso: string,
+     *   processo_sigiloso: bool,
+     *   codigo_bloqueado_sigiloso: string,
+     *   sigiloso_obrigatorio_menor_ou_vd: bool
      * }
      */
     public function getEstadoEdicaoPorProcessoId(string $processoId, int $partesMenoresNaPauta = 0): array
@@ -75,6 +78,7 @@ final class ProcessoPrioridadesService
         $hasMenor = $this->partesRepository->countMenoresPorIdadeOuFlagNoProcesso($processoId) > 0
             || $partesMenoresNaPauta > 0;
         $hasReu = SalaAudienciasReuPresoDetector::processoTemReuPreso($this->connection, $processoId, $numero);
+        $hasSigiloProcesso = $proc !== null && !empty($proc['sigiloso']);
 
         $rows = $this->repository->findByProcessoId($processoId);
         $prioridades = [];
@@ -97,6 +101,19 @@ final class ProcessoPrioridadesService
         if ($hasReu) {
             $bloqueados[] = PrioridadesProcessuaisCatalog::codigoAutomaticaReuPreso();
         }
+        $codMenor = PrioridadesProcessuaisCatalog::codigoAutomaticaParteMenor();
+        $codVd = PrioridadesProcessuaisCatalog::codigoViolenciaDomestica();
+        $sigilosoObrigatorioMenorOuVd = false;
+        foreach ($prioridades as $p) {
+            $cc = (string) ($p['codigo'] ?? '');
+            if ($cc === $codMenor || $cc === $codVd) {
+                $sigilosoObrigatorioMenorOuVd = true;
+                break;
+            }
+        }
+        if ($hasSigiloProcesso || $sigilosoObrigatorioMenorOuVd) {
+            $bloqueados[] = PrioridadesProcessuaisCatalog::codigoSigiloso();
+        }
 
         return [
             'processo_id' => $processoId,
@@ -105,8 +122,11 @@ final class ProcessoPrioridadesService
             'codigos_bloqueados_remocao' => array_values(array_unique($bloqueados)),
             'has_parte_menor' => $hasMenor,
             'has_reu_preso' => $hasReu,
+            'processo_sigiloso' => $hasSigiloProcesso,
+            'sigiloso_obrigatorio_menor_ou_vd' => $sigilosoObrigatorioMenorOuVd,
             'codigo_bloqueado_menor' => PrioridadesProcessuaisCatalog::codigoAutomaticaParteMenor(),
             'codigo_bloqueado_reu_preso' => PrioridadesProcessuaisCatalog::codigoAutomaticaReuPreso(),
+            'codigo_bloqueado_sigiloso' => PrioridadesProcessuaisCatalog::codigoSigiloso(),
         ];
     }
 
@@ -159,6 +179,26 @@ final class ProcessoPrioridadesService
         }
         if ($hasReu && $codigo === PrioridadesProcessuaisCatalog::codigoAutomaticaReuPreso()) {
             throw new InvalidArgumentException('Esta prioridade é mantida automaticamente enquanto houver réu preso no cadastro do processo.');
+        }
+        $codMenorRem = PrioridadesProcessuaisCatalog::codigoAutomaticaParteMenor();
+        $codVdRem = PrioridadesProcessuaisCatalog::codigoViolenciaDomestica();
+        $codSigRem = PrioridadesProcessuaisCatalog::codigoSigiloso();
+        $rowsRem = $this->repository->findByProcessoId($processoId);
+        $temMenorOuVdNaLista = false;
+        foreach ($rowsRem as $rw) {
+            $cr = trim((string) ($rw['codigo'] ?? ''));
+            if ($cr === $codMenorRem || $cr === $codVdRem) {
+                $temMenorOuVdNaLista = true;
+                break;
+            }
+        }
+        if ($codigo === $codSigRem && $temMenorOuVdNaLista) {
+            throw new InvalidArgumentException('A prioridade Sigiloso é obrigatória enquanto existir prioridade de menor ou de violência doméstica.');
+        }
+        $procRem = $this->processosRepository->findById($processoId);
+        $sigProc = $procRem !== null && !empty($procRem['sigiloso']);
+        if ($sigProc && $codigo === $codSigRem) {
+            throw new InvalidArgumentException('Esta prioridade é mantida automaticamente enquanto o processo estiver marcado como sigiloso.');
         }
 
         if ($this->repository->findOneByProcessoAndCodigo($processoId, $codigo) === null) {
@@ -260,6 +300,7 @@ final class ProcessoPrioridadesService
         }
         $this->syncMenor($processoId, $partesMenoresNaPauta);
         $this->syncReuPreso($processoId, $numeroProcesso);
+        $this->syncSigiloso($processoId);
     }
 
     /**
@@ -295,6 +336,49 @@ final class ProcessoPrioridadesService
         }
     }
 
+    public function syncSigiloso(string $processoId): void
+    {
+        $processoId = trim($processoId);
+        if ($processoId === '') {
+            return;
+        }
+        $codigoSig = PrioridadesProcessuaisCatalog::codigoSigiloso();
+        $codMenor = PrioridadesProcessuaisCatalog::codigoAutomaticaParteMenor();
+        $codVd = PrioridadesProcessuaisCatalog::codigoViolenciaDomestica();
+
+        $proc = $this->processosRepository->findById($processoId);
+        $procSigFlag = $proc !== null && !empty($proc['sigiloso']);
+
+        $rows = $this->repository->findByProcessoId($processoId);
+        $codigos = [];
+        foreach ($rows as $row) {
+            $c = trim((string) ($row['codigo'] ?? ''));
+            if ($c !== '') {
+                $codigos[$c] = true;
+            }
+        }
+        $temMenorOuVD = isset($codigos[$codMenor]) || isset($codigos[$codVd]);
+
+        if ($procSigFlag) {
+            $this->repository->upsert($processoId, $codigoSig, ProcessoPrioridadeOrigem::REGRA_SIGILOSO, null);
+
+            return;
+        }
+        if ($temMenorOuVD) {
+            $this->repository->upsert($processoId, $codigoSig, ProcessoPrioridadeOrigem::REGRA_DERIVADA_MENOR_OU_VD, null);
+
+            return;
+        }
+        $this->repository->deleteByProcessoIdCodigoAndOrigens(
+            $processoId,
+            $codigoSig,
+            [
+                ProcessoPrioridadeOrigem::REGRA_SIGILOSO,
+                ProcessoPrioridadeOrigem::REGRA_DERIVADA_MENOR_OU_VD,
+            ]
+        );
+    }
+
     /** Job semanal / manutenção: reavalia regras que não são VD (VD não é removida automaticamente). */
     public function reconciliarTodosProcessosComPrioridade(): int
     {
@@ -304,6 +388,7 @@ final class ProcessoPrioridadesService
             $numero = $this->numeroDoProcesso($pid);
             $this->syncMenor($pid);
             $this->syncReuPreso($pid, $numero);
+            $this->syncSigiloso($pid);
             $n++;
         }
 

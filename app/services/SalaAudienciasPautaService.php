@@ -793,6 +793,8 @@ final class SalaAudienciasPautaService
             'prioridades_labels' => $labels,
             'prioridade_bloqueada_se_menor' => PrioridadesProcessuaisCatalog::labelForCodigo(PrioridadesProcessuaisCatalog::codigoAutomaticaParteMenor()),
             'prioridade_bloqueada_se_reu_preso' => PrioridadesProcessuaisCatalog::labelForCodigo(PrioridadesProcessuaisCatalog::codigoAutomaticaReuPreso()),
+            'prioridade_bloqueada_se_sigiloso' => PrioridadesProcessuaisCatalog::labelForCodigo(PrioridadesProcessuaisCatalog::codigoSigiloso()),
+            'prioridade_bloqueada_se_sigiloso_menor_ou_vd' => 'menor ou violência doméstica',
         ]);
     }
 

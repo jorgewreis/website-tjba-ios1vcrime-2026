@@ -6,6 +6,7 @@ if (function_exists('mb_internal_encoding')) {
     mb_internal_encoding('UTF-8');
 }
 
+require_once __DIR__ . '/../../helpers/PrioridadesProcessuaisCatalog.php';
 require_once __DIR__ . '/../../services/SalaAudienciasPautaService.php';
 require_once __DIR__ . '/../../repositories/GabineteReuPresoProcessoRepository.php';
 require_once __DIR__ . '/../../repositories/GabineteReuPresoRepository.php';
@@ -324,7 +325,7 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                     <label for="audiencia-edit-sala">Localização <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <?php $locAtual = (string) ($row['localizacao'] ?? ''); ?>
                     <select class="width-400 height-md" id="audiencia-edit-sala">
-                        <option value="" selected disabled>Selecione a localização</option>
+                        <option value="" disabled<?php echo $locAtual === '' ? ' selected' : ''; ?>>Selecione a localização</option>
                         <option value="presencial"<?php echo $locAtual === 'presencial' ? ' selected' : ''; ?>>Presencial - Fórum</option>
                         <option value="lifesize"<?php echo $locAtual === 'lifesize' ? ' selected' : ''; ?>>Virtual - Lifesize</option>
                         <option value="audin"<?php echo $locAtual === 'audin' ? ' selected' : ''; ?>>Virtual - Audin</option>
@@ -362,7 +363,11 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                 </div>
                 <button type="button" class="btn btn-primary height-md" id="btn-prioridade-adicionar">Adicionar</button>
             </div>
-            <div id="prioridades-processuais-list" class="display-flex col col-full gap-y-sm" aria-live="polite"></div>
+            <div class="display-flex col col-full grp-subtask-panel">
+                <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top align-start flex-wrap grp-sub-line grp-sub-line-primary" style="font-family: monospace; font-size: 11px;">
+                    <div id="prioridades-processuais-list" class="display-flex col col-full gap-y-sm" aria-live="polite"></div>
+                </div>
+            </div>
         </div>
         <?php endif; ?>
 
@@ -652,6 +657,15 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
         window.PAUTA_PRIORIDADES_INITIAL = <?php echo json_encode($prioridadesEdicaoInicial, JSON_UNESCAPED_UNICODE); ?>;
         window.PAUTA_EDIT_ID = <?php echo json_encode($row !== null ? (string) ($row['id_pauta'] ?? '') : '', JSON_UNESCAPED_UNICODE); ?>;
         window.PAUTA_PROCESSO_ID = <?php echo json_encode($row !== null ? (string) ($row['processo'] ?? '') : '', JSON_UNESCAPED_UNICODE); ?>;
+        window.PAUTA_PROCESSO_SIGILOSO = <?php echo json_encode($row !== null && !empty($row['processo_sigiloso'])); ?>;
+        window.PRIORIDADES_BADGE_DANGER_CODES = <?php echo json_encode([
+            PrioridadesProcessuaisCatalog::codigoAutomaticaReuPreso(),
+            PrioridadesProcessuaisCatalog::codigoViolenciaDomestica(),
+            PrioridadesProcessuaisCatalog::codigoAutomaticaParteMenor(),
+        ], JSON_UNESCAPED_UNICODE); ?>;
+        window.PRIORIDADES_BADGE_BLACK_CODES = <?php echo json_encode([
+            PrioridadesProcessuaisCatalog::codigoSigiloso(),
+        ], JSON_UNESCAPED_UNICODE); ?>;
     </script>
 
     <script src="/assets/js/shared/text-formatter.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/shared/text-formatter.js') ?: time(); ?>"></script>

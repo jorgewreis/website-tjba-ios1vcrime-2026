@@ -333,6 +333,8 @@ $endItem = min($offset + count($rows), $total);
                                     $badgeClass = 'badge-warning';
                                     if ($codigo !== null && in_array($codigo, ['reu_preso', 'violencia_domestica', 'crianca_adolescente'], true)) {
                                         $badgeClass = 'badge-danger';
+                                    } elseif ($codigo === 'sigiloso') {
+                                        $badgeClass = 'badge-black';
                                     }
                                     ?>
                                     <span class="badge <?php echo htmlspecialchars($badgeClass, ENT_QUOTES); ?>"><?php echo htmlspecialchars($rotulo, ENT_QUOTES); ?></span>

@@ -76,7 +76,64 @@
         if (state.has_reu_preso && c === state.codigo_bloqueado_reu_preso) {
             return '*automática (réu preso)';
         }
+        var sigCod = String(state.codigo_bloqueado_sigiloso || '');
+        if (sigCod !== '' && c === sigCod) {
+            if (state.processo_sigiloso) {
+                return '*automática (processo sigiloso)';
+            }
+            if (state.sigiloso_obrigatorio_menor_ou_vd) {
+                return '*obrigatória (menor ou violência doméstica)';
+            }
+        }
         return '';
+    }
+
+    /** Mesma regra de `sala-audiencias-pauta-list.php`: danger para réu preso, violência doméstica, criança/adolescente. */
+    function dangerCodes() {
+        return Array.isArray(window.PRIORIDADES_BADGE_DANGER_CODES)
+            ? window.PRIORIDADES_BADGE_DANGER_CODES
+            : ['reu_preso', 'violencia_domestica', 'crianca_adolescente'];
+    }
+
+    function resolveCanonicalCodigo(p) {
+        var c = String(p.codigo || '').trim();
+        var lab = String(p.label || '').trim();
+        if (state && Array.isArray(state.catalogo)) {
+            var i;
+            for (i = 0; i < state.catalogo.length; i++) {
+                var it = state.catalogo[i];
+                if (!it) {
+                    continue;
+                }
+                if (c && String(it.codigo || '') === c) {
+                    return c;
+                }
+            }
+            for (i = 0; i < state.catalogo.length; i++) {
+                var it2 = state.catalogo[i];
+                if (it2 && lab && String(it2.label || '') === lab && it2.codigo) {
+                    return String(it2.codigo);
+                }
+            }
+        }
+        return c || lab;
+    }
+
+    function blackCodes() {
+        return Array.isArray(window.PRIORIDADES_BADGE_BLACK_CODES)
+            ? window.PRIORIDADES_BADGE_BLACK_CODES
+            : ['sigiloso'];
+    }
+
+    function badgeClassForPrioridade(p) {
+        var cod = resolveCanonicalCodigo(p);
+        if (dangerCodes().indexOf(cod) >= 0) {
+            return 'badge badge-danger';
+        }
+        if (blackCodes().indexOf(cod) >= 0) {
+            return 'badge badge-black';
+        }
+        return 'badge badge-warning';
     }
 
     function populateSelect() {
@@ -113,10 +170,21 @@
     function renderList() {
         listEl.innerHTML = '';
         if (!state || !Array.isArray(state.prioridades) || state.prioridades.length === 0) {
+            var wrapEmpty = document.createElement('div');
+            wrapEmpty.className = 'display-flex flex-wrap align-items-center gap-y-sm';
+            if (window.PAUTA_PROCESSO_SIGILOSO) {
+                var sigOnly = document.createElement('span');
+                sigOnly.className = 'badge badge-black';
+                sigOnly.title = 'Processo sigiloso';
+                sigOnly.textContent = 'S';
+                wrapEmpty.appendChild(sigOnly);
+            }
             var empty = document.createElement('span');
             empty.className = 'minor-info';
+            empty.style.marginLeft = window.PAUTA_PROCESSO_SIGILOSO ? '8px' : '';
             empty.textContent = 'Nenhuma prioridade registrada para este processo.';
-            listEl.appendChild(empty);
+            wrapEmpty.appendChild(empty);
+            listEl.appendChild(wrapEmpty);
             return;
         }
 
@@ -124,7 +192,7 @@
             return String(a.label || a.codigo).localeCompare(String(b.label || b.codigo), 'pt-BR');
         });
 
-        sorted.forEach(function (p) {
+        sorted.forEach(function (p, idx) {
             var codigo = String(p.codigo || '');
             var label = String(p.label || codigo);
             var row = document.createElement('div');
@@ -133,8 +201,15 @@
 
             var left = document.createElement('div');
             left.className = 'display-flex row row-fit align-center gap-y-sm flex-wrap';
+            if (idx === 0 && window.PAUTA_PROCESSO_SIGILOSO) {
+                var sigBadge = document.createElement('span');
+                sigBadge.className = 'badge badge-black';
+                sigBadge.title = 'Processo sigiloso';
+                sigBadge.textContent = 'S';
+                left.appendChild(sigBadge);
+            }
             var badge = document.createElement('span');
-            badge.className = 'badge badge-primary';
+            badge.className = badgeClassForPrioridade(p);
             badge.textContent = label;
             left.appendChild(badge);
             var hintText = hintForCodigo(codigo);

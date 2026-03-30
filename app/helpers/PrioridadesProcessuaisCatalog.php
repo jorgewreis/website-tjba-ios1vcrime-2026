@@ -14,6 +14,7 @@ final class PrioridadesProcessuaisCatalog
             return [
                 'crianca_adolescente' => 'Criança ou adolescente',
                 'reu_preso' => 'Réu preso',
+                'sigiloso' => 'Sigiloso',
             ];
         }
         $data = require $path;
@@ -21,6 +22,7 @@ final class PrioridadesProcessuaisCatalog
             return [
                 'crianca_adolescente' => 'Criança ou adolescente',
                 'reu_preso' => 'Réu preso',
+                'sigiloso' => 'Sigiloso',
             ];
         }
         $out = [];
@@ -48,6 +50,11 @@ final class PrioridadesProcessuaisCatalog
     public static function codigoViolenciaDomestica(): string
     {
         return 'violencia_domestica';
+    }
+
+    public static function codigoSigiloso(): string
+    {
+        return 'sigiloso';
     }
 
     /** @deprecated use codigoAutomaticaParteMenor + labelForCodigo */
@@ -121,6 +128,7 @@ final class PrioridadesProcessuaisCatalog
             'pessoa_deficiencia' => 'pessoa_deficiencia',
             'doenca-grave' => 'pessoa_doenca_grave',
             'doença-grave' => 'pessoa_doenca_grave',
+            'sigiloso' => 'sigiloso',
         ];
 
         return $aliases[$t] ?? null;

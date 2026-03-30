@@ -87,7 +87,19 @@ final class SalaAudienciasPautaRepository
         $st->bindValue(':obs', $row['observacoes'] ?? null);
         $st->bindValue(':atualizado_por', $row['atualizado_por'] ?? null);
         $st->execute();
-        return $st->rowCount() > 0;
+        if ($st->rowCount() > 0) {
+            return true;
+        }
+        // MySQL pode reportar 0 linhas afetadas quando os valores enviados são idênticos aos já gravados;
+        // nesse caso o UPDATE ainda é válido se o registro existir e estiver ativo.
+        $check = $this->connection->prepare(sprintf(
+            'SELECT 1 FROM `%s` WHERE `id_pauta` = :id AND `ativo` = 1 LIMIT 1',
+            $this->table
+        ));
+        $check->bindValue(':id', $id);
+        $check->execute();
+
+        return $check->fetchColumn() !== false;
     }
 
     public function setStatus(string $id, string $status, ?string $atualizadoPor): bool
