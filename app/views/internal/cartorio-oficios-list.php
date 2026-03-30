@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 declare(strict_types=1);
 
 header('Content-Type: text/html; charset=UTF-8');
@@ -8,8 +8,31 @@ if (function_exists('mb_internal_encoding')) {
 
 require_once __DIR__ . '/../../services/OficiosCartorioService.php';
 require_once __DIR__ . '/../../repositories/OficiosCartorioSubtarefasRepository.php';
+require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
 
 $connection = Conection::getInstance()->getConnection();
+
+$ruleServidor = '';
+$hasRuleAllocation = false;
+$ruleNameAllocOficios = 'ALLOCATE-CARTORIOOFICIOS';
+try {
+    $regrasRepoAlloc = new AlocacoesRegrasRepository($connection);
+    $ruleRowAlloc = $regrasRepoAlloc->findByRegra($ruleNameAllocOficios);
+    $allocatedUserIdAlloc = $ruleRowAlloc['usuario_id'] ?? null;
+    if ($allocatedUserIdAlloc !== null && $allocatedUserIdAlloc !== '') {
+        $stmtAlloc = $connection->prepare('SELECT `nome`, `sobrenome` FROM `usuarios` WHERE `id_usuario` = ? LIMIT 1');
+        $stmtAlloc->execute([$allocatedUserIdAlloc]);
+        $uAlloc = $stmtAlloc->fetch(PDO::FETCH_ASSOC);
+        if ($uAlloc !== false) {
+            $nomeAlloc = trim((string) ($uAlloc['nome'] ?? ''));
+            $sobrenomeAlloc = trim((string) ($uAlloc['sobrenome'] ?? ''));
+            $ruleServidor = $sobrenomeAlloc !== '' ? $nomeAlloc . ' ' . $sobrenomeAlloc : $nomeAlloc;
+            $hasRuleAllocation = $ruleServidor !== '';
+        }
+    }
+} catch (\Throwable $e) {
+    // mantém padrão
+}
 
 $currentUserId   = trim((string) ($_SESSION['id_usuario'] ?? ''));
 $perfisGestaoLst = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
@@ -192,12 +215,7 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
             <span class="all">Interno - Cartório - Ofícios -</span>
             <span class="specific">Lista e registro</span>
         </div>
-        <div class="display-flex row row-full justify-between align-center">
-            <h1 class="title-page">Ofícios</h1>
-            <?php if ($isGestao): ?>
-            <button type="button" class="btn btn-secondary height-sm" data-nav-href="/frame.php?page=oficiosrules">Regras de alocação</button>
-            <?php endif; ?>
-        </div>
+        <h1 class="title-page">Ofícios</h1>
         <p class="description-page">Registro de ofícios expedidos pelo cartório, com cumprimento via CCM ou envio pelo próprio cartório.</p>
     </div>
 
@@ -492,6 +510,18 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
             </div>
         <?php endif; ?>
 
+        <div class="display-flex row row-full info padding-x-md padding-y-md border-top">
+            <?php if ($hasRuleAllocation): ?>
+                <span>*Conforme regra de alocação, os ofícios do cartório serão alocados automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
+            <?php else: ?>
+                <span>*Não existe nenhum usuário alocado automaticamente para esta tarefa no momento.</span>
+            <?php endif; ?>
+        </div>
+
+        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
+            <button type="button" class="btn btn-primary-outline" id="alterar-regra-btn" style="display: none;">Alterar regra de alocação</button>
+        </div>
+
         <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
             <span class="pagination-info">
                 Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $totalDocuments; ?> <?php echo $documentsLabel; ?>
@@ -755,6 +785,34 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                 }).catch(function () {
                     if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
                 });
+            });
+        })();
+
+        (function () {
+            var PERFIS_ALTERAR_REGRA = ['ADMIN', 'DIRETORA', 'MAGISTRADA'];
+            function hasPermissionToChangeRule(perfis) {
+                if (!Array.isArray(perfis) || perfis.length === 0) return false;
+                var allowed = PERFIS_ALTERAR_REGRA.map(function (p) { return p.toUpperCase(); });
+                return perfis.some(function (perfil) {
+                    var p = (perfil && String(perfil)).toUpperCase().trim();
+                    return allowed.indexOf(p) !== -1;
+                });
+            }
+            window.addEventListener('DOMContentLoaded', function () {
+                var btn = document.getElementById('alterar-regra-btn');
+                if (!btn) return;
+                fetch('/admin/api/getPerfis.php', { credentials: 'same-origin' })
+                    .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+                    .then(function (data) {
+                        var perfis = (data && data.perfis) ? data.perfis : [];
+                        if (hasPermissionToChangeRule(perfis)) {
+                            btn.style.display = '';
+                            btn.addEventListener('click', function () {
+                                window.location.href = '/frame.php?page=oficiosrules';
+                            });
+                        }
+                    })
+                    .catch(function () { btn.style.display = 'none'; });
             });
         })();
     </script>

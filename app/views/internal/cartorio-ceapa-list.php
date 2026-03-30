@@ -144,12 +144,7 @@ if ($totalPages > 0) {
             <span class="all">Interno - Cartório - Ceapa -</span>
             <span class="specific">Lista de registros</span>
         </div>
-        <div class="display-flex row row-full justify-between align-center">
-            <h1 class="title-page">Ceapa</h1>
-            <?php if ($isGestao): ?>
-            <button type="button" class="btn btn-secondary height-sm" data-nav-href="/frame.php?page=ceaparules">Regras de alocação</button>
-            <?php endif; ?>
-        </div>
+        <h1 class="title-page">Ceapa</h1>
         <p class="description-page">Acompanhamento de cumprimento de decisão com controle de status e observações.</p>
     </div>
 

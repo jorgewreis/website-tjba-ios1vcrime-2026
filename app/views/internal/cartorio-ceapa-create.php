@@ -1,5 +1,31 @@
-﻿<?php
+<?php
 declare(strict_types=1);
+
+require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
+
+$connection = Conection::getInstance()->getConnection();
+
+$ruleServidor = '';
+$hasRuleAllocation = false;
+$ruleName = 'ALLOCATE-CEAPA';
+try {
+    $regrasRepo = new AlocacoesRegrasRepository($connection);
+    $ruleRow = $regrasRepo->findByRegra($ruleName);
+    $allocatedUserId = $ruleRow['usuario_id'] ?? null;
+    if ($allocatedUserId !== null && $allocatedUserId !== '') {
+        $stmt = $connection->prepare('SELECT `nome`, `sobrenome` FROM `usuarios` WHERE `id_usuario` = ? LIMIT 1');
+        $stmt->execute([$allocatedUserId]);
+        $u = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($u !== false) {
+            $nome = trim((string) ($u['nome'] ?? ''));
+            $sobrenome = trim((string) ($u['sobrenome'] ?? ''));
+            $ruleServidor = $sobrenome !== '' ? $nome . ' ' . $sobrenome : $nome;
+            $hasRuleAllocation = $ruleServidor !== '';
+        }
+    }
+} catch (\Throwable $e) {
+    // mantém padrão
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -74,7 +100,16 @@ declare(strict_types=1);
             </div>
         </div>
 
+        <div class="display-flex row row-full info padding-x-md padding-y-md">
+            <?php if ($hasRuleAllocation): ?>
+                <span>*Conforme regra de alocação, as tarefas CEAPA serão alocadas automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
+            <?php else: ?>
+                <span>*Não existe nenhum usuário alocado automaticamente para esta tarefa no momento.</span>
+            <?php endif; ?>
+        </div>
+
         <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
+            <button type="button" class="btn btn-primary-outline" id="alterar-regra-btn" style="display: none;">Alterar regra de alocação</button>
             <button type="button" class="btn btn-secondary" id="voltar-btn" data-allow-during-loading="true">Voltar</button>
             <button type="button" class="btn btn-primary" id="cadastrar-btn">Cadastrar</button>
         </div>
@@ -391,6 +426,35 @@ declare(strict_types=1);
             e.preventDefault();
             window.location.href = '/frame.php?page=ceapa';
         }, { capture: true });
+    </script>
+    <script>
+        (function () {
+            var PERFIS_ALTERAR_REGRA = ['ADMIN', 'DIRETORA', 'MAGISTRADA'];
+            function hasPermissionToChangeRule(perfis) {
+                if (!Array.isArray(perfis) || perfis.length === 0) return false;
+                var allowed = PERFIS_ALTERAR_REGRA.map(function (p) { return p.toUpperCase(); });
+                return perfis.some(function (perfil) {
+                    var p = (perfil && String(perfil)).toUpperCase().trim();
+                    return allowed.indexOf(p) !== -1;
+                });
+            }
+            window.addEventListener('DOMContentLoaded', function () {
+                var btn = document.getElementById('alterar-regra-btn');
+                if (!btn) return;
+                fetch('/admin/api/getPerfis.php', { credentials: 'same-origin' })
+                    .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+                    .then(function (data) {
+                        var perfis = (data && data.perfis) ? data.perfis : [];
+                        if (hasPermissionToChangeRule(perfis)) {
+                            btn.style.display = '';
+                            btn.addEventListener('click', function () {
+                                window.location.href = '/frame.php?page=ceaparules';
+                            });
+                        }
+                    })
+                    .catch(function () { btn.style.display = 'none'; });
+            });
+        })();
     </script>
 </body>
 </html>
