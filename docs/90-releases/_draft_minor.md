@@ -110,4 +110,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Feat: implement delete functionality in CeapaRepository and CeapaService; update views to support task deletion with confirmation** `[fbcb410]`
 - **Fix: update layout of cartorio-ceapa-list view by adjusting column widths and removing redundant date display** `[7cbd896]`
 - **feat(gabinete-reus-presos-edit): add datetime formatting function and simplify UI labels** `[2cd0ace]`
+- **refactor(gabinete-reus-presos-edit): update button styles and adjust UI for better readability** `[4868e0c]`
 
