@@ -122,4 +122,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(views): remove invisible characters from PHP opening tags in multiple view files** `[47a38f8]`
 - **feat(database): enhance database connection configuration to support dynamic port and improved error logging** `[795a91c]`
 - **feat(views): enhance oficio selection options by categorizing types into groups for better organization and user experience** `[2443f52]`
+- **feat(cartorio): add administrative oficio types and enhance process number validation logic** `[3b3ddcd]`
 
