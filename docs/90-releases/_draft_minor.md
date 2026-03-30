@@ -33,4 +33,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(audiencias): update input handling for parte selection, enabling read-only state and placeholder text** `[c5add78]`
 - **fix(form): enable clickable state for defendant selection in finished status to improve user interaction** `[b01a777]`
 - **feat(audiencias): add 'salapaineldia' page and update related access and navigation links** `[4291da5]`
+- **refactor(toast-system): standardize toast usage and improve documentation on visual models and feedback mechanisms** `[695b2ca]`
 
