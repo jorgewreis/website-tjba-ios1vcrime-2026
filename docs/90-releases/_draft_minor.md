@@ -119,4 +119,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(cartorio): implement automatic allocation rules for CEAPA and Ofícios, including user permission checks and UI updates** `[f6e498d]`
 - **feat(cartorio): refactor user allocation logic to utilize AlocacaoRegrasUsuariosHelper for eligibility checks and streamline user list retrieval across multiple views** `[5f46ccc]`
 - **refactor(cartorio): streamline allocation rule views by consolidating common elements and enhancing user eligibility checks across multiple modules** `[e4da9c4]`
+- **fix(views): remove invisible characters from PHP opening tags in multiple view files** `[47a38f8]`
 
