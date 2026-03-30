@@ -6,6 +6,7 @@ if (function_exists('mb_internal_encoding')) {
     mb_internal_encoding('UTF-8');
 }
 
+require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../services/SalaAudienciasPautaService.php';
 require_once __DIR__ . '/../../services/ProcessoManager.php';
 
@@ -160,20 +161,33 @@ $endItem = min($offset + count($rows), $total);
                                     'testemunha_defesa' => 3,
                                 ];
                                 usort($partesStatus, static function ($a, $b) use ($ordemTipos): int {
-                                    $ta = (string) (($a['tipo_parte'] ?? '') === '' ? ($a['tipo'] ?? '') : ($a['tipo_parte'] ?? ''));
-                                    $tb = (string) (($b['tipo_parte'] ?? '') === '' ? ($b['tipo'] ?? '') : ($b['tipo_parte'] ?? ''));
+                                    $tipoKey = static function ($x): string {
+                                        if (!is_array($x)) {
+                                            return '';
+                                        }
+                                        $tp = (string) (($x['tipo_parte'] ?? '') === '' ? ($x['tipo'] ?? '') : ($x['tipo_parte'] ?? ''));
+
+                                        return $tp;
+                                    };
+                                    $ta = $tipoKey($a);
+                                    $tb = $tipoKey($b);
                                     $ia = $ordemTipos[$ta] ?? 4;
                                     $ib = $ordemTipos[$tb] ?? 4;
                                     if ($ia === $ib) {
                                         return 0;
                                     }
+
                                     return $ia <=> $ib;
                                 });
 
                                 foreach ($partesStatus as $parteStatus):
+                                    $cumprimentoFallback = '';
+                                    if (is_scalar($parteStatus) || $parteStatus === null) {
+                                        $cumprimentoFallback = (string) ($parteStatus ?? '');
+                                    }
                                     $cp = is_array($parteStatus)
                                         ? $parteStatus
-                                        : ['nome_parte' => '', 'tipo_parte' => '', 'expedicao' => 'Não expedido', 'cumprimento' => (string) $parteStatus];
+                                        : ['nome_parte' => '', 'tipo_parte' => '', 'expedicao' => 'Não expedido', 'cumprimento' => $cumprimentoFallback];
 
                                     $nomeParte = trim((string) ($cp['nome_parte'] ?? ''));
                                     $expVal = trim((string) ($cp['expedicao'] ?? 'Não expedido'));
@@ -290,7 +304,12 @@ $endItem = min($offset + count($rows), $total);
             <?php
                 $prioridadesRow = [];
                 if (!empty($row['numero_processo'])) {
-                    $prioridadesRow = $processoManager->listarPrioridades((string) $row['numero_processo']);
+                    try {
+                        $prioridadesRow = $processoManager->listarPrioridades((string) $row['numero_processo']);
+                    } catch (Throwable $e) {
+                        error_log('sala-audiencias-pauta-list: listarPrioridades falhou: ' . $e->getMessage());
+                        $prioridadesRow = [];
+                    }
                 }
             ?>
             <?php if ($prioridadesRow !== []): ?>
