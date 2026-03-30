@@ -250,12 +250,6 @@ if ($totalPages > 0) {
 
                 <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                     <div class="display-flex row row-fit justify-start gap-y-sm align-center flex-wrap">
-                        <div class="col">
-                            <label class="button-table" title="Ver processos vinculados (detalhes por processo)">
-                                <input type="radio" name="open-subtask-grp" value="<?php echo htmlspecialchars($rid, ENT_QUOTES); ?>" aria-controls="subtask-grp-<?php echo htmlspecialchars($rid, ENT_QUOTES); ?>" aria-expanded="false" />
-                                <i class="fi fi-rr-angle-small-down"></i>
-                            </label>
-                        </div>
                         <div class="col width-600">
                             <span class="minor-info">Réu</span>
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['nome'] ?? ''), ENT_QUOTES); ?></span>
@@ -276,7 +270,7 @@ if ($totalPages > 0) {
                     </div>
                 </div>
 
-                <div class="display-flex col col-full subtask subtask-collapsed grp-subtask-panel" id="subtask-grp-<?php echo htmlspecialchars($rid, ENT_QUOTES); ?>" aria-hidden="true">
+                <div class="display-flex col col-full grp-subtask-panel" id="subtask-grp-<?php echo htmlspecialchars($rid, ENT_QUOTES); ?>" aria-hidden="true">
                     <?php if (empty($subLinhas)): ?>
                     <div class="display-flex row row-full subtask padding-x-sm padding-y-sm border-top">
                         <span class="minor-info">Nenhum processo vinculado.</span>
@@ -285,21 +279,15 @@ if ($totalPages > 0) {
                         <?php foreach ($subLinhas as $sl):
                             $isPrincipal = !empty($sl['principal']);
                             if ($isPrincipal): ?>
-                    <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top align-start flex-wrap grp-sub-line grp-sub-line-primary">
+                    <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top align-start flex-wrap grp-sub-line grp-sub-line-primary" style="font-family: monospace; font-size: 11px;">
                         <div class="display-flex row row-fit justify-start gap-y-md flex-wrap grp-sub-left">
                             <div class="col">
-                                <span class="minor-info"><?php echo htmlspecialchars((string) ($sl['classe_nome'] ?? '—'), ENT_QUOTES); ?></span>
-                                <span class="width-600 major-info text-ellipsis"><?php echo htmlspecialchars((string) ($sl['numero_processo'] ?? '—'), ENT_QUOTES); ?></span>
+                                <span class="width-700 minor-info text-ellipsis"><?php echo htmlspecialchars((string) ($sl['numero_processo'] ?? '—') . ' (' . ($sl['classe_nome'] ?? '—') . ')', ENT_QUOTES); ?></span>
                             </div>
                         </div>
                         <div class="display-flex row row-fit justify-end gap-y-md">
                             <div class="col">
-                                <span class="minor-info">Última movimentação</span>
-                                <span class="width-600 major-info text-ellipsis"><?php echo htmlspecialchars((string) ($sl['ultima_movimentacao'] ?? '—'), ENT_QUOTES); ?></span>
-                            </div>
-                            <div class="col">
-                                <span class="minor-info">Data</span>
-                                <span class="width-300 major-info text-ellipsis"><?php echo htmlspecialchars((string) ($sl['ultima_movimentacao_data'] ?? '—'), ENT_QUOTES); ?></span>
+                                <span class="width-700 minor-info text-ellipsis"><?php echo htmlspecialchars((string) ($sl['ultima_movimentacao_data'] ?? '—') . ' — ' . ($sl['ultima_movimentacao'] ?? '—'), ENT_QUOTES); ?></span>
                             </div>
                         </div>
                     </div>

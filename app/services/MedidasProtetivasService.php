@@ -66,15 +66,22 @@ final class MedidasProtetivasService
             $rows[$index]['Subtarefas'] = $this->subtarefasRepository->findPendenteOuEmAndamentoByMedidaId($idMedida);
             $rows[$index]['SubtarefasAll'] = $this->subtarefasRepository->findByMedidaId($idMedida);
             $alocadosRaw = $this->alocadosRepository->findByMedidaId($idMedida);
-            $rows[$index]['Alocados'] = [];
+            $alocados = [];
             foreach (array_slice($alocadosRaw, 0, 5) as $alocado) {
-                $rows[$index]['Alocados'][] = [
-                    'iniciais' => $alocado['iniciais'] ?? '—',
+                $tipo = $this->normalizeTipoAlocado((string) ($alocado['tipo'] ?? ''));
+                $alocados[] = [
+                    'alocado_id'    => $alocado['id'] ?? '',
+                    'iniciais'      => $alocado['iniciais'] ?? '—',
                     'nome_completo' => $alocado['nome_completo'] ?? '',
-                    'usuario_id' => $alocado['usuario_id'] ?? '',
-                    'tipo' => $this->normalizeTipoAlocado((string) ($alocado['tipo'] ?? '')),
+                    'usuario_id'    => $alocado['usuario_id'] ?? '',
+                    'tipo'          => $tipo,
                 ];
             }
+            usort($alocados, static function (array $a, array $b): int {
+                static $order = ['rule' => 0, 'all' => 1, 'specific' => 2];
+                return ($order[$a['tipo']] ?? 9) <=> ($order[$b['tipo']] ?? 9);
+            });
+            $rows[$index]['Alocados'] = $alocados;
         }
 
         return [
@@ -516,6 +523,16 @@ final class MedidasProtetivasService
         }
 
         return 'specific';
+    }
+
+    public function removeAlocado(string $alocadoId, string $tipo, string $requestUserId): bool
+    {
+        $alocadoId     = trim($alocadoId);
+        $requestUserId = trim($requestUserId);
+        if ($alocadoId === '' || $requestUserId === '') {
+            return false;
+        }
+        return $this->alocadosRepository->deleteById($alocadoId);
     }
 
     private function formatarCNJ(string $digits): string

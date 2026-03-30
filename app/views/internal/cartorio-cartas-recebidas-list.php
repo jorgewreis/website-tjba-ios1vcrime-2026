@@ -11,6 +11,16 @@ require_once __DIR__ . '/../../repositories/CartasRecebidasSubtarefasRepository.
 
 $connection = Conection::getInstance()->getConnection();
 
+$currentUserId   = trim((string) ($_SESSION['id_usuario'] ?? ''));
+$perfisGestaoLst = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
+$isGestao        = false;
+if ($currentUserId !== '') {
+    $stmtPerfis = $connection->prepare('SELECT DISTINCT UPPER(TRIM(perfil)) AS perfil FROM usuario_perfil WHERE usuario = ? AND perfil IS NOT NULL');
+    $stmtPerfis->execute([$currentUserId]);
+    $perfisUsuario = $stmtPerfis->fetchAll(PDO::FETCH_COLUMN);
+    $isGestao = count(array_intersect($perfisUsuario, $perfisGestaoLst)) > 0;
+}
+
 $routePage = trim((string) ($_GET['page'] ?? 'cartasrecebidas'));
 $finalidadeFilter = trim($_GET['finalidade'] ?? '');
 $statusFilter = trim($_GET['status'] ?? '');
@@ -324,22 +334,36 @@ if ($totalPages > 0) {
                         <div class="display-flex row row-fit justify-end gap-y-sm allocate-chips-row allocate-users">
                             <?php
                             $alocados = $row['Alocados'] ?? [];
-                            if (count($alocados) > 0) {
-                                foreach ($alocados as $alocado) {
-                                    $tipo = $alocado['tipo'] ?? 'specific';
-                                    $iniciais = $alocado['iniciais'] ?? '—';
-                                    $nomeCompleto = $alocado['nome_completo'] ?? '';
-                                    $userLabel = $nomeCompleto !== '' ? $nomeCompleto : $iniciais;
-                                    if ($tipo === 'rule') {
-                                        $title = 'Alocado por regra para ' . ($nomeCompleto !== '' ? $nomeCompleto : $iniciais);
-                                    } elseif ($tipo === 'all') {
-                                        $title = 'Alocado para ' . ($nomeCompleto !== '' ? $nomeCompleto : $iniciais);
-                                    } else {
-                                        $title = 'Alocação voluntária: ' . ($nomeCompleto !== '' ? $nomeCompleto : $iniciais);
-                                    }
-                                    $classeTipo = in_array($tipo, ['rule', 'specific', 'all'], true) ? ' ' . $tipo : '';
-                                    ?><span class="user-allocate<?php echo $classeTipo; ?>" title="<?php echo htmlspecialchars($title, ENT_QUOTES); ?>"><?php echo htmlspecialchars($iniciais, ENT_QUOTES); ?></span><?php
+                            foreach ($alocados as $alocado) {
+                                $tipo         = $alocado['tipo'] ?? 'specific';
+                                $iniciais     = htmlspecialchars($alocado['iniciais'] ?? '—', ENT_QUOTES);
+                                $nomeCompleto = $alocado['nome_completo'] ?? '';
+                                $nomeLabel    = $nomeCompleto !== '' ? $nomeCompleto : ($alocado['iniciais'] ?? '—');
+                                if ($tipo === 'rule') {
+                                    $chipTitle = 'Servidor responsável (regra): ' . $nomeLabel;
+                                } elseif ($tipo === 'all') {
+                                    $chipTitle = 'Servidor alocado: ' . $nomeLabel;
+                                } else {
+                                    $chipTitle = 'Autoalocado: ' . $nomeLabel;
                                 }
+                                $classeTipo   = in_array($tipo, ['rule', 'specific', 'all'], true) ? ' ' . $tipo : '';
+                                $alocadoIdStr = htmlspecialchars($alocado['alocado_id'] ?? '', ENT_QUOTES);
+                                $usuarioIdStr = $alocado['usuario_id'] ?? '';
+                                $podeRemover  = $isGestao || ($tipo === 'specific' && $usuarioIdStr === $currentUserId);
+                                ?>
+                                <span class="user-allocate-wrap">
+                                    <span class="user-allocate<?php echo $classeTipo; ?>" title="<?php echo htmlspecialchars($chipTitle, ENT_QUOTES); ?>"><?php echo $iniciais; ?></span>
+                                    <?php if ($podeRemover): ?>
+                                    <button type="button"
+                                        class="user-allocate-remove js-desalocar"
+                                        data-alocado-id="<?php echo $alocadoIdStr; ?>"
+                                        data-tipo="<?php echo htmlspecialchars($tipo, ENT_QUOTES); ?>"
+                                        data-endpoint="/api/cartorio-cartas-recebidas/desalocar.php"
+                                        title="Remover alocação"
+                                        aria-label="Remover alocação">×</button>
+                                    <?php endif; ?>
+                                </span>
+                                <?php
                             }
                             ?>
                         </div>
@@ -720,6 +744,43 @@ if ($totalPages > 0) {
                         notify('error', 'Erro', 'Erro de conexão.');
                         btn.disabled = false;
                     });
+                });
+            });
+        })();
+
+        (function () {
+            const pending = {};
+            function requireSecondClick(key, msg) {
+                const now = Date.now();
+                if ((pending[key] || 0) > now) { delete pending[key]; return true; }
+                pending[key] = now + 5000;
+                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Confirmação', message: msg });
+                return false;
+            }
+            document.addEventListener('click', function (e) {
+                const btn = e.target.closest('.js-desalocar');
+                if (!btn) return;
+                const alocadoId = btn.getAttribute('data-alocado-id') || '';
+                const tipo      = btn.getAttribute('data-tipo') || '';
+                const endpoint  = btn.getAttribute('data-endpoint') || '';
+                if (!alocadoId || !endpoint) return;
+                if (!requireSecondClick('desalocar-' + alocadoId, 'Clique novamente para confirmar a remoção da alocação.')) return;
+                fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ alocado_id: alocadoId, tipo: tipo }),
+                    credentials: 'same-origin'
+                }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+                .then(function (res) {
+                    if (res.ok && res.j && res.j.deleted) {
+                        if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Alocação removida.' });
+                        setTimeout(function () { window.location.reload(); }, 800);
+                    } else {
+                        const msg = (res.j && res.j.error) ? res.j.error : 'Falha ao remover alocação.';
+                        if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: msg });
+                    }
+                }).catch(function () {
+                    if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
                 });
             });
         })();

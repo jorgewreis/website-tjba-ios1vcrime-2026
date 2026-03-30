@@ -49,16 +49,23 @@ final class EditaisService
                 $rows[$i]['Subtarefas'] = $this->subtarefasRepository->findPendenteOuEmAndamentoByEditalId($idEdital);
                 $rows[$i]['SubtarefasAll'] = $this->subtarefasRepository->findByEditalId($idEdital);
                 $alocadosRaw = $this->alocadosRepository->findByEditalId($idEdital);
-                $rows[$i]['Alocados'] = [];
+                $alocados = [];
                 $max = 5;
                 foreach (array_slice($alocadosRaw, 0, $max) as $a) {
-                    $rows[$i]['Alocados'][] = [
-                        'iniciais' => $a['iniciais'] ?? '—',
+                    $tipo = $this->normalizeTipoAlocado((string) ($a['tipo'] ?? ''));
+                    $alocados[] = [
+                        'alocado_id'    => $a['id'] ?? '',
+                        'iniciais'      => $a['iniciais'] ?? '—',
                         'nome_completo' => $a['nome_completo'] ?? '',
-                        'usuario_id' => $a['usuario_id'] ?? '',
-                        'tipo' => $this->normalizeTipoAlocado($a['tipo'] ?? ''),
+                        'usuario_id'    => $a['usuario_id'] ?? '',
+                        'tipo'          => $tipo,
                     ];
                 }
+                usort($alocados, static function (array $a, array $b): int {
+                    static $order = ['rule' => 0, 'all' => 1, 'specific' => 2];
+                    return ($order[$a['tipo']] ?? 9) <=> ($order[$b['tipo']] ?? 9);
+                });
+                $rows[$i]['Alocados'] = $alocados;
                 $rows[$i]['DecursoInfo'] = $this->getDecursoInfo($idEdital);
             } else {
                 $rows[$i]['Subtarefas'] = [];
@@ -580,7 +587,20 @@ final class EditaisService
         if ($t === EditaisAlocadosRepository::TIPO_RULE || $t === 'rule') {
             return 'rule';
         }
+        if ($t === 'all') {
+            return 'all';
+        }
         return 'specific';
+    }
+
+    public function removeAlocado(string $alocadoId, string $tipo, string $requestUserId): bool
+    {
+        $alocadoId     = trim($alocadoId);
+        $requestUserId = trim($requestUserId);
+        if ($alocadoId === '' || $requestUserId === '') {
+            return false;
+        }
+        return $this->alocadosRepository->deleteById($alocadoId);
     }
 
     private function formatarCNJ(string $digits): string

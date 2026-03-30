@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../repositories/OficiosCartorioRepository.php';
 require_once __DIR__ . '/../repositories/OficiosCartorioSubtarefasRepository.php';
+require_once __DIR__ . '/../repositories/OficiosCartorioAlocadosRepository.php';
+require_once __DIR__ . '/../repositories/AlocacoesRegrasRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
@@ -13,18 +15,41 @@ final class OficiosCartorioService
     private PDO $connection;
     private OficiosCartorioRepository $repository;
     private OficiosCartorioSubtarefasRepository $subtarefasRepository;
+    private OficiosCartorioAlocadosRepository $alocadosRepository;
+    private AlocacoesRegrasRepository $alocacoesRegrasRepository;
     private ProcessosRepository $processosRepository;
     private ClassesRepository $classesRepository;
 
     private const MEIOS_VALIDOS = ['email', 'malote_digital', 'pessoalmente'];
+    private const REGRA_ALOCAR_OFICIOS = 'ALLOCATE-CARTORIOOFICIOS';
+
+    /** Ordem de exibição dos tipos de alocação. */
+    private const TIPO_ORDER = ['rule' => 0, 'all' => 1, 'specific' => 2];
 
     public function __construct(PDO $connection)
     {
         $this->connection = $connection;
         $this->repository = new OficiosCartorioRepository($connection);
         $this->subtarefasRepository = new OficiosCartorioSubtarefasRepository($connection);
+        $this->alocadosRepository = new OficiosCartorioAlocadosRepository($connection);
+        $this->alocacoesRegrasRepository = new AlocacoesRegrasRepository($connection);
         $this->processosRepository = new ProcessosRepository($connection);
         $this->classesRepository = new ClassesRepository($connection);
+    }
+
+    private function normalizeTipoAlocado(string $tipo): string
+    {
+        return in_array($tipo, ['rule', 'all', 'specific'], true) ? $tipo : 'specific';
+    }
+
+    public function removeAlocado(string $alocadoId, string $tipo, string $requestUserId): bool
+    {
+        $alocadoId     = trim($alocadoId);
+        $requestUserId = trim($requestUserId);
+        if ($alocadoId === '' || $requestUserId === '') {
+            return false;
+        }
+        return $this->alocadosRepository->deleteById($alocadoId);
     }
 
     public function listOficios(array $filters, int $limit, int $offset): array
@@ -36,9 +61,27 @@ final class OficiosCartorioService
                 $allSt = $this->subtarefasRepository->findByOficioId($id);
                 $rows[$i]['SubtarefasAll'] = $allSt;
                 $rows[$i]['Subtarefas'] = $this->filterSubtarefasAbertas($allSt);
+                $alocadosRaw = $this->alocadosRepository->findByOficioId($id);
+                $alocados = [];
+                $max = 5;
+                foreach (array_slice($alocadosRaw, 0, $max) as $a) {
+                    $tipo = $this->normalizeTipoAlocado((string) ($a['tipo'] ?? ''));
+                    $alocados[] = [
+                        'alocado_id'    => $a['id'] ?? '',
+                        'iniciais'      => $a['iniciais'] ?? '—',
+                        'nome_completo' => $a['nome_completo'] ?? '',
+                        'usuario_id'    => $a['usuario_id'] ?? '',
+                        'tipo'          => $tipo,
+                    ];
+                }
+                usort($alocados, static function (array $a, array $b): int {
+                    return (self::TIPO_ORDER[$a['tipo']] ?? 9) <=> (self::TIPO_ORDER[$b['tipo']] ?? 9);
+                });
+                $rows[$i]['Alocados'] = $alocados;
             } else {
                 $rows[$i]['Subtarefas'] = [];
                 $rows[$i]['SubtarefasAll'] = [];
+                $rows[$i]['Alocados'] = [];
             }
         }
         return [
@@ -157,6 +200,17 @@ final class OficiosCartorioService
                 ]);
                 $this->subtarefasRepository->create($id, OficiosCartorioSubtarefasRepository::TIPO_ENVIAR, 1, 'em_andamento');
                 $this->subtarefasRepository->create($id, OficiosCartorioSubtarefasRepository::TIPO_JUNTAR, 2, 'pendente');
+            }
+
+            $regra = $this->alocacoesRegrasRepository->findByRegra(self::REGRA_ALOCAR_OFICIOS);
+            if ($regra !== null) {
+                $usuarioIdRegra = trim((string) ($regra['usuario_id'] ?? ''));
+                if ($usuarioIdRegra !== '' && $usuarioIdRegra !== $criadoPor) {
+                    $this->alocadosRepository->addAlocado($id, $usuarioIdRegra, OficiosCartorioAlocadosRepository::TIPO_RULE);
+                }
+            }
+            if ($criadoPor !== null && $criadoPor !== '') {
+                $this->alocadosRepository->addAlocado($id, $criadoPor, OficiosCartorioAlocadosRepository::TIPO_SPECIFIC);
             }
 
             $this->connection->commit();

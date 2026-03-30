@@ -2,6 +2,8 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../repositories/CeapaRepository.php';
+require_once __DIR__ . '/../repositories/CeapaAlocadosRepository.php';
+require_once __DIR__ . '/../repositories/AlocacoesRegrasRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosPartesRepository.php';
 require_once __DIR__ . '/../repositories/PartesRepository.php';
@@ -13,15 +15,24 @@ final class CeapaService
 {
     private PDO $connection;
     private CeapaRepository $repository;
+    private CeapaAlocadosRepository $alocadosRepository;
+    private AlocacoesRegrasRepository $alocacoesRegrasRepository;
     private ProcessosRepository $processosRepository;
     private ProcessosPartesRepository $processosPartesRepository;
     private PartesRepository $partesRepository;
     private ClassesRepository $classesRepository;
 
+    private const REGRA_ALOCAR_CEAPA = 'ALLOCATE-CEAPA';
+
+    /** Ordem de exibição dos tipos de alocação. */
+    private const TIPO_ORDER = ['rule' => 0, 'all' => 1, 'specific' => 2];
+
     public function __construct(PDO $connection)
     {
         $this->connection = $connection;
         $this->repository = new CeapaRepository($connection);
+        $this->alocadosRepository = new CeapaAlocadosRepository($connection);
+        $this->alocacoesRegrasRepository = new AlocacoesRegrasRepository($connection);
         $this->processosRepository = new ProcessosRepository($connection);
         $this->processosPartesRepository = new ProcessosPartesRepository($connection);
         $this->partesRepository = new PartesRepository($connection);
@@ -30,10 +41,50 @@ final class CeapaService
 
     public function listTarefas(array $filters, int $limit, int $offset): array
     {
+        $rows = $this->repository->fetchList($filters, $limit, $offset);
+        foreach ($rows as $i => $row) {
+            $idTarefa = (string) ($row['id'] ?? '');
+            if ($idTarefa !== '') {
+                $alocadosRaw = $this->alocadosRepository->findByCeapaId($idTarefa);
+                $alocados = [];
+                $max = 5;
+                foreach (array_slice($alocadosRaw, 0, $max) as $a) {
+                    $tipo = $this->normalizeTipoAlocado((string) ($a['tipo'] ?? ''));
+                    $alocados[] = [
+                        'alocado_id'   => $a['id'] ?? '',
+                        'iniciais'     => $a['iniciais'] ?? '—',
+                        'nome_completo' => $a['nome_completo'] ?? '',
+                        'usuario_id'   => $a['usuario_id'] ?? '',
+                        'tipo'         => $tipo,
+                    ];
+                }
+                usort($alocados, static function (array $a, array $b): int {
+                    return (self::TIPO_ORDER[$a['tipo']] ?? 9) <=> (self::TIPO_ORDER[$b['tipo']] ?? 9);
+                });
+                $rows[$i]['Alocados'] = $alocados;
+            } else {
+                $rows[$i]['Alocados'] = [];
+            }
+        }
         return [
-            'rows' => $this->repository->fetchList($filters, $limit, $offset),
+            'rows' => $rows,
             'total' => $this->repository->count($filters),
         ];
+    }
+
+    private function normalizeTipoAlocado(string $tipo): string
+    {
+        return in_array($tipo, ['rule', 'all', 'specific'], true) ? $tipo : 'specific';
+    }
+
+    public function removeAlocado(string $alocadoId, string $tipo, string $requestUserId): bool
+    {
+        $alocadoId     = trim($alocadoId);
+        $requestUserId = trim($requestUserId);
+        if ($alocadoId === '' || $requestUserId === '') {
+            return false;
+        }
+        return $this->alocadosRepository->deleteById($alocadoId);
     }
 
     public function getStatusCounts(array $filters): array
@@ -100,6 +151,17 @@ final class CeapaService
             'status_cumprimento' => $statusCumprimento,
             'usuario_cadastro_id' => $usuarioCadastroId !== '' ? $usuarioCadastroId : null,
         ]);
+
+        $regra = $this->alocacoesRegrasRepository->findByRegra(self::REGRA_ALOCAR_CEAPA);
+        if ($regra !== null) {
+            $usuarioIdRegra = trim((string) ($regra['usuario_id'] ?? ''));
+            if ($usuarioIdRegra !== '' && $usuarioIdRegra !== $usuarioCadastroId) {
+                $this->alocadosRepository->addAlocado($id, $usuarioIdRegra, CeapaAlocadosRepository::TIPO_RULE);
+            }
+        }
+        if ($usuarioCadastroId !== '') {
+            $this->alocadosRepository->addAlocado($id, $usuarioCadastroId, CeapaAlocadosRepository::TIPO_SPECIFIC);
+        }
 
         return $id;
     }

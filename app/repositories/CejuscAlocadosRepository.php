@@ -102,6 +102,21 @@ final class CejuscAlocadosRepository
         return $rows;
     }
 
+    public function deleteById(string $id): bool
+    {
+        $id = trim($id);
+        if ($id === '') {
+            return false;
+        }
+        $stmt = $this->connection->prepare(
+            sprintf('DELETE FROM `%s` WHERE `id` = :id', $this->table)
+        );
+        $stmt->bindValue(':id', $id);
+        $stmt->execute();
+
+        return $stmt->rowCount() > 0;
+    }
+
     public function deleteByCejuscId(string $cejuscTarefaId): void
     {
         $cejuscTarefaId = trim($cejuscTarefaId);
