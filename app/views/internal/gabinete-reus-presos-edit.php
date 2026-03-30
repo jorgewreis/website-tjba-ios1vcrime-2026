@@ -246,7 +246,7 @@ if ($ultimaMov !== null) {
                     <input type="hidden" id="grp-new-df" value="">
                     <input type="hidden" id="grp-new-vinc" value="secundario">
                     <?php endif; ?>
-                    <button type="button" class="btn btn-secondary" id="btn-grp-add-proc">Adicionar processo</button>
+                    <button type="button" class="btn btn-primary-outline" id="btn-grp-add-proc">Adicionar processo</button>
             </div>
             <?php endif; ?>
         </div>
@@ -254,16 +254,9 @@ if ($ultimaMov !== null) {
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
             <h2 style="margin:0;">Movimentações processuais</h2>
         </div>
-        <div class="display-flex col col-full padding-x-md padding-y-md gap-y-md border-bottom">
+        <div class="display-flex col col-full padding-x-md padding-y-md border-bottom">
             <?php if (!empty($movimentacoes)): ?>
-            <div class="row row-full border-bottom">
-                <div class="display-flex row row-full align-center justify-between padding-y-sm" style="gap:12px;">
-                    <span class="minor-info" style="min-width:0;flex:1;">Movimentação</span>
-                    <span class="minor-info width-200">Cadastro</span>
-                    <span class="minor-info width-100 text-right">Ações</span>
-                </div>
-            </div>
-            <ul class="row row-full display-flex" id="grp-mov-table-body" style="margin:0;padding:0;list-style:none;">
+            <ul class="row row-full display-flex" id="grp-mov-table-body" style="font-family: monospace; font-size:0.9rem;">
                 <?php foreach ($movimentacoes as $m):
                     $movTipo = trim((string) ($m['tipo_label'] ?? ''));
                     $movObs = trim((string) ($m['observacoes'] ?? ''));
@@ -271,8 +264,8 @@ if ($ultimaMov !== null) {
                     $movLabel = $movObs !== '' ? ($movBase . ' (' . $movObs . ')') : $movBase;
                     ?>
                 <li class="display-flex row row-full align-center justify-between border-bottom padding-y-sm grp-mov-row" style="gap:12px;">
-                    <span class="minor-info text-ellipsis" style="min-width:0;flex:1;"><?php echo htmlspecialchars($movLabel, ENT_QUOTES); ?></span>
-                    <span class="minor-info width-200"><?php echo htmlspecialchars(grpFmtDateTimeBr($m['created_at'] ?? null), ENT_QUOTES); ?></span>
+                    <span class="minor-info text-ellipsis" style="min-width:0;flex:1; margin: 0 20px; font-size: 11px"><?php echo htmlspecialchars($movLabel, ENT_QUOTES); ?></span>
+                    <span class="minor-info width-200" style="font-size:10px; margin: 0 10px;"><?php echo htmlspecialchars(grpFmtDateTimeBr($m['created_at'] ?? null), ENT_QUOTES); ?></span>
                     <div class="display-flex row row-fit align-center justify-end">
                         <?php if (!$arquivado): ?>
                         <button
@@ -308,9 +301,9 @@ if ($ultimaMov !== null) {
                 </div>
                 <div class="col">
                     <label for="grp-mov-obs">Observações</label>
-                    <input type="text" class="width-700 height-md" id="grp-mov-obs" placeholder="Opcional" maxlength="2000">
+                    <input type="text" class="width-700 height-md" id="grp-mov-obs" maxlength="2000">
                 </div>
-                <button type="button" class="btn btn-primary height-md" id="btn-grp-add-mov" style="margin-top:22px;">Registrar movimentação</button>
+                <button type="button" class="btn btn-primary-outline height-md" id="btn-grp-add-mov" style="margin-top:22px;">Registrar movimentação</button>
             </div>
             <?php endif; ?>
         </div>
