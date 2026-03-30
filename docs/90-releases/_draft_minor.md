@@ -112,4 +112,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(gabinete-reus-presos-edit): add datetime formatting function and simplify UI labels** `[2cd0ace]`
 - **refactor(gabinete-reus-presos-edit): update button styles and adjust UI for better readability** `[4868e0c]`
 - **feat(gabinete-reus-presos-edit): implement date input restrictions and enhance UI interaction for movement types** `[fa6acf4]`
+- **feat(access): add new access rules for 'ceaparules' and 'oficiosrules'; implement deleteById method in multiple repositories and services for better resource management** `[c8c962a]`
 
