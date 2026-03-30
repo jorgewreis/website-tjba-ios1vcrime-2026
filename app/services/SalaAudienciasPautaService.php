@@ -10,8 +10,7 @@ require_once __DIR__ . '/../repositories/PartesRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosPartesRepository.php';
 require_once __DIR__ . '/../helpers/SalaAudienciasDuracaoEstimadaHelper.php';
 require_once __DIR__ . '/../helpers/PrioridadesProcessuaisCatalog.php';
-require_once __DIR__ . '/../helpers/SalaAudienciasReuPresoDetector.php';
-require_once __DIR__ . '/ProcessoManager.php';
+require_once __DIR__ . '/ProcessoPrioridadesService.php';
 
 final class SalaAudienciasPautaService
 {
@@ -23,7 +22,7 @@ final class SalaAudienciasPautaService
     private ClassesRepository $classesRepository;
     private PartesRepository $partesRepository;
     private ProcessosPartesRepository $processosPartesRepository;
-    private ?ProcessoManager $processoPrioridadesManager = null;
+    private ?ProcessoPrioridadesService $processoPrioridadesService = null;
 
     public function __construct(PDO $connection)
     {
@@ -361,8 +360,7 @@ final class SalaAudienciasPautaService
             $this->connection->commit();
             $this->sincronizarDuracaoEHorariosPauta($idPauta);
             $numeroProcPauta = trim((string) ($pauta['numero_processo'] ?? ''));
-            $this->garantirPrioridadeCriancaOuAdolescenteSeMenor($numeroProcPauta, $maioridade);
-            $this->sincronizarPrioridadeReuPresoNoProcesso($idPauta);
+            $this->sincronizarPrioridadesProcessoAposPartes($processoId, $numeroProcPauta);
 
             return $idPartePauta;
         } catch (Throwable $e) {
@@ -388,8 +386,6 @@ final class SalaAudienciasPautaService
         }
 
         $this->normalizeDefensorPayloadForSave($payload, $tipo);
-
-        $maioridadeAnterior = strtolower(trim((string) ($parteAtual['maioridade'] ?? '')));
 
         $this->connection->beginTransaction();
         try {
@@ -461,16 +457,9 @@ final class SalaAudienciasPautaService
             if ($idPautaSync !== '') {
                 $this->sincronizarDuracaoEHorariosPauta($idPautaSync);
             }
-            $maioridadeNova = strtolower(trim($maioridade));
             $processoIdAtual = trim((string) ($parteAtual['processo'] ?? ''));
             $numeroProcAtual = trim((string) ($parteAtual['numero_processo'] ?? ''));
-            if ($maioridadeNova === 'menor' && $maioridadeAnterior !== 'menor') {
-                $this->garantirPrioridadeCriancaOuAdolescenteSeMenor($numeroProcAtual, $maioridade);
-            }
-            if ($maioridadeAnterior === 'menor' && $maioridadeNova !== 'menor') {
-                $this->avaliarRemocaoPrioridadeCriancaAposMenor($processoIdAtual, $numeroProcAtual);
-            }
-            $this->sincronizarPrioridadeReuPresoNoProcesso($idPautaSync);
+            $this->sincronizarPrioridadesProcessoAposPartes($processoIdAtual, $numeroProcAtual);
 
             return $ok;
         } catch (Throwable $e) {
@@ -682,18 +671,14 @@ final class SalaAudienciasPautaService
             return false;
         }
         $idPauta = trim((string) ($parte['pauta'] ?? ''));
-        $maioridadeAnt = strtolower(trim((string) ($parte['maioridade'] ?? '')));
         $processoIdParte = trim((string) ($parte['processo'] ?? ''));
         $numeroProcParte = trim((string) ($parte['numero_processo'] ?? ''));
         $ok = $this->parteRepository->softDelete($idParte, $usuarioId);
         if ($ok && $idPauta !== '') {
             $this->sincronizarDuracaoEHorariosPauta($idPauta);
         }
-        if ($ok && $maioridadeAnt === 'menor' && $processoIdParte !== '' && $numeroProcParte !== '') {
-            $this->avaliarRemocaoPrioridadeCriancaAposMenor($processoIdParte, $numeroProcParte);
-        }
-        if ($ok && $idPauta !== '') {
-            $this->sincronizarPrioridadeReuPresoNoProcesso($idPauta);
+        if ($ok && $processoIdParte !== '') {
+            $this->sincronizarPrioridadesProcessoAposPartes($processoIdParte, $numeroProcParte);
         }
 
         return $ok;
@@ -726,79 +711,29 @@ final class SalaAudienciasPautaService
         $this->pautaRepository->updateTimingEstimado($idPauta, $dataHoraDes, $horaInicio, $horaFim, $dur);
     }
 
-    private function processoPrioridadesManager(): ProcessoManager
+    private function processoPrioridadesService(): ProcessoPrioridadesService
     {
-        if ($this->processoPrioridadesManager === null) {
-            $this->processoPrioridadesManager = new ProcessoManager($this->connection);
+        if ($this->processoPrioridadesService === null) {
+            $this->processoPrioridadesService = new ProcessoPrioridadesService($this->connection);
         }
 
-        return $this->processoPrioridadesManager;
+        return $this->processoPrioridadesService;
     }
 
-    private function garantirPrioridadeCriancaOuAdolescenteSeMenor(string $numeroProcesso, string $maioridade): void
-    {
-        if (strtolower(trim($maioridade)) !== 'menor') {
-            return;
-        }
-        $numero = trim($numeroProcesso);
-        if ($numero === '') {
-            return;
-        }
-        $this->processoPrioridadesManager()->adicionarPrioridadeSeNaoExistir($numero, PrioridadesProcessuaisCatalog::prioridadeAutomaticaParteMenor());
-    }
-
-    /**
-     * Remove a prioridade só se não restar nenhuma parte menor ativa em audiências do mesmo processo.
-     */
-    private function avaliarRemocaoPrioridadeCriancaAposMenor(string $processoId, string $numeroProcesso): void
+    private function sincronizarPrioridadesProcessoAposPartes(string $processoId, string $numeroProcesso): void
     {
         $processoId = trim($processoId);
-        $numero = trim($numeroProcesso);
-        if ($processoId === '' || $numero === '') {
+        if ($processoId === '') {
             return;
         }
-        $q = $this->parteRepository->countPartesMenoresAtivasPorProcesso($processoId);
-        if ($q === 0) {
-            $this->processoPrioridadesManager()->removerPrioridade($numero, PrioridadesProcessuaisCatalog::prioridadeAutomaticaParteMenor());
-        }
+        $nPauta = $this->parteRepository->countPartesMenoresAtivasPorProcesso($processoId);
+        $this->processoPrioridadesService()->reconciliarAutomaticas($processoId, trim($numeroProcesso), $nPauta);
     }
 
     /**
-     * Mantém em `processoPrioridades` a prioridade "Réu preso" conforme nomes de réus da audiência
-     * e cadastros de réus presos (globais e por processo).
+     * Estado das prioridades do processo na tela de edição da audiência.
      *
-     * @return bool detecção atual (há réu da audiência identificado como preso)
-     */
-    private function sincronizarPrioridadeReuPresoNoProcesso(string $idPauta): bool
-    {
-        $idPauta = trim($idPauta);
-        if ($idPauta === '') {
-            return false;
-        }
-        $pauta = $this->pautaRepository->findById($idPauta);
-        if ($pauta === null) {
-            return false;
-        }
-        $processoId = trim((string) ($pauta['processo'] ?? ''));
-        $numero = trim((string) ($pauta['numero_processo'] ?? ''));
-        $partes = $this->parteRepository->listByPauta($idPauta);
-        $tem = SalaAudienciasReuPresoDetector::audienciaTemReuPreso($this->connection, $processoId, $numero, $partes);
-        $label = PrioridadesProcessuaisCatalog::prioridadeAutomaticaReuPreso();
-        if ($numero !== '') {
-            if ($tem) {
-                $this->processoPrioridadesManager()->adicionarPrioridadeSeNaoExistir($numero, $label);
-            } else {
-                $this->processoPrioridadesManager()->removerPrioridade($numero, $label);
-            }
-        }
-
-        return $tem;
-    }
-
-    /**
-     * Estado da seção de prioridades na edição da audiência (catálogo + lista no BD + bloqueio da automática).
-     *
-     * @return array{prioridades: list<string>, has_parte_menor: bool, has_reu_preso: bool, catalogo: list<string>, prioridade_bloqueada_se_menor: string, prioridade_bloqueada_se_reu_preso: string}
+     * @return array<string, mixed>
      */
     public function listPrioridadesEdicaoAudiencia(string $idPauta): array
     {
@@ -807,35 +742,21 @@ final class SalaAudienciasPautaService
             throw new InvalidArgumentException('Audiência não encontrada.');
         }
         $processoId = trim((string) ($pauta['processo'] ?? ''));
-        $numero = trim((string) ($pauta['numero_processo'] ?? ''));
-        $hasMenor = $processoId !== '' && $this->parteRepository->countPartesMenoresAtivasPorProcesso($processoId) > 0;
-
-        $dbList = [];
-        if ($numero !== '') {
-            $dbList = $this->processoPrioridadesManager()->listarPrioridades($numero);
+        if ($processoId === '') {
+            throw new InvalidArgumentException('Processo vinculado à audiência é inválido.');
         }
+        $nPauta = $this->parteRepository->countPartesMenoresAtivasPorProcesso($processoId);
+        $estado = $this->processoPrioridadesService()->getEstadoEdicaoPorProcessoId($processoId, $nPauta);
 
-        $auto = PrioridadesProcessuaisCatalog::prioridadeAutomaticaParteMenor();
-        if ($hasMenor && $numero !== '' && !in_array($auto, $dbList, true)) {
-            $this->processoPrioridadesManager()->adicionarPrioridadeSeNaoExistir($numero, $auto);
-            $dbList = $this->processoPrioridadesManager()->listarPrioridades($numero);
-        }
+        $labels = array_map(static function (array $p): string {
+            return (string) ($p['label'] ?? '');
+        }, $estado['prioridades']);
 
-        $hasReuPreso = $this->sincronizarPrioridadeReuPresoNoProcesso($idPauta);
-        if ($numero !== '') {
-            $dbList = $this->processoPrioridadesManager()->listarPrioridades($numero);
-        }
-
-        sort($dbList, SORT_LOCALE_STRING);
-
-        return [
-            'prioridades' => $dbList,
-            'has_parte_menor' => $hasMenor,
-            'has_reu_preso' => $hasReuPreso,
-            'catalogo' => PrioridadesProcessuaisCatalog::sortedLabels(),
-            'prioridade_bloqueada_se_menor' => $auto,
-            'prioridade_bloqueada_se_reu_preso' => PrioridadesProcessuaisCatalog::prioridadeAutomaticaReuPreso(),
-        ];
+        return array_merge($estado, [
+            'prioridades_labels' => $labels,
+            'prioridade_bloqueada_se_menor' => PrioridadesProcessuaisCatalog::labelForCodigo(PrioridadesProcessuaisCatalog::codigoAutomaticaParteMenor()),
+            'prioridade_bloqueada_se_reu_preso' => PrioridadesProcessuaisCatalog::labelForCodigo(PrioridadesProcessuaisCatalog::codigoAutomaticaReuPreso()),
+        ]);
     }
 
     public function addPrioridadeCatalogoAudiencia(string $idPauta, string $prioridade, ?string $usuarioId): void
@@ -849,14 +770,11 @@ final class SalaAudienciasPautaService
         if ($pauta === null) {
             throw new InvalidArgumentException('Audiência não encontrada.');
         }
-        $numero = trim((string) ($pauta['numero_processo'] ?? ''));
-        if ($numero === '') {
-            throw new InvalidArgumentException('Número do processo não disponível para esta audiência.');
+        $processoId = trim((string) ($pauta['processo'] ?? ''));
+        if ($processoId === '') {
+            throw new InvalidArgumentException('Processo vinculado à audiência é inválido.');
         }
-        $ok = $this->processoPrioridadesManager()->adicionarPrioridadeSeNaoExistir($numero, $prioridade);
-        if (!$ok) {
-            throw new RuntimeException('Não foi possível registrar a prioridade.');
-        }
+        $this->processoPrioridadesService()->adicionarManualPorCodigoOuRotulo($processoId, $prioridade);
     }
 
     public function removePrioridadeCatalogoAudiencia(string $idPauta, string $prioridade, ?string $usuarioId): void
@@ -871,23 +789,11 @@ final class SalaAudienciasPautaService
             throw new InvalidArgumentException('Audiência não encontrada.');
         }
         $processoId = trim((string) ($pauta['processo'] ?? ''));
-        $numero = trim((string) ($pauta['numero_processo'] ?? ''));
-        if ($numero === '') {
-            throw new InvalidArgumentException('Número do processo não disponível para esta audiência.');
+        if ($processoId === '') {
+            throw new InvalidArgumentException('Processo vinculado à audiência é inválido.');
         }
-        $auto = PrioridadesProcessuaisCatalog::prioridadeAutomaticaParteMenor();
-        if ($prioridade === $auto && $processoId !== '' && $this->parteRepository->countPartesMenoresAtivasPorProcesso($processoId) > 0) {
-            throw new InvalidArgumentException('Esta prioridade é mantida automaticamente enquanto houver parte menor.');
-        }
-        $autoReu = PrioridadesProcessuaisCatalog::prioridadeAutomaticaReuPreso();
-        if ($prioridade === $autoReu) {
-            $partes = $this->parteRepository->listByPauta($idPauta);
-            $numeroCheck = trim((string) ($pauta['numero_processo'] ?? ''));
-            if (SalaAudienciasReuPresoDetector::audienciaTemReuPreso($this->connection, $processoId, $numeroCheck, $partes)) {
-                throw new InvalidArgumentException('Esta prioridade é mantida automaticamente enquanto houver réu preso entre as partes desta audiência.');
-            }
-        }
-        $this->processoPrioridadesManager()->removerPrioridade($numero, $prioridade);
+        $nPauta = $this->parteRepository->countPartesMenoresAtivasPorProcesso($processoId);
+        $this->processoPrioridadesService()->removerPorCodigoOuRotulo($processoId, $prioridade, $nPauta);
     }
 }
 

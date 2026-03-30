@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../repositories/GabineteReuPresoProcessoRepository.php';
 require_once __DIR__ . '/../repositories/GabineteReuPresoRepository.php';
+require_once __DIR__ . '/../repositories/ProcessosPartesRepository.php';
 
 /**
  * Detecção de "réu preso" alinhada a `sala-audiencias-pauta-edit.php` (mapas + fallbacks de nome).
@@ -73,6 +74,38 @@ final class SalaAudienciasReuPresoDetector
                 continue;
             }
             $nomeParteRaw = trim((string) ($parte['nome_parte'] ?? ''));
+            if ($nomeParteRaw === '') {
+                continue;
+            }
+            if (self::nomeReuCorrespondeReuPreso($nomeParteRaw, $map, $sigMap)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** Réu preso no âmbito do processo (vínculos em `processos_partes` + cadastro gabinete). */
+    public static function processoTemReuPreso(PDO $pdo, string $processoId, string $numeroProcesso): bool
+    {
+        $processoId = trim($processoId);
+        if ($processoId === '') {
+            return false;
+        }
+
+        $repo = new ProcessosPartesRepository($pdo);
+        $acusados = $repo->findAcusadosByProcessoId($processoId);
+        if ($acusados === []) {
+            return false;
+        }
+
+        [$map, $sigMap] = self::buildReusPresosMaps($pdo, $processoId, trim($numeroProcesso));
+        if ($map === [] && $sigMap === []) {
+            return false;
+        }
+
+        foreach ($acusados as $row) {
+            $nomeParteRaw = trim((string) ($row['nome_completo'] ?? ''));
             if ($nomeParteRaw === '') {
                 continue;
             }

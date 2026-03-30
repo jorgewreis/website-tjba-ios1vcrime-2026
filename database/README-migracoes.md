@@ -10,3 +10,4 @@
 8. **migrations/20260221_avatar_slug_legacy_to_initials.sql** – (Opcional) Normaliza `default`/vazio para `initials` (ver mesmo documento).
 9. **migrations/20260327_ceapa_tarefas.sql** – Cria `ceapa_tarefas` (vínculo com `processos` e `partes`) para o módulo CEAPA.
 10. **migrations/20260327_ceapa_tarefas_usuario_cadastro.sql** – Para bases que já criaram `ceapa_tarefas` sem usuário criador: adiciona `usuario_cadastro_id` + FK para `usuarios`.
+11. **migrations/20260331_processo_prioridades_unificacao.sql** – Unifica prioridades em `processo_prioridades` (`codigo` + `origem`). Em seguida, se existir `processoPrioridades`, rodar `php database/migrations/run_processo_prioridades_unificacao_data.php`. O script `20260330_processoPrioridades.sql` está **deprecado** (não usar em bases novas).

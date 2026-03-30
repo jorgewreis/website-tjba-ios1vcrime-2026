@@ -2,19 +2,18 @@
 declare(strict_types=1);
 
 /**
- * Catálogo versionado de rótulos de prioridade processual (lista fechada).
- * Ordem aqui é irrelevante para a UI: a tela ordena alfabeticamente.
+ * Catálogo fechado: código estável (BD/API) => rótulo pt-BR (UI).
+ * Ordem no array é irrelevante; a UI ordena por rótulo.
  *
- * A prioridade vinculada automaticamente a parte menor deve usar exatamente o mesmo texto
- * que em PrioridadesProcessuaisCatalog::prioridadeAutomaticaParteMenor().
- * Idem para réu preso e PrioridadesProcessuaisCatalog::prioridadeAutomaticaReuPreso().
+ * Códigos automáticos usados em regras:
+ * - crianca_adolescente, reu_preso, violencia_domestica (MP)
  */
 return [
-    'Criança ou adolescente',
-    'Réu preso',
-    'Idoso',
-    'Idoso (80 anos ou mais)',
-    'Pessoa com deficiência',
-    'Pessoa com doença grave',
-    'Violência doméstica',
+    'crianca_adolescente' => 'Criança ou adolescente',
+    'reu_preso' => 'Réu preso',
+    'idoso' => 'Idoso',
+    'idoso_80_anos_ou_mais' => 'Idoso (80 anos ou mais)',
+    'pessoa_deficiencia' => 'Pessoa com deficiência',
+    'pessoa_doenca_grave' => 'Pessoa com doença grave',
+    'violencia_domestica' => 'Violência doméstica',
 ];

@@ -251,6 +251,36 @@ final class ProcessosPartesRepository
         return $rows === false ? [] : $rows;
     }
 
+    /**
+     * Parte menor no cadastro processual: idade &lt; 18 pela data de nascimento ou flag ECA no vínculo.
+     */
+    public function countMenoresPorIdadeOuFlagNoProcesso(string $processoId): int
+    {
+        $processoId = trim($processoId);
+        if ($processoId === '') {
+            return 0;
+        }
+
+        $sql = sprintf(
+            'SELECT COUNT(*) FROM `%s` pp
+             INNER JOIN `partes` p ON p.`id` = pp.`parte_id`
+             WHERE pp.`processo_id` = :processo_id
+               AND (
+                   pp.`prioridade_crianca_adolescente` = 1
+                   OR (
+                       p.`data_nascimento` IS NOT NULL
+                       AND TIMESTAMPDIFF(YEAR, p.`data_nascimento`, CURDATE()) < 18
+                   )
+               )',
+            $this->table
+        );
+        $statement = $this->connection->prepare($sql);
+        $statement->bindValue(':processo_id', $processoId);
+        $statement->execute();
+
+        return (int) $statement->fetchColumn();
+    }
+
     public function delete(string $id): bool
     {
         $id = trim($id);

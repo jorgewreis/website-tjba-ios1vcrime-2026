@@ -1,6 +1,10 @@
 <?php
 declare(strict_types=1);
 
+/**
+ * @deprecated Preferir GET /api/processos/prioridades-list.php?processo_id=...
+ * Mantido para clientes que ainda enviam id_pauta.
+ */
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);

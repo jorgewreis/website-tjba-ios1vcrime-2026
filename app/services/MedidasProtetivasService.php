@@ -7,6 +7,7 @@ require_once __DIR__ . '/../repositories/MedidasProtetivasAlocadosRepository.php
 require_once __DIR__ . '/../repositories/AlocacoesRegrasRepository.php';
 require_once __DIR__ . '/../repositories/PartesRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosPartesRepository.php';
+require_once __DIR__ . '/ProcessoPrioridadesService.php';
 require_once __DIR__ . '/../repositories/ProcessoPrioridadesRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
@@ -28,7 +29,7 @@ final class MedidasProtetivasService
     private AlocacoesRegrasRepository $alocacoesRegrasRepository;
     private PartesRepository $partesRepository;
     private ProcessosPartesRepository $processosPartesRepository;
-    private ProcessoPrioridadesRepository $processoPrioridadesRepository;
+    private ProcessoPrioridadesService $processoPrioridadesService;
     private ProcessosRepository $processosRepository;
     private ClassesRepository $classesRepository;
     private CejuscService $cejuscService;
@@ -44,7 +45,7 @@ final class MedidasProtetivasService
         $this->alocacoesRegrasRepository = new AlocacoesRegrasRepository($connection);
         $this->partesRepository = new PartesRepository($connection);
         $this->processosPartesRepository = new ProcessosPartesRepository($connection);
-        $this->processoPrioridadesRepository = new ProcessoPrioridadesRepository($connection);
+        $this->processoPrioridadesService = new ProcessoPrioridadesService($connection);
         $this->processosRepository = new ProcessosRepository($connection);
         $this->classesRepository = new ClassesRepository($connection);
         $this->cejuscService = new CejuscService($connection);
@@ -114,7 +115,7 @@ final class MedidasProtetivasService
             ? $this->processosPartesRepository->findByProcessoId($processoId, ProcessosPartesRepository::TIPO_VITIMA)
             : [];
         $medida['prioridades_processo'] = $processoId !== ''
-            ? $this->processoPrioridadesRepository->findByProcessoId($processoId)
+            ? (new ProcessoPrioridadesRepository($this->connection))->findByProcessoId($processoId)
             : [];
 
         return $medida;
@@ -209,9 +210,7 @@ final class MedidasProtetivasService
                     );
                 }
 
-                foreach ($this->mapPrioridadesMarcadas($flags) as $prioridade) {
-                    $this->processoPrioridadesRepository->insert($processoId, $prioridade);
-                }
+                $this->processoPrioridadesService->registrarPrioridadesFlagsVitimaMedida($processoId, $flags);
             }
 
             $medidaId = IdGenerator::generateUniquePrefixedId(
@@ -252,6 +251,8 @@ final class MedidasProtetivasService
             ]);
             $cejuscId = trim((string) ($cejuscResult['id'] ?? ''));
             $this->repository->update($medidaId, ['cejusc_tarefa_id' => $cejuscId]);
+
+            $this->processoPrioridadesService->registrarViolenciaDomesticaMedidaProtetiva($processoId);
 
             $this->connection->commit();
             return [
@@ -477,25 +478,6 @@ final class MedidasProtetivasService
             'prioridade_idoso' => !empty($payload['idoso']),
             'prioridade_pessoa_deficiencia' => !empty($payload['pessoa_deficiencia']),
         ];
-    }
-
-    private function mapPrioridadesMarcadas(array $flags): array
-    {
-        $prioridades = [];
-        if (!empty($flags['prioridade_mulher'])) {
-            $prioridades[] = 'mulher';
-        }
-        if (!empty($flags['prioridade_crianca_adolescente'])) {
-            $prioridades[] = 'crianca_adolescente';
-        }
-        if (!empty($flags['prioridade_idoso'])) {
-            $prioridades[] = 'idoso';
-        }
-        if (!empty($flags['prioridade_pessoa_deficiencia'])) {
-            $prioridades[] = 'pessoa_deficiencia';
-        }
-
-        return $prioridades;
     }
 
     private function isPartePayloadEmpty(array $payload): bool

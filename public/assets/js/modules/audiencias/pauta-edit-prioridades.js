@@ -6,8 +6,8 @@
         return;
     }
 
-    var idPauta = String(window.PAUTA_EDIT_ID || '').trim();
-    if (!idPauta) {
+    var processoId = String(window.PAUTA_PROCESSO_ID || window.PROCESSO_PRIORIDADES_PROCESSO_ID || '').trim();
+    if (!processoId) {
         return;
     }
 
@@ -19,7 +19,25 @@
     }
 
     var pendingConfirmations = {};
-    var state = window.PAUTA_PRIORIDADES_INITIAL;
+    var state = normalizeInitial(window.PAUTA_PRIORIDADES_INITIAL || window.PROCESSO_PRIORIDADES_INITIAL);
+
+    function normalizeInitial(s) {
+        if (!s || typeof s !== 'object') {
+            return s;
+        }
+        var out = Object.assign({}, s);
+        if (Array.isArray(out.prioridades) && out.prioridades.length > 0 && typeof out.prioridades[0] === 'string') {
+            out.prioridades = out.prioridades.map(function (label) {
+                return { codigo: label, label: label, origem: '' };
+            });
+        }
+        if (Array.isArray(out.catalogo) && out.catalogo.length > 0 && typeof out.catalogo[0] === 'string') {
+            out.catalogo = out.catalogo.map(function (label) {
+                return { codigo: label, label: label };
+            });
+        }
+        return out;
+    }
 
     function notify(type, title, message) {
         if (typeof showToast === 'function') {
@@ -39,45 +57,48 @@
         return false;
     }
 
-    function escapeHtml(str) {
-        return String(str)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
+    function codigosBloqueados() {
+        if (!state || !Array.isArray(state.codigos_bloqueados_remocao)) {
+            return [];
+        }
+        return state.codigos_bloqueados_remocao;
     }
 
-    function isLocked(p) {
-        if (!state) {
-            return false;
+    function isLockedCodigo(codigo) {
+        return codigosBloqueados().indexOf(String(codigo || '')) >= 0;
+    }
+
+    function hintForCodigo(codigo) {
+        var c = String(codigo || '');
+        if (state.has_parte_menor && c === state.codigo_bloqueado_menor) {
+            return '*automática (parte menor)';
         }
-        if (p === state.prioridade_bloqueada_se_menor && state.has_parte_menor) {
-            return true;
+        if (state.has_reu_preso && c === state.codigo_bloqueado_reu_preso) {
+            return '*automática (réu preso)';
         }
-        if (p === state.prioridade_bloqueada_se_reu_preso && state.has_reu_preso) {
-            return true;
-        }
-        return false;
+        return '';
     }
 
     function populateSelect() {
-        if (!state || !catalogoLista().length) {
+        if (!state) {
             return;
         }
-        var current = state.prioridades || [];
-        var set = {};
-        current.forEach(function (x) {
-            set[String(x)] = true;
+        var current = {};
+        (state.prioridades || []).forEach(function (x) {
+            if (x && x.codigo) {
+                current[String(x.codigo)] = true;
+            }
         });
         selectEl.innerHTML = '<option value="" selected disabled>Selecione...</option>';
-        catalogoLista().forEach(function (label) {
-            if (set[label]) {
+        catalogoLista().forEach(function (item) {
+            var cod = String(item.codigo || '');
+            var lab = String(item.label || cod);
+            if (!cod || current[cod]) {
                 return;
             }
             var opt = document.createElement('option');
-            opt.value = label;
-            opt.textContent = label;
+            opt.value = cod;
+            opt.textContent = lab;
             selectEl.appendChild(opt);
         });
     }
@@ -100,10 +121,12 @@
         }
 
         var sorted = state.prioridades.slice().sort(function (a, b) {
-            return String(a).localeCompare(String(b), 'pt-BR');
+            return String(a.label || a.codigo).localeCompare(String(b.label || b.codigo), 'pt-BR');
         });
 
         sorted.forEach(function (p) {
+            var codigo = String(p.codigo || '');
+            var label = String(p.label || codigo);
             var row = document.createElement('div');
             row.className = 'display-flex row row-full align-center justify-between padding-y-xs';
             row.style.borderBottom = '1px solid rgba(0,0,0,.06)';
@@ -112,27 +135,23 @@
             left.className = 'display-flex row row-fit align-center gap-y-sm flex-wrap';
             var badge = document.createElement('span');
             badge.className = 'badge badge-primary';
-            badge.textContent = p;
+            badge.textContent = label;
             left.appendChild(badge);
-            if (p === state.prioridade_bloqueada_se_menor && state.has_parte_menor) {
-                var hintMenor = document.createElement('span');
-                hintMenor.className = 'label-hint-automatizado';
-                hintMenor.textContent = '*automática (parte menor)';
-                left.appendChild(hintMenor);
-            } else if (p === state.prioridade_bloqueada_se_reu_preso && state.has_reu_preso) {
-                var hintReu = document.createElement('span');
-                hintReu.className = 'label-hint-automatizado';
-                hintReu.textContent = '*automática (réu preso)';
-                left.appendChild(hintReu);
+            var hintText = hintForCodigo(codigo);
+            if (hintText) {
+                var hint = document.createElement('span');
+                hint.className = 'label-hint-automatizado';
+                hint.textContent = hintText;
+                left.appendChild(hint);
             }
 
             row.appendChild(left);
 
-            if (!isLocked(p)) {
+            if (!isLockedCodigo(codigo)) {
                 var btn = document.createElement('button');
                 btn.type = 'button';
                 btn.className = 'btn btn-danger-outline height-sm';
-                btn.setAttribute('data-prioridade-rem', p);
+                btn.setAttribute('data-prioridade-codigo-rem', codigo);
                 btn.setAttribute('title', 'Remover prioridade');
                 btn.textContent = 'Remover';
                 row.appendChild(btn);
@@ -143,13 +162,13 @@
     }
 
     function applyState(next) {
-        state = next;
+        state = normalizeInitial(next);
         populateSelect();
         renderList();
     }
 
     function fetchState() {
-        return fetch('/api/sala-audiencias-pauta/prioridades-list.php?id_pauta=' + encodeURIComponent(idPauta), {
+        return fetch('/api/processos/prioridades-list.php?processo_id=' + encodeURIComponent(processoId), {
             credentials: 'same-origin',
         })
             .then(function (r) {
@@ -188,9 +207,9 @@
             notify('error', 'Validacao', 'Selecione uma prioridade no catálogo.');
             return;
         }
-        postJson('/api/sala-audiencias-pauta/prioridades-add.php', {
-            id_pauta: idPauta,
-            prioridade: val,
+        postJson('/api/processos/prioridades-add.php', {
+            processo_id: processoId,
+            codigo: val,
         })
             .then(function (res) {
                 if (res.ok && res.j && res.j.success && res.j.state) {
@@ -207,21 +226,21 @@
     });
 
     listEl.addEventListener('click', function (ev) {
-        var btn = ev.target && ev.target.closest ? ev.target.closest('[data-prioridade-rem]') : null;
+        var btn = ev.target && ev.target.closest ? ev.target.closest('[data-prioridade-codigo-rem]') : null;
         if (!btn) {
             return;
         }
-        var p = String(btn.getAttribute('data-prioridade-rem') || '').trim();
-        if (!p) {
+        var codigo = String(btn.getAttribute('data-prioridade-codigo-rem') || '').trim();
+        if (!codigo) {
             return;
         }
-        var ck = 'prioridade-rem-' + idPauta + '-' + p;
+        var ck = 'prioridade-rem-' + processoId + '-' + codigo;
         if (!requireSecondClick(ck, 'Clique novamente em Remover em ate 5 segundos para confirmar.')) {
             return;
         }
-        postJson('/api/sala-audiencias-pauta/prioridades-remove.php', {
-            id_pauta: idPauta,
-            prioridade: p,
+        postJson('/api/processos/prioridades-remove.php', {
+            processo_id: processoId,
+            codigo: codigo,
         })
             .then(function (res) {
                 if (res.ok && res.j && res.j.success && res.j.state) {

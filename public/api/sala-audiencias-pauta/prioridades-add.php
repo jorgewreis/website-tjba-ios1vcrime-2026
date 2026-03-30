@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+/**
+ * @deprecated Preferir POST /api/processos/prioridades-add.php com processo_id + codigo.
+ */
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);

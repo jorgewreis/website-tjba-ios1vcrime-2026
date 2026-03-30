@@ -352,7 +352,7 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
             <h2>Prioridades processuais</h2>
         </div>
         <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md" id="prioridades-processuais-wrap">
-            <p class="description-page" style="margin:0;">Prioridades vinculadas ao número do processo. Inclusões e exclusões são salvas ao confirmar cada ação.</p>
+            <p class="description-page" style="margin:0;">Prioridades do processo (valem para todas as audiências). Inclusões e exclusões são salvas ao confirmar cada ação.</p>
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
                     <label for="prioridade-catalog-select">Incluir prioridade</label>
@@ -651,6 +651,7 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
         window.PAUTA_EXISTING_PART_NAMES_SIGS = <?php echo json_encode($existingPartSignatures, JSON_UNESCAPED_UNICODE); ?>;
         window.PAUTA_PRIORIDADES_INITIAL = <?php echo json_encode($prioridadesEdicaoInicial, JSON_UNESCAPED_UNICODE); ?>;
         window.PAUTA_EDIT_ID = <?php echo json_encode($row !== null ? (string) ($row['id_pauta'] ?? '') : '', JSON_UNESCAPED_UNICODE); ?>;
+        window.PAUTA_PROCESSO_ID = <?php echo json_encode($row !== null ? (string) ($row['processo'] ?? '') : '', JSON_UNESCAPED_UNICODE); ?>;
     </script>
 
     <script src="/assets/js/shared/text-formatter.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/shared/text-formatter.js') ?: time(); ?>"></script>
