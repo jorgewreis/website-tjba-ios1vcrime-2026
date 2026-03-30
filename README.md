@@ -237,7 +237,8 @@ Diretrizes práticas para manter consistência visual (com base na paleta acima)
 
 ### Alerts / mensagens
 
-- Use sempre o par **(cor do tipo) + (fundo do tipo)**:
+- Para **feedback de operação** (salvar, erro de API, etc.) use o **sistema de toast** (`App.Toast` / `showToast`), não `alert()`. Política de modelo simple vs full e empilhamento: ver **`docs/00-foundation/sistema-toast.md`** e `.cursor/rules/toast-system.mdc`.
+- Para **cores semânticas** em componentes estáticos (chips, badges), use o par **(cor do tipo) + (fundo do tipo)**:
   - **Sucesso**, **Perigo**, **Atenção**, **Info**.
 
 ### Inputs (formulários)

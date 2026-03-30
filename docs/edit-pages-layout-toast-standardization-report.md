@@ -1,5 +1,7 @@
 # Relatorio de Padronizacao das Paginas `*-edit.php`
 
+> **Nota (2026):** este relatorio descreve o trabalho de layout e uso de `showToast` na epoca. A politica atual de **simple vs full** e de duracao esta centralizada em `public/assets/js/shared/toast.js` e documentada em `docs/00-foundation/sistema-toast.md`. Chamadas antigas com `variant: 'full'` em todo lugar foram supersedidas por essa politica.
+
 ## Escopo
 
 Padronizacao estrutural, visual e comportamental das paginas `*-edit.php` para alinhamento com o modelo consolidado em `*-create.php` e `*-list.php`.
@@ -9,7 +11,7 @@ Padronizacao estrutural, visual e comportamental das paginas `*-edit.php` para a
 - Estrutura base com `container-full card-page`.
 - Blocos internos com `display-flex row row-full ...`.
 - Eliminacao de markup legado `row table`.
-- Padrao de toasts com `showToast({ type, variant: 'full', title, message })`.
+- Padrao de toasts com `showToast({ type, title, message })` (variant opcional; ver `docs/00-foundation/sistema-toast.md`).
 - Remocao de `alert()` e substituicao por toasts.
 - Confirmacao de acoes destrutivas via duplo clique com toast informativo.
 - Feedback de sucesso/erro em operacoes principais (salvar, cancelar, excluir, adicionar/remover vinculos).
@@ -24,7 +26,7 @@ Padronizacao estrutural, visual e comportamental das paginas `*-edit.php` para a
 
 - `app/views/internal/cartorio-guias-edit.php`
   - **Antes:** mistura de blocos legados e toasts com variacao de `variant`.
-  - **Depois:** estrutura de secoes padronizada (`display-flex`) e toasts uniformizados (`variant: 'full'` + `title`).
+  - **Depois:** estrutura de secoes padronizada (`display-flex`) e toasts uniformizados (`title` + mensagem; na epoca usava-se `variant: 'full'` — hoje a politica esta em `toast.js`).
 
 - `app/views/internal/cartorio-editais-edit.php`
   - **Antes:** estrutura hibrida `row table` e cancelamento sem feedback claro.

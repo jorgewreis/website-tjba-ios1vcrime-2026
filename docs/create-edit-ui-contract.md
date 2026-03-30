@@ -20,8 +20,9 @@
 
 ## Toasts e feedback
 
-- Feedback de sucesso/erro/info deve ser exclusivamente via `showToast`.
+- Feedback de sucesso/erro/info deve ser exclusivamente via `showToast` (views internas) ou `App.Toast.show` (shell).
 - Nao usar `label/div` inline para exibir status de submit.
+- **Modelo visual:** definido em `toast.js` — sucesso costuma ser **simple** (sem barra de título, tempo menor); erro é **full** (com título). Nao e necessario repetir `variant: 'full'` em cada chamada; ver `docs/00-foundation/sistema-toast.md` e `.cursor/rules/toast-system.mdc`.
 
 ## Botoes
 

@@ -348,6 +348,8 @@ Parciais recomendadas:
 - - `public/assets/css/shared/forms.css` — formulários, inputs, mascaramento e helpers visuais.
 - - `public/assets/css/shared/responsive.css` — regras adaptativas por breakpoint.
 - - `public/assets/css/shared/toast.css` — estilos dos toasts flutuantes.
+- - `public/assets/js/shared/toast.js` — fila, modelos simple/full, duracao e politica automatica (`App.Toast`).
+- - `public/assets/js/shared/toast-helper.js` — `showToast` para iframes (postMessage ao parent).
 - - `public/assets/css/shared/utilities.css` — helpers utilitários (mostrar/ocultar, espaçamentos).
 - #### Estilos por módulo
 - Cada módulo que precise de estilos específicos (por exemplo, `public/assets/css/modules/guias/create.css`) deve viver em `public/assets/css/modules/<nome-do-modulo>/` para evitar poluição global. Essa organização ajuda a manter apenas o necessário carregado nas páginas específicas de cada área.

@@ -8,7 +8,7 @@ alwaysApply: false
 
 - Reutilizar classes CSS existentes; nunca criar classe nova para layout dessas telas.
 - Estrutura de blocos deve seguir padrão `container-full card-page`, com seções `display-flex` e ações no rodapé da página.
-- Feedback ao usuário deve usar somente `showToast` (success/error/info); não usar feedback inline.
+- Feedback ao usuário deve usar somente `showToast` (success/error/info); não usar feedback inline. Modelo simple/full e duração são definidos em `toast.js` (ver `docs/00-foundation/sistema-toast.md`).
 - Campo de CPF usa placeholder `000.000.000-00` e validação front/back compatível.
 - Campo CNJ/processo usa placeholder `0000000-00.0000.0.00.0000` e validação CNJ no front/back.
 - Campo de telefone usa placeholder `(00) 00000-0000` com máscara e sanitização no envio.

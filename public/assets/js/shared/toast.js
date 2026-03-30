@@ -1,12 +1,11 @@
 /**
  * Sistema de Toast – substitui alertas/erros/sucesso em todo o sistema.
- * Dois modelos: full (título + fechar + conteúdo) e simple (só conteúdo, com barra de tempo).
- * Política:
- * - simple como padrão
- * - full para erro crítico e validação longa
- * - deduplicação em 5s com contador xN
- * - pausa no hover
- * - aria-live assertive apenas para erro crítico
+ * Dois modelos: full (barra de título + fechar + conteúdo) e simple (só mensagem + barra de tempo).
+ * Política (resolveVariant — ignora variant explícito salvo forceVariant):
+ * - success: simple (rápido), exceto mensagem longa/complexa → full
+ * - error: sempre full
+ * - info: simple se curto; full se mensagem longa/complexa
+ * - deduplicação em 5s com contador xN; pausa no hover; erro crítico → aria-live assertive
  */
 (function (global) {
     'use strict';
@@ -19,6 +18,8 @@
     const DEDUP_TIMER_STEP_MS = 1500;
     const MAX_DURATION_MS = 15000;
     const SIMPLE_DURATION_MIN = 3000;
+    const SUCCESS_SIMPLE_MAX_MS = 3200;
+    const SUCCESS_SIMPLE_MIN_MS = 1800;
     const FULL_DURATION_DEFAULT_MS = 8000;
     const LONG_MESSAGE_THRESHOLD = 120;
     const SIMPLE_MS_BASE = 2000;
@@ -53,10 +54,6 @@
         return container;
     }
 
-    function hasOwn(obj, key) {
-        return Object.prototype.hasOwnProperty.call(obj, key);
-    }
-
     function isLongOrComplexMessage(message) {
         const raw = String(message || '');
         if (raw.trim().length >= LONG_MESSAGE_THRESHOLD) return true;
@@ -76,10 +73,24 @@
         return opts.type === 'error' && (opts.critical === true || opts.blocking === true);
     }
 
-    function resolveVariant(opts, explicitVariant) {
-        if (explicitVariant) return opts.variant;
-        if (opts.type === 'error' && (isCriticalError(opts) || isLongOrComplexMessage(opts.message))) {
+    /**
+     * Define simple vs full. Chamadas antigas passam variant:'full' em todo lugar;
+     * a política abaixo prevalece (exceto opts.forceVariant === 'full'|'simple').
+     */
+    function resolveVariant(opts) {
+        const forced = opts.forceVariant;
+        if (forced === 'full' || forced === 'simple') {
+            return forced;
+        }
+        const long = isLongOrComplexMessage(opts.message || '');
+        if (opts.type === 'success') {
+            return long ? 'full' : 'simple';
+        }
+        if (opts.type === 'error') {
             return 'full';
+        }
+        if (opts.type === 'info') {
+            return long ? 'full' : 'simple';
         }
         return 'simple';
     }
@@ -96,6 +107,14 @@
         if (!message || typeof message !== 'string') return SIMPLE_DURATION_MIN;
         const len = message.trim().length;
         let ms = SIMPLE_MS_BASE + len * SIMPLE_MS_PER_CHAR;
+
+        // Sucesso no modelo simples: tempo mais curto (não usar o mesmo multiplicador dos demais)
+        if (variant === 'simple' && type === 'success') {
+            ms = Math.floor((SIMPLE_MS_BASE * 0.5) + len * 22);
+            ms = Math.max(SUCCESS_SIMPLE_MIN_MS, Math.min(SUCCESS_SIMPLE_MAX_MS, ms));
+            return ms;
+        }
+
         ms = Math.floor(ms * 1.5);
         if (type === 'error') ms *= 2;
         ms = Math.max(SIMPLE_DURATION_MIN, Math.min(MAX_DURATION_MS, ms));
@@ -389,12 +408,11 @@
      */
     function show(options) {
         const input = typeof options === 'string' ? { message: options } : (options || {});
-        const explicitVariant = hasOwn(input, 'variant');
         const opts = Object.assign(
             { type: 'info', variant: 'simple', title: '', message: '', subtitle: '', critical: false },
             input
         );
-        opts.variant = resolveVariant(opts, explicitVariant);
+        opts.variant = resolveVariant(opts);
         if (!opts.title && TITLES[opts.type]) opts.title = TITLES[opts.type];
         opts.dedupKey = buildDedupKey(opts);
         opts.dedupLastSeenAt = Date.now();
