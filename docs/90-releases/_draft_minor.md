@@ -114,4 +114,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(gabinete-reus-presos-edit): implement date input restrictions and enhance UI interaction for movement types** `[fa6acf4]`
 - **feat(access): add new access rules for 'ceaparules' and 'oficiosrules'; implement deleteById method in multiple repositories and services for better resource management** `[c8c962a]`
 - **refactor(gabinete-reus-presos-list): remove unused styles and simplify description text for clarity** `[d0e1859]`
+- **style(toast): enhance toast component styles and remove obsolete JavaScript file** `[58fa8dd]`
 
