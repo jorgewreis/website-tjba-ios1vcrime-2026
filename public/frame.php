@@ -64,6 +64,7 @@ $allowed_pages = [
     'salapautaparteedit'    => $PAGES . '/sala-audiencias-pauta-parte-edit.php',
     'salaata'               => $PAGES . '/sala-audiencias-atas-list.php',
     'salapainel'            => $PAGES . '/sala-audiencias-pauta-list.php',
+    'salapaineldia'         => $PAGES . '/sala-audiencias-painel-dia.php',
     'estudaata'             => $PAGES . '/sala-audiencias-atas-estudantes.php',
     'estudapainel'          => $PAGES . '/sala-audiencias-painel-estudantes.php',
     'reuspresos'            => $PAGES . '/gabinete-reus-presos-list.php',

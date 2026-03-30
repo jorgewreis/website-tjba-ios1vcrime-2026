@@ -83,6 +83,7 @@ final class PageAccessRegistry
             'salapauta' => $areaAudiencias,
             'salaata' => $areaAudiencias,
             'salapainel' => $areaAudiencias,
+            'salapaineldia' => $areaAudiencias,
             'estudapauta' => ['kind' => 'estudantes_readonly'],
             'estudaata' => ['kind' => 'estudantes_readonly'],
             'estudapainel' => ['kind' => 'estudantes_readonly'],

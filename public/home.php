@@ -523,6 +523,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                 items: [                    
                     { icon: 'fi fi-rs-clipboard-list-check', label: 'Pauta de Audiências', target: 'salapauta' },
                     { icon: 'fi fi-rs-document', label: 'Atas de Audiências', target: 'salaata' },
+                    { icon: 'fi fi-rs-calendar-day', label: 'Painel do dia', target: 'salapaineldia' },
                     { icon: 'fi fi-rs-screen', label: 'Painel em tempo real', target: 'salapainel' }
                 ]
             },
