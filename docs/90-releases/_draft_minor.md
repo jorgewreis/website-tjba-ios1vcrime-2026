@@ -111,4 +111,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **Fix: update layout of cartorio-ceapa-list view by adjusting column widths and removing redundant date display** `[7cbd896]`
 - **feat(gabinete-reus-presos-edit): add datetime formatting function and simplify UI labels** `[2cd0ace]`
 - **refactor(gabinete-reus-presos-edit): update button styles and adjust UI for better readability** `[4868e0c]`
+- **feat(gabinete-reus-presos-edit): implement date input restrictions and enhance UI interaction for movement types** `[fa6acf4]`
 
