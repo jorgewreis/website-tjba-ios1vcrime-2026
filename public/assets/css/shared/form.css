@@ -542,7 +542,7 @@ button.btn:disabled {
     color: var(--color-text-on-surface);
 }
 .badge-black {
-    background-color: var(--color-black);
+    background-color: var(--color-text-on-surface);
     color: var(--color-text-on-primary);
 }
 
