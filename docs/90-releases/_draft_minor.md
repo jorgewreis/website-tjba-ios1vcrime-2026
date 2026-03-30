@@ -29,4 +29,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(audiencias): improve DataJud caching mechanism with enhanced storage handling and legacy support** `[f85722d]`
 - **fix(form): update badge-black background color to match surface text color for improved accessibility** `[bf7122c]`
 - **feat(audiencias): add functionality to list occupied and available time slots for hearings, enhancing scheduling capabilities in services and views** `[50b2156]`
+- **feat(processos): add method to list distinct names of defendants linked to a process and integrate it into the hearing scheduling views** `[3c1760f]`
 
