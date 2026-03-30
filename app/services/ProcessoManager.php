@@ -101,6 +101,60 @@ class ProcessoManager
     }
 
     /**
+     * Insere uma prioridade para o número do processo se ainda não existir (não substitui as demais).
+     */
+    public function adicionarPrioridadeSeNaoExistir(string $numeroProcesso, string $prioridade): bool
+    {
+        $numeroProcesso = trim($numeroProcesso);
+        $prioridade = trim($prioridade);
+        if ($numeroProcesso === '' || $prioridade === '') {
+            return false;
+        }
+
+        $sqlCheck = 'SELECT 1 FROM processoPrioridades WHERE numero = ? AND prioridade = ? LIMIT 1';
+        $st = $this->pdo->prepare($sqlCheck);
+        $st->execute([$numeroProcesso, $prioridade]);
+        if ($st->fetchColumn() !== false) {
+            return true;
+        }
+
+        try {
+            $idPrioridade = Helper::gerarId();
+            $sql = 'INSERT INTO processoPrioridades (id_proc_prioridade, numero, prioridade) VALUES (?, ?, ?)';
+            $ins = $this->pdo->prepare($sql);
+
+            return $ins->execute([$idPrioridade, $numeroProcesso, $prioridade]);
+        } catch (Throwable $e) {
+            error_log('ProcessoManager::adicionarPrioridadeSeNaoExistir: ' . $e->getMessage());
+
+            return false;
+        }
+    }
+
+    /**
+     * Remove apenas o registro dessa prioridade para o número do processo.
+     */
+    public function removerPrioridade(string $numeroProcesso, string $prioridade): bool
+    {
+        $numeroProcesso = trim($numeroProcesso);
+        $prioridade = trim($prioridade);
+        if ($numeroProcesso === '' || $prioridade === '') {
+            return false;
+        }
+
+        try {
+            $sql = 'DELETE FROM processoPrioridades WHERE numero = ? AND prioridade = ?';
+            $st = $this->pdo->prepare($sql);
+
+            return $st->execute([$numeroProcesso, $prioridade]);
+        } catch (Throwable $e) {
+            error_log('ProcessoManager::removerPrioridade: ' . $e->getMessage());
+
+            return false;
+        }
+    }
+
+    /**
      * Atualiza a classe de um processo
      */
     private function atualizarClasseProcesso(string $numero, string $classe): bool

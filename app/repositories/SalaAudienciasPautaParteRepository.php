@@ -108,6 +108,31 @@ final class SalaAudienciasPautaParteRepository
     }
 
     /**
+     * Quantidade de partes ativas com maioridade "menor" em qualquer audiência do mesmo processo.
+     */
+    public function countPartesMenoresAtivasPorProcesso(string $processoId): int
+    {
+        $processoId = trim($processoId);
+        if ($processoId === '') {
+            return 0;
+        }
+
+        $sql = sprintf(
+            'SELECT COUNT(*) FROM `%s` pp
+             INNER JOIN `sala_audiencias_pauta` pa ON pa.`id_pauta` = pp.`pauta` AND pa.`ativo` = 1
+             WHERE pa.`processo` = :processo
+               AND pp.`ativo` = 1
+               AND pp.`maioridade` = \'menor\'',
+            $this->table
+        );
+        $st = $this->connection->prepare($sql);
+        $st->bindValue(':processo', $processoId);
+        $st->execute();
+
+        return (int) $st->fetchColumn();
+    }
+
+    /**
      * @param list<string> $pautaIds
      * @return array<string, list<array{nome_parte: string, tipo_parte: string, expedicao: string, cumprimento: string}>> id_pauta => partes com status
      */

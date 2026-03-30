@@ -15,6 +15,14 @@ $id = trim((string) ($_GET['id'] ?? ''));
 $service = new SalaAudienciasPautaService(Conection::getInstance()->getConnection());
 $row = $id !== '' ? $service->find($id) : null;
 $partes = $row !== null ? $service->listPartes((string) $row['id_pauta']) : [];
+$prioridadesEdicaoInicial = null;
+if ($row !== null) {
+    try {
+        $prioridadesEdicaoInicial = $service->listPrioridadesEdicaoAudiencia((string) $row['id_pauta']);
+    } catch (Throwable $e) {
+        $prioridadesEdicaoInicial = null;
+    }
+}
 $reusPresosMap = [];
 $reusPresosSigMap = [];
 
@@ -339,6 +347,25 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
             </div>
         </div>
 
+        <?php if ($row !== null): ?>
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <h2>Prioridades processuais</h2>
+        </div>
+        <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md" id="prioridades-processuais-wrap">
+            <p class="description-page" style="margin:0;">Prioridades vinculadas ao número do processo. Inclusões e exclusões são salvas ao confirmar cada ação.</p>
+            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
+                <div class="col">
+                    <label for="prioridade-catalog-select">Incluir prioridade</label>
+                    <select class="width-500 height-md" id="prioridade-catalog-select">
+                        <option value="" selected disabled>Selecione...</option>
+                    </select>
+                </div>
+                <button type="button" class="btn btn-primary height-md" id="btn-prioridade-adicionar">Adicionar</button>
+            </div>
+            <div id="prioridades-processuais-list" class="display-flex col col-full gap-y-sm" aria-live="polite"></div>
+        </div>
+        <?php endif; ?>
+
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
             <h2>Adicionar parte</h2>
         </div>
@@ -622,10 +649,13 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
     ?>
     <script>
         window.PAUTA_EXISTING_PART_NAMES_SIGS = <?php echo json_encode($existingPartSignatures, JSON_UNESCAPED_UNICODE); ?>;
+        window.PAUTA_PRIORIDADES_INITIAL = <?php echo json_encode($prioridadesEdicaoInicial, JSON_UNESCAPED_UNICODE); ?>;
+        window.PAUTA_EDIT_ID = <?php echo json_encode($row !== null ? (string) ($row['id_pauta'] ?? '') : '', JSON_UNESCAPED_UNICODE); ?>;
     </script>
 
     <script src="/assets/js/shared/text-formatter.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/shared/text-formatter.js') ?: time(); ?>"></script>
     <script src="/assets/js/modules/datajud/datajud-cycle-helper.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/datajud/datajud-cycle-helper.js') ?: time(); ?>"></script>
     <script src="/assets/js/modules/audiencias/pauta-edit.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-edit.js') ?: time(); ?>"></script>
+    <script src="/assets/js/modules/audiencias/pauta-edit-prioridades.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-edit-prioridades.js') ?: time(); ?>"></script>
 </body>
 </html>
