@@ -251,10 +251,35 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                     <label for="oficio-tipo">Tipo de ofício <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-600 height-md" id="oficio-tipo" name="tipo_oficio">
                         <option value="">Selecione…</option>
-                        <option value="Ofício requisitório">Ofício requisitório</option>
-                        <option value="Ofício de comunicação">Ofício de comunicação</option>
-                        <option value="Ofício de encaminhamento">Ofício de encaminhamento</option>
-                        <option value="Outro">Outro</option>
+                        <optgroup label="Solicitação">
+                        <option value="Ofício Solicitando Reativação do CPF">Ofício solicitando Reativação do CPF</option>
+                        <option value="Ofício Solicitando Suspensão do CPF">Ofício solicitando Suspensão do CPF</option>
+                        <option value="Ofício Solicitando Agendamento de Audiência">Ofício solicitando Agendamento de Audiência</option>
+                        </optgroup>
+                        <optgroup label="Encaminhamento">
+                        <option value="Ofício Encaminhando Decisão de Medida Protetiva">Ofício encaminhando Decisão de Medida Protetiva</option>
+                        <option value="Ofício Encaminhando Decisão Interlocutória">Ofício encaminhando Decisão Interlocutória</option>
+                        <option value="Ofício Encaminhando Documentos">Ofício encaminhando Documentos</option>
+                        <option value="Ofício Encaminhando Sentença">Ofício encaminhando Sentença</option>
+                        <option value="Ofício Encaminhando Informação">Ofício encaminhando Informação</option>
+                        </optgroup>
+                        <optgroup label="Informando">
+                        <option value="Ofício Informando Baixa ao Cedep">Ofício informando Baixa ao Cedep</option>
+                        <option value="Ofício Informando Condenação ao CEDEP">Ofício informando Condenação ao CEDEP</option>
+                        </optgroup>
+                        <optgroup label="Requisitando">
+                            <option value="Ofício Requisitando Policial para Audiência">Ofício requisitando Policial para Audiência</option>
+                            <option value="Ofício Requisitando Preso para Audiência">Ofício requisitando Preso para Audiência</option>
+                            <option value="Ofício Requisitando Servidor para Audiência">Ofício requisitando Servidor para Audiência</option>
+                            <option value="Ofício Requisitando Informações">Ofício requisitando Informações</option>
+                        </optgroup>
+                        <optgroup label="Administrativos">
+                            <option value="Ofício Solicitando Férias">Ofício solicitando Férias</option>
+                            <option value="Ofício Solicitando Licença Prêmio">Ofício solicitando Licença Prêmio</option>
+                            <option value="Ofício Solicitando Reembolso">Ofício solicitando Reembolso</option>
+                            <option value="Ofício Solicitando Afastamento">Ofício solicitando Afastamento</option>
+                            <option value="Ofício Diversos">Ofício diversos</option>
+                        </optgroup>
                     </select>
                 </div>
                 <div class="col">
@@ -396,21 +421,9 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                             <span class="minor-info text-ellipsis" title="<?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?>" <?php echo $classeStyle; ?>><?php echo htmlspecialchars($classeNome); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars((string) ($row['Processo'] ?? '')); ?></span>
                         </div>
-                        <div class="col width-400">
+                        <div class="col width-500">
                             <span class="minor-info">Tipo</span>
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['TipoOficio'] ?? '')); ?></span>
-                        </div>
-                        <div class="col width-220">
-                            <?php
-                            $nomeCriadorRow = trim((string) ($row['CriadoPorNome'] ?? ''));
-                            $nomeCriadorRow = $nomeCriadorRow !== '' ? $nomeCriadorRow : '—';
-                            ?>
-                            <span class="minor-info"><?php echo htmlspecialchars(oficios_list_formatar_data_hora($row['Data'] ?? null)); ?></span>
-                            <span class="major-info text-ellipsis" title="<?php echo $nomeCriadorRow !== '—' ? htmlspecialchars($nomeCriadorRow, ENT_QUOTES) : ''; ?>"><?php echo htmlspecialchars($nomeCriadorRow); ?></span>
-                        </div>
-                        <div class="col width-280">
-                            <span class="minor-info">Cumprimento</span>
-                            <span class="major-info text-ellipsis"><?php echo htmlspecialchars(cartorio_oficios_label_cumprimento($row)); ?></span>
                         </div>
                     </div>
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">
