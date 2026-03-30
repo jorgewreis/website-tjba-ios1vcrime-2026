@@ -110,6 +110,9 @@ $horariosGrade = SalaAudienciasPautaService::horariosGradeCadastroAudiencia();
         </div>
     </div>
 
+    <script>
+        window.AUDIENCIA_HORARIOS_GRADE = <?php echo json_encode($horariosGrade, JSON_UNESCAPED_UNICODE); ?>;
+    </script>
     <script src="/assets/js/modules/datajud/cnj.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/datajud/cnj.js') ?: time(); ?>"></script>
     <script src="/assets/js/modules/datajud/datajud-cycle-helper.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/datajud/datajud-cycle-helper.js') ?: time(); ?>"></script>
     <script src="/assets/js/modules/datajud/datajud-api.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/datajud/datajud-api.js') ?: time(); ?>"></script>

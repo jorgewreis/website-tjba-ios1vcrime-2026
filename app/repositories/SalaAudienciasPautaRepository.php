@@ -231,6 +231,50 @@ final class SalaAudienciasPautaRepository
         return $st->fetchColumn() !== false;
     }
 
+    /**
+     * Horários (HH:MM) já reservados por audiências **designada** ou **agendada** na data.
+     *
+     * @return list<string>
+     */
+    public function listHorariosOcupadosNaData(string $dataAudiencia, ?string $exceptIdPauta = null): array
+    {
+        $dataAudiencia = trim($dataAudiencia);
+        if ($dataAudiencia === '') {
+            return [];
+        }
+        $sql = sprintf(
+            'SELECT `hora_audiencia` FROM `%s` WHERE `ativo` = 1 AND `status` IN (:designada, :legacy_agendada)
+             AND `data_audiencia` = :data',
+            $this->table
+        );
+        $exceptIdPauta = $exceptIdPauta !== null ? trim($exceptIdPauta) : '';
+        if ($exceptIdPauta !== '') {
+            $sql .= ' AND `id_pauta` <> :exc';
+        }
+        $st = $this->connection->prepare($sql);
+        $st->bindValue(':designada', 'designada');
+        $st->bindValue(':legacy_agendada', 'agendada');
+        $st->bindValue(':data', $dataAudiencia);
+        if ($exceptIdPauta !== '') {
+            $st->bindValue(':exc', $exceptIdPauta);
+        }
+        $st->execute();
+        $rows = $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        $seen = [];
+        foreach ($rows as $row) {
+            $h = trim((string) ($row['hora_audiencia'] ?? ''));
+            if ($h === '') {
+                continue;
+            }
+            if (preg_match('/^(\d{1,2}):(\d{2})/', $h, $m)) {
+                $hm = sprintf('%02d:%02d', (int) $m[1], (int) $m[2]);
+                $seen[$hm] = true;
+            }
+        }
+
+        return array_keys($seen);
+    }
+
     public function fetchList(array $filters, int $limit, int $offset): array
     {
         [$where, $params] = $this->buildWhere($filters);

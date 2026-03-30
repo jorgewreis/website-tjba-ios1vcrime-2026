@@ -649,7 +649,114 @@
         fetchAttempt(1);
     }
 
+    function readGradeEdit() {
+        var g = window.PAUTA_HORARIOS_GRADE;
+        return Array.isArray(g) ? g : [];
+    }
+
+    function fillHoraSelectEdit(available) {
+        var sel = document.getElementById('audiencia-edit-hora');
+        if (!sel) return;
+        var preserved = String(sel.value || '').trim();
+        var extra = String(window.PAUTA_HORA_FORA_GRADE || '').trim();
+        sel.innerHTML = '';
+        var opt0 = document.createElement('option');
+        opt0.value = '';
+        opt0.disabled = true;
+        opt0.selected = true;
+        opt0.textContent = 'Selecione a hora';
+        sel.appendChild(opt0);
+        (available || []).forEach(function (hm) {
+            var o = document.createElement('option');
+            o.value = hm;
+            o.textContent = hm;
+            sel.appendChild(o);
+        });
+        if (extra && (available || []).indexOf(extra) < 0) {
+            var ox = document.createElement('option');
+            ox.value = extra;
+            ox.textContent = extra + ' (registro atual)';
+            sel.appendChild(ox);
+        }
+        var canKeep = false;
+        if (preserved) {
+            if ((available || []).indexOf(preserved) >= 0) {
+                canKeep = true;
+            } else if (extra && preserved === extra) {
+                canKeep = true;
+            }
+        }
+        if (canKeep) {
+            sel.value = preserved;
+        }
+    }
+
+    function buildUrlOccupiedSlots(data) {
+        var id = String(document.getElementById('audiencia-edit-id')?.value || '').trim();
+        var q = '?data=' + encodeURIComponent(data);
+        if (id) {
+            q += '&except_id=' + encodeURIComponent(id);
+        }
+        return '/api/sala-audiencias-pauta/occupied-slots.php' + q;
+    }
+
+    function refreshHoraEditDisponiveis(done) {
+        var dataEl = document.getElementById('audiencia-edit-data');
+        var sel = document.getElementById('audiencia-edit-hora');
+        if (!dataEl || !sel) {
+            if (typeof done === 'function') {
+                done();
+            }
+            return;
+        }
+        var d = String(dataEl.value || '').trim();
+        var grade = readGradeEdit();
+        if (!d) {
+            fillHoraSelectEdit(grade);
+            if (typeof done === 'function') {
+                done();
+            }
+            return;
+        }
+        fetch(buildUrlOccupiedSlots(d), { credentials: 'same-origin' })
+            .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+            .then(function (res) {
+                if (!res.ok || !res.j || !Array.isArray(res.j.available)) {
+                    notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao carregar horários.');
+                    fillHoraSelectEdit(grade);
+                    if (typeof done === 'function') {
+                        done();
+                    }
+                    return;
+                }
+                fillHoraSelectEdit(res.j.available);
+                if (res.j.available.length === 0) {
+                    var extra = String(window.PAUTA_HORA_FORA_GRADE || '').trim();
+                    var cur = String(sel.value || '').trim();
+                    if (!(extra && cur === extra)) {
+                        notify('info', 'Horários', 'Não há horários livres nesta data.');
+                    }
+                }
+                if (typeof done === 'function') {
+                    done();
+                }
+            })
+            .catch(function () {
+                notify('error', 'Erro', 'Erro de conexão.');
+                fillHoraSelectEdit(grade);
+                if (typeof done === 'function') {
+                    done();
+                }
+            });
+    }
+
+    document.getElementById('audiencia-edit-data')?.addEventListener('change', function () {
+        refreshHoraEditDisponiveis();
+    });
+
     initParteNomeDatajudSelect();
 
-    initialAudienciaSnapshot = currentAudienciaSnapshot();
+    refreshHoraEditDisponiveis(function () {
+        initialAudienciaSnapshot = currentAudienciaSnapshot();
+    });
 })();

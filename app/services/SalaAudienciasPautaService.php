@@ -629,6 +629,30 @@ final class SalaAudienciasPautaService
         return $slots;
     }
 
+    /**
+     * Grade padrão menos horários já ocupados por outra audiência (designada/agendada).
+     *
+     * @return list<string>
+     */
+    public function listHorariosDisponiveisCadastro(string $data, ?string $exceptIdPauta = null): array
+    {
+        $data = trim($data);
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $data)) {
+            throw new InvalidArgumentException('Data inválida.');
+        }
+        $grade = self::horariosGradeCadastroAudiencia();
+        $occupied = $this->pautaRepository->listHorariosOcupadosNaData($data, $exceptIdPauta);
+        $occupiedSet = array_flip($occupied);
+        $available = [];
+        foreach ($grade as $hm) {
+            if (!isset($occupiedSet[$hm])) {
+                $available[] = $hm;
+            }
+        }
+
+        return $available;
+    }
+
     private function assertDataAudienciaNaoPassada(string $data): void
     {
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $data)) {

@@ -39,6 +39,66 @@
 
     setupDataMinimaAudiencia();
 
+    function readGradeFromWindow() {
+        var g = window.AUDIENCIA_HORARIOS_GRADE;
+        return Array.isArray(g) ? g : [];
+    }
+
+    function fillHoraSelectCreate(available) {
+        var sel = document.getElementById('audiencia-hora');
+        if (!sel) return;
+        var preserved = String(sel.value || '').trim();
+        sel.innerHTML = '';
+        var opt0 = document.createElement('option');
+        opt0.value = '';
+        opt0.disabled = true;
+        opt0.selected = true;
+        opt0.textContent = 'Selecione a hora';
+        sel.appendChild(opt0);
+        (available || []).forEach(function (hm) {
+            var o = document.createElement('option');
+            o.value = hm;
+            o.textContent = hm;
+            sel.appendChild(o);
+        });
+        if (preserved && (available || []).indexOf(preserved) >= 0) {
+            sel.value = preserved;
+        }
+    }
+
+    function refreshHoraDisponiveisCreate() {
+        var dataEl = document.getElementById('audiencia-data');
+        var d = String(dataEl && dataEl.value || '').trim();
+        var grade = readGradeFromWindow();
+        if (!d) {
+            fillHoraSelectCreate(grade);
+            return;
+        }
+        fetch('/api/sala-audiencias-pauta/occupied-slots.php?data=' + encodeURIComponent(d), {
+            credentials: 'same-origin'
+        })
+            .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+            .then(function (res) {
+                if (!res.ok || !res.j || !Array.isArray(res.j.available)) {
+                    notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao carregar horários.');
+                    fillHoraSelectCreate(grade);
+                    return;
+                }
+                fillHoraSelectCreate(res.j.available);
+                if (res.j.available.length === 0) {
+                    notify('info', 'Horários', 'Não há horários livres nesta data.');
+                }
+            })
+            .catch(function () {
+                notify('error', 'Erro', 'Erro de conexão.');
+                fillHoraSelectCreate(grade);
+            });
+    }
+
+    document.getElementById('audiencia-data')?.addEventListener('change', refreshHoraDisponiveisCreate);
+    document.getElementById('audiencia-data')?.addEventListener('blur', refreshHoraDisponiveisCreate);
+    refreshHoraDisponiveisCreate();
+
     document.getElementById('btn-audiencia-voltar')?.addEventListener('click', function () {
         window.location.href = '/frame.php?page=salapauta';
     });

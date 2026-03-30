@@ -651,8 +651,18 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
             }
         }
         $existingPartSignatures = array_keys($existingPartSignatures);
+
+        $pautaHorariosGrade = [];
+        $pautaHoraForaGrade = '';
+        if ($row !== null) {
+            $pautaHorariosGrade = SalaAudienciasPautaService::horariosGradeCadastroAudiencia();
+            $hEditRow = substr((string) ($row['hora_audiencia'] ?? '00:00:00'), 0, 5);
+            $pautaHoraForaGrade = in_array($hEditRow, $pautaHorariosGrade, true) ? '' : $hEditRow;
+        }
     ?>
     <script>
+        window.PAUTA_HORARIOS_GRADE = <?php echo json_encode($pautaHorariosGrade, JSON_UNESCAPED_UNICODE); ?>;
+        window.PAUTA_HORA_FORA_GRADE = <?php echo json_encode($pautaHoraForaGrade, JSON_UNESCAPED_UNICODE); ?>;
         window.PAUTA_EXISTING_PART_NAMES_SIGS = <?php echo json_encode($existingPartSignatures, JSON_UNESCAPED_UNICODE); ?>;
         window.PAUTA_PRIORIDADES_INITIAL = <?php echo json_encode($prioridadesEdicaoInicial, JSON_UNESCAPED_UNICODE); ?>;
         window.PAUTA_EDIT_ID = <?php echo json_encode($row !== null ? (string) ($row['id_pauta'] ?? '') : '', JSON_UNESCAPED_UNICODE); ?>;
