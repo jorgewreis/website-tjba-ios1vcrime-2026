@@ -17,12 +17,21 @@ if (file_exists($envPath)) {
     }
 }
 
-// Configurações do banco de dados
-define('DB_HOST', '72.60.250.46');
-define('DB_NAME', 'common');
-define('DB_USER', 'admin');
-define('DB_PASS', 'vluyIOTXf2fKx8RLZxck');
-define('DB_CHARSET', 'utf8mb4');
+// Configurações do banco de dados (opcional: DB_HOST, DB_NAME, DB_USER, DB_PASS, DB_CHARSET no .env)
+$dbHost = $_ENV['DB_HOST'] ?? getenv('DB_HOST');
+$dbName = $_ENV['DB_NAME'] ?? getenv('DB_NAME');
+$dbUser = $_ENV['DB_USER'] ?? getenv('DB_USER');
+$dbPass = $_ENV['DB_PASS'] ?? getenv('DB_PASS');
+$dbCharset = $_ENV['DB_CHARSET'] ?? getenv('DB_CHARSET');
+$dbPort = $_ENV['DB_PORT'] ?? getenv('DB_PORT');
+
+define('DB_HOST', (is_string($dbHost) && $dbHost !== '') ? $dbHost : '72.60.250.46');
+define('DB_NAME', (is_string($dbName) && $dbName !== '') ? $dbName : 'common');
+define('DB_USER', (is_string($dbUser) && $dbUser !== '') ? $dbUser : 'admin');
+define('DB_PASS', (is_string($dbPass) && $dbPass !== '') ? $dbPass : 'vluyIOTXf2fKx8RLZxck');
+define('DB_CHARSET', (is_string($dbCharset) && $dbCharset !== '') ? $dbCharset : 'utf8mb4');
+$portNum = (is_string($dbPort) && $dbPort !== '' && ctype_digit($dbPort)) ? (int) $dbPort : 3306;
+define('DB_PORT', $portNum > 0 && $portNum <= 65535 ? $portNum : 3306);
 
 // Configurações de segurança
 define('TOKEN_EXPIRATION_HOURS', 8);

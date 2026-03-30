@@ -11,6 +11,7 @@ Documentação completa: [docs/00-foundation/id-padrao-banco-dados.md](../00-fou
 
 ## Arquivos nesta pasta
 
+- **plano-migracao-cartorio-oficios.md** – Plano de migração do legado `CartorioOficios` para `oficios_cartorio` (fonte: [`CartorioOficios.sql`](../../CartorioOficios.sql) na raiz do repositório).
 - **estudantes.sql** – Tabela de cadastro de estudantes (consulta a audiências/atas/pautas). ID: `EST-` + 26 chars.
 
 Ao criar novos scripts SQL para tabelas, usar sempre `CHAR(30)` (ou `VARCHAR(30)`) para a chave primária e o formato prefixo + hífen + código.
