@@ -25,4 +25,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(audiencias): handle exceptions during process priority retrieval and improve type handling in audiencia list view** `[095669b]`
 - **feat(audiencias): implement process priority management in SalaAudienciasPautaService and enhance UI for priority handling** `[1e1cd32]`
 - **feat(prioridades): enhance process priority management with new repository methods and UI improvements** `[f720c4a]`
+- **feat(audiencias): enhance process priority handling in services and views, including UI updates for defensor management** `[5f89cdf]`
 
