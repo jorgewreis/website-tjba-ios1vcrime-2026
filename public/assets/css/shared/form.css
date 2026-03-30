@@ -691,6 +691,12 @@ textarea.status-finished {
     color: var(--color-success-active) !important;
     pointer-events: none !important;
 }
+
+/* Edição de audiência: lista de réus do processo — select deve permanecer clicável (regra global acima bloqueia DataJud “concluído”). */
+#parte-nome-selecao.status-finished {
+    pointer-events: auto !important;
+    cursor: pointer;
+}
 select.status-warning,
 textarea.status-warning {
     background-color: var(--color-warning-bg-light) !important;
