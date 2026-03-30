@@ -7,6 +7,7 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 require_once __DIR__ . '/../../services/SalaAudienciasPautaService.php';
+require_once __DIR__ . '/../../services/ProcessoManager.php';
 
 $service = new SalaAudienciasPautaService(Conection::getInstance()->getConnection());
 $hoje = date('Y-m-d');
@@ -284,6 +285,28 @@ $endItem = min($offset + count($rows), $total);
                     </div>
                 </div>
             </div>
+            <!-- MOSTRAR SE HOUVER PRIORIDADES DO PROCESSO -->
+            <?php if (!empty($row['numero_processo'])): ?>
+            <div class="display-flex col col-full grp-subtask-panel" id="subtask-grp-<?php echo htmlspecialchars($rid, ENT_QUOTES); ?>">
+                <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top align-start flex-wrap grp-sub-line grp-sub-line-primary" style="font-family: monospace; font-size: 11px;">
+                    <div class="display-flex row row-fit justify-start gap-y-md flex-wrap grp-sub-left">
+                        <div class="col width-300">
+                        </div>
+                        <div class="col width-800">
+                            <!-- PRIORIDADES DO PROCESSO -->
+                            <div class="minor-info">                            
+                                <?php
+                                    $prioridades = $processoManager->listarPrioridades($row['numero_processo']);
+                                    foreach ($prioridades as $prioridade):
+                                        echo '<span class="badge badge-primary">' . htmlspecialchars($prioridade, ENT_QUOTES) . '</span>';
+                                    endforeach;
+                                ?>
+                            </div>
+                        </div>
+                    </div>                    
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
         <?php endforeach; ?>
 
