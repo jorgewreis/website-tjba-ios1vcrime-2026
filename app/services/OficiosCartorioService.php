@@ -202,11 +202,14 @@ final class OficiosCartorioService
                 $this->subtarefasRepository->create($id, OficiosCartorioSubtarefasRepository::TIPO_JUNTAR, 2, 'pendente');
             }
 
-            $regra = $this->alocacoesRegrasRepository->findByRegra(self::REGRA_ALOCAR_OFICIOS);
-            if ($regra !== null) {
-                $usuarioIdRegra = trim((string) ($regra['usuario_id'] ?? ''));
-                if ($usuarioIdRegra !== '' && $usuarioIdRegra !== $criadoPor) {
-                    $this->alocadosRepository->addAlocado($id, $usuarioIdRegra, OficiosCartorioAlocadosRepository::TIPO_RULE);
+            // Alocação automática por regra só para cumprimento pelo Cartório; CCM só aloca o cadastrante (specific).
+            if ($forma === 'cartorio') {
+                $regra = $this->alocacoesRegrasRepository->findByRegra(self::REGRA_ALOCAR_OFICIOS);
+                if ($regra !== null) {
+                    $usuarioIdRegra = trim((string) ($regra['usuario_id'] ?? ''));
+                    if ($usuarioIdRegra !== '' && $usuarioIdRegra !== $criadoPor) {
+                        $this->alocadosRepository->addAlocado($id, $usuarioIdRegra, OficiosCartorioAlocadosRepository::TIPO_RULE);
+                    }
                 }
             }
             if ($criadoPor !== null && $criadoPor !== '') {

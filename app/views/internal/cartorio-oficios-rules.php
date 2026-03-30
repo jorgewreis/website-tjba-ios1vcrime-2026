@@ -7,6 +7,7 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
+require_once __DIR__ . '/../../helpers/AlocacaoRegrasUsuariosHelper.php';
 
 function resolveUsuarioNomeOficios(PDO $connection, ?string $usuarioId): string
 {
@@ -29,21 +30,6 @@ function resolveUsuarioNomeOficios(PDO $connection, ?string $usuarioId): string
     $nomeCompleto = $sobrenome !== '' ? $nome . ' ' . $sobrenome : $nome;
 
     return $nomeCompleto !== '' ? $nomeCompleto : 'Nome não informado';
-}
-
-function isUsuarioEstudanteOficios(PDO $connection, string $usuarioId): bool
-{
-    $usuarioId = trim($usuarioId);
-    if ($usuarioId === '') {
-        return false;
-    }
-
-    $stmt = $connection->prepare('SELECT 1 FROM usuario_perfil WHERE usuario = :usuario_id AND UPPER(TRIM(perfil)) = :perfil LIMIT 1');
-    $stmt->bindValue(':usuario_id', $usuarioId);
-    $stmt->bindValue(':perfil', 'ESTUDANTE');
-    $stmt->execute();
-
-    return $stmt->fetch(PDO::FETCH_ASSOC) !== false;
 }
 
 $connection = Conection::getInstance()->getConnection();
@@ -70,38 +56,21 @@ $ruleUsuarioId   = '';
 $ruleUsuarioNome = 'Nenhum usuário definido';
 
 try {
-    $stmtUsers = $connection->prepare("
-        SELECT u.`id_usuario`, u.`nome`, u.`sobrenome`
-        FROM `usuarios` u
-        WHERE NOT EXISTS (
-            SELECT 1
-            FROM `usuario_perfil` up
-            WHERE up.`usuario` = u.`id_usuario`
-              AND UPPER(TRIM(up.`perfil`)) = 'ESTUDANTE'
-        )
-        ORDER BY u.`nome`, u.`sobrenome`
-    ");
-    $stmtUsers->execute();
-    while (($row = $stmtUsers->fetch(PDO::FETCH_ASSOC)) !== false) {
-        $id        = trim((string) ($row['id_usuario'] ?? ''));
-        $nome      = trim((string) ($row['nome'] ?? ''));
-        $sobrenome = trim((string) ($row['sobrenome'] ?? ''));
-        $name      = $sobrenome !== '' ? $nome . ' ' . $sobrenome : $nome;
-        if ($id !== '' && $name !== '') {
-            $usersList[] = ['id' => $id, 'name' => $name];
-        }
-    }
-    if (empty($usersList)) {
-        $errors[] = 'Nenhum usuário foi encontrado na tabela usuarios.';
+    $usersList = AlocacaoRegrasUsuariosHelper::listUsuariosInternos($connection);
+    if ($usersList === []) {
+        $errors[] = 'Nenhum usuário interno elegível foi encontrado.';
     }
 
     $regrasRepo      = new AlocacoesRegrasRepository($connection);
     $ruleRow         = $regrasRepo->findByRegra($ruleName);
     $ruleUsuarioId   = (string) ($ruleRow['usuario_id'] ?? '');
     $ruleUsuarioNome = resolveUsuarioNomeOficios($connection, $ruleUsuarioId);
-    $selectedUserId  = (string) ($ruleRow['usuario_id'] ?? $selectedUserId);
-    if ($selectedUserId === '' && !empty($usersList)) {
-        $selectedUserId = $usersList[0]['id'];
+    $selectedUserId  = trim((string) ($ruleRow['usuario_id'] ?? ''));
+    if ($selectedUserId !== '') {
+        $idsInList = array_column($usersList, 'id');
+        if (!in_array($selectedUserId, $idsInList, true)) {
+            $usersList[] = ['id' => $selectedUserId, 'name' => $ruleUsuarioNome . ' (fora da lista atual)'];
+        }
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -125,8 +94,8 @@ try {
             $postedUserId = trim((string) ($_POST['id_user'] ?? ''));
             if ($postedUserId === '') {
                 $errors[] = 'Selecione um servidor antes de salvar.';
-            } elseif (isUsuarioEstudanteOficios($connection, $postedUserId)) {
-                $errors[] = 'Não é permitido alocar um estudante em regras internas do cartório.';
+            } elseif (!AlocacaoRegrasUsuariosHelper::isUsuarioElegivelParaRegraInterna($connection, $postedUserId)) {
+                $errors[] = 'Apenas servidores internos com perfil operacional podem ser alocados nesta regra.';
             } else {
                 try {
                     $usuarioAtualizaId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : null;
@@ -195,7 +164,7 @@ try {
                             data-original-user-name="<?php echo htmlspecialchars($ruleUsuarioNome, ENT_QUOTES, 'UTF-8'); ?>"
                             data-original-user-id="<?php echo htmlspecialchars($selectedUserId, ENT_QUOTES, 'UTF-8'); ?>"
                             <?php echo $podeAlterarRegra ? '' : 'disabled'; ?>>
-                            <option value=""<?php echo $selectedUserId === '' ? ' selected' : ''; ?>>Sem alocação automática</option>
+                            <option value="" disabled<?php echo $selectedUserId === '' ? ' selected' : ''; ?>>Selecione aqui</option>
                             <?php foreach ($usersList as $user): ?>
                                 <option value="<?php echo htmlspecialchars($user['id'], ENT_QUOTES); ?>"<?php echo $selectedUserId === $user['id'] ? ' selected' : ''; ?>>
                                     <?php echo htmlspecialchars($user['name']); ?>
@@ -263,15 +232,14 @@ try {
             const originalId = (select.getAttribute('data-original-user-id') || '').trim();
 
             const syncSaveButton = () => {
-                const currentId           = (select.value || '').trim();
-                const effectiveOriginalId = originalId !== '' ? originalId : currentId;
-                const changed             = currentId !== effectiveOriginalId;
+                const currentId = (select.value || '').trim();
+                const changed = currentId !== originalId;
 
                 if (changed) saveBtn.removeAttribute('disabled');
                 else saveBtn.setAttribute('disabled', '');
 
                 if (clearBtn) {
-                    if (effectiveOriginalId !== '') clearBtn.removeAttribute('disabled');
+                    if (originalId !== '') clearBtn.removeAttribute('disabled');
                     else clearBtn.setAttribute('disabled', '');
                 }
             };
