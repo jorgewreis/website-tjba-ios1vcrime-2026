@@ -116,4 +116,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(gabinete-reus-presos-list): remove unused styles and simplify description text for clarity** `[d0e1859]`
 - **style(toast): enhance toast component styles and remove obsolete JavaScript file** `[58fa8dd]`
 - **refactor(views): update input fields to include data attributes for DataJud integration and replace obsolete script references with new module paths** `[0c8e637]`
+- **feat(cartorio): implement automatic allocation rules for CEAPA and Ofícios, including user permission checks and UI updates** `[f6e498d]`
 
