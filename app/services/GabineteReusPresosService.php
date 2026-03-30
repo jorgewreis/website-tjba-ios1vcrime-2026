@@ -4,7 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../repositories/GabineteReuPresoRepository.php';
 require_once __DIR__ . '/../repositories/GabineteReuPresoProcessoRepository.php';
 require_once __DIR__ . '/../repositories/GabineteReuPresoMovimentacaoRepository.php';
-require_once __DIR__ . '/../repositories/ProcessoPrioridadesRepository.php';
+require_once __DIR__ . '/ProcessoPrioridadesService.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../repositories/PartesRepository.php';
@@ -14,8 +14,6 @@ require_once __DIR__ . '/../helpers/TextFormatter.php';
 
 final class GabineteReusPresosService
 {
-    public const PRIORIDADE_REU_PRESO = 'reu-preso';
-
     /** Prefixos de tipos que disparam prazo de 90 dias para próxima revisão (CPP art. 316 — referência operacional). */
     public const PREFIXOS_MOVIMENTACAO_REVISAO_90_DIAS = [
         'decretacao',
@@ -36,7 +34,7 @@ final class GabineteReusPresosService
     private GabineteReuPresoRepository $reuRepo;
     private GabineteReuPresoProcessoRepository $procRepo;
     private GabineteReuPresoMovimentacaoRepository $movRepo;
-    private ProcessoPrioridadesRepository $prioridadesRepo;
+    private ?ProcessoPrioridadesService $processoPrioridadesService = null;
     private ProcessosRepository $processosRepository;
     private ClassesRepository $classesRepository;
     private PartesRepository $partesRepository;
@@ -48,11 +46,31 @@ final class GabineteReusPresosService
         $this->reuRepo = new GabineteReuPresoRepository($connection);
         $this->procRepo = new GabineteReuPresoProcessoRepository($connection);
         $this->movRepo = new GabineteReuPresoMovimentacaoRepository($connection);
-        $this->prioridadesRepo = new ProcessoPrioridadesRepository($connection);
         $this->processosRepository = new ProcessosRepository($connection);
         $this->classesRepository = new ClassesRepository($connection);
         $this->partesRepository = new PartesRepository($connection);
         $this->processosPartesRepository = new ProcessosPartesRepository($connection);
+    }
+
+    private function processoPrioridadesService(): ProcessoPrioridadesService
+    {
+        if ($this->processoPrioridadesService === null) {
+            $this->processoPrioridadesService = new ProcessoPrioridadesService($this->connection);
+        }
+
+        return $this->processoPrioridadesService;
+    }
+
+    /** Reavalia prioridades automáticas (réu preso, menor) após alterações no gabinete. */
+    private function reconciliarPrioridadesProcesso(string $processoId): void
+    {
+        $processoId = trim($processoId);
+        if ($processoId === '') {
+            return;
+        }
+        $proc = $this->processosRepository->findById($processoId);
+        $numero = $proc !== null ? trim((string) ($proc['numero_processo'] ?? '')) : '';
+        $this->processoPrioridadesService()->reconciliarAutomaticas($processoId, $numero, 0);
     }
 
     /**
@@ -322,16 +340,14 @@ final class GabineteReusPresosService
             ]);
             // Situação e datas são compartilhadas entre todos os processos vinculados do mesmo réu preso.
             $this->procRepo->updateDadosCustodiaByReuPresoId($reuId, $situacao, $dataPrisao, $dataFato);
-            if ($oldProc !== $processoId) {
-                $this->removePrioridadeIfPreso($oldProc, $oldSituacao);
-            } elseif ($oldSituacao !== $situacao) {
-                $this->removePrioridadeIfPreso($processoId, $oldSituacao);
+            if ($oldProc !== $processoId && $oldProc !== '') {
+                $this->reconciliarPrioridadesProcesso($oldProc);
             }
             $allByReu = $this->procRepo->findByReuPresoId($reuId);
             foreach ($allByReu as $ln) {
                 $pid = trim((string) ($ln['processo_id'] ?? ''));
                 if ($pid !== '') {
-                    $this->applyPrioridadeForProcesso($pid, $situacao);
+                    $this->reconciliarPrioridadesProcesso($pid);
                 }
             }
             if ($principal) {
@@ -364,7 +380,7 @@ final class GabineteReusPresosService
             'data_fato' => $dataFato,
         ]);
 
-        $this->applyPrioridadeForProcesso($processoId, $situacao);
+        $this->reconciliarPrioridadesProcesso($processoId);
 
         if ($principal && !$autoPrincipal) {
             $this->setPrincipalInternal($reuId, $newId);
@@ -398,8 +414,8 @@ final class GabineteReusPresosService
         $situacao = (string) ($link['situacao'] ?? '');
         $wasPrincipal = !empty($link['principal']);
 
-        $this->removePrioridadeIfPreso($processoId, $situacao);
         $this->procRepo->deleteById($linkId);
+        $this->reconciliarPrioridadesProcesso($processoId);
 
         $remaining = $this->procRepo->findByReuPresoId($reuId);
         if ($wasPrincipal && $remaining !== []) {
@@ -555,16 +571,21 @@ final class GabineteReusPresosService
         }
 
         $links = $this->procRepo->findByReuPresoId($id);
+        $processosParaReconciliar = [];
         foreach ($links as $ln) {
             if (($ln['situacao'] ?? '') === 'preso') {
-                $this->prioridadesRepo->deleteByProcessoIdAndPrioridade(
-                    (string) $ln['processo_id'],
-                    self::PRIORIDADE_REU_PRESO
-                );
+                $pid = trim((string) ($ln['processo_id'] ?? ''));
+                if ($pid !== '') {
+                    $processosParaReconciliar[$pid] = true;
+                }
             }
         }
 
         $this->reuRepo->updateStatusArquivado($id);
+
+        foreach (array_keys($processosParaReconciliar) as $pid) {
+            $this->reconciliarPrioridadesProcesso($pid);
+        }
     }
 
     public function recalcProximaRevisao(string $reuId): void
@@ -627,23 +648,6 @@ final class GabineteReusPresosService
         }
 
         return false;
-    }
-
-    private function applyPrioridadeForProcesso(string $processoId, string $situacao): void
-    {
-        if ($situacao === 'preso') {
-            $this->prioridadesRepo->insert($processoId, self::PRIORIDADE_REU_PRESO);
-        } else {
-            $this->prioridadesRepo->deleteByProcessoIdAndPrioridade($processoId, self::PRIORIDADE_REU_PRESO);
-        }
-    }
-
-    /** Remove prioridade reu-preso quando o vínculo estava como preso (troca de processo ou situação). */
-    private function removePrioridadeIfPreso(string $processoId, string $situacao): void
-    {
-        if ($situacao === 'preso') {
-            $this->prioridadesRepo->deleteByProcessoIdAndPrioridade($processoId, self::PRIORIDADE_REU_PRESO);
-        }
     }
 
     /** @param mixed $v */

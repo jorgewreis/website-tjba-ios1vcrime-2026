@@ -108,7 +108,7 @@ $defPrivadoEhOutro = ($defensorPrivadoAtual === 'outro');
 
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px; display:none;" id="parte-edit-defensor-wrapper">
                 <div class="col">
-                    <label for="parte-edit-tipo-defensor">Tipo de defensor</label>
+                    <label for="parte-edit-tipo-defensor">Tipo de defensor <span class="label-hint-automatizado">(opcional)</span></label>
                     <select class="width-400 height-md" id="parte-edit-tipo-defensor">
                         <option value="">Selecione o tipo</option>
                         <option value="publico"<?php echo $tipoDefensorAtual === 'publico' ? ' selected' : ''; ?>>Defensor público</option>

@@ -7,6 +7,7 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 require_once __DIR__ . '/../../helpers/Conection.php';
+require_once __DIR__ . '/../../helpers/PrioridadesProcessuaisCatalog.php';
 require_once __DIR__ . '/../../services/SalaAudienciasPautaService.php';
 require_once __DIR__ . '/../../services/ProcessoManager.php';
 
@@ -312,16 +313,29 @@ $endItem = min($offset + count($rows), $total);
                     }
                 }
             ?>
-            <?php if ($prioridadesRow !== []): ?>
+            <?php
+                $processoSigiloso = !empty($row['processo_sigiloso']);
+            ?>
+            <?php if ($prioridadesRow !== [] || $processoSigiloso): ?>
             <div class="display-flex col col-full grp-subtask-panel" id="subtask-grp-<?php echo htmlspecialchars((string) ($row['id_pauta'] ?? ''), ENT_QUOTES); ?>">
                 <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top align-start flex-wrap grp-sub-line grp-sub-line-primary" style="font-family: monospace; font-size: 11px;">
                     <div class="display-flex row row-fit justify-start gap-y-md flex-wrap grp-sub-left">
-                        <div class="col width-300">
-                        </div>
-                        <div class="col width-800">
-                            <div class="minor-info">
+                        <div class="col">
+                            <div class="display-flex flex-wrap align-items-center">
+                                <?php if ($processoSigiloso): ?>
+                                    <span class="badge badge-black" title="Processo sigiloso">S</span>
+                                <?php endif; ?>
                                 <?php foreach ($prioridadesRow as $prioridade): ?>
-                                    <span class="badge badge-primary"><?php echo htmlspecialchars((string) $prioridade, ENT_QUOTES); ?></span>
+                                    <?php
+                                    $rotulo = trim((string) $prioridade);
+                                    $codigo = PrioridadesProcessuaisCatalog::codigoForLabel($rotulo)
+                                        ?? PrioridadesProcessuaisCatalog::normalizeToCodigo($rotulo);
+                                    $badgeClass = 'badge-warning';
+                                    if ($codigo !== null && in_array($codigo, ['reu_preso', 'violencia_domestica', 'crianca_adolescente'], true)) {
+                                        $badgeClass = 'badge-danger';
+                                    }
+                                    ?>
+                                    <span class="badge <?php echo htmlspecialchars($badgeClass, ENT_QUOTES); ?>"><?php echo htmlspecialchars($rotulo, ENT_QUOTES); ?></span>
                                 <?php endforeach; ?>
                             </div>
                         </div>

@@ -138,31 +138,6 @@
         var cumprimento = requiredValue('parte-edit-cumprimento', 'Cumprimento');
         if (!cumprimento) return;
 
-        var tipoParte = String(document.getElementById('parte-edit-tipo')?.value || '').trim();
-        if (tipoParte === 'reu' || tipoParte === 'vitima') {
-            var tipoDefensor = requiredValue('parte-edit-tipo-defensor', 'Tipo de defensor');
-            if (!tipoDefensor) return;
-            if (tipoDefensor === 'publico') {
-                var pubSel = String(document.getElementById('parte-edit-defensor-publico')?.value || '').trim();
-                if (pubSel === 'outro') {
-                    var nomePub = requiredValue('parte-edit-defensor-publico-outro', 'Nome do defensor publico');
-                    if (!nomePub) return;
-                } else if (!pubSel) {
-                    notify('error', 'Validacao', 'Selecione o defensor publico ou Outro.');
-                    return;
-                }
-            } else if (tipoDefensor === 'privado') {
-                var privSel = String(document.getElementById('parte-edit-defensor-privado')?.value || '').trim();
-                if (privSel === 'outro') {
-                    var nomePriv = requiredValue('parte-edit-defensor-privado-outro', 'Nome do advogado');
-                    if (!nomePriv) return;
-                } else if (!privSel) {
-                    notify('error', 'Validacao', 'Selecione o advogado ou Outro.');
-                    return;
-                }
-            }
-        }
-
         var idParte = String(document.getElementById('parte-edit-id')?.value || '').trim();
         fetch('/api/sala-audiencias-pauta/partes-update.php', {
             method: 'POST',

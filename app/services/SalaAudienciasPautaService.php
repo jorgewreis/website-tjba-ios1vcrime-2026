@@ -468,55 +468,92 @@ final class SalaAudienciasPautaService
         }
     }
 
+    /** Zera todos os campos de defensor no payload (persistência). */
+    private function clearDefensorPayloadFields(array &$payload): void
+    {
+        $payload['tipo_defensor'] = null;
+        $payload['defensor_publico_id'] = null;
+        $payload['defensor_publico_outro'] = null;
+        $payload['defensor_privado_id'] = null;
+        $payload['defensor_privado_outro'] = null;
+    }
+
     /**
      * Ajusta IDs de defensor (incl. opção "outro" → cadastro em `partes`) e zera campos não usados.
+     * Defensor público/privado é sempre opcional: dados incompletos limpam o bloco em vez de exigir preenchimento.
      */
     private function normalizeDefensorPayloadForSave(array &$payload, string $tipoParte): void
     {
-        $tipoDef = trim((string) ($payload['tipo_defensor'] ?? ''));
         if ($tipoParte !== 'reu' && $tipoParte !== 'vitima') {
-            $payload['tipo_defensor'] = null;
-            $payload['defensor_publico_id'] = null;
-            $payload['defensor_publico_outro'] = null;
+            $this->clearDefensorPayloadFields($payload);
+
+            return;
+        }
+
+        $tipoDef = trim((string) ($payload['tipo_defensor'] ?? ''));
+        if ($tipoDef !== 'publico' && $tipoDef !== 'privado') {
+            $this->clearDefensorPayloadFields($payload);
+
+            return;
+        }
+
+        if ($tipoDef === 'publico') {
+            $id = trim((string) ($payload['defensor_publico_id'] ?? ''));
+            $outro = trim((string) ($payload['defensor_publico_outro'] ?? ''));
+            if ($id === '' && $outro === '') {
+                $this->clearDefensorPayloadFields($payload);
+
+                return;
+            }
+            if ($id === 'outro') {
+                if ($outro === '') {
+                    $this->clearDefensorPayloadFields($payload);
+
+                    return;
+                }
+                $payload['defensor_publico_id'] = $this->partesRepository->ensureParteByNomeOuCpf($outro, null, PartesRepository::PROFISSAO_DEFENSOR_PUBLICO);
+                $payload['defensor_publico_outro'] = null;
+            } else {
+                if ($id === '') {
+                    $this->clearDefensorPayloadFields($payload);
+
+                    return;
+                }
+                $payload['defensor_publico_outro'] = null;
+            }
+            $payload['tipo_defensor'] = 'publico';
             $payload['defensor_privado_id'] = null;
             $payload['defensor_privado_outro'] = null;
 
             return;
         }
-        if ($tipoDef === 'publico') {
-            $id = trim((string) ($payload['defensor_publico_id'] ?? ''));
-            $outro = trim((string) ($payload['defensor_publico_outro'] ?? ''));
-            if ($id === 'outro') {
-                if ($outro === '') {
-                    throw new InvalidArgumentException('Informe o nome do defensor público.');
-                }
-                $payload['defensor_publico_id'] = $this->partesRepository->ensureParteByNomeOuCpf($outro, null, PartesRepository::PROFISSAO_DEFENSOR_PUBLICO);
-                $payload['defensor_publico_outro'] = null;
-            } else {
-                $payload['defensor_publico_outro'] = null;
+
+        $id = trim((string) ($payload['defensor_privado_id'] ?? ''));
+        $outro = trim((string) ($payload['defensor_privado_outro'] ?? ''));
+        if ($id === '' && $outro === '') {
+            $this->clearDefensorPayloadFields($payload);
+
+            return;
+        }
+        if ($id === 'outro') {
+            if ($outro === '') {
+                $this->clearDefensorPayloadFields($payload);
+
+                return;
             }
-            $payload['defensor_privado_id'] = null;
+            $payload['defensor_privado_id'] = $this->partesRepository->ensureParteByNomeOuCpf($outro, null, PartesRepository::PROFISSAO_ADVOGADO);
             $payload['defensor_privado_outro'] = null;
-        } elseif ($tipoDef === 'privado') {
-            $id = trim((string) ($payload['defensor_privado_id'] ?? ''));
-            $outro = trim((string) ($payload['defensor_privado_outro'] ?? ''));
-            if ($id === 'outro') {
-                if ($outro === '') {
-                    throw new InvalidArgumentException('Informe o nome do defensor privado (advogado).');
-                }
-                $payload['defensor_privado_id'] = $this->partesRepository->ensureParteByNomeOuCpf($outro, null, PartesRepository::PROFISSAO_ADVOGADO);
-                $payload['defensor_privado_outro'] = null;
-            } else {
-                $payload['defensor_privado_outro'] = null;
-            }
-            $payload['defensor_publico_id'] = null;
-            $payload['defensor_publico_outro'] = null;
         } else {
-            $payload['defensor_publico_id'] = null;
-            $payload['defensor_publico_outro'] = null;
-            $payload['defensor_privado_id'] = null;
+            if ($id === '') {
+                $this->clearDefensorPayloadFields($payload);
+
+                return;
+            }
             $payload['defensor_privado_outro'] = null;
         }
+        $payload['tipo_defensor'] = 'privado';
+        $payload['defensor_publico_id'] = null;
+        $payload['defensor_publico_outro'] = null;
     }
 
     /**
