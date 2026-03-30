@@ -178,8 +178,6 @@ if ($totalPages > 0) {
         }
         .grp-sub-line-primary .grp-sub-left { flex: 1 1 auto; min-width: 0; max-width: 55%; }
         .grp-sub-line-primary .grp-sub-right { flex: 1 1 auto; min-width: 0; max-width: 45%; justify-content: flex-end; text-align: right; }
-        .grp-sub-line-compact { padding-top: 4px !important; padding-bottom: 4px !important; }
-        .grp-sub-line-compact .major-info { font-size: 0.95em; line-height: 1.3; }
     </style>
 </head>
 <body class="page-internal">
@@ -192,7 +190,7 @@ if ($totalPages > 0) {
             <span class="specific">Réus Presos</span>
         </div>
         <h1 class="title-page">Réus presos</h1>
-        <p class="description-page">Acompanhamento de custódia, processo principal e prazo de reavaliação. Use <strong>expandir</strong> para ver cada processo vinculado (principal com última movimentação e data; demais em linha compacta).</p>
+        <p class="description-page">Acompanhamento de custódia, processo principal e prazo de reavaliação.</p>
     </div>
 
     <div class="container-full card-page">
@@ -270,7 +268,7 @@ if ($totalPages > 0) {
                     </div>
                 </div>
 
-                <div class="display-flex col col-full grp-subtask-panel" id="subtask-grp-<?php echo htmlspecialchars($rid, ENT_QUOTES); ?>" aria-hidden="true">
+                <div class="display-flex col col-full grp-subtask-panel" id="subtask-grp-<?php echo htmlspecialchars($rid, ENT_QUOTES); ?>">
                     <?php if (empty($subLinhas)): ?>
                     <div class="display-flex row row-full subtask padding-x-sm padding-y-sm border-top">
                         <span class="minor-info">Nenhum processo vinculado.</span>
@@ -285,7 +283,7 @@ if ($totalPages > 0) {
                                 <span class="width-700 minor-info text-ellipsis"><?php echo htmlspecialchars((string) ($sl['numero_processo'] ?? '—') . ' (' . ($sl['classe_nome'] ?? '—') . ')', ENT_QUOTES); ?></span>
                             </div>
                         </div>
-                        <div class="display-flex row row-fit justify-end gap-y-md">
+                        <div class="display-flex row row-fit justify-end gap-y-md grp-sub-right">
                             <div class="col">
                                 <span class="width-700 minor-info text-ellipsis"><?php echo htmlspecialchars((string) ($sl['ultima_movimentacao_data'] ?? '—') . ' — ' . ($sl['ultima_movimentacao'] ?? '—'), ENT_QUOTES); ?></span>
                             </div>
@@ -380,24 +378,6 @@ if ($totalPages > 0) {
             btn.addEventListener('click', function() {
                 var id = this.getAttribute('data-id');
                 if (id) window.location.href = '/frame.php?page=reuspresosedit&id=' + encodeURIComponent(id);
-            });
-        });
-
-        document.querySelectorAll('input[name="open-subtask-grp"]').forEach(function (radio) {
-            radio.addEventListener('change', function () {
-                var mid = this.value;
-                var targetId = 'subtask-grp-' + mid;
-                document.querySelectorAll('.grp-subtask-panel').forEach(function (row) {
-                    var isTarget = row.id === targetId;
-                    row.classList.toggle('subtask-collapsed', !isTarget);
-                    row.setAttribute('aria-hidden', isTarget ? 'false' : 'true');
-                });
-                document.querySelectorAll('input[name="open-subtask-grp"]').forEach(function (r) {
-                    var p = document.getElementById('subtask-grp-' + r.value);
-                    if (p) {
-                        r.setAttribute('aria-expanded', r.checked && r.value === mid ? 'true' : 'false');
-                    }
-                });
             });
         });
     })();
