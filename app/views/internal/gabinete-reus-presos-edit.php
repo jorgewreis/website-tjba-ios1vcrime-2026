@@ -259,13 +259,15 @@ if ($ultimaMov !== null) {
             <ul class="row row-full display-flex" id="grp-mov-table-body" style="font-family: monospace; font-size:0.9rem;">
                 <?php foreach ($movimentacoes as $m):
                     $movTipo = trim((string) ($m['tipo_label'] ?? ''));
+                    $movTipoCodigo = trim((string) ($m['tipo_codigo'] ?? ''));
                     $movObs = trim((string) ($m['observacoes'] ?? ''));
                     $movBase = grpFmtBr($m['data_movimentacao'] ?? null) . ' - ' . $movTipo;
                     $movLabel = $movObs !== '' ? ($movBase . ' (' . $movObs . ')') : $movBase;
+                    $movExtraClass = $movTipoCodigo === 'anotacao' ? ' status-current' : '';
                     ?>
-                <li class="display-flex row row-full align-center justify-between border-bottom padding-y-sm grp-mov-row" style="gap:12px;">
-                    <span class="minor-info text-ellipsis" style="min-width:0;flex:1; margin: 0 20px; font-size: 11px"><?php echo htmlspecialchars($movLabel, ENT_QUOTES); ?></span>
-                    <span class="minor-info width-200" style="font-size:10px; margin: 0 10px;"><?php echo htmlspecialchars(grpFmtDateTimeBr($m['created_at'] ?? null), ENT_QUOTES); ?></span>
+                <li class="display-flex row row-full align-center justify-between border-bottom padding-y-sm grp-mov-row<?php echo $movExtraClass; ?>" style="gap:12px;">
+                    <span class="minor-info text-ellipsis" style="min-width:0;flex:1; margin: 0 20px; font-size: 11px; padding-top: 3px;"><?php echo htmlspecialchars($movLabel, ENT_QUOTES); ?></span>
+                    <span class="minor-info width-200" style="font-size:10px; margin: 0 10px; padding-top: 3px;"><?php echo htmlspecialchars(grpFmtDateTimeBr($m['created_at'] ?? null), ENT_QUOTES); ?></span>
                     <div class="display-flex row row-fit align-center justify-end">
                         <?php if (!$arquivado): ?>
                         <button
@@ -274,7 +276,7 @@ if ($ultimaMov !== null) {
                             data-mov-id="<?php echo htmlspecialchars((string) ($m['id'] ?? ''), ENT_QUOTES); ?>"
                             title="Excluir movimentação"
                             aria-label="Excluir movimentação"
-                            style="display: flex; align-items: center; justify-content: center; width: 20px; height: 20px !important; padding: 5px; border-radius: 2px; border: none; box-shadow: none;"
+                            style="display: flex; align-items: center; justify-content: center; width: 20px; height: 20px !important; padding: 5px; margin-right: 10px; border-radius: 2px; border: 1px solid var(--color-border);"
                         >x</button>
                         <?php endif; ?>
                     </div>
@@ -286,7 +288,7 @@ if ($ultimaMov !== null) {
             <?php endif; ?>
 
             <?php if (!$arquivado): ?>
-            <div class="display-flex row row-full flex-wrap align-end gap-y-md border-top padding-top-md" style="gap:12px;">
+            <div class="display-flex row row-full flex-wrap align-end gap-y-md padding-top-lg" style="gap:12px;">
                 <div class="col">
                     <label for="grp-mov-tipo">Tipo</label>
                     <select class="width-600 height-md" id="grp-mov-tipo">
@@ -297,7 +299,7 @@ if ($ultimaMov !== null) {
                 </div>
                 <div class="col">
                     <label for="grp-mov-data">Data</label>
-                    <input type="date" class="height-md" id="grp-mov-data">
+                    <input type="date" class="height-md" id="grp-mov-data" max="<?php echo date('Y-m-d'); ?>">
                 </div>
                 <div class="col">
                     <label for="grp-mov-obs">Observações</label>
@@ -617,6 +619,38 @@ if ($ultimaMov !== null) {
             }
 
             syncNewProcessInheritedFields();
+
+            (function () {
+                const tipoSel = document.getElementById('grp-mov-tipo');
+                const dataInput = document.getElementById('grp-mov-data');
+                if (!tipoSel || !dataInput) return;
+
+                function todayIso() {
+                    const now = new Date();
+                    const y = now.getFullYear();
+                    const m = String(now.getMonth() + 1).padStart(2, '0');
+                    const d = String(now.getDate()).padStart(2, '0');
+                    return y + '-' + m + '-' + d;
+                }
+
+                function applyTipoRules() {
+                    const today = todayIso();
+                    if (tipoSel.value === 'anotacao') {
+                        dataInput.value = today;
+                        dataInput.setAttribute('readonly', 'readonly');
+                        dataInput.removeAttribute('max');
+                    } else {
+                        dataInput.removeAttribute('readonly');
+                        dataInput.max = today;
+                        if (dataInput.value > today) {
+                            dataInput.value = today;
+                        }
+                    }
+                }
+
+                tipoSel.addEventListener('change', applyTipoRules);
+                applyTipoRules();
+            })();
 
             document.getElementById('btn-grp-add-mov')?.addEventListener('click', function () {
                 const tipo = document.getElementById('grp-mov-tipo')?.value || '';
