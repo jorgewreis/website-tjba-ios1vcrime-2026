@@ -1,7 +1,12 @@
 /**
  * Sistema de Toast – substitui alertas/erros/sucesso em todo o sistema.
  * Dois modelos: full (título + fechar + conteúdo) e simple (só conteúdo, com barra de tempo).
- * Máximo 5 toasts visíveis; excedentes entram em fila. Integração via postMessage para iframe.
+ * Política:
+ * - simple como padrão
+ * - full para erro crítico e validação longa
+ * - deduplicação em 5s com contador xN
+ * - pausa no hover
+ * - aria-live assertive apenas para erro crítico
  */
 (function (global) {
     'use strict';
@@ -9,17 +14,13 @@
     const App = global.App || (global.App = {});
 
     const MAX_VISIBLE = 5;
-    const ENTER_DURATION = 350;
     const EXIT_DURATION = 900;
-
-    /** Tempo mínimo e máximo (ms) para toasts do tipo simple (informativo) */
+    const DEDUP_WINDOW_MS = 5000;
+    const DEDUP_TIMER_STEP_MS = 1500;
+    const MAX_DURATION_MS = 15000;
     const SIMPLE_DURATION_MIN = 3000;
-    const SIMPLE_DURATION_MAX = 15000;
-    /** Duração padrão para toasts full (com botão fechar) */
     const FULL_DURATION_DEFAULT_MS = 8000;
-    /** Cada toast que aparece depois tem duração = 2× a duração do anterior; o primeiro usa tempo base. */
-    const SUBSEQUENT_DURATION_MULTIPLIER = 2;
-    /** Tempo base + por caractere (ms) para cálculo automático de leitura */
+    const LONG_MESSAGE_THRESHOLD = 120;
     const SIMPLE_MS_BASE = 2000;
     const SIMPLE_MS_PER_CHAR = 45;
 
@@ -52,20 +53,145 @@
         return container;
     }
 
-    /**
-     * Duração base (ms) para o primeiro toast da lista – tempo original de contagem.
-     * Usado quando visibleList.length === 0; também como referência para o “anterior” quando não há.
-     */
-    function getBaseDuration(message, variant, type) {
+    function hasOwn(obj, key) {
+        return Object.prototype.hasOwnProperty.call(obj, key);
+    }
+
+    function isLongOrComplexMessage(message) {
+        const raw = String(message || '');
+        if (raw.trim().length >= LONG_MESSAGE_THRESHOLD) return true;
+        if (/\r?\n/.test(raw)) return true;
+        return /(^|\n)\s*([-*•]|\d+\.)\s+/m.test(raw);
+    }
+
+    function normalizeDedupText(text) {
+        return String(text || '')
+            .toLowerCase()
+            .replace(/\b\d+\b/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    function isCriticalError(opts) {
+        return opts.type === 'error' && (opts.critical === true || opts.blocking === true);
+    }
+
+    function resolveVariant(opts, explicitVariant) {
+        if (explicitVariant) return opts.variant;
+        if (opts.type === 'error' && (isCriticalError(opts) || isLongOrComplexMessage(opts.message))) {
+            return 'full';
+        }
+        return 'simple';
+    }
+
+    function buildDedupKey(opts) {
+        return [
+            opts.type || 'info',
+            opts.variant || 'simple',
+            normalizeDedupText(opts.message || '')
+        ].join('|');
+    }
+
+    function getDuration(message, variant, type) {
         if (!message || typeof message !== 'string') return SIMPLE_DURATION_MIN;
         const len = message.trim().length;
         let ms = SIMPLE_MS_BASE + len * SIMPLE_MS_PER_CHAR;
         ms = Math.floor(ms * 1.5);
-        if (type === 'error') ms = Math.min(SIMPLE_DURATION_MAX, ms * 2);
-        ms = Math.max(SIMPLE_DURATION_MIN, Math.min(SIMPLE_DURATION_MAX, ms));
-        if (variant !== 'simple' && ms < SIMPLE_DURATION_MIN) ms = FULL_DURATION_DEFAULT_MS;
-        if (variant === 'full' && type === 'error') ms = Math.min(SIMPLE_DURATION_MAX, Math.max(ms, FULL_DURATION_DEFAULT_MS * 2));
+        if (type === 'error') ms *= 2;
+        ms = Math.max(SIMPLE_DURATION_MIN, Math.min(MAX_DURATION_MS, ms));
+        if (variant === 'full') {
+            ms = Math.max(ms, FULL_DURATION_DEFAULT_MS);
+        }
         return ms;
+    }
+
+    function isWithinDedupWindow(lastSeenAt) {
+        return Date.now() - Number(lastSeenAt || 0) <= DEDUP_WINDOW_MS;
+    }
+
+    function getBarScaleX(bar) {
+        if (!bar) return 1;
+        const transform = global.getComputedStyle(bar).transform;
+        if (!transform || transform === 'none') return 1;
+        const match = transform.match(/^matrix\(([^,]+)/);
+        const scaleX = match ? parseFloat(match[1]) : 1;
+        return Number.isFinite(scaleX) ? Math.max(0, Math.min(1, scaleX)) : 1;
+    }
+
+    function renderDedupBadge(toastEl) {
+        if (!toastEl) return;
+        const count = Number(toastEl._dedupCount || 1);
+        if (!toastEl._dedupBadge) return;
+        if (count > 1) {
+            toastEl._dedupBadge.textContent = 'x' + count;
+            toastEl._dedupBadge.hidden = false;
+        } else {
+            toastEl._dedupBadge.hidden = true;
+        }
+    }
+
+    function applyTimerState(toastEl, remainingMs, resetScale) {
+        if (!toastEl || !toastEl._countdownBar) return;
+        const bar = toastEl._countdownBar;
+        const next = Math.max(0, Math.min(MAX_DURATION_MS, Math.floor(remainingMs)));
+        toastEl._remainingMs = next;
+
+        if (next <= 0) {
+            removeToast(toastEl);
+            return;
+        }
+
+        if (toastEl._removeTimeout) {
+            clearTimeout(toastEl._removeTimeout);
+        }
+
+        const initialScale = resetScale ? 1 : getBarScaleX(bar);
+        bar.style.transition = 'none';
+        bar.style.transform = 'scaleX(' + initialScale + ')';
+        requestAnimationFrame(function () {
+            bar.style.transition = 'transform ' + next + 'ms linear';
+            bar.style.transform = 'scaleX(0)';
+        });
+
+        toastEl._paused = false;
+        toastEl._startTime = Date.now();
+        toastEl._removeTimeout = setTimeout(function () {
+            removeToast(toastEl);
+        }, next);
+    }
+
+    function pauseToast(toastEl) {
+        if (!toastEl || toastEl._paused || !toastEl._countdownBar) return;
+        const elapsed = Date.now() - Number(toastEl._startTime || Date.now());
+        const remaining = Math.max(0, Number(toastEl._remainingMs || 0) - elapsed);
+        toastEl._remainingMs = remaining;
+        if (toastEl._removeTimeout) {
+            clearTimeout(toastEl._removeTimeout);
+            toastEl._removeTimeout = null;
+        }
+        const scale = getBarScaleX(toastEl._countdownBar);
+        toastEl._countdownBar.style.transition = 'none';
+        toastEl._countdownBar.style.transform = 'scaleX(' + scale + ')';
+        toastEl._paused = true;
+    }
+
+    function resumeToast(toastEl) {
+        if (!toastEl || !toastEl._paused || !toastEl._countdownBar) return;
+        applyTimerState(toastEl, toastEl._remainingMs, false);
+    }
+
+    function extendToastTimer(toastEl) {
+        if (!toastEl || !toastEl._countdownBar) return;
+        const now = Date.now();
+        const elapsed = toastEl._paused ? 0 : now - Number(toastEl._startTime || now);
+        const baseRemaining = toastEl._paused
+            ? Number(toastEl._remainingMs || 0)
+            : Math.max(0, Number(toastEl._remainingMs || 0) - elapsed);
+        const extended = Math.min(MAX_DURATION_MS, baseRemaining + DEDUP_TIMER_STEP_MS);
+        toastEl._remainingMs = extended;
+        if (!toastEl._paused) {
+            applyTimerState(toastEl, extended, false);
+        }
     }
 
     function createToastElement(options, durationMs) {
@@ -74,14 +200,19 @@
             variant = 'full',
             title = TITLES[type] || 'Informação',
             message = '',
-            subtitle
+            subtitle,
+            dedupCount = 1
         } = options;
 
         const isFull = variant === 'full';
         const root = document.createElement('div');
         root.className = 'toast-item';
         root.setAttribute('role', 'alert');
-        root.setAttribute('aria-live', 'polite');
+        root.setAttribute('aria-live', isCriticalError(options) ? 'assertive' : 'polite');
+        const counter = document.createElement('span');
+        counter.className = 'toast-counter';
+        counter.hidden = true;
+        counter.setAttribute('aria-hidden', 'true');
 
         const toast = document.createElement('div');
         toast.className = isFull ? `toast-full ${type}` : `toast ${type}`;
@@ -97,12 +228,19 @@
             closeBtn.setAttribute('aria-label', 'Fechar');
             closeBtn.innerHTML = '&times;';
             header.appendChild(titleEl);
+            header.appendChild(counter);
             header.appendChild(closeBtn);
             toast.appendChild(header);
+            root._dedupBadge = counter;
         }
 
         const body = document.createElement('div');
         body.className = 'toast-body';
+        if (!isFull) {
+            counter.classList.add('toast-counter-simple');
+            body.appendChild(counter);
+            root._dedupBadge = counter;
+        }
         if (isFull && ICONS[type]) {
             const iconWrap = document.createElement('div');
             iconWrap.className = 'toast-icon';
@@ -141,13 +279,24 @@
             countdownBar.style.transform = 'scaleX(1)';
             countdownWrap.appendChild(countdownBar);
             toast.appendChild(countdownWrap);
-            root._toastDuration = durationMs;
             root._countdownBar = countdownBar;
         }
 
         root.appendChild(toast);
         root._options = options;
         root._variant = variant;
+        root._dedupKey = options.dedupKey || '';
+        root._dedupLastSeenAt = Date.now();
+        root._dedupCount = Math.max(1, Number(dedupCount || 1));
+        root._remainingMs = durationMs;
+        root._paused = false;
+
+        root.addEventListener('mouseenter', function () {
+            pauseToast(root);
+        });
+        root.addEventListener('mouseleave', function () {
+            resumeToast(root);
+        });
 
         if (isFull) {
             const closeBtn = toast.querySelector('.toast-close');
@@ -158,48 +307,16 @@
             }
         }
 
+        renderDedupBadge(root);
         return root;
     }
 
-    /**
-     * Reajusta o tempo restante do toast para o equivalente em "tempo base".
-     * Ex.: toast de 20s (2× base 10s), restam 10s → em tempo base restariam 5s; define 5s e continua.
-     * Usado quando esse toast passa a ser o primeiro após o anterior ser removido.
-     */
-    function resetToastToBaseDuration(toastEl) {
-        if (!toastEl || !toastEl._countdownBar || !toastEl._options || !toastEl._startTime) return;
-        if (toastEl._removeTimeout) clearTimeout(toastEl._removeTimeout);
-
-        const currentTotal = toastEl._toastDuration;
-        const elapsed = Date.now() - toastEl._startTime;
-        const remaining = Math.max(0, currentTotal - elapsed);
-
-        if (remaining <= 0) {
-            removeToast(toastEl);
-            return;
-        }
-
-        const opts = toastEl._options;
-        const baseMs = getBaseDuration(opts.message || '', opts.variant || 'full', opts.type || 'info');
-        const newRemaining = Math.round((remaining / currentTotal) * baseMs);
-        if (newRemaining <= 0) {
-            removeToast(toastEl);
-            return;
-        }
-
-        toastEl._toastDuration = baseMs;
-        toastEl._startTime = Date.now();
-
-        const bar = toastEl._countdownBar;
-        const proportionLeft = remaining / currentTotal;
-        bar.style.transition = 'transform ' + newRemaining + 'ms linear';
-        bar.style.transform = 'scaleX(' + proportionLeft + ')';
-        requestAnimationFrame(function () {
-            bar.style.transform = 'scaleX(0)';
-        });
-        toastEl._removeTimeout = setTimeout(function () {
-            removeToast(toastEl);
-        }, newRemaining);
+    function bumpToast(toastEl) {
+        if (!toastEl) return;
+        toastEl._dedupCount = Number(toastEl._dedupCount || 1) + 1;
+        toastEl._dedupLastSeenAt = Date.now();
+        renderDedupBadge(toastEl);
+        extendToastTimer(toastEl);
     }
 
     function removeToast(toastEl) {
@@ -211,11 +328,6 @@
 
         const idx = visibleList.indexOf(toastEl);
         if (idx > -1) visibleList.splice(idx, 1);
-
-        // Só quando o removido era o primeiro: quem passou a ser o primeiro usa o tempo base.
-        if (idx === 0 && visibleList.length > 0 && visibleList[0]._countdownBar) {
-            resetToastToBaseDuration(visibleList[0]);
-        }
 
         setTimeout(function () {
             if (toastEl.parentNode) toastEl.parentNode.removeChild(toastEl);
@@ -231,34 +343,36 @@
         }
     }
 
+    function findDuplicateInVisible(dedupKey) {
+        for (let i = visibleList.length - 1; i >= 0; i--) {
+            const item = visibleList[i];
+            if (item && item._dedupKey === dedupKey && isWithinDedupWindow(item._dedupLastSeenAt)) {
+                return item;
+            }
+        }
+        return null;
+    }
+
+    function findDuplicateInQueue(dedupKey) {
+        for (let i = queue.length - 1; i >= 0; i--) {
+            const item = queue[i];
+            if (item && item.dedupKey === dedupKey && isWithinDedupWindow(item.dedupLastSeenAt)) {
+                return item;
+            }
+        }
+        return null;
+    }
+
     function showNow(options) {
         const cont = getContainer();
-        const isPrincipal = visibleList.length === 0;
-        const message = options.message || '';
-        const type = options.type || 'info';
-        let durationMs;
-        if (isPrincipal) {
-            durationMs = getBaseDuration(message, options.variant, type);
-        } else {
-            const last = visibleList[visibleList.length - 1];
-            const prevDuration = last._toastDuration || getBaseDuration(message, options.variant, type);
-            durationMs = Math.min(SIMPLE_DURATION_MAX, Math.floor(prevDuration * SUBSEQUENT_DURATION_MULTIPLIER));
-        }
+        const durationMs = getDuration(options.message || '', options.variant, options.type);
         const el = createToastElement(options, durationMs);
         el.classList.add('toast-visible');
         cont.appendChild(el);
         visibleList.push(el);
 
         if (el._countdownBar && durationMs > 0) {
-            el._startTime = Date.now();
-            requestAnimationFrame(function () {
-                el._countdownBar.style.transform = 'scaleX(0)';
-            });
-        }
-        if (durationMs > 0) {
-            el._removeTimeout = setTimeout(function () {
-                removeToast(el);
-            }, durationMs);
+            applyTimerState(el, durationMs, true);
         }
     }
 
@@ -270,20 +384,55 @@
      * @param {string} [options.title] - Título (modelo full)
      * @param {string} [options.message] - Mensagem principal
      * @param {string} [options.subtitle] - Subtítulo opcional
+     * @param {boolean} [options.critical=false] - Marca erro crítico (ativa aria-live assertive e prioriza full)
      * @param {Function} [options.onClose] - Callback chamado quando o toast for fechado (botão ou auto)
      */
     function show(options) {
+        const input = typeof options === 'string' ? { message: options } : (options || {});
+        const explicitVariant = hasOwn(input, 'variant');
         const opts = Object.assign(
-            { type: 'info', variant: 'full', title: '', message: '', subtitle: '' },
-            typeof options === 'string' ? { message: options } : options
+            { type: 'info', variant: 'simple', title: '', message: '', subtitle: '', critical: false },
+            input
         );
+        opts.variant = resolveVariant(opts, explicitVariant);
         if (!opts.title && TITLES[opts.type]) opts.title = TITLES[opts.type];
+        opts.dedupKey = buildDedupKey(opts);
+        opts.dedupLastSeenAt = Date.now();
+        opts.dedupCount = Math.max(1, Number(opts.dedupCount || 1));
+
+        const duplicateVisible = findDuplicateInVisible(opts.dedupKey);
+        if (duplicateVisible) {
+            bumpToast(duplicateVisible);
+            return duplicateVisible;
+        }
+        const duplicateQueue = findDuplicateInQueue(opts.dedupKey);
+        if (duplicateQueue) {
+            duplicateQueue.dedupCount = Number(duplicateQueue.dedupCount || 1) + 1;
+            duplicateQueue.dedupLastSeenAt = Date.now();
+            return null;
+        }
 
         if (visibleList.length >= MAX_VISIBLE) {
             queue.push(opts);
-            return;
+            return null;
         }
         showNow(opts);
+        return null;
+    }
+
+    function success(message, opts) {
+        const input = Object.assign({}, opts || {}, { type: 'success', message: message || '' });
+        return show(input);
+    }
+
+    function error(message, opts) {
+        const input = Object.assign({}, opts || {}, { type: 'error', message: message || '' });
+        return show(input);
+    }
+
+    function info(message, opts) {
+        const input = Object.assign({}, opts || {}, { type: 'info', message: message || '' });
+        return show(input);
     }
 
     function initPostMessage() {
@@ -326,6 +475,9 @@
 
     App.Toast = {
         show,
+        success,
+        error,
+        info,
         get visibleCount() { return visibleList.length; },
         get queueCount() { return queue.length; }
     };

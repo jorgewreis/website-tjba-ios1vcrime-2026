@@ -108,6 +108,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 10px;
     border-radius: 6px 6px 0 0;
     padding: 10px 15px;
     background-color: var(--color-background-elevated);
@@ -131,12 +132,39 @@
     font-size: 14px;
     font-weight: 600;
     color: var(--color-text-primary);
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
 .toast-full.success .toast-header .toast-title,
 .toast-full.error .toast-header .toast-title,
 .toast-full.info .toast-header .toast-title {
-    color: var(--color-background-elevated);
+    color: var(--color-gray-000);
+}
+
+.toast-header .toast-counter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    background: var(--color-black-300);
+    color: var(--color-gray-000);
+    border: 1px solid var(--color-white-300);
+}
+
+.toast-header .toast-counter[hidden] {
+    display: none;
+}
+
+.toast-body .toast-counter-simple {
+    position: absolute;
+    top: 8px;
+    right: 10px;
 }
 
 .toast-header .toast-close {
@@ -153,7 +181,7 @@
 .toast-full.success .toast-header .toast-close,
 .toast-full.error .toast-header .toast-close,
 .toast-full.info .toast-header .toast-close {
-    color: var(--color-background-elevated);
+    color: var(--color-gray-000);
 }
 
 .toast-header .toast-close:hover {
@@ -163,7 +191,7 @@
 .toast-full.success .toast-header .toast-close:hover,
 .toast-full.error .toast-header .toast-close:hover,
 .toast-full.info .toast-header .toast-close:hover {
-    color: var(--color-background-elevated);
+    color: var(--color-white-100);
 }
 
 /* Corpo do toast */
@@ -206,13 +234,13 @@
 .toast-body .toast-message .toast-subtitle {
     font-size: 12px;
     font-weight: 600;
-    color: var(--color-text-secondary);
+    color: var(--color-gray-800);
 }
 
 .toast-body .toast-message .toast-information {
     font-size: 13px;
     font-weight: 400;
-    color: var(--color-text-secondary);
+    color: var(--color-gray-800);
     margin: 0;
     line-height: 1.4;
 }
@@ -224,7 +252,7 @@
 .toast-body .toast-message .toast-timestamp {
     font-size: 11px;
     font-weight: 400;
-    color: var(--color-text-secondary);
+    color: var(--color-gray-700);
 }
 
 /* Modelo 2 (informativo): barra de tempo regressivo interna, semitransparente */
