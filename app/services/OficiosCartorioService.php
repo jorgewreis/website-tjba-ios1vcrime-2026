@@ -23,6 +23,18 @@ final class OficiosCartorioService
     private const MEIOS_VALIDOS = ['email', 'malote_digital', 'pessoalmente'];
     private const REGRA_ALOCAR_OFICIOS = 'ALLOCATE-CARTORIOOFICIOS';
 
+    /** Valores do optgroup "Administrativos" em cartorio-oficios-list (processo opcional). */
+    private const TIPOS_OFICIO_ADMINISTRATIVOS = [
+        'Ofício Solicitando Férias',
+        'Ofício Solicitando Licença Prêmio',
+        'Ofício Solicitando Reembolso',
+        'Ofício Solicitando Afastamento',
+        'Ofício Diversos',
+    ];
+
+    /** Exibido em `numero_processo` quando não há vínculo com processo judicial. */
+    private const NUMERO_PROCESSO_SEM_VINCULO = '—';
+
     /** Ordem de exibição dos tipos de alocação. */
     private const TIPO_ORDER = ['rule' => 0, 'all' => 1, 'specific' => 2];
 
@@ -110,21 +122,38 @@ final class OficiosCartorioService
 
     public function create(array $payload): string
     {
-        $numeroProcesso = trim((string) ($payload['numero_processo'] ?? $payload['processo'] ?? ''));
-        if ($numeroProcesso === '') {
-            throw new InvalidArgumentException('O número do processo é obrigatório.');
-        }
-        $digits = preg_replace('/\D+/', '', $numeroProcesso);
-        if (strlen($digits) !== 20) {
-            throw new InvalidArgumentException('Número do processo deve ter 20 dígitos (formato CNJ).');
-        }
-        $numeroFormatado = $this->formatarCNJ($digits);
-
-        $tipoOficio = trim((string) ($payload['tipo_oficio'] ?? ''));
-        if ($tipoOficio === '') {
+        $tipoOficioRaw = trim((string) ($payload['tipo_oficio'] ?? ''));
+        if ($tipoOficioRaw === '') {
             throw new InvalidArgumentException('O tipo de ofício é obrigatório.');
         }
-        $tipoOficio = TextFormatter::formatProperName($tipoOficio, 255);
+        $esAdministrativo = $this->isTipoOficioAdministrativo($tipoOficioRaw);
+
+        $numeroProcesso = trim((string) ($payload['numero_processo'] ?? $payload['processo'] ?? ''));
+        if (!$esAdministrativo && $numeroProcesso === '') {
+            throw new InvalidArgumentException('O número do processo é obrigatório.');
+        }
+
+        $processoOrigemId = null;
+        $numeroFormatado = self::NUMERO_PROCESSO_SEM_VINCULO;
+        $classeId = null;
+
+        if ($numeroProcesso !== '') {
+            $digits = preg_replace('/\D+/', '', $numeroProcesso);
+            if (strlen($digits) !== 20) {
+                throw new InvalidArgumentException('Número do processo deve ter 20 dígitos (formato CNJ).');
+            }
+            $numeroFormatado = $this->formatarCNJ($digits);
+
+            $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
+            $classeDescricao = trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? ''));
+            if ($classeCodigo !== '') {
+                $classeNome = $classeDescricao !== '' ? TextFormatter::formatProperName($classeDescricao, 200) : $classeCodigo;
+                $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
+            }
+            $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, false);
+        }
+
+        $tipoOficio = TextFormatter::formatProperName($tipoOficioRaw, 255);
 
         $forma = trim((string) ($payload['forma_cumprimento'] ?? ''));
         if (!in_array($forma, ['ccm', 'cartorio'], true)) {
@@ -138,15 +167,6 @@ final class OficiosCartorioService
                 throw new InvalidArgumentException('Selecione o meio de envio (e-mail, malote digital ou pessoalmente).');
             }
         }
-
-        $classeId = null;
-        $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
-        $classeDescricao = trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? ''));
-        if ($classeCodigo !== '') {
-            $classeNome = $classeDescricao !== '' ? TextFormatter::formatProperName($classeDescricao, 200) : $classeCodigo;
-            $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
-        }
-        $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, false);
 
         $ano = (int) date('Y');
         if (isset($payload['ano']) && is_numeric($payload['ano'])) {
@@ -311,6 +331,11 @@ final class OficiosCartorioService
             'deleted' => $deleted,
             'message' => $deleted ? 'Ofício excluído com sucesso.' : 'Nenhum registro removido.',
         ];
+    }
+
+    private function isTipoOficioAdministrativo(string $tipoOficioRaw): bool
+    {
+        return in_array($tipoOficioRaw, self::TIPOS_OFICIO_ADMINISTRATIVOS, true);
     }
 
     private function formatarCNJ(string $digits): string

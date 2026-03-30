@@ -240,7 +240,7 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
             <h3 class="title-section" style="margin:0;font-size:1rem;font-weight:600;">Registrar ofício</h3>
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
-                    <label for="filter-processo">Número do processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <label for="filter-processo">Número do processo <span id="cartorio-processo-hint" class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="text" class="width-400 height-md" id="filter-processo" name="processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off">
                 </div>
                 <div class="col">
@@ -274,19 +274,18 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                             <option value="Ofício Requisitando Informações">Ofício requisitando Informações</option>
                         </optgroup>
                         <optgroup label="Administrativos">
-                            <option value="Ofício Solicitando Férias">Ofício solicitando Férias</option>
-                            <option value="Ofício Solicitando Licença Prêmio">Ofício solicitando Licença Prêmio</option>
-                            <option value="Ofício Solicitando Reembolso">Ofício solicitando Reembolso</option>
-                            <option value="Ofício Solicitando Afastamento">Ofício solicitando Afastamento</option>
-                            <option value="Ofício Diversos">Ofício diversos</option>
+                            <option value="Ofício Solicitando Férias" data-oficio-grupo="administrativo">Ofício solicitando Férias</option>
+                            <option value="Ofício Solicitando Licença Prêmio" data-oficio-grupo="administrativo">Ofício solicitando Licença Prêmio</option>
+                            <option value="Ofício Solicitando Reembolso" data-oficio-grupo="administrativo">Ofício solicitando Reembolso</option>
+                            <option value="Ofício Solicitando Afastamento" data-oficio-grupo="administrativo">Ofício solicitando Afastamento</option>
+                            <option value="Ofício Diversos" data-oficio-grupo="administrativo">Ofício diversos</option>
                         </optgroup>
                     </select>
                 </div>
                 <div class="col">
                     <label for="oficio-forma-cumprimento">Forma de cumprimento <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-500 height-md" id="oficio-forma-cumprimento" name="forma_cumprimento">
-                        <option value="">Selecione…</option>
-                        <option value="ccm">por Oficial de Justiça (CCM)</option>
+                        <option value="ccm" selected>por Oficial de Justiça (CCM)</option>
                         <option value="cartorio">pelo Cartório</option>
                     </select>
                 </div>
@@ -421,7 +420,7 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                             <span class="minor-info text-ellipsis" title="<?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?>" <?php echo $classeStyle; ?>><?php echo htmlspecialchars($classeNome); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars((string) ($row['Processo'] ?? '')); ?></span>
                         </div>
-                        <div class="col width-500">
+                        <div class="col width-700">
                             <span class="minor-info">Tipo</span>
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['TipoOficio'] ?? '')); ?></span>
                         </div>
@@ -619,6 +618,31 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
 
             const formaSel = document.getElementById('oficio-forma-cumprimento');
             const meioRow = document.getElementById('oficio-meio-envio-row');
+            const cartorioTipoSelect = document.getElementById('oficio-tipo');
+            const cartorioProcessoHint = document.getElementById('cartorio-processo-hint');
+            const cartorioProcessoLabel = document.querySelector('label[for="filter-processo"]');
+
+            function cartorioOficioEhAdministrativo() {
+                const opt = cartorioTipoSelect?.selectedOptions?.[0];
+                return opt && opt.getAttribute('data-oficio-grupo') === 'administrativo';
+            }
+
+            function atualizarRegraProcessoCartorio() {
+                const admin = cartorioOficioEhAdministrativo();
+                if (cartorioProcessoHint) {
+                    cartorioProcessoHint.textContent = admin ? 'opcional' : '*obrigatório';
+                    cartorioProcessoHint.className = admin ? 'label-hint-automatizado' : 'label-hint-obrigatorio';
+                }
+                if (cartorioProcessoLabel) {
+                    cartorioProcessoLabel.title = admin
+                        ? 'Para tipos administrativos o número do processo pode ficar em branco.'
+                        : '';
+                }
+            }
+
+            cartorioTipoSelect?.addEventListener('change', atualizarRegraProcessoCartorio);
+            atualizarRegraProcessoCartorio();
+
             function toggleMeioEnvio() {
                 if (!meioRow || !formaSel) return;
                 const v = formaSel.value;
@@ -635,7 +659,14 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                 if (p) p.value = '';
                 if (t) t.selectedIndex = 0;
                 if (m) m.selectedIndex = 0;
-                if (fc) fc.selectedIndex = 0;
+                if (fc) {
+                    const optCcm = fc.querySelector('option[value="ccm"]');
+                    if (optCcm) {
+                        fc.value = 'ccm';
+                    } else {
+                        fc.selectedIndex = 0;
+                    }
+                }
                 const hcc = document.getElementById('hidden-classe-codigo');
                 const hcd = document.getElementById('hidden-classe-descricao');
                 const cl = document.getElementById('filter-classe');
@@ -643,6 +674,7 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                 if (hcd) hcd.value = '';
                 if (cl) cl.value = '';
                 toggleMeioEnvio();
+                atualizarRegraProcessoCartorio();
             });
 
             document.getElementById('btn-oficio-registrar')?.addEventListener('click', function () {
@@ -650,15 +682,24 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                 const tipo = document.getElementById('oficio-tipo')?.value || '';
                 const forma = document.getElementById('oficio-forma-cumprimento')?.value || '';
                 const meio = document.getElementById('oficio-meio-envio')?.value || '';
-                const cc = document.getElementById('hidden-classe-codigo')?.value || '';
-                const cd = document.getElementById('hidden-classe-descricao')?.value || '';
-                if (!proc || !tipo || !forma) {
-                    notify('error', 'Validação', 'Preencha processo, tipo e forma de cumprimento.');
+                let cc = document.getElementById('hidden-classe-codigo')?.value || '';
+                let cd = document.getElementById('hidden-classe-descricao')?.value || '';
+                const admin = cartorioOficioEhAdministrativo();
+                if (!tipo || !forma) {
+                    notify('error', 'Validação', 'Preencha tipo e forma de cumprimento.');
+                    return;
+                }
+                if (!admin && !proc) {
+                    notify('error', 'Validação', 'Preencha o número do processo.');
                     return;
                 }
                 if (forma === 'cartorio' && !meio) {
                     notify('error', 'Validação', 'Selecione o meio de envio.');
                     return;
+                }
+                if (admin && !proc) {
+                    cc = '';
+                    cd = '';
                 }
                 const body = {
                     numero_processo: proc,
