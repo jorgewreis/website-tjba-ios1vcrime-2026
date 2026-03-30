@@ -1,0 +1,33 @@
+---
+description: Telas cartorio-*-rules.php — partials compartilhados, breadcrumb/título e checklist de QA.
+---
+
+# Páginas de regras de alocação (`cartorio-*-rules.php`)
+
+## Partials (`app/views/internal/`)
+
+| Arquivo | Função |
+|--------|--------|
+| `_cartorio_rules_head.php` | `<head>` + `header-page` até `description-page` (texto escapado). Espera `$nomeCurtoModulo`, `$locationAll`, `$description`; opcional `$pageTitle`, `$htmlLang`. |
+| `_cartorio_rules_summary_row.php` | Linha de resumo quando existe `id` na regra. Espera `$ruleRow`, `$ruleUsuarioNome`, `$locationSpecificPrefix` (= `{NomeCurto} - Regras`), `$resumoRowClass` (`info` ou `success`). |
+| `_cartorio_rules_scripts.php` | Toasts (`showToast`), Voltar (`window.location.href` → `/frame.php?page=...`), `syncSaveButton`. Espera `$successMessage`, `$errors`, `$voltarPage`. |
+
+## Formato fixo por tela
+
+- `$nomeCurtoModulo`: mesmo token no breadcrumb `specific` e no `h1`.
+- Breadcrumb: `span.all` = `$locationAll`; `span.specific` = `{NomeCurto} - Regras`.
+- `h1`: `{NomeCurto} — Regras de alocação` (travessão EM).
+- Select: label **Servidor**, `id`/`for` = **`filter-servidor-alocacao`**.
+- Linha de resumo: prefixo = texto completo do `specific` (ex. `Ceapa - Regras: id - Nome`).
+- Classe da linha: `success` se `usuario_id` da regra estiver em `array_column(listUsuariosInternos, 'id')` **antes** de acrescentar “(fora da lista atual)”; senão `info`.
+
+## Checklist de QA (por rota `frame.php?page=…rules`)
+
+- `lang="pt-BR"`, viewport, `_internal_head_styles` + `_toast_script`.
+- Breadcrumb “Interno - …” (não “Internal”).
+- `h1` e `specific` alinhados ao mesmo `$nomeCurtoModulo`.
+- `description-page` só texto plano (escapado no partial).
+- Botões no contrato; Voltar via `location` (partial de scripts).
+- Fluxos: salvar, erro, remover alocação, voltar, usuário sem permissão.
+
+Rotas: `ceaparules`, `cejuscrules`, `editaisrules`, `guiasrules`, `medidasprotetivasrules`, `oficiosrules`, `cartasrecebidasrules`, `cartasexpedidasrules`.
