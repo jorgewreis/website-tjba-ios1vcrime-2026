@@ -128,7 +128,7 @@
 
         var has = String(selectParteNome.dataset.hasProcessoReusParts || '0');
         if (has === '1') {
-            // Volta ao padrão: mostra só select (com o primeiro nome).
+            // Volta à lista: select visível, input oculto (valor espelhado no input para o envio).
             selectParteNome.style.display = '';
             selectParteNome.disabled = false;
 
@@ -136,7 +136,6 @@
             if (firstVal && selectParteNome.querySelector('option[value="' + firstVal + '"]')) {
                 selectParteNome.value = firstVal;
             } else {
-                // fallback: pega primeira opção diferente de __OUTRO__
                 var opts = selectParteNome.querySelectorAll('option');
                 var picked = '';
                 opts.forEach(function (o) {
@@ -148,7 +147,7 @@
 
             input.value = String(selectParteNome.value || '');
             input.style.display = 'none';
-            input.readOnly = true;
+            input.readOnly = false;
         } else {
             // Sem lista do processo: mostra input e oculta select.
             selectParteNome.style.display = 'none';
@@ -335,7 +334,8 @@
             select.disabled = false;
             select.style.display = '';
             input.style.display = 'none';
-            input.readOnly = true;
+            input.readOnly = false;
+            input.placeholder = 'Digite o nome da parte';
             setStatusHint('*Nomes do cadastro do processo', 'var(--color-success-active)');
         }
 
@@ -361,27 +361,19 @@
             var val = String(select.value || '').trim();
             if (val === '__OUTRO__') {
                 select.classList.remove('status-finished');
+                input.value = '';
+                input.placeholder = 'Digite o nome da parte';
                 input.style.display = '';
                 input.readOnly = false;
-                input.focus();
                 select.style.display = 'none';
+                input.focus();
                 return;
             }
             input.value = normalizeSelectedName(val);
             input.style.display = 'none';
-            input.readOnly = true;
+            select.style.display = '';
+            select.classList.add('status-finished');
         });
-
-        select.value = '__OUTRO__';
-        select.disabled = true;
-        select.style.display = '';
-        input.style.display = 'none';
-        input.readOnly = true;
-        input.placeholder = 'Digite o nome da parte';
-        input.value = '';
-
-        select.dataset.hasProcessoReusParts = '0';
-        select.dataset.firstProcessoReuValue = '';
 
         var raw = Array.isArray(window.PAUTA_REUS_NOMES_INITIAL) ? window.PAUTA_REUS_NOMES_INITIAL : [];
         var nomes = dedupeStrings(raw).sort(function (a, b) { return a.localeCompare(b, 'pt-BR'); });
