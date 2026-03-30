@@ -20,4 +20,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(GabineteReusPresosService): update prefix handling for 90-day review and adjust string matching logic; update labels in cartorio-editais-list view** `[7c8835c]`
 - **feat(audiencias): improve DataJud integration by adding session storage for process status and enhancing UI feedback during loading** `[73e6be0]`
 - **feat(audiencias): enhance DataJud caching mechanism with session storage and improve data retrieval logic** `[ea3b58f]`
+- **feat(audiencias): add process priority display in audiencia list view** `[12dd4ba]`
 
