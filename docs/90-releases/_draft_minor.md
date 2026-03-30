@@ -23,4 +23,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(audiencias): add process priority display in audiencia list view** `[12dd4ba]`
 - **refactor(audiencias): optimize process priority retrieval in audiencia list view** `[27a0a25]`
 - **fix(audiencias): handle exceptions during process priority retrieval and improve type handling in audiencia list view** `[095669b]`
+- **feat(audiencias): implement process priority management in SalaAudienciasPautaService and enhance UI for priority handling** `[1e1cd32]`
 
