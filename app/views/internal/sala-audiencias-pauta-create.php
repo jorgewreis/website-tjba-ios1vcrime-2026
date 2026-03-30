@@ -70,7 +70,7 @@ $horariosGrade = SalaAudienciasPautaService::horariosGradeCadastroAudiencia();
                     <input type="date" class="width-300 height-md" id="audiencia-data" min="<?php echo htmlspecialchars($dataMinimaCadastro, ENT_QUOTES); ?>" required>
                 </div>
                 <div class="col filter">
-                    <label for="audiencia-hora">Hora (09:00–16:00, a cada 10 min) <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <label for="audiencia-hora">Hora <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-300 height-md" id="audiencia-hora" required>
                         <option value="" selected disabled>Selecione a hora</option>
                         <?php foreach ($horariosGrade as $hm): ?>

@@ -165,6 +165,54 @@ final class ProcessosPartesRepository
     }
 
     /**
+     * Nomes distintos de partes vinculadas ao processo com papel de acusado (réu, indiciado, sentenciado).
+     *
+     * @return list<string>
+     */
+    public function listNomesReusPorProcessoId(string $processoId): array
+    {
+        $processoId = trim($processoId);
+        if ($processoId === '') {
+            return [];
+        }
+        $tipos = [self::TIPO_REU, self::TIPO_INDICIADO, self::TIPO_SENTENCIADO];
+        $inNames = [];
+        foreach ($tipos as $i => $_) {
+            $inNames[] = ':t' . $i;
+        }
+        $sql = sprintf(
+            'SELECT DISTINCT p.`nome_completo`
+             FROM `%s` pp
+             INNER JOIN `partes` p ON p.`id` = pp.`parte_id`
+             WHERE pp.`processo_id` = :processo_id
+             AND pp.`tipo_parte` IN (%s)
+             AND TRIM(COALESCE(p.`nome_completo`, \'\')) <> \'\'
+             ORDER BY p.`nome_completo` ASC',
+            $this->table,
+            implode(', ', $inNames)
+        );
+        $statement = $this->connection->prepare($sql);
+        $statement->bindValue(':processo_id', $processoId);
+        foreach ($tipos as $i => $t) {
+            $statement->bindValue(':t' . $i, $t);
+        }
+        $statement->execute();
+        $rows = $statement->fetchAll(PDO::FETCH_COLUMN);
+        if ($rows === false) {
+            return [];
+        }
+        $out = [];
+        foreach ($rows as $nome) {
+            $n = trim((string) $nome);
+            if ($n !== '') {
+                $out[] = $n;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
      * @param list<string> $processoIds
      * @return array<string, int> processo_id => total_partes
      */

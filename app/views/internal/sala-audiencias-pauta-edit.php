@@ -11,6 +11,7 @@ require_once __DIR__ . '/../../services/SalaAudienciasPautaService.php';
 require_once __DIR__ . '/../../repositories/GabineteReuPresoProcessoRepository.php';
 require_once __DIR__ . '/../../repositories/GabineteReuPresoRepository.php';
 require_once __DIR__ . '/../../repositories/PartesRepository.php';
+require_once __DIR__ . '/../../repositories/ProcessosPartesRepository.php';
 
 $id = trim((string) ($_GET['id'] ?? ''));
 $service = new SalaAudienciasPautaService(Conection::getInstance()->getConnection());
@@ -26,6 +27,8 @@ if ($row !== null) {
 }
 $reusPresosMap = [];
 $reusPresosSigMap = [];
+/** @var list<string> Nomes de réus/indiciados/sentenciados já vinculados ao processo (cadastro local). */
+$reusNomesProcesso = [];
 
 // Normalização usada para comparar o nome do "reu" na audiência
 // com os nomes cadastrados em "réus presos" (reduz variações por espaços, acentos e pontuação).
@@ -95,6 +98,15 @@ $addNomeToReuMap = static function (string $nome, array &$map, array &$sigMap) u
 if ($row !== null) {
     $processoId = trim((string) ($row['processo'] ?? ''));
     $numeroProcesso = trim((string) ($row['numero_processo'] ?? ''));
+
+    if ($processoId !== '') {
+        try {
+            $repoProcessoPartes = new ProcessosPartesRepository(Conection::getInstance()->getConnection());
+            $reusNomesProcesso = $repoProcessoPartes->listNomesReusPorProcessoId($processoId);
+        } catch (Throwable $e) {
+            $reusNomesProcesso = [];
+        }
+    }
 
     // Monta mapa global de "réus presos" apenas pelo cadastro ativo,
     // para evitar falhas de resolução por processo_id/CNJ.
@@ -377,11 +389,10 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
         <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
-                    <label for="parte-nome-selecao">Nome da parte <span class="label-hint-obrigatorio">*obrigatório</span> <span id="parte-nome-datajud-status" class="label-hint-automatizado" aria-live="polite"></span></label>
+                    <label for="parte-nome-selecao">Nome da parte <span class="label-hint-obrigatorio">*obrigatório</span> <span id="parte-nome-processo-status" class="label-hint-automatizado" aria-live="polite"></span></label>
                     <select
                         class="width-700 height-md white"
                         id="parte-nome-selecao"
-                        data-datajud-related="true"
                     >
                         <option value="__OUTRO__" selected>Outro (digite abaixo)</option>
                     </select>
@@ -629,7 +640,7 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
     </div>
 
     <?php
-        // Para filtrar o select DataJud: não mostrar nomes que já existem na lista de partes desta audiência.
+        // Para filtrar o select de nomes do processo: não mostrar nomes que já existem na lista de partes desta audiência.
         // Assinatura = apenas letras/números (remove espaços e pontuação), para reduzir diferenças de formatação.
         $existingPartSignatures = [];
         foreach ($partes as $pItem) {
@@ -663,6 +674,7 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
     <script>
         window.PAUTA_HORARIOS_GRADE = <?php echo json_encode($pautaHorariosGrade, JSON_UNESCAPED_UNICODE); ?>;
         window.PAUTA_HORA_FORA_GRADE = <?php echo json_encode($pautaHoraForaGrade, JSON_UNESCAPED_UNICODE); ?>;
+        window.PAUTA_REUS_NOMES_INITIAL = <?php echo json_encode($reusNomesProcesso, JSON_UNESCAPED_UNICODE); ?>;
         window.PAUTA_EXISTING_PART_NAMES_SIGS = <?php echo json_encode($existingPartSignatures, JSON_UNESCAPED_UNICODE); ?>;
         window.PAUTA_PRIORIDADES_INITIAL = <?php echo json_encode($prioridadesEdicaoInicial, JSON_UNESCAPED_UNICODE); ?>;
         window.PAUTA_EDIT_ID = <?php echo json_encode($row !== null ? (string) ($row['id_pauta'] ?? '') : '', JSON_UNESCAPED_UNICODE); ?>;
@@ -679,7 +691,6 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
     </script>
 
     <script src="/assets/js/shared/text-formatter.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/shared/text-formatter.js') ?: time(); ?>"></script>
-    <script src="/assets/js/modules/datajud/datajud-cycle-helper.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/datajud/datajud-cycle-helper.js') ?: time(); ?>"></script>
     <script src="/assets/js/modules/audiencias/pauta-edit.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-edit.js') ?: time(); ?>"></script>
     <script src="/assets/js/modules/audiencias/pauta-edit-prioridades.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-edit-prioridades.js') ?: time(); ?>"></script>
 </body>
