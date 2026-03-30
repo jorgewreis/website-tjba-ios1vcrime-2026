@@ -26,4 +26,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(audiencias): implement process priority management in SalaAudienciasPautaService and enhance UI for priority handling** `[1e1cd32]`
 - **feat(prioridades): enhance process priority management with new repository methods and UI improvements** `[f720c4a]`
 - **feat(audiencias): enhance process priority handling in services and views, including UI updates for defensor management** `[5f89cdf]`
+- **refactor(audiencias): improve DataJud caching mechanism with enhanced storage handling and legacy support** `[f85722d]`
 
