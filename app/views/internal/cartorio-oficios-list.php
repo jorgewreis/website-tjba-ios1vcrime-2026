@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 declare(strict_types=1);
 
 header('Content-Type: text/html; charset=UTF-8');
@@ -227,7 +227,7 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                 </div>
                 <div class="col">
                     <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
-                    <input type="text" class="width-600 height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>
+                    <input type="text" class="width-600 height-md" id="filter-classe" data-datajud-related="true" placeholder="Preenchido automaticamente pelo DataJud" readonly>
                 </div>
                 <div class="col">
                     <label for="oficio-tipo">Tipo de ofício <span class="label-hint-obrigatorio">*obrigatório</span></label>
@@ -539,8 +539,9 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
         </div>
     </div>
 
-    <script src="/assets/js/modules/cartorio/cartas-expedidas/cnj.js"></script>
-    <script src="/assets/js/modules/cartorio/cartas-expedidas/datajud-api.js"></script>
+    <script src="/assets/js/modules/datajud/cnj.js"></script>
+    <script src="/assets/js/modules/datajud/datajud-cycle-helper.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/datajud/datajud-cycle-helper.js') ?: time(); ?>"></script>
+    <script src="/assets/js/modules/datajud/datajud-api.js"></script>
     <script src="/assets/js/shared/text-formatter.js"></script>
     <script>
         (function () {

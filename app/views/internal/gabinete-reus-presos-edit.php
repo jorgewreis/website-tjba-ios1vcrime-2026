@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 declare(strict_types=1);
 
 header('Content-Type: text/html; charset=UTF-8');
@@ -105,7 +105,7 @@ if ($ultimaMov !== null) {
     <div class="container-full card-page">
         <div class="padding-x-md padding-y-md">
             <p class="major-info"><?php echo htmlspecialchars($errorMessage !== '' ? $errorMessage : 'Registro não encontrado.', ENT_QUOTES); ?></p>
-            <button type="button" class="btn btn-secondary margin-top-md" id="btn-erro-voltar">Voltar à lista</button>
+            <button type="button" class="btn btn-secondary margin-top-md" id="btn-erro-voltar" data-allow-during-loading="true">Voltar à lista</button>
         </div>
     </div>
     <?php else: ?>
@@ -211,7 +211,7 @@ if ($ultimaMov !== null) {
                     </div>
                     <div class="col">
                         <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
-                        <input type="text" class="width-500 height-md" id="filter-classe" placeholder="Preenchido pelo DataJud" readonly>
+                        <input type="text" class="width-500 height-md" id="filter-classe" data-datajud-related="true" placeholder="Preenchido pelo DataJud" readonly>
                     </div>
                 </div>
                 <input type="hidden" id="hidden-classe-codigo">
@@ -312,7 +312,7 @@ if ($ultimaMov !== null) {
 
         <div class="display-flex row row-full justify-end padding-x-md padding-y-md gap-y-md flex-wrap">
             <?php if (!$arquivado): ?>
-            <button type="button" class="btn btn-secondary" id="btn-grp-voltar" onclick="window.location.href='/frame.php?page=reuspresos'">Voltar</button>
+            <button type="button" class="btn btn-secondary" id="btn-grp-voltar" data-allow-during-loading="true" onclick="window.location.href='/frame.php?page=reuspresos'">Voltar</button>
             <button type="button" class="btn btn-danger-outline" id="btn-grp-arquivar">Excluir</button>
             <?php endif; ?>
         </div>
@@ -328,8 +328,9 @@ if ($ultimaMov !== null) {
     </div>
 
     <?php if ($errorMessage === '' && $reu !== null && !$arquivado): ?>
-    <script src="/assets/js/modules/cartorio/cartas-expedidas/cnj.js"></script>
-    <script src="/assets/js/modules/cartorio/cartas-expedidas/datajud-api.js"></script>
+    <script src="/assets/js/modules/datajud/cnj.js"></script>
+    <script src="/assets/js/modules/datajud/datajud-cycle-helper.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/datajud/datajud-cycle-helper.js') ?: time(); ?>"></script>
+    <script src="/assets/js/modules/datajud/datajud-api.js"></script>
     <script>
         (function () {
             const reuId = document.getElementById('hidden-grp-id')?.value || '';

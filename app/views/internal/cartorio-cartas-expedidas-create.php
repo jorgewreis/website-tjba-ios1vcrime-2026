@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 declare(strict_types=1);
 
 require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
@@ -144,7 +144,7 @@ try {
             </div>
             <div class="col">
                 <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
-                <input type="text" class="width-600 height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>                
+                <input type="text" class="width-600 height-md" id="filter-classe" data-datajud-related="true" placeholder="Preenchido automaticamente pelo DataJud" readonly>                
             </div>
             <div class="col">
                 <label for="filter-tipo">Finalidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
@@ -232,7 +232,7 @@ try {
         <!-- Ações -->
         <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
             <button class="btn btn-primary-outline" id="alterar-regra-btn" style="display: none;">Alterar regra de envio</button> <!-- visível apenas para usuários com permissão de administrador -->
-            <button class="btn btn-secondary" id="voltar-btn">Voltar</button>
+            <button class="btn btn-secondary" id="voltar-btn" data-allow-during-loading="true">Voltar</button>
             <button class="btn btn-primary" id="cadastrar-btn" type="button">Cadastrar</button>
         </div>        
     </div>
@@ -257,8 +257,9 @@ try {
             }
         })();
     </script>
-    <script src="/assets/js/modules/cartorio/cartas-expedidas/cnj.js"></script>
-    <script src="/assets/js/modules/cartorio/cartas-expedidas/datajud-api.js"></script>
+    <script src="/assets/js/modules/datajud/cnj.js"></script>
+    <script src="/assets/js/modules/datajud/datajud-cycle-helper.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/datajud/datajud-cycle-helper.js') ?: time(); ?>"></script>
+    <script src="/assets/js/modules/datajud/datajud-api.js"></script>
     <script>
         (function () {
             var processoInput = document.getElementById('filter-processo');

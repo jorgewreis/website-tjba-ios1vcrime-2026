@@ -30,9 +30,10 @@
 ## Reaproveitamento técnico obrigatório
 
 - Priorizar componentes/fluxos já consolidados no projeto:
-  - `cnj.js`
-  - `datajud-api.js`
-  - `text-formatter.js`
+  - `public/assets/js/modules/datajud/cnj.js`
+  - `public/assets/js/modules/datajud/datajud-cycle-helper.js` (antes de `datajud-api.js`)
+  - `public/assets/js/modules/datajud/datajud-api.js`
+  - `public/assets/js/shared/text-formatter.js`
   - Endpoints de vínculo processo-réu e busca de pessoas já existentes no domínio.
 - Evitar criação de variações locais quando já houver fluxo estável equivalente.
 

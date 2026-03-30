@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 declare(strict_types=1);
 
 header('Content-Type: text/html; charset=UTF-8');
@@ -349,6 +349,7 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                     <select
                         class="width-700 height-md white"
                         id="parte-nome-selecao"
+                        data-datajud-related="true"
                     >
                         <option value="__OUTRO__" selected>Outro (digite abaixo)</option>
                     </select>
@@ -579,8 +580,8 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
         <?php endforeach; ?>
 
         <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
-            <button type="button" class="btn btn-secondary" id="btn-audiencia-edit-voltar">Voltar</button>
-            <button type="button" class="btn btn-danger-outline" id="btn-audiencia-edit-cancelar">Cancelar audiência</button>
+            <button type="button" class="btn btn-secondary" id="btn-audiencia-edit-voltar" data-allow-during-loading="true">Voltar</button>
+            <button type="button" class="btn btn-danger-outline" id="btn-audiencia-edit-cancelar" data-allow-during-loading="true">Cancelar audiência</button>
             <button type="button" class="btn btn-danger" id="btn-audiencia-edit-excluir">Excluir audiência</button>
             <button type="button" class="btn btn-primary" id="btn-audiencia-edit-salvar">Salvar alterações</button>
         </div>
@@ -624,6 +625,7 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
     </script>
 
     <script src="/assets/js/shared/text-formatter.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/shared/text-formatter.js') ?: time(); ?>"></script>
+    <script src="/assets/js/modules/datajud/datajud-cycle-helper.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/datajud/datajud-cycle-helper.js') ?: time(); ?>"></script>
     <script src="/assets/js/modules/audiencias/pauta-edit.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-edit.js') ?: time(); ?>"></script>
 </body>
 </html>

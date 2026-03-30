@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 declare(strict_types=1);
 
 header('Content-Type: text/html; charset=UTF-8');
@@ -49,7 +49,7 @@ $horariosGrade = SalaAudienciasPautaService::horariosGradeCadastroAudiencia();
                 </div>
                 <div class="col filter">
                     <label for="audiencia-classe" id="processo-ap-info" aria-live="polite">Classe processual <span class="label-hint-automatizado">*automatizado</span></label>
-                    <input type="text" class="width-600 height-md" id="audiencia-classe" placeholder="Preenchido automaticamente pelo DataJud" readonly autocomplete="off">
+                    <input type="text" class="width-600 height-md" id="audiencia-classe" data-datajud-related="true" placeholder="Preenchido automaticamente pelo DataJud" readonly autocomplete="off">
                 </div>
             </div>
             <input type="hidden" id="hidden-classe-codigo" name="classe_codigo" value="">
@@ -96,7 +96,7 @@ $horariosGrade = SalaAudienciasPautaService::horariosGradeCadastroAudiencia();
             </div>
 
             <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
-                <button type="button" class="btn btn-secondary" id="btn-audiencia-voltar">Voltar</button>
+                <button type="button" class="btn btn-secondary" id="btn-audiencia-voltar" data-allow-during-loading="true">Voltar</button>
                 <button type="button" class="btn btn-primary" id="btn-audiencia-cadastrar">Cadastrar</button>
             </div>
         </form>
@@ -110,8 +110,9 @@ $horariosGrade = SalaAudienciasPautaService::horariosGradeCadastroAudiencia();
         </div>
     </div>
 
-    <script src="/assets/js/modules/cartorio/cartas-expedidas/cnj.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/cartorio/cartas-expedidas/cnj.js') ?: time(); ?>"></script>
-    <script src="/assets/js/modules/cartorio/cartas-expedidas/datajud-api.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/cartorio/cartas-expedidas/datajud-api.js') ?: time(); ?>"></script>
+    <script src="/assets/js/modules/datajud/cnj.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/datajud/cnj.js') ?: time(); ?>"></script>
+    <script src="/assets/js/modules/datajud/datajud-cycle-helper.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/datajud/datajud-cycle-helper.js') ?: time(); ?>"></script>
+    <script src="/assets/js/modules/datajud/datajud-api.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/datajud/datajud-api.js') ?: time(); ?>"></script>
     <script src="/assets/js/modules/audiencias/pauta-create.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-create.js') ?: time(); ?>"></script>
 </body>
 </html>

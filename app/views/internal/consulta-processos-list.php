@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 declare(strict_types=1);
 
 header('Content-Type: text/html; charset=UTF-8');
@@ -80,7 +80,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
 
         <?php include __DIR__ . '/_toast_script.php'; ?>
         <?php include __DIR__ . '/_copy_process_script.php'; ?>
-        <script src="/assets/js/modules/cartorio/cartas-expedidas/cnj.js"></script>
+        <script src="/assets/js/modules/datajud/cnj.js"></script>
     </head>
 <body class="page-internal">
 

@@ -307,6 +307,7 @@
             var val = String(select.value || '').trim();
             if (val === '__OUTRO__') {
                 // Selecionou "Outro": mostra input e oculta select.
+                select.classList.remove('status-finished');
                 input.style.display = '';
                 input.readOnly = false;
                 input.focus();
@@ -338,112 +339,198 @@
             return;
         }
 
+        if (typeof window.DataJudCycle === 'undefined') {
+            console.error('pauta-edit.js: DataJudCycle não encontrado. Inclua /assets/js/modules/datajud/datajud-cycle-helper.js antes deste script.');
+            select.disabled = false;
+            return;
+        }
+
+        var DC = window.DataJudCycle;
         var API_ENDPOINT = '/api/datajud/search-processo.php';
-        var body = { numero: digits };
 
-        fetch(API_ENDPOINT, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'same-origin',
-            body: JSON.stringify(body)
-        })
-            .then(function (r) {
-                return r.text().then(function (txt) {
-                    var parsed = null;
-                    var parseError = null;
-                    try {
-                        parsed = txt ? JSON.parse(txt) : null;
-                    } catch (e) {
-                        parseError = e ? (e.message || 'json-parse-error') : 'json-parse-error';
-                    }
-                    return { ok: r.ok, status: r.status, statusText: r.statusText, j: parsed, raw: txt, parseError: parseError };
-                });
+        DC.cancelPrevious();
+        var myOpId = DC.getOperationId();
+        var session = DC.startSelectLoading(select);
+
+        function applyManualFallback(toastPayload) {
+            DC.endSelectCycleUi(session);
+            DC.clearSelectLoading(select);
+            select.classList.remove('status-finished');
+            select.dataset.hasDatajudParts = '0';
+            select.dataset.firstDatajudValue = '';
+            select.innerHTML = '<option value="__OUTRO__" selected>Outro (digite abaixo)</option>';
+            select.value = '__OUTRO__';
+            select.disabled = true;
+            select.style.display = 'none';
+
+            input.value = '';
+            input.style.display = '';
+            input.readOnly = false;
+            input.placeholder = 'Digite o nome da parte';
+            if (toastPayload && typeof showToast === 'function') {
+                showToast(toastPayload);
+            }
+        }
+
+        function signatureNome(n) {
+            var s = String(n || '').trim().toLowerCase();
+            try {
+                s = s.replace(/[^\p{L}\p{N}]+/gu, '');
+            } catch (e) {
+                s = s.replace(/[^a-z0-9]+/gi, '');
+            }
+            return s;
+        }
+
+        function fetchAttempt(attemptIndex) {
+            if (DC.isStaleOperation(myOpId)) {
+                return Promise.resolve();
+            }
+
+            var controller = new AbortController();
+            DC.registerFetchController(controller);
+            var tid = setTimeout(function () {
+                DC.setPendingAbortReason('timeout');
+                controller.abort();
+            }, DC.FETCH_TIMEOUT_MS);
+
+            return fetch(API_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify({ numero: digits }),
+                signal: controller.signal,
             })
-            .then(function (res) {
-                if (res.parseError) throw new Error('Resposta inválida da API local de DataJud.');
-                if (!res.ok) throw new Error((res.j && res.j.error) ? res.j.error : 'Erro ao consultar DataJud.');
-                var data = res.j && res.j.data ? res.j.data : null;
-                var nomes = [];
-                if (data && Array.isArray(data.polo_passivo)) {
-                    nomes = data.polo_passivo;
-                }
-                nomes = dedupeStrings(nomes).sort(function (a, b) { return a.localeCompare(b, 'pt-BR'); });
-
-                // Filtra do select apenas nomes que ainda não existem na lista de partes.
-                // Regra pedida: se já existir na audiência/processo, não deve aparecer no select.
-                var nomesAntesFiltro = nomes.length;
-                var existingSigs = Array.isArray(window.PAUTA_EXISTING_PART_NAMES_SIGS) ? window.PAUTA_EXISTING_PART_NAMES_SIGS : [];
-                var existingSet = new Set(existingSigs);
-                function signatureNome(n) {
-                    var s = String(n || '').trim().toLowerCase();
-                    try {
-                        // Unicode property escapes (modern browsers).
-                        s = s.replace(/[^\p{L}\p{N}]+/gu, '');
-                    } catch (e) {
-                        // fallback simples (ASCII).
-                        s = s.replace(/[^a-z0-9]+/gi, '');
-                    }
-                    return s;
-                }
-                nomes = nomes.filter(function (nome) {
-                    var sig = signatureNome(nome);
-                    return sig && !existingSet.has(sig);
-                });
-
-
-                if (nomes.length > 0) {
-                    // Lista encontrada: mostra só select e oculta input.
-                    var options = '';
-                    nomes.forEach(function (n) {
-                        var safeVal = escapeHtml(n);
-                        options += '<option value="' + safeVal + '">' + safeVal + '</option>';
+                .then(function (r) {
+                    return r.text().then(function (txt) {
+                        var parsed = null;
+                        var parseError = null;
+                        try {
+                            parsed = txt ? JSON.parse(txt) : null;
+                        } catch (e) {
+                            parseError = e ? (e.message || 'json-parse-error') : 'json-parse-error';
+                        }
+                        return { ok: r.ok, status: r.status, j: parsed, parseError: parseError };
                     });
-                    options += '<option value="__OUTRO__">Outro (digite abaixo)</option>';
-                    select.innerHTML = options;
+                })
+                .then(function (res) {
+                    if (DC.isStaleOperation(myOpId)) {
+                        return;
+                    }
+                    if (res.parseError) {
+                        var pe = new Error('parse');
+                        pe.code = 'parse';
+                        throw pe;
+                    }
+                    if (!res.ok) {
+                        var he = new Error('http');
+                        he.isHttp = true;
+                        he.msg = (res.j && res.j.error) ? res.j.error : 'Erro ao consultar DataJud.';
+                        throw he;
+                    }
+                    var data = res.j && res.j.data ? res.j.data : null;
+                    var nomes = [];
+                    if (data && Array.isArray(data.polo_passivo)) {
+                        nomes = data.polo_passivo;
+                    }
+                    nomes = dedupeStrings(nomes).sort(function (a, b) { return a.localeCompare(b, 'pt-BR'); });
 
-                    select.dataset.hasDatajudParts = '1';
-                    select.dataset.firstDatajudValue = nomes[0] || '';
+                    var existingSigs = Array.isArray(window.PAUTA_EXISTING_PART_NAMES_SIGS) ? window.PAUTA_EXISTING_PART_NAMES_SIGS : [];
+                    var existingSet = new Set(existingSigs);
+                    nomes = nomes.filter(function (nome) {
+                        var sig = signatureNome(nome);
+                        return sig && !existingSet.has(sig);
+                    });
 
-                    select.value = nomes[0] || '';
-                    input.value = normalizeSelectedName(select.value || '');
+                    DC.endSelectCycleUi(session);
+                    DC.clearSelectLoading(select);
 
-                    select.disabled = false;
-                    select.style.display = '';
-                    input.style.display = 'none';
-                    input.readOnly = true;
-                } else {
-                    // Nenhuma parte retornada: oculta select e mostra input.
-                    select.dataset.hasDatajudParts = '0';
-                    select.dataset.firstDatajudValue = '';
+                    if (nomes.length > 0) {
+                        var options = '';
+                        nomes.forEach(function (n) {
+                            var safeVal = escapeHtml(n);
+                            options += '<option value="' + safeVal + '">' + safeVal + '</option>';
+                        });
+                        options += '<option value="__OUTRO__">Outro (digite abaixo)</option>';
+                        select.innerHTML = options;
 
-                    select.innerHTML = '<option value="__OUTRO__" selected>Outro (digite abaixo)</option>';
-                    select.value = '__OUTRO__';
-                    select.disabled = true;
-                    select.style.display = 'none';
+                        select.dataset.hasDatajudParts = '1';
+                        select.dataset.firstDatajudValue = nomes[0] || '';
 
-                    input.value = '';
-                    input.style.display = '';
-                    input.readOnly = false;
-                    input.placeholder = 'Digite o nome da parte';
-                }
-            })
-            .catch(function () {
-                // Se falhar, mantém o input livre (sem bloquear usuário).
-                if (typeof showToast === 'function') {
-                    showToast({ type: 'info', variant: 'full', title: 'DataJud', message: 'Nao foi possivel consultar nomes do processo no DataJud. Voce pode digitar manualmente.' });
-                }
-                select.dataset.hasDatajudParts = '0';
-                select.dataset.firstDatajudValue = '';
-                select.innerHTML = '<option value="__OUTRO__" selected>Outro (digite abaixo)</option>';
-                select.value = '__OUTRO__';
-                select.disabled = true;
-                select.style.display = 'none';
+                        select.value = nomes[0] || '';
+                        input.value = normalizeSelectedName(select.value || '');
 
-                input.value = '';
-                input.style.display = '';
-                input.readOnly = false;
-                input.placeholder = 'Digite o nome da parte';
-            });
+                        select.classList.add('status-finished');
+                        select.disabled = false;
+                        select.style.display = '';
+                        input.style.display = 'none';
+                        input.readOnly = true;
+                    } else {
+                        select.dataset.hasDatajudParts = '0';
+                        select.dataset.firstDatajudValue = '';
+
+                        select.innerHTML = '<option value="__OUTRO__" selected>Outro (digite abaixo)</option>';
+                        select.value = '__OUTRO__';
+                        select.disabled = true;
+                        select.style.display = 'none';
+
+                        input.value = '';
+                        input.style.display = '';
+                        input.readOnly = false;
+                        input.placeholder = 'Digite o nome da parte';
+                    }
+                })
+                .catch(function (err) {
+                    if (DC.isStaleOperation(myOpId)) {
+                        return;
+                    }
+                    if (err.name === 'AbortError') {
+                        var reason = DC.consumeAbortReason();
+                        if (reason === 'user') {
+                            return;
+                        }
+                        if (reason === 'timeout' && attemptIndex < DC.MAX_FETCH_ATTEMPTS) {
+                            return fetchAttempt(attemptIndex + 1);
+                        }
+                        if (reason === 'timeout') {
+                            applyManualFallback(typeof showToast === 'function' ? {
+                                type: 'info',
+                                variant: 'simple',
+                                message: DC.MSG_NO_RESULT,
+                            } : null);
+                        }
+                        return;
+                    }
+                    console.error('DataJud (partes) falhou', err);
+                    if (err && err.code === 'parse') {
+                        applyManualFallback(typeof showToast === 'function' ? {
+                            type: 'error',
+                            variant: 'simple',
+                            message: DC.MSG_HTTP_GENERIC,
+                        } : null);
+                        return;
+                    }
+                    if (err && err.isHttp) {
+                        applyManualFallback(typeof showToast === 'function' ? {
+                            type: 'error',
+                            variant: 'simple',
+                            message: err.msg || DC.MSG_HTTP_GENERIC,
+                        } : null);
+                        return;
+                    }
+                    applyManualFallback(typeof showToast === 'function' ? {
+                        type: 'info',
+                        variant: 'simple',
+                        message: 'Não foi possível consultar nomes do processo no DataJud. Você pode digitar manualmente.',
+                    } : null);
+                })
+                .finally(function () {
+                    clearTimeout(tid);
+                    DC.clearFetchController();
+                });
+        }
+
+        fetchAttempt(1);
     }
 
     initParteNomeDatajudSelect();

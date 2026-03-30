@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 declare(strict_types=1);
 
 header('Content-Type: text/html; charset=UTF-8');
@@ -47,7 +47,7 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
                 </div>
                 <div class="col">
                     <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
-                    <input type="text" class="width-600 height-md" id="filter-classe" name="classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>
+                    <input type="text" class="width-600 height-md" id="filter-classe" data-datajud-related="true" name="classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>
                 </div>
             </div>
             <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
@@ -68,7 +68,7 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
             <p class="minor-info" id="gab-mon-reu-hint" style="margin:0;">Com processo válido, o sistema carrega os réus vinculados; se não houver cadastro, informe o nome completo.</p>
 
             <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
-                <button type="button" class="btn btn-secondary" id="btn-gab-mon-voltar">Voltar</button>
+                <button type="button" class="btn btn-secondary" id="btn-gab-mon-voltar" data-allow-during-loading="true">Voltar</button>
                 <button type="button" class="btn btn-primary" id="btn-gab-mon-registrar">Registrar</button>
             </div>
         </div>
@@ -82,8 +82,9 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
         </div>
     </div>
 
-    <script src="/assets/js/modules/cartorio/cartas-expedidas/cnj.js"></script>
-    <script src="/assets/js/modules/cartorio/cartas-expedidas/datajud-api.js"></script>
+    <script src="/assets/js/modules/datajud/cnj.js"></script>
+    <script src="/assets/js/modules/datajud/datajud-cycle-helper.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/datajud/datajud-cycle-helper.js') ?: time(); ?>"></script>
+    <script src="/assets/js/modules/datajud/datajud-api.js"></script>
     <script>
         (function () {
             const notify = (type, title, message) => {

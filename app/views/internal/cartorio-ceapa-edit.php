@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 declare(strict_types=1);
 
 require_once __DIR__ . '/../../services/CeapaService.php';
@@ -128,7 +128,7 @@ $podeExcluirTarefa = !$isEstagiarioEdit || $isCriadorTarefa;
                 </div>
                 <div class="col filter">
                     <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe processual</label>
-                    <input type="text" class="width-600 height-md<?php echo $lockClasse ? ' readonly' : ''; ?>" id="filter-classe" value="<?php echo htmlspecialchars($lockClasse ? $classeNome : '', ENT_QUOTES); ?>" placeholder="Preenchido automaticamente pelo DataJud" <?php echo $lockClasse ? 'readonly' : ''; ?>>
+                    <input type="text" class="width-600 height-md<?php echo $lockClasse ? ' readonly' : ''; ?>" id="filter-classe" data-datajud-related="true" value="<?php echo htmlspecialchars($lockClasse ? $classeNome : '', ENT_QUOTES); ?>" placeholder="Preenchido automaticamente pelo DataJud" <?php echo $lockClasse ? 'readonly' : ''; ?>>
                 </div>
             </div>
             <input type="hidden" id="hidden-classe-codigo" name="classe_codigo" value="<?php echo htmlspecialchars($classeCodigo, ENT_QUOTES); ?>">
@@ -183,7 +183,7 @@ $podeExcluirTarefa = !$isEstagiarioEdit || $isCriadorTarefa;
         <?php endif; ?>
 
         <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
-            <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
+            <button type="button" class="btn btn-secondary" id="voltar-btn" data-allow-during-loading="true">Voltar</button>
             <?php if ($errorMessage === ''): ?>
                 <?php if ($podeExcluirTarefa): ?>
                     <button type="button" class="btn btn-danger-outline" id="excluir-btn">Excluir</button>
@@ -202,8 +202,9 @@ $podeExcluirTarefa = !$isEstagiarioEdit || $isCriadorTarefa;
     </div>
 
     <?php if ($tarefa !== null): ?>
-    <script src="/assets/js/modules/cartorio/cartas-expedidas/cnj.js"></script>
-    <script src="/assets/js/modules/cartorio/cartas-expedidas/datajud-api.js"></script>
+    <script src="/assets/js/modules/datajud/cnj.js"></script>
+    <script src="/assets/js/modules/datajud/datajud-cycle-helper.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/datajud/datajud-cycle-helper.js') ?: time(); ?>"></script>
+    <script src="/assets/js/modules/datajud/datajud-api.js"></script>
     <script src="/assets/js/shared/text-formatter.js"></script>
     <script>
         (function () {
