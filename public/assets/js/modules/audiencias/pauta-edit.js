@@ -284,10 +284,35 @@
         return out;
     }
 
+    /** Evita nova consulta ao DataJud após reload quando o processo já retornou sem polo passivo nesta aba. */
+    var STORAGE_KEY_DATAJUD_SEM_POLO = 'salapauta.datajudSemPoloPassivo';
+
+    function readDatajudSemPoloPassivo(processDigits) {
+        try {
+            var raw = sessionStorage.getItem(STORAGE_KEY_DATAJUD_SEM_POLO);
+            if (!raw) return false;
+            var o = JSON.parse(raw);
+            return o && o[processDigits] === true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function writeDatajudSemPoloPassivo(processDigits) {
+        try {
+            var raw = sessionStorage.getItem(STORAGE_KEY_DATAJUD_SEM_POLO);
+            var o = raw ? JSON.parse(raw) : {};
+            if (!o || typeof o !== 'object') o = {};
+            o[processDigits] = true;
+            sessionStorage.setItem(STORAGE_KEY_DATAJUD_SEM_POLO, JSON.stringify(o));
+        } catch (e) {}
+    }
+
     function initParteNomeDatajudSelect() {
         var processoInput = document.getElementById('audiencia-edit-processo');
         var select = document.getElementById('parte-nome-selecao');
         var input = document.getElementById('parte-nome');
+        var statusEl = document.getElementById('parte-nome-datajud-status');
         if (!processoInput || !select || !input) return;
 
         function escapeHtml(str) {
@@ -305,6 +330,9 @@
 
         select.addEventListener('change', function () {
             var val = String(select.value || '').trim();
+            if (typeof window.DataJudCycle !== 'undefined' && val === window.DataJudCycle.DATAJUD_SELECT_LOADING_VALUE) {
+                return;
+            }
             if (val === '__OUTRO__') {
                 // Selecionou "Outro": mostra input e oculta select.
                 select.classList.remove('status-finished');
@@ -345,16 +373,7 @@
             return;
         }
 
-        var DC = window.DataJudCycle;
-        var API_ENDPOINT = '/api/datajud/search-processo.php';
-
-        DC.cancelPrevious();
-        var myOpId = DC.getOperationId();
-        var session = DC.startSelectLoading(select);
-
-        function applyManualFallback(toastPayload) {
-            DC.endSelectCycleUi(session);
-            DC.clearSelectLoading(select);
+        function applyNoDatajudPartesUi(toastPayload) {
             select.classList.remove('status-finished');
             select.dataset.hasDatajudParts = '0';
             select.dataset.firstDatajudValue = '';
@@ -367,9 +386,30 @@
             input.style.display = '';
             input.readOnly = false;
             input.placeholder = 'Digite o nome da parte';
+            if (statusEl && typeof window.DataJudCycle !== 'undefined') {
+                window.DataJudCycle.setFieldStatus(statusEl, '', null);
+            }
             if (toastPayload && typeof showToast === 'function') {
                 showToast(toastPayload);
             }
+        }
+
+        if (readDatajudSemPoloPassivo(digits)) {
+            applyNoDatajudPartesUi(null);
+            return;
+        }
+
+        var DC = window.DataJudCycle;
+        var API_ENDPOINT = '/api/datajud/search-processo.php';
+
+        DC.cancelPrevious();
+        var myOpId = DC.getOperationId();
+        var session = DC.startSelectLoading(select, statusEl);
+
+        function applyManualFallback(toastPayload) {
+            DC.endSelectCycleUi(session);
+            DC.clearSelectLoading(select);
+            applyNoDatajudPartesUi(toastPayload);
         }
 
         function signatureNome(n) {
@@ -435,6 +475,10 @@
                     }
                     nomes = dedupeStrings(nomes).sort(function (a, b) { return a.localeCompare(b, 'pt-BR'); });
 
+                    if (nomes.length === 0) {
+                        writeDatajudSemPoloPassivo(digits);
+                    }
+
                     var existingSigs = Array.isArray(window.PAUTA_EXISTING_PART_NAMES_SIGS) ? window.PAUTA_EXISTING_PART_NAMES_SIGS : [];
                     var existingSet = new Set(existingSigs);
                     nomes = nomes.filter(function (nome) {
@@ -465,19 +509,11 @@
                         select.style.display = '';
                         input.style.display = 'none';
                         input.readOnly = true;
+                        if (statusEl) {
+                            DC.setFieldStatus(statusEl, '*Nomes obtidos via DataJud', 'var(--color-success-active)');
+                        }
                     } else {
-                        select.dataset.hasDatajudParts = '0';
-                        select.dataset.firstDatajudValue = '';
-
-                        select.innerHTML = '<option value="__OUTRO__" selected>Outro (digite abaixo)</option>';
-                        select.value = '__OUTRO__';
-                        select.disabled = true;
-                        select.style.display = 'none';
-
-                        input.value = '';
-                        input.style.display = '';
-                        input.readOnly = false;
-                        input.placeholder = 'Digite o nome da parte';
+                        applyNoDatajudPartesUi(null);
                     }
                 })
                 .catch(function (err) {

@@ -16,6 +16,8 @@
     var MSG_EMPTY_CLASSE = 'Processo encontrado sem classe cadastrada no DataJud.';
     var PLACEHOLDER_LOADING = 'Consultando informações processuais...';
     var FALLBACK_CLASSE = 'Classe não informada';
+    /** Valor reservado da primeira opção do select enquanto a API DataJud carrega (ex.: nomes de partes). */
+    var DATAJUD_SELECT_LOADING_VALUE = '__DATAJUD_LOADING__';
 
     var operationId = 0;
     var activeFetchController = null;
@@ -110,6 +112,8 @@
         selectEl.classList.remove('status-finished');
         selectEl.classList.add('status-warning');
         selectEl.setAttribute('aria-busy', 'true');
+        selectEl.disabled = true;
+        selectEl.innerHTML = '<option value="' + DATAJUD_SELECT_LOADING_VALUE + '" selected disabled>' + PLACEHOLDER_LOADING + '</option>';
     }
 
     function clearSelectLoadingVisual(selectEl) {
@@ -130,6 +134,12 @@
         MSG_EMPTY_CLASSE: MSG_EMPTY_CLASSE,
         PLACEHOLDER_LOADING: PLACEHOLDER_LOADING,
         FALLBACK_CLASSE: FALLBACK_CLASSE,
+        DATAJUD_SELECT_LOADING_VALUE: DATAJUD_SELECT_LOADING_VALUE,
+
+        /** Atualiza texto auxiliar ao lado do rótulo (mesmo padrão do fluxo de classe processual). */
+        setFieldStatus: function (statusElement, message, colorVar) {
+            setStatusMessage(statusElement, message, colorVar);
+        },
 
         getOperationId: function () {
             return operationId;
@@ -289,25 +299,35 @@
             }
         },
 
-        /** Carregamento da lista de partes (audiências): select em estado de consulta. */
-        startSelectLoading: function (selectEl) {
+        /**
+         * Carregamento da lista de partes (audiências): select com placeholder e classes como o input de classe.
+         * @param {HTMLSelectElement} selectEl
+         * @param {HTMLElement|null} [statusElement] — span ou label filho para mensagem (ex.: “Consultando o DataJud…”).
+         */
+        startSelectLoading: function (selectEl, statusElement) {
             clearSlowToastTimer();
             buttonSnapshot = snapshotPageButtons();
             applyPageLock(buttonSnapshot);
             if (selectEl) {
                 setSelectLoadingState(selectEl);
             }
+            if (statusElement) {
+                setStatusMessage(statusElement, 'Consultando o DataJud...', 'var(--color-warning-active)');
+            }
             slowToastTimer = setTimeout(function () {
                 slowToastTimer = null;
                 showDataToast(MSG_SLOW, 'info');
             }, SLOW_TOAST_MS);
-            return { buttonSnapshot: buttonSnapshot };
+            return { buttonSnapshot: buttonSnapshot, statusElement: statusElement || null };
         },
 
         endSelectCycleUi: function (session) {
             clearSlowToastTimer();
             restorePageLock(session && session.buttonSnapshot);
             buttonSnapshot = null;
+            if (session && session.statusElement) {
+                setStatusMessage(session.statusElement, '', null);
+            }
         },
 
         clearSelectLoading: function (selectEl) {

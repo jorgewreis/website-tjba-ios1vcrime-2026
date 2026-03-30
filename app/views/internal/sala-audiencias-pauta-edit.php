@@ -345,7 +345,7 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
         <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
-                    <label for="parte-nome">Nome da parte <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <label for="parte-nome-selecao">Nome da parte <span class="label-hint-obrigatorio">*obrigatório</span> <span id="parte-nome-datajud-status" class="label-hint-automatizado" aria-live="polite"></span></label>
                     <select
                         class="width-700 height-md white"
                         id="parte-nome-selecao"
