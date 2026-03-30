@@ -284,29 +284,43 @@
         return out;
     }
 
-    /** Evita nova consulta ao DataJud após reload quando o processo já retornou sem polo passivo nesta aba. */
-    var STORAGE_KEY_DATAJUD_SEM_POLO = 'salapauta.datajudSemPoloPassivo';
+    /**
+     * Cache DataJud de partes por sessão (por aba). Evita re-consulta a cada reload após adicionar parte.
+     * Estrutura: { "20digits": null | ["Nome1", ...] }
+     *   null  → DataJud retornou sem polo passivo
+     *   array → nomes encontrados (antes do filtro de partes já cadastradas)
+     */
+    var STORAGE_KEY_DATAJUD_POLO = 'salapauta.datajudPoloPassivo';
 
-    function readDatajudSemPoloPassivo(processDigits) {
+    function readDatajudCache(processDigits) {
         try {
-            var raw = sessionStorage.getItem(STORAGE_KEY_DATAJUD_SEM_POLO);
-            if (!raw) return false;
+            var raw = sessionStorage.getItem(STORAGE_KEY_DATAJUD_POLO);
+            if (!raw) return undefined;
             var o = JSON.parse(raw);
-            return o && o[processDigits] === true;
+            if (!o || typeof o !== 'object') return undefined;
+            if (!(processDigits in o)) return undefined;
+            return o[processDigits]; // null ou array
         } catch (e) {
-            return false;
+            return undefined;
         }
     }
 
-    function writeDatajudSemPoloPassivo(processDigits) {
+    function writeDatajudCache(processDigits, nomes) {
         try {
-            var raw = sessionStorage.getItem(STORAGE_KEY_DATAJUD_SEM_POLO);
-            var o = raw ? JSON.parse(raw) : {};
-            if (!o || typeof o !== 'object') o = {};
-            o[processDigits] = true;
-            sessionStorage.setItem(STORAGE_KEY_DATAJUD_SEM_POLO, JSON.stringify(o));
+            var raw = sessionStorage.getItem(STORAGE_KEY_DATAJUD_POLO);
+            var o = (raw ? JSON.parse(raw) : null) || {};
+            if (typeof o !== 'object') o = {};
+            o[processDigits] = Array.isArray(nomes) ? nomes : null;
+            sessionStorage.setItem(STORAGE_KEY_DATAJUD_POLO, JSON.stringify(o));
         } catch (e) {}
     }
+
+    /** Mantém compatibilidade com chave legada criada em conversas anteriores. */
+    var STORAGE_KEY_DATAJUD_SEM_POLO_LEGACY = 'salapauta.datajudSemPoloPassivo';
+    function clearLegacyStorage() {
+        try { sessionStorage.removeItem(STORAGE_KEY_DATAJUD_SEM_POLO_LEGACY); } catch (e) {}
+    }
+    clearLegacyStorage();
 
     function initParteNomeDatajudSelect() {
         var processoInput = document.getElementById('audiencia-edit-processo');
@@ -394,8 +408,46 @@
             }
         }
 
-        if (readDatajudSemPoloPassivo(digits)) {
-            applyNoDatajudPartesUi(null);
+        var cached = readDatajudCache(digits);
+        if (cached !== undefined) {
+            if (!Array.isArray(cached) || cached.length === 0) {
+                applyNoDatajudPartesUi(null);
+                return;
+            }
+            var cachedExistingSigs = Array.isArray(window.PAUTA_EXISTING_PART_NAMES_SIGS) ? window.PAUTA_EXISTING_PART_NAMES_SIGS : [];
+            var cachedExistingSet = new Set(cachedExistingSigs);
+            function signatureNomeCached(n) {
+                var s = String(n || '').trim().toLowerCase();
+                try { s = s.replace(/[^\p{L}\p{N}]+/gu, ''); } catch (e) { s = s.replace(/[^a-z0-9]+/gi, ''); }
+                return s;
+            }
+            var filteredCached = cached.filter(function (nome) {
+                var sig = signatureNomeCached(nome);
+                return sig && !cachedExistingSet.has(sig);
+            });
+            if (filteredCached.length === 0) {
+                applyNoDatajudPartesUi(null);
+                return;
+            }
+            var optionsCached = '';
+            filteredCached.forEach(function (n) {
+                var safeVal = escapeHtml(n);
+                optionsCached += '<option value="' + safeVal + '">' + safeVal + '</option>';
+            });
+            optionsCached += '<option value="__OUTRO__">Outro (digite abaixo)</option>';
+            select.innerHTML = optionsCached;
+            select.dataset.hasDatajudParts = '1';
+            select.dataset.firstDatajudValue = filteredCached[0] || '';
+            select.value = filteredCached[0] || '';
+            input.value = normalizeSelectedName(select.value || '');
+            select.classList.add('status-finished');
+            select.disabled = false;
+            select.style.display = '';
+            input.style.display = 'none';
+            input.readOnly = true;
+            if (statusEl && typeof window.DataJudCycle !== 'undefined') {
+                window.DataJudCycle.setFieldStatus(statusEl, '*Nomes obtidos via DataJud', 'var(--color-success-active)');
+            }
             return;
         }
 
@@ -475,9 +527,8 @@
                     }
                     nomes = dedupeStrings(nomes).sort(function (a, b) { return a.localeCompare(b, 'pt-BR'); });
 
-                    if (nomes.length === 0) {
-                        writeDatajudSemPoloPassivo(digits);
-                    }
+                    // Grava o resultado bruto (antes do filtro de partes já cadastradas) para reuso no reload.
+                    writeDatajudCache(digits, nomes);
 
                     var existingSigs = Array.isArray(window.PAUTA_EXISTING_PART_NAMES_SIGS) ? window.PAUTA_EXISTING_PART_NAMES_SIGS : [];
                     var existingSet = new Set(existingSigs);
