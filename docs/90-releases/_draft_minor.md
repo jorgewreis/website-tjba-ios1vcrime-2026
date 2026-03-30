@@ -117,4 +117,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **style(toast): enhance toast component styles and remove obsolete JavaScript file** `[58fa8dd]`
 - **refactor(views): update input fields to include data attributes for DataJud integration and replace obsolete script references with new module paths** `[0c8e637]`
 - **feat(cartorio): implement automatic allocation rules for CEAPA and Ofícios, including user permission checks and UI updates** `[f6e498d]`
+- **feat(cartorio): refactor user allocation logic to utilize AlocacaoRegrasUsuariosHelper for eligibility checks and streamline user list retrieval across multiple views** `[5f46ccc]`
 
