@@ -37,4 +37,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(datajud): enhance process and class synchronization flow with DataJud integration, including automatic class retrieval, validation improvements, and updated documentation** `[85537b0]`
 - **refactor(datajud): update synchronization feedback and toast handling, improving user experience during class retrieval and error scenarios** `[7b77dc6]`
 - **feat(datajud): implement enhanced loading and error handling for class retrieval, including dynamic placeholders and retry logic for DataJud API calls** `[d1a3489]`
+- **refactor(datajud): improve class placeholder handling and normalization for DataJud integration, ensuring case-insensitive comparisons and updated documentation** `[89e6f01]`
 
