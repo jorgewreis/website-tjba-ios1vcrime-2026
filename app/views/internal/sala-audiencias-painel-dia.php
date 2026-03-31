@@ -55,20 +55,21 @@ $dataTitulo = $diasSemana[(int) $dtHoje->format('w')] . ', ' . $dtHoje->format('
         <?php include __DIR__ . '/_copy_process_script.php'; ?>
         <style>
             .timeline-day-ruler { padding: 8px 0 4px; }
-            .timeline-day-ruler-track { position: relative; height: 26px; border-radius: 999px; background: #eef2f6; overflow: hidden; }
+            .timeline-day-ruler-track { position: relative; height: 26px; border-radius: 4px; background: #eef2f6; overflow: hidden; }
             .timeline-day-ruler-shade { position: absolute; top: 0; height: 100%; background: rgba(71,84,103,.18); z-index: 0; }
-            .timeline-day-ruler-hour-tick { position: absolute; top: 0; width: 1px; height: 100%; background: rgba(71,84,103,.22); }
+            .timeline-day-ruler-hour-tick { position: absolute; bottom: 0; width: 1px; height: 3px; background: rgba(20,20,20,.3); }
             .timeline-day-ruler-hour-tick.hidden { opacity: 0; }
-            .timeline-day-ruler-now { position: absolute; top: 0; width: 1px; height: 100%; background: rgba(17,24,39,.45); z-index: 4; }
-            .timeline-day-ruler-bar-prev { position: absolute; top: 5px; height: 12px; border-radius: 999px; background: #8db8ff; opacity: .7; }
-            .timeline-day-ruler-bar-real { position: absolute; top: 8px; height: 8px; border-radius: 999px; background: #2b7a4b; opacity: .95; z-index: 3; }
-            .timeline-day-ruler-bar-real.late { background: #d14343; }
-            .timeline-day-ruler-bar-real.early { background: #7c5cff; }
+            .timeline-day-ruler-now { position: absolute; top: 0; width: 3px; height: 100%; background: rgba(20,20,20,.30); z-index: 4; }
+            .timeline-day-ruler-bar-prev { position: absolute; top: 4px; height: 18px; border-radius: 4px; border: 1px solid #20202060; background: #20202050; }
+            .timeline-day-ruler-bar-real { position: absolute; top: 8px; height: 8px; border-radius: 4px; background: var(--color-primary); opacity: .95; z-index: 3; }
+            .timeline-day-ruler-bar-real.late { background: var(--color-primary-active); }
+            .timeline-day-ruler-bar-real.early { background: var(--color-primary-active); }
             .timeline-day-ruler-labels { position: relative; margin-top: 6px; height: 14px; font-size: 11px; color: #667085; font-family: monospace; }
             .timeline-day-ruler-label { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
             .timeline-day-ruler-label.hidden { opacity: 0; }
             .timeline-day-ruler-legend { margin-top: 6px; display: flex; gap: 12px; align-items: center; font-size: 11px; color: #667085; }
             .timeline-day-ruler-legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+            .timeline-day-ruler-empty { font-size: 12px; color: #667085; }
         </style>
     </head>
 <body class="page-internal">
@@ -390,16 +391,14 @@ $dataTitulo = $diasSemana[(int) $dtHoje->format('w')] . ', ' . $dtHoje->format('
                     : '';
                 root.innerHTML =
                     `<div class="timeline-day-ruler-track">
-                        <span class="timeline-day-ruler-shade" style="left:0%;width:10%"></span>
-                        <span class="timeline-day-ruler-shade" style="left:90%;width:10%"></span>
+                        <span class="timeline-day-ruler-shade" style="left:0%;width:9%"></span>
+                        <span class="timeline-day-ruler-shade" style="left:91%;width:9%"></span>
                         ${tickHtml}${prevHtml.join('')}${realHtml.join('')}${nowHtml}
                      </div>
                      <div class="timeline-day-ruler-labels">${labelsHtml}</div>
                      <div class="timeline-day-ruler-legend">
-                       <span><i class="timeline-day-ruler-legend-dot" style="background:#8db8ff"></i> Previsto</span>
-                       <span><i class="timeline-day-ruler-legend-dot" style="background:#2b7a4b"></i> Real no horário</span>
-                       <span><i class="timeline-day-ruler-legend-dot" style="background:#d14343"></i> Atraso</span>
-                       <span><i class="timeline-day-ruler-legend-dot" style="background:#7c5cff"></i> Adiantamento</span>
+                       <span><i class="timeline-day-ruler-legend-dot" style="background: #20202050"></i> Previsto</span>
+                       <span><i class="timeline-day-ruler-legend-dot" style="background: var(--color-primary)"></i> Real</span>
                      </div>`;
             }
             function refreshTimelineData() {
