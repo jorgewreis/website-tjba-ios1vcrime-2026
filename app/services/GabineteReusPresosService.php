@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../repositories/GabineteReuPresoRepository.php';
 require_once __DIR__ . '/../repositories/GabineteReuPresoProcessoRepository.php';
 require_once __DIR__ . '/../repositories/GabineteReuPresoMovimentacaoRepository.php';
+require_once __DIR__ . '/../repositories/SalaAudienciasPautaRepository.php';
 require_once __DIR__ . '/ProcessoPrioridadesService.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
@@ -34,6 +35,7 @@ final class GabineteReusPresosService
     private GabineteReuPresoRepository $reuRepo;
     private GabineteReuPresoProcessoRepository $procRepo;
     private GabineteReuPresoMovimentacaoRepository $movRepo;
+    private SalaAudienciasPautaRepository $pautaRepo;
     private ?ProcessoPrioridadesService $processoPrioridadesService = null;
     private ProcessosRepository $processosRepository;
     private ClassesRepository $classesRepository;
@@ -46,6 +48,7 @@ final class GabineteReusPresosService
         $this->reuRepo = new GabineteReuPresoRepository($connection);
         $this->procRepo = new GabineteReuPresoProcessoRepository($connection);
         $this->movRepo = new GabineteReuPresoMovimentacaoRepository($connection);
+        $this->pautaRepo = new SalaAudienciasPautaRepository($connection);
         $this->processosRepository = new ProcessosRepository($connection);
         $this->classesRepository = new ClassesRepository($connection);
         $this->partesRepository = new PartesRepository($connection);
@@ -272,7 +275,94 @@ final class GabineteReusPresosService
             : [];
         foreach ($movs as $k => $m) {
             $movs[$k]['tipo_label'] = $this->labelTipoMovimentacao((string) ($m['tipo_codigo'] ?? ''));
+            $movs[$k]['is_virtual'] = false;
         }
+
+        if ($principalProcessoId !== '') {
+            $audiencias = $this->pautaRepo->listByProcessoId($principalProcessoId);
+            foreach ($audiencias as $aud) {
+                $statusRaw = strtolower(trim((string) ($aud['status'] ?? '')));
+                if ($statusRaw === 'agendada') {
+                    $statusRaw = 'designada';
+                } elseif ($statusRaw === 'adiada') {
+                    $statusRaw = 'redesignada';
+                }
+
+                $tipoAud = trim((string) ($aud['tipo_audiencia'] ?? ''));
+                $horaAudRaw = trim((string) ($aud['hora_audiencia'] ?? ''));
+                $horaAud = '—';
+                if (preg_match('/^(\d{1,2}):(\d{2})/', $horaAudRaw, $hm)) {
+                    $horaAud = sprintf('%02d:%02d', (int) $hm[1], (int) $hm[2]);
+                }
+
+                $descricao = 'Audiência';
+                if ($statusRaw === 'designada') {
+                    $descricao = 'Audiência'
+                        . ($tipoAud !== '' ? ' de ' . $tipoAud : '')
+                        . ' designada para as ' . $horaAud;
+                } elseif ($statusRaw === 'em_andamento') {
+                    $descricao = 'Audiência em andamento';
+                } elseif ($statusRaw === 'finalizada' || $statusRaw === 'realizada') {
+                    $descricao = 'Audiência realizada';
+                } elseif ($statusRaw === 'redesignada') {
+                    $descricao = 'Audiência redesignada';
+                } elseif ($statusRaw === 'cancelada') {
+                    $descricao = 'Audiência cancelada';
+                }
+
+                $dataMov = trim((string) ($aud['data_audiencia'] ?? ''));
+                $createdAt = null;
+                if ($statusRaw === 'em_andamento') {
+                    $inicioEfetivo = trim((string) ($aud['data_hora_inicio_efetivo'] ?? ''));
+                    if ($inicioEfetivo !== '') {
+                        $dataMov = substr($inicioEfetivo, 0, 10);
+                        $createdAt = $inicioEfetivo;
+                    }
+                } elseif ($statusRaw === 'finalizada' || $statusRaw === 'realizada') {
+                    $fimEfetivo = trim((string) ($aud['data_hora_fim_efetivo'] ?? ''));
+                    if ($fimEfetivo !== '') {
+                        $dataMov = substr($fimEfetivo, 0, 10);
+                        $createdAt = $fimEfetivo;
+                    }
+                }
+
+                $movs[] = [
+                    'id' => 'AUD-' . trim((string) ($aud['id_pauta'] ?? '')),
+                    'reu_preso_id' => $id,
+                    'tipo_codigo' => 'audiencia_' . ($statusRaw !== '' ? $statusRaw : 'status'),
+                    'tipo_label' => $descricao,
+                    'data_movimentacao' => $dataMov,
+                    'observacoes' => null,
+                    'created_at' => $createdAt,
+                    'is_virtual' => true,
+                ];
+            }
+        }
+
+        usort($movs, static function (array $a, array $b): int {
+            $ta = strtotime((string) ($a['data_movimentacao'] ?? ''));
+            $tb = strtotime((string) ($b['data_movimentacao'] ?? ''));
+            if ($ta === false) {
+                $ta = 0;
+            }
+            if ($tb === false) {
+                $tb = 0;
+            }
+            if ($ta === $tb) {
+                $ca = strtotime((string) ($a['created_at'] ?? ''));
+                $cb = strtotime((string) ($b['created_at'] ?? ''));
+                if ($ca === false) {
+                    $ca = 0;
+                }
+                if ($cb === false) {
+                    $cb = 0;
+                }
+
+                return $cb <=> $ca;
+            }
+
+            return $tb <=> $ta;
+        });
 
         return [
             'reu' => $reu,

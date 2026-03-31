@@ -299,6 +299,31 @@ final class SalaAudienciasPautaRepository
         return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function listByProcessoId(string $processoId): array
+    {
+        $processoId = trim($processoId);
+        if ($processoId === '') {
+            return [];
+        }
+
+        $sql = sprintf(
+            'SELECT `id_pauta`, `tipo_audiencia`, `data_audiencia`, `hora_audiencia`, `status`, `data_hora_inicio_efetivo`, `data_hora_fim_efetivo`
+             FROM `%s`
+             WHERE `ativo` = 1
+               AND `processo` = :processo
+             ORDER BY `data_audiencia` DESC, `hora_audiencia` DESC',
+            $this->table
+        );
+        $st = $this->connection->prepare($sql);
+        $st->bindValue(':processo', $processoId);
+        $st->execute();
+
+        return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
     public function count(array $filters): int
     {
         [$where, $params] = $this->buildWhere($filters);
