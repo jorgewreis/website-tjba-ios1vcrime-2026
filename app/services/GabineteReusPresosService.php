@@ -746,6 +746,7 @@ final class GabineteReusPresosService
             $mov = $pid !== '' ? ($ultMap[$pid] ?? null) : null;
             $tipoLabel = $mov !== null ? $this->labelTipoMovimentacao((string) ($mov['tipo_codigo'] ?? '')) : '—';
             $dataBr = $mov !== null ? $this->formatDataMovimentoBr((string) ($mov['data_movimentacao'] ?? '')) : '—';
+            $obsMov = $mov !== null ? trim((string) ($mov['observacoes'] ?? '')) : '';
             $compacto = $numero !== '' && $classe !== ''
                 ? $numero . ' (' . $classe . ')'
                 : ($numero !== '' ? $numero : '—');
@@ -758,6 +759,7 @@ final class GabineteReusPresosService
                 'texto_compacto' => $compacto,
                 'ultima_movimentacao' => $tipoLabel,
                 'ultima_movimentacao_data' => $dataBr,
+                'ultima_movimentacao_observacao' => $obsMov,
             ];
         }
 

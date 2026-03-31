@@ -79,7 +79,7 @@ final class SalaAudienciasEstudanteInscricaoRepository
     }
 
     /**
-     * Audiências de hoje, designadas, elegíveis para inscrição, com flag se o usuário já está inscrito.
+     * Audiências de hoje para o painel do estudante, com flags de elegibilidade/inscrição.
      *
      * @return list<array<string, mixed>>
      */
@@ -100,7 +100,6 @@ final class SalaAudienciasEstudanteInscricaoRepository
             LEFT JOIN `' . $this->table . '` i ON i.`pauta` = a.`id_pauta` AND i.`usuario` = :u
             WHERE a.`ativo` = 1
               AND a.`data_audiencia` = CURDATE()
-              AND a.`status` IN (\'designada\', \'agendada\')
         ';
         $st = $this->connection->prepare($sql);
         $st->bindValue(':u', $idUsuario);

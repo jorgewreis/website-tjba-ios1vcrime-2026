@@ -285,7 +285,14 @@ if ($totalPages > 0) {
                         </div>
                         <div class="display-flex row row-fit justify-end gap-y-md grp-sub-right">
                             <div class="col">
-                                <span class="width-700 minor-info text-ellipsis"><?php echo htmlspecialchars((string) ($sl['ultima_movimentacao_data'] ?? '—') . ' — ' . ($sl['ultima_movimentacao'] ?? '—'), ENT_QUOTES); ?></span>
+                                <?php
+                                    $obsUltMov = trim((string) ($sl['ultima_movimentacao_observacao'] ?? ''));
+                                    $textoUltMov = (string) ($sl['ultima_movimentacao_data'] ?? '—') . ' — ' . (string) ($sl['ultima_movimentacao'] ?? '—');
+                                    if ($obsUltMov !== '') {
+                                        $textoUltMov .= ' (' . $obsUltMov . ')';
+                                    }
+                                ?>
+                                <span class="width-700 minor-info text-ellipsis"><?php echo htmlspecialchars($textoUltMov, ENT_QUOTES); ?></span>
                             </div>
                         </div>
                     </div>

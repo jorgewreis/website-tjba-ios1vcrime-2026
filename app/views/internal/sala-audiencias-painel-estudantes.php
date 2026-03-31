@@ -69,6 +69,35 @@ $minhasOffset = ($minhasPage - 1) * $itemsPerPage;
 $minhasPageRows = array_slice($minhasRows, $minhasOffset, $itemsPerPage);
 $minhasStartItem = $minhasTotal > 0 ? $minhasOffset + 1 : 0;
 $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
+function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string $horaAud, string $inicioRaw, string $fimRaw): string
+{
+    $status = trim(strtolower($statusRaw));
+    if ($status === 'agendada') {
+        $status = 'designada';
+    } elseif ($status === 'adiada') {
+        $status = 'redesignada';
+    }
+
+    $designadaTs = strtotime(trim($dataAud . ' ' . $horaAud));
+    $inicioTs = $inicioRaw !== '' ? strtotime($inicioRaw) : false;
+    $fimTs = $fimRaw !== '' ? strtotime($fimRaw) : false;
+
+    if ($status === 'finalizada' && $inicioTs !== false && $fimTs !== false && $fimTs >= $inicioTs) {
+        $duracaoMin = (int) floor(($fimTs - $inicioTs) / 60);
+
+        return date('H:i', $inicioTs) . ' - ' . date('H:i', $fimTs) . ' (' . $duracaoMin . 'min)';
+    }
+
+    if ($status === 'em_andamento' && $inicioTs !== false) {
+        return date('H:i', $inicioTs);
+    }
+
+    if ($designadaTs !== false) {
+        return date('H:i', $designadaTs);
+    }
+
+    return '—';
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -90,7 +119,7 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
             .timeline-day-ruler-now { position: absolute; top: 0; width: 3px; height: 100%; background: rgba(20,20,20,.30); z-index: 4; }
             .timeline-day-ruler-bar-prev { position: absolute; top: 4px; height: 18px; border-radius: 4px; border: 1px solid #20202060; background: #20202050; }
             .timeline-day-ruler-bar-real { position: absolute; top: 8px; height: 8px; border-radius: 4px; background: var(--color-primary); opacity: .95; z-index: 3; }
-            .timeline-day-ruler-bar-real.late { background: transparent; }
+            .timeline-day-ruler-bar-real.late { background: white; }
             .timeline-day-ruler-bar-real.early { background: var(--color-primary-active); }
             .timeline-day-ruler-labels { position: relative; margin-top: 6px; height: 14px; font-size: 11px; color: #667085; font-family: monospace; }
             .timeline-day-ruler-label { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
@@ -134,7 +163,7 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
         </div>
         <?php if (count($hojePageRows) === 0): ?>
         <div class="padding-x-lg padding-y-lg">
-            <p class="description-page">Não há audiências designadas para inscrição hoje ou você já está inscrito em todas as opções disponíveis.</p>
+            <p class="description-page">Não há audiências cadastradas para hoje.</p>
         </div>
         <?php endif; ?>
         <?php foreach ($hojePageRows as $row):
@@ -154,17 +183,13 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
             }
             $inicioEfetivoRaw = trim((string) ($row['data_hora_inicio_efetivo'] ?? ''));
             $fimEfetivoRaw = trim((string) ($row['data_hora_fim_efetivo'] ?? ''));
-            $inicioTs = $inicioEfetivoRaw !== '' ? strtotime($inicioEfetivoRaw) : false;
-            if ($inicioTs === false) {
-                $inicioFallback = trim((string) ($row['data_audiencia'] ?? '')) . ' ' . trim((string) ($row['hora_audiencia'] ?? ''));
-                $inicioTs = strtotime($inicioFallback);
-            }
-            $duracaoEstimada = max(5, (int) ($row['duracao_estimada_minutos'] ?? 0));
-            $previsaoTs = $inicioTs !== false ? ($inicioTs + ($duracaoEstimada * 60)) : false;
-            $fimTs = $fimEfetivoRaw !== '' ? strtotime($fimEfetivoRaw) : false;
-            $duracaoRealMin = ($inicioTs !== false && $fimTs !== false && $fimTs >= $inicioTs)
-                ? (int) floor(($fimTs - $inicioTs) / 60)
-                : $duracaoEstimada;
+            $horaExibicao = painelEstudanteHoraPorStatus(
+                $statusRow,
+                (string) ($row['data_audiencia'] ?? ''),
+                (string) ($row['hora_audiencia'] ?? ''),
+                $inicioEfetivoRaw,
+                $fimEfetivoRaw
+            );
             ?>
         <div class="display-flex col col-full register border-bottom" data-pauta="<?php echo $idPauta; ?>">
             <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center flex-wrap gap-y-sm">
@@ -181,13 +206,7 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
                     >
                         <span class="minor-info">Horario</span>
                         <div class="js-time-lines">
-                        <?php if ($statusRow === 'em_andamento' && $inicioTs !== false): ?>
-                        <span class="major-info"><?php echo htmlspecialchars(date('H:i', $inicioTs), ENT_QUOTES, 'UTF-8'); ?> - <?php echo htmlspecialchars($previsaoTs !== false ? date('H:i', $previsaoTs) : '--:--', ENT_QUOTES, 'UTF-8'); ?> (prev.)</span>
-                        <?php elseif ($statusRow === 'finalizada' && $inicioTs !== false && $fimTs !== false): ?>
-                        <span class="major-info"><?php echo htmlspecialchars(date('H:i', $inicioTs), ENT_QUOTES, 'UTF-8'); ?> - <?php echo htmlspecialchars(date('H:i', $fimTs), ENT_QUOTES, 'UTF-8'); ?> (<?php echo (int) $duracaoRealMin; ?>min)</span>
-                        <?php else: ?>
-                        <span class="major-info"><?php echo htmlspecialchars(substr((string) $row['hora_audiencia'], 0, 5), ENT_QUOTES, 'UTF-8'); ?></span>
-                        <?php endif; ?>
+                        <span class="major-info"><?php echo htmlspecialchars($horaExibicao, ENT_QUOTES, 'UTF-8'); ?></span>
                         </div>
                     </div>
                     <div class="col width-400 col-process process-info" title="clique para copiar">
@@ -315,17 +334,13 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
             }
             $inicioEfetivoRaw = trim((string) ($m['data_hora_inicio_efetivo'] ?? ''));
             $fimEfetivoRaw = trim((string) ($m['data_hora_fim_efetivo'] ?? ''));
-            $inicioTs = $inicioEfetivoRaw !== '' ? strtotime($inicioEfetivoRaw) : false;
-            if ($inicioTs === false) {
-                $inicioFallback = trim((string) ($m['data_audiencia'] ?? '')) . ' ' . trim((string) ($m['hora_audiencia'] ?? ''));
-                $inicioTs = strtotime($inicioFallback);
-            }
-            $duracaoEstimada = max(5, (int) ($m['duracao_estimada_minutos'] ?? 0));
-            $previsaoTs = $inicioTs !== false ? ($inicioTs + ($duracaoEstimada * 60)) : false;
-            $fimTs = $fimEfetivoRaw !== '' ? strtotime($fimEfetivoRaw) : false;
-            $duracaoRealMin = ($inicioTs !== false && $fimTs !== false && $fimTs >= $inicioTs)
-                ? (int) floor(($fimTs - $inicioTs) / 60)
-                : $duracaoEstimada;
+            $horaExibicaoMinhas = painelEstudanteHoraPorStatus(
+                $stRow,
+                (string) ($m['data_audiencia'] ?? ''),
+                (string) ($m['hora_audiencia'] ?? ''),
+                $inicioEfetivoRaw,
+                $fimEfetivoRaw
+            );
             $labelsStatusEst = [
                 'designada' => 'Designada',
                 'em_andamento' => 'Em andamento',
@@ -358,13 +373,7 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
                 >
                     <span class="minor-info">Horario</span>
                     <div class="js-time-lines">
-                    <?php if ($stRow === 'em_andamento' && $inicioTs !== false): ?>
-                    <span class="major-info"><?php echo htmlspecialchars(date('H:i', $inicioTs), ENT_QUOTES, 'UTF-8'); ?> - <?php echo htmlspecialchars($previsaoTs !== false ? date('H:i', $previsaoTs) : '--:--', ENT_QUOTES, 'UTF-8'); ?> (prev.)</span>
-                    <?php elseif ($stRow === 'finalizada' && $inicioTs !== false && $fimTs !== false): ?>
-                    <span class="major-info"><?php echo htmlspecialchars(date('H:i', $inicioTs), ENT_QUOTES, 'UTF-8'); ?> - <?php echo htmlspecialchars(date('H:i', $fimTs), ENT_QUOTES, 'UTF-8'); ?> (<?php echo (int) $duracaoRealMin; ?>min)</span>
-                    <?php else: ?>
-                    <span class="major-info"><?php echo htmlspecialchars(substr((string) $m['hora_audiencia'], 0, 5), ENT_QUOTES, 'UTF-8'); ?></span>
-                    <?php endif; ?>
+                    <span class="major-info"><?php echo htmlspecialchars($horaExibicaoMinhas, ENT_QUOTES, 'UTF-8'); ?></span>
                     </div>
                 </div>
                 <div class="col width-500">
@@ -441,29 +450,25 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
             var lines = block.querySelector('.js-time-lines');
             if (!lines) return;
             var status = String(item.status || '').trim();
+            if (status === 'agendada') status = 'designada';
+            if (status === 'adiada') status = 'redesignada';
             var dataAud = String(item.data_audiencia || '').trim();
             var horaAud = String(item.hora_audiencia || '').trim();
             var inicioRaw = String(item.data_hora_inicio_efetivo || '').trim();
             var fimRaw = String(item.data_hora_fim_efetivo || '').trim();
             var inicioTs = parseDateTime(inicioRaw);
-            if (isNaN(inicioTs)) {
-                inicioTs = parseDateTime((dataAud + ' ' + horaAud).trim());
-            }
-            var duracao = parseInt(item.duracao_estimada_minutos || 0, 10);
-            if (!Number.isFinite(duracao) || duracao < 5) duracao = 5;
-            var previsaoTs = isNaN(inicioTs) ? NaN : (inicioTs + duracao * 60000);
             var fimTs = parseDateTime(fimRaw);
+            var designadaTs = parseDateTime((dataAud + ' ' + horaAud).trim());
             var html = '';
-            if (status === 'em_andamento' && !isNaN(inicioTs)) {
-                html += '<span class="major-info">' + fmtTime(inicioTs) + ' - ' + (isNaN(previsaoTs) ? '--:--' : fmtTime(previsaoTs)) + ' (prev.)</span>';
-            } else if (status === 'finalizada' && !isNaN(inicioTs) && !isNaN(fimTs) && fimTs >= inicioTs) {
+            if (status === 'finalizada' && !isNaN(inicioTs) && !isNaN(fimTs) && fimTs >= inicioTs) {
                 var durReal = Math.floor((fimTs - inicioTs) / 60000);
                 html += '<span class="major-info">' + fmtTime(inicioTs) + ' - ' + fmtTime(fimTs) + ' (' + durReal + 'min)</span>';
-            } else {
-                var agendadaTs = parseDateTime((dataAud + ' ' + horaAud).trim());
-                if (!isNaN(agendadaTs)) {
-                    html += '<span class="major-info">' + fmtTime(agendadaTs) + '</span>';
-                }
+            } else if (status === 'em_andamento' && !isNaN(inicioTs)) {
+                html += '<span class="major-info">' + fmtTime(inicioTs) + '</span>';
+            } else if (status === 'finalizada' && !isNaN(inicioTs)) {
+                html += '<span class="major-info">' + fmtTime(inicioTs) + '</span>';
+            } else if (!isNaN(designadaTs)) {
+                html += '<span class="major-info">' + fmtTime(designadaTs) + '</span>';
             }
             lines.innerHTML = html;
         }
@@ -576,12 +581,16 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
             var clamp = function (m) { return Math.max(dayStart, Math.min(dayEnd, m)); };
             var pct = function (m) { return ((clamp(m) - dayStart) / range) * 100; };
             var prevBars = [];
+            var delayBars = [];
             var realBars = [];
+            var now = new Date();
+            var nowMin = now.getHours() * 60 + now.getMinutes();
             var fmtHM = function (m) {
                 var hh = String(Math.floor(m / 60)).padStart(2, '0');
                 var mm = String(m % 60).padStart(2, '0');
                 return hh + ':' + mm;
             };
+            var sourceItems = [];
             container.querySelectorAll('.js-time-block[data-pauta]').forEach(function (block) {
                 var pautaId = String(block.getAttribute('data-pauta') || '').trim();
                 var item = (overrides && pautaId && overrides[pautaId]) ? overrides[pautaId] : {
@@ -593,41 +602,77 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
                 };
                 var schedTs = parseDateTime((String(item.data_audiencia || '').trim() + ' ' + String(item.hora_audiencia || '').trim()).trim());
                 if (isNaN(schedTs)) return;
-                var sMin = (new Date(schedTs)).getHours() * 60 + (new Date(schedTs)).getMinutes();
+                var sched = new Date(schedTs);
+                var sMin = sched.getHours() * 60 + sched.getMinutes();
                 var prevDur = parseInt(item.duracao_estimada_minutos || 0, 10);
                 if (!Number.isFinite(prevDur) || prevDur < 5) prevDur = 5;
-                var prevEnd = sMin + prevDur;
-                prevBars.push({
-                    l: pct(sMin),
-                    w: Math.max(0.4, pct(prevEnd) - pct(sMin)),
-                    title: 'Previsto: ' + fmtHM(sMin) + ' - ' + fmtHM(prevEnd)
-                });
                 var rsTs = parseDateTime(item.data_hora_inicio_efetivo || '');
                 var reTs = parseDateTime(item.data_hora_fim_efetivo || '');
+                var rs = null;
+                var re = null;
                 if (!isNaN(rsTs)) {
                     var rsd = new Date(rsTs);
-                    var rs = rsd.getHours() * 60 + rsd.getMinutes();
-                    var re = rs + prevDur;
-                    if (!isNaN(reTs)) {
-                        var red = new Date(reTs);
-                        re = red.getHours() * 60 + red.getMinutes();
-                    }
-                    var delta = rs - sMin;
-                    var cls = delta > 5 ? 'late' : (delta < -5 ? 'early' : '');
-                    realBars.push({
-                        l: pct(rs),
-                        w: Math.max(0.4, pct(re) - pct(rs)),
-                        cls: cls,
-                        title: 'Real: ' + fmtHM(rs) + ' - ' + fmtHM(re) + ' | Previsto: ' + fmtHM(sMin) + ' - ' + fmtHM(prevEnd)
+                    rs = rsd.getHours() * 60 + rsd.getMinutes();
+                }
+                if (!isNaN(reTs)) {
+                    var red = new Date(reTs);
+                    re = red.getHours() * 60 + red.getMinutes();
+                }
+                sourceItems.push({
+                    plannedStart: sMin,
+                    plannedDur: prevDur,
+                    realStart: rs,
+                    realEnd: re
+                });
+            });
+            sourceItems.sort(function (a, b) { return a.plannedStart - b.plannedStart; });
+            var cursorEnd = dayStart;
+            sourceItems.forEach(function (slot) {
+                var displayStart = Math.max(slot.plannedStart, cursorEnd);
+                var plannedEnd = displayStart + slot.plannedDur;
+                var runningEnd = (slot.realStart !== null && slot.realEnd === null)
+                    ? Math.max(slot.realStart, nowMin)
+                    : null;
+                var effectiveRealEnd = slot.realEnd !== null ? slot.realEnd : runningEnd;
+                var blockEnd = effectiveRealEnd !== null ? Math.max(plannedEnd, effectiveRealEnd) : plannedEnd;
+
+                prevBars.push({
+                    l: pct(displayStart),
+                    w: Math.max(0.4, pct(blockEnd) - pct(displayStart)),
+                    title: 'Previsto: ' + fmtHM(displayStart) + ' - ' + fmtHM(plannedEnd)
+                });
+
+                var delayStart = displayStart;
+                var delayEnd = slot.realStart !== null ? slot.realStart : (nowMin > displayStart ? nowMin : null);
+                if (delayEnd !== null && delayEnd > delayStart) {
+                    delayBars.push({
+                        l: pct(delayStart),
+                        w: Math.max(0.4, pct(delayEnd) - pct(delayStart)),
+                        title: 'Aguardando início real: ' + fmtHM(delayStart) + ' - ' + fmtHM(delayEnd)
                     });
                 }
+
+                if (slot.realStart !== null) {
+                    var realStart = slot.realStart;
+                    var realEnd = slot.realEnd !== null ? slot.realEnd : Math.max(realStart, nowMin);
+                    if (realEnd > realStart) {
+                        realBars.push({
+                            l: pct(realStart),
+                            w: Math.max(0.4, pct(realEnd) - pct(realStart)),
+                            title: 'Real: ' + fmtHM(realStart) + ' - ' + fmtHM(realEnd) + ' | Previsto: ' + fmtHM(displayStart) + ' - ' + fmtHM(plannedEnd)
+                        });
+                    }
+                }
+
+                cursorEnd = Math.max(cursorEnd, blockEnd);
             });
-            if (!prevBars.length && !realBars.length) {
+            if (!prevBars.length && !realBars.length && !delayBars.length) {
                 root.innerHTML = '<span class="timeline-day-ruler-empty">Régua do tempo (08:00–18:00) indisponível no momento.</span>';
                 return;
             }
             var prevHtml = prevBars.map(function (b) { return '<span class="timeline-day-ruler-bar-prev" title="' + escapeHtml(b.title) + '" style="left:' + b.l + '%;width:' + b.w + '%"></span>'; }).join('');
-            var realHtml = realBars.map(function (b) { return '<span class="timeline-day-ruler-bar-real ' + (b.cls || '') + '" title="' + escapeHtml(b.title) + '" style="left:' + b.l + '%;width:' + b.w + '%"></span>'; }).join('');
+            var delayHtml = delayBars.map(function (b) { return '<span class="timeline-day-ruler-bar-real" title="' + escapeHtml(b.title) + '" style="left:' + b.l + '%;width:' + b.w + '%;background:#ffffff;opacity:.95;z-index:2;"></span>'; }).join('');
+            var realHtml = realBars.map(function (b) { return '<span class="timeline-day-ruler-bar-real" title="' + escapeHtml(b.title) + '" style="left:' + b.l + '%;width:' + b.w + '%"></span>'; }).join('');
             var tickHtml = Array.from({ length: 11 }, function (_, i) {
                 var left = (i / 10) * 100;
                 var hiddenClass = (i === 0 || i === 10) ? ' hidden' : '';
@@ -639,8 +684,6 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
                 var hiddenClass = (i === 0 || i === 10) ? ' hidden' : '';
                 return '<span class="timeline-day-ruler-label' + hiddenClass + '" style="left:' + left + '%">' + hour + ':00</span>';
             }).join('');
-            var now = new Date();
-            var nowMin = now.getHours() * 60 + now.getMinutes();
             var nowHtml = (nowMin >= dayStart && nowMin <= dayEnd)
                 ? '<span class="timeline-day-ruler-now" title="Agora: ' + fmtHM(nowMin) + '" style="left:' + pct(nowMin) + '%"></span>'
                 : '';
@@ -648,7 +691,7 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
                 '<div class="timeline-day-ruler-track">' +
                 '<span class="timeline-day-ruler-shade" style="left:0%;width:9%"></span>' +
                 '<span class="timeline-day-ruler-shade" style="left:91%;width:9%"></span>' +
-                tickHtml + prevHtml + realHtml + nowHtml + '</div>' +
+                tickHtml + prevHtml + delayHtml + realHtml + nowHtml + '</div>' +
                 '<div class="timeline-day-ruler-labels">' + labelsHtml + '</div>' +
                 '<div class="timeline-day-ruler-legend">' +
                 '<span><i class="timeline-day-ruler-legend-dot" style="background: #20202050"></i> Previsto</span>' +

@@ -41,6 +41,40 @@ foreach ($rows as $rowTimeline) {
 $dtHoje = new \DateTimeImmutable('today');
 $diasSemana = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
 $dataTitulo = $diasSemana[(int) $dtHoje->format('w')] . ', ' . $dtHoje->format('d/m/Y');
+function painelHoraPorStatus(array $row): string
+{
+    $status = strtolower(trim((string) ($row['status'] ?? '')));
+    if ($status === 'agendada') {
+        $status = 'designada';
+    } elseif ($status === 'adiada') {
+        $status = 'redesignada';
+    }
+
+    $dataAud = trim((string) ($row['data_audiencia'] ?? ''));
+    $horaAud = trim((string) ($row['hora_audiencia'] ?? ''));
+    $inicioRaw = trim((string) ($row['data_hora_inicio_efetivo'] ?? ''));
+    $fimRaw = trim((string) ($row['data_hora_fim_efetivo'] ?? ''));
+
+    $designadaTs = strtotime(trim($dataAud . ' ' . $horaAud));
+    $inicioTs = $inicioRaw !== '' ? strtotime($inicioRaw) : false;
+    $fimTs = $fimRaw !== '' ? strtotime($fimRaw) : false;
+
+    if ($status === 'finalizada' && $inicioTs !== false && $fimTs !== false && $fimTs >= $inicioTs) {
+        $duracaoMin = (int) floor(($fimTs - $inicioTs) / 60);
+
+        return date('H:i', $inicioTs) . ' - ' . date('H:i', $fimTs) . ' (' . $duracaoMin . 'min)';
+    }
+
+    if ($status === 'em_andamento' && $inicioTs !== false) {
+        return date('H:i', $inicioTs);
+    }
+
+    if ($designadaTs !== false) {
+        return date('H:i', $designadaTs);
+    }
+
+    return '—';
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -106,8 +140,8 @@ $dataTitulo = $diasSemana[(int) $dtHoje->format('w')] . ', ' . $dtHoje->format('
             <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                 <div class="display-flex row row-fit justify-start gap-y-sm align-center">
                     <div class="col width-300">
-                        <span class="minor-info">Data e hora</span>
-                        <span class="major-info"><?php echo htmlspecialchars(date('d/m/Y', strtotime((string) $row['data_audiencia'])) . ' - ' . substr((string) $row['hora_audiencia'], 0, 5), ENT_QUOTES); ?></span>
+                        <span class="minor-info">Horário</span>
+                        <span class="major-info"><?php echo htmlspecialchars(painelHoraPorStatus($row), ENT_QUOTES); ?></span>
                     </div>
                     <div class="col width-400 col-process process-info" title="clique para copiar">
                         <?php
@@ -365,27 +399,57 @@ $dataTitulo = $diasSemana[(int) $dtHoje->format('w')] . ', ' . $dtHoje->format('
             }).join('');
             function renderTimeline() {
                 const prevHtml = [];
+                const delayHtml = [];
                 const realHtml = [];
-                Object.keys(itemsById).forEach((id) => {
-                    const it = itemsById[id];
-                    const sTs = toTs((it.data_audiencia || '') + ' ' + (it.hora_audiencia || ''));
-                    if (Number.isNaN(sTs)) return;
-                    const sMin = toMin(sTs);
-                    const prevDur = Math.max(5, parseInt(it.duracao_estimada_minutos || 0, 10) || 5);
-                    const prevEnd = sMin + prevDur;
-                    prevHtml.push(`<span class="timeline-day-ruler-bar-prev" title="Previsto: ${fmtHM(sMin)} - ${fmtHM(prevEnd)}" style="left:${pct(sMin)}%;width:${Math.max(0.4, pct(prevEnd) - pct(sMin))}%"></span>`);
-                    const rsTs = toTs(it.data_hora_inicio_efetivo || '');
-                    const reTs = toTs(it.data_hora_fim_efetivo || '');
-                    if (!Number.isNaN(rsTs)) {
-                        const rs = toMin(rsTs);
-                        const re = !Number.isNaN(reTs) ? toMin(reTs) : (rs + prevDur);
-                        const delta = rs - sMin;
-                        const cls = delta > 5 ? 'late' : (delta < -5 ? 'early' : '');
-                        realHtml.push(`<span class="timeline-day-ruler-bar-real ${cls}" title="Real: ${fmtHM(rs)} - ${fmtHM(re)} | Previsto: ${fmtHM(sMin)} - ${fmtHM(prevEnd)}" style="left:${pct(rs)}%;width:${Math.max(0.4, pct(re) - pct(rs))}%"></span>`);
-                    }
-                });
                 const now = new Date();
                 const nowMin = now.getHours() * 60 + now.getMinutes();
+                const slots = Object.keys(itemsById)
+                    .map((id) => ({ id: id, it: itemsById[id] }))
+                    .map((x) => {
+                        const sTs = toTs((x.it.data_audiencia || '') + ' ' + (x.it.hora_audiencia || ''));
+                        if (Number.isNaN(sTs)) return null;
+                        const plannedStart = toMin(sTs);
+                        const plannedDur = Math.max(5, parseInt(x.it.duracao_estimada_minutos || 0, 10) || 5);
+                        const rsTs = toTs(x.it.data_hora_inicio_efetivo || '');
+                        const reTs = toTs(x.it.data_hora_fim_efetivo || '');
+                        return {
+                            id: x.id,
+                            plannedStart: plannedStart,
+                            plannedDur: plannedDur,
+                            realStart: Number.isNaN(rsTs) ? null : toMin(rsTs),
+                            realEnd: Number.isNaN(reTs) ? null : toMin(reTs),
+                        };
+                    })
+                    .filter((x) => x !== null)
+                    .sort((a, b) => a.plannedStart - b.plannedStart);
+                let cursorEnd = dayStart;
+                slots.forEach((slot) => {
+                    const displayStart = Math.max(slot.plannedStart, cursorEnd);
+                    const plannedEnd = displayStart + slot.plannedDur;
+                    const runningEnd = slot.realStart !== null && slot.realEnd === null
+                        ? Math.max(slot.realStart, nowMin)
+                        : null;
+                    const effectiveRealEnd = slot.realEnd !== null ? slot.realEnd : runningEnd;
+                    const blockEnd = effectiveRealEnd !== null ? Math.max(plannedEnd, effectiveRealEnd) : plannedEnd;
+
+                    prevHtml.push(`<span class="timeline-day-ruler-bar-prev" title="Previsto: ${fmtHM(displayStart)} - ${fmtHM(plannedEnd)}" style="left:${pct(displayStart)}%;width:${Math.max(0.4, pct(blockEnd) - pct(displayStart))}%"></span>`);
+
+                    const delayStart = displayStart;
+                    const delayEnd = slot.realStart !== null ? slot.realStart : (nowMin > displayStart ? nowMin : null);
+                    if (delayEnd !== null && delayEnd > delayStart) {
+                        delayHtml.push(`<span class="timeline-day-ruler-bar-real" title="Aguardando início real: ${fmtHM(delayStart)} - ${fmtHM(delayEnd)}" style="left:${pct(delayStart)}%;width:${Math.max(0.4, pct(delayEnd) - pct(delayStart))}%;background:#ffffff;opacity:.95;z-index:2;"></span>`);
+                    }
+
+                    if (slot.realStart !== null) {
+                        const realStart = slot.realStart;
+                        const realEnd = slot.realEnd !== null ? slot.realEnd : Math.max(realStart, nowMin);
+                        if (realEnd > realStart) {
+                            realHtml.push(`<span class="timeline-day-ruler-bar-real" title="Real: ${fmtHM(realStart)} - ${fmtHM(realEnd)} | Previsto: ${fmtHM(displayStart)} - ${fmtHM(plannedEnd)}" style="left:${pct(realStart)}%;width:${Math.max(0.4, pct(realEnd) - pct(realStart))}%"></span>`);
+                        }
+                    }
+
+                    cursorEnd = Math.max(cursorEnd, blockEnd);
+                });
                 const nowHtml = (nowMin >= dayStart && nowMin <= dayEnd)
                     ? `<span class="timeline-day-ruler-now" title="Agora: ${fmtHM(nowMin)}" style="left:${pct(nowMin)}%"></span>`
                     : '';
@@ -393,7 +457,7 @@ $dataTitulo = $diasSemana[(int) $dtHoje->format('w')] . ', ' . $dtHoje->format('
                     `<div class="timeline-day-ruler-track">
                         <span class="timeline-day-ruler-shade" style="left:0%;width:9%"></span>
                         <span class="timeline-day-ruler-shade" style="left:91%;width:9%"></span>
-                        ${tickHtml}${prevHtml.join('')}${realHtml.join('')}${nowHtml}
+                        ${tickHtml}${prevHtml.join('')}${delayHtml.join('')}${realHtml.join('')}${nowHtml}
                      </div>
                      <div class="timeline-day-ruler-labels">${labelsHtml}</div>
                      <div class="timeline-day-ruler-legend">
