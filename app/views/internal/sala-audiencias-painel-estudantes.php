@@ -83,10 +83,15 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
         <?php include __DIR__ . '/_copy_process_script.php'; ?>
         <style>
             .timeline-day-ruler { padding: 8px 0 4px; }
-            .timeline-day-ruler-track { position: relative; height: 22px; border-radius: 999px; background: #eef2f6; overflow: hidden; }
+            .timeline-day-ruler-track { position: relative; height: 26px; border-radius: 999px; background: #eef2f6; overflow: hidden; }
+            .timeline-day-ruler-hour-tick { position: absolute; top: 0; width: 1px; height: 100%; background: rgba(71,84,103,.22); }
+            .timeline-day-ruler-now { position: absolute; top: 0; width: 1px; height: 100%; background: rgba(17,24,39,.45); z-index: 4; }
             .timeline-day-ruler-bar-prev { position: absolute; top: 5px; height: 12px; border-radius: 999px; background: #8db8ff; opacity: .7; }
-            .timeline-day-ruler-bar-real { position: absolute; top: 7px; height: 8px; border-radius: 999px; background: #2b7a4b; opacity: .95; }
-            .timeline-day-ruler-labels { margin-top: 6px; display: flex; justify-content: space-between; font-size: 11px; color: #667085; font-family: monospace; }
+            .timeline-day-ruler-bar-real { position: absolute; top: 8px; height: 8px; border-radius: 999px; background: #2b7a4b; opacity: .95; z-index: 3; }
+            .timeline-day-ruler-bar-real.late { background: #d14343; }
+            .timeline-day-ruler-bar-real.early { background: #7c5cff; }
+            .timeline-day-ruler-labels { margin-top: 6px; display: grid; grid-template-columns: repeat(11, 1fr); font-size: 11px; color: #667085; font-family: monospace; }
+            .timeline-day-ruler-labels span { text-align: center; }
             .timeline-day-ruler-legend { margin-top: 6px; display: flex; gap: 12px; align-items: center; font-size: 11px; color: #667085; }
             .timeline-day-ruler-legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
             .timeline-day-ruler-empty { font-size: 12px; color: #667085; }
@@ -121,8 +126,8 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
                 </div>
             </div>
         </div>
-        <div class="padding-x-md padding-y-sm border-bottom">
-            <div id="timeline-hoje-painel-estudante" class="timeline-day-ruler"></div>
+        <div class="display-flex row row-full padding-x-md padding-y-sm border-bottom">
+            <div id="timeline-hoje-painel-estudante" class="timeline-day-ruler row row-full"></div>
         </div>
         <?php if (count($hojePageRows) === 0): ?>
         <div class="padding-x-lg padding-y-lg">
@@ -205,9 +210,9 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
                     <?php elseif ($lotado): ?>
                     <span class="minor-info text-error">Vagas esgotadas.</span>
                     <?php elseif ($sigiloso): ?>
-                    <span class="minor-info text-error">Processo sigiloso.</span>
+                    <span class="minor-info text-error">Inscricao indisponivel.</span>
                     <?php elseif ($menor): ?>
-                    <span class="minor-info text-error">Proibida inscrição de estudantes.</span>
+                    <span class="minor-info text-error">Inscricao indisponivel.</span>
                     <?php elseif ($podeInscricaoComoEstudante && $pode): ?>
                     <button type="button" class="btn btn-primary btn-inscrever-ata" data-pauta="<?php echo $idPauta; ?>">Inscrever-me</button>
                     <?php elseif (!$podeInscricaoComoEstudante): ?>
@@ -569,6 +574,11 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
             var pct = function (m) { return ((clamp(m) - dayStart) / range) * 100; };
             var prevBars = [];
             var realBars = [];
+            var fmtHM = function (m) {
+                var hh = String(Math.floor(m / 60)).padStart(2, '0');
+                var mm = String(m % 60).padStart(2, '0');
+                return hh + ':' + mm;
+            };
             container.querySelectorAll('.js-time-block[data-pauta]').forEach(function (block) {
                 var pautaId = String(block.getAttribute('data-pauta') || '').trim();
                 var item = (overrides && pautaId && overrides[pautaId]) ? overrides[pautaId] : {
@@ -583,7 +593,12 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
                 var sMin = (new Date(schedTs)).getHours() * 60 + (new Date(schedTs)).getMinutes();
                 var prevDur = parseInt(item.duracao_estimada_minutos || 0, 10);
                 if (!Number.isFinite(prevDur) || prevDur < 5) prevDur = 5;
-                prevBars.push({ l: pct(sMin), w: Math.max(0.4, pct(sMin + prevDur) - pct(sMin)) });
+                var prevEnd = sMin + prevDur;
+                prevBars.push({
+                    l: pct(sMin),
+                    w: Math.max(0.4, pct(prevEnd) - pct(sMin)),
+                    title: 'Previsto: ' + fmtHM(sMin) + ' - ' + fmtHM(prevEnd)
+                });
                 var rsTs = parseDateTime(item.data_hora_inicio_efetivo || '');
                 var reTs = parseDateTime(item.data_hora_fim_efetivo || '');
                 if (!isNaN(rsTs)) {
@@ -594,21 +609,43 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
                         var red = new Date(reTs);
                         re = red.getHours() * 60 + red.getMinutes();
                     }
-                    realBars.push({ l: pct(rs), w: Math.max(0.4, pct(re) - pct(rs)) });
+                    var delta = rs - sMin;
+                    var cls = delta > 5 ? 'late' : (delta < -5 ? 'early' : '');
+                    realBars.push({
+                        l: pct(rs),
+                        w: Math.max(0.4, pct(re) - pct(rs)),
+                        cls: cls,
+                        title: 'Real: ' + fmtHM(rs) + ' - ' + fmtHM(re) + ' | Previsto: ' + fmtHM(sMin) + ' - ' + fmtHM(prevEnd)
+                    });
                 }
             });
             if (!prevBars.length && !realBars.length) {
                 root.innerHTML = '<span class="timeline-day-ruler-empty">Régua do tempo (08:00–18:00) indisponível no momento.</span>';
                 return;
             }
-            var prevHtml = prevBars.map(function (b) { return '<span class="timeline-day-ruler-bar-prev" style="left:' + b.l + '%;width:' + b.w + '%"></span>'; }).join('');
-            var realHtml = realBars.map(function (b) { return '<span class="timeline-day-ruler-bar-real" style="left:' + b.l + '%;width:' + b.w + '%"></span>'; }).join('');
+            var prevHtml = prevBars.map(function (b) { return '<span class="timeline-day-ruler-bar-prev" title="' + escapeHtml(b.title) + '" style="left:' + b.l + '%;width:' + b.w + '%"></span>'; }).join('');
+            var realHtml = realBars.map(function (b) { return '<span class="timeline-day-ruler-bar-real ' + (b.cls || '') + '" title="' + escapeHtml(b.title) + '" style="left:' + b.l + '%;width:' + b.w + '%"></span>'; }).join('');
+            var tickHtml = Array.from({ length: 11 }, function (_, i) {
+                var left = (i / 10) * 100;
+                return '<span class="timeline-day-ruler-hour-tick" style="left:' + left + '%"></span>';
+            }).join('');
+            var labelsHtml = Array.from({ length: 11 }, function (_, i) {
+                var hour = String(8 + i).padStart(2, '0');
+                return '<span>' + hour + ':00</span>';
+            }).join('');
+            var now = new Date();
+            var nowMin = now.getHours() * 60 + now.getMinutes();
+            var nowHtml = (nowMin >= dayStart && nowMin <= dayEnd)
+                ? '<span class="timeline-day-ruler-now" title="Agora: ' + fmtHM(nowMin) + '" style="left:' + pct(nowMin) + '%"></span>'
+                : '';
             root.innerHTML =
-                '<div class="timeline-day-ruler-track">' + prevHtml + realHtml + '</div>' +
-                '<div class="timeline-day-ruler-labels"><span>08:00</span><span>18:00</span></div>' +
+                '<div class="timeline-day-ruler-track">' + tickHtml + prevHtml + realHtml + nowHtml + '</div>' +
+                '<div class="timeline-day-ruler-labels">' + labelsHtml + '</div>' +
                 '<div class="timeline-day-ruler-legend">' +
                 '<span><i class="timeline-day-ruler-legend-dot" style="background:#8db8ff"></i> Previsto</span>' +
-                '<span><i class="timeline-day-ruler-legend-dot" style="background:#2b7a4b"></i> Real</span>' +
+                '<span><i class="timeline-day-ruler-legend-dot" style="background:#2b7a4b"></i> Real no horário</span>' +
+                '<span><i class="timeline-day-ruler-legend-dot" style="background:#d14343"></i> Atraso</span>' +
+                '<span><i class="timeline-day-ruler-legend-dot" style="background:#7c5cff"></i> Adiantamento</span>' +
                 '</div>';
         }
         function refreshStatusAndTime() {
