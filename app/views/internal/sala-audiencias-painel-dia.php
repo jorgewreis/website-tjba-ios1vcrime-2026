@@ -458,9 +458,7 @@ function painelHoraPorStatus(array $row): string
                 slots.forEach((slot) => {
                     const displayStart = Math.max(slot.plannedStart, cursorEnd);
                     const plannedEnd = displayStart + slot.plannedDur;
-                    const realStartDisplay = slot.realStart !== null
-                        ? Math.max(slot.realStart, displayStart)
-                        : null;
+                    const realStartDisplay = slot.realStart !== null ? slot.realStart : null;
                     const runningEnd = realStartDisplay !== null && slot.realEnd === null
                         ? Math.max(realStartDisplay, nowMin)
                         : null;

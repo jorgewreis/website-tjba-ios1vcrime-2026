@@ -673,9 +673,7 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
             sourceItems.forEach(function (slot) {
                 var displayStart = Math.max(slot.plannedStart, cursorEnd);
                 var plannedEnd = displayStart + slot.plannedDur;
-                var realStartDisplay = slot.realStart !== null
-                    ? Math.max(slot.realStart, displayStart)
-                    : null;
+                var realStartDisplay = slot.realStart !== null ? slot.realStart : null;
                 var runningEnd = (realStartDisplay !== null && slot.realEnd === null)
                     ? Math.max(realStartDisplay, nowMin)
                     : null;
