@@ -443,6 +443,11 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
             if (isNaN(d.getTime())) return '';
             return pad2(d.getHours()) + ':' + pad2(d.getMinutes());
         }
+        function toMinuteValue(ts) {
+            var d = new Date(ts);
+            if (isNaN(d.getTime())) return NaN;
+            return d.getHours() * 60 + d.getMinutes() + (d.getSeconds() / 60);
+        }
         function getFramePhpHref() {
             var path = window.location.pathname || '/frame.php';
             var slash = path.lastIndexOf('/');
@@ -660,7 +665,7 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
                 var schedTs = parseDateTime((String(item.data_audiencia || '').trim() + ' ' + String(item.hora_audiencia || '').trim()).trim());
                 if (isNaN(schedTs)) return;
                 var sched = new Date(schedTs);
-                var sMin = sched.getHours() * 60 + sched.getMinutes();
+                var sMin = toMinuteValue(schedTs);
                 var prevDur = parseInt(item.duracao_estimada_minutos || 0, 10);
                 if (!Number.isFinite(prevDur) || prevDur < 5) prevDur = 5;
                 var rsTs = parseDateTime(item.data_hora_inicio_efetivo || '');
@@ -668,12 +673,10 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
                 var rs = null;
                 var re = null;
                 if (!isNaN(rsTs)) {
-                    var rsd = new Date(rsTs);
-                    rs = rsd.getHours() * 60 + rsd.getMinutes();
+                    rs = toMinuteValue(rsTs);
                 }
                 if (!isNaN(reTs)) {
-                    var red = new Date(reTs);
-                    re = red.getHours() * 60 + red.getMinutes();
+                    re = toMinuteValue(reTs);
                 }
                 sourceItems.push({
                     plannedStart: sMin,
@@ -724,7 +727,7 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
                     var realEnd = slot.realEnd !== null
                         ? Math.max(slot.realEnd, realStart)
                         : Math.max(realStart, nowMin);
-                    if (realEnd > realStart) {
+                    if (realEnd >= realStart) {
                         realBars.push({
                             l: pct(realStart),
                             w: Math.max(0.4, pct(realEnd) - pct(realStart)),

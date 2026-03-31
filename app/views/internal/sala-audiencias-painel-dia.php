@@ -400,7 +400,7 @@ function painelHoraPorStatus(array $row): string
             const toMin = (ts) => {
                 const d = new Date(ts);
                 if (Number.isNaN(d.getTime())) return NaN;
-                return d.getHours() * 60 + d.getMinutes();
+                return d.getHours() * 60 + d.getMinutes() + (d.getSeconds() / 60);
             };
             const clamp = (m) => Math.max(dayStart, Math.min(dayEnd, m));
             const pct = (m) => ((clamp(m) - dayStart) / range) * 100;
@@ -500,7 +500,7 @@ function painelHoraPorStatus(array $row): string
                         const realEnd = slot.realEnd !== null
                             ? Math.max(slot.realEnd, realStart)
                             : Math.max(realStart, nowMin);
-                        if (realEnd > realStart) {
+                        if (realEnd >= realStart) {
                             realHtml.push(`<span class="timeline-day-ruler-bar-real" title="Real: ${fmtHM(realStart)} - ${fmtHM(realEnd)} | Previsto: ${fmtHM(displayStart)} - ${fmtHM(plannedEnd)}" style="left:${pct(realStart)}%;width:${Math.max(0.4, pct(realEnd) - pct(realStart))}%;background:${colorByStatus(slot.status)}"></span>`);
                         }
                     }
