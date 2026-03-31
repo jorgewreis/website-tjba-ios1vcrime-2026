@@ -107,18 +107,21 @@ function painelHoraPorStatus(array $row): string
         <style>
             .timeline-day-ruler { padding: 8px 0 4px; }
             .timeline-day-ruler-track { position: relative; height: 22px; border-radius: 4px; background: #eef2f6; overflow: hidden; }
-            .timeline-day-ruler-shade { position: absolute; top: 0; height: 100%; background: rgba(71,84,103,.18); z-index: 0; }
+            .timeline-day-ruler-shade { position: absolute; top: 0; height: 100%; background: rgba(20,20,20,.1); z-index: 0; }
             .timeline-day-ruler-hour-tick { position: absolute; bottom: 0; width: 1px; height: 3px; background: rgba(20,20,20,.3); }
             .timeline-day-ruler-hour-tick.hidden { opacity: 0; }
             .timeline-day-ruler-now { position: absolute; top: 0; width: 3px; height: 100%; background: rgba(20,20,20,.30); z-index: 4; }
-            .timeline-day-ruler-bar-prev { position: absolute; top: 1px; height: 20px; background: var(--color-primary); }
+            .timeline-day-ruler-bar-prev { position: absolute; top: 1px; height: 20px; background: var(--color-gray-300); }
             .timeline-day-ruler-bar-real { position: absolute; top: 1px; height: 20px; border-right: 1px solid #ffffff50; opacity: .7; z-index: 3; }
+            .timeline-day-ruler-bar-delay { background: #ffffff; z-index: 2; }
+            .timeline-day-ruler-bar-real.is-warning { background: var(--color-warning); }
+            .timeline-day-ruler-bar-real.is-success { background: var(--color-primary); }
+            .timeline-day-ruler-bar-real.is-danger { background: var(--color-danger); }
             .timeline-day-ruler-labels { position: relative; margin-top: 6px; height: 14px; font-size: 11px; color: #667085; font-family: monospace; }
             .timeline-day-ruler-label { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
             .timeline-day-ruler-label.hidden { opacity: 0; }
             .timeline-day-ruler-legend { margin-top: 6px; display: flex; gap: 12px; align-items: center; font-size: 11px; color: #667085; }
             .timeline-day-ruler-legend-dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
-            .timeline-day-ruler-empty { font-size: 12px; color: #667085; }
         </style>
     </head>
 <body class="page-internal">
@@ -430,12 +433,12 @@ function painelHoraPorStatus(array $row): string
                 const st = normalizeStatus(statusRaw);
                 return st === 'finalizada' || st === 'realizada';
             };
-            const colorByStatus = (statusRaw) => {
+            const classByStatus = (statusRaw) => {
                 const st = normalizeStatus(statusRaw);
-                if (st === 'em_andamento') return 'var(--color-warning)';
-                if (st === 'finalizada' || st === 'realizada') return 'var(--color-success)';
-                if (st === 'cancelada') return 'var(--color-danger)';
-                return 'var(--color-warning)';
+                if (st === 'em_andamento') return 'is-warning';
+                if (st === 'finalizada' || st === 'realizada') return 'is-success';
+                if (st === 'cancelada') return 'is-danger';
+                return 'is-warning';
             };
             const allFinished = () => {
                 const ids = Object.keys(itemsById);
@@ -492,7 +495,7 @@ function painelHoraPorStatus(array $row): string
                     const delayStart = displayStart;
                     const delayEnd = realStartDisplay !== null ? realStartDisplay : (nowMin > displayStart ? nowMin : null);
                     if (delayEnd !== null && delayEnd > delayStart) {
-                        delayHtml.push(`<span class="timeline-day-ruler-bar-real" title="Aguardando início real: ${fmtHM(delayStart)} - ${fmtHM(delayEnd)}" style="left:${pct(delayStart)}%;width:${Math.max(0.4, pct(delayEnd) - pct(delayStart))}%;background:#ffffff;z-index:2;"></span>`);
+                        delayHtml.push(`<span class="timeline-day-ruler-bar-real timeline-day-ruler-bar-delay" title="Aguardando início real: ${fmtHM(delayStart)} - ${fmtHM(delayEnd)}" style="left:${pct(delayStart)}%;width:${Math.max(0.4, pct(delayEnd) - pct(delayStart))}%"></span>`);
                     }
 
                     if (realStartDisplay !== null) {
@@ -501,7 +504,7 @@ function painelHoraPorStatus(array $row): string
                             ? Math.max(slot.realEnd, realStart)
                             : Math.max(realStart, nowMin);
                         if (realEnd >= realStart) {
-                            realHtml.push(`<span class="timeline-day-ruler-bar-real" title="Real: ${fmtHM(realStart)} - ${fmtHM(realEnd)} | Previsto: ${fmtHM(displayStart)} - ${fmtHM(plannedEnd)}" style="left:${pct(realStart)}%;width:${Math.max(0.4, pct(realEnd) - pct(realStart))}%;background:${colorByStatus(slot.status)}"></span>`);
+                            realHtml.push(`<span class="timeline-day-ruler-bar-real ${classByStatus(slot.status)}" title="Real: ${fmtHM(realStart)} - ${fmtHM(realEnd)} | Previsto: ${fmtHM(displayStart)} - ${fmtHM(plannedEnd)}" style="left:${pct(realStart)}%;width:${Math.max(0.4, pct(realEnd) - pct(realStart))}%"></span>`);
                         }
                     }
 
