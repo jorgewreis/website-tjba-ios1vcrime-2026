@@ -5,9 +5,9 @@ Scripts **transversais** usados em gabinete, cartório, audiências e outras ár
 ## Fluxo (ordem real)
 
 1. `cnj.js` — evento `cnjValidated` (20 dígitos).
-2. `datajud-api.js` — `GET /api/processos/classe-read.php?numero=...` (sessão). Se houver classe no BD, preenche o input com `data-preserve-banco="1"` para não apagar o valor durante “Consultando…”.
-3. `DataJudCycle.startLoading` — consulta ao DataJud em andamento.
-4. `POST /api/datajud/search-processo.php` — classe vinda do índice DataJud.
+2. `datajud-api.js` — `GET /api/processos/classe-read.php?numero=...` (sessão). Se houver classe no BD **e** o texto não for o placeholder **`Classe não informada`** (igual a `DataJudCycle.FALLBACK_CLASSE`), preenche o input com `data-preserve-banco="1"`. Caso contrário, segue o loading padrão (`status-warning`, placeholder “Consultando…”).
+3. `DataJudCycle.startLoading` — consulta ao DataJud em andamento (placeholder base `PLACEHOLDER_LOADING`).
+4. `POST /api/datajud/search-processo.php` — classe vinda do índice DataJud; até **3 tentativas** após timeout, com espera **10s / 15s / 20s** por tentativa (`getFetchTimeoutMs`). O placeholder do input fica **`Tent. N — DataJud…`** a partir da 2ª tentativa.
 5. Em sucesso com classe — `POST /api/processos/classe-sync.php` (sessão) para garantir `classes` + `processos.classe_id` (noop se código igual ao já vinculado). `postSyncClasse` aplica **até 3 tentativas** em falha de **rede** ou **5xx**; **toasts só em** `updated`/`created` (**info**); erros de sync **sem** toast. Se o **BD** já preencheu a classe, `DataJudCycle.startLoading` usa `bancoPrefilled`: input em **`status-finished`**, botões **sem** lock e sem toast “consultando…” até o DataJud responder.
 
 **Documentação canônica (única fonte):** [`docs/00-foundation/datajud-classe-processo-bd-sync.md`](../../../../docs/00-foundation/datajud-classe-processo-bd-sync.md) (índice, decisões, QA, arquivos).

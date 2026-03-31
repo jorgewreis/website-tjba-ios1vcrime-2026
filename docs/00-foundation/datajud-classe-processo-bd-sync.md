@@ -37,6 +37,7 @@ Em telas internas com o trio `cnj.js` → `datajud-cycle-helper.js` → `datajud
 | **Processo novo** | `classe-sync` pode **criar** linha em `processos` com número + classe. |
 | **DataJud falha** | Não chama sync; UI pode manter classe só do BD (*Classe do cadastro local*). Com classe já vinda do BD: **sem** toast de erro; só mensagem de contexto no rótulo/auxiliar. |
 | **BD com classe** | Enquanto o DataJud carrega: input em **`status-finished`**, botões **desbloqueados** (`startLoading` com `bancoPrefilled`). |
+| **BD com placeholder** | Se `classe-read` trouxer texto igual a **`Classe não informada`** (mesmo valor que `DataJudCycle.FALLBACK_CLASSE`), trata-se como **sem classe**: não preenche o input, usa placeholder de consulta ao DataJud e **`status-warning`** (fluxo normal de loading). |
 | **CEAPA edit travado** | `DATAJUD_SKIP_CLASSE_SYNC` — não grava via sync; DataJud ainda preenche visualmente. |
 | **Retries** | `postSyncClasse` em `datajud-api.js`: até **3** tentativas com atraso em **rede** ou **HTTP 5xx**. O corpo da resposta é lido como **texto** e parseado com `JSON.parse` seguro; corpo inválido ou vazio **não** dispara retry (evita confundir HTML/erro de proxy com falha de rede). |
 | **Reconsulta** | Sem botão dedicado; novo ciclo ao **revalidar o CNJ** (`cnjValidated`). |
@@ -47,7 +48,7 @@ Em telas internas com o trio `cnj.js` → `datajud-cycle-helper.js` → `datajud
 
 1. **Validação CNJ** — `cnj.js` dispara `cnjValidated` com 20 dígitos (não a cada tecla; validação estável / blur).
 2. **Leitura local** — `GET` `/api/processos/classe-read.php?numero=` (20 dígitos). Se existir classe, preenche o input (`data-preserve-banco="1"`).
-3. **Consulta DataJud** — `POST` `/api/datajud/search-processo.php`.
+3. **Consulta DataJud** — `POST` `/api/datajud/search-processo.php`. Até **3 tentativas** em caso de timeout por tentativa, com limite **10s / 15s / 20s** (`DataJudCycle.getFetchTimeoutMs`).
 4. **Sincronização** — se a resposta DataJud tiver classe utilizável, `POST` `/api/processos/classe-sync.php`. Respostas: `noop` | `updated` | `created`.
 
 ---

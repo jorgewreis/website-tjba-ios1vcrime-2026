@@ -7,14 +7,25 @@
     'use strict';
 
     var SLOW_TOAST_MS = 500;
-    var FETCH_TIMEOUT_MS = 10000;
-    var MAX_FETCH_ATTEMPTS = 2;
+    /** 1ª tentativa 10s, 2ª 15s, 3ª 20s — ver `getFetchTimeoutMs`. */
+    var FETCH_TIMEOUT_MS_BY_ATTEMPT = [10000, 15000, 20000];
+    var MAX_FETCH_ATTEMPTS = 3;
+
+    function getFetchTimeoutMs(attemptIndex) {
+        var n = Number(attemptIndex);
+        if (!n || n < 1 || n !== n) {
+            n = 1;
+        }
+        var i = Math.min(n, FETCH_TIMEOUT_MS_BY_ATTEMPT.length) - 1;
+        return FETCH_TIMEOUT_MS_BY_ATTEMPT[i];
+    }
 
     var MSG_SLOW = 'Consultando informações processuais. Isso pode levar alguns segundos.';
     var MSG_NO_RESULT = 'A consulta ao DataJud não retornou resultados a tempo. Tente novamente ou informe os dados manualmente.';
     var MSG_HTTP_GENERIC = 'Não foi possível concluir a consulta ao DataJud.';
     var MSG_EMPTY_CLASSE = 'Processo encontrado sem classe cadastrada no DataJud.';
-    var PLACEHOLDER_LOADING = 'Consultando informações processuais...';
+    /** Curto para não estourar inputs estreitos (ex.: classe em formulários). */
+    var PLACEHOLDER_LOADING = 'Consultando DataJud…';
     var FALLBACK_CLASSE = 'Classe não informada';
     /** Valor reservado da primeira opção do select enquanto a API DataJud carrega (ex.: nomes de partes). */
     var DATAJUD_SELECT_LOADING_VALUE = '__DATAJUD_LOADING__';
@@ -93,7 +104,18 @@
         classeInput.style.removeProperty('background-color');
     }
 
-    function setClasseLoadingState(classeInput) {
+    function getClasseLoadingPlaceholder(attemptIndex) {
+        var n = Number(attemptIndex);
+        if (!n || n < 1 || n !== n) {
+            n = 1;
+        }
+        if (n <= 1) {
+            return PLACEHOLDER_LOADING;
+        }
+        return 'Tent. ' + n + ' — DataJud…';
+    }
+
+    function setClasseLoadingState(classeInput, attemptIndex) {
         if (!classeInput) {
             return;
         }
@@ -107,7 +129,7 @@
         if (!preserve && !keepInitial) {
             classeInput.value = '';
         }
-        classeInput.placeholder = PLACEHOLDER_LOADING;
+        classeInput.placeholder = getClasseLoadingPlaceholder(attemptIndex || 1);
     }
 
     function setSelectLoadingState(selectEl) {
@@ -131,8 +153,11 @@
 
     global.DataJudCycle = {
         SLOW_TOAST_MS: SLOW_TOAST_MS,
-        FETCH_TIMEOUT_MS: FETCH_TIMEOUT_MS,
+        /** @deprecated Preferir `getFetchTimeoutMs(1)` — mantido como 10000 para compat. */
+        FETCH_TIMEOUT_MS: FETCH_TIMEOUT_MS_BY_ATTEMPT[0],
         MAX_FETCH_ATTEMPTS: MAX_FETCH_ATTEMPTS,
+        /** Timeout do `fetch` DataJud por número da tentativa (1–3): 10s / 15s / 20s. */
+        getFetchTimeoutMs: getFetchTimeoutMs,
         MSG_SLOW: MSG_SLOW,
         MSG_NO_RESULT: MSG_NO_RESULT,
         MSG_HTTP_GENERIC: MSG_HTTP_GENERIC,
@@ -140,6 +165,22 @@
         PLACEHOLDER_LOADING: PLACEHOLDER_LOADING,
         FALLBACK_CLASSE: FALLBACK_CLASSE,
         DATAJUD_SELECT_LOADING_VALUE: DATAJUD_SELECT_LOADING_VALUE,
+
+        /** Placeholder curto no input de classe; a partir da 2ª tentativa: `Tent. N — DataJud…`. */
+        getClasseLoadingPlaceholder: getClasseLoadingPlaceholder,
+
+        /**
+         * Atualiza só o placeholder quando há nova tentativa de fetch (sem refazer o restante do estado).
+         * @param {HTMLInputElement|null} classeInput
+         * @param {number} attemptIndex — 1 = primeira
+         * @param {boolean} [bancoPrefilled] — se true, não altera (valor da classe do BD visível)
+         */
+        updateClasseLoadingAttemptPlaceholder: function (classeInput, attemptIndex, bancoPrefilled) {
+            if (!classeInput || bancoPrefilled) {
+                return;
+            }
+            classeInput.placeholder = getClasseLoadingPlaceholder(attemptIndex || 1);
+        },
 
         /** Atualiza texto auxiliar ao lado do rótulo (mesmo padrão do fluxo de classe processual). */
         setFieldStatus: function (statusElement, message, colorVar) {
@@ -228,7 +269,7 @@
                     dom.classeInput.removeAttribute('aria-busy');
                     dom.classeInput.placeholder = '';
                 } else {
-                    setClasseLoadingState(dom.classeInput);
+                    setClasseLoadingState(dom.classeInput, 1);
                 }
             }
             if (dom.statusElement) {

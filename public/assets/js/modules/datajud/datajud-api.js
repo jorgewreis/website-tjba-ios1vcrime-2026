@@ -104,6 +104,30 @@
 
 
 
+    function getClasseNaoInformadaMarker() {
+
+        return (window.DataJudCycle && window.DataJudCycle.FALLBACK_CLASSE)
+
+            ? String(window.DataJudCycle.FALLBACK_CLASSE)
+
+            : 'Classe não informada';
+
+    }
+
+
+
+    /** Igual a “sem classe” no fluxo DataJud: não preenche o input nem ativa bancoPrefilled. */
+
+    function isClasseNaoInformadaText(s) {
+
+        var t = (s != null ? String(s).trim() : '');
+
+        return t !== '' && t === getClasseNaoInformadaMarker();
+
+    }
+
+
+
     function showToastSync(opts) {
 
         if (typeof window.showToast === 'function') {
@@ -388,6 +412,36 @@
 
                     var display = (c.nome && String(c.nome).trim() !== '') ? String(c.nome).trim() : String(c.codigo).trim();
 
+                    if (isClasseNaoInformadaText(display)) {
+
+                        if (domFresh.classeInput) {
+
+                            domFresh.classeInput.removeAttribute('data-datajud-initial');
+
+                            domFresh.classeInput.removeAttribute('data-preserve-banco');
+
+                            domFresh.classeInput.value = '';
+
+                        }
+
+                        if (domFresh.classeCodigoField) {
+
+                            domFresh.classeCodigoField.value = '';
+
+                        }
+
+                        if (domFresh.classeDescricaoField) {
+
+                            domFresh.classeDescricaoField.value = '';
+
+                        }
+
+                        globalObj.__datajudBancoPrefill = null;
+
+                        return;
+
+                    }
+
                     globalObj.__datajudBancoPrefill = {
 
                         codigo: String(c.codigo || '').trim(),
@@ -462,6 +516,12 @@
 
                     }
 
+                    if (typeof DC.updateClasseLoadingAttemptPlaceholder === 'function') {
+
+                        DC.updateClasseLoadingAttemptPlaceholder(domFresh.classeInput, attemptIndex, hadBancoPrefill);
+
+                    }
+
 
 
                     var controller = new AbortController();
@@ -474,7 +534,7 @@
 
                         controller.abort();
 
-                    }, DC.FETCH_TIMEOUT_MS);
+                    }, typeof DC.getFetchTimeoutMs === 'function' ? DC.getFetchTimeoutMs(attemptIndex) : 10000);
 
 
 
