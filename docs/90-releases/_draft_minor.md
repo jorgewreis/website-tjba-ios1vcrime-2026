@@ -126,4 +126,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(timeline): add daily timeline visualization for audience schedules, including estimated and actual durations** `[cdf35e8]`
 - **feat(timeline): enhance daily timeline visualization with improved styling and functionality, including hour ticks, current time indicator, and updated color coding for estimated and actual durations** `[b175b3a]`
 - **feat(timeline): enhance timeline components with improved styling, including new shading elements, updated label visibility, and refined bar heights for better visual clarity** `[137e4d5]`
+- **fix(timeline): adjust timeline styling for improved visual consistency, including height and color updates for hour ticks and bars** `[67216d2]`
 
