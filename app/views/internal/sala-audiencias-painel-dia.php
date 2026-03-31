@@ -104,25 +104,7 @@ function painelHoraPorStatus(array $row): string
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
         <?php include __DIR__ . '/_toast_script.php'; ?>
         <?php include __DIR__ . '/_copy_process_script.php'; ?>
-        <style>
-            .timeline-day-ruler { padding: 8px 0 4px; }
-            .timeline-day-ruler-track { position: relative; height: 22px; border-radius: 4px; background: #eef2f6; overflow: hidden; }
-            .timeline-day-ruler-shade { position: absolute; top: 0; height: 100%; background: rgba(20,20,20,.1); z-index: 0; }
-            .timeline-day-ruler-hour-tick { position: absolute; bottom: 0; width: 1px; height: 3px; background: rgba(20,20,20,.3); }
-            .timeline-day-ruler-hour-tick.hidden { opacity: 0; }
-            .timeline-day-ruler-now { position: absolute; top: 0; width: 3px; height: 100%; background: rgba(20,20,20,.30); z-index: 4; }
-            .timeline-day-ruler-bar-prev { position: absolute; top: 1px; height: 20px; background: var(--color-gray-300); }
-            .timeline-day-ruler-bar-real { position: absolute; top: 1px; height: 20px; border-right: 1px solid #ffffff50; opacity: .7; z-index: 3; }
-            .timeline-day-ruler-bar-delay { background: #ffffff; z-index: 2; }
-            .timeline-day-ruler-bar-real.is-warning { background: var(--color-warning); }
-            .timeline-day-ruler-bar-real.is-success { background: var(--color-primary); }
-            .timeline-day-ruler-bar-real.is-danger { background: var(--color-danger); }
-            .timeline-day-ruler-labels { position: relative; margin-top: 6px; height: 14px; font-size: 11px; color: #667085; font-family: monospace; }
-            .timeline-day-ruler-label { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
-            .timeline-day-ruler-label.hidden { opacity: 0; }
-            .timeline-day-ruler-legend { margin-top: 6px; display: flex; gap: 12px; align-items: center; font-size: 11px; color: #667085; }
-            .timeline-day-ruler-legend-dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
-        </style>
+        <link rel="stylesheet" href="/assets/css/shared/timeline-day-ruler.css?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/css/shared/timeline-day-ruler.css') ?: time(); ?>">
     </head>
 <body class="page-internal">
     <div class="spacing-top-page"></div>
@@ -373,6 +355,7 @@ function painelHoraPorStatus(array $row): string
         </div>
     </div>
 
+    <script src="/assets/js/shared/timeline-day-ruler.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/shared/timeline-day-ruler.js') ?: time(); ?>"></script>
     <script>
         (function () {
             const itemsBase = <?php echo json_encode($timelineItemsHoje, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?> || [];
@@ -382,148 +365,15 @@ function painelHoraPorStatus(array $row): string
                 if (id !== '') itemsById[id] = Object.assign({}, it);
             });
             const root = document.getElementById('timeline-hoje-painel-dia');
-            if (!root || itemsBase.length === 0) return;
-            const dayStart = 8 * 60;
-            const dayEnd = 18 * 60;
-            const range = dayEnd - dayStart;
-            const toTs = (v) => {
-                const s = String(v || '').trim();
-                if (!s) return NaN;
-                const m = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?$/);
-                if (!m) return NaN;
-                const y = Number(m[1]);
-                const mo = Number(m[2]) - 1;
-                const d = Number(m[3]);
-                const hh = Number(m[4] || '0');
-                const mm = Number(m[5] || '0');
-                const ss = Number(m[6] || '0');
-                const dt = new Date(y, mo, d, hh, mm, ss, 0);
-                return Number.isNaN(dt.getTime()) ? NaN : dt.getTime();
-            };
-            const toMin = (ts) => {
-                const d = new Date(ts);
-                if (Number.isNaN(d.getTime())) return NaN;
-                return d.getHours() * 60 + d.getMinutes() + (d.getSeconds() / 60);
-            };
-            const clamp = (m) => Math.max(dayStart, Math.min(dayEnd, m));
-            const pct = (m) => ((clamp(m) - dayStart) / range) * 100;
-            const fmtHM = (m) => {
-                const hh = String(Math.floor(m / 60)).padStart(2, '0');
-                const mm = String(m % 60).padStart(2, '0');
-                return `${hh}:${mm}`;
-            };
-            const tickHtml = Array.from({ length: 11 }, (_, i) => {
-                const left = (i / 10) * 100;
-                const hiddenClass = (i === 0 || i === 10) ? ' hidden' : '';
-                return `<span class="timeline-day-ruler-hour-tick${hiddenClass}" style="left:${left}%"></span>`;
-            }).join('');
-            const labelsHtml = Array.from({ length: 11 }, (_, i) => {
-                const hour = String(8 + i).padStart(2, '0');
-                const left = (i / 10) * 100;
-                const hiddenClass = (i === 0 || i === 10) ? ' hidden' : '';
-                return `<span class="timeline-day-ruler-label${hiddenClass}" style="left:${left}%">${hour}:00</span>`;
-            }).join('');
-            const normalizeStatus = (statusRaw) => {
-                const s = String(statusRaw || '').trim().toLowerCase();
-                if (s === 'agendada') return 'designada';
-                if (s === 'adiada') return 'redesignada';
-                return s;
-            };
-            const isFinishedStatus = (statusRaw) => {
-                const st = normalizeStatus(statusRaw);
-                return st === 'finalizada' || st === 'realizada';
-            };
-            const classByStatus = (statusRaw) => {
-                const st = normalizeStatus(statusRaw);
-                if (st === 'em_andamento') return 'is-warning';
-                if (st === 'finalizada' || st === 'realizada') return 'is-success';
-                if (st === 'cancelada') return 'is-danger';
-                return 'is-warning';
-            };
+            if (!root || itemsBase.length === 0 || !window.TimelineDayRuler) return;
             const allFinished = () => {
                 const ids = Object.keys(itemsById);
                 if (!ids.length) return false;
-                return ids.every((id) => isFinishedStatus(itemsById[id]?.status));
+                return ids.every((id) => window.TimelineDayRuler.isFinishedStatus(itemsById[id]?.status));
             };
+            const asTimelineItems = () => Object.keys(itemsById).map((id) => Object.assign({ id: id }, itemsById[id]));
             function renderTimeline() {
-                const prevHtml = [];
-                const delayHtml = [];
-                const realHtml = [];
-                const now = new Date();
-                const nowMin = now.getHours() * 60 + now.getMinutes();
-                const slots = Object.keys(itemsById)
-                    .map((id) => ({ id: id, it: itemsById[id] }))
-                    .map((x) => {
-                        const sTs = toTs((x.it.data_audiencia || '') + ' ' + (x.it.hora_audiencia || ''));
-                        if (Number.isNaN(sTs)) return null;
-                        const plannedStart = toMin(sTs);
-                        const plannedDur = Math.max(5, parseInt(x.it.duracao_estimada_minutos || 0, 10) || 5);
-                        const rsTs = toTs(x.it.data_hora_inicio_efetivo || '');
-                        const reTs = toTs(x.it.data_hora_fim_efetivo || '');
-                        return {
-                            id: x.id,
-                            plannedStart: plannedStart,
-                            plannedDur: plannedDur,
-                            realStart: Number.isNaN(rsTs) ? null : toMin(rsTs),
-                            realEnd: Number.isNaN(reTs) ? null : toMin(reTs),
-                            status: normalizeStatus(x.it.status || ''),
-                            sortStart: Number.isNaN(rsTs) ? plannedStart : toMin(rsTs),
-                        };
-                    })
-                    .filter((x) => x !== null)
-                    .sort((a, b) => {
-                        if (a.sortStart !== b.sortStart) {
-                            return a.sortStart - b.sortStart;
-                        }
-                        return a.plannedStart - b.plannedStart;
-                    });
-                let cursorEnd = dayStart;
-                slots.forEach((slot) => {
-                    const displayStart = Math.max(slot.plannedStart, cursorEnd);
-                    const plannedEnd = displayStart + slot.plannedDur;
-                    const realStartDisplay = slot.realStart !== null ? slot.realStart : null;
-                    const runningEnd = realStartDisplay !== null && slot.realEnd === null
-                        ? Math.max(realStartDisplay, nowMin)
-                        : null;
-                    const effectiveRealEnd = realStartDisplay !== null
-                        ? (slot.realEnd !== null ? Math.max(slot.realEnd, realStartDisplay) : runningEnd)
-                        : null;
-                    const blockEnd = effectiveRealEnd !== null ? Math.max(plannedEnd, effectiveRealEnd) : plannedEnd;
-
-                    prevHtml.push(`<span class="timeline-day-ruler-bar-prev" title="Previsto: ${fmtHM(displayStart)} - ${fmtHM(plannedEnd)}" style="left:${pct(displayStart)}%;width:${Math.max(0.4, pct(blockEnd) - pct(displayStart))}%"></span>`);
-
-                    const delayStart = displayStart;
-                    const delayEnd = realStartDisplay !== null ? realStartDisplay : (nowMin > displayStart ? nowMin : null);
-                    if (delayEnd !== null && delayEnd > delayStart) {
-                        delayHtml.push(`<span class="timeline-day-ruler-bar-real timeline-day-ruler-bar-delay" title="Aguardando início real: ${fmtHM(delayStart)} - ${fmtHM(delayEnd)}" style="left:${pct(delayStart)}%;width:${Math.max(0.4, pct(delayEnd) - pct(delayStart))}%"></span>`);
-                    }
-
-                    if (realStartDisplay !== null) {
-                        const realStart = realStartDisplay;
-                        const realEnd = slot.realEnd !== null
-                            ? Math.max(slot.realEnd, realStart)
-                            : Math.max(realStart, nowMin);
-                        if (realEnd >= realStart) {
-                            realHtml.push(`<span class="timeline-day-ruler-bar-real ${classByStatus(slot.status)}" title="Real: ${fmtHM(realStart)} - ${fmtHM(realEnd)} | Previsto: ${fmtHM(displayStart)} - ${fmtHM(plannedEnd)}" style="left:${pct(realStart)}%;width:${Math.max(0.4, pct(realEnd) - pct(realStart))}%"></span>`);
-                        }
-                    }
-
-                    cursorEnd = Math.max(cursorEnd, blockEnd);
-                });
-                const nowHtml = (nowMin >= dayStart && nowMin <= dayEnd)
-                    ? `<span class="timeline-day-ruler-now" title="Agora: ${fmtHM(nowMin)}" style="left:${pct(nowMin)}%"></span>`
-                    : '';
-                root.innerHTML =
-                    `<div class="timeline-day-ruler-track">
-                        <span class="timeline-day-ruler-shade" style="left:0%;width:9%"></span>
-                        <span class="timeline-day-ruler-shade" style="left:91%;width:9%"></span>
-                        ${tickHtml}${prevHtml.join('')}${delayHtml.join('')}${realHtml.join('')}${nowHtml}
-                     </div>
-                     <div class="timeline-day-ruler-labels">${labelsHtml}</div>
-                     <div class="timeline-day-ruler-legend">
-                       <span><i class="timeline-day-ruler-legend-dot" style="background: #20202050"></i> Previsto</span>
-                       <span><i class="timeline-day-ruler-legend-dot" style="background: var(--color-primary)"></i> Real</span>
-                     </div>`;
+                window.TimelineDayRuler.render(root, asTimelineItems());
             }
             function refreshTimelineData() {
                 const pautas = Object.keys(itemsById);
