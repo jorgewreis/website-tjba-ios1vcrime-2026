@@ -185,6 +185,59 @@ final class SalaAudienciasPautaRepository
         return false;
     }
 
+    /**
+     * Garante coerência dos horários efetivos quando status é alterado fora do painel.
+     */
+    public function ensureEffectiveTimesByStatus(string $id, string $status, ?string $atualizadoPor): bool
+    {
+        $id = trim($id);
+        $status = strtolower(trim($status));
+        if ($id === '' || $status === '') {
+            return false;
+        }
+
+        $now = date('Y-m-d H:i:s');
+        if ($status === 'em_andamento') {
+            $sql = sprintf(
+                'UPDATE `%s`
+                 SET `atualizado_por` = :u,
+                     `data_hora_inicio_efetivo` = COALESCE(`data_hora_inicio_efetivo`, :now),
+                     `data_hora_fim_efetivo` = NULL
+                 WHERE `id_pauta` = :id AND `ativo` = 1
+                 LIMIT 1',
+                $this->table
+            );
+            $st = $this->connection->prepare($sql);
+            $st->bindValue(':id', $id);
+            $st->bindValue(':u', $atualizadoPor);
+            $st->bindValue(':now', $now);
+            $st->execute();
+
+            return true;
+        }
+
+        if ($status === 'finalizada' || $status === 'realizada') {
+            $sql = sprintf(
+                'UPDATE `%s`
+                 SET `atualizado_por` = :u,
+                     `data_hora_inicio_efetivo` = COALESCE(`data_hora_inicio_efetivo`, :now),
+                     `data_hora_fim_efetivo` = COALESCE(`data_hora_fim_efetivo`, :now)
+                 WHERE `id_pauta` = :id AND `ativo` = 1
+                 LIMIT 1',
+                $this->table
+            );
+            $st = $this->connection->prepare($sql);
+            $st->bindValue(':id', $id);
+            $st->bindValue(':u', $atualizadoPor);
+            $st->bindValue(':now', $now);
+            $st->execute();
+
+            return true;
+        }
+
+        return false;
+    }
+
     public function softDelete(string $id, ?string $atualizadoPor): bool
     {
         $sql = sprintf('UPDATE `%s` SET `ativo`=0,`atualizado_por`=:atualizado_por WHERE `id_pauta`=:id AND `ativo`=1 LIMIT 1', $this->table);
@@ -279,7 +332,7 @@ final class SalaAudienciasPautaRepository
     {
         [$where, $params] = $this->buildWhere($filters);
         $sql = sprintf(
-            'SELECT a.`id_pauta`, a.`tipo_audiencia`, a.`data_audiencia`, a.`hora_audiencia`, a.`data_hora_designacao`, a.`hora_inicio`, a.`hora_fim`, a.`duracao_estimada_minutos`, a.`localizacao`, a.`status`, p.`numero_processo`, COALESCE(p.`sigiloso`, 0) AS `processo_sigiloso`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `classe_nome`
+            'SELECT a.`id_pauta`, a.`tipo_audiencia`, a.`data_audiencia`, a.`hora_audiencia`, a.`data_hora_designacao`, a.`hora_inicio`, a.`hora_fim`, a.`data_hora_inicio_efetivo`, a.`data_hora_fim_efetivo`, a.`duracao_estimada_minutos`, a.`localizacao`, a.`status`, p.`numero_processo`, COALESCE(p.`sigiloso`, 0) AS `processo_sigiloso`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `classe_nome`
              FROM `%s` a
              LEFT JOIN `processos` p ON p.`id` = a.`processo`
              LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id`

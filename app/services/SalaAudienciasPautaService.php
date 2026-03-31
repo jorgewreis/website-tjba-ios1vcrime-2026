@@ -174,6 +174,7 @@ final class SalaAudienciasPautaService
             'atualizado_por' => $usuarioId,
         ]);
         if ($ok) {
+            $this->pautaRepository->ensureEffectiveTimesByStatus($id, $status, $usuarioId);
             $this->sincronizarDuracaoEHorariosPauta($id);
         }
 
