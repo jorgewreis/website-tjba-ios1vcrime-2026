@@ -45,6 +45,24 @@ $statusCounts = $result['statusCounts'] ?? ['designada' => 0, 'realizada' => 0, 
 $totalPages = max(1, (int) ceil(max(1, $total) / $itemsPerPage));
 $startItem = $total > 0 ? $offset + 1 : 0;
 $endItem = min($offset + count($rows), $total);
+$timelineItemsHoje = [];
+foreach ($rows as $rowTimeline) {
+    $dataRow = substr((string) ($rowTimeline['data_audiencia'] ?? ''), 0, 10);
+    if ($dataRow !== $hoje) {
+        continue;
+    }
+    $horaRow = substr((string) ($rowTimeline['hora_audiencia'] ?? '00:00'), 0, 5);
+    $durPrev = max(5, (int) ($rowTimeline['duracao_estimada_minutos'] ?? 0));
+    $timelineItemsHoje[] = [
+        'id' => (string) ($rowTimeline['id_pauta'] ?? ''),
+        'data_audiencia' => $dataRow,
+        'hora_audiencia' => $horaRow,
+        'duracao_estimada_minutos' => $durPrev,
+        'data_hora_inicio_efetivo' => (string) ($rowTimeline['data_hora_inicio_efetivo'] ?? ''),
+        'data_hora_fim_efetivo' => (string) ($rowTimeline['data_hora_fim_efetivo'] ?? ''),
+        'tipo_audiencia' => (string) ($rowTimeline['tipo_audiencia'] ?? ''),
+    ];
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -57,6 +75,16 @@ $endItem = min($offset + count($rows), $total);
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
         <?php include __DIR__ . '/_toast_script.php'; ?>
         <?php include __DIR__ . '/_copy_process_script.php'; ?>
+        <style>
+            .timeline-day-ruler { padding: 8px 0 4px; }
+            .timeline-day-ruler-track { position: relative; height: 22px; border-radius: 999px; background: #eef2f6; overflow: hidden; }
+            .timeline-day-ruler-bar-prev { position: absolute; top: 5px; height: 12px; border-radius: 999px; background: #8db8ff; opacity: .7; }
+            .timeline-day-ruler-bar-real { position: absolute; top: 7px; height: 8px; border-radius: 999px; background: #2b7a4b; opacity: .95; }
+            .timeline-day-ruler-labels { margin-top: 6px; display: flex; justify-content: space-between; font-size: 11px; color: #667085; font-family: monospace; }
+            .timeline-day-ruler-legend { margin-top: 6px; display: flex; gap: 12px; align-items: center; font-size: 11px; color: #667085; }
+            .timeline-day-ruler-legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+            .timeline-day-ruler-empty { font-size: 12px; color: #667085; }
+        </style>
     </head>
 <body class="page-internal">
     <div class="spacing-top-page"></div>
@@ -129,6 +157,9 @@ $endItem = min($offset + count($rows), $total);
                     </select>
                 </div>
             </div>
+        </div>
+        <div class="padding-x-md padding-y-sm border-bottom">
+            <div id="timeline-hoje-pauta-interna" class="timeline-day-ruler"></div>
         </div>
         <?php foreach ($rows as $row): ?>
         <div class="display-flex col col-full register border-bottom" data-audiencia-id="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>">
@@ -371,6 +402,59 @@ $endItem = min($offset + count($rows), $total);
         </div>
     </div>
 
+    <script>
+        (function () {
+            const items = <?php echo json_encode($timelineItemsHoje, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?> || [];
+            const root = document.getElementById('timeline-hoje-pauta-interna');
+            if (!root) return;
+            const dayStart = 8 * 60;
+            const dayEnd = 18 * 60;
+            const range = dayEnd - dayStart;
+            const toTs = (v) => {
+                const s = String(v || '').trim();
+                if (!s) return NaN;
+                const t = Date.parse(s.replace(' ', 'T'));
+                return Number.isNaN(t) ? NaN : t;
+            };
+            const toMin = (ts) => {
+                const d = new Date(ts);
+                if (Number.isNaN(d.getTime())) return NaN;
+                return d.getHours() * 60 + d.getMinutes();
+            };
+            const parseSched = (it) => toTs((it.data_audiencia || '') + ' ' + (it.hora_audiencia || ''));
+            const clamp = (m) => Math.max(dayStart, Math.min(dayEnd, m));
+            const pct = (m) => ((clamp(m) - dayStart) / range) * 100;
+            const barsPrev = [];
+            const barsReal = [];
+            items.forEach((it) => {
+                const sTs = parseSched(it);
+                if (Number.isNaN(sTs)) return;
+                const sMin = toMin(sTs);
+                const prevDur = Math.max(5, parseInt(it.duracao_estimada_minutos || 0, 10) || 5);
+                barsPrev.push({ l: pct(sMin), w: Math.max(0.4, pct(sMin + prevDur) - pct(sMin)) });
+                const realStartTs = toTs(it.data_hora_inicio_efetivo || '');
+                const realEndTs = toTs(it.data_hora_fim_efetivo || '');
+                if (!Number.isNaN(realStartTs)) {
+                    const rs = toMin(realStartTs);
+                    const re = !Number.isNaN(realEndTs) ? toMin(realEndTs) : (rs + prevDur);
+                    barsReal.push({ l: pct(rs), w: Math.max(0.4, pct(re) - pct(rs)) });
+                }
+            });
+            if (barsPrev.length === 0 && barsReal.length === 0) {
+                root.innerHTML = '<span class="timeline-day-ruler-empty">Régua do tempo (08:00–18:00) indisponível para os filtros atuais.</span>';
+                return;
+            }
+            const prevHtml = barsPrev.map((b) => `<span class="timeline-day-ruler-bar-prev" style="left:${b.l}%;width:${b.w}%"></span>`).join('');
+            const realHtml = barsReal.map((b) => `<span class="timeline-day-ruler-bar-real" style="left:${b.l}%;width:${b.w}%"></span>`).join('');
+            root.innerHTML =
+                `<div class="timeline-day-ruler-track">${prevHtml}${realHtml}</div>
+                 <div class="timeline-day-ruler-labels"><span>08:00</span><span>18:00</span></div>
+                 <div class="timeline-day-ruler-legend">
+                   <span><i class="timeline-day-ruler-legend-dot" style="background:#8db8ff"></i> Previsto</span>
+                   <span><i class="timeline-day-ruler-legend-dot" style="background:#2b7a4b"></i> Real</span>
+                 </div>`;
+        })();
+    </script>
     <script src="/assets/js/modules/audiencias/pauta-list.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-list.js') ?: time(); ?>"></script>
 </body>
 </html>

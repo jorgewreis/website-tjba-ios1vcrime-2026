@@ -26,6 +26,17 @@ $result = $service->list([
 ], 500, 0);
 $rows = $result['rows'] ?? [];
 $totalHoje = count($rows);
+$timelineItemsHoje = [];
+foreach ($rows as $rowTimeline) {
+    $timelineItemsHoje[] = [
+        'id' => (string) ($rowTimeline['id_pauta'] ?? ''),
+        'data_audiencia' => substr((string) ($rowTimeline['data_audiencia'] ?? ''), 0, 10),
+        'hora_audiencia' => substr((string) ($rowTimeline['hora_audiencia'] ?? '00:00'), 0, 5),
+        'duracao_estimada_minutos' => max(5, (int) ($rowTimeline['duracao_estimada_minutos'] ?? 0)),
+        'data_hora_inicio_efetivo' => (string) ($rowTimeline['data_hora_inicio_efetivo'] ?? ''),
+        'data_hora_fim_efetivo' => (string) ($rowTimeline['data_hora_fim_efetivo'] ?? ''),
+    ];
+}
 
 $dtHoje = new \DateTimeImmutable('today');
 $diasSemana = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
@@ -42,6 +53,15 @@ $dataTitulo = $diasSemana[(int) $dtHoje->format('w')] . ', ' . $dtHoje->format('
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
         <?php include __DIR__ . '/_toast_script.php'; ?>
         <?php include __DIR__ . '/_copy_process_script.php'; ?>
+        <style>
+            .timeline-day-ruler { padding: 8px 0 4px; }
+            .timeline-day-ruler-track { position: relative; height: 22px; border-radius: 999px; background: #eef2f6; overflow: hidden; }
+            .timeline-day-ruler-bar-prev { position: absolute; top: 5px; height: 12px; border-radius: 999px; background: #8db8ff; opacity: .7; }
+            .timeline-day-ruler-bar-real { position: absolute; top: 7px; height: 8px; border-radius: 999px; background: #2b7a4b; opacity: .95; }
+            .timeline-day-ruler-labels { margin-top: 6px; display: flex; justify-content: space-between; font-size: 11px; color: #667085; font-family: monospace; }
+            .timeline-day-ruler-legend { margin-top: 6px; display: flex; gap: 12px; align-items: center; font-size: 11px; color: #667085; }
+            .timeline-day-ruler-legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+        </style>
     </head>
 <body class="page-internal">
     <div class="spacing-top-page"></div>
@@ -61,6 +81,9 @@ $dataTitulo = $diasSemana[(int) $dtHoje->format('w')] . ', ' . $dtHoje->format('
                 <h2 style="margin:0;">Audiências de hoje</h2>
                 <span class="minor-info"><?php echo (int) $totalHoje; ?> audiência(s)</span>
             </div>
+        </div>
+        <div class="padding-x-md padding-y-sm border-bottom">
+            <div id="timeline-hoje-painel-dia" class="timeline-day-ruler"></div>
         </div>
 
         <?php if ($totalHoje === 0): ?>
@@ -289,6 +312,52 @@ $dataTitulo = $diasSemana[(int) $dtHoje->format('w')] . ', ' . $dtHoje->format('
         </div>
     </div>
 
+    <script>
+        (function () {
+            const items = <?php echo json_encode($timelineItemsHoje, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?> || [];
+            const root = document.getElementById('timeline-hoje-painel-dia');
+            if (!root || items.length === 0) return;
+            const dayStart = 8 * 60;
+            const dayEnd = 18 * 60;
+            const range = dayEnd - dayStart;
+            const toTs = (v) => {
+                const s = String(v || '').trim();
+                if (!s) return NaN;
+                const t = Date.parse(s.replace(' ', 'T'));
+                return Number.isNaN(t) ? NaN : t;
+            };
+            const toMin = (ts) => {
+                const d = new Date(ts);
+                if (Number.isNaN(d.getTime())) return NaN;
+                return d.getHours() * 60 + d.getMinutes();
+            };
+            const clamp = (m) => Math.max(dayStart, Math.min(dayEnd, m));
+            const pct = (m) => ((clamp(m) - dayStart) / range) * 100;
+            const prevHtml = [];
+            const realHtml = [];
+            items.forEach((it) => {
+                const sTs = toTs((it.data_audiencia || '') + ' ' + (it.hora_audiencia || ''));
+                if (Number.isNaN(sTs)) return;
+                const sMin = toMin(sTs);
+                const prevDur = Math.max(5, parseInt(it.duracao_estimada_minutos || 0, 10) || 5);
+                prevHtml.push(`<span class="timeline-day-ruler-bar-prev" style="left:${pct(sMin)}%;width:${Math.max(0.4, pct(sMin + prevDur) - pct(sMin))}%"></span>`);
+                const rsTs = toTs(it.data_hora_inicio_efetivo || '');
+                const reTs = toTs(it.data_hora_fim_efetivo || '');
+                if (!Number.isNaN(rsTs)) {
+                    const rs = toMin(rsTs);
+                    const re = !Number.isNaN(reTs) ? toMin(reTs) : (rs + prevDur);
+                    realHtml.push(`<span class="timeline-day-ruler-bar-real" style="left:${pct(rs)}%;width:${Math.max(0.4, pct(re) - pct(rs))}%"></span>`);
+                }
+            });
+            root.innerHTML =
+                `<div class="timeline-day-ruler-track">${prevHtml.join('')}${realHtml.join('')}</div>
+                 <div class="timeline-day-ruler-labels"><span>08:00</span><span>18:00</span></div>
+                 <div class="timeline-day-ruler-legend">
+                   <span><i class="timeline-day-ruler-legend-dot" style="background:#8db8ff"></i> Previsto</span>
+                   <span><i class="timeline-day-ruler-legend-dot" style="background:#2b7a4b"></i> Real</span>
+                 </div>`;
+        })();
+    </script>
     <script src="/assets/js/modules/audiencias/pauta-list.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-list.js') ?: time(); ?>"></script>
 </body>
 </html>

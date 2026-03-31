@@ -7,6 +7,8 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 require_once __DIR__ . '/../../services/SalaAudienciasAtaService.php';
+require_once __DIR__ . '/../../helpers/PrioridadesProcessuaisCatalog.php';
+require_once __DIR__ . '/../../services/ProcessoManager.php';
 require_once __DIR__ . '/../../models/Usuario.php';
 require_once __DIR__ . '/../../helpers/UserAccessHelper.php';
 require_once __DIR__ . '/../../access/ProfileNormalizer.php';
@@ -20,9 +22,26 @@ if (!is_array($perfilsUsuario)) {
 $normPerfis = ProfileNormalizer::normalize($perfilsUsuario);
 $podeInscricaoComoEstudante = UserAccessHelper::isUsuarioExterno($perfilsUsuario) && ProfileNormalizer::hasEstudante($normPerfis);
 
-$service = new SalaAudienciasAtaService(Conection::getInstance()->getConnection());
+$pdo = Conection::getInstance()->getConnection();
+$service = new SalaAudienciasAtaService($pdo);
+$processoManager = new ProcessoManager($pdo);
 $hojeRows = $userId !== '' ? $service->listHojeParaInscricaoEstudante($userId) : [];
 $minhasRows = $userId !== '' ? $service->listMinhasInscricoesEstudante($userId) : [];
+$toTimeTs = static function (array $row): int {
+    $inicioEfetivo = trim((string) ($row['data_hora_inicio_efetivo'] ?? ''));
+    if ($inicioEfetivo !== '') {
+        $ts = strtotime($inicioEfetivo);
+        if ($ts !== false) {
+            return $ts;
+        }
+    }
+    $fallback = trim((string) ($row['data_audiencia'] ?? '')) . ' ' . trim((string) ($row['hora_audiencia'] ?? ''));
+    $ts = strtotime(trim($fallback));
+    return $ts !== false ? $ts : PHP_INT_MAX;
+};
+usort($hojeRows, static function (array $a, array $b) use ($toTimeTs): int {
+    return $toTimeTs($a) <=> $toTimeTs($b);
+});
 $maxVagas = SalaAudienciasAtaService::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA;
 $itemsPerPage = (int) ($_GET['items_per_page'] ?? 25);
 if (!in_array($itemsPerPage, [10, 25, 50, 100], true)) {
@@ -62,6 +81,16 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
         <?php include __DIR__ . '/_toast_script.php'; ?>
         <?php include __DIR__ . '/_copy_process_script.php'; ?>
+        <style>
+            .timeline-day-ruler { padding: 8px 0 4px; }
+            .timeline-day-ruler-track { position: relative; height: 22px; border-radius: 999px; background: #eef2f6; overflow: hidden; }
+            .timeline-day-ruler-bar-prev { position: absolute; top: 5px; height: 12px; border-radius: 999px; background: #8db8ff; opacity: .7; }
+            .timeline-day-ruler-bar-real { position: absolute; top: 7px; height: 8px; border-radius: 999px; background: #2b7a4b; opacity: .95; }
+            .timeline-day-ruler-labels { margin-top: 6px; display: flex; justify-content: space-between; font-size: 11px; color: #667085; font-family: monospace; }
+            .timeline-day-ruler-legend { margin-top: 6px; display: flex; gap: 12px; align-items: center; font-size: 11px; color: #667085; }
+            .timeline-day-ruler-legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+            .timeline-day-ruler-empty { font-size: 12px; color: #667085; }
+        </style>
     </head>
 <body class="page-internal">
     <div class="spacing-top-page"></div>
@@ -75,7 +104,7 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
         <p class="description-page">Área para inscrições e acompanhamento das suas participações em audiências.</p>
     </div>
 
-    <div class="container-full card-page">
+    <div class="container-full card-page" id="card-audiencias-hoje-estudante">
         <div class="display-flex row row-full align-center justify-between padding-x-lg padding-y-md border-bottom">
             <div class="display-flex row row-fit justify-start padding-x-md"><h2>Audiências de hoje</h2></div>
         </div>
@@ -91,6 +120,9 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
                     </select>
                 </div>
             </div>
+        </div>
+        <div class="padding-x-md padding-y-sm border-bottom">
+            <div id="timeline-hoje-painel-estudante" class="timeline-day-ruler"></div>
         </div>
         <?php if (count($hojePageRows) === 0): ?>
         <div class="padding-x-lg padding-y-lg">
@@ -175,7 +207,7 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
                     <?php elseif ($sigiloso): ?>
                     <span class="minor-info text-error">Processo sigiloso.</span>
                     <?php elseif ($menor): ?>
-                    <span class="minor-info text-error">Audiencia com menor envolvido.</span>
+                    <span class="minor-info text-error">Proibida inscrição de estudantes.</span>
                     <?php elseif ($podeInscricaoComoEstudante && $pode): ?>
                     <button type="button" class="btn btn-primary btn-inscrever-ata" data-pauta="<?php echo $idPauta; ?>">Inscrever-me</button>
                     <?php elseif (!$podeInscricaoComoEstudante): ?>
@@ -185,6 +217,46 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
                     <?php endif; ?>
                 </div>
             </div>
+            <?php
+                $prioridadesRow = [];
+                if (!empty($row['numero_processo'])) {
+                    try {
+                        $prioridadesRow = $processoManager->listarPrioridades((string) $row['numero_processo']);
+                    } catch (Throwable $e) {
+                        error_log('sala-audiencias-painel-estudantes: listarPrioridades falhou: ' . $e->getMessage());
+                        $prioridadesRow = [];
+                    }
+                }
+            ?>
+            <?php if ($prioridadesRow !== [] || $sigiloso): ?>
+            <div class="display-flex col col-full grp-subtask-panel">
+                <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top align-start flex-wrap grp-sub-line grp-sub-line-primary" style="font-family: monospace; font-size: 11px;">
+                    <div class="display-flex row row-fit justify-start gap-y-md flex-wrap grp-sub-left">
+                        <div class="col">
+                            <div class="display-flex flex-wrap align-items-center">
+                                <?php if ($sigiloso): ?>
+                                <span class="badge badge-black" title="Processo sigiloso">S</span>
+                                <?php endif; ?>
+                                <?php foreach ($prioridadesRow as $prioridade): ?>
+                                    <?php
+                                        $rotulo = trim((string) $prioridade);
+                                        $codigo = PrioridadesProcessuaisCatalog::codigoForLabel($rotulo)
+                                            ?? PrioridadesProcessuaisCatalog::normalizeToCodigo($rotulo);
+                                        $badgeClass = 'badge-warning';
+                                        if ($codigo !== null && in_array($codigo, ['reu_preso', 'violencia_domestica', 'crianca_adolescente'], true)) {
+                                            $badgeClass = 'badge-danger';
+                                        } elseif ($codigo === 'sigiloso') {
+                                            $badgeClass = 'badge-black';
+                                        }
+                                    ?>
+                                <span class="badge <?php echo htmlspecialchars($badgeClass, ENT_QUOTES); ?>"><?php echo htmlspecialchars($rotulo, ENT_QUOTES); ?></span>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
         <?php endforeach; ?>
         <div class="display-flex row row-full justify-between padding-x-lg padding-y-lg">
@@ -426,7 +498,7 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
             } else if (sigiloso) {
                 wrapper.innerHTML = '<span class="minor-info text-error">Processo sigiloso.</span>';
             } else if (menor) {
-                wrapper.innerHTML = '<span class="minor-info text-error">Audiencia com menor envolvido.</span>';
+                wrapper.innerHTML = '<span class="minor-info text-error">Proibida inscrição de estudantes.</span>';
             } else if (pode && pauta) {
                 wrapper.innerHTML = '<button type="button" class="btn btn-primary btn-inscrever-ata" data-pauta="' + escapeHtml(pauta) + '">Inscrever-me</button>';
             } else {
@@ -483,6 +555,61 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
                 if (!items[id]) return;
                 renderVagas(items[id]);
             });
+            renderTimeline(items);
+        }
+        function renderTimeline(overrides) {
+            var root = document.getElementById('timeline-hoje-painel-estudante');
+            if (!root) return;
+            var container = document.getElementById('card-audiencias-hoje-estudante');
+            if (!container) return;
+            var dayStart = 8 * 60;
+            var dayEnd = 18 * 60;
+            var range = dayEnd - dayStart;
+            var clamp = function (m) { return Math.max(dayStart, Math.min(dayEnd, m)); };
+            var pct = function (m) { return ((clamp(m) - dayStart) / range) * 100; };
+            var prevBars = [];
+            var realBars = [];
+            container.querySelectorAll('.js-time-block[data-pauta]').forEach(function (block) {
+                var pautaId = String(block.getAttribute('data-pauta') || '').trim();
+                var item = (overrides && pautaId && overrides[pautaId]) ? overrides[pautaId] : {
+                    data_audiencia: block.getAttribute('data-data-audiencia') || '',
+                    hora_audiencia: block.getAttribute('data-hora-audiencia') || '',
+                    data_hora_inicio_efetivo: block.getAttribute('data-inicio') || '',
+                    data_hora_fim_efetivo: block.getAttribute('data-fim') || '',
+                    duracao_estimada_minutos: block.getAttribute('data-duracao-estimada') || '0'
+                };
+                var schedTs = parseDateTime((String(item.data_audiencia || '').trim() + ' ' + String(item.hora_audiencia || '').trim()).trim());
+                if (isNaN(schedTs)) return;
+                var sMin = (new Date(schedTs)).getHours() * 60 + (new Date(schedTs)).getMinutes();
+                var prevDur = parseInt(item.duracao_estimada_minutos || 0, 10);
+                if (!Number.isFinite(prevDur) || prevDur < 5) prevDur = 5;
+                prevBars.push({ l: pct(sMin), w: Math.max(0.4, pct(sMin + prevDur) - pct(sMin)) });
+                var rsTs = parseDateTime(item.data_hora_inicio_efetivo || '');
+                var reTs = parseDateTime(item.data_hora_fim_efetivo || '');
+                if (!isNaN(rsTs)) {
+                    var rsd = new Date(rsTs);
+                    var rs = rsd.getHours() * 60 + rsd.getMinutes();
+                    var re = rs + prevDur;
+                    if (!isNaN(reTs)) {
+                        var red = new Date(reTs);
+                        re = red.getHours() * 60 + red.getMinutes();
+                    }
+                    realBars.push({ l: pct(rs), w: Math.max(0.4, pct(re) - pct(rs)) });
+                }
+            });
+            if (!prevBars.length && !realBars.length) {
+                root.innerHTML = '<span class="timeline-day-ruler-empty">Régua do tempo (08:00–18:00) indisponível no momento.</span>';
+                return;
+            }
+            var prevHtml = prevBars.map(function (b) { return '<span class="timeline-day-ruler-bar-prev" style="left:' + b.l + '%;width:' + b.w + '%"></span>'; }).join('');
+            var realHtml = realBars.map(function (b) { return '<span class="timeline-day-ruler-bar-real" style="left:' + b.l + '%;width:' + b.w + '%"></span>'; }).join('');
+            root.innerHTML =
+                '<div class="timeline-day-ruler-track">' + prevHtml + realHtml + '</div>' +
+                '<div class="timeline-day-ruler-labels"><span>08:00</span><span>18:00</span></div>' +
+                '<div class="timeline-day-ruler-legend">' +
+                '<span><i class="timeline-day-ruler-legend-dot" style="background:#8db8ff"></i> Previsto</span>' +
+                '<span><i class="timeline-day-ruler-legend-dot" style="background:#2b7a4b"></i> Real</span>' +
+                '</div>';
         }
         function refreshStatusAndTime() {
             var pautas = collectPautas();
@@ -506,6 +633,7 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
         }
         bindItemsPerPage('items-per-page-hoje');
         bindItemsPerPage('items-per-page-minhas');
+        renderTimeline(null);
         refreshStatusAndTime();
         window.setInterval(refreshStatusAndTime, 60000);
     })();
