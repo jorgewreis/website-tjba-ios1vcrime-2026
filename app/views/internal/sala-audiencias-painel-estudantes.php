@@ -82,10 +82,20 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
     $inicioTs = $inicioRaw !== '' ? strtotime($inicioRaw) : false;
     $fimTs = $fimRaw !== '' ? strtotime($fimRaw) : false;
 
-    if ($status === 'finalizada' && $inicioTs !== false && $fimTs !== false && $fimTs >= $inicioTs) {
-        $duracaoMin = (int) floor(($fimTs - $inicioTs) / 60);
+    if ($status === 'finalizada') {
+        if ($inicioTs !== false && $fimTs !== false && $fimTs >= $inicioTs) {
+            $duracaoMin = (int) floor(($fimTs - $inicioTs) / 60);
 
-        return date('H:i', $inicioTs) . ' - ' . date('H:i', $fimTs) . ' (' . $duracaoMin . 'min)';
+            return date('H:i', $inicioTs) . ' - ' . date('H:i', $fimTs) . ' (' . $duracaoMin . ' min)';
+        }
+        if ($inicioTs !== false) {
+            return date('H:i', $inicioTs) . ' - --:-- (sem encerramento real)';
+        }
+        if ($fimTs !== false) {
+            return '--:-- - ' . date('H:i', $fimTs) . ' (sem início real)';
+        }
+
+        return 'Sem horário real registrado';
     }
 
     if ($status === 'em_andamento' && $inicioTs !== false) {
@@ -462,10 +472,14 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
             var html = '';
             if (status === 'finalizada' && !isNaN(inicioTs) && !isNaN(fimTs) && fimTs >= inicioTs) {
                 var durReal = Math.floor((fimTs - inicioTs) / 60000);
-                html += '<span class="major-info">' + fmtTime(inicioTs) + ' - ' + fmtTime(fimTs) + ' (' + durReal + 'min)</span>';
-            } else if (status === 'em_andamento' && !isNaN(inicioTs)) {
-                html += '<span class="major-info">' + fmtTime(inicioTs) + '</span>';
+                html += '<span class="major-info">' + fmtTime(inicioTs) + ' - ' + fmtTime(fimTs) + ' (' + durReal + ' min)</span>';
             } else if (status === 'finalizada' && !isNaN(inicioTs)) {
+                html += '<span class="major-info">' + fmtTime(inicioTs) + ' - --:-- (sem encerramento real)</span>';
+            } else if (status === 'finalizada' && !isNaN(fimTs)) {
+                html += '<span class="major-info">--:-- - ' + fmtTime(fimTs) + ' (sem início real)</span>';
+            } else if (status === 'finalizada') {
+                html += '<span class="major-info">Sem horário real registrado</span>';
+            } else if (status === 'em_andamento' && !isNaN(inicioTs)) {
                 html += '<span class="major-info">' + fmtTime(inicioTs) + '</span>';
             } else if (!isNaN(designadaTs)) {
                 html += '<span class="major-info">' + fmtTime(designadaTs) + '</span>';
@@ -570,6 +584,35 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
             });
             renderTimeline(items);
         }
+        function normalizeStatus(statusRaw) {
+            var s = String(statusRaw || '').trim().toLowerCase();
+            if (s === 'agendada') return 'designada';
+            if (s === 'adiada') return 'redesignada';
+            return s;
+        }
+        function isFinishedStatus(statusRaw) {
+            var st = normalizeStatus(statusRaw);
+            return st === 'finalizada' || st === 'realizada';
+        }
+        function allPautasFinished(itemsMap) {
+            var ids = Object.keys(itemsMap || {});
+            if (!ids.length) return false;
+            return ids.every(function (id) {
+                return isFinishedStatus(itemsMap[id] && itemsMap[id].status);
+            });
+        }
+        function buildCurrentItemsFromDom() {
+            var out = {};
+            document.querySelectorAll('.js-time-block[data-pauta]').forEach(function (block) {
+                var id = String(block.getAttribute('data-pauta') || '').trim();
+                if (!id) return;
+                out[id] = {
+                    id_pauta: id,
+                    status: String(block.getAttribute('data-status') || '').trim()
+                };
+            });
+            return out;
+        }
         function renderTimeline(overrides) {
             var root = document.getElementById('timeline-hoje-painel-estudante');
             if (!root) return;
@@ -630,10 +673,15 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
             sourceItems.forEach(function (slot) {
                 var displayStart = Math.max(slot.plannedStart, cursorEnd);
                 var plannedEnd = displayStart + slot.plannedDur;
-                var runningEnd = (slot.realStart !== null && slot.realEnd === null)
-                    ? Math.max(slot.realStart, nowMin)
+                var realStartDisplay = slot.realStart !== null
+                    ? Math.max(slot.realStart, displayStart)
                     : null;
-                var effectiveRealEnd = slot.realEnd !== null ? slot.realEnd : runningEnd;
+                var runningEnd = (realStartDisplay !== null && slot.realEnd === null)
+                    ? Math.max(realStartDisplay, nowMin)
+                    : null;
+                var effectiveRealEnd = realStartDisplay !== null
+                    ? (slot.realEnd !== null ? Math.max(slot.realEnd, realStartDisplay) : runningEnd)
+                    : null;
                 var blockEnd = effectiveRealEnd !== null ? Math.max(plannedEnd, effectiveRealEnd) : plannedEnd;
 
                 prevBars.push({
@@ -643,7 +691,7 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
                 });
 
                 var delayStart = displayStart;
-                var delayEnd = slot.realStart !== null ? slot.realStart : (nowMin > displayStart ? nowMin : null);
+                var delayEnd = realStartDisplay !== null ? realStartDisplay : (nowMin > displayStart ? nowMin : null);
                 if (delayEnd !== null && delayEnd > delayStart) {
                     delayBars.push({
                         l: pct(delayStart),
@@ -652,9 +700,11 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
                     });
                 }
 
-                if (slot.realStart !== null) {
-                    var realStart = slot.realStart;
-                    var realEnd = slot.realEnd !== null ? slot.realEnd : Math.max(realStart, nowMin);
+                if (realStartDisplay !== null) {
+                    var realStart = realStartDisplay;
+                    var realEnd = slot.realEnd !== null
+                        ? Math.max(slot.realEnd, realStart)
+                        : Math.max(realStart, nowMin);
                     if (realEnd > realStart) {
                         realBars.push({
                             l: pct(realStart),
@@ -671,7 +721,7 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
                 return;
             }
             var prevHtml = prevBars.map(function (b) { return '<span class="timeline-day-ruler-bar-prev" title="' + escapeHtml(b.title) + '" style="left:' + b.l + '%;width:' + b.w + '%"></span>'; }).join('');
-            var delayHtml = delayBars.map(function (b) { return '<span class="timeline-day-ruler-bar-real" title="' + escapeHtml(b.title) + '" style="left:' + b.l + '%;width:' + b.w + '%;background:#ffffff;opacity:.95;z-index:2;"></span>'; }).join('');
+            var delayHtml = delayBars.map(function (b) { return '<span class="timeline-day-ruler-bar-real" title="' + escapeHtml(b.title) + '" style="left:' + b.l + '%;width:' + b.w + '%;z-index:2;"></span>'; }).join('');
             var realHtml = realBars.map(function (b) { return '<span class="timeline-day-ruler-bar-real" title="' + escapeHtml(b.title) + '" style="left:' + b.l + '%;width:' + b.w + '%"></span>'; }).join('');
             var tickHtml = Array.from({ length: 11 }, function (_, i) {
                 var left = (i / 10) * 100;
@@ -701,6 +751,7 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
         function refreshStatusAndTime() {
             var pautas = collectPautas();
             if (!pautas.length) return;
+            if (allPautasFinished(latestItemsById)) return;
             fetch('/api/sala-audiencias-pauta/status-bulk.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -714,20 +765,33 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
                 })
                 .then(function (res) {
                     if (!res.ok || !res.body.success || !res.body.items) return;
+                    Object.keys(res.body.items).forEach(function (id) {
+                        latestItemsById[id] = Object.assign({}, latestItemsById[id] || {}, res.body.items[id]);
+                    });
                     applyUpdates(res.body.items);
                 })
                 .catch(function () { /* erro silencioso de polling */ });
+        }
+        var latestItemsById = buildCurrentItemsFromDom();
+        var pollTimer = null;
+        function tick() {
+            // Atualiza marcador "agora" mesmo sem mudança de dados.
+            renderTimeline(null);
+            if (allPautasFinished(latestItemsById)) {
+                if (pollTimer !== null) {
+                    window.clearInterval(pollTimer);
+                    pollTimer = null;
+                }
+                return;
+            }
+            // Atualiza dados reais sem recarregar a página.
+            refreshStatusAndTime();
         }
         bindItemsPerPage('items-per-page-hoje');
         bindItemsPerPage('items-per-page-minhas');
         renderTimeline(null);
         refreshStatusAndTime();
-        window.setInterval(function () {
-            // Atualiza marcador "agora" mesmo sem mudança de dados.
-            renderTimeline(null);
-            // Atualiza dados reais sem recarregar a página.
-            refreshStatusAndTime();
-        }, 60000);
+        pollTimer = window.setInterval(tick, 60000);
     })();
     </script>
 </body>

@@ -28,8 +28,15 @@ $rows = $result['rows'] ?? [];
 $totalHoje = count($rows);
 $timelineItemsHoje = [];
 foreach ($rows as $rowTimeline) {
+    $statusTimeline = strtolower(trim((string) ($rowTimeline['status'] ?? '')));
+    if ($statusTimeline === 'agendada') {
+        $statusTimeline = 'designada';
+    } elseif ($statusTimeline === 'adiada') {
+        $statusTimeline = 'redesignada';
+    }
     $timelineItemsHoje[] = [
         'id' => (string) ($rowTimeline['id_pauta'] ?? ''),
+        'status' => $statusTimeline,
         'data_audiencia' => substr((string) ($rowTimeline['data_audiencia'] ?? ''), 0, 10),
         'hora_audiencia' => substr((string) ($rowTimeline['hora_audiencia'] ?? '00:00'), 0, 5),
         'duracao_estimada_minutos' => max(5, (int) ($rowTimeline['duracao_estimada_minutos'] ?? 0)),
@@ -59,10 +66,20 @@ function painelHoraPorStatus(array $row): string
     $inicioTs = $inicioRaw !== '' ? strtotime($inicioRaw) : false;
     $fimTs = $fimRaw !== '' ? strtotime($fimRaw) : false;
 
-    if ($status === 'finalizada' && $inicioTs !== false && $fimTs !== false && $fimTs >= $inicioTs) {
-        $duracaoMin = (int) floor(($fimTs - $inicioTs) / 60);
+    if ($status === 'finalizada') {
+        if ($inicioTs !== false && $fimTs !== false && $fimTs >= $inicioTs) {
+            $duracaoMin = (int) floor(($fimTs - $inicioTs) / 60);
 
-        return date('H:i', $inicioTs) . ' - ' . date('H:i', $fimTs) . ' (' . $duracaoMin . 'min)';
+            return date('H:i', $inicioTs) . ' - ' . date('H:i', $fimTs) . ' (' . $duracaoMin . ' min)';
+        }
+        if ($inicioTs !== false) {
+            return date('H:i', $inicioTs) . ' - --:-- (sem encerramento real)';
+        }
+        if ($fimTs !== false) {
+            return '--:-- - ' . date('H:i', $fimTs) . ' (sem início real)';
+        }
+
+        return 'Sem horário real registrado';
     }
 
     if ($status === 'em_andamento' && $inicioTs !== false) {
@@ -95,7 +112,7 @@ function painelHoraPorStatus(array $row): string
             .timeline-day-ruler-hour-tick.hidden { opacity: 0; }
             .timeline-day-ruler-now { position: absolute; top: 0; width: 3px; height: 100%; background: rgba(20,20,20,.30); z-index: 4; }
             .timeline-day-ruler-bar-prev { position: absolute; top: 4px; height: 18px; background: #20202050; }
-            .timeline-day-ruler-bar-real { position: absolute; top: 5px; height: 16px; background: var(--color-primary); opacity: .95; z-index: 3; }
+            .timeline-day-ruler-bar-real { position: absolute; top: 4px; height: 18px; background: var(--color-primary); border-right: 1px solid #ffffff50; opacity: .7; z-index: 3; }
             .timeline-day-ruler-bar-real.late { background: transparent; }
             .timeline-day-ruler-bar-real.early { background: var(--color-primary-active); }
             .timeline-day-ruler-labels { position: relative; margin-top: 6px; height: 14px; font-size: 11px; color: #667085; font-family: monospace; }
@@ -115,7 +132,7 @@ function painelHoraPorStatus(array $row): string
             <span class="specific">Painel do dia</span>
         </div>
         <h1 class="title-page">Painel de Audiências</h1>
-        <p class="description-page">Audiências de hoje (<?php echo htmlspecialchars($dataTitulo, ENT_QUOTES, 'UTF-8'); ?>). Lista única, sem filtros — todas as situações.</p>
+        <p class="description-page">Audiências de hoje (<?php echo htmlspecialchars($dataTitulo, ENT_QUOTES, 'UTF-8'); ?>).</p>
     </div>
 
     <div class="container-full card-page">
@@ -397,6 +414,21 @@ function painelHoraPorStatus(array $row): string
                 const hiddenClass = (i === 0 || i === 10) ? ' hidden' : '';
                 return `<span class="timeline-day-ruler-label${hiddenClass}" style="left:${left}%">${hour}:00</span>`;
             }).join('');
+            const normalizeStatus = (statusRaw) => {
+                const s = String(statusRaw || '').trim().toLowerCase();
+                if (s === 'agendada') return 'designada';
+                if (s === 'adiada') return 'redesignada';
+                return s;
+            };
+            const isFinishedStatus = (statusRaw) => {
+                const st = normalizeStatus(statusRaw);
+                return st === 'finalizada' || st === 'realizada';
+            };
+            const allFinished = () => {
+                const ids = Object.keys(itemsById);
+                if (!ids.length) return false;
+                return ids.every((id) => isFinishedStatus(itemsById[id]?.status));
+            };
             function renderTimeline() {
                 const prevHtml = [];
                 const delayHtml = [];
@@ -426,23 +458,30 @@ function painelHoraPorStatus(array $row): string
                 slots.forEach((slot) => {
                     const displayStart = Math.max(slot.plannedStart, cursorEnd);
                     const plannedEnd = displayStart + slot.plannedDur;
-                    const runningEnd = slot.realStart !== null && slot.realEnd === null
-                        ? Math.max(slot.realStart, nowMin)
+                    const realStartDisplay = slot.realStart !== null
+                        ? Math.max(slot.realStart, displayStart)
                         : null;
-                    const effectiveRealEnd = slot.realEnd !== null ? slot.realEnd : runningEnd;
+                    const runningEnd = realStartDisplay !== null && slot.realEnd === null
+                        ? Math.max(realStartDisplay, nowMin)
+                        : null;
+                    const effectiveRealEnd = realStartDisplay !== null
+                        ? (slot.realEnd !== null ? Math.max(slot.realEnd, realStartDisplay) : runningEnd)
+                        : null;
                     const blockEnd = effectiveRealEnd !== null ? Math.max(plannedEnd, effectiveRealEnd) : plannedEnd;
 
                     prevHtml.push(`<span class="timeline-day-ruler-bar-prev" title="Previsto: ${fmtHM(displayStart)} - ${fmtHM(plannedEnd)}" style="left:${pct(displayStart)}%;width:${Math.max(0.4, pct(blockEnd) - pct(displayStart))}%"></span>`);
 
                     const delayStart = displayStart;
-                    const delayEnd = slot.realStart !== null ? slot.realStart : (nowMin > displayStart ? nowMin : null);
+                    const delayEnd = realStartDisplay !== null ? realStartDisplay : (nowMin > displayStart ? nowMin : null);
                     if (delayEnd !== null && delayEnd > delayStart) {
                         delayHtml.push(`<span class="timeline-day-ruler-bar-real" title="Aguardando início real: ${fmtHM(delayStart)} - ${fmtHM(delayEnd)}" style="left:${pct(delayStart)}%;width:${Math.max(0.4, pct(delayEnd) - pct(delayStart))}%;z-index:2;"></span>`);
                     }
 
-                    if (slot.realStart !== null) {
-                        const realStart = slot.realStart;
-                        const realEnd = slot.realEnd !== null ? slot.realEnd : Math.max(realStart, nowMin);
+                    if (realStartDisplay !== null) {
+                        const realStart = realStartDisplay;
+                        const realEnd = slot.realEnd !== null
+                            ? Math.max(slot.realEnd, realStart)
+                            : Math.max(realStart, nowMin);
                         if (realEnd > realStart) {
                             realHtml.push(`<span class="timeline-day-ruler-bar-real" title="Real: ${fmtHM(realStart)} - ${fmtHM(realEnd)} | Previsto: ${fmtHM(displayStart)} - ${fmtHM(plannedEnd)}" style="left:${pct(realStart)}%;width:${Math.max(0.4, pct(realEnd) - pct(realStart))}%"></span>`);
                         }
@@ -468,6 +507,7 @@ function painelHoraPorStatus(array $row): string
             function refreshTimelineData() {
                 const pautas = Object.keys(itemsById);
                 if (!pautas.length) return;
+                if (allFinished()) return;
                 fetch('/api/sala-audiencias-pauta/status-bulk.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -487,10 +527,19 @@ function painelHoraPorStatus(array $row): string
                     .catch(() => { /* erro silencioso no polling */ });
             }
             renderTimeline();
-            window.setInterval(() => {
+            let pollTimer = null;
+            const tick = () => {
                 renderTimeline();
+                if (allFinished()) {
+                    if (pollTimer !== null) {
+                        window.clearInterval(pollTimer);
+                        pollTimer = null;
+                    }
+                    return;
+                }
                 refreshTimelineData();
-            }, 60000);
+            };
+            pollTimer = window.setInterval(tick, 60000);
         })();
     </script>
     <script src="/assets/js/modules/audiencias/pauta-list.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-list.js') ?: time(); ?>"></script>
