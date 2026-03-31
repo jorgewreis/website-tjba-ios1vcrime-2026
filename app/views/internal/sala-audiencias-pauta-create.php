@@ -10,6 +10,15 @@ if (function_exists('mb_internal_encoding')) {
 require_once __DIR__ . '/../../services/SalaAudienciasPautaService.php';
 $servicePautaTipos = new SalaAudienciasPautaService(Conection::getInstance()->getConnection());
 $tipos = $servicePautaTipos->listTiposAtivos();
+$tipoNppExtra = 'Proposta de Acordo de NPP';
+$temTipoNppExtra = false;
+foreach ($tipos as $tpItem) {
+    $nomeTp = trim((string) ($tpItem['nome'] ?? ''));
+    if ($nomeTp === $tipoNppExtra) {
+        $temTipoNppExtra = true;
+        break;
+    }
+}
 $dataMinimaCadastro = date('Y-m-d');
 $horariosGrade = SalaAudienciasPautaService::horariosGradeCadastroAudiencia();
 ?>
@@ -63,6 +72,9 @@ $horariosGrade = SalaAudienciasPautaService::horariosGradeCadastroAudiencia();
                         <?php foreach ($tipos as $tp): ?>
                             <option value="<?php echo htmlspecialchars((string) ($tp['codigo'] ?? ''), ENT_QUOTES); ?>"><?php echo htmlspecialchars((string) ($tp['nome'] ?? ''), ENT_QUOTES); ?></option>
                         <?php endforeach; ?>
+                        <?php if (!$temTipoNppExtra): ?>
+                            <option value="proposta_acordo_npp"><?php echo htmlspecialchars($tipoNppExtra, ENT_QUOTES); ?></option>
+                        <?php endif; ?>
                     </select>
                 </div>
                 <div class="col filter">

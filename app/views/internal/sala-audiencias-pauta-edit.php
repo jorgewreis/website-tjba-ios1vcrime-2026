@@ -225,6 +225,15 @@ usort($partesOrdenadas, static function (array $a, array $b) use ($ordemTiposPar
 });
 
 $tipos = $service->listTiposAtivos();
+$tipoNppExtra = 'Proposta de Acordo de NPP';
+$temTipoNppExtra = false;
+foreach ($tipos as $tpItem) {
+    $nomeTp = trim((string) ($tpItem['nome'] ?? ''));
+    if ($nomeTp === $tipoNppExtra) {
+        $temTipoNppExtra = true;
+        break;
+    }
+}
 $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection());
 ?>
 <!DOCTYPE html>
@@ -315,6 +324,9 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                         <?php foreach ($tipos as $tp): $tpNome = (string) ($tp['nome'] ?? ''); ?>
                             <option value="<?php echo htmlspecialchars($tpNome, ENT_QUOTES); ?>"<?php echo $tipoAtual === $tpNome ? ' selected' : ''; ?>><?php echo htmlspecialchars($tpNome, ENT_QUOTES); ?></option>
                         <?php endforeach; ?>
+                        <?php if (!$temTipoNppExtra || $tipoAtual === $tipoNppExtra): ?>
+                            <option value="<?php echo htmlspecialchars($tipoNppExtra, ENT_QUOTES); ?>"<?php echo $tipoAtual === $tipoNppExtra ? ' selected' : ''; ?>><?php echo htmlspecialchars($tipoNppExtra, ENT_QUOTES); ?></option>
+                        <?php endif; ?>
                     </select>
                 </div>
                 <div class="col filter">
