@@ -136,4 +136,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(audiencias): add method to list designated hearings by process ID and integrate into service logic** `[481338c]`
 - **fix(timeline): adjust height and border radius of timeline bars for improved visual consistency** `[3afb484]`
 - **feat(audiencias): improve status normalization and time display for hearings in internal views** `[fa98d16]`
+- **feat(audiencias): add ensureEffectiveTimesByStatus method to manage effective times based on status changes** `[1eaf16f]`
 
