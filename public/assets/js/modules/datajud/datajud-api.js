@@ -116,13 +116,23 @@
 
 
 
-    /** Igual a “sem classe” no fluxo DataJud: não preenche o input nem ativa bancoPrefilled. */
+    function normalizeClassePlaceholderCompare(s) {
+
+        return (s != null ? String(s).trim().toLocaleLowerCase('pt-BR') : '');
+
+    }
+
+
+
+    /** Igual a “sem classe” no fluxo DataJud: não preenche o input nem ativa bancoPrefilled (comparação sem diferenciar maiúsculas/minúsculas). */
 
     function isClasseNaoInformadaText(s) {
 
-        var t = (s != null ? String(s).trim() : '');
+        var t = normalizeClassePlaceholderCompare(s);
 
-        return t !== '' && t === getClasseNaoInformadaMarker();
+        var marker = normalizeClassePlaceholderCompare(getClasseNaoInformadaMarker());
+
+        return t !== '' && t === marker;
 
     }
 

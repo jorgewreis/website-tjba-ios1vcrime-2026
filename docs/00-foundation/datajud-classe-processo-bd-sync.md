@@ -37,7 +37,7 @@ Em telas internas com o trio `cnj.js` → `datajud-cycle-helper.js` → `datajud
 | **Processo novo** | `classe-sync` pode **criar** linha em `processos` com número + classe. |
 | **DataJud falha** | Não chama sync; UI pode manter classe só do BD (*Classe do cadastro local*). Com classe já vinda do BD: **sem** toast de erro; só mensagem de contexto no rótulo/auxiliar. |
 | **BD com classe** | Enquanto o DataJud carrega: input em **`status-finished`**, botões **desbloqueados** (`startLoading` com `bancoPrefilled`). |
-| **BD com placeholder** | Se `classe-read` trouxer texto igual a **`Classe não informada`** (mesmo valor que `DataJudCycle.FALLBACK_CLASSE`), trata-se como **sem classe**: não preenche o input, usa placeholder de consulta ao DataJud e **`status-warning`** (fluxo normal de loading). |
+| **BD com placeholder** | Se `classe-read` trouxer texto equivalente a **`Classe não informada`** (`DataJudCycle.FALLBACK_CLASSE`), **sem diferenciar maiúsculas/minúsculas** (ex.: “Classe Não Informada”), trata-se como **sem classe**: não preenche o input, usa placeholder de consulta ao DataJud e **`status-warning`**. |
 | **CEAPA edit travado** | `DATAJUD_SKIP_CLASSE_SYNC` — não grava via sync; DataJud ainda preenche visualmente. |
 | **Retries** | `postSyncClasse` em `datajud-api.js`: até **3** tentativas com atraso em **rede** ou **HTTP 5xx**. O corpo da resposta é lido como **texto** e parseado com `JSON.parse` seguro; corpo inválido ou vazio **não** dispara retry (evita confundir HTML/erro de proxy com falha de rede). |
 | **Reconsulta** | Sem botão dedicado; novo ciclo ao **revalidar o CNJ** (`cnjValidated`). |
