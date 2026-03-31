@@ -132,4 +132,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(timeline): update late bar color to transparent for improved visual distinction in timeline components** `[9e204a0]`
 - **feat(cartorio): enhance oficio creation response and improve toast notifications with highlighting functionality** `[3565620]`
 - **feat(internal): implement conditional delete permissions for estagiario profiles on edit pages** `[f3dfc83]`
+- **feat(audiencias): enhance audience display logic and improve time formatting for student panels** `[35cff4f]`
 
