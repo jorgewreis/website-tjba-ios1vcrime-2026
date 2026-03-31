@@ -128,4 +128,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(timeline): enhance timeline components with improved styling, including new shading elements, updated label visibility, and refined bar heights for better visual clarity** `[137e4d5]`
 - **fix(timeline): adjust timeline styling for improved visual consistency, including height and color updates for hour ticks and bars** `[67216d2]`
 - **feat(timeline): refactor timeline rendering logic for improved data handling and visual updates, including enhanced item management and styling adjustments** `[cb2d6a0]`
+- **fix(timeline): refine timeline styling and layout adjustments, including updates to bar heights, colors, and label visibility for enhanced clarity** `[4a0218d]`
 
