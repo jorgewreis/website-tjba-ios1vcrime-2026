@@ -128,9 +128,7 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
             .timeline-day-ruler-hour-tick.hidden { opacity: 0; }
             .timeline-day-ruler-now { position: absolute; top: 0; width: 3px; height: 100%; background: rgba(20,20,20,.30); z-index: 4; }
             .timeline-day-ruler-bar-prev { position: absolute; top: 4px; height: 18px; border-radius: 4px; border: 1px solid #20202060; background: #20202050; }
-            .timeline-day-ruler-bar-real { position: absolute; top: 8px; height: 8px; border-radius: 4px; background: var(--color-primary); opacity: .95; z-index: 3; }
-            .timeline-day-ruler-bar-real.late { background: white; }
-            .timeline-day-ruler-bar-real.early { background: var(--color-primary-active); }
+            .timeline-day-ruler-bar-real { position: absolute; top: 8px; height: 8px; border-radius: 4px; opacity: .95; z-index: 3; }
             .timeline-day-ruler-labels { position: relative; margin-top: 6px; height: 14px; font-size: 11px; color: #667085; font-family: monospace; }
             .timeline-day-ruler-label { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
             .timeline-day-ruler-label.hidden { opacity: 0; }
@@ -428,8 +426,16 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
         function parseDateTime(v) {
             var s = String(v || '').trim();
             if (!s) return NaN;
-            var iso = s.replace(' ', 'T');
-            var t = Date.parse(iso);
+            var m = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?$/);
+            if (!m) return NaN;
+            var y = Number(m[1]);
+            var mo = Number(m[2]) - 1;
+            var d = Number(m[3]);
+            var hh = Number(m[4] || '0');
+            var mm = Number(m[5] || '0');
+            var ss = Number(m[6] || '0');
+            var dt = new Date(y, mo, d, hh, mm, ss, 0);
+            var t = dt.getTime();
             return isNaN(t) ? NaN : t;
         }
         function fmtTime(ts) {
@@ -590,6 +596,13 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
             if (s === 'adiada') return 'redesignada';
             return s;
         }
+        function colorByStatus(statusRaw) {
+            var st = normalizeStatus(statusRaw);
+            if (st === 'em_andamento') return 'var(--color-warning)';
+            if (st === 'finalizada' || st === 'realizada') return 'var(--color-success)';
+            if (st === 'cancelada') return 'var(--color-danger)';
+            return 'var(--color-warning)';
+        }
         function isFinishedStatus(statusRaw) {
             var st = normalizeStatus(statusRaw);
             return st === 'finalizada' || st === 'realizada';
@@ -639,6 +652,7 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
                 var item = (overrides && pautaId && overrides[pautaId]) ? overrides[pautaId] : {
                     data_audiencia: block.getAttribute('data-data-audiencia') || '',
                     hora_audiencia: block.getAttribute('data-hora-audiencia') || '',
+                    status: block.getAttribute('data-status') || '',
                     data_hora_inicio_efetivo: block.getAttribute('data-inicio') || '',
                     data_hora_fim_efetivo: block.getAttribute('data-fim') || '',
                     duracao_estimada_minutos: block.getAttribute('data-duracao-estimada') || '0'
@@ -666,6 +680,7 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
                     plannedDur: prevDur,
                     realStart: rs,
                     realEnd: re,
+                    status: normalizeStatus(item.status || ''),
                     sortStart: rs !== null ? rs : sMin
                 });
             });
@@ -713,6 +728,7 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
                         realBars.push({
                             l: pct(realStart),
                             w: Math.max(0.4, pct(realEnd) - pct(realStart)),
+                            status: slot.status,
                             title: 'Real: ' + fmtHM(realStart) + ' - ' + fmtHM(realEnd) + ' | Previsto: ' + fmtHM(displayStart) + ' - ' + fmtHM(plannedEnd)
                         });
                     }
@@ -725,8 +741,8 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
                 return;
             }
             var prevHtml = prevBars.map(function (b) { return '<span class="timeline-day-ruler-bar-prev" title="' + escapeHtml(b.title) + '" style="left:' + b.l + '%;width:' + b.w + '%"></span>'; }).join('');
-            var delayHtml = delayBars.map(function (b) { return '<span class="timeline-day-ruler-bar-real" title="' + escapeHtml(b.title) + '" style="left:' + b.l + '%;width:' + b.w + '%;z-index:2;"></span>'; }).join('');
-            var realHtml = realBars.map(function (b) { return '<span class="timeline-day-ruler-bar-real" title="' + escapeHtml(b.title) + '" style="left:' + b.l + '%;width:' + b.w + '%"></span>'; }).join('');
+            var delayHtml = delayBars.map(function (b) { return '<span class="timeline-day-ruler-bar-real" title="' + escapeHtml(b.title) + '" style="left:' + b.l + '%;width:' + b.w + '%;background:#ffffff;z-index:2;"></span>'; }).join('');
+            var realHtml = realBars.map(function (b) { return '<span class="timeline-day-ruler-bar-real" title="' + escapeHtml(b.title) + '" style="left:' + b.l + '%;width:' + b.w + '%;background:' + colorByStatus(b.status) + '"></span>'; }).join('');
             var tickHtml = Array.from({ length: 11 }, function (_, i) {
                 var left = (i / 10) * 100;
                 var hiddenClass = (i === 0 || i === 10) ? ' hidden' : '';

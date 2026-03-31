@@ -111,10 +111,8 @@ function painelHoraPorStatus(array $row): string
             .timeline-day-ruler-hour-tick { position: absolute; bottom: 0; width: 1px; height: 3px; background: rgba(20,20,20,.3); }
             .timeline-day-ruler-hour-tick.hidden { opacity: 0; }
             .timeline-day-ruler-now { position: absolute; top: 0; width: 3px; height: 100%; background: rgba(20,20,20,.30); z-index: 4; }
-            .timeline-day-ruler-bar-prev { position: absolute; top: 1px; height: 20px; background: #20202050; }
-            .timeline-day-ruler-bar-real { position: absolute; top: 1px; height: 20px; background: var(--color-primary); border-right: 1px solid #ffffff50; opacity: .7; z-index: 3; }
-            .timeline-day-ruler-bar-real.late { background: transparent; }
-            .timeline-day-ruler-bar-real.early { background: var(--color-primary-active); }
+            .timeline-day-ruler-bar-prev { position: absolute; top: 1px; height: 20px; background: var(--color-primary); }
+            .timeline-day-ruler-bar-real { position: absolute; top: 1px; height: 20px; border-right: 1px solid #ffffff50; opacity: .7; z-index: 3; }
             .timeline-day-ruler-labels { position: relative; margin-top: 6px; height: 14px; font-size: 11px; color: #667085; font-family: monospace; }
             .timeline-day-ruler-label { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
             .timeline-day-ruler-label.hidden { opacity: 0; }
@@ -388,8 +386,16 @@ function painelHoraPorStatus(array $row): string
             const toTs = (v) => {
                 const s = String(v || '').trim();
                 if (!s) return NaN;
-                const t = Date.parse(s.replace(' ', 'T'));
-                return Number.isNaN(t) ? NaN : t;
+                const m = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?$/);
+                if (!m) return NaN;
+                const y = Number(m[1]);
+                const mo = Number(m[2]) - 1;
+                const d = Number(m[3]);
+                const hh = Number(m[4] || '0');
+                const mm = Number(m[5] || '0');
+                const ss = Number(m[6] || '0');
+                const dt = new Date(y, mo, d, hh, mm, ss, 0);
+                return Number.isNaN(dt.getTime()) ? NaN : dt.getTime();
             };
             const toMin = (ts) => {
                 const d = new Date(ts);
@@ -424,6 +430,13 @@ function painelHoraPorStatus(array $row): string
                 const st = normalizeStatus(statusRaw);
                 return st === 'finalizada' || st === 'realizada';
             };
+            const colorByStatus = (statusRaw) => {
+                const st = normalizeStatus(statusRaw);
+                if (st === 'em_andamento') return 'var(--color-warning)';
+                if (st === 'finalizada' || st === 'realizada') return 'var(--color-success)';
+                if (st === 'cancelada') return 'var(--color-danger)';
+                return 'var(--color-warning)';
+            };
             const allFinished = () => {
                 const ids = Object.keys(itemsById);
                 if (!ids.length) return false;
@@ -450,6 +463,7 @@ function painelHoraPorStatus(array $row): string
                             plannedDur: plannedDur,
                             realStart: Number.isNaN(rsTs) ? null : toMin(rsTs),
                             realEnd: Number.isNaN(reTs) ? null : toMin(reTs),
+                            status: normalizeStatus(x.it.status || ''),
                             sortStart: Number.isNaN(rsTs) ? plannedStart : toMin(rsTs),
                         };
                     })
@@ -478,7 +492,7 @@ function painelHoraPorStatus(array $row): string
                     const delayStart = displayStart;
                     const delayEnd = realStartDisplay !== null ? realStartDisplay : (nowMin > displayStart ? nowMin : null);
                     if (delayEnd !== null && delayEnd > delayStart) {
-                        delayHtml.push(`<span class="timeline-day-ruler-bar-real" title="Aguardando início real: ${fmtHM(delayStart)} - ${fmtHM(delayEnd)}" style="left:${pct(delayStart)}%;width:${Math.max(0.4, pct(delayEnd) - pct(delayStart))}%;z-index:2;"></span>`);
+                        delayHtml.push(`<span class="timeline-day-ruler-bar-real" title="Aguardando início real: ${fmtHM(delayStart)} - ${fmtHM(delayEnd)}" style="left:${pct(delayStart)}%;width:${Math.max(0.4, pct(delayEnd) - pct(delayStart))}%;background:#ffffff;z-index:2;"></span>`);
                     }
 
                     if (realStartDisplay !== null) {
@@ -487,7 +501,7 @@ function painelHoraPorStatus(array $row): string
                             ? Math.max(slot.realEnd, realStart)
                             : Math.max(realStart, nowMin);
                         if (realEnd > realStart) {
-                            realHtml.push(`<span class="timeline-day-ruler-bar-real" title="Real: ${fmtHM(realStart)} - ${fmtHM(realEnd)} | Previsto: ${fmtHM(displayStart)} - ${fmtHM(plannedEnd)}" style="left:${pct(realStart)}%;width:${Math.max(0.4, pct(realEnd) - pct(realStart))}%"></span>`);
+                            realHtml.push(`<span class="timeline-day-ruler-bar-real" title="Real: ${fmtHM(realStart)} - ${fmtHM(realEnd)} | Previsto: ${fmtHM(displayStart)} - ${fmtHM(plannedEnd)}" style="left:${pct(realStart)}%;width:${Math.max(0.4, pct(realEnd) - pct(realStart))}%;background:${colorByStatus(slot.status)}"></span>`);
                         }
                     }
 
