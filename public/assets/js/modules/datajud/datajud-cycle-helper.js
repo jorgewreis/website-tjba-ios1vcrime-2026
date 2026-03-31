@@ -207,22 +207,43 @@
         /**
          * Fluxo padrão (classe): só o input de classe entra em estado de carregamento.
          * @param {Object} dom — retorno de getDom() em datajud-api.js
+         * @param {Object} [options]
+         * @param {boolean} [options.bancoPrefilled] — se true, classe já veio do BD: `status-finished`, sem lock de botões e sem toast “consultando…” (DataJud segue em background).
          */
-        startLoading: function (dom) {
+        startLoading: function (dom, options) {
+            options = options || {};
+            var bancoPrefilled = options.bancoPrefilled === true;
             clearSlowToastTimer();
-            buttonSnapshot = snapshotPageButtons();
-            applyPageLock(buttonSnapshot);
+            if (!bancoPrefilled) {
+                buttonSnapshot = snapshotPageButtons();
+                applyPageLock(buttonSnapshot);
+            } else {
+                buttonSnapshot = null;
+            }
             if (dom.classeInput) {
-                setClasseLoadingState(dom.classeInput);
+                if (bancoPrefilled) {
+                    clearClasseLoadingVisual(dom.classeInput);
+                    dom.classeInput.classList.add('status-finished');
+                    dom.classeInput.classList.remove('status-warning');
+                    dom.classeInput.removeAttribute('aria-busy');
+                    dom.classeInput.placeholder = '';
+                } else {
+                    setClasseLoadingState(dom.classeInput);
+                }
             }
             if (dom.statusElement) {
-                setStatusMessage(dom.statusElement, 'Consultando o DataJud...', 'var(--color-warning-active)');
+                setStatusMessage(
+                    dom.statusElement,
+                    'Consultando o DataJud...',
+                    bancoPrefilled ? 'var(--color-gray-700)' : 'var(--color-warning-active)'
+                );
             }
-            var self = this;
-            slowToastTimer = setTimeout(function () {
-                slowToastTimer = null;
-                showDataToast(MSG_SLOW, 'info');
-            }, SLOW_TOAST_MS);
+            if (!bancoPrefilled) {
+                slowToastTimer = setTimeout(function () {
+                    slowToastTimer = null;
+                    showDataToast(MSG_SLOW, 'info');
+                }, SLOW_TOAST_MS);
+            }
             return { buttonSnapshot: buttonSnapshot };
         },
 
@@ -335,12 +356,20 @@
                 }
             }
 
+            var hadBancoPrefill = !!(global.__datajudBancoPrefill && global.__datajudBancoPrefill.display);
+
+            if (hadBancoPrefill) {
+                return;
+            }
+
             if (kind === 'timeout') {
-                showDataToast(MSG_NO_RESULT, 'info');
+                showDataToastError(MSG_NO_RESULT);
             } else if (kind === 'http') {
                 showDataToastError(detail && detail.message ? detail.message : MSG_HTTP_GENERIC);
             } else if (kind === 'network') {
                 showDataToastError(MSG_HTTP_GENERIC);
+            } else if (kind === 'partial') {
+                showDataToastError(MSG_EMPTY_CLASSE);
             }
         },
 

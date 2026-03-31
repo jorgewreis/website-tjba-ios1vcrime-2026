@@ -86,4 +86,4 @@ Relatórios antigos de padronização de telas (ex.: `docs/edit-pages-layout-toa
 
 ### Fluxo DataJud + sync de classe
 
-Após sincronizar classe do processo com o BD (`/api/processos/classe-sync.php`), o front usa `showToast` / `App.Toast` com **`type: 'success'`** só quando a API retorna ação `updated` ou `created`; erros usam **`type: 'error'`** (muitas vezes com `title: 'Sincronização'`). Em `noop` não há toast de sucesso. Detalhes: [`docs/00-foundation/datajud-classe-processo-bd-sync.md`](datajud-classe-processo-bd-sync.md) (secção Feedback).
+Após sincronizar classe do processo com o BD (`/api/processos/classe-sync.php`), o front usa **`type: 'info'`** (`variant: 'simple'`) só quando a API retorna `updated` ou `created`; falhas de sync **não** exibem toast. Falhas da **consulta** DataJud usam **`type: 'error'`** apenas quando não havia classe no BD. Em `noop` não há toast. Detalhes: [`docs/00-foundation/datajud-classe-processo-bd-sync.md`](datajud-classe-processo-bd-sync.md) (secção Feedback).

@@ -35,7 +35,8 @@ Em telas internas com o trio `cnj.js` → `datajud-cycle-helper.js` → `datajud
 | **Ordem** | CNJ válido → `classe-read` (BD) → DataJud → `classe-sync` (só se DataJud trouxe classe). |
 | **Igualdade** | Comparação por **código** normalizado (`ClassesRepository::normalizeCodigo`); resposta `noop` sem toast de sucesso. |
 | **Processo novo** | `classe-sync` pode **criar** linha em `processos` com número + classe. |
-| **DataJud falha** | Não chama sync; UI pode manter classe só do BD (*Classe do cadastro local*). |
+| **DataJud falha** | Não chama sync; UI pode manter classe só do BD (*Classe do cadastro local*). Com classe já vinda do BD: **sem** toast de erro; só mensagem de contexto no rótulo/auxiliar. |
+| **BD com classe** | Enquanto o DataJud carrega: input em **`status-finished`**, botões **desbloqueados** (`startLoading` com `bancoPrefilled`). |
 | **CEAPA edit travado** | `DATAJUD_SKIP_CLASSE_SYNC` — não grava via sync; DataJud ainda preenche visualmente. |
 | **Retries** | `postSyncClasse` em `datajud-api.js`: até **3** tentativas com atraso em **rede** ou **HTTP 5xx**. O corpo da resposta é lido como **texto** e parseado com `JSON.parse` seguro; corpo inválido ou vazio **não** dispara retry (evita confundir HTML/erro de proxy com falha de rede). |
 | **Reconsulta** | Sem botão dedicado; novo ciclo ao **revalidar o CNJ** (`cnjValidated`). |
@@ -95,9 +96,10 @@ Usado quando a **classe vem do PHP** no primeiro render (ex.: CEAPA com classe t
 
 ## Feedback (toasts)
 
-- **Sucesso** (`updated` / `created`): `showToast` / `App.Toast` — ver política em [`sistema-toast.md`](sistema-toast.md) (sucesso tende ao modelo simple / curto).
-- **Erro** de sync: toast **error** (título “Sincronização” quando aplicável).
-- **`noop`:** sem toast de sucesso (decisão ajuste fino **1**).
+- **Sync** (`updated` / `created`): toast **`info`** (`variant: 'simple'`) — atualização de classe ou cadastro de processo/classe.
+- **Erro** de sync (HTTP, rede após retries, corpo inválido): **sem toast** (valores do DataJud permanecem na tela; o usuário pode salvar o formulário).
+- **`noop`:** sem toast (decisão ajuste fino **1**).
+- **DataJud** (timeout, HTTP, rede, processo sem classe): toast **`error`** só quando **não** há classe no BD (`classe-read` não preencheu o campo); se já havia classe local, só ajuste de UI/label, sem toast.
 
 ---
 
@@ -136,11 +138,12 @@ Usado quando a **classe vem do PHP** no primeiro render (ex.: CEAPA com classe t
 
 ## Checklist de QA manual (cenários globais)
 
-- [ ] Processo **novo** no BD: DataJud retorna classe → toast criado/atualizado; `processos` e `classes` coerentes.
-- [ ] **Mesma** classe BD/DataJud → `noop`, sem toast de sucesso.
-- [ ] Classe **diferente** no DataJud → `updated` + toast.
-- [ ] DataJud **sem** classe; BD tinha classe → *Classe do cadastro local* / fallback.
-- [ ] Falha de rede no sync após DataJud OK → retries depois toast de erro; valores DataJud mantidos.
+- [ ] Processo **novo** no BD: DataJud retorna classe → toast **info** em `updated`/`created`; `processos` e `classes` coerentes.
+- [ ] **Mesma** classe BD/DataJud → `noop`, sem toast.
+- [ ] Classe **diferente** no DataJud → `updated` + toast **info**.
+- [ ] DataJud **sem** classe; BD tinha classe → *Classe do cadastro local* / fallback; sem toast de erro.
+- [ ] Falha de rede no sync após DataJud OK → retries; **sem** toast de erro; valores DataJud mantidos.
+- [ ] BD já trouxe classe → `status-finished` e botões liberados enquanto DataJud carrega.
 - [ ] CEAPA `lockClasse` → sem `POST` em `classe-sync`.
 - [ ] **Troca de CNJ** → novo ciclo sem valor fantasma.
 

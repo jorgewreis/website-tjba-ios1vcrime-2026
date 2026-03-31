@@ -174,10 +174,6 @@
 
             if (!res.ok) {
 
-                var msg = (res.body && res.body.error) ? res.body.error : 'Não foi possível salvar a classe no sistema.';
-
-                showToastSync({ type: 'error', title: 'Sincronização', message: msg });
-
                 return;
 
             }
@@ -186,11 +182,11 @@
 
             if (action === 'updated') {
 
-                showToastSync({ type: 'success', message: 'Classe do processo atualizada no sistema.' });
+                showToastSync({ type: 'info', variant: 'simple', message: 'Classe do processo atualizada no sistema.' });
 
             } else if (action === 'created') {
 
-                showToastSync({ type: 'success', message: 'Processo e classe registrados no sistema.' });
+                showToastSync({ type: 'info', variant: 'simple', message: 'Processo e classe registrados no sistema.' });
 
             }
 
@@ -271,14 +267,6 @@
                         return delay(SYNC_RETRY_DELAY_MS * tryNum).then(function () { return attempt(tryNum + 1); });
 
                     }
-
-                    showToastSync({
-
-                        type: 'error',
-
-                        message: 'Não foi possível salvar a classe no sistema. Tente ao enviar o formulário.',
-
-                    });
 
                 });
 
@@ -460,7 +448,9 @@
 
                 }
 
-                var session = DC.startLoading(domFresh);
+                var hadBancoPrefill = !!(globalObj.__datajudBancoPrefill && globalObj.__datajudBancoPrefill.display);
+
+                var session = DC.startLoading(domFresh, { bancoPrefilled: hadBancoPrefill });
 
 
 
