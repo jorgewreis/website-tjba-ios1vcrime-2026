@@ -133,4 +133,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(cartorio): enhance oficio creation response and improve toast notifications with highlighting functionality** `[3565620]`
 - **feat(internal): implement conditional delete permissions for estagiario profiles on edit pages** `[f3dfc83]`
 - **feat(audiencias): enhance audience display logic and improve time formatting for student panels** `[35cff4f]`
+- **feat(audiencias): add method to list designated hearings by process ID and integrate into service logic** `[481338c]`
 
