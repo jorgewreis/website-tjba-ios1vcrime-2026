@@ -139,4 +139,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(audiencias): add ensureEffectiveTimesByStatus method to manage effective times based on status changes** `[1eaf16f]`
 - **refactor(audiencias): simplify realStartDisplay calculation in internal views for better readability** `[fd7e71e]`
 - **fix(timeline): adjust height of timeline bars and improve sorting logic for better display of scheduled times** `[69066f9]`
+- **refactor(date-parsing): enhance date parsing logic in internal views for improved accuracy and consistency** `[512b286]`
 
