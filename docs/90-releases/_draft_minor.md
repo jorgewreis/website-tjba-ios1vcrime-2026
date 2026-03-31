@@ -125,4 +125,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(cartorio): add administrative oficio types and enhance process number validation logic** `[3b3ddcd]`
 - **feat(timeline): add daily timeline visualization for audience schedules, including estimated and actual durations** `[cdf35e8]`
 - **feat(timeline): enhance daily timeline visualization with improved styling and functionality, including hour ticks, current time indicator, and updated color coding for estimated and actual durations** `[b175b3a]`
+- **feat(timeline): enhance timeline components with improved styling, including new shading elements, updated label visibility, and refined bar heights for better visual clarity** `[137e4d5]`
 
