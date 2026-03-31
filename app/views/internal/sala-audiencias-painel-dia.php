@@ -94,15 +94,15 @@ function painelHoraPorStatus(array $row): string
             .timeline-day-ruler-hour-tick { position: absolute; bottom: 0; width: 1px; height: 3px; background: rgba(20,20,20,.3); }
             .timeline-day-ruler-hour-tick.hidden { opacity: 0; }
             .timeline-day-ruler-now { position: absolute; top: 0; width: 3px; height: 100%; background: rgba(20,20,20,.30); z-index: 4; }
-            .timeline-day-ruler-bar-prev { position: absolute; top: 4px; height: 18px; border-radius: 4px; border: 1px solid #20202060; background: #20202050; }
-            .timeline-day-ruler-bar-real { position: absolute; top: 8px; height: 8px; border-radius: 4px; background: var(--color-primary); opacity: .95; z-index: 3; }
+            .timeline-day-ruler-bar-prev { position: absolute; top: 4px; height: 18px; background: #20202050; }
+            .timeline-day-ruler-bar-real { position: absolute; top: 5px; height: 16px; background: var(--color-primary); opacity: .95; z-index: 3; }
             .timeline-day-ruler-bar-real.late { background: transparent; }
             .timeline-day-ruler-bar-real.early { background: var(--color-primary-active); }
             .timeline-day-ruler-labels { position: relative; margin-top: 6px; height: 14px; font-size: 11px; color: #667085; font-family: monospace; }
             .timeline-day-ruler-label { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
             .timeline-day-ruler-label.hidden { opacity: 0; }
             .timeline-day-ruler-legend { margin-top: 6px; display: flex; gap: 12px; align-items: center; font-size: 11px; color: #667085; }
-            .timeline-day-ruler-legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+            .timeline-day-ruler-legend-dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
             .timeline-day-ruler-empty { font-size: 12px; color: #667085; }
         </style>
     </head>
@@ -437,7 +437,7 @@ function painelHoraPorStatus(array $row): string
                     const delayStart = displayStart;
                     const delayEnd = slot.realStart !== null ? slot.realStart : (nowMin > displayStart ? nowMin : null);
                     if (delayEnd !== null && delayEnd > delayStart) {
-                        delayHtml.push(`<span class="timeline-day-ruler-bar-real" title="Aguardando início real: ${fmtHM(delayStart)} - ${fmtHM(delayEnd)}" style="left:${pct(delayStart)}%;width:${Math.max(0.4, pct(delayEnd) - pct(delayStart))}%;background:#ffffff;opacity:.95;z-index:2;"></span>`);
+                        delayHtml.push(`<span class="timeline-day-ruler-bar-real" title="Aguardando início real: ${fmtHM(delayStart)} - ${fmtHM(delayEnd)}" style="left:${pct(delayStart)}%;width:${Math.max(0.4, pct(delayEnd) - pct(delayStart))}%;z-index:2;"></span>`);
                     }
 
                     if (slot.realStart !== null) {
