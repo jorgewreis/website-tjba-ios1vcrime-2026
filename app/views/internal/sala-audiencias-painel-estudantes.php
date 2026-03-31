@@ -90,7 +90,7 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
             .timeline-day-ruler-now { position: absolute; top: 0; width: 3px; height: 100%; background: rgba(20,20,20,.30); z-index: 4; }
             .timeline-day-ruler-bar-prev { position: absolute; top: 4px; height: 18px; border-radius: 4px; border: 1px solid #20202060; background: #20202050; }
             .timeline-day-ruler-bar-real { position: absolute; top: 8px; height: 8px; border-radius: 4px; background: var(--color-primary); opacity: .95; z-index: 3; }
-            .timeline-day-ruler-bar-real.late { background: var(--color-primary-active); }
+            .timeline-day-ruler-bar-real.late { background: transparent; }
             .timeline-day-ruler-bar-real.early { background: var(--color-primary-active); }
             .timeline-day-ruler-labels { position: relative; margin-top: 6px; height: 14px; font-size: 11px; color: #667085; font-family: monospace; }
             .timeline-day-ruler-label { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }

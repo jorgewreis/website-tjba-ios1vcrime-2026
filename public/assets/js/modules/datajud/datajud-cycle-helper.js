@@ -7,8 +7,8 @@
     'use strict';
 
     var SLOW_TOAST_MS = 500;
-    /** 1ª tentativa 10s, 2ª 15s, 3ª 20s — ver `getFetchTimeoutMs`. */
-    var FETCH_TIMEOUT_MS_BY_ATTEMPT = [10000, 15000, 20000];
+    /** 1ª tentativa 20s, 2ª 30s, 3ª 40s — ver `getFetchTimeoutMs`. */
+    var FETCH_TIMEOUT_MS_BY_ATTEMPT = [20000, 30000, 40000];
     var MAX_FETCH_ATTEMPTS = 3;
 
     function getFetchTimeoutMs(attemptIndex) {
@@ -153,10 +153,10 @@
 
     global.DataJudCycle = {
         SLOW_TOAST_MS: SLOW_TOAST_MS,
-        /** @deprecated Preferir `getFetchTimeoutMs(1)` — mantido como 10000 para compat. */
+        /** @deprecated Preferir `getFetchTimeoutMs(1)` — mantido como 20000 para compat. */
         FETCH_TIMEOUT_MS: FETCH_TIMEOUT_MS_BY_ATTEMPT[0],
         MAX_FETCH_ATTEMPTS: MAX_FETCH_ATTEMPTS,
-        /** Timeout do `fetch` DataJud por número da tentativa (1–3): 10s / 15s / 20s. */
+        /** Timeout do `fetch` DataJud por número da tentativa (1–3): 20s / 30s / 40s. */
         getFetchTimeoutMs: getFetchTimeoutMs,
         MSG_SLOW: MSG_SLOW,
         MSG_NO_RESULT: MSG_NO_RESULT,
