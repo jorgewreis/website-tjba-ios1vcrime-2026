@@ -138,4 +138,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(audiencias): improve status normalization and time display for hearings in internal views** `[fa98d16]`
 - **feat(audiencias): add ensureEffectiveTimesByStatus method to manage effective times based on status changes** `[1eaf16f]`
 - **refactor(audiencias): simplify realStartDisplay calculation in internal views for better readability** `[fd7e71e]`
+- **fix(timeline): adjust height of timeline bars and improve sorting logic for better display of scheduled times** `[69066f9]`
 
