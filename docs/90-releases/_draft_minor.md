@@ -135,4 +135,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(audiencias): enhance audience display logic and improve time formatting for student panels** `[35cff4f]`
 - **feat(audiencias): add method to list designated hearings by process ID and integrate into service logic** `[481338c]`
 - **fix(timeline): adjust height and border radius of timeline bars for improved visual consistency** `[3afb484]`
+- **feat(audiencias): improve status normalization and time display for hearings in internal views** `[fa98d16]`
 
