@@ -130,4 +130,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(timeline): refactor timeline rendering logic for improved data handling and visual updates, including enhanced item management and styling adjustments** `[cb2d6a0]`
 - **fix(timeline): refine timeline styling and layout adjustments, including updates to bar heights, colors, and label visibility for enhanced clarity** `[4a0218d]`
 - **fix(timeline): update late bar color to transparent for improved visual distinction in timeline components** `[9e204a0]`
+- **feat(cartorio): enhance oficio creation response and improve toast notifications with highlighting functionality** `[3565620]`
 
