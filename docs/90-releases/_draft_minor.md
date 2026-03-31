@@ -35,4 +35,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(audiencias): add 'salapaineldia' page and update related access and navigation links** `[4291da5]`
 - **refactor(toast-system): standardize toast usage and improve documentation on visual models and feedback mechanisms** `[695b2ca]`
 - **feat(datajud): enhance process and class synchronization flow with DataJud integration, including automatic class retrieval, validation improvements, and updated documentation** `[85537b0]`
+- **refactor(datajud): update synchronization feedback and toast handling, improving user experience during class retrieval and error scenarios** `[7b77dc6]`
 
