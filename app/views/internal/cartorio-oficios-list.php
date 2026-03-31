@@ -593,14 +593,24 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                 }
             };
             const POST_RELOAD_TOAST_KEY = 'cartorio.postReloadToast';
-            const queuePostReloadToast = (type, title, message) => {
+            const queuePostReloadToast = (payload) => {
                 try {
                     const raw = sessionStorage.getItem(POST_RELOAD_TOAST_KEY);
                     const fila = raw ? JSON.parse(raw) : [];
                     const lista = Array.isArray(fila) ? fila : (fila && fila.message ? [fila] : []);
-                    lista.push({ type, title, message });
+                    lista.push(payload);
                     sessionStorage.setItem(POST_RELOAD_TOAST_KEY, JSON.stringify(lista));
                 } catch (e) {}
+            };
+            const highlightCreatedOficio = (oficioId) => {
+                const id = (oficioId || '').toString().trim();
+                if (!id) return;
+                const row = document.getElementById(id);
+                if (!row) return;
+                row.classList.add('status-finished');
+                window.setTimeout(function () {
+                    row.classList.remove('status-finished');
+                }, 10000);
             };
             const flushPostReloadToast = () => {
                 try {
@@ -611,6 +621,7 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                     const lista = Array.isArray(data) ? data : (data && data.message ? [data] : []);
                     lista.forEach(function (item) {
                         if (item && item.message) notify(item.type || 'info', item.title || 'Informação', item.message);
+                        if (item && item.highlight_oficio_id) highlightCreatedOficio(item.highlight_oficio_id);
                     });
                 } catch (e) {}
             };
@@ -718,7 +729,16 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                 .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
                 .then(function (res) {
                     if (res.ok && res.j && res.j.id) {
-                        queuePostReloadToast('success', 'Sucesso', 'Ofício registrado com sucesso.');
+                        const numeroOficio = (res.j.numero_oficio || '').toString().trim();
+                        const msg = numeroOficio
+                            ? ('Ofício ' + numeroOficio + ' registrado com sucesso.')
+                            : 'Ofício registrado com sucesso.';
+                        queuePostReloadToast({
+                            type: 'success',
+                            title: 'Sucesso',
+                            message: msg,
+                            highlight_oficio_id: res.j.id
+                        });
                         window.location.reload();
                     } else {
                         notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao registrar.');
@@ -790,7 +810,7 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                     .then(function (r) { return r.json(); })
                     .then(function (data) {
                         if (data.success) {
-                            queuePostReloadToast('success', 'Sucesso', 'Subtarefa concluída com sucesso.');
+                            queuePostReloadToast({ type: 'success', title: 'Sucesso', message: 'Subtarefa concluída com sucesso.' });
                             window.location.reload();
                         } else {
                             notify('error', 'Erro', data.error || 'Erro ao concluir.');
