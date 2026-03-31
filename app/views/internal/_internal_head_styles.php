@@ -20,19 +20,28 @@ $__hideDeleteV = @filemtime($__hideDeletePath) ?: time();
 
 $__currentUserPerfis = (isset($userPerfils) && is_array($userPerfils)) ? $userPerfils : [];
 $__isEstagiarioProfile = false;
+$__normalizedPerfis = [];
 foreach ($__currentUserPerfis as $__perfilRaw) {
     $__perfil = strtoupper(trim((string) $__perfilRaw));
+    if ($__perfil !== '') {
+        $__normalizedPerfis[] = $__perfil;
+    }
     if ($__perfil === 'ESTAGIARIO' || strpos($__perfil, 'ESTAGIARIO-') === 0) {
         $__isEstagiarioProfile = true;
-        break;
     }
 }
 $__currentPage = trim((string) ($_GET['page'] ?? ''));
 $__isEditPage = $__currentPage !== '' && (bool) preg_match('/edit$/i', $__currentPage);
+$__canDeleteOnThisEditPage = false;
+if ($__isEditPage && $__currentPage === 'reuspresosedit') {
+    $__canDeleteOnThisEditPage = in_array('ESTAGIARIO-GABINETE', $__normalizedPerfis, true)
+        || in_array('SERVIDOR-GABINETE', $__normalizedPerfis, true);
+}
 ?>
 <script src="/assets/js/shared/navigate-buttons.js?v=<?php echo (int) $__navBtnV; ?>" defer></script>
 <script>window.__IS_ESTAGIARIO_PROFILE = <?php echo $__isEstagiarioProfile ? 'true' : 'false'; ?>;</script>
-<?php if ($__isEstagiarioProfile && $__isEditPage): ?>
+<script>window.__ALLOW_DELETE_ON_EDIT_PAGE = <?php echo $__canDeleteOnThisEditPage ? 'true' : 'false'; ?>;</script>
+<?php if ($__isEstagiarioProfile && $__isEditPage && !$__canDeleteOnThisEditPage): ?>
 <style>
     button[id*="excluir"],
     button[id*="delete"],

@@ -5,6 +5,10 @@
         return;
     }
 
+    if (window.__ALLOW_DELETE_ON_EDIT_PAGE) {
+        return;
+    }
+
     var page = new URLSearchParams(window.location.search || '').get('page') || '';
     if (!/edit$/i.test(page)) {
         return;
