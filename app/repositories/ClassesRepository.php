@@ -15,10 +15,22 @@ final class ClassesRepository
         $this->table = $table;
     }
 
+    /** Normalização do código de classe (igual a ensureClass/findByCodigo). */
+    public static function normalizeCodigo(string $codigo): string
+    {
+        return strtoupper(preg_replace('/[^A-Za-z0-9]+/', '', $codigo));
+    }
+
+    /** Compara dois códigos brutos após a mesma normalização usada em `ensureClass` / sync DataJud. */
+    public static function codigosEquivalentes(string $a, string $b): bool
+    {
+        return self::normalizeCodigo($a) === self::normalizeCodigo($b);
+    }
+
     /** Retorna o id da classe (existente ou recém-criada). */
     public function ensureClass(string $codigo, string $nome): string
     {
-        $codigo = strtoupper(preg_replace('/[^A-Za-z0-9]+/', '', $codigo));
+        $codigo = self::normalizeCodigo($codigo);
         if ($codigo === '') {
             throw new InvalidArgumentException('Código da classe não pode ser vazio.');
         }
@@ -58,7 +70,7 @@ final class ClassesRepository
 
     public function findByCodigo(string $codigo): ?array
     {
-        $codigo = strtoupper(preg_replace('/[^A-Za-z0-9]+/', '', $codigo));
+        $codigo = self::normalizeCodigo($codigo);
         if ($codigo === '') {
             return null;
         }

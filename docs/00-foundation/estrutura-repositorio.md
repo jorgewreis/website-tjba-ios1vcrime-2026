@@ -229,6 +229,8 @@ Arquivos de exemplo:
   **Por quê:** registra pontuações e eventos de produtividade no sistema.
 - `app/services/Guias.php`  
   **Por quê:** orquestra cadastro de guias, serviços dependentes e auditoria (AuditLogger).
+- `app/services/ProcessoClasseSyncService.php`  
+  **Por quê:** leitura de processo/classe por CNJ e sincronização automática da classe após DataJud (`/api/processos/classe-read.php`, `/api/processos/classe-sync.php`). Documentação: `docs/00-foundation/datajud-classe-processo-bd-sync.md`.
 
 Esses serviços devem ser consumidos por controllers e middlewares, mantendo a conexão com o banco por `app/helpers/Conexao.php`.
 

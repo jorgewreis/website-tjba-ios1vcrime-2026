@@ -83,3 +83,7 @@ Relatórios antigos de padronização de telas (ex.: `docs/edit-pages-layout-toa
 - `.cursor/rules/toast-system.mdc`
 - `.cursor/rules/destructive-actions-confirmation.mdc` (confirmação + toast `info`)
 - `docs/create-edit-ui-contract.md` (contrato create/edit)
+
+### Fluxo DataJud + sync de classe
+
+Após sincronizar classe do processo com o BD (`/api/processos/classe-sync.php`), o front usa `showToast` / `App.Toast` com **`type: 'success'`** só quando a API retorna ação `updated` ou `created`; erros usam **`type: 'error'`** (muitas vezes com `title: 'Sincronização'`). Em `noop` não há toast de sucesso. Detalhes: [`docs/00-foundation/datajud-classe-processo-bd-sync.md`](datajud-classe-processo-bd-sync.md) (secção Feedback).

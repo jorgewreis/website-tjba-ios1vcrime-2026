@@ -128,7 +128,7 @@ $podeExcluirTarefa = !$isEstagiarioEdit || $isCriadorTarefa;
                 </div>
                 <div class="col filter">
                     <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe processual</label>
-                    <input type="text" class="width-600 height-md<?php echo $lockClasse ? ' readonly' : ''; ?>" id="filter-classe" data-datajud-related="true" value="<?php echo htmlspecialchars($lockClasse ? $classeNome : '', ENT_QUOTES); ?>" placeholder="Preenchido automaticamente pelo DataJud" <?php echo $lockClasse ? 'readonly' : ''; ?>>
+                    <input type="text" class="width-600 height-md<?php echo $lockClasse ? ' readonly' : ''; ?>" id="filter-classe" data-datajud-related="true" value="<?php echo htmlspecialchars($lockClasse ? $classeNome : '', ENT_QUOTES); ?>" placeholder="Preenchido automaticamente pelo DataJud" <?php echo $lockClasse ? 'readonly' : ''; ?><?php echo ($lockClasse && $classeNome !== '' && $classeNome !== 'Classe não informada') ? ' data-datajud-initial="1"' : ''; ?>>
                 </div>
             </div>
             <input type="hidden" id="hidden-classe-codigo" name="classe_codigo" value="<?php echo htmlspecialchars($classeCodigo, ENT_QUOTES); ?>">
@@ -202,6 +202,9 @@ $podeExcluirTarefa = !$isEstagiarioEdit || $isCriadorTarefa;
     </div>
 
     <?php if ($tarefa !== null): ?>
+    <?php if ($lockClasse): ?>
+    <script>window.DATAJUD_SKIP_CLASSE_SYNC = true;</script>
+    <?php endif; ?>
     <script src="/assets/js/modules/datajud/cnj.js"></script>
     <script src="/assets/js/modules/datajud/datajud-cycle-helper.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/datajud/datajud-cycle-helper.js') ?: time(); ?>"></script>
     <script src="/assets/js/modules/datajud/datajud-api.js"></script>

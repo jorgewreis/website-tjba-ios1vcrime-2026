@@ -330,10 +330,10 @@ Campos sugeridos:
 
 ---
 
--## Estrutura do projeto (referência)
--
+## Estrutura do projeto (referência)
+
 Pastas principais no repositório:
--
+
 - `app/` — modelos, services, helpers, middlewares e views divididos entre `public` e `internal`.
 - `bootstrap/`, `config/` e `database/` — inicialização, parâmetros de conexão e migrações/exportações SQL.
 - `public/` — entrypoints (`index.php`, `home.php`, `frame.php`, APIs em `admin/api/`) e a pasta `assets/` com CSS/JS/template compartilhados, imagens e ícones.
@@ -341,6 +341,8 @@ Pastas principais no repositório:
 - `storage/` — runtime (logs, uploads, backups) e **não versiona** o conteúdo (apenas `.gitkeep`).
 - `tools/` — auxiliares de IA e modelos de prompt (usados apenas em contexto de desenvolvimento/documentação).
 - `vendor/`
+
+Fluxo **número CNJ → classe processual** (DataJud + cadastro local): ver [`docs/00-foundation/datajud-classe-processo-bd-sync.md`](docs/00-foundation/datajud-classe-processo-bd-sync.md) e [`public/assets/js/modules/datajud/README.md`](public/assets/js/modules/datajud/README.md).
 
 ---
 

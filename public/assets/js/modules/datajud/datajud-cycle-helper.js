@@ -28,9 +28,9 @@
     function showDataToast(message, type) {
         type = type || 'info';
         if (typeof global.showToast === 'function') {
-            global.showToast({ type: type, variant: 'simple', message: message });
+            global.showToast({ type: type, message: message });
         } else if (global.App && global.App.Toast && typeof global.App.Toast.show === 'function') {
-            global.App.Toast.show({ type: type, variant: 'simple', message: message });
+            global.App.Toast.show({ type: type, message: message });
         }
     }
 
@@ -101,7 +101,12 @@
         classeInput.classList.add('status-warning');
         classeInput.setAttribute('aria-busy', 'true');
         classeInput.readOnly = true;
-        classeInput.value = '';
+        var preserve = classeInput.getAttribute('data-preserve-banco') === '1';
+        var keepInitial = classeInput.getAttribute('data-datajud-initial') === '1'
+            && String(classeInput.value || '').trim() !== '';
+        if (!preserve && !keepInitial) {
+            classeInput.value = '';
+        }
         classeInput.placeholder = PLACEHOLDER_LOADING;
     }
 
@@ -185,10 +190,14 @@
             operationId += 1;
             restorePageLock(buttonSnapshot);
             buttonSnapshot = null;
+            if (global.__datajudBancoPrefill !== undefined) {
+                global.__datajudBancoPrefill = null;
+            }
             if (dom && dom.classeInput) {
                 clearClasseLoadingVisual(dom.classeInput);
                 dom.classeInput.readOnly = false;
                 dom.classeInput.placeholder = '';
+                dom.classeInput.removeAttribute('data-preserve-banco');
             }
             if (dom && dom.statusElement) {
                 setStatusMessage(dom.statusElement, '', null);
@@ -237,6 +246,11 @@
                 return;
             }
             clearClasseLoadingVisual(classeInput);
+            classeInput.removeAttribute('data-preserve-banco');
+            classeInput.removeAttribute('data-datajud-initial');
+            if (global.__datajudBancoPrefill !== undefined) {
+                global.__datajudBancoPrefill = null;
+            }
             var representation = (classe && (classe.descricao || classe.codigo)) ? String(classe.descricao || classe.codigo || '') : 'Classe';
             classeInput.value = representation;
             classeInput.readOnly = true;
@@ -276,18 +290,49 @@
             var statusColor = 'var(--color-gray-700)';
 
             if (kind === 'partial' || kind === 'empty') {
-                classeInput.value = fallbackText;
-                setStatusMessage(statusElement, MSG_EMPTY_CLASSE, statusColor);
+                if (global.__datajudBancoPrefill && global.__datajudBancoPrefill.display) {
+                    classeInput.value = global.__datajudBancoPrefill.display;
+                    classeInput.readOnly = true;
+                    classeInput.classList.add('status-finished');
+                    if (classeCodigoField) {
+                        classeCodigoField.value = global.__datajudBancoPrefill.codigo || '';
+                    }
+                    if (classeDescricaoField) {
+                        classeDescricaoField.value = global.__datajudBancoPrefill.descricao || '';
+                    }
+                    setStatusMessage(statusElement, '*Classe do cadastro local (DataJud sem classe)', 'var(--color-gray-700)');
+                } else {
+                    classeInput.value = fallbackText;
+                    setStatusMessage(statusElement, MSG_EMPTY_CLASSE, statusColor);
+                    if (classeCodigoField) {
+                        classeCodigoField.value = '';
+                    }
+                    if (classeDescricaoField) {
+                        classeDescricaoField.value = '';
+                    }
+                }
             } else {
-                classeInput.value = fallbackText;
-                setStatusMessage(statusElement, 'Classe', statusColor);
-            }
-
-            if (classeCodigoField) {
-                classeCodigoField.value = '';
-            }
-            if (classeDescricaoField) {
-                classeDescricaoField.value = '';
+                if (global.__datajudBancoPrefill && global.__datajudBancoPrefill.display) {
+                    classeInput.value = global.__datajudBancoPrefill.display;
+                    classeInput.readOnly = true;
+                    classeInput.classList.add('status-finished');
+                    if (classeCodigoField) {
+                        classeCodigoField.value = global.__datajudBancoPrefill.codigo || '';
+                    }
+                    if (classeDescricaoField) {
+                        classeDescricaoField.value = global.__datajudBancoPrefill.descricao || '';
+                    }
+                    setStatusMessage(statusElement, '*Classe do cadastro local (consulta DataJud indisponível)', 'var(--color-gray-700)');
+                } else {
+                    classeInput.value = fallbackText;
+                    setStatusMessage(statusElement, 'Classe', statusColor);
+                    if (classeCodigoField) {
+                        classeCodigoField.value = '';
+                    }
+                    if (classeDescricaoField) {
+                        classeDescricaoField.value = '';
+                    }
+                }
             }
 
             if (kind === 'timeout') {

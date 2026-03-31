@@ -265,6 +265,26 @@ final class ProcessosRepository
         $statement->execute();
     }
 
+    /** Atualiza apenas `classe_id` (ex.: sincronização DataJud). */
+    public function updateClasseForProcesso(string $processoId, string $classeId): void
+    {
+        $processoId = trim($processoId);
+        $classeId = trim($classeId);
+        if ($processoId === '' || $classeId === '') {
+            throw new InvalidArgumentException('processo_id e classe_id são obrigatórios.');
+        }
+
+        $statement = $this->connection->prepare(
+            sprintf(
+                'UPDATE `%s` SET `classe_id` = :classe_id, `updated_at` = NOW() WHERE `id` = :id LIMIT 1',
+                $this->table
+            )
+        );
+        $statement->bindValue(':id', $processoId);
+        $statement->bindValue(':classe_id', $classeId);
+        $statement->execute();
+    }
+
     private function normalizeNumber(string $value): string
     {
         return preg_replace('/\D+/', '', $value);

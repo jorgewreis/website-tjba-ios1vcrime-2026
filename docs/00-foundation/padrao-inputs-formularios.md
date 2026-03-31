@@ -32,7 +32,7 @@ Páginas que já seguem o padrão: Guias (create/edit), Cartas Expedidas (create
 
 1. **Incluir os scripts** na view (antes dos scripts inline):
    - Para número de processo: `<script src="/assets/js/modules/datajud/cnj.js"></script>`
-   - Quando a tela também preenche **classe via DataJud** (após CNJ válido), na ordem: `cnj.js` → `datajud-cycle-helper.js` → `datajud-api.js` (ver `public/assets/js/modules/datajud/README.md`).
+   - Quando a tela também preenche **classe via DataJud** (após CNJ válido), na ordem: `cnj.js` → `datajud-cycle-helper.js` → `datajud-api.js` (ver `public/assets/js/modules/datajud/README.md`). O `datajud-api.js` atual consulta antes a classe no BD (`/api/processos/classe-read.php`) e, após o DataJud, sincroniza com `/api/processos/classe-sync.php` — ver `docs/00-foundation/datajud-classe-processo-bd-sync.md`.
    - Para nome/cidade: `<script src="/assets/js/shared/text-formatter.js"></script>`
 
 2. **Blur nos inputs**: em cada campo que recebe correção, registrar `addEventListener('blur', ...)` e aplicar a função (ex.: `TextFormatter.formatProperName(...)` no valor).

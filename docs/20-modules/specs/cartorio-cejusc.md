@@ -40,7 +40,7 @@ Fluxo: ao concluir a subtarefa 1, a subtarefa 2 é ativada/criada; ao concluir a
 ## 7. Cadastro
 
 - **Campos obrigatórios:** Número do processo, Nome do réu.
-- Sem DataJud obrigatório para classe; sem cidade/estado/finalidade. Classe do processo pode ser exibida na listagem/edição se existir no BD.
+- **Create:** classe processual preenchida automaticamente pelo fluxo DataJud (trio `cnj.js` + helpers) com leitura prévia no BD e sync — ver `docs/00-foundation/datajud-classe-processo-bd-sync.md`. Sem cidade/estado/finalidade na tela de create.
 - Réu: cadastro/busca via ReuManager (reus); vínculo ao processo em processoReus; tarefa grava reu_id.
 
 ## 8. Referências

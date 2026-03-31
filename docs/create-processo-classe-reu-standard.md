@@ -1,29 +1,46 @@
 # Padronização Create: Processo, Classe e Réu
 
+**Documento canônico do fluxo DataJud + BD + sync:** [`docs/00-foundation/datajud-classe-processo-bd-sync.md`](00-foundation/datajud-classe-processo-bd-sync.md) (decisões, inventário, QA, APIs).
+
 ## Objetivo
 
 Padronizar o comportamento das telas `app/views/internal/*-create.php` para garantir consistência de:
 - validação CNJ do número do processo;
-- obtenção automática da classe (DataJud);
-- persistência de processo/classe;
+- obtenção automática da classe (DataJud + leitura prévia no BD + sync em `processos`/`classes` — ver `docs/00-foundation/datajud-classe-processo-bd-sync.md`; comparação de código: `ClassesRepository::normalizeCodigo` / `codigosEquivalentes`);
+- persistência de processo/classe (no submit do módulo continua valendo; o sync antecipa vínculo quando o DataJud retorna classe);
 - vínculo de réu/denunciado ao processo com fallback para cadastro manual.
 
 ## Regra de referência
 
 - Regra dedicada criada em: `.cursor/rules/processo-classe-reu-automation.mdc`.
 
-## Resultado da varredura (create interno)
+## Inventário: trio DataJud completo (`cnj.js` + `datajud-cycle-helper.js` + `datajud-api.js`)
 
-### Telas com processo + classe + CNJ + DataJud (aderentes)
+### Create e fluxos equivalentes
 
-- `app/views/internal/cartorio-cartas-expedidas-create.php`
-- `app/views/internal/cartorio-cartas-recebidas-create.php`
+- `app/views/internal/sala-audiencias-pauta-create.php`
 - `app/views/internal/cartorio-cejusc-create.php`
 - `app/views/internal/cartorio-editais-create.php`
 - `app/views/internal/cartorio-guias-create.php`
 - `app/views/internal/cartorio-medidas-protetivas-create.php`
+- `app/views/internal/cartorio-ceapa-create.php`
+- `app/views/internal/cartorio-cartas-recebidas-create.php`
+- `app/views/internal/cartorio-cartas-expedidas-create.php`
 - `app/views/internal/gabinete-monitoramento-eletronico-create.php`
-- `app/views/internal/sala-audiencias-pauta-create.php`
+
+### Listagens / modais com filtro processo + classe
+
+- `app/views/internal/cartorio-oficios-list.php`
+- `app/views/internal/gabinete-oficios-list.php`
+
+### Edição com o mesmo trio (exceções de negócio podem usar `DATAJUD_SKIP_CLASSE_SYNC`)
+
+- `app/views/internal/gabinete-reus-presos-edit.php`
+- `app/views/internal/cartorio-ceapa-edit.php` (sync desativado quando a classe está travada no registro CEAPA)
+
+### Somente CNJ (`cnj.js` sem consulta automática de classe DataJud nesta tela)
+
+- `app/views/internal/consulta-processos-list.php`
 
 ### Telas sem input de processo (regra processo/classe não se aplica)
 

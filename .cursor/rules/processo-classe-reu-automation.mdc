@@ -1,5 +1,9 @@
 # Padrão Sistêmico: Processo + Classe + Réu (Create Interno)
 
+## Documentação canônica
+
+- Fluxo completo (BD, DataJud, sync, decisões, QA): `docs/00-foundation/datajud-classe-processo-bd-sync.md`.
+
 ## Escopo
 
 - Aplica-se a todas as telas `app/views/internal/*-create.php`.
@@ -10,10 +14,11 @@
 ## Processo e classe (obrigatório quando existe input de processo)
 
 1. Campo de processo deve usar máscara/normalização CNJ e validação estrutural.
-2. Campo de classe processual deve existir na mesma tela e ser preenchido automaticamente por DataJud.
-3. O fluxo deve persistir processo/classe no banco (reaproveitando mecanismos já existentes no projeto).
-4. Não permitir cadastro final enquanto classe estiver em estado de carregamento (`Aguarde...`).
-5. Ao invalidar processo (menos de 20 dígitos), limpar classe e metadados associados.
+2. Campo de classe processual deve existir na mesma tela; o `datajud-api.js` consulta primeiro a classe já vinculada em `processos`/`classes` (`/api/processos/classe-read.php`), depois o DataJud, e em caso de sucesso com classe chama `/api/processos/classe-sync.php` (noop se o código já for o mesmo). Documentação: `docs/00-foundation/datajud-classe-processo-bd-sync.md`. Comparação de código de classe no PHP: `ClassesRepository::normalizeCodigo` / `codigosEquivalentes`. Em edições com classe já renderizada pelo servidor, usar `data-datajud-initial="1"` no input quando aplicável (ver README do módulo DataJud).
+3. O submit do módulo continua persistindo processo/classe pelos services existentes; o sync antecipa vínculo quando o DataJud retorna classe utilizável.
+4. Exceção: `window.DATAJUD_SKIP_CLASSE_SYNC = true` (ex.: CEAPA edição com classe travada) — não chamar o sync automático.
+5. Não permitir cadastro final enquanto classe estiver em estado de carregamento (`Aguarde...`).
+6. Ao invalidar processo (menos de 20 dígitos), limpar classe e metadados associados.
 
 ## Réu/denunciado (obrigatório quando existe campo de parte passiva)
 
@@ -44,7 +49,7 @@
 
 ## Checklist rápido por tela create
 
-- [ ] Possui processo? Se sim: CNJ + DataJud + classe + persistência processo/classe.
+- [ ] Possui processo? Se sim: CNJ + leitura BD + DataJud + sync automático da classe + persistência no submit do módulo.
 - [ ] Possui réu/denunciado? Se sim: select por vínculos + opção Outro + input livre.
 - [ ] Nome livre formatado por TextFormatter.
 - [ ] Bloqueio de cadastro enquanto DataJud está pendente.

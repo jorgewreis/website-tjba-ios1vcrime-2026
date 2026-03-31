@@ -191,7 +191,10 @@ final class CeapaService
             }
             $classeCodigoPayload = trim((string) ($payload['classe_codigo'] ?? ''));
             if ($classeNomeExistente !== '' && $classeNomeExistente !== 'Classe não informada') {
-                if ($classeCodigoPayload !== '' && $classeCodigoPayload !== $classeCodigoExistente) {
+                if (
+                    $classeCodigoPayload !== ''
+                    && !ClassesRepository::codigosEquivalentes($classeCodigoPayload, $classeCodigoExistente)
+                ) {
                     throw new InvalidArgumentException('Não é permitido alterar a classe processual quando já houver valor cadastrado.');
                 }
             }
