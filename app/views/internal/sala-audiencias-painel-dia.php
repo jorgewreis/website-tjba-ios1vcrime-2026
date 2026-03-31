@@ -322,9 +322,14 @@ $dataTitulo = $diasSemana[(int) $dtHoje->format('w')] . ', ' . $dtHoje->format('
 
     <script>
         (function () {
-            const items = <?php echo json_encode($timelineItemsHoje, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?> || [];
+            const itemsBase = <?php echo json_encode($timelineItemsHoje, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?> || [];
+            const itemsById = {};
+            itemsBase.forEach((it) => {
+                const id = String(it.id || '').trim();
+                if (id !== '') itemsById[id] = Object.assign({}, it);
+            });
             const root = document.getElementById('timeline-hoje-painel-dia');
-            if (!root || items.length === 0) return;
+            if (!root || itemsBase.length === 0) return;
             const dayStart = 8 * 60;
             const dayEnd = 18 * 60;
             const range = dayEnd - dayStart;
@@ -341,30 +346,11 @@ $dataTitulo = $diasSemana[(int) $dtHoje->format('w')] . ', ' . $dtHoje->format('
             };
             const clamp = (m) => Math.max(dayStart, Math.min(dayEnd, m));
             const pct = (m) => ((clamp(m) - dayStart) / range) * 100;
-            const prevHtml = [];
-            const realHtml = [];
             const fmtHM = (m) => {
                 const hh = String(Math.floor(m / 60)).padStart(2, '0');
                 const mm = String(m % 60).padStart(2, '0');
                 return `${hh}:${mm}`;
             };
-            items.forEach((it) => {
-                const sTs = toTs((it.data_audiencia || '') + ' ' + (it.hora_audiencia || ''));
-                if (Number.isNaN(sTs)) return;
-                const sMin = toMin(sTs);
-                const prevDur = Math.max(5, parseInt(it.duracao_estimada_minutos || 0, 10) || 5);
-                const prevEnd = sMin + prevDur;
-                prevHtml.push(`<span class="timeline-day-ruler-bar-prev" title="Previsto: ${fmtHM(sMin)} - ${fmtHM(prevEnd)}" style="left:${pct(sMin)}%;width:${Math.max(0.4, pct(prevEnd) - pct(sMin))}%"></span>`);
-                const rsTs = toTs(it.data_hora_inicio_efetivo || '');
-                const reTs = toTs(it.data_hora_fim_efetivo || '');
-                if (!Number.isNaN(rsTs)) {
-                    const rs = toMin(rsTs);
-                    const re = !Number.isNaN(reTs) ? toMin(reTs) : (rs + prevDur);
-                    const delta = rs - sMin;
-                    const cls = delta > 5 ? 'late' : (delta < -5 ? 'early' : '');
-                    realHtml.push(`<span class="timeline-day-ruler-bar-real ${cls}" title="Real: ${fmtHM(rs)} - ${fmtHM(re)} | Previsto: ${fmtHM(sMin)} - ${fmtHM(prevEnd)}" style="left:${pct(rs)}%;width:${Math.max(0.4, pct(re) - pct(rs))}%"></span>`);
-                }
-            });
             const tickHtml = Array.from({ length: 11 }, (_, i) => {
                 const left = (i / 10) * 100;
                 const hiddenClass = (i === 0 || i === 10) ? ' hidden' : '';
@@ -376,24 +362,72 @@ $dataTitulo = $diasSemana[(int) $dtHoje->format('w')] . ', ' . $dtHoje->format('
                 const hiddenClass = (i === 0 || i === 10) ? ' hidden' : '';
                 return `<span class="timeline-day-ruler-label${hiddenClass}" style="left:${left}%">${hour}:00</span>`;
             }).join('');
-            const now = new Date();
-            const nowMin = now.getHours() * 60 + now.getMinutes();
-            const nowHtml = (nowMin >= dayStart && nowMin <= dayEnd)
-                ? `<span class="timeline-day-ruler-now" title="Agora: ${fmtHM(nowMin)}" style="left:${pct(nowMin)}%"></span>`
-                : '';
-            root.innerHTML =
-                `<div class="timeline-day-ruler-track">
-                    <span class="timeline-day-ruler-shade" style="left:0%;width:10%"></span>
-                    <span class="timeline-day-ruler-shade" style="left:90%;width:10%"></span>
-                    ${tickHtml}${prevHtml.join('')}${realHtml.join('')}${nowHtml}
-                 </div>
-                 <div class="timeline-day-ruler-labels">${labelsHtml}</div>
-                 <div class="timeline-day-ruler-legend">
-                   <span><i class="timeline-day-ruler-legend-dot" style="background:#8db8ff"></i> Previsto</span>
-                   <span><i class="timeline-day-ruler-legend-dot" style="background:#2b7a4b"></i> Real no horário</span>
-                   <span><i class="timeline-day-ruler-legend-dot" style="background:#d14343"></i> Atraso</span>
-                   <span><i class="timeline-day-ruler-legend-dot" style="background:#7c5cff"></i> Adiantamento</span>
-                 </div>`;
+            function renderTimeline() {
+                const prevHtml = [];
+                const realHtml = [];
+                Object.keys(itemsById).forEach((id) => {
+                    const it = itemsById[id];
+                    const sTs = toTs((it.data_audiencia || '') + ' ' + (it.hora_audiencia || ''));
+                    if (Number.isNaN(sTs)) return;
+                    const sMin = toMin(sTs);
+                    const prevDur = Math.max(5, parseInt(it.duracao_estimada_minutos || 0, 10) || 5);
+                    const prevEnd = sMin + prevDur;
+                    prevHtml.push(`<span class="timeline-day-ruler-bar-prev" title="Previsto: ${fmtHM(sMin)} - ${fmtHM(prevEnd)}" style="left:${pct(sMin)}%;width:${Math.max(0.4, pct(prevEnd) - pct(sMin))}%"></span>`);
+                    const rsTs = toTs(it.data_hora_inicio_efetivo || '');
+                    const reTs = toTs(it.data_hora_fim_efetivo || '');
+                    if (!Number.isNaN(rsTs)) {
+                        const rs = toMin(rsTs);
+                        const re = !Number.isNaN(reTs) ? toMin(reTs) : (rs + prevDur);
+                        const delta = rs - sMin;
+                        const cls = delta > 5 ? 'late' : (delta < -5 ? 'early' : '');
+                        realHtml.push(`<span class="timeline-day-ruler-bar-real ${cls}" title="Real: ${fmtHM(rs)} - ${fmtHM(re)} | Previsto: ${fmtHM(sMin)} - ${fmtHM(prevEnd)}" style="left:${pct(rs)}%;width:${Math.max(0.4, pct(re) - pct(rs))}%"></span>`);
+                    }
+                });
+                const now = new Date();
+                const nowMin = now.getHours() * 60 + now.getMinutes();
+                const nowHtml = (nowMin >= dayStart && nowMin <= dayEnd)
+                    ? `<span class="timeline-day-ruler-now" title="Agora: ${fmtHM(nowMin)}" style="left:${pct(nowMin)}%"></span>`
+                    : '';
+                root.innerHTML =
+                    `<div class="timeline-day-ruler-track">
+                        <span class="timeline-day-ruler-shade" style="left:0%;width:10%"></span>
+                        <span class="timeline-day-ruler-shade" style="left:90%;width:10%"></span>
+                        ${tickHtml}${prevHtml.join('')}${realHtml.join('')}${nowHtml}
+                     </div>
+                     <div class="timeline-day-ruler-labels">${labelsHtml}</div>
+                     <div class="timeline-day-ruler-legend">
+                       <span><i class="timeline-day-ruler-legend-dot" style="background:#8db8ff"></i> Previsto</span>
+                       <span><i class="timeline-day-ruler-legend-dot" style="background:#2b7a4b"></i> Real no horário</span>
+                       <span><i class="timeline-day-ruler-legend-dot" style="background:#d14343"></i> Atraso</span>
+                       <span><i class="timeline-day-ruler-legend-dot" style="background:#7c5cff"></i> Adiantamento</span>
+                     </div>`;
+            }
+            function refreshTimelineData() {
+                const pautas = Object.keys(itemsById);
+                if (!pautas.length) return;
+                fetch('/api/sala-audiencias-pauta/status-bulk.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ pautas: pautas })
+                })
+                    .then((r) => r.json().then((j) => ({ ok: r.ok, body: j || {} })))
+                    .then((res) => {
+                        if (!res.ok || !res.body.success || !res.body.items) return;
+                        Object.keys(res.body.items).forEach((id) => {
+                            if (itemsById[id]) {
+                                itemsById[id] = Object.assign({}, itemsById[id], res.body.items[id]);
+                            }
+                        });
+                        renderTimeline();
+                    })
+                    .catch(() => { /* erro silencioso no polling */ });
+            }
+            renderTimeline();
+            window.setInterval(() => {
+                renderTimeline();
+                refreshTimelineData();
+            }, 60000);
         })();
     </script>
     <script src="/assets/js/modules/audiencias/pauta-list.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-list.js') ?: time(); ?>"></script>

@@ -88,7 +88,7 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
             .timeline-day-ruler-hour-tick { position: absolute; bottom: 0; width: 1px; height: 3px; background: rgba(20,20,20,.3); }
             .timeline-day-ruler-hour-tick.hidden { opacity: 0; }
             .timeline-day-ruler-now { position: absolute; top: 0; width: 3px; height: 100%; background: rgba(20,20,20,.30); z-index: 4; }
-            .timeline-day-ruler-bar-prev { position: absolute; top: 4px; height: 18px; border-radius: 4px; border: 1px solid #20202090; background: transparent; }
+            .timeline-day-ruler-bar-prev { position: absolute; top: 4px; height: 18px; border-radius: 4px; border: 1px solid #20202060; background: #20202050; }
             .timeline-day-ruler-bar-real { position: absolute; top: 8px; height: 8px; border-radius: 4px; background: var(--color-primary); opacity: .95; z-index: 3; }
             .timeline-day-ruler-bar-real.late { background: var(--color-primary-active); }
             .timeline-day-ruler-bar-real.early { background: var(--color-primary-active); }
@@ -647,7 +647,7 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
             root.innerHTML =
                 '<div class="timeline-day-ruler-track">' +
                 '<span class="timeline-day-ruler-shade" style="left:0%;width:9%"></span>' +
-                '<span class="timeline-day-ruler-shade" style="left:90%;width:9%"></span>' +
+                '<span class="timeline-day-ruler-shade" style="left:91%;width:9%"></span>' +
                 tickHtml + prevHtml + realHtml + nowHtml + '</div>' +
                 '<div class="timeline-day-ruler-labels">' + labelsHtml + '</div>' +
                 '<div class="timeline-day-ruler-legend">' +
@@ -679,7 +679,12 @@ $minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
         bindItemsPerPage('items-per-page-minhas');
         renderTimeline(null);
         refreshStatusAndTime();
-        window.setInterval(refreshStatusAndTime, 60000);
+        window.setInterval(function () {
+            // Atualiza marcador "agora" mesmo sem mudança de dados.
+            renderTimeline(null);
+            // Atualiza dados reais sem recarregar a página.
+            refreshStatusAndTime();
+        }, 60000);
     })();
     </script>
 </body>
