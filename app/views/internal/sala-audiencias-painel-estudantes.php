@@ -665,10 +665,16 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
                     plannedStart: sMin,
                     plannedDur: prevDur,
                     realStart: rs,
-                    realEnd: re
+                    realEnd: re,
+                    sortStart: rs !== null ? rs : sMin
                 });
             });
-            sourceItems.sort(function (a, b) { return a.plannedStart - b.plannedStart; });
+            sourceItems.sort(function (a, b) {
+                if (a.sortStart !== b.sortStart) {
+                    return a.sortStart - b.sortStart;
+                }
+                return a.plannedStart - b.plannedStart;
+            });
             var cursorEnd = dayStart;
             sourceItems.forEach(function (slot) {
                 var displayStart = Math.max(slot.plannedStart, cursorEnd);

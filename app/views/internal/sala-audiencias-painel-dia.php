@@ -106,13 +106,13 @@ function painelHoraPorStatus(array $row): string
         <?php include __DIR__ . '/_copy_process_script.php'; ?>
         <style>
             .timeline-day-ruler { padding: 8px 0 4px; }
-            .timeline-day-ruler-track { position: relative; height: 26px; border-radius: 4px; background: #eef2f6; overflow: hidden; }
+            .timeline-day-ruler-track { position: relative; height: 22px; border-radius: 4px; background: #eef2f6; overflow: hidden; }
             .timeline-day-ruler-shade { position: absolute; top: 0; height: 100%; background: rgba(71,84,103,.18); z-index: 0; }
             .timeline-day-ruler-hour-tick { position: absolute; bottom: 0; width: 1px; height: 3px; background: rgba(20,20,20,.3); }
             .timeline-day-ruler-hour-tick.hidden { opacity: 0; }
             .timeline-day-ruler-now { position: absolute; top: 0; width: 3px; height: 100%; background: rgba(20,20,20,.30); z-index: 4; }
-            .timeline-day-ruler-bar-prev { position: absolute; top: 4px; height: 18px; background: #20202050; }
-            .timeline-day-ruler-bar-real { position: absolute; top: 4px; height: 18px; background: var(--color-primary); border-right: 1px solid #ffffff50; opacity: .7; z-index: 3; }
+            .timeline-day-ruler-bar-prev { position: absolute; top: 1px; height: 20px; background: #20202050; }
+            .timeline-day-ruler-bar-real { position: absolute; top: 1px; height: 20px; background: var(--color-primary); border-right: 1px solid #ffffff50; opacity: .7; z-index: 3; }
             .timeline-day-ruler-bar-real.late { background: transparent; }
             .timeline-day-ruler-bar-real.early { background: var(--color-primary-active); }
             .timeline-day-ruler-labels { position: relative; margin-top: 6px; height: 14px; font-size: 11px; color: #667085; font-family: monospace; }
@@ -450,10 +450,16 @@ function painelHoraPorStatus(array $row): string
                             plannedDur: plannedDur,
                             realStart: Number.isNaN(rsTs) ? null : toMin(rsTs),
                             realEnd: Number.isNaN(reTs) ? null : toMin(reTs),
+                            sortStart: Number.isNaN(rsTs) ? plannedStart : toMin(rsTs),
                         };
                     })
                     .filter((x) => x !== null)
-                    .sort((a, b) => a.plannedStart - b.plannedStart);
+                    .sort((a, b) => {
+                        if (a.sortStart !== b.sortStart) {
+                            return a.sortStart - b.sortStart;
+                        }
+                        return a.plannedStart - b.plannedStart;
+                    });
                 let cursorEnd = dayStart;
                 slots.forEach((slot) => {
                     const displayStart = Math.max(slot.plannedStart, cursorEnd);
