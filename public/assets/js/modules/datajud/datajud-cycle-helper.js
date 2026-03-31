@@ -21,7 +21,7 @@
     }
 
     var MSG_SLOW = 'Consultando informações processuais. Isso pode levar alguns segundos.';
-    var MSG_NO_RESULT = 'A consulta ao DataJud não retornou resultados a tempo. Tente novamente ou informe os dados manualmente.';
+    var MSG_NO_RESULT = 'A consulta ao DataJud não retornou resultados a tempo. Tente novamente ou informe a classe manualmente.';
     var MSG_HTTP_GENERIC = 'Não foi possível concluir a consulta ao DataJud.';
     var MSG_EMPTY_CLASSE = 'Processo encontrado sem classe cadastrada no DataJud.';
     /** Curto para não estourar inputs estreitos (ex.: classe em formulários). */
@@ -112,7 +112,7 @@
         if (n <= 1) {
             return PLACEHOLDER_LOADING;
         }
-        return 'Tent. ' + n + ' — DataJud…';
+        return 'Tentativa ' + n + ', aguarde...';
     }
 
     function setClasseLoadingState(classeInput, attemptIndex) {
@@ -275,7 +275,9 @@
             if (dom.statusElement) {
                 setStatusMessage(
                     dom.statusElement,
-                    'Consultando o DataJud...',
+                    bancoPrefilled
+                        ? 'Consultando DataJud para atualização...'
+                        : 'Consultando o DataJud...',
                     bancoPrefilled ? 'var(--color-gray-700)' : 'var(--color-warning-active)'
                 );
             }
@@ -362,7 +364,7 @@
                     if (classeDescricaoField) {
                         classeDescricaoField.value = global.__datajudBancoPrefill.descricao || '';
                     }
-                    setStatusMessage(statusElement, '*Classe do cadastro local (DataJud sem classe)', 'var(--color-gray-700)');
+                    setStatusMessage(statusElement, '*Classe', 'var(--color-gray-700)');
                 } else {
                     classeInput.value = fallbackText;
                     setStatusMessage(statusElement, MSG_EMPTY_CLASSE, statusColor);
@@ -384,7 +386,7 @@
                     if (classeDescricaoField) {
                         classeDescricaoField.value = global.__datajudBancoPrefill.descricao || '';
                     }
-                    setStatusMessage(statusElement, '*Classe do cadastro local (consulta DataJud indisponível)', 'var(--color-gray-700)');
+                    setStatusMessage(statusElement, '*Classe', 'var(--color-gray-700)');
                 } else {
                     classeInput.value = fallbackText;
                     setStatusMessage(statusElement, 'Classe', statusColor);
