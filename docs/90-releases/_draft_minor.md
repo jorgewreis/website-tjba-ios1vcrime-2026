@@ -134,4 +134,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(internal): implement conditional delete permissions for estagiario profiles on edit pages** `[f3dfc83]`
 - **feat(audiencias): enhance audience display logic and improve time formatting for student panels** `[35cff4f]`
 - **feat(audiencias): add method to list designated hearings by process ID and integrate into service logic** `[481338c]`
+- **fix(timeline): adjust height and border radius of timeline bars for improved visual consistency** `[3afb484]`
 
