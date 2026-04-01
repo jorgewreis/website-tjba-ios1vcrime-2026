@@ -150,99 +150,21 @@ $statusLabel = $statusAtual === 'finalizada' ? 'Finalizada' : ($statusAtual === 
     <?php if ($oficio !== null && $errorMessage === ''): ?>
     <script>
         (function () {
-            const notify = (type, title, message) => {
-                if (window.App && App.Page && typeof App.Page.notify === 'function') {
-                    App.Page.notify(type, title, message);
-                    return;
-                }
-                if (typeof showToast === 'function') showToast({ type, variant: 'full', title, message });
-            };
-            const queuePostReloadToast = (type, title, message) => {
-                if (window.App && App.Page && typeof App.Page.queuePostReloadToast === 'function') {
-                    App.Page.queuePostReloadToast(type, title, message, 'cartorio.postReloadToast');
-                    return;
-                }
-                try {
-                    const key = 'cartorio.postReloadToast';
-                    const raw = sessionStorage.getItem(key);
-                    const fila = raw ? JSON.parse(raw) : [];
-                    const lista = Array.isArray(fila) ? fila : (fila && fila.message ? [fila] : []);
-                    lista.push({ type, title, message });
-                    sessionStorage.setItem(key, JSON.stringify(lista));
-                } catch (e) {}
-            };
-            const oid = document.getElementById('hidden-gab-oficio-id')?.value || '';
+            if (!window.App || !App.OficiosEdit || typeof App.OficiosEdit.initialize !== 'function') {
+                return;
+            }
 
-            document.getElementById('gab-voltar-btn')?.addEventListener('click', function () {
-                window.location.href = '/frame.php?page=oficiosgabinete';
-            });
-
-            const requireSecondClick = window.App && App.Page && typeof App.Page.createSecondClickGuard === 'function'
-                ? App.Page.createSecondClickGuard()
-                : (() => {
-                    const pendingConfirmations = {};
-                    return (key, message) => {
-                        const now = Date.now();
-                        const validUntil = Number(pendingConfirmations[key] || 0);
-                        if (validUntil > now) {
-                            delete pendingConfirmations[key];
-                            return true;
-                        }
-                        pendingConfirmations[key] = now + 5000;
-                        notify('info', 'Confirmação', message);
-                        return false;
-                    };
-                })();
-
-            document.getElementById('gab-cancelar-oficio-btn')?.addEventListener('click', function () {
-                const btn = this;
-                btn.disabled = true;
-                fetch('/api/gabinete-oficios/cancel.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: oid }),
-                    credentials: 'same-origin'
-                })
-                .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
-                .then(function (res) {
-                    if (res.ok && res.j && res.j.success) {
-                        queuePostReloadToast('success', 'Sucesso', 'Ofício cancelado.');
-                        window.location.href = '/frame.php?page=oficiosgabinete';
-                    } else {
-                        notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao cancelar.');
-                        btn.disabled = false;
-                    }
-                })
-                .catch(function () {
-                    notify('error', 'Erro', 'Erro de conexão.');
-                    btn.disabled = false;
-                });
-            });
-
-            document.getElementById('gab-excluir-oficio-btn')?.addEventListener('click', function () {
-                if (!requireSecondClick('excluir-oficio-gab', 'Clique novamente em Excluir em até 5 segundos para confirmar a exclusão.')) return;
-                const btn = this;
-                btn.disabled = true;
-                fetch('/api/gabinete-oficios/delete.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: oid }),
-                    credentials: 'same-origin'
-                })
-                .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
-                .then(function (res) {
-                    if (res.ok && res.j && (res.j.deleted || res.j.message)) {
-                        queuePostReloadToast('success', 'Sucesso', (res.j.message) || 'Ofício excluído.');
-                        window.location.href = '/frame.php?page=oficiosgabinete';
-                    } else {
-                        notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao excluir.');
-                        btn.disabled = false;
-                    }
-                })
-                .catch(function () {
-                    notify('error', 'Erro', 'Erro de conexão.');
-                    btn.disabled = false;
-                });
+            App.OficiosEdit.initialize({
+                idFieldId: 'hidden-gab-oficio-id',
+                backButtonId: 'gab-voltar-btn',
+                cancelButtonId: 'gab-cancelar-oficio-btn',
+                deleteButtonId: 'gab-excluir-oficio-btn',
+                cancelEndpoint: '/api/gabinete-oficios/cancel.php',
+                deleteEndpoint: '/api/gabinete-oficios/delete.php',
+                listHref: '/frame.php?page=oficiosgabinete',
+                storageKey: 'cartorio.postReloadToast',
+                deleteConfirmKey: 'excluir-oficio-gab',
+                deleteConfirmMessage: 'Clique novamente em Excluir em até 5 segundos para confirmar a exclusão.'
             });
         })();
     </script>

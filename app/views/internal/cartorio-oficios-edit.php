@@ -174,99 +174,21 @@ $subLabels = [
     <?php if ($oficio !== null && $errorMessage === ''): ?>
     <script>
         (function () {
-            const notify = (type, title, message) => {
-                if (window.App && App.Page && typeof App.Page.notify === 'function') {
-                    App.Page.notify(type, title, message);
-                    return;
-                }
-                if (typeof showToast === 'function') showToast({ type, variant: 'full', title, message });
-            };
-            const queuePostReloadToast = (type, title, message) => {
-                if (window.App && App.Page && typeof App.Page.queuePostReloadToast === 'function') {
-                    App.Page.queuePostReloadToast(type, title, message, 'cartorio.postReloadToast');
-                    return;
-                }
-                try {
-                    const key = 'cartorio.postReloadToast';
-                    const raw = sessionStorage.getItem(key);
-                    const fila = raw ? JSON.parse(raw) : [];
-                    const lista = Array.isArray(fila) ? fila : (fila && fila.message ? [fila] : []);
-                    lista.push({ type, title, message });
-                    sessionStorage.setItem(key, JSON.stringify(lista));
-                } catch (e) {}
-            };
-            const oid = document.getElementById('hidden-oficio-id')?.value || '';
+            if (!window.App || !App.OficiosEdit || typeof App.OficiosEdit.initialize !== 'function') {
+                return;
+            }
 
-            document.getElementById('voltar-btn')?.addEventListener('click', function () {
-                window.location.href = '/frame.php?page=oficioscartorio';
-            });
-
-            const requireSecondClick = window.App && App.Page && typeof App.Page.createSecondClickGuard === 'function'
-                ? App.Page.createSecondClickGuard()
-                : (() => {
-                    const pendingConfirmations = {};
-                    return (key, message) => {
-                        const now = Date.now();
-                        const validUntil = Number(pendingConfirmations[key] || 0);
-                        if (validUntil > now) {
-                            delete pendingConfirmations[key];
-                            return true;
-                        }
-                        pendingConfirmations[key] = now + 5000;
-                        notify('info', 'Confirmação', message);
-                        return false;
-                    };
-                })();
-
-            document.getElementById('cancelar-oficio-btn')?.addEventListener('click', function () {
-                const btn = this;
-                btn.disabled = true;
-                fetch('/api/cartorio-oficios/cancel.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: oid }),
-                    credentials: 'same-origin'
-                })
-                .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
-                .then(function (res) {
-                    if (res.ok && res.j && res.j.success) {
-                        queuePostReloadToast('success', 'Sucesso', 'Ofício cancelado.');
-                        window.location.href = '/frame.php?page=oficioscartorio';
-                    } else {
-                        notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao cancelar.');
-                        btn.disabled = false;
-                    }
-                })
-                .catch(function () {
-                    notify('error', 'Erro', 'Erro de conexão.');
-                    btn.disabled = false;
-                });
-            });
-
-            document.getElementById('excluir-oficio-btn')?.addEventListener('click', function () {
-                if (!requireSecondClick('excluir-oficio-cartorio', 'Clique novamente em Excluir em até 5 segundos para confirmar a exclusão.')) return;
-                const btn = this;
-                btn.disabled = true;
-                fetch('/api/cartorio-oficios/delete.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: oid }),
-                    credentials: 'same-origin'
-                })
-                .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
-                .then(function (res) {
-                    if (res.ok && res.j && (res.j.deleted || res.j.message)) {
-                        queuePostReloadToast('success', 'Sucesso', (res.j.message) || 'Ofício excluído.');
-                        window.location.href = '/frame.php?page=oficioscartorio';
-                    } else {
-                        notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao excluir.');
-                        btn.disabled = false;
-                    }
-                })
-                .catch(function () {
-                    notify('error', 'Erro', 'Erro de conexão.');
-                    btn.disabled = false;
-                });
+            App.OficiosEdit.initialize({
+                idFieldId: 'hidden-oficio-id',
+                backButtonId: 'voltar-btn',
+                cancelButtonId: 'cancelar-oficio-btn',
+                deleteButtonId: 'excluir-oficio-btn',
+                cancelEndpoint: '/api/cartorio-oficios/cancel.php',
+                deleteEndpoint: '/api/cartorio-oficios/delete.php',
+                listHref: '/frame.php?page=oficioscartorio',
+                storageKey: 'cartorio.postReloadToast',
+                deleteConfirmKey: 'excluir-oficio-cartorio',
+                deleteConfirmMessage: 'Clique novamente em Excluir em até 5 segundos para confirmar a exclusão.'
             });
         })();
     </script>

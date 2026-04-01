@@ -581,47 +581,6 @@ if ($totalPages > 0) {
     <script src="/assets/js/modules/cartorio/cartas-expedidas/search-list.js"></script>
     <script>
         (function () {
-            const pageTools = window.App && App.Page ? App.Page : null;
-            const notify = (type, title, message) => {
-                if (pageTools && typeof pageTools.notify === 'function') {
-                    pageTools.notify(type, title, message);
-                    return;
-                }
-                if (typeof showToast === 'function') {
-                    showToast({ type, variant: 'full', title, message });
-                }
-            };
-            const POST_RELOAD_TOAST_KEY = 'cartorio.postReloadToast';
-            const queuePostReloadToast = (type, title, message) => {
-                if (pageTools && typeof pageTools.queuePostReloadToast === 'function') {
-                    pageTools.queuePostReloadToast(type, title, message, POST_RELOAD_TOAST_KEY);
-                    return;
-                }
-                try {
-                    const raw = sessionStorage.getItem(POST_RELOAD_TOAST_KEY);
-                    const fila = raw ? JSON.parse(raw) : [];
-                    const lista = Array.isArray(fila) ? fila : (fila && fila.message ? [fila] : []);
-                    lista.push({ type, title, message });
-                    sessionStorage.setItem(POST_RELOAD_TOAST_KEY, JSON.stringify(lista));
-                } catch (e) {}
-            };
-            const flushPostReloadToast = () => {
-                if (pageTools && typeof pageTools.flushPostReloadToast === 'function') {
-                    pageTools.flushPostReloadToast(POST_RELOAD_TOAST_KEY, { type: 'info', title: 'Informação' });
-                    return;
-                }
-                try {
-                    const raw = sessionStorage.getItem(POST_RELOAD_TOAST_KEY);
-                    if (!raw) return;
-                    sessionStorage.removeItem(POST_RELOAD_TOAST_KEY);
-                    const data = JSON.parse(raw);
-                    const lista = Array.isArray(data) ? data : (data && data.message ? [data] : []);
-                    lista.forEach(function (item) {
-                        if (item && item.message) notify(item.type || 'info', item.title || 'Informação', item.message);
-                    });
-                } catch (e) {}
-            };
-            flushPostReloadToast();
             if (window.CartasExpedidasSearch && typeof window.CartasExpedidasSearch.initializeProcessSearch === 'function') {
                 window.CartasExpedidasSearch.initializeProcessSearch({
                     inputId: 'search-input',
@@ -636,146 +595,99 @@ if ($totalPages > 0) {
                 });
             }
 
-            const novoCadastroBtn = document.getElementById('novo-cadastro-btn');
-            if (novoCadastroBtn) {
-                novoCadastroBtn.addEventListener('click', function () {
-                    window.location.href = '/frame.php?page=cartasexpedidascreate';
-                });
+            if (!window.App || !App.CartorioTaskList || typeof App.CartorioTaskList.initialize !== 'function') {
+                return;
             }
 
-            document.querySelectorAll('.btn-editar[data-carta-id]').forEach(function (button) {
-                button.addEventListener('click', function () {
-                    const cartaId = button.dataset.cartaId;
-                    if (!cartaId) return;
-                    window.location.href = '/frame.php?page=cartasexpedidasedit&id=' + encodeURIComponent(cartaId);
-                });
-            });
+            App.CartorioTaskList.initialize({
+                storageKey: 'cartorio.postReloadToast',
+                newButtonId: 'novo-cadastro-btn',
+                newHref: '/frame.php?page=cartasexpedidascreate',
+                editButtonSelector: '.btn-editar[data-carta-id]',
+                editIdAttribute: 'cartaId',
+                editHrefBuilder: function (cartaId) {
+                    return '/frame.php?page=cartasexpedidasedit&id=' + encodeURIComponent(cartaId);
+                },
+                onReady: function (ctx) {
+                    const notify = ctx.notify;
+                    const queuePostReloadToast = ctx.queuePostReloadToast;
 
-            // Expandir/recolher subtarefa ao selecionar o radio
-            document.querySelectorAll('input[name="open-subtask"]').forEach(function (radio) {
-                radio.addEventListener('change', function () {
-                    const cartaId = this.value;
-                    const targetId = 'subtask-' + cartaId;
-                    document.querySelectorAll('.col.subtask').forEach(function (subtaskRow) {
-                        const isTarget = subtaskRow.id === targetId;
-                        subtaskRow.classList.toggle('subtask-collapsed', !isTarget);
-                        subtaskRow.setAttribute('aria-hidden', isTarget ? 'false' : 'true');
-                    });
-                    document.querySelectorAll('input[name="open-subtask"]').forEach(function (r) {
-                        r.setAttribute('aria-expanded', r.value === cartaId ? 'true' : 'false');
-                    });
-                });
-            });
+                    document.querySelectorAll('.btn-concluir-subtarefa').forEach(function (btn) {
+                        btn.addEventListener('click', function () {
+                            const normalizeTipo = (value) => String(value || '').trim().toLowerCase();
+                            const subtarefaId = this.getAttribute('data-subtarefa-id');
+                            if (!subtarefaId) return;
+                            const block = this.closest('[data-subtarefa-id][data-subtarefa-tipo]');
+                            const tipo = normalizeTipo(block ? (block.getAttribute('data-subtarefa-tipo') || '') : '');
+                            const qtdEl = block ? block.querySelector('.subtask-qtd-docs') : null;
+                            const numeroDestino = block ? block.querySelector('.subtask-numero-destino') : null;
+                            const resultadoDevolucao = block ? block.querySelector('.subtask-resultado-devolucao') : null;
+                            const metodoEnvio = block ? block.querySelector('.subtask-metodo-envio') : null;
 
-            // Concluir subtarefa
-            document.querySelectorAll('.btn-concluir-subtarefa').forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    const normalizeTipo = (value) => String(value || '').trim().toLowerCase();
-                    const subtarefaId = this.getAttribute('data-subtarefa-id');
-                    if (!subtarefaId) return;
-                    const block = this.closest('[data-subtarefa-id][data-subtarefa-tipo]');
-                    const tipo = normalizeTipo(block ? (block.getAttribute('data-subtarefa-tipo') || '') : '');
-                    const qtdEl = block ? block.querySelector('.subtask-qtd-docs') : null;
-                    const numeroDestino = block ? block.querySelector('.subtask-numero-destino') : null;
-                    const resultadoDevolucao = block ? block.querySelector('.subtask-resultado-devolucao') : null;
-                    const metodoEnvio = block ? block.querySelector('.subtask-metodo-envio') : null;
-                    if (['aguardando_gerar_pdf', 'gerar_pdf'].includes(tipo)) {
-                        var qtd = qtdEl ? (parseInt(qtdEl.value, 10) || 0) : 0;
-                        if (qtd < 2 || qtd > 10) {
-                            notify('error', 'Atenção', 'Informe a quantidade de documentos gerados (2 a 10).');
-                            return;
-                        }
-                    } else if (['aguardando_envio', 'envio_processo', 'enviar_processo'].includes(tipo)) {
-                        if (!metodoEnvio || !metodoEnvio.value || !metodoEnvio.value.trim()) {
-                            notify('error', 'Atenção', 'Selecione o método de envio.');
-                            return;
-                        }
-                    } else if (['aguardando_informacoes', 'informar_dados', 'detalhamento_informacoes'].includes(tipo)) {
-                        if (!numeroDestino || !numeroDestino.value.trim()) {
-                            notify('error', 'Atenção', 'Informe o número do processo no Juízo Deprecante.');
-                            return;
-                        }
-                    } else if (['aguardando_devolucao', 'confirmar_juntada', 'juntada_devolucao'].includes(tipo)) {
-                        if (!resultadoDevolucao || !resultadoDevolucao.value) {
-                            notify('error', 'Atenção', 'Selecione o resultado da devolução.');
-                            return;
-                        }
-                    }
-                    let dadosEspecificos = null;
-                    if (block) {
-                        const varaDestino = block.querySelector('.subtask-vara-destino');
-                        const obj = {};
-                        if (qtdEl) obj.qtd_docs_gerados = parseInt(qtdEl.value, 10) || 2;
-                        if (numeroDestino && numeroDestino.value.trim()) obj.numero_processo_destino = numeroDestino.value.trim();
-                        if (varaDestino && varaDestino.value.trim()) obj.vara_destino = varaDestino.value.trim();
-                        if (resultadoDevolucao && resultadoDevolucao.value) obj.resultado_devolucao = resultadoDevolucao.value;
-                        if (metodoEnvio && metodoEnvio.value && metodoEnvio.value.trim()) obj.metodo_envio = metodoEnvio.value.trim();
-                        if (Object.keys(obj).length > 0) dadosEspecificos = JSON.stringify(obj);
-                    }
-                    btn.disabled = true;
-                    fetch('/api/cartorio-cartas-expedidas/concluir-subtarefa.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            subtarefa_id: subtarefaId,
-                            dados_especificos: dadosEspecificos
-                        })
-                    })
-                    .then(function (r) { return r.json(); })
-                    .then(function (data) {
-                        if (data.success) {
-                            queuePostReloadToast('success', 'Sucesso', 'Subtarefa concluída com sucesso.');
-                            if (data.tarefa_principal_concluida && data.tarefa_principal_mensagem) {
-                                queuePostReloadToast('success', 'Sucesso', data.tarefa_principal_mensagem);
+                            if (['aguardando_gerar_pdf', 'gerar_pdf'].includes(tipo)) {
+                                var qtd = qtdEl ? (parseInt(qtdEl.value, 10) || 0) : 0;
+                                if (qtd < 2 || qtd > 10) {
+                                    notify('error', 'Atenção', 'Informe a quantidade de documentos gerados (2 a 10).');
+                                    return;
+                                }
+                            } else if (['aguardando_envio', 'envio_processo', 'enviar_processo'].includes(tipo)) {
+                                if (!metodoEnvio || !metodoEnvio.value || !metodoEnvio.value.trim()) {
+                                    notify('error', 'Atenção', 'Selecione o método de envio.');
+                                    return;
+                                }
+                            } else if (['aguardando_informacoes', 'informar_dados', 'detalhamento_informacoes'].includes(tipo)) {
+                                if (!numeroDestino || !numeroDestino.value.trim()) {
+                                    notify('error', 'Atenção', 'Informe o número do processo no Juízo Deprecante.');
+                                    return;
+                                }
+                            } else if (['aguardando_devolucao', 'confirmar_juntada', 'juntada_devolucao'].includes(tipo)) {
+                                if (!resultadoDevolucao || !resultadoDevolucao.value) {
+                                    notify('error', 'Atenção', 'Selecione o resultado da devolução.');
+                                    return;
+                                }
                             }
-                            window.location.reload();
-                        } else {
-                            notify('error', 'Erro', data.error || 'Erro ao concluir subtarefa.');
-                            btn.disabled = false;
-                        }
-                    })
-                    .catch(function () {
-                        notify('error', 'Erro', 'Erro de conexão.');
-                        btn.disabled = false;
-                    });
-                });
-            });
-        })();
 
-        (function () {
-            const pending = {};
-            function requireSecondClick(key, msg) {
-                const now = Date.now();
-                if ((pending[key] || 0) > now) { delete pending[key]; return true; }
-                pending[key] = now + 5000;
-                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Confirmação', message: msg });
-                return false;
-            }
-            document.addEventListener('click', function (e) {
-                const btn = e.target.closest('.js-desalocar');
-                if (!btn) return;
-                const alocadoId = btn.getAttribute('data-alocado-id') || '';
-                const tipo      = btn.getAttribute('data-tipo') || '';
-                const endpoint  = btn.getAttribute('data-endpoint') || '';
-                if (!alocadoId || !endpoint) return;
-                if (!requireSecondClick('desalocar-' + alocadoId, 'Clique novamente para confirmar a remoção da alocação.')) return;
-                fetch(endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ alocado_id: alocadoId, tipo: tipo }),
-                    credentials: 'same-origin'
-                }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
-                .then(function (res) {
-                    if (res.ok && res.j && res.j.deleted) {
-                        if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Alocação removida.' });
-                        setTimeout(function () { window.location.reload(); }, 800);
-                    } else {
-                        const msg = (res.j && res.j.error) ? res.j.error : 'Falha ao remover alocação.';
-                        if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: msg });
-                    }
-                }).catch(function () {
-                    if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
-                });
+                            let dadosEspecificos = null;
+                            if (block) {
+                                const varaDestino = block.querySelector('.subtask-vara-destino');
+                                const obj = {};
+                                if (qtdEl) obj.qtd_docs_gerados = parseInt(qtdEl.value, 10) || 2;
+                                if (numeroDestino && numeroDestino.value.trim()) obj.numero_processo_destino = numeroDestino.value.trim();
+                                if (varaDestino && varaDestino.value.trim()) obj.vara_destino = varaDestino.value.trim();
+                                if (resultadoDevolucao && resultadoDevolucao.value) obj.resultado_devolucao = resultadoDevolucao.value;
+                                if (metodoEnvio && metodoEnvio.value && metodoEnvio.value.trim()) obj.metodo_envio = metodoEnvio.value.trim();
+                                if (Object.keys(obj).length > 0) dadosEspecificos = JSON.stringify(obj);
+                            }
+
+                            btn.disabled = true;
+                            fetch('/api/cartorio-cartas-expedidas/concluir-subtarefa.php', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    subtarefa_id: subtarefaId,
+                                    dados_especificos: dadosEspecificos
+                                })
+                            })
+                                .then(function (response) { return response.json(); })
+                                .then(function (data) {
+                                    if (data.success) {
+                                        queuePostReloadToast('success', 'Sucesso', 'Subtarefa concluída com sucesso.');
+                                        if (data.tarefa_principal_concluida && data.tarefa_principal_mensagem) {
+                                            queuePostReloadToast('success', 'Sucesso', data.tarefa_principal_mensagem);
+                                        }
+                                        window.location.reload();
+                                    } else {
+                                        notify('error', 'Erro', data.error || 'Erro ao concluir subtarefa.');
+                                        btn.disabled = false;
+                                    }
+                                })
+                                .catch(function () {
+                                    notify('error', 'Erro', 'Erro de conexão.');
+                                    btn.disabled = false;
+                                });
+                        });
+                    });
+                }
             });
         })();
     </script>

@@ -23,6 +23,10 @@ $__pageHelpersPath = dirname(__DIR__, 3) . '/public/assets/js/shared/page-helper
 $__pageHelpersV = @filemtime($__pageHelpersPath) ?: time();
 $__listSearchPath = dirname(__DIR__, 3) . '/public/assets/js/shared/list-search.js';
 $__listSearchV = @filemtime($__listSearchPath) ?: time();
+$__cartorioTaskListPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-task-list.js';
+$__cartorioTaskListV = @filemtime($__cartorioTaskListPath) ?: time();
+$__oficiosEditPath = dirname(__DIR__, 3) . '/public/assets/js/shared/oficios-edit.js';
+$__oficiosEditV = @filemtime($__oficiosEditPath) ?: time();
 
 $__currentUserPerfis = (isset($userPerfils) && is_array($userPerfils)) ? $userPerfils : [];
 $__isEstagiarioProfile = false;
@@ -67,6 +71,8 @@ window.__APP_CONTEXT = Object.assign({}, window.__APP_CONTEXT || {}, {
 <script src="/assets/js/shared/user-context.js?v=<?php echo (int) $__userContextV; ?>"></script>
 <script src="/assets/js/shared/page-helpers.js?v=<?php echo (int) $__pageHelpersV; ?>"></script>
 <script src="/assets/js/shared/list-search.js?v=<?php echo (int) $__listSearchV; ?>"></script>
+<script src="/assets/js/shared/cartorio-task-list.js?v=<?php echo (int) $__cartorioTaskListV; ?>"></script>
+<script src="/assets/js/shared/oficios-edit.js?v=<?php echo (int) $__oficiosEditV; ?>"></script>
 <script>window.__IS_ESTAGIARIO_PROFILE = <?php echo $__isEstagiarioProfile ? 'true' : 'false'; ?>;</script>
 <script>window.__ALLOW_DELETE_ON_EDIT_PAGE = <?php echo $__canDeleteOnThisEditPage ? 'true' : 'false'; ?>;</script>
 <?php if ($__isEstagiarioProfile && $__isEditPage && !$__canDeleteOnThisEditPage): ?>

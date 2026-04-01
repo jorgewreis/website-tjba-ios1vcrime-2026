@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.07
+
+**Data:** 2026-04-01 20:34:33 | **Commit:** `d2719d9` | **Tipo:** `minor`
+
+- feat: adicionar script de gerenciamento de tarefas do cartório e integrar funcionalidades de notificação e manipulação de subtarefas
+
 ## V. 1.06
 
 **Data:** 2026-04-01 20:21:53 | **Commit:** `1c9cf76` | **Tipo:** `minor`
@@ -3846,6 +3852,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
