@@ -44,4 +44,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(security): aprimorar políticas de autenticação e recuperação de senha com tokens hasheados e expiração** `[22421e6]`
 - **Fix: Refine architecture documentation, enhance security policies, and update performance requirements** `[d7bdc7e]`
 - **docs: atualizar documentação sobre APIs internas, estrutura de diretórios e diretrizes de versionamento** `[49d1f16]`
+- **Fix: Refine data management and security documentation; enhance CRUD lifecycle, data secrecy rules, log retention policy, and audit traceability requirements. Introduce authentication runbook for operational consistency post-deploy, ensuring robust validation and error handling across user authentication flows.** `[6829580]`
 
