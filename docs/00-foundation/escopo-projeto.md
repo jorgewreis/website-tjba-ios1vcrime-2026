@@ -47,7 +47,7 @@ O escopo do **Projeto 2026.01** está voltado à criação de uma base sólida p
 Esta fase não tem como objetivo “entregar o sistema pronto”, mas sim:
 
 - consolidar e registrar, em documentos formais, a visão de negócio, o modelo funcional, a arquitetura técnica e as diretrizes de integrações e segurança;  
-- preparar o ambiente de hospedagem, DNS, proteção e observabilidade (servidor, CloudPanel, Cloudflare, CloudWatch e correlatos);  
+- preparar o ambiente de hospedagem, DNS, proteção e observabilidade básica (servidor, CloudPanel, Cloudflare, logs do servidor e correlatos);  
 - estabelecer padrões que serão seguidos em todos os ciclos futuros (versionamento, ambientes, logging, segurança e qualidade de código).
 
 ### 3.1 Entregas principais do Projeto 2026.01
@@ -61,7 +61,7 @@ As entregas principais previstas para esta fase incluem, no mínimo:
 
 2. **Documentos técnicos de arquitetura e integrações:**
    - Documento de Arquitetura de Software (SAD), com definição de tecnologias, camadas, padrões de desenvolvimento, ambientes e decisões técnicas estruturais.
-   - Documento de Integrações Externas e APIs, abrangendo API interna, SMTP, CloudWatch, futura API do CNJ, futura integração com WhatsApp e diretrizes gerais de segurança e observabilidade para integrações.
+   - Documento de Integrações Externas e APIs, abrangendo API interna, SMTP, futura API do CNJ, futura integração com WhatsApp e diretrizes gerais de segurança e observabilidade para integrações.
 
 3. **Organização e padronização de repositório e versionamento:**
    - Estrutura mínima de pastas (`/docs`, `/src`, `/bd` ou equivalente) alinhada às diretrizes de arquitetura.
@@ -71,7 +71,7 @@ As entregas principais previstas para esta fase incluem, no mínimo:
 4. **Configuração de infraestrutura básica:**
    - Configuração e validação do ambiente de hospedagem no servidor definido (Hostinger + CloudPanel), com Nginx, PHP, MySQL e estrutura base para o webapp.
    - Ajustes mínimos de DNS e proxy reverso por meio do Cloudflare, incluindo configuração de domínios/subdomínios e HTTPS.
-   - Configuração inicial de logs e observabilidade com AWS CloudWatch, incluindo o pipeline básico para recepção de logs de aplicação.
+   - Configuração inicial de logs e observabilidade compatível com o ambiente disponível, priorizando `error_log`, logs do servidor e documentação operacional do fluxo.
    - Definição e registro, em documentação, das características dos ambientes Dev, Homolog e Prod, com suas respectivas URLs e parâmetros de configuração.
 
 Essas entregas garantem que, ao término do Projeto 2026.01, o sistema ainda não esteja funcionalmente completo, mas já exista uma fundação técnica e documental sólida para desenvolvimento iterativo nas próximas fases.
@@ -107,14 +107,14 @@ A exclusão desses itens do escopo 2026.01 não significa que eles não serão e
 As seguintes premissas são adotadas como verdadeiras para este ciclo:
 
 - Os documentos de **Objetivos e Público-Alvo**, **Funcionalidades das Áreas Pública e Restrita** e **Arquitetura de Software** servirão como referência principal para decisões de escopo e priorização.
-- A infraestrutura base (servidor, painel de controle, DNS, Cloudflare, CloudWatch) estará disponível para configuração durante esta fase.
+- A infraestrutura base (servidor, painel de controle, DNS, Cloudflare e logging local do ambiente) estará disponível para configuração durante esta fase.
 - Alterações significativas de escopo de produto serão tratadas como insumos para versões futuras dos documentos, não como reabertura ilimitada desta fase inicial.
 
 ### 5.2 Restrições
 
 As principais restrições do Projeto 2026.01 são:
 
-- **Restrição de custo:** as configurações de infraestrutura (Cloudflare, AWS CloudWatch, etc.) devem priorizar o uso de planos gratuitos ou de baixo custo, conforme definido no documento de arquitetura.
+- **Restrição de custo:** as configurações de infraestrutura e observabilidade devem priorizar soluções já disponíveis no ambiente e serviços de baixo custo, conforme definido no documento de arquitetura.
 - **Restrição de tempo:** por se tratar de fase preparatória, o foco é documentação e infraestrutura básica, sem tentativa de desenvolvimento completo de módulos funcionais complexos.
 - **Restrição tecnológica:** o stack descrito no Documento de Arquitetura deve ser seguido, com base em PHP customizado, MySQL, Nginx/PHP-FPM e frontend em HTML/CSS/JavaScript, salvo decisão formalmente registrada em documento de mudança arquitetural.
 

@@ -123,7 +123,7 @@ A camada de infraestrutura fornece implementações concretas para as interfaces
 - Implementações de repositórios usando PDO, SQL parametrizado e adapters próprios
 - Adaptadores para APIs externas (CNJ, WhatsApp, etc.)
 - Serviços de armazenamento de arquivos
-- Implementações de logging (CloudWatch)
+- Implementações de logging e observabilidade compatíveis com o ambiente (`error_log`, logs do servidor e integrações futuras quando adotadas)
 - Configurações de banco de dados e conexões externas
 
 **Restrições e boas práticas:**

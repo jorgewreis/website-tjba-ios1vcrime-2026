@@ -209,7 +209,7 @@ Arquivos de exemplo:
 - `app/helpers/Helper.php`  
   **Por quê:** utilitários de domínio (IDs únicos, iniciais, transformações).
 - `app/helpers/AuditLogger.php`  
-  **Por quê:** registrar auditoria completa com fallback para `error_log`.
+  **Por quê:** registrar eventos operacionais e de auditoria com fallback para `error_log`.
 - `app/helpers/ToastHelper.php`  
   **Por quê:** ponte entre o backend PHP e o sistema de toasts em `public/assets/js`.
 - `app/helpers/autoload.php`  
@@ -440,6 +440,7 @@ Você já tem uma boa estrutura. Exemplos de arquivos por área:
 - `docs/40-operations/backups/politica-de-backup.md`
 - `docs/40-operations/monitoring/metricas-e-alertas.md`
 - `docs/40-operations/troubleshooting/erros-comuns.md`
+- `docs/40-operations/auth-security-runbook.md`
 
 ### docs/90-releases/
 - `docs/90-releases/README.md`  

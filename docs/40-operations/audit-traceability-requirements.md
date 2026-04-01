@@ -1,59 +1,179 @@
-﻿# Especificação de Requisitos de Auditoria e Rastreabilidade
+# Requisitos de Auditoria e Rastreabilidade
 
-## 1. Introdução
+## 1. Objetivo
 
-Este documento define os requisitos para o subsistema de auditoria (logging) do WebApp | 1vCrimeIlheus. O objetivo é garantir que todas as ações críticas realizadas no sistema sejam registradas de forma imutável, permitindo a rastreabilidade de eventos para fins de segurança, conformidade legal e investigação forense.
+Este documento descreve o **estado operacional atual** da auditoria e da rastreabilidade do sistema, diferenciando:
 
-## 2. Escopo de Auditoria
+- o que já está implementado no código;
+- o que existe apenas como estrutura auxiliar no banco;
+- o que continua como requisito evolutivo.
 
-O sistema deve registrar obrigatoriamente os seguintes tipos de eventos:
+## 2. Estado atual da observabilidade e auditoria
 
-### 2.1. Eventos de Segurança e Acesso
+Hoje o sistema possui um modelo **híbrido** de registro operacional.
 
-- **Autenticação:** Tentativas de login (sucesso e falha), logout e bloqueio de conta.
-- **Gestão de Sessão:** Renovação de tokens e expiração de sessão.
-- **Gestão de Usuários:** Criação, alteração de perfil, bloqueio/desbloqueio e redefinição de senha de usuários.
+As principais fontes são:
 
-### 2.2. Eventos de Negócio (CRUD)
+- `error_log` do PHP para falhas, exceções e eventos técnicos;
+- logs de infraestrutura do servidor web e do PHP-FPM;
+- helper [`app/helpers/AuditLoggerHelper.php`](../../app/helpers/AuditLoggerHelper.php), que tenta gravar em `audit_log` e, se falhar, faz fallback para `error_log`;
+- estruturas auxiliares documentadas em [`database/schema.sql`](../../database/schema.sql), como `logs_acesso` e `logs_sistema`, ainda sem adoção uniforme em todos os módulos.
 
-- **Criação:** Inclusão de novos processos, tarefas ou documentos.
-- **Edição:** Alteração de dados em registros existentes (deve registrar o estado anterior e o novo).
-- **Exclusão:** Remoção física ou lógica de qualquer registro (exclusivo para perfil Chefia).
-- **Movimentação:** Mudança de fase ou status de um processo.
-- **Alocação:** Atribuição ou realocação de tarefas entre servidores.
+Conclusão importante:
 
-## 3. Estrutura do Registro de Log
+- o projeto **ainda não possui** um subsistema único, centralizado e homogêneo de auditoria para todos os eventos;
+- a rastreabilidade atual existe, mas está distribuída entre banco, runtime e logs de aplicação.
 
-Cada entrada de log deve conter, no mínimo, os seguintes metadados para garantir a completude da informação ("Quem, O Que, Onde, Quando e Como"):
+## 3. Eventos atualmente observáveis
 
-- **Timestamp:** Data e hora exata do evento (UTC ou Horário de Brasília, padronizado).
-- **Actor (Quem):** ID do usuário (`id_usuario`) e Perfil que realizou a ação.
-- **Action (O Que):** Código ou descrição da ação (ex: `PROCESS_DELETE`, `USER_LOGIN_FAIL`).
-- **Target (Alvo):** ID do recurso afetado (ex: `id_processo`, `id_tarefa`).
-- **Source (Onde):** Endereço IP de origem da requisição e User-Agent do navegador.
-- **Changes (Como):** Para edições, um objeto JSON contendo o "Antes" (`old_value`) e o "Depois" (`new_value`) dos campos alterados.
+### 3.1. Segurança e autenticação
 
-## 4. Armazenamento e Proteção
+O código atual já permite rastrear ou inferir operacionalmente:
 
-### 4.1. Persistência
+- falhas de autenticação no login;
+- bloqueios temporários progressivos via `login_rate_limits`;
+- invalidação de sessão e logout;
+- expiração de sessão/inatividade refletida em páginas e endpoints;
+- solicitação de redefinição de senha;
+- uso de token de redefinição e invalidação após consumo.
 
-- **Banco de Dados:** Os logs devem ser armazenados em uma tabela dedicada (ex: `auditoria_logs`) no MySQL.
-- **Performance:** A gravação de logs deve ser assíncrona ou otimizada para não impactar o tempo de resposta das transações do usuário.
+Artefatos principais:
 
-### 4.2. Imutabilidade e Segurança
+- [`public/login.php`](../../public/login.php)
+- [`app/services/LoginRateLimiter.php`](../../app/services/LoginRateLimiter.php)
+- [`public/logout.php`](../../public/logout.php)
+- [`public/admin/api/checkToken.php`](../../public/admin/api/checkToken.php)
+- [`app/services/PasswordResetService.php`](../../app/services/PasswordResetService.php)
+- [`config/security.php`](../../config/security.php)
 
-- **Read-Only:** A tabela de logs não deve permitir operações de `UPDATE` ou `DELETE` pela aplicação principal. Apenas inserções (`INSERT`) são permitidas.
-- **Acesso Restrito:** Apenas usuários com perfil **Admin** podem visualizar os relatórios de auditoria. Nenhuma Chefia ou Servidor deve ter acesso a esses registros.
+### 3.2. Regras de negócio
 
-## 5. Retenção e Expurgo
+A cobertura de auditoria de negócio ainda é parcial.
 
-- **Período de Retenção:** Os logs de auditoria devem ser mantidos acessíveis online por um período mínimo de **5 anos**, conforme requisitos legais para sistemas judiciários.
-- **Arquivamento:** Após o período de retenção online, os dados podem ser movidos para armazenamento frio (Cold Storage/S3 Glacier) para fins históricos, liberando espaço no banco de dados principal.
+Hoje há exemplo explícito de auditoria de ação de negócio em:
 
-## 6. Requisitos de Interface
+- [`app/services/Guias.php`](../../app/services/Guias.php), que chama `AuditLogger::log(...)` no cadastro de guia.
 
-- **Painel de Auditoria:** O módulo Admin deve possuir uma interface de busca avançada de logs, permitindo filtros por:
-  - Intervalo de datas.
-  - Usuário específico.
-  - Tipo de ação (ex: "Ver todas as exclusões feitas pela Chefia X").
-  - Endereço IP.
+Nos demais módulos, o padrão predominante ainda é:
+
+- validação de regras;
+- retorno controlado ao usuário;
+- registro técnico por `error_log` em caso de falha.
+
+### 3.3. Estruturas de banco relacionadas
+
+As seguintes estruturas existem no material SQL versionado e devem ser tratadas como parte do desenho canônico de observabilidade:
+
+- `logs_acesso`
+- `logs_sistema`
+- `login_rate_limits`
+- `recuperacao_senha`
+- `historico_senha`
+
+Observação:
+
+- `login_rate_limits`, `recuperacao_senha` e `historico_senha` não são logs de auditoria completos, mas deixam rastros operacionais úteis para suporte e investigação.
+
+## 4. Eventos mínimos que devem ser tratados como obrigatórios
+
+Mesmo quando ainda não houver persistência homogênea em tabela dedicada, os seguintes eventos devem ser considerados obrigatórios do ponto de vista operacional:
+
+- login bem-sucedido;
+- login mal-sucedido;
+- bloqueio temporário por excesso de tentativas;
+- logout;
+- sessão expirada por timeout de inatividade;
+- solicitação de recuperação de senha;
+- redefinição de senha concluída;
+- criação, edição e exclusão de registros sensíveis;
+- alteração de perfil, lotação ou status de usuário;
+- operações administrativas críticas.
+
+## 5. Armazenamento atual e implicações práticas
+
+### 5.1. `error_log` como trilha operacional real
+
+Hoje, na prática, o `error_log` é uma das fontes mais importantes de suporte.
+
+Ele registra, entre outros:
+
+- falhas de configuração;
+- falhas de conexão;
+- exceções em endpoints;
+- erros de sessão;
+- falhas no fluxo de reset;
+- fallback do `AuditLogger`.
+
+Isso significa que retenção, permissão de acesso e rotação do `error_log` têm impacto direto na capacidade de auditoria e diagnóstico do sistema.
+
+### 5.2. `audit_log` via helper
+
+O helper de auditoria atual tenta gravar em uma tabela chamada `audit_log`.
+
+Esse ponto é importante porque:
+
+- essa tabela **não é a mesma** narrativa documentada em `logs_sistema`;
+- a inserção é “best effort”;
+- se a tabela não existir, o evento vai para `error_log`.
+
+Portanto, a documentação operacional deve assumir que:
+
+- `audit_log` é um mecanismo pontual já usado no código;
+- `logs_sistema` e `logs_acesso` são estruturas auxiliares previstas no schema;
+- ainda há trabalho futuro para convergir tudo em um modelo único.
+
+## 6. Acesso operacional aos logs
+
+No estado atual do projeto, **não existe um painel administrativo completo e canônico de auditoria** para navegação por filtros na interface.
+
+Assim, o acesso real aos registros ocorre por:
+
+- acesso operacional ao servidor;
+- acesso controlado ao banco de dados;
+- inspeção de arquivos/logs de infraestrutura;
+- investigação pontual em tabelas auxiliares.
+
+Diretriz atual:
+
+- acesso direto a logs técnicos e a trilhas operacionais deve ficar restrito a `ADMIN` e à operação técnica autorizada;
+- qualquer relatório filtrado para outros perfis deve depender de implementação explícita, não de acesso bruto à infraestrutura.
+
+## 7. Sensibilidade dos dados de log
+
+É proibido registrar em texto claro:
+
+- senhas;
+- tokens de sessão;
+- hash de senha desnecessariamente exposto;
+- segredos de integração;
+- dados pessoais além do necessário para suporte e auditoria.
+
+### 7.1. Observação importante sobre reset de senha
+
+Quando `MAIL_DRIVER` não está configurado para SMTP, o fluxo atual de recuperação pode registrar o link de redefinição no `error_log` como fallback operacional.
+
+Isso é aceitável para desenvolvimento/homologação, mas deve ser tratado com cuidado:
+
+- o arquivo de log passa a conter material sensível temporário;
+- em produção, o ideal é operar com SMTP configurado e acesso restrito aos logs.
+
+## 8. Retenção e governança
+
+A política de retenção deve ser lida em conjunto com [`docs/30-security/log-retention-policy.md`](../30-security/log-retention-policy.md).
+
+Como regra:
+
+- logs técnicos de alto volume podem ter retenção menor;
+- trilhas ligadas a segurança, autenticação e operações administrativas exigem retenção mais longa;
+- qualquer descarte deve respeitar a necessidade de suporte, conformidade e investigação.
+
+## 9. Lacunas atuais registradas
+
+As principais lacunas ainda abertas são:
+
+- ausência de um pipeline único e uniforme para `logs_acesso`, `logs_sistema` e `audit_log`;
+- ausência de painel canônico de auditoria na interface;
+- cobertura desigual de eventos de negócio entre módulos;
+- dependência forte de `error_log` para parte relevante da trilha operacional.
+
+Essas lacunas não impedem operação, mas precisam ser conhecidas para que a documentação não descreva um nível de maturidade de auditoria que o sistema ainda não atingiu.

@@ -4,7 +4,7 @@
 
 A segurança da informação no **WebApp | 1vCrimeIlheus** baseia-se em uma classificação rigorosa dos dados, dividindo-os em três níveis de sensibilidade: Público, Interno e Confidencial. Esta taxonomia orienta não apenas as regras de negócio, mas também a implementação técnica dos filtros de banco de dados e das interfaces de usuário. O objetivo é garantir a conformidade com a Lei Geral de Proteção de Dados (LGPD) e as normas da Corregedoria, evitando a exposição indevida de partes processuais e servidores.
 
-Dados classificados como **Públicos** podem ser acessados sem autenticação. Dados **Internos** exigem autenticação e vínculo setorial. Já os dados **Confidenciais** possuem restrições severas, sendo acessíveis apenas por perfis de Chefia/Admin ou, no caso de senhas, sendo inacessíveis até mesmo para administradores.
+Dados classificados como **Públicos** podem ser acessados sem autenticação. Dados **Internos** exigem autenticação e vínculo setorial. Já os dados **Confidenciais** possuem restrições severas, sendo acessíveis apenas por perfis autorizados e, em casos de segurança/auditoria, também condicionados ao mecanismo operacional disponível no ambiente.
 
 ### Níveis de Classificação
 
@@ -93,11 +93,11 @@ Esta segregação é vital para garantir a isenção em processos administrativo
 
 ### Matriz de Acesso aos Logs
 
-- **Chefia:** Visualiza logs apenas do seu próprio setor (quem fez o quê dentro do departamento).
-- **Administrador:** Visualiza logs globais de todo o sistema (auditoria completa).
-- **Servidor/Estagiário:** **Sem acesso** (menu oculto e API bloqueada).
+- **Chefia:** pode receber relatórios ou visões setoriais quando o módulo oferecer essa capacidade ou quando houver extração administrativa autorizada.
+- **Administrador:** pode acessar mecanismos técnicos e relatórios administrativos de segurança, mas isso não significa a existência de um painel único de "auditoria completa" já implementado.
+- **Servidor/Estagiário:** **Sem acesso** a logs de segurança e auditoria.
 
 ### Boas Práticas de Auditoria
 
-- **Imutabilidade:** A tabela de logs deve ter permissão `INSERT` e `SELECT`, mas `UPDATE` e `DELETE` devem ser revogados no banco de dados para o usuário da aplicação.
-- **Registro Completo:** O log deve salvar o "Antes" e o "Depois" da alteração (snapshot JSON) para permitir *rollback* manual se necessário.
+- **Imutabilidade:** quando houver armazenamento dedicado de auditoria, rotinas operacionais comuns não devem poder alterar ou apagar esses registros.
+- **Registro adequado:** sempre que possível, o evento deve salvar contexto suficiente para suporte, investigação e responsabilização.

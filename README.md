@@ -358,6 +358,21 @@ Após clonar o repositório, configure os hooks:
 
 - git config core.hooksPath .githooks
 
+## Operação e pós-deploy
+
+O workflow de deploy do ambiente `develop` sincroniza arquivos e recarrega serviços, mas **não executa migrações SQL automaticamente**.
+
+Antes de considerar uma implantação concluída, valide:
+
+- migrações/manutenções necessárias do banco;
+- login, logout e sessão autenticada;
+- rate limit de login;
+- fluxo de recuperação e redefinição de senha.
+
+Referência operacional:
+
+- [`docs/40-operations/auth-security-runbook.md`](docs/40-operations/auth-security-runbook.md)
+
 ## Deploy automático para dev.ios1vcrime.com.br
 
 O branch `develop` é conectado ao workflow `.github/workflows/deploy-dev.yml`.

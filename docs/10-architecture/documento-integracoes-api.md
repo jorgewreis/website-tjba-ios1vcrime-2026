@@ -63,11 +63,11 @@ A integração com serviço de mensagens via WhatsApp tem como finalidade o envi
 
 No ambiente de homologação, deve ser adotado um sandbox ou número específico para testes, isolando o fluxo de mensagens de usuários reais. Os fluxos de negócio que fizerem uso de WhatsApp devem ser desenhados de forma que falhas na integração ou indisponibilidade do serviço não interrompam o processo principal; nesse caso, a mensagem pode ser tratada como opcional ou substituída por outro canal de comunicação. Informações sobre mensagens enviadas (horário, tipo, status de envio, destinatário mascarado) devem ser registradas para controle e auditoria.
 
-### 3.4 Integração com serviço de logs em nuvem
+### 3.4 Observabilidade e integração com serviços de logs
 
-O serviço de logs em nuvem (por exemplo, CloudWatch) é responsável por centralizar logs do backend, incluindo erros de aplicação, eventos de auditoria e eventos relevantes de negócio. Esta integração é elemento crucial da estratégia de observabilidade, permitindo acompanhar a saúde do sistema e analisar o comportamento das integrações externas em tempo de execução.
+No estado atual do projeto, a observabilidade oficial é híbrida e prioriza mecanismos já disponíveis no ambiente, como `error_log`, logs do servidor web e registros operacionais gerados pela própria aplicação. Serviços externos de centralização em nuvem podem ser adotados futuramente, mas não devem ser descritos como dependência obrigatória da implementação atual.
 
-A utilização do serviço deve observar limites de custo, preferencialmente operando dentro de faixas gratuitas quando disponíveis. Devem ser definidos padrões de formatação de logs, níveis de severidade (info, warning, error, critical) e campos obrigatórios, como contexto da operação, IDs internos de entidades (audiência, tarefa, documento), perfil do usuário que disparou a ação e ambiente (dev, homolog, prod). Antes do envio, os dados sensíveis devem ser mascarados ou excluídos do payload, mitigando riscos em casos de acessos indevidos ao serviço de logging.
+Independentemente do destino final do log, devem existir padrões mínimos de formatação, níveis de severidade (info, warning, error, critical) e campos obrigatórios, como contexto da operação, IDs internos de entidades relevantes, perfil do usuário que disparou a ação e ambiente (dev, homolog, prod). Antes do envio ou persistência, os dados sensíveis devem ser mascarados ou excluídos do payload.
 
 ---
 
@@ -123,7 +123,7 @@ Em situações de erro, devem ser utilizados códigos HTTP adequados (4xx para f
 
 ## 5. Segurança em integrações e APIs
 
-A segurança é eixo transversal no desenho das integrações externas e da API interna, considerando o contexto institucional, a presença de dados pessoais e processuais e a necessidade de auditoria completa. Os mecanismos de segurança incluem autenticação forte, autorização granular, criptografia em trânsito, proteção de credenciais, mascaramento de dados e políticas rígidas de acesso administrativo.
+A segurança é eixo transversal no desenho das integrações externas e da API interna, considerando o contexto institucional, a presença de dados pessoais e processuais e a necessidade de rastreabilidade adequada. Os mecanismos de segurança incluem autenticação forte, autorização granular, criptografia em trânsito, proteção de credenciais, mascaramento de dados e políticas rígidas de acesso administrativo.
 
 Além dos controles técnicos, devem existir regras de governança sobre quem pode configurar integrações, gerar chaves, acessar logs e alterar parâmetros sensíveis do sistema. Perfis privilegiados devem ser minimamente necessários e suas ações precisam ser registradas de forma detalhada para permitir rastreabilidade, investigação de incidentes e responsabilização quando necessário.
 
