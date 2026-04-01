@@ -4,143 +4,40 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **Fix: correcao de validacao cnj** `[00cb0c2]`
-- **Feat: implementacao de sistema para remover alocacao de usuario por regra** `[9bcd73c]`
-- **Fix: correcao de erro na remocao de alocacao** `[46e6215]`
-- **Fix: correcao de feedbacks para toasts** `[f737aa2]`
-- **Fix: correcao de movimentacoes das subtarefas** `[5e8ad8b]`
-- **Fix: correcao de movimentacao de subtarefas** `[dc88dc2]`
-- **Feat: nova implementacao edit pages** `[0db7b91]`
-- **Fix: ajustes de estilo** `[cbc4184]`
-- **Fix: pequenos ajustes cartas expedidas** `[074f624]`
-- **Fix: correcao de layouts** `[34777a6]`
-- **Fix: pequenos ajustes** `[56ad09d]`
-- **Fix: correcao de toasts e alerts** `[bda95f6]`
-- **Fix: correcao de edit usuario externo** `[c299674]`
-- **Feat: config de permissoes de usuario** `[56473ed]`
-- **Fix: correcao de usuario estagiario** `[b5b24bf]`
-- **Fix: correcao de input de dados pessoais** `[85b57b5]`
-- **Feat: nova implementacao de paginas de erro melhoradas** `[88bd330]`
-- **Fix: correcao input** `[2dff2b7]`
-- **Fix: correcao de bugs** `[5064596]`
-- **Feat: criacao de novo dashboard para usuario externo** `[cb53908]`
-- **Fix: correcao de perfis** `[b79390d]`
-- **Feat: implementacao de funcao para alterar avatar de usuario** `[b45587b]`
-- **Fix: alteracao do modelo de imagens do avatar** `[135be03]`
-- **Fix: pequenos ajustes do avatar** `[a5a0d41]`
-- **Fix: correcao de regra de iniciais de usuario** `[18edf6e]`
-- **Fix: pequeno ajuste de css** `[97d8896]`
-- **Fix: pequenos ajustes css** `[88e22fb]`
-- **Fix: pequenos ajustes de presos** `[a54091a]`
-- **Fix: mais ajustes** `[06ffbb3]`
-- **Fix: pequenos ajustes** `[f42fe04]`
-- **Fix: correcao de datas de mov** `[687ec43]`
-- **Fix: pequenos ajustes** `[2a21b8e]`
-- **Fix: correcao de classes** `[b714740]`
-- **Fix: pequenas correcoes** `[28372be]`
-- **Fix: correcao de bd** `[6e43043]`
-- **Fix: ajustes de codigo** `[6fc0755]`
-- **Feat: novo modelo pauta de audiencias** `[6dec536]`
-- **Fix: correcao no banco de dados** `[c0d1964]`
-- **Fix: correcao de inputs** `[b2f5a12]`
-- **Fix: correcao de cadastro de parte** `[66276c9]`
-- **Fix: pequenos ajustes** `[1bf1223]`
-- **Fix: pequena correcao de valores** `[f190481]`
-- **Fix: correcao no cadastro de parte** `[dcac95d]`
-- **Feat: mini status de cumprimento de partes** `[eb8966c]`
-- **Fix: pequeno ajuste de tamanho** `[4944bc9]`
-- **Fix: correcao de erros** `[c0e71c4]`
-- **Fix: correcao de function** `[5c29143]`
-- **Fix: correcao de input classe** `[6146c71]`
-- **Fix: correcao reu preso** `[dff7692]`
-- **Fix: correção de mini status de audiencias** `[f5aa79b]`
-- **Fix: melhorias no cadastro** `[349cb30]`
-- **Fix: pequenos ajustes** `[3bb7905]`
-- **Fix: melhorias no codigo** `[28c9d0b]`
-- **Fix: correcao de bug** `[4c020fa]`
-- **Fix: tentativa de correcao** `[8236c27]`
-- **Fix: nova tentativa** `[fbb328a]`
-- **Fix: mais uma tentativa** `[1b268f6]`
-- **Fix: mais outra tentativa** `[bd05682]`
-- **Fix: ultima tentativa padrao de correcao** `[e78cb6d]`
-- **Fix: tentativa de correcao com debug** `[18b60f1]`
-- **Fix: nova tentativa de correcao debug** `[95a7f18]`
-- **Fix: correcao parte 1 debug** `[10e06c3]`
-- **Fix: correcao parte 2 debug** `[a7951ea]`
-- **Fix: tentativa parte 3 debug** `[d79c533]`
-- **Fix: nova tentativa parte 4 debug** `[f0975e4]`
-- **Fix: debug parte 5** `[639cc37]`
-- **Fix: debug parte 6 premium** `[5986784]`
-- **Fix: debug 7 premium** `[6f9a07f]`
-- **Fix: debug premium 8** `[3ddba76]`
-- **Fix: debug parcial ok** `[075047e]`
-- **Fix: novo debug p 1** `[7af4f47]`
-- **Fix: debug p2 premium** `[3681fd2]`
-- **Fix: debug premium 3** `[b582174]`
-- **Fix: debug premium 4** `[0363f20]`
-- **Fix: debug premium 5** `[ddd05f8]`
-- **Fix: debug parte 6** `[b74f4f3]`
-- **Fix: debug parte 7** `[bc55ff1]`
-- **Fix: ajustes finais debug** `[dfc7c3b]`
-- **Fix: ajustes de buttons** `[64cac9c]`
-- **Fix: correcao de modelos buttons** `[5f1ceb8]`
-- **Fix: pequenos ajustes** `[184c4ef]`
-- **Fix: regra de bloqueio de exclusao** `[0f36484]`
-- **Fix: correcao no envio de pdf** `[a2c8ad8]`
-- **Fix: tentativa de envio de pdf** `[3801252]`
-- **Fix: nova tentativa** `[53c9802]`
-- **Fix: melhorias na pagina de atas** `[4fd0f3d]`
-- **Fix: melhorias de dashboard** `[4428525]`
-- **Fix: alteracao do visual do card** `[fe67ce7]`
-- **Fix: melhorias no dashboard externo** `[1c7f6f4]`
-- **Feat: form sexo user** `[e8c9bbc]`
-- **Fix: melhorias no edit user** `[cc5fed6]`
-- **Fix: correcao de layout** `[689b74f]`
-- **Fix: melhorias nas atas** `[a04aa5d]`
-- **Fix: ajuste de paginacao** `[03f09ba]`
-- **Feat: implementacao de data de inicio e fim** `[5c81b28]`
-- **Feat: melhoria na atualização de status** `[ffcf20e]`
-- **Fix: correcao e ajustes** `[cac89bd]`
-- **Fix: correcao de classe** `[c82359b]`
-- **Feat: add CEAPA functionality and improve reu selection in forms** `[009c32e]`
-- **Fix: corrigir referência de chave estrangeira na cláusula FROM do CeapaRepository** `[9c2d8ff]`
-- **Fix: correct label casing for CEAPA in home.php** `[8bd4883]`
-- **Feat: add countByTipoSuspensao method in CeapaRepository and corresponding service method; update views and API to support tipo_suspensao filtering** `[304f8ed]`
-- **Refactor: update cartorio-ceapa-list view layout and add textarea styles in form.css** `[6f1dfee]`
-- **Feat: implement delete functionality in CeapaRepository and CeapaService; update views to support task deletion with confirmation** `[fbcb410]`
-- **Fix: update layout of cartorio-ceapa-list view by adjusting column widths and removing redundant date display** `[7cbd896]`
-- **feat(gabinete-reus-presos-edit): add datetime formatting function and simplify UI labels** `[2cd0ace]`
-- **refactor(gabinete-reus-presos-edit): update button styles and adjust UI for better readability** `[4868e0c]`
-- **feat(gabinete-reus-presos-edit): implement date input restrictions and enhance UI interaction for movement types** `[fa6acf4]`
-- **feat(access): add new access rules for 'ceaparules' and 'oficiosrules'; implement deleteById method in multiple repositories and services for better resource management** `[c8c962a]`
-- **refactor(gabinete-reus-presos-list): remove unused styles and simplify description text for clarity** `[d0e1859]`
-- **style(toast): enhance toast component styles and remove obsolete JavaScript file** `[58fa8dd]`
-- **refactor(views): update input fields to include data attributes for DataJud integration and replace obsolete script references with new module paths** `[0c8e637]`
-- **feat(cartorio): implement automatic allocation rules for CEAPA and Ofícios, including user permission checks and UI updates** `[f6e498d]`
-- **feat(cartorio): refactor user allocation logic to utilize AlocacaoRegrasUsuariosHelper for eligibility checks and streamline user list retrieval across multiple views** `[5f46ccc]`
-- **refactor(cartorio): streamline allocation rule views by consolidating common elements and enhancing user eligibility checks across multiple modules** `[e4da9c4]`
-- **fix(views): remove invisible characters from PHP opening tags in multiple view files** `[47a38f8]`
-- **feat(database): enhance database connection configuration to support dynamic port and improved error logging** `[795a91c]`
-- **feat(views): enhance oficio selection options by categorizing types into groups for better organization and user experience** `[2443f52]`
-- **feat(cartorio): add administrative oficio types and enhance process number validation logic** `[3b3ddcd]`
-- **feat(timeline): add daily timeline visualization for audience schedules, including estimated and actual durations** `[cdf35e8]`
-- **feat(timeline): enhance daily timeline visualization with improved styling and functionality, including hour ticks, current time indicator, and updated color coding for estimated and actual durations** `[b175b3a]`
-- **feat(timeline): enhance timeline components with improved styling, including new shading elements, updated label visibility, and refined bar heights for better visual clarity** `[137e4d5]`
-- **fix(timeline): adjust timeline styling for improved visual consistency, including height and color updates for hour ticks and bars** `[67216d2]`
-- **feat(timeline): refactor timeline rendering logic for improved data handling and visual updates, including enhanced item management and styling adjustments** `[cb2d6a0]`
-- **fix(timeline): refine timeline styling and layout adjustments, including updates to bar heights, colors, and label visibility for enhanced clarity** `[4a0218d]`
-- **fix(timeline): update late bar color to transparent for improved visual distinction in timeline components** `[9e204a0]`
-- **feat(cartorio): enhance oficio creation response and improve toast notifications with highlighting functionality** `[3565620]`
-- **feat(internal): implement conditional delete permissions for estagiario profiles on edit pages** `[f3dfc83]`
-- **feat(audiencias): enhance audience display logic and improve time formatting for student panels** `[35cff4f]`
-- **feat(audiencias): add method to list designated hearings by process ID and integrate into service logic** `[481338c]`
-- **fix(timeline): adjust height and border radius of timeline bars for improved visual consistency** `[3afb484]`
-- **feat(audiencias): improve status normalization and time display for hearings in internal views** `[fa98d16]`
-- **feat(audiencias): add ensureEffectiveTimesByStatus method to manage effective times based on status changes** `[1eaf16f]`
-- **refactor(audiencias): simplify realStartDisplay calculation in internal views for better readability** `[fd7e71e]`
-- **fix(timeline): adjust height of timeline bars and improve sorting logic for better display of scheduled times** `[69066f9]`
-- **refactor(date-parsing): enhance date parsing logic in internal views for improved accuracy and consistency** `[512b286]`
-- **refactor(date-calculation): enhance time conversion logic in internal views to include seconds and improve condition checks for timeline rendering** `[dbb5602]`
-- **refactor(timeline): update timeline bar styles and status classification for improved visual representation and maintainability** `[26827cf]`
-- **refactor(timeline): adjust timeline bar styles and status classification for improved visual consistency and maintainability** `[eef7788]`
+- **Fix: correcao de badge** `[afc3427]`
+- **Fix: pequenos ajustes** `[2ec963e]`
+- **Fix: correcao de pauta com buttons** `[6d786ac]`
+- **Fix: correção de buttons** `[8f18f23]`
+- **Fix: ajuste de theme** `[af5071e]`
+- **Fix: pequenos ajustes de cor** `[7fbc0ae]`
+- **Feat: nova implementação de upload de ata** `[88a31b2]`
+- **Fix: Correção do button de editar** `[390c6f2]`
+- **Refactor: improve handling of user allocation and result validation in CartasRecebidasService and update titles in the view** `[cf8f1f9]`
+- **fix(cartas-recebidas): update atomico subtarefa, protecao reativacao e timeline sempre visivel** `[6ac461a]`
+- **fix(cartas-expedidas): corrige conclusao de subtarefas que sempre retornava erro - try-catch em addAlocado e update atomico** `[d3ad998]`
+- **fix(services): try-catch em addAlocado no concluirSubtarefa de Medidas, Editais e Cejusc** `[8096c51]`
+- **fix(GabineteReuPresoRepository): enhance ordering logic in query to prioritize review dates and prison dates** `[82106de]`
+- **fix(GabineteReusPresosService): update prefix handling for 90-day review and adjust string matching logic; update labels in cartorio-editais-list view** `[7c8835c]`
+- **feat(audiencias): improve DataJud integration by adding session storage for process status and enhancing UI feedback during loading** `[73e6be0]`
+- **feat(audiencias): enhance DataJud caching mechanism with session storage and improve data retrieval logic** `[ea3b58f]`
+- **feat(audiencias): add process priority display in audiencia list view** `[12dd4ba]`
+- **refactor(audiencias): optimize process priority retrieval in audiencia list view** `[27a0a25]`
+- **fix(audiencias): handle exceptions during process priority retrieval and improve type handling in audiencia list view** `[095669b]`
+- **feat(audiencias): implement process priority management in SalaAudienciasPautaService and enhance UI for priority handling** `[1e1cd32]`
+- **feat(prioridades): enhance process priority management with new repository methods and UI improvements** `[f720c4a]`
+- **feat(audiencias): enhance process priority handling in services and views, including UI updates for defensor management** `[5f89cdf]`
+- **refactor(audiencias): improve DataJud caching mechanism with enhanced storage handling and legacy support** `[f85722d]`
+- **fix(form): update badge-black background color to match surface text color for improved accessibility** `[bf7122c]`
+- **feat(audiencias): add functionality to list occupied and available time slots for hearings, enhancing scheduling capabilities in services and views** `[50b2156]`
+- **feat(processos): add method to list distinct names of defendants linked to a process and integrate it into the hearing scheduling views** `[3c1760f]`
+- **fix(audiencias): update input handling for parte selection, enabling read-only state and placeholder text** `[c5add78]`
+- **fix(form): enable clickable state for defendant selection in finished status to improve user interaction** `[b01a777]`
+- **feat(audiencias): add 'salapaineldia' page and update related access and navigation links** `[4291da5]`
+- **refactor(toast-system): standardize toast usage and improve documentation on visual models and feedback mechanisms** `[695b2ca]`
+- **feat(datajud): enhance process and class synchronization flow with DataJud integration, including automatic class retrieval, validation improvements, and updated documentation** `[85537b0]`
+- **refactor(datajud): update synchronization feedback and toast handling, improving user experience during class retrieval and error scenarios** `[7b77dc6]`
+- **feat(datajud): implement enhanced loading and error handling for class retrieval, including dynamic placeholders and retry logic for DataJud API calls** `[d1a3489]`
+- **refactor(datajud): improve class placeholder handling and normalization for DataJud integration, ensuring case-insensitive comparisons and updated documentation** `[89e6f01]`
+- **refactor(datajud): update status messages and placeholders for improved clarity in DataJud interactions** `[0f404aa]`
+- **chore(env): remover arquivo de configuração .env por motivos de segurança** `[2ec9af4]`
 
