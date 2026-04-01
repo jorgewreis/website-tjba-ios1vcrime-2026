@@ -41,4 +41,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(datajud): update status messages and placeholders for improved clarity in DataJud interactions** `[0f404aa]`
 - **chore(env): remover arquivo de configuração .env por motivos de segurança** `[2ec9af4]`
 - **Feat: Implement security enhancements and password policy updates across the application** `[acd2a60]`
+- **feat(security): aprimorar políticas de autenticação e recuperação de senha com tokens hasheados e expiração** `[22421e6]`
 
