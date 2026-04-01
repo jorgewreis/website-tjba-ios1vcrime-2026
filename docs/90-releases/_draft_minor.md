@@ -40,4 +40,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(datajud): improve class placeholder handling and normalization for DataJud integration, ensuring case-insensitive comparisons and updated documentation** `[89e6f01]`
 - **refactor(datajud): update status messages and placeholders for improved clarity in DataJud interactions** `[0f404aa]`
 - **chore(env): remover arquivo de configuração .env por motivos de segurança** `[2ec9af4]`
+- **Feat: Implement security enhancements and password policy updates across the application** `[acd2a60]`
 
