@@ -25,9 +25,10 @@ alwaysApply: true
 O container e `App.Toast` já estão disponíveis. Use:
 
 ```javascript
-App.Toast.show({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Operação concluída.' });
-App.Toast.show({ type: 'error', variant: 'full', title: 'Erro', message: 'Falha ao salvar.' });
-App.Toast.show({ type: 'info', variant: 'simple', message: 'Texto informativo.' });
+// variant/title são opcionais: toast.js escolhe simple vs full (success→simple curto; error→full; info longo→full).
+App.Toast.show({ type: 'success', message: 'Operação concluída.' });
+App.Toast.show({ type: 'error', title: 'Erro', message: 'Falha ao salvar.' });
+App.Toast.show({ type: 'info', message: 'Texto informativo.' });
 ```
 
 ### Views internas (carregadas no iframe por frame.php)
@@ -41,9 +42,9 @@ App.Toast.show({ type: 'info', variant: 'simple', message: 'Texto informativo.' 
 2. Use a função global `showToast()` (envia a mensagem ao parent para exibir o toast):
 
 ```javascript
-showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Mensagem de erro.' });
-showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Salvo com sucesso.' });
-showToast({ type: 'info', variant: 'simple', message: 'Enviando dados...' });
+showToast({ type: 'error', title: 'Erro', message: 'Mensagem de erro.' });
+showToast({ type: 'success', message: 'Salvo com sucesso.' });
+showToast({ type: 'info', message: 'Enviando dados...' });
 ```
 
 ### Parâmetros
@@ -51,14 +52,30 @@ showToast({ type: 'info', variant: 'simple', message: 'Enviando dados...' });
 | Parâmetro  | Valores                    | Descrição |
 |-----------|----------------------------|-----------|
 | `type`    | `'success'`, `'error'`, `'info'` | Tipo visual do toast |
-| `variant` | `'full'`                   | Barra de título + botão fechar + conteúdo |
-| `variant` | `'simple'`                 | Só conteúdo + barra de tempo regressiva (informativo) |
-| `title`   | string                     | Título (recomendado em `full`) |
+| `variant` | (opcional)                 | Ignorado para a política automática; só `forceVariant` força o modelo |
+| `forceVariant` | `'full'` \| `'simple'` | Forçar modelo (exceções) |
+| `title`   | string                     | Título (modelo full; recomendado em erro) |
 | `message` | string                     | Mensagem principal (obrigatório) |
 | `subtitle`| string                     | Opcional |
+| `critical` / `blocking` | boolean | Com `type: 'error'`, marca erro crítico (`aria-live` assertive) |
+
+### Política de modelo (automática)
+
+- **success** → simple (rápido), exceto mensagem longa/complexa → full.
+- **error** → sempre full.
+- **info** → simple se curto; full se longo/complexo.
+
+### Layout e animação
+
+- Pilha no canto inferior direito: mais novo junto à base, mais antigo acima; **entrada de baixo**; **saída para a direita**; sem sobreposição (`toast.css`).
+
+### Documentação estendida
+
+- `docs/00-foundation/sistema-toast.md`
 
 ### Arquivos de referência
 
 - `public/assets/js/shared/toast.js` – lógica do toast (App.Toast)
 - `public/assets/js/shared/toast-helper.js` – helper para iframe (showToast)
+- `public/assets/css/shared/toast.css` – layout e animações
 - `app/views/internal/_toast_script.php` – include para views internas

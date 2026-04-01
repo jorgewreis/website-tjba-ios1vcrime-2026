@@ -294,7 +294,12 @@ $timelineData = $edital !== null
 
                 var btnExcluir = document.getElementById('excluir-tarefa-btn');
                 if (btnExcluir && window.__currentEditalId) {
+                    var pageTools = window.App && App.Page ? App.Page : null;
                     function queuePostReloadToast(type, title, message) {
+                        if (pageTools && typeof pageTools.queuePostReloadToast === 'function') {
+                            pageTools.queuePostReloadToast(type, title, message, 'cartorio.postReloadToast');
+                            return;
+                        }
                         try {
                             var key = 'cartorio.postReloadToast';
                             var raw = sessionStorage.getItem(key);

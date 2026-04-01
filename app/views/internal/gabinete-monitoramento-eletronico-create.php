@@ -47,7 +47,7 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
                 </div>
                 <div class="col">
                     <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
-                    <input type="text" class="width-600 height-md" id="filter-classe" name="classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>
+                    <input type="text" class="width-600 height-md" id="filter-classe" data-datajud-related="true" name="classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>
                 </div>
             </div>
             <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
@@ -68,7 +68,7 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
             <p class="minor-info" id="gab-mon-reu-hint" style="margin:0;">Com processo válido, o sistema carrega os réus vinculados; se não houver cadastro, informe o nome completo.</p>
 
             <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
-                <button type="button" class="btn btn-secondary" id="btn-gab-mon-voltar">Voltar</button>
+                <button type="button" class="btn btn-secondary" id="btn-gab-mon-voltar" data-allow-during-loading="true">Voltar</button>
                 <button type="button" class="btn btn-primary" id="btn-gab-mon-registrar">Registrar</button>
             </div>
         </div>
@@ -82,11 +82,16 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
         </div>
     </div>
 
-    <script src="/assets/js/modules/cartorio/cartas-expedidas/cnj.js"></script>
-    <script src="/assets/js/modules/cartorio/cartas-expedidas/datajud-api.js"></script>
+    <script src="/assets/js/modules/datajud/cnj.js"></script>
+    <script src="/assets/js/modules/datajud/datajud-cycle-helper.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/datajud/datajud-cycle-helper.js') ?: time(); ?>"></script>
+    <script src="/assets/js/modules/datajud/datajud-api.js"></script>
     <script>
         (function () {
             const notify = (type, title, message) => {
+                if (window.App && App.Page && typeof App.Page.notify === 'function') {
+                    App.Page.notify(type, title, message);
+                    return;
+                }
                 if (typeof showToast === 'function') showToast({ type, variant: 'full', title, message });
             };
 
@@ -120,7 +125,7 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
                 reuSelect.innerHTML = '';
                 reus.forEach(function (r) {
                     var opt = document.createElement('option');
-                    opt.value = r.id || '';
+                    opt.value = (r.id ? ('processo_parte:' + r.id) : '');
                     opt.textContent = (r.nome || '') + (r.tipo_parte ? ' (' + r.tipo_parte + ')' : '');
                     reuSelect.appendChild(opt);
                 });
@@ -132,6 +137,35 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
                 reuNome.style.display = 'none';
                 reuNome.required = false;
                 reuNome.value = '';
+            }
+
+            var lastSuggestionNome = '';
+            function formatCpfDisplay(cpf) {
+                var s = (cpf || '').replace(/\D/g, '');
+                if (s.length !== 11) return cpf || '';
+                return s.slice(0, 3) + '.' + s.slice(3, 6) + '.' + s.slice(6, 9) + '-' + s.slice(9);
+            }
+            function showReuSelectSugestoes(pessoas, nomeDigitado) {
+                if (!reuSelect || !reuNome) return;
+                reuSelect.innerHTML = '';
+                pessoas.forEach(function (p) {
+                    var opt = document.createElement('option');
+                    opt.value = p.id ? ('parte:' + p.id) : '';
+                    var label = (p.nome_completo || '').trim();
+                    if ((p.cpf || '').replace(/\D/g, '').length === 11) {
+                        label += ' - ' + formatCpfDisplay(p.cpf);
+                    }
+                    opt.textContent = label || p.id;
+                    reuSelect.appendChild(opt);
+                });
+                var novo = document.createElement('option');
+                novo.value = '__novo__';
+                novo.textContent = 'Cadastrar novo: ' + (nomeDigitado || '');
+                reuSelect.appendChild(novo);
+                lastSuggestionNome = nomeDigitado || '';
+                reuSelect.style.display = '';
+                reuNome.style.display = 'none';
+                reuNome.required = false;
             }
 
             function carregarReus(numeroFormatado) {
@@ -180,14 +214,14 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
 
             if (reuSelect) {
                 reuSelect.addEventListener('change', function () {
-                    if (this.value === 'outro') {
+                    if (this.value === 'outro' || this.value === '__novo__') {
                         reuSelect.style.display = 'none';
-                        reuSelect.innerHTML = '';
-                        reuSelect.value = '';
                         if (reuNome) {
+                            if (this.value === '__novo__') {
+                                reuNome.value = lastSuggestionNome;
+                            }
                             reuNome.style.display = '';
                             reuNome.required = true;
-                            reuNome.value = '';
                             reuNome.focus();
                         }
                     } else if (this.value !== '') {
@@ -206,6 +240,17 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
                         nome = TextFormatter.formatProperName(nome, 255);
                         reuNome.value = nome;
                     }
+                    if (nome.length < 2) return;
+                    if (reuSelect && reuSelect.style.display !== 'none' && reuSelect.value && reuSelect.value !== 'outro' && reuSelect.value !== '__novo__') return;
+                    fetch('/api/pessoas/search-by-name.php?nome=' + encodeURIComponent(nome) + '&limit=20', { credentials: 'same-origin' })
+                        .then(function (r) { return r.json(); })
+                        .then(function (data) {
+                            var pessoas = (data && data.pessoas) ? data.pessoas : [];
+                            if (pessoas.length > 0) {
+                                showReuSelectSugestoes(pessoas, nome);
+                            }
+                        })
+                        .catch(function () {});
                 });
             }
 
@@ -261,7 +306,7 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
                 var cd = document.getElementById('hidden-classe-descricao')?.value || '';
                 var selEl = document.getElementById('gab-mon-reu-select');
                 var nomeEl = document.getElementById('gab-mon-reu-nome');
-                var reuSel = selEl && selEl.style.display !== 'none' ? (selEl.value || '') : '';
+                var reuSel = selEl && selEl.style.display !== 'none' ? ((selEl.value || '').trim()) : '';
                 var nomeLivre = nomeEl?.value?.trim() || '';
                 if (!proc) {
                     notify('error', 'Validação', 'Informe o número do processo.');
@@ -273,14 +318,10 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
                     classe_descricao: cd,
                     reu_complemento: ''
                 };
-                if (reuSel === 'outro') {
-                    if (!nomeLivre) {
-                        notify('error', 'Validação', 'Informe o nome completo do réu.');
-                        return;
-                    }
-                    body.reu_complemento = nomeLivre;
-                } else if (reuSel !== '') {
-                    body.processo_parte_id = reuSel;
+                if (reuSel && reuSel.indexOf('processo_parte:') === 0) {
+                    body.processo_parte_id = reuSel.substring('processo_parte:'.length);
+                } else if (reuSel && reuSel.indexOf('parte:') === 0) {
+                    body.reu_id = reuSel.substring('parte:'.length);
                 } else {
                     if (!nomeLivre) {
                         notify('error', 'Validação', 'Informe o nome completo do réu.');

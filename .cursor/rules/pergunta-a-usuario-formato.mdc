@@ -1,0 +1,17 @@
+---
+description: Formato obrigatório ao fazer perguntas de alinhamento ou escolha ao usuário.
+globs: 
+alwaysApply: true
+---
+
+# Formato de perguntas ao usuário
+
+Quando for necessário fazer **perguntas** ao usuário (alinhamento, escopo, preferências, decisões de produto ou implementação):
+
+1. **Uma pergunta por vez** — não envie listas longas de dúvidas na mesma mensagem.
+2. Para cada pergunta, ofereça **pelo menos quatro respostas prontas** (opções claras e mutuamente compreensíveis).
+3. Sempre que uma pergunta for muito técnica ou envolver muitos critérios, informa em cada opção de resposta uma frase explicativa do como e porquê. 
+4. Inclua **sempre uma última opção** do tipo: o usuário pode **informar algo diferente** ou personalizado (ex.: “Outro — descreva abaixo” ou “Prefiro combinar — digo nos próximos passos”).
+5. Aguarde a resposta antes de fazer a **próxima** pergunta.
+
+Isso vale para qualquer thread de decisão (UI, contratos de componente, migração, priorização), salvo se o usuário pedir explicitamente várias perguntas de uma vez.

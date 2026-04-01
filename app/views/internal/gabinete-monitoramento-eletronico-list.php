@@ -282,9 +282,9 @@ $statusLabelUi = static function (string $s): string {
                         </div>
                     </div>
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                        <div class="col button-table button-edit" data-monitoramento-id="<?php echo htmlspecialchars($idMon, ENT_QUOTES); ?>" title="Editar">
-                            <i class="fi fi-rr-file-edit"></i>
-                        </div>
+                        <button type="button" class="btn btn-editar" data-monitoramento-id="<?php echo htmlspecialchars($idMon, ENT_QUOTES); ?>" title="Editar">
+                            <i class="fi fi-rr-pen-square"></i>
+                        </button>
                         <?php if ($tarefaCancelada): ?>
                         <div class="col">
                             <div class="width-300 padding-x-lg status status-cancelled"><?php echo htmlspecialchars($statusLabelUi('cancelada')); ?></div>
@@ -379,23 +379,23 @@ $statusLabelUi = static function (string $s): string {
                     $nextParams = $baseQueryParams;
                     $nextParams['page_number'] = $currentPage < $totalPages ? $currentPage + 1 : $currentPage;
                     ?>
-                    <a class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>" <?php if ($currentPage > 1): ?>href="?<?php echo htmlspecialchars(http_build_query($prevParams)); ?>"<?php else: ?>aria-disabled="true"<?php endif; ?>>
+                    <button type="button" class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>" <?php if ($currentPage > 1): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($prevParams), ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>>
                         <img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior">
-                    </a>
+                    </button>
                     <?php foreach ($paginationButtons as $page): ?>
                         <?php $pageParams = $baseQueryParams; $pageParams['page_number'] = $page; ?>
-                        <a class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" href="?<?php echo htmlspecialchars(http_build_query($pageParams)); ?>"><?php echo $page; ?></a>
+                        <button type="button" class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" <?php if ($page !== $currentPage): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($pageParams), ENT_QUOTES); ?>"<?php else: ?>disabled<?php endif; ?>><?php echo $page; ?></button>
                     <?php endforeach; ?>
                     <?php if ($paginationEllipsis && !empty($trailingPages)): ?>
-                        <a class="pagination-symbol pagination-ellipsis" aria-hidden="true"><img src="/assets/icons/Navigation-Menu-Horizontal--Streamline-Ultimate.png" alt="Mais páginas"></a>
+                        <span class="pagination-symbol pagination-ellipsis" aria-hidden="true"><img src="/assets/icons/Navigation-Menu-Horizontal--Streamline-Ultimate.png" alt="Mais páginas"></span>
                         <?php foreach ($trailingPages as $page): ?>
                             <?php $pageParams = $baseQueryParams; $pageParams['page_number'] = $page; ?>
-                            <a class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" href="?<?php echo htmlspecialchars(http_build_query($pageParams)); ?>"><?php echo $page; ?></a>
+                            <button type="button" class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" <?php if ($page !== $currentPage): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($pageParams), ENT_QUOTES); ?>"<?php else: ?>disabled<?php endif; ?>><?php echo $page; ?></button>
                         <?php endforeach; ?>
                     <?php endif; ?>
-                    <a class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>" <?php if ($currentPage < $totalPages): ?>href="?<?php echo htmlspecialchars(http_build_query($nextParams)); ?>"<?php else: ?>aria-disabled="true"<?php endif; ?>>
+                    <button type="button" class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>" <?php if ($currentPage < $totalPages): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($nextParams), ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>>
                         <img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página">
-                    </a>
+                    </button>
                 </div>
             <?php endif; ?>
         </div>
@@ -412,9 +412,17 @@ $statusLabelUi = static function (string $s): string {
     <script>
         (function () {
             const notify = (type, title, message) => {
+                if (window.App && App.Page && typeof App.Page.notify === 'function') {
+                    App.Page.notify(type, title, message);
+                    return;
+                }
                 if (typeof showToast === 'function') showToast({ type, variant: 'full', title, message });
             };
             const queuePostReloadToast = (type, title, message) => {
+                if (window.App && App.Page && typeof App.Page.queuePostReloadToast === 'function') {
+                    App.Page.queuePostReloadToast(type, title, message, 'gme.postReloadToast');
+                    return;
+                }
                 try {
                     const key = 'gme.postReloadToast';
                     const raw = sessionStorage.getItem(key);
@@ -425,6 +433,10 @@ $statusLabelUi = static function (string $s): string {
                 } catch (e) {}
             };
             const flushPostReloadToast = () => {
+                if (window.App && App.Page && typeof App.Page.flushPostReloadToast === 'function') {
+                    App.Page.flushPostReloadToast('gme.postReloadToast', { type: 'info', title: 'Informação' });
+                    return;
+                }
                 try {
                     const raw = sessionStorage.getItem('gme.postReloadToast');
                     if (!raw) return;
@@ -461,7 +473,7 @@ $statusLabelUi = static function (string $s): string {
                 if (e.key === 'Enter') applyFilters();
             });
 
-            document.querySelectorAll('.button-edit').forEach(function (btn) {
+            document.querySelectorAll('.btn-editar[data-monitoramento-id]').forEach(function (btn) {
                 btn.addEventListener('click', function () {
                     const id = this.dataset.monitoramentoId;
                     if (id) window.location.href = '/frame.php?page=monitoramentogabineteedit&id=' + encodeURIComponent(id);

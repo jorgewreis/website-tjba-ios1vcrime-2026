@@ -5,6 +5,7 @@ require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/security.php';
 require_once __DIR__ . '/../../app/helpers/Conection.php';
 require_once __DIR__ . '/../../app/helpers/TextFormatter.php';
+require_once __DIR__ . '/../../app/helpers/SexoHelper.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -36,6 +37,7 @@ $sobrenome = isset($partes[1]) ? TextFormatter::formatProperName($partes[1], 200
 
 $cpf       = trim((string) ($payload['cpf'] ?? ''));
 $telefone  = mb_substr(trim((string) ($payload['telefone'] ?? '')), 0, $limites['telefone']);
+$sexo      = SexoHelper::normalize(trim((string) ($payload['sexo'] ?? '')));
 $whatsapp  = !empty($payload['telefone_whatsapp']);
 $faculdade = mb_substr(trim((string) ($payload['faculdade'] ?? '')), 0, $limites['faculdade']);
 $email     = mb_strtolower(trim((string) ($payload['email'] ?? '')), 'UTF-8');
@@ -51,6 +53,11 @@ $cpfFormatado = Security::formatCPF($cpfNumerico);
 $telefoneNumerico = preg_replace('/\D/', '', $telefone);
 if (strlen($telefoneNumerico) < 10) {
     echo json_encode(['success' => false, 'message' => 'Informe o telefone com DDD (mínimo 10 dígitos).']);
+    exit;
+}
+
+if (!SexoHelper::isValid($sexo)) {
+    echo json_encode(['success' => false, 'message' => 'Selecione o sexo.']);
     exit;
 }
 
@@ -83,8 +90,8 @@ if (!$aceiteTermosLgpd) {
 }
 
 $senha = trim((string) ($payload['senha'] ?? ''));
-if (strlen($senha) < 6) {
-    echo json_encode(['success' => false, 'message' => 'A senha deve ter no mínimo 6 caracteres.']);
+if (($policy = Security::validatePasswordPolicy($senha))['valid'] !== true) {
+    echo json_encode(['success' => false, 'message' => $policy['message'] ?? 'Senha inválida.']);
     exit;
 }
 
@@ -132,17 +139,36 @@ try {
     $idUsuario = 'USR-' . strtoupper(bin2hex(random_bytes(13)));
     $senhaHash = Security::hashPassword($senha);
 
+    $stHasSexo = $pdo->prepare(
+        "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usuarios' AND COLUMN_NAME = 'sexo'"
+    );
+    $stHasSexo->execute();
+    $hasSexoColumn = ((int) $stHasSexo->fetchColumn()) > 0;
+
     // Tabela usuarios: Tipo externo, Setor (via usuario_setor), Cargo Estudante, Status Ativo (cadastro_ativo=1)
-    $stmt = $pdo->prepare("
-        INSERT INTO usuarios (
-            id_usuario, nome, sobrenome, data_nascimento, cargo, instituicao, cpf, telefone, email,
-            senha_hash, meta, ultimo_acesso, token_acesso, token_expira, cadastro_ativo, created_at, updated_at
-        ) VALUES (
-            ?, ?, ?, '-', 'Estudante', '-', ?, ?, ?,
-            ?, '-', NULL, NULL, NULL, 1, NOW(), NOW()
-        )
-    ");
-    $stmt->execute([$idUsuario, $nome, $sobrenome, $cpfFormatado, $telefone, $email, $senhaHash]);
+    if ($hasSexoColumn) {
+        $stmt = $pdo->prepare("
+            INSERT INTO usuarios (
+                id_usuario, nome, sobrenome, sexo, data_nascimento, cargo, instituicao, cpf, telefone, email,
+                senha_hash, meta, ultimo_acesso, token_acesso, token_expira, cadastro_ativo, created_at, updated_at
+            ) VALUES (
+                ?, ?, ?, ?, '-', 'Estudante', '-', ?, ?, ?,
+                ?, '-', NULL, NULL, NULL, 1, NOW(), NOW()
+            )
+        ");
+        $stmt->execute([$idUsuario, $nome, $sobrenome, $sexo, $cpfFormatado, $telefone, $email, $senhaHash]);
+    } else {
+        $stmt = $pdo->prepare("
+            INSERT INTO usuarios (
+                id_usuario, nome, sobrenome, data_nascimento, cargo, instituicao, cpf, telefone, email,
+                senha_hash, meta, ultimo_acesso, token_acesso, token_expira, cadastro_ativo, created_at, updated_at
+            ) VALUES (
+                ?, ?, ?, '-', 'Estudante', '-', ?, ?, ?,
+                ?, '-', NULL, NULL, NULL, 1, NOW(), NOW()
+            )
+        ");
+        $stmt->execute([$idUsuario, $nome, $sobrenome, $cpfFormatado, $telefone, $email, $senhaHash]);
+    }
 
     // Garantir que o perfil ESTUDANTE exista em perfis (evita erro de FK se a tabela tiver restrição)
     try {

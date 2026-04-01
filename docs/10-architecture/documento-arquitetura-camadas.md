@@ -41,7 +41,7 @@ A camada de apresentação constitui o ponto de contato entre o sistema e seus u
 - Views/templates que definem a estrutura visual das páginas
 - DTOs (Data Transfer Objects) para transferência estruturada de dados
 - Middlewares para processamento de requisições (autenticação, autorização)
-- Assets compilados (Bootstrap, CSS/SCSS, JS/TS)
+- Assets estáticos e módulos próprios em `public/assets/` (CSS, JavaScript, imagens e ícones)
 
 **Restrições e boas práticas:**
 
@@ -120,10 +120,10 @@ A camada de infraestrutura fornece implementações concretas para as interfaces
 
 **Componentes técnicos:**
 
-- Implementações de repositórios usando Eloquent/Query Builder
+- Implementações de repositórios usando PDO, SQL parametrizado e adapters próprios
 - Adaptadores para APIs externas (CNJ, WhatsApp, etc.)
 - Serviços de armazenamento de arquivos
-- Implementações de logging (CloudWatch)
+- Implementações de logging e observabilidade compatíveis com o ambiente (`error_log`, logs do servidor e integrações futuras quando adotadas)
 - Configurações de banco de dados e conexões externas
 
 **Restrições e boas práticas:**

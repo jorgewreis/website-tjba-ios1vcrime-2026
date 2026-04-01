@@ -9,10 +9,7 @@ require_once __DIR__ . '/../app/helpers/Conection.php';
 require_once __DIR__ . '/../app/access/AccessEvaluator.php';
 require_once __DIR__ . '/../app/access/AccessPolicyVersion.php';
 
-// Garante que a sessão esteja ativa antes de acessar dados do usuário.
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
+Security::requireAuthentication();
 
 // Página solicitada (padrão: dashboard).
 $page = $_GET['page'] ?? 'dashboard';
@@ -32,6 +29,10 @@ $allowed_pages = [
     'cejusc'                => $PAGES . '/cartorio-cejusc-list.php',
     'cejuscedit'            => $PAGES . '/cartorio-cejusc-edit.php',
     'cejusccreate'          => $PAGES . '/cartorio-cejusc-create.php',
+    'ceapa'                 => $PAGES . '/cartorio-ceapa-list.php',
+    'ceapaedit'             => $PAGES . '/cartorio-ceapa-edit.php',
+    'ceapacreate'           => $PAGES . '/cartorio-ceapa-create.php',
+    'ceaparules'            => $PAGES . '/cartorio-ceapa-rules.php',
     'cejuscrules'           => $PAGES . '/cartorio-cejusc-rules.php',
     'editais'               => $PAGES . '/cartorio-editais-list.php',
     'editaisedit'           => $PAGES . '/cartorio-editais-edit.php',
@@ -47,11 +48,25 @@ $allowed_pages = [
     'medidasprotetivasrules' => $PAGES . '/cartorio-medidas-protetivas-rules.php',
     'oficioscartorio'       => $PAGES . '/cartorio-oficios-list.php',
     'oficioscartorioedit'   => $PAGES . '/cartorio-oficios-edit.php',
+    'oficiosrules'          => $PAGES . '/cartorio-oficios-rules.php',
     'oficiosgabinete'       => $PAGES . '/gabinete-oficios-list.php',
     'oficiosgabineteedit'   => $PAGES . '/gabinete-oficios-edit.php',
     'monitoramentogabinete' => $PAGES . '/gabinete-monitoramento-eletronico-list.php',
     'monitoramentogabinetecreate' => $PAGES . '/gabinete-monitoramento-eletronico-create.php',
     'monitoramentogabineteedit'   => $PAGES . '/gabinete-monitoramento-eletronico-edit.php',
+    'salapauta'             => $PAGES . '/sala-audiencias-pauta-list.php',
+    'estudapauta'           => $PAGES . '/sala-audiencias-pauta-list-estudantes.php',
+    'salapautacreate'       => $PAGES . '/sala-audiencias-pauta-create.php',
+    'salapautaedit'         => $PAGES . '/sala-audiencias-pauta-edit.php',
+    'salapautaparteedit'    => $PAGES . '/sala-audiencias-pauta-parte-edit.php',
+    'salaata'               => $PAGES . '/sala-audiencias-atas-list.php',
+    'salapainel'            => $PAGES . '/sala-audiencias-pauta-list.php',
+    'salapaineldia'         => $PAGES . '/sala-audiencias-painel-dia.php',
+    'estudaata'             => $PAGES . '/sala-audiencias-atas-estudantes.php',
+    'estudapainel'          => $PAGES . '/sala-audiencias-painel-estudantes.php',
+    'reuspresos'            => $PAGES . '/gabinete-reus-presos-list.php',
+    'reuspresoscreate'      => $PAGES . '/gabinete-reus-presos-create.php',
+    'reuspresosedit'        => $PAGES . '/gabinete-reus-presos-edit.php',
     'cartasexpedidas'       => $PAGES . '/cartorio-cartas-expedidas-list.php',
     'cartasexpedidasedit'   => $PAGES . '/cartorio-cartas-expedidas-edit.php',
     'cartasexpedidascreate' => $PAGES . '/cartorio-cartas-expedidas-create.php',
@@ -130,8 +145,7 @@ do {
     $user = $usuario->validarToken($_SESSION['token']);
 
     if (!$user) {
-        $_SESSION = [];
-        session_destroy();
+        Security::clearAuthenticatedSession();
         $validationStatus = 401;
         $validationMessage = 'Sessão expirada';
         break;

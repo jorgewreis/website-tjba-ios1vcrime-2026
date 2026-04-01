@@ -11,8 +11,9 @@ final class Conection
     private function __construct()
     {
         $dsn = sprintf(
-            'mysql:host=%s;dbname=%s;charset=%s',
+            'mysql:host=%s;port=%d;dbname=%s;charset=%s',
             DB_HOST,
+            DB_PORT,
             DB_NAME,
             DB_CHARSET
         );
@@ -27,7 +28,11 @@ final class Conection
             $this->pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
         } catch (PDOException $e) {
             error_log('Erro de conexão com o banco: ' . $e->getMessage());
-            throw new RuntimeException('Erro interno de conexão com o banco de dados.');
+            $msg = 'Erro interno de conexão com o banco de dados.';
+            if (PHP_SAPI === 'cli') {
+                $msg .= ' ' . $e->getMessage() . ' (host=' . DB_HOST . ':' . DB_PORT . ', db=' . DB_NAME . ')';
+            }
+            throw new RuntimeException($msg);
         }
     }
 

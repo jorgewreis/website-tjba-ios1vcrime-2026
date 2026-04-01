@@ -165,6 +165,105 @@ final class ProcessosPartesRepository
     }
 
     /**
+     * Nomes distintos de partes vinculadas ao processo com papel de acusado (réu, indiciado, sentenciado).
+     *
+     * @return list<string>
+     */
+    public function listNomesReusPorProcessoId(string $processoId): array
+    {
+        $processoId = trim($processoId);
+        if ($processoId === '') {
+            return [];
+        }
+        $tipos = [self::TIPO_REU, self::TIPO_INDICIADO, self::TIPO_SENTENCIADO];
+        $inNames = [];
+        foreach ($tipos as $i => $_) {
+            $inNames[] = ':t' . $i;
+        }
+        $sql = sprintf(
+            'SELECT DISTINCT p.`nome_completo`
+             FROM `%s` pp
+             INNER JOIN `partes` p ON p.`id` = pp.`parte_id`
+             WHERE pp.`processo_id` = :processo_id
+             AND pp.`tipo_parte` IN (%s)
+             AND TRIM(COALESCE(p.`nome_completo`, \'\')) <> \'\'
+             ORDER BY p.`nome_completo` ASC',
+            $this->table,
+            implode(', ', $inNames)
+        );
+        $statement = $this->connection->prepare($sql);
+        $statement->bindValue(':processo_id', $processoId);
+        foreach ($tipos as $i => $t) {
+            $statement->bindValue(':t' . $i, $t);
+        }
+        $statement->execute();
+        $rows = $statement->fetchAll(PDO::FETCH_COLUMN);
+        if ($rows === false) {
+            return [];
+        }
+        $out = [];
+        foreach ($rows as $nome) {
+            $n = trim((string) $nome);
+            if ($n !== '') {
+                $out[] = $n;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param list<string> $processoIds
+     * @return array<string, int> processo_id => total_partes
+     */
+    public function countByProcessoIds(array $processoIds): array
+    {
+        $processoIds = array_values(array_filter(array_map(static function ($id) {
+            return trim((string) $id);
+        }, $processoIds), static function ($id) {
+            return $id !== '';
+        }));
+        if ($processoIds === []) {
+            return [];
+        }
+
+        $placeholders = [];
+        $params = [];
+        foreach ($processoIds as $i => $id) {
+            $k = ':p' . $i;
+            $placeholders[] = $k;
+            $params[$k] = $id;
+        }
+        $sql = sprintf(
+            'SELECT `processo_id`, COUNT(*) AS `total`
+             FROM `%s`
+             WHERE `processo_id` IN (%s)
+             GROUP BY `processo_id`',
+            $this->table,
+            implode(', ', $placeholders)
+        );
+        $statement = $this->connection->prepare($sql);
+        foreach ($params as $k => $v) {
+            $statement->bindValue($k, $v);
+        }
+        $statement->execute();
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+        if ($rows === false) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($rows as $row) {
+            $pid = trim((string) ($row['processo_id'] ?? ''));
+            if ($pid !== '') {
+                $out[$pid] = (int) ($row['total'] ?? 0);
+            }
+        }
+
+        return $out;
+    }
+
+    /**
      * Réus / acusados vinculados ao processo (polo passivo: réu, indiciado, sentenciado).
      *
      * @return list<array<string, mixed>>
@@ -198,6 +297,36 @@ final class ProcessosPartesRepository
         $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
 
         return $rows === false ? [] : $rows;
+    }
+
+    /**
+     * Parte menor no cadastro processual: idade &lt; 18 pela data de nascimento ou flag ECA no vínculo.
+     */
+    public function countMenoresPorIdadeOuFlagNoProcesso(string $processoId): int
+    {
+        $processoId = trim($processoId);
+        if ($processoId === '') {
+            return 0;
+        }
+
+        $sql = sprintf(
+            'SELECT COUNT(*) FROM `%s` pp
+             INNER JOIN `partes` p ON p.`id` = pp.`parte_id`
+             WHERE pp.`processo_id` = :processo_id
+               AND (
+                   pp.`prioridade_crianca_adolescente` = 1
+                   OR (
+                       p.`data_nascimento` IS NOT NULL
+                       AND TIMESTAMPDIFF(YEAR, p.`data_nascimento`, CURDATE()) < 18
+                   )
+               )',
+            $this->table
+        );
+        $statement = $this->connection->prepare($sql);
+        $statement->bindValue(':processo_id', $processoId);
+        $statement->execute();
+
+        return (int) $statement->fetchColumn();
     }
 
     public function delete(string $id): bool

@@ -19,10 +19,7 @@ $usuario = new Usuario();
 $user = $usuario->validarToken($_SESSION['token']);
 
 if (!$user) {
-    $_SESSION = [];
-    if (session_status() === PHP_SESSION_ACTIVE) {
-        session_destroy();
-    }
+    Security::clearAuthenticatedSession();
     header('Location: /index.php');
     exit;
 }
@@ -208,6 +205,11 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             overflow: hidden;
             background: var(--color-border-subtle);
         }
+        .nav-new-avatar.is-initials {
+            background: transparent;
+            justify-content: flex-start;
+            padding-left: 10px;
+        }
         .nav-new-avatar img {
             width: 100%;
             height: 100%;
@@ -218,11 +220,12 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 100%;
-            height: 100%;
-            font-size: 1.25rem;
+            width: 44px;
+            height: 44px;
+            font-size: 1rem;
             font-weight: 600;
-            border-radius: 6px 0 0 6px;
+            border-radius: 5px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
         }
         .navbar-nav-left .layout-menu-toggle {
             position: absolute;
@@ -359,20 +362,20 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
 
             <div class="layout-menu">
                 <div class="brand-name">
-                    <a class="brand-name-link">
+                    <button type="button" class="brand-name-link">
                         <span class="name-primary">Sistema de Gestão</span>
                         <span class="name-secondary">Primeira Vara Crime</span>
-                    </a>
-                    <a class="layout-menu-toggle">
+                    </button>
+                    <button type="button" class="layout-menu-toggle">
                         <i class="fi fi-rs-angle-circle-left"></i>
-                    </a>
+                    </button>
                 </div>
                 <ul class="menu-inner">
                     <li class="menu-item active">
-                        <a class="menu-link" data-target="<?php echo htmlspecialchars($defaultHomePage, ENT_QUOTES, 'UTF-8'); ?>">
+                        <button type="button" class="menu-link" data-target="<?php echo htmlspecialchars($defaultHomePage, ENT_QUOTES, 'UTF-8'); ?>">
                             <i class="fi fi-rs-home"></i>
                             <span class="text"><?php echo $isUsuarioExterno ? 'Início' : 'Dashboard'; ?></span>
-                        </a>
+                        </button>
                     </li>
                 </ul>
             </div>
@@ -382,7 +385,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                 <nav class="layout-navbar">
                     <div class="navbar-nav-left">
                         <div class="nav-avatar-navbar-wrap" tabindex="0" aria-label="Usuário logado" aria-describedby="user-summary-navbar">
-                            <div class="nav-new-avatar">
+                            <div class="nav-new-avatar <?php echo (($avatarNavbarDisplay['mode'] ?? '') === 'image' && !empty($avatarNavbarDisplay['url'])) ? 'is-image' : 'is-initials'; ?>">
                                 <?php if (($avatarNavbarDisplay['mode'] ?? '') === 'image' && !empty($avatarNavbarDisplay['url'])): ?>
                                     <img src="<?php echo htmlspecialchars((string) $avatarNavbarDisplay['url'], ENT_QUOTES, 'UTF-8'); ?>" alt="">
                                 <?php else: ?>
@@ -395,9 +398,9 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                             </div>
                         </div>
                         <div class="layout-menu-toggle">
-                            <a class="nav-item nav-link">
+                            <button type="button" class="nav-item nav-link">
                                 <i class="fi fi-br-menu-burger"></i>
-                            </a>
+                            </button>
                         </div>
                         <div class="nav-item nav-item-user-summary">
                             <div class="user-summary-inline" id="user-summary-navbar" title="<?php echo htmlspecialchars($avatarSummaryTitle !== '' ? $avatarSummaryTitle : 'Usuário', ENT_QUOTES, 'UTF-8'); ?>">
@@ -409,24 +412,24 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                     <div class="navbar-nav-right">
                         <ul class="navbar-nav">
                             <li class="nav-item" data-target="<?php echo htmlspecialchars($defaultHomePage, ENT_QUOTES, 'UTF-8'); ?>">
-                                <a class="nav-link">
+                                <button type="button" class="nav-link">
                                     <i class="fi fi-br-layout-fluid"></i>
-                                </a>
+                                </button>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" id="themeToggle" href="#" role="button" tabindex="0" aria-label="Alternar tema" title="Alternar tema (claro / escuro / automático)">
+                                <button type="button" class="nav-link" id="themeToggle" tabindex="0" aria-label="Alternar tema" title="Alternar tema (claro / escuro / automático)">
                                     <i class="fi fi-rs-eclipse-alt"></i>
-                                </a>
+                                </button>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link disabled">
+                                <button type="button" class="nav-link disabled" disabled aria-disabled="true">
                                     <i class="fi fi-rs-bell"></i>
-                                </a>
+                                </button>
                             </li>
                             <li class="nav-item nav-item-settings" id="nav-item-settings">
-                                <a class="nav-link" id="settings-menu-trigger" href="#" role="button" aria-expanded="false" aria-haspopup="true" aria-label="Configurações e perfil">
+                                <button type="button" class="nav-link" id="settings-menu-trigger" aria-expanded="false" aria-haspopup="true" aria-label="Configurações e perfil">
                                     <i class="fi fi-rs-settings"></i>
-                                </a>
+                                </button>
                                 <div class="settings-dropdown" id="settings-dropdown" role="menu" aria-label="Menu Perfil" hidden>
                                     <div class="settings-dropdown-inner">
                                         <div class="menu-header">
@@ -434,10 +437,10 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                                         </div>
                                         <ul class="settings-dropdown-list">
                                             <li class="menu-item">
-                                                <a class="menu-link" href="#" role="menuitem" data-settings="alterar-senha">Alterar senha</a>
+                                                <button type="button" class="menu-link" role="menuitem" data-settings="alterar-senha">Alterar senha</button>
                                             </li>
                                             <li class="menu-item">
-                                                <a class="menu-link" href="#" role="menuitem" data-settings="alterar-dados">Alterar dados pessoais</a>
+                                                <button type="button" class="menu-link" role="menuitem" data-settings="alterar-dados">Alterar dados pessoais</button>
                                             </li>
                                         </ul>
                                     </div>
@@ -463,6 +466,8 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
 
     <script src="/assets/js/shared/prefs.js" defer></script>
     <script src="/assets/js/shared/toast.js" defer></script>
+    <script src="/assets/js/shared/navigate-buttons.js" defer></script>
+    <script src="/assets/js/shared/user-context.js" defer></script>
     <script src="/assets/js/shared/common.js" defer></script>
     <script src="/assets/js/shared/menu.js" defer></script>
 
@@ -475,8 +480,8 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
         const HAS_PERFIL_ESTUDANTE = <?php echo json_encode($hasPerfilEstudante, JSON_UNESCAPED_UNICODE); ?>;
         /** Consultor externo: partes, instituições e CEP (alinhado a frame.php — ConsultasPartesInstituicoes + ConsultasCep). */
         const MENU_TARGETS_CONSULTAS_EXTERNO_CONSULTOR = new Set(['consultapartes', 'instituicoespublicas', 'consultacep']);
-        /** Estudante externo: apenas CEP. */
-        const MENU_TARGETS_CONSULTAS_EXTERNO_ESTUDANTE = new Set(['consultacep']);
+        /** Estudante externo: CEP + recursos de audiências para estudantes. */
+        const MENU_TARGETS_CONSULTAS_EXTERNO_ESTUDANTE = new Set(['consultacep', 'estudapauta', 'estudaata', 'estudapainel']);
 
         /** Mesma regra de app/access/AccessEvaluator.php (recalculada no cliente após fetch de perfis). */
         const COMPOSITE_PROFILE_RE = /^(ESTAGIARIO|SERVIDOR)-(CARTORIO|GABINETE|AUDIENCIAS)$/;
@@ -495,6 +500,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                         ]
                     },
                     { icon: 'fi fi-rs-money-check-edit', label: 'Cejusc', target: 'cejusc' },
+                    { icon: 'fi fi-rs-hand-holding-heart', label: 'Ceapa', target: 'ceapa' },
                     { icon: 'fi fi-rs-document', label: 'Editais', target: 'editais' },
                     { icon: 'fi fi-rs-blog-text', label: 'Guias', target: 'guias' },
                     { icon: 'fi fi-rs-user-shield', label: 'Medidas protetivas', target: 'medidasprotetivas' },
@@ -512,17 +518,17 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             },
             {
                 section: 'Sala de Audiências',
-                items: [                    
-                    { icon: 'fi fi-rs-clipboard-list-check', label: 'Pauta', target: 'salapauta' },
-                    { icon: 'fi fi-rs-document', label: 'Atas', target: 'salaata' },
-                    { icon: 'fi fi-rs-screen', label: 'Painel', target: 'salapainel' }
+                items: [
+                    { icon: 'fi fi-rs-clipboard-list-check', label: 'Pauta de Audiências', target: 'salapauta' },
+                    { icon: 'fi fi-rs-document', label: 'Atas de Audiências', target: 'salaata' },
+                    { icon: 'fi fi-rs-calendar-day', label: 'Painel do dia', target: 'salapaineldia' }
                 ]
             },
             {
                 section: 'Estudantes',
                 items: [
                     { icon: 'fi fi-rs-clipboard-list-check', label: 'Pauta de Audiências', target: 'estudapauta' },
-                    { icon: 'fi fi-rs-document', label: 'Atas', target: 'estudaata' },
+                    { icon: 'fi fi-rs-document', label: 'Atas de Audiências', target: 'estudaata' },
                     { icon: 'fi fi-rs-screen', label: 'Painel em tempo real', target: 'estudapainel' }
                 ]
             },
@@ -552,10 +558,24 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             return trim((string) $s);
         }, $userSetores))), JSON_UNESCAPED_UNICODE); ?>;
 
+        window.__APP_CONTEXT = Object.assign({}, window.__APP_CONTEXT || {}, {
+            initialPerfis: INITIAL_USER_PERFIS,
+            fallbackPerfis: FALLBACK_PERFIS,
+            allowedRulePerfis: ['ADMIN', 'DIRETORA', 'MAGISTRADA'],
+            currentUser: {
+                id: <?php echo json_encode($sessionUserId, JSON_UNESCAPED_UNICODE); ?>,
+                nome: <?php echo json_encode($userDisplayFullName !== '' ? $userDisplayFullName : $userName, JSON_UNESCAPED_UNICODE); ?>,
+                usuario: <?php echo json_encode($userDisplayFullName !== '' ? $userDisplayFullName : $userName, JSON_UNESCAPED_UNICODE); ?>
+            }
+        });
+
         /**
          * Unifica fontes de perfil, normaliza maiúsculas e mapeia perfis legados para CHEFIA (mesmo critério do sistema).
          */
         function normalizePerfis(perfis) {
+            if (window.App && App.User && typeof App.User.normalizePerfis === 'function') {
+                return App.User.normalizePerfis(perfis);
+            }
             const out = [];
             const seen = new Set();
             (perfis || []).forEach((raw) => {
@@ -573,6 +593,12 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
         }
 
         async function fetchUserPerfis() {
+            if (window.App && App.User && typeof App.User.fetchPerfis === 'function') {
+                return App.User.fetchPerfis('/admin/api/getPerfis.php', {
+                    initialPerfis: INITIAL_USER_PERFIS,
+                    fallbackPerfis: FALLBACK_PERFIS
+                });
+            }
             let fromApi = [];
             try {
                 const response = await fetch('/admin/api/getPerfis.php');
@@ -593,6 +619,9 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
         function computePermittedMenuSectionsFromPerfis(perfis) {
             const norm = normalizePerfis(perfis);
             if (IS_USUARIO_EXTERNO) {
+                if (HAS_PERFIL_ESTUDANTE) {
+                    return ['Consultas', 'Estudantes'];
+                }
                 return ['Consultas'];
             }
             if (norm.includes('ADMIN') || norm.includes('CHEFIA')) {
@@ -639,7 +668,8 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
         }
 
         function createMenuLink({ icon, label, target }) {
-            const link = document.createElement('a');
+            const link = document.createElement('button');
+            link.type = 'button';
             link.className = 'menu-link';
 
             if (target) {
@@ -665,7 +695,8 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             menuItem.className = 'menu-item';
 
             if (item.type === 'submenu') {
-                const link = document.createElement('a');
+                const link = document.createElement('button');
+                link.type = 'button';
                 link.className = 'menu-link menu-toggle';
 
                 if (item.icon) {
@@ -705,8 +736,8 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
 
             const li = document.createElement('li');
             li.className = 'menu-item menu-item-logout';
-            const link = document.createElement('a');
-            link.href = '#';
+            const link = document.createElement('button');
+            link.type = 'button';
             link.className = 'menu-link';
             link.id = 'logout-btn';
             link.dataset.logout = '';

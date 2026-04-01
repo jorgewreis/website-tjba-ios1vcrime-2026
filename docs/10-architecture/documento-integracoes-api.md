@@ -63,31 +63,55 @@ A integração com serviço de mensagens via WhatsApp tem como finalidade o envi
 
 No ambiente de homologação, deve ser adotado um sandbox ou número específico para testes, isolando o fluxo de mensagens de usuários reais. Os fluxos de negócio que fizerem uso de WhatsApp devem ser desenhados de forma que falhas na integração ou indisponibilidade do serviço não interrompam o processo principal; nesse caso, a mensagem pode ser tratada como opcional ou substituída por outro canal de comunicação. Informações sobre mensagens enviadas (horário, tipo, status de envio, destinatário mascarado) devem ser registradas para controle e auditoria.
 
-### 3.4 Integração com serviço de logs em nuvem
+### 3.4 Observabilidade e integração com serviços de logs
 
-O serviço de logs em nuvem (por exemplo, CloudWatch) é responsável por centralizar logs do backend, incluindo erros de aplicação, eventos de auditoria e eventos relevantes de negócio. Esta integração é elemento crucial da estratégia de observabilidade, permitindo acompanhar a saúde do sistema e analisar o comportamento das integrações externas em tempo de execução.
+No estado atual do projeto, a observabilidade oficial é híbrida e prioriza mecanismos já disponíveis no ambiente, como `error_log`, logs do servidor web e registros operacionais gerados pela própria aplicação. Serviços externos de centralização em nuvem podem ser adotados futuramente, mas não devem ser descritos como dependência obrigatória da implementação atual.
 
-A utilização do serviço deve observar limites de custo, preferencialmente operando dentro de faixas gratuitas quando disponíveis. Devem ser definidos padrões de formatação de logs, níveis de severidade (info, warning, error, critical) e campos obrigatórios, como contexto da operação, IDs internos de entidades (audiência, tarefa, documento), perfil do usuário que disparou a ação e ambiente (dev, homolog, prod). Antes do envio, os dados sensíveis devem ser mascarados ou excluídos do payload, mitigando riscos em casos de acessos indevidos ao serviço de logging.
+Independentemente do destino final do log, devem existir padrões mínimos de formatação, níveis de severidade (info, warning, error, critical) e campos obrigatórios, como contexto da operação, IDs internos de entidades relevantes, perfil do usuário que disparou a ação e ambiente (dev, homolog, prod). Antes do envio ou persistência, os dados sensíveis devem ser mascarados ou excluídos do payload.
 
 ---
 
 ## 4. API interna do sistema
 
-Além das integrações com serviços externos, a solução expõe uma API interna, consumida pelo frontend e, opcionalmente, por clientes autorizados. Essa API é protegida por modelo de autenticação híbrida (sessão e JWT) e é tratada como parte central da arquitetura, devendo ser documentada, testada e versionada com o mesmo rigor aplicado às integrações externas.
+Além das integrações com serviços externos, a solução expõe uma API interna consumida principalmente pelo frontend e por páginas autenticadas do próprio sistema. Essa API acompanha o modelo oficial de autenticação da aplicação e deve ser documentada, testada e mantida com o mesmo rigor aplicado às integrações externas.
 
 A API interna é responsável por disponibilizar, em formato programático, funcionalidades como gestão de audiências, tarefas internas, expedições, notificações, painéis de produtividade, perfis e configurações. A forma como esses recursos são expostos deve considerar tanto a estabilidade a longo prazo quanto a capacidade de evolução controlada.
 
-### 4.1 Padrão de versionamento e estrutura de endpoints
+### 4.1 Estrutura atual de endpoints e diretriz de evolução
 
-A API interna deve ser explicitamente versionada, preferencialmente por meio de prefixo de URL (por exemplo, `/api/v1/...`), de modo que alterações incompatíveis sejam introduzidas em novas versões, sem impactar clientes que utilizam versões anteriores. Cada versão deve possuir documentação própria, descrevendo os endpoints disponíveis, parâmetros obrigatórios e opcionais, formatos de requisição e resposta, além de exemplos de uso.
+No estado atual do projeto, a API interna **não utiliza prefixo de versionamento em URL** como `/api/v1/...`.
 
-Os endpoints devem ser organizados de forma coerente com o domínio funcional, agrupando recursos por contexto: audiências, cartas, ofícios, medidas protetivas, notificações, perfis, usuários, produtividade e configurações gerais. Sempre que possível, deve-se seguir princípios RESTful (uso adequado de métodos HTTP, códigos de status padronizados, representações consistentes), sem impedir a criação de endpoints específicos para ações de negócio que não se encaixem perfeitamente em operações CRUD tradicionais.
+A superfície oficial vigente é:
 
-### 4.2 Autenticação híbrida (sessão e JWT)
+- `public/api/` como base dos endpoints internos do sistema;
+- `public/api/admin/` para grupos administrativos que já seguem essa superfície;
+- `public/admin/api/` apenas para endpoints auxiliares legados ainda consumidos pelo shell autenticado, como verificação de token e leitura de perfis.
 
-A autenticação é implementada de forma híbrida, combinando uso de sessão para navegação tradicional via web com uso de tokens JWT para cenários em que seja necessária autenticação stateless, como acesso programático por clientes autorizados. Essa combinação permite aproveitar a experiência clássica de sistemas internos e, ao mesmo tempo, oferecer flexibilidade para integrações futuras.
+Além dessas áreas, existe uma pasta `api/` na raiz do repositório contendo scripts antigos (`users.php`, `guia.php`, `documents.php`, `notifications.php`, `guia_pdf.php`). Essa árvore **não é canônica**, não deve ser tratada como contrato oficial e não deve receber novas evoluções sem refatoração planejada.
 
-Para o uso de JWT, devem ser definidas políticas claras de emissão, escopo, expiração, renovação e revogação de tokens. Os tokens não devem transportar informações sensíveis em claro, limitando-se a identificadores (por exemplo, IDs de usuário) e claims estritamente necessários, como perfis ou papéis de acesso. A cada requisição autenticada por token, o backend deve validar assinatura, expiração e escopos, garantindo que apenas recursos e operações compatíveis com o perfil associado sejam acessados.
+Os endpoints oficiais atuais estão organizados por domínio funcional, com grupos como:
+
+- cartório (`cartorio-cartas-expedidas`, `cartorio-cartas-recebidas`, `cartorio-guias`, `cartorio-oficios`, `cartorio-medidas-protetivas`, `cartorio-cejusc`, `cartorio-ceapa`, `cartorio-editais`);
+- gabinete (`gabinete-reus-presos`, `gabinete-oficios`, `gabinete-monitoramento-eletronico`);
+- audiências (`sala-audiencias-pauta`, `sala-audiencias-ata`);
+- entidades auxiliares (`pessoas`, `instituicoes-publicas`, `processos`, `processos-partes`, `consulta-processos`, `cep`, `datajud`);
+- administração (`public/api/admin/feriados`).
+
+Como diretriz de evolução, novas mudanças incompatíveis **podem** futuramente adotar versionamento explícito, mas isso ainda não faz parte da implementação atual. Até que exista uma decisão formal de migração, a documentação deve refletir o contrato real sem inventar uma versão em URL que o sistema ainda não expõe.
+
+### 4.2 Autenticação da API interna
+
+O modelo oficial atual da API interna acompanha o restante da aplicação:
+
+- autenticação baseada em sessão PHP para navegação e chamadas autenticadas do frontend;
+- validação server-side do usuário autenticado;
+- confirmação do token persistido no banco de dados quando o fluxo exigir revalidação da sessão;
+- timeout de inatividade de 60 minutos no contexto autenticado;
+- cookies de sessão configurados no bootstrap central com flags de segurança;
+- proteção CSRF nos fluxos que alteram estado;
+- rate limit no login e em rotas sensíveis quando aplicável.
+
+Não há, neste momento, um contrato oficial de API interna baseado em JWT como mecanismo principal de autenticação. Qualquer uso legado ou experimental de JWT deve ser tratado como não canônico até decisão arquitetural formal.
 
 ### 4.3 Padronização de respostas e tratamento de erros
 
@@ -99,7 +123,7 @@ Em situações de erro, devem ser utilizados códigos HTTP adequados (4xx para f
 
 ## 5. Segurança em integrações e APIs
 
-A segurança é eixo transversal no desenho das integrações externas e da API interna, considerando o contexto institucional, a presença de dados pessoais e processuais e a necessidade de auditoria completa. Os mecanismos de segurança incluem autenticação forte, autorização granular, criptografia em trânsito, proteção de credenciais, mascaramento de dados e políticas rígidas de acesso administrativo.
+A segurança é eixo transversal no desenho das integrações externas e da API interna, considerando o contexto institucional, a presença de dados pessoais e processuais e a necessidade de rastreabilidade adequada. Os mecanismos de segurança incluem autenticação forte, autorização granular, criptografia em trânsito, proteção de credenciais, mascaramento de dados e políticas rígidas de acesso administrativo.
 
 Além dos controles técnicos, devem existir regras de governança sobre quem pode configurar integrações, gerar chaves, acessar logs e alterar parâmetros sensíveis do sistema. Perfis privilegiados devem ser minimamente necessários e suas ações precisam ser registradas de forma detalhada para permitir rastreabilidade, investigação de incidentes e responsabilização quando necessário.
 
@@ -107,7 +131,7 @@ Além dos controles técnicos, devem existir regras de governança sobre quem po
 
 O controle de acesso a endpoints da API interna e a funcionalidades que disparam integrações externas deve respeitar a matriz de perfis do sistema (como perfis de chefia, servidores, gabinete e perfis acadêmicos). A autorização deve ser aplicada tanto na camada de apresentação (guards, policies) quanto na camada de aplicação e domínio, garantindo que decisões críticas de permissão não dependam apenas da interface.
 
-Para acessos via JWT, recomenda-se a utilização de claims ou escopos de permissão associados ao token, definindo claramente quais recursos podem ser consultados ou modificados. Tokens emitidos para integrações específicas não devem possuir privilégios amplos; é preferível emitir tokens com escopo reduzido e tempo de vida limitado. Em integrações com serviços externos que exijam credenciais (por exemplo, chaves de API), estas nunca devem ser expostas ao usuário final ou trafegadas para o frontend.
+Para acessos autenticados à API interna, as permissões devem ser verificadas no backend com base no usuário autenticado, seus perfis e suas regras de acesso por página, setor ou funcionalidade. Em integrações com serviços externos que exijam credenciais, estas nunca devem ser expostas ao usuário final ou trafegadas para o frontend.
 
 ### 5.2 Criptografia em trânsito e proteção de credenciais
 
@@ -177,7 +201,7 @@ Uma vez aprovada, a nova integração deve ser incorporada à arquitetura por me
 
 ### 8.2 Versionamento e descontinuação de integrações
 
-Sempre que uma integração exigir mudança incompatível com a versão atual (por exemplo, alteração de contrato por parte do provedor ou migração para serviço alternativo), deve ser adotada estratégia de versionamento que permita a convivência temporária de versões antiga e nova, com período de transição bem definido. Durante esse período, o sistema pode suportar ambos os caminhos, migrando gradualmente fluxos internos até a desativação definitiva da versão anterior.
+Sempre que uma integração exigir mudança incompatível com a versão atual (por exemplo, alteração de contrato por parte do provedor ou migração para serviço alternativo), deve ser adotada estratégia de versionamento que permita a convivência temporária de versões antiga e nova, com período de transição bem definido. Para a API interna, isso significa que uma futura adoção de `/api/v1/...` ou namespace equivalente deve ser tratada como mudança arquitetural planejada, e não presumida como já existente.
 
 A descontinuação de integrações antigas deve ser precedida de monitoramento que comprove ausência de uso ativo ou residual. Após a desativação, credenciais associadas devem ser revogadas, configurações removidas ou arquivadas com segurança, e a documentação técnica atualizada para refletir o estado real do ambiente. O histórico de decisões de descontinuação deve ser preservado, permitindo rastrear motivos, datas e impactos observados.
 

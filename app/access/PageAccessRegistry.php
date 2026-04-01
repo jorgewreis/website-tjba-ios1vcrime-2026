@@ -35,6 +35,7 @@ final class PageAccessRegistry
 
         static $areaCartorio = ['kind' => 'area_a', 'area' => AccessAreas::CARTORIO];
         static $areaGabinete = ['kind' => 'area_a', 'area' => AccessAreas::GABINETE];
+        static $areaAudiencias = ['kind' => 'area_a', 'area' => AccessAreas::AUDIENCIAS];
 
         $map = [
             'dashboard' => ['kind' => 'all_internal'],
@@ -44,6 +45,10 @@ final class PageAccessRegistry
             'cejusc' => $areaCartorio,
             'cejuscedit' => $areaCartorio,
             'cejusccreate' => $areaCartorio,
+            'ceapa' => $areaCartorio,
+            'ceapaedit' => $areaCartorio,
+            'ceapacreate' => $areaCartorio,
+            'ceaparules' => $areaCartorio,
             'cejuscrules' => $areaCartorio,
             'editais' => $areaCartorio,
             'editaisedit' => $areaCartorio,
@@ -59,6 +64,7 @@ final class PageAccessRegistry
             'medidasprotetivasrules' => $areaCartorio,
             'oficioscartorio' => $areaCartorio,
             'oficioscartorioedit' => $areaCartorio,
+            'oficiosrules' => $areaCartorio,
             'cartasexpedidas' => $areaCartorio,
             'cartasexpedidasedit' => $areaCartorio,
             'cartasexpedidascreate' => $areaCartorio,
@@ -74,6 +80,19 @@ final class PageAccessRegistry
             'monitoramentogabinete' => $areaGabinete,
             'monitoramentogabinetecreate' => $areaGabinete,
             'monitoramentogabineteedit' => $areaGabinete,
+            'salapauta' => $areaAudiencias,
+            'salaata' => $areaAudiencias,
+            'salapainel' => $areaAudiencias,
+            'salapaineldia' => $areaAudiencias,
+            'estudapauta' => ['kind' => 'estudantes_readonly'],
+            'estudaata' => ['kind' => 'estudantes_readonly'],
+            'estudapainel' => ['kind' => 'estudantes_readonly'],
+            'salapautacreate' => $areaAudiencias,
+            'salapautaedit' => $areaAudiencias,
+            'salapautaparteedit' => $areaAudiencias,
+            'reuspresos' => $areaGabinete,
+            'reuspresoscreate' => $areaGabinete,
+            'reuspresosedit' => $areaGabinete,
 
             'notificacoes' => ['kind' => 'all_internal'],
             'configuracoes' => ['kind' => 'all_internal'],

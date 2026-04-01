@@ -545,6 +545,7 @@ body {
 
     /* Menu Link States */
     .menu-inner .menu-item .menu-link {
+        width: 220px;
         background-color: var(--color-background-elevated);
         color: var(--color-text-primary);
     }
@@ -748,5 +749,22 @@ body {
         border: none;
         border-style: hidden;
         margin-top: 74px;
+    }
+
+    /* Botões no lugar de âncoras (layout home / menu) — mantém classes .nav-link / .menu-link */
+    button.nav-link,
+    button.menu-link,
+    button.brand-name-link,
+    button.layout-menu-toggle {
+        font: inherit;
+        font-family: inherit;
+        color: inherit;
+        border: none;
+        appearance: none;
+        -webkit-appearance: none;
+        text-decoration: none;
+        cursor: pointer;
+        width: auto;
+        box-sizing: border-box;
     }
 }

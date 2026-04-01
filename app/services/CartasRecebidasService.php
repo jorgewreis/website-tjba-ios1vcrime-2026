@@ -52,16 +52,23 @@ final class CartasRecebidasService
                 $rows[$i]['Subtarefas'] = $this->subtarefasRepository->findPendenteOuEmAndamentoByCartaId($idCarta);
                 $rows[$i]['SubtarefasAll'] = $this->subtarefasRepository->findByCartaId($idCarta);
                 $alocadosRaw = $this->alocadosRepository->findByCartaId($idCarta);
-                $rows[$i]['Alocados'] = [];
+                $alocados = [];
                 $max = 5;
                 foreach (array_slice($alocadosRaw, 0, $max) as $a) {
-                    $rows[$i]['Alocados'][] = [
-                        'iniciais' => $a['iniciais'] ?? '—',
+                    $tipo = $this->normalizeTipoAlocado((string) ($a['tipo'] ?? ''));
+                    $alocados[] = [
+                        'alocado_id'    => $a['id'] ?? '',
+                        'iniciais'      => $a['iniciais'] ?? '—',
                         'nome_completo' => $a['nome_completo'] ?? '',
-                        'usuario_id' => $a['usuario_id'] ?? '',
-                        'tipo' => $this->normalizeTipoAlocado($a['tipo'] ?? ''),
+                        'usuario_id'    => $a['usuario_id'] ?? '',
+                        'tipo'          => $tipo,
                     ];
                 }
+                usort($alocados, static function (array $a, array $b): int {
+                    static $order = ['rule' => 0, 'all' => 1, 'specific' => 2];
+                    return ($order[$a['tipo']] ?? 9) <=> ($order[$b['tipo']] ?? 9);
+                });
+                $rows[$i]['Alocados'] = $alocados;
             } else {
                 $rows[$i]['Subtarefas'] = [];
                 $rows[$i]['SubtarefasAll'] = [];
@@ -206,13 +213,15 @@ final class CartasRecebidasService
             throw new InvalidArgumentException('Carta da subtarefa não identificada.');
         }
 
-        $usuarioIdMovimentacao = null;
+        $dadosArray = [];
         if ($dadosJson !== null && $dadosJson !== '') {
-            $dadosArray = json_decode($dadosJson, true);
-            if (is_array($dadosArray)) {
-                $usuarioIdMovimentacao = trim((string) ($dadosArray['usuario_id'] ?? ''));
+            $decoded = json_decode($dadosJson, true);
+            if (is_array($decoded)) {
+                $dadosArray = $decoded;
             }
         }
+
+        $usuarioIdMovimentacao = trim((string) ($dadosArray['usuario_id'] ?? ''));
         if ($usuarioIdMovimentacao !== '') {
             try {
                 $this->alocadosRepository->addAlocado($cartaId, $usuarioIdMovimentacao);
@@ -221,32 +230,46 @@ final class CartasRecebidasService
             }
         }
 
-        if ($ordem === 3) {
-            $dadosArray = [];
-            if ($dadosJson !== null && $dadosJson !== '') {
-                $dadosArray = json_decode($dadosJson, true);
-            }
-            $resultadoCumprimento = trim((string) (($dadosArray['resultado_cumprimento'] ?? $dadosArray['resultado'] ?? '')));
+        $tipo = trim((string) ($subtarefa['tipo'] ?? ''));
+
+        $tiposJuntadaCertidao = [
+            CartasRecebidasSubtarefasRepository::TIPO_ORDEM_3,
+            'certidao_oficial_justica',
+            'juntada_certidao',
+            'confirmar_juntada',
+            'juntada_certidao_oficial_justica',
+        ];
+        $tiposEnvioDevolucao = [
+            CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5,
+            'envio_processo',
+            'enviar_processo',
+            'devolucao_origem',
+            'devolução_origem',
+        ];
+
+        if (in_array($tipo, $tiposJuntadaCertidao, true)) {
+            $resultadoCumprimento = trim((string) ($dadosArray['resultado_cumprimento'] ?? $dadosArray['resultado'] ?? ''));
             if ($resultadoCumprimento === '') {
                 throw new InvalidArgumentException('Selecione o resultado do cumprimento para concluir a juntada da certidão do oficial de justiça.');
             }
         }
 
-        $this->subtarefasRepository->marcarConcluida($subtarefaId);
-
-        if ($dadosJson !== null && $dadosJson !== '') {
-            $stmt = $this->connection->prepare(
-                'UPDATE `cartas_recebidas_subtarefas` SET `dados_especificos` = :dados, `updated_at` = NOW() WHERE `id` = :id LIMIT 1'
-            );
-            $stmt->bindValue(':dados', $dadosJson);
-            $stmt->bindValue(':id', $subtarefaId);
-            $stmt->execute();
+        if (in_array($tipo, $tiposEnvioDevolucao, true)) {
+            $tipoEnvio = trim((string) ($dadosArray['tipo_envio'] ?? ''));
+            if ($tipoEnvio === '') {
+                throw new InvalidArgumentException('Selecione o tipo de envio para informar a devolução.');
+            }
         }
+
+        $this->subtarefasRepository->marcarConcluidaComDados($subtarefaId, $dadosJson);
 
         if ($ordem < 7) {
             $proxima = $this->subtarefasRepository->findByCartaIdEOrdem($cartaId, $ordem + 1);
-            if ($proxima !== null) {
-                $this->subtarefasRepository->atualizarStatus((string) $proxima['id'], 'em_andamento');
+            if ($proxima !== null && trim((string) ($proxima['status'] ?? '')) !== CartasRecebidasSubtarefasRepository::STATUS_CANCELADA) {
+                $statusProxima = trim((string) ($proxima['status'] ?? ''));
+                if ($statusProxima !== 'concluida') {
+                    $this->subtarefasRepository->atualizarStatus((string) $proxima['id'], 'em_andamento');
+                }
             }
             $this->repository->update($cartaId, ['status' => 'em_andamento']);
             return ['tarefa_principal_concluida' => false];
@@ -304,6 +327,16 @@ final class CartasRecebidasService
             return 'all';
         }
         return 'specific';
+    }
+
+    public function removeAlocado(string $alocadoId, string $tipo, string $requestUserId): bool
+    {
+        $alocadoId     = trim($alocadoId);
+        $requestUserId = trim($requestUserId);
+        if ($alocadoId === '' || $requestUserId === '') {
+            return false;
+        }
+        return $this->alocadosRepository->deleteById($alocadoId);
     }
 
     private function parseDate($value): ?string

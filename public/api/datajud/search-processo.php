@@ -5,6 +5,10 @@ header('Content-Type: application/json; charset=UTF-8');
 header('Access-Control-Allow-Origin: *');
 $config = require __DIR__ . '/config.php';
 
+if (($config['api_key'] ?? '') === '') {
+    respond(['error' => 'Integração DataJud não configurada.'], 500);
+}
+
 $rawInput = file_get_contents('php://input') ?: '';
 $payload = json_decode($rawInput, true);
 if (!is_array($payload)) {
@@ -21,30 +25,18 @@ if ($numero === '' || strlen($numero) !== 20) {
 $body = [
     'query' => [
         'bool' => [
-            'must' => [
+            // DataJud (Elastic): match é o método documentado; term é mantido como fallback.
+            'should' => [
+                ['match' => ['numeroProcesso' => $numero]],
                 ['term' => ['numeroProcesso' => $numero]],
             ],
+            'minimum_should_match' => 1,
         ],
     ],
     'size' => 1,
-    '_source' => [
-        'numeroProcesso',
-        'classeProcessual',
-        'classe',
-        'assuntos',
-        'polo',
-        'prioridade',
-        'tribunal',
-        'movimentos',
-        'orgaoJulgador',
-        'nivelSigilo',
-        'grau',
-        'formato',
-        'sistema',
-        'dataHoraUltimaAtualizacao',
-        'dataAjuizamento',
-        'id',
-    ],
+    // Retorna _source completo para suportar variações de schema entre tribunais.
+    // A resposta segue size=1, então o impacto é baixo.
+    '_source' => true,
 ];
 
 $ch = curl_init($config['endpoint']);
@@ -62,8 +54,6 @@ curl_setopt_array($ch, [
 
 $response = curl_exec($ch);
 $error = curl_error($ch);
-$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
 
 if ($response === false) {
     respond(['error' => 'Falha ao contatar o DataJud: ' . $error], 502);
@@ -75,6 +65,7 @@ if (!is_array($decoded) || !isset($decoded['hits']['hits'][0]['_source'])) {
 }
 
 $source = $decoded['hits']['hits'][0]['_source'];
+$poloPassivo = extractPartNamesFromPolos($source);
 
 $result = [
     'numero' => $source['numeroProcesso'] ?? $numero,
@@ -82,7 +73,7 @@ $result = [
     'classe' => formatarClasse($source),
     'assuntos' => formatarAssuntos($source['assuntos'] ?? []),
     'prioridades' => formatarPrioridades($source['prioridade'] ?? []),
-    'polo_passivo' => formatarPolo($source['polo'] ?? []),
+    'polo_passivo' => $poloPassivo,
     'movimentos' => formatarMovimentos($source['movimentos'] ?? []),
     'orgao_julgador' => formatarOrgao($source['orgaoJulgador'] ?? []),
     'nivel_sigilo' => $source['nivelSigilo'] ?? null,
@@ -224,21 +215,43 @@ function formatarPrioridades($prioridades): array
 
 function formatarPolo($polos): array
 {
-    $passivo = [];
+    $nomes = [];
     foreach ((array) $polos as $polo) {
-        $tipo = $polo['polo'] ?? ($polo['tipoPolo'] ?? null);
-        if ($tipo !== 'PA' && strtolower($tipo ?? '') !== 'polo passivo') {
-            continue;
-        }
         $partes = (array) ($polo['parte'] ?? $polo['partes'] ?? []);
         foreach ($partes as $parte) {
-            $nome = $parte['nome'] ?? ($parte['descricao'] ?? null);
+            if (is_string($parte)) {
+                $nome = $parte;
+            } elseif (is_array($parte)) {
+                $nome = $parte['nome'] ?? ($parte['descricao'] ?? null);
+            } else {
+                $nome = null;
+            }
             if ($nome) {
-                $passivo[] = trim($nome);
+                $nomes[] = trim((string) $nome);
             }
         }
     }
-    return array_values(array_unique($passivo));
+    // Observação: mantemos o nome da chave "polo_passivo" na resposta,
+    // mas aqui retornamos os nomes de todas as partes encontradas no processo.
+    $nomes = array_values(array_filter($nomes, static function ($v) {
+        return trim((string) $v) !== '';
+    }));
+    return array_values(array_unique($nomes));
+}
+
+function extractPartNamesFromPolos(array $source): array
+{
+    $nomes = [];
+    foreach (['polo', 'poloAtivo', 'poloPassivo'] as $campo) {
+        $extraidos = formatarPolo($source[$campo] ?? []);
+        foreach ($extraidos as $nome) {
+            $v = trim((string) $nome);
+            if ($v !== '') {
+                $nomes[$v] = true;
+            }
+        }
+    }
+    return array_values(array_keys($nomes));
 }
 
 function respond(array $payload, int $status = 200): void

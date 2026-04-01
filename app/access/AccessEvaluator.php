@@ -46,7 +46,13 @@ final class AccessEvaluator
         $temEstudante = ProfileNormalizer::hasEstudante($norm);
         $temConsultor = ProfileNormalizer::hasConsultor($norm);
 
+        if ($page === 'alterardados') {
+            return true;
+        }
         if ($page === 'consultacep') {
+            return true;
+        }
+        if (($page === 'estudapauta' || $page === 'estudaata' || $page === 'estudapainel') && $temEstudante) {
             return true;
         }
         if ($page === 'consultapartes' || $page === 'instituicoespublicas' || $page === 'partesinstituicoeslist') {
@@ -91,6 +97,13 @@ final class AccessEvaluator
             case 'externo_only':
                 return false;
 
+            case 'estudantes_readonly':
+                if (ProfileNormalizer::isElevated($norm)) {
+                    return true;
+                }
+
+                return ProfileNormalizer::hasAnyCargoAreaComposite($norm);
+
             default:
                 return false;
         }
@@ -108,6 +121,10 @@ final class AccessEvaluator
         $sections = [];
 
         if (UserAccessHelper::isUsuarioExterno($rawPerfils)) {
+            if (ProfileNormalizer::hasEstudante($norm)) {
+                return ['Consultas', 'Estudantes'];
+            }
+
             return ['Consultas'];
         }
 

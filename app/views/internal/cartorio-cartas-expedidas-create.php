@@ -124,12 +124,10 @@ try {
         <p class="description-page">Caso tenha alguma dificuldade no preenchimento do cadastro, verifique os arquivos abaixo para obter ajuda.</p>
         
         <!-- Badges de arquivos para download -->
-        <a href="/documents/pdf/PJBA - 1VCR - POP - Expedição e Envio de Cartas Precatórias.pdf" target="_blank" rel="noopener noreferrer">
-            <div class="badge file">
-                <img src="/assets/icons/Office-File-Pdf-1--Streamline-Ultimate.png" alt="Ícone de arquivo PDF">
-                <span>Passo a passo - Expedição de Cartas Precatórias</span>
-            </div>
-        </a>
+        <button type="button" class="badge file" data-nav-href="/documents/pdf/PJBA - 1VCR - POP - Expedição e Envio de Cartas Precatórias.pdf" data-nav-target="_blank">
+            <img src="/assets/icons/Office-File-Pdf-1--Streamline-Ultimate.png" alt="Ícone de arquivo PDF">
+            <span>Passo a passo - Expedição de Cartas Precatórias</span>
+        </button>
     </div>
 
     <div class="container-full card-page">       
@@ -146,7 +144,7 @@ try {
             </div>
             <div class="col">
                 <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
-                <input type="text" class="width-600 height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>                
+                <input type="text" class="width-600 height-md" id="filter-classe" data-datajud-related="true" placeholder="Preenchido automaticamente pelo DataJud" readonly>                
             </div>
             <div class="col">
                 <label for="filter-tipo">Finalidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
@@ -234,7 +232,7 @@ try {
         <!-- Ações -->
         <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
             <button class="btn btn-primary-outline" id="alterar-regra-btn" style="display: none;">Alterar regra de envio</button> <!-- visível apenas para usuários com permissão de administrador -->
-            <button class="btn btn-secondary" id="voltar-btn">Voltar</button>
+            <button class="btn btn-secondary" id="voltar-btn" data-allow-during-loading="true">Voltar</button>
             <button class="btn btn-primary" id="cadastrar-btn" type="button">Cadastrar</button>
         </div>        
     </div>
@@ -259,8 +257,9 @@ try {
             }
         })();
     </script>
-    <script src="/assets/js/modules/cartorio/cartas-expedidas/cnj.js"></script>
-    <script src="/assets/js/modules/cartorio/cartas-expedidas/datajud-api.js"></script>
+    <script src="/assets/js/modules/datajud/cnj.js"></script>
+    <script src="/assets/js/modules/datajud/datajud-cycle-helper.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/datajud/datajud-cycle-helper.js') ?: time(); ?>"></script>
+    <script src="/assets/js/modules/datajud/datajud-api.js"></script>
     <script>
         (function () {
             var processoInput = document.getElementById('filter-processo');
@@ -293,6 +292,10 @@ try {
             const classeCodigoField = document.getElementById('hidden-classe-codigo');
             const classeDescricaoField = document.getElementById('hidden-classe-descricao');
             const showFeedback = (message, type = 'success') => {
+                if (window.App && App.Page && typeof App.Page.notify === 'function') {
+                    App.Page.notify(type === 'error' ? 'error' : 'success', type === 'error' ? 'Erro' : 'Sucesso', message);
+                    return;
+                }
                 if (typeof showToast === 'function') {
                     showToast({ type: type === 'error' ? 'error' : 'success', variant: 'full', title: type === 'error' ? 'Erro' : 'Sucesso', message });
                 }

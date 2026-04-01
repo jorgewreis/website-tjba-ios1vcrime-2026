@@ -50,16 +50,23 @@ final class CejuscService
                 $rows[$i]['Subtarefas'] = $this->subtarefasRepository->findPendenteOuEmAndamentoByCejuscId($idTarefa);
                 $rows[$i]['SubtarefasAll'] = $this->subtarefasRepository->findByCejuscId($idTarefa);
                 $alocadosRaw = $this->alocadosRepository->findByCejuscId($idTarefa);
-                $rows[$i]['Alocados'] = [];
+                $alocados = [];
                 $max = 5;
                 foreach (array_slice($alocadosRaw, 0, $max) as $a) {
-                    $rows[$i]['Alocados'][] = [
-                        'iniciais' => $a['iniciais'] ?? '—',
+                    $tipo = $this->normalizeTipoAlocado((string) ($a['tipo'] ?? ''));
+                    $alocados[] = [
+                        'alocado_id'    => $a['id'] ?? '',
+                        'iniciais'      => $a['iniciais'] ?? '—',
                         'nome_completo' => $a['nome_completo'] ?? '',
-                        'usuario_id' => $a['usuario_id'] ?? '',
-                        'tipo' => $this->normalizeTipoAlocado($a['tipo'] ?? ''),
+                        'usuario_id'    => $a['usuario_id'] ?? '',
+                        'tipo'          => $tipo,
                     ];
                 }
+                usort($alocados, static function (array $a, array $b): int {
+                    static $order = ['rule' => 0, 'all' => 1, 'specific' => 2];
+                    return ($order[$a['tipo']] ?? 9) <=> ($order[$b['tipo']] ?? 9);
+                });
+                $rows[$i]['Alocados'] = $alocados;
             } else {
                 $rows[$i]['Subtarefas'] = [];
                 $rows[$i]['SubtarefasAll'] = [];
@@ -252,7 +259,11 @@ final class CejuscService
             }
         }
         if ($usuarioIdMovimentacao !== null && $usuarioIdMovimentacao !== '') {
-            $this->alocadosRepository->addAlocado($cejuscId, $usuarioIdMovimentacao);
+            try {
+                $this->alocadosRepository->addAlocado($cejuscId, $usuarioIdMovimentacao);
+            } catch (\RuntimeException $e) {
+                // limite ou duplicata — não impede a conclusão da subtarefa
+            }
         }
 
         if ($dadosJson !== null && $dadosJson !== '') {
@@ -303,6 +314,16 @@ final class CejuscService
             return 'all';
         }
         return 'specific';
+    }
+
+    public function removeAlocado(string $alocadoId, string $tipo, string $requestUserId): bool
+    {
+        $alocadoId     = trim($alocadoId);
+        $requestUserId = trim($requestUserId);
+        if ($alocadoId === '' || $requestUserId === '') {
+            return false;
+        }
+        return $this->alocadosRepository->deleteById($alocadoId);
     }
 
     private function formatarCNJ(string $digits): string

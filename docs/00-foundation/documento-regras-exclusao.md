@@ -12,9 +12,9 @@
 
 ## 1. Introdução
 
-Este documento estabelece as regras técnicas e de governança para operações de exclusão e edição de dados no sistema, garantindo rastreabilidade completa, conformidade com a LGPD, auditoria institucional e segurança da informação. As diretrizes aqui descritas aplicam-se a todos os módulos da Área Restrita (Interna) e devem ser observadas em toda a arquitetura do sistema, desde a camada de apresentação até a camada de infraestrutura.
+Este documento estabelece as regras técnicas e de governança para operações de exclusão e edição de dados no sistema, garantindo rastreabilidade compatível com a instrumentação atual, conformidade com a LGPD e segurança da informação. As diretrizes aqui descritas aplicam-se aos módulos da Área Restrita (Interna) e devem ser observadas em toda a arquitetura do sistema, desde a camada de apresentação até a camada de infraestrutura.
 
-A exclusão e a edição de dados são operações críticas em sistemas judiciais, pois impactam diretamente a integridade dos registros, a confiabilidade das informações e a capacidade de auditoria. Por esse motivo, o sistema adota uma abordagem híbrida de exclusão (soft delete e hard delete) e um modelo rigoroso de controle de edições, com registro detalhado de todas as alterações realizadas.
+A exclusão e a edição de dados são operações críticas em sistemas judiciais, pois impactam diretamente a integridade dos registros, a confiabilidade das informações e a capacidade de auditoria. Por esse motivo, o sistema adota diretrizes de controle para exclusão lógica, exclusão física e edição, mas a forma exata de implementação varia conforme o módulo, o schema disponível e o nível de instrumentação já implementado.
 
 Este documento se relaciona diretamente com os documentos de **Objetivos e Público-Alvo**, **Funcionalidades das Áreas Pública e Restrita**, **Arquitetura de Software (SAD)** e **Integrações Externas e APIs**, devendo ser utilizado como referência obrigatória para implementação de funcionalidades de CRUD (Create, Read, Update, Delete) em todos os módulos do sistema.
 
@@ -24,7 +24,7 @@ Este documento se relaciona diretamente com os documentos de **Objetivos e Públ
 
 As operações de exclusão e edição de dados devem respeitar os seguintes princípios fundamentais:
 
-- **Rastreabilidade total:** toda exclusão ou edição deve ser registrada em log de auditoria, contendo identificação do usuário responsável, data e hora da operação, contexto funcional e, no caso de edições, os valores anteriores e posteriores dos campos alterados.
+- **Rastreabilidade compatível:** exclusões e edições sensíveis devem gerar registro operacional ou de auditoria de forma compatível com o módulo e com a instrumentação disponível no ambiente.
 
 - **Conformidade com LGPD:** exclusões definitivas (hard delete) devem observar os direitos dos titulares de dados pessoais, incluindo o direito ao esquecimento, mas sempre respeitando as obrigações legais de retenção de dados processuais e administrativos.
 
@@ -46,50 +46,34 @@ O soft delete consiste em marcar um registro como excluído, sem removê-lo fisi
 
 #### 3.1.1 Quando utilizar soft delete
 
-O soft delete deve ser utilizado como padrão em todas as entidades que:
+O soft delete deve ser utilizado preferencialmente nas entidades em que o schema e o fluxo já suportem exclusão lógica sem comprometer o comportamento do sistema:
 
 - Possuam valor histórico, estatístico ou de auditoria.
 - Estejam sujeitas a obrigações legais de retenção de dados.
 - Façam parte de fluxos operacionais que possam exigir consulta posterior (por exemplo, audiências encerradas, tarefas concluídas, ofícios enviados).
 - Sejam referenciadas por outras entidades em relacionamentos críticos.
 
-Exemplos de entidades que devem adotar soft delete:
-
-- Audiências
-- Tarefas e sub-tarefas
-- Cartas recebidas e expedidas
-- Ofícios
-- Editais
-- Guias
-- Medidas protetivas
-- Notificações
-- Logs de auditoria (nunca devem ser excluídos fisicamente)
+Quando um módulo ainda não possui suporte nativo a soft delete, a regra é documentar explicitamente o comportamento adotado, evitando assumir que toda entidade já trabalha com `deleted_at` ou estrutura equivalente.
 
 #### 3.1.2 Implementação técnica do soft delete
 
-A implementação deve seguir o padrão do Laravel, utilizando o trait `SoftDeletes` nos models correspondentes. O campo `deleted_at` (timestamp) deve ser adicionado às tabelas relevantes, armazenando a data e hora da exclusão lógica.
+A implementação, quando adotada, deve seguir um padrão compatível com a arquitetura PHP customizada do projeto. O campo `deleted_at` (timestamp) ou um status equivalente pode ser adicionado às tabelas relevantes, armazenando a data e hora da exclusão lógica.
 
 Ao realizar um soft delete:
 
 - O registro permanece na tabela, mas é marcado com `deleted_at` preenchido.
-- Consultas padrão (via Eloquent) automaticamente excluem registros soft-deleted, a menos que seja utilizado o método `withTrashed()` ou `onlyTrashed()`.
-- A operação deve gerar um log de auditoria contendo:
-  - ID do registro excluído
-  - Tipo de entidade (tabela)
-  - ID do usuário responsável
-  - Data e hora da exclusão
-  - Contexto funcional (módulo, submódulo)
-  - Justificativa (quando aplicável)
+- Repositórios, services e consultas padrão devem excluir registros soft-deleted por convenção, a menos que o caso de uso exija explicitamente visualização de itens excluídos.
+- A operação deve gerar, sempre que o módulo já estiver instrumentado para isso, um registro operacional ou de auditoria contendo identificação do usuário, horário e contexto funcional.
 
 #### 3.1.3 Recuperação de registros soft-deleted
 
-Registros marcados como excluídos logicamente podem ser recuperados (restaurados) por perfis autorizados, desde que:
+Registros marcados como excluídos logicamente podem ser recuperados (restaurados) por perfis autorizados, quando o módulo oferecer essa capacidade, desde que:
 
 - A recuperação seja justificada e registrada em log.
 - Não comprometa a integridade de fluxos operacionais já finalizados.
 - Seja realizada dentro de um prazo razoável (a definir por política institucional, por exemplo, 90 dias).
 
-A operação de restauração deve gerar log de auditoria equivalente ao da exclusão, contendo identificação do usuário, data/hora e justificativa.
+A operação de restauração deve gerar registro equivalente ao da exclusão quando houver instrumentação disponível no módulo.
 
 ### 3.2 Hard delete (exclusão física)
 
@@ -118,14 +102,9 @@ A exclusão física deve ser implementada com validações rigorosas:
 - Verificação de permissões do usuário (apenas perfis administrativos ou chefias devem ter acesso).
 - Confirmação explícita da operação (modal de confirmação com justificativa obrigatória).
 - Validação de integridade referencial (garantir que a exclusão não quebre relacionamentos críticos).
-- Geração de log de auditoria antes da exclusão, contendo:
-  - Snapshot completo do registro (ou dos campos mais relevantes)
-  - ID do usuário responsável
-  - Data e hora da exclusão
-  - Justificativa textual
-  - Contexto funcional
+- Geração de registro operacional ou de auditoria antes da exclusão, quando o módulo já possuir esse mecanismo implementado.
 
-Após a exclusão física, o registro não pode ser recuperado diretamente do banco de dados, mas o log de auditoria deve preservar informações suficientes para reconstituir o contexto da operação.
+Após a exclusão física, o registro não pode ser recuperado diretamente do banco de dados. Quando houver trilha de auditoria disponível, ela deve preservar informações suficientes para reconstituir o contexto da operação.
 
 #### 3.2.3 Restrições e alertas
 
@@ -141,7 +120,7 @@ Em casos de exclusão em massa (batch delete), deve haver validação adicional 
 
 ## 4. Edição de dados
 
-A edição de dados é uma operação frequente no sistema, mas deve ser controlada de forma a garantir rastreabilidade, integridade e conformidade. Toda edição relevante deve gerar registro em log de auditoria, contendo os valores anteriores e posteriores dos campos alterados.
+A edição de dados é uma operação frequente no sistema, mas deve ser controlada de forma a garantir rastreabilidade, integridade e conformidade. Edições relevantes devem gerar registro operacional ou de auditoria sempre que o módulo ou serviço já estiver instrumentado para isso.
 
 ### 4.1 Tipos de edição
 
@@ -157,46 +136,22 @@ Toda edição deve respeitar as seguintes diretrizes:
 
 - **Validação de permissões:** apenas perfis autorizados podem editar determinados campos ou entidades.
 - **Validação de negócio:** edições devem respeitar regras de negócio (por exemplo, não permitir alteração de data de audiência já realizada).
-- **Registro em log de auditoria:** toda edição relevante deve gerar log contendo:
-  - ID do registro editado
-  - Tipo de entidade (tabela)
-  - ID do usuário responsável
-  - Data e hora da edição
-  - Campos alterados (nome do campo, valor anterior, valor posterior)
-  - Contexto funcional (módulo, submódulo)
-  - Justificativa (quando aplicável)
+- **Registro operacional/auditoria:** toda edição relevante deve gerar registro contendo usuário, data/hora, contexto funcional e, quando disponível, o detalhamento dos campos alterados.
 
-### 4.3 Implementação técnica de logs de edição
+### 4.3 Implementação técnica de rastreabilidade
 
-A implementação de logs de edição pode ser realizada de duas formas principais:
+O projeto não possui hoje uma tabela canônica única de auditoria para todo o sistema. A rastreabilidade atual pode envolver, conforme o módulo:
 
-#### 4.3.1 Tabela de auditoria genérica
+- helpers de auditoria com fallback para `error_log`;
+- logs do servidor e da infraestrutura local;
+- tabelas auxiliares específicas já existentes no banco;
+- registros operacionais pontuais feitos pelo próprio fluxo de negócio.
 
-Criação de uma tabela de auditoria genérica (`audit_logs` ou `activity_logs`) que registra todas as operações de edição do sistema, contendo campos como:
-
-- `id` (chave primária)
-- `user_id` (ID do usuário responsável)
-- `entity_type` (tipo de entidade, ex.: "Audiencia", "Tarefa")
-- `entity_id` (ID do registro editado)
-- `action` (tipo de ação: "update", "delete", "restore")
-- `changes` (JSON contendo campos alterados, valores anteriores e posteriores)
-- `context` (módulo, submódulo, funcionalidade)
-- `justification` (justificativa textual, quando aplicável)
-- `ip_address` (endereço IP do usuário)
-- `user_agent` (navegador/dispositivo)
-- `created_at` (timestamp da operação)
-
-#### 4.3.2 Tabelas de histórico específicas
-
-Para entidades críticas (como audiências, tarefas, medidas protetivas), pode ser criada uma tabela de histórico específica (por exemplo, `audiencias_history`) que armazena snapshots completos do registro a cada edição, facilitando consultas e reconstituição de estados anteriores.
+Quando um módulo exigir trilha mais forte, a recomendação é documentar explicitamente onde o evento fica registrado e qual consulta operacional ou técnica permite recuperá-lo.
 
 ### 4.4 Visualização de histórico de edições
 
-O sistema deve disponibilizar, para perfis autorizados (chefia, administração), funcionalidades de consulta ao histórico de edições, permitindo:
-
-- Visualizar todas as edições realizadas em um registro específico.
-- Filtrar edições por usuário, período, tipo de entidade ou módulo.
-- Exportar logs de auditoria para análise externa ou apresentação em processos administrativos.
+O sistema deve disponibilizar, para perfis autorizados, mecanismos de consulta ao histórico de edições compatíveis com o que já existir no módulo ou na operação. Isso pode ocorrer por telas dedicadas quando implementadas, por relatórios administrativos ou por apoio operacional/técnico em casos sensíveis.
 
 ---
 
@@ -230,9 +185,9 @@ Cada módulo do sistema pode possuir regras adicionais de exclusão e edição, 
 
 ### 5.5 Módulo de Logs, Auditoria e Segurança (m11)
 
-- **Exclusão:** hard delete proibido. Logs de auditoria são imutáveis e devem ser preservados indefinidamente (ou conforme política de retenção institucional).
-- **Edição:** proibida. Logs não podem ser alterados sob nenhuma hipótese.
-- **Exportação:** permitida para perfis administrativos, com registro da operação de exportação.
+- **Exclusão:** hard delete deve ser tratado com máxima restrição e seguir a política de retenção vigente.
+- **Edição:** registros de auditoria e segurança não devem ser alterados por rotinas operacionais comuns.
+- **Exportação:** relatórios ou extrações devem ocorrer apenas em contexto administrativo/técnico autorizado e conforme a instrumentação disponível.
 
 ### 5.6 Módulo de Configurações Gerais (m12)
 
@@ -292,7 +247,7 @@ Sempre que possível, dados pessoais em logs de auditoria devem ser pseudonimiza
 
 ## 8. Conclusão
 
-Este documento estabelece as diretrizes técnicas e de governança para operações de exclusão e edição de dados no sistema, garantindo rastreabilidade, conformidade legal e integridade da informação. A adoção de soft delete como padrão, aliada ao controle rigoroso de edições com logs detalhados, assegura que o sistema mantenha a confiabilidade necessária para um ambiente judicial.
+Este documento estabelece as diretrizes técnicas e de governança para operações de exclusão e edição de dados no sistema, garantindo conformidade legal, integridade da informação e rastreabilidade compatível com o estágio atual da plataforma.
 
 As regras aqui descritas devem ser implementadas de forma consistente em todos os módulos, respeitando as especificidades funcionais de cada contexto. Qualquer exceção ou ajuste deve ser documentado e aprovado institucionalmente, com atualização deste documento para refletir as mudanças.
 

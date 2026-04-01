@@ -274,26 +274,22 @@ if (!function_exists('cartorioTimelineGetConfig')) {
         $taskStatus = trim((string) ($options['task_status'] ?? ($task['status'] ?? 'pendente')));
         $statusMeta = cartorioTimelineTaskStatusMeta($taskStatus);
         $definitions = $config['subtasks'];
-        $showProgress = in_array($taskStatus, ['pendente', 'em_andamento'], true);
+        $showProgress = $taskStatus !== '';
         $progressStatuses = [];
         $segments = [];
 
-        if ($showProgress) {
-            $segments[] = [
-                'class' => 'concluida',
-                'title' => $config['cadastro_label'],
-            ];
-        }
+        $segments[] = [
+            'class' => 'concluida',
+            'title' => $config['cadastro_label'],
+        ];
 
         foreach ($definitions as $ordem => $definition) {
             $status = trim((string) (($subtarefasPorOrdem[$ordem]['status'] ?? 'pendente')));
             $progressStatuses[$ordem] = $status;
-            if ($showProgress) {
-                $segments[] = [
-                    'class' => cartorioTimelineSegmentClass($status),
-                    'title' => $definition['label'],
-                ];
-            }
+            $segments[] = [
+                'class' => cartorioTimelineSegmentClass($status),
+                'title' => $definition['label'],
+            ];
         }
 
         $rows = [];
@@ -352,7 +348,7 @@ if (!function_exists('cartorioTimelineGetConfig')) {
             'statusClass' => $statusMeta['class'],
             'currentTaskTitle' => $currentTitle,
             'showProgress' => $showProgress,
-            'progressValue' => 1 + count(array_filter($progressStatuses, static fn ($status): bool => $status === 'concluida')),
+            'progressValue' => 1 + count(array_filter($progressStatuses, static fn ($status): bool => $status === 'concluida' || $status === 'cancelada')),
             'progressMax' => count($definitions) + 1,
             'segments' => $segments,
             'cadastro' => cartorioTimelineCadastroContent($module, $task, $createdRaw, $options),
@@ -362,7 +358,7 @@ if (!function_exists('cartorioTimelineGetConfig')) {
 
     function cartorioTimelineTaskStatusMeta(string $taskStatus): array
     {
-        if ($taskStatus === 'concluida' || $taskStatus === 'concluida' || $taskStatus === 'concluída') {
+        if ($taskStatus === 'concluida' || $taskStatus === 'concluída') {
             return ['label' => 'Finalizada', 'class' => 'status-finished'];
         }
         if ($taskStatus === 'cancelada') {

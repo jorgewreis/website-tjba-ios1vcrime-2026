@@ -112,7 +112,7 @@ $csrfToken = Security::generateCSRFToken();
                             </div>
                             <div class="col">
                                 <label class="link-login">
-                                    <a href="recupera_senha.php">Esqueceu a senha?</a>
+                                    <button type="button" class="link-like" data-nav-href="recupera_senha.php">Esqueceu a senha?</button>
                                 </label>
                             </div>
                         </div>
@@ -156,6 +156,7 @@ $csrfToken = Security::generateCSRFToken();
         <div id="toast-container" class="toast-container" aria-live="polite"></div>
     </div>
 
+    <script src="/assets/js/shared/navigate-buttons.js" defer></script>
     <script src="/assets/js/shared/cpf.js" defer></script>
     <script src="/assets/js/shared/toast.js" defer></script>
     <script src="/assets/js/shared/prefs.js" defer></script>

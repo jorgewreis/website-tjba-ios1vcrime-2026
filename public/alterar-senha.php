@@ -11,10 +11,7 @@ Security::requireAuthentication();
 $usuario = new Usuario();
 $user = $usuario->validarToken($_SESSION['token'] ?? '');
 if (!$user) {
-    $_SESSION = [];
-    if (session_status() === PHP_SESSION_ACTIVE) {
-        session_destroy();
-    }
+    Security::clearAuthenticatedSession();
     header('Location: /index.php');
     exit;
 }
@@ -98,7 +95,7 @@ $csrfToken = Security::generateCSRFToken();
                     <div class="title-page">
                         <span class="title">Alterar senha</span>
                         <span class="info-title">
-                            Informe a senha atual e defina uma nova senha (mínimo 8 caracteres).
+                            Informe a senha atual e defina uma nova senha com <?php echo htmlspecialchars(Security::passwordPolicySummary(), ENT_QUOTES, 'UTF-8'); ?>.
                         </span>
                     </div>
 
@@ -115,14 +112,14 @@ $csrfToken = Security::generateCSRFToken();
                         <div class="display-flex row row-full justify-start align-center padding-x-sm">
                             <div class="col">
                                 <label for="nova_senha">Nova senha</label>
-                                <input class="width-400" type="password" id="nova_senha" name="nova_senha" autocomplete="new-password" minlength="8" required>
+                                <input class="width-400" type="password" id="nova_senha" name="nova_senha" autocomplete="new-password" minlength="<?php echo PASSWORD_MIN_LENGTH; ?>" maxlength="<?php echo PASSWORD_MAX_LENGTH; ?>" required>
                             </div>
                         </div>
 
                         <div class="display-flex row row-full justify-start align-center padding-x-sm">
                             <div class="col">
                                 <label for="confirmar_senha">Confirmar nova senha</label>
-                                <input class="width-400" type="password" id="confirmar_senha" name="confirmar_senha" autocomplete="new-password" minlength="8" required>
+                                <input class="width-400" type="password" id="confirmar_senha" name="confirmar_senha" autocomplete="new-password" minlength="<?php echo PASSWORD_MIN_LENGTH; ?>" maxlength="<?php echo PASSWORD_MAX_LENGTH; ?>" required>
                             </div>
                         </div>
 
@@ -163,10 +160,11 @@ $csrfToken = Security::generateCSRFToken();
                     }
                     return;
                 }
-                if (nova.length < 8) {
+                var senhaRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{<?php echo PASSWORD_MIN_LENGTH; ?>,<?php echo PASSWORD_MAX_LENGTH; ?>}$/;
+                if (!senhaRegex.test(nova)) {
                     e.preventDefault();
                     if (window.App && App.Toast) {
-                        App.Toast.show({ type: 'error', variant: 'full', title: 'Erro', message: 'A nova senha deve ter no mínimo 8 caracteres.' });
+                        App.Toast.show({ type: 'error', variant: 'full', title: 'Erro', message: 'A senha deve seguir a política: <?php echo addslashes(Security::passwordPolicySummary()); ?>.' });
                     }
                     return;
                 }

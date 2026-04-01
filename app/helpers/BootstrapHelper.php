@@ -16,8 +16,8 @@ function getDatabaseConnection(): PDO
 /**
  * Inicia variáveis e sessões compartilhadas entre publicações.
  */
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+if (function_exists('bootstrapSession')) {
+    bootstrapSession();
 }
 
 /**

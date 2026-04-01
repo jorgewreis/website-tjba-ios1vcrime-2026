@@ -10,6 +10,16 @@ require_once __DIR__ . '/../../services/CartasExpedidasService.php';
 
 $connection = Conection::getInstance()->getConnection();
 
+$currentUserId   = trim((string) ($_SESSION['id_usuario'] ?? ''));
+$perfisGestaoLst = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
+$isGestao        = false;
+if ($currentUserId !== '') {
+    $stmtPerfis = $connection->prepare('SELECT DISTINCT UPPER(TRIM(perfil)) AS perfil FROM usuario_perfil WHERE usuario = ? AND perfil IS NOT NULL');
+    $stmtPerfis->execute([$currentUserId]);
+    $perfisUsuario = $stmtPerfis->fetchAll(PDO::FETCH_COLUMN);
+    $isGestao = count(array_intersect($perfisUsuario, $perfisGestaoLst)) > 0;
+}
+
 $routePage = trim((string) ($_GET['page'] ?? 'cartasexpedidas'));
 $finalidadeFilter = trim($_GET['finalidade'] ?? '');
 $statusFilter = trim($_GET['status'] ?? '');
@@ -197,12 +207,10 @@ if ($totalPages > 0) {
         <p class="description-page">Controle de cartas precatórias, rogatórias e de ordem expedidas pelo cartório.</p>
          
         <!-- Badges de arquivos para download -->
-        <a href="/documents/pdf/PJBA - 1VCR - POP - Expedição e Envio de Cartas Precatórias.pdf" target="_blank" rel="noopener noreferrer">
-            <div class="badge file">
-                <img src="/assets/icons/Office-File-Pdf-1--Streamline-Ultimate.png" alt="Ícone de arquivo PDF">
-                <span>Passo a passo - Expedição de Cartas Precatórias</span>
-            </div>
-        </a>
+        <button type="button" class="badge file" data-nav-href="/documents/pdf/PJBA - 1VCR - POP - Expedição e Envio de Cartas Precatórias.pdf" data-nav-target="_blank">
+            <img src="/assets/icons/Office-File-Pdf-1--Streamline-Ultimate.png" alt="Ícone de arquivo PDF">
+            <span>Passo a passo - Expedição de Cartas Precatórias</span>
+        </button>
     </div>
 
     <div class="container-full card-page">
@@ -330,28 +338,42 @@ if ($totalPages > 0) {
                         </div>
                     </div>
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                        <div class="col button-table button-edit" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" title="Editar">
-                            <i class="fi fi-rr-file-edit"></i>
-                        </div>
+                        <button type="button" class="btn btn-editar" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" title="Editar">
+                            <i class="fi fi-rr-pen-square"></i>
+                        </button>
                         <div class="display-flex row row-fit justify-end gap-y-sm cartas-expedidas-allocate allocate-users">
                             <?php
                             $alocados = $row['Alocados'] ?? [];
-                            if (count($alocados) != 0) {
-                                foreach ($alocados as $alocado) {
-                                    $tipo = $alocado['tipo'] ?? 'specific';
-                                    $iniciais = $alocado['iniciais'] ?? '—';
-                                    $nomeCompleto = $alocado['nome_completo'] ?? '';
-                                    $userLabel = $nomeCompleto !== '' ? $nomeCompleto : $iniciais;
-                                    if ($tipo === 'rule') {
-                                        $title = 'Envio de carta alocado para ' . ($nomeCompleto !== '' ? $nomeCompleto : $iniciais);
-                                    } elseif ($tipo === 'all') {
-                                        $title = 'Usuário alocado para a tarefa: ' . ($nomeCompleto !== '' ? $nomeCompleto : $iniciais);
-                                    } else {
-                                        $title = 'Alocação voluntária: ' . ($nomeCompleto !== '' ? $nomeCompleto : $iniciais);
-                                    }
-                                    $classeTipo = in_array($tipo, ['rule', 'specific', 'all'], true) ? ' ' . $tipo : '';
-                                    ?><span class="user-allocate<?php echo $classeTipo; ?>" title="<?php echo htmlspecialchars($title, ENT_QUOTES); ?>"><?php echo htmlspecialchars($iniciais, ENT_QUOTES); ?></span><?php
+                            foreach ($alocados as $alocado) {
+                                $tipo         = $alocado['tipo'] ?? 'specific';
+                                $iniciais     = htmlspecialchars($alocado['iniciais'] ?? '—', ENT_QUOTES);
+                                $nomeCompleto = $alocado['nome_completo'] ?? '';
+                                $nomeLabel    = $nomeCompleto !== '' ? $nomeCompleto : ($alocado['iniciais'] ?? '—');
+                                if ($tipo === 'rule') {
+                                    $chipTitle = 'Servidor responsável (regra): ' . $nomeLabel;
+                                } elseif ($tipo === 'all') {
+                                    $chipTitle = 'Servidor alocado: ' . $nomeLabel;
+                                } else {
+                                    $chipTitle = 'Autoalocado: ' . $nomeLabel;
                                 }
+                                $classeTipo   = in_array($tipo, ['rule', 'specific', 'all'], true) ? ' ' . $tipo : '';
+                                $alocadoIdStr = htmlspecialchars($alocado['alocado_id'] ?? '', ENT_QUOTES);
+                                $usuarioIdStr = $alocado['usuario_id'] ?? '';
+                                $podeRemover  = $isGestao || ($tipo === 'specific' && $usuarioIdStr === $currentUserId);
+                                ?>
+                                <span class="user-allocate-wrap">
+                                    <span class="user-allocate<?php echo $classeTipo; ?>" title="<?php echo htmlspecialchars($chipTitle, ENT_QUOTES); ?>"><?php echo $iniciais; ?></span>
+                                    <?php if ($podeRemover): ?>
+                                    <button type="button"
+                                        class="user-allocate-remove js-desalocar"
+                                        data-alocado-id="<?php echo $alocadoIdStr; ?>"
+                                        data-tipo="<?php echo htmlspecialchars($tipo, ENT_QUOTES); ?>"
+                                        data-endpoint="/api/cartorio-cartas-expedidas/desalocar.php"
+                                        title="Remover alocação"
+                                        aria-label="Remover alocação">×</button>
+                                    <?php endif; ?>
+                                </span>
+                                <?php
                             }
                             ?>
                         </div>
@@ -511,37 +533,37 @@ if ($totalPages > 0) {
                         $nextParams['page_number'] = $nextPage;
                         $nextHref = '?' . http_build_query($nextParams);
                     ?>
-                    <a class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>"
-                       <?php if ($currentPage > 1): ?>href="<?php echo htmlspecialchars($prevHref); ?>"<?php else: ?>aria-disabled="true"<?php endif; ?>>
+                    <button type="button" class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>"
+                       <?php if ($currentPage > 1): ?>data-nav-href="<?php echo htmlspecialchars($prevHref, ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>>
                         <img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior">
-                    </a>
+                    </button>
                     <?php foreach ($paginationButtons as $page): ?>
                         <?php
                             $pageParams = $baseQueryParams;
                             $pageParams['page_number'] = $page;
                         ?>
-                        <a class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" href="?<?php echo htmlspecialchars(http_build_query($pageParams)); ?>">
+                        <button type="button" class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" <?php if ($page !== $currentPage): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($pageParams), ENT_QUOTES); ?>"<?php else: ?>disabled<?php endif; ?>>
                             <?php echo $page; ?>
-                        </a>
+                        </button>
                     <?php endforeach; ?>
                     <?php if ($paginationEllipsis && !empty($trailingPages)): ?>
-                        <a class="pagination-symbol pagination-ellipsis" aria-hidden="true">
+                        <span class="pagination-symbol pagination-ellipsis" aria-hidden="true">
                             <img src="/assets/icons/Navigation-Menu-Horizontal--Streamline-Ultimate.png" alt="Mais páginas">
-                        </a>
+                        </span>
                         <?php foreach ($trailingPages as $page): ?>
                             <?php
                                 $pageParams = $baseQueryParams;
                                 $pageParams['page_number'] = $page;
                             ?>
-                            <a class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" href="?<?php echo htmlspecialchars(http_build_query($pageParams)); ?>">
+                            <button type="button" class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" <?php if ($page !== $currentPage): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($pageParams), ENT_QUOTES); ?>"<?php else: ?>disabled<?php endif; ?>>
                                 <?php echo $page; ?>
-                            </a>
+                            </button>
                         <?php endforeach; ?>
                     <?php endif; ?>
-                    <a class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>"
-                       <?php if ($currentPage < $totalPages): ?>href="<?php echo htmlspecialchars($nextHref); ?>"<?php else: ?>aria-disabled="true"<?php endif; ?>>
+                    <button type="button" class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>"
+                       <?php if ($currentPage < $totalPages): ?>data-nav-href="<?php echo htmlspecialchars($nextHref, ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>>
                         <img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página">
-                    </a>
+                    </button>
                 </div>
             <?php endif; ?>
         </div> 
@@ -559,34 +581,6 @@ if ($totalPages > 0) {
     <script src="/assets/js/modules/cartorio/cartas-expedidas/search-list.js"></script>
     <script>
         (function () {
-            const notify = (type, title, message) => {
-                if (typeof showToast === 'function') {
-                    showToast({ type, variant: 'full', title, message });
-                }
-            };
-            const POST_RELOAD_TOAST_KEY = 'cartorio.postReloadToast';
-            const queuePostReloadToast = (type, title, message) => {
-                try {
-                    const raw = sessionStorage.getItem(POST_RELOAD_TOAST_KEY);
-                    const fila = raw ? JSON.parse(raw) : [];
-                    const lista = Array.isArray(fila) ? fila : (fila && fila.message ? [fila] : []);
-                    lista.push({ type, title, message });
-                    sessionStorage.setItem(POST_RELOAD_TOAST_KEY, JSON.stringify(lista));
-                } catch (e) {}
-            };
-            const flushPostReloadToast = () => {
-                try {
-                    const raw = sessionStorage.getItem(POST_RELOAD_TOAST_KEY);
-                    if (!raw) return;
-                    sessionStorage.removeItem(POST_RELOAD_TOAST_KEY);
-                    const data = JSON.parse(raw);
-                    const lista = Array.isArray(data) ? data : (data && data.message ? [data] : []);
-                    lista.forEach(function (item) {
-                        if (item && item.message) notify(item.type || 'info', item.title || 'Informação', item.message);
-                    });
-                } catch (e) {}
-            };
-            flushPostReloadToast();
             if (window.CartasExpedidasSearch && typeof window.CartasExpedidasSearch.initializeProcessSearch === 'function') {
                 window.CartasExpedidasSearch.initializeProcessSearch({
                     inputId: 'search-input',
@@ -601,109 +595,99 @@ if ($totalPages > 0) {
                 });
             }
 
-            const novoCadastroBtn = document.getElementById('novo-cadastro-btn');
-            if (novoCadastroBtn) {
-                novoCadastroBtn.addEventListener('click', function () {
-                    window.location.href = '/frame.php?page=cartasexpedidascreate';
-                });
+            if (!window.App || !App.CartorioTaskList || typeof App.CartorioTaskList.initialize !== 'function') {
+                return;
             }
 
-            document.querySelectorAll('.button-edit').forEach(function (button) {
-                button.addEventListener('click', function () {
-                    const cartaId = button.dataset.cartaId;
-                    if (!cartaId) return;
-                    window.location.href = '/frame.php?page=cartasexpedidasedit&id=' + encodeURIComponent(cartaId);
-                });
-            });
+            App.CartorioTaskList.initialize({
+                storageKey: 'cartorio.postReloadToast',
+                newButtonId: 'novo-cadastro-btn',
+                newHref: '/frame.php?page=cartasexpedidascreate',
+                editButtonSelector: '.btn-editar[data-carta-id]',
+                editIdAttribute: 'cartaId',
+                editHrefBuilder: function (cartaId) {
+                    return '/frame.php?page=cartasexpedidasedit&id=' + encodeURIComponent(cartaId);
+                },
+                onReady: function (ctx) {
+                    const notify = ctx.notify;
+                    const queuePostReloadToast = ctx.queuePostReloadToast;
 
-            // Expandir/recolher subtarefa ao selecionar o radio
-            document.querySelectorAll('input[name="open-subtask"]').forEach(function (radio) {
-                radio.addEventListener('change', function () {
-                    const cartaId = this.value;
-                    const targetId = 'subtask-' + cartaId;
-                    document.querySelectorAll('.col.subtask').forEach(function (subtaskRow) {
-                        const isTarget = subtaskRow.id === targetId;
-                        subtaskRow.classList.toggle('subtask-collapsed', !isTarget);
-                        subtaskRow.setAttribute('aria-hidden', isTarget ? 'false' : 'true');
-                    });
-                    document.querySelectorAll('input[name="open-subtask"]').forEach(function (r) {
-                        r.setAttribute('aria-expanded', r.value === cartaId ? 'true' : 'false');
-                    });
-                });
-            });
+                    document.querySelectorAll('.btn-concluir-subtarefa').forEach(function (btn) {
+                        btn.addEventListener('click', function () {
+                            const normalizeTipo = (value) => String(value || '').trim().toLowerCase();
+                            const subtarefaId = this.getAttribute('data-subtarefa-id');
+                            if (!subtarefaId) return;
+                            const block = this.closest('[data-subtarefa-id][data-subtarefa-tipo]');
+                            const tipo = normalizeTipo(block ? (block.getAttribute('data-subtarefa-tipo') || '') : '');
+                            const qtdEl = block ? block.querySelector('.subtask-qtd-docs') : null;
+                            const numeroDestino = block ? block.querySelector('.subtask-numero-destino') : null;
+                            const resultadoDevolucao = block ? block.querySelector('.subtask-resultado-devolucao') : null;
+                            const metodoEnvio = block ? block.querySelector('.subtask-metodo-envio') : null;
 
-            // Concluir subtarefa
-            document.querySelectorAll('.btn-concluir-subtarefa').forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    const normalizeTipo = (value) => String(value || '').trim().toLowerCase();
-                    const subtarefaId = this.getAttribute('data-subtarefa-id');
-                    if (!subtarefaId) return;
-                    const block = this.closest('[data-subtarefa-id][data-subtarefa-tipo]');
-                    const tipo = normalizeTipo(block ? (block.getAttribute('data-subtarefa-tipo') || '') : '');
-                    const qtdEl = block ? block.querySelector('.subtask-qtd-docs') : null;
-                    const numeroDestino = block ? block.querySelector('.subtask-numero-destino') : null;
-                    const resultadoDevolucao = block ? block.querySelector('.subtask-resultado-devolucao') : null;
-                    const metodoEnvio = block ? block.querySelector('.subtask-metodo-envio') : null;
-                    if (['aguardando_gerar_pdf', 'gerar_pdf'].includes(tipo)) {
-                        var qtd = qtdEl ? (parseInt(qtdEl.value, 10) || 0) : 0;
-                        if (qtd < 2 || qtd > 10) {
-                            notify('error', 'Atenção', 'Informe a quantidade de documentos gerados (2 a 10).');
-                            return;
-                        }
-                    } else if (['aguardando_envio', 'envio_processo', 'enviar_processo'].includes(tipo)) {
-                        if (!metodoEnvio || !metodoEnvio.value || !metodoEnvio.value.trim()) {
-                            notify('error', 'Atenção', 'Selecione o método de envio.');
-                            return;
-                        }
-                    } else if (['aguardando_informacoes', 'informar_dados', 'detalhamento_informacoes'].includes(tipo)) {
-                        if (!numeroDestino || !numeroDestino.value.trim()) {
-                            notify('error', 'Atenção', 'Informe o número do processo no Juízo Deprecante.');
-                            return;
-                        }
-                    } else if (['aguardando_devolucao', 'confirmar_juntada', 'juntada_devolucao'].includes(tipo)) {
-                        if (!resultadoDevolucao || !resultadoDevolucao.value) {
-                            notify('error', 'Atenção', 'Selecione o resultado da devolução.');
-                            return;
-                        }
-                    }
-                    let dadosEspecificos = null;
-                    if (block) {
-                        const varaDestino = block.querySelector('.subtask-vara-destino');
-                        const obj = {};
-                        if (qtdEl) obj.qtd_docs_gerados = parseInt(qtdEl.value, 10) || 2;
-                        if (numeroDestino && numeroDestino.value.trim()) obj.numero_processo_destino = numeroDestino.value.trim();
-                        if (varaDestino && varaDestino.value.trim()) obj.vara_destino = varaDestino.value.trim();
-                        if (resultadoDevolucao && resultadoDevolucao.value) obj.resultado_devolucao = resultadoDevolucao.value;
-                        if (metodoEnvio && metodoEnvio.value && metodoEnvio.value.trim()) obj.metodo_envio = metodoEnvio.value.trim();
-                        if (Object.keys(obj).length > 0) dadosEspecificos = JSON.stringify(obj);
-                    }
-                    btn.disabled = true;
-                    fetch('/api/cartorio-cartas-expedidas/concluir-subtarefa.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            subtarefa_id: subtarefaId,
-                            dados_especificos: dadosEspecificos
-                        })
-                    })
-                    .then(function (r) { return r.json(); })
-                    .then(function (data) {
-                        if (data.success) {
-                            queuePostReloadToast('success', 'Sucesso', 'Subtarefa concluída com sucesso.');
-                            if (data.tarefa_principal_concluida && data.tarefa_principal_mensagem) {
-                                queuePostReloadToast('success', 'Sucesso', data.tarefa_principal_mensagem);
+                            if (['aguardando_gerar_pdf', 'gerar_pdf'].includes(tipo)) {
+                                var qtd = qtdEl ? (parseInt(qtdEl.value, 10) || 0) : 0;
+                                if (qtd < 2 || qtd > 10) {
+                                    notify('error', 'Atenção', 'Informe a quantidade de documentos gerados (2 a 10).');
+                                    return;
+                                }
+                            } else if (['aguardando_envio', 'envio_processo', 'enviar_processo'].includes(tipo)) {
+                                if (!metodoEnvio || !metodoEnvio.value || !metodoEnvio.value.trim()) {
+                                    notify('error', 'Atenção', 'Selecione o método de envio.');
+                                    return;
+                                }
+                            } else if (['aguardando_informacoes', 'informar_dados', 'detalhamento_informacoes'].includes(tipo)) {
+                                if (!numeroDestino || !numeroDestino.value.trim()) {
+                                    notify('error', 'Atenção', 'Informe o número do processo no Juízo Deprecante.');
+                                    return;
+                                }
+                            } else if (['aguardando_devolucao', 'confirmar_juntada', 'juntada_devolucao'].includes(tipo)) {
+                                if (!resultadoDevolucao || !resultadoDevolucao.value) {
+                                    notify('error', 'Atenção', 'Selecione o resultado da devolução.');
+                                    return;
+                                }
                             }
-                            window.location.reload();
-                        } else {
-                            notify('error', 'Erro', data.error || 'Erro ao concluir subtarefa.');
-                            btn.disabled = false;
-                        }
-                    })
-                    .catch(function () {
-                        notify('error', 'Erro', 'Erro de conexão.');
-                        btn.disabled = false;
+
+                            let dadosEspecificos = null;
+                            if (block) {
+                                const varaDestino = block.querySelector('.subtask-vara-destino');
+                                const obj = {};
+                                if (qtdEl) obj.qtd_docs_gerados = parseInt(qtdEl.value, 10) || 2;
+                                if (numeroDestino && numeroDestino.value.trim()) obj.numero_processo_destino = numeroDestino.value.trim();
+                                if (varaDestino && varaDestino.value.trim()) obj.vara_destino = varaDestino.value.trim();
+                                if (resultadoDevolucao && resultadoDevolucao.value) obj.resultado_devolucao = resultadoDevolucao.value;
+                                if (metodoEnvio && metodoEnvio.value && metodoEnvio.value.trim()) obj.metodo_envio = metodoEnvio.value.trim();
+                                if (Object.keys(obj).length > 0) dadosEspecificos = JSON.stringify(obj);
+                            }
+
+                            btn.disabled = true;
+                            fetch('/api/cartorio-cartas-expedidas/concluir-subtarefa.php', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    subtarefa_id: subtarefaId,
+                                    dados_especificos: dadosEspecificos
+                                })
+                            })
+                                .then(function (response) { return response.json(); })
+                                .then(function (data) {
+                                    if (data.success) {
+                                        queuePostReloadToast('success', 'Sucesso', 'Subtarefa concluída com sucesso.');
+                                        if (data.tarefa_principal_concluida && data.tarefa_principal_mensagem) {
+                                            queuePostReloadToast('success', 'Sucesso', data.tarefa_principal_mensagem);
+                                        }
+                                        window.location.reload();
+                                    } else {
+                                        notify('error', 'Erro', data.error || 'Erro ao concluir subtarefa.');
+                                        btn.disabled = false;
+                                    }
+                                })
+                                .catch(function () {
+                                    notify('error', 'Erro', 'Erro de conexão.');
+                                    btn.disabled = false;
+                                });
+                        });
                     });
-                });
+                }
             });
         })();
     </script>

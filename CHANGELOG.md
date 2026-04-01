@@ -1,5 +1,221 @@
 # Changelog
 
+## V. 1.09
+
+**Data:** 2026-04-01 20:54:49 | **Commit:** `142c202` | **Tipo:** `minor`
+
+- feat: atualizar configuração de deploy para incluir ambiente de produção e ajustar documentação
+
+## V. 1.08
+
+**Data:** 2026-04-01 20:51:52 | **Commit:** `08148eb` | **Tipo:** `minor`
+
+- feat: criar script de migração para a tabela de Produtividade e implementar página de relatórios de produtividade com filtros
+
+## V. 1.07
+
+**Data:** 2026-04-01 20:34:33 | **Commit:** `d2719d9` | **Tipo:** `minor`
+
+- feat: adicionar script de gerenciamento de tarefas do cartório e integrar funcionalidades de notificação e manipulação de subtarefas
+
+## V. 1.06
+
+**Data:** 2026-04-01 20:21:53 | **Commit:** `1c9cf76` | **Tipo:** `minor`
+
+- feat: adicionar gerenciamento de contexto do usuário e funções de validação de sessão; implementar busca de perfis e normalização de permissões
+
+## V. 1.04.0091
+
+**Data:** 2026-03-24 16:46:38 | **Commit:** `30599fe` | **Tipo:** `patch`
+
+- Feat: novo modelo de pagina de atas
+
+## V. 1.04.0090
+
+**Data:** 2026-03-24 16:21:06 | **Commit:** `765df86` | **Tipo:** `patch`
+
+- Feat: nova pagina para pauta de audiencia para estudante
+
+## V. 1.04.0089
+
+**Data:** 2026-03-24 15:53:59 | **Commit:** `223add7` | **Tipo:** `patch`
+
+- Fix: pequenos ajustes e implementacoes
+
+## V. 1.04.0088
+
+**Data:** 2026-03-24 15:45:02 | **Commit:** `6d8572f` | **Tipo:** `patch`
+
+- Fix: correção de select de defensor
+
+## V. 1.04.0087
+
+**Data:** 2026-03-24 15:38:46 | **Commit:** `f3ad5e2` | **Tipo:** `patch`
+
+- Fix: correcao de erros de buttons
+
+## V. 1.04.0086
+
+**Data:** 2026-03-24 15:32:25 | **Commit:** `fc5d50d` | **Tipo:** `patch`
+
+- Fix: correcao de conexao com o bd
+
+## V. 1.04.0085
+
+**Data:** 2026-03-24 15:21:04 | **Commit:** `f66fafd` | **Tipo:** `patch`
+
+- Fix: correcao do modelo de consulta partes
+
+## V. 1.04.0084
+
+**Data:** 2026-03-24 13:03:02 | **Commit:** `dff7692` | **Tipo:** `patch`
+
+- Fix: correcao reu preso
+
+## V. 1.04.0083
+
+**Data:** 2026-03-24 12:59:35 | **Commit:** `6146c71` | **Tipo:** `patch`
+
+- Fix: correcao de input classe
+
+## V. 1.04.0082
+
+**Data:** 2026-03-24 12:56:09 | **Commit:** `5c29143` | **Tipo:** `patch`
+
+- Fix: correcao de function
+
+## V. 1.04.0081
+
+**Data:** 2026-03-24 12:51:25 | **Commit:** `c0e71c4` | **Tipo:** `patch`
+
+- Fix: correcao de erros
+
+## V. 1.04.0080
+
+**Data:** 2026-03-24 12:43:42 | **Commit:** `4944bc9` | **Tipo:** `patch`
+
+- Fix: pequeno ajuste de tamanho
+
+## V. 1.04.0079
+
+**Data:** 2026-03-24 12:40:17 | **Commit:** `eb8966c` | **Tipo:** `patch`
+
+- Feat: mini status de cumprimento de partes
+
+## V. 1.04.0078
+
+**Data:** 2026-03-24 12:31:03 | **Commit:** `dcac95d` | **Tipo:** `patch`
+
+- Fix: correcao no cadastro de parte
+
+## V. 1.04.0077
+
+**Data:** 2026-03-24 12:19:14 | **Commit:** `f190481` | **Tipo:** `patch`
+
+- Fix: pequena correcao de valores
+
+## V. 1.04.0076
+
+**Data:** 2026-03-24 12:03:05 | **Commit:** `1bf1223` | **Tipo:** `patch`
+
+- Fix: pequenos ajustes
+
+## V. 1.04.0075
+
+**Data:** 2026-03-24 11:53:21 | **Commit:** `66276c9` | **Tipo:** `patch`
+
+- Fix: correcao de cadastro de parte
+
+## V. 1.04.0074
+
+**Data:** 2026-03-24 11:49:44 | **Commit:** `b2f5a12` | **Tipo:** `patch`
+
+- Fix: correcao de inputs
+
+## V. 1.04.0073
+
+**Data:** 2026-03-24 11:33:35 | **Commit:** `c0d1964` | **Tipo:** `patch`
+
+- Fix: correcao no banco de dados
+
+## V. 1.04.0072
+
+**Data:** 2026-03-24 11:11:33 | **Commit:** `6dec536` | **Tipo:** `patch`
+
+- Feat: novo modelo pauta de audiencias
+
+## V. 1.04.0071
+
+**Data:** 2026-03-23 12:23:27 | **Commit:** `6fc0755` | **Tipo:** `patch`
+
+- Fix: ajustes de codigo
+
+## V. 1.04.0070
+
+**Data:** 2026-03-23 11:54:35 | **Commit:** `6e43043` | **Tipo:** `patch`
+
+- Fix: correcao de bd
+
+## V. 1.04.0069
+
+**Data:** 2026-03-23 11:43:31 | **Commit:** `28372be` | **Tipo:** `patch`
+
+- Fix: pequenas correcoes
+
+## V. 1.04.0068
+
+**Data:** 2026-03-23 10:36:54 | **Commit:** `b714740` | **Tipo:** `patch`
+
+- Fix: correcao de classes
+
+## V. 1.04.0067
+
+**Data:** 2026-03-23 10:16:19 | **Commit:** `2a21b8e` | **Tipo:** `patch`
+
+- Fix: pequenos ajustes
+
+## V. 1.04.0066
+
+**Data:** 2026-03-23 09:57:12 | **Commit:** `687ec43` | **Tipo:** `patch`
+
+- Fix: correcao de datas de mov
+
+## V. 1.04.0065
+
+**Data:** 2026-03-23 09:45:52 | **Commit:** `f42fe04` | **Tipo:** `patch`
+
+- Fix: pequenos ajustes
+
+## V. 1.04.0064
+
+**Data:** 2026-03-23 08:58:21 | **Commit:** `06ffbb3` | **Tipo:** `patch`
+
+- Fix: mais ajustes
+
+## V. 1.04.0063
+
+**Data:** 2026-03-23 08:44:47 | **Commit:** `a54091a` | **Tipo:** `patch`
+
+- Fix: pequenos ajustes de presos
+
+## V. 1.04.0062
+
+**Data:** 2026-03-22 11:01:16 | **Commit:** `e104855` | **Tipo:** `patch`
+
+- Fix: pequenos ajustes
+
+## V. 1.04.0061
+
+**Data:** 2026-03-22 10:57:18 | **Commit:** `b8b9330` | **Tipo:** `patch`
+
+- Fix: correcao de reus
+
+## V. 1.04.0060
+
+**Data:** 2026-03-22 10:39:10 | **Commit:** `3cb4dc2` | **Tipo:** `patch`
+
+- Feat: nova implementacao pagina reus presos
+
 ## V. 1.04.0059
 
 **Data:** 2026-03-22 09:02:50 | **Commit:** `188c02d` | **Tipo:** `patch`
@@ -3648,6 +3864,42 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

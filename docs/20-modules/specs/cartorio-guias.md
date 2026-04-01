@@ -52,7 +52,7 @@ Submódulo do Módulo de Cartório (m4) para gestão de **guias** de execução 
 
 - **Campos obrigatórios:** Número do processo, Tipo de guia (default: "Guia - Tipo não informado").
 - **Opcionais:** Denunciado, Etapa, Regime, Data do fato, Dias-multa, Observações.
-- Formatação: número do processo (CNJ) e nome do denunciado conforme padrão de inputs (cnj.js, text-formatter.js); blur antes do submit.
+- Formatação: número do processo (CNJ) e nome do denunciado conforme padrão de inputs (`modules/datajud/cnj.js`, `text-formatter.js`); blur antes do submit.
 
 ## 8. Rotas e views
 

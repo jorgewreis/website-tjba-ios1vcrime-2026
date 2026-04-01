@@ -80,7 +80,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
 
         <?php include __DIR__ . '/_toast_script.php'; ?>
         <?php include __DIR__ . '/_copy_process_script.php'; ?>
-        <script src="/assets/js/modules/cartorio/cartas-expedidas/cnj.js"></script>
+        <script src="/assets/js/modules/datajud/cnj.js"></script>
     </head>
 <body class="page-internal">
 
@@ -156,7 +156,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                     </div>
                     <div class="display-flex row row-fit justify-end">
                         <div class="col process-edit">
-                            <button type="button" class="" title="Abrir" data-edit-id="<?php echo htmlspecialchars($row['id'] ?? ''); ?>"><i class="fi fi-rr-file-edit"></i></button>
+                            <button type="button" class="btn btn-editar" title="Abrir processo" data-edit-id="<?php echo htmlspecialchars($row['id'] ?? ''); ?>"><i class="fi fi-rr-pen-square"></i></button>
                         </div>
                     </div>
                 </div>
@@ -182,11 +182,11 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                     $prevParams = $baseQueryParams; $prevParams['page_number'] = max(1, $currentPage - 1);
                     $nextParams = $baseQueryParams; $nextParams['page_number'] = min($totalPages, $currentPage + 1);
                     ?>
-                    <a class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>" <?php if ($currentPage > 1): ?>href="?<?php echo http_build_query($prevParams); ?>"<?php else: ?>aria-disabled="true"<?php endif; ?>>‹</a>
+                    <button type="button" class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>" <?php if ($currentPage > 1): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($prevParams), ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>>‹</button>
                     <?php foreach ($paginationButtons as $p): $qp = $baseQueryParams; $qp['page_number'] = $p; ?>
-                        <a class="pagination-number<?php echo $p === $currentPage ? ' active' : ''; ?>" href="?<?php echo http_build_query($qp); ?>"><?php echo $p; ?></a>
+                        <button type="button" class="pagination-number<?php echo $p === $currentPage ? ' active' : ''; ?>" <?php if ($p !== $currentPage): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($qp), ENT_QUOTES); ?>"<?php else: ?>disabled<?php endif; ?>><?php echo $p; ?></button>
                     <?php endforeach; ?>
-                    <a class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>" <?php if ($currentPage < $totalPages): ?>href="?<?php echo http_build_query($nextParams); ?>"<?php else: ?>aria-disabled="true"<?php endif; ?>>›</a>
+                    <button type="button" class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>" <?php if ($currentPage < $totalPages): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($nextParams), ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>>›</button>
                 </div>
             <?php endif; ?>
         </div>

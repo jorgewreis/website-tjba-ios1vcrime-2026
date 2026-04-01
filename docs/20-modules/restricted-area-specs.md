@@ -1,37 +1,76 @@
 # Especificação Funcional — Área Restrita
 
 ## Referências e alinhamento
-- docs/00-foundation/escopo-produto.md — visão de produto completa (módulos m1, m3, m4, m5, m6, m11, m12, Gabinete).
-- docs/00-foundation/funcionalidades areas publica e restrita.md — regras de segregação, perfis e sigilo.
-- docs/00-foundation/technical-assumptions-constraints.md — autênticação jwt/sessionStorage, políticas de senha e isolamento por setor.
-
-**Specs de submódulos (m4 Cartório):** [Cartas Expedidas](20-modules/specs/cartorio-cartas-expedidas.md) · [Cartas Recebidas](20-modules/specs/cartorio-cartas-recebidas.md) · [Guias](20-modules/specs/cartorio-guias.md) · [Cejusc](20-modules/specs/cartorio-cejusc.md).
+- `docs/00-foundation/escopo-produto.md` — visão de produto e módulos internos.
+- `docs/00-foundation/funcionalidades areas publica e restrita.md` — regras de segregação e perfis.
+- `docs/00-foundation/technical-assumptions-constraints.md` — premissas e restrições técnicas vigentes.
+- `docs/30-security/authentication_password_policy.md` — política de autenticação, sessão e senha.
 
 ## 1. Visão geral e arquitetura
-A Área Restrita é o núcleo administrativo do webapp. Carregada via dmin/home.php, ela renderiza o conteúdo externo (controllers/views) dentro de um iframe para manter o menu lateral e cabeçalho fixos. Essa abordagem (iframe + shell Next.js) preserva o isolamento entre público e interno, protegendo rotas sensíveis e respeitando o canônico de arquitetura.
+A Área Restrita é o núcleo administrativo do sistema. Ela é servida por `public/home.php`, que funciona como shell autenticado, e carrega páginas internas por meio de `public/frame.php?page=...`.
+
+Essa abordagem preserva o menu e o cabeçalho fixos, reduz exposição direta de páginas internas e mantém a validação de acesso centralizada no backend.
 
 ## 2. Autenticação e controle de sessão
-A autenticação acontece em index.php e valida tokens JWT de 6h. Os dados de sessão ficam exclusivamente em sessionStorage; não há cookies PHP nativos. Regras de senha (8 caracteres, letras, números e símbolos) e bloqueio após 3 tentativas são aplicadas em 	echnical-assumptions-constraints.md.
+O fluxo oficial de autenticação da Área Restrita é baseado em:
+
+- validação de credenciais no backend PHP;
+- criação de sessão PHP após login bem-sucedido;
+- geração de token aleatório no servidor;
+- persistência do **hash** desse token na tabela de usuários com prazo de expiração;
+- timeout de inatividade de **60 minutos**;
+- revalidação do token persistido a cada acesso à área autenticada e aos endpoints administrativos dependentes da sessão.
+
+Na prática:
+
+- `public/index.php` apresenta a entrada pública;
+- `public/login.php` processa o login;
+- `$_SESSION` mantém o estado autenticado;
+- `config/security.php` valida a existência da sessão e o timeout de inatividade;
+- `app/models/Usuario.php` persiste e valida `token_acesso` e `token_expira`, com `token_acesso` armazenado em hash;
+- `public/home.php` e `public/admin/api/*` validam a sessão e o token persistido antes de responder.
+
+O `sessionStorage` do navegador pode ser utilizado para preferências e estados auxiliares de interface, mas **não é o mecanismo oficial de autenticação do sistema**.
 
 ## 3. Perfis e isolamento
-1. **Chefias:** visam configurações globais, alocação e realocação de usuários, acesso irrestrito a logs e relatórios críticos.
-2. **Servidores:** operam dentro do setor, podendo incluir/editar dados, mas sem excluir nem relocar colegas.
-3. **Estagiários e consultores:** acesso reduzido, apenas leitura ou edição limitada, sem permissão para relatórios sensíveis.
+Os acessos da Área Restrita dependem de perfis e, quando aplicável, de lotação ou setor do usuário.
 
-Regra transversal: **isolamento por setor** (perfil não vê dados de outro núcleo) e **log de auditoria obrigatório** (AuditLogger).
+Perfis operacionais típicos:
+
+1. **Chefias e administradores:** acesso ampliado a configurações, alocação e funcionalidades críticas.
+2. **Servidores:** atuação nas rotinas do setor conforme permissão funcional.
+3. **Estudantes e consultores:** acesso reduzido às áreas e consultas compatíveis com seu papel.
+
+Regra transversal:
+
+- o backend deve impedir acesso indevido entre setores e páginas;
+- páginas e APIs internas não devem confiar apenas em ocultação visual de interface;
+- decisões de permissão devem ser revalidadas no servidor.
 
 ## 4. Módulos internos principais
-- **m1 Audiências:** cadastro, partes, PDFs e controle de presença vinculando estudantes.
-- **m3 Tarefas:** catálogo, sub-tarefas parametricas, pontuação e exclusão controlada.
-- **m4 Cartório:** regras de sub-tarefas, cartas, editais, guias, ofícios e medidas protetivas.
-- **m5 Notificações:** geração automática e prioridades controladas por chefia.
-- **m6 Produtividade:** registro de pontos, dashboards e metas.
-- **m11 Logs/Auditoria:** reporta acessos, falhas, alterações e eventos sensíveis.
-- **m12 Configurações:** prazos, notificações, governança e versionamento de regras.
-- **Gabinete:** réus presos, ofícios consultoria e monitoramento eletrônico.
+- **Audiências:** pauta, atas, painel e fluxos de estudantes.
+- **Cartório:** cartas, editais, guias, CEJUSC, medidas protetivas e ofícios.
+- **Gabinete:** réus presos, ofícios e monitoramento eletrônico.
+- **Usuários e perfis:** cadastro, edição, perfis e dados pessoais.
+- **Consultas e cadastros auxiliares:** partes, processos, instituições públicas, prioridades e feriados.
+- **Configuração e governança:** páginas internas e regras administrativas existentes no roteamento atual.
 
-## 5. Relatórios e segurança
-Relatórios operacionais (produtividade, cadastros, volumes) são liberados para chefias e servidores; relatórios de segurança (logs de acesso, tentativas falhas, alterações sensíveis) ficam exclusivos para chefias/administradores. A integridade dos dados usa prefixos semânticos (USR-, PER-) e validação server-side.
+## 5. Segurança operacional
+A Área Restrita deve operar com:
 
-## 6. Governança e compliance
-As regras de auditoria, versionamento e isolamento seguem o canônico global. Todas as ações críticas geram toast (frontend) e log (backend) com o mesmo padrão, enquanto políticas de LGPD garante mascaramento nos relatórios e tabelas, conforme 	echnical-assumptions-constraints.md.
+- sessão validada no backend;
+- proteção CSRF nos formulários aplicáveis;
+- cookie de sessão com flags endurecidas no bootstrap central;
+- rate limit de login por IP e CPF com bloqueio temporário progressivo;
+- invalidação do token persistido em logout ou expiração;
+- invalidação de sessão anterior após redefinição de senha;
+- validação server-side de permissões;
+- registro de eventos relevantes de autenticação e acesso.
+
+## 6. Observações de manutenção
+Qualquer mudança futura no modelo de autenticação deve atualizar, em conjunto:
+
+- este documento;
+- `docs/30-security/authentication_password_policy.md`;
+- `docs/10-architecture/documento-integracoes-api.md`;
+- `docs/00-foundation/project-canonical-document.md`, se a decisão afetar a arquitetura oficial.

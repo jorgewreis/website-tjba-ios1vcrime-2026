@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/security.php';
 require_once __DIR__ . '/../app/helpers/BootstrapHelper.php';
+require_once __DIR__ . '/../app/helpers/Conection.php';
 
 if (Security::isAuthenticated()) {
     header('Location: /home.php');
@@ -19,6 +20,7 @@ header('Content-Type: application/json; charset=utf-8');
 
 require_once __DIR__ . '/../app/models/Usuario.php';
 require_once __DIR__ . '/../app/helpers/AvatarInitialsPalette.php';
+require_once __DIR__ . '/../app/services/LoginRateLimiter.php';
 
 $cpf   = $_POST['cpf'] ?? '';
 $senha = $_POST['senha'] ?? '';
@@ -40,21 +42,17 @@ if (!Security::verifyCSRFToken($csrf)) {
     exit;
 }
 
-// === Rate limiting: evita brute force baseado em sessão ===
-$maxAttempts = 5;
-$lockWindowSeconds = 15 * 60; // 15 minutos
-$attempts = $_SESSION['login_attempts'] ?? [];
-$now = time();
+$normalizedCpf = Security::normalizeCPF($cpf);
+$clientIp = Security::getClientIp();
 
-// Remove tentativas antigas
-$attempts = array_filter($attempts, function ($ts) use ($now, $lockWindowSeconds) {
-    return ($now - $ts) <= $lockWindowSeconds;
-});
+$pdo = Conection::getInstance()->getConnection();
+$rateLimiter = new LoginRateLimiter($pdo);
+$limitStatus = $rateLimiter->canAttempt($normalizedCpf, $clientIp);
 
-if (count($attempts) >= $maxAttempts) {
+if (($limitStatus['allowed'] ?? false) !== true) {
     echo json_encode([
         'success' => false,
-        'message' => 'Muitas tentativas de login. Tente novamente mais tarde.'
+        'message' => $limitStatus['message'] ?? 'Muitas tentativas de login. Tente novamente mais tarde.'
     ]);
     exit;
 }
@@ -63,13 +61,16 @@ $usuario = new Usuario();
 $resultado = $usuario->autenticar($cpf, $senha);
 
 if (($resultado['success'] ?? false) !== true) {
-    // registra tentativa falha
-    $attempts[] = $now;
-    $_SESSION['login_attempts'] = $attempts;
+    $limitStatus = $rateLimiter->registerFailure($normalizedCpf, $clientIp);
 
     $message = !empty($resultado['inactive']) && !empty($resultado['message'])
         ? $resultado['message']
         : 'CPF ou senha inválidos.';
+
+    if (($limitStatus['allowed'] ?? true) !== true && !empty($limitStatus['message'])) {
+        $message = (string) $limitStatus['message'];
+    }
+
     echo json_encode([
         'success' => false,
         'message' => $message
@@ -82,23 +83,25 @@ if (($resultado['success'] ?? false) !== true) {
    ===================== */
 
 session_regenerate_id(true);
-
-$_SESSION['id_usuario']   = $resultado['id_usuario'];
-$_SESSION['user_profile'] = $resultado['perfil'];
-$_SESSION['token']        = Security::generateSecureToken();
+$sessionToken = Security::generateSecureToken();
+Security::initializeAuthenticatedSession(
+    $resultado['id_usuario'],
+    $resultado['perfil'],
+    $sessionToken,
+    (string) ($resultado['nome'] ?? '')
+);
 
 /* Persistir token */
 $usuario->atualizarToken(
     $resultado['id_usuario'],
-    $_SESSION['token'],
+    $sessionToken,
     TOKEN_EXPIRATION_HOURS
 );
 $usuario->registrarUltimoAcesso($resultado['id_usuario']);
 
 AvatarInitialsPalette::regenerateOnLogin();
 
-// login bem-sucedido: limpa registros de tentativa
-unset($_SESSION['login_attempts']);
+$rateLimiter->clear($normalizedCpf, $clientIp);
 
 echo json_encode(['success' => true]);
 exit;

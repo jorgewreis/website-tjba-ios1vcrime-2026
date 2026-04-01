@@ -27,6 +27,7 @@ try {
     $user = $usuario->validarToken($token);
     
     if (!$user) {
+        Security::clearAuthenticatedSession();
         http_response_code(401);
         echo json_encode(['success' => false, 'message' => 'Token expirado ou inválido']);
         exit;
@@ -35,6 +36,7 @@ try {
     http_response_code(200);
     echo json_encode([
         'success' => true,
+        'valid' => true,
         'message' => 'Token válido',
         'user' => $user
     ]);

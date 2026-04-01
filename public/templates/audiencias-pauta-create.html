@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Pauta de Audiências — Cadastro — Primeira Vara Crime de Ilhéus</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="../../public/assets/css/shared/reset.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/color.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/layout.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/page.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/form.css">
+    <link rel="stylesheet" href="../../public/assets/css/shared/table.css">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+</head>
+<body class="page-internal">
+
+    <div class="spacing-top-page"></div>
+
+    <div class="header-page">
+        <div class="location">
+            <span class="all">Interno - Cartório - Audiências -</span>
+            <span class="specific">Cadastro</span>
+        </div>
+        <h1 class="title-page">Nova audiência</h1>
+        <p class="description-page">Preencha os dados para incluir uma nova audiência na pauta do cartório.</p>
+    </div>
+
+    <div class="container-full card-page">
+
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <h2>Dados da audiência</h2>
+        </div>
+
+        <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md">
+            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
+                <div class="col">
+                    <label for="audiencia-processo">Número do processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <input type="text" class="width-400 height-md" id="audiencia-processo" name="processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off">
+                </div>
+                <div class="col">
+                    <label for="audiencia-classe">Classe</label>
+                    <input type="text" class="width-600 height-md readonly" id="audiencia-classe" name="classe" placeholder="Classe do processo" readonly>
+                </div>
+                <div class="col">
+                    <label for="audiencia-tipo">Tipo de audiência <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <select class="width-500 height-md" id="audiencia-tipo" name="tipo_audiencia">
+                        <option value="" selected disabled>Selecione o tipo</option>
+                        <option value="conciliacao">Conciliação</option>
+                        <option value="custodia">Custódia</option>
+                        <option value="testemunha">Inquirição de Testemunha</option>
+                        <option value="instrucao">Instrução e Julgamento</option>
+                        <option value="julgamento">Interrogatório</option>
+                        <option value="justificacao">Justificação</option>
+                        <option value="vitima">Oitiva de Vítima</option>
+                        <option value="suspensao">Proposta de Suspensão Condicional</option>
+                        <option value="anpp">Proposta de Acordo de Não Persecução Penal</option>
+                        <option value="outra">Outra</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
+                <div class="col">
+                    <label for="audiencia-data">Data <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <input type="date" class="width-300 height-md" id="audiencia-data" name="data_audiencia">
+                </div>
+                <div class="col">
+                    <label for="audiencia-hora">Hora <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <input type="time" class="width-300 height-md" id="audiencia-hora" name="hora_audiencia">
+                </div>
+                <div class="col">
+                    <label for="audiencia-sala">Localização <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <select class="width-400 height-md" id="audiencia-sala" name="sala">
+                        <option value="">Selecione...</option>
+                        <option value="presencial">Presencial - Fórum</option>
+                        <option value="lifesize" selected>Virtual - Lifesize</option>
+                        <option value="audin">Virtual - Audin</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <label for="audiencia-status">Status inicial</label>
+                    <select class="width-400 height-md" id="audiencia-status" name="status">
+                        <option value="designada" selected>Designada</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
+                <button type="button" class="btn btn-secondary" id="btn-audiencia-voltar">Voltar</button>
+                <button type="button" class="btn btn-primary" id="btn-audiencia-cadastrar">Cadastrar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-page">
+        <div class="location">
+            <span class="all">Aplicativo web desenvolvido integralmente por </span>
+            <span class="specific">Jorge Reis Develop</span>
+            <span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span>
+        </div>
+    </div>
+
+</body>
+</html>

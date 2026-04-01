@@ -1,66 +1,197 @@
 <?php
 
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
+/**
+ * Carrega um arquivo .env simples para o escopo atual.
+ */
+function loadProjectEnv(string $envPath): void
+{
+    if (!is_file($envPath)) {
+        return;
+    }
 
-$envPath = __DIR__ . '/../.env';
+    $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if ($lines === false) {
+        return;
+    }
 
-if (file_exists($envPath)) {
-    foreach (file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
-        if (str_starts_with(trim($line), '#')) {
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if ($line === '' || str_starts_with($line, '#')) {
             continue;
         }
-        [$key, $value] = array_map('trim', explode('=', $line, 2));
+
+        $eqPos = strpos($line, '=');
+        if ($eqPos === false) {
+            continue;
+        }
+
+        $key = trim(substr($line, 0, $eqPos));
+        $value = trim(substr($line, $eqPos + 1));
+        if ($key === '') {
+            continue;
+        }
+
+        $value = trim($value, " \t\n\r\0\x0B\"'");
         putenv("{$key}={$value}");
         $_ENV[$key] = $value;
     }
 }
 
-// Configurações do banco de dados
-define('DB_HOST', '72.60.250.46');
-define('DB_NAME', 'common');
-define('DB_USER', 'admin');
-define('DB_PASS', 'vluyIOTXf2fKx8RLZxck');
-define('DB_CHARSET', 'utf8mb4');
+/**
+ * Lê variável de ambiente carregada pelo PHP ou pelo .env local.
+ */
+function envValue(string $key, ?string $default = null): ?string
+{
+    $value = $_ENV[$key] ?? getenv($key);
+    if ($value === false || $value === null) {
+        return $default;
+    }
+
+    $value = trim((string) $value);
+    return $value !== '' ? $value : $default;
+}
+
+/**
+ * Interrompe a execução com erro controlado de configuração.
+ */
+function failConfiguration(array $missingKeys): never
+{
+    $message = 'Configuracao obrigatoria ausente: ' . implode(', ', $missingKeys);
+    error_log($message);
+
+    if (PHP_SAPI === 'cli') {
+        throw new RuntimeException($message);
+    }
+
+    if (!headers_sent()) {
+        http_response_code(500);
+        header('Content-Type: text/plain; charset=UTF-8');
+    }
+
+    exit('Erro interno de configuracao. Contate o suporte.');
+}
+
+$envPath = __DIR__ . '/../.env';
+loadProjectEnv($envPath);
+
+// Configurações do banco de dados (obrigatórias via ambiente ou .env local)
+$dbHost = envValue('DB_HOST');
+$dbName = envValue('DB_NAME');
+$dbUser = envValue('DB_USER');
+$dbPass = envValue('DB_PASS');
+$dbCharset = envValue('DB_CHARSET', 'utf8mb4');
+$dbPort = envValue('DB_PORT', '3306');
+
+$missingDbConfig = [];
+foreach ([
+    'DB_HOST' => $dbHost,
+    'DB_NAME' => $dbName,
+    'DB_USER' => $dbUser,
+    'DB_PASS' => $dbPass,
+] as $key => $value) {
+    if ($value === null || $value === '') {
+        $missingDbConfig[] = $key;
+    }
+}
+
+if ($missingDbConfig !== []) {
+    failConfiguration($missingDbConfig);
+}
+
+define('DB_HOST', $dbHost);
+define('DB_NAME', $dbName);
+define('DB_USER', $dbUser);
+define('DB_PASS', $dbPass);
+define('DB_CHARSET', $dbCharset);
+$portNum = (is_string($dbPort) && $dbPort !== '' && ctype_digit($dbPort)) ? (int) $dbPort : 3306;
+define('DB_PORT', $portNum > 0 && $portNum <= 65535 ? $portNum : 3306);
 
 // Configurações de segurança
 define('TOKEN_EXPIRATION_HOURS', 8);
-define('PASSWORD_MIN_LENGTH', 8);
+define('PASSWORD_MIN_LENGTH', 10);
+define('PASSWORD_MAX_LENGTH', 128);
 define('SESSION_LIFETIME', 28800); // 8 horas
+define('SESSION_IDLE_TIMEOUT', 3600); // 60 minutos
+define('LOGIN_RATE_LIMIT_WINDOW_SECONDS', 900); // 15 minutos
+define('LOGIN_RATE_LIMIT_MAX_ATTEMPTS', 5);
+define('LOGIN_RATE_LIMIT_BASE_LOCK_SECONDS', 900); // 15 minutos
+define('LOGIN_RATE_LIMIT_MAX_LOCK_SECONDS', 28800); // 8 horas
+define('PASSWORD_RESET_TOKEN_TTL_SECONDS', 3600); // 1 hora
 
 // Timezone
-date_default_timezone_set('America/Bahia');
+date_default_timezone_set(envValue('APP_TIMEZONE', 'America/Bahia'));
 
-// Configurações de sessão (ANTES de iniciar a sessão)
-if (session_status() === PHP_SESSION_NONE) {
-    ini_set('session.cookie_httponly', 1);
+function appIsHttpsRequest(): bool
+{
+    return (
+        (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (!empty($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443)
+        || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower((string) $_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https')
+        || (!empty($_SERVER['HTTP_CF_VISITOR']) && str_contains((string) $_SERVER['HTTP_CF_VISITOR'], 'https'))
+    );
+}
 
-    // Só marca secure se estiver em HTTPS
-    $isHttps =
-    (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-    || (!empty($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443)
-    || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
-    || (!empty($_SERVER['HTTP_CF_VISITOR']) && str_contains($_SERVER['HTTP_CF_VISITOR'], 'https'));
-
-    ini_set('session.cookie_secure', $isHttps ? '1' : '0');
-
-    ini_set('session.use_strict_mode', 1);
-    ini_set('session.gc_probability', '1');
-    ini_set('session.gc_divisor', '100');
-    ini_set('session.gc_maxlifetime', (string)SESSION_LIFETIME);
-
-
-    // Define parâmetros do cookie de sessão
-    session_set_cookie_params([
+/**
+ * @return array{lifetime:int,path:string,domain:string,secure:bool,httponly:bool,samesite:string}
+ */
+function appSessionCookieParams(): array
+{
+    return [
         'lifetime' => SESSION_LIFETIME,
         'path' => '/',
         'domain' => '',
-        'secure' => $isHttps,
+        'secure' => appIsHttpsRequest(),
         'httponly' => true,
-        'samesite' => 'Lax'
-    ]);
+        'samesite' => 'Lax',
+    ];
+}
 
-    // Inicia a sessão apenas se ainda não foi iniciada
+function bootstrapSession(bool $forceStart = false): void
+{
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        return;
+    }
+
+    if (PHP_SAPI === 'cli' && !$forceStart) {
+        return;
+    }
+
+    $cookieParams = appSessionCookieParams();
+
+    ini_set('session.use_strict_mode', '1');
+    ini_set('session.use_only_cookies', '1');
+    ini_set('session.cookie_httponly', '1');
+    ini_set('session.cookie_secure', $cookieParams['secure'] ? '1' : '0');
+    ini_set('session.cookie_samesite', $cookieParams['samesite']);
+    ini_set('session.gc_probability', '1');
+    ini_set('session.gc_divisor', '100');
+    ini_set('session.gc_maxlifetime', (string) SESSION_LIFETIME);
+
+    session_set_cookie_params($cookieParams);
     session_start();
 }
+
+function destroySessionData(): void
+{
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        return;
+    }
+
+    $_SESSION = [];
+
+    if (ini_get('session.use_cookies')) {
+        $params = session_get_cookie_params();
+        setcookie(session_name(), '', [
+            'expires' => time() - 42000,
+            'path' => $params['path'] ?? '/',
+            'domain' => $params['domain'] ?? '',
+            'secure' => !empty($params['secure']),
+            'httponly' => !empty($params['httponly']),
+            'samesite' => $params['samesite'] ?? 'Lax',
+        ]);
+    }
+
+    session_destroy();
+}
+
+bootstrapSession();

@@ -11,7 +11,7 @@ Além de servir como referência para pastas e arquivos, este guia deve ser cons
 
 - `docs/00-foundation/project-canonical-document.md`: decisão central do projeto (stack, arquitetura, restrições e versionamento).
 - `docs/00-foundation/guia-estrutura-docs.md`: recomendações de organização da pasta `docs/`, nomenclaturas e formatos.
-- `docs/00-foundation/technical-assumptions-constraints.md`: premissas, stack híbrido (Next.js + PHP/MySQL) e limites técnicos que condicionam esta estrutura.
+- `docs/00-foundation/technical-assumptions-constraints.md`: premissas e limites técnicos que condicionam esta estrutura.
 - `docs/90-releases/README.md`: operação de releases (Patch/Minor/Major) e seus artefatos (`VERSION`, `CHANGELOG`, `_draft_minor.md`).
 
 ## 3. Regras gerais transversais
@@ -209,7 +209,7 @@ Arquivos de exemplo:
 - `app/helpers/Helper.php`  
   **Por quê:** utilitários de domínio (IDs únicos, iniciais, transformações).
 - `app/helpers/AuditLogger.php`  
-  **Por quê:** registrar auditoria completa com fallback para `error_log`.
+  **Por quê:** registrar eventos operacionais e de auditoria com fallback para `error_log`.
 - `app/helpers/ToastHelper.php`  
   **Por quê:** ponte entre o backend PHP e o sistema de toasts em `public/assets/js`.
 - `app/helpers/autoload.php`  
@@ -229,6 +229,8 @@ Arquivos de exemplo:
   **Por quê:** registra pontuações e eventos de produtividade no sistema.
 - `app/services/Guias.php`  
   **Por quê:** orquestra cadastro de guias, serviços dependentes e auditoria (AuditLogger).
+- `app/services/ProcessoClasseSyncService.php`  
+  **Por quê:** leitura de processo/classe por CNJ e sincronização automática da classe após DataJud (`/api/processos/classe-read.php`, `/api/processos/classe-sync.php`). Documentação: `docs/00-foundation/datajud-classe-processo-bd-sync.md`.
 
 Esses serviços devem ser consumidos por controllers e middlewares, mantendo a conexão com o banco por `app/helpers/Conexao.php`.
 
@@ -315,20 +317,41 @@ Parciais recomendadas:
 
 ## database/
 
-- `database/migrations/2026_02_01_000001_create_users_table.php`  
-  **Por quê:** versionar estrutura do banco com histórico rastreável.
-- `database/migrations/2026_02_01_000002_create_perfis_table.php`
-- `database/migrations/2026_02_01_000003_create_cartas_table.php`
-- `database/migrations/2026_02_01_000004_create_oficios_table.php`
-- `database/migrations/2026_02_01_000005_create_audit_logs_table.php`
+- `database/schema.sql`  
+  **Por quê:** estrutura SQL **auxiliar e parcial** do banco, com tabelas de apoio, índices e views. Não substitui o banco completo nem as migrações incrementais.
+- `database/triggers.sql`  
+  **Por quê:** triggers de apoio versionados separadamente do schema auxiliar.
+- `database/README-migracoes.md`  
+  **Por quê:** inventário atual das migrações SQL e ordem sugerida por cenário.
 
-- `database/seeds/SeedPerfis.php`  
-  **Por quê:** perfis padrão e permissões iniciais.
-- `database/seeds/SeedUsersAdmin.php`  
-  **Por quê:** usuário admin inicial (com cuidado; sem senha fixa em texto).
+Arquivos presentes hoje em `database/migrations/`:
 
-- `database/schema.sql` (opcional)  
-  **Por quê:** export mínimo de estrutura para referência rápida (sem dados).
+- `database/migrations/usuarios_created_at_updated_at.sql`  
+  **Por quê:** normaliza `created_at` e `updated_at` em `usuarios`.
+- `database/migrations/20260322_seed_setores_inicial.sql`  
+  **Por quê:** seed inicial de `setores`.
+- `database/migrations/20260322_setores_codigo_area.sql`  
+  **Por quê:** adiciona e preenche `setores.codigo_area`.
+- `database/migrations/20260322_usuario_perfil_composite_limpeza.sql`  
+  **Por quê:** apoio à transição para perfis compostos.
+- `database/migrations/20260322_oficios_criado_por.sql`  
+  **Por quê:** rastreabilidade de criação/edição em ofícios.
+- `database/migrations/20260322_gabinete_reus_presos.sql`  
+  **Por quê:** estrutura do módulo de réus presos.
+- `database/migrations/guias.sql`  
+  **Por quê:** estrutura do módulo de guias.
+- `database/migrations/salario_minimo_e_valor_multa_guias.sql`  
+  **Por quê:** apoio a cálculo de multa nas guias.
+- `database/migrations/seed_salario_minimo_1994_2026.sql`  
+  **Por quê:** carga histórica de salário mínimo.
+- `database/migrations/20260330_processoPrioridades.sql`  
+  **Por quê:** artefato legado/deprecado do modelo antigo de prioridades.
+- `database/migrations/20260331_processo_prioridades_unificacao.sql`  
+  **Por quê:** unifica prioridades processuais no modelo atual.
+- `database/migrations/run_processo_prioridades_unificacao_data.php`  
+  **Por quê:** migração assistida de dados do modelo legado de prioridades.
+- `database/migrations/20260401_login_rate_limits.sql`  
+  **Por quê:** cria a estrutura oficial de rate limit de login.
 
 
 ---
@@ -348,6 +371,8 @@ Parciais recomendadas:
 - - `public/assets/css/shared/forms.css` — formulários, inputs, mascaramento e helpers visuais.
 - - `public/assets/css/shared/responsive.css` — regras adaptativas por breakpoint.
 - - `public/assets/css/shared/toast.css` — estilos dos toasts flutuantes.
+- - `public/assets/js/shared/toast.js` — fila, modelos simple/full, duracao e politica automatica (`App.Toast`).
+- - `public/assets/js/shared/toast-helper.js` — `showToast` para iframes (postMessage ao parent).
 - - `public/assets/css/shared/utilities.css` — helpers utilitários (mostrar/ocultar, espaçamentos).
 - #### Estilos por módulo
 - Cada módulo que precise de estilos específicos (por exemplo, `public/assets/css/modules/guias/create.css`) deve viver em `public/assets/css/modules/<nome-do-modulo>/` para evitar poluição global. Essa organização ajuda a manter apenas o necessário carregado nas páginas específicas de cada área.
@@ -415,6 +440,7 @@ Você já tem uma boa estrutura. Exemplos de arquivos por área:
 - `docs/40-operations/backups/politica-de-backup.md`
 - `docs/40-operations/monitoring/metricas-e-alertas.md`
 - `docs/40-operations/troubleshooting/erros-comuns.md`
+- `docs/40-operations/auth-security-runbook.md`
 
 ### docs/90-releases/
 - `docs/90-releases/README.md`  

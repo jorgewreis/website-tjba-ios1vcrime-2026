@@ -14,13 +14,18 @@
 |---------|--------------------------|
 | EST     | estudantes               |
 | USR     | usuarios                 |
+| USP     | usuario_perfil           |
 | SET     | setores                  |
 | USO     | usuario_setor            |
 | LOG     | logs_acesso              |
 | LGS     | logs_sistema             |
-| TNT     | tentativas_login         |
+| RLT     | login_rate_limits        |
+| TNT     | tentativas_login (legado) |
 | REC     | recuperacao_senha        |
 | HIS     | historico_senha          |
+| GRP     | gabinete_reu_preso       |
+| GPP     | gabinete_reu_preso_processo |
+| GPM     | gabinete_reu_preso_movimentacao |
 | CLA     | classes                  |
 | TRI     | tribunais                |
 | COM     | comarcas                 |
@@ -38,6 +43,7 @@
 | GUI     | guias                    |
 | GUS     | guias_subtarefas         |
 | GUA     | guias_alocados           |
+| SAL     | salario_minimo           |
 | ALR     | alocacoes_regras         |
 | DOC     | documentos               |
 
@@ -61,7 +67,7 @@ require_once __DIR__ . '/../helpers/IdGenerator.php';
 $id = IdGenerator::generateUniquePrefixedId($pdo, 'cartas_recebidas', 'id', 'CPR', 30);
 ```
 
-Repositórios e services que fazem INSERT com ID já utilizam esse helper. Em pontos isolados (ex.: `api/users.php`, `api/documents.php`), usar o mesmo formato manualmente ou carregar o helper e chamar `generateUniquePrefixedId`.
+Repositórios e services que fazem INSERT com ID já utilizam esse helper. Quando houver criação manual fora de repository dedicado (por exemplo em endpoints PHP pontuais de `public/api/` ou views administrativas), manter o mesmo padrão ou carregar o helper e chamar `generateUniquePrefixedId`.
 
 ### No banco (MySQL)
 

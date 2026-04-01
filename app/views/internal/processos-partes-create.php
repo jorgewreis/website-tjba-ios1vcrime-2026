@@ -79,7 +79,7 @@ $polosValidos = ['ativo' => 'Ativo', 'passivo' => 'Passivo', 'terceiros' => 'Ter
             </div>
         </div>
         <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
-            <a href="/frame.php?page=consultaprocessosedit&id=<?php echo urlencode($processoId); ?>" class="btn btn-secondary">Voltar</a>
+            <button type="button" class="btn btn-secondary" data-nav-href="/frame.php?page=consultaprocessosedit&id=<?php echo urlencode($processoId); ?>">Voltar</button>
             <button type="button" class="btn btn-primary" id="vincular-btn">Vincular</button>
         </div>
     </div>

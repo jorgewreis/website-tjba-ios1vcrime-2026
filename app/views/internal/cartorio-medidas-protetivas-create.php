@@ -67,7 +67,7 @@ try {
             </div>
             <div class="col filter">
                 <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe processual <span class="label-hint-automatizado">*automatizado</span></label>
-                <input type="text" class="width-600 height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>
+                <input type="text" class="width-600 height-md" id="filter-classe" data-datajud-related="true" placeholder="Preenchido automaticamente pelo DataJud" readonly>
             </div>
         </div>
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
@@ -131,7 +131,7 @@ try {
 
         <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
             <button class="btn btn-primary-outline" id="alterar-regra-btn" style="display: none;">Alterar regra de alocação</button>
-            <button class="btn btn-secondary" id="voltar-btn">Voltar</button>
+            <button class="btn btn-secondary" id="voltar-btn" data-allow-during-loading="true">Voltar</button>
             <button class="btn btn-primary" id="cadastrar-btn" type="button">Cadastrar</button>
         </div>
 
@@ -208,8 +208,9 @@ try {
             window.location.href = '/frame.php?page=medidasprotetivas';
         }, { capture: true });
     </script>
-    <script src="/assets/js/modules/cartorio/cartas-expedidas/cnj.js"></script>
-    <script src="/assets/js/modules/cartorio/cartas-expedidas/datajud-api.js"></script>
+    <script src="/assets/js/modules/datajud/cnj.js"></script>
+    <script src="/assets/js/modules/datajud/datajud-cycle-helper.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/datajud/datajud-cycle-helper.js') ?: time(); ?>"></script>
+    <script src="/assets/js/modules/datajud/datajud-api.js"></script>
     <script src="/assets/js/shared/text-formatter.js"></script>
     <script>
         (function () {
@@ -374,33 +375,12 @@ try {
     </script>
     <script>
         (function () {
-            var PERFIS_ALTERAR_REGRA = ['ADMIN', 'DIRETORA', 'MAGISTRADA'];
-
-            function hasPermissionToChangeRule(perfis) {
-                if (!Array.isArray(perfis) || perfis.length === 0) return false;
-                var allowed = PERFIS_ALTERAR_REGRA.map(function (perfil) { return perfil.toUpperCase(); });
-                return perfis.some(function (perfil) {
-                    return allowed.indexOf(String(perfil || '').toUpperCase().trim()) !== -1;
-                });
-            }
-
             window.addEventListener('DOMContentLoaded', function () {
-                var btn = document.getElementById('alterar-regra-btn');
-                if (!btn) return;
-                fetch('/admin/api/getPerfis.php', { credentials: 'same-origin' })
-                    .then(function (response) { if (!response.ok) throw new Error(); return response.json(); })
-                    .then(function (data) {
-                        var perfis = (data && data.perfis) ? data.perfis : [];
-                        if (hasPermissionToChangeRule(perfis)) {
-                            btn.style.display = '';
-                            btn.addEventListener('click', function () {
-                                window.location.href = '/frame.php?page=medidasprotetivasrules';
-                            });
-                        }
-                    })
-                    .catch(function () {
-                        btn.style.display = 'none';
-                    });
+                if (!window.App || !App.User || typeof App.User.setupRuleButton !== 'function') return;
+                App.User.setupRuleButton({
+                    buttonId: 'alterar-regra-btn',
+                    targetPage: 'medidasprotetivasrules'
+                });
             });
         })();
     </script>

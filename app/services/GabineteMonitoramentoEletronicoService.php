@@ -201,6 +201,25 @@ final class GabineteMonitoramentoEletronicoService
         $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, false);
 
         $processoParteId = trim((string) ($payload['processo_parte_id'] ?? $payload['reu_processo_parte_id'] ?? ''));
+        $reuId = trim((string) ($payload['reu_id'] ?? ''));
+        if ($processoParteId === '' && $reuId !== '') {
+            $partesRepo = new PartesRepository($this->connection);
+            $parte = $partesRepo->findById($reuId);
+            if ($parte === null) {
+                throw new InvalidArgumentException('Réu informado não foi encontrado no cadastro de partes.');
+            }
+            $vinculoExistente = $this->processosPartesRepository->findByProcessoAndParte($processoOrigemId, $reuId);
+            if ($vinculoExistente !== null) {
+                $processoParteId = (string) ($vinculoExistente['id'] ?? '');
+            } else {
+                $processoParteId = $this->processosPartesRepository->addParte(
+                    $processoOrigemId,
+                    $reuId,
+                    ProcessosPartesRepository::TIPO_REU,
+                    ProcessosPartesRepository::POLO_PASSIVO
+                );
+            }
+        }
         $modoOutro = ($processoParteId === '' || $processoParteId === 'outro');
         $complemento = trim((string) ($payload['reu_complemento'] ?? ''));
 

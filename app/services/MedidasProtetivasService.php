@@ -7,6 +7,7 @@ require_once __DIR__ . '/../repositories/MedidasProtetivasAlocadosRepository.php
 require_once __DIR__ . '/../repositories/AlocacoesRegrasRepository.php';
 require_once __DIR__ . '/../repositories/PartesRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosPartesRepository.php';
+require_once __DIR__ . '/ProcessoPrioridadesService.php';
 require_once __DIR__ . '/../repositories/ProcessoPrioridadesRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
@@ -28,7 +29,7 @@ final class MedidasProtetivasService
     private AlocacoesRegrasRepository $alocacoesRegrasRepository;
     private PartesRepository $partesRepository;
     private ProcessosPartesRepository $processosPartesRepository;
-    private ProcessoPrioridadesRepository $processoPrioridadesRepository;
+    private ProcessoPrioridadesService $processoPrioridadesService;
     private ProcessosRepository $processosRepository;
     private ClassesRepository $classesRepository;
     private CejuscService $cejuscService;
@@ -44,7 +45,7 @@ final class MedidasProtetivasService
         $this->alocacoesRegrasRepository = new AlocacoesRegrasRepository($connection);
         $this->partesRepository = new PartesRepository($connection);
         $this->processosPartesRepository = new ProcessosPartesRepository($connection);
-        $this->processoPrioridadesRepository = new ProcessoPrioridadesRepository($connection);
+        $this->processoPrioridadesService = new ProcessoPrioridadesService($connection);
         $this->processosRepository = new ProcessosRepository($connection);
         $this->classesRepository = new ClassesRepository($connection);
         $this->cejuscService = new CejuscService($connection);
@@ -66,15 +67,22 @@ final class MedidasProtetivasService
             $rows[$index]['Subtarefas'] = $this->subtarefasRepository->findPendenteOuEmAndamentoByMedidaId($idMedida);
             $rows[$index]['SubtarefasAll'] = $this->subtarefasRepository->findByMedidaId($idMedida);
             $alocadosRaw = $this->alocadosRepository->findByMedidaId($idMedida);
-            $rows[$index]['Alocados'] = [];
+            $alocados = [];
             foreach (array_slice($alocadosRaw, 0, 5) as $alocado) {
-                $rows[$index]['Alocados'][] = [
-                    'iniciais' => $alocado['iniciais'] ?? '—',
+                $tipo = $this->normalizeTipoAlocado((string) ($alocado['tipo'] ?? ''));
+                $alocados[] = [
+                    'alocado_id'    => $alocado['id'] ?? '',
+                    'iniciais'      => $alocado['iniciais'] ?? '—',
                     'nome_completo' => $alocado['nome_completo'] ?? '',
-                    'usuario_id' => $alocado['usuario_id'] ?? '',
-                    'tipo' => $this->normalizeTipoAlocado((string) ($alocado['tipo'] ?? '')),
+                    'usuario_id'    => $alocado['usuario_id'] ?? '',
+                    'tipo'          => $tipo,
                 ];
             }
+            usort($alocados, static function (array $a, array $b): int {
+                static $order = ['rule' => 0, 'all' => 1, 'specific' => 2];
+                return ($order[$a['tipo']] ?? 9) <=> ($order[$b['tipo']] ?? 9);
+            });
+            $rows[$index]['Alocados'] = $alocados;
         }
 
         return [
@@ -107,7 +115,7 @@ final class MedidasProtetivasService
             ? $this->processosPartesRepository->findByProcessoId($processoId, ProcessosPartesRepository::TIPO_VITIMA)
             : [];
         $medida['prioridades_processo'] = $processoId !== ''
-            ? $this->processoPrioridadesRepository->findByProcessoId($processoId)
+            ? (new ProcessoPrioridadesRepository($this->connection))->findByProcessoId($processoId)
             : [];
 
         return $medida;
@@ -202,9 +210,7 @@ final class MedidasProtetivasService
                     );
                 }
 
-                foreach ($this->mapPrioridadesMarcadas($flags) as $prioridade) {
-                    $this->processoPrioridadesRepository->insert($processoId, $prioridade);
-                }
+                $this->processoPrioridadesService->registrarPrioridadesFlagsVitimaMedida($processoId, $flags);
             }
 
             $medidaId = IdGenerator::generateUniquePrefixedId(
@@ -245,6 +251,8 @@ final class MedidasProtetivasService
             ]);
             $cejuscId = trim((string) ($cejuscResult['id'] ?? ''));
             $this->repository->update($medidaId, ['cejusc_tarefa_id' => $cejuscId]);
+
+            $this->processoPrioridadesService->registrarViolenciaDomesticaMedidaProtetiva($processoId);
 
             $this->connection->commit();
             return [
@@ -324,7 +332,11 @@ final class MedidasProtetivasService
 
             $usuarioIdMovimentacao = trim((string) ($dadosArray['usuario_id'] ?? ''));
             if ($usuarioIdMovimentacao !== '') {
-                $this->alocadosRepository->addAlocado($medidaId, $usuarioIdMovimentacao, MedidasProtetivasAlocadosRepository::TIPO_SPECIFIC);
+                try {
+                    $this->alocadosRepository->addAlocado($medidaId, $usuarioIdMovimentacao, MedidasProtetivasAlocadosRepository::TIPO_SPECIFIC);
+                } catch (\RuntimeException $e) {
+                    // limite ou duplicata — não impede a conclusão da subtarefa
+                }
             }
             $this->subtarefasRepository->atualizarDadosEspecificos($subtarefaId, $dadosJson);
         } else {
@@ -468,25 +480,6 @@ final class MedidasProtetivasService
         ];
     }
 
-    private function mapPrioridadesMarcadas(array $flags): array
-    {
-        $prioridades = [];
-        if (!empty($flags['prioridade_mulher'])) {
-            $prioridades[] = 'mulher';
-        }
-        if (!empty($flags['prioridade_crianca_adolescente'])) {
-            $prioridades[] = 'crianca_adolescente';
-        }
-        if (!empty($flags['prioridade_idoso'])) {
-            $prioridades[] = 'idoso';
-        }
-        if (!empty($flags['prioridade_pessoa_deficiencia'])) {
-            $prioridades[] = 'pessoa_deficiencia';
-        }
-
-        return $prioridades;
-    }
-
     private function isPartePayloadEmpty(array $payload): bool
     {
         if (trim((string) ($payload['parte_id'] ?? '')) !== '') {
@@ -512,6 +505,16 @@ final class MedidasProtetivasService
         }
 
         return 'specific';
+    }
+
+    public function removeAlocado(string $alocadoId, string $tipo, string $requestUserId): bool
+    {
+        $alocadoId     = trim($alocadoId);
+        $requestUserId = trim($requestUserId);
+        if ($alocadoId === '' || $requestUserId === '') {
+            return false;
+        }
+        return $this->alocadosRepository->deleteById($alocadoId);
     }
 
     private function formatarCNJ(string $digits): string

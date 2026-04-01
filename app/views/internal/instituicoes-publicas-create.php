@@ -49,7 +49,7 @@ if (function_exists('mb_internal_encoding')) mb_internal_encoding('UTF-8');
             </div>
         </div>
         <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
-            <a href="/frame.php?page=instituicoespublicas" class="btn btn-secondary">Voltar</a>
+            <button type="button" class="btn btn-secondary" data-nav-href="/frame.php?page=instituicoespublicas">Voltar</button>
             <button type="button" class="btn btn-primary" id="cadastrar-btn">Cadastrar</button>
         </div>
     </div>
@@ -57,9 +57,16 @@ if (function_exists('mb_internal_encoding')) mb_internal_encoding('UTF-8');
     (function() {
         var nomeEl = document.getElementById('nome');
         var nomeFantasiaEl = document.getElementById('nome_fantasia');
+        function formatNomeInstituicao(value) {
+            var nome = String(value || '').trim().replace(/\s+/g, ' ');
+            if (typeof TextFormatter !== 'undefined' && typeof TextFormatter.formatProperName === 'function') {
+                nome = TextFormatter.formatProperName(nome, 255);
+            }
+            return nome.slice(0, 255);
+        }
         if (nomeEl) {
             nomeEl.addEventListener('blur', function() {
-                this.value = (this.value || '').trim().replace(/\s+/g, ' ').slice(0, 255);
+                this.value = formatNomeInstituicao(this.value || '');
             });
         }
         if (nomeFantasiaEl) {
@@ -72,7 +79,14 @@ if (function_exists('mb_internal_encoding')) mb_internal_encoding('UTF-8');
         }
     })();
     document.getElementById('cadastrar-btn').addEventListener('click', function() {
-        var nome = (document.getElementById('nome').value || '').trim().replace(/\s+/g, ' ').slice(0, 255);
+        var nomeRaw = document.getElementById('nome').value || '';
+        var nome = String(nomeRaw).trim().replace(/\s+/g, ' ');
+        if (typeof TextFormatter !== 'undefined' && typeof TextFormatter.formatProperName === 'function') {
+            nome = TextFormatter.formatProperName(nome, 255);
+        } else {
+            nome = nome.slice(0, 255);
+        }
+        document.getElementById('nome').value = nome;
         if (!nome) { if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Nome é obrigatório.' }); return; }
         var cnpjRaw = (document.getElementById('cnpj').value || '').replace(/\D/g, '');
         if (cnpjRaw && cnpjRaw.length === 14 && typeof App !== 'undefined' && App.CNPJ && !App.CNPJ.validar(cnpjRaw)) {

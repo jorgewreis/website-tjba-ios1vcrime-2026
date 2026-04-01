@@ -77,12 +77,12 @@ $faculdades = [
                     <div class="title-page">
                         <span class="title">Cadastro de estudantes</span>
                         <span class="info-title">Antes de se cadastrar, leia os termos sobre uso dos dados pessoais (LGPD).</span>
-                        <a href="<?php echo htmlspecialchars($termosLgpdPdfUrl, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer" style="text-decoration: none; display: inline-block; margin-top: 8px;">
+                        <button type="button" class="btn-link-badge" data-nav-href="<?php echo htmlspecialchars($termosLgpdPdfUrl, ENT_QUOTES, 'UTF-8'); ?>" data-nav-target="_blank" style="text-decoration: none; display: inline-block; margin-top: 8px;">
                             <span class="badge file">
                                 <img src="/assets/icons/Office-File-Pdf-1--Streamline-Ultimate.png" alt="PDF">
                                 <span>Termos sobre LGPD – Cadastro de estudantes</span>
                             </span>
-                        </a>
+                        </button>
                     </div>
 
                     <form class="form-login" id="formEstudante">
@@ -97,6 +97,18 @@ $faculdades = [
                             <div class="col">
                                 <label for="cpf">CPF *</label>
                                 <input class="width-400" type="text" id="cpf" name="cpf" required maxlength="14" placeholder="000.000.000-00">
+                            </div>
+                        </div>
+                        
+                        <div class="display-flex row row-full justify-start align-center padding-x-sm">
+                            <div class="col">
+                                <label for="sexo">Sexo *</label>
+                                <select class="width-300" id="sexo" name="sexo" required>
+                                    <option value="">Selecione</option>
+                                    <option value="Feminino">Feminino</option>
+                                    <option value="Masculino">Masculino</option>
+                                    <option value="Outro">Outro</option>
+                                </select>
                             </div>
                         </div>
 
@@ -138,7 +150,7 @@ $faculdades = [
                         <div class="display-flex row row-full justify-start align-center padding-x-sm">
                             <div class="col">
                                 <label for="senha">Senha *</label>
-                                <input class="width-400" type="password" id="senha" name="senha" required minlength="6" maxlength="25" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+                                <input class="width-400" type="password" id="senha" name="senha" required minlength="<?php echo PASSWORD_MIN_LENGTH; ?>" maxlength="<?php echo PASSWORD_MAX_LENGTH; ?>" placeholder="Mín. <?php echo PASSWORD_MIN_LENGTH; ?> caracteres, 1 maiúscula, 1 minúscula, 1 número e 1 símbolo" autocomplete="new-password">
                             </div>
                         </div>
 
@@ -146,7 +158,7 @@ $faculdades = [
                             <div class="col">
                                 <label class="checkbox-label">
                                     <input type="checkbox" id="aceite_termos_lgpd" name="aceite_termos_lgpd" value="1" required>
-                                    <span>Li e aceito os <a href="<?php echo htmlspecialchars($termosLgpdPdfUrl, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">termos sobre LGPD</a></span>
+                                    <span>Li e aceito os <button type="button" class="link-inline" data-nav-href="<?php echo htmlspecialchars($termosLgpdPdfUrl, ENT_QUOTES, 'UTF-8'); ?>" data-nav-target="_blank">termos sobre LGPD</button></span>
                                 </label>
                             </div>
                         </div>
@@ -165,6 +177,7 @@ $faculdades = [
         <div id="toast-container" class="toast-container" aria-live="polite"></div>
     </div>
 
+    <script src="/assets/js/shared/navigate-buttons.js" defer></script>
     <script src="/assets/js/shared/cpf.js" defer></script>
     <script src="/assets/js/shared/toast.js" defer></script>
     <script src="/assets/js/shared/text-formatter.js"></script>
@@ -200,8 +213,9 @@ $faculdades = [
                     return;
                 }
                 const senha = (form.querySelector("#senha") && form.querySelector("#senha").value) || "";
-                if (senha.length < 6) {
-                    if (window.App && App.Toast) App.Toast.show({ type: "error", variant: "full", title: "Erro", message: "A senha deve ter no mínimo 6 caracteres." });
+                const senhaRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{<?php echo PASSWORD_MIN_LENGTH; ?>,<?php echo PASSWORD_MAX_LENGTH; ?>}$/;
+                if (!senhaRegex.test(senha)) {
+                    if (window.App && App.Toast) App.Toast.show({ type: "error", variant: "full", title: "Erro", message: "A senha deve seguir a política: <?php echo addslashes(Security::passwordPolicySummary()); ?>." });
                     return;
                 }
                 if (!form.querySelector("#aceite_termos_lgpd").checked) {
@@ -227,6 +241,7 @@ $faculdades = [
                         cpf: cpfDigits,
                         senha: senha,
                         telefone: (formData.get("telefone") || "").trim().slice(0, 20),
+                        sexo: (formData.get("sexo") || "").trim(),
                         telefone_whatsapp: form.querySelector("#telefone_whatsapp").checked,
                         faculdade: formData.get("faculdade") || "",
                         email: (formData.get("email") || "").trim().toLowerCase().slice(0, 255),

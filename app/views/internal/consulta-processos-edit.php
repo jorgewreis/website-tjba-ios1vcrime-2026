@@ -5,7 +5,9 @@ header('Content-Type: text/html; charset=UTF-8');
 if (function_exists('mb_internal_encoding')) mb_internal_encoding('UTF-8');
 
 require_once __DIR__ . '/../../helpers/Conection.php';
+require_once __DIR__ . '/../../repositories/SalaAudienciasPautaParteRepository.php';
 require_once __DIR__ . '/../../services/ConsultaProcessosService.php';
+require_once __DIR__ . '/../../services/ProcessoPrioridadesService.php';
 
 $id = trim((string) ($_GET['id'] ?? ''));
 if ($id === '') { header('Location: /frame.php?page=consultaprocessos'); exit; }
@@ -15,6 +17,13 @@ $processo = $service->get($id);
 if ($processo === null) { header('Location: /frame.php?page=consultaprocessos'); exit; }
 
 $partes = $processo['partes'] ?? [];
+$processoIdFicha = trim((string) ($processo['id'] ?? ''));
+$nMenoresPauta = $processoIdFicha !== ''
+    ? (new SalaAudienciasPautaParteRepository($connection))->countPartesMenoresAtivasPorProcesso($processoIdFicha)
+    : 0;
+$prioridadesFichaEstado = $processoIdFicha !== ''
+    ? (new ProcessoPrioridadesService($connection))->getEstadoEdicaoPorProcessoId($processoIdFicha, $nMenoresPauta)
+    : null;
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -34,6 +43,24 @@ $partes = $processo['partes'] ?? [];
     </div>
     <div class="container-full card-page">
         <input type="hidden" id="processo-id" value="<?php echo htmlspecialchars($processo['id'] ?? ''); ?>">
+        <?php if ($prioridadesFichaEstado !== null): ?>
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <h2>Prioridades processuais</h2>
+        </div>
+        <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md" id="prioridades-processuais-wrap">
+            <p class="description-page" style="margin:0;">Prioridades do processo (valem para todas as audiências). Inclusões e exclusões são salvas ao confirmar cada ação.</p>
+            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
+                <div class="col">
+                    <label for="prioridade-catalog-select">Incluir prioridade</label>
+                    <select class="width-500 height-md" id="prioridade-catalog-select">
+                        <option value="" selected disabled>Selecione...</option>
+                    </select>
+                </div>
+                <button type="button" class="btn btn-primary height-md" id="btn-prioridade-adicionar">Adicionar</button>
+            </div>
+            <div id="prioridades-processuais-list" class="display-flex col col-full gap-y-sm" aria-live="polite"></div>
+        </div>
+        <?php endif; ?>
         <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Partes vinculadas</h2></div>
         <?php if (!empty($partes)): ?>
             <table class="table-list">
@@ -46,8 +73,8 @@ $partes = $processo['partes'] ?? [];
                         <td><?php echo htmlspecialchars($p['tipo_parte'] ?? '—'); ?></td>
                         <td><?php echo htmlspecialchars($p['polo'] ?? '—'); ?></td>
                         <td>
-                            <a href="/frame.php?page=consultapartesedit&id=<?php echo urlencode($p['parte_id'] ?? ''); ?>" class="btn btn-secondary-outline">Ver pessoa</a>
-                            <a href="/frame.php?page=processospartesedit&id=<?php echo urlencode($p['id'] ?? ''); ?>" class="btn btn-secondary-outline">Editar vínculo</a>
+                            <button type="button" class="btn btn-secondary-outline" data-nav-href="/frame.php?page=consultapartesedit&id=<?php echo urlencode($p['parte_id'] ?? ''); ?>">Ver pessoa</button>
+                            <button type="button" class="btn btn-secondary-outline" data-nav-href="/frame.php?page=processospartesedit&id=<?php echo urlencode($p['id'] ?? ''); ?>">Editar vínculo</button>
                             <button type="button" class="btn btn-secondary-outline btn-desvincular" data-id="<?php echo htmlspecialchars($p['id'] ?? ''); ?>" data-processo-id="<?php echo htmlspecialchars($processo['id'] ?? ''); ?>">Desvincular</button>
                         </td>
                     </tr>
@@ -62,12 +89,23 @@ $partes = $processo['partes'] ?? [];
             </div>
         <?php endif; ?>
         <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
-            <a href="/frame.php?page=consultaprocessos" class="btn btn-secondary">Voltar</a>
-            <a href="/frame.php?page=processospartescreate&processo_id=<?php echo urlencode($processo['id'] ?? ''); ?>" class="btn btn-primary">Vincular parte</a>
+            <button type="button" class="btn btn-secondary" data-nav-href="/frame.php?page=consultaprocessos">Voltar</button>
+            <button type="button" class="btn btn-primary" data-nav-href="/frame.php?page=processospartescreate&processo_id=<?php echo urlencode($processo['id'] ?? ''); ?>">Vincular parte</button>
         </div>
     </div>
+    <?php if ($prioridadesFichaEstado !== null): ?>
+    <script>
+        window.PROCESSO_PRIORIDADES_PROCESSO_ID = <?php echo json_encode($processoIdFicha, JSON_UNESCAPED_UNICODE); ?>;
+        window.PROCESSO_PRIORIDADES_INITIAL = <?php echo json_encode($prioridadesFichaEstado, JSON_UNESCAPED_UNICODE); ?>;
+    </script>
+    <script src="/assets/js/modules/audiencias/pauta-edit-prioridades.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-edit-prioridades.js') ?: time(); ?>"></script>
+    <?php endif; ?>
     <script>
     function queuePostReloadToast(type, title, message) {
+        if (window.App && App.Page && typeof App.Page.queuePostReloadToast === 'function') {
+            App.Page.queuePostReloadToast(type, title, message, 'cartorio.postReloadToast');
+            return;
+        }
         try {
             var key = 'cartorio.postReloadToast';
             var raw = sessionStorage.getItem(key);
@@ -77,18 +115,22 @@ $partes = $processo['partes'] ?? [];
             sessionStorage.setItem(key, JSON.stringify(lista));
         } catch (e) {}
     }
-    var pendingConfirmations = {};
-    function requireSecondClick(key, message) {
-        var now = Date.now();
-        var validUntil = Number(pendingConfirmations[key] || 0);
-        if (validUntil > now) {
-            delete pendingConfirmations[key];
-            return true;
-        }
-        pendingConfirmations[key] = now + 5000;
-        if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Confirmação', message: message });
-        return false;
-    }
+    var requireSecondClick = window.App && App.Page && typeof App.Page.createSecondClickGuard === 'function'
+        ? App.Page.createSecondClickGuard()
+        : (function () {
+            var pendingConfirmations = {};
+            return function (key, message) {
+                var now = Date.now();
+                var validUntil = Number(pendingConfirmations[key] || 0);
+                if (validUntil > now) {
+                    delete pendingConfirmations[key];
+                    return true;
+                }
+                pendingConfirmations[key] = now + 5000;
+                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Confirmação', message: message });
+                return false;
+            };
+        })();
     document.querySelectorAll('.btn-desvincular').forEach(function(btn) {
         btn.addEventListener('click', function() {
             var id = this.getAttribute('data-id');

@@ -11,6 +11,16 @@ require_once __DIR__ . '/../../repositories/GuiasSubtarefasRepository.php';
 
 $connection = Conection::getInstance()->getConnection();
 
+$currentUserId   = trim((string) ($_SESSION['id_usuario'] ?? ''));
+$perfisGestaoLst = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
+$isGestao        = false;
+if ($currentUserId !== '') {
+    $stmtPerfis = $connection->prepare('SELECT DISTINCT UPPER(TRIM(perfil)) AS perfil FROM usuario_perfil WHERE usuario = ? AND perfil IS NOT NULL');
+    $stmtPerfis->execute([$currentUserId]);
+    $perfisUsuario = $stmtPerfis->fetchAll(PDO::FETCH_COLUMN);
+    $isGestao = count(array_intersect($perfisUsuario, $perfisGestaoLst)) > 0;
+}
+
 $routePage = trim((string) ($_GET['page'] ?? 'guias'));
 $tipoFilter = trim($_GET['tipo'] ?? '');
 $statusFilter = trim($_GET['status'] ?? '');
@@ -287,28 +297,42 @@ if ($totalPages > 0) {
                         </div>                        
                     </div>
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                        <div class="col button-table button-edit" data-edit-id="<?php echo htmlspecialchars($idGuia, ENT_QUOTES); ?>" title="Editar">
-                            <i class="fi fi-rr-file-edit"></i>
-                        </div>
+                        <button type="button" class="btn btn-editar" data-edit-id="<?php echo htmlspecialchars($idGuia, ENT_QUOTES); ?>" title="Editar">
+                            <i class="fi fi-rr-pen-square"></i>
+                        </button>
                         <div class="display-flex row row-fit justify-end gap-y-sm allocate-chips-row allocate-users">
                             <?php
                             $alocados = $row['Alocados'] ?? [];
-                            if (count($alocados) > 0) {
-                                foreach ($alocados as $alocado) {
-                                    $tipo = $alocado['tipo'] ?? 'specific';
-                                    $iniciais = $alocado['iniciais'] ?? '—';
-                                    $nomeCompleto = $alocado['nome_completo'] ?? '';
-                                    $userLabel = $nomeCompleto !== '' ? $nomeCompleto : $iniciais;
-                                    if ($tipo === 'rule') {
-                                        $title = 'Guia alocada para ' . ($nomeCompleto !== '' ? $nomeCompleto : $iniciais);
-                                    } elseif ($tipo === 'all') {
-                                        $title = 'Usuário alocado para a tarefa: ' . ($nomeCompleto !== '' ? $nomeCompleto : $iniciais);
-                                    } else {
-                                        $title = 'Alocação voluntária: ' . ($nomeCompleto !== '' ? $nomeCompleto : $iniciais);
-                                    }
-                                    $classeTipo = in_array($tipo, ['rule', 'specific', 'all'], true) ? ' ' . $tipo : '';
-                                    ?><span class="user-allocate<?php echo $classeTipo; ?>" title="<?php echo htmlspecialchars($title, ENT_QUOTES); ?>"><?php echo htmlspecialchars($iniciais, ENT_QUOTES); ?></span><?php
+                            foreach ($alocados as $alocado) {
+                                $tipo         = $alocado['tipo'] ?? 'specific';
+                                $iniciais     = htmlspecialchars($alocado['iniciais'] ?? '—', ENT_QUOTES);
+                                $nomeCompleto = $alocado['nome_completo'] ?? '';
+                                $nomeLabel    = $nomeCompleto !== '' ? $nomeCompleto : ($alocado['iniciais'] ?? '—');
+                                if ($tipo === 'rule') {
+                                    $chipTitle = 'Servidor responsável (regra): ' . $nomeLabel;
+                                } elseif ($tipo === 'all') {
+                                    $chipTitle = 'Servidor alocado: ' . $nomeLabel;
+                                } else {
+                                    $chipTitle = 'Autoalocado: ' . $nomeLabel;
                                 }
+                                $classeTipo   = in_array($tipo, ['rule', 'specific', 'all'], true) ? ' ' . $tipo : '';
+                                $alocadoIdStr = htmlspecialchars($alocado['alocado_id'] ?? '', ENT_QUOTES);
+                                $usuarioIdStr = $alocado['usuario_id'] ?? '';
+                                $podeRemover  = $isGestao || ($tipo === 'specific' && $usuarioIdStr === $currentUserId);
+                                ?>
+                                <span class="user-allocate-wrap">
+                                    <span class="user-allocate<?php echo $classeTipo; ?>" title="<?php echo htmlspecialchars($chipTitle, ENT_QUOTES); ?>"><?php echo $iniciais; ?></span>
+                                    <?php if ($podeRemover): ?>
+                                    <button type="button"
+                                        class="user-allocate-remove js-desalocar"
+                                        data-alocado-id="<?php echo $alocadoIdStr; ?>"
+                                        data-tipo="<?php echo htmlspecialchars($tipo, ENT_QUOTES); ?>"
+                                        data-endpoint="/api/cartorio-guias/desalocar.php"
+                                        title="Remover alocação"
+                                        aria-label="Remover alocação">×</button>
+                                    <?php endif; ?>
+                                </span>
+                                <?php
                             }
                             ?>
                         </div>
@@ -489,22 +513,22 @@ if ($totalPages > 0) {
                     $nextParams['page_number'] = $nextPage;
                     $nextHref = '?' . http_build_query($nextParams);
                     ?>
-                    <a class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>" <?php if ($currentPage > 1): ?>href="<?php echo htmlspecialchars($prevHref); ?>"<?php else: ?>aria-disabled="true"<?php endif; ?>>
+                    <button type="button" class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>" <?php if ($currentPage > 1): ?>data-nav-href="<?php echo htmlspecialchars($prevHref, ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>>
                         <img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior">
-                    </a>
+                    </button>
                     <?php foreach ($paginationButtons as $page): ?>
                         <?php $pageParams = $baseQueryParams; $pageParams['page_number'] = $page; ?>
-                        <a class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" href="?<?php echo htmlspecialchars(http_build_query($pageParams)); ?>"><?php echo $page; ?></a>
+                        <button type="button" class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" <?php if ($page !== $currentPage): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($pageParams), ENT_QUOTES); ?>"<?php else: ?>disabled<?php endif; ?>><?php echo $page; ?></button>
                     <?php endforeach; ?>
                     <?php if ($paginationEllipsis && !empty($trailingPages)): ?>
                         <?php foreach ($trailingPages as $page): ?>
                             <?php $pageParams = $baseQueryParams; $pageParams['page_number'] = $page; ?>
-                            <a class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" href="?<?php echo htmlspecialchars(http_build_query($pageParams)); ?>"><?php echo $page; ?></a>
+                            <button type="button" class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" <?php if ($page !== $currentPage): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($pageParams), ENT_QUOTES); ?>"<?php else: ?>disabled<?php endif; ?>><?php echo $page; ?></button>
                         <?php endforeach; ?>
                     <?php endif; ?>
-                    <a class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>" <?php if ($currentPage < $totalPages): ?>href="<?php echo htmlspecialchars($nextHref); ?>"<?php else: ?>aria-disabled="true"<?php endif; ?>>
+                    <button type="button" class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>" <?php if ($currentPage < $totalPages): ?>data-nav-href="<?php echo htmlspecialchars($nextHref, ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>>
                         <img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página">
-                    </a>
+                    </button>
                 </div>
             <?php endif; ?>
         </div>
@@ -521,12 +545,20 @@ if ($totalPages > 0) {
     <script>
     (function () {
         const notify = (type, title, message) => {
+            if (window.App && App.Page && typeof App.Page.notify === 'function') {
+                App.Page.notify(type, title, message);
+                return;
+            }
             if (typeof showToast === 'function') {
                 showToast({ type, variant: 'full', title, message });
             }
         };
         const POST_RELOAD_TOAST_KEY = 'cartorio.postReloadToast';
         const queuePostReloadToast = (type, title, message) => {
+            if (window.App && App.Page && typeof App.Page.queuePostReloadToast === 'function') {
+                App.Page.queuePostReloadToast(type, title, message, POST_RELOAD_TOAST_KEY);
+                return;
+            }
             try {
                 const raw = sessionStorage.getItem(POST_RELOAD_TOAST_KEY);
                 const fila = raw ? JSON.parse(raw) : [];
@@ -536,6 +568,10 @@ if ($totalPages > 0) {
             } catch (e) {}
         };
         const flushPostReloadToast = () => {
+            if (window.App && App.Page && typeof App.Page.flushPostReloadToast === 'function') {
+                App.Page.flushPostReloadToast(POST_RELOAD_TOAST_KEY, { type: 'info', title: 'Informação' });
+                return;
+            }
             try {
                 const raw = sessionStorage.getItem(POST_RELOAD_TOAST_KEY);
                 if (!raw) return;
@@ -585,7 +621,7 @@ if ($totalPages > 0) {
             });
         }
 
-        document.querySelectorAll('.button-edit[data-edit-id]').forEach(function (btn) {
+        document.querySelectorAll('.btn-editar[data-edit-id]').forEach(function (btn) {
             btn.addEventListener('click', function (event) {
                 const guiaId = (event.currentTarget?.getAttribute('data-edit-id') || '').trim();
                 if (!guiaId) {
@@ -777,6 +813,43 @@ if ($totalPages > 0) {
             });
         });
     })();
+
+        (function () {
+            const pending = {};
+            function requireSecondClick(key, msg) {
+                const now = Date.now();
+                if ((pending[key] || 0) > now) { delete pending[key]; return true; }
+                pending[key] = now + 5000;
+                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Confirmação', message: msg });
+                return false;
+            }
+            document.addEventListener('click', function (e) {
+                const btn = e.target.closest('.js-desalocar');
+                if (!btn) return;
+                const alocadoId = btn.getAttribute('data-alocado-id') || '';
+                const tipo      = btn.getAttribute('data-tipo') || '';
+                const endpoint  = btn.getAttribute('data-endpoint') || '';
+                if (!alocadoId || !endpoint) return;
+                if (!requireSecondClick('desalocar-' + alocadoId, 'Clique novamente para confirmar a remoção da alocação.')) return;
+                fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ alocado_id: alocadoId, tipo: tipo }),
+                    credentials: 'same-origin'
+                }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+                .then(function (res) {
+                    if (res.ok && res.j && res.j.deleted) {
+                        if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Alocação removida.' });
+                        setTimeout(function () { window.location.reload(); }, 800);
+                    } else {
+                        const msg = (res.j && res.j.error) ? res.j.error : 'Falha ao remover alocação.';
+                        if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: msg });
+                    }
+                }).catch(function () {
+                    if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
+                });
+            });
+        })();
     </script>
 </body>
 </html>

@@ -11,6 +11,7 @@ require_once __DIR__ . '/../../helpers/DateHelper.php';
 require_once __DIR__ . '/../../helpers/TextFormatter.php';
 require_once __DIR__ . '/../../helpers/AvatarCatalog.php';
 require_once __DIR__ . '/../../helpers/SetoresAccessHelper.php';
+require_once __DIR__ . '/../../helpers/SexoHelper.php';
 require_once __DIR__ . '/../../../config/security.php';
 
 Security::requireAuthentication();
@@ -33,6 +34,9 @@ if (!$podeCadastrar) {
 }
 
 $connection = Conection::getInstance()->getConnection();
+$stHasSexo = $connection->prepare("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usuarios' AND COLUMN_NAME = 'sexo'");
+$stHasSexo->execute();
+$hasSexoColumn = ((int) $stHasSexo->fetchColumn()) > 0;
 
 $mensagemErro = '';
 $mensagemSucesso = '';
@@ -42,6 +46,7 @@ $formValues = [
     'cpf'     => '',
     'email'   => '',
     'telefone' => '',
+    'sexo'    => '',
     'tipo'    => 'interno',
     'cargo'   => '',
     'setor'   => '',
@@ -59,6 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $cpf = preg_replace('/\D/', '', trim((string) ($_POST['cpf'] ?? '')));
         $email = trim((string) ($_POST['email'] ?? ''));
         $telefone = trim((string) ($_POST['telefone'] ?? ''));
+        $sexo = SexoHelper::normalize(trim((string) ($_POST['sexo'] ?? '')));
         $dataNascimentoRaw = trim((string) ($_POST['data_nascimento'] ?? ''));
         $dataNascimentoIso = DateHelper::normalizeIsoDate($dataNascimentoRaw);
         $senha = (string) ($_POST['senha'] ?? '');
@@ -105,6 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'cpf'      => strlen($cpf) === 11 ? preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', $cpf) : $_POST['cpf'] ?? '',
             'email'    => $email,
             'telefone' => $telefone,
+            'sexo'     => $sexo,
             'tipo'     => $isExterno ? 'externo' : 'interno',
             'cargo'    => $cargo,
             'setor'    => $setorLabel,
@@ -120,10 +127,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $mensagemErro = 'CPF inválido ou incompleto.';
         } elseif ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $mensagemErro = 'E-mail obrigatório e válido.';
+        } elseif (!SexoHelper::isValid($sexo)) {
+            $mensagemErro = 'Selecione o sexo.';
         } elseif ($dataNascimentoRaw !== '' && $dataNascimentoIso === null) {
             $mensagemErro = 'Informe a data de nascimento no formato AAAA-MM-DD.';
-        } elseif (strlen($senha) < 10 || !preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{10,}$/', $senha)) {
-            $mensagemErro = 'Senha deve ter no mínimo 10 caracteres, 1 maiúscula, 1 minúscula, 1 número e 1 símbolo.';
+        } elseif (($policy = Security::validatePasswordPolicy($senha))['valid'] !== true) {
+            $mensagemErro = $policy['message'] ?? 'Senha inválida.';
         } elseif ($senha !== $senhaConfirm) {
             $mensagemErro = 'As senhas não coincidem.';
         } else {
@@ -140,30 +149,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $senhaHash = Security::hashPassword($senha);
                     $cpfFormatado = preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', $cpf);
 
-                    $stmt = $connection->prepare("
-                        INSERT INTO usuarios (
-                            id_usuario, nome, sobrenome, data_nascimento, cargo, instituicao, cpf, telefone, email,
-                            senha_hash, meta, ultimo_acesso, token_acesso, token_expira, cadastro_ativo, created_at, updated_at,
-                            avatar_slug
-                        ) VALUES (
-                            ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                            ?, '-', NULL, NULL, NULL, 0, NOW(), NOW(),
-                            ?
-                        )
-                    ");
-                    $stmt->execute([
-                        $idUsuario,
-                        $nome,
-                        $sobrenome,
-                        $dataNascimentoIso,
-                        $cargo !== '' ? $cargo : null,
-                        $setorLabel !== '' ? $setorLabel : '-',
-                        $cpfFormatado,
-                        $telefone !== '' ? $telefone : null,
-                        $email,
-                        $senhaHash,
-                        AvatarCatalog::getDefaultSlug(),
-                    ]);
+                    if ($hasSexoColumn) {
+                        $stmt = $connection->prepare("
+                            INSERT INTO usuarios (
+                                id_usuario, nome, sobrenome, sexo, data_nascimento, cargo, instituicao, cpf, telefone, email,
+                                senha_hash, meta, ultimo_acesso, token_acesso, token_expira, cadastro_ativo, created_at, updated_at,
+                                avatar_slug
+                            ) VALUES (
+                                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                                ?, '-', NULL, NULL, NULL, 0, NOW(), NOW(),
+                                ?
+                            )
+                        ");
+                        $stmt->execute([
+                            $idUsuario,
+                            $nome,
+                            $sobrenome,
+                            $sexo,
+                            $dataNascimentoIso,
+                            $cargo !== '' ? $cargo : null,
+                            $setorLabel !== '' ? $setorLabel : '-',
+                            $cpfFormatado,
+                            $telefone !== '' ? $telefone : null,
+                            $email,
+                            $senhaHash,
+                            AvatarCatalog::getDefaultSlug(),
+                        ]);
+                    } else {
+                        $stmt = $connection->prepare("
+                            INSERT INTO usuarios (
+                                id_usuario, nome, sobrenome, data_nascimento, cargo, instituicao, cpf, telefone, email,
+                                senha_hash, meta, ultimo_acesso, token_acesso, token_expira, cadastro_ativo, created_at, updated_at,
+                                avatar_slug
+                            ) VALUES (
+                                ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                                ?, '-', NULL, NULL, NULL, 0, NOW(), NOW(),
+                                ?
+                            )
+                        ");
+                        $stmt->execute([
+                            $idUsuario,
+                            $nome,
+                            $sobrenome,
+                            $dataNascimentoIso,
+                            $cargo !== '' ? $cargo : null,
+                            $setorLabel !== '' ? $setorLabel : '-',
+                            $cpfFormatado,
+                            $telefone !== '' ? $telefone : null,
+                            $email,
+                            $senhaHash,
+                            AvatarCatalog::getDefaultSlug(),
+                        ]);
+                    }
 
                     if ($perfil !== '') {
                         $idUsuPerfil = 'USP-' . strtoupper(bin2hex(random_bytes(13)));
@@ -289,6 +326,17 @@ $csrfToken = Security::generateCSRFToken();
             </div>
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col full-line">
+                    <label for="create-sexo">Sexo <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <select id="create-sexo" name="sexo" class="width-300 height-md white" required>
+                        <option value="">Selecione</option>
+                        <option value="Feminino"<?php echo ($formValues['sexo'] ?? '') === 'Feminino' ? ' selected' : ''; ?>>Feminino</option>
+                        <option value="Masculino"<?php echo ($formValues['sexo'] ?? '') === 'Masculino' ? ' selected' : ''; ?>>Masculino</option>
+                        <option value="Outro"<?php echo ($formValues['sexo'] ?? '') === 'Outro' ? ' selected' : ''; ?>>Outro</option>
+                    </select>
+                </div>
+            </div>
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
+                <div class="col full-line">
                     <label for="create-data-nascimento">Data de nascimento</label>
                     <input type="date" id="create-data-nascimento" name="data_nascimento" class="width-300 height-md white" max="<?php echo date('Y-m-d'); ?>" value="<?php echo htmlspecialchars($formValues['data_nascimento'], ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
@@ -387,6 +435,7 @@ $csrfToken = Security::generateCSRFToken();
         var emailInput = document.getElementById('create-email');
         var senhaInput = document.getElementById('create-senha');
         var senhaConfirmInput = document.getElementById('create-senha-confirm');
+        var sexoSelect = document.getElementById('create-sexo');
         var tipoSelect = document.getElementById('create-tipo');
         var internoFields = document.getElementById('create-interno-fields');
         var externoFields = document.getElementById('create-externo-fields');
@@ -549,12 +598,14 @@ $csrfToken = Security::generateCSRFToken();
             dataNascimentoInput.addEventListener('input', updateCadastrarButton);
             dataNascimentoInput.addEventListener('change', updateCadastrarButton);
         }
+        if (sexoSelect) sexoSelect.addEventListener('change', updateCadastrarButton);
 
         function isFormValidForSubmit() {
             var nome = (nomeInput && nomeInput.value) ? nomeInput.value.trim() : '';
             var sobrenome = (sobrenomeInput && sobrenomeInput.value) ? sobrenomeInput.value.trim() : '';
             var cpf = (cpfInput && cpfInput.value) ? cpfInput.value : '';
             var email = (emailInput && emailInput.value) ? emailInput.value.trim() : '';
+            var sexo = (sexoSelect && sexoSelect.value) ? sexoSelect.value.trim() : '';
             var senha = (senhaInput && senhaInput.value) ? senhaInput.value : '';
             var conf = (senhaConfirmInput && senhaConfirmInput.value) ? senhaConfirmInput.value : '';
             if (!nome || !sobrenome) return false;
@@ -566,6 +617,7 @@ $csrfToken = Security::generateCSRFToken();
                 if (!validarCPF(cpf)) return false;
             }
             if (!email || !validarEmail(email)) return false;
+            if (sexo !== 'Feminino' && sexo !== 'Masculino' && sexo !== 'Outro') return false;
             if (!validarSenha(senha)) return false;
             if (isExternoSelected()) return senha === conf;
             var cargo = (cargoSelect && cargoSelect.value) ? cargoSelect.value.trim() : '';

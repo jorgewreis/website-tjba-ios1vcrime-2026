@@ -44,7 +44,7 @@ if ($parteId !== '') {
     <div class="header-page">
         <div class="location"><span class="all">Interno - Consultas -</span> <span class="specific">Vínculos pessoa-instituição</span></div>
         <h1 class="title-page">Vínculos pessoa-instituição</h1>
-        <p class="description-page">Consulte por pessoa (parte) ou por instituição.</p>
+        <p class="description-page">Consulte por pessoa ou por instituição.</p>
     </div>
     <div class="container-full card-page">
 
@@ -53,7 +53,7 @@ if ($parteId !== '') {
                 <h2>Vínculos</h2>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md">
-                <a href="/frame.php?page=partesinstituicoescreate" class="btn btn-primary height-md">Novo vínculo</a>
+                <button type="button" class="btn btn-primary height-md" data-nav-href="/frame.php?page=partesinstituicoescreate">Novo vínculo</button>
             </div>
         </div>
 
@@ -122,9 +122,9 @@ if ($parteId !== '') {
                         </div>
                     </div>
                     <div class="display-flex row row-fit justify-end gap-y-sm">
-                        <a href="/frame.php?page=partesinstituicoesedit&id=<?php echo urlencode($r['id'] ?? ''); ?>" class="btn btn-secondary-outline height-sm">Editar</a>
+                        <button type="button" class="btn btn-secondary-outline height-sm" data-nav-href="/frame.php?page=partesinstituicoesedit&id=<?php echo urlencode($r['id'] ?? ''); ?>">Editar</button>
                         <?php if ($parteId !== ''): ?>
-                            <a href="/frame.php?page=consultapartesedit&id=<?php echo urlencode($r['parte_id'] ?? ''); ?>" class="btn btn-secondary-outline height-sm">Ver pessoa</a>
+                            <button type="button" class="btn btn-secondary-outline height-sm" data-nav-href="/frame.php?page=consultapartesedit&id=<?php echo urlencode($r['parte_id'] ?? ''); ?>">Ver pessoa</button>
                         <?php endif; ?>
                     </div>
                 </div>

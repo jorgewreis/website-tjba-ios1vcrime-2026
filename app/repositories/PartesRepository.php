@@ -7,6 +7,14 @@ require_once __DIR__ . '/../../config/security.php';
 
 final class PartesRepository
 {
+    /** Valores usados nos filtros de defensor (audiências) e ao sincronizar vínculo processo-parte. */
+    public const PROFISSAO_ADVOGADO = 'Advogado';
+    public const PROFISSAO_ADVOGADA = 'Advogada';
+    public const PROFISSAO_DEFENSOR_PUBLICO = 'Defensor Público';
+    public const PROFISSAO_DEFENSORA_PUBLICA = 'Defensora Pública';
+
+    private const TABELA_PARTES_INSTITUICOES = 'partes_instituicoes';
+
     private PDO $connection;
     private string $table;
 
@@ -24,7 +32,7 @@ final class PartesRepository
         }
 
         $statement = $this->connection->prepare(
-            sprintf('SELECT `id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `created_at`, `updated_at` FROM `%s` WHERE `id` = :id LIMIT 1', $this->table)
+            sprintf('SELECT `id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `profissao`, `created_at`, `updated_at` FROM `%s` WHERE `id` = :id LIMIT 1', $this->table)
         );
         $statement->bindValue(':id', $id);
         $statement->execute();
@@ -41,7 +49,7 @@ final class PartesRepository
         }
 
         $statement = $this->connection->prepare(
-            sprintf('SELECT `id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `created_at`, `updated_at` FROM `%s` WHERE `cpf` = :cpf LIMIT 1', $this->table)
+            sprintf('SELECT `id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `profissao`, `created_at`, `updated_at` FROM `%s` WHERE `cpf` = :cpf LIMIT 1', $this->table)
         );
         $statement->bindValue(':cpf', $cpf);
         $statement->execute();
@@ -58,7 +66,7 @@ final class PartesRepository
         }
 
         $statement = $this->connection->prepare(
-            sprintf('SELECT `id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `created_at`, `updated_at` FROM `%s` WHERE `nome_completo` = :nome_completo LIMIT 1', $this->table)
+            sprintf('SELECT `id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `profissao`, `created_at`, `updated_at` FROM `%s` WHERE `nome_completo` = :nome_completo LIMIT 1', $this->table)
         );
         $statement->bindValue(':nome_completo', $nomeCompleto);
         $statement->execute();
@@ -73,7 +81,7 @@ final class PartesRepository
         [$whereClause, $params, $joinClause] = $this->buildListFilter($filters);
 
         $sql = sprintf(
-            'SELECT p.`id`, p.`cpf`, p.`nome_completo`, p.`sexo`, p.`data_nascimento`, p.`created_at`, p.`updated_at` FROM `%s` p %s %s ORDER BY p.`nome_completo` ASC LIMIT :limit OFFSET :offset',
+            'SELECT p.`id`, p.`cpf`, p.`nome_completo`, p.`sexo`, p.`data_nascimento`, p.`profissao`, p.`created_at`, p.`updated_at` FROM `%s` p %s %s ORDER BY p.`nome_completo` ASC LIMIT :limit OFFSET :offset',
             $this->table,
             $joinClause,
             $whereClause ? 'WHERE ' . $whereClause : ''
@@ -100,6 +108,167 @@ final class PartesRepository
         $statement->execute();
 
         return (int) $statement->fetchColumn();
+    }
+
+    /**
+     * Profissões distintas já usadas em `partes` ou em vínculos ativos com instituições.
+     *
+     * @return list<string>
+     */
+    public function listProfissoesDistintas(): array
+    {
+        $sql = sprintf(
+            '(SELECT DISTINCT TRIM(`profissao`) AS `p` FROM `%s` WHERE `profissao` IS NOT NULL AND TRIM(`profissao`) != \'\')
+             UNION
+             (SELECT DISTINCT TRIM(`profissao`) AS `p` FROM `%s` WHERE `profissao` IS NOT NULL AND TRIM(`profissao`) != \'\' AND `ativo` = 1)
+             ORDER BY `p` ASC',
+            $this->table,
+            self::TABELA_PARTES_INSTITUICOES
+        );
+        $statement = $this->connection->query($sql);
+        if ($statement === false) {
+            return [];
+        }
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+        $out = [];
+        foreach ($rows as $row) {
+            $p = trim((string) ($row['p'] ?? ''));
+            if ($p !== '' && !in_array($p, $out, true)) {
+                $out[] = $p;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Lista pessoas cadastradas com a profissão indicada (ex.: Advogado, Defensor Público).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function listByProfissao(string $profissao, int $limit = 500): array
+    {
+        return $this->listByProfissoes([$profissao], $limit);
+    }
+
+    /**
+     * Lista pessoas cujo campo `profissao` coincide com uma das variações (ex.: Advogado e Advogada).
+     *
+     * @param list<string> $profissoes
+     * @param bool $incluirProfissaoVinculoInstituicao Se true, inclui também quem só informou a profissão no vínculo `partes_instituicoes` (cadastro por instituição).
+     * @return list<array<string, mixed>>
+     */
+    public function listByProfissoes(array $profissoes, int $limit = 500, bool $incluirProfissaoVinculoInstituicao = false): array
+    {
+        $vals = [];
+        foreach ($profissoes as $p) {
+            $t = trim((string) $p);
+            if ($t !== '' && !in_array($t, $vals, true)) {
+                $vals[] = $t;
+            }
+        }
+        $vals = $this->expandSinonimosProfissaoParaFiltro($vals);
+        if ($vals === []) {
+            return [];
+        }
+        $limit = max(1, min(2000, $limit));
+        $placeholders = [];
+        foreach ($vals as $i => $_) {
+            $placeholders[] = ':p' . $i;
+        }
+        $inList = implode(', ', $placeholders);
+
+        if ($incluirProfissaoVinculoInstituicao) {
+            $placeholdersV = [];
+            foreach ($vals as $i => $_) {
+                $placeholdersV[] = ':pv' . $i;
+            }
+            $inListV = implode(', ', $placeholdersV);
+            $statement = $this->connection->prepare(
+                sprintf(
+                    'SELECT DISTINCT `id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `profissao`, `created_at`, `updated_at` FROM (
+                        SELECT `id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `profissao`, `created_at`, `updated_at` FROM `%s` WHERE `profissao` IN (%s)
+                        UNION
+                        SELECT p.`id`, p.`cpf`, p.`nome_completo`, p.`sexo`, p.`data_nascimento`, p.`profissao`, p.`created_at`, p.`updated_at`
+                        FROM `%s` p
+                        INNER JOIN `%s` pi ON pi.`parte_id` = p.`id` AND pi.`ativo` = 1
+                        WHERE pi.`profissao` IN (%s)
+                    ) AS u
+                    ORDER BY `nome_completo` ASC
+                    LIMIT :lim',
+                    $this->table,
+                    $inList,
+                    $this->table,
+                    self::TABELA_PARTES_INSTITUICOES,
+                    $inListV
+                )
+            );
+        } else {
+            $statement = $this->connection->prepare(
+                sprintf(
+                    'SELECT `id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `profissao`, `created_at`, `updated_at` FROM `%s` WHERE `profissao` IN (%s) ORDER BY `nome_completo` ASC LIMIT :lim',
+                    $this->table,
+                    $inList
+                )
+            );
+        }
+        foreach ($vals as $i => $v) {
+            $statement->bindValue(':p' . $i, $v);
+            if ($incluirProfissaoVinculoInstituicao) {
+                $statement->bindValue(':pv' . $i, $v);
+            }
+        }
+        $statement->bindValue(':lim', $limit, PDO::PARAM_INT);
+        $statement->execute();
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+        return $rows === false ? [] : $rows;
+    }
+
+    /**
+     * Inclui grafias comuns no cadastro livre (sem acento, etc.) para o filtro IN (...).
+     *
+     * @param list<string> $vals
+     * @return list<string>
+     */
+    private function expandSinonimosProfissaoParaFiltro(array $vals): array
+    {
+        $extra = [];
+        foreach ($vals as $v) {
+            if ($v === self::PROFISSAO_DEFENSORA_PUBLICA) {
+                $extra[] = 'Defensora Publica';
+            }
+            if ($v === self::PROFISSAO_DEFENSOR_PUBLICO) {
+                $extra[] = 'Defensor Publico';
+            }
+        }
+        $merged = array_merge($vals, $extra);
+        $out = [];
+        foreach ($merged as $s) {
+            $s = trim((string) $s);
+            if ($s !== '' && !in_array($s, $out, true)) {
+                $out[] = $s;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Quando a parte é vinculada ao processo como advogado ou defensor público, grava a profissão em `partes`.
+     */
+    public function syncProfissaoFromTipoProcessoParte(string $parteId, string $tipoParte): void
+    {
+        $parteId = trim($parteId);
+        if ($parteId === '') {
+            return;
+        }
+        $tipo = strtolower(trim($tipoParte));
+        if ($tipo === 'advogado') {
+            $this->update($parteId, ['profissao' => self::PROFISSAO_ADVOGADO]);
+        } elseif ($tipo === 'defensor_publico') {
+            $this->update($parteId, ['profissao' => self::PROFISSAO_DEFENSOR_PUBLICO]);
+        }
     }
 
     /** @return array{0: string, 1: array<string, mixed>, 2: string} */
@@ -157,9 +326,16 @@ final class PartesRepository
             $id = IdGenerator::generateUniquePrefixedId($this->connection, $this->table, 'id', 'PRT', 30);
         }
 
+        $profissao = trim((string) ($row['profissao'] ?? ''));
+        if ($profissao !== '') {
+            $profissao = function_exists('mb_substr') ? mb_substr($profissao, 0, 120, 'UTF-8') : substr($profissao, 0, 120);
+        } else {
+            $profissao = null;
+        }
+
         $statement = $this->connection->prepare(
             sprintf(
-                'INSERT INTO `%s` (`id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `created_at`, `updated_at`) VALUES (:id, :cpf, :nome_completo, :sexo, :data_nascimento, NOW(), NOW())',
+                'INSERT INTO `%s` (`id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `profissao`, `created_at`, `updated_at`) VALUES (:id, :cpf, :nome_completo, :sexo, :data_nascimento, :profissao, NOW(), NOW())',
                 $this->table
             )
         );
@@ -168,6 +344,7 @@ final class PartesRepository
         $statement->bindValue(':nome_completo', $nomeCompleto);
         $statement->bindValue(':sexo', $sexo === '' ? null : $sexo);
         $statement->bindValue(':data_nascimento', $dataNascimento === '' ? null : $dataNascimento);
+        $statement->bindValue(':profissao', $profissao);
         $statement->execute();
 
         return $id;
@@ -176,7 +353,7 @@ final class PartesRepository
     public function update(string $id, array $payload): bool
     {
         $id = trim($id);
-        $allowed = ['cpf', 'nome_completo', 'sexo', 'data_nascimento'];
+        $allowed = ['cpf', 'nome_completo', 'sexo', 'data_nascimento', 'profissao'];
         $set = [];
         $params = [':id' => $id];
 
@@ -199,6 +376,13 @@ final class PartesRepository
                 }
             } elseif ($column === 'nome_completo') {
                 $value = TextFormatter::formatProperName((string) $value, 255);
+            } elseif ($column === 'profissao') {
+                $value = trim((string) $value);
+                if ($value === '') {
+                    $value = null;
+                } else {
+                    $value = function_exists('mb_substr') ? mb_substr($value, 0, 120, 'UTF-8') : substr($value, 0, 120);
+                }
             } else {
                 $value = trim((string) $value);
                 if (in_array($column, ['sexo', 'data_nascimento'], true)) {
@@ -259,12 +443,15 @@ final class PartesRepository
      * Se CPF informado: busca por CPF; se não achar, insere com nome e CPF.
      * Se só nome: busca por nome_completo exato; se não achar, insere só com nome.
      */
-    public function ensureParteByNomeOuCpf(string $nomeCompleto, ?string $cpf = null): string
+    public function ensureParteByNomeOuCpf(string $nomeCompleto, ?string $cpf = null, ?string $profissao = null): string
     {
         $nomeCompleto = TextFormatter::formatProperName(trim($nomeCompleto), 255);
         if ($nomeCompleto === '') {
             throw new InvalidArgumentException('Nome completo é obrigatório.');
         }
+
+        $profRaw = $profissao !== null && trim($profissao) !== '' ? trim($profissao) : '';
+        $profissaoNorm = $profRaw === '' ? null : (function_exists('mb_substr') ? mb_substr($profRaw, 0, 120, 'UTF-8') : substr($profRaw, 0, 120));
 
         $cpfNormalized = $cpf !== null && $cpf !== '' ? $this->normalizeCpf($cpf) : '';
         if ($cpfNormalized !== '') {
@@ -273,7 +460,11 @@ final class PartesRepository
             }
             $existing = $this->findByCpf($cpfNormalized);
             if ($existing !== null) {
-                $this->update((string) $existing['id'], ['nome_completo' => $nomeCompleto]);
+                $up = ['nome_completo' => $nomeCompleto];
+                if ($profissaoNorm !== null) {
+                    $up['profissao'] = $profissaoNorm;
+                }
+                $this->update((string) $existing['id'], $up);
                 return (string) $existing['id'];
             }
             return $this->insert([
@@ -281,11 +472,15 @@ final class PartesRepository
                 'cpf' => $cpfNormalized,
                 'sexo' => null,
                 'data_nascimento' => null,
+                'profissao' => $profissaoNorm,
             ]);
         }
 
         $existing = $this->findByNomeCompleto($nomeCompleto);
         if ($existing !== null) {
+            if ($profissaoNorm !== null) {
+                $this->update((string) $existing['id'], ['profissao' => $profissaoNorm]);
+            }
             return (string) $existing['id'];
         }
         return $this->insert([
@@ -293,6 +488,7 @@ final class PartesRepository
             'cpf' => null,
             'sexo' => null,
             'data_nascimento' => null,
+            'profissao' => $profissaoNorm,
         ]);
     }
 

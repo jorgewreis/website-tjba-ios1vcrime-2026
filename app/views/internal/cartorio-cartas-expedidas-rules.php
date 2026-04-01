@@ -7,6 +7,7 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
+require_once __DIR__ . '/../../helpers/AlocacaoRegrasUsuariosHelper.php';
 
 function resolveUsuarioNome(PDO $connection, ?string $usuarioId): string
 {
@@ -31,27 +32,8 @@ function resolveUsuarioNome(PDO $connection, ?string $usuarioId): string
     return $nomeCompleto !== '' ? $nomeCompleto : 'Nome não informado';
 }
 
-/**
- * Estudantes (perfil ESTUDANTE) não podem ser alocados em regras internas do cartório.
- */
-function isUsuarioEstudante(PDO $connection, string $usuarioId): bool
-{
-    $usuarioId = trim($usuarioId);
-    if ($usuarioId === '') {
-        return false;
-    }
-
-    $stmt = $connection->prepare('SELECT 1 FROM usuario_perfil WHERE usuario = :usuario_id AND UPPER(TRIM(perfil)) = :perfil LIMIT 1');
-    $stmt->bindValue(':usuario_id', $usuarioId);
-    $stmt->bindValue(':perfil', 'ESTUDANTE');
-    $stmt->execute();
-
-    return $stmt->fetch(PDO::FETCH_ASSOC) !== false;
-}
-
 $connection = Conection::getInstance()->getConnection();
 
-/** Perfis que podem alterar a regra de alocação (tabela usuario_perfil). */
 $perfisAlterarRegra = ['ADMIN', 'DIRETORA', 'MAGISTRADA'];
 
 $userPerfis = [];
@@ -72,41 +54,30 @@ $selectedUserId = '';
 $ruleRow = null;
 $ruleUsuarioId = '';
 $ruleUsuarioNome = 'Nenhum usuário definido';
+$idsInternosElegiveis = [];
+
+$nomeCurtoModulo = 'Cartas expedidas';
+$locationAll = 'Interno - Cartório - Cartas expedidas -';
+$description = 'Defina o servidor responsável pela alocação automática das tarefas de acompanhamento e envio de cartas expedidas.';
+$voltarPage = 'cartasexpedidas';
 
 try {
-    $usersList = [];
-    $stmtUsers = $connection->prepare("
-        SELECT u.`id_usuario`, u.`nome`, u.`sobrenome`
-        FROM `usuarios` u
-        WHERE NOT EXISTS (
-            SELECT 1
-            FROM `usuario_perfil` up
-            WHERE up.`usuario` = u.`id_usuario`
-              AND UPPER(TRIM(up.`perfil`)) = 'ESTUDANTE'
-        )
-        ORDER BY u.`nome`, u.`sobrenome`
-    ");
-    $stmtUsers->execute();
-    while (($row = $stmtUsers->fetch(PDO::FETCH_ASSOC)) !== false) {
-        $id = trim((string) ($row['id_usuario'] ?? ''));
-        $nome = trim((string) ($row['nome'] ?? ''));
-        $sobrenome = trim((string) ($row['sobrenome'] ?? ''));
-        $name = $sobrenome !== '' ? $nome . ' ' . $sobrenome : $nome;
-        if ($id !== '' && $name !== '') {
-            $usersList[] = ['id' => $id, 'name' => $name];
-        }
+    $usersList = AlocacaoRegrasUsuariosHelper::listUsuariosInternos($connection);
+    if ($usersList === []) {
+        $errors[] = 'Nenhum usuário interno elegível foi encontrado.';
     }
-    if (empty($usersList)) {
-        $errors[] = 'Nenhum usuário foi encontrado na tabela usuarios.';
-    }
+    $idsInternosElegiveis = array_column($usersList, 'id');
 
     $regrasRepo = new AlocacoesRegrasRepository($connection);
     $ruleRow = $regrasRepo->findByRegra($ruleName);
     $ruleUsuarioId = (string) ($ruleRow['usuario_id'] ?? '');
     $ruleUsuarioNome = resolveUsuarioNome($connection, $ruleUsuarioId);
-    $selectedUserId = (string) ($ruleRow['usuario_id'] ?? $selectedUserId);
-    if ($selectedUserId === '' && !empty($usersList)) {
-        $selectedUserId = $usersList[0]['id'];
+    $selectedUserId = trim((string) ($ruleRow['usuario_id'] ?? ''));
+    if ($selectedUserId !== '') {
+        $idsInList = array_column($usersList, 'id');
+        if (!in_array($selectedUserId, $idsInList, true)) {
+            $usersList[] = ['id' => $selectedUserId, 'name' => $ruleUsuarioNome . ' (fora da lista atual)'];
+        }
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -133,8 +104,8 @@ try {
             if (($postedUserId = trim((string) ($_POST['id_user'] ?? ''))) === '') {
                 $errors[] = 'Selecione um servidor antes de salvar.';
             } else {
-                if (isUsuarioEstudante($connection, $postedUserId)) {
-                    $errors[] = 'Não é permitido alocar um estudante em regras internas do cartório.';
+                if (!AlocacaoRegrasUsuariosHelper::isUsuarioElegivelParaRegraInterna($connection, $postedUserId)) {
+                    $errors[] = 'Apenas servidores internos com perfil operacional podem ser alocados nesta regra.';
                 } else {
                     try {
                         $usuarioAtualizaId = null;
@@ -158,43 +129,12 @@ try {
 } catch (\Throwable $exception) {
     $errors[] = 'Erro ao acessar as regras: ' . $exception->getMessage();
 }
+
+$locationSpecificPrefix = $nomeCurtoModulo . ' - Regras';
+$resumoRowClass = (trim($ruleUsuarioId) !== '' && in_array($ruleUsuarioId, $idsInternosElegiveis, true)) ? 'success' : 'info';
+
+include __DIR__ . '/_cartorio_rules_head.php';
 ?>
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta lang="pt-BR">
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title>Cartas Expedidas - Primeira Vara Crime de Ilhéus</title>
-        <meta name="description" content="">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-                <?php include __DIR__ . '/_internal_head_styles.php'; ?>
-        <?php include __DIR__ . '/_toast_script.php'; ?>
-
-
-    </head>
-<body class="page-internal">
-
-    <!-- SPACING -->
-    <div class="spacing-top-page"></div>
-
-    <div class="header-page">
-        <!-- Mapa de navegação do site -->
-        <div class="location">
-            <span class="all">Internal - Cartório - Cartas Expedidas -</span>
-            <span class="specific">Regras</span>
-        </div>
-
-        <!-- Título e descrição da página -->
-        <h1 class="title-page">Regras de Alocação de Carta Expedida</h1>
-        <p class="description-page">Caso tenha alguma dificuldade no preenchimento das regras, verifique os arquivos abaixo para obter ajuda.</p>
-
-        <!-- Badges de arquivos para download -->
-        <div class="badge file">
-            <img src="/assets/icons/Office-File-Pdf-1--Streamline-Ultimate.png" alt="Ícone de arquivo PDF">
-            <span>Guia Completo - Divisão de Tarefas</span>
-        </div>
-    </div>
 
     <div class="container-full card-page">
         <form method="post" class="rule-form" style="width: 100%">
@@ -213,18 +153,12 @@ try {
                 </div>
             <?php endif; ?>
 
-            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom">
-                <div class="col">
-                    <span class="minor-info" style="font-weight: 600;">Acompanhamento e envio de Cartas Expedidas</span>
-                </div>
-            </div>
-
             <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="display-flex row row-fit justify-start gap-y-md">
-                    <div class="col">
-                        <label for="filter-processo">Responsável</label>
-                        <select class="width-600 height-md" id="filter-processo" name="id_user" data-original-user-name="<?php echo htmlspecialchars($ruleUsuarioNome, ENT_QUOTES, 'UTF-8'); ?>" data-original-user-id="<?php echo htmlspecialchars($selectedUserId, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $podeAlterarRegra ? '' : 'disabled'; ?>>
-                            <option value=""<?php echo $selectedUserId === '' ? ' selected' : ''; ?>>Sem alocação automática</option>
+                    <div class="col filter">
+                        <label for="filter-servidor-alocacao">Servidor</label>
+                        <select class="width-600 height-md" id="filter-servidor-alocacao" name="id_user" data-original-user-name="<?php echo htmlspecialchars($ruleUsuarioNome, ENT_QUOTES, 'UTF-8'); ?>" data-original-user-id="<?php echo htmlspecialchars($selectedUserId, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $podeAlterarRegra ? '' : 'disabled'; ?>>
+                            <option value="" disabled<?php echo $selectedUserId === '' ? ' selected' : ''; ?>>Selecione aqui</option>
                             <?php foreach ($usersList as $user): ?>
                                 <option value="<?php echo htmlspecialchars($user['id'], ENT_QUOTES); ?>"<?php echo $selectedUserId === $user['id'] ? ' selected' : ''; ?>>
                                     <?php echo htmlspecialchars($user['name']); ?>
@@ -236,15 +170,8 @@ try {
                 <div class="display-flex row row-fit justify-end gap-y-md"></div>
             </div>
 
-            <?php if (!empty($ruleRow['id'] ?? '')): ?>
-                <div class="display-flex row row-full padding-x-md padding-y-md border-bottom <?php echo $ruleUsuarioNome === '' ? 'info' : 'success'; ?>">
-                    <div class="col">
-                        <span><?php echo htmlspecialchars(sprintf('Regra atual: %s - %s', $ruleRow['id'] ?? 'sem ID', $ruleUsuarioNome)); ?></span>
-                    </div>
-                </div>
-            <?php endif; ?>
+<?php include __DIR__ . '/_cartorio_rules_summary_row.php'; ?>
 
-            <!-- Ações -->
             <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
                 <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
                 <?php if ($podeAlterarRegra): ?>
@@ -256,7 +183,6 @@ try {
         </form>
     </div>
 
-    <!-- Develop Info -->
     <div class="footer-page">
         <div class="location">
             <span class="all">Aplicativo web desenvolvido integralmente por </span>
@@ -264,53 +190,6 @@ try {
             <span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span>
         </div>
     </div>
-    <script>
-        (() => {
-            const successMessage = <?php echo json_encode($successMessage, JSON_UNESCAPED_UNICODE); ?>;
-            const errors = <?php echo json_encode(array_values($errors), JSON_UNESCAPED_UNICODE); ?>;
-            if (successMessage && typeof showToast === 'function') {
-                showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: successMessage });
-            }
-            if (Array.isArray(errors) && errors.length && typeof showToast === 'function') {
-                errors.forEach((message) => showToast({ type: 'error', variant: 'full', title: 'Erro', message }));
-            }
-        })();
-
-        (() => {
-            const btn = document.getElementById('voltar-btn');
-            if (btn) {
-                btn.addEventListener('click', (event) => {
-                    event.preventDefault();
-                    window.location.href = '/frame.php?page=cartasexpedidascreate';
-                }, { capture: true });
-            }
-        })();
-
-        (() => {
-            const saveBtn = document.getElementById('salvar-btn');
-            const clearBtn = document.getElementById('remover-alocacao-btn');
-            const select = document.querySelector('select[name="id_user"]');
-            if (!saveBtn || !select) return;
-
-            const originalId = (select.getAttribute('data-original-user-id') || '').trim();
-
-            const syncSaveButton = () => {
-                const currentId = (select.value || '').trim();
-                const effectiveOriginalId = originalId !== '' ? originalId : currentId;
-                const changed = currentId !== effectiveOriginalId;
-
-                if (changed) saveBtn.removeAttribute('disabled');
-                else saveBtn.setAttribute('disabled', '');
-
-                if (clearBtn) {
-                    if (effectiveOriginalId !== '') clearBtn.removeAttribute('disabled');
-                    else clearBtn.setAttribute('disabled', '');
-                }
-            };
-
-            select.addEventListener('change', syncSaveButton);
-            syncSaveButton();
-        })();
-    </script>
+<?php include __DIR__ . '/_cartorio_rules_scripts.php'; ?>
 </body>
 </html>

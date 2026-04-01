@@ -52,7 +52,7 @@ Regras transversais aplicáveis a todos os módulos:
 - gestão de documentos públicos  
 - regras por comarcas e tribunais  
 
-Todas as alterações geram logs, histórico de versões e possibilidade de rollback.
+Alterações sensíveis devem gerar registros operacionais ou de auditoria conforme a instrumentação disponível em cada módulo. Histórico detalhado e rollback existem apenas onde já houver suporte explícito.
 
 ---
 
@@ -105,7 +105,7 @@ Regras obrigatórias:
 
 ### 4.1 Finalidade e funcionamento do ambiente restrito
 
-Ambiente de trabalho oficial para usuários internos autenticados, com rastreabilidade total das ações e auditoria obrigatória.
+Ambiente de trabalho oficial para usuários internos autenticados, com rastreabilidade compatível com o módulo e com a instrumentação operacional existente.
 
 ### 4.2 Autenticação, contas e funcionalidades de acesso
 
@@ -245,7 +245,7 @@ Etapas:
 - alterações de regras  
 - eventos operacionais
 
-Logs são imutáveis e exportáveis.
+Os eventos desse módulo devem ser preservados com o maior nível de integridade possível. Exportações e consultas dependem dos mecanismos administrativos e técnicos disponíveis no ambiente.
 
 ---
 
@@ -280,7 +280,7 @@ Diretrizes permanentes:
 
 - separação rigorosa entre público e restrito  
 - bloqueio total de informações sigilosas  
-- rastreabilidade total  
+- rastreabilidade adequada ao contexto operacional  
 - parametrização e versionamento  
 - padronização por tarefas e sub-tarefas
 

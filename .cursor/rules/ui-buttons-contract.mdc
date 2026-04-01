@@ -1,0 +1,49 @@
+---
+description: Contrato de botões — classes .btn, ordem, type, acessibilidade, exceções e navegação.
+globs: app/views/**/*.php, public/**/*.php, public/templates/**/*.html, public/assets/css/shared/form.css
+alwaysApply: true
+---
+
+# Contrato de botões (UI)
+
+Decisões de produto: escopo **todo o repositório de interface**; migração **por módulo** (PRs menores); documentação viva em **regra Cursor** + **`public/templates/component-buttons.html`**.
+
+## Base e ordem das classes
+
+- Todos os botões de ação usam **`btn`** + **variante de cor** (`btn-primary`, `btn-primary-outline`, `btn-secondary`, `btn-secondary-outline`, `btn-danger`, `btn-danger-outline`, etc.), conforme `public/assets/css/shared/form.css`.
+- **Ordem fixa:** `btn` → variante → utilitários de tamanho/layout (`height-sm`, `height-md`, `width-*`, etc.), quando existirem.  
+  Exemplo: `class="btn btn-primary height-md"`.
+
+## Edição em linha de tabela
+
+- Ação “editar” na tabela: **`btn btn-editar`** (nunca só `btn-editar`).  
+- Ícone sem texto visível: **`aria-label`** e **`title`** com o **mesmo texto**.
+
+## Semântica HTML
+
+- Em todo `<button>`, declarar **`type` explicitamente**: `type="button"`, `type="submit"` ou `type="reset"`.
+
+## Navegação (sem `<a href>` para UI)
+
+- Preferir `<button type="button" ... data-nav-href="...">` e, se nova aba, `data-nav-target="_blank"`.  
+- Script: `public/assets/js/shared/navigate-buttons.js` (já carregado nas internas via `_internal_head_styles.php` quando aplicável).
+
+## Lista v1 — exceções (não exigem `btn` + variante de cor)
+
+Alterações a essa lista exigem **revisão explícita** do contrato.
+
+| Categoria | Classes / padrão | Notas |
+|-----------|------------------|--------|
+| Toast | `toast-close` | Fechar notificação |
+| Paginação | `pagination-symbol`, `pagination-number`, reticências (`span.pagination-ellipsis`) | Controles de página, não ações de formulário |
+| Badge PDF / arquivo | `badge file` + `data-nav-href` (e `_blank` se aplicável) | Pode ser `<button type="button" class="badge file" ...>` |
+| Texto como link | `link-inline`, `btn-link-badge` | Estilo de link, não botão cheio |
+| Shell / menu | Controles de menu/layout do `home`/frame | Até alinhados ao contrato em migração futura |
+
+## Referência visual
+
+- Catálogo e exemplos: **`public/templates/component-buttons.html`** (abrir no navegador a partir de `public/`).
+
+## Formato de perguntas ao usuário
+
+- Ao alinhar escopo: **uma pergunta por vez**, **≥4 opções**, **explicação do porquê** + opção **“Outro”**. Ver `.cursor/rules/pergunta-a-usuario-formato.mdc`.

@@ -10,6 +10,7 @@ require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
 require_once __DIR__ . '/../../helpers/UserAccessHelper.php';
 require_once __DIR__ . '/../../helpers/AvatarCatalog.php';
 require_once __DIR__ . '/../../helpers/AvatarInitialsPalette.php';
+require_once __DIR__ . '/../../helpers/SexoHelper.php';
 
 $connection = Conection::getInstance()->getConnection();
 $userId = $userId ?? ($_SESSION['id_usuario'] ?? '');
@@ -46,32 +47,39 @@ if ($isUsuarioExterno) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csrf_token']) && Security::verifyCSRFToken($_POST['csrf_token'] ?? null)) {
     $email = trim((string) ($_POST['email'] ?? ''));
     $telefone = trim((string) ($_POST['telefone'] ?? ''));
+    $sexo = SexoHelper::normalize(trim((string) ($_POST['sexo'] ?? '')));
+    if (!SexoHelper::isValid($sexo)) {
+        $mensagemErro = 'Selecione o sexo.';
+    }
     // Cargo e setor não são editáveis nesta tela (apenas ADMIN/CHEFIA em usuários).
     $cargo = trim((string) ($dados['cargo'] ?? ''));
     $instituicao = trim((string) ($dados['instituicao'] ?? ''));
 
-    $resultado = $usuario->atualizarDadosPessoais($userId, [
-        'email' => $email,
-        'telefone' => $telefone,
-        'cargo' => $cargo,
-        'instituicao' => $instituicao,
-    ]);
-    $avatarResult = ['success' => true];
-    if (!$isUsuarioExterno && $resultado['success']) {
-        $slugPost = trim((string) ($_POST['avatar_slug'] ?? ''));
-        if ($slugPost !== '') {
-            $avatarResult = $usuario->atualizarAvatarSlug($userId, $slugPost);
+    if ($mensagemErro === '') {
+        $resultado = $usuario->atualizarDadosPessoais($userId, [
+            'email' => $email,
+            'telefone' => $telefone,
+            'sexo' => $sexo,
+            'cargo' => $cargo,
+            'instituicao' => $instituicao,
+        ]);
+        $avatarResult = ['success' => true];
+        if (!$isUsuarioExterno && $resultado['success']) {
+            $slugPost = trim((string) ($_POST['avatar_slug'] ?? ''));
+            if ($slugPost !== '') {
+                $avatarResult = $usuario->atualizarAvatarSlug($userId, $slugPost);
+            }
         }
-    }
-    if ($resultado['success'] && $avatarResult['success']) {
-        $_SESSION['flash_profile_saved_toast'] = 'Dados atualizados com sucesso.';
-        $dashPage = $isUsuarioExterno ? 'dashboardexterno' : 'dashboard';
-        header('Location: /frame.php?page=' . $dashPage . '&profile_saved=1', true, 302);
-        exit;
-    } elseif (!$resultado['success']) {
-        $mensagemErro = $resultado['message'] ?? 'Não foi possível atualizar os dados.';
-    } else {
-        $mensagemErro = $avatarResult['message'] ?? 'Não foi possível atualizar o avatar.';
+        if ($resultado['success'] && $avatarResult['success']) {
+            $_SESSION['flash_profile_saved_toast'] = 'Dados atualizados com sucesso.';
+            $dashPage = $isUsuarioExterno ? 'dashboardexterno' : 'dashboard';
+            header('Location: /frame.php?page=' . $dashPage . '&profile_saved=1', true, 302);
+            exit;
+        } elseif (!$resultado['success']) {
+            $mensagemErro = $resultado['message'] ?? 'Não foi possível atualizar os dados.';
+        } else {
+            $mensagemErro = $avatarResult['message'] ?? 'Não foi possível atualizar o avatar.';
+        }
     }
 }
 
@@ -210,6 +218,15 @@ if (!$isUsuarioExterno && $dados !== null) {
                         <label for="edit-telefone">Telefone</label>
                         <input type="text" id="edit-telefone" name="telefone" class="width-300 height-md" value="<?php echo htmlspecialchars($dados['telefone'] ?? '', ENT_QUOTES); ?>" maxlength="50">
                     </div>
+                    <div class="col">
+                        <label for="edit-sexo">Sexo</label>
+                        <select id="edit-sexo" name="sexo" class="width-300 height-md">
+                            <option value="">Selecione</option>
+                            <option value="Feminino"<?php echo (($dados['sexo'] ?? '') === 'Feminino') ? ' selected' : ''; ?>>Feminino</option>
+                            <option value="Masculino"<?php echo (($dados['sexo'] ?? '') === 'Masculino') ? ' selected' : ''; ?>>Masculino</option>
+                            <option value="Outro"<?php echo (($dados['sexo'] ?? '') === 'Outro') ? ' selected' : ''; ?>>Outro</option>
+                        </select>
+                    </div>
                 </div>
 
                 <?php if (!$isUsuarioExterno): ?>
@@ -327,7 +344,8 @@ if (!$isUsuarioExterno && $dados !== null) {
         var interno = <?php echo json_encode(!$isUsuarioExterno, JSON_UNESCAPED_UNICODE); ?>;
         var initial = {
             email: <?php echo json_encode($dados['email'] ?? '', JSON_UNESCAPED_UNICODE); ?>,
-            telefone: <?php echo json_encode($dados['telefone'] ?? '', JSON_UNESCAPED_UNICODE); ?>
+            telefone: <?php echo json_encode($dados['telefone'] ?? '', JSON_UNESCAPED_UNICODE); ?>,
+            sexo: <?php echo json_encode($dados['sexo'] ?? '', JSON_UNESCAPED_UNICODE); ?>
         };
         if (interno) {
             initial.avatarSlug = <?php echo json_encode($avatarSlugForJs, JSON_UNESCAPED_UNICODE); ?>;
@@ -338,7 +356,8 @@ if (!$isUsuarioExterno && $dados !== null) {
             var telEl = document.getElementById('edit-telefone');
             var cur = {
                 email: emailEl ? (emailEl.value || '').trim() : '',
-                telefone: telEl ? (telEl.value || '').trim() : ''
+                telefone: telEl ? (telEl.value || '').trim() : '',
+                sexo: (document.getElementById('edit-sexo')?.value || '').trim()
             };
             if (interno) {
                 var avEl = document.getElementById('edit-avatar-slug');
@@ -349,7 +368,8 @@ if (!$isUsuarioExterno && $dados !== null) {
         function hasChanges() {
             var cur = getCurrent();
             var base = (initial.email || '') !== (cur.email || '') ||
-                (initial.telefone || '') !== (cur.telefone || '');
+                (initial.telefone || '') !== (cur.telefone || '') ||
+                (initial.sexo || '') !== (cur.sexo || '');
             if (interno) {
                 base = base || (initial.avatarSlug || '') !== (cur.avatarSlug || '');
             }
@@ -364,7 +384,7 @@ if (!$isUsuarioExterno && $dados !== null) {
             window.location.href = '/frame.php?page=dashboard';
         });
 
-        var observedFields = ['edit-email', 'edit-telefone'];
+        var observedFields = ['edit-email', 'edit-telefone', 'edit-sexo'];
         observedFields.forEach(function (id) {
             var el = document.getElementById(id);
             if (el) {

@@ -4,7 +4,7 @@
 
 A segurança da informação no **WebApp | 1vCrimeIlheus** baseia-se em uma classificação rigorosa dos dados, dividindo-os em três níveis de sensibilidade: Público, Interno e Confidencial. Esta taxonomia orienta não apenas as regras de negócio, mas também a implementação técnica dos filtros de banco de dados e das interfaces de usuário. O objetivo é garantir a conformidade com a Lei Geral de Proteção de Dados (LGPD) e as normas da Corregedoria, evitando a exposição indevida de partes processuais e servidores.
 
-Dados classificados como **Públicos** podem ser acessados sem autenticação. Dados **Internos** exigem autenticação e vínculo setorial. Já os dados **Confidenciais** possuem restrições severas, sendo acessíveis apenas por perfis de Chefia/Admin ou, no caso de senhas, sendo inacessíveis até mesmo para administradores.
+Dados classificados como **Públicos** podem ser acessados sem autenticação. Dados **Internos** exigem autenticação e vínculo setorial. Já os dados **Confidenciais** possuem restrições severas, sendo acessíveis apenas por perfis autorizados e, em casos de segurança/auditoria, também condicionados ao mecanismo operacional disponível no ambiente.
 
 ### Níveis de Classificação
 
@@ -21,19 +21,32 @@ Dados classificados como **Públicos** podem ser acessados sem autenticação. D
 
 O princípio fundamental de segurança interna é o **Isolamento por Setor**. Tecnicamente, isso significa que a autorização de acesso não é global, mas sim contextual. Um usuário com perfil de "Servidor" lotado na "Secretaria Criminal" não possui permissão, em nível de banco de dados, para realizar consultas (`SELECT`) em registros pertencentes ao "Gabinete do Juiz", a menos que possua uma permissão transversal explícita.
 
-Esta regra impede a "navegação lateral" dentro do sistema. Mesmo que um usuário mal-intencionado tente manipular IDs na URL ou forçar chamadas de API, o sistema validará se o `id_setor` do registro solicitado coincide com o `id_setor` da sessão do usuário.
+Esta regra impede a "navegação lateral" dentro do sistema. Mesmo que um usuário mal-intencionado tente manipular IDs na URL ou forçar chamadas de API, o sistema deve validar se o registro solicitado pertence ao mesmo escopo de lotação resolvido para o usuário em `usuario_setor` / `setores`.
 
 ### Regras Técnicas de Implementação
 
-- **Filtro SQL Obrigatório:** Toda consulta deve conter a cláusula `WHERE id_setor = :session_setor_id`.
-- **Validação de API:** O *middleware* deve verificar se o token JWT pertence ao setor que está sendo consultado.
+- **Filtro SQL Obrigatório:** Toda consulta sensível deve aplicar o isolamento por setor usando a estratégia compatível com o módulo, normalmente por `JOIN`/`WHERE` sobre `usuario_setor`, `setores` ou coluna setorial equivalente.
+- **Validação de API:** O backend deve verificar se o usuário autenticado e o contexto da sessão pertencem ao setor autorizado para a consulta solicitada.
 - **Bloqueio de IDs:** Tentar acessar `GET /api/processos/123` onde o processo 123 é de outro setor deve retornar `403 Forbidden`, e não `404 Not Found` (para evitar enumeração).
 
 ### Exemplo de Uso (SQL Seguro)
 
-sql -- ERRADO (Vulnerável a acesso cruzado): SELECT * FROM tb_processos WHERE id_processo = 'PROC-100';
+```sql
+-- ERRADO (Vulnerável a acesso cruzado)
+SELECT *
+FROM minha_tabela_setorial
+WHERE id = 'REG-...';
 
--- CORRETO (Isolamento garantido): SELECT * FROM tb_processos WHERE id_processo = 'PROC-100' AND id_setor = 5; -- ID do setor do usuário logado
+-- CORRETO (Isolamento garantido)
+SELECT r.*
+FROM minha_tabela_setorial r
+WHERE r.id = 'REG-...'
+  AND r.setor_id IN (
+      SELECT us.setor
+      FROM usuario_setor us
+      WHERE us.usuario = :session_user_id
+  );
+```
 
 ## 3. Visibilidade na Área Pública
 
@@ -80,11 +93,11 @@ Esta segregação é vital para garantir a isenção em processos administrativo
 
 ### Matriz de Acesso aos Logs
 
-- **Chefia:** Visualiza logs apenas do seu próprio setor (quem fez o quê dentro do departamento).
-- **Administrador:** Visualiza logs globais de todo o sistema (auditoria completa).
-- **Servidor/Estagiário:** **Sem acesso** (menu oculto e API bloqueada).
+- **Chefia:** pode receber relatórios ou visões setoriais quando o módulo oferecer essa capacidade ou quando houver extração administrativa autorizada.
+- **Administrador:** pode acessar mecanismos técnicos e relatórios administrativos de segurança, mas isso não significa a existência de um painel único de "auditoria completa" já implementado.
+- **Servidor/Estagiário:** **Sem acesso** a logs de segurança e auditoria.
 
 ### Boas Práticas de Auditoria
 
-- **Imutabilidade:** A tabela de logs deve ter permissão `INSERT` e `SELECT`, mas `UPDATE` e `DELETE` devem ser revogados no banco de dados para o usuário da aplicação.
-- **Registro Completo:** O log deve salvar o "Antes" e o "Depois" da alteração (snapshot JSON) para permitir *rollback* manual se necessário.
+- **Imutabilidade:** quando houver armazenamento dedicado de auditoria, rotinas operacionais comuns não devem poder alterar ou apagar esses registros.
+- **Registro adequado:** sempre que possível, o evento deve salvar contexto suficiente para suporte, investigação e responsabilização.

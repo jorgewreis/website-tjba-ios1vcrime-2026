@@ -1,150 +1,129 @@
-﻿# Estrutura de Pastas e Arquivos Base do Backend
+# Estrutura de Pastas e Arquivos Base do Backend
 
-## 1. Visão Geral da Arquitetura
+## 1. Visao Geral da Arquitetura
 
-A arquitetura do **WebApp | 1vCrimeIlheus** foi desenhada para operar com alta performance e segurança em um ambiente PHP nativo, sem a dependência de frameworks pesados (como Laravel ou Symfony) para o backend. A estrutura separa claramente a camada de apresentação (arquivos públicos e painel administrativo) da camada de lógica de negócios e persistência de dados (pasta `/bd` e `/api`), facilitando a manutenção e a escalabilidade do código.
+O backend do projeto e uma base **PHP customizada**, organizada para separar arquivos publicos, regras de negocio, acesso a dados, configuracao e scripts de banco.
+Esta documentacao descreve a estrutura **real** do repositorio e substitui modelos genericos baseados em frameworks que nao fazem parte da arquitetura oficial.
 
-O núcleo do sistema baseia-se no padrão de projeto **Singleton** para conexões de banco de dados e no uso de **JWT (JSON Web Tokens)** para autenticação *stateless*. Isso garante que o servidor não precise manter sessões em memória, delegando o armazenamento das credenciais temporárias ao `sessionStorage` do navegador do cliente, o que é ideal para a infraestrutura hospedada no CloudPanel.
+## 2. Estrutura de Diretorios Atual
 
-## 2. Estrutura de Diretórios Sugerida
+Abaixo esta a estrutura principal do backend e das camadas relacionadas:
 
-A organização das pastas segue uma lógica funcional, onde arquivos sensíveis e classes de sistema são isolados de scripts públicos. A raiz do projeto contém apenas os arquivos de entrada e configuração essenciais, enquanto a lógica pesada reside em subdiretórios protegidos pelo `.htaccess`.
+- **root/**
+  - **app/**
+    - **access/**: politicas, registro de paginas e avaliacao de acesso
+    - **controllers/**: controladores da aplicacao
+    - **helpers/**: bootstrap, conexao, utilitarios e apoio tecnico
+    - **middlewares/**: middlewares e validacoes intermediarias
+    - **models/**: modelos centrais do dominio
+    - **repositories/**: consultas e persistencia orientadas ao banco
+    - **rules/**: regras especificas do dominio
+    - **services/**: casos de uso e orquestracao
+    - **views/**
+      - **internal/**: paginas internas carregadas pelo shell autenticado
+      - **public/**: views publicas quando aplicavel
+  - **config/**
+    - **config.php**
+    - **security.php**
+  - **database/**
+    - **schema.sql**
+    - **migrations/**
+    - **seeds/**
+    - scripts SQL auxiliares e evolutivos
+  - **public/**
+    - **index.php**: entrada publica
+    - **login.php**: processamento de autenticacao
+    - **home.php**: shell autenticado
+    - **frame.php**: carregamento das paginas internas
+    - **api/**: superficie oficial de endpoints internos
+    - **api/admin/**: endpoints administrativos que ja seguem a superficie oficial
+    - **admin/api/**: endpoints auxiliares legados ainda ativos por compatibilidade
+    - **assets/**: CSS, JavaScript, imagens, templates e recursos estaticos
+  - **storage/**
+    - **logs/**
+    - **uploads/**
+    - **backups/**
+  - **docs/**
+  - **scripts/**
 
-Abaixo está a árvore de diretórios recomendada para organizar os módulos do sistema:
+Observacao: existe tambem uma pasta **`api/`** na raiz do repositorio, mas ela nao representa a superficie principal atual da aplicacao. Hoje ela deve ser tratada como legado nao canonico.
 
-- **root/** (Raiz do projeto)
-  - **.env** (Variáveis de ambiente - *Não comitar*)
-  - **.htaccess** (Regras de segurança e roteamento)
-  - **index.php** (Tela de Login / Gateway público)
-  - **composer.json** (Dependências PHP, ex: firebase/php-jwt)
-  - **admin/** (Frontend da Área Restrita)
-    - **home.php** (Estrutura base com Iframe)
-    - **assets/** (CSS, JS, Imagens do painel)
-  - **bd/** (Classes Core e Models)
-    - **Conexao.php** (Singleton de conexão MySQL)
-    - **AuthMiddleware.php** (Validação de JWT)
-    - **ResponseHelper.php** (Padronização de JSON)
-    - **Usuario.php** (Classe de manipulação de usuários)
-  - **api/** (Endpoints da API - Lógica de Controle)
-    - **auth/** (Login, Recuperação de Senha)
-    - **usuarios/** (CRUD de usuários: create.php, update.php)
-    - **relatorios/** (Scripts de geração de relatórios)
-  - **docs/** (Documentação do Projeto)
+## 3. Camada de Conexao
 
-## 3. Camada de Conexão (Singleton)
+A conexao com o banco e centralizada em helper proprio, com destaque para:
 
-A classe de conexão é o componente mais crítico do backend, responsável por estabelecer a comunicação segura com o banco de dados MySQL. Utilizamos o padrão de projeto **Singleton** para garantir que apenas uma instância da conexão PDO seja criada durante o ciclo de vida de uma requisição, evitando a sobrecarga de múltiplas conexões simultâneas que poderiam derrubar o servidor em momentos de alto tráfego.
+- `app/helpers/Conection.php`
+- `config/config.php`
 
-O arquivo `bd/Conexao.php` lê as credenciais diretamente do arquivo `.env` utilizando a função `getenv()`. Além disso, configura o PDO para lançar exceções em caso de erro (`ERRMODE_EXCEPTION`) e define o *charset* como `utf8mb4`, garantindo a compatibilidade total com caracteres especiais e emojis, essenciais para nomes e textos em português.
+Essa camada encapsula a criacao da conexao PDO e os parametros necessarios para acesso ao MySQL, mantendo o consumo do banco desacoplado dos entrypoints publicos.
 
-### Código Base: `bd/Conexao.php`
-php <?php class Conexao { private static $instance = null;
+## 4. Camada de Seguranca e Acesso
 
-public static function getConn() {
-    if (self::$instance === null) {
-        // Carrega variáveis de ambiente (Requer biblioteca vlucas/phpdotenv se não for nativo)
-        $host = getenv('DB_HOST');
-        $name = getenv('DB_NAME');
-        $user = getenv('DB_USER');
-        $pass = getenv('DB_PASS');
-        $port = getenv('DB_PORT') ?: 3306;
+O controle da area restrita e feito no backend, com apoio de:
 
-        try {
-            $dsn = "mysql:host=$host;port=$port;dbname=$name;charset=utf8mb4";
-            self::$instance = new PDO($dsn, $user, $pass);
-            self::$instance->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            self::$instance->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            // Log do erro real no servidor
-            error_log("Erro de Conexão: " . $e->getMessage());
-            // Retorno genérico para o usuário
-            header('Content-Type: application/json');
-            http_response_code(500);
-            echo json_encode(["status" => "error", "message" => "Erro interno de conexão."]);
-            exit;
-        }
-    }
-    return self::$instance;
-}
-}
+- `config/security.php`
+- `app/helpers/bootstrap.php`
+- `app/access/`
+- `app/middlewares/`
 
-## 4. Camada de Segurança (Middleware JWT)
+O shell autenticado e servido por `public/home.php`, enquanto `public/frame.php` resolve as paginas internas permitidas.
+Regras de permissao e acesso por perfil/pagina devem permanecer centralizadas fora da camada de apresentacao.
 
-A segurança das rotas da API é garantida por um *Middleware* de autenticação. Como o sistema não utiliza sessões de servidor (`PHPSESSID`), cada requisição feita pelo *frontend* deve conter o cabeçalho `Authorization: Bearer <token>`. O middleware intercepta a requisição, extrai o token e verifica sua assinatura digital e validade temporal (6 horas).
+## 5. Camada de Aplicacao e Persistencia
 
-O arquivo `bd/AuthMiddleware.php` utiliza a biblioteca `firebase/php-jwt` para decodificar o token. Se o token for inválido, expirado ou não fornecido, o script interrompe a execução imediatamente e retorna um código HTTP 401 (Unauthorized), impedindo que o código da API subsequente seja executado.
+O fluxo padrao do backend ocorre assim:
 
-### Código Base: `bd/AuthMiddleware.php`
+1. o navegador acessa um entrypoint em `public/` ou um endpoint em `public/api/`;
+2. o backend carrega configuracao, seguranca e bootstrap;
+3. services, controllers, models e repositories executam o fluxo da funcionalidade;
+4. a resposta retorna como HTML renderizado ou JSON, conforme o caso.
 
-<div class="widget code-container remove-before-copy"><div class="code-header non-draggable"><span class="iaf s13 w700 code-language-placeholder">php</span><div class="code-copy-button"><span class="iaf s13 w500 code-copy-placeholder">Copiar</span><img class="code-copy-icon" src="data:image/svg+xml;utf8,%0A%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%3E%0A%20%20%3Cpath%20d%3D%22M10.8%208.63V11.57C10.8%2014.02%209.82%2015%207.37%2015H4.43C1.98%2015%201%2014.02%201%2011.57V8.63C1%206.18%201.98%205.2%204.43%205.2H7.37C9.82%205.2%2010.8%206.18%2010.8%208.63Z%22%20stroke%3D%22%23717C92%22%20stroke-width%3D%221.05%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%0A%20%20%3Cpath%20d%3D%22M15%204.42999V7.36999C15%209.81999%2014.02%2010.8%2011.57%2010.8H10.8V8.62999C10.8%206.17999%209.81995%205.19999%207.36995%205.19999H5.19995V4.42999C5.19995%201.97999%206.17995%200.999992%208.62995%200.999992H11.57C14.02%200.999992%2015%201.97999%2015%204.42999Z%22%20stroke%3D%22%23717C92%22%20stroke-width%3D%221.05%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%0A%3C%2Fsvg%3E%0A" /></div></div><pre id="code-8194263z5" style="color:white;font-family:Consolas, Monaco, &quot;Andale Mono&quot;, &quot;Ubuntu Mono&quot;, monospace;text-align:left;white-space:pre;word-spacing:normal;word-break:normal;word-wrap:normal;line-height:1.5;font-size:1em;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-hyphens:none;-moz-hyphens:none;-ms-hyphens:none;hyphens:none;padding:8px;margin:8px;overflow:auto;background:#011627;width:calc(100% - 8px);border-radius:8px;box-shadow:0px 8px 18px 0px rgba(120, 120, 143, 0.10), 2px 2px 10px 0px rgba(255, 255, 255, 0.30) inset"><code class="language-php" style="white-space:pre;color:#d6deeb;font-family:Consolas, Monaco, &quot;Andale Mono&quot;, &quot;Ubuntu Mono&quot;, monospace;text-align:left;word-spacing:normal;word-break:normal;word-wrap:normal;line-height:1.5;font-size:1em;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-hyphens:none;-moz-hyphens:none;-ms-hyphens:none;hyphens:none"><span class="token php language-php delimiter" style="color:rgb(214, 222, 235);font-weight:bold">&lt;?php</span><span class="token php language-php">
-</span><span class="token php language-php"></span><span class="token php language-php" style="color:rgb(127, 219, 202)">require_once</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(130, 170, 255)">__DIR__</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(127, 219, 202)">.</span><span class="token php language-php"> </span><span class="token php language-php single-quoted-string" style="color:rgb(173, 219, 103)">&#x27;/../vendor/autoload.php&#x27;</span><span class="token php language-php" style="color:rgb(199, 146, 234)">;</span><span class="token php language-php">
-</span><span class="token php language-php"></span><span class="token php language-php" style="color:rgb(127, 219, 202)">use</span><span class="token php language-php"> </span><span class="token php language-php package">Firebase</span><span class="token php language-php package" style="color:rgb(199, 146, 234)">\</span><span class="token php language-php package">JWT</span><span class="token php language-php package" style="color:rgb(199, 146, 234)">\</span><span class="token php language-php package">JWT</span><span class="token php language-php" style="color:rgb(199, 146, 234)">;</span><span class="token php language-php">
-</span><span class="token php language-php"></span><span class="token php language-php" style="color:rgb(127, 219, 202)">use</span><span class="token php language-php"> </span><span class="token php language-php package">Firebase</span><span class="token php language-php package" style="color:rgb(199, 146, 234)">\</span><span class="token php language-php package">JWT</span><span class="token php language-php package" style="color:rgb(199, 146, 234)">\</span><span class="token php language-php package">Key</span><span class="token php language-php" style="color:rgb(199, 146, 234)">;</span><span class="token php language-php">
-</span><span class="token php language-php">
-</span><span class="token php language-php"></span><span class="token php language-php" style="color:rgb(127, 219, 202)">class</span><span class="token php language-php"> </span><span class="token php language-php class-name-definition" style="color:rgb(255, 203, 139)">AuthMiddleware</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(199, 146, 234)">{</span><span class="token php language-php">
-</span><span class="token php language-php">    </span><span class="token php language-php" style="color:rgb(127, 219, 202)">public</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(127, 219, 202)">static</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(127, 219, 202)">function</span><span class="token php language-php"> </span><span class="token php language-php function-definition" style="color:rgb(130, 170, 255)">verificarAcesso</span><span class="token php language-php" style="color:rgb(199, 146, 234)">(</span><span class="token php language-php" style="color:rgb(199, 146, 234)">)</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(199, 146, 234)">{</span><span class="token php language-php">
-</span><span class="token php language-php">        </span><span class="token php language-php" style="color:rgb(214, 222, 235)">$headers</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(127, 219, 202)">=</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(130, 170, 255)">apache_request_headers</span><span class="token php language-php" style="color:rgb(199, 146, 234)">(</span><span class="token php language-php" style="color:rgb(199, 146, 234)">)</span><span class="token php language-php" style="color:rgb(199, 146, 234)">;</span><span class="token php language-php">
-</span><span class="token php language-php">        </span><span class="token php language-php" style="color:rgb(214, 222, 235)">$token</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(127, 219, 202)">=</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(130, 170, 255)">null</span><span class="token php language-php" style="color:rgb(199, 146, 234)">;</span><span class="token php language-php">
-</span><span class="token php language-php">
-</span><span class="token php language-php">        </span><span class="token php language-php" style="color:rgb(127, 219, 202)">if</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(199, 146, 234)">(</span><span class="token php language-php" style="color:rgb(127, 219, 202)">isset</span><span class="token php language-php" style="color:rgb(199, 146, 234)">(</span><span class="token php language-php" style="color:rgb(214, 222, 235)">$headers</span><span class="token php language-php" style="color:rgb(199, 146, 234)">[</span><span class="token php language-php single-quoted-string" style="color:rgb(173, 219, 103)">&#x27;Authorization&#x27;</span><span class="token php language-php" style="color:rgb(199, 146, 234)">]</span><span class="token php language-php" style="color:rgb(199, 146, 234)">)</span><span class="token php language-php" style="color:rgb(199, 146, 234)">)</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(199, 146, 234)">{</span><span class="token php language-php">
-</span><span class="token php language-php">            </span><span class="token php language-php" style="color:rgb(214, 222, 235)">$matches</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(127, 219, 202)">=</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(199, 146, 234)">[</span><span class="token php language-php" style="color:rgb(199, 146, 234)">]</span><span class="token php language-php" style="color:rgb(199, 146, 234)">;</span><span class="token php language-php">
-</span><span class="token php language-php">            </span><span class="token php language-php" style="color:rgb(127, 219, 202)">if</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(199, 146, 234)">(</span><span class="token php language-php" style="color:rgb(130, 170, 255)">preg_match</span><span class="token php language-php" style="color:rgb(199, 146, 234)">(</span><span class="token php language-php single-quoted-string" style="color:rgb(173, 219, 103)">&#x27;/Bearer\s(\S+)/&#x27;</span><span class="token php language-php" style="color:rgb(199, 146, 234)">,</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(214, 222, 235)">$headers</span><span class="token php language-php" style="color:rgb(199, 146, 234)">[</span><span class="token php language-php single-quoted-string" style="color:rgb(173, 219, 103)">&#x27;Authorization&#x27;</span><span class="token php language-php" style="color:rgb(199, 146, 234)">]</span><span class="token php language-php" style="color:rgb(199, 146, 234)">,</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(214, 222, 235)">$matches</span><span class="token php language-php" style="color:rgb(199, 146, 234)">)</span><span class="token php language-php" style="color:rgb(199, 146, 234)">)</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(199, 146, 234)">{</span><span class="token php language-php">
-</span><span class="token php language-php">                </span><span class="token php language-php" style="color:rgb(214, 222, 235)">$token</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(127, 219, 202)">=</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(214, 222, 235)">$matches</span><span class="token php language-php" style="color:rgb(199, 146, 234)">[</span><span class="token php language-php" style="color:rgb(247, 140, 108)">1</span><span class="token php language-php" style="color:rgb(199, 146, 234)">]</span><span class="token php language-php" style="color:rgb(199, 146, 234)">;</span><span class="token php language-php">
-</span><span class="token php language-php">            </span><span class="token php language-php" style="color:rgb(199, 146, 234)">}</span><span class="token php language-php">
-</span><span class="token php language-php">        </span><span class="token php language-php" style="color:rgb(199, 146, 234)">}</span><span class="token php language-php">
-</span><span class="token php language-php">
-</span><span class="token php language-php">        </span><span class="token php language-php" style="color:rgb(127, 219, 202)">if</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(199, 146, 234)">(</span><span class="token php language-php" style="color:rgb(127, 219, 202)">!</span><span class="token php language-php" style="color:rgb(214, 222, 235)">$token</span><span class="token php language-php" style="color:rgb(199, 146, 234)">)</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(199, 146, 234)">{</span><span class="token php language-php">
-</span><span class="token php language-php">            </span><span class="token php language-php scope" style="color:rgb(127, 219, 202)">self</span><span class="token php language-php scope" style="color:rgb(199, 146, 234)">::</span><span class="token php language-php" style="color:rgb(130, 170, 255)">negarAcesso</span><span class="token php language-php" style="color:rgb(199, 146, 234)">(</span><span class="token php language-php double-quoted-string" style="color:rgb(173, 219, 103)">&quot;Token de autenticação não fornecido.&quot;</span><span class="token php language-php" style="color:rgb(199, 146, 234)">)</span><span class="token php language-php" style="color:rgb(199, 146, 234)">;</span><span class="token php language-php">
-</span><span class="token php language-php">        </span><span class="token php language-php" style="color:rgb(199, 146, 234)">}</span><span class="token php language-php">
-</span><span class="token php language-php">
-</span><span class="token php language-php">        </span><span class="token php language-php" style="color:rgb(127, 219, 202)">try</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(199, 146, 234)">{</span><span class="token php language-php">
-</span><span class="token php language-php">            </span><span class="token php language-php" style="color:rgb(214, 222, 235)">$key</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(127, 219, 202)">=</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(130, 170, 255)">getenv</span><span class="token php language-php" style="color:rgb(199, 146, 234)">(</span><span class="token php language-php single-quoted-string" style="color:rgb(173, 219, 103)">&#x27;JWT_SECRET&#x27;</span><span class="token php language-php" style="color:rgb(199, 146, 234)">)</span><span class="token php language-php" style="color:rgb(199, 146, 234)">;</span><span class="token php language-php">
-</span><span class="token php language-php">            </span><span class="token php language-php" style="color:rgb(214, 222, 235)">$decoded</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(127, 219, 202)">=</span><span class="token php language-php"> </span><span class="token php language-php scope">JWT</span><span class="token php language-php scope" style="color:rgb(199, 146, 234)">::</span><span class="token php language-php" style="color:rgb(130, 170, 255)">decode</span><span class="token php language-php" style="color:rgb(199, 146, 234)">(</span><span class="token php language-php" style="color:rgb(214, 222, 235)">$token</span><span class="token php language-php" style="color:rgb(199, 146, 234)">,</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(127, 219, 202)">new</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(255, 203, 139)">Key</span><span class="token php language-php" style="color:rgb(199, 146, 234)">(</span><span class="token php language-php" style="color:rgb(214, 222, 235)">$key</span><span class="token php language-php" style="color:rgb(199, 146, 234)">,</span><span class="token php language-php"> </span><span class="token php language-php single-quoted-string" style="color:rgb(173, 219, 103)">&#x27;JWT_ALGO&#x27;</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(127, 219, 202)">?</span><span class="token php language-php" style="color:rgb(199, 146, 234)">:</span><span class="token php language-php"> </span><span class="token php language-php single-quoted-string" style="color:rgb(173, 219, 103)">&#x27;HS256&#x27;</span><span class="token php language-php" style="color:rgb(199, 146, 234)">)</span><span class="token php language-php" style="color:rgb(199, 146, 234)">)</span><span class="token php language-php" style="color:rgb(199, 146, 234)">;</span><span class="token php language-php">
-</span><span class="token php language-php">            </span><span class="token php language-php" style="color:rgb(127, 219, 202)">return</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(199, 146, 234)">(</span><span class="token php language-php type-casting" style="color:rgb(127, 219, 202)">array</span><span class="token php language-php" style="color:rgb(199, 146, 234)">)</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(214, 222, 235)">$decoded</span><span class="token php language-php" style="color:rgb(127, 219, 202)">-&gt;</span><span class="token php language-php" style="color:rgb(128, 203, 196)">data</span><span class="token php language-php" style="color:rgb(199, 146, 234)">;</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(99, 119, 119);font-style:italic">// Retorna dados do usuário (ID, Setor, Perfil)</span><span class="token php language-php">
-</span><span class="token php language-php">        </span><span class="token php language-php" style="color:rgb(199, 146, 234)">}</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(127, 219, 202)">catch</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(199, 146, 234)">(</span><span class="token php language-php" style="color:rgb(255, 203, 139)">Exception</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(214, 222, 235)">$e</span><span class="token php language-php" style="color:rgb(199, 146, 234)">)</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(199, 146, 234)">{</span><span class="token php language-php">
-</span><span class="token php language-php">            </span><span class="token php language-php scope" style="color:rgb(127, 219, 202)">self</span><span class="token php language-php scope" style="color:rgb(199, 146, 234)">::</span><span class="token php language-php" style="color:rgb(130, 170, 255)">negarAcesso</span><span class="token php language-php" style="color:rgb(199, 146, 234)">(</span><span class="token php language-php double-quoted-string" style="color:rgb(173, 219, 103)">&quot;Sessão expirada ou inválida. Faça login novamente.&quot;</span><span class="token php language-php" style="color:rgb(199, 146, 234)">)</span><span class="token php language-php" style="color:rgb(199, 146, 234)">;</span><span class="token php language-php">
-</span><span class="token php language-php">        </span><span class="token php language-php" style="color:rgb(199, 146, 234)">}</span><span class="token php language-php">
-</span><span class="token php language-php">    </span><span class="token php language-php" style="color:rgb(199, 146, 234)">}</span><span class="token php language-php">
-</span><span class="token php language-php">
-</span><span class="token php language-php">    </span><span class="token php language-php" style="color:rgb(127, 219, 202)">private</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(127, 219, 202)">static</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(127, 219, 202)">function</span><span class="token php language-php"> </span><span class="token php language-php function-definition" style="color:rgb(130, 170, 255)">negarAcesso</span><span class="token php language-php" style="color:rgb(199, 146, 234)">(</span><span class="token php language-php" style="color:rgb(214, 222, 235)">$msg</span><span class="token php language-php" style="color:rgb(199, 146, 234)">)</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(199, 146, 234)">{</span><span class="token php language-php">
-</span><span class="token php language-php">        </span><span class="token php language-php" style="color:rgb(130, 170, 255)">header</span><span class="token php language-php" style="color:rgb(199, 146, 234)">(</span><span class="token php language-php single-quoted-string" style="color:rgb(173, 219, 103)">&#x27;Content-Type: application/json&#x27;</span><span class="token php language-php" style="color:rgb(199, 146, 234)">)</span><span class="token php language-php" style="color:rgb(199, 146, 234)">;</span><span class="token php language-php">
-</span><span class="token php language-php">        </span><span class="token php language-php" style="color:rgb(130, 170, 255)">http_response_code</span><span class="token php language-php" style="color:rgb(199, 146, 234)">(</span><span class="token php language-php" style="color:rgb(247, 140, 108)">401</span><span class="token php language-php" style="color:rgb(199, 146, 234)">)</span><span class="token php language-php" style="color:rgb(199, 146, 234)">;</span><span class="token php language-php">
-</span><span class="token php language-php">        </span><span class="token php language-php" style="color:rgb(127, 219, 202)">echo</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(130, 170, 255)">json_encode</span><span class="token php language-php" style="color:rgb(199, 146, 234)">(</span><span class="token php language-php" style="color:rgb(199, 146, 234)">[</span><span class="token php language-php double-quoted-string" style="color:rgb(173, 219, 103)">&quot;status&quot;</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(127, 219, 202)">=&gt;</span><span class="token php language-php"> </span><span class="token php language-php double-quoted-string" style="color:rgb(173, 219, 103)">&quot;error&quot;</span><span class="token php language-php" style="color:rgb(199, 146, 234)">,</span><span class="token php language-php"> </span><span class="token php language-php double-quoted-string" style="color:rgb(173, 219, 103)">&quot;message&quot;</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(127, 219, 202)">=&gt;</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(214, 222, 235)">$msg</span><span class="token php language-php" style="color:rgb(199, 146, 234)">]</span><span class="token php language-php" style="color:rgb(199, 146, 234)">)</span><span class="token php language-php" style="color:rgb(199, 146, 234)">;</span><span class="token php language-php">
-</span><span class="token php language-php">        </span><span class="token php language-php" style="color:rgb(127, 219, 202)">exit</span><span class="token php language-php" style="color:rgb(199, 146, 234)">;</span><span class="token php language-php">
-</span><span class="token php language-php">    </span><span class="token php language-php" style="color:rgb(199, 146, 234)">}</span><span class="token php language-php">
-</span><span class="token php language-php"></span><span class="token php language-php" style="color:rgb(199, 146, 234)">}</span><span class="token php language-php">
-</span><span class="token php language-php"></span></code></pre></div>
+Diretorios-chave nessa camada:
 
-## 5. Padronização de Respostas (Helper)
+- `app/controllers/`
+- `app/services/`
+- `app/models/`
+- `app/repositories/`
+- `app/rules/`
 
-Para manter a consistência da comunicação entre o *backend* e o *frontend*, todas as respostas da API devem seguir um formato JSON estrito. Isso evita que desenvolvedores diferentes retornem estruturas variadas (ex: um retorna `msg`, outro `message`, outro `erro`), o que dificultaria o tratamento de dados no React/Next.js.
+## 6. Frontend Acoplado ao Backend
 
-O arquivo `bd/ResponseHelper.php` encapsula a lógica de envio de respostas. Ele define automaticamente o cabeçalho `Content-Type: application/json`, o código de status HTTP correto e estrutura o corpo da resposta com os campos `status`, `message`, `data` e `timestamp`, conforme definido nas regras de CRUD do projeto.
+Mesmo este documento sendo focado no backend, a estrutura real do projeto exige considerar os ativos acoplados ao runtime:
 
-### Código Base: `bd/ResponseHelper.php`
+- `public/assets/css/shared/` contem a base de estilos compartilhados;
+- `public/assets/css/modules/` contem estilos especificos de modulos;
+- `public/assets/js/` contem scripts e modulos JavaScript do sistema;
+- `app/views/internal/` contem as telas internas carregadas no iframe.
 
-<div class="widget code-container remove-before-copy"><div class="code-header non-draggable"><span class="iaf s13 w700 code-language-placeholder">php</span><div class="code-copy-button"><span class="iaf s13 w500 code-copy-placeholder">Copiar</span><img class="code-copy-icon" src="data:image/svg+xml;utf8,%0A%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%3E%0A%20%20%3Cpath%20d%3D%22M10.8%208.63V11.57C10.8%2014.02%209.82%2015%207.37%2015H4.43C1.98%2015%201%2014.02%201%2011.57V8.63C1%206.18%201.98%205.2%204.43%205.2H7.37C9.82%205.2%2010.8%206.18%2010.8%208.63Z%22%20stroke%3D%22%23717C92%22%20stroke-width%3D%221.05%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%0A%20%20%3Cpath%20d%3D%22M15%204.42999V7.36999C15%209.81999%2014.02%2010.8%2011.57%2010.8H10.8V8.62999C10.8%206.17999%209.81995%205.19999%207.36995%205.19999H5.19995V4.42999C5.19995%201.97999%206.17995%200.999992%208.62995%200.999992H11.57C14.02%200.999992%2015%201.97999%2015%204.42999Z%22%20stroke%3D%22%23717C92%22%20stroke-width%3D%221.05%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%0A%3C%2Fsvg%3E%0A" /></div></div><pre id="code-jwx4spnj6" style="color:white;font-family:Consolas, Monaco, &quot;Andale Mono&quot;, &quot;Ubuntu Mono&quot;, monospace;text-align:left;white-space:pre;word-spacing:normal;word-break:normal;word-wrap:normal;line-height:1.5;font-size:1em;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-hyphens:none;-moz-hyphens:none;-ms-hyphens:none;hyphens:none;padding:8px;margin:8px;overflow:auto;background:#011627;width:calc(100% - 8px);border-radius:8px;box-shadow:0px 8px 18px 0px rgba(120, 120, 143, 0.10), 2px 2px 10px 0px rgba(255, 255, 255, 0.30) inset"><code class="language-php" style="white-space:pre;color:#d6deeb;font-family:Consolas, Monaco, &quot;Andale Mono&quot;, &quot;Ubuntu Mono&quot;, monospace;text-align:left;word-spacing:normal;word-break:normal;word-wrap:normal;line-height:1.5;font-size:1em;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-hyphens:none;-moz-hyphens:none;-ms-hyphens:none;hyphens:none"><span class="token php language-php delimiter" style="color:rgb(214, 222, 235);font-weight:bold">&lt;?php</span><span class="token php language-php">
-</span><span class="token php language-php"></span><span class="token php language-php" style="color:rgb(127, 219, 202)">class</span><span class="token php language-php"> </span><span class="token php language-php class-name-definition" style="color:rgb(255, 203, 139)">ResponseHelper</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(199, 146, 234)">{</span><span class="token php language-php">
-</span><span class="token php language-php">    </span><span class="token php language-php" style="color:rgb(127, 219, 202)">public</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(127, 219, 202)">static</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(127, 219, 202)">function</span><span class="token php language-php"> </span><span class="token php language-php function-definition" style="color:rgb(130, 170, 255)">send</span><span class="token php language-php" style="color:rgb(199, 146, 234)">(</span><span class="token php language-php" style="color:rgb(214, 222, 235)">$status</span><span class="token php language-php" style="color:rgb(199, 146, 234)">,</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(214, 222, 235)">$message</span><span class="token php language-php" style="color:rgb(199, 146, 234)">,</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(214, 222, 235)">$data</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(127, 219, 202)">=</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(199, 146, 234)">[</span><span class="token php language-php" style="color:rgb(199, 146, 234)">]</span><span class="token php language-php" style="color:rgb(199, 146, 234)">,</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(214, 222, 235)">$code</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(127, 219, 202)">=</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(247, 140, 108)">200</span><span class="token php language-php" style="color:rgb(199, 146, 234)">)</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(199, 146, 234)">{</span><span class="token php language-php">
-</span><span class="token php language-php">        </span><span class="token php language-php" style="color:rgb(130, 170, 255)">http_response_code</span><span class="token php language-php" style="color:rgb(199, 146, 234)">(</span><span class="token php language-php" style="color:rgb(214, 222, 235)">$code</span><span class="token php language-php" style="color:rgb(199, 146, 234)">)</span><span class="token php language-php" style="color:rgb(199, 146, 234)">;</span><span class="token php language-php">
-</span><span class="token php language-php">        </span><span class="token php language-php" style="color:rgb(130, 170, 255)">header</span><span class="token php language-php" style="color:rgb(199, 146, 234)">(</span><span class="token php language-php single-quoted-string" style="color:rgb(173, 219, 103)">&#x27;Content-Type: application/json; charset=utf-8&#x27;</span><span class="token php language-php" style="color:rgb(199, 146, 234)">)</span><span class="token php language-php" style="color:rgb(199, 146, 234)">;</span><span class="token php language-php">
-</span><span class="token php language-php">
-</span><span class="token php language-php">        </span><span class="token php language-php" style="color:rgb(127, 219, 202)">echo</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(130, 170, 255)">json_encode</span><span class="token php language-php" style="color:rgb(199, 146, 234)">(</span><span class="token php language-php" style="color:rgb(199, 146, 234)">[</span><span class="token php language-php">
-</span><span class="token php language-php">            </span><span class="token php language-php double-quoted-string" style="color:rgb(173, 219, 103)">&quot;status&quot;</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(127, 219, 202)">=&gt;</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(214, 222, 235)">$status</span><span class="token php language-php" style="color:rgb(199, 146, 234)">,</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(99, 119, 119);font-style:italic">// &#x27;success&#x27; ou &#x27;error&#x27;</span><span class="token php language-php">
-</span><span class="token php language-php">            </span><span class="token php language-php double-quoted-string" style="color:rgb(173, 219, 103)">&quot;message&quot;</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(127, 219, 202)">=&gt;</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(214, 222, 235)">$message</span><span class="token php language-php" style="color:rgb(199, 146, 234)">,</span><span class="token php language-php">
-</span><span class="token php language-php">            </span><span class="token php language-php double-quoted-string" style="color:rgb(173, 219, 103)">&quot;data&quot;</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(127, 219, 202)">=&gt;</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(214, 222, 235)">$data</span><span class="token php language-php" style="color:rgb(199, 146, 234)">,</span><span class="token php language-php">
-</span><span class="token php language-php">            </span><span class="token php language-php double-quoted-string" style="color:rgb(173, 219, 103)">&quot;timestamp&quot;</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(127, 219, 202)">=&gt;</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(130, 170, 255)">date</span><span class="token php language-php" style="color:rgb(199, 146, 234)">(</span><span class="token php language-php single-quoted-string" style="color:rgb(173, 219, 103)">&#x27;Y-m-d H:i:s&#x27;</span><span class="token php language-php" style="color:rgb(199, 146, 234)">)</span><span class="token php language-php">
-</span><span class="token php language-php">        </span><span class="token php language-php" style="color:rgb(199, 146, 234)">]</span><span class="token php language-php" style="color:rgb(199, 146, 234)">,</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(130, 170, 255)">JSON_UNESCAPED_UNICODE</span><span class="token php language-php" style="color:rgb(199, 146, 234)">)</span><span class="token php language-php" style="color:rgb(199, 146, 234)">;</span><span class="token php language-php">
-</span><span class="token php language-php">
-</span><span class="token php language-php">        </span><span class="token php language-php" style="color:rgb(127, 219, 202)">exit</span><span class="token php language-php" style="color:rgb(199, 146, 234)">;</span><span class="token php language-php">
-</span><span class="token php language-php">    </span><span class="token php language-php" style="color:rgb(199, 146, 234)">}</span><span class="token php language-php">
-</span><span class="token php language-php">
-</span><span class="token php language-php">    </span><span class="token php language-php" style="color:rgb(127, 219, 202)">public</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(127, 219, 202)">static</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(127, 219, 202)">function</span><span class="token php language-php"> </span><span class="token php language-php function-definition" style="color:rgb(130, 170, 255)">success</span><span class="token php language-php" style="color:rgb(199, 146, 234)">(</span><span class="token php language-php" style="color:rgb(214, 222, 235)">$message</span><span class="token php language-php" style="color:rgb(199, 146, 234)">,</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(214, 222, 235)">$data</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(127, 219, 202)">=</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(199, 146, 234)">[</span><span class="token php language-php" style="color:rgb(199, 146, 234)">]</span><span class="token php language-php" style="color:rgb(199, 146, 234)">)</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(199, 146, 234)">{</span><span class="token php language-php">
-</span><span class="token php language-php">        </span><span class="token php language-php scope" style="color:rgb(127, 219, 202)">self</span><span class="token php language-php scope" style="color:rgb(199, 146, 234)">::</span><span class="token php language-php" style="color:rgb(130, 170, 255)">send</span><span class="token php language-php" style="color:rgb(199, 146, 234)">(</span><span class="token php language-php single-quoted-string" style="color:rgb(173, 219, 103)">&#x27;success&#x27;</span><span class="token php language-php" style="color:rgb(199, 146, 234)">,</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(214, 222, 235)">$message</span><span class="token php language-php" style="color:rgb(199, 146, 234)">,</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(214, 222, 235)">$data</span><span class="token php language-php" style="color:rgb(199, 146, 234)">,</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(247, 140, 108)">200</span><span class="token php language-php" style="color:rgb(199, 146, 234)">)</span><span class="token php language-php" style="color:rgb(199, 146, 234)">;</span><span class="token php language-php">
-</span><span class="token php language-php">    </span><span class="token php language-php" style="color:rgb(199, 146, 234)">}</span><span class="token php language-php">
-</span><span class="token php language-php">
-</span><span class="token php language-php">    </span><span class="token php language-php" style="color:rgb(127, 219, 202)">public</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(127, 219, 202)">static</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(127, 219, 202)">function</span><span class="token php language-php"> </span><span class="token php language-php function-definition" style="color:rgb(130, 170, 255)">error</span><span class="token php language-php" style="color:rgb(199, 146, 234)">(</span><span class="token php language-php" style="color:rgb(214, 222, 235)">$message</span><span class="token php language-php" style="color:rgb(199, 146, 234)">,</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(214, 222, 235)">$code</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(127, 219, 202)">=</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(247, 140, 108)">400</span><span class="token php language-php" style="color:rgb(199, 146, 234)">)</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(199, 146, 234)">{</span><span class="token php language-php">
-</span><span class="token php language-php">        </span><span class="token php language-php scope" style="color:rgb(127, 219, 202)">self</span><span class="token php language-php scope" style="color:rgb(199, 146, 234)">::</span><span class="token php language-php" style="color:rgb(130, 170, 255)">send</span><span class="token php language-php" style="color:rgb(199, 146, 234)">(</span><span class="token php language-php single-quoted-string" style="color:rgb(173, 219, 103)">&#x27;error&#x27;</span><span class="token php language-php" style="color:rgb(199, 146, 234)">,</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(214, 222, 235)">$message</span><span class="token php language-php" style="color:rgb(199, 146, 234)">,</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(199, 146, 234)">[</span><span class="token php language-php" style="color:rgb(199, 146, 234)">]</span><span class="token php language-php" style="color:rgb(199, 146, 234)">,</span><span class="token php language-php"> </span><span class="token php language-php" style="color:rgb(214, 222, 235)">$code</span><span class="token php language-php" style="color:rgb(199, 146, 234)">)</span><span class="token php language-php" style="color:rgb(199, 146, 234)">;</span><span class="token php language-php">
-</span><span class="token php language-php">    </span><span class="token php language-php" style="color:rgb(199, 146, 234)">}</span><span class="token php language-php">
-</span><span class="token php language-php"></span><span class="token php language-php" style="color:rgb(199, 146, 234)">}</span><span class="token php language-php">
-</span><span class="token php language-php"></span></code></pre></div>
+O projeto usa CSS e JavaScript proprios, sem Bootstrap como dependencia estrutural.
+
+## 7. Endpoints Internos
+
+A superficie principal de endpoints internos do sistema fica em:
+
+- `public/api/`
+
+Ela contem grupos de endpoints por modulo, como cartorio, gabinete, audiencias, consultas, pessoas, processos e entidades auxiliares.
+Dentro dela, ja existe tambem o agrupamento:
+
+- `public/api/admin/`
+
+para alguns fluxos administrativos mais novos, como feriados.
+
+Os endpoints de apoio administrativo mais antigos ficam em:
+
+- `public/admin/api/`
+
+Esses endpoints antigos ainda fazem parte do runtime, mas nao devem ser a base para novos contratos.
+
+A pasta `api/` na raiz do repositorio contem scripts antigos fora da superficie oficial atual. Ela nao deve ser usada para novos endpoints, para testes normativos ou como referencia de arquitetura.
+
+Novas rotas e novos contratos devem ser documentados a partir de `public/api/`, evitando dispersao entre diretorios paralelos.
+
+## 8. Diretrizes de Manutencao
+
+- manter regra de negocio fora de `public/`
+- manter SQL e evolucoes estruturais em `database/`
+- manter configuracoes de runtime em `config/`
+- manter documentacao alinhada a estrutura real do repositorio
+- nao introduzir documentacao baseada em Laravel, Next.js ou Bootstrap para descrever a arquitetura atual

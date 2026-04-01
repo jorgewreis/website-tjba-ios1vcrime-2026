@@ -1,98 +1,187 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
     <head>
-        <meta lang="pt-BR">
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title>Template Model - Components - Buttons</title>
-        <meta name="description" content="">
+        <title>Referência — Botões (contrato do projeto)</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="./../assets/css/shared/reset.css">
         <link rel="stylesheet" href="./../assets/css/shared/color.css">
+        <link rel="stylesheet" href="./../assets/css/shared/page.css">
         <link rel="stylesheet" href="./../assets/css/shared/form.css">
+        <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+        <style>
+            .ref-section { margin: 2rem 0; padding: 0 1.5rem 2rem; border-bottom: 1px solid var(--color-border, #ddd); }
+            .ref-section h2 { font-family: 'Poppins', sans-serif; font-size: 1.1rem; margin-bottom: 0.75rem; color: var(--color-text-primary); }
+            .ref-section p.note { font-size: 13px; color: var(--color-text-secondary); max-width: 56rem; margin-bottom: 1rem; }
+            .ref-code { font-family: ui-monospace, monospace; font-size: 12px; background: var(--color-background-elevated, #f5f5f5); padding: 0.75rem 1rem; border-radius: 6px; margin: 0.75rem 0; white-space: pre-wrap; }
+        </style>
     </head>
-    <body>
-        <div class="form-line">
-            <button class="btn btn-large">Button</button><button class="btn">Button</button><button class="btn  btn-small">Button</button>
+    <body class="page-internal">
+        <div class="spacing-top-page"></div>
+        <div class="header-page" style="padding-left: 1.5rem; padding-right: 1.5rem;">
+            <div class="location"><span class="all">Referência —</span> <span class="specific">Componentes / Botões</span></div>
+            <h1 class="title-page">Contrato de botões</h1>
+            <p class="description-page">Base <code>btn</code> + variante; ordem: <code>btn</code> → variante → utilitários (<code>height-sm</code>, etc.). Todo <code>&lt;button&gt;</code> com <code>type</code> explícito. Regra completa: <code>.cursor/rules/ui-buttons-contract.mdc</code>.</p>
         </div>
-        <hr>
-        <div class="form-line">
-            <button class="btn btn-primary">Primary</button><button class="btn btn-primary-outline">Primary</button><button class="btn btn-primary" disabled>Primary</button>
-        </div>
-        <div class="form-line">
-            <button class="btn btn-secondary">Secondary</button><button class="btn btn-secondary-outline">Secondary</button><button class="btn btn-secondary" disabled>Secondary</button>
-        </div>
-        <div class="form-line">
-            <button class="btn btn-success">Success</button><button class="btn btn-success-outline">Success</button><button class="btn btn-success" disabled>Success</button>
-        </div>
-        <div class="form-line">
-            <button class="btn btn-danger">Danger</button><button class="btn btn-danger-outline">Danger</button><button class="btn btn-danger" disabled>Danger</button>
-        </div>
-        <div class="form-line">
-            <button class="btn btn-warning">Warning</button><button class="btn btn-warning-outline">Warning</button><button class="btn btn-warning" disabled>Warning</button>
-        </div>
-        <div class="form-line">
-            <button class="btn btn-info">Info</button><button class="btn btn-info-outline">Info</button><button class="btn btn-info" disabled>Info</button>
-        </div>
-        <hr>
-        <div class="form-line">
-            <div class="status status-pending">Pendente</div>
-            <div class="status status-current">Aguardando expedição</div>
-            <div class="status status-current">Aguardando envio</div>
-            <div class="status status-current">Aguardando juntada de termo</div>
-            <div class="status status-cancelled">Cancelada</div>
-            <div class="status status-finished">Concluída</div>
-        </div>
-        <hr>
-        <div class="form-line">
-            <div class="status status-small status-pending">Pendente</div>
-            <div class="status status-small status-current">Em andamento</div>
-            <div class="status status-small status-cancelled">Cancelada</div>
-            <div class="status status-small status-finished">Concluída</div>
-        </div>
-        <hr>
-        <div class="form-line">
-            <div class="badge btn-primary">Badge</div>
-            <div class="badge btn-warning">Alerta</div>
-            <div class="badge btn-danger">Urgente</div>
-        </div>
-        <div class="line-filter">
-            <div class="block-cell">
-                <label for="filter-tipo">Filtrar por tipo</label>
-                <select class="width-200 height-md" id="filter-tipo">
-                    <option value="" selected>Mostrar todos</option>
-                    <option value="Tipo 1">Tipo 1</option>
-                    <option value="Tipo 2">Tipo 2</option>
-                </select>
+
+        <!-- 1. Variantes -->
+        <section class="ref-section" id="variantes">
+            <h2>1. Variantes de cor (tamanhos base, médio e grande)</h2>
+            <p class="note">Ordem: <code>btn</code> → variante → <code>btn-large</code> / <code>btn-small</code> quando necessário.</p>
+            <div class="form-line">
+                <button type="button" class="btn btn-large">Button</button>
+                <button type="button" class="btn">Button</button>
+                <button type="button" class="btn btn-small">Button</button>
             </div>
-            <div class="block-cell">
-                <label for="filter-status">Filtrar por status</label>
-                <select class="width-100 height-md" id="filter-status">
-                    <option value="" selected>Mostrar todos</option>
-                    <option value="Pendente">Pendente</option>
-                    <option value="Em andamento">Em andamento</option>
-                    <option value="Cancelada">Cancelada</option>
-                    <option value="Concluída">Concluída</option>
-                </select>
+            <hr>
+            <div class="form-line">
+                <button type="button" class="btn btn-primary">Primary</button><button type="button" class="btn btn-primary-outline">Primary</button><button type="button" class="btn btn-primary" disabled>Primary</button>
             </div>
-            <div class="block-cell">
-                <label for="items-per-page">Docs</label>
-                <select class="width-ssm height-md" id="items-per-page">
-                    <option value="10">10</option>
-                    <option value="25" selected>25</option>
-                    <option value="50">50</option>
-                    <option value="100">100</option>
-                </select>
+            <div class="form-line">
+                <button type="button" class="btn btn-secondary">Secondary</button><button type="button" class="btn btn-secondary-outline">Secondary</button><button type="button" class="btn btn-secondary" disabled>Secondary</button>
             </div>
-        </div>
-        <div class="line-buttons">
-            <select class="width-100 height-md" id="export-type">
-                <option value="" selected>Exportar lista</option>
-                <option value="pdf">Gerar PDF</option>
-                <option value="csv">Gerar CSV</option>
-                <option value="print">Imprimir</option>
-            </select>
-            <button class="btn btn-secondary-outline">Cancelar</button><button class="btn btn-primary">Salvar</button>
-        </div>
+            <div class="form-line">
+                <button type="button" class="btn btn-success">Success</button><button type="button" class="btn btn-success-outline">Success</button><button type="button" class="btn btn-success" disabled>Success</button>
+            </div>
+            <div class="form-line">
+                <button type="button" class="btn btn-danger">Danger</button><button type="button" class="btn btn-danger-outline">Danger</button><button type="button" class="btn btn-danger" disabled>Danger</button>
+            </div>
+            <div class="form-line">
+                <button type="button" class="btn btn-warning">Warning</button><button type="button" class="btn btn-warning-outline">Warning</button><button type="button" class="btn btn-warning" disabled>Warning</button>
+            </div>
+            <div class="form-line">
+                <button type="button" class="btn btn-info">Info</button><button type="button" class="btn btn-info-outline">Info</button><button type="button" class="btn btn-info" disabled>Info</button>
+            </div>
+        </section>
+
+        <!-- 2. Formulário -->
+        <section class="ref-section" id="formulario">
+            <h2>2. Rodapé de formulário / barra de ações</h2>
+            <p class="note">Padrão comum: secundário (voltar/cancelar) + primário (salvar). Ajuste variantes ao fluxo (ex.: <code>btn-danger-outline</code> para cancelar operação).</p>
+            <div class="line-buttons">
+                <button type="button" class="btn btn-secondary height-md">Voltar</button>
+                <button type="button" class="btn btn-secondary-outline height-md">Cancelar</button>
+                <button type="submit" class="btn btn-primary height-md">Salvar</button>
+            </div>
+            <div class="ref-code">&lt;button type="button" class="btn btn-secondary height-md"&gt;Voltar&lt;/button&gt;
+&lt;button type="submit" class="btn btn-primary height-md"&gt;Salvar&lt;/button&gt;</div>
+        </section>
+
+        <!-- 3. Tabela -->
+        <section class="ref-section" id="tabela">
+            <h2>3. Linha de tabela — editar (ícone)</h2>
+            <p class="note">Sempre <code>btn btn-editar</code>. Sem texto visível: <code>aria-label</code> e <code>title</code> iguais.</p>
+            <div class="form-line" style="align-items: center; gap: 12px;">
+                <button type="button" class="btn btn-editar" title="Editar" aria-label="Editar"><i class="fi fi-rr-pen-square"></i></button>
+                <span class="minor-info">(demonstração isolada; na listagem real fica na célula de ações)</span>
+            </div>
+            <div class="ref-code">&lt;button type="button" class="btn btn-editar" title="Editar" aria-label="Editar"&gt;&lt;i class="fi fi-rr-pen-square"&gt;&lt;/i&gt;&lt;/button&gt;</div>
+        </section>
+
+        <!-- 4. Navegação -->
+        <section class="ref-section" id="navegacao">
+            <h2>4. Navegação por botão (<code>data-nav-href</code>)</h2>
+            <p class="note">Substitui <code>&lt;a href&gt;</code> para ações de UI. Requer <code>navigate-buttons.js</code>. Nova aba: <code>data-nav-target="_blank"</code>.</p>
+            <div class="form-line">
+                <button type="button" class="btn btn-primary height-md" data-nav-href="../index.php">Ir para início (exemplo)</button>
+                <button type="button" class="btn btn-secondary-outline height-md" data-nav-href="https://example.com" data-nav-target="_blank">Externo (nova aba)</button>
+            </div>
+            <div class="ref-code">&lt;button type="button" class="btn btn-primary height-md" data-nav-href="/frame.php?page=..."&gt;Texto&lt;/button&gt;</div>
+        </section>
+
+        <!-- 5. Exceções v1 -->
+        <section class="ref-section" id="excecoes">
+            <h2>5. Exceções ao par <code>btn</code> + variante (lista v1)</h2>
+            <p class="note">Estes padrões não usam variante de cor do <code>btn</code>; ver tabela na regra <code>ui-buttons-contract.mdc</code>.</p>
+            <ul style="font-size: 14px; color: var(--color-text-secondary); max-width: 48rem;">
+                <li><strong>Toast:</strong> <code>toast-close</code> — exemplo abaixo.</li>
+                <li><strong>Paginação:</strong> <code>pagination-symbol</code>, <code>pagination-number</code>; reticências em <code>span.pagination-ellipsis</code>.</li>
+                <li><strong>Badge PDF:</strong> <code>badge file</code> + <code>data-nav-href</code> (botão ou estilo equivalente).</li>
+                <li><strong>Link em texto:</strong> <code>link-inline</code>, <code>btn-link-badge</code>.</li>
+            </ul>
+            <div class="form-line" style="align-items: center; gap: 16px; flex-wrap: wrap;">
+                <button type="button" class="toast-close" aria-label="Fechar" title="Fechar">&times;</button>
+                <span class="minor-info">toast-close</span>
+                <button type="button" class="pagination-symbol" disabled aria-disabled="true" title="Página anterior"><img src="../assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt=""></button>
+                <button type="button" class="pagination-number active" disabled>1</button>
+                <button type="button" class="pagination-symbol" disabled aria-disabled="true" title="Próxima página"><img src="../assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt=""></button>
+                <span class="minor-info">paginação (desabilitada, demo)</span>
+            </div>
+            <div class="form-line" style="margin-top: 12px;">
+                <button type="button" class="badge file" data-nav-href="#" data-nav-target="_blank" title="Abrir PDF de exemplo" aria-label="Abrir PDF de exemplo">
+                    <img src="../assets/icons/Office-File-Pdf-1--Streamline-Ultimate.png" alt="">
+                    <span>Passo a passo (demo)</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Conteúdo legado: status e filtros (mantido como showcase) -->
+        <section class="ref-section" id="legado-status">
+            <h2>6. Outros elementos no mesmo arquivo (status, filtros)</h2>
+            <p class="note">Mantidos para referência visual; não são o contrato de <code>btn</code>.</p>
+            <div class="form-line">
+                <div class="status status-pending">Pendente</div>
+                <div class="status status-current">Aguardando expedição</div>
+                <div class="status status-current">Aguardando envio</div>
+                <div class="status status-current">Aguardando juntada de termo</div>
+                <div class="status status-cancelled">Cancelada</div>
+                <div class="status status-finished">Concluída</div>
+            </div>
+            <hr>
+            <div class="form-line">
+                <div class="status status-small status-pending">Pendente</div>
+                <div class="status status-small status-current">Em andamento</div>
+                <div class="status status-small status-cancelled">Cancelada</div>
+                <div class="status status-small status-finished">Concluída</div>
+            </div>
+            <hr>
+            <div class="form-line">
+                <div class="badge btn-primary">Badge</div>
+                <div class="badge btn-warning">Alerta</div>
+                <div class="badge btn-danger">Urgente</div>
+            </div>
+            <div class="line-filter">
+                <div class="block-cell">
+                    <label for="filter-tipo">Filtrar por tipo</label>
+                    <select class="width-200 height-md" id="filter-tipo">
+                        <option value="" selected>Mostrar todos</option>
+                        <option value="Tipo 1">Tipo 1</option>
+                        <option value="Tipo 2">Tipo 2</option>
+                    </select>
+                </div>
+                <div class="block-cell">
+                    <label for="filter-status">Filtrar por status</label>
+                    <select class="width-100 height-md" id="filter-status">
+                        <option value="" selected>Mostrar todos</option>
+                        <option value="Pendente">Pendente</option>
+                        <option value="Em andamento">Em andamento</option>
+                        <option value="Cancelada">Cancelada</option>
+                        <option value="Concluída">Concluída</option>
+                    </select>
+                </div>
+                <div class="block-cell">
+                    <label for="items-per-page">Docs</label>
+                    <select class="width-ssm height-md" id="items-per-page">
+                        <option value="10">10</option>
+                        <option value="25" selected>25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+            </div>
+            <div class="line-buttons">
+                <select class="width-100 height-md" id="export-type">
+                    <option value="" selected>Exportar lista</option>
+                    <option value="pdf">Gerar PDF</option>
+                    <option value="csv">Gerar CSV</option>
+                    <option value="print">Imprimir</option>
+                </select>
+                <button type="button" class="btn btn-secondary-outline">Cancelar</button>
+                <button type="button" class="btn btn-primary">Salvar</button>
+            </div>
+        </section>
+
+        <script src="./../assets/js/shared/navigate-buttons.js"></script>
     </body>
 </html>

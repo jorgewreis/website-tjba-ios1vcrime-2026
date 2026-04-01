@@ -199,17 +199,19 @@ declare(strict_types=1);
                     '<div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">' +
                         '<span class="pagination-info" id="consulta-feedback">Mostrando ' + startItem + '-' + endItem + ' de ' + totalItems + ' endereços (' + totalPages + ' páginas, ' + perPage + ' itens por página)</span>' +
                         '<div class="pagination-controls">' +
-                            '<a class="pagination-symbol' + (isPrevDisabled ? ' disabled' : '') + '" href="#" data-page-action="prev" ' + (isPrevDisabled ? 'aria-disabled="true"' : '') + ' aria-label="Página anterior">‹</a>' +
+                            '<button type="button" class="pagination-symbol' + (isPrevDisabled ? ' disabled' : '') + '" data-page-action="prev" ' + (isPrevDisabled ? 'disabled aria-disabled="true"' : '') + ' aria-label="Página anterior">‹</button>' +
                             paginationButtons.map(function (pageNumber) {
-                                return '<a class="pagination-number' + (pageNumber === page ? ' active' : '') + '" href="#" data-page-number="' + pageNumber + '">' + pageNumber + '</a>';
+                                var isActive = pageNumber === page;
+                                return '<button type="button" class="pagination-number' + (isActive ? ' active' : '') + '" ' + (isActive ? 'disabled' : 'data-page-number="' + pageNumber + '"') + '>' + pageNumber + '</button>';
                             }).join('') +
                             (paginationEllipsis
                                 ? '<span class="pagination-symbol pagination-ellipsis" aria-hidden="true">…</span>'
                                 : '') +
                             trailingPages.map(function (pageNumber) {
-                                return '<a class="pagination-number' + (pageNumber === page ? ' active' : '') + '" href="#" data-page-number="' + pageNumber + '">' + pageNumber + '</a>';
+                                var isActive = pageNumber === page;
+                                return '<button type="button" class="pagination-number' + (isActive ? ' active' : '') + '" ' + (isActive ? 'disabled' : 'data-page-number="' + pageNumber + '"') + '>' + pageNumber + '</button>';
                             }).join('') +
-                            '<a class="pagination-symbol' + (isNextDisabled ? ' disabled' : '') + '" href="#" data-page-action="next" ' + (isNextDisabled ? 'aria-disabled="true"' : '') + ' aria-label="Próxima página">›</a>' +
+                            '<button type="button" class="pagination-symbol' + (isNextDisabled ? ' disabled' : '') + '" data-page-action="next" ' + (isNextDisabled ? 'disabled aria-disabled="true"' : '') + ' aria-label="Próxima página">›</button>' +
                         '</div>' +
                     '</div>';
             }

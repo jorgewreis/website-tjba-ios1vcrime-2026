@@ -59,7 +59,7 @@ O **Sistema de Gestão do Cartório** foi desenvolvido para apoiar atividades in
 Área acessível antes do login, voltada ao acesso e manutenção de conta:
 
 - **Login** (entrada principal: `index.php`)
-- **Recuperação de senha**
+- **Recuperação de senha por link de redefinição**
 - **Cadastro de novo usuário**
 
 ---
@@ -156,11 +156,12 @@ A autorização é baseada em perfil, garantindo que cada usuário visualize e e
 
 Padrão de navegação do sistema:
 
-- **Login:** `index.php`
-- **Após login:** redireciona para `admin/home.php`
-- **Páginas internas:** exibidas dentro de um **iframe** em `admin/home.php` (menu carrega no mesmo iframe)
-- **Exposição de URLs internas:** preferir páginas internas acessadas por **arquivos públicos** que fazem `include` dos scripts da área `admin`, evitando expor diretamente URLs sensíveis
-- **Logout:** após logout bem-sucedido, redirecionar para `index.php`
+- **Login:** `public/index.php`
+- **Processamento de autenticação:** `public/login.php`
+- **Após login:** redireciona para `public/home.php`
+- **Páginas internas:** exibidas dentro de um **iframe** no shell autenticado e resolvidas por `public/frame.php?page=...`
+- **APIs internas:** a superfície oficial atual está em `public/api/` (incluindo grupos como `public/api/admin/`); `public/admin/api/` permanece ativo apenas para endpoints auxiliares de compatibilidade da área autenticada
+- **Logout:** após logout bem-sucedido, redirecionar para `public/index.php`
 
 ---
 
@@ -237,7 +238,8 @@ Diretrizes práticas para manter consistência visual (com base na paleta acima)
 
 ### Alerts / mensagens
 
-- Use sempre o par **(cor do tipo) + (fundo do tipo)**:
+- Para **feedback de operação** (salvar, erro de API, etc.) use o **sistema de toast** (`App.Toast` / `showToast`), não `alert()`. Política de modelo simple vs full e empilhamento: ver **`docs/00-foundation/sistema-toast.md`** e `.cursor/rules/toast-system.mdc`.
+- Para **cores semânticas** em componentes estáticos (chips, badges), use o par **(cor do tipo) + (fundo do tipo)**:
   - **Sucesso**, **Perigo**, **Atenção**, **Info**.
 
 ### Inputs (formulários)
@@ -305,8 +307,12 @@ Esse padrão unifica o comportamento visual de todas as páginas internas de lis
 - Validação e sanitização **server-side** em formulários e endpoints
 - Uso de **prepared statements** para reduzir risco de SQL Injection
 - Proteções contra XSS/CSRF (conforme arquitetura adotada)
+- Sessão PHP com bootstrap endurecido (`HttpOnly`, `SameSite`, `strict mode`, `use_only_cookies`)
+- Timeout de inatividade de 60 minutos na área autenticada
+- Rate limit de login por IP/CPF com bloqueio temporário progressivo
+- Persistência de token de sessão em **hash** no banco
 - Restringir acesso direto a scripts sensíveis e arquivos de configuração
-- Recuperação de senha com fluxo seguro (token/expiração), quando aplicável
+- Recuperação de senha com **link de uso único** e expiração
 
 ---
 
@@ -329,17 +335,20 @@ Campos sugeridos:
 
 ---
 
--## Estrutura do projeto (referência)
--
+## Estrutura do projeto (referência)
+
 Pastas principais no repositório:
--
-- `app/` — modelos, services, helpers, middlewares e views divididos entre `public` e `internal`.
-- `bootstrap/`, `config/` e `database/` — inicialização, parâmetros de conexão e migrações/exportações SQL.
-- `public/` — entrypoints (`index.php`, `home.php`, `frame.php`, APIs em `admin/api/`) e a pasta `assets/` com CSS/JS/template compartilhados, imagens e ícones.
-- `scripts/` — automações (versionamento, drafts, bump) utilizadas pelos hooks do repositório.
-- `storage/` — runtime (logs, uploads, backups) e **não versiona** o conteúdo (apenas `.gitkeep`).
-- `tools/` — auxiliares de IA e modelos de prompt (usados apenas em contexto de desenvolvimento/documentação).
-- `vendor/`
+
+- `app/` — código principal do sistema, com `access`, `controllers`, `helpers`, `middlewares`, `models`, `repositories`, `rules`, `services` e `views`.
+- `config/` e `database/` — parâmetros de runtime, segurança, schema, migrations, seeds e scripts SQL auxiliares.
+- `public/` — entrypoints (`index.php`, `login.php`, `home.php`, `frame.php`), superfície oficial de APIs em `public/api/`, endpoints auxiliares legados em `public/admin/api/`, além de `assets/`, `documents/` e `templates/`.
+- `storage/` — runtime local, com logs, uploads e backups.
+- `docs/` — documentação técnica, funcional, operacional e de releases.
+- `scripts/` — automações e utilitários de manutenção do repositório.
+- `tools/` — auxiliares de desenvolvimento, incluindo ferramentas de IA.
+- `api/` — scripts antigos (`users.php`, `guia.php`, `documents.php`, `notifications.php`, `guia_pdf.php`) mantidos apenas como legado do repositório; não compõem a superfície oficial atual e não devem receber evolução sem refatoração explícita.
+
+Fluxo **número CNJ → classe processual** (DataJud + cadastro local): ver [`docs/00-foundation/datajud-classe-processo-bd-sync.md`](docs/00-foundation/datajud-classe-processo-bd-sync.md) e [`public/assets/js/modules/datajud/README.md`](public/assets/js/modules/datajud/README.md).
 
 ---
 
@@ -349,10 +358,26 @@ Após clonar o repositório, configure os hooks:
 
 - git config core.hooksPath .githooks
 
-## Deploy automático para dev.ios1vcrime.com.br
+## Operação e pós-deploy
 
-O branch `develop` é conectado ao workflow `.github/workflows/deploy-dev.yml`.
-Cada push aprovado nesse branch dispara a sincronização automatizada com o subdomínio `dev.ios1vcrime.com.br`, que consome o conteúdo vivo da pasta `public/`. Garanta que só arquivos públicos (HTML, CSS, JS, assets) estejam sob `public/`, pois qualquer script ou arquivo sensível deve ficar em `app/`, `config/`, `storage/` ou em `tools/`.
+O workflow de deploy do ambiente oficial sincroniza arquivos e recarrega serviços, mas **não executa migrações SQL automaticamente**.
+
+Antes de considerar uma implantação concluída, valide:
+
+- migrações/manutenções necessárias do banco;
+- login, logout e sessão autenticada;
+- rate limit de login;
+- fluxo de recuperação e redefinição de senha.
+
+Referência operacional:
+
+- [`docs/40-operations/auth-security-runbook.md`](docs/40-operations/auth-security-runbook.md)
+
+## Deploy automático para produção
+
+O branch `main` é conectado ao workflow `.github/workflows/deploy-prod.yml`.
+Cada push aprovado nesse branch dispara a sincronização automatizada com `ios1vcrime.com.br`. O workflow de `dev` permanece disponível apenas por disparo manual em `.github/workflows/deploy-dev.yml`.
+Garanta que só arquivos públicos (HTML, CSS, JS, assets) estejam sob `public/`, pois qualquer script ou arquivo sensível deve ficar em `app/`, `config/`, `storage/` ou em `tools/`.
 
 ## Contexto Ativo (estado atual)
 

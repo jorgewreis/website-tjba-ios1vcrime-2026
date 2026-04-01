@@ -8,8 +8,41 @@ if (function_exists('mb_internal_encoding')) {
 
 require_once __DIR__ . '/../../services/OficiosCartorioService.php';
 require_once __DIR__ . '/../../repositories/OficiosCartorioSubtarefasRepository.php';
+require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
 
 $connection = Conection::getInstance()->getConnection();
+
+$ruleServidor = '';
+$hasRuleAllocation = false;
+$ruleNameAllocOficios = 'ALLOCATE-CARTORIOOFICIOS';
+try {
+    $regrasRepoAlloc = new AlocacoesRegrasRepository($connection);
+    $ruleRowAlloc = $regrasRepoAlloc->findByRegra($ruleNameAllocOficios);
+    $allocatedUserIdAlloc = $ruleRowAlloc['usuario_id'] ?? null;
+    if ($allocatedUserIdAlloc !== null && $allocatedUserIdAlloc !== '') {
+        $stmtAlloc = $connection->prepare('SELECT `nome`, `sobrenome` FROM `usuarios` WHERE `id_usuario` = ? LIMIT 1');
+        $stmtAlloc->execute([$allocatedUserIdAlloc]);
+        $uAlloc = $stmtAlloc->fetch(PDO::FETCH_ASSOC);
+        if ($uAlloc !== false) {
+            $nomeAlloc = trim((string) ($uAlloc['nome'] ?? ''));
+            $sobrenomeAlloc = trim((string) ($uAlloc['sobrenome'] ?? ''));
+            $ruleServidor = $sobrenomeAlloc !== '' ? $nomeAlloc . ' ' . $sobrenomeAlloc : $nomeAlloc;
+            $hasRuleAllocation = $ruleServidor !== '';
+        }
+    }
+} catch (\Throwable $e) {
+    // mantém padrão
+}
+
+$currentUserId   = trim((string) ($_SESSION['id_usuario'] ?? ''));
+$perfisGestaoLst = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
+$isGestao        = false;
+if ($currentUserId !== '') {
+    $stmtPerfis = $connection->prepare('SELECT DISTINCT UPPER(TRIM(perfil)) AS perfil FROM usuario_perfil WHERE usuario = ? AND perfil IS NOT NULL');
+    $stmtPerfis->execute([$currentUserId]);
+    $perfisUsuario = $stmtPerfis->fetchAll(PDO::FETCH_COLUMN);
+    $isGestao = count(array_intersect($perfisUsuario, $perfisGestaoLst)) > 0;
+}
 
 $routePage = trim((string) ($_GET['page'] ?? 'oficioscartorio'));
 $statusFilter = trim($_GET['status'] ?? '');
@@ -207,28 +240,52 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
             <h3 class="title-section" style="margin:0;font-size:1rem;font-weight:600;">Registrar ofício</h3>
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
-                    <label for="filter-processo">Número do processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <label for="filter-processo">Número do processo <span id="cartorio-processo-hint" class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="text" class="width-400 height-md" id="filter-processo" name="processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off">
                 </div>
                 <div class="col">
                     <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
-                    <input type="text" class="width-600 height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>
+                    <input type="text" class="width-600 height-md" id="filter-classe" data-datajud-related="true" placeholder="Preenchido automaticamente pelo DataJud" readonly>
                 </div>
                 <div class="col">
                     <label for="oficio-tipo">Tipo de ofício <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-600 height-md" id="oficio-tipo" name="tipo_oficio">
                         <option value="">Selecione…</option>
-                        <option value="Ofício requisitório">Ofício requisitório</option>
-                        <option value="Ofício de comunicação">Ofício de comunicação</option>
-                        <option value="Ofício de encaminhamento">Ofício de encaminhamento</option>
-                        <option value="Outro">Outro</option>
+                        <optgroup label="Solicitação">
+                        <option value="Ofício Solicitando Reativação do CPF">Ofício solicitando Reativação do CPF</option>
+                        <option value="Ofício Solicitando Suspensão do CPF">Ofício solicitando Suspensão do CPF</option>
+                        <option value="Ofício Solicitando Agendamento de Audiência">Ofício solicitando Agendamento de Audiência</option>
+                        </optgroup>
+                        <optgroup label="Encaminhamento">
+                        <option value="Ofício Encaminhando Decisão de Medida Protetiva">Ofício encaminhando Decisão de Medida Protetiva</option>
+                        <option value="Ofício Encaminhando Decisão Interlocutória">Ofício encaminhando Decisão Interlocutória</option>
+                        <option value="Ofício Encaminhando Documentos">Ofício encaminhando Documentos</option>
+                        <option value="Ofício Encaminhando Sentença">Ofício encaminhando Sentença</option>
+                        <option value="Ofício Encaminhando Informação">Ofício encaminhando Informação</option>
+                        </optgroup>
+                        <optgroup label="Informando">
+                        <option value="Ofício Informando Baixa ao Cedep">Ofício informando Baixa ao Cedep</option>
+                        <option value="Ofício Informando Condenação ao CEDEP">Ofício informando Condenação ao CEDEP</option>
+                        </optgroup>
+                        <optgroup label="Requisitando">
+                            <option value="Ofício Requisitando Policial para Audiência">Ofício requisitando Policial para Audiência</option>
+                            <option value="Ofício Requisitando Preso para Audiência">Ofício requisitando Preso para Audiência</option>
+                            <option value="Ofício Requisitando Servidor para Audiência">Ofício requisitando Servidor para Audiência</option>
+                            <option value="Ofício Requisitando Informações">Ofício requisitando Informações</option>
+                        </optgroup>
+                        <optgroup label="Administrativos">
+                            <option value="Ofício Solicitando Férias" data-oficio-grupo="administrativo">Ofício solicitando Férias</option>
+                            <option value="Ofício Solicitando Licença Prêmio" data-oficio-grupo="administrativo">Ofício solicitando Licença Prêmio</option>
+                            <option value="Ofício Solicitando Reembolso" data-oficio-grupo="administrativo">Ofício solicitando Reembolso</option>
+                            <option value="Ofício Solicitando Afastamento" data-oficio-grupo="administrativo">Ofício solicitando Afastamento</option>
+                            <option value="Ofício Diversos" data-oficio-grupo="administrativo">Ofício diversos</option>
+                        </optgroup>
                     </select>
                 </div>
                 <div class="col">
                     <label for="oficio-forma-cumprimento">Forma de cumprimento <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-500 height-md" id="oficio-forma-cumprimento" name="forma_cumprimento">
-                        <option value="">Selecione…</option>
-                        <option value="ccm">por Oficial de Justiça (CCM)</option>
+                        <option value="ccm" selected>por Oficial de Justiça (CCM)</option>
                         <option value="cartorio">pelo Cartório</option>
                     </select>
                 </div>
@@ -363,27 +420,51 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                             <span class="minor-info text-ellipsis" title="<?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?>" <?php echo $classeStyle; ?>><?php echo htmlspecialchars($classeNome); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars((string) ($row['Processo'] ?? '')); ?></span>
                         </div>
-                        <div class="col width-400">
+                        <div class="col width-700">
                             <span class="minor-info">Tipo</span>
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['TipoOficio'] ?? '')); ?></span>
                         </div>
-                        <div class="col width-220">
-                            <?php
-                            $nomeCriadorRow = trim((string) ($row['CriadoPorNome'] ?? ''));
-                            $nomeCriadorRow = $nomeCriadorRow !== '' ? $nomeCriadorRow : '—';
-                            ?>
-                            <span class="minor-info"><?php echo htmlspecialchars(oficios_list_formatar_data_hora($row['Data'] ?? null)); ?></span>
-                            <span class="major-info text-ellipsis" title="<?php echo $nomeCriadorRow !== '—' ? htmlspecialchars($nomeCriadorRow, ENT_QUOTES) : ''; ?>"><?php echo htmlspecialchars($nomeCriadorRow); ?></span>
-                        </div>
-                        <div class="col width-280">
-                            <span class="minor-info">Cumprimento</span>
-                            <span class="major-info text-ellipsis"><?php echo htmlspecialchars(cartorio_oficios_label_cumprimento($row)); ?></span>
-                        </div>
                     </div>
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                        <div class="col button-table button-edit" data-oficio-id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" title="Editar">
-                            <i class="fi fi-rr-file-edit"></i>
+                        <div class="display-flex row row-fit justify-end gap-y-sm allocate-chips-row allocate-users">
+                        <?php
+                        $alocados = $row['Alocados'] ?? [];
+                        foreach ($alocados as $alocado) {
+                            $tipo         = $alocado['tipo'] ?? 'specific';
+                            $iniciais     = htmlspecialchars($alocado['iniciais'] ?? '—', ENT_QUOTES);
+                            $nomeCompleto = $alocado['nome_completo'] ?? '';
+                            $nomeLabel    = $nomeCompleto !== '' ? $nomeCompleto : ($alocado['iniciais'] ?? '—');
+                            if ($tipo === 'rule') {
+                                $chipTitle = 'Servidor responsável (regra): ' . $nomeLabel;
+                            } elseif ($tipo === 'all') {
+                                $chipTitle = 'Servidor alocado: ' . $nomeLabel;
+                            } else {
+                                $chipTitle = 'Autoalocado: ' . $nomeLabel;
+                            }
+                            $classeTipo   = in_array($tipo, ['rule', 'specific', 'all'], true) ? ' ' . $tipo : '';
+                            $alocadoIdStr = htmlspecialchars($alocado['alocado_id'] ?? '', ENT_QUOTES);
+                            $usuarioIdStr = $alocado['usuario_id'] ?? '';
+                            $podeRemover  = $isGestao || ($tipo === 'specific' && $usuarioIdStr === $currentUserId);
+                            ?>
+                            <span class="user-allocate-wrap">
+                                <span class="user-allocate<?php echo $classeTipo; ?>" title="<?php echo htmlspecialchars($chipTitle, ENT_QUOTES); ?>"><?php echo $iniciais; ?></span>
+                                <?php if ($podeRemover): ?>
+                                <button type="button"
+                                    class="user-allocate-remove js-desalocar"
+                                    data-alocado-id="<?php echo $alocadoIdStr; ?>"
+                                    data-tipo="<?php echo htmlspecialchars($tipo, ENT_QUOTES); ?>"
+                                    data-endpoint="/api/cartorio-oficios/desalocar.php"
+                                    title="Remover alocação"
+                                    aria-label="Remover alocação">×</button>
+                                <?php endif; ?>
+                            </span>
+                            <?php
+                        }
+                        ?>
                         </div>
+                        <button type="button" class="btn btn-editar" data-oficio-id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" title="Editar">
+                            <i class="fi fi-rr-pen-square"></i>
+                        </button>
                         <?php if ($tarefaCancelada): ?>
                         <div class="col">
                             <div class="width-300 padding-x-lg status status-cancelled">Cancelada</div>
@@ -441,6 +522,18 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
             </div>
         <?php endif; ?>
 
+        <div class="display-flex row row-full info padding-x-md padding-y-md border-top">
+            <?php if ($hasRuleAllocation): ?>
+                <span>*Conforme regra de alocação, os ofícios do cartório serão alocados automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
+            <?php else: ?>
+                <span>*Não existe nenhum usuário alocado automaticamente para esta tarefa no momento.</span>
+            <?php endif; ?>
+        </div>
+
+        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
+            <button type="button" class="btn btn-primary-outline" id="alterar-regra-btn" style="display: none;">Alterar regra de alocação</button>
+        </div>
+
         <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
             <span class="pagination-info">
                 Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $totalDocuments; ?> <?php echo $documentsLabel; ?>
@@ -458,23 +551,23 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                     $nextParams['page_number'] = $nextPage;
                     $nextHref = '?' . http_build_query($nextParams);
                     ?>
-                    <a class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>" <?php if ($currentPage > 1): ?>href="<?php echo htmlspecialchars($prevHref); ?>"<?php else: ?>aria-disabled="true"<?php endif; ?>>
+                    <button type="button" class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>" <?php if ($currentPage > 1): ?>data-nav-href="<?php echo htmlspecialchars($prevHref, ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>>
                         <img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior">
-                    </a>
+                    </button>
                     <?php foreach ($paginationButtons as $page): ?>
                         <?php $pageParams = $baseQueryParams; $pageParams['page_number'] = $page; ?>
-                        <a class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" href="?<?php echo htmlspecialchars(http_build_query($pageParams)); ?>"><?php echo $page; ?></a>
+                        <button type="button" class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" <?php if ($page !== $currentPage): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($pageParams), ENT_QUOTES); ?>"<?php else: ?>disabled<?php endif; ?>><?php echo $page; ?></button>
                     <?php endforeach; ?>
                     <?php if ($paginationEllipsis && !empty($trailingPages)): ?>
-                        <a class="pagination-symbol pagination-ellipsis" aria-hidden="true"><img src="/assets/icons/Navigation-Menu-Horizontal--Streamline-Ultimate.png" alt="Mais páginas"></a>
+                        <span class="pagination-symbol pagination-ellipsis" aria-hidden="true"><img src="/assets/icons/Navigation-Menu-Horizontal--Streamline-Ultimate.png" alt="Mais páginas"></span>
                         <?php foreach ($trailingPages as $page): ?>
                             <?php $pageParams = $baseQueryParams; $pageParams['page_number'] = $page; ?>
-                            <a class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" href="?<?php echo htmlspecialchars(http_build_query($pageParams)); ?>"><?php echo $page; ?></a>
+                            <button type="button" class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" <?php if ($page !== $currentPage): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($pageParams), ENT_QUOTES); ?>"<?php else: ?>disabled<?php endif; ?>><?php echo $page; ?></button>
                         <?php endforeach; ?>
                     <?php endif; ?>
-                    <a class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>" <?php if ($currentPage < $totalPages): ?>href="<?php echo htmlspecialchars($nextHref); ?>"<?php else: ?>aria-disabled="true"<?php endif; ?>>
+                    <button type="button" class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>" <?php if ($currentPage < $totalPages): ?>data-nav-href="<?php echo htmlspecialchars($nextHref, ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>>
                         <img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página">
-                    </a>
+                    </button>
                 </div>
             <?php endif; ?>
         </div>
@@ -488,27 +581,53 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
         </div>
     </div>
 
-    <script src="/assets/js/modules/cartorio/cartas-expedidas/cnj.js"></script>
-    <script src="/assets/js/modules/cartorio/cartas-expedidas/datajud-api.js"></script>
+    <script src="/assets/js/modules/datajud/cnj.js"></script>
+    <script src="/assets/js/modules/datajud/datajud-cycle-helper.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/datajud/datajud-cycle-helper.js') ?: time(); ?>"></script>
+    <script src="/assets/js/modules/datajud/datajud-api.js"></script>
     <script src="/assets/js/shared/text-formatter.js"></script>
     <script>
         (function () {
             const notify = (type, title, message) => {
+                if (window.App && App.Page && typeof App.Page.notify === 'function') {
+                    App.Page.notify(type, title, message);
+                    return;
+                }
                 if (typeof showToast === 'function') {
                     showToast({ type, variant: 'full', title, message });
                 }
             };
             const POST_RELOAD_TOAST_KEY = 'cartorio.postReloadToast';
-            const queuePostReloadToast = (type, title, message) => {
+            const queuePostReloadToast = (payload) => {
+                if (window.App && App.Page && typeof App.Page.queuePostReloadToast === 'function') {
+                    App.Page.queuePostReloadToast(payload, null, null, POST_RELOAD_TOAST_KEY);
+                    return;
+                }
                 try {
                     const raw = sessionStorage.getItem(POST_RELOAD_TOAST_KEY);
                     const fila = raw ? JSON.parse(raw) : [];
                     const lista = Array.isArray(fila) ? fila : (fila && fila.message ? [fila] : []);
-                    lista.push({ type, title, message });
+                    lista.push(payload);
                     sessionStorage.setItem(POST_RELOAD_TOAST_KEY, JSON.stringify(lista));
                 } catch (e) {}
             };
+            const highlightCreatedOficio = (oficioId) => {
+                const id = (oficioId || '').toString().trim();
+                if (!id) return;
+                const row = document.getElementById(id);
+                if (!row) return;
+                row.classList.add('status-finished');
+                window.setTimeout(function () {
+                    row.classList.remove('status-finished');
+                }, 10000);
+            };
             const flushPostReloadToast = () => {
+                if (window.App && App.Page && typeof App.Page.flushPostReloadToast === 'function') {
+                    const list = App.Page.flushPostReloadToast(POST_RELOAD_TOAST_KEY, { type: 'info', title: 'Informação' });
+                    (Array.isArray(list) ? list : []).forEach(function (item) {
+                        if (item && item.highlight_oficio_id) highlightCreatedOficio(item.highlight_oficio_id);
+                    });
+                    return;
+                }
                 try {
                     const raw = sessionStorage.getItem(POST_RELOAD_TOAST_KEY);
                     if (!raw) return;
@@ -517,6 +636,7 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                     const lista = Array.isArray(data) ? data : (data && data.message ? [data] : []);
                     lista.forEach(function (item) {
                         if (item && item.message) notify(item.type || 'info', item.title || 'Informação', item.message);
+                        if (item && item.highlight_oficio_id) highlightCreatedOficio(item.highlight_oficio_id);
                     });
                 } catch (e) {}
             };
@@ -524,6 +644,31 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
 
             const formaSel = document.getElementById('oficio-forma-cumprimento');
             const meioRow = document.getElementById('oficio-meio-envio-row');
+            const cartorioTipoSelect = document.getElementById('oficio-tipo');
+            const cartorioProcessoHint = document.getElementById('cartorio-processo-hint');
+            const cartorioProcessoLabel = document.querySelector('label[for="filter-processo"]');
+
+            function cartorioOficioEhAdministrativo() {
+                const opt = cartorioTipoSelect?.selectedOptions?.[0];
+                return opt && opt.getAttribute('data-oficio-grupo') === 'administrativo';
+            }
+
+            function atualizarRegraProcessoCartorio() {
+                const admin = cartorioOficioEhAdministrativo();
+                if (cartorioProcessoHint) {
+                    cartorioProcessoHint.textContent = admin ? 'opcional' : '*obrigatório';
+                    cartorioProcessoHint.className = admin ? 'label-hint-automatizado' : 'label-hint-obrigatorio';
+                }
+                if (cartorioProcessoLabel) {
+                    cartorioProcessoLabel.title = admin
+                        ? 'Para tipos administrativos o número do processo pode ficar em branco.'
+                        : '';
+                }
+            }
+
+            cartorioTipoSelect?.addEventListener('change', atualizarRegraProcessoCartorio);
+            atualizarRegraProcessoCartorio();
+
             function toggleMeioEnvio() {
                 if (!meioRow || !formaSel) return;
                 const v = formaSel.value;
@@ -540,7 +685,14 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                 if (p) p.value = '';
                 if (t) t.selectedIndex = 0;
                 if (m) m.selectedIndex = 0;
-                if (fc) fc.selectedIndex = 0;
+                if (fc) {
+                    const optCcm = fc.querySelector('option[value="ccm"]');
+                    if (optCcm) {
+                        fc.value = 'ccm';
+                    } else {
+                        fc.selectedIndex = 0;
+                    }
+                }
                 const hcc = document.getElementById('hidden-classe-codigo');
                 const hcd = document.getElementById('hidden-classe-descricao');
                 const cl = document.getElementById('filter-classe');
@@ -548,6 +700,7 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                 if (hcd) hcd.value = '';
                 if (cl) cl.value = '';
                 toggleMeioEnvio();
+                atualizarRegraProcessoCartorio();
             });
 
             document.getElementById('btn-oficio-registrar')?.addEventListener('click', function () {
@@ -555,15 +708,24 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                 const tipo = document.getElementById('oficio-tipo')?.value || '';
                 const forma = document.getElementById('oficio-forma-cumprimento')?.value || '';
                 const meio = document.getElementById('oficio-meio-envio')?.value || '';
-                const cc = document.getElementById('hidden-classe-codigo')?.value || '';
-                const cd = document.getElementById('hidden-classe-descricao')?.value || '';
-                if (!proc || !tipo || !forma) {
-                    notify('error', 'Validação', 'Preencha processo, tipo e forma de cumprimento.');
+                let cc = document.getElementById('hidden-classe-codigo')?.value || '';
+                let cd = document.getElementById('hidden-classe-descricao')?.value || '';
+                const admin = cartorioOficioEhAdministrativo();
+                if (!tipo || !forma) {
+                    notify('error', 'Validação', 'Preencha tipo e forma de cumprimento.');
+                    return;
+                }
+                if (!admin && !proc) {
+                    notify('error', 'Validação', 'Preencha o número do processo.');
                     return;
                 }
                 if (forma === 'cartorio' && !meio) {
                     notify('error', 'Validação', 'Selecione o meio de envio.');
                     return;
+                }
+                if (admin && !proc) {
+                    cc = '';
+                    cd = '';
                 }
                 const body = {
                     numero_processo: proc,
@@ -582,7 +744,16 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                 .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
                 .then(function (res) {
                     if (res.ok && res.j && res.j.id) {
-                        queuePostReloadToast('success', 'Sucesso', 'Ofício registrado com sucesso.');
+                        const numeroOficio = (res.j.numero_oficio || '').toString().trim();
+                        const msg = numeroOficio
+                            ? ('Ofício ' + numeroOficio + ' registrado com sucesso.')
+                            : 'Ofício registrado com sucesso.';
+                        queuePostReloadToast({
+                            type: 'success',
+                            title: 'Sucesso',
+                            message: msg,
+                            highlight_oficio_id: res.j.id
+                        });
                         window.location.reload();
                     } else {
                         notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao registrar.');
@@ -621,7 +792,7 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                 if (e.key === 'Enter') applyFilters();
             });
 
-            document.querySelectorAll('.button-edit').forEach(function (btn) {
+            document.querySelectorAll('.btn-editar[data-oficio-id]').forEach(function (btn) {
                 btn.addEventListener('click', function () {
                     const id = this.dataset.oficioId;
                     if (id) window.location.href = '/frame.php?page=oficioscartorioedit&id=' + encodeURIComponent(id);
@@ -654,7 +825,7 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                     .then(function (r) { return r.json(); })
                     .then(function (data) {
                         if (data.success) {
-                            queuePostReloadToast('success', 'Sucesso', 'Subtarefa concluída com sucesso.');
+                            queuePostReloadToast({ type: 'success', title: 'Sucesso', message: 'Subtarefa concluída com sucesso.' });
                             window.location.reload();
                         } else {
                             notify('error', 'Erro', data.error || 'Erro ao concluir.');
@@ -665,6 +836,53 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                         notify('error', 'Erro', 'Erro de conexão.');
                         btn.disabled = false;
                     });
+                });
+            });
+        })();
+
+        (function () {
+            const pending = {};
+            function requireSecondClick(key, msg) {
+                const now = Date.now();
+                if ((pending[key] || 0) > now) { delete pending[key]; return true; }
+                pending[key] = now + 5000;
+                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Confirmação', message: msg });
+                return false;
+            }
+            document.addEventListener('click', function (e) {
+                const btn = e.target.closest('.js-desalocar');
+                if (!btn) return;
+                const alocadoId = btn.getAttribute('data-alocado-id') || '';
+                const tipo      = btn.getAttribute('data-tipo') || '';
+                const endpoint  = btn.getAttribute('data-endpoint') || '';
+                if (!alocadoId || !endpoint) return;
+                if (!requireSecondClick('desalocar-' + alocadoId, 'Clique novamente para confirmar a remoção da alocação.')) return;
+                fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ alocado_id: alocadoId, tipo: tipo }),
+                    credentials: 'same-origin'
+                }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+                .then(function (res) {
+                    if (res.ok && res.j && res.j.deleted) {
+                        if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Alocação removida.' });
+                        setTimeout(function () { window.location.reload(); }, 800);
+                    } else {
+                        const msg = (res.j && res.j.error) ? res.j.error : 'Falha ao remover alocação.';
+                        if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: msg });
+                    }
+                }).catch(function () {
+                    if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
+                });
+            });
+        })();
+
+        (function () {
+            window.addEventListener('DOMContentLoaded', function () {
+                if (!window.App || !App.User || typeof App.User.setupRuleButton !== 'function') return;
+                App.User.setupRuleButton({
+                    buttonId: 'alterar-regra-btn',
+                    targetPage: 'oficiosrules'
                 });
             });
         })();

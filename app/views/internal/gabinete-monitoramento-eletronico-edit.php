@@ -178,9 +178,17 @@ $podeCancelarTarefa = $podeCancelarTarefa && !$tarefaCancelada && !$tarefaFinali
     <script>
         (function () {
             const notify = (type, title, message) => {
+                if (window.App && App.Page && typeof App.Page.notify === 'function') {
+                    App.Page.notify(type, title, message);
+                    return;
+                }
                 if (typeof showToast === 'function') showToast({ type, variant: 'full', title, message });
             };
             const queuePostReloadToast = (type, title, message) => {
+                if (window.App && App.Page && typeof App.Page.queuePostReloadToast === 'function') {
+                    App.Page.queuePostReloadToast(type, title, message, 'gme.postReloadToast');
+                    return;
+                }
                 try {
                     const key = 'gme.postReloadToast';
                     const raw = sessionStorage.getItem(key);

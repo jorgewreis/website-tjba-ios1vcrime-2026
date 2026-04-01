@@ -154,11 +154,59 @@ hr {
     transition: all 0.2s ease;
 }
 
+button.pagination-symbol,
+button.pagination-number {
+    font: inherit;
+    font-family: inherit;
+    color: inherit;
+    appearance: none;
+    -webkit-appearance: none;
+    border: none;
+    margin: 0;
+    text-decoration: none;
+    background-color: var(--color-background-elevated);
+}
+
+.link-login button.link-like {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
 .link-login a{
     font-family: 'Montserrat', sans-serif;
     font-size: 13px;
     font-weight: 500;
     color: var(--color-text-primary);
+}
+
+button.btn-link-badge {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    text-align: inherit;
+}
+
+button.link-inline {
+    font: inherit;
+    color: var(--color-primary-active, var(--color-text-primary));
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    text-decoration: underline;
+    display: inline;
 }
 
 
@@ -388,6 +436,54 @@ hr {
     color: var(--color-text-on-primary);
 }
 
+/* Ícone de edição na tabela: sempre use .btn.btn-editar (base + variante) */
+.btn-editar {
+    height: 30px;
+    width: 30px;
+    padding: 5px 0 0 0;
+    border-radius: 4px;
+    font-size: 16px;
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--color-background-menu);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all 0.5s ease;
+}
+.btn.btn-editar {
+    border: none;
+    box-shadow: none;
+}
+    .btn-editar.reload:hover {
+        background-color: var(--color-primary-bg-light);
+        color: var(--color-primary-active);
+        transition: all 0.2s ease;
+    }
+    .btn-editar.start:hover {
+        background-color: var(--color-success-bg-light);
+        color: var(--color-success-active);
+        transition: all 0.2s ease;
+    }
+    .btn-editar.stop:hover {
+        background-color: var(--color-danger-bg-light);
+        color: var(--color-danger-active);
+        transition: all 0.2s ease;
+    }
+.btn-editar:hover {
+    background-color: var(--color-background-menu-hover);
+    color: var(--color-text-primary);
+}
+.btn-editar:active {
+    background-color: var(--color-background-menu-active);
+    color: var(--color-text-primary);
+}
+.btn-editar:disabled {
+    opacity: 0.2;
+    cursor: not-allowed;
+    box-shadow: none;
+    pointer-events: none;
+    filter: grayscale(100%);
+}
+
 .button-table{
     width: fit-content;
     height: 38px;
@@ -433,12 +529,36 @@ button.btn:disabled {
     color: var(--color-text-on-primary);
 }
 
+.badge-primary {
+    background-color: var(--color-primary);
+    color: var(--color-text-on-primary);
+}
+.badge-danger {
+    background-color: var(--color-danger);
+    color: var(--color-text-on-primary);
+}
+.badge-warning {
+    background-color: var(--color-warning);
+    color: var(--color-text-on-surface);
+}
+.badge-black {
+    background-color: var(--color-text-on-surface);
+    color: var(--color-text-on-primary);
+}
+
+
 .badge.file {
     height: 30px;
     padding: 10px 20px 5px 10px;    
     color: var(--color-text-secondary);
     text-transform: none;
     cursor: pointer;
+}
+button.badge.file {
+    font: inherit;
+    border: none;
+    background: transparent;
+    box-sizing: border-box;
 }
 .badge.file:hover {
     background-color: var(--color-background-elevated);
@@ -500,7 +620,8 @@ input[type="text"],
 input[type="email"],
 input[type="password"],
 input[type="number"],
-input[type="date"] {
+input[type="date"], 
+input[type="time"] {
     height: 40px;
     padding: 0 1em;
     
@@ -512,6 +633,30 @@ input[type="date"] {
     color: var(--color-text-primary);
     font-size: 12px;
     font-family: "Poppins", sans-serif;
+}
+
+.id-info {
+    font-weight: 600;
+    font-family: "Poppins", sans-serif;
+    color: var(--color-primary);
+    margin-left: 1px;
+}
+
+.id-preso {
+    font-weight: 600;
+    font-family: "Poppins", sans-serif;
+    color: var(--color-danger);
+    text-transform: uppercase;
+    margin-left: 1px;
+}
+.minor-info-defesa {
+    font-size: 10px;
+    font-weight: 500;
+    font-family: "Poppins", sans-serif;
+    color: var(--color-text-secondary);
+    margin-left: 30px;
+    margin-top: -2px;
+    display: block;
 }
 
 input[type="text"].readonly{
@@ -538,9 +683,48 @@ input[type="text"].status-error {
     color: var(--color-danger-active) !important;
     pointer-events: none !important;
 }
+
+/* Mesmo padrão visual de input[type="text"] para retorno DataJud em select/textarea */
+select.status-finished,
+textarea.status-finished {
+    background-color: var(--color-success-bg-light) !important;
+    color: var(--color-success-active) !important;
+    pointer-events: none !important;
+}
+
+/* Edição de audiência: lista de réus do processo — select deve permanecer clicável (regra global acima bloqueia DataJud “concluído”). */
+#parte-nome-selecao.status-finished {
+    pointer-events: auto !important;
+    cursor: pointer;
+}
+select.status-warning,
+textarea.status-warning {
+    background-color: var(--color-warning-bg-light) !important;
+    color: var(--color-warning-active) !important;
+    pointer-events: none !important;
+}
+select.status-error,
+textarea.status-error {
+    background-color: var(--color-danger-bg-light) !important;
+    color: var(--color-danger-active) !important;
+    pointer-events: none !important;
+}
 input.white,
 select.white{
     background-color: var(--color-white-100);
+}
+
+/* TEXTAREA */
+textarea {
+    min-height: 100px;
+    padding: 10px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    box-shadow: 1px 1px 4px 1px rgba(0, 0, 0, 0.05);
+    background-color: var(--color-background-elevated);
+    color: var(--color-text-primary);
+    font-size: 12px;
+    font-family: "Poppins", sans-serif;
 }
 
 /* LABEL */
@@ -572,6 +756,39 @@ input[type="radio"] {
     }
 }
 
+.mini-status {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    display: inline-block;
+    vertical-align: middle;
+    background-color: var(--color-text-secondary);
+    margin: 0 2px 2px 0;
+}
+
+.mini-status.status-finished {
+    background-color: var(--color-success);
+}
+
+.mini-status.status-pending {
+    background-color: var(--color-secondary-bg-light);
+}
+
+.mini-status.status-cancelled {
+    background-color: var(--color-danger);
+}
+
+.mini-status.mini-status-dual {
+    /* Mantém o mesmo tamanho/formato do mini-status, mas pinta metade esquerda e metade direita. */
+    background-color: transparent;
+    background: linear-gradient(
+        to right,
+        var(--left-color, var(--color-secondary-bg-light)) 0%,
+        var(--left-color, var(--color-secondary-bg-light)) 50%,
+        var(--right-color, var(--color-secondary-bg-light)) 50%,
+        var(--right-color, var(--color-secondary-bg-light)) 100%
+    );
+}
 
 
 /* BUTTONS - STATUS */

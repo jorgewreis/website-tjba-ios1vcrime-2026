@@ -322,11 +322,19 @@ $tiposOptions = [
         if (!idGuia) return;
 
         function showToastMsg(type, title, message) {
+            if (window.App && App.Page && typeof App.Page.notify === 'function') {
+                App.Page.notify(type, title, message);
+                return;
+            }
             if (typeof showToast === 'function') {
                 showToast({ type: type, variant: 'full', title: title, message: message });
             }
         }
         function queuePostReloadToast(type, title, message) {
+            if (window.App && App.Page && typeof App.Page.queuePostReloadToast === 'function') {
+                App.Page.queuePostReloadToast(type, title, message, 'cartorio.postReloadToast');
+                return;
+            }
             try {
                 var key = 'cartorio.postReloadToast';
                 var raw = sessionStorage.getItem(key);

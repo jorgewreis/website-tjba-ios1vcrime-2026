@@ -23,10 +23,17 @@ final class ConsultaProcessosService
     public function list(array $filters, int $limit, int $offset): array
     {
         $rows = $this->processosRepository->fetchList($filters, $limit, $offset);
+        $processoIds = [];
+        foreach ($rows as $row) {
+            $pid = trim((string) ($row['id'] ?? ''));
+            if ($pid !== '') {
+                $processoIds[] = $pid;
+            }
+        }
+        $totalPartesByProcesso = $this->processosPartesRepository->countByProcessoIds($processoIds);
         foreach ($rows as $i => $row) {
             $processoId = (string) ($row['id'] ?? '');
-            $partes = $processoId !== '' ? $this->processosPartesRepository->findByProcessoId($processoId) : [];
-            $rows[$i]['total_partes'] = count($partes);
+            $rows[$i]['total_partes'] = $processoId !== '' ? (int) ($totalPartesByProcesso[$processoId] ?? 0) : 0;
             $rows[$i]['classe_nome'] = '';
             if (!empty($row['classe_id'])) {
                 $classe = $this->classesRepository->findById((string) $row['classe_id']);

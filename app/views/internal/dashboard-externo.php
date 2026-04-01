@@ -4,7 +4,9 @@ declare(strict_types=1);
 Security::requireAuthentication();
 
 require_once __DIR__ . '/../../helpers/UserAccessHelper.php';
+require_once __DIR__ . '/../../helpers/SexoHelper.php';
 require_once __DIR__ . '/../../models/Usuario.php';
+require_once __DIR__ . '/../../helpers/Conection.php';
 
 $dashUsuario = new Usuario();
 $dashUserId = trim((string) ($_SESSION['id_usuario'] ?? ''));
@@ -17,6 +19,45 @@ foreach ($dashPerfis as $p) {
     }
 }
 $dashIsEstudanteExterno = UserAccessHelper::isUsuarioExterno($dashPerfis) && $dashHasEstudante;
+
+$dashPrimeiroNome = '';
+$dashSexoUsuario = '';
+if ($dashUserId !== '') {
+    try {
+        $dashPdo = Conection::getInstance()->getConnection();
+        try {
+            $stUser = $dashPdo->prepare('SELECT `nome`, `sexo` FROM `usuarios` WHERE `id_usuario` = :id LIMIT 1');
+            $stUser->bindValue(':id', $dashUserId);
+            $stUser->execute();
+            $dashRowUser = $stUser->fetch(PDO::FETCH_ASSOC);
+        } catch (Throwable $e) {
+            $stUser = $dashPdo->prepare('SELECT `nome` FROM `usuarios` WHERE `id_usuario` = :id LIMIT 1');
+            $stUser->bindValue(':id', $dashUserId);
+            $stUser->execute();
+            $dashRowUser = $stUser->fetch(PDO::FETCH_ASSOC);
+        }
+
+        if (is_array($dashRowUser)) {
+            $nomeCompleto = trim((string) ($dashRowUser['nome'] ?? ''));
+            if ($nomeCompleto !== '') {
+                $dashPrimeiroNome = trim((string) preg_split('/\s+/u', $nomeCompleto)[0]);
+            }
+            $dashSexoUsuario = trim((string) ($dashRowUser['sexo'] ?? ''));
+        }
+    } catch (Throwable $e) {
+        $dashPrimeiroNome = '';
+        $dashSexoUsuario = '';
+    }
+}
+
+$dashSexoNorm = SexoHelper::normalize($dashSexoUsuario);
+$dashSaudacaoBase = 'Bem-vindo(a)';
+if ($dashSexoNorm === SexoHelper::FEMININO) {
+    $dashSaudacaoBase = 'Bem-vinda';
+} elseif ($dashSexoNorm === SexoHelper::MASCULINO) {
+    $dashSaudacaoBase = 'Bem-vindo';
+}
+$dashTituloBoasVindas = $dashSaudacaoBase . ($dashPrimeiroNome !== '' ? ', ' . $dashPrimeiroNome : '');
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -30,6 +71,39 @@ $dashIsEstudanteExterno = UserAccessHelper::isUsuarioExterno($dashPerfis) && $da
 
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
     <?php include __DIR__ . '/_toast_script.php'; ?>
+    <style>
+        .external-dashboard-list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            gap: 12px;
+        }
+        .external-dashboard-list li {
+            margin: 0;
+            padding: 12px 14px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            line-height: 1.6;
+            background: var(--color-background-elevated);
+            transition: background 0.7s ease;
+        }
+        .external-dashboard-list li:hover {
+            background: var(--color-primary-bg-light);
+            transition: background 0.3s ease;
+        }
+        .external-dashboard-note {
+            margin: 0;
+            padding: 12px 14px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            background: var(--color-warning-bg-light);
+            line-height: 1.5;
+            width: 100%;
+        }
+    </style>
 </head>
 <body class="page-internal">
 
@@ -40,9 +114,9 @@ $dashIsEstudanteExterno = UserAccessHelper::isUsuarioExterno($dashPerfis) && $da
             <span class="all">Área externa —</span>
             <span class="specific">Início</span>
         </div>
-        <h1 class="title-page">Bem-vindo(a)</h1>
+        <h1 class="title-page"><?php echo htmlspecialchars($dashTituloBoasVindas, ENT_QUOTES, 'UTF-8'); ?></h1>
         <p class="description-page"><?php echo $dashIsEstudanteExterno
-            ? 'Este é o seu painel de acesso. Pelo menu lateral você pode utilizar a consulta de CEP e, nas configurações, seus dados pessoais.'
+            ? 'Este é o seu painel de acesso. Pelo menu lateral você pode consultar CEP, realizar inscrições e acompanhar suas participações no Painel em tempo real, acessar downloads em Atas de Audiências e, nas configurações, atualizar seus dados pessoais.'
             : 'Este é o seu painel de acesso ao sistema. Utilize o menu para as consultas liberadas ao seu perfil (partes, instituições públicas, CEP) e seus dados pessoais nas configurações.'; ?></p>
     </div>
 
@@ -52,22 +126,22 @@ $dashIsEstudanteExterno = UserAccessHelper::isUsuarioExterno($dashPerfis) && $da
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md gap-y-md">
             <div class="col full-line">
-                <ul class="minor-info" style="margin: 0; padding-left: 1.25rem; line-height: 1.6;">
+                <ul class="minor-info external-dashboard-list">
                     <?php if ($dashIsEstudanteExterno): ?>
                     <li><strong>Consulta CEP:</strong> disponível no menu lateral, seção <em>Consultas</em>.</li>
+                    <li><strong>Painel em tempo real:</strong> faça inscrições e acompanhe suas participações na seção <em>Estudantes</em>.</li>
+                    <li><strong>Atas de Audiências:</strong> acesse os links de download das atas vinculadas na seção <em>Estudantes</em>.</li>
                     <li><strong>Dados pessoais:</strong> no ícone de configurações (engrenagem), altere senha ou dados cadastrais quando necessário.</li>
-                    <li><strong>Limitação:</strong> perfil <em>estudante</em> não inclui consulta de partes, instituições ou processos; tarefas de cartório e gabinete também não estão disponíveis.</li>
                     <?php else: ?>
                     <li><strong>Consultas:</strong> pelo menu lateral — <em>Consulta Partes</em>, <em>Instituições Públicas</em> e <em>CEP</em> (conforme seu perfil de consultor externo).</li>
                     <li><strong>Dados pessoais:</strong> no ícone de configurações (engrenagem), altere senha ou dados cadastrais quando necessário.</li>
-                    <li><strong>Limitação:</strong> consulta de processos e tarefas de cartório, gabinete e gestão interna não estão disponíveis para usuários externos.</li>
                     <?php endif; ?>
                 </ul>
             </div>
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md gap-y-md border-top">
             <div class="col full-line">
-                <p class="minor-info" style="margin: 0;">Em caso de dúvida sobre liberação de acesso, procure a diretoria ou o administrador do sistema.</p>
+                <p class="minor-info external-dashboard-note">Em caso de dúvida sobre liberação de acesso, procure a diretoria da Vara ou o administrador do sistema.</p>
             </div>
         </div>
     </div>

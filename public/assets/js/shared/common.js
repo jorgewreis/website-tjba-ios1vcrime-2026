@@ -2,13 +2,16 @@
   const App = global.App || (global.App = {});
 
   async function validateSessionToken(endpoint = "/admin/api/checkToken.php") {
+    if (App.User && typeof App.User.validateSessionToken === "function") {
+      return App.User.validateSessionToken(endpoint);
+    }
     try {
       const response = await fetch(endpoint);
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
       const result = await response.json();
-      return result.valid === true;
+      return result.valid === true || result.success === true;
     } catch (error) {
       console.error("Erro ao validar token:", error);
       return false;
@@ -86,6 +89,12 @@
     validateSessionToken,
     performLogout,
     showNotification,
-    confirmAction
+    confirmAction,
+    getUserPerfis: function (endpoint = "/admin/api/getPerfis.php", options = {}) {
+      if (App.User && typeof App.User.fetchPerfis === "function") {
+        return App.User.fetchPerfis(endpoint, options);
+      }
+      return Promise.resolve([]);
+    }
   };
 })(window);

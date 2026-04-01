@@ -13,7 +13,7 @@ Este documento estabelece os requisitos de disponibilidade do sistema (SLA), as 
 
 ### 2.2. Monitoramento
 
-- **Health Checks:** O sistema deve possuir um endpoint de monitoramento (`/api/health`) que verifique a conectividade com o banco de dados e o status do servidor PHP.
+- **Health Checks:** recomenda-se expor futuramente um endpoint de monitoramento em `public/api/health` (ou namespace equivalente) para verificar conectividade com banco e status do servidor PHP. No estado atual do repositório, esse endpoint ainda não está documentado como implementado.
 - **Alertas:** A equipe de operações deve ser notificada automaticamente (via e-mail ou SMS) em caso de indisponibilidade superior a 5 minutos.
 
 ### 2.3. Proteção de Infraestrutura

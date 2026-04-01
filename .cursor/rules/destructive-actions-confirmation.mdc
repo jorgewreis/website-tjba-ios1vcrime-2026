@@ -9,7 +9,7 @@ alwaysApply: true
 ## Regra obrigatória
 
 - Em ações destrutivas (`excluir`, `cancelar`, `desativar`, `remover`), usar confirmação no padrão do projeto: **duplo clique + toast informativo**.
-- Mensagem de confirmação deve ser exibida via toast (`type: 'info'`, `variant: 'full'`, `title: 'Confirmação'`).
+- Mensagem de confirmação deve ser exibida via toast, por exemplo: `showToast({ type: 'info', title: 'Confirmação', message: '...' })`. O modelo simple/full é resolvido por `toast.js` (texto curto tende a **simple**; mensagens longas passam a **full** automaticamente).
 - Só executar a ação destrutiva na segunda interação dentro da janela de tempo definida.
 
 ## Alert como exceção

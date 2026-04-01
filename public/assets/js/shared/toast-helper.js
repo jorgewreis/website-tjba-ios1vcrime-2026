@@ -2,7 +2,7 @@
  * Helper para exibir toasts a partir de páginas carregadas em iframe (frame.php).
  * Se a página estiver no iframe, envia postMessage para o parent (home) exibir o toast.
  * Caso contrário, usa App.Toast diretamente.
- * Uso: showToast({ type: 'success'|'error'|'info', variant: 'full'|'simple', title?: string, message: string })
+ * Uso: showToast({ type, message, title?, variant? }) — variant é só dica; toast.js aplica política (success→simple, error→full, etc.).
  */
 (function (global) {
     'use strict';

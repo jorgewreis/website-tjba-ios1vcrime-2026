@@ -254,7 +254,7 @@ final class ProcessosRepository
     {
         $statement = $this->connection->prepare(
             sprintf(
-                'UPDATE `%s` SET `classe_id` = :classe_id, `data_fato` = COALESCE(:data_fato, `data_fato`), `sigiloso` = :sigiloso, `updated_at` = NOW() WHERE `id` = :id LIMIT 1',
+                'UPDATE `%s` SET `classe_id` = COALESCE(:classe_id, `classe_id`), `data_fato` = COALESCE(:data_fato, `data_fato`), `sigiloso` = :sigiloso, `updated_at` = NOW() WHERE `id` = :id LIMIT 1',
                 $this->table
             )
         );
@@ -262,6 +262,26 @@ final class ProcessosRepository
         $statement->bindValue(':classe_id', $classeId !== null && $classeId !== '' ? $classeId : null);
         $statement->bindValue(':data_fato', $dataFato);
         $statement->bindValue(':sigiloso', $sigiloso ? 1 : 0, PDO::PARAM_INT);
+        $statement->execute();
+    }
+
+    /** Atualiza apenas `classe_id` (ex.: sincronização DataJud). */
+    public function updateClasseForProcesso(string $processoId, string $classeId): void
+    {
+        $processoId = trim($processoId);
+        $classeId = trim($classeId);
+        if ($processoId === '' || $classeId === '') {
+            throw new InvalidArgumentException('processo_id e classe_id são obrigatórios.');
+        }
+
+        $statement = $this->connection->prepare(
+            sprintf(
+                'UPDATE `%s` SET `classe_id` = :classe_id, `updated_at` = NOW() WHERE `id` = :id LIMIT 1',
+                $this->table
+            )
+        );
+        $statement->bindValue(':id', $processoId);
+        $statement->bindValue(':classe_id', $classeId);
         $statement->execute();
     }
 

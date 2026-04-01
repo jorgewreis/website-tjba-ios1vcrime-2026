@@ -154,7 +154,7 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
             <span class="all">Interno - Gabinete - Ofícios -</span>
             <span class="specific">Lista e registro</span>
         </div>
-        <h1 class="title-page">Ofícios</h1>
+        <h1 class="title-page">Ofícios (Gabinete)</h1>
         <p class="description-page">Registro de ofícios do gabinete (processo e tipo).</p>
     </div>
 
@@ -184,7 +184,7 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
                 </div>
                 <div class="col">
                     <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
-                    <input type="text" class="width-600 height-md" id="filter-classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>
+                    <input type="text" class="width-600 height-md" id="filter-classe" data-datajud-related="true" placeholder="Preenchido automaticamente pelo DataJud" readonly>
                 </div>            
                 <div class="col">
                     <label for="gab-oficio-tipo">Tipo de ofício <span class="label-hint-obrigatorio">*obrigatório</span></label>
@@ -281,7 +281,7 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
                             <span class="minor-info">Tipo</span>
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['TipoOficio'] ?? '')); ?></span>
                         </div>
-                        <div class="col width-600">
+                        <div class="col width-500">
                             <?php
                             $nomeCriadorGab = trim((string) ($row['CriadoPorNome'] ?? ''));
                             $nomeCriadorGab = $nomeCriadorGab !== '' ? $nomeCriadorGab : '—';
@@ -291,9 +291,9 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
                         </div>
                     </div>
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                        <div class="col button-table button-edit" data-oficio-id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" title="Editar">
-                            <i class="fi fi-rr-file-edit"></i>
-                        </div>
+                        <button type="button" class="btn btn-editar" data-oficio-id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" title="Editar">
+                            <i class="fi fi-rr-pen-square"></i>
+                        </button>
                         <?php if ($st === 'cancelada'): ?>
                         <div class="col">
                             <div class="width-300 padding-x-lg status status-cancelled">Cancelada</div>
@@ -324,23 +324,23 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
                     $nextParams = $baseQueryParams;
                     $nextParams['page_number'] = $currentPage < $totalPages ? $currentPage + 1 : $currentPage;
                     ?>
-                    <a class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>" <?php if ($currentPage > 1): ?>href="?<?php echo htmlspecialchars(http_build_query($prevParams)); ?>"<?php else: ?>aria-disabled="true"<?php endif; ?>>
+                    <button type="button" class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>" <?php if ($currentPage > 1): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($prevParams), ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>>
                         <img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior">
-                    </a>
+                    </button>
                     <?php foreach ($paginationButtons as $page): ?>
                         <?php $pageParams = $baseQueryParams; $pageParams['page_number'] = $page; ?>
-                        <a class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" href="?<?php echo htmlspecialchars(http_build_query($pageParams)); ?>"><?php echo $page; ?></a>
+                        <button type="button" class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" <?php if ($page !== $currentPage): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($pageParams), ENT_QUOTES); ?>"<?php else: ?>disabled<?php endif; ?>><?php echo $page; ?></button>
                     <?php endforeach; ?>
                     <?php if ($paginationEllipsis && !empty($trailingPages)): ?>
-                        <a class="pagination-symbol pagination-ellipsis" aria-hidden="true"><img src="/assets/icons/Navigation-Menu-Horizontal--Streamline-Ultimate.png" alt="Mais páginas"></a>
+                        <span class="pagination-symbol pagination-ellipsis" aria-hidden="true"><img src="/assets/icons/Navigation-Menu-Horizontal--Streamline-Ultimate.png" alt="Mais páginas"></span>
                         <?php foreach ($trailingPages as $page): ?>
                             <?php $pageParams = $baseQueryParams; $pageParams['page_number'] = $page; ?>
-                            <a class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" href="?<?php echo htmlspecialchars(http_build_query($pageParams)); ?>"><?php echo $page; ?></a>
+                            <button type="button" class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" <?php if ($page !== $currentPage): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($pageParams), ENT_QUOTES); ?>"<?php else: ?>disabled<?php endif; ?>><?php echo $page; ?></button>
                         <?php endforeach; ?>
                     <?php endif; ?>
-                    <a class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>" <?php if ($currentPage < $totalPages): ?>href="?<?php echo htmlspecialchars(http_build_query($nextParams)); ?>"<?php else: ?>aria-disabled="true"<?php endif; ?>>
+                    <button type="button" class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>" <?php if ($currentPage < $totalPages): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($nextParams), ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>>
                         <img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página">
-                    </a>
+                    </button>
                 </div>
             <?php endif; ?>
         </div>
@@ -354,14 +354,23 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
         </div>
     </div>
 
-    <script src="/assets/js/modules/cartorio/cartas-expedidas/cnj.js"></script>
-    <script src="/assets/js/modules/cartorio/cartas-expedidas/datajud-api.js"></script>
+    <script src="/assets/js/modules/datajud/cnj.js"></script>
+    <script src="/assets/js/modules/datajud/datajud-cycle-helper.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/datajud/datajud-cycle-helper.js') ?: time(); ?>"></script>
+    <script src="/assets/js/modules/datajud/datajud-api.js"></script>
     <script>
         (function () {
             const notify = (type, title, message) => {
+                if (window.App && App.Page && typeof App.Page.notify === 'function') {
+                    App.Page.notify(type, title, message);
+                    return;
+                }
                 if (typeof showToast === 'function') showToast({ type, variant: 'full', title, message });
             };
             const queuePostReloadToast = (type, title, message) => {
+                if (window.App && App.Page && typeof App.Page.queuePostReloadToast === 'function') {
+                    App.Page.queuePostReloadToast(type, title, message, 'cartorio.postReloadToast');
+                    return;
+                }
                 try {
                     const key = 'cartorio.postReloadToast';
                     const raw = sessionStorage.getItem(key);
@@ -372,6 +381,10 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
                 } catch (e) {}
             };
             const flushPostReloadToast = () => {
+                if (window.App && App.Page && typeof App.Page.flushPostReloadToast === 'function') {
+                    App.Page.flushPostReloadToast('cartorio.postReloadToast', { type: 'info', title: 'Informação' });
+                    return;
+                }
                 try {
                     const raw = sessionStorage.getItem('cartorio.postReloadToast');
                     if (!raw) return;
@@ -491,7 +504,7 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
                 if (e.key === 'Enter') applyFilters();
             });
 
-            document.querySelectorAll('.button-edit').forEach(function (btn) {
+            document.querySelectorAll('.btn-editar[data-oficio-id]').forEach(function (btn) {
                 btn.addEventListener('click', function () {
                     const id = this.dataset.oficioId;
                     if (id) window.location.href = '/frame.php?page=oficiosgabineteedit&id=' + encodeURIComponent(id);

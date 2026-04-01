@@ -185,8 +185,13 @@
         const parentHeading = parentSub?.closest(".menu-item");
         parentHeading?.classList.add("active");
 
+        const target = link.getAttribute("data-target");
+        if (target && iframe) {
+          iframe.src = "/frame.php?page=" + encodeURIComponent(target);
+          return;
+        }
         const href = link.getAttribute("href");
-        if (href && iframe) {
+        if (href && href !== "#" && iframe) {
           iframe.src = href;
         }
       });
@@ -194,20 +199,10 @@
   }
 
   async function fetchUserPerfis(endpoint = "/admin/api/getPerfis.php") {
-    const result = [];
-    try {
-      const response = await fetch(endpoint);
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      const payload = await response.json();
-      if (Array.isArray(payload.perfis)) {
-        return payload.perfis;
-      }
-    } catch (error) {
-      console.error("Erro ao buscar perfis do usuário:", error);
+    if (App.User && typeof App.User.fetchPerfis === "function") {
+      return App.User.fetchPerfis(endpoint);
     }
-    return result;
+    return [];
   }
 
   function getPermittedSections(perfis) {

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../repositories/MedidasProtetivasSubtarefasRepository.php';
 require_once __DIR__ . '/../../helpers/CartorioTimelineHelper.php';
+require_once __DIR__ . '/../../helpers/PrioridadesProcessuaisCatalog.php';
 require_once __DIR__ . '/../../services/MedidasProtetivasService.php';
 
 $connection = Conection::getInstance()->getConnection();
@@ -66,12 +67,6 @@ $timelineMinorPendente = [
 $ordemParaTipo = [
     1 => MedidasProtetivasSubtarefasRepository::TIPO_ORDEM_1,
     2 => MedidasProtetivasSubtarefasRepository::TIPO_ORDEM_2,
-];
-$prioridadeLabels = [
-    'mulher' => 'Mulher',
-    'crianca_adolescente' => 'Criança/Adolescente',
-    'idoso' => 'Idoso',
-    'pessoa_deficiencia' => 'Pessoa com deficiência',
 ];
 ?>
 <!DOCTYPE html>
@@ -197,7 +192,14 @@ $prioridadeLabels = [
                     <div class="badge-line">
                         <?php if (!empty($medida['prioridades_processo'])): ?>
                             <?php foreach ($medida['prioridades_processo'] as $prioridade): ?>
-                                <span class="status status-primary-light padding-lr-lg"><?php echo htmlspecialchars($prioridadeLabels[(string) ($prioridade['prioridade'] ?? '')] ?? (string) ($prioridade['prioridade'] ?? 'Prioridade'), ENT_QUOTES); ?></span>
+                                <?php
+                                $rawPrior = trim((string) ($prioridade['codigo'] ?? $prioridade['prioridade'] ?? ''));
+                                $codigoPrior = PrioridadesProcessuaisCatalog::normalizeToCodigo($rawPrior) ?? $rawPrior;
+                                $textoPrior = PrioridadesProcessuaisCatalog::isValidCodigo($codigoPrior)
+                                    ? PrioridadesProcessuaisCatalog::labelForCodigo($codigoPrior)
+                                    : ($rawPrior !== '' ? $rawPrior : 'Prioridade');
+                                ?>
+                                <span class="status status-primary-light padding-lr-lg"><?php echo htmlspecialchars($textoPrior, ENT_QUOTES); ?></span>
                             <?php endforeach; ?>
                         <?php else: ?>
                             <span class="minor-info">Processo sem prioridade processual cadastrada.</span>
@@ -255,8 +257,12 @@ $prioridadeLabels = [
         </script>
         <script>
             (function () {
-                var pendingConfirmations = {};
+                var pageTools = window.App && App.Page ? App.Page : null;
                 function queuePostReloadToast(type, title, message) {
+                    if (pageTools && typeof pageTools.queuePostReloadToast === 'function') {
+                        pageTools.queuePostReloadToast(type, title, message, 'cartorio.postReloadToast');
+                        return;
+                    }
                     try {
                         var key = 'cartorio.postReloadToast';
                         var raw = sessionStorage.getItem(key);
@@ -266,19 +272,24 @@ $prioridadeLabels = [
                         sessionStorage.setItem(key, JSON.stringify(lista));
                     } catch (e) {}
                 }
-                function requireSecondClick(key, message) {
-                    var now = Date.now();
-                    var validUntil = Number(pendingConfirmations[key] || 0);
-                    if (validUntil > now) {
-                        delete pendingConfirmations[key];
-                        return true;
-                    }
-                    pendingConfirmations[key] = now + 5000;
-                    if (typeof showToast === 'function') {
-                        showToast({ type: 'info', variant: 'full', title: 'Confirmação', message: message });
-                    }
-                    return false;
-                }
+                var requireSecondClick = pageTools && typeof pageTools.createSecondClickGuard === 'function'
+                    ? pageTools.createSecondClickGuard()
+                    : (function () {
+                        var pendingConfirmations = {};
+                        return function (key, message) {
+                            var now = Date.now();
+                            var validUntil = Number(pendingConfirmations[key] || 0);
+                            if (validUntil > now) {
+                                delete pendingConfirmations[key];
+                                return true;
+                            }
+                            pendingConfirmations[key] = now + 5000;
+                            if (typeof showToast === 'function') {
+                                showToast({ type: 'info', variant: 'full', title: 'Confirmação', message: message });
+                            }
+                            return false;
+                        };
+                    })();
                 var voltarBtn = document.getElementById('voltar-btn');
                 if (voltarBtn) {
                     voltarBtn.addEventListener('click', function (e) {

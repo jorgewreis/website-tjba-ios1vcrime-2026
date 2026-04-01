@@ -35,7 +35,7 @@ $instituicoes = $instituicoesList['rows'] ?? [];
     <div class="header-page">
         <div class="location"><span class="all">Interno - Consultas -</span> <span class="specific">Novo vínculo pessoa-instituição</span></div>
         <h1 class="title-page">Novo vínculo pessoa-instituição</h1>
-        <p class="description-page">Vincule uma pessoa (parte) a uma instituição pública.</p>
+        <p class="description-page">Vincule uma pessoa a uma instituição.</p>
     </div>
     <div class="container-full card-page">
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
@@ -45,7 +45,7 @@ $instituicoes = $instituicoesList['rows'] ?? [];
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
-                <label for="parte_id">Pessoa (parte) <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <label for="parte_id">Pessoa <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <select class="width-600 height-md white" id="parte_id" required>
                     <option value="">— Selecione a pessoa —</option>
                     <?php foreach ($pessoas as $p): ?>
@@ -79,17 +79,17 @@ $instituicoes = $instituicoesList['rows'] ?? [];
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="setor_id">Setor (opcional)</label>
-                <select class="width-200 height-md white" id="setor_id">
+                <select class="width-500 height-md white" id="setor_id">
                     <option value="">— Selecione a instituição primeiro —</option>
                 </select>
             </div>
             <div class="col">
                 <label for="profissao">Profissão</label>
-                <input type="text" class="width-200 height-md white" id="profissao" placeholder="Ex: Policial">
+                <input type="text" class="width-400 height-md white" id="profissao" maxlength="120" placeholder="Ex: Policial">
             </div>
             <div class="col">
                 <label for="cargo_funcao">Cargo / Função <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-200 height-md white" id="cargo_funcao" placeholder="Ex: Investigador">
+                <input type="text" class="width-400 height-md white" id="cargo_funcao" placeholder="Ex: Investigador">
             </div>
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
@@ -104,6 +104,26 @@ $instituicoes = $instituicoesList['rows'] ?? [];
         </div>
     </div>
     <script>
+    function formatProfissaoCampo(el) {
+        if (!el) return '';
+        var v = el.value || '';
+        if (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
+            v = TextFormatter.formatProperName(v, 120);
+        } else {
+            v = v.trim();
+        }
+        el.value = v;
+        return v || null;
+    }
+    var profissaoEl = document.getElementById('profissao');
+    if (profissaoEl && typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
+        profissaoEl.addEventListener('blur', function() {
+            var t = (this.value || '').trim();
+            if (t === '') return;
+            this.value = TextFormatter.formatProperName(this.value, 120);
+        });
+    }
+
     document.getElementById('voltar-btn').addEventListener('click', function() { window.location.href = '/frame.php?page=partesinstituicoeslist'; });
     document.getElementById('btn-buscar-pessoa').addEventListener('click', function() { window.open('/frame.php?page=consultapartes', '_blank'); });
     document.getElementById('btn-buscar-instituicao').addEventListener('click', function() { window.open('/frame.php?page=instituicoespublicas', '_blank'); });
@@ -124,6 +144,7 @@ $instituicoes = $instituicoesList['rows'] ?? [];
             .catch(function() { sel.innerHTML = '<option value="">— Erro —</option>'; });
     });
     document.getElementById('salvar-btn').addEventListener('click', function() {
+        var btn = this;
         var parteId = (document.getElementById('parte_id').value || '').trim();
         var instituicaoId = (document.getElementById('instituicao_id').value || '').trim();
         var cargoFuncao = (document.getElementById('cargo_funcao').value || '').trim();
@@ -131,27 +152,47 @@ $instituicoes = $instituicoesList['rows'] ?? [];
             if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Selecione a pessoa e a instituição.' });
             return;
         }
+        if (!cargoFuncao) {
+            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Validação', message: 'Informe o cargo ou função.' });
+            return;
+        }
+        var profEl = document.getElementById('profissao');
+        var profFmt = profEl ? formatProfissaoCampo(profEl) : null;
         var payload = {
             parte_id: parteId,
             instituicao_id: instituicaoId,
             setor_id: (document.getElementById('setor_id').value || '').trim() || null,
-            profissao: (document.getElementById('profissao').value || '').trim() || null,
-            cargo_funcao: cargoFuncao || null,
+            profissao: profFmt,
+            cargo_funcao: cargoFuncao,
             observacoes: (document.getElementById('observacoes').value || '').trim() || null
         };
-        this.disabled = true;
-        fetch('/api/pessoas/vinculos-instituicoes/create.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-            .then(function(r) { return r.json(); })
-            .then(function(d) {
-                if (d.id) {
+        btn.disabled = true;
+        fetch('/api/pessoas/vinculos-instituicoes/create.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify(payload)
+        })
+            .then(function(r) {
+                return r.text().then(function(t) {
+                    var j = {};
+                    try { j = t ? JSON.parse(t) : {}; } catch (e) {}
+                    return { ok: r.ok, j: j };
+                });
+            })
+            .then(function(res) {
+                if (res.ok && res.j && res.j.id) {
                     if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Vínculo criado.' });
                     window.location.href = '/frame.php?page=partesinstituicoeslist';
-                } else {
-                    if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: d.error || 'Erro.' });
-                    document.getElementById('salvar-btn').disabled = false;
+                    return;
                 }
+                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: (res.j && res.j.error) ? res.j.error : 'Não foi possível salvar o vínculo.' });
+                btn.disabled = false;
             })
-            .catch(function() { document.getElementById('salvar-btn').disabled = false; });
+            .catch(function() {
+                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Falha de conexão ou resposta inválida.' });
+                btn.disabled = false;
+            });
     });
     </script>
 </body>

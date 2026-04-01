@@ -22,10 +22,11 @@
 | **Interno** | Se `avatar_slug` for um ficheiro da pasta 3d → `<img>`; se `initials` (ou legado) → iniciais + paleta da sessão. |
 | **Externo** | **Sempre** iniciais + paleta (não usa foto 3d do BD, mesmo que exista). |
 
-## Migrações SQL
+## Alinhamento de schema
 
-- `database/migrations/20260220_usuarios_avatar_slug.sql` — cria `avatar_slug`.
-- `database/migrations/20260221_avatar_slug_legacy_to_initials.sql` — (opcional) `UPDATE` de `default` / vazio para `initials`.
+- O código já trata `usuarios.avatar_slug` como coluna oficial quando ela existe no ambiente.
+- O repositório **não possui hoje** uma migration versionada específica para essa coluna.
+- Em ambientes legados, a criação ou ajuste de `avatar_slug` deve ser feita por migration/manual SQL alinhado ao estado atual do banco antes de liberar o fluxo de avatar para uso completo.
 
 ## Cadastro de utilizador (admin)
 

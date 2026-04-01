@@ -1,0 +1,137 @@
+<?php
+declare(strict_types=1);
+
+require_once __DIR__ . '/../helpers/IdGenerator.php';
+require_once __DIR__ . '/../helpers/UserInitialsHelper.php';
+
+final class OficiosCartorioAlocadosRepository
+{
+    private PDO $connection;
+    private string $table;
+
+    /** Collation única para evitar "Illegal mix of collations" em JOIN com usuarios. */
+    private const COLLATION = 'utf8mb4_unicode_ci';
+
+    public const TIPO_RULE     = 'rule';
+    public const TIPO_SPECIFIC = 'specific';
+    public const TIPO_ALL      = 'all';
+
+    public function __construct(PDO $connection, string $table = 'cartorio_oficios_alocados')
+    {
+        $this->connection = $connection;
+        $this->table      = $table;
+    }
+
+    public static function iniciais(string $nome, string $sobrenome): string
+    {
+        return UserInitialsHelper::fromNomeSobrenome($nome, $sobrenome);
+    }
+
+    public function addAlocado(string $oficioId, string $usuarioId, string $tipo = self::TIPO_SPECIFIC): string
+    {
+        $oficioId  = trim($oficioId);
+        $usuarioId = trim($usuarioId);
+        if ($oficioId === '' || $usuarioId === '') {
+            throw new InvalidArgumentException('oficio_id e usuario_id são obrigatórios.');
+        }
+
+        $existing = $this->connection->prepare(
+            sprintf(
+                'SELECT `id` FROM `%s` WHERE `oficio_id` = :oficio_id AND `usuario_id` = :usuario_id LIMIT 1',
+                $this->table
+            )
+        );
+        $existing->bindValue(':oficio_id', $oficioId);
+        $existing->bindValue(':usuario_id', $usuarioId);
+        $existing->execute();
+        $row = $existing->fetch(PDO::FETCH_ASSOC);
+        if ($row !== false) {
+            return (string) $row['id'];
+        }
+
+        $id = IdGenerator::generateUniquePrefixedId(
+            $this->connection,
+            $this->table,
+            'id',
+            'OCA',
+            30
+        );
+
+        $tipoVal = $tipo === self::TIPO_RULE ? self::TIPO_RULE : ($tipo === self::TIPO_ALL ? self::TIPO_ALL : self::TIPO_SPECIFIC);
+
+        $sql = sprintf(
+            'INSERT INTO `%s` (`id`, `oficio_id`, `usuario_id`, `tipo`, `created_at`) VALUES (:id, :oficio_id, :usuario_id, :tipo, NOW())',
+            $this->table
+        );
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bindValue(':id', $id);
+        $stmt->bindValue(':oficio_id', $oficioId);
+        $stmt->bindValue(':usuario_id', $usuarioId);
+        $stmt->bindValue(':tipo', $tipoVal);
+        $stmt->execute();
+
+        return $id;
+    }
+
+    public function findByOficioId(string $oficioId): array
+    {
+        $oficioId = trim($oficioId);
+        if ($oficioId === '') {
+            return [];
+        }
+
+        $coll = self::COLLATION;
+        $sql  = sprintf(
+            'SELECT a.`id`, a.`oficio_id`, a.`usuario_id`, a.`tipo`, a.`created_at`, u.`nome`, u.`sobrenome`'
+            . ' FROM `%s` a'
+            . ' LEFT JOIN `usuarios` u ON u.`id_usuario` COLLATE %s = a.`usuario_id` COLLATE %s'
+            . ' WHERE a.`oficio_id` = :oficio_id'
+            . ' ORDER BY a.`created_at` ASC',
+            $this->table,
+            $coll,
+            $coll
+        );
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bindValue(':oficio_id', $oficioId);
+        $stmt->execute();
+
+        $rows = [];
+        while (($row = $stmt->fetch(PDO::FETCH_ASSOC)) !== false) {
+            $nome      = trim((string) ($row['nome'] ?? ''));
+            $sobrenome = trim((string) ($row['sobrenome'] ?? ''));
+            $row['iniciais']      = self::iniciais($nome, $sobrenome);
+            $row['nome_completo'] = $sobrenome !== '' ? $nome . ' ' . $sobrenome : $nome;
+            $rows[] = $row;
+        }
+
+        return $rows;
+    }
+
+    public function deleteById(string $id): bool
+    {
+        $id = trim($id);
+        if ($id === '') {
+            return false;
+        }
+        $stmt = $this->connection->prepare(
+            sprintf('DELETE FROM `%s` WHERE `id` = :id', $this->table)
+        );
+        $stmt->bindValue(':id', $id);
+        $stmt->execute();
+
+        return $stmt->rowCount() > 0;
+    }
+
+    public function deleteByOficioId(string $oficioId): void
+    {
+        $oficioId = trim($oficioId);
+        if ($oficioId === '') {
+            return;
+        }
+        $stmt = $this->connection->prepare(
+            sprintf('DELETE FROM `%s` WHERE `oficio_id` = :oficio_id', $this->table)
+        );
+        $stmt->bindValue(':oficio_id', $oficioId);
+        $stmt->execute();
+    }
+}

@@ -10,6 +10,7 @@ require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../helpers/DateHelper.php';
 require_once __DIR__ . '/../../helpers/TextFormatter.php';
 require_once __DIR__ . '/../../helpers/SetoresAccessHelper.php';
+require_once __DIR__ . '/../../helpers/SexoHelper.php';
 require_once __DIR__ . '/../../access/ProfileNormalizer.php';
 require_once __DIR__ . '/../../../config/security.php';
 
@@ -33,6 +34,9 @@ if (!$podeEditarExcluir) {
 }
 
 $connection = Conection::getInstance()->getConnection();
+$stHasSexo = $connection->prepare("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usuarios' AND COLUMN_NAME = 'sexo'");
+$stHasSexo->execute();
+$hasSexoColumn = ((int) $stHasSexo->fetchColumn()) > 0;
 $idUsuario = trim((string) ($_GET['id'] ?? ''));
 if ($idUsuario === '') {
     header('Location: /frame.php?page=usuarioslist');
@@ -70,7 +74,10 @@ $statusAtual = 'ativo';
 $dataNascimentoVal = '';
 
 // Carregar usuário (apenas internos – tabela usuarios)
-$stmt = $connection->prepare('SELECT id_usuario, nome, sobrenome, cpf, email, telefone, cargo, instituicao, cadastro_ativo, data_nascimento FROM usuarios WHERE id_usuario = ? LIMIT 1');
+$sqlSelectUsuario = $hasSexoColumn
+    ? 'SELECT id_usuario, nome, sobrenome, sexo, cpf, email, telefone, cargo, instituicao, cadastro_ativo, data_nascimento FROM usuarios WHERE id_usuario = ? LIMIT 1'
+    : 'SELECT id_usuario, nome, sobrenome, cpf, email, telefone, cargo, instituicao, cadastro_ativo, data_nascimento FROM usuarios WHERE id_usuario = ? LIMIT 1';
+$stmt = $connection->prepare($sqlSelectUsuario);
 $stmt->execute([$idUsuario]);
 $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 if ($usuario === false || empty($usuario['id_usuario'])) {
@@ -149,6 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $sobrenome = TextFormatter::formatProperName(trim((string) ($_POST['sobrenome'] ?? '')), 100);
             $email = trim((string) ($_POST['email'] ?? ''));
             $telefone = trim((string) ($_POST['telefone'] ?? ''));
+            $sexo = SexoHelper::normalize(trim((string) ($_POST['sexo'] ?? '')));
             $dataNascimentoRaw = trim((string) ($_POST['data_nascimento'] ?? ''));
             $dataNascimentoIso = DateHelper::normalizeIsoDate($dataNascimentoRaw);
             $dataNascimentoVal = $dataNascimentoRaw;
@@ -175,6 +183,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $mensagemErro = 'Nome e sobrenome são obrigatórios.';
             } elseif ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $mensagemErro = 'E-mail obrigatório e válido.';
+            } elseif (!SexoHelper::isValid($sexo)) {
+                $mensagemErro = 'Selecione o sexo.';
             } else {
                 if ($cargo === 'Magistrada' && $setorLabel === '') {
                     $setorLabel = 'Gabinete';
@@ -184,18 +194,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $connection->beginTransaction();
 
                     $dataNascimentoSave = $dataNascimentoRaw !== '' && $dataNascimentoIso !== null ? $dataNascimentoIso : null;
-                    $stmt = $connection->prepare('UPDATE usuarios SET nome = ?, sobrenome = ?, data_nascimento = ?, email = ?, telefone = ?, cargo = ?, instituicao = ?, cadastro_ativo = ?, updated_at = NOW() WHERE id_usuario = ?');
-                    $stmt->execute([
-                        $nome,
-                        $sobrenome,
-                        $dataNascimentoSave,
-                        $email,
-                        $telefone !== '' ? $telefone : null,
-                        $cargo !== '' ? $cargo : null,
-                        $setorLabel !== '' ? $setorLabel : '-',
-                        $cadastroAtivoValue,
-                        $idUsuario,
-                    ]);
+                    if ($hasSexoColumn) {
+                        $stmt = $connection->prepare('UPDATE usuarios SET nome = ?, sobrenome = ?, sexo = ?, data_nascimento = ?, email = ?, telefone = ?, cargo = ?, instituicao = ?, cadastro_ativo = ?, updated_at = NOW() WHERE id_usuario = ?');
+                        $stmt->execute([
+                            $nome,
+                            $sobrenome,
+                            $sexo,
+                            $dataNascimentoSave,
+                            $email,
+                            $telefone !== '' ? $telefone : null,
+                            $cargo !== '' ? $cargo : null,
+                            $setorLabel !== '' ? $setorLabel : '-',
+                            $cadastroAtivoValue,
+                            $idUsuario,
+                        ]);
+                    } else {
+                        $stmt = $connection->prepare('UPDATE usuarios SET nome = ?, sobrenome = ?, data_nascimento = ?, email = ?, telefone = ?, cargo = ?, instituicao = ?, cadastro_ativo = ?, updated_at = NOW() WHERE id_usuario = ?');
+                        $stmt->execute([
+                            $nome,
+                            $sobrenome,
+                            $dataNascimentoSave,
+                            $email,
+                            $telefone !== '' ? $telefone : null,
+                            $cargo !== '' ? $cargo : null,
+                            $setorLabel !== '' ? $setorLabel : '-',
+                            $cadastroAtivoValue,
+                            $idUsuario,
+                        ]);
+                    }
 
                     if ($status === 'bloqueado' && $cpfUsuario !== '') {
                         $stmt = $connection->prepare('SELECT id_tentativa FROM tentativas_login WHERE cpf = ? LIMIT 1');
@@ -282,6 +308,7 @@ $sobrenomeVal = htmlspecialchars($usuario['sobrenome'] ?? '', ENT_QUOTES, 'UTF-8
 $cpfVal = htmlspecialchars($usuario['cpf'] ?? '', ENT_QUOTES, 'UTF-8');
 $emailVal = htmlspecialchars($usuario['email'] ?? '', ENT_QUOTES, 'UTF-8');
 $telefoneVal = htmlspecialchars($usuario['telefone'] ?? '', ENT_QUOTES, 'UTF-8');
+$sexoVal = trim((string) ($usuario['sexo'] ?? ''));
 $cargoVal = trim((string) ($usuario['cargo'] ?? ''));
 
 function deriveUsuarioStatus(array $usuario): string
@@ -385,6 +412,15 @@ function deriveUsuarioStatus(array $usuario): string
                     <label for="edit-telefone">Telefone</label>
                     <input type="text" id="edit-telefone" name="telefone" class="width-300 height-md white" placeholder="(00) 00000-0000" maxlength="50" value="<?php echo htmlspecialchars($telefoneVal, ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
+                <div class="col">
+                    <label for="edit-sexo">Sexo <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <select id="edit-sexo" name="sexo" class="width-300 height-md white" required>
+                        <option value="">Selecione</option>
+                        <option value="Feminino"<?php echo $sexoVal === 'Feminino' ? ' selected' : ''; ?>>Feminino</option>
+                        <option value="Masculino"<?php echo $sexoVal === 'Masculino' ? ' selected' : ''; ?>>Masculino</option>
+                        <option value="Outro"<?php echo $sexoVal === 'Outro' ? ' selected' : ''; ?>>Outro</option>
+                    </select>
+                </div>
             </div>
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col full-line">
@@ -479,6 +515,7 @@ function deriveUsuarioStatus(array $usuario): string
         var sobrenomeInput = document.getElementById('edit-sobrenome');
         var emailInput = document.getElementById('edit-email');
         var telefoneInput = document.getElementById('edit-telefone');
+        var sexoSelect = document.getElementById('edit-sexo');
         var dataNascimentoInput = document.getElementById('edit-data-nascimento');
         var statusSelect = document.getElementById('edit-status');
         var cargoSelect = document.getElementById('edit-cargo');
@@ -557,8 +594,10 @@ function deriveUsuarioStatus(array $usuario): string
             var nome = (nomeInput && nomeInput.value) ? nomeInput.value.trim() : '';
             var sobrenome = (sobrenomeInput && sobrenomeInput.value) ? sobrenomeInput.value.trim() : '';
             var email = (emailInput && emailInput.value) ? emailInput.value.trim() : '';
+            var sexo = (sexoSelect && sexoSelect.value) ? sexoSelect.value.trim() : '';
             if (!nome || !sobrenome) return false;
             if (!email || !validarEmail(email)) return false;
+            if (sexo !== 'Feminino' && sexo !== 'Masculino' && sexo !== 'Outro') return false;
             return true;
         }
 
@@ -573,6 +612,7 @@ function deriveUsuarioStatus(array $usuario): string
                 sobrenome: sobrenomeInput ? (sobrenomeInput.value || '').trim() : '',
                 email: emailInput ? (emailInput.value || '').trim() : '',
                 telefone: telefoneInput ? (telefoneInput.value || '').trim() : '',
+                sexo: sexoSelect ? (sexoSelect.value || '').trim() : '',
                 dataNascimento: dataNascimentoInput ? (dataNascimentoInput.value || '').trim() : '',
                 status: statusSelect ? (statusSelect.value || '').trim() : '',
                 cargo: cargoSelect ? (cargoSelect.value || '').trim() : '',
@@ -623,6 +663,7 @@ function deriveUsuarioStatus(array $usuario): string
             telefoneInput.addEventListener('input', updateSalvarButton);
             telefoneInput.addEventListener('change', updateSalvarButton);
         }
+        if (sexoSelect) sexoSelect.addEventListener('change', updateSalvarButton);
         if (dataNascimentoInput) {
             dataNascimentoInput.addEventListener('input', updateSalvarButton);
             dataNascimentoInput.addEventListener('change', updateSalvarButton);

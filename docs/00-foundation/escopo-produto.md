@@ -43,7 +43,7 @@ O produto final é organizado em duas grandes áreas:
   - Regra central: nenhuma tramitação processual ou dado sigiloso é exposto na área pública; casos protegidos por sigilo ou LGPD são mascarados ou bloqueados integralmente.
 
 - **Área Restrita (Interna)**  
-  - Ambiente de trabalho oficial para usuários internos autenticados, com rastreabilidade total e auditoria obrigatória.  
+  - Ambiente de trabalho oficial para usuários internos autenticados, com rastreabilidade compatível com o módulo e com a instrumentação operacional existente.  
   - Autenticação, gestão de sessão, perfis e permissões, acesso a manuais internos.  
   - Núcleo operacional, com módulos para Cartório, Gabinete, Audiências, Tarefas, Notificações, Produtividade, Logs e Configurações Gerais.  
   - Regras transversais: segurança reforçada, sigilo, LGPD, feedback padronizado, pontuação e produtividade, versionamento e governança de regras e parâmetros.
@@ -97,7 +97,7 @@ O escopo de produto contempla, como visão-alvo, os seguintes módulos e submód
 
 - **Módulo m11 — Logs, Auditoria e Segurança**
   - Registro de autenticação, acessos negados, alterações de regras e eventos operacionais.
-  - Logs imutáveis e exportáveis, com mascaramento de dados sensíveis.
+  - Estratégia híbrida de observabilidade, com mascaramento de dados sensíveis e possibilidade de relatórios administrativos conforme a instrumentação disponível.
 
 - **Módulo m12 — Configurações Gerais do Sistema**
   - Prazos, metas, tipos, comarcas, notificações.
@@ -114,13 +114,13 @@ O escopo técnico é definido pelo Documento de Arquitetura de Software (SAD), q
 
 ### 3.1 Stack tecnológica principal
 
-- Backend: PHP com framework Laravel.
-- Frontend: HTML, CSS, JavaScript, com uso de Bootstrap; evolução planejada para SCSS (Sass) e TypeScript.
+- Backend: PHP customizado.
+- Frontend: HTML, CSS e JavaScript, sem framework obrigatório.
 - Banco de dados: MySQL.
 - Servidor web: Nginx (com PHP-FPM).
-- Autenticação: modelo híbrido (sessão + JWT).
+- Autenticação: sessão PHP com validação server-side, token persistido em hash no banco, timeout de inatividade e reset por link com expiração.
 - E-mail: SMTP.
-- Logs/observabilidade: AWS CloudWatch.
+- Logs/observabilidade: `error_log`, logs do servidor e integrações externas opcionais quando adotadas.
 - Storage de arquivos: disco local do servidor.
 - Cache e filas: inicialmente não utilizados para reduzir complexidade e custo.
 - Containers: Docker para desenvolvimento, sem exigência em produção.
@@ -133,9 +133,9 @@ O escopo técnico é definido pelo Documento de Arquitetura de Software (SAD), q
   - Domínio (regras de negócio, entidades, invariantes).
   - Infraestrutura (persistência, integrações, IO).
 - Adoção de boas práticas de codificação:
-  - PSR-12 e padrões Laravel.
+  - PSR-12 e padrões internos do projeto.
   - Controllers finos, com regra de negócio concentrada em camadas de aplicação/domínio.
-  - Persistência via Eloquent/Query Builder, evitando SQL solto quando não necessário.
+  - Persistência via PDO, repositórios e SQL parametrizado, evitando SQL concatenado manualmente.
   - Validação server-side consistente e sanitização centralizada.
   - Logs com padrão único, mascaramento de dados sensíveis e tratamento de erros padronizado.
 
@@ -144,7 +144,7 @@ O escopo técnico é definido pelo Documento de Arquitetura de Software (SAD), q
 - API do CNJ (futura): integração HTTP, com contratos a definir, para consulta/registro de dados institucionais.
 - SMTP: envio de e-mails operacionais e notificações.
 - WhatsApp (futuro): uso de API oficial para envio de mensagens e alertas.
-- CloudWatch: centralização de logs de aplicação, auditoria e eventos de negócio.
+- Serviços externos de observabilidade: opcionais e futuros, se houver necessidade operacional e adoção formal.
 
 ---
 
@@ -155,7 +155,7 @@ O Projeto 2026.01 corresponde à fase inicial de implantação, com foco em **do
 ### 4.1 Objetivo da fase
 
 - Consolidar os fundamentos conceituais, funcionais e arquiteturais do sistema em documentos oficiais.  
-- Estabelecer a base de infraestrutura (servidor, CloudPanel, Cloudflare, AWS CloudWatch, DNS, HTTPS) necessária para suportar as fases de desenvolvimento.  
+- Estabelecer a base de infraestrutura (servidor, CloudPanel, Cloudflare, DNS, HTTPS e logging operacional compatível com o ambiente) necessária para suportar as fases de desenvolvimento.  
 - Garantir rastreabilidade e governança desde o início, evitando decisões ad hoc sem registro.
 
 ### 4.2 Entregas previstas na fase 2026.01
@@ -173,7 +173,7 @@ O Projeto 2026.01 corresponde à fase inicial de implantação, com foco em **do
 3. **Infraestrutura e ambientes**
    - Configuração do servidor de hospedagem (Hostinger + CloudPanel) com Nginx, PHP, MySQL e ambiente pronto para receber o código do sistema.
    - Ajustes mínimos no Cloudflare (DNS, proxy, HTTPS) para o domínio/subdomínios associados ao sistema.
-   - Configuração inicial de logs de aplicação apontando para AWS CloudWatch, com definição de grupos/streams e padrão mínimo de log.
+   - Configuração inicial de logs de aplicação e operação em mecanismo compatível com o ambiente vigente, com padrão mínimo de severidade e contexto.
    - Documentação dos ambientes (Dev, Homolog, Prod), com URLs, parâmetros de configuração e características (como uso de banco único, flags de ambiente e mitigação de riscos).
 
 4. **Governança inicial de código e versionamento**
@@ -212,7 +212,7 @@ Esses itens permanecem dentro do **escopo de produto**, mas serão tratados em f
 
 ### 6.2 Restrições
 
-- **Custos de infraestrutura:** serviços de terceiros (Cloudflare, AWS CloudWatch, etc.) devem priorizar uso de faixas gratuitas e planos de baixo custo, conforme documentado no SAD.
+- **Custos de infraestrutura:** serviços de terceiros devem priorizar uso de faixas gratuitas e planos de baixo custo, conforme documentado no SAD.
 - **Complexidade técnica:** cache e filas permanecem desativados nesta fase, para reduzir complexidade operacional e riscos em um ambiente ainda em consolidação.
 - **Banco de dados único entre ambientes:** o uso de um único banco exige mitigação de riscos (roles restritas, flags de ambiente, bloqueio de rotas perigosas fora de produção), conforme já indicado no SAD.
 

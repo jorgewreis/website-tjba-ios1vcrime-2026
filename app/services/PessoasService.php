@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/../helpers/TextFormatter.php';
+require_once __DIR__ . '/../helpers/ProfissaoValidator.php';
 require_once __DIR__ . '/../repositories/PartesRepository.php';
 require_once __DIR__ . '/../repositories/PartesTelefonesRepository.php';
 require_once __DIR__ . '/../repositories/PartesEnderecosRepository.php';
@@ -71,6 +73,7 @@ final class PessoasService
                 'nome_completo' => $payload['nome_completo'] ?? '',
                 'sexo' => $payload['sexo'] ?? '',
                 'data_nascimento' => $payload['data_nascimento'] ?? '',
+                'profissao' => $this->resolverProfissaoParaPayload($payload, null),
             ]);
 
             $telefones = $payload['telefones'] ?? [];
@@ -123,15 +126,25 @@ final class PessoasService
 
     public function update(string $id, array $payload): bool
     {
-        if ($this->partesRepository->findById($id) === null) {
+        $existente = $this->partesRepository->findById($id);
+        if ($existente === null) {
             return false;
         }
         $allowed = ['cpf', 'nome_completo', 'sexo', 'data_nascimento'];
         $data = array_intersect_key($payload, array_flip($allowed));
+        $anterior = trim((string) ($existente['profissao'] ?? ''));
+        if (array_key_exists('profissao_selecao', $payload) || array_key_exists('profissao_outra', $payload) || array_key_exists('profissao', $payload)) {
+            $data['profissao'] = $this->resolverProfissaoParaPayload($payload, $anterior);
+        }
         if ($data === []) {
             return true;
         }
-        return $this->partesRepository->update($id, $data);
+        $ok = $this->partesRepository->update($id, $data);
+        if ($ok) {
+            $this->reconciliarProfissaoParteComVinculosInstituicao($id);
+        }
+
+        return $ok;
     }
 
     public function addTelefone(string $parteId, array $row): string
@@ -208,16 +221,174 @@ final class PessoasService
             'ativo' => array_key_exists('ativo', $row) ? (int) (bool) $row['ativo'] : 1,
             'observacoes' => isset($row['observacoes']) ? (trim((string) $row['observacoes']) ?: null) : null,
         ];
-        return $this->partesInstituicoesRepository->insert($data);
+        $novoId = $this->partesInstituicoesRepository->insert($data);
+        $this->reconciliarProfissaoParteComVinculosInstituicao($parteId);
+
+        return $novoId;
     }
 
     public function updateVinculoInstituicao(string $id, array $payload): bool
     {
-        return $this->partesInstituicoesRepository->update($id, $payload);
+        $ok = $this->partesInstituicoesRepository->update($id, $payload);
+        if ($ok) {
+            $row = $this->partesInstituicoesRepository->findById($id);
+            $parteId = trim((string) ($row['parte_id'] ?? ''));
+            if ($parteId !== '') {
+                $this->reconciliarProfissaoParteComVinculosInstituicao($parteId);
+            }
+        }
+
+        return $ok;
     }
 
     public function deleteVinculoInstituicao(string $id): bool
     {
-        return $this->partesInstituicoesRepository->delete($id);
+        $row = $this->partesInstituicoesRepository->findById($id);
+        $parteId = $row !== null ? trim((string) ($row['parte_id'] ?? '')) : '';
+        $ok = $this->partesInstituicoesRepository->delete($id);
+        if ($ok && $parteId !== '') {
+            $this->reconciliarProfissaoParteComVinculosInstituicao($parteId);
+        }
+
+        return $ok;
+    }
+
+    /**
+     * Mantém `partes.profissao` alinhada com os vínculos ativos em `partes_instituicoes`:
+     * - se `partes.profissao` estiver vazia e algum vínculo tiver profissão, copia a do vínculo mais recente para `partes`;
+     * - define um valor canônico (prioridade: `partes.profissao` quando preenchida; senão a primeira profissão não vazia nos vínculos, por data mais recente);
+     * - atualiza cada vínculo ativo cuja profissão canônica seja diferente ou vazia.
+     */
+    private function reconciliarProfissaoParteComVinculosInstituicao(string $parteId): void
+    {
+        $parteId = trim($parteId);
+        if ($parteId === '') {
+            return;
+        }
+        $parte = $this->partesRepository->findById($parteId);
+        if ($parte === null) {
+            return;
+        }
+        $vinculos = $this->partesInstituicoesRepository->findByParteId($parteId, true);
+        if ($vinculos === []) {
+            return;
+        }
+
+        $canonPartes = $this->canonProfissaoParaComparacao($parte['profissao'] ?? null);
+        $primeiraDosVinculos = '';
+        foreach ($vinculos as $v) {
+            $c = $this->canonProfissaoParaComparacao($v['profissao'] ?? null);
+            if ($c !== '') {
+                $primeiraDosVinculos = $c;
+                break;
+            }
+        }
+
+        if ($canonPartes === '' && $primeiraDosVinculos === '') {
+            return;
+        }
+
+        $valorAlvo = $canonPartes !== '' ? $canonPartes : $primeiraDosVinculos;
+
+        $alterarPartes = $canonPartes === '' && $primeiraDosVinculos !== '';
+        $alterarAlgumVinculo = false;
+        foreach ($vinculos as $v) {
+            $cv = $this->canonProfissaoParaComparacao($v['profissao'] ?? null);
+            if ($cv !== $valorAlvo) {
+                $alterarAlgumVinculo = true;
+                break;
+            }
+        }
+
+        if (!$alterarPartes && !$alterarAlgumVinculo) {
+            return;
+        }
+
+        $this->connection->beginTransaction();
+        try {
+            if ($alterarPartes) {
+                $this->partesRepository->update($parteId, ['profissao' => $valorAlvo]);
+            }
+            if ($alterarAlgumVinculo) {
+                foreach ($vinculos as $v) {
+                    $vid = trim((string) ($v['id'] ?? ''));
+                    if ($vid === '') {
+                        continue;
+                    }
+                    $cv = $this->canonProfissaoParaComparacao($v['profissao'] ?? null);
+                    if ($cv !== $valorAlvo) {
+                        $this->partesInstituicoesRepository->update($vid, ['profissao' => $valorAlvo]);
+                    }
+                }
+            }
+            $this->connection->commit();
+        } catch (Throwable $e) {
+            $this->connection->rollBack();
+            throw $e;
+        }
+    }
+
+    private function canonProfissaoParaComparacao(?string $valor): string
+    {
+        $t = trim((string) $valor);
+        if ($t === '') {
+            return '';
+        }
+
+        return TextFormatter::formatProperName($t, 120);
+    }
+
+    /**
+     * Resolve `profissao` a partir de `profissao_selecao` / `profissao_outra` ou texto livre legado (`profissao`).
+     */
+    private function resolverProfissaoParaPayload(array $payload, ?string $profissaoAnteriorParte): ?string
+    {
+        if (array_key_exists('profissao_selecao', $payload) || array_key_exists('profissao_outra', $payload)) {
+            return $this->resolverProfissaoPayload($payload, $profissaoAnteriorParte);
+        }
+        if (array_key_exists('profissao', $payload)) {
+            $lista = $this->partesRepository->listProfissoesDistintas();
+            $raw = trim((string) $payload['profissao']);
+            if ($raw === '') {
+                return null;
+            }
+            if (in_array($raw, $lista, true)) {
+                return TextFormatter::formatProperName($raw, 120);
+            }
+            $ign = $profissaoAnteriorParte !== null && trim((string) $profissaoAnteriorParte) !== ''
+                ? trim((string) $profissaoAnteriorParte)
+                : null;
+            ProfissaoValidator::validarNovaProfissao($raw, $lista, $ign);
+
+            return TextFormatter::formatProperName($raw, 120);
+        }
+
+        return null;
+    }
+
+    private function resolverProfissaoPayload(array $payload, ?string $profissaoAnteriorParte): ?string
+    {
+        $lista = $this->partesRepository->listProfissoesDistintas();
+        $prev = trim((string) ($profissaoAnteriorParte ?? ''));
+
+        $sel = trim((string) ($payload['profissao_selecao'] ?? ''));
+        $outra = trim((string) ($payload['profissao_outra'] ?? ''));
+
+        if ($sel === '') {
+            return null;
+        }
+        if ($sel === ProfissaoValidator::SELECT_OUTRA) {
+            ProfissaoValidator::validarNovaProfissao($outra, $lista, $prev !== '' ? $prev : null);
+
+            return TextFormatter::formatProperName($outra, 120);
+        }
+        if (!in_array($sel, $lista, true)) {
+            if ($prev !== '' && TextFormatter::formatProperName($sel, 120) === TextFormatter::formatProperName($prev, 120)) {
+                return TextFormatter::formatProperName($prev, 120);
+            }
+            throw new InvalidArgumentException('Profissão inválida. Atualize a página e tente novamente.');
+        }
+
+        return TextFormatter::formatProperName($sel, 120);
     }
 }

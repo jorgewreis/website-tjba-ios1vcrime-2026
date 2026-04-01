@@ -6,23 +6,12 @@ require_once __DIR__ . '/../../config/security.php';
 
 final class PasswordResetService
 {
-    private PDO $pdo;
+    private const TABLE = 'recuperacao_senha';
+    private const PASSWORD_HISTORY_LIMIT = 5;
 
-    /** @param array<string, mixed> $data */
-    private static function debugLog(string $message, array $data = [], string $hypothesisId = ''): void
-    {
-        $path = __DIR__ . '/../../debug-5b84a2.log';
-        $payload = [
-            'sessionId' => '5b84a2',
-            'runId' => $data['runId'] ?? 'run1',
-            'hypothesisId' => $hypothesisId,
-            'location' => 'PasswordResetService',
-            'message' => $message,
-            'data' => $data,
-            'timestamp' => (int) (microtime(true) * 1000),
-        ];
-        @file_put_contents($path, json_encode($payload) . "\n", FILE_APPEND | LOCK_EX);
-    }
+    private PDO $pdo;
+    private bool $storageChecked = false;
+    private bool $storageReady = false;
 
     public function __construct()
     {
@@ -30,184 +19,270 @@ final class PasswordResetService
     }
 
     /**
-     * Processa recuperação de senha. Retorna array com success, emailSent e message.
-     * - success: dados válidos, usuário encontrado e senha atualizada no banco
-     * - emailSent: e-mail foi de fato enviado (SMTP). Com MAIL_DRIVER=log não envia e-mail real.
+     * Mantido por compatibilidade com o endpoint antigo.
+     *
+     * @return array{success:bool,emailSent:bool,message:string}
      */
     public function process(string $cpf, string $email): array
+    {
+        return $this->requestReset($cpf, $email);
+    }
+
+    /**
+     * @return array{success:bool,emailSent:bool,message:string}
+     */
+    public function requestReset(string $cpf, string $email): array
     {
         $cpf = Security::normalizeCPF($cpf);
         $email = strtolower(trim($email));
 
         if (!Security::validarCPF($cpf) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return [
-                'success'   => false,
+                'success' => false,
                 'emailSent' => false,
-                'message'   => 'Não foi possível processar. Verifique CPF e e-mail e tente novamente.'
+                'message' => 'Não foi possível processar. Verifique CPF e e-mail e tente novamente.',
+            ];
+        }
+
+        if (!$this->ensureStorage()) {
+            return [
+                'success' => false,
+                'emailSent' => false,
+                'message' => 'Fluxo de recuperação indisponível nesta instalação. Contate o suporte.',
             ];
         }
 
         $cpfFormatado = Security::formatCPF($cpf);
-
         $stmt = $this->pdo->prepare("
             SELECT id_usuario, nome, email
-            FROM usuarios
-            WHERE cpf = ?
-              AND LOWER(email) = ?
-            LIMIT 1
+              FROM usuarios
+             WHERE cpf = ?
+               AND LOWER(email) = ?
+             LIMIT 1
         ");
         $stmt->execute([$cpfFormatado, $email]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$user) {
             return [
-                'success'   => false,
+                'success' => false,
                 'emailSent' => false,
-                'message'   => 'CPF e e-mail não conferem. Verifique os dados e tente novamente.'
+                'message' => 'CPF e e-mail não conferem. Verifique os dados e tente novamente.',
             ];
         }
 
-        $senhaTemp = Security::generateTempPassword(10);
-        $senhaHash = Security::hashPassword($senhaTemp);
+        $plainToken = Security::generateSecureToken(32);
+        $tokenHash = Security::hashAccessToken($plainToken);
+        $resetId = $this->generateId('REC');
+        $resetUrl = $this->buildResetUrl($plainToken);
+        $expiresAt = date('Y-m-d H:i:s', time() + PASSWORD_RESET_TOKEN_TTL_SECONDS);
+        $ip = Security::getClientIp();
 
         $this->pdo->beginTransaction();
 
-        $stmt = $this->pdo->prepare("
-            UPDATE usuarios
-               SET senha_hash   = ?,
-                   token_acesso = NULL,
-                   token_expira = NULL
-             WHERE id_usuario = ?
-             LIMIT 1
-        ");
-        $stmt->execute([$senhaHash, $user['id_usuario']]);
+        try {
+            $invalidateStmt = $this->pdo->prepare("
+                UPDATE " . self::TABLE . "
+                   SET usado = 1
+                 WHERE usuario = ?
+                   AND usado = 0
+            ");
+            $invalidateStmt->execute([$user['id_usuario']]);
 
-        if ($stmt->rowCount() < 1) {
-            $this->pdo->rollBack();
+            $insertStmt = $this->pdo->prepare("
+                INSERT INTO " . self::TABLE . " (
+                    id_recuperacao, usuario, token, expira_em, usado, ip, data_solicitacao
+                ) VALUES (
+                    ?, ?, ?, ?, 0, ?, NOW()
+                )
+            ");
+            $insertStmt->execute([$resetId, $user['id_usuario'], $tokenHash, $expiresAt, $ip]);
+
+            $sendResult = $this->sendEmail((string) $user['email'], (string) $user['nome'], $resetUrl);
+            if (!$sendResult['ok']) {
+                $this->pdo->rollBack();
+                return [
+                    'success' => false,
+                    'emailSent' => false,
+                    'message' => 'Não foi possível enviar a recuperação de senha. Tente novamente mais tarde.',
+                ];
+            }
+
+            $this->pdo->commit();
+
             return [
-                'success'   => false,
+                'success' => true,
+                'emailSent' => $sendResult['sent'],
+                'message' => $sendResult['sent']
+                    ? 'Enviamos um link de redefinição para o e-mail informado. Verifique sua caixa de entrada.'
+                    : 'A solicitação foi registrada, mas o envio de e-mail não está ativo neste ambiente. Contate o suporte.',
+            ];
+        } catch (Throwable $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+
+            error_log('PasswordResetService::requestReset: ' . $e->getMessage());
+            return [
+                'success' => false,
                 'emailSent' => false,
-                'message'   => 'Não foi possível atualizar a senha. Tente novamente.'
+                'message' => 'Não foi possível processar a recuperação de senha. Tente novamente mais tarde.',
             ];
         }
-
-        $sendResult = $this->sendEmail($user['email'], $user['nome'], $senhaTemp);
-
-        if (!$sendResult['ok']) {
-            $this->pdo->rollBack();
-            return [
-                'success'   => false,
-                'emailSent' => false,
-                'message'   => 'Senha redefinida, mas o e-mail não pôde ser enviado. Contate o suporte.'
-            ];
-        }
-
-        $this->pdo->commit();
-
-        return [
-            'success'   => true,
-            'emailSent' => $sendResult['sent'],
-            'message'   => $sendResult['sent']
-                ? 'Um e-mail foi enviado para o endereço informado com a nova senha. Verifique sua caixa de entrada.'
-                : 'Senha redefinida. O envio de e-mail não está ativo neste ambiente. Contate o suporte para obter sua nova senha.'
-        ];
-    }
-
-    /* ================= UTILITÁRIOS ================= */
-
-    /** Garante que .env foi carregado. Tenta vários caminhos (project root, document root). */
-    private function loadEnvOnce(): void
-    {
-        static $loaded = false;
-        if ($loaded) {
-            return;
-        }
-        $candidates = [
-            __DIR__ . '/../../.env',
-            __DIR__ . '/../../../.env',
-        ];
-        if (!empty($_SERVER['DOCUMENT_ROOT'])) {
-            $candidates[] = $_SERVER['DOCUMENT_ROOT'] . '/../.env';
-            $candidates[] = $_SERVER['DOCUMENT_ROOT'] . '/.env';
-        }
-        $envPath = null;
-        foreach ($candidates as $path) {
-            if (is_file($path)) {
-                $envPath = $path;
-                break;
-            }
-        }
-        if ($envPath === null) {
-            self::debugLog('loadEnvOnce: .env não encontrado em nenhum candidato', ['candidates' => $candidates], 'A');
-            $loaded = true;
-            return;
-        }
-        self::debugLog('loadEnvOnce: .env carregado', ['envPath' => $envPath], 'A');
-        $lines = @file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if ($line === '' || $line[0] === '#') {
-                continue;
-            }
-            $eq = strpos($line, '=');
-            if ($eq === false) {
-                continue;
-            }
-            $key = trim(substr($line, 0, $eq));
-            $value = trim(substr($line, $eq + 1));
-            if ($key !== '') {
-                $value = trim($value, " \t\"'");
-                putenv("{$key}={$value}");
-                $_ENV[$key] = $value;
-            }
-        }
-        $loaded = true;
-    }
-
-    /** Lê variável de ambiente (getenv ou $_ENV). Aceita MAIL_USER/MAIL_PASS como alias. */
-    private function env(string $key, ?string $default = null): ?string
-    {
-        $this->loadEnvOnce();
-        $v = getenv($key);
-        if ($v !== false && $v !== '') {
-            return trim((string) $v);
-        }
-        $v = $_ENV[$key] ?? null;
-        return $v !== null && $v !== '' ? trim((string) $v) : $default;
     }
 
     /**
-     * Envia e-mail com a senha temporária. Retorna ['ok' => bool, 'sent' => bool].
-     * ok: operação concluída (senha pode ser commitada). sent: e-mail foi de fato enviado (SMTP).
+     * @return array<string,mixed>|null
      */
-    private function sendEmail(string $to, string $nome, string $senhaTemp): array
+    public function validateResetToken(string $plainToken): ?array
     {
-        $driver = strtolower(trim((string) ($this->env('MAIL_DRIVER') ?? '')));
-        if ($driver === '' && $this->env('MAIL_HOST') !== null) {
+        $plainToken = trim($plainToken);
+        if ($plainToken === '' || !$this->ensureStorage()) {
+            return null;
+        }
+
+        $tokenHash = Security::hashAccessToken($plainToken);
+        $stmt = $this->pdo->prepare("
+            SELECT r.id_recuperacao, r.usuario, r.expira_em, u.email, u.nome
+              FROM " . self::TABLE . " r
+              INNER JOIN usuarios u ON u.id_usuario = r.usuario
+             WHERE r.token = ?
+               AND r.usado = 0
+               AND r.expira_em > NOW()
+             LIMIT 1
+        ");
+        $stmt->execute([$tokenHash]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $row === false ? null : $row;
+    }
+
+    /**
+     * @return array{success:bool,message:string}
+     */
+    public function resetPassword(string $plainToken, string $novaSenha): array
+    {
+        $resetRequest = $this->validateResetToken($plainToken);
+        if ($resetRequest === null) {
+            return ['success' => false, 'message' => 'O link de redefinição é inválido ou expirou.'];
+        }
+
+        $policy = Security::validatePasswordPolicy($novaSenha);
+        if (($policy['valid'] ?? false) !== true) {
+            return ['success' => false, 'message' => $policy['message'] ?? 'Senha inválida.'];
+        }
+
+        $userId = trim((string) ($resetRequest['usuario'] ?? ''));
+        if ($userId === '') {
+            return ['success' => false, 'message' => 'Usuário da redefinição não encontrado.'];
+        }
+
+        if ($this->hasRecentPasswordReuse($userId, $novaSenha)) {
+            return ['success' => false, 'message' => 'A nova senha não pode repetir nenhuma das últimas senhas utilizadas.'];
+        }
+
+        $tokenHash = Security::hashAccessToken($plainToken);
+        $passwordHash = Security::hashPassword($novaSenha);
+
+        $this->pdo->beginTransaction();
+
+        try {
+            $this->updateUserPassword($userId, $passwordHash, true);
+
+            $markUsedStmt = $this->pdo->prepare("
+                UPDATE " . self::TABLE . "
+                   SET usado = 1
+                 WHERE token = ?
+                   AND usado = 0
+                 LIMIT 1
+            ");
+            $markUsedStmt->execute([$tokenHash]);
+
+            $this->pdo->commit();
+
+            return ['success' => true, 'message' => 'Senha redefinida com sucesso. Faça login com a nova senha.'];
+        } catch (Throwable $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+
+            error_log('PasswordResetService::resetPassword: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Não foi possível redefinir a senha. Tente novamente.'];
+        }
+    }
+
+    private function ensureStorage(): bool
+    {
+        if ($this->storageChecked) {
+            return $this->storageReady;
+        }
+
+        $this->storageChecked = true;
+
+        try {
+            $this->pdo->exec(
+                "CREATE TABLE IF NOT EXISTS " . self::TABLE . " (
+                    id_recuperacao CHAR(30) NOT NULL PRIMARY KEY,
+                    usuario CHAR(30) NOT NULL,
+                    token VARCHAR(100) NOT NULL UNIQUE,
+                    expira_em DATETIME NOT NULL,
+                    usado TINYINT(1) NOT NULL DEFAULT 0,
+                    ip VARCHAR(45) NOT NULL,
+                    data_solicitacao DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    INDEX idx_usuario (usuario),
+                    INDEX idx_token (token),
+                    INDEX idx_expira (expira_em)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+            );
+
+            $this->storageReady = true;
+        } catch (Throwable $e) {
+            error_log('PasswordResetService: armazenamento indisponível: ' . $e->getMessage());
+            $this->storageReady = false;
+        }
+
+        return $this->storageReady;
+    }
+
+    private function generateId(string $prefix): string
+    {
+        return $prefix . '-' . strtoupper(bin2hex(random_bytes(13)));
+    }
+
+    private function buildResetUrl(string $plainToken): string
+    {
+        $appUrl = trim((string) envValue('APP_URL', ''));
+        if ($appUrl !== '') {
+            return rtrim($appUrl, '/') . '/redefinir_senha.php?token=' . urlencode($plainToken);
+        }
+
+        $scheme = appIsHttpsRequest() ? 'https' : 'http';
+        $host = trim((string) ($_SERVER['HTTP_HOST'] ?? 'localhost'));
+        return $scheme . '://' . $host . '/redefinir_senha.php?token=' . urlencode($plainToken);
+    }
+
+    /**
+     * @return array{ok:bool,sent:bool}
+     */
+    private function sendEmail(string $to, string $nome, string $resetUrl): array
+    {
+        $driver = strtolower(trim((string) envValue('MAIL_DRIVER', '')));
+        if ($driver === '' && envValue('MAIL_HOST') !== null) {
             $driver = 'smtp';
         }
         if ($driver === '') {
             $driver = 'log';
         }
 
-        // ======================
-        // Fallback (LOG): apenas registra no servidor; nenhum e-mail real enviado
-        // ======================
         if ($driver !== 'smtp') {
-            self::debugLog('sendEmail: branch log (driver não é smtp)', ['driver' => $driver], 'B');
-            error_log("[RESET SENHA] {$to} | senha temporária: {$senhaTemp}");
+            error_log('[RESET SENHA] ' . $to . ' | link: ' . $resetUrl);
             return ['ok' => true, 'sent' => false];
         }
 
-        // ======================
-        // SMTP (Hostinger, Microsoft 365, etc.)
-        // ======================
-        $host = $this->env('MAIL_HOST') ?? '';
-        $user = $this->env('MAIL_USERNAME') ?? $this->env('MAIL_USER') ?? '';
-        self::debugLog('sendEmail: após ler env', ['driver' => $driver, 'hasHost' => $host !== '', 'hasUser' => $user !== ''], 'B');
+        $host = (string) envValue('MAIL_HOST', '');
+        $user = (string) (envValue('MAIL_USERNAME') ?? envValue('MAIL_USER') ?? '');
         if ($host === '' || $user === '') {
-            self::debugLog('sendEmail: retorno early (host ou user vazio)', ['hostEmpty' => $host === '', 'userEmpty' => $user === ''], 'B');
-            error_log('[RESET SENHA] SMTP não configurado: MAIL_HOST ou MAIL_USER vazio após carregar .env');
+            error_log('[RESET SENHA] SMTP não configurado: MAIL_HOST ou MAIL_USER vazio.');
             return ['ok' => true, 'sent' => false];
         }
 
@@ -223,8 +298,7 @@ final class PasswordResetService
             }
         }
         if ($autoload === null) {
-            self::debugLog('sendEmail: PHPMailer não encontrado', ['autoloadsChecked' => $autoloads], 'E');
-            error_log('[RESET SENHA] PHPMailer não encontrado. Execute: composer require phpmailer/phpmailer (na raiz do projeto)');
+            error_log('[RESET SENHA] PHPMailer não encontrado. Execute: composer require phpmailer/phpmailer');
             return ['ok' => true, 'sent' => false];
         }
         require_once $autoload;
@@ -233,117 +307,157 @@ final class PasswordResetService
 
         try {
             $mail->isSMTP();
-            $mail->Host       = $host;
-            $mail->Port       = (int) ($this->env('MAIL_PORT') ?? 587);
-            $mail->SMTPAuth   = true;
-            $mail->Username   = $user;
-            $mail->Password   = $this->env('MAIL_PASSWORD') ?? $this->env('MAIL_PASS') ?? '';
+            $mail->Host = $host;
+            $mail->Port = (int) envValue('MAIL_PORT', '587');
+            $mail->SMTPAuth = true;
+            $mail->Username = $user;
+            $mail->Password = (string) (envValue('MAIL_PASSWORD') ?? envValue('MAIL_PASS') ?? '');
 
-            $encryption = strtolower(trim((string) ($this->env('MAIL_ENCRYPTION') ?? '')));
+            $encryption = strtolower(trim((string) envValue('MAIL_ENCRYPTION', '')));
             if ($encryption === '' && $mail->Port === 465) {
                 $encryption = 'ssl';
             }
+
             $mail->SMTPSecure = $encryption === 'ssl'
                 ? \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS
                 : \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
 
             $mail->CharSet = 'UTF-8';
-
-            // Evita falha de SSL em alguns servidores (certificado)
             $mail->SMTPOptions = [
                 'ssl' => [
-                    'verify_peer'       => false,
-                    'verify_peer_name'  => false,
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
                     'allow_self_signed' => true,
                 ],
             ];
 
-            $fromAddress = $this->env('MAIL_FROM_ADDRESS') ?? $user;
-            $fromName    = $this->env('MAIL_FROM_NAME') ?: 'Sistema';
+            $fromAddress = (string) (envValue('MAIL_FROM_ADDRESS') ?? $user);
+            $fromName = (string) (envValue('MAIL_FROM_NAME') ?: 'Sistema');
 
-                $mail->setFrom($fromAddress, $fromName);
-                $mail->addAddress($to, $nome);
-
-                $html = '
-                    <!DOCTYPE html>
-                    <html lang="pt-BR">
-                    <head>
+            $mail->setFrom($fromAddress, $fromName);
+            $mail->addAddress($to, $nome);
+            $mail->isHTML(true);
+            $mail->Subject = 'Redefinição de senha – Primeira Vara Crime de Ilhéus';
+            $mail->Body = '
+                <!DOCTYPE html>
+                <html lang="pt-BR">
+                <head>
                     <meta charset="UTF-8">
-                    <title>Recuperação de Senha</title>
-                    </head>
-                    <body style="margin:0; padding:0; background-color:#f4f6f8; font-family:Arial, Helvetica, sans-serif;">
-
-                    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f6f8; padding:20px 0;">
-                    <tr>
-                        <td align="center">
-
-                        <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff; overflow:hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
-
-                            <tr>
-                            <td style="background-color:#686BFB; padding:20px; text-align:center;">
-                                <span style="color:#ffffff; font-size:18px; font-weight:bold;">
-                                SGC - Primeira Vara Crime de Ilhéus
-                                </span>
+                    <title>Redefinição de senha</title>
+                </head>
+                <body style="margin:0;padding:0;background:#f4f6f8;font-family:Arial,Helvetica,sans-serif;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f8;padding:20px 0;">
+                        <tr>
+                            <td align="center">
+                                <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;box-shadow:0 2px 6px rgba(0,0,0,0.15);">
+                                    <tr>
+                                        <td style="background:#686BFB;padding:20px;text-align:center;color:#ffffff;font-size:18px;font-weight:bold;">
+                                            SGC - Primeira Vara Crime de Ilhéus
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding:30px;color:#333333;font-size:14px;line-height:1.6;">
+                                            <p>Olá, <strong>' . htmlspecialchars($nome, ENT_QUOTES, 'UTF-8') . '</strong>.</p>
+                                            <p>Recebemos uma solicitação para redefinição de senha do seu acesso ao sistema.</p>
+                                            <p>Para continuar, clique no botão abaixo. O link expira em 1 hora e pode ser usado uma única vez.</p>
+                                            <p style="margin:30px 0;text-align:center;">
+                                                <a href="' . htmlspecialchars($resetUrl, ENT_QUOTES, 'UTF-8') . '" style="display:inline-block;background:#ff0040;color:#ffffff;padding:12px 20px;border-radius:6px;text-decoration:none;font-weight:600;">
+                                                    Redefinir senha
+                                                </a>
+                                            </p>
+                                            <p>Se o botão não funcionar, copie e cole este endereço no navegador:</p>
+                                            <p style="word-break:break-all;color:#555555;">' . htmlspecialchars($resetUrl, ENT_QUOTES, 'UTF-8') . '</p>
+                                            <p style="margin-top:30px;font-size:12px;color:#777777;">
+                                                Caso você não tenha solicitado esta recuperação, ignore esta mensagem.
+                                            </p>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="background:#f0f0f0;padding:15px;text-align:center;font-size:11px;color:#666666;">
+                                            © ' . date('Y') . ' Primeira Vara Crime de Ilhéus<br>
+                                            Este é um e-mail automático. Não responda.
+                                        </td>
+                                    </tr>
+                                </table>
                             </td>
-                            </tr>
-
-                            <tr>
-                            <td style="padding:30px; color:#333333; font-size:14px; line-height:1.6;">
-                                <p>Olá, <strong>' . htmlspecialchars($nome, ENT_QUOTES, 'UTF-8') . '</strong>.</p>
-
-                                <p>Recebemos uma solicitação para redefinição de senha do seu acesso ao sistema.</p>
-
-                                <p style="margin:25px 0; text-align:center;">
-                                <span style="display:inline-block; background-color:#ff0040; color:#ffffff; padding:12px 20px; font-size:18px; font-weight: 600; letter-spacing:1px; border-radius:6px;">
-                                    ' . htmlspecialchars($senhaTemp, ENT_QUOTES, 'UTF-8') . '
-                                </span>
-                                </p>
-
-                                <p>Essa é uma <strong>senha temporária</strong>. Recomendamos que você a altere após realizar o login.</p>
-
-                                <p style="margin-top:30px; font-size:12px; color:#777777;">
-                                Caso você não tenha solicitado esta recuperação, ignore esta mensagem.
-                                </p>
-                            </td>
-                            </tr>
-
-                            <tr>
-                            <td style="background-color:#f0f0f0; padding:15px; text-align:center; font-size:11px; color:#666666;">
-                                © ' . date('Y') . ' Primeira Vara Crime de Ilhéus<br>
-                                Este é um e-mail automático. Não responda.
-                            </td>
-                            </tr>
-
-                        </table>
-
-                        </td>
-                    </tr>
+                        </tr>
                     </table>
+                </body>
+                </html>';
 
-                    </body>
-                    </html>';
+            $mail->AltBody =
+                "Olá, {$nome}.\n\n" .
+                "Use o link abaixo para redefinir sua senha (válido por 1 hora):\n{$resetUrl}\n\n" .
+                "Caso você não tenha solicitado esta recuperação, ignore esta mensagem.\n";
 
-
-                $mail->isHTML(true);
-                $mail->Subject = 'Recuperação de senha – Primeira Vara Crime de Ilhéus';
-                $mail->Body    = $html;
-
-                $mail->AltBody =
-                    "Olá, {$nome}.\n\n" .
-                    "Sua senha temporária é: {$senhaTemp}\n\n" .
-                    "Recomendamos que você altere a senha após o login.\n";
-
-                self::debugLog('sendEmail: chamando mail->send()', [], 'C');
-                $mail->send();
-                self::debugLog('sendEmail: mail->send() ok', ['sent' => true], 'C');
-                return ['ok' => true, 'sent' => true];
-
-        } catch (\Throwable $e) {
-            self::debugLog('sendEmail: exceção em send', ['error' => $e->getMessage(), 'ok' => false, 'sent' => false], 'C');
-            error_log('Erro SMTP: ' . $e->getMessage());
+            $mail->send();
+            return ['ok' => true, 'sent' => true];
+        } catch (Throwable $e) {
+            error_log('Erro SMTP reset de senha: ' . $e->getMessage());
             return ['ok' => false, 'sent' => false];
         }
     }
 
+    private function hasRecentPasswordReuse(string $userId, string $novaSenha): bool
+    {
+        $stmtAtual = $this->pdo->prepare('SELECT senha_hash FROM usuarios WHERE id_usuario = ? LIMIT 1');
+        $stmtAtual->execute([$userId]);
+        $atual = $stmtAtual->fetchColumn();
+        if (is_string($atual) && $atual !== '' && Security::verifyPassword($novaSenha, $atual)) {
+            return true;
+        }
 
+        try {
+            $stmtHistorico = $this->pdo->prepare('
+                SELECT senha_hash
+                  FROM historico_senha
+                 WHERE usuario = ?
+              ORDER BY data_alteracao DESC
+                 LIMIT ' . self::PASSWORD_HISTORY_LIMIT
+            );
+            $stmtHistorico->execute([$userId]);
+            $historico = $stmtHistorico->fetchAll(PDO::FETCH_COLUMN);
+        } catch (Throwable $e) {
+            return false;
+        }
+
+        foreach ($historico as $hash) {
+            if (is_string($hash) && $hash !== '' && Security::verifyPassword($novaSenha, $hash)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function updateUserPassword(string $userId, string $passwordHash, bool $invalidateSession): void
+    {
+        try {
+            $stmt = $this->pdo->prepare("
+                UPDATE usuarios
+                   SET senha_hash = ?,
+                       token_acesso = " . ($invalidateSession ? 'NULL' : 'token_acesso') . ",
+                       token_expira = " . ($invalidateSession ? 'NULL' : 'token_expira') . ",
+                       updated_at = NOW()
+                 WHERE id_usuario = ?
+                 LIMIT 1
+            ");
+            $stmt->execute([$passwordHash, $userId]);
+        } catch (PDOException $e) {
+            if (stripos($e->getMessage(), 'updated_at') !== false || stripos($e->getMessage(), 'Unknown column') !== false) {
+                $stmt = $this->pdo->prepare("
+                    UPDATE usuarios
+                       SET senha_hash = ?,
+                           token_acesso = " . ($invalidateSession ? 'NULL' : 'token_acesso') . ",
+                           token_expira = " . ($invalidateSession ? 'NULL' : 'token_expira') . "
+                     WHERE id_usuario = ?
+                     LIMIT 1
+                ");
+                $stmt->execute([$passwordHash, $userId]);
+                return;
+            }
+
+            throw $e;
+        }
+    }
 }

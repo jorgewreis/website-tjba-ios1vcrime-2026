@@ -39,7 +39,7 @@ Perfil técnico com acesso irrestrito a todas as funcionalidades do sistema, foc
 - **Permissões:**
   - Gerenciamento total de usuários (criar, editar, inativar, desbloquear).
   - Configuração de parâmetros do sistema.
-  - Acesso a logs de auditoria e segurança.
+  - Acesso a mecanismos administrativos e técnicos de auditoria e segurança quando existentes no módulo ou no ambiente.
   - Não atua no fluxo processual de negócio (não movimenta processos), mas possui permissão técnica para tal em casos de suporte.
 
 ### 3.2. Perfil: CHEFIA
@@ -127,8 +127,8 @@ Perfil para consulta pontual de informações públicas ou autorizadas.
 Todas as rotas da API e do Frontend devem ser protegidas por um middleware de autorização que verifique:
 
 1.  Se o token de sessão é válido.
-2.  Se o `id_perfil` do usuário possui permissão para o recurso solicitado.
-3.  Se o `id_setor` do usuário corresponde ao setor do dado solicitado (para perfis não-globais).
+2.  Se o usuário possui um perfil válido em `usuario_perfil.perfil` para o recurso solicitado.
+3.  Se a lotação do usuário em `usuario_setor` / `setores` corresponde ao setor do dado solicitado (para perfis não-globais).
 
 ### 5.2. Interface Adaptativa
 
@@ -140,9 +140,4 @@ A interface do usuário (UI) deve ser renderizada condicionalmente:
 
 ### 5.3. Auditoria de Ações
 
-Ações críticas, especialmente as de **Exclusão** (realizadas pela Chefia) e **Edição** (realizadas por Servidores/Estagiários), devem gerar logs de auditoria contendo:
-
-- ID do Usuário.
-- Timestamp da ação.
-- Tipo de ação (DELETE, UPDATE).
-- Dados anteriores e dados novos (para updates).
+Ações críticas, especialmente as de **Exclusão** (realizadas pela Chefia) e **Edição** (realizadas por Servidores/Estagiários), devem gerar registros operacionais ou de auditoria de forma compatível com o módulo, contendo ao menos identificação do usuário, horário, tipo de ação e contexto funcional. Quando o fluxo já suportar trilha detalhada, devem ser preservados também os valores anteriores e posteriores relevantes.

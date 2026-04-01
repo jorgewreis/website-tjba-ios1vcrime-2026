@@ -184,19 +184,37 @@ final class CartasExpedidasSubtarefasRepository
 
     public function marcarConcluida(string $id): void
     {
+        $this->marcarConcluidaComDados($id, null);
+    }
+
+    public function marcarConcluidaComDados(string $id, ?string $dadosJson): void
+    {
         $id = trim($id);
         if ($id === '') {
             throw new InvalidArgumentException('ID da subtarefa é obrigatório.');
         }
 
-        $statement = $this->connection->prepare(
-            sprintf(
-                'UPDATE `%s` SET `status` = :status, `updated_at` = NOW() WHERE `id` = :id LIMIT 1',
-                $this->table
-            )
-        );
-        $statement->bindValue(':status', self::STATUS_CONCLUIDA);
-        $statement->bindValue(':id', $id);
+        if ($dadosJson !== null && $dadosJson !== '') {
+            $statement = $this->connection->prepare(
+                sprintf(
+                    'UPDATE `%s` SET `status` = :status, `dados_especificos` = :dados, `updated_at` = NOW() WHERE `id` = :id LIMIT 1',
+                    $this->table
+                )
+            );
+            $statement->bindValue(':status', self::STATUS_CONCLUIDA);
+            $statement->bindValue(':dados', $dadosJson);
+            $statement->bindValue(':id', $id);
+        } else {
+            $statement = $this->connection->prepare(
+                sprintf(
+                    'UPDATE `%s` SET `status` = :status, `updated_at` = NOW() WHERE `id` = :id LIMIT 1',
+                    $this->table
+                )
+            );
+            $statement->bindValue(':status', self::STATUS_CONCLUIDA);
+            $statement->bindValue(':id', $id);
+        }
+
         $statement->execute();
     }
 

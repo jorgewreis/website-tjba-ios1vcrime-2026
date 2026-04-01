@@ -25,30 +25,15 @@ final class DataJudService
         $body = [
             'query' => [
                 'bool' => [
-                    'must' => [
+                    'should' => [
+                        ['match' => ['numeroProcesso' => $numero]],
                         ['term' => ['numeroProcesso' => $numero]],
                     ],
+                    'minimum_should_match' => 1,
                 ],
             ],
             'size' => 1,
-            '_source' => [
-                'numeroProcesso',
-                'classeProcessual',
-                'classe',
-                'assuntos',
-                'polo',
-                'prioridade',
-                'tribunal',
-                'movimentos',
-                'orgaoJulgador',
-                'nivelSigilo',
-                'grau',
-                'formato',
-                'sistema',
-                'dataHoraUltimaAtualizacao',
-                'dataAjuizamento',
-                'id',
-            ],
+            '_source' => true,
         ];
 
         $ch = curl_init($this->config['endpoint']);
@@ -66,7 +51,6 @@ final class DataJudService
 
         $response = curl_exec($ch);
         $error = curl_error($ch);
-        curl_close($ch);
 
         if ($response === false) {
             throw new RuntimeException('Falha ao contatar o DataJud: ' . $error);
@@ -79,13 +63,15 @@ final class DataJudService
 
         $source = $decoded['hits']['hits'][0]['_source'];
 
+        $poloPassivo = $this->extractPartNamesFromPolos($source);
+
         return [
             'numero' => $source['numeroProcesso'] ?? $numero,
             'tribunal' => $source['tribunal'] ?? 'TJBA',
             'classe' => $this->formatarClasse($source),
             'assuntos' => $this->formatarAssuntos($source['assuntos'] ?? []),
             'prioridades' => $this->formatarPrioridades($source['prioridade'] ?? []),
-            'polo_passivo' => $this->formatarPolo($source['polo'] ?? []),
+            'polo_passivo' => $poloPassivo,
             'movimentos' => $this->formatarMovimentos($source['movimentos'] ?? []),
             'orgao_julgador' => $this->formatarOrgao($source['orgaoJulgador'] ?? []),
             'nivel_sigilo' => $source['nivelSigilo'] ?? null,
@@ -222,5 +208,20 @@ final class DataJudService
             }
         }
         return array_values(array_unique($passivo));
+    }
+
+    private function extractPartNamesFromPolos(array $source): array
+    {
+        $nomes = [];
+        foreach (['polo', 'poloAtivo', 'poloPassivo'] as $campo) {
+            $extraidos = $this->formatarPolo((array) ($source[$campo] ?? []));
+            foreach ($extraidos as $nome) {
+                $v = trim((string) $nome);
+                if ($v !== '') {
+                    $nomes[$v] = true;
+                }
+            }
+        }
+        return array_values(array_keys($nomes));
     }
 }
