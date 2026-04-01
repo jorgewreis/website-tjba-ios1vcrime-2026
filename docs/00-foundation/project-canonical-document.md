@@ -9,7 +9,7 @@ authors:
   - "Jorge Reis"
 decisions:
   stack: "PHP · MySQL · HTML/CSS/JavaScript"
-  architecture: "Aplicação web PHP customizada com área restrita em iframe e APIs internas em public/api"
+  architecture: "Aplicação web PHP customizada com área restrita em iframe e superfície oficial de APIs em public/api"
   versioning: "VERSION/CHANGELOG/docs/90-releases orientam releases Patch/Minor/Major"
 ---
 
@@ -40,7 +40,8 @@ O fluxo principal do sistema usa:
 - `public/login.php` para autenticação;
 - `public/home.php` como shell autenticado;
 - `public/frame.php` para carregamento das páginas internas no iframe;
-- `public/api/` como superfície principal de endpoints HTTP internos.
+- `public/api/` como superfície oficial de endpoints HTTP internos.
+- `public/admin/api/` apenas como namespace auxiliar legado ainda ativo para compatibilidade do shell autenticado.
 
 O backend é responsável por validação, autorização, acesso a dados e orquestração das regras do sistema.
 Bibliotecas de terceiros podem existir de forma pontual, mas **não definem a arquitetura do projeto**.
@@ -69,7 +70,7 @@ A estrutura oficial do repositório é orientada pelo código atual:
 - `scripts/` reúne automações e utilitários operacionais;
 - `tools/` reúne ferramentas auxiliares de desenvolvimento e IA.
 
-Há ainda uma árvore `api/` na raiz do repositório que não compõe a arquitetura principal atual e deve ser tratada separadamente em revisão específica.
+Há ainda uma árvore `api/` na raiz do repositório que não compõe a arquitetura principal atual. Ela deve ser tratada como **legado não canônico**, sem novas evoluções até que seja migrada ou removida de forma planejada.
 
 ## Regras de versionamento
 As versões continuam sendo controladas por `VERSION`, `CHANGELOG.md` e `docs/90-releases/`.
@@ -82,7 +83,9 @@ As seguintes restrições passam a valer como diretriz obrigatória:
 - manter a interface principal compatível com **HTML, CSS e JavaScript** sem dependência de framework frontend obrigatório;
 - manter o backend em **PHP** com acesso a dados em **MySQL**;
 - preservar a separação entre arquivos públicos (`public/`) e lógica interna (`app/`, `config/`, `database/`);
-- manter endpoints internos alinhados à estrutura oficial do projeto, com prioridade para `public/api/`.
+- manter endpoints internos alinhados à estrutura oficial do projeto, usando `public/api/` como base para novos contratos;
+- não usar a árvore `api/` da raiz como superfície oficial;
+- preservar `public/admin/api/` apenas enquanto houver dependências de compatibilidade.
 
 ## Decisões já tomadas
 As decisões abaixo passam a ser referência oficial:

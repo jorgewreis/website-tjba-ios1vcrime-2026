@@ -160,7 +160,7 @@ Padrão de navegação do sistema:
 - **Processamento de autenticação:** `public/login.php`
 - **Após login:** redireciona para `public/home.php`
 - **Páginas internas:** exibidas dentro de um **iframe** no shell autenticado e resolvidas por `public/frame.php?page=...`
-- **APIs internas:** concentradas principalmente em `public/api/`, com alguns endpoints auxiliares em `public/admin/api/`
+- **APIs internas:** a superfície oficial atual está em `public/api/` (incluindo grupos como `public/api/admin/`); `public/admin/api/` permanece ativo apenas para endpoints auxiliares de compatibilidade da área autenticada
 - **Logout:** após logout bem-sucedido, redirecionar para `public/index.php`
 
 ---
@@ -341,12 +341,12 @@ Pastas principais no repositório:
 
 - `app/` — código principal do sistema, com `access`, `controllers`, `helpers`, `middlewares`, `models`, `repositories`, `rules`, `services` e `views`.
 - `config/` e `database/` — parâmetros de runtime, segurança, schema, migrations, seeds e scripts SQL auxiliares.
-- `public/` — entrypoints (`index.php`, `login.php`, `home.php`, `frame.php`), APIs em `public/api/` e `public/admin/api/`, além de `assets/`, `documents/` e `templates/`.
+- `public/` — entrypoints (`index.php`, `login.php`, `home.php`, `frame.php`), superfície oficial de APIs em `public/api/`, endpoints auxiliares legados em `public/admin/api/`, além de `assets/`, `documents/` e `templates/`.
 - `storage/` — runtime local, com logs, uploads e backups.
 - `docs/` — documentação técnica, funcional, operacional e de releases.
 - `scripts/` — automações e utilitários de manutenção do repositório.
 - `tools/` — auxiliares de desenvolvimento, incluindo ferramentas de IA.
-- `api/` — scripts e endpoints antigos que exigem revisão separada antes de serem tratados como superfície oficial.
+- `api/` — scripts antigos (`users.php`, `guia.php`, `documents.php`, `notifications.php`, `guia_pdf.php`) mantidos apenas como legado do repositório; não compõem a superfície oficial atual e não devem receber evolução sem refatoração explícita.
 
 Fluxo **número CNJ → classe processual** (DataJud + cadastro local): ver [`docs/00-foundation/datajud-classe-processo-bd-sync.md`](docs/00-foundation/datajud-classe-processo-bd-sync.md) e [`public/assets/js/modules/datajud/README.md`](public/assets/js/modules/datajud/README.md).
 

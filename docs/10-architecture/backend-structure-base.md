@@ -35,8 +35,9 @@ Abaixo esta a estrutura principal do backend e das camadas relacionadas:
     - **login.php**: processamento de autenticacao
     - **home.php**: shell autenticado
     - **frame.php**: carregamento das paginas internas
-    - **api/**: endpoints internos principais
-    - **admin/api/**: endpoints auxiliares administrativos
+    - **api/**: superficie oficial de endpoints internos
+    - **api/admin/**: endpoints administrativos que ja seguem a superficie oficial
+    - **admin/api/**: endpoints auxiliares legados ainda ativos por compatibilidade
     - **assets/**: CSS, JavaScript, imagens, templates e recursos estaticos
   - **storage/**
     - **logs/**
@@ -45,7 +46,7 @@ Abaixo esta a estrutura principal do backend e das camadas relacionadas:
   - **docs/**
   - **scripts/**
 
-Observacao: existe tambem uma pasta **`api/`** na raiz do repositorio, mas ela nao representa a superficie principal atual da aplicacao e deve ser tratada separadamente em auditoria propria.
+Observacao: existe tambem uma pasta **`api/`** na raiz do repositorio, mas ela nao representa a superficie principal atual da aplicacao. Hoje ela deve ser tratada como legado nao canonico.
 
 ## 3. Camada de Conexao
 
@@ -102,12 +103,22 @@ A superficie principal de endpoints internos do sistema fica em:
 
 - `public/api/`
 
-Ela contem grupos de endpoints por modulo, como cartorio, gabinete, audiencias, consultas e entidades auxiliares.
+Ela contem grupos de endpoints por modulo, como cartorio, gabinete, audiencias, consultas, pessoas, processos e entidades auxiliares.
+Dentro dela, ja existe tambem o agrupamento:
+
+- `public/api/admin/`
+
+para alguns fluxos administrativos mais novos, como feriados.
+
 Os endpoints de apoio administrativo mais antigos ficam em:
 
 - `public/admin/api/`
 
-Novas rotas e novos contratos devem ser documentados a partir da estrutura oficial do projeto, evitando dispersao entre diretorios paralelos.
+Esses endpoints antigos ainda fazem parte do runtime, mas nao devem ser a base para novos contratos.
+
+A pasta `api/` na raiz do repositorio contem scripts antigos fora da superficie oficial atual. Ela nao deve ser usada para novos endpoints, para testes normativos ou como referencia de arquitetura.
+
+Novas rotas e novos contratos devem ser documentados a partir de `public/api/`, evitando dispersao entre diretorios paralelos.
 
 ## 8. Diretrizes de Manutencao
 

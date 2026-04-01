@@ -77,11 +77,27 @@ Além das integrações com serviços externos, a solução expõe uma API inter
 
 A API interna é responsável por disponibilizar, em formato programático, funcionalidades como gestão de audiências, tarefas internas, expedições, notificações, painéis de produtividade, perfis e configurações. A forma como esses recursos são expostos deve considerar tanto a estabilidade a longo prazo quanto a capacidade de evolução controlada.
 
-### 4.1 Padrão de versionamento e estrutura de endpoints
+### 4.1 Estrutura atual de endpoints e diretriz de evolução
 
-A API interna deve ser explicitamente versionada, preferencialmente por meio de prefixo de URL (por exemplo, `/api/v1/...`), de modo que alterações incompatíveis sejam introduzidas em novas versões, sem impactar clientes que utilizam versões anteriores. Cada versão deve possuir documentação própria, descrevendo os endpoints disponíveis, parâmetros obrigatórios e opcionais, formatos de requisição e resposta, além de exemplos de uso.
+No estado atual do projeto, a API interna **não utiliza prefixo de versionamento em URL** como `/api/v1/...`.
 
-Os endpoints devem ser organizados de forma coerente com o domínio funcional, agrupando recursos por contexto: audiências, cartas, ofícios, medidas protetivas, notificações, perfis, usuários, produtividade e configurações gerais. Sempre que possível, deve-se seguir princípios RESTful (uso adequado de métodos HTTP, códigos de status padronizados, representações consistentes), sem impedir a criação de endpoints específicos para ações de negócio que não se encaixem perfeitamente em operações CRUD tradicionais.
+A superfície oficial vigente é:
+
+- `public/api/` como base dos endpoints internos do sistema;
+- `public/api/admin/` para grupos administrativos que já seguem essa superfície;
+- `public/admin/api/` apenas para endpoints auxiliares legados ainda consumidos pelo shell autenticado, como verificação de token e leitura de perfis.
+
+Além dessas áreas, existe uma pasta `api/` na raiz do repositório contendo scripts antigos (`users.php`, `guia.php`, `documents.php`, `notifications.php`, `guia_pdf.php`). Essa árvore **não é canônica**, não deve ser tratada como contrato oficial e não deve receber novas evoluções sem refatoração planejada.
+
+Os endpoints oficiais atuais estão organizados por domínio funcional, com grupos como:
+
+- cartório (`cartorio-cartas-expedidas`, `cartorio-cartas-recebidas`, `cartorio-guias`, `cartorio-oficios`, `cartorio-medidas-protetivas`, `cartorio-cejusc`, `cartorio-ceapa`, `cartorio-editais`);
+- gabinete (`gabinete-reus-presos`, `gabinete-oficios`, `gabinete-monitoramento-eletronico`);
+- audiências (`sala-audiencias-pauta`, `sala-audiencias-ata`);
+- entidades auxiliares (`pessoas`, `instituicoes-publicas`, `processos`, `processos-partes`, `consulta-processos`, `cep`, `datajud`);
+- administração (`public/api/admin/feriados`).
+
+Como diretriz de evolução, novas mudanças incompatíveis **podem** futuramente adotar versionamento explícito, mas isso ainda não faz parte da implementação atual. Até que exista uma decisão formal de migração, a documentação deve refletir o contrato real sem inventar uma versão em URL que o sistema ainda não expõe.
 
 ### 4.2 Autenticação da API interna
 
@@ -185,7 +201,7 @@ Uma vez aprovada, a nova integração deve ser incorporada à arquitetura por me
 
 ### 8.2 Versionamento e descontinuação de integrações
 
-Sempre que uma integração exigir mudança incompatível com a versão atual (por exemplo, alteração de contrato por parte do provedor ou migração para serviço alternativo), deve ser adotada estratégia de versionamento que permita a convivência temporária de versões antiga e nova, com período de transição bem definido. Durante esse período, o sistema pode suportar ambos os caminhos, migrando gradualmente fluxos internos até a desativação definitiva da versão anterior.
+Sempre que uma integração exigir mudança incompatível com a versão atual (por exemplo, alteração de contrato por parte do provedor ou migração para serviço alternativo), deve ser adotada estratégia de versionamento que permita a convivência temporária de versões antiga e nova, com período de transição bem definido. Para a API interna, isso significa que uma futura adoção de `/api/v1/...` ou namespace equivalente deve ser tratada como mudança arquitetural planejada, e não presumida como já existente.
 
 A descontinuação de integrações antigas deve ser precedida de monitoramento que comprove ausência de uso ativo ou residual. Após a desativação, credenciais associadas devem ser revogadas, configurações removidas ou arquivadas com segurança, e a documentação técnica atualizada para refletir o estado real do ambiente. O histórico de decisões de descontinuação deve ser preservado, permitindo rastrear motivos, datas e impactos observados.
 
