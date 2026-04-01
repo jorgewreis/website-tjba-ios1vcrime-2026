@@ -42,4 +42,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **chore(env): remover arquivo de configuração .env por motivos de segurança** `[2ec9af4]`
 - **Feat: Implement security enhancements and password policy updates across the application** `[acd2a60]`
 - **feat(security): aprimorar políticas de autenticação e recuperação de senha com tokens hasheados e expiração** `[22421e6]`
+- **Fix: Refine architecture documentation, enhance security policies, and update performance requirements** `[d7bdc7e]`
 
