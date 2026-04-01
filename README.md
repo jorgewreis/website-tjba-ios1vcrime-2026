@@ -360,7 +360,7 @@ Após clonar o repositório, configure os hooks:
 
 ## Operação e pós-deploy
 
-O workflow de deploy do ambiente `develop` sincroniza arquivos e recarrega serviços, mas **não executa migrações SQL automaticamente**.
+O workflow de deploy do ambiente oficial sincroniza arquivos e recarrega serviços, mas **não executa migrações SQL automaticamente**.
 
 Antes de considerar uma implantação concluída, valide:
 
@@ -373,10 +373,11 @@ Referência operacional:
 
 - [`docs/40-operations/auth-security-runbook.md`](docs/40-operations/auth-security-runbook.md)
 
-## Deploy automático para dev.ios1vcrime.com.br
+## Deploy automático para produção
 
-O branch `develop` é conectado ao workflow `.github/workflows/deploy-dev.yml`.
-Cada push aprovado nesse branch dispara a sincronização automatizada com o subdomínio `dev.ios1vcrime.com.br`, que consome o conteúdo vivo da pasta `public/`. Garanta que só arquivos públicos (HTML, CSS, JS, assets) estejam sob `public/`, pois qualquer script ou arquivo sensível deve ficar em `app/`, `config/`, `storage/` ou em `tools/`.
+O branch `main` é conectado ao workflow `.github/workflows/deploy-prod.yml`.
+Cada push aprovado nesse branch dispara a sincronização automatizada com `ios1vcrime.com.br`. O workflow de `dev` permanece disponível apenas por disparo manual em `.github/workflows/deploy-dev.yml`.
+Garanta que só arquivos públicos (HTML, CSS, JS, assets) estejam sob `public/`, pois qualquer script ou arquivo sensível deve ficar em `app/`, `config/`, `storage/` ou em `tools/`.
 
 ## Contexto Ativo (estado atual)
 

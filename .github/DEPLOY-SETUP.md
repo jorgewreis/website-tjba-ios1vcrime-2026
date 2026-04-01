@@ -1,8 +1,8 @@
-# Configuração do servidor para deploy (DEV)
+# Configuração do servidor para deploy (DEV e PROD)
 
 Se o workflow **Sync files to server** falhar com `rsync: [receiver] open "..." failed: Permission denied (13)`, o usuário de deploy não tem permissão de escrita no diretório do site no servidor.
 
-Os **secrets** (`DEPLOY_USER`, `DEV_PATH`) não podem ser lidos no GitHub depois de salvos. Use as dicas abaixo para saber qual usuário e caminho usar.
+Os **secrets** (`DEPLOY_USER`, `DEV_PATH`, `PROD_PATH`) não podem ser lidos no GitHub depois de salvos. Use as dicas abaixo para saber qual usuário e caminho usar.
 
 ---
 
@@ -13,10 +13,11 @@ Os **secrets** (`DEPLOY_USER`, `DEV_PATH`) não podem ser lidos no GitHub depois
    - No **CloudPanel**: é o usuário do site (ex.: `clp_abc123`), que aparece em Sites → seu site → usuário/detalhes.  
    - Ou conecte por SSH com a chave do deploy e rode `whoami` — o resultado é o `DEPLOY_USER`.
 
-2. **Caminho do site (`DEV_PATH`)**  
-   É o diretório no servidor onde o código do site deve ficar.  
+2. **Caminho do site (`DEV_PATH` e `PROD_PATH`)**  
+   São os diretórios no servidor onde o código de cada ambiente deve ficar.  
    - No **CloudPanel**: Sites → seu site → **Document Root** ou caminho do site (ex.: `/home/clp_abc123/htdocs/ios1vcrime`).  
-   - Ou anote o caminho que você usou quando criou o secret `DEV_PATH` no GitHub.
+   - Para `DEV_PATH`, use o document root do `dev.ios1vcrime.com.br`.
+   - Para `PROD_PATH`, use o document root do `ios1vcrime.com.br`.
 
 ---
 
@@ -43,4 +44,4 @@ Como **root** no servidor:
 chown -R clp_abc123: /home/clp_abc123/htdocs/ios1vcrime
 ```
 
-Depois disso, rode o workflow de deploy de novo; o rsync deve concluir sem "Permission denied".
+Depois disso, rode o workflow de deploy correspondente de novo; o rsync deve concluir sem "Permission denied".

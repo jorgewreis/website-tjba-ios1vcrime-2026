@@ -6,7 +6,8 @@ Este runbook consolida os passos operacionais mínimos para deploy, validação 
 
 ## 2. Premissas importantes
 
-- o workflow [`deploy-dev.yml`](../../.github/workflows/deploy-dev.yml) sincroniza arquivos e recarrega serviços;
+- o workflow [`deploy-prod.yml`](../../.github/workflows/deploy-prod.yml) sincroniza arquivos e recarrega serviços em produção;
+- o workflow [`deploy-dev.yml`](../../.github/workflows/deploy-dev.yml) permanece disponível apenas para disparo manual no ambiente de desenvolvimento;
 - o deploy automatizado **não executa migrações SQL automaticamente**;
 - portanto, qualquer mudança de banco exigida pela release precisa ser aplicada manualmente no ambiente.
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.09
+
+**Data:** 2026-04-01 20:54:49 | **Commit:** `142c202` | **Tipo:** `minor`
+
+- feat: atualizar configuração de deploy para incluir ambiente de produção e ajustar documentação
+
 ## V. 1.08
 
 **Data:** 2026-04-01 20:51:52 | **Commit:** `08148eb` | **Tipo:** `minor`
@@ -3858,6 +3864,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

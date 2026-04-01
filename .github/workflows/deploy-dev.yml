@@ -1,8 +1,6 @@
-name: Deploy DEV (develop -> dev.ios1vcrime.com.br)
+name: Deploy DEV (manual -> dev.ios1vcrime.com.br)
 
 on:
-  push:
-    branches: ["develop"]
   workflow_dispatch:
 
 jobs:

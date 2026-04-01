@@ -20,8 +20,8 @@ Use este checklist para guardar passos e confirmar que os acessos necessários e
    - [ ] Confirmar rotação e leitores autorizados.
 
 3. Deploy e CI
-   - [ ] Verificar workflow referente a deploy em `develop` (GitHub Actions / CI).
-   - [ ] Validar que deploy automático aponta para `dev.ios1vcrime.com.br`.
+   - [ ] Verificar workflow referente a deploy em `main` (GitHub Actions / CI).
+   - [ ] Validar que deploy automático aponta para `ios1vcrime.com.br`.
    - [ ] Confirmar rollback procedure e backups.
 
 4. Acesso de emergência
