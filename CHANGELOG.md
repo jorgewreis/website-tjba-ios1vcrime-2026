@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.08
+
+**Data:** 2026-04-01 20:51:52 | **Commit:** `08148eb` | **Tipo:** `minor`
+
+- feat: criar script de migração para a tabela de Produtividade e implementar página de relatórios de produtividade com filtros
+
 ## V. 1.07
 
 **Data:** 2026-04-01 20:34:33 | **Commit:** `d2719d9` | **Tipo:** `minor`
@@ -3852,6 +3858,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
