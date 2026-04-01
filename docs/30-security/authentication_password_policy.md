@@ -1,79 +1,116 @@
 # Política de Autenticação e Senha
 
 ## 1. Objetivo
-Este documento descreve o modelo oficial de autenticação atualmente adotado pelo sistema e as regras mínimas relacionadas a senha, sessão e proteção do fluxo autenticado.
+Este documento descreve o modelo oficial de autenticação, sessão, senha e recuperação atualmente adotado pelo sistema.
 
 ## 2. Modelo oficial de autenticação
 O sistema utiliza **sessão PHP com validação server-side** como fluxo principal de autenticação.
 
-O processo ocorre da seguinte forma:
+O processo oficial ocorre assim:
 
 1. o usuário envia CPF e senha para `public/login.php`;
 2. o backend valida as credenciais;
 3. em caso de sucesso, a aplicação regenera o identificador de sessão;
 4. o backend grava em `$_SESSION` os dados essenciais do usuário autenticado;
 5. o backend gera um token aleatório;
-6. esse token é persistido no banco de dados com expiração;
-7. a cada acesso autenticado, o sistema valida a sessão PHP e confirma no banco se o token ainda é válido.
+6. esse token é **hasheado** antes de ser persistido em `usuarios.token_acesso`;
+7. o hash do token é mantido no banco com prazo de expiração;
+8. a cada acesso autenticado, o sistema valida a sessão PHP, verifica o timeout de inatividade e confirma no banco se o token ainda é válido.
 
 Componentes principais do fluxo:
 
+- `config/config.php`
 - `config/security.php`
 - `public/login.php`
 - `public/home.php`
+- `public/frame.php`
 - `public/admin/api/checkToken.php`
 - `public/admin/api/getPerfis.php`
 - `app/models/Usuario.php`
 
-## 3. Sessão e estado autenticado
+## 3. Sessão e cookies
 O estado autenticado é controlado pelo backend por meio de sessão PHP.
 
-Diretrizes:
+Diretrizes vigentes:
 
 - o navegador não é a fonte de verdade da autenticação;
 - `$_SESSION` é o estado principal da navegação autenticada;
 - o token persistido no banco funciona como segunda validação de consistência e expiração;
-- o logout deve invalidar a sessão local e limpar o token persistido do usuário;
+- o logout invalida a sessão local e limpa o token persistido do usuário;
 - preferências de interface armazenadas em `sessionStorage` não equivalem a autenticação.
 
-## 4. Requisitos atuais de senha
-No estado atual do sistema, a política funcional mínima adotada pelo código é:
+Bootstrap e endurecimento de sessão:
+
+- os parâmetros de sessão são configurados antes de `session_start()`;
+- o cookie de sessão usa `HttpOnly`;
+- o cookie usa `SameSite=Lax`;
+- o atributo `Secure` é aplicado quando a requisição está em HTTPS;
+- `session.use_strict_mode=1` e `session.use_only_cookies=1` fazem parte do bootstrap oficial;
+- existe expiração absoluta baseada em `SESSION_LIFETIME` e timeout de inatividade de **60 minutos** baseado em `SESSION_IDLE_TIMEOUT`.
+
+## 4. Controle de tentativas de login
+O fluxo oficial de login aplica contenção de tentativas mal-sucedidas no backend, antes da criação da sessão autenticada.
+
+Política atual:
+
+- janela de observação de **15 minutos**;
+- limite base de **5 tentativas** por janela;
+- controle por **IP** e por **CPF**;
+- bloqueio temporário **progressivo**, com aumento da duração a cada reincidência;
+- persistência em backend por meio da tabela `login_rate_limits`, com fallback defensivo em sessão quando a estrutura persistente não estiver disponível.
+
+Componentes principais:
+
+- `public/login.php`
+- `app/services/LoginRateLimiter.php`
+- `database/migrations/20260401_login_rate_limits.sql`
+
+## 5. Política oficial de senha
+A política oficial de senha foi unificada.
+
+Regras vigentes:
 
 - hashing com `password_hash` usando `PASSWORD_ARGON2ID`;
 - verificação com `password_verify`;
-- exigência mínima de comprimento conforme o fluxo implementado em cada tela;
-- transmissão de credenciais somente por requisição HTTP ao backend;
-- armazenamento de senha apenas em formato hash.
+- mínimo de **10 caracteres**;
+- exigência de ao menos **1 letra maiúscula**, **1 minúscula**, **1 número** e **1 símbolo**;
+- armazenamento de senha apenas em formato hash;
+- proibição de reutilização da senha atual;
+- bloqueio de reutilização recente com base em `historico_senha`, quando a estrutura estiver disponível.
 
-Observação importante:
+Essa política deve ser respeitada pelos fluxos de:
 
-- existem divergências entre fluxos de criação, alteração e recuperação de senha no sistema atual;
-- este documento descreve o modelo de autenticação oficial, mas a uniformização completa da política de senha deve ser tratada em revisão específica.
+- criação de usuários;
+- cadastro de estudantes;
+- alteração de senha;
+- redefinição por recuperação.
 
-## 5. Controle de tentativas e sessão
-O login atual aplica contenção de tentativas mal-sucedidas com base na sessão do usuário anônimo antes da autenticação.
+## 6. Recuperação e redefinição de senha
+O fluxo oficial de recuperação de senha não envia mais senha temporária por e-mail.
 
-Estado atual documentado:
+Fluxo vigente:
 
-- limite de 5 tentativas dentro de uma janela de 15 minutos no fluxo de login principal;
-- o bloqueio atual não é um bloqueio persistente por conta;
-- a checagem é feita no backend antes da criação da sessão autenticada.
+1. o usuário informa CPF e e-mail em `public/recupera_senha.php`;
+2. o backend valida a combinação e emite um token aleatório;
+3. o token é **hasheado** antes de ser persistido em `recuperacao_senha`;
+4. o sistema envia ao usuário um **link de redefinição** com token de uso único;
+5. o link expira em **1 hora**;
+6. a nova senha é definida em `public/redefinir_senha.php`;
+7. ao concluir a redefinição, o token de recuperação é marcado como usado e a sessão anterior do usuário é invalidada.
 
-Essa política reflete o comportamento atual do código e pode ser revista separadamente em endurecimento de segurança.
+Componentes principais:
 
-## 6. Recuperação de senha
-O fluxo de recuperação de senha deve ser documentado de acordo com a implementação efetiva do sistema.
-
-No estado atual:
-
-- a recuperação não depende do modelo oficial de sessão autenticada;
-- a autenticação principal da Área Restrita continua sendo sessão PHP com token persistido em banco;
-- qualquer refatoração futura do reset de senha deve preservar a coerência com esse modelo.
+- `public/recupera_senha.php`
+- `public/envia_mail.php`
+- `public/redefinir_senha.php`
+- `app/services/PasswordResetService.php`
 
 ## 7. Regras de armazenamento e transporte
 - credenciais não devem ser armazenadas em texto puro;
 - senhas não devem ser registradas em logs;
-- tokens persistidos e dados de sessão não devem ser expostos ao frontend como mecanismo primário de autenticação;
+- tokens de sessão e tokens de recuperação devem ser persistidos em formato hash;
+- dados de sessão não devem ser expostos ao frontend como mecanismo primário de autenticação;
+- o fluxo de recuperação deve usar token com expiração e uso único;
 - a aplicação deve operar preferencialmente sob HTTPS nos ambientes implantados.
 
 ## 8. Diretriz canônica
@@ -82,5 +119,7 @@ Até nova decisão arquitetural formal, o sistema **não adota JWT em `sessionSt
 O modelo oficial vigente é:
 
 - **sessão PHP**
-- **token aleatório persistido no banco**
+- **token aleatório persistido em hash no banco**
 - **validação server-side em páginas e endpoints internos**
+- **timeout de inatividade de 60 minutos**
+- **reset por link com token único e expiração**

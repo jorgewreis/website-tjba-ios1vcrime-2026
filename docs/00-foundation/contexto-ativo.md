@@ -20,14 +20,15 @@ authors:
 ## O problema atual
 - As páginas internas ainda dependem de scripts legados (menu, controle de seções) que precisam ser verificadas contra a nova implementação em `public/assets/js/shared/menu.js`.
 - A camada de documentação e o README não estão totalmente em sincronia com a nova organização física das pastas e arquivos (assets, configs, scripts).
-- O fluxo de autenticação da área interna usa sessão PHP e token aleatório persistido no banco; qualquer mudança precisa preservar a decisão registrada no canônico do projeto.
+- O fluxo de autenticação da área interna usa sessão PHP, token persistido em hash no banco, timeout de inatividade e reset por link único; qualquer mudança precisa preservar a decisão registrada no canônico do projeto.
 
 ## O que já foi testado
 - Realizadas inspeções manuais dos entrypoints `public/index.php`, `public/home.php` e `public/recupera_senha.php` para garantir que carreguem os estilos e scripts redistribuídos.
 - Os arquivos JS compartilhados foram validados visualmente (sem testes automáticos) em um carregamento básico do browser para confirmar que `App.CPF`, `App.Auth` e `App.Menu` estão definidos antes dos handlers de DOM.
+- O endurecimento de autenticação foi validado manualmente após deploy, incluindo login, sessão, troca de senha e fluxo de redefinição.
 
 ## O que NÃO pode ser alterado
-- A stack oficial baseada em PHP, MySQL, HTML, CSS e JavaScript, além do modelo de autenticação por sessão PHP com token persistido em banco, conforme documentado nos arquivos canônicos atuais.
+- A stack oficial baseada em PHP, MySQL, HTML, CSS e JavaScript, além do modelo de autenticação por sessão PHP com token persistido em hash no banco, conforme documentado nos arquivos canônicos atuais.
 - A governança de versionamento (arquivo `VERSION`, `CHANGELOG.md`, pastas `docs/90-releases/`) e o uso de `public/` exclusivamente para recursos expostos.
 - As decisões de arquitetura já consolidadas (painel admin em iframe, separação de áreas públicas/restritas, IDs com prefixos semânticos).
 
@@ -43,12 +44,17 @@ authors:
 - `public/login.php`
 - `public/logout.php`
 - `public/recupera_senha.php`
+- `public/redefinir_senha.php`
 - `public/envia_mail.php`
 - `public/admin/api/checkToken.php`
 - `public/admin/api/getPerfis.php`
 - `app/models/Usuario.php`
 - `app/helpers/Conection.php`
 - `app/services/PasswordResetService.php`
+- `app/services/LoginRateLimiter.php`
+- `config/security.php`
+- `config/config.php`
+- `database/migrations/20260401_login_rate_limits.sql`
 - `public/assets/css/shared/layout.css`
 - `public/assets/css/shared/components.css`
 - `public/assets/css/shared/forms.css`

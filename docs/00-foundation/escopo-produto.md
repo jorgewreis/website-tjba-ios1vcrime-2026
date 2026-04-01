@@ -114,11 +114,11 @@ O escopo técnico é definido pelo Documento de Arquitetura de Software (SAD), q
 
 ### 3.1 Stack tecnológica principal
 
-- Backend: PHP com framework Laravel.
-- Frontend: HTML, CSS, JavaScript, com uso de Bootstrap; evolução planejada para SCSS (Sass) e TypeScript.
+- Backend: PHP customizado.
+- Frontend: HTML, CSS e JavaScript, sem framework obrigatório.
 - Banco de dados: MySQL.
 - Servidor web: Nginx (com PHP-FPM).
-- Autenticação: sessão PHP com validação server-side e token aleatório persistido no banco.
+- Autenticação: sessão PHP com validação server-side, token persistido em hash no banco, timeout de inatividade e reset por link com expiração.
 - E-mail: SMTP.
 - Logs/observabilidade: AWS CloudWatch.
 - Storage de arquivos: disco local do servidor.

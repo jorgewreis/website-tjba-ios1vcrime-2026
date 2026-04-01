@@ -59,7 +59,7 @@ O **Sistema de Gestão do Cartório** foi desenvolvido para apoiar atividades in
 Área acessível antes do login, voltada ao acesso e manutenção de conta:
 
 - **Login** (entrada principal: `index.php`)
-- **Recuperação de senha**
+- **Recuperação de senha por link de redefinição**
 - **Cadastro de novo usuário**
 
 ---
@@ -307,8 +307,12 @@ Esse padrão unifica o comportamento visual de todas as páginas internas de lis
 - Validação e sanitização **server-side** em formulários e endpoints
 - Uso de **prepared statements** para reduzir risco de SQL Injection
 - Proteções contra XSS/CSRF (conforme arquitetura adotada)
+- Sessão PHP com bootstrap endurecido (`HttpOnly`, `SameSite`, `strict mode`, `use_only_cookies`)
+- Timeout de inatividade de 60 minutos na área autenticada
+- Rate limit de login por IP/CPF com bloqueio temporário progressivo
+- Persistência de token de sessão em **hash** no banco
 - Restringir acesso direto a scripts sensíveis e arquivos de configuração
-- Recuperação de senha com fluxo seguro (token/expiração), quando aplicável
+- Recuperação de senha com **link de uso único** e expiração
 
 ---
 

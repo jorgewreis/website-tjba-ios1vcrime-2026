@@ -90,5 +90,7 @@ As decisões abaixo passam a ser referência oficial:
 - A base do sistema é uma aplicação **PHP customizada**.
 - O frontend oficial usa **HTML, CSS e JavaScript**, sem Next.js e sem Bootstrap.
 - O backend oficial usa **PHP** e o banco oficial é **MySQL**.
+- A autenticação oficial usa **sessão PHP**, validação server-side e token persistido **em hash** no banco.
+- O fluxo oficial de recuperação usa **link de redefinição com token único e expiração**, não senha temporária por e-mail.
 - A área autenticada utiliza `public/home.php` e `public/frame.php` como shell e carregamento interno.
 - A estrutura real do repositório, e não modelos genéricos de framework, é a referência para documentação de arquitetura e manutenção.

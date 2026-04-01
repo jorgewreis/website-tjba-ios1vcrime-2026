@@ -17,7 +17,8 @@ O fluxo oficial de autenticação da Área Restrita é baseado em:
 - validação de credenciais no backend PHP;
 - criação de sessão PHP após login bem-sucedido;
 - geração de token aleatório no servidor;
-- persistência desse token na tabela de usuários com prazo de expiração;
+- persistência do **hash** desse token na tabela de usuários com prazo de expiração;
+- timeout de inatividade de **60 minutos**;
 - revalidação do token persistido a cada acesso à área autenticada e aos endpoints administrativos dependentes da sessão.
 
 Na prática:
@@ -25,8 +26,8 @@ Na prática:
 - `public/index.php` apresenta a entrada pública;
 - `public/login.php` processa o login;
 - `$_SESSION` mantém o estado autenticado;
-- `config/security.php` valida a existência da sessão;
-- `app/models/Usuario.php` persiste e valida `token_acesso` e `token_expira`;
+- `config/security.php` valida a existência da sessão e o timeout de inatividade;
+- `app/models/Usuario.php` persiste e valida `token_acesso` e `token_expira`, com `token_acesso` armazenado em hash;
 - `public/home.php` e `public/admin/api/*` validam a sessão e o token persistido antes de responder.
 
 O `sessionStorage` do navegador pode ser utilizado para preferências e estados auxiliares de interface, mas **não é o mecanismo oficial de autenticação do sistema**.
@@ -59,7 +60,10 @@ A Área Restrita deve operar com:
 
 - sessão validada no backend;
 - proteção CSRF nos formulários aplicáveis;
+- cookie de sessão com flags endurecidas no bootstrap central;
+- rate limit de login por IP e CPF com bloqueio temporário progressivo;
 - invalidação do token persistido em logout ou expiração;
+- invalidação de sessão anterior após redefinição de senha;
 - validação server-side de permissões;
 - registro de eventos relevantes de autenticação e acesso.
 

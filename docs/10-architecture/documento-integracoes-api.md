@@ -89,7 +89,11 @@ O modelo oficial atual da API interna acompanha o restante da aplicação:
 
 - autenticação baseada em sessão PHP para navegação e chamadas autenticadas do frontend;
 - validação server-side do usuário autenticado;
-- confirmação do token persistido no banco de dados quando o fluxo exigir revalidação da sessão.
+- confirmação do token persistido no banco de dados quando o fluxo exigir revalidação da sessão;
+- timeout de inatividade de 60 minutos no contexto autenticado;
+- cookies de sessão configurados no bootstrap central com flags de segurança;
+- proteção CSRF nos fluxos que alteram estado;
+- rate limit no login e em rotas sensíveis quando aplicável.
 
 Não há, neste momento, um contrato oficial de API interna baseado em JWT como mecanismo principal de autenticação. Qualquer uso legado ou experimental de JWT deve ser tratado como não canônico até decisão arquitetural formal.
 
