@@ -6,7 +6,7 @@ A implementação eficaz de logs serve como a principal ferramenta de diagnósti
 
 ## 1. Classificação e Granularidade dos Logs
 
-Para evitar a saturação do armazenamento e garantir que apenas informações relevantes sejam processadas, os logs são categorizados por níveis de severidade e origem. É fundamental distinguir entre logs de infraestrutura (gerados pelo servidor web Nginx e banco de dados MySQL) e logs de aplicação (gerados pelo Next.js e regras de negócio). A granularidade deve ser ajustada para capturar detalhes suficientes para a reconstrução de um evento, sem, no entanto, registrar dados sensíveis como senhas ou tokens de autenticação em texto plano.
+Para evitar a saturação do armazenamento e garantir que apenas informações relevantes sejam processadas, os logs são categorizados por níveis de severidade e origem. É fundamental distinguir entre logs de infraestrutura (gerados pelo servidor web Nginx e banco de dados MySQL) e logs de aplicação (gerados pelos entrypoints PHP, serviços internos e regras de negócio). A granularidade deve ser ajustada para capturar detalhes suficientes para a reconstrução de um evento, sem, no entanto, registrar dados sensíveis como senhas ou tokens de autenticação em texto plano.
 
 Os logs de aplicação devem seguir uma estrutura padronizada, preferencialmente em formato JSON, facilitando a ingestão por ferramentas de monitoramento. Cada entrada de log deve conter, minimamente, o *timestamp* (carimbo de tempo UTC), o nível de severidade, o identificador do usuário (se autenticado), o endereço IP de origem e a mensagem descritiva do evento. A separação clara entre eventos de rotina e eventos críticos permite a configuração de alertas automatizados para situações que exigem intervenção imediata.
 
@@ -45,18 +45,18 @@ Conforme as regras de negócio estabelecidas, a visualização de relatórios de
 
 A implementação técnica da política de logs utiliza ferramentas nativas do sistema operacional Linux e configurações específicas do CloudPanel/Nginx. O utilitário `logrotate` é o mecanismo padrão para gerenciar a rotação, compressão e expurgo automático dos arquivos de log. Isso impede que o crescimento descontrolado dos arquivos de texto consuma todo o espaço em disco disponível, o que poderia levar à interrupção do serviço.
 
-Para a aplicação Next.js, recomenda-se o uso de bibliotecas de logging estruturado (como Winston ou Pino) que enviem a saída para o `stdout/stderr`. Em ambiente de produção, gerenciadores de processos como PM2 ou Docker capturam esses fluxos e os gravam em arquivos físicos, que por sua vez são gerenciados pelo `logrotate`. É crucial garantir que as permissões dos arquivos de log (`chmod/chown`) impeçam a leitura por usuários não privilegiados do sistema operacional.
+Para a aplicação PHP, recomenda-se o uso de logging estruturado sempre que viável, seja por `error_log`, arquivos próprios em `storage/logs/` ou integração com serviços centralizados como CloudWatch. Em ambiente de produção, o Nginx, o PHP-FPM e a aplicação podem gerar arquivos físicos ou saídas integradas ao coletor do servidor, que por sua vez são gerenciados pelo `logrotate`. É crucial garantir que as permissões dos arquivos de log (`chmod/chown`) impeçam a leitura por usuários não privilegiados do sistema operacional.
 
 - **Configuração do Logrotate:**
     - **Frequência:** Diária (`daily`).
     - **Compressão:** Ativada (`compress`), utilizando gzip para economizar espaço.
     - **Modo de Criação:** Novos arquivos criados com permissão 0640 (`create 0640 root adm`).
-    - **Scripts de Pós-Rotação:** Reiniciar o serviço Nginx/PM2 suavemente para liberar os descritores de arquivo (`postrotate`).
+    - **Scripts de Pós-Rotação:** Recarregar o Nginx e, quando aplicável, o PHP-FPM ou o coletor de logs suavemente para liberar os descritores de arquivo (`postrotate`).
 
 ## 5. FAQ
 
 - **O sistema registra as senhas dos usuários nos logs?**
-    - **Não.** Em hipótese alguma senhas, tokens JWT completos ou dados de cartão de crédito devem ser gravados nos logs. Caso ocorra um erro durante o login, registra-se apenas o ID do usuário (se identificado) e o motivo da falha, nunca a credencial enviada.
+    - **Não.** Em hipótese alguma senhas, tokens de sessão, tokens de reset, JWT legados ou dados de cartão de crédito devem ser gravados nos logs. Caso ocorra um erro durante o login, registra-se apenas o ID do usuário (se identificado) e o motivo da falha, nunca a credencial enviada.
 
 - **O que acontece se o disco do servidor encher devido aos logs?**
     - **Interrupção de Serviço.** Se o disco atingir 100% de capacidade, o banco de dados e o servidor web podem parar de funcionar. Por isso, a política de rotação e compressão é vital. Monitoramento de espaço em disco deve ser configurado para alertar quando o uso atingir 80%.

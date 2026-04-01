@@ -127,8 +127,8 @@ Perfil para consulta pontual de informações públicas ou autorizadas.
 Todas as rotas da API e do Frontend devem ser protegidas por um middleware de autorização que verifique:
 
 1.  Se o token de sessão é válido.
-2.  Se o `id_perfil` do usuário possui permissão para o recurso solicitado.
-3.  Se o `id_setor` do usuário corresponde ao setor do dado solicitado (para perfis não-globais).
+2.  Se o usuário possui um perfil válido em `usuario_perfil.perfil` para o recurso solicitado.
+3.  Se a lotação do usuário em `usuario_setor` / `setores` corresponde ao setor do dado solicitado (para perfis não-globais).
 
 ### 5.2. Interface Adaptativa
 

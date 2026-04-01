@@ -1,13 +1,15 @@
 -- ============================================================================
 -- TRIGGERS.SQL - Sistema de Gestão Criminal de Ilhéus
 -- Banco de Dados: common
--- Versão: 1.0.0
--- Data: 2026-02-03
+-- Versão: 1.1.0
+-- Data: 2026-04-01
 -- ============================================================================
 -- ID: Gerar sempre no padrão 30 caracteres (prefixo 3 letras + hífen + 26 chars).
 -- Documentação: docs/00-foundation/id-padrao-banco-dados.md
 -- IMPORTANTE: Execute este arquivo via terminal MySQL, não pelo SQLTools
 -- Comando: mysql -u usuario -p common < /caminho/triggers.sql
+-- Observação: o controle oficial de rate limit de login é feito na aplicação,
+-- pela tabela login_rate_limits. Não há trigger canônico para esse fluxo.
 -- ============================================================================
 
 USE common;
@@ -17,7 +19,6 @@ USE common;
 -- ============================================================================
 
 DROP TRIGGER IF EXISTS trg_historico_senha_update;
-DROP TRIGGER IF EXISTS trg_limpar_tentativas_login;
 
 -- ============================================================================
 -- TRIGGER: trg_historico_senha_update
@@ -36,27 +37,6 @@ BEGIN
         -- Insere a senha anterior no histórico
         INSERT INTO historico_senha (id_historico, usuario, senha_hash, data_alteracao)
         VALUES (CONCAT('HIS-', UPPER(SUBSTRING(REPLACE(UUID(), '-', ''), 1, 26))), NEW.id_usuario, OLD.senha_hash, NOW());
-    END IF;
-END//
-DELIMITER ;
-
--- ============================================================================
--- TRIGGER: trg_limpar_tentativas_login
--- Descrição: Limpa tentativas de login após login bem-sucedido
--- Objetivo: Resetar contador de bloqueio após acesso autorizado
--- Acionamento: AFTER UPDATE na tabela usuarios
--- ============================================================================
-
-DELIMITER //
-CREATE TRIGGER trg_limpar_tentativas_login
-AFTER UPDATE ON usuarios
-FOR EACH ROW
-BEGIN
-    -- Verifica se houve atualização de último_acesso (login realizado)
-    IF NEW.ultimo_acesso IS NOT NULL AND 
-       (OLD.ultimo_acesso IS NULL OR NEW.ultimo_acesso != OLD.ultimo_acesso) THEN
-        -- Remove registro de tentativas do CPF
-        DELETE FROM tentativas_login WHERE cpf = NEW.cpf;
     END IF;
 END//
 DELIMITER ;

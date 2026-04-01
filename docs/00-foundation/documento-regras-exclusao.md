@@ -67,12 +67,12 @@ Exemplos de entidades que devem adotar soft delete:
 
 #### 3.1.2 Implementação técnica do soft delete
 
-A implementação deve seguir o padrão do Laravel, utilizando o trait `SoftDeletes` nos models correspondentes. O campo `deleted_at` (timestamp) deve ser adicionado às tabelas relevantes, armazenando a data e hora da exclusão lógica.
+A implementação deve seguir um padrão compatível com a arquitetura PHP customizada do projeto. O campo `deleted_at` (timestamp) ou um status equivalente deve ser adicionado às tabelas relevantes, armazenando a data e hora da exclusão lógica.
 
 Ao realizar um soft delete:
 
 - O registro permanece na tabela, mas é marcado com `deleted_at` preenchido.
-- Consultas padrão (via Eloquent) automaticamente excluem registros soft-deleted, a menos que seja utilizado o método `withTrashed()` ou `onlyTrashed()`.
+- Repositórios, services e consultas padrão devem excluir registros soft-deleted por convenção, a menos que o caso de uso exija explicitamente visualização de itens excluídos.
 - A operação deve gerar um log de auditoria contendo:
   - ID do registro excluído
   - Tipo de entidade (tabela)

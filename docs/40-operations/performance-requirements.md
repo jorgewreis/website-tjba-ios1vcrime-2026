@@ -11,7 +11,7 @@ Os tempos abaixo consideram condições normais de rede (banda larga estável) e
 ### 2.1. Interações de Interface (Frontend)
 
 - **Carregamento Inicial (LCP):** O conteúdo principal da página de login ou dashboard deve ser visível em até **2,5 segundos** (Core Web Vitals).
-- **Navegação entre Rotas:** A transição entre páginas internas (via Next.js Router) deve ocorrer em menos de **500ms**.
+- **Navegação entre páginas internas:** A transição entre conteúdos da área autenticada (via `public/home.php` + `public/frame.php?page=...`) deve ocorrer em menos de **500ms** para páginas leves, desconsideradas consultas pesadas ao banco.
 - **Feedback Visual:** Qualquer ação do usuário (clique em botão) deve apresentar um feedback visual (spinner, mudança de cor) em menos de **100ms**.
 
 ### 2.2. Requisições de API (Backend)
@@ -38,7 +38,7 @@ Os tempos abaixo consideram condições normais de rede (banda larga estável) e
 
 ### 5.1. Assets e Caching
 
-- **Minificação:** Todo o código CSS e JavaScript deve ser minificado no build de produção do Next.js.
+- **Minificação:** Todo o código CSS e JavaScript exposto em `public/assets/` deve ser entregue em versão otimizada para produção, sem depender de build obrigatório de framework frontend.
 - **Imagens:** Imagens estáticas devem ser otimizadas (formato WebP) e servidas com cache de longo prazo.
 - **Lazy Loading:** Componentes pesados ou listas longas devem ser carregados sob demanda (Lazy Load) para não bloquear a renderização inicial.
 

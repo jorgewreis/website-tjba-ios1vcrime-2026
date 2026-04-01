@@ -317,20 +317,41 @@ Parciais recomendadas:
 
 ## database/
 
-- `database/migrations/2026_02_01_000001_create_users_table.php`  
-  **Por quê:** versionar estrutura do banco com histórico rastreável.
-- `database/migrations/2026_02_01_000002_create_perfis_table.php`
-- `database/migrations/2026_02_01_000003_create_cartas_table.php`
-- `database/migrations/2026_02_01_000004_create_oficios_table.php`
-- `database/migrations/2026_02_01_000005_create_audit_logs_table.php`
+- `database/schema.sql`  
+  **Por quê:** estrutura SQL **auxiliar e parcial** do banco, com tabelas de apoio, índices e views. Não substitui o banco completo nem as migrações incrementais.
+- `database/triggers.sql`  
+  **Por quê:** triggers de apoio versionados separadamente do schema auxiliar.
+- `database/README-migracoes.md`  
+  **Por quê:** inventário atual das migrações SQL e ordem sugerida por cenário.
 
-- `database/seeds/SeedPerfis.php`  
-  **Por quê:** perfis padrão e permissões iniciais.
-- `database/seeds/SeedUsersAdmin.php`  
-  **Por quê:** usuário admin inicial (com cuidado; sem senha fixa em texto).
+Arquivos presentes hoje em `database/migrations/`:
 
-- `database/schema.sql` (opcional)  
-  **Por quê:** export mínimo de estrutura para referência rápida (sem dados).
+- `database/migrations/usuarios_created_at_updated_at.sql`  
+  **Por quê:** normaliza `created_at` e `updated_at` em `usuarios`.
+- `database/migrations/20260322_seed_setores_inicial.sql`  
+  **Por quê:** seed inicial de `setores`.
+- `database/migrations/20260322_setores_codigo_area.sql`  
+  **Por quê:** adiciona e preenche `setores.codigo_area`.
+- `database/migrations/20260322_usuario_perfil_composite_limpeza.sql`  
+  **Por quê:** apoio à transição para perfis compostos.
+- `database/migrations/20260322_oficios_criado_por.sql`  
+  **Por quê:** rastreabilidade de criação/edição em ofícios.
+- `database/migrations/20260322_gabinete_reus_presos.sql`  
+  **Por quê:** estrutura do módulo de réus presos.
+- `database/migrations/guias.sql`  
+  **Por quê:** estrutura do módulo de guias.
+- `database/migrations/salario_minimo_e_valor_multa_guias.sql`  
+  **Por quê:** apoio a cálculo de multa nas guias.
+- `database/migrations/seed_salario_minimo_1994_2026.sql`  
+  **Por quê:** carga histórica de salário mínimo.
+- `database/migrations/20260330_processoPrioridades.sql`  
+  **Por quê:** artefato legado/deprecado do modelo antigo de prioridades.
+- `database/migrations/20260331_processo_prioridades_unificacao.sql`  
+  **Por quê:** unifica prioridades processuais no modelo atual.
+- `database/migrations/run_processo_prioridades_unificacao_data.php`  
+  **Por quê:** migração assistida de dados do modelo legado de prioridades.
+- `database/migrations/20260401_login_rate_limits.sql`  
+  **Por quê:** cria a estrutura oficial de rate limit de login.
 
 
 ---

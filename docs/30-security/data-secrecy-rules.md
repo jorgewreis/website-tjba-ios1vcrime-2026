@@ -21,19 +21,32 @@ Dados classificados como **Públicos** podem ser acessados sem autenticação. D
 
 O princípio fundamental de segurança interna é o **Isolamento por Setor**. Tecnicamente, isso significa que a autorização de acesso não é global, mas sim contextual. Um usuário com perfil de "Servidor" lotado na "Secretaria Criminal" não possui permissão, em nível de banco de dados, para realizar consultas (`SELECT`) em registros pertencentes ao "Gabinete do Juiz", a menos que possua uma permissão transversal explícita.
 
-Esta regra impede a "navegação lateral" dentro do sistema. Mesmo que um usuário mal-intencionado tente manipular IDs na URL ou forçar chamadas de API, o sistema validará se o `id_setor` do registro solicitado coincide com o `id_setor` da sessão do usuário.
+Esta regra impede a "navegação lateral" dentro do sistema. Mesmo que um usuário mal-intencionado tente manipular IDs na URL ou forçar chamadas de API, o sistema deve validar se o registro solicitado pertence ao mesmo escopo de lotação resolvido para o usuário em `usuario_setor` / `setores`.
 
 ### Regras Técnicas de Implementação
 
-- **Filtro SQL Obrigatório:** Toda consulta deve conter a cláusula `WHERE id_setor = :session_setor_id`.
+- **Filtro SQL Obrigatório:** Toda consulta sensível deve aplicar o isolamento por setor usando a estratégia compatível com o módulo, normalmente por `JOIN`/`WHERE` sobre `usuario_setor`, `setores` ou coluna setorial equivalente.
 - **Validação de API:** O backend deve verificar se o usuário autenticado e o contexto da sessão pertencem ao setor autorizado para a consulta solicitada.
 - **Bloqueio de IDs:** Tentar acessar `GET /api/processos/123` onde o processo 123 é de outro setor deve retornar `403 Forbidden`, e não `404 Not Found` (para evitar enumeração).
 
 ### Exemplo de Uso (SQL Seguro)
 
-sql -- ERRADO (Vulnerável a acesso cruzado): SELECT * FROM tb_processos WHERE id_processo = 'PROC-100';
+```sql
+-- ERRADO (Vulnerável a acesso cruzado)
+SELECT *
+FROM minha_tabela_setorial
+WHERE id = 'REG-...';
 
--- CORRETO (Isolamento garantido): SELECT * FROM tb_processos WHERE id_processo = 'PROC-100' AND id_setor = 5; -- ID do setor do usuário logado
+-- CORRETO (Isolamento garantido)
+SELECT r.*
+FROM minha_tabela_setorial r
+WHERE r.id = 'REG-...'
+  AND r.setor_id IN (
+      SELECT us.setor
+      FROM usuario_setor us
+      WHERE us.usuario = :session_user_id
+  );
+```
 
 ## 3. Visibilidade na Área Pública
 

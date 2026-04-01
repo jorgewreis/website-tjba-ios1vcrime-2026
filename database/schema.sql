@@ -1,11 +1,16 @@
 -- ============================================================================
 -- SCHEMA.SQL - Sistema de Gestão Criminal de Ilhéus
 -- Banco de Dados: common
--- Versão: 1.0.0
--- Data: 2026-02-03
+-- Versão: 1.1.0
+-- Data: 2026-04-01
+-- ============================================================================
+-- ARQUIVO AUXILIAR E PARCIAL:
+-- Este arquivo não representa o dump completo de todo o banco da aplicação.
+-- Ele versiona estruturas de apoio, índices e views que convivem com tabelas
+-- já existentes no ambiente e com migrações em database/migrations/.
 -- ============================================================================
 -- REGRA DE ID: Todas as chaves primárias de tabela seguem o padrão de 30
--- caracteres: prefixo de 3 letras + hífen + código de 26 caracteres (ex.: SET-xxx).
+-- caracteres: prefixo de 3 letras + hífen + código de 26 caracteres.
 -- Documentação: docs/00-foundation/id-padrao-banco-dados.md
 -- ============================================================================
 
@@ -97,9 +102,8 @@ CREATE TABLE IF NOT EXISTS logs_sistema (
 
 -- ============================================================================
 -- TABELA: tentativas_login
--- Descrição: Controle de tentativas de login para bloqueio de conta
--- Bloqueia conta após 3 tentativas falhas consecutivas
--- Requer desbloqueio por administrador
+-- Descrição: estrutura legada ainda usada em alguns fluxos administrativos
+-- Não é mais a fonte oficial de rate limit de login
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS tentativas_login (
@@ -116,9 +120,30 @@ CREATE TABLE IF NOT EXISTS tentativas_login (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================================
+-- TABELA: login_rate_limits
+-- Descrição: mecanismo oficial de rate limit de login por IP/CPF
+-- Utilizado pelo serviço LoginRateLimiter
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS login_rate_limits (
+    id_rate_limit CHAR(30) NOT NULL COMMENT 'Formato RLT- + 26 chars (regra padrão 30 chars)' PRIMARY KEY,
+    scope_type VARCHAR(20) NOT NULL,
+    scope_value VARCHAR(191) NOT NULL,
+    attempt_count INT NOT NULL DEFAULT 0,
+    lock_level INT NOT NULL DEFAULT 0,
+    window_started_at DATETIME NOT NULL,
+    last_attempt_at DATETIME NOT NULL,
+    locked_until DATETIME DEFAULT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_scope (scope_type, scope_value),
+    KEY idx_locked_until (locked_until)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================================
 -- TABELA: recuperacao_senha
 -- Descrição: Tokens para recuperação de senha via e-mail
--- Token enviado para o e-mail cadastrado do usuário
+-- A coluna `token` armazena o hash do token enviado ao usuário
 -- Expira após período definido (recomendado: 1 hora)
 -- ============================================================================
 
@@ -152,6 +177,7 @@ CREATE TABLE IF NOT EXISTS historico_senha (
 
 -- ============================================================================
 -- ADICIONAR ÍNDICES NAS TABELAS EXISTENTES
+-- Observação: estas ALTER TABLE pressupõem tabelas-base pré-existentes
 -- ============================================================================
 
 -- Índices na tabela usuarios para otimização de consultas
@@ -166,6 +192,7 @@ ALTER TABLE processos ADD INDEX idx_data_cadastro (data_cadastro);
 
 -- ============================================================================
 -- VIEWS ÚTEIS
+-- Observação: estas views dependem de tabelas-base pré-existentes
 -- ============================================================================
 
 -- View: Usuários com seus perfis e setores

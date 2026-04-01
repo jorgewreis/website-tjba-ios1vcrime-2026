@@ -14,13 +14,18 @@
 |---------|--------------------------|
 | EST     | estudantes               |
 | USR     | usuarios                 |
+| USP     | usuario_perfil           |
 | SET     | setores                  |
 | USO     | usuario_setor            |
 | LOG     | logs_acesso              |
 | LGS     | logs_sistema             |
-| TNT     | tentativas_login         |
+| RLT     | login_rate_limits        |
+| TNT     | tentativas_login (legado) |
 | REC     | recuperacao_senha        |
 | HIS     | historico_senha          |
+| GRP     | gabinete_reu_preso       |
+| GPP     | gabinete_reu_preso_processo |
+| GPM     | gabinete_reu_preso_movimentacao |
 | CLA     | classes                  |
 | TRI     | tribunais                |
 | COM     | comarcas                 |
@@ -38,6 +43,7 @@
 | GUI     | guias                    |
 | GUS     | guias_subtarefas         |
 | GUA     | guias_alocados           |
+| SAL     | salario_minimo           |
 | ALR     | alocacoes_regras         |
 | DOC     | documentos               |
 

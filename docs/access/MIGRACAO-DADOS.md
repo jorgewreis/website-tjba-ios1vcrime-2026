@@ -64,7 +64,7 @@ Para cada **usuário interno** (não estudante/consultor externo):
 
 ```sql
 INSERT INTO usuario_perfil (id_usu_perfil, usuario, perfil)
-VALUES ('UPE-GERADO_PELO_SISTEMA_26CHARS', 'USR-xxxxxxxxxxxxxxxxxxxxxxxxxx', 'SERVIDOR-CARTORIO');
+VALUES ('USP-GERADO_PELO_SISTEMA_26CHARS', 'USR-xxxxxxxxxxxxxxxxxxxxxxxxxx', 'SERVIDOR-CARTORIO');
 ```
 
 Repita por utilizador e por área (várias linhas se tiver Cartório + Gabinete).

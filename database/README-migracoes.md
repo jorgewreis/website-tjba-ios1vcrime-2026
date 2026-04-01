@@ -1,13 +1,158 @@
-# Ordem de execução dos scripts SQL (módulo Pessoas e Instituições)
+# Inventário e uso dos scripts SQL versionados
 
-1. **partes-processos-partes.sql** – Cria `partes`, `processos_partes`, `processo_prioridades`. Requer tabela `processos`.
-2. **alter-partes-campos-opcionais.sql** – Torna CPF, sexo e data_nascimento opcionais em `partes`.
-3. **pessoas-instituicoes-vinculos.sql** – Cria `instituicoes_publicas`, `instituicoes_enderecos`, `instituicoes_telefones`, `instituicoes_setores`, `partes_telefones`, `partes_enderecos`, `partes_instituicoes`.
-4. **alter-processos-partes-observacoes-ativo.sql** – Adiciona `observacoes` e `ativo` em `processos_partes`.
-5. **alter-cejusc-guias-partes-drop-reus.sql** – Substitui `reu_id` por `parte_id` em cejusc_tarefas e guias; remove tabelas `reus` e `processoReus`. Executar apenas após migração de dados legados, se houver.
-6. **alter-usuarios-cadastro-ativo.sql** – Adiciona `cadastro_ativo` em `usuarios` (0=pendente, 1=ativo). Obrigatório para regras de acesso: somente cadastro ativo acessa o site; estudantes ativos ao cadastrar; servidores pendentes até validação por admin/diretora.
-7. **migrations/20260220_usuarios_avatar_slug.sql** – Adiciona `avatar_slug` em `usuarios` (preset de avatar sem upload; ver `docs/40-operations/avatars-presets-usuarios.md`).
-8. **migrations/20260221_avatar_slug_legacy_to_initials.sql** – (Opcional) Normaliza `default`/vazio para `initials` (ver mesmo documento).
-9. **migrations/20260327_ceapa_tarefas.sql** – Cria `ceapa_tarefas` (vínculo com `processos` e `partes`) para o módulo CEAPA.
-10. **migrations/20260327_ceapa_tarefas_usuario_cadastro.sql** – Para bases que já criaram `ceapa_tarefas` sem usuário criador: adiciona `usuario_cadastro_id` + FK para `usuarios`.
-11. **migrations/20260331_processo_prioridades_unificacao.sql** – Unifica prioridades em `processo_prioridades` (`codigo` + `origem`). Em seguida, se existir `processoPrioridades`, rodar `php database/migrations/run_processo_prioridades_unificacao_data.php`. O script `20260330_processoPrioridades.sql` está **deprecado** (não usar em bases novas).
+Este arquivo substitui a lista antiga de migrações que já não existem no repositório.
+
+## 1. Observações gerais
+
+- Hoje **não existe uma ordem única global** para todos os scripts de `database/`.
+- O projeto combina:
+  - estruturas auxiliares em `database/schema.sql`;
+  - triggers opcionais em `database/triggers.sql`;
+  - migrações incrementais por módulo em `database/migrations/`.
+- Parte das tabelas-base do sistema já existe fora desses scripts auxiliares, especialmente `usuarios`, `perfis`, `usuario_perfil`, `processos` e `classes`.
+
+## 2. Base de autenticação e usuários
+
+### `usuarios_created_at_updated_at.sql`
+
+Adiciona `created_at` e `updated_at` em `usuarios` quando essas colunas ainda não existem.
+
+### `20260401_login_rate_limits.sql`
+
+Cria a tabela `login_rate_limits`, hoje usada como mecanismo oficial de rate limit de login por IP/CPF.
+
+### Observação importante
+
+A tabela `tentativas_login` continua existindo como legado em alguns fluxos administrativos, mas **não** é mais a estrutura oficial de limitação de brute force.
+
+## 3. Setores e perfis compostos
+
+### `20260322_seed_setores_inicial.sql`
+
+Popula a tabela `setores` com os registros iniciais de Cartório, Gabinete e Sala de Audiências.
+
+Use somente quando a tabela `setores` estiver vazia.
+
+### `20260322_setores_codigo_area.sql`
+
+Adiciona/preenche `setores.codigo_area` com os valores operacionais:
+
+- `CARTORIO`
+- `GABINETE`
+- `AUDIENCIAS`
+
+### `20260322_usuario_perfil_composite_limpeza.sql`
+
+Script assistido de transição para perfis compostos (`ESTAGIARIO-*`, `SERVIDOR-*`).
+
+Não é uma migração “fire and forget”. Exige validação manual, backup e conferência de login antes da remoção de perfis legados.
+
+## 4. Módulo Gabinete
+
+### `20260322_gabinete_reus_presos.sql`
+
+Cria as tabelas do módulo de acompanhamento de réus presos:
+
+- `gabinete_reu_preso`
+- `gabinete_reu_preso_processo`
+- `gabinete_reu_preso_movimentacao`
+
+Requer a tabela `processos`.
+
+## 5. Módulo Ofícios
+
+### `20260322_oficios_criado_por.sql`
+
+Adiciona rastreabilidade de criação/edição em:
+
+- `oficios_cartorio`
+- `oficios_gabinete`
+
+Colunas adicionadas:
+
+- `criado_por`
+- `atualizado_por`
+
+## 6. Módulo Guias
+
+### `guias.sql`
+
+Cria as tabelas principais do módulo:
+
+- `guias`
+- `guias_subtarefas`
+- `guias_alocados`
+
+### `salario_minimo_e_valor_multa_guias.sql`
+
+- cria `salario_minimo`;
+- adiciona `guias.valor_multa`.
+
+### `seed_salario_minimo_1994_2026.sql`
+
+Popula a tabela `salario_minimo` com a série histórica necessária ao cálculo de multa.
+
+Executar somente após `salario_minimo_e_valor_multa_guias.sql`.
+
+## 7. Prioridades processuais
+
+### `20260330_processoPrioridades.sql`
+
+Arquivo **deprecado**.
+
+Não deve ser usado em instalações novas. Ele representa o modelo legado `processoPrioridades`.
+
+### `20260331_processo_prioridades_unificacao.sql`
+
+Migração oficial para o modelo unificado em `processo_prioridades`, com:
+
+- `codigo`
+- `origem`
+- `regra_detalhe`
+
+### `run_processo_prioridades_unificacao_data.php`
+
+Script PHP de apoio para migrar dados da tabela legada `processoPrioridades` para `processo_prioridades`.
+
+Executar somente quando a base ainda contiver a tabela antiga.
+
+## 8. Ordem sugerida por cenário
+
+### Nova instalação em ambiente já existente da aplicação
+
+1. Validar existência das tabelas-base do sistema.
+2. Aplicar `usuarios_created_at_updated_at.sql` se necessário.
+3. Aplicar `20260322_setores_codigo_area.sql` se `setores.codigo_area` ainda não existir.
+4. Aplicar `20260322_seed_setores_inicial.sql` se `setores` estiver vazia.
+5. Aplicar `20260401_login_rate_limits.sql`.
+6. Aplicar migrações por módulo (`oficios`, `gabinete`, `guias`, `prioridades`) conforme a funcionalidade desejada.
+
+### Base legada com perfis antigos
+
+1. Rodar `20260322_setores_codigo_area.sql`.
+2. Conferir e corrigir `codigo_area`.
+3. Executar o processo assistido descrito em `20260322_usuario_perfil_composite_limpeza.sql`.
+4. Validar logins e permissões.
+5. Só então remover perfis legados.
+
+### Base com modelo antigo de prioridades
+
+1. Aplicar `20260331_processo_prioridades_unificacao.sql`.
+2. Se existir `processoPrioridades`, executar `php database/migrations/run_processo_prioridades_unificacao_data.php`.
+3. Tratar `20260330_processoPrioridades.sql` apenas como referência histórica.
+
+## 9. Arquivos presentes hoje em `database/migrations/`
+
+- `20260322_gabinete_reus_presos.sql`
+- `20260322_oficios_criado_por.sql`
+- `20260322_seed_setores_inicial.sql`
+- `20260322_setores_codigo_area.sql`
+- `20260322_usuario_perfil_composite_limpeza.sql`
+- `20260330_processoPrioridades.sql`
+- `20260331_processo_prioridades_unificacao.sql`
+- `20260401_login_rate_limits.sql`
+- `guias.sql`
+- `run_processo_prioridades_unificacao_data.php`
+- `salario_minimo_e_valor_multa_guias.sql`
+- `seed_salario_minimo_1994_2026.sql`
+- `usuarios_created_at_updated_at.sql`

@@ -116,7 +116,7 @@ As principais restrições do Projeto 2026.01 são:
 
 - **Restrição de custo:** as configurações de infraestrutura (Cloudflare, AWS CloudWatch, etc.) devem priorizar o uso de planos gratuitos ou de baixo custo, conforme definido no documento de arquitetura.
 - **Restrição de tempo:** por se tratar de fase preparatória, o foco é documentação e infraestrutura básica, sem tentativa de desenvolvimento completo de módulos funcionais complexos.
-- **Restrição tecnológica:** o stack descrito no Documento de Arquitetura (Laravel, MySQL, Nginx, CloudWatch, etc.) deve ser seguido, salvo decisão formalmente registrada em documento de mudança arquitetural.
+- **Restrição tecnológica:** o stack descrito no Documento de Arquitetura deve ser seguido, com base em PHP customizado, MySQL, Nginx/PHP-FPM e frontend em HTML/CSS/JavaScript, salvo decisão formalmente registrada em documento de mudança arquitetural.
 
 ---
 

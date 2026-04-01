@@ -2,7 +2,7 @@
 
 Este documento estabelece as diretrizes técnicas e decisões estratégicas referentes à segurança de dados em trânsito e ao controle de acesso baseado em localização geográfica. O objetivo primordial é garantir a confidencialidade, integridade e autenticidade das informações trocadas entre as interfaces clientes e a infraestrutura do servidor, utilizando protocolos de criptografia robustos e mecanismos de filtragem proativa.
 
-A implementação destas estratégias visa mitigar riscos associados a ataques de interceptação, como *Man-in-the-Middle* (MitM), e reduzir drasticamente a superfície de ataque contra botnets automatizados oriundos de regiões fora do escopo operacional da aplicação. Estas definições aplicam-se a todo o ecossistema web, abrangendo o servidor web Nginx gerenciado via CloudPanel e o frontend da aplicação desenvolvido em Next.js.
+A implementação destas estratégias visa mitigar riscos associados a ataques de interceptação, como *Man-in-the-Middle* (MitM), e reduzir drasticamente a superfície de ataque contra botnets automatizados oriundos de regiões fora do escopo operacional da aplicação. Estas definições aplicam-se a todo o ecossistema web, abrangendo o servidor web Nginx gerenciado via CloudPanel, o runtime PHP sob PHP-FPM e os entrypoints públicos da aplicação.
 
 ## 1. Estratégia de Implementação SSL/TLS
 
@@ -28,7 +28,7 @@ Ao implementar essa restrição, alcançamos uma otimização significativa dos 
 
 ### 2.1. Bloqueio em Nível de Infraestrutura (Nginx/CloudPanel)
 
-A camada mais eficiente para aplicar restrições geográficas é o servidor web, neste caso, o Nginx. O processamento de regras neste nível ocorre antes que a requisição seja repassada para o *runtime* da aplicação (Node.js/Next.js), resultando em latência extremamente baixa e alto *throughput* de rejeição. O CloudPanel facilita essa integração através do módulo `ngx_http_geoip_module` ou através de Listas de Controle de Acesso (ACLs) que mapeiam faixas de IP para seus respectivos países (*GeoIP Database*).
+A camada mais eficiente para aplicar restrições geográficas é o servidor web, neste caso, o Nginx. O processamento de regras neste nível ocorre antes que a requisição seja repassada para o runtime da aplicação PHP, resultando em latência extremamente baixa e alto *throughput* de rejeição. O CloudPanel facilita essa integração através do módulo `ngx_http_geoip_module` ou através de Listas de Controle de Acesso (ACLs) que mapeiam faixas de IP para seus respectivos países (*GeoIP Database*).
 
 A política recomendada é a de *Whitelisting* (Lista de Permissão), que é mais segura e gerenciável do que *Blacklisting*. Neste modelo, negamos explicitamente todo o tráfego por padrão (`deny all`) e permitimos apenas faixas de IP originárias do Brasil (`allow BR`). Essa abordagem elimina a necessidade de atualizar constantemente listas de países bloqueados e garante que novas ameaças de locais inesperados sejam neutralizadas automaticamente.
 
@@ -36,11 +36,11 @@ A política recomendada é a de *Whitelisting* (Lista de Permissão), que é mai
 - **Política Padrão:** Negar todo tráfego de entrada que não corresponda ao código de país permitido (BR).
 - **Tratamento de Exceções:** IPs específicos de serviços de monitoramento externo ou parceiros no exterior devem ser adicionados manualmente à lista de permissão.
 
-### 2.2. Bloqueio em Nível de Aplicação (Next.js Middleware)
+### 2.2. Bloqueio em Nível de Aplicação (Bootstrap PHP / Entry Points)
 
-Como uma camada secundária de defesa, a validação geográfica pode ser implementada dentro da lógica da aplicação utilizando o Middleware do Next.js. Embora menos eficiente que o bloqueio no Nginx, esta camada oferece controle granular e melhor experiência de usuário. Ela permite, por exemplo, que páginas públicas permaneçam acessíveis globalmente (se necessário para SEO), enquanto rotas críticas como `/admin`, `/login` ou endpoints de API sejam estritamente trancadas para IPs locais.
+Como uma camada secundária de defesa, a validação geográfica pode ser implementada dentro da lógica da aplicação PHP, por meio do bootstrap compartilhado, guards de autenticação ou validações nos entrypoints sensíveis. Embora menos eficiente que o bloqueio no Nginx, esta camada oferece controle granular e melhor experiência de usuário. Ela permite, por exemplo, que páginas públicas permaneçam acessíveis globalmente, enquanto rotas críticas como `/home.php`, `/frame.php`, `/login.php` ou endpoints de API autenticados sejam estritamente trancados para IPs permitidos.
 
-Esta implementação baseia-se na leitura de cabeçalhos HTTP repassados pelo proxy ou CDN, como `X-Forwarded-For` ou `CF-IPCountry` (caso utilize Cloudflare). O middleware intercepta a requisição antes que ela atinja a renderização da página ou a lógica da API, permitindo que o sistema retorne uma resposta 403 Forbidden customizada com uma mensagem clara ao usuário, ou até mesmo registre a tentativa para auditoria de segurança futura.
+Esta implementação baseia-se na leitura de cabeçalhos HTTP repassados pelo proxy ou CDN, como `X-Forwarded-For` ou `CF-IPCountry` (caso utilize Cloudflare). O bootstrap ou guard intercepta a requisição antes que ela atinja a renderização da página ou a lógica da API, permitindo que o sistema retorne uma resposta `403 Forbidden` customizada com uma mensagem clara ao usuário, ou até mesmo registre a tentativa para auditoria de segurança futura.
 
 - **Granularidade:** Proteção aplicada especificamente em rotas sensíveis (Admin e API).
 - **Feedback:** Entrega de respostas JSON ou HTML explicando o motivo do bloqueio, diferentemente da queda abrupta de conexão do Nginx.
@@ -58,19 +58,41 @@ Recomenda-se que todas as alterações sejam testadas inicialmente em um ambient
 - **Forçar HTTPS:** Habilitar a opção "Force HTTPS" nas configurações do CloudPanel para criar a regra de redirecionamento 301 automática.
 - **Configuração de Cabeçalho:** Inserir manualmente a diretiva HSTS na configuração do Vhost do Nginx: `add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;`.
 
-### Configuração de Geo-blocking (Exemplo Next.js Middleware)
+### Configuração de Geo-blocking (Exemplo em PHP)
 
-Para a camada de aplicação, o trecho de código a seguir ilustra como interceptar requisições e validar o país de origem. Este código deve ser adaptado no arquivo `middleware.ts` na raiz do projeto Next.js.
+Para a camada de aplicação, o trecho de código a seguir ilustra como interceptar requisições e validar o país de origem em um bootstrap ou entrypoint compartilhado do projeto PHP.
 
-typescript import { NextResponse } from 'next/server'; import type { NextRequest } from 'next/server';
+```php
+<?php
+$country = $_SERVER['HTTP_CF_IPCOUNTRY'] ?? '';
+$path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 
-export function middleware(request: NextRequest) { // Tenta identificar o país via headers (Cloudflare ou Proxy padrão) const country = request.geo?.country || request.headers.get('cf-ipcountry');
+$protectedPaths = [
+    '/home.php',
+    '/frame.php',
+    '/login.php',
+    '/admin',
+    '/api/secure',
+];
 
-// Define os caminhos críticos que requerem proteção geográfica const isProtectedPath = request.nextUrl.pathname.startsWith('/admin') || request.nextUrl.pathname.startsWith('/api/secure');
+$isProtectedPath = false;
+foreach ($protectedPaths as $prefix) {
+    if (str_starts_with($path, $prefix)) {
+        $isProtectedPath = true;
+        break;
+    }
+}
 
-// Lógica: Se for caminho protegido e o país for identificado como não-BR if (isProtectedPath && country && country !== 'BR') { return new NextResponse( JSON.stringify({ success: false, message: 'Acesso negado: Sua localização não está autorizada a acessar este recurso.' }), { status: 403, headers: { 'content-type': 'application/json' } } ); }
-
-return NextResponse.next(); }
+if ($isProtectedPath && $country !== '' && strtoupper($country) !== 'BR') {
+    http_response_code(403);
+    header('Content-Type: application/json; charset=UTF-8');
+    echo json_encode([
+        'success' => false,
+        'message' => 'Acesso negado: sua localização não está autorizada a acessar este recurso.',
+    ]);
+    exit;
+}
+```
 
 ## 4. FAQ
 
@@ -88,4 +110,4 @@ Estas respostas devem ser utilizadas como referência ao distinguir entre uma fa
     O redirecionamento padrão ainda permite que a primeiríssima requisição seja feita via HTTP, o que pode ser interceptado. O HSTS instrui o navegador a nunca sequer tentar a conexão HTTP, eliminando essa pequena janela de vulnerabilidade e protegendo contra ataques de *SSL Stripping*.
 
 - **O Geo-blocking pode afetar a indexação de SEO (Googlebot)?**
-    Sim, se aplicado indiscriminadamente. Se a aplicação possuir conteúdo público que precisa ser indexado, o bloqueio deve ser feito via Middleware (Camada 7) excluindo os *User-Agents* de bots de busca, ou configurado apenas nas rotas administrativas, deixando a *home page* pública acessível.
+    Sim, se aplicado indiscriminadamente. Se a aplicação possuir conteúdo público que precisa ser indexado, o bloqueio deve ser feito na camada de aplicação excluindo os *User-Agents* de bots de busca, ou configurado apenas nas rotas administrativas, deixando a *home page* pública acessível.

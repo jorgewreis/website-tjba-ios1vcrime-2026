@@ -38,11 +38,11 @@ O projeto deve aderir às seguintes diretrizes nacionais e internacionais:
 - **Rótulos ARIA:** Utilize `aria-label` ou `aria-labelledby` para elementos interativos que não possuem texto visível (ex: botões apenas com ícones).
 - **Texto Alternativo em Imagens:** Todas as imagens informativas devem ter atributos `alt` descritivos. Imagens decorativas devem ter `alt=""` vazio.
 
-## 5. Implementação Técnica (Next.js e React)
+## 5. Implementação Técnica (HTML, CSS, JavaScript e PHP)
 
 ### 5.1. Formulários e Entrada de Dados
 
-- **Rótulos (Labels):** Todos os campos de entrada (especialmente nos formulários de Login e Cadastro) devem ter elementos `<label>` associados via `htmlFor` (React) / `for` (HTML).
+- **Rótulos (Labels):** Todos os campos de entrada (especialmente nos formulários de Login e Cadastro) devem ter elementos `<label>` associados via `for`/`id` em HTML.
 - **Campos com Máscara:** Para o campo de CPF (mascarado), garanta que o leitor de tela anuncie o formato esperado. Utilize `aria-describedby` para vincular textos de ajuda.
 - **Identificação de Erros:** Erros de validação devem ser associados programaticamente ao campo de entrada para que os leitores de tela anunciem o erro imediatamente.
 
@@ -55,8 +55,8 @@ Dado que a arquitetura utiliza `iframes` para páginas administrativas:
 
 ### 5.3. Ferramentas de Desenvolvimento
 
-- **Linting:** Habilite o `eslint-plugin-jsx-a11y` no projeto Next.js para identificar problemas de acessibilidade durante o desenvolvimento.
-- **Testes:** Utilize ferramentas como **Lighthouse** ou **Axe DevTools** no pipeline de CI/CD para validar a conformidade antes dos lançamentos.
+- **Checklist de revisão:** Inclua verificação de acessibilidade nas revisões de HTML, formulários, iframes e navegação por teclado.
+- **Testes:** Utilize ferramentas como **Lighthouse** ou **Axe DevTools** e validação manual nos principais fluxos antes dos lançamentos.
 
 ## 6. Requisitos Específicos de Componentes
 

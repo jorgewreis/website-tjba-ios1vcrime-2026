@@ -38,11 +38,11 @@ The project must adhere to the following international and national guidelines:
 - **ARIA Labels:** Use `aria-label` or `aria-labelledby` for interactive elements that lack visible text (e.g., icon-only buttons).
 - **Image Alt Text:** All informative images must have descriptive `alt` attributes. Decorative images must have empty `alt=""`.
 
-## 5. Technical Implementation (Next.js and React)
+## 5. Technical Implementation (HTML, CSS, JavaScript and PHP)
 
 ### 5.1. Forms and Input
 
-- **Labels:** All input fields (especially the Login and Registration forms) must have associated `<label>` elements linked via `htmlFor` (React) / `for` (HTML).
+- **Labels:** All input fields (especially Login and Registration forms) must have associated `<label>` elements linked via `for`/`id` in HTML.
 - **Masked Inputs:** For the CPF field (masked), ensure the screen reader announces the expected format. Use `aria-describedby` to link help text.
 - **Error Identification:** Validation errors must be programmatically associated with the input field so screen readers announce the error immediately.
 
@@ -55,8 +55,8 @@ Given the architecture uses `iframes` for admin pages:
 
 ### 5.3. Development Tooling
 
-- **Linting:** Enable `eslint-plugin-jsx-a11y` in the Next.js project to catch accessibility issues during development.
-- **Testing:** Use tools like **Lighthouse** or **Axe DevTools** in the CI/CD pipeline to validate compliance before releases.
+- **Review checklist:** Include accessibility verification in HTML, forms, iframes and keyboard-navigation reviews.
+- **Testing:** Use tools like **Lighthouse** or **Axe DevTools**, plus manual validation in the main user flows before releases.
 
 ## 6. Specific Component Requirements
 

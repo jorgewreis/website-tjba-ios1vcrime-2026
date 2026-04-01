@@ -133,9 +133,9 @@ O escopo técnico é definido pelo Documento de Arquitetura de Software (SAD), q
   - Domínio (regras de negócio, entidades, invariantes).
   - Infraestrutura (persistência, integrações, IO).
 - Adoção de boas práticas de codificação:
-  - PSR-12 e padrões Laravel.
+  - PSR-12 e padrões internos do projeto.
   - Controllers finos, com regra de negócio concentrada em camadas de aplicação/domínio.
-  - Persistência via Eloquent/Query Builder, evitando SQL solto quando não necessário.
+  - Persistência via PDO, repositórios e SQL parametrizado, evitando SQL concatenado manualmente.
   - Validação server-side consistente e sanitização centralizada.
   - Logs com padrão único, mascaramento de dados sensíveis e tratamento de erros padronizado.
 
