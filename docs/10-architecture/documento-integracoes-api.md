@@ -73,7 +73,7 @@ A utilização do serviço deve observar limites de custo, preferencialmente ope
 
 ## 4. API interna do sistema
 
-Além das integrações com serviços externos, a solução expõe uma API interna, consumida pelo frontend e, opcionalmente, por clientes autorizados. Essa API é protegida por modelo de autenticação híbrida (sessão e JWT) e é tratada como parte central da arquitetura, devendo ser documentada, testada e versionada com o mesmo rigor aplicado às integrações externas.
+Além das integrações com serviços externos, a solução expõe uma API interna consumida principalmente pelo frontend e por páginas autenticadas do próprio sistema. Essa API acompanha o modelo oficial de autenticação da aplicação e deve ser documentada, testada e mantida com o mesmo rigor aplicado às integrações externas.
 
 A API interna é responsável por disponibilizar, em formato programático, funcionalidades como gestão de audiências, tarefas internas, expedições, notificações, painéis de produtividade, perfis e configurações. A forma como esses recursos são expostos deve considerar tanto a estabilidade a longo prazo quanto a capacidade de evolução controlada.
 
@@ -83,11 +83,15 @@ A API interna deve ser explicitamente versionada, preferencialmente por meio de 
 
 Os endpoints devem ser organizados de forma coerente com o domínio funcional, agrupando recursos por contexto: audiências, cartas, ofícios, medidas protetivas, notificações, perfis, usuários, produtividade e configurações gerais. Sempre que possível, deve-se seguir princípios RESTful (uso adequado de métodos HTTP, códigos de status padronizados, representações consistentes), sem impedir a criação de endpoints específicos para ações de negócio que não se encaixem perfeitamente em operações CRUD tradicionais.
 
-### 4.2 Autenticação híbrida (sessão e JWT)
+### 4.2 Autenticação da API interna
 
-A autenticação é implementada de forma híbrida, combinando uso de sessão para navegação tradicional via web com uso de tokens JWT para cenários em que seja necessária autenticação stateless, como acesso programático por clientes autorizados. Essa combinação permite aproveitar a experiência clássica de sistemas internos e, ao mesmo tempo, oferecer flexibilidade para integrações futuras.
+O modelo oficial atual da API interna acompanha o restante da aplicação:
 
-Para o uso de JWT, devem ser definidas políticas claras de emissão, escopo, expiração, renovação e revogação de tokens. Os tokens não devem transportar informações sensíveis em claro, limitando-se a identificadores (por exemplo, IDs de usuário) e claims estritamente necessários, como perfis ou papéis de acesso. A cada requisição autenticada por token, o backend deve validar assinatura, expiração e escopos, garantindo que apenas recursos e operações compatíveis com o perfil associado sejam acessados.
+- autenticação baseada em sessão PHP para navegação e chamadas autenticadas do frontend;
+- validação server-side do usuário autenticado;
+- confirmação do token persistido no banco de dados quando o fluxo exigir revalidação da sessão.
+
+Não há, neste momento, um contrato oficial de API interna baseado em JWT como mecanismo principal de autenticação. Qualquer uso legado ou experimental de JWT deve ser tratado como não canônico até decisão arquitetural formal.
 
 ### 4.3 Padronização de respostas e tratamento de erros
 
@@ -107,7 +111,7 @@ Além dos controles técnicos, devem existir regras de governança sobre quem po
 
 O controle de acesso a endpoints da API interna e a funcionalidades que disparam integrações externas deve respeitar a matriz de perfis do sistema (como perfis de chefia, servidores, gabinete e perfis acadêmicos). A autorização deve ser aplicada tanto na camada de apresentação (guards, policies) quanto na camada de aplicação e domínio, garantindo que decisões críticas de permissão não dependam apenas da interface.
 
-Para acessos via JWT, recomenda-se a utilização de claims ou escopos de permissão associados ao token, definindo claramente quais recursos podem ser consultados ou modificados. Tokens emitidos para integrações específicas não devem possuir privilégios amplos; é preferível emitir tokens com escopo reduzido e tempo de vida limitado. Em integrações com serviços externos que exijam credenciais (por exemplo, chaves de API), estas nunca devem ser expostas ao usuário final ou trafegadas para o frontend.
+Para acessos autenticados à API interna, as permissões devem ser verificadas no backend com base no usuário autenticado, seus perfis e suas regras de acesso por página, setor ou funcionalidade. Em integrações com serviços externos que exijam credenciais, estas nunca devem ser expostas ao usuário final ou trafegadas para o frontend.
 
 ### 5.2 Criptografia em trânsito e proteção de credenciais
 

@@ -69,8 +69,8 @@ final class Usuario
     }
 
     /**
- * Logout apenas do usuário atual: remove token deste usuário no banco e encerra a sessão local.
- */
+     * Logout apenas do usuário atual: remove o token persistido do usuário.
+     */
     public function logoutLocal(string $idUsuario): array
     {
         try {
@@ -81,27 +81,6 @@ final class Usuario
                 WHERE id_usuario = ?
             ");
             $stmt->execute([$idUsuario]);
-
-            // Apaga sessão local
-            if (session_status() !== PHP_SESSION_ACTIVE) {
-                session_start();
-            }
-            $_SESSION = [];
-
-            if (ini_get('session.use_cookies')) {
-                $params = session_get_cookie_params();
-                setcookie(
-                    session_name(),
-                    '',
-                    time() - 42000,
-                    $params['path'],
-                    $params['domain'],
-                    $params['secure'],
-                    $params['httponly']
-                );
-            }
-
-            session_destroy();
 
             return [
                 'success' => true,
@@ -174,13 +153,14 @@ final class Usuario
         int $horasValidade
     ): void {
         $expira = date('Y-m-d H:i:s', strtotime("+{$horasValidade} hours"));
+        $tokenHash = Security::hashAccessToken($token);
 
         $stmt = $this->pdo->prepare("
             UPDATE usuarios
             SET token_acesso = ?, token_expira = ?
             WHERE id_usuario = ?
         ");
-        $stmt->execute([$token, $expira, $idUsuario]);
+        $stmt->execute([$tokenHash, $expira, $idUsuario]);
     }
 
     public function registrarUltimoAcesso(string $idUsuario): void
@@ -196,21 +176,43 @@ final class Usuario
 
     public function validarToken(string $token): ?array
     {
+        $token = trim($token);
+        if ($token === '') {
+            return null;
+        }
+
+        $tokenHash = Security::hashAccessToken($token);
         $stmt = $this->pdo->prepare("
-            SELECT id_usuario, nome
+            SELECT id_usuario, nome, token_acesso
             FROM usuarios
-            WHERE token_acesso = ?
+            WHERE (token_acesso = ? OR token_acesso = ?)
               AND token_expira > NOW()
               AND COALESCE(cadastro_ativo, 1) = 1
             LIMIT 1
         ");
-        $stmt->execute([$token]);
+        $stmt->execute([$tokenHash, $token]);
 
         $usuario = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
         if ($usuario !== null) {
             $idUsuario = trim((string) ($usuario['id_usuario'] ?? ''));
+            $storedToken = (string) ($usuario['token_acesso'] ?? '');
+
+            if ($storedToken === $token) {
+                $upgradeStmt = $this->pdo->prepare("
+                    UPDATE usuarios
+                    SET token_acesso = ?
+                    WHERE id_usuario = ?
+                      AND token_acesso = ?
+                ");
+                $upgradeStmt->execute([$tokenHash, $idUsuario, $token]);
+            }
+
             if ($idUsuario !== '' && $this->shouldRefreshLastAccess($idUsuario)) {
                 $this->registrarUltimoAcesso($idUsuario);
+            }
+
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                Security::touchSessionActivity();
             }
         }
 
@@ -219,7 +221,7 @@ final class Usuario
 
     /**
      * Altera a senha do usuário. Exige senha atual correta.
-     * Nova senha: mínimo 8 caracteres.
+     * Nova senha: política centralizada em Security::validatePasswordPolicy().
      *
      * @return array{success: bool, message?: string}
      */
@@ -243,9 +245,17 @@ final class Usuario
             return ['success' => false, 'message' => 'Senha atual incorreta.'];
         }
 
-        $novaSenha = trim($novaSenha);
-        if (strlen($novaSenha) < 8) {
-            return ['success' => false, 'message' => 'A nova senha deve ter no mínimo 8 caracteres.'];
+        $policy = Security::validatePasswordPolicy($novaSenha);
+        if (($policy['valid'] ?? false) !== true) {
+            return ['success' => false, 'message' => $policy['message'] ?? 'Senha inválida.'];
+        }
+
+        if (Security::verifyPassword($novaSenha, $row['senha_hash'])) {
+            return ['success' => false, 'message' => 'A nova senha deve ser diferente da senha atual.'];
+        }
+
+        if ($this->hasRecentPasswordReuse($idUsuario, $novaSenha)) {
+            return ['success' => false, 'message' => 'A nova senha não pode repetir nenhuma das últimas senhas utilizadas.'];
         }
 
         $novoHash = Security::hashPassword($novaSenha);
@@ -452,6 +462,38 @@ final class Usuario
 
         $lastTouch = isset($registry[$idUsuario]) ? (int) $registry[$idUsuario] : 0;
         return $lastTouch <= 0 || (time() - $lastTouch) >= self::LAST_ACCESS_REFRESH_SECONDS;
+    }
+
+    private function hasRecentPasswordReuse(string $idUsuario, string $novaSenha, int $historyLimit = 5): bool
+    {
+        $stmtAtual = $this->pdo->prepare('SELECT senha_hash FROM usuarios WHERE id_usuario = ? LIMIT 1');
+        $stmtAtual->execute([$idUsuario]);
+        $atual = $stmtAtual->fetchColumn();
+        if (is_string($atual) && $atual !== '' && Security::verifyPassword($novaSenha, $atual)) {
+            return true;
+        }
+
+        try {
+            $stmtHistorico = $this->pdo->prepare('
+                SELECT senha_hash
+                  FROM historico_senha
+                 WHERE usuario = ?
+              ORDER BY data_alteracao DESC
+                 LIMIT ' . max(1, $historyLimit)
+            );
+            $stmtHistorico->execute([$idUsuario]);
+            $historico = $stmtHistorico->fetchAll(PDO::FETCH_COLUMN);
+        } catch (Throwable $e) {
+            return false;
+        }
+
+        foreach ($historico as $hash) {
+            if (is_string($hash) && $hash !== '' && Security::verifyPassword($novaSenha, $hash)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function markLastAccessRefresh(string $idUsuario): void

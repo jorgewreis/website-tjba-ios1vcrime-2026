@@ -1,66 +1,94 @@
 ---
 id: project-canonical-document
 title: "Documento Canônico do Projeto"
-version: "0.1.0"
-date: 2026-02-18
-status: draft
+version: "0.2.0"
+date: 2026-04-01
+status: active
 review_cycle: 12m
 authors:
   - "Jorge Reis"
 decisions:
-  stack: "PHP 8.2 · MySQL 8.0 (utf8mb4) · Next.js + JS ES2022"
-  session_storage: "JWT tokens armazenados em sessionStorage e painel admin em iframe"
+  stack: "PHP · MySQL · HTML/CSS/JavaScript"
+  architecture: "Aplicação web PHP customizada com área restrita em iframe e APIs internas em public/api"
   versioning: "VERSION/CHANGELOG/docs/90-releases orientam releases Patch/Minor/Major"
 ---
 
 # Documento Canônico do Projeto
 
 ## Objetivo do sistema
-O objetivo deste documento é tornar explícitas as regras e referências que guiam a evolução do Sistema de Gestão do Cartório (SGC) e garantir que qualquer autor novo entenda o que já está decidido antes de acrescentar conteúdo técnico ou funcional.
-Ele reúne, em um único arquivo canônico, o propósito do sistema, a stack consolidada, os padrões obrigatórios e as restrições que vêm da arquitetura e da governança institucional.
-Ter essa base registrando contexto e escopo evita decisões ad hoc que contradizem a separação público/restrita ou as exigências de auditoria já documentadas.
+Este documento registra as decisões estruturais que passam a valer como referência oficial para a evolução do Sistema de Gestão do Cartório (SGC).
+Seu papel é eliminar ambiguidades entre proposta, documentação histórica e implementação real, deixando explícita a stack adotada, a organização do sistema e as restrições técnicas que devem orientar novas alterações.
 
 ## Stack oficial
-A stack oficial combina um front-end shell em Next.js com módulos legados em PHP e SQL, conforme as premissas descritas no repositório: o front deve ser escrito em ES2022 (módulos e sintaxe moderna) e consumidor dos serviços JSON expostos pelo back-end PHP.
-No back-end, adotamos PHP 8.2 para caber com o CloudPanel 2026, aproveitar atributos e tipos estritos e manter compatibilidade com bibliotecas de segurança; o código roda em scripts e classes com separação clara de responsabilidades (controllers, helpers, models).
-O banco de dados é MySQL 8.0, charset `utf8mb4` (conforme `.env`), e o carregamento dos scripts front/back depende de JSON/REST; JavaScript comportamental permanece vanilla quando não há necessidade de React, respeitando o objetivo de manter respostas leves para os módulos públicos.
+A stack oficial do projeto é composta por **PHP** no backend, **MySQL** no banco de dados e **HTML, CSS e JavaScript** no frontend.
+O sistema **não adota Next.js, Laravel ou Bootstrap como base arquitetural**.
+A interface é servida por arquivos PHP em `public/`, com assets próprios em `public/assets/` e páginas internas em `app/views/`.
+As interações assíncronas do frontend ocorrem por JavaScript modular e endpoints internos, principalmente em `public/api/`.
 
 ## Regras de arquitetura
-A arquitetura deve deixar clara a divisão entre a área pública (contas, recuperações, informações não sensíveis) e a área restrita (painel administrativo, módulos cartoriais), usando camadas em `app/`, `public/` e `database/` para separar responsabilidades e mantendo logs por ação em `storage/logs`.
-O painel administrativo (`admin/home.php`) carrega páginas internas e menus dentro de um `<iframe>`, enquanto o shell externo pode ser implementado com Next.js; isso garante que o frame controle sessão, navegação e layout, sem expor rotas sensíveis diretamente.
-Documentos de arquitetura devem manter diagramas em formatos editáveis (diagrams.net ou similares), ADRs referenciadas em `docs/architecture/adr/` e requisitos não funcionais explícitos para disponibilidade, escalabilidade e segurança, conforme o canônico de arquitetura.
+A arquitetura oficial é a de uma **aplicação web PHP customizada**, com separação entre:
+
+- entrada pública e shell autenticado em `public/`;
+- regras de negócio e apoio técnico em `app/`;
+- configuração em `config/`;
+- SQL, estrutura e migrações em `database/`;
+- runtime local em `storage/`.
+
+O fluxo principal do sistema usa:
+
+- `public/index.php` como entrada pública;
+- `public/login.php` para autenticação;
+- `public/home.php` como shell autenticado;
+- `public/frame.php` para carregamento das páginas internas no iframe;
+- `public/api/` como superfície principal de endpoints HTTP internos.
+
+O backend é responsável por validação, autorização, acesso a dados e orquestração das regras do sistema.
+Bibliotecas de terceiros podem existir de forma pontual, mas **não definem a arquitetura do projeto**.
 
 ## Convenções de nomenclatura
-Os arquivos e pastas devem seguir `kebab-case` em inglês sempre que possível, como recomendado no guia de documentação (`docs/00-foundation/guia-estrutura-docs.md`), mantendo nomes descritivos e curtos (ex.: `docs/architecture/adr/session-policy.md`).
-Controller, Model e Helper devem usar `PascalCase` para refletir a nomenclatura de classes PHP, enquanto views e assets preferem `snake_case` ou `kebab-case` conforme o contexto de carga; o importante é que o padrão escolhido seja aplicado de forma consistente dentro de cada pasta.
-Identificadores persistidos no banco também obedecem a uma convenção clara: prefixos de três letras (ex.: `USR-`, `PER-`) seguidos de hífen e sequência única, garantindo que qualquer consulta ou log identifique rapidamente o tipo de entidade envolvida.
+Arquivos e pastas de documentação e assets devem preferir `kebab-case`, com nomes curtos e descritivos.
+Classes PHP devem usar `PascalCase`, acompanhando a convenção já adotada em helpers, models, repositories, services e middlewares.
+Views, páginas públicas e scripts podem usar `snake_case` ou `kebab-case`, desde que o padrão seja consistente dentro de cada diretório.
+Identificadores persistidos no banco continuam seguindo o padrão semântico com prefixo e hífen, conforme os documentos de dados e banco do projeto.
 
 ## Padrões CSS
-A paleta de cores oficial deriva das seções de interface do README: tons neutros (brancos e cinzas suaves), azuis em três camadas (claros para fundos, médios para bordas e fortes para ações), e cores semânticas para feedback (sucesso, perigo, atenção, info), embalados em regras de contraste aprovadas para leitura.
-A organização dos arquivos CSS segue o padrão modular descrito em `estrutura-repositorio.md`: primeiro `reset.css`, depois `layout.css`, depois `components.css` e `pages/*.css`, mantendo o CSS de cada página separado e evitando arquivos monolíticos; os arquivos de tema e core ficam dentro de `public/assets/css/`, com importação controlada em `public/index.php` ou equivalente.
-Estados de componente (hover, focus, ativo) devem usar classes utilitárias e animações discretas, e qualquer nova regra visual precisa passar pelos critérios de accesibilidade definidos no `accessibility-requirements.md` (WCAG 2.1 AA), para manter contraste e foco previsível.
+O projeto utiliza **CSS próprio**, organizado em `public/assets/css/`, sem dependência arquitetural de Bootstrap.
+Os estilos compartilhados ficam principalmente em `public/assets/css/shared/`, com arquivos como `reset.css`, `layout.css`, `form.css`, `page.css`, `table.css`, `login.css`, `toast.css` e `color.css`.
+Estilos específicos de módulos podem ser mantidos em `public/assets/css/modules/`, preservando o princípio de separar base visual e regras locais.
+Componentes novos devem seguir a paleta e os utilitários já consolidados no projeto, em especial os utilitários numéricos de largura definidos em `public/assets/css/shared/form.css`.
 
 ## Estrutura de pastas
-A raiz do repositório concentra governança (`README.md`, `LICENSE.md`, `VERSION`, `CHANGELOG.md`, `COMMITS.md`), configuração (`.env`, `.gitattributes`, `.gitignore`), automações (`scripts/`, `.github/workflows`) e código (`app/`, `config/`, `database/`, `public/`, `storage/`).
-Documentação fica em `docs/`, com subpastas numeradas (`00-foundation`, `10-architecture`, `20-modules`, `30-security`, `40-operations`, `90-releases`) organizando público, arquitetura, módulos, segurança, operações e histórico de releases.
-Diretórios de runtime como `storage/` não versionam artefatos; apenas marcadores (`.gitkeep`) ficam no repositório para garantir existência, enquanto uploads, logs e backups são mantidos lá e ignorados pelo Git conforme regra da raiz.
+A estrutura oficial do repositório é orientada pelo código atual:
+
+- `app/` concentra `access`, `controllers`, `helpers`, `middlewares`, `models`, `repositories`, `rules`, `services` e `views`;
+- `config/` mantém parâmetros de runtime e segurança;
+- `database/` reúne schema, migrations, seeds e scripts SQL auxiliares;
+- `public/` reúne entrypoints, assets, documentos públicos e APIs internas;
+- `storage/` concentra uploads, logs e backups locais;
+- `docs/` concentra a documentação versionada;
+- `scripts/` reúne automações e utilitários operacionais;
+- `tools/` reúne ferramentas auxiliares de desenvolvimento e IA.
+
+Há ainda uma árvore `api/` na raiz do repositório que não compõe a arquitetura principal atual e deve ser tratada separadamente em revisão específica.
 
 ## Regras de versionamento
-As versões vivem em três lugares: o arquivo `VERSION` é a fonte única para scripts e automações, `CHANGELOG.md` registra o histórico cumulativo e `docs/90-releases/` abriga `_draft_minor.md`, notas por versão (`vYY.MM.md`) e checklists; isso garante rastreabilidade entre o código, a documentação e os releases oficiais.
-Os ciclos seguem o modelo Patch/Minor/Major descrito em `docs/90-releases/README.md`: patches incrementam `YY.MM.PPPP` e alimentam o draft, minors consolidam o draft em um novo `vYY.MM.md`, e majors são reservados para mudanças estruturais com checklists e migrações adicionais.
-Branches e commits acompanham a governança do escopo (como detalhado em `docs/00-foundation/escopo-projeto.md`): há uma estratégia fixa para proteger `main`/`release`, usar branches temporárias para feature fixes e documentar convenções (descrição clara do escopo, ticket e área impactada) antes do merge.
+As versões continuam sendo controladas por `VERSION`, `CHANGELOG.md` e `docs/90-releases/`.
+O repositório adota o fluxo Patch → Minor → Major já descrito na documentação de releases, preservando rastreabilidade entre código, documentos e histórico operacional.
 
 ## Restrições técnicas
-O front-end deve ser desenvolvido com Next.js e servir como shell para o painel administrativo, enquanto o backend continua em PHP (8.2) acessando MySQL e entregando JSON; a comunicação entre camadas precisa seguir esse modelo híbrido, sem introduzir APIs REST externas que não sigam a estrutura existente.
-Segurança exige que o token JWT seja armazenado exclusivamente no `sessionStorage`, que não se use cookies HTTP-only nem sessões nativas do PHP para controle de estado, e que CPF permaneça com máscara no banco (`VARCHAR`), conforme as restrições de dados e autenticação definidas no documento de premissas.
-A interface deve entregar a estética minimalista e acessível definida no `accessibility-requirements.md`, mantendo o isolamento de setores (nada de dados de outro setor para perfis não-admin) e obedecendo o padrão de IDs com prefixo semântico para facilitar auditoria e logs.
+As seguintes restrições passam a valer como diretriz obrigatória:
+
+- não introduzir **Next.js**, **Laravel** ou **Bootstrap** como base oficial do projeto;
+- manter a interface principal compatível com **HTML, CSS e JavaScript** sem dependência de framework frontend obrigatório;
+- manter o backend em **PHP** com acesso a dados em **MySQL**;
+- preservar a separação entre arquivos públicos (`public/`) e lógica interna (`app/`, `config/`, `database/`);
+- manter endpoints internos alinhados à estrutura oficial do projeto, com prioridade para `public/api/`.
 
 ## Decisões já tomadas
-Esta seção registra decisões críticas que já foram documentadas e que devem ser mantidas como ponto de referência obrigatório antes de qualquer nova mudança.
-A seguir estão as decisões confirmadas até agora, com a relação direta aos documentos de premissas e governança:
-- O painel administrativo roda dentro de um `<iframe>` hospedado em `admin/home.php` e a “casca” externa pode ser Next.js, mantendo a separação entre shell e conteúdos sensíveis.
-- A persistência da autenticação usa tokens JWT salvos somente no `sessionStorage`, evitando cookies HTTP-only ou sessão de PHP para permitir auditoria em JavaScript.
-- Todos os identificadores principais (`USR-`, `PER-`, `CRT-`, etc.) mantêm prefixos semânticos, facilitando logs e rastreamento de eventos no banco de dados.
-- O versionamento segue o trio `VERSION`/`CHANGELOG`/`docs/90-releases` com ciclos Patch → Minor → Major descritos no canônico de releases.
-- A paleta de CSS e os splits de componentes seguem o padrão minimalista e modular descrito no README e nos documentos de UI.
-A continuidade dessas decisões garante que qualquer nova adição respeite o modelo de governança compartilhado e não introduza variações que compliquem auditoria, segurança ou experiência do usuário.
+As decisões abaixo passam a ser referência oficial:
+
+- A base do sistema é uma aplicação **PHP customizada**.
+- O frontend oficial usa **HTML, CSS e JavaScript**, sem Next.js e sem Bootstrap.
+- O backend oficial usa **PHP** e o banco oficial é **MySQL**.
+- A área autenticada utiliza `public/home.php` e `public/frame.php` como shell e carregamento interno.
+- A estrutura real do repositório, e não modelos genéricos de framework, é a referência para documentação de arquitetura e manutenção.

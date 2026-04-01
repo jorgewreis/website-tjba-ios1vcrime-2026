@@ -26,7 +26,7 @@ Esta regra impede a "navegação lateral" dentro do sistema. Mesmo que um usuár
 ### Regras Técnicas de Implementação
 
 - **Filtro SQL Obrigatório:** Toda consulta deve conter a cláusula `WHERE id_setor = :session_setor_id`.
-- **Validação de API:** O *middleware* deve verificar se o token JWT pertence ao setor que está sendo consultado.
+- **Validação de API:** O backend deve verificar se o usuário autenticado e o contexto da sessão pertencem ao setor autorizado para a consulta solicitada.
 - **Bloqueio de IDs:** Tentar acessar `GET /api/processos/123` onde o processo 123 é de outro setor deve retornar `403 Forbidden`, e não `404 Not Found` (para evitar enumeração).
 
 ### Exemplo de Uso (SQL Seguro)

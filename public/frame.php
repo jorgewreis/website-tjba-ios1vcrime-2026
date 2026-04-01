@@ -9,10 +9,7 @@ require_once __DIR__ . '/../app/helpers/Conection.php';
 require_once __DIR__ . '/../app/access/AccessEvaluator.php';
 require_once __DIR__ . '/../app/access/AccessPolicyVersion.php';
 
-// Garante que a sessão esteja ativa antes de acessar dados do usuário.
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
+Security::requireAuthentication();
 
 // Página solicitada (padrão: dashboard).
 $page = $_GET['page'] ?? 'dashboard';
@@ -148,8 +145,7 @@ do {
     $user = $usuario->validarToken($_SESSION['token']);
 
     if (!$user) {
-        $_SESSION = [];
-        session_destroy();
+        Security::clearAuthenticatedSession();
         $validationStatus = 401;
         $validationMessage = 'Sessão expirada';
         break;

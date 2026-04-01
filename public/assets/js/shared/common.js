@@ -8,7 +8,7 @@
         throw new Error(`HTTP ${response.status}`);
       }
       const result = await response.json();
-      return result.valid === true;
+      return result.valid === true || result.success === true;
     } catch (error) {
       console.error("Erro ao validar token:", error);
       return false;

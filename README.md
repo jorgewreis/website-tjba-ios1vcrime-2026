@@ -156,11 +156,12 @@ A autorização é baseada em perfil, garantindo que cada usuário visualize e e
 
 Padrão de navegação do sistema:
 
-- **Login:** `index.php`
-- **Após login:** redireciona para `admin/home.php`
-- **Páginas internas:** exibidas dentro de um **iframe** em `admin/home.php` (menu carrega no mesmo iframe)
-- **Exposição de URLs internas:** preferir páginas internas acessadas por **arquivos públicos** que fazem `include` dos scripts da área `admin`, evitando expor diretamente URLs sensíveis
-- **Logout:** após logout bem-sucedido, redirecionar para `index.php`
+- **Login:** `public/index.php`
+- **Processamento de autenticação:** `public/login.php`
+- **Após login:** redireciona para `public/home.php`
+- **Páginas internas:** exibidas dentro de um **iframe** no shell autenticado e resolvidas por `public/frame.php?page=...`
+- **APIs internas:** concentradas principalmente em `public/api/`, com alguns endpoints auxiliares em `public/admin/api/`
+- **Logout:** após logout bem-sucedido, redirecionar para `public/index.php`
 
 ---
 
@@ -334,13 +335,14 @@ Campos sugeridos:
 
 Pastas principais no repositório:
 
-- `app/` — modelos, services, helpers, middlewares e views divididos entre `public` e `internal`.
-- `bootstrap/`, `config/` e `database/` — inicialização, parâmetros de conexão e migrações/exportações SQL.
-- `public/` — entrypoints (`index.php`, `home.php`, `frame.php`, APIs em `admin/api/`) e a pasta `assets/` com CSS/JS/template compartilhados, imagens e ícones.
-- `scripts/` — automações (versionamento, drafts, bump) utilizadas pelos hooks do repositório.
-- `storage/` — runtime (logs, uploads, backups) e **não versiona** o conteúdo (apenas `.gitkeep`).
-- `tools/` — auxiliares de IA e modelos de prompt (usados apenas em contexto de desenvolvimento/documentação).
-- `vendor/`
+- `app/` — código principal do sistema, com `access`, `controllers`, `helpers`, `middlewares`, `models`, `repositories`, `rules`, `services` e `views`.
+- `config/` e `database/` — parâmetros de runtime, segurança, schema, migrations, seeds e scripts SQL auxiliares.
+- `public/` — entrypoints (`index.php`, `login.php`, `home.php`, `frame.php`), APIs em `public/api/` e `public/admin/api/`, além de `assets/`, `documents/` e `templates/`.
+- `storage/` — runtime local, com logs, uploads e backups.
+- `docs/` — documentação técnica, funcional, operacional e de releases.
+- `scripts/` — automações e utilitários de manutenção do repositório.
+- `tools/` — auxiliares de desenvolvimento, incluindo ferramentas de IA.
+- `api/` — scripts e endpoints antigos que exigem revisão separada antes de serem tratados como superfície oficial.
 
 Fluxo **número CNJ → classe processual** (DataJud + cadastro local): ver [`docs/00-foundation/datajud-classe-processo-bd-sync.md`](docs/00-foundation/datajud-classe-processo-bd-sync.md) e [`public/assets/js/modules/datajud/README.md`](public/assets/js/modules/datajud/README.md).
 

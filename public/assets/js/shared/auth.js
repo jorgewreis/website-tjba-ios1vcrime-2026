@@ -75,6 +75,7 @@
     if (!form || !cpfInput || !emailInput) return;
 
     const onlyDigits = (value) => (value || "").toString().replace(/\D+/g, "");
+    const csrfInput = form.querySelector('input[name="csrf_token"]');
 
     const elements = {
       alertBox: document.getElementById("alert-login"),
@@ -143,7 +144,8 @@
           },
           body: JSON.stringify({
             cpf: cpfDigits,
-            email
+            email,
+            csrf_token: csrfInput ? csrfInput.value : ""
           })
         });
 
@@ -154,7 +156,7 @@
 
         if (success) {
           const toastType = emailSent ? "success" : "info";
-          const toastTitle = emailSent ? "E-mail enviado" : "Senha redefinida";
+          const toastTitle = emailSent ? "Link enviado" : "Solicitação registrada";
           if (global.App && global.App.Toast) global.App.Toast.show({ type: toastType, variant: "full", title: toastTitle, message });
           else setAlert(emailSent ? "success" : "primary", toastTitle, message);
           form.reset();

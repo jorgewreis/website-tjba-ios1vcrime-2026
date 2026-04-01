@@ -1,52 +1,56 @@
-﻿# Especificação de Premissas e Restrições Técnicas
+# Especificação de Premissas e Restrições Técnicas
 
 ## 1. Introdução
 
-Este documento formaliza as premissas básicas assumidas para o desenvolvimento do WebApp | 1vCrimeIlheus e as restrições técnicas que limitam as decisões de design e implementação. O objetivo é balizar a arquitetura do software e garantir a aderência aos requisitos de negócio e infraestrutura.
+Este documento formaliza as premissas básicas e as restrições técnicas do projeto, considerando a arquitetura que de fato foi adotada para o sistema.
+Seu objetivo é orientar decisões de design, manutenção e evolução sem recorrer a frameworks ou convenções que não fazem parte da base oficial do repositório.
 
 ## 2. Premissas do Projeto
 
-As premissas são fatores considerados verdadeiros para que o projeto seja viável. Caso alguma premissa não se confirme, o cronograma ou a qualidade podem ser impactados.
+As premissas são fatores considerados verdadeiros para a continuidade do projeto. Se alguma delas deixar de valer, pode haver impacto em prazo, operação ou qualidade.
 
 ### 2.1. Infraestrutura e Conectividade
 
-- **Ambiente de Hospedagem:** Assume-se a disponibilidade contínua do ambiente CloudPanel com suporte a PHP e MySQL.
-- **Conectividade do Cliente:** O sistema é uma aplicação web dependente de conexão estável com a internet; não haverá suporte a modo offline (PWA Offline) nesta versão.
-- **Navegadores Modernos:** Assume-se que os usuários (Servidores e Externos) utilizarão navegadores modernos (Chrome, Firefox, Edge, Safari) atualizados, compatíveis com ES6+ e recursos do Next.js.
+- **Ambiente de hospedagem:** Assume-se a disponibilidade contínua de um ambiente com suporte a **PHP** e **MySQL**, compatível com a estrutura atual do projeto.
+- **Conectividade do cliente:** O sistema é uma aplicação web dependente de conexão estável com a internet; não há suporte a modo offline.
+- **Navegadores modernos:** Assume-se uso de navegadores modernos (Chrome, Firefox, Edge, Safari) atualizados, compatíveis com HTML5, CSS3 e JavaScript ES6+.
 
 ### 2.2. Dados e Migração
 
-- **Integridade dos Dados:** Assume-se que não haverá migração de dados legados complexos nesta fase inicial; o banco de dados começará com uma estrutura limpa ou com carga inicial controlada.
+- **Integridade dos dados:** O banco deve permanecer sob controle do projeto, com scripts SQL versionados em `database/`.
+- **Migrações controladas:** Evoluções estruturais do banco devem ocorrer por scripts explícitos e revisáveis, evitando mudanças implícitas ou dependentes de framework ORM.
 
 ## 3. Restrições Técnicas
 
-As restrições são limitações impostas pela arquitetura, orçamento ou diretrizes estratégicas que **devem** ser respeitadas obrigatoriamente.
+As restrições abaixo devem ser respeitadas obrigatoriamente.
 
-### 3.1. Stack Tecnológico (Híbrido)
+### 3.1. Stack Tecnológica Oficial
 
-- **Frontend:** Deve ser desenvolvido exclusivamente em **Next.js** (React).
-- **Backend/API:** A lógica de negócios e acesso a dados deve ser implementada em **PHP** (Classes e Scripts).
-- **Banco de Dados:** Uso obrigatório de **MySQL** hospedado no CloudPanel.
-- **Comunicação:** A troca de dados entre Frontend e Backend deve ocorrer via JSON.
+- **Backend:** Deve ser desenvolvido em **PHP**, usando a organização existente do repositório.
+- **Frontend:** Deve ser desenvolvido em **HTML, CSS e JavaScript**, sem dependência arquitetural de Next.js, React ou Bootstrap.
+- **Banco de Dados:** Uso de **MySQL** como banco principal.
+- **Comunicação:** A aplicação pode combinar renderização server-side em PHP com requisições JSON para endpoints internos quando necessário.
 
 ### 3.2. Restrições Arquiteturais
 
-- **Admin via Iframe:** O painel administrativo (`admin/home.php`) deve carregar as páginas internas e menus dentro de um `<iframe>`. O Next.js deve gerenciar a "casca" externa ou integrar-se a esse modelo onde aplicável.
-- **Gestão de Sessão:** A persistência da autenticação (Token JWT) deve ser feita exclusivamente no **sessionStorage** do navegador. Não utilizar Cookies HTTP-Only ou Sessões de Servidor PHP nativas para controle de estado da API.
-- **Identificadores (IDs):** Todas as chaves primárias devem ser strings contendo um prefixo semântico de 3 letras seguido de hífen (ex: `USR-` para usuários, `PER-` para perfis).
+- **Shell autenticado:** A área restrita do sistema deve permanecer centrada em `public/home.php`, com carregamento interno por `public/frame.php`.
+- **Separação de responsabilidades:** Arquivos públicos devem permanecer em `public/`, enquanto regras de negócio, acesso a dados, configuração e apoio técnico devem permanecer fora da raiz pública.
+- **Identificadores (IDs):** As chaves primárias e identificadores semânticos continuam seguindo o padrão institucional já documentado.
+- **Sem framework obrigatório:** O projeto não deve depender de Laravel, Next.js ou Bootstrap para funcionar como sistema principal.
 
 ### 3.3. Restrições de Segurança e Dados
 
-- **Mascaramento de CPF:** O CPF deve ser armazenado no banco de dados como `VARCHAR` contendo a máscara (pontos e traço).
-- **Isolamento de Setor:** A arquitetura deve impedir fisicamente (via query SQL ou Middleware) que um usuário acesse dados de outro setor, salvo se for Admin.
-- **Validação de Senha:** O sistema deve impedir o reuso da senha anterior e exigir complexidade mínima (8 caracteres, letras, números, especiais).
+- **Mascaramento de CPF:** O CPF deve permanecer armazenado em `VARCHAR`, com máscara, conforme o padrão atual do projeto.
+- **Isolamento de setor:** A aplicação deve impedir acesso indevido entre setores e perfis por meio das regras implementadas no backend.
+- **Políticas de autenticação e senha:** Devem seguir os documentos específicos de segurança e a decisão arquitetural vigente para autenticação da área restrita.
 
 ### 3.4. Restrições de Interface (UI/UX)
 
-- **Estilo Visual:** A interface deve seguir uma estética minimalista, inspirada em referências artísticas (ex: Monument Valley), evitando excesso de informações (clutter) na tela.
-- **Acessibilidade:** Conformidade obrigatória com WCAG 2.1 Nível AA (conforme documento `accessibility-requirements.md`).
+- **Estilo visual:** A interface deve seguir a linguagem visual própria do projeto, com CSS customizado e sem adoção de Bootstrap como base.
+- **Acessibilidade:** Deve haver aderência às diretrizes de acessibilidade já documentadas para o sistema.
 
 ## 4. Riscos Associados
 
-- **Arquitetura Iframe:** O uso de iframes pode apresentar desafios para responsividade móvel e acessibilidade (leitores de tela), exigindo esforço extra de desenvolvimento para mitigação.
-- **Segurança Client-Side:** O armazenamento de tokens no `sessionStorage` é suscetível a ataques XSS se não houver uma sanitização rigorosa de todos os inputs e outputs da aplicação.
+- **Arquitetura com iframe:** O uso de iframe na área restrita exige atenção extra em responsividade, acessibilidade e navegação.
+- **Código sem framework dominante:** A manutenção depende de disciplina na organização dos arquivos, padronização de naming e separação clara de responsabilidades.
+- **Acoplamento entre páginas e endpoints internos:** Mudanças estruturais em `public/`, `app/` e `public/api/` exigem revisão documental para evitar novas divergências entre código e documentação.

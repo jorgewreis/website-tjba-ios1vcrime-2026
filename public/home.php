@@ -19,10 +19,7 @@ $usuario = new Usuario();
 $user = $usuario->validarToken($_SESSION['token']);
 
 if (!$user) {
-    $_SESSION = [];
-    if (session_status() === PHP_SESSION_ACTIVE) {
-        session_destroy();
-    }
+    Security::clearAuthenticatedSession();
     header('Location: /index.php');
     exit;
 }

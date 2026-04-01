@@ -150,7 +150,7 @@ $faculdades = [
                         <div class="display-flex row row-full justify-start align-center padding-x-sm">
                             <div class="col">
                                 <label for="senha">Senha *</label>
-                                <input class="width-400" type="password" id="senha" name="senha" required minlength="6" maxlength="25" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+                                <input class="width-400" type="password" id="senha" name="senha" required minlength="<?php echo PASSWORD_MIN_LENGTH; ?>" maxlength="<?php echo PASSWORD_MAX_LENGTH; ?>" placeholder="Mín. <?php echo PASSWORD_MIN_LENGTH; ?> caracteres, 1 maiúscula, 1 minúscula, 1 número e 1 símbolo" autocomplete="new-password">
                             </div>
                         </div>
 
@@ -213,8 +213,9 @@ $faculdades = [
                     return;
                 }
                 const senha = (form.querySelector("#senha") && form.querySelector("#senha").value) || "";
-                if (senha.length < 6) {
-                    if (window.App && App.Toast) App.Toast.show({ type: "error", variant: "full", title: "Erro", message: "A senha deve ter no mínimo 6 caracteres." });
+                const senhaRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{<?php echo PASSWORD_MIN_LENGTH; ?>,<?php echo PASSWORD_MAX_LENGTH; ?>}$/;
+                if (!senhaRegex.test(senha)) {
+                    if (window.App && App.Toast) App.Toast.show({ type: "error", variant: "full", title: "Erro", message: "A senha deve seguir a política: <?php echo addslashes(Security::passwordPolicySummary()); ?>." });
                     return;
                 }
                 if (!form.querySelector("#aceite_termos_lgpd").checked) {

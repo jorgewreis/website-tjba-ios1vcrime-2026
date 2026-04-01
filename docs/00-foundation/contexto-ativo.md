@@ -20,14 +20,14 @@ authors:
 ## O problema atual
 - As páginas internas ainda dependem de scripts legados (menu, controle de seções) que precisam ser verificadas contra a nova implementação em `public/assets/js/shared/menu.js`.
 - A camada de documentação e o README não estão totalmente em sincronia com a nova organização física das pastas e arquivos (assets, configs, scripts).
-- O fluxo de autenticação ainda usa tokens JWT gravados em sessão PHP; qualquer mudança precisa preservar a decisão registrada no canônico do projeto.
+- O fluxo de autenticação da área interna usa sessão PHP e token aleatório persistido no banco; qualquer mudança precisa preservar a decisão registrada no canônico do projeto.
 
 ## O que já foi testado
 - Realizadas inspeções manuais dos entrypoints `public/index.php`, `public/home.php` e `public/recupera_senha.php` para garantir que carreguem os estilos e scripts redistribuídos.
 - Os arquivos JS compartilhados foram validados visualmente (sem testes automáticos) em um carregamento básico do browser para confirmar que `App.CPF`, `App.Auth` e `App.Menu` estão definidos antes dos handlers de DOM.
 
 ## O que NÃO pode ser alterado
-- A stack oficial (PHP 8.2, MySQL 8.0 `utf8mb4`, Next.js + JS ES2022) e os tokens JWT guardados em `sessionStorage`, conforme documentado em `docs/00-foundation/project-canonical-document.md`.
+- A stack oficial baseada em PHP, MySQL, HTML, CSS e JavaScript, além do modelo de autenticação por sessão PHP com token persistido em banco, conforme documentado nos arquivos canônicos atuais.
 - A governança de versionamento (arquivo `VERSION`, `CHANGELOG.md`, pastas `docs/90-releases/`) e o uso de `public/` exclusivamente para recursos expostos.
 - As decisões de arquitetura já consolidadas (painel admin em iframe, separação de áreas públicas/restritas, IDs com prefixos semânticos).
 

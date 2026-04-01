@@ -6,6 +6,8 @@ final class Security
     private const SESSION_TOKEN_KEY = 'token';
     private const SESSION_USER_ID   = 'id_usuario';
     private const SESSION_PROFILE   = 'user_profile';
+    private const SESSION_USER_NAME = 'nome';
+    private const SESSION_LAST_ACTIVITY = 'last_activity_at';
     private const CSRF_SESSION_KEY  = 'csrf_token';
 
     private const PERFIS_RANK = [
@@ -19,15 +21,17 @@ final class Security
 
     public static function isAuthenticated(): bool
     {
-        return isset(
-            $_SESSION[self::SESSION_TOKEN_KEY],
-            $_SESSION[self::SESSION_USER_ID]
-        ) && is_string($_SESSION[self::SESSION_TOKEN_KEY]);
+        if (!self::hasAuthenticatedKeys()) {
+            return false;
+        }
+
+        return !self::isSessionExpiredByInactivity();
     }
 
     public static function requireAuthentication(): void
     {
         if (!self::isAuthenticated()) {
+            self::clearAuthenticatedSession();
             header('Location: /index.php');
             exit;
         }
@@ -67,6 +71,11 @@ final class Security
     public static function generateSecureToken(int $bytes = 32): string
     {
         return bin2hex(random_bytes($bytes));
+    }
+
+    public static function hashAccessToken(string $token): string
+    {
+        return hash('sha256', $token);
     }
 
     public static function generateCSRFToken(): string
@@ -175,6 +184,147 @@ final class Security
             $out .= $chars[random_int(0, strlen($chars) - 1)];
         }
         return $out;
+    }
+
+    /**
+     * @return array{valid:bool,message:?string}
+     */
+    public static function validatePasswordPolicy(string $password): array
+    {
+        if ($password === '') {
+            return ['valid' => false, 'message' => 'Informe a senha.'];
+        }
+
+        if (strlen($password) < PASSWORD_MIN_LENGTH) {
+            return [
+                'valid' => false,
+                'message' => 'A senha deve ter no mínimo ' . PASSWORD_MIN_LENGTH . ' caracteres.',
+            ];
+        }
+
+        if (strlen($password) > PASSWORD_MAX_LENGTH) {
+            return [
+                'valid' => false,
+                'message' => 'A senha deve ter no máximo ' . PASSWORD_MAX_LENGTH . ' caracteres.',
+            ];
+        }
+
+        if (!preg_match('/[a-z]/', $password)) {
+            return ['valid' => false, 'message' => 'A senha deve conter ao menos uma letra minúscula.'];
+        }
+
+        if (!preg_match('/[A-Z]/', $password)) {
+            return ['valid' => false, 'message' => 'A senha deve conter ao menos uma letra maiúscula.'];
+        }
+
+        if (!preg_match('/\d/', $password)) {
+            return ['valid' => false, 'message' => 'A senha deve conter ao menos um número.'];
+        }
+
+        if (!preg_match('/[^\w\s]/', $password)) {
+            return ['valid' => false, 'message' => 'A senha deve conter ao menos um símbolo.'];
+        }
+
+        return ['valid' => true, 'message' => null];
+    }
+
+    public static function passwordPolicySummary(): string
+    {
+        return 'mínimo de ' . PASSWORD_MIN_LENGTH . ' caracteres, com 1 letra maiúscula, 1 minúscula, 1 número e 1 símbolo';
+    }
+
+    public static function initializeAuthenticatedSession(string $userId, ?string $profile, string $token, ?string $name = null): void
+    {
+        $_SESSION[self::SESSION_USER_ID] = $userId;
+        $_SESSION[self::SESSION_PROFILE] = $profile;
+        $_SESSION[self::SESSION_TOKEN_KEY] = $token;
+        if ($name !== null && $name !== '') {
+            $_SESSION[self::SESSION_USER_NAME] = $name;
+        }
+
+        self::touchSessionActivity(true);
+    }
+
+    public static function touchSessionActivity(bool $force = false): void
+    {
+        if (!self::hasAuthenticatedKeys()) {
+            return;
+        }
+
+        if (!$force && self::isSessionExpiredByInactivity()) {
+            return;
+        }
+
+        $_SESSION[self::SESSION_LAST_ACTIVITY] = time();
+    }
+
+    public static function clearAuthenticatedSession(): void
+    {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            unset(
+                $_SESSION[self::SESSION_USER_ID],
+                $_SESSION[self::SESSION_PROFILE],
+                $_SESSION[self::SESSION_TOKEN_KEY],
+                $_SESSION[self::SESSION_USER_NAME],
+                $_SESSION[self::SESSION_LAST_ACTIVITY],
+                $_SESSION[self::CSRF_SESSION_KEY]
+            );
+        }
+
+        if (function_exists('destroySessionData')) {
+            destroySessionData();
+        }
+    }
+
+    public static function isSessionExpiredByInactivity(): bool
+    {
+        if (!self::hasAuthenticatedKeys()) {
+            return false;
+        }
+
+        $lastActivity = $_SESSION[self::SESSION_LAST_ACTIVITY] ?? null;
+        if (!is_int($lastActivity) && !ctype_digit((string) $lastActivity)) {
+            return false;
+        }
+
+        return (time() - (int) $lastActivity) > SESSION_IDLE_TIMEOUT;
+    }
+
+    public static function getClientIp(): string
+    {
+        $candidates = [
+            $_SERVER['HTTP_CF_CONNECTING_IP'] ?? null,
+            $_SERVER['HTTP_X_FORWARDED_FOR'] ?? null,
+            $_SERVER['REMOTE_ADDR'] ?? null,
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (!is_string($candidate) || trim($candidate) === '') {
+                continue;
+            }
+
+            $parts = array_map('trim', explode(',', $candidate));
+            foreach ($parts as $part) {
+                if ($part !== '' && filter_var($part, FILTER_VALIDATE_IP)) {
+                    return $part;
+                }
+            }
+        }
+
+        return '0.0.0.0';
+    }
+
+    public static function getUserName(): ?string
+    {
+        return $_SESSION[self::SESSION_USER_NAME] ?? null;
+    }
+
+    private static function hasAuthenticatedKeys(): bool
+    {
+        return isset(
+            $_SESSION[self::SESSION_TOKEN_KEY],
+            $_SESSION[self::SESSION_USER_ID]
+        ) && is_string($_SESSION[self::SESSION_TOKEN_KEY]);
     }
 
     /* ==================== SESSION GETTERS ==================== */

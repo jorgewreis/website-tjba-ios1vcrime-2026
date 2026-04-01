@@ -131,8 +131,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $mensagemErro = 'Selecione o sexo.';
         } elseif ($dataNascimentoRaw !== '' && $dataNascimentoIso === null) {
             $mensagemErro = 'Informe a data de nascimento no formato AAAA-MM-DD.';
-        } elseif (strlen($senha) < 10 || !preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{10,}$/', $senha)) {
-            $mensagemErro = 'Senha deve ter no mínimo 10 caracteres, 1 maiúscula, 1 minúscula, 1 número e 1 símbolo.';
+        } elseif (($policy = Security::validatePasswordPolicy($senha))['valid'] !== true) {
+            $mensagemErro = $policy['message'] ?? 'Senha inválida.';
         } elseif ($senha !== $senhaConfirm) {
             $mensagemErro = 'As senhas não coincidem.';
         } else {

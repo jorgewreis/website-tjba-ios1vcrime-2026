@@ -71,7 +71,7 @@ if (isset($_COOKIE['tjba_1vcrime_remember_cpf'])) {
                     <div class="title-page">
                         <span class="title">Recuperar senha</span>
                         <span class="info-title">
-                            Informe o CPF e confirme o e-mail cadastrado.
+                            Informe o CPF e confirme o e-mail cadastrado para receber um link de redefinição.
                         </span>
                     </div>
 

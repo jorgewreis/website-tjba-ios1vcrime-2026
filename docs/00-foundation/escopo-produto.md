@@ -118,7 +118,7 @@ O escopo técnico é definido pelo Documento de Arquitetura de Software (SAD), q
 - Frontend: HTML, CSS, JavaScript, com uso de Bootstrap; evolução planejada para SCSS (Sass) e TypeScript.
 - Banco de dados: MySQL.
 - Servidor web: Nginx (com PHP-FPM).
-- Autenticação: modelo híbrido (sessão + JWT).
+- Autenticação: sessão PHP com validação server-side e token aleatório persistido no banco.
 - E-mail: SMTP.
 - Logs/observabilidade: AWS CloudWatch.
 - Storage de arquivos: disco local do servidor.

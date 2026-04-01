@@ -5,6 +5,10 @@ header('Content-Type: application/json; charset=UTF-8');
 header('Access-Control-Allow-Origin: *');
 $config = require __DIR__ . '/config.php';
 
+if (($config['api_key'] ?? '') === '') {
+    respond(['error' => 'Integração DataJud não configurada.'], 500);
+}
+
 $rawInput = file_get_contents('php://input') ?: '';
 $payload = json_decode($rawInput, true);
 if (!is_array($payload)) {

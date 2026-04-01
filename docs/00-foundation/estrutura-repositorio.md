@@ -11,7 +11,7 @@ Além de servir como referência para pastas e arquivos, este guia deve ser cons
 
 - `docs/00-foundation/project-canonical-document.md`: decisão central do projeto (stack, arquitetura, restrições e versionamento).
 - `docs/00-foundation/guia-estrutura-docs.md`: recomendações de organização da pasta `docs/`, nomenclaturas e formatos.
-- `docs/00-foundation/technical-assumptions-constraints.md`: premissas, stack híbrido (Next.js + PHP/MySQL) e limites técnicos que condicionam esta estrutura.
+- `docs/00-foundation/technical-assumptions-constraints.md`: premissas e limites técnicos que condicionam esta estrutura.
 - `docs/90-releases/README.md`: operação de releases (Patch/Minor/Major) e seus artefatos (`VERSION`, `CHANGELOG`, `_draft_minor.md`).
 
 ## 3. Regras gerais transversais

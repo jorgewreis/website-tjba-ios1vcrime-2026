@@ -90,8 +90,8 @@ if (!$aceiteTermosLgpd) {
 }
 
 $senha = trim((string) ($payload['senha'] ?? ''));
-if (strlen($senha) < 6) {
-    echo json_encode(['success' => false, 'message' => 'A senha deve ter no mínimo 6 caracteres.']);
+if (($policy = Security::validatePasswordPolicy($senha))['valid'] !== true) {
+    echo json_encode(['success' => false, 'message' => $policy['message'] ?? 'Senha inválida.']);
     exit;
 }
 

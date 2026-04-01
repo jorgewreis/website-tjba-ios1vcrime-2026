@@ -19,10 +19,7 @@ try {
     $usuario = new Usuario();
     $user = ($token !== null && $token !== '') ? $usuario->validarToken($token) : null;
     if ($user === null) {
-        $_SESSION = [];
-        if (session_status() === PHP_SESSION_ACTIVE) {
-            session_destroy();
-        }
+        Security::clearAuthenticatedSession();
         http_response_code(401);
         echo json_encode(['success' => false, 'message' => 'Sessão expirada']);
         exit;
