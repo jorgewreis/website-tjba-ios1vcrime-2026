@@ -467,6 +467,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
     <script src="/assets/js/shared/prefs.js" defer></script>
     <script src="/assets/js/shared/toast.js" defer></script>
     <script src="/assets/js/shared/navigate-buttons.js" defer></script>
+    <script src="/assets/js/shared/user-context.js" defer></script>
     <script src="/assets/js/shared/common.js" defer></script>
     <script src="/assets/js/shared/menu.js" defer></script>
 
@@ -557,10 +558,24 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             return trim((string) $s);
         }, $userSetores))), JSON_UNESCAPED_UNICODE); ?>;
 
+        window.__APP_CONTEXT = Object.assign({}, window.__APP_CONTEXT || {}, {
+            initialPerfis: INITIAL_USER_PERFIS,
+            fallbackPerfis: FALLBACK_PERFIS,
+            allowedRulePerfis: ['ADMIN', 'DIRETORA', 'MAGISTRADA'],
+            currentUser: {
+                id: <?php echo json_encode($sessionUserId, JSON_UNESCAPED_UNICODE); ?>,
+                nome: <?php echo json_encode($userDisplayFullName !== '' ? $userDisplayFullName : $userName, JSON_UNESCAPED_UNICODE); ?>,
+                usuario: <?php echo json_encode($userDisplayFullName !== '' ? $userDisplayFullName : $userName, JSON_UNESCAPED_UNICODE); ?>
+            }
+        });
+
         /**
          * Unifica fontes de perfil, normaliza maiúsculas e mapeia perfis legados para CHEFIA (mesmo critério do sistema).
          */
         function normalizePerfis(perfis) {
+            if (window.App && App.User && typeof App.User.normalizePerfis === 'function') {
+                return App.User.normalizePerfis(perfis);
+            }
             const out = [];
             const seen = new Set();
             (perfis || []).forEach((raw) => {
@@ -578,6 +593,12 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
         }
 
         async function fetchUserPerfis() {
+            if (window.App && App.User && typeof App.User.fetchPerfis === 'function') {
+                return App.User.fetchPerfis('/admin/api/getPerfis.php', {
+                    initialPerfis: INITIAL_USER_PERFIS,
+                    fallbackPerfis: FALLBACK_PERFIS
+                });
+            }
             let fromApi = [];
             try {
                 const response = await fetch('/admin/api/getPerfis.php');

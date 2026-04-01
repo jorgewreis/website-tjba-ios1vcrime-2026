@@ -292,6 +292,10 @@ try {
             const classeCodigoField = document.getElementById('hidden-classe-codigo');
             const classeDescricaoField = document.getElementById('hidden-classe-descricao');
             const showFeedback = (message, type = 'success') => {
+                if (window.App && App.Page && typeof App.Page.notify === 'function') {
+                    App.Page.notify(type === 'error' ? 'error' : 'success', type === 'error' ? 'Erro' : 'Sucesso', message);
+                    return;
+                }
                 if (typeof showToast === 'function') {
                     showToast({ type: type === 'error' ? 'error' : 'success', variant: 'full', title: type === 'error' ? 'Erro' : 'Sucesso', message });
                 }

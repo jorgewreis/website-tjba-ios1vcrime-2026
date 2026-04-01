@@ -1,8 +1,11 @@
 (function () {
     'use strict';
+    var pageTools = window.App && App.Page ? App.Page : null;
 
-    /** Mesmo diretório do documento atual (ex.: /public/frame.php → /public/frame.php). */
     function getFramePhpHref() {
+        if (pageTools && typeof pageTools.getFramePhpHref === 'function') {
+            return pageTools.getFramePhpHref();
+        }
         var path = window.location.pathname || '/frame.php';
         var slash = path.lastIndexOf('/');
         var dir = slash >= 0 ? path.slice(0, slash + 1) : '/';
@@ -10,6 +13,10 @@
     }
 
     function notify(type, title, message) {
+        if (pageTools && typeof pageTools.notify === 'function') {
+            pageTools.notify(type, title, message);
+            return;
+        }
         if (typeof showToast === 'function') {
             showToast({ type: type, variant: 'full', title: title, message: message });
         }
@@ -47,11 +54,15 @@
             })
             .then(function (res) {
                 if (res.ok && res.j && res.j.success) {
-                    try {
-                        sessionStorage.setItem('salapauta.postReloadToast', JSON.stringify([
-                            { type: 'success', title: 'Sucesso', message: successMessage }
-                        ]));
-                    } catch (e) {}
+                    if (pageTools && typeof pageTools.queuePostReloadToast === 'function') {
+                        pageTools.queuePostReloadToast('success', 'Sucesso', successMessage, 'salapauta.postReloadToast');
+                    } else {
+                        try {
+                            sessionStorage.setItem('salapauta.postReloadToast', JSON.stringify([
+                                { type: 'success', title: 'Sucesso', message: successMessage }
+                            ]));
+                        } catch (e) {}
+                    }
                     window.location.reload();
                     return;
                 }
@@ -134,6 +145,10 @@
     }
 
     (function flushPostReloadToast() {
+        if (pageTools && typeof pageTools.flushPostReloadToast === 'function') {
+            pageTools.flushPostReloadToast('salapauta.postReloadToast', { type: 'success', title: 'Sucesso' });
+            return;
+        }
         try {
             var raw = sessionStorage.getItem('salapauta.postReloadToast');
             if (!raw) return;

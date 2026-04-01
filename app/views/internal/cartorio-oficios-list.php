@@ -588,12 +588,20 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
     <script>
         (function () {
             const notify = (type, title, message) => {
+                if (window.App && App.Page && typeof App.Page.notify === 'function') {
+                    App.Page.notify(type, title, message);
+                    return;
+                }
                 if (typeof showToast === 'function') {
                     showToast({ type, variant: 'full', title, message });
                 }
             };
             const POST_RELOAD_TOAST_KEY = 'cartorio.postReloadToast';
             const queuePostReloadToast = (payload) => {
+                if (window.App && App.Page && typeof App.Page.queuePostReloadToast === 'function') {
+                    App.Page.queuePostReloadToast(payload, null, null, POST_RELOAD_TOAST_KEY);
+                    return;
+                }
                 try {
                     const raw = sessionStorage.getItem(POST_RELOAD_TOAST_KEY);
                     const fila = raw ? JSON.parse(raw) : [];
@@ -613,6 +621,13 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                 }, 10000);
             };
             const flushPostReloadToast = () => {
+                if (window.App && App.Page && typeof App.Page.flushPostReloadToast === 'function') {
+                    const list = App.Page.flushPostReloadToast(POST_RELOAD_TOAST_KEY, { type: 'info', title: 'Informação' });
+                    (Array.isArray(list) ? list : []).forEach(function (item) {
+                        if (item && item.highlight_oficio_id) highlightCreatedOficio(item.highlight_oficio_id);
+                    });
+                    return;
+                }
                 try {
                     const raw = sessionStorage.getItem(POST_RELOAD_TOAST_KEY);
                     if (!raw) return;
@@ -863,30 +878,12 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
         })();
 
         (function () {
-            var PERFIS_ALTERAR_REGRA = ['ADMIN', 'DIRETORA', 'MAGISTRADA'];
-            function hasPermissionToChangeRule(perfis) {
-                if (!Array.isArray(perfis) || perfis.length === 0) return false;
-                var allowed = PERFIS_ALTERAR_REGRA.map(function (p) { return p.toUpperCase(); });
-                return perfis.some(function (perfil) {
-                    var p = (perfil && String(perfil)).toUpperCase().trim();
-                    return allowed.indexOf(p) !== -1;
-                });
-            }
             window.addEventListener('DOMContentLoaded', function () {
-                var btn = document.getElementById('alterar-regra-btn');
-                if (!btn) return;
-                fetch('/admin/api/getPerfis.php', { credentials: 'same-origin' })
-                    .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
-                    .then(function (data) {
-                        var perfis = (data && data.perfis) ? data.perfis : [];
-                        if (hasPermissionToChangeRule(perfis)) {
-                            btn.style.display = '';
-                            btn.addEventListener('click', function () {
-                                window.location.href = '/frame.php?page=oficiosrules';
-                            });
-                        }
-                    })
-                    .catch(function () { btn.style.display = 'none'; });
+                if (!window.App || !App.User || typeof App.User.setupRuleButton !== 'function') return;
+                App.User.setupRuleButton({
+                    buttonId: 'alterar-regra-btn',
+                    targetPage: 'oficiosrules'
+                });
             });
         })();
     </script>

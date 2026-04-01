@@ -581,13 +581,22 @@ if ($totalPages > 0) {
     <script src="/assets/js/modules/cartorio/cartas-expedidas/search-list.js"></script>
     <script>
         (function () {
+            const pageTools = window.App && App.Page ? App.Page : null;
             const notify = (type, title, message) => {
+                if (pageTools && typeof pageTools.notify === 'function') {
+                    pageTools.notify(type, title, message);
+                    return;
+                }
                 if (typeof showToast === 'function') {
                     showToast({ type, variant: 'full', title, message });
                 }
             };
             const POST_RELOAD_TOAST_KEY = 'cartorio.postReloadToast';
             const queuePostReloadToast = (type, title, message) => {
+                if (pageTools && typeof pageTools.queuePostReloadToast === 'function') {
+                    pageTools.queuePostReloadToast(type, title, message, POST_RELOAD_TOAST_KEY);
+                    return;
+                }
                 try {
                     const raw = sessionStorage.getItem(POST_RELOAD_TOAST_KEY);
                     const fila = raw ? JSON.parse(raw) : [];
@@ -597,6 +606,10 @@ if ($totalPages > 0) {
                 } catch (e) {}
             };
             const flushPostReloadToast = () => {
+                if (pageTools && typeof pageTools.flushPostReloadToast === 'function') {
+                    pageTools.flushPostReloadToast(POST_RELOAD_TOAST_KEY, { type: 'info', title: 'Informação' });
+                    return;
+                }
                 try {
                     const raw = sessionStorage.getItem(POST_RELOAD_TOAST_KEY);
                     if (!raw) return;

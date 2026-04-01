@@ -1,8 +1,12 @@
 (function () {
     'use strict';
+    var pageTools = window.App && App.Page ? App.Page : null;
     var MAX_UPLOAD_BYTES = 2 * 1024 * 1024;
 
     function getFramePhpHref() {
+        if (pageTools && typeof pageTools.getFramePhpHref === 'function') {
+            return pageTools.getFramePhpHref();
+        }
         var path = window.location.pathname || '/frame.php';
         var slash = path.lastIndexOf('/');
         var dir = slash >= 0 ? path.slice(0, slash + 1) : '/';
@@ -10,6 +14,10 @@
     }
 
     function notify(type, title, message) {
+        if (pageTools && typeof pageTools.notify === 'function') {
+            pageTools.notify(type, title, message);
+            return;
+        }
         if (typeof showToast === 'function') {
             showToast({ type: type, variant: 'full', title: title, message: message });
         }

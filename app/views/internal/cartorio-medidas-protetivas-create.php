@@ -375,33 +375,12 @@ try {
     </script>
     <script>
         (function () {
-            var PERFIS_ALTERAR_REGRA = ['ADMIN', 'DIRETORA', 'MAGISTRADA'];
-
-            function hasPermissionToChangeRule(perfis) {
-                if (!Array.isArray(perfis) || perfis.length === 0) return false;
-                var allowed = PERFIS_ALTERAR_REGRA.map(function (perfil) { return perfil.toUpperCase(); });
-                return perfis.some(function (perfil) {
-                    return allowed.indexOf(String(perfil || '').toUpperCase().trim()) !== -1;
-                });
-            }
-
             window.addEventListener('DOMContentLoaded', function () {
-                var btn = document.getElementById('alterar-regra-btn');
-                if (!btn) return;
-                fetch('/admin/api/getPerfis.php', { credentials: 'same-origin' })
-                    .then(function (response) { if (!response.ok) throw new Error(); return response.json(); })
-                    .then(function (data) {
-                        var perfis = (data && data.perfis) ? data.perfis : [];
-                        if (hasPermissionToChangeRule(perfis)) {
-                            btn.style.display = '';
-                            btn.addEventListener('click', function () {
-                                window.location.href = '/frame.php?page=medidasprotetivasrules';
-                            });
-                        }
-                    })
-                    .catch(function () {
-                        btn.style.display = 'none';
-                    });
+                if (!window.App || !App.User || typeof App.User.setupRuleButton !== 'function') return;
+                App.User.setupRuleButton({
+                    buttonId: 'alterar-regra-btn',
+                    targetPage: 'medidasprotetivasrules'
+                });
             });
         })();
     </script>

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.06
+
+**Data:** 2026-04-01 20:21:53 | **Commit:** `1c9cf76` | **Tipo:** `minor`
+
+- feat: adicionar gerenciamento de contexto do usuário e funções de validação de sessão; implementar busca de perfis e normalização de permissões
+
 ## V. 1.04.0091
 
 **Data:** 2026-03-24 16:46:38 | **Commit:** `30599fe` | **Tipo:** `patch`
@@ -3840,6 +3846,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

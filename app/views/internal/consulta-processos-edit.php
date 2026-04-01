@@ -102,6 +102,10 @@ $prioridadesFichaEstado = $processoIdFicha !== ''
     <?php endif; ?>
     <script>
     function queuePostReloadToast(type, title, message) {
+        if (window.App && App.Page && typeof App.Page.queuePostReloadToast === 'function') {
+            App.Page.queuePostReloadToast(type, title, message, 'cartorio.postReloadToast');
+            return;
+        }
         try {
             var key = 'cartorio.postReloadToast';
             var raw = sessionStorage.getItem(key);
@@ -111,18 +115,22 @@ $prioridadesFichaEstado = $processoIdFicha !== ''
             sessionStorage.setItem(key, JSON.stringify(lista));
         } catch (e) {}
     }
-    var pendingConfirmations = {};
-    function requireSecondClick(key, message) {
-        var now = Date.now();
-        var validUntil = Number(pendingConfirmations[key] || 0);
-        if (validUntil > now) {
-            delete pendingConfirmations[key];
-            return true;
-        }
-        pendingConfirmations[key] = now + 5000;
-        if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Confirmação', message: message });
-        return false;
-    }
+    var requireSecondClick = window.App && App.Page && typeof App.Page.createSecondClickGuard === 'function'
+        ? App.Page.createSecondClickGuard()
+        : (function () {
+            var pendingConfirmations = {};
+            return function (key, message) {
+                var now = Date.now();
+                var validUntil = Number(pendingConfirmations[key] || 0);
+                if (validUntil > now) {
+                    delete pendingConfirmations[key];
+                    return true;
+                }
+                pendingConfirmations[key] = now + 5000;
+                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Confirmação', message: message });
+                return false;
+            };
+        })();
     document.querySelectorAll('.btn-desvincular').forEach(function(btn) {
         btn.addEventListener('click', function() {
             var id = this.getAttribute('data-id');

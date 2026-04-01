@@ -161,6 +161,10 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
         return false;
     }
     function queuePostReloadToast(type, title, message) {
+        if (window.App && App.Page && typeof App.Page.queuePostReloadToast === 'function') {
+            App.Page.queuePostReloadToast(type, title, message, 'cartorio.postReloadToast');
+            return;
+        }
         try {
             var key = 'cartorio.postReloadToast';
             var raw = sessionStorage.getItem(key);

@@ -286,6 +286,10 @@ try {
         (function () {
             var btn = document.getElementById('cadastrar-btn');
             var showFeedback = function (message, type) {
+                if (window.App && App.Page && typeof App.Page.notify === 'function') {
+                    App.Page.notify(type === 'error' ? 'error' : 'success', type === 'error' ? 'Erro' : 'Sucesso', message);
+                    return;
+                }
                 if (typeof showToast === 'function') {
                     showToast({ type: type === 'error' ? 'error' : 'success', variant: 'full', title: type === 'error' ? 'Erro' : 'Sucesso', message: message });
                 }
@@ -429,30 +433,12 @@ try {
     </script>
     <script>
         (function () {
-            var PERFIS_ALTERAR_REGRA = ['ADMIN', 'DIRETORA', 'MAGISTRADA'];
-            function hasPermissionToChangeRule(perfis) {
-                if (!Array.isArray(perfis) || perfis.length === 0) return false;
-                var allowed = PERFIS_ALTERAR_REGRA.map(function (p) { return p.toUpperCase(); });
-                return perfis.some(function (perfil) {
-                    var p = (perfil && String(perfil)).toUpperCase().trim();
-                    return allowed.indexOf(p) !== -1;
-                });
-            }
             window.addEventListener('DOMContentLoaded', function () {
-                var btn = document.getElementById('alterar-regra-btn');
-                if (!btn) return;
-                fetch('/admin/api/getPerfis.php', { credentials: 'same-origin' })
-                    .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
-                    .then(function (data) {
-                        var perfis = (data && data.perfis) ? data.perfis : [];
-                        if (hasPermissionToChangeRule(perfis)) {
-                            btn.style.display = '';
-                            btn.addEventListener('click', function () {
-                                window.location.href = '/frame.php?page=ceaparules';
-                            });
-                        }
-                    })
-                    .catch(function () { btn.style.display = 'none'; });
+                if (!window.App || !App.User || typeof App.User.setupRuleButton !== 'function') return;
+                App.User.setupRuleButton({
+                    buttonId: 'alterar-regra-btn',
+                    targetPage: 'ceaparules'
+                });
             });
         })();
     </script>

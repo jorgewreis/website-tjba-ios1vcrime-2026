@@ -151,9 +151,17 @@ $statusLabel = $statusAtual === 'finalizada' ? 'Finalizada' : ($statusAtual === 
     <script>
         (function () {
             const notify = (type, title, message) => {
+                if (window.App && App.Page && typeof App.Page.notify === 'function') {
+                    App.Page.notify(type, title, message);
+                    return;
+                }
                 if (typeof showToast === 'function') showToast({ type, variant: 'full', title, message });
             };
             const queuePostReloadToast = (type, title, message) => {
+                if (window.App && App.Page && typeof App.Page.queuePostReloadToast === 'function') {
+                    App.Page.queuePostReloadToast(type, title, message, 'cartorio.postReloadToast');
+                    return;
+                }
                 try {
                     const key = 'cartorio.postReloadToast';
                     const raw = sessionStorage.getItem(key);
@@ -169,18 +177,22 @@ $statusLabel = $statusAtual === 'finalizada' ? 'Finalizada' : ($statusAtual === 
                 window.location.href = '/frame.php?page=oficiosgabinete';
             });
 
-            const pendingConfirmations = {};
-            function requireSecondClick(key, message) {
-                const now = Date.now();
-                const validUntil = Number(pendingConfirmations[key] || 0);
-                if (validUntil > now) {
-                    delete pendingConfirmations[key];
-                    return true;
-                }
-                pendingConfirmations[key] = now + 5000;
-                notify('info', 'Confirmação', message);
-                return false;
-            }
+            const requireSecondClick = window.App && App.Page && typeof App.Page.createSecondClickGuard === 'function'
+                ? App.Page.createSecondClickGuard()
+                : (() => {
+                    const pendingConfirmations = {};
+                    return (key, message) => {
+                        const now = Date.now();
+                        const validUntil = Number(pendingConfirmations[key] || 0);
+                        if (validUntil > now) {
+                            delete pendingConfirmations[key];
+                            return true;
+                        }
+                        pendingConfirmations[key] = now + 5000;
+                        notify('info', 'Confirmação', message);
+                        return false;
+                    };
+                })();
 
             document.getElementById('gab-cancelar-oficio-btn')?.addEventListener('click', function () {
                 const btn = this;

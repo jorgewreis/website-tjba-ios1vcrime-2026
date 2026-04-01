@@ -412,9 +412,17 @@ $statusLabelUi = static function (string $s): string {
     <script>
         (function () {
             const notify = (type, title, message) => {
+                if (window.App && App.Page && typeof App.Page.notify === 'function') {
+                    App.Page.notify(type, title, message);
+                    return;
+                }
                 if (typeof showToast === 'function') showToast({ type, variant: 'full', title, message });
             };
             const queuePostReloadToast = (type, title, message) => {
+                if (window.App && App.Page && typeof App.Page.queuePostReloadToast === 'function') {
+                    App.Page.queuePostReloadToast(type, title, message, 'gme.postReloadToast');
+                    return;
+                }
                 try {
                     const key = 'gme.postReloadToast';
                     const raw = sessionStorage.getItem(key);
@@ -425,6 +433,10 @@ $statusLabelUi = static function (string $s): string {
                 } catch (e) {}
             };
             const flushPostReloadToast = () => {
+                if (window.App && App.Page && typeof App.Page.flushPostReloadToast === 'function') {
+                    App.Page.flushPostReloadToast('gme.postReloadToast', { type: 'info', title: 'Informação' });
+                    return;
+                }
                 try {
                     const raw = sessionStorage.getItem('gme.postReloadToast');
                     if (!raw) return;

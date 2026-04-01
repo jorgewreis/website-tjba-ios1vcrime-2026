@@ -257,8 +257,12 @@ $ordemParaTipo = [
         </script>
         <script>
             (function () {
-                var pendingConfirmations = {};
+                var pageTools = window.App && App.Page ? App.Page : null;
                 function queuePostReloadToast(type, title, message) {
+                    if (pageTools && typeof pageTools.queuePostReloadToast === 'function') {
+                        pageTools.queuePostReloadToast(type, title, message, 'cartorio.postReloadToast');
+                        return;
+                    }
                     try {
                         var key = 'cartorio.postReloadToast';
                         var raw = sessionStorage.getItem(key);
@@ -268,19 +272,24 @@ $ordemParaTipo = [
                         sessionStorage.setItem(key, JSON.stringify(lista));
                     } catch (e) {}
                 }
-                function requireSecondClick(key, message) {
-                    var now = Date.now();
-                    var validUntil = Number(pendingConfirmations[key] || 0);
-                    if (validUntil > now) {
-                        delete pendingConfirmations[key];
-                        return true;
-                    }
-                    pendingConfirmations[key] = now + 5000;
-                    if (typeof showToast === 'function') {
-                        showToast({ type: 'info', variant: 'full', title: 'Confirmação', message: message });
-                    }
-                    return false;
-                }
+                var requireSecondClick = pageTools && typeof pageTools.createSecondClickGuard === 'function'
+                    ? pageTools.createSecondClickGuard()
+                    : (function () {
+                        var pendingConfirmations = {};
+                        return function (key, message) {
+                            var now = Date.now();
+                            var validUntil = Number(pendingConfirmations[key] || 0);
+                            if (validUntil > now) {
+                                delete pendingConfirmations[key];
+                                return true;
+                            }
+                            pendingConfirmations[key] = now + 5000;
+                            if (typeof showToast === 'function') {
+                                showToast({ type: 'info', variant: 'full', title: 'Confirmação', message: message });
+                            }
+                            return false;
+                        };
+                    })();
                 var voltarBtn = document.getElementById('voltar-btn');
                 if (voltarBtn) {
                     voltarBtn.addEventListener('click', function (e) {

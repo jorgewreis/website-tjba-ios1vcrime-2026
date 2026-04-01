@@ -1,5 +1,11 @@
 (function () {
+    var pageTools = window.App && App.Page ? App.Page : null;
+
     function notify(type, title, message) {
+        if (pageTools && typeof pageTools.notify === 'function') {
+            pageTools.notify(type, title, message);
+            return;
+        }
         if (typeof showToast === 'function') {
             showToast({ type: type, variant: 'full', title: title, message: message });
         }
@@ -26,6 +32,10 @@
     });
 
     (function flushPostReloadToast() {
+        if (pageTools && typeof pageTools.flushPostReloadToast === 'function') {
+            pageTools.flushPostReloadToast('estudapauta.postReloadToast', { type: 'success', title: 'Sucesso' });
+            return;
+        }
         try {
             var raw = sessionStorage.getItem('estudapauta.postReloadToast');
             if (!raw) return;

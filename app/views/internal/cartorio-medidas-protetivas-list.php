@@ -411,12 +411,20 @@ if ($totalPages > 0) {
     <script>
         (function () {
             function notify(type, title, message) {
+                if (window.App && App.Page && typeof App.Page.notify === 'function') {
+                    App.Page.notify(type, title, message);
+                    return;
+                }
                 if (typeof showToast === 'function') {
                     showToast({ type: type, variant: 'full', title: title, message: message });
                 }
             }
             var POST_RELOAD_TOAST_KEY = 'cartorio.postReloadToast';
             function queuePostReloadToast(type, title, message) {
+                if (window.App && App.Page && typeof App.Page.queuePostReloadToast === 'function') {
+                    App.Page.queuePostReloadToast(type, title, message, POST_RELOAD_TOAST_KEY);
+                    return;
+                }
                 try {
                     var raw = sessionStorage.getItem(POST_RELOAD_TOAST_KEY);
                     var fila = raw ? JSON.parse(raw) : [];
@@ -426,6 +434,10 @@ if ($totalPages > 0) {
                 } catch (e) {}
             }
             function flushPostReloadToast() {
+                if (window.App && App.Page && typeof App.Page.flushPostReloadToast === 'function') {
+                    App.Page.flushPostReloadToast(POST_RELOAD_TOAST_KEY, { type: 'info', title: 'Informação' });
+                    return;
+                }
                 try {
                     var raw = sessionStorage.getItem(POST_RELOAD_TOAST_KEY);
                     if (!raw) return;

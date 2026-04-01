@@ -1,22 +1,30 @@
 (function () {
-    var pendingConfirmations = {};
+    var pageTools = window.App && App.Page ? App.Page : null;
+    var requireSecondClick = pageTools && typeof pageTools.createSecondClickGuard === 'function'
+        ? pageTools.createSecondClickGuard()
+        : (function () {
+            var pendingConfirmations = {};
+            return function (key, message) {
+                var now = Date.now();
+                var validUntil = Number(pendingConfirmations[key] || 0);
+                if (validUntil > now) {
+                    delete pendingConfirmations[key];
+                    return true;
+                }
+                pendingConfirmations[key] = now + 5000;
+                notify('info', 'Confirmacao', message);
+                return false;
+            };
+        })();
 
     function notify(type, title, message) {
+        if (pageTools && typeof pageTools.notify === 'function') {
+            pageTools.notify(type, title, message);
+            return;
+        }
         if (typeof showToast === 'function') {
             showToast({ type: type, variant: 'full', title: title, message: message });
         }
-    }
-
-    function requireSecondClick(key, message) {
-        var now = Date.now();
-        var validUntil = Number(pendingConfirmations[key] || 0);
-        if (validUntil > now) {
-            delete pendingConfirmations[key];
-            return true;
-        }
-        pendingConfirmations[key] = now + 5000;
-        notify('info', 'Confirmacao', message);
-        return false;
     }
 
     function requiredValue(id, label) {

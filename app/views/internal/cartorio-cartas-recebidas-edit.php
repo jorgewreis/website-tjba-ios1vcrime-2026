@@ -374,6 +374,10 @@ $stateOptions = [
                 }
 
                 const showFeedback = (message, type = 'success') => {
+                    if (window.App && App.Page && typeof App.Page.notify === 'function') {
+                        App.Page.notify(type === 'error' ? 'error' : 'success', type === 'error' ? 'Erro' : 'Sucesso', message);
+                        return;
+                    }
                     if (typeof showToast === 'function') {
                         showToast({ type: type === 'error' ? 'error' : 'success', variant: 'full', title: type === 'error' ? 'Erro' : 'Sucesso', message });
                     }
@@ -536,19 +540,28 @@ $stateOptions = [
 
                 const btnExcluirTarefa = document.getElementById('excluir-tarefa-btn');
                 if (btnExcluirTarefa && window.__currentCartaId) {
-                    const pendingConfirmations = {};
-                    const requireSecondClick = (key, message) => {
-                        const now = Date.now();
-                        const validUntil = Number(pendingConfirmations[key] || 0);
-                        if (validUntil > now) {
-                            delete pendingConfirmations[key];
-                            return true;
-                        }
-                        pendingConfirmations[key] = now + 5000;
-                        if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Confirmação', message: message });
-                        return false;
-                    };
+                    const pageTools = window.App && App.Page ? App.Page : null;
+                    const requireSecondClick = pageTools && typeof pageTools.createSecondClickGuard === 'function'
+                        ? pageTools.createSecondClickGuard()
+                        : (() => {
+                            const pendingConfirmations = {};
+                            return (key, message) => {
+                                const now = Date.now();
+                                const validUntil = Number(pendingConfirmations[key] || 0);
+                                if (validUntil > now) {
+                                    delete pendingConfirmations[key];
+                                    return true;
+                                }
+                                pendingConfirmations[key] = now + 5000;
+                                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Confirmação', message: message });
+                                return false;
+                            };
+                        })();
                     const queuePostReloadToast = (type, title, message) => {
+                        if (pageTools && typeof pageTools.queuePostReloadToast === 'function') {
+                            pageTools.queuePostReloadToast(type, title, message, 'cartorio.postReloadToast');
+                            return;
+                        }
                         try {
                             const key = 'cartorio.postReloadToast';
                             const raw = sessionStorage.getItem(key);

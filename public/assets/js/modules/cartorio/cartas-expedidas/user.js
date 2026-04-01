@@ -1,16 +1,8 @@
-// user.js
-// Funções relacionadas ao usuário e permissões.
-// Perfis para alterar regra de alocação: obtidos da tabela usuario_perfil via /admin/api/getPerfis.php
-
-var PERFIS_ALTERAR_REGRA = ['ADMIN', 'DIRETORA', 'MAGISTRADA'];
-
 function hasPermissionToChangeRule(perfis) {
-    if (!Array.isArray(perfis) || perfis.length === 0) return false;
-    const allowed = PERFIS_ALTERAR_REGRA.map(function (p) { return p.toUpperCase(); });
-    return perfis.some(function (perfil) {
-        var p = (perfil && String(perfil)).toUpperCase().trim();
-        return allowed.indexOf(p) !== -1;
-    });
+    if (window.App && App.User && typeof App.User.canChangeRule === 'function') {
+        return App.User.canChangeRule(perfis);
+    }
+    return false;
 }
 
 function hasPermission() {
@@ -22,35 +14,24 @@ function hasPermission() {
 }
 
 function showRuleButton(btnId) {
-    var btn = document.getElementById(btnId);
-    if (!btn) return;
-
-    var endpoint = typeof window.CARTAS_EXPEDIDAS_PERFIS_ENDPOINT !== 'undefined'
-        ? window.CARTAS_EXPEDIDAS_PERFIS_ENDPOINT
-        : '/admin/api/getPerfis.php';
-
-    fetch(endpoint, { credentials: 'same-origin' })
-        .then(function (response) {
-            if (!response.ok) throw new Error('getPerfis');
-            return response.json();
-        })
-        .then(function (data) {
-            var perfis = (data && data.perfis) ? data.perfis : [];
-            if (typeof window.__userPerfisCartorio === 'undefined') {
+    if (window.App && App.User && typeof App.User.setupRuleButton === 'function') {
+        return App.User.setupRuleButton({
+            buttonId: btnId,
+            targetPage: 'cartasexpedidasrules',
+            endpoint: typeof window.CARTAS_EXPEDIDAS_PERFIS_ENDPOINT !== 'undefined'
+                ? window.CARTAS_EXPEDIDAS_PERFIS_ENDPOINT
+                : '/admin/api/getPerfis.php'
+        }).then(function (allowed) {
+            if (!allowed || !window.App || !App.User || typeof App.User.fetchPerfis !== 'function') {
+                return allowed;
+            }
+            return App.User.fetchPerfis().then(function (perfis) {
                 window.__userPerfisCartorio = perfis;
-            }
-            if (hasPermissionToChangeRule(perfis)) {
-                btn.style.display = '';
-                btn.addEventListener('click', function () {
-                    window.location.href = '/frame.php?page=cartasexpedidasrules';
-                });
-            } else {
-                btn.style.display = 'none';
-            }
-        })
-        .catch(function () {
-            btn.style.display = 'none';
+                return allowed;
+            });
         });
+    }
+    return Promise.resolve(false);
 }
 
 // Inicialização automática
@@ -58,35 +39,18 @@ window.addEventListener('DOMContentLoaded', function () {
     showRuleButton('alterar-regra-btn');
 });
 
-function parseUserLogin() {
-    const raw = sessionStorage.getItem('UserLogin');
-    if (!raw) {
-        return null;
-    }
-    try {
-        return JSON.parse(raw);
-    } catch (e) {
-        return null;
-    }
-}
-
 function getCurrentUser() {
-    const userLogin = parseUserLogin();
-    if (!userLogin) {
-        return null;
+    if (window.App && App.User && typeof App.User.getCurrentUser === 'function') {
+        return App.User.getCurrentUser();
     }
-    if (Array.isArray(userLogin)) {
-        return userLogin[0] ?? null;
-    }
-    return typeof userLogin === 'object' ? userLogin : null;
+    return null;
 }
 
 function getCurrentUserName() {
-    const current = getCurrentUser();
-    if (!current) {
-        return null;
+    if (window.App && App.User && typeof App.User.getCurrentUserName === 'function') {
+        return App.User.getCurrentUserName();
     }
-    return current.usuario ?? current.nome ?? null;
+    return null;
 }
 
 if (typeof window !== 'undefined') {

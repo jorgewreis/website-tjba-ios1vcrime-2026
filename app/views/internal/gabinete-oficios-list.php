@@ -360,9 +360,17 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
     <script>
         (function () {
             const notify = (type, title, message) => {
+                if (window.App && App.Page && typeof App.Page.notify === 'function') {
+                    App.Page.notify(type, title, message);
+                    return;
+                }
                 if (typeof showToast === 'function') showToast({ type, variant: 'full', title, message });
             };
             const queuePostReloadToast = (type, title, message) => {
+                if (window.App && App.Page && typeof App.Page.queuePostReloadToast === 'function') {
+                    App.Page.queuePostReloadToast(type, title, message, 'cartorio.postReloadToast');
+                    return;
+                }
                 try {
                     const key = 'cartorio.postReloadToast';
                     const raw = sessionStorage.getItem(key);
@@ -373,6 +381,10 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
                 } catch (e) {}
             };
             const flushPostReloadToast = () => {
+                if (window.App && App.Page && typeof App.Page.flushPostReloadToast === 'function') {
+                    App.Page.flushPostReloadToast('cartorio.postReloadToast', { type: 'info', title: 'Informação' });
+                    return;
+                }
                 try {
                     const raw = sessionStorage.getItem('cartorio.postReloadToast');
                     if (!raw) return;

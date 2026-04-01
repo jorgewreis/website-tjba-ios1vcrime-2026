@@ -1,4 +1,6 @@
 (function () {
+    var pageTools = window.App && App.Page ? App.Page : null;
+
     function onlyDigits(value) {
         if (typeof window.onlyDigitsCNJ === 'function') {
             return window.onlyDigitsCNJ(value);
@@ -7,6 +9,10 @@
     }
 
     function notify(type, title, message) {
+        if (pageTools && typeof pageTools.notify === 'function') {
+            pageTools.notify(type, title, message);
+            return;
+        }
         if (typeof showToast === 'function') {
             showToast({ type: type, variant: 'full', title: title, message: message });
         }

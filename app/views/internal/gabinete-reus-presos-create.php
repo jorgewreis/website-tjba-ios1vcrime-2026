@@ -64,6 +64,10 @@ $routePage = trim((string) ($_GET['page'] ?? 'reuspresoscreate'));
     <script>
         (function () {
             const notify = (type, title, message) => {
+                if (window.App && App.Page && typeof App.Page.notify === 'function') {
+                    App.Page.notify(type, title, message);
+                    return;
+                }
                 if (typeof showToast === 'function') showToast({ type, variant: 'full', title, message });
             };
 
