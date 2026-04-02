@@ -54,8 +54,49 @@ if ($isGestao) {
 }
 
 $totalPages = $totalDocuments > 0 ? (int) ceil($totalDocuments / $itemsPerPage) : 0;
-if ($totalPages > 0 && $currentPage > $totalPages) {
-    $currentPage = $totalPages;
+if ($isGestao && $errors === []) {
+    if ($totalDocuments === 0) {
+        $currentPage = 1;
+        $offset = 0;
+    } elseif ($currentPage > $totalPages) {
+        $currentPage = $totalPages;
+        $offset = ($currentPage - 1) * $itemsPerPage;
+        try {
+            $result = $service->listRules($userId, ['q' => $q, 'ativo' => $ativo], $itemsPerPage, $offset);
+            $rows = $result['rows'] ?? [];
+        } catch (Throwable $e) {
+            $errors[] = 'Erro ao carregar regras: ' . $e->getMessage();
+        }
+    }
+}
+
+$displayedCount = count($rows);
+$startItem = $displayedCount > 0 ? $offset + 1 : 0;
+$endItem = $displayedCount > 0 ? $offset + $displayedCount : 0;
+$documentsLabel = $totalDocuments === 1 ? 'regra' : 'regras';
+$pagesLabel = $totalPages === 1 ? 'página' : 'páginas';
+$itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
+
+$paginationButtons = [];
+$paginationEllipsis = false;
+$trailingPages = [];
+if ($totalPages > 0) {
+    if ($totalPages <= 5) {
+        $paginationButtons = range(1, $totalPages);
+    } else {
+        $windowStart = max(1, min($currentPage - 2, $totalPages - 4));
+        $windowEnd = min($totalPages, $windowStart + 4);
+        for ($page = $windowStart; $page <= $windowEnd; $page++) {
+            $paginationButtons[] = $page;
+        }
+        if ($windowEnd < $totalPages) {
+            $paginationEllipsis = true;
+            $extraStart = max($windowEnd + 1, $totalPages - 1);
+            for ($page = $extraStart; $page <= $totalPages; $page++) {
+                $trailingPages[] = $page;
+            }
+        }
+    }
 }
 
 $baseQuery = ['page' => $routePage, 'q' => $q, 'ativo' => $ativo, 'items_per_page' => $itemsPerPage];
@@ -128,10 +169,6 @@ $baseQuery = ['page' => $routePage, 'q' => $q, 'ativo' => $ativo, 'items_per_pag
         <?php endforeach; ?>
 
         <?php if ($errors === []): ?>
-            <div class="display-flex row row-full padding-x-md padding-y-sm border-bottom gap-y-md">
-                <span class="status status-current padding-x-md">Total de regras: <?php echo $totalDocuments; ?></span>
-                <span class="minor-info">Página <?php echo max(1, $currentPage); ?> de <?php echo max(1, $totalPages); ?></span>
-            </div>
             <?php if ($rows === []): ?>
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom">
                 <span class="minor-info">Nenhuma regra encontrada.</span>
@@ -176,14 +213,41 @@ $baseQuery = ['page' => $routePage, 'q' => $q, 'ativo' => $ativo, 'items_per_pag
             <?php endif; ?>
         <?php endif; ?>
 
-        <?php if ($errors === [] && $totalDocuments > 0 && $totalPages > 1): ?>
-        <div class="display-flex row row-full justify-end align-center gap-y-sm padding-x-md padding-y-md border-top">
-            <?php for ($p = 1; $p <= $totalPages; $p++): ?>
-                <?php $query = http_build_query(array_merge($baseQuery, ['page_number' => $p])); ?>
-                <button type="button" class="pagination-number<?php echo $p === $currentPage ? ' active' : ''; ?>" data-nav-href="/frame.php?<?php echo htmlspecialchars($query, ENT_QUOTES); ?>">
-                    <?php echo $p; ?>
-                </button>
-            <?php endfor; ?>
+        <?php if ($errors === []): ?>
+        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm border-top">
+            <span class="pagination-info">
+                Mostrando <?php echo (int) $startItem; ?>-<?php echo (int) $endItem; ?> de <?php echo (int) $totalDocuments; ?> <?php echo htmlspecialchars($documentsLabel, ENT_QUOTES, 'UTF-8'); ?>
+                (<?php echo (int) $totalPages; ?> <?php echo htmlspecialchars($pagesLabel, ENT_QUOTES, 'UTF-8'); ?>, <?php echo (int) $itemsPerPage; ?> <?php echo htmlspecialchars($itemsLabel, ENT_QUOTES, 'UTF-8'); ?> por página)
+            </span>
+            <?php if ($totalPages > 0): ?>
+                <div class="pagination-controls">
+                    <?php
+                    $prevPage = $currentPage > 1 ? $currentPage - 1 : 1;
+                    $prevParams = array_merge($baseQuery, ['page_number' => $prevPage]);
+                    $prevHref = '/frame.php?' . http_build_query($prevParams);
+                    $nextPage = $currentPage < $totalPages ? $currentPage + 1 : $currentPage;
+                    $nextParams = array_merge($baseQuery, ['page_number' => $nextPage]);
+                    $nextHref = '/frame.php?' . http_build_query($nextParams);
+                    ?>
+                    <button type="button" class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>" <?php if ($currentPage > 1): ?>data-nav-href="<?php echo htmlspecialchars($prevHref, ENT_QUOTES, 'UTF-8'); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>>
+                        <img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior">
+                    </button>
+                    <?php foreach ($paginationButtons as $page): ?>
+                        <?php $pageParams = array_merge($baseQuery, ['page_number' => $page]); ?>
+                        <button type="button" class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" <?php if ($page !== $currentPage): ?>data-nav-href="/frame.php?<?php echo htmlspecialchars(http_build_query($pageParams), ENT_QUOTES, 'UTF-8'); ?>"<?php else: ?>disabled<?php endif; ?>><?php echo (int) $page; ?></button>
+                    <?php endforeach; ?>
+                    <?php if ($paginationEllipsis && $trailingPages !== []): ?>
+                        <span class="pagination-symbol pagination-ellipsis" aria-hidden="true"><img src="/assets/icons/Navigation-Menu-Horizontal--Streamline-Ultimate.png" alt="Mais páginas"></span>
+                        <?php foreach ($trailingPages as $page): ?>
+                            <?php $pageParams = array_merge($baseQuery, ['page_number' => $page]); ?>
+                            <button type="button" class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" <?php if ($page !== $currentPage): ?>data-nav-href="/frame.php?<?php echo htmlspecialchars(http_build_query($pageParams), ENT_QUOTES, 'UTF-8'); ?>"<?php else: ?>disabled<?php endif; ?>><?php echo (int) $page; ?></button>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                    <button type="button" class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>" <?php if ($currentPage < $totalPages): ?>data-nav-href="<?php echo htmlspecialchars($nextHref, ENT_QUOTES, 'UTF-8'); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>>
+                        <img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página">
+                    </button>
+                </div>
+            <?php endif; ?>
         </div>
         <?php endif; ?>
     </div>

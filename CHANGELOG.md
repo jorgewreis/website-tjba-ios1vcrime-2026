@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.41
+
+**Data:** 2026-04-02 19:49:13 | **Commit:** `bfedb2f` | **Tipo:** `minor`
+
+- feat: implement pagination and improved display for Produtividade list and rules views, enhancing user navigation and feedback
+
 ## V. 1.40
 
 **Data:** 2026-04-02 19:44:25 | **Commit:** `877d07a` | **Tipo:** `minor`
@@ -4092,6 +4098,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
