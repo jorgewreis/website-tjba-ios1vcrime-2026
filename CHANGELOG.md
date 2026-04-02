@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.21
+
+**Data:** 2026-04-02 12:33:01 | **Commit:** `6f4fd0d` | **Tipo:** `minor`
+
+- feat: update frases.php with new phrases and remove outdated ones
+
 ## V. 1.20
 
 **Data:** 2026-04-02 11:58:16 | **Commit:** `3b81168` | **Tipo:** `minor`
@@ -3942,6 +3948,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

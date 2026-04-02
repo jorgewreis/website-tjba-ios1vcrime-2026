@@ -109,10 +109,10 @@ $csrfToken = Security::generateCSRFToken();
                     </div>
                     <!-- FOOTER - SYSTEM -->
                     <div class="footer-page" style="position: absolute; bottom: 0;">                        
-                        <div class="info-page">
-                            <?php if ($isDiaNaoUtil && $infoExpediente): ?>
-                                <span class="info-line"><?php echo htmlspecialchars($infoExpediente, ENT_QUOTES, 'UTF-8'); ?></span>
-                            <?php endif; ?>
+                        <?php if ($isDiaNaoUtil && $infoExpediente): ?>
+                            <span class="info-app" style="background-color: goldenrod; color: #303030;"><?php echo htmlspecialchars($infoExpediente, ENT_QUOTES, 'UTF-8'); ?></span>
+                        <?php endif; ?>
+                        <div class="info-page">                            
                             <span class="info-line">Rua Dr. Hygino Filho, bloco C, 1º andar, sala 132 - Jardim Atlântico, Ilhéus - BA</span>
                             <span class="info-line">Tel.: 73 3234-3428 - WhatsApp: 71 99610-8241 - Email: ilheus1vcriminal@tjba.jus.br</span>
                         </div>
