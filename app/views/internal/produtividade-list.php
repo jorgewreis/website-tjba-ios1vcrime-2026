@@ -133,7 +133,6 @@ $baseQuery = [
                 <label for="regra_busca">Tarefa<span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="hidden" id="regra_id" value="">
                 <input type="text" id="regra_busca" class="width-700 height-md white" placeholder="Ex.: 0001- Expedição de Mandado de Prisão no BNMP">
-                <span class="minor-info">Selecione uma opção para habilitar o cadastro.</span>
             </div>
             <div class="col">
                 <label for="quantidade">Qtd <span class="label-hint-obrigatorio">*</span></label>

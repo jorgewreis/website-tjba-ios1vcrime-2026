@@ -133,59 +133,16 @@ final class ProdutividadeRegrasRepository
     {
         $query = trim($query);
         $limit = max(1, min(20, $limit));
-        $tokens = array_values(array_filter(
-            preg_split('/\s+/u', mb_strtolower($query, 'UTF-8')) ?: [],
-            static function ($token): bool {
-                return trim((string) $token) !== '';
-            }
-        ));
-        $tokens = array_slice($tokens, 0, 6);
-
-        $contextExpr = 'CONCAT(
-            COALESCE(`tipo_ato`, \'\'),
-            \' de \',
-            COALESCE(NULLIF(`tipo_documento`, \'\'), \'documento\'),
-            \' no \',
-            COALESCE(NULLIF(`sistema_modulo`, \'\'), \'sistema não informado\')
-        )';
-
-        $tokenWhere = '';
-        $tokenParams = [];
-        if ($tokens !== []) {
-            $parts = [];
-            foreach ($tokens as $i => $token) {
-                $param = ':tok' . $i;
-                $parts[] = sprintf('%s COLLATE utf8mb4_general_ci LIKE %s', $contextExpr, $param);
-                $tokenParams[$param] = '%' . $token . '%';
-            }
-            $tokenWhere = ' OR (' . implode(' AND ', $parts) . ')';
-        }
-
+        $queryNorm = $this->normalizeForSearch($query);
         $sql = sprintf(
             'SELECT `id`, `tipo_ato`, `tipo_documento`, `sistema_modulo`, `pontos_por_ato`, `pontos_multiplicador`
              FROM `%s`
              WHERE `ativo` = 1
-               AND (
-                    :q = \'\'
-                    OR `tipo_ato` COLLATE utf8mb4_general_ci LIKE :likeQ
-                    OR `tipo_documento` COLLATE utf8mb4_general_ci LIKE :likeQ
-                    OR `sistema_modulo` COLLATE utf8mb4_general_ci LIKE :likeQ
-                    OR %s COLLATE utf8mb4_general_ci LIKE :likeQ
-                    %s
-               )
              ORDER BY `tipo_ato` ASC, `sistema_modulo` ASC, `tipo_documento` ASC
-             LIMIT :limit',
-            $this->table,
-            $contextExpr,
-            $tokenWhere
+             LIMIT 500',
+            $this->table
         );
         $statement = $this->connection->prepare($sql);
-        $statement->bindValue(':q', $query);
-        $statement->bindValue(':likeQ', '%' . $query . '%');
-        foreach ($tokenParams as $param => $value) {
-            $statement->bindValue($param, $value);
-        }
-        $statement->bindValue(':limit', $limit, PDO::PARAM_INT);
         $statement->execute();
 
         $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
@@ -194,6 +151,13 @@ final class ProdutividadeRegrasRepository
             $tipoAto = trim((string) ($row['tipo_ato'] ?? ''));
             $tipoDoc = trim((string) ($row['tipo_documento'] ?? ''));
             $modulo = trim((string) ($row['sistema_modulo'] ?? ''));
+            $fullContext = trim($tipoAto . ' ' . $tipoDoc . ' ' . $modulo);
+            $fullContextNorm = $this->normalizeForSearch($fullContext);
+
+            if ($queryNorm !== '' && mb_strpos($fullContextNorm, $queryNorm, 0, 'UTF-8') === false) {
+                continue;
+            }
+
             $label = $tipoAto;
             if ($tipoDoc !== '' && $modulo !== '') {
                 $label .= ' de ' . $tipoDoc . ' no ' . $modulo;
@@ -211,9 +175,33 @@ final class ProdutividadeRegrasRepository
                 'pontos_por_ato' => (string) ($row['pontos_por_ato'] ?? '0.00'),
                 'pontos_multiplicador' => (string) ($row['pontos_multiplicador'] ?? '1.00'),
             ];
+
+            if (count($out) >= $limit) {
+                break;
+            }
         }
 
         return $out;
+    }
+
+    private function normalizeForSearch(string $value): string
+    {
+        $text = mb_strtolower(trim($value), 'UTF-8');
+        if ($text === '') {
+            return '';
+        }
+
+        if (class_exists('Normalizer')) {
+            $normalized = \Normalizer::normalize($text, \Normalizer::FORM_D);
+            if ($normalized !== false) {
+                $text = preg_replace('/\p{Mn}+/u', '', $normalized) ?? $text;
+            }
+        }
+
+        $text = preg_replace('/[^\p{L}\p{N}\s]+/u', ' ', $text) ?? $text;
+        $text = preg_replace('/\s+/u', ' ', $text) ?? $text;
+
+        return trim($text);
     }
 
     /**

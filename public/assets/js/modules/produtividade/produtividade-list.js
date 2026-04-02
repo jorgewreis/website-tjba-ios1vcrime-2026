@@ -32,7 +32,7 @@
                 var empty = document.createElement('button');
                 empty.type = 'button';
                 empty.className = 'btn btn-secondary-outline height-md';
-                empty.textContent = 'Nenhuma regra ativa encontrada';
+                empty.textContent = 'Nenhuma tarefa encontrada';
                 empty.disabled = true;
                 list.appendChild(empty);
                 return;
@@ -69,9 +69,18 @@
                 fetch('/api/produtividade/regras/search.php?q=' + encodeURIComponent(q) + '&limit=8', {
                     credentials: 'same-origin'
                 })
-                    .then(function (response) { return response.json(); })
-                    .then(function (data) {
-                        render(data.rows || []);
+                    .then(function (response) {
+                        return response.json().then(function (data) {
+                            return { ok: response.ok, data: data };
+                        });
+                    })
+                    .then(function (result) {
+                        if (!result.ok) {
+                            notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Falha ao buscar regras ativas.');
+                            list.innerHTML = '';
+                            return;
+                        }
+                        render((result.data && result.data.rows) ? result.data.rows : []);
                     })
                     .catch(function () {
                         list.innerHTML = '';
