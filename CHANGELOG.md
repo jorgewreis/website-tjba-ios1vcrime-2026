@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.10
+
+**Data:** 2026-04-01 21:14:31 | **Commit:** `0279ca1` | **Tipo:** `minor`
+
+- feat: enhance deployment workflows with debug options and refactor SSH setup steps
+
 ## V. 1.09
 
 **Data:** 2026-04-01 20:54:49 | **Commit:** `142c202` | **Tipo:** `minor`
@@ -3864,6 +3870,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

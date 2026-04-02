@@ -4,42 +4,73 @@ on:
   push:
     branches: ["main"]
   workflow_dispatch:
+    inputs:
+      debug:
+        description: "Diagnóstico extra (SSH -vvv, rsync -vv, set -x no sync)"
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: production
 
+    env:
+      DEPLOY_DEBUG: ${{ github.event_name == 'workflow_dispatch' && inputs.debug || false }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup SSH (from base64 key)
-        run: |
-          mkdir -p ~/.ssh
-          printf '%s' "${{ secrets.DEPLOY_KEY_B64 }}" | base64 -d > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+      - name: Preflight (secrets obrigatórios)
+        env:
+          DEPLOY_KEY_B64: ${{ secrets.DEPLOY_KEY_B64 }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_TARGET_PATH: ${{ secrets.PROD_PATH }}
+        run: bash .github/scripts/deploy-preflight.sh
 
-      - name: Fingerprint of key used by Actions (safe)
-        run: |
-          ssh-keygen -lf ~/.ssh/id_ed25519
+      - name: Setup SSH (decode + validar chave + keyscan)
+        env:
+          DEPLOY_KEY_B64: ${{ secrets.DEPLOY_KEY_B64 }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: bash .github/scripts/deploy-ssh-setup.sh
 
       - name: SSH sanity check
+        env:
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
         run: |
-          ssh -i ~/.ssh/id_ed25519 \
+          set -e
+          EXTRA=()
+          if [ "${DEPLOY_DEBUG}" = "true" ]; then
+            EXTRA=(-vvv)
+            echo "::notice::DEPLOY_DEBUG: SSH com -vvv (saída longa nos logs)."
+          fi
+          ssh "${EXTRA[@]}" -i ~/.ssh/id_ed25519 \
             -o IdentitiesOnly=yes \
             -o PreferredAuthentications=publickey \
             -o PubkeyAuthentication=yes \
             -o PasswordAuthentication=no \
             -o BatchMode=yes \
             -o StrictHostKeyChecking=yes \
-            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "echo SSH_OK && whoami && pwd"
 
       - name: Sync files to server (PROD)
+        env:
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          PROD_PATH: ${{ secrets.PROD_PATH }}
         run: |
-          rsync -az \
+          set -e
+          RSYNC_EXTRA=()
+          if [ "${DEPLOY_DEBUG}" = "true" ]; then
+            set -x
+            RSYNC_EXTRA=(-vv)
+          fi
+          rsync "${RSYNC_EXTRA[@]}" -az \
             --no-times --omit-dir-times \
             --no-perms --no-owner --no-group \
             --inplace \
@@ -55,7 +86,7 @@ jobs:
             --exclude ".config/" \
             --exclude ".githooks/" \
             --exclude "vendor/" \
-            ./ "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.PROD_PATH }}/"
+            ./ "${DEPLOY_USER}@${DEPLOY_HOST}:${PROD_PATH}/"
 
       - name: Post-deploy (PROD)
         run: |
