@@ -20,6 +20,11 @@ set -e
 
 if [ "$code" -ne 0 ]; then
   echo "::error::Autenticação SSH falhou (Permission denied / exit ${code}). O servidor não aceitou esta chave para este usuário@host."
+  echo "::notice::Se o resumo abaixo mostra \"Offering public key\" e em seguida de novo \"Authentications that can continue: publickey\", o sshd recusou essa chave — ela não está (ou não bate) em ~/.ssh/authorized_keys do DEPLOY_USER no servidor."
+
+  echo "----- Cole esta linha inteira em ~/.ssh/authorized_keys do usuário de deploy no servidor -----"
+  ssh-keygen -y -f ~/.ssh/id_ed25519
+  echo "-----------------------------------------------------------------------------------------------"
 
   VLOG="$(mktemp)"
   trap 'rm -f "$VLOG"' EXIT

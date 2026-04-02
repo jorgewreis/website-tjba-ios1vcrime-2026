@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.16
+
+**Data:** 2026-04-01 21:27:53 | **Commit:** `73cfbfe` | **Tipo:** `minor`
+
+- feat: enhance SSH error diagnostics with detailed instructions for key authorization
+
 ## V. 1.15
 
 **Data:** 2026-04-01 21:26:20 | **Commit:** `40bf0dd` | **Tipo:** `minor`
@@ -3900,6 +3906,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
