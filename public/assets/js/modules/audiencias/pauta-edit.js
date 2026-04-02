@@ -17,7 +17,6 @@
             };
         })();
     var initialAudienciaSnapshot = '';
-    var parteNomeSuggestTimer = null;
 
     function notify(type, title, message) {
         if (pageTools && typeof pageTools.notify === 'function') {
@@ -272,11 +271,6 @@
         input.value = '';
         input.placeholder = 'Digite o nome completo';
         if (hiddenId) hiddenId.value = '';
-        if (parteNomeSuggestTimer !== null) {
-            window.clearTimeout(parteNomeSuggestTimer);
-            parteNomeSuggestTimer = null;
-        }
-
         var has = String(selectParteNome.dataset.hasProcessoReusParts || '0');
         if (has === '1') {
             var nomes = [];
@@ -493,23 +487,8 @@
             }
         });
 
-        input.addEventListener('input', function () {
-            if (hiddenId) hiddenId.value = '';
-            if (parteNomeSuggestTimer !== null) {
-                window.clearTimeout(parteNomeSuggestTimer);
-            }
-            var typed = String(input.value || '').trim();
-            if (typed.length < 2) {
-                setParteNomeStatus('', '');
-                return;
-            }
-            parteNomeSuggestTimer = window.setTimeout(function () {
-                normalizePartNameInput();
-                fetchPeopleSuggestions(String(input.value || '').trim());
-            }, 350);
-        });
-
         input.addEventListener('blur', function () {
+            if (hiddenId) hiddenId.value = '';
             normalizePartNameInput();
             fetchPeopleSuggestions(String(input.value || '').trim());
         });

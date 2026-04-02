@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.34
+
+**Data:** 2026-04-02 16:40:56 | **Commit:** `cf9a1ac` | **Tipo:** `minor`
+
+- refactor: remove unused parteNomeSuggestTimer and simplify input event handling in pauta-edit.js
+
 ## V. 1.33
 
 **Data:** 2026-04-02 16:37:24 | **Commit:** `d327738` | **Tipo:** `minor`
@@ -4026,6 +4032,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
