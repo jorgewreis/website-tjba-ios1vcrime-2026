@@ -231,6 +231,20 @@ body {
         color: var(--color-primary);
         font-weight: 500;
     }
+
+    /* iframe ocupa 100% do page-right, sem borda nem scroll interno */
+    .page-right-iframe {
+        padding: 0 !important;
+        overflow: hidden;
+    }
+    .page-right-iframe iframe {
+        width: 100%;
+        min-height: 100%;
+        border: none;
+        display: block;
+        background-color: var(--color-background-elevated);
+        /* altura ajustada dinamicamente via postMessage APP_RESIZE */
+    }
 }
 
 @media (min-width: 768px) {
