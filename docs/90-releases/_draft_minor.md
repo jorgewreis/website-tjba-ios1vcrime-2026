@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-_Nenhuma entrada pendente._
+- **fix: update option text for new entry in pauta-edit.js to improve clarity** `[1912f4e]`
 
