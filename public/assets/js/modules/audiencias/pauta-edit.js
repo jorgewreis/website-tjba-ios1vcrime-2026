@@ -17,6 +17,7 @@
             };
         })();
     var initialAudienciaSnapshot = '';
+    var parteNomeSuggestTimer = null;
 
     function notify(type, title, message) {
         if (pageTools && typeof pageTools.notify === 'function') {
@@ -31,6 +32,7 @@
     function readPartPayload() {
         return {
             nome_parte: String(document.getElementById('parte-nome')?.value || '').trim(),
+            parte_id_global: String(document.getElementById('parte-id-global')?.value || '').trim(),
             tipo_parte: String(document.getElementById('parte-tipo')?.value || '').trim(),
             maioridade: String(document.getElementById('parte-maioridade')?.value || '').trim()
         };
@@ -65,6 +67,137 @@
             s = TextFormatter.formatProperName(s, 255);
         }
         return s;
+    }
+
+    function formatCpfDisplay(cpf) {
+        var digits = String(cpf || '').replace(/\D/g, '');
+        if (digits.length !== 11) return String(cpf || '').trim();
+        return digits.slice(0, 3) + '.' + digits.slice(3, 6) + '.' + digits.slice(6, 9) + '-' + digits.slice(9, 11);
+    }
+
+    function setParteNomeStatus(text, color) {
+        var statusEl = document.getElementById('parte-nome-processo-status');
+        if (!statusEl) return;
+        statusEl.textContent = text || '';
+        statusEl.style.color = color || '';
+    }
+
+    function resolvePessoaOptionLabel(pessoa) {
+        if (pessoa && String(pessoa.label || '').trim()) {
+            return String(pessoa.label).trim();
+        }
+
+        var nome = String((pessoa && pessoa.nome_completo) || '').trim();
+        var cpf = String((pessoa && (pessoa.cpf_formatado || pessoa.cpf)) || '').trim();
+        var profissao = String((pessoa && pessoa.profissao_exibicao) || '').trim();
+        var lotacao = String((pessoa && pessoa.lotacao_exibicao) || '').trim();
+        var label = nome;
+        if (cpf) {
+            label = formatCpfDisplay(cpf) + ' - ' + label;
+        }
+        var suffix = [];
+        if (profissao) suffix.push(profissao);
+        if (lotacao) suffix.push(lotacao);
+        if (suffix.length) {
+            label += ' (' + suffix.join(' - ') + ')';
+        }
+        return label;
+    }
+
+    function fillParteNomeManualUi(select, input, hiddenId, preserveValue) {
+        if (!select || !input) return;
+        select.classList.remove('status-finished');
+        select.dataset.mode = 'manual';
+        select.disabled = true;
+        select.style.display = 'none';
+        input.style.display = '';
+        input.readOnly = false;
+        input.placeholder = 'Digite o nome completo';
+        input.value = typeof preserveValue === 'string' ? preserveValue : '';
+        if (hiddenId) hiddenId.value = '';
+        setParteNomeStatus('', '');
+    }
+
+    function fillParteNomeSelectWithProcessoNames(select, input, hiddenId, nomes) {
+        if (!select || !input) return;
+        var processoNames = Array.isArray(nomes) ? nomes.slice() : [];
+        select.innerHTML = '';
+        processoNames.forEach(function (nome) {
+            var option = document.createElement('option');
+            option.value = nome;
+            option.textContent = nome;
+            option.dataset.nomeParte = nome;
+            select.appendChild(option);
+        });
+        var outro = document.createElement('option');
+        outro.value = '__OUTRO__';
+        outro.textContent = 'Outro (digite abaixo)';
+        select.appendChild(outro);
+
+        select.dataset.mode = 'processo';
+        select.dataset.hasProcessoReusParts = processoNames.length > 0 ? '1' : '0';
+        select.dataset.firstProcessoReuValue = processoNames[0] || '';
+        select.dataset.processoNamesJson = JSON.stringify(processoNames);
+        select.dataset.lastSuggestedName = '';
+        select.classList.add('status-finished');
+        select.disabled = false;
+        select.style.display = '';
+
+        if (hiddenId) hiddenId.value = '';
+        if (processoNames.length > 0) {
+            select.value = processoNames[0];
+            input.value = normalizeSelectedName(processoNames[0]);
+            input.style.display = 'none';
+            setParteNomeStatus('*Nomes do cadastro do processo', 'var(--color-success-active)');
+        } else {
+            fillParteNomeManualUi(select, input, hiddenId, '');
+        }
+    }
+
+    function fillParteNomeSelectWithPeopleSuggestions(select, input, hiddenId, pessoas, nomeDigitado) {
+        if (!select || !input) return;
+        var suggestions = Array.isArray(pessoas) ? pessoas.slice(0, 3) : [];
+        if (!suggestions.length) {
+            fillParteNomeManualUi(select, input, hiddenId, nomeDigitado);
+            return;
+        }
+
+        select.innerHTML = '';
+        var outraPessoa = document.createElement('option');
+        outraPessoa.value = '__OUTRA_PESSOA__';
+        outraPessoa.textContent = 'Outra pessoa (usar: ' + nomeDigitado + ')';
+        outraPessoa.dataset.nomeParte = nomeDigitado;
+        outraPessoa.dataset.parteIdGlobal = '';
+        select.appendChild(outraPessoa);
+
+        suggestions.forEach(function (pessoa) {
+            var option = document.createElement('option');
+            option.value = String((pessoa && pessoa.id) || '').trim();
+            option.textContent = resolvePessoaOptionLabel(pessoa);
+            option.dataset.nomeParte = String((pessoa && pessoa.nome_completo) || '').trim();
+            option.dataset.parteIdGlobal = String((pessoa && pessoa.id) || '').trim();
+            select.appendChild(option);
+        });
+
+        var novo = document.createElement('option');
+        novo.value = '__novo__';
+        novo.textContent = 'Cadastrar novo: ' + nomeDigitado;
+        select.appendChild(novo);
+
+        select.dataset.mode = 'people';
+        select.dataset.lastSuggestedName = nomeDigitado;
+        select.classList.add('status-finished');
+        select.disabled = false;
+        select.style.display = '';
+        select.value = '__OUTRA_PESSOA__';
+
+        var firstOption = select.options[0];
+        input.value = normalizeSelectedName(firstOption?.dataset.nomeParte || nomeDigitado);
+        input.style.display = 'none';
+        if (hiddenId) {
+            hiddenId.value = '';
+        }
+        setParteNomeStatus('*Selecione uma pessoa cadastrada para vincular ou mantenha "Outra pessoa"', 'var(--primary-color-active)');
     }
 
     function currentAudienciaSnapshot() {
@@ -133,39 +266,28 @@
 
         var selectParteNome = document.getElementById('parte-nome-selecao');
         var input = document.getElementById('parte-nome');
+        var hiddenId = document.getElementById('parte-id-global');
         if (!selectParteNome || !input) return;
 
         input.value = '';
-        input.placeholder = 'Digite o nome da parte';
+        input.placeholder = 'Digite o nome completo';
+        if (hiddenId) hiddenId.value = '';
+        if (parteNomeSuggestTimer !== null) {
+            window.clearTimeout(parteNomeSuggestTimer);
+            parteNomeSuggestTimer = null;
+        }
 
         var has = String(selectParteNome.dataset.hasProcessoReusParts || '0');
         if (has === '1') {
-            // Volta à lista: select visível, input oculto (valor espelhado no input para o envio).
-            selectParteNome.style.display = '';
-            selectParteNome.disabled = false;
-
-            var firstVal = String(selectParteNome.dataset.firstProcessoReuValue || '');
-            if (firstVal && selectParteNome.querySelector('option[value="' + firstVal + '"]')) {
-                selectParteNome.value = firstVal;
-            } else {
-                var opts = selectParteNome.querySelectorAll('option');
-                var picked = '';
-                opts.forEach(function (o) {
-                    if (picked) return;
-                    if ((o.value || '') !== '__OUTRO__') picked = o.value;
-                });
-                if (picked) selectParteNome.value = picked;
+            var nomes = [];
+            try {
+                nomes = JSON.parse(String(selectParteNome.dataset.processoNamesJson || '[]'));
+            } catch (e) {
+                nomes = [];
             }
-
-            input.value = String(selectParteNome.value || '');
-            input.style.display = 'none';
-            input.readOnly = false;
+            fillParteNomeSelectWithProcessoNames(selectParteNome, input, hiddenId, nomes);
         } else {
-            // Sem lista do processo: mostra input e oculta select.
-            selectParteNome.style.display = 'none';
-            selectParteNome.disabled = true;
-            input.style.display = '';
-            input.readOnly = false;
+            fillParteNomeManualUi(selectParteNome, input, hiddenId, '');
         }
     }
 
@@ -302,17 +424,8 @@
     function initParteNomeSelectFromProcesso() {
         var select = document.getElementById('parte-nome-selecao');
         var input = document.getElementById('parte-nome');
-        var statusEl = document.getElementById('parte-nome-processo-status');
+        var hiddenId = document.getElementById('parte-id-global');
         if (!select || !input) return;
-
-        function escapeHtml(str) {
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
-        }
 
         function signatureNome(n) {
             var s = String(n || '').trim().toLowerCase();
@@ -324,67 +437,81 @@
             return s;
         }
 
-        function setStatusHint(text, color) {
-            if (!statusEl) return;
-            statusEl.textContent = text || '';
-            statusEl.style.color = color || '';
-        }
-
-        function applyListaPartesUi(nomes) {
-            var options = '';
-            nomes.forEach(function (n) {
-                var safeVal = escapeHtml(n);
-                options += '<option value="' + safeVal + '">' + safeVal + '</option>';
-            });
-            options += '<option value="__OUTRO__">Outro (digite abaixo)</option>';
-            select.innerHTML = options;
-            select.dataset.hasProcessoReusParts = '1';
-            select.dataset.firstProcessoReuValue = nomes[0] || '';
-            select.value = nomes[0] || '';
-            input.value = normalizeSelectedName(select.value || '');
-            select.classList.add('status-finished');
-            select.disabled = false;
-            select.style.display = '';
-            input.style.display = 'none';
-            input.readOnly = false;
-            input.placeholder = 'Digite o nome da parte';
-            setStatusHint('*Nomes do cadastro do processo', 'var(--color-success-active)');
-        }
-
-        function applyManualEntryUi() {
-            select.classList.remove('status-finished');
-            select.dataset.hasProcessoReusParts = '0';
-            select.dataset.firstProcessoReuValue = '';
-            select.innerHTML = '<option value="__OUTRO__" selected>Outro (digite abaixo)</option>';
-            select.value = '__OUTRO__';
-            select.disabled = true;
-            select.style.display = 'none';
-            input.value = '';
-            input.style.display = '';
-            input.readOnly = false;
-            input.placeholder = 'Digite o nome da parte';
-            setStatusHint('', '');
+        function fetchPeopleSuggestions(rawName) {
+            var nome = normalizeSelectedName(rawName);
+            if (input.style.display === 'none' || nome.length < 2) {
+                return;
+            }
+            fetch('/api/pessoas/search-by-name.php?nome=' + encodeURIComponent(nome) + '&limit=3', { credentials: 'same-origin' })
+                .then(function (response) { return response.json(); })
+                .then(function (data) {
+                    var pessoas = data && Array.isArray(data.pessoas) ? data.pessoas : [];
+                    if (pessoas.length > 0) {
+                        fillParteNomeSelectWithPeopleSuggestions(select, input, hiddenId, pessoas, nome);
+                    } else {
+                        if (hiddenId) hiddenId.value = '';
+                        setParteNomeStatus('', '');
+                    }
+                })
+                .catch(function () {
+                    if (hiddenId) hiddenId.value = '';
+                });
         }
 
         if (select.dataset.loaded === '1') return;
         select.dataset.loaded = '1';
 
         select.addEventListener('change', function () {
+            var mode = String(select.dataset.mode || '').trim();
             var val = String(select.value || '').trim();
-            if (val === '__OUTRO__') {
+            if (val === '__OUTRO__' || val === '__novo__') {
                 select.classList.remove('status-finished');
-                input.value = '';
-                input.placeholder = 'Digite o nome da parte';
-                input.style.display = '';
-                input.readOnly = false;
-                select.style.display = 'none';
+                fillParteNomeManualUi(select, input, hiddenId, String(select.dataset.lastSuggestedName || ''));
                 input.focus();
                 return;
             }
-            input.value = normalizeSelectedName(val);
+
+            var selectedOption = select.options[select.selectedIndex];
+            var nomeSelecionado = String(selectedOption?.dataset.nomeParte || val).trim();
+            input.value = normalizeSelectedName(nomeSelecionado);
             input.style.display = 'none';
             select.style.display = '';
             select.classList.add('status-finished');
+            if (mode === 'people') {
+                var parteIdGlobal = String(selectedOption?.dataset.parteIdGlobal || '').trim();
+                if (hiddenId) {
+                    hiddenId.value = parteIdGlobal;
+                }
+                if (parteIdGlobal !== '') {
+                    setParteNomeStatus('*Pessoa vinculada ao cadastro existente', 'var(--color-success-active)');
+                } else {
+                    setParteNomeStatus('*Outra pessoa selecionada: a audiência será salva sem vínculo', 'var(--primary-color-active)');
+                }
+            } else {
+                if (hiddenId) hiddenId.value = '';
+                setParteNomeStatus('*Nomes do cadastro do processo', 'var(--color-success-active)');
+            }
+        });
+
+        input.addEventListener('input', function () {
+            if (hiddenId) hiddenId.value = '';
+            if (parteNomeSuggestTimer !== null) {
+                window.clearTimeout(parteNomeSuggestTimer);
+            }
+            var typed = String(input.value || '').trim();
+            if (typed.length < 2) {
+                setParteNomeStatus('', '');
+                return;
+            }
+            parteNomeSuggestTimer = window.setTimeout(function () {
+                normalizePartNameInput();
+                fetchPeopleSuggestions(String(input.value || '').trim());
+            }, 350);
+        });
+
+        input.addEventListener('blur', function () {
+            normalizePartNameInput();
+            fetchPeopleSuggestions(String(input.value || '').trim());
         });
 
         var raw = Array.isArray(window.PAUTA_REUS_NOMES_INITIAL) ? window.PAUTA_REUS_NOMES_INITIAL : [];
@@ -398,9 +525,11 @@
         });
 
         if (nomes.length > 0) {
-            applyListaPartesUi(nomes);
+            fillParteNomeSelectWithProcessoNames(select, input, hiddenId, nomes);
         } else {
-            applyManualEntryUi();
+            select.dataset.hasProcessoReusParts = '0';
+            select.dataset.processoNamesJson = '[]';
+            fillParteNomeManualUi(select, input, hiddenId, '');
         }
     }
 

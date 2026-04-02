@@ -412,10 +412,11 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                         type="text"
                         class="width-700 height-md"
                         id="parte-nome"
-                        placeholder="Digite o nome da parte"
+                        placeholder="Digite o nome completo"
                         autocomplete="off"
                         style="display:none;"
                     >
+                    <input type="hidden" id="parte-id-global" value="">
                 </div>
                 <div class="col">
                     <label for="parte-tipo">Tipo de parte <span class="label-hint-obrigatorio">*obrigatório</span></label>
@@ -459,15 +460,6 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                     $parteGlobal = $partesRepoLista->findById($parteIdGlobalRaw);
                     if ($parteGlobal !== null) {
                         $parteGlobalLinkId = (string) ($parteGlobal['id'] ?? '');
-                    }
-                }
-                if ($parteGlobalLinkId === '') {
-                    $nomeParteLookup = trim((string) ($parte['nome_parte'] ?? ''));
-                    if ($nomeParteLookup !== '') {
-                        $parteGlobalPorNome = $partesRepoLista->findByNomeCompleto($nomeParteLookup);
-                        if ($parteGlobalPorNome !== null) {
-                            $parteGlobalLinkId = (string) ($parteGlobalPorNome['id'] ?? '');
-                        }
                     }
                 }
             }

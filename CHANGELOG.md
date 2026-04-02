@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.33
+
+**Data:** 2026-04-02 16:37:24 | **Commit:** `d327738` | **Tipo:** `minor`
+
+- feat: add functionality to list student registrations by pauta IDs
+
 ## V. 1.32
 
 **Data:** 2026-04-02 16:09:35 | **Commit:** `a8b3244` | **Tipo:** `minor`
@@ -4020,6 +4026,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

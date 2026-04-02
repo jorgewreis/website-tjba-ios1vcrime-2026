@@ -41,6 +41,7 @@ final class PessoasService
                 return [
                     'nome' => $v['instituicao_nome'] ?? '',
                     'sigla' => $v['instituicao_sigla'] ?? '',
+                    'profissao' => $v['profissao'] ?? '',
                     'cargo_funcao' => $v['cargo_funcao'] ?? '',
                 ];
             }, $vinculosInst);

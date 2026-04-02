@@ -49,6 +49,75 @@ final class SalaAudienciasEstudanteInscricaoRepository
     }
 
     /**
+     * Retorna inscritos agrupados por pauta, em ordem cronológica de inscrição.
+     *
+     * @param list<string> $pautaIds
+     * @return array<string, list<array<string, mixed>>>
+     */
+    public function listDetalhesByPautaIds(array $pautaIds): array
+    {
+        $pautaIds = array_values(array_unique(array_filter(array_map(static function ($id): string {
+            return trim((string) $id);
+        }, $pautaIds), static function (string $id): bool {
+            return $id !== '';
+        })));
+        if ($pautaIds === []) {
+            return [];
+        }
+
+        $placeholders = implode(', ', array_fill(0, count($pautaIds), '?'));
+        $sql = sprintf(
+            'SELECT i.`id`, i.`pauta`, i.`created_at` AS `inscrito_em`,
+                    COALESCE(
+                        NULLIF(TRIM(e.`nome_completo`), \'\'),
+                        NULLIF(TRIM(CONCAT(COALESCE(u.`nome`, \'\'), \' \', COALESCE(u.`sobrenome`, \'\'))), \'\'),
+                        \'Estudante não identificado\'
+                    ) AS `nome_completo`,
+                    COALESCE(
+                        NULLIF(TRIM(e.`telefone`), \'\'),
+                        NULLIF(TRIM(u.`telefone`), \'\'),
+                        \'\'
+                    ) AS `telefone`,
+                    COALESCE(
+                        NULLIF(TRIM(e.`faculdade`), \'\'),
+                        CASE
+                            WHEN TRIM(COALESCE(u.`instituicao`, \'\')) IN (\'\', \'-\') THEN \'\'
+                            ELSE TRIM(u.`instituicao`)
+                        END,
+                        \'\'
+                    ) AS `faculdade`
+             FROM `%s` i
+             LEFT JOIN `usuarios` u ON u.`id_usuario` = i.`usuario`
+             LEFT JOIN `estudantes` e ON e.`cpf` = u.`cpf`
+             WHERE i.`pauta` IN (' . $placeholders . ')
+             ORDER BY i.`pauta` ASC, i.`created_at` ASC, i.`id` ASC',
+            $this->table
+        );
+
+        $st = $this->connection->prepare($sql);
+        foreach ($pautaIds as $idx => $pautaId) {
+            $st->bindValue($idx + 1, $pautaId);
+        }
+        $st->execute();
+
+        $rows = $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        $grouped = [];
+        foreach ($rows as $row) {
+            $pautaId = trim((string) ($row['pauta'] ?? ''));
+            if ($pautaId === '') {
+                continue;
+            }
+            if (!isset($grouped[$pautaId])) {
+                $grouped[$pautaId] = [];
+            }
+            $row['ordem_inscricao'] = count($grouped[$pautaId]) + 1;
+            $grouped[$pautaId][] = $row;
+        }
+
+        return $grouped;
+    }
+
+    /**
      * Inscrições do usuário onde a ata ainda não expirou ou ainda não foi publicada (para lista “minhas audiências”).
      *
      * @return list<array<string, mixed>>

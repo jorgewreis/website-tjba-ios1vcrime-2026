@@ -8,11 +8,13 @@ if (function_exists('mb_internal_encoding')) {
 
 require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../helpers/PrioridadesProcessuaisCatalog.php';
+require_once __DIR__ . '/../../repositories/SalaAudienciasEstudanteInscricaoRepository.php';
 require_once __DIR__ . '/../../services/SalaAudienciasPautaService.php';
 require_once __DIR__ . '/../../services/ProcessoManager.php';
 
 $pdo = Conection::getInstance()->getConnection();
 $service = new SalaAudienciasPautaService($pdo);
+$inscricaoRepository = new SalaAudienciasEstudanteInscricaoRepository($pdo);
 $processoManager = new ProcessoManager($pdo);
 $hoje = date('Y-m-d');
 $idEmAndamentoHoje = $service->findIdEmAndamentoNaData($hoje);
@@ -26,6 +28,12 @@ $result = $service->list([
 ], 500, 0);
 $rows = $result['rows'] ?? [];
 $totalHoje = count($rows);
+$pautaIdsHoje = array_values(array_filter(array_map(static function (array $row): string {
+    return trim((string) ($row['id_pauta'] ?? ''));
+}, $rows), static function (string $id): bool {
+    return $id !== '';
+}));
+$inscritosByPauta = $inscricaoRepository->listDetalhesByPautaIds($pautaIdsHoje);
 $timelineItemsHoje = [];
 foreach ($rows as $rowTimeline) {
     $statusTimeline = strtolower(trim((string) ($rowTimeline['status'] ?? '')));
@@ -91,6 +99,40 @@ function painelHoraPorStatus(array $row): string
     }
 
     return '—';
+}
+
+function painelResumoInscrito(array $inscrito): string
+{
+    $ordem = max(1, (int) ($inscrito['ordem_inscricao'] ?? 0));
+    $inscritoEmRaw = trim((string) ($inscrito['inscrito_em'] ?? ''));
+    $inscritoEmTs = $inscritoEmRaw !== '' ? strtotime($inscritoEmRaw) : false;
+    $inscritoEmLabel = $inscritoEmTs !== false
+        ? date('d/m/Y', $inscritoEmTs) . ' às ' . date('H:i:s', $inscritoEmTs)
+        : 'data não informada';
+
+    $nome = trim((string) ($inscrito['nome_completo'] ?? ''));
+    if ($nome === '') {
+        $nome = 'Estudante não identificado';
+    }
+
+    $telefone = trim((string) ($inscrito['telefone'] ?? ''));
+    if ($telefone === '') {
+        $telefone = 'telefone não informado';
+    }
+
+    $faculdade = trim((string) ($inscrito['faculdade'] ?? ''));
+    if ($faculdade === '' || $faculdade === '-') {
+        $faculdade = 'Faculdade não informada';
+    }
+
+    return sprintf(
+        '%d. Cadastrado em %s - %s (%s - %s)',
+        $ordem,
+        $inscritoEmLabel,
+        $nome,
+        $faculdade,
+        $telefone
+    );
 }
 ?>
 <!DOCTYPE html>
@@ -313,6 +355,8 @@ function painelHoraPorStatus(array $row): string
             ?>
             <?php
                 $processoSigiloso = !empty($row['processo_sigiloso']);
+                $idPautaAtual = trim((string) ($row['id_pauta'] ?? ''));
+                $inscritosRow = $idPautaAtual !== '' ? ($inscritosByPauta[$idPautaAtual] ?? []) : [];
             ?>
             <?php if ($prioridadesRow !== [] || $processoSigiloso): ?>
             <div class="display-flex col col-full grp-subtask-panel" id="subtask-grp-<?php echo htmlspecialchars((string) ($row['id_pauta'] ?? ''), ENT_QUOTES); ?>">
@@ -343,6 +387,27 @@ function painelHoraPorStatus(array $row): string
                 </div>
             </div>
             <?php endif; ?>
+            <div class="display-flex col col-full grp-subtask-panel" id="subtask-grp-estudantes-<?php echo htmlspecialchars((string) ($row['id_pauta'] ?? ''), ENT_QUOTES); ?>">
+                <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top align-start flex-wrap grp-sub-line grp-sub-line-primary" style="font-family: monospace; font-size: 11px;">
+                    <div class="display-flex row row-fit justify-start gap-y-md flex-wrap grp-sub-left">
+                        <div class="col">
+                            <span class="minor-info">Estudantes inscritos</span>
+                            <span class="major-info"><?php echo count($inscritosRow); ?> inscrito(s)</span>
+                        </div>
+                    </div>
+                </div>
+                <?php if ($inscritosRow === []): ?>
+                <div class="display-flex row row-full subtask padding-x-sm padding-y-sm border-top" style="font-family: monospace; font-size: 11px;">
+                    <span class="minor-info">Nenhum estudante inscrito.</span>
+                </div>
+                <?php else: ?>
+                    <?php foreach ($inscritosRow as $inscrito): ?>
+                    <div class="display-flex row row-full subtask padding-x-sm padding-y-sm border-top" style="font-family: monospace; font-size: 11px;">
+                        <span class="major-info" style="white-space: normal; word-break: break-word;"><?php echo htmlspecialchars(painelResumoInscrito($inscrito), ENT_QUOTES, 'UTF-8'); ?></span>
+                    </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
         </div>
         <?php endforeach; ?>
     </div>

@@ -290,44 +290,54 @@ final class SalaAudienciasPautaService
             // reutilizamos o `parte_id` existente em vez de criar um novo cadastro global.
             $nomeNormRaw = function_exists('mb_strtolower') ? mb_strtolower($nome, 'UTF-8') : strtolower($nome);
             $nomeNorm = preg_replace('/\s+/u', ' ', trim($nomeNormRaw));
-            $parteGlobalId = '';
-            $processoParteId = '';
+            $parteGlobalId = trim((string) ($payload['parte_id_global'] ?? ''));
+            $processoParteId = trim((string) ($payload['processo_parte_id'] ?? ''));
 
-            if ($isTestemunha) {
+            if ($isTestemunha && ($parteGlobalId === '' || $processoParteId === '')) {
                 $vinculos = $this->processosPartesRepository->findByProcessoId($processoId, $tipoProcesso);
                 foreach ($vinculos as $v) {
                     $vNome = trim((string) ($v['nome_completo'] ?? ''));
                     $vNomeNormRaw = function_exists('mb_strtolower') ? mb_strtolower($vNome, 'UTF-8') : strtolower($vNome);
                     $vNomeNorm = preg_replace('/\s+/u', ' ', trim($vNomeNormRaw));
                     if ($vNomeNorm !== '' && $nomeNorm !== '' && $vNomeNorm === $nomeNorm) {
-                        $parteGlobalId = trim((string) ($v['parte_id'] ?? ''));
-                        $processoParteId = trim((string) ($v['id'] ?? ''));
+                        if ($parteGlobalId === '') {
+                            $parteGlobalId = trim((string) ($v['parte_id'] ?? ''));
+                        }
+                        if ($processoParteId === '') {
+                            $processoParteId = trim((string) ($v['id'] ?? ''));
+                        }
                         break;
                     }
                 }
             }
 
             if ($parteGlobalId === '') {
-                $parteGlobalId = $this->partesRepository->ensureParteByNomeOuCpf($nome, null);
+                if ($isTestemunha) {
+                    $parteGlobalId = '';
+                } else {
+                    $parteGlobalId = $this->partesRepository->ensureParteByNomeOuCpf($nome, null);
+                }
             }
 
-            if ($processoParteId === '') {
-                $processoParte = $this->processosPartesRepository->findByProcessoAndParte($processoId, $parteGlobalId);
-                if ($processoParte === null) {
-                    $processoParteId = $this->processosPartesRepository->addParte($processoId, $parteGlobalId, $tipoProcesso, $poloProcesso);
+            if ($parteGlobalId !== '') {
+                if ($processoParteId === '') {
+                    $processoParte = $this->processosPartesRepository->findByProcessoAndParte($processoId, $parteGlobalId);
+                    if ($processoParte === null) {
+                        $processoParteId = $this->processosPartesRepository->addParte($processoId, $parteGlobalId, $tipoProcesso, $poloProcesso);
+                    } else {
+                        $processoParteId = (string) ($processoParte['id'] ?? '');
+                        $this->processosPartesRepository->update($processoParteId, [
+                            'tipo_parte' => $tipoProcesso,
+                            'polo' => $poloProcesso,
+                        ]);
+                    }
                 } else {
-                    $processoParteId = (string) ($processoParte['id'] ?? '');
+                    // Mesmo reaproveitando, garantimos o tipo/polo corretos no vínculo.
                     $this->processosPartesRepository->update($processoParteId, [
                         'tipo_parte' => $tipoProcesso,
                         'polo' => $poloProcesso,
                     ]);
                 }
-            } else {
-                // Mesmo reaproveitando, garantimos o tipo/polo corretos no vínculo.
-                $this->processosPartesRepository->update($processoParteId, [
-                    'tipo_parte' => $tipoProcesso,
-                    'polo' => $poloProcesso,
-                ]);
             }
 
             $tipoDef = trim((string) ($payload['tipo_defensor'] ?? ''));
