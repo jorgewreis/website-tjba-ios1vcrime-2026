@@ -120,6 +120,65 @@
         });
     }
 
+    function bindFilters(config) {
+        const filters = config.filters || null;
+        if (!filters || typeof filters.apply !== 'function') {
+            return;
+        }
+
+        const applyFilters = function () {
+            filters.apply();
+        };
+
+        (filters.triggerIds || []).forEach(function (id) {
+            const element = global.document.getElementById(id);
+            if (!element) {
+                return;
+            }
+            element.addEventListener('change', applyFilters);
+        });
+
+        const searchInputId = filters.searchInputId || '';
+        if (!searchInputId) {
+            return;
+        }
+
+        const searchInput = global.document.getElementById(searchInputId);
+        if (!searchInput) {
+            return;
+        }
+
+        if (filters.searchMode === 'debounce') {
+            const delay = Number(filters.searchDelay) > 0 ? Number(filters.searchDelay) : 800;
+            let timerId = null;
+            searchInput.addEventListener('input', function () {
+                global.clearTimeout(timerId);
+                timerId = global.setTimeout(applyFilters, delay);
+            });
+            return;
+        }
+
+        searchInput.addEventListener('keypress', function (event) {
+            if (event.key === 'Enter') {
+                applyFilters();
+            }
+        });
+    }
+
+    function bindCustomButtons(config, context) {
+        (config.buttons || []).forEach(function (definition) {
+            if (!definition || !definition.selector || typeof definition.onClick !== 'function') {
+                return;
+            }
+
+            global.document.querySelectorAll(definition.selector).forEach(function (button) {
+                button.addEventListener('click', function (event) {
+                    definition.onClick(button, event, context);
+                });
+            });
+        });
+    }
+
     function bindDesalocarButtons(options, pageTools, notify) {
         if (options.enableDesalocar === false) {
             return;
@@ -210,24 +269,24 @@
                 return button && button.dataset ? button.dataset[key] || '' : '';
             }
         );
+        bindFilters(config);
         bindSubtaskExpansion(config.subtaskRadioName || 'open-subtask');
         bindDesalocarButtons(config, pageTools, notify);
 
-        if (typeof config.onReady === 'function') {
-            config.onReady({
-                pageTools: pageTools,
-                notify: notify,
-                queuePostReloadToast: queuePostReloadToast,
-                storageKey: storageKey
-            });
-        }
-
-        return {
+        const context = {
             pageTools: pageTools,
             notify: notify,
             queuePostReloadToast: queuePostReloadToast,
             storageKey: storageKey
         };
+
+        bindCustomButtons(config, context);
+
+        if (typeof config.onReady === 'function') {
+            config.onReady(context);
+        }
+
+        return context;
     }
 
     App.CartorioTaskList = {

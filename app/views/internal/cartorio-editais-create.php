@@ -111,132 +111,20 @@ try {
         </div>
     </div>
 
-    <script>
-        document.getElementById('voltar-btn')?.addEventListener('click', function (e) {
-            e.preventDefault();
-            window.location.href = '/frame.php?page=editais';
-        }, { capture: true });
-    </script>
     <script src="/assets/js/modules/datajud/cnj.js"></script>
     <script src="/assets/js/modules/datajud/datajud-cycle-helper.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/datajud/datajud-cycle-helper.js') ?: time(); ?>"></script>
     <script src="/assets/js/modules/datajud/datajud-api.js"></script>
     <script>
         (function () {
-            window.addEventListener('DOMContentLoaded', function () {
-                if (!window.App || !App.User || typeof App.User.setupRuleButton !== 'function') return;
-                App.User.setupRuleButton({
-                    buttonId: 'alterar-regra-btn',
-                    targetPage: 'editaisrules'
-                });
-            });
-        })();
-    </script>
-    <script>
-        (function () {
-            var btn = document.getElementById('cadastrar-btn');
-            var showFeedback = function (message, type) {
-                if (window.App && App.Page && typeof App.Page.notify === 'function') {
-                    App.Page.notify(type === 'error' ? 'error' : 'success', type === 'error' ? 'Erro' : 'Sucesso', message);
-                    return;
-                }
-                if (typeof showToast === 'function') {
-                    showToast({ type: type === 'error' ? 'error' : 'success', variant: 'full', title: type === 'error' ? 'Erro' : 'Sucesso', message: message });
-                }
-            };
-
-            function onlyDigits(s) {
-                return (s || '').replace(/\D/g, '');
+            if (window.App && App.CartorioCreateBootstrap) {
+                App.CartorioCreateBootstrap.bindBackButton({ href: '/frame.php?page=editais' });
+                App.CartorioCreateBootstrap.setupRuleButton({ targetPage: 'editaisrules' });
+            }
+            if (!window.App || !App.CartorioEditaisCreate || typeof App.CartorioEditaisCreate.initialize !== 'function') {
+                return;
             }
 
-            btn.addEventListener('click', function () {
-                var processoInput = document.getElementById('filter-processo');
-                var processo = (processoInput?.value || '').trim();
-                if (!processo) {
-                    showFeedback('O número do processo é obrigatório.', 'error');
-                    return;
-                }
-                if (processoInput && typeof window.normalizeAndValidateCNJValue === 'function') {
-                    var normalized = window.normalizeAndValidateCNJValue(processo, { toastOnInvalid: true });
-                    if (!normalized.ok) {
-                        processoInput.value = '';
-                        processoInput.focus();
-                        return;
-                    }
-                    processoInput.value = normalized.formatted;
-                    processo = normalized.formatted;
-                } else {
-                    var digits = onlyDigits(processo);
-                    if (digits.length !== 20) {
-                        showFeedback('O número do processo está incompleto ou inválido (20 dígitos).', 'error');
-                        return;
-                    }
-                }
-                var classeVal = (document.getElementById('filter-classe')?.value || '').trim();
-                if (classeVal === 'Aguarde...') {
-                    showFeedback('Aguarde a consulta ao DataJud terminar antes de cadastrar.', 'error');
-                    return;
-                }
-                var tipoEdital = (document.getElementById('filter-tipo-edital')?.value || '').trim();
-                if (!tipoEdital) {
-                    showFeedback('O tipo de edital é obrigatório.', 'error');
-                    return;
-                }
-                var prazoDias = parseInt(document.getElementById('filter-prazo-dias')?.value || '0', 10);
-                if (isNaN(prazoDias) || prazoDias < 1) {
-                    showFeedback('O prazo do edital é obrigatório e deve ser de pelo menos 1 dia.', 'error');
-                    return;
-                }
-
-                btn.disabled = true;
-                var payload = {
-                    processo: processo,
-                    tipo_edital: tipoEdital,
-                    prazo_dias: prazoDias
-                };
-                var hCod = document.getElementById('hidden-classe-codigo');
-                var hDesc = document.getElementById('hidden-classe-descricao');
-                if (hCod && hCod.value) payload.classe_codigo = hCod.value.trim();
-                if (hDesc && hDesc.value) payload.classe_descricao = hDesc.value.trim();
-
-                fetch('/api/cartorio-editais/create.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
-                    credentials: 'same-origin'
-                })
-                .then(function (r) {
-                    if (!r.ok) return r.json().then(function (d) { throw new Error(d.error || 'Erro ao criar'); });
-                    return r.json();
-                })
-                .then(function (data) {
-                    var id = data && data.id;
-                    if (!id) {
-                        btn.disabled = false;
-                        showFeedback('Resposta inválida do servidor.', 'error');
-                        return;
-                    }
-                    return fetch('/api/cartorio-editais/criar-primeira-subtarefa.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ edital_id: id }),
-                        credentials: 'same-origin'
-                    })
-                    .then(function (r2) {
-                        if (!r2.ok) return r2.json().then(function (d) { throw new Error(d.error || 'Erro ao criar subtarefas'); });
-                        return id;
-                    });
-                })
-                .then(function (id) {
-                    if (typeof showToast === 'function') {
-                        showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Edital cadastrado.' });
-                    }
-                    window.location.href = '/frame.php?page=editais';
-                })
-                .catch(function (err) {
-                    btn.disabled = false;
-                    showFeedback(err && err.message ? err.message : 'Erro ao cadastrar.', 'error');
-                });
-            });
+            App.CartorioEditaisCreate.initialize();
         })();
     </script>
 </body>

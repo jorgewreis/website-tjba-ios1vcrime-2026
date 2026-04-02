@@ -39,6 +39,34 @@ $__cartorioSimpleEditPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cart
 $__cartorioSimpleEditV = @filemtime($__cartorioSimpleEditPath) ?: time();
 $__cartorioGuiasEditPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-guias-edit.js';
 $__cartorioGuiasEditV = @filemtime($__cartorioGuiasEditPath) ?: time();
+$__cartorioCejuscListPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-cejusc-list.js';
+$__cartorioCejuscListV = @filemtime($__cartorioCejuscListPath) ?: time();
+$__cartorioEditaisListPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-editais-list.js';
+$__cartorioEditaisListV = @filemtime($__cartorioEditaisListPath) ?: time();
+$__cartorioMedidasListPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-medidas-protetivas-list.js';
+$__cartorioMedidasListV = @filemtime($__cartorioMedidasListPath) ?: time();
+$__cartorioGuiasListPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-guias-list.js';
+$__cartorioGuiasListV = @filemtime($__cartorioGuiasListPath) ?: time();
+$__cartorioCreateHelpersPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-create-helpers.js';
+$__cartorioCreateHelpersV = @filemtime($__cartorioCreateHelpersPath) ?: time();
+$__cartorioCartasExpedidasCreatePath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-cartas-expedidas-create.js';
+$__cartorioCartasExpedidasCreateV = @filemtime($__cartorioCartasExpedidasCreatePath) ?: time();
+$__cartorioCartasRecebidasCreatePath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-cartas-recebidas-create.js';
+$__cartorioCartasRecebidasCreateV = @filemtime($__cartorioCartasRecebidasCreatePath) ?: time();
+$__cartorioEditaisCreatePath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-editais-create.js';
+$__cartorioEditaisCreateV = @filemtime($__cartorioEditaisCreatePath) ?: time();
+$__cartorioGuiasCreatePath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-guias-create.js';
+$__cartorioGuiasCreateV = @filemtime($__cartorioGuiasCreatePath) ?: time();
+$__cartorioMedidasCreatePath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-medidas-protetivas-create.js';
+$__cartorioMedidasCreateV = @filemtime($__cartorioMedidasCreatePath) ?: time();
+$__cartorioCreateBootstrapPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-create-bootstrap.js';
+$__cartorioCreateBootstrapV = @filemtime($__cartorioCreateBootstrapPath) ?: time();
+$__cartorioCityLookupPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-city-lookup.js';
+$__cartorioCityLookupV = @filemtime($__cartorioCityLookupPath) ?: time();
+$__cartorioGuiasCreateUiPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-guias-create-ui.js';
+$__cartorioGuiasCreateUiV = @filemtime($__cartorioGuiasCreateUiPath) ?: time();
+$__cartorioMedidasCreateUiPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-medidas-protetivas-create-ui.js';
+$__cartorioMedidasCreateUiV = @filemtime($__cartorioMedidasCreateUiPath) ?: time();
 
 $__currentUserPerfis = (isset($userPerfils) && is_array($userPerfils)) ? $userPerfils : [];
 $__isEstagiarioProfile = false;
@@ -91,6 +119,20 @@ window.__APP_CONTEXT = Object.assign({}, window.__APP_CONTEXT || {}, {
 <script src="/assets/js/shared/gme-create.js?v=<?php echo (int) $__gmeCreateV; ?>"></script>
 <script src="/assets/js/shared/cartorio-simple-edit.js?v=<?php echo (int) $__cartorioSimpleEditV; ?>"></script>
 <script src="/assets/js/shared/cartorio-guias-edit.js?v=<?php echo (int) $__cartorioGuiasEditV; ?>"></script>
+<script src="/assets/js/shared/cartorio-cejusc-list.js?v=<?php echo (int) $__cartorioCejuscListV; ?>"></script>
+<script src="/assets/js/shared/cartorio-editais-list.js?v=<?php echo (int) $__cartorioEditaisListV; ?>"></script>
+<script src="/assets/js/shared/cartorio-medidas-protetivas-list.js?v=<?php echo (int) $__cartorioMedidasListV; ?>"></script>
+<script src="/assets/js/shared/cartorio-guias-list.js?v=<?php echo (int) $__cartorioGuiasListV; ?>"></script>
+<script src="/assets/js/shared/cartorio-create-helpers.js?v=<?php echo (int) $__cartorioCreateHelpersV; ?>"></script>
+<script src="/assets/js/shared/cartorio-create-bootstrap.js?v=<?php echo (int) $__cartorioCreateBootstrapV; ?>"></script>
+<script src="/assets/js/shared/cartorio-city-lookup.js?v=<?php echo (int) $__cartorioCityLookupV; ?>"></script>
+<script src="/assets/js/shared/cartorio-cartas-expedidas-create.js?v=<?php echo (int) $__cartorioCartasExpedidasCreateV; ?>"></script>
+<script src="/assets/js/shared/cartorio-cartas-recebidas-create.js?v=<?php echo (int) $__cartorioCartasRecebidasCreateV; ?>"></script>
+<script src="/assets/js/shared/cartorio-editais-create.js?v=<?php echo (int) $__cartorioEditaisCreateV; ?>"></script>
+<script src="/assets/js/shared/cartorio-guias-create.js?v=<?php echo (int) $__cartorioGuiasCreateV; ?>"></script>
+<script src="/assets/js/shared/cartorio-medidas-protetivas-create.js?v=<?php echo (int) $__cartorioMedidasCreateV; ?>"></script>
+<script src="/assets/js/shared/cartorio-guias-create-ui.js?v=<?php echo (int) $__cartorioGuiasCreateUiV; ?>"></script>
+<script src="/assets/js/shared/cartorio-medidas-protetivas-create-ui.js?v=<?php echo (int) $__cartorioMedidasCreateUiV; ?>"></script>
 <script>window.__IS_ESTAGIARIO_PROFILE = <?php echo $__isEstagiarioProfile ? 'true' : 'false'; ?>;</script>
 <script>window.__ALLOW_DELETE_ON_EDIT_PAGE = <?php echo $__canDeleteOnThisEditPage ? 'true' : 'false'; ?>;</script>
 <?php if ($__isEstagiarioProfile && $__isEditPage && !$__canDeleteOnThisEditPage): ?>

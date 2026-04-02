@@ -233,183 +233,30 @@ try {
         </div>
     </div>
 
-    <script>
-        (() => {
-            const btn = document.getElementById('voltar-btn');
-            if (btn) {
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    window.location.href = '/frame.php?page=cartasrecebidas';
-                }, { capture: true });
-            }
-        })();
-    </script>
     <script src="/assets/js/modules/datajud/cnj.js"></script>
     <script src="/assets/js/modules/datajud/datajud-cycle-helper.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/datajud/datajud-cycle-helper.js') ?: time(); ?>"></script>
     <script src="/assets/js/modules/datajud/datajud-api.js"></script>
-    <script>
-        (function () {
-            var processoInput = document.getElementById('filter-processo');
-            if (processoInput) {
-                processoInput.addEventListener('input', function () {
-                    var digits = (this.value || '').replace(/\D/g, '');
-                    if (digits.length !== 20) {
-                        var classeInput = document.getElementById('filter-classe');
-                        if (classeInput) {
-                            classeInput.value = '';
-                            classeInput.readOnly = true;
-                        }
-                        var hCod = document.getElementById('hidden-classe-codigo');
-                        var hDesc = document.getElementById('hidden-classe-descricao');
-                        if (hCod) hCod.value = '';
-                        if (hDesc) hDesc.value = '';
-                    }
-                });
-            }
-        })();
-    </script>
     <script src="/assets/js/shared/text-formatter.js"></script>
     <script>
         (function () {
-            window.addEventListener('DOMContentLoaded', function () {
-                if (!window.App || !App.User || typeof App.User.setupRuleButton !== 'function') return;
-                App.User.setupRuleButton({
-                    buttonId: 'alterar-regra-btn',
-                    targetPage: 'cartasrecebidasrules'
-                });
-            });
-        })();
-    </script>
-    <script>
-        (() => {
-            const btn = document.getElementById('cadastrar-btn');
-            const classeCodigoField = document.getElementById('hidden-classe-codigo');
-            const classeDescricaoField = document.getElementById('hidden-classe-descricao');
-            const showFeedback = (message, type = 'success') => {
-                if (window.App && App.Page && typeof App.Page.notify === 'function') {
-                    App.Page.notify(type === 'error' ? 'error' : 'success', type === 'error' ? 'Erro' : 'Sucesso', message);
-                    return;
-                }
-                if (typeof showToast === 'function') {
-                    showToast({ type: type === 'error' ? 'error' : 'success', variant: 'full', title: type === 'error' ? 'Erro' : 'Sucesso', message });
-                }
-            };
-            const getValue = (id) => document.getElementById(id)?.value?.trim() ?? '';
-
-            const formatCidade = (value) => {
-                if (typeof TextFormatter !== 'undefined' && typeof TextFormatter.formatProperName === 'function') {
-                    return TextFormatter.formatProperName(value, 50);
-                }
-                return value;
-            };
-
-            const cidadeInput = document.getElementById('filter-cidade');
-            const estadoSelect = document.getElementById('filter-estado');
-            if (cidadeInput) {
-                cidadeInput.addEventListener('blur', () => {
-                    cidadeInput.value = formatCidade(cidadeInput.value);
-                    const cidade = cidadeInput.value.trim();
-                    if (cidade.length < 2) return;
-                    fetch('/api/cartorio-cartas-recebidas/buscar-cidade.php?cidade=' + encodeURIComponent(cidade))
-                        .then(r => r.json())
-                        .then(data => {
-                            if (!data.found) return;
-                            if (data.uf && estadoSelect) {
-                                estadoSelect.value = data.uf;
-                            }
-                            const status = (data.status_cidade || '').trim();
-                            // Bloqueio por CCM (Central de Mandados) aplica-se apenas a cartas expedidas.
-                            if (status.toLowerCase() === 'agregada' && data.nome) {
-                                cidadeInput.value = formatCidade(data.nome);
-                            }
-                        })
-                        .catch(() => {});
+            if (window.App && App.CartorioCreateBootstrap) {
+                App.CartorioCreateBootstrap.bindBackButton({ href: '/frame.php?page=cartasrecebidas' });
+                App.CartorioCreateBootstrap.bindClasseResetOnShortProcess();
+                App.CartorioCreateBootstrap.setupRuleButton({ targetPage: 'cartasrecebidasrules' });
+            }
+            if (window.App && App.CartorioCityLookup) {
+                App.CartorioCityLookup.initialize({
+                    endpoint: '/api/cartorio-cartas-recebidas/buscar-cidade.php?cidade=',
+                    blockCcm: false,
+                    maxLength: 50,
+                    formatMaxLength: 50
                 });
             }
+            if (!window.App || !App.CartorioCartasRecebidasCreate || typeof App.CartorioCartasRecebidasCreate.initialize !== 'function') {
+                return;
+            }
 
-            if (!btn) return;
-
-            btn.addEventListener('click', async (e) => {
-                e.preventDefault();
-                if (btn.disabled) return;
-                // Dispara blur para aplicar correção automática (CNJ no processo; maiúsculas/minúsculas na cidade)
-                document.getElementById('filter-processo')?.blur();
-                document.getElementById('filter-cidade')?.blur();
-
-                const processoInputEl = document.getElementById('filter-processo');
-                const processoRaw = getValue('filter-processo');
-                if (processoRaw === '') {
-                    return showFeedback('Informe o número do processo antes de cadastrar.', 'error');
-                }
-                if (processoInputEl && typeof window.normalizeAndValidateCNJValue === 'function') {
-                    const normalized = window.normalizeAndValidateCNJValue(processoRaw, { toastOnInvalid: true });
-                    if (!normalized.ok) {
-                        processoInputEl.value = '';
-                        processoInputEl.focus();
-                        return;
-                    }
-                    processoInputEl.value = normalized.formatted;
-                }
-
-                const cidadeOrigem = formatCidade(getValue('filter-cidade'));
-                const ufOrigem = getValue('filter-estado');
-                const finalidade = getValue('filter-tipo');
-                if (cidadeOrigem === '') {
-                    return showFeedback('Informe a cidade de origem.', 'error');
-                }
-                if (ufOrigem === '') {
-                    return showFeedback('Informe o estado.', 'error');
-                }
-                if (finalidade === '') {
-                    return showFeedback('Informe a finalidade.', 'error');
-                }
-
-                const classeVal = getValue('filter-classe');
-                if (classeVal === 'Aguarde...') {
-                    return showFeedback('Aguarde a consulta ao DataJud terminar antes de cadastrar.', 'error');
-                }
-
-                const prazo = parseInt(document.getElementById('filter-prazo')?.value ?? '30', 10) || 30;
-
-                const payload = {
-                    numero_processo_origem: getValue('filter-processo'),
-                    cidade_origem: cidadeOrigem,
-                    uf_origem: ufOrigem,
-                    finalidade,
-                    prazo_dias: prazo,
-                };
-                if (classeCodigoField?.value.trim()) {
-                    payload.classe_codigo = classeCodigoField.value.trim();
-                }
-                if (classeDescricaoField?.value.trim()) {
-                    payload.classe_descricao = classeDescricaoField.value.trim();
-                } else if (classeVal && classeVal !== 'Classe não informada' && classeVal !== 'Aguarde...') {
-                    payload.classe_descricao = classeVal;
-                    if (!payload.classe_codigo) {
-                        payload.classe_codigo = classeVal.replace(/\s+/g, '').substring(0, 20);
-                    }
-                }
-
-                btn.disabled = true;
-                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Informação', message: 'Enviando dados...' });
-                else showFeedback('Enviando dados...', 'success');
-
-                try {
-                    const response = await fetch('/api/cartorio-cartas-recebidas/create.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload),
-                    });
-                    const data = await response.json();
-                    if (!response.ok) {
-                        throw new Error(data.error || 'Falha ao cadastrar a carta recebida.');
-                    }
-                    window.location.href = '/frame.php?page=cartasrecebidas';
-                } catch (err) {
-                    showFeedback(err.message || 'Não foi possível cadastrar.', 'error');
-                    btn.disabled = false;
-                }
-            });
+            App.CartorioCartasRecebidasCreate.initialize();
         })();
     </script>
 </body>

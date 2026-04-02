@@ -246,220 +246,33 @@ try {
         </div>
     </div>
 
-    <script>
-        (() => {
-            const btn = document.getElementById('voltar-btn');
-            if (btn) {
-                btn.addEventListener('click', (event) => {
-                    event.preventDefault();
-                    window.location.href = '/frame.php?page=cartasexpedidas';
-                }, { capture: true });
-            }
-        })();
-    </script>
     <script src="/assets/js/modules/datajud/cnj.js"></script>
     <script src="/assets/js/modules/datajud/datajud-cycle-helper.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/datajud/datajud-cycle-helper.js') ?: time(); ?>"></script>
     <script src="/assets/js/modules/datajud/datajud-api.js"></script>
-    <script>
-        (function () {
-            var processoInput = document.getElementById('filter-processo');
-            if (processoInput) {
-                processoInput.addEventListener('input', function () {
-                    var digits = (this.value || '').replace(/\D/g, '');
-                    if (digits.length !== 20) {
-                        var classeInput = document.getElementById('filter-classe');
-                        if (classeInput) {
-                            classeInput.value = '';
-                            classeInput.readOnly = true;
-                        }
-                        var hCod = document.getElementById('hidden-classe-codigo');
-                        var hDesc = document.getElementById('hidden-classe-descricao');
-                        if (hCod) hCod.value = '';
-                        if (hDesc) hDesc.value = '';
-                    }
-                });
-            }
-        })();
-    </script>
     <script src="/assets/js/modules/cartorio/cartas-expedidas/user.js"></script>
     <script src="/assets/js/shared/text-formatter.js"></script>
     <script>
         window.__currentUserName = <?php echo json_encode($currentUserName, JSON_UNESCAPED_UNICODE); ?>;
     </script>
     <script>
-        (() => {
-            const btn = document.getElementById('cadastrar-btn');
-            const classeCodigoField = document.getElementById('hidden-classe-codigo');
-            const classeDescricaoField = document.getElementById('hidden-classe-descricao');
-            const showFeedback = (message, type = 'success') => {
-                if (window.App && App.Page && typeof App.Page.notify === 'function') {
-                    App.Page.notify(type === 'error' ? 'error' : 'success', type === 'error' ? 'Erro' : 'Sucesso', message);
-                    return;
-                }
-                if (typeof showToast === 'function') {
-                    showToast({ type: type === 'error' ? 'error' : 'success', variant: 'full', title: type === 'error' ? 'Erro' : 'Sucesso', message });
-                }
-            };
-
-            const getValue = (id) => document.getElementById(id)?.value.trim() || '';
-            const sanitizePrazo = (value) => {
-                const digits = (value || '').replace(/\D+/g, '');
-                if (digits === '') {
-                    return '0';
-                }
-                return digits.slice(0, 3);
-            };
-            const formatCidade = (value) => {
-                if (typeof TextFormatter !== 'undefined' && typeof TextFormatter.formatProperName === 'function') {
-                    return TextFormatter.formatProperName(value, 50);
-                }
-                return value;
-            };
-            const normalizeCidadeForCompare = (value) => {
-                return (value || '').trim().toLowerCase()
-                    .normalize('NFD').replace(/\p{M}/gu, '')
-                    .replace(/ç/g, 'c');
-            };
-            const cidadeInput = document.getElementById('filter-cidade');
-            const estadoSelect = document.getElementById('filter-estado');
-            if (cidadeInput) {
-                cidadeInput.setAttribute('maxlength', '50');
-                cidadeInput.addEventListener('blur', () => {
-                    cidadeInput.value = formatCidade(cidadeInput.value);
-                    const cidade = cidadeInput.value.trim();
-                    if (cidade.length < 2) return;
-                    fetch('/api/cartorio-cartas-expedidas/buscar-cidade.php?cidade=' + encodeURIComponent(cidade))
-                        .then(r => r.json())
-                        .then(data => {
-                            if (!data.found) return;
-                            if (data.uf && estadoSelect) {
-                                estadoSelect.value = data.uf;
-                            }
-                            const status = (data.status_cidade || '').trim();
-                            if (status.toUpperCase() === 'CCM') {
-                                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Informação', message: 'Comarca com Central de Mandados' });
-                                cidadeInput.value = '';
-                            } else if (status.toLowerCase() === 'agregada' && data.nome) {
-                                cidadeInput.value = formatCidade(data.nome);
-                            }
-                        })
-                        .catch(() => {});
+        (function () {
+            if (window.App && App.CartorioCreateBootstrap) {
+                App.CartorioCreateBootstrap.bindBackButton({ href: '/frame.php?page=cartasexpedidas' });
+                App.CartorioCreateBootstrap.bindClasseResetOnShortProcess();
+            }
+            if (window.App && App.CartorioCityLookup) {
+                App.CartorioCityLookup.initialize({
+                    endpoint: '/api/cartorio-cartas-expedidas/buscar-cidade.php?cidade=',
+                    blockCcm: true,
+                    maxLength: 50,
+                    formatMaxLength: 50
                 });
             }
-            const endpoint = '/api/cartorio-cartas-expedidas/create.php';
-
-            if (!btn) {
+            if (!window.App || !App.CartorioCartasExpedidasCreate || typeof App.CartorioCartasExpedidasCreate.initialize !== 'function') {
                 return;
             }
 
-            const requiredFields = [
-                { id: 'filter-processo', label: 'Número do processo' },
-                { id: 'filter-tipo', label: 'Finalidade' },
-                { id: 'filter-prazo', label: 'Prazo de cumprimento' },
-                { id: 'filter-estado', label: 'Estado' },
-                { id: 'filter-cidade', label: 'Cidade' },
-            ];
-
-            const validateRequiredFields = () => {
-                for (const field of requiredFields) {
-                    const element = document.getElementById(field.id);
-                    if (!element) {
-                        continue;
-                    }
-                    const value = element.value.trim();
-                    if (value === '') {
-                        showFeedback(`O campo ${field.label} é obrigatório.`, 'error');
-                        return false;
-                    }
-                }
-                return true;
-            };
-
-            btn.addEventListener('click', async (event) => {
-                event.preventDefault();
-                if (btn.disabled) {
-                    return;
-                }
-                // Dispara blur para aplicar correção automática (CNJ no processo; maiúsculas/minúsculas na cidade)
-                document.getElementById('filter-processo')?.blur();
-                document.getElementById('filter-cidade')?.blur();
-
-                const processoInputEl = document.getElementById('filter-processo');
-                const processoRaw = getValue('filter-processo');
-                if (processoRaw === '') {
-                    return showFeedback('Informe o número do processo antes de cadastrar.', 'error');
-                }
-                if (processoInputEl && typeof window.normalizeAndValidateCNJValue === 'function') {
-                    const normalized = window.normalizeAndValidateCNJValue(processoRaw, { toastOnInvalid: true });
-                    if (!normalized.ok) {
-                        processoInputEl.value = '';
-                        processoInputEl.focus();
-                        return;
-                    }
-                    processoInputEl.value = normalized.formatted;
-                }
-                if (!validateRequiredFields()) {
-                    return;
-                }
-                const cidadeDestino = formatCidade(getValue('filter-cidade'));
-                if (normalizeCidadeForCompare(cidadeDestino) === 'ilheus') {
-                    return showFeedback('O cadastro não é permitido para a cidade de Ilhéus (comarca de origem).', 'error');
-                }
-
-                const usuarioAtual = (typeof window.__currentUserName === 'string' && window.__currentUserName.trim() !== '')
-                    ? window.__currentUserName.trim()
-                    : (typeof getCurrentUserName === 'function' ? getCurrentUserName() : null);
-                if (!usuarioAtual) {
-                    return showFeedback('Não foi possível identificar o usuário logado.', 'error');
-                }
-
-                const classeVal = getValue('filter-classe');
-                if (classeVal === 'Aguarde...') {
-                    return showFeedback('Aguarde a consulta ao DataJud terminar antes de cadastrar.', 'error');
-                }
-                const payload = {
-                    numero_processo: getValue('filter-processo'),
-                    classe: classeVal || '',
-                    finalidade: getValue('filter-tipo'),
-                    prazo: sanitizePrazo(getValue('filter-prazo')),
-                    estado: getValue('filter-estado'),
-                    cidade: formatCidade(getValue('filter-cidade')),
-                    usuario: usuarioAtual,
-                };
-                if (classeCodigoField?.value.trim()) {
-                    payload.classe_codigo = classeCodigoField.value.trim();
-                }
-                if (classeDescricaoField?.value.trim()) {
-                    payload.classe_descricao = classeDescricaoField.value.trim();
-                } else if (classeVal && classeVal !== 'Classe não informada' && classeVal !== 'Aguarde...') {
-                    payload.classe_descricao = classeVal;
-                    if (!payload.classe_codigo) {
-                        payload.classe_codigo = classeVal.replace(/\s+/g, '').substring(0, 20);
-                    }
-                }
-
-                btn.disabled = true;
-                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Informação', message: 'Enviando dados...' });
-                else showFeedback('Enviando dados...', 'success');
-
-                try {
-                    const response = await fetch(endpoint, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload),
-                    });
-
-                    const data = await response.json();
-                    if (!response.ok) {
-                        throw new Error(data.error || 'Falha ao salvar a carta expedida.');
-                    }
-
-                    window.location.href = '/frame.php?page=cartasexpedidas';
-                } catch (error) {
-                    showFeedback(error.message || 'Não foi possível cadastrar a carta expedida.', 'error');
-                    btn.disabled = false;
-                }
-            });
+            App.CartorioCartasExpedidasCreate.initialize();
         })();
     </script>
 

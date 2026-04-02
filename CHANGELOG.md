@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.19.0002
+
+**Data:** 2026-04-02 10:39:10 | **Commit:** `e5f67ba` | **Tipo:** `patch`
+
+- Refactor: redução de codigo
+
 ## V. 1.19.0001
 
 **Data:** 2026-04-02 10:07:13 | **Commit:** `bf837e1` | **Tipo:** `patch`
@@ -3930,6 +3936,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
