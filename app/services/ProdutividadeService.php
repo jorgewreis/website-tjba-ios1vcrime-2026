@@ -35,6 +35,15 @@ final class ProdutividadeService
         return $this->regrasRepository->findById($id);
     }
 
+    /**
+     * @return array{tipos_ato:list<string>,tipos_documento:list<string>,sistemas_modulo:list<string>}
+     */
+    public function listRuleCatalogValues(string $actorUserId): array
+    {
+        $this->assertGestao($actorUserId);
+        return $this->regrasRepository->listDistinctCatalogValues();
+    }
+
     public function createRule(string $actorUserId, array $payload): string
     {
         $this->assertGestao($actorUserId);

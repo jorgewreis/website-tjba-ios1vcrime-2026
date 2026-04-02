@@ -11,33 +11,6 @@
         }
     }
 
-    function setupModal() {
-        var modal = document.getElementById('produtividade-modal');
-        var openBtn = document.getElementById('abrir-lancamento-manual');
-        var closeBtns = document.querySelectorAll('[data-close-modal]');
-        if (!modal || !openBtn) {
-            return;
-        }
-
-        function open() {
-            modal.style.display = 'flex';
-        }
-
-        function close() {
-            modal.style.display = 'none';
-        }
-
-        openBtn.addEventListener('click', open);
-        closeBtns.forEach(function (btn) {
-            btn.addEventListener('click', close);
-        });
-        modal.addEventListener('click', function (event) {
-            if (event.target === modal) {
-                close();
-            }
-        });
-    }
-
     function setupRuleSearch() {
         var input = document.getElementById('regra_busca');
         var hidden = document.getElementById('regra_id');
@@ -262,7 +235,6 @@
         }
     }
 
-    setupModal();
     setupRuleSearch();
     setupClasseByProcesso();
     setupCreateManual();

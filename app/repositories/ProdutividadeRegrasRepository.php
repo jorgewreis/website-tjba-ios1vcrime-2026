@@ -137,7 +137,19 @@ final class ProdutividadeRegrasRepository
             'SELECT `id`, `tipo_ato`, `tipo_documento`, `sistema_modulo`, `pontos_por_ato`, `pontos_multiplicador`
              FROM `%s`
              WHERE `ativo` = 1
-               AND (:q = \'\' OR `tipo_ato` LIKE :likeQ OR `tipo_documento` LIKE :likeQ OR `sistema_modulo` LIKE :likeQ)
+               AND (
+                    :q = \'\'
+                    OR `tipo_ato` LIKE :likeQ
+                    OR `tipo_documento` LIKE :likeQ
+                    OR `sistema_modulo` LIKE :likeQ
+                    OR CONCAT(
+                        COALESCE(`tipo_ato`, \'\'),
+                        \' de \',
+                        COALESCE(NULLIF(`tipo_documento`, \'\'), \'documento\'),
+                        \' no \',
+                        COALESCE(NULLIF(`sistema_modulo`, \'\'), \'sistema não informado\')
+                    ) LIKE :likeQ
+               )
              ORDER BY `tipo_ato` ASC, `sistema_modulo` ASC, `tipo_documento` ASC
              LIMIT :limit',
             $this->table
@@ -155,11 +167,12 @@ final class ProdutividadeRegrasRepository
             $tipoDoc = trim((string) ($row['tipo_documento'] ?? ''));
             $modulo = trim((string) ($row['sistema_modulo'] ?? ''));
             $label = $tipoAto;
-            if ($tipoDoc !== '') {
-                $label .= ' - ' . $tipoDoc;
-            }
-            if ($modulo !== '') {
-                $label .= ' (' . $modulo . ')';
+            if ($tipoDoc !== '' && $modulo !== '') {
+                $label .= ' de ' . $tipoDoc . ' no ' . $modulo;
+            } elseif ($tipoDoc !== '') {
+                $label .= ' de ' . $tipoDoc;
+            } elseif ($modulo !== '') {
+                $label .= ' no ' . $modulo;
             }
             $out[] = [
                 'id' => (string) ($row['id'] ?? ''),
@@ -170,6 +183,54 @@ final class ProdutividadeRegrasRepository
                 'pontos_por_ato' => (string) ($row['pontos_por_ato'] ?? '0.00'),
                 'pontos_multiplicador' => (string) ($row['pontos_multiplicador'] ?? '1.00'),
             ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * @return array{tipos_ato:list<string>,tipos_documento:list<string>,sistemas_modulo:list<string>}
+     */
+    public function listDistinctCatalogValues(): array
+    {
+        $tiposAto = $this->fetchDistinctStringColumn('tipo_ato');
+        $tiposDocumento = $this->fetchDistinctStringColumn('tipo_documento');
+        $sistemasModulo = $this->fetchDistinctStringColumn('sistema_modulo');
+
+        return [
+            'tipos_ato' => $tiposAto,
+            'tipos_documento' => $tiposDocumento,
+            'sistemas_modulo' => $sistemasModulo,
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function fetchDistinctStringColumn(string $column): array
+    {
+        $column = IdGenerator::validateIdentifier($column);
+        $sql = sprintf(
+            'SELECT DISTINCT TRIM(`%s`) AS `v`
+             FROM `%s`
+             WHERE `%s` IS NOT NULL AND TRIM(`%s`) <> \'\'
+             ORDER BY `v` ASC',
+            $column,
+            $this->table,
+            $column,
+            $column
+        );
+        $statement = $this->connection->query($sql);
+        if ($statement === false) {
+            return [];
+        }
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+        $out = [];
+        foreach ($rows as $row) {
+            $value = trim((string) ($row['v'] ?? ''));
+            if ($value !== '' && !in_array($value, $out, true)) {
+                $out[] = $value;
+            }
         }
 
         return $out;

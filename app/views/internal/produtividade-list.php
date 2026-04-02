@@ -81,21 +81,6 @@ $baseQuery = [
         <?php include __DIR__ . '/_internal_head_styles.php'; ?>
         <?php include __DIR__ . '/_toast_script.php'; ?>
         <style>
-            #produtividade-modal {
-                position: fixed;
-                inset: 0;
-                background: rgba(0, 0, 0, 0.45);
-                display: none;
-                align-items: center;
-                justify-content: center;
-                z-index: 9999;
-            }
-            #produtividade-modal .modal-card {
-                width: min(96vw, 960px);
-                background: #fff;
-                border-radius: 10px;
-                overflow: hidden;
-            }
             #regra_sugestoes {
                 display: flex;
                 flex-direction: column;
@@ -118,13 +103,56 @@ $baseQuery = [
 
     <div class="container-full card-page">
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
-            <h2>Lançamentos</h2>
+            <h2>Registrar produtividade manual</h2>
             <div class="display-flex row row-fit justify-end gap-y-md">
                 <?php if ($isGestao): ?>
                 <button type="button" class="btn btn-secondary height-md" data-nav-href="/frame.php?page=produtividaderegras">Regras</button>
                 <?php endif; ?>
-                <button type="button" class="btn btn-primary height-md" id="abrir-lancamento-manual">Registrar manualmente</button>
             </div>
+        </div>
+
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
+            <div class="col col-full">
+                <label for="regra_busca">Regra <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <input type="hidden" id="regra_id" value="">
+                <input type="text" id="regra_busca" class="width-1200 height-md white" placeholder="Ex.: 0001- Expedição de Mandado de Prisão no BNMP">
+                <span class="minor-info">A busca considera qualquer parte do contexto completo da regra.</span>
+                <div id="regra_sugestoes"></div>
+            </div>
+        </div>
+
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
+            <div class="col">
+                <label for="quantidade">Quantidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <input type="number" id="quantidade" class="width-200 height-md white" min="1" value="1">
+            </div>
+            <div class="col">
+                <label for="numero_processo">Número do processo (CNJ)</label>
+                <input type="text" id="numero_processo" class="width-400 height-md white" placeholder="0000000-00.0000.0.00.0000">
+            </div>
+            <div class="col">
+                <label for="classe_processo">Classe (DataJud)</label>
+                <input type="text" id="classe_processo" class="width-500 height-md white" placeholder="Preenchida automaticamente quando possível">
+            </div>
+            <div class="col">
+                <label for="data_hora_ato">Data/hora do ato</label>
+                <input type="datetime-local" id="data_hora_ato" class="width-300 height-md white" value="<?php echo date('Y-m-d\TH:i'); ?>">
+            </div>
+        </div>
+
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md align-end">
+            <div class="col col-full">
+                <label for="observacoes">Observações</label>
+                <textarea id="observacoes" class="width-800 white" rows="3" placeholder="Descreva detalhes relevantes do lançamento"></textarea>
+            </div>
+            <div class="col">
+                <button type="button" class="btn btn-primary height-md" id="salvar-lancamento-manual">Salvar lançamento</button>
+            </div>
+        </div>
+
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <h2>Lançamentos</h2>
+            <div class="display-flex row row-fit justify-end gap-y-md"></div>
         </div>
 
         <form method="get" id="filtro-produtividade-form" class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
@@ -257,55 +285,6 @@ $baseQuery = [
             <?php endfor; ?>
         </div>
         <?php endif; ?>
-    </div>
-
-    <div id="produtividade-modal">
-        <div class="modal-card">
-            <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
-                <h2>Lançamento manual</h2>
-                <button type="button" class="btn btn-secondary-outline height-md" data-close-modal>Fechar</button>
-            </div>
-
-            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
-                <div class="col col-full">
-                    <label for="regra_busca">Regra <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="hidden" id="regra_id" value="">
-                    <input type="text" id="regra_busca" class="width-1200 height-md white" placeholder="Digite para buscar regra ativa...">
-                    <div id="regra_sugestoes"></div>
-                </div>
-            </div>
-
-            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
-                <div class="col">
-                    <label for="quantidade">Quantidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="number" id="quantidade" class="width-200 height-md white" min="1" value="1">
-                </div>
-                <div class="col">
-                    <label for="numero_processo">Número do processo (CNJ)</label>
-                    <input type="text" id="numero_processo" class="width-400 height-md white" placeholder="0000000-00.0000.0.00.0000">
-                </div>
-                <div class="col">
-                    <label for="classe_processo">Classe (DataJud)</label>
-                    <input type="text" id="classe_processo" class="width-500 height-md white" placeholder="Preenchida automaticamente quando possível">
-                </div>
-            </div>
-
-            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
-                <div class="col">
-                    <label for="data_hora_ato">Data/hora do ato</label>
-                    <input type="datetime-local" id="data_hora_ato" class="width-300 height-md white" value="<?php echo date('Y-m-d\TH:i'); ?>">
-                </div>
-                <div class="col col-full">
-                    <label for="observacoes">Observações</label>
-                    <textarea id="observacoes" class="width-800 white" rows="3" placeholder="Descreva detalhes relevantes do lançamento"></textarea>
-                </div>
-            </div>
-
-            <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
-                <button type="button" class="btn btn-secondary height-md" data-close-modal>Cancelar</button>
-                <button type="button" class="btn btn-primary height-md" id="salvar-lancamento-manual">Salvar lançamento</button>
-            </div>
-        </div>
     </div>
 
     <script src="/assets/js/modules/produtividade/produtividade-list.js"></script>

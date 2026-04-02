@@ -38,6 +38,14 @@ $form = [
 ];
 $error = '';
 $success = '';
+$catalog = ['tipos_ato' => [], 'tipos_documento' => [], 'sistemas_modulo' => []];
+if ($isGestao) {
+    try {
+        $catalog = $service->listRuleCatalogValues($userId);
+    } catch (Throwable $e) {
+        // mantém catálogo vazio
+    }
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $form = [
@@ -107,18 +115,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <?php endif; ?>
 
+            <?php
+            $tipoAtoInCatalog = in_array($form['tipo_ato'], $catalog['tipos_ato'], true);
+            $tipoDocInCatalog = in_array($form['tipo_documento'], $catalog['tipos_documento'], true);
+            $sistemaInCatalog = in_array($form['sistema_modulo'], $catalog['sistemas_modulo'], true);
+            ?>
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col">
-                    <label for="tipo_ato">Tipo de ato <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="text" id="tipo_ato" name="tipo_ato" class="width-500 height-md white" value="<?php echo htmlspecialchars($form['tipo_ato'], ENT_QUOTES); ?>" required>
+                    <label for="tipo_ato_select">Tipo de ato <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <select id="tipo_ato_select" class="width-500 height-md white">
+                        <option value="">Selecione</option>
+                        <?php foreach ($catalog['tipos_ato'] as $opt): ?>
+                        <option value="<?php echo htmlspecialchars($opt, ENT_QUOTES); ?>"<?php echo $tipoAtoInCatalog && $form['tipo_ato'] === $opt ? ' selected' : ''; ?>><?php echo htmlspecialchars($opt, ENT_QUOTES); ?></option>
+                        <?php endforeach; ?>
+                        <option value="__OUTRO__"<?php echo !$tipoAtoInCatalog && $form['tipo_ato'] !== '' ? ' selected' : ''; ?>>Outro (digitar abaixo)</option>
+                    </select>
+                    <input type="text" id="tipo_ato" name="tipo_ato" class="width-500 height-md white" value="<?php echo htmlspecialchars($form['tipo_ato'], ENT_QUOTES); ?>" required style="<?php echo (!$tipoAtoInCatalog && $form['tipo_ato'] !== '') ? '' : 'display:none; margin-top:8px;'; ?>" placeholder="Ex.: 0001- Expedição">
                 </div>
                 <div class="col">
-                    <label for="tipo_documento">Tipo de documento</label>
-                    <input type="text" id="tipo_documento" name="tipo_documento" class="width-400 height-md white" value="<?php echo htmlspecialchars($form['tipo_documento'], ENT_QUOTES); ?>">
+                    <label for="tipo_documento_select">Tipo de documento</label>
+                    <select id="tipo_documento_select" class="width-400 height-md white">
+                        <option value="">Selecione</option>
+                        <?php foreach ($catalog['tipos_documento'] as $opt): ?>
+                        <option value="<?php echo htmlspecialchars($opt, ENT_QUOTES); ?>"<?php echo $tipoDocInCatalog && $form['tipo_documento'] === $opt ? ' selected' : ''; ?>><?php echo htmlspecialchars($opt, ENT_QUOTES); ?></option>
+                        <?php endforeach; ?>
+                        <option value="__OUTRO__"<?php echo !$tipoDocInCatalog && $form['tipo_documento'] !== '' ? ' selected' : ''; ?>>Outro (digitar abaixo)</option>
+                    </select>
+                    <input type="text" id="tipo_documento" name="tipo_documento" class="width-400 height-md white" value="<?php echo htmlspecialchars($form['tipo_documento'], ENT_QUOTES); ?>" style="<?php echo (!$tipoDocInCatalog && $form['tipo_documento'] !== '') ? '' : 'display:none; margin-top:8px;'; ?>" placeholder="Ex.: Mandado de Prisão">
                 </div>
                 <div class="col">
-                    <label for="sistema_modulo">Sistema/módulo</label>
-                    <input type="text" id="sistema_modulo" name="sistema_modulo" class="width-300 height-md white" value="<?php echo htmlspecialchars($form['sistema_modulo'], ENT_QUOTES); ?>">
+                    <label for="sistema_modulo_select">Sistema/módulo</label>
+                    <select id="sistema_modulo_select" class="width-300 height-md white">
+                        <option value="">Selecione</option>
+                        <?php foreach ($catalog['sistemas_modulo'] as $opt): ?>
+                        <option value="<?php echo htmlspecialchars($opt, ENT_QUOTES); ?>"<?php echo $sistemaInCatalog && $form['sistema_modulo'] === $opt ? ' selected' : ''; ?>><?php echo htmlspecialchars($opt, ENT_QUOTES); ?></option>
+                        <?php endforeach; ?>
+                        <option value="__OUTRO__"<?php echo !$sistemaInCatalog && $form['sistema_modulo'] !== '' ? ' selected' : ''; ?>>Outro (digitar abaixo)</option>
+                    </select>
+                    <input type="text" id="sistema_modulo" name="sistema_modulo" class="width-300 height-md white" value="<?php echo htmlspecialchars($form['sistema_modulo'], ENT_QUOTES); ?>" style="<?php echo (!$sistemaInCatalog && $form['sistema_modulo'] !== '') ? '' : 'display:none; margin-top:8px;'; ?>" placeholder="Ex.: BNMP">
                 </div>
             </div>
 
@@ -152,6 +186,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </form>
     </div>
+<script>
+(function () {
+    function bindContextSelect(selectId, inputId) {
+        var select = document.getElementById(selectId);
+        var input = document.getElementById(inputId);
+        if (!select || !input) return;
+
+        function sync() {
+            if (select.value === '__OUTRO__') {
+                input.style.display = '';
+                input.required = true;
+                input.focus();
+                return;
+            }
+            if (select.value === '') {
+                input.value = '';
+                input.style.display = 'none';
+                input.required = false;
+                return;
+            }
+            input.value = select.value;
+            input.style.display = 'none';
+            input.required = inputId === 'tipo_ato';
+        }
+
+        select.addEventListener('change', sync);
+        sync();
+    }
+
+    bindContextSelect('tipo_ato_select', 'tipo_ato');
+    bindContextSelect('tipo_documento_select', 'tipo_documento');
+    bindContextSelect('sistema_modulo_select', 'sistema_modulo');
+})();
+</script>
 </body>
 </html>
 
