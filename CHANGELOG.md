@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.36
+
+**Data:** 2026-04-02 18:21:52 | **Commit:** `e683d0b` | **Tipo:** `minor`
+
+- feat: update Produtividade UI to enhance user experience with new input fields and role-based visibility for rules button
+
 ## V. 1.35
 
 **Data:** 2026-04-02 18:13:37 | **Commit:** `906ea7c` | **Tipo:** `minor`
@@ -4056,6 +4062,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
