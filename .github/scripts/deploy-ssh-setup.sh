@@ -29,6 +29,9 @@ fi
 echo "Fingerprint da chave usada pelo Actions:"
 cat /tmp/gha_ssh_kfl.txt
 
+echo "Chave pública correspondente (uma linha; deve estar em ~/.ssh/authorized_keys do DEPLOY_USER no servidor):"
+ssh-keygen -y -f ~/.ssh/id_ed25519
+
 if ! ssh-keyscan -H "${DEPLOY_HOST}" >> ~/.ssh/known_hosts 2>/tmp/gha_keyscan.err; then
   echo "::error::ssh-keyscan falhou para DEPLOY_HOST (host inalcançável, DNS ou firewall)."
   cat /tmp/gha_keyscan.err

@@ -34,17 +34,7 @@ jobs:
         env:
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
-        run: |
-          set -e
-          ssh -i ~/.ssh/id_ed25519 \
-            -o IdentitiesOnly=yes \
-            -o PreferredAuthentications=publickey \
-            -o PubkeyAuthentication=yes \
-            -o PasswordAuthentication=no \
-            -o BatchMode=yes \
-            -o StrictHostKeyChecking=yes \
-            "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            "echo SSH_OK && whoami && pwd"
+        run: bash .github/scripts/deploy-ssh-check.sh
 
 
       # Se composer falhar com "Permission denied" em vendor: no servidor, rode uma vez:
