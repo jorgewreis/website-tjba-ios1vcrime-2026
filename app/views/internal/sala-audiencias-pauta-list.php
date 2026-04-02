@@ -26,6 +26,7 @@ if ($statusFilter === 'adiada') {
 $periodoFilter = trim((string) ($_GET['periodo'] ?? ''));
 $tipoFilter = trim((string) ($_GET['tipo'] ?? ''));
 $search = trim((string) ($_GET['search'] ?? ''));
+$routePage = trim((string) ($_GET['page'] ?? 'salapauta'));
 $itemsPerPage = (int) ($_GET['items_per_page'] ?? 25);
 if (!in_array($itemsPerPage, [10, 25, 50, 100], true)) {
     $itemsPerPage = 25;
@@ -75,12 +76,16 @@ $endItem = min($offset + count($rows), $total);
             <div class="display-flex row row-fit justify-start"><h2>Lista de audiências</h2></div>
             <div class="display-flex row row-fit justify-end gap-y-md">
                 <input type="text" class="width-400 height-md" id="search-input" placeholder="Pesquisar por processo, parte ou sala..." autocomplete="off" value="<?php echo htmlspecialchars($search, ENT_QUOTES); ?>">
-                <select class="width-300 height-md" id="export-type" disabled>
-                    <option value="" selected>Exportar lista</option>
-                    <option value="pdf">Gerar PDF</option>
-                    <option value="csv">Gerar CSV</option>
-                    <option value="print">Imprimir</option>
-                </select>
+                <?php
+                $listExportPage = $routePage;
+                $listExportQuery = array_filter([
+                    'status' => $statusFilter,
+                    'periodo' => $periodoFilter,
+                    'tipo' => $tipoFilter,
+                    'search' => $search,
+                ], static fn ($v) => $v !== null && $v !== '');
+                include __DIR__ . '/_list_export_buttons.php';
+                ?>
                 <button type="button" class="btn btn-primary" id="novo-cadastro-btn">Nova audiência</button>
             </div>
         </div>

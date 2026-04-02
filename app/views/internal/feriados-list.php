@@ -150,6 +150,11 @@ if ($totalPages > 0) {
                 <h2>Lista</h2>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md">
+                <?php
+                $listExportPage = $routePage;
+                $listExportQuery = $baseQueryParams;
+                include __DIR__ . '/_list_export_buttons.php';
+                ?>
                 <button type="button" class="btn btn-primary height-md" id="novo-cadastro-btn">Novo cadastro</button>
             </div>
         </div>

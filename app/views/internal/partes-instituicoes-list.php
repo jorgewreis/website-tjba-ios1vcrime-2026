@@ -53,6 +53,11 @@ if ($parteId !== '') {
                 <h2>Vínculos</h2>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md">
+                <?php
+                $listExportPage = 'partesinstituicoeslist';
+                $listExportQuery = array_filter(['parte_id' => $parteId, 'instituicao_id' => $instituicaoId], static fn ($v) => $v !== '');
+                include __DIR__ . '/_list_export_buttons.php';
+                ?>
                 <button type="button" class="btn btn-primary height-md" data-nav-href="/frame.php?page=partesinstituicoescreate">Novo vínculo</button>
             </div>
         </div>

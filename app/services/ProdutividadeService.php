@@ -5,6 +5,7 @@ require_once __DIR__ . '/../repositories/ProdutividadeRegrasRepository.php';
 require_once __DIR__ . '/../repositories/ProdutividadeLancamentosRepository.php';
 require_once __DIR__ . '/../repositories/ProdutividadeLogRepository.php';
 require_once __DIR__ . '/../repositories/ProdutividadeMetasRepository.php';
+require_once __DIR__ . '/../access/AccessAreas.php';
 
 final class ProdutividadeService
 {
@@ -505,6 +506,11 @@ final class ProdutividadeService
         if ($alvoValor === '') {
             throw new InvalidArgumentException('Alvo da meta é obrigatório.');
         }
+        if ($tipoAlvo === 'setor') {
+            $alvoValor = $this->normalizeMetaAlvoSetor($alvoValor);
+        } elseif ($tipoAlvo === 'perfil') {
+            $alvoValor = $this->normalizeMetaAlvoPerfil($alvoValor);
+        }
 
         $periodoTipo = trim((string) ($payload['periodo_tipo'] ?? ($current['periodo_tipo'] ?? '')));
         if (!in_array($periodoTipo, ['semana', 'mes', 'trimestre'], true)) {
@@ -551,6 +557,41 @@ final class ProdutividadeService
         }
         $dt = DateTime::createFromFormat('Y-m-d', $value);
         return $dt !== false && $dt->format('Y-m-d') === $value;
+    }
+
+    private function normalizeMetaAlvoSetor(string $alvoValor): string
+    {
+        $u = strtoupper(trim($alvoValor));
+        if (!in_array($u, AccessAreas::ALL, true)) {
+            throw new InvalidArgumentException('Setor inválido. Escolha Cartório, Gabinete ou Sala de Audiências.');
+        }
+
+        return $u;
+    }
+
+    private function normalizeMetaAlvoPerfil(string $alvoValor): string
+    {
+        $statement = $this->connection->prepare(
+            'SELECT TRIM(`perfil`) AS `p` FROM `usuario_perfil` WHERE UPPER(TRIM(`perfil`)) = UPPER(?) LIMIT 1'
+        );
+        $statement->execute([$alvoValor]);
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        if ($row !== false && trim((string) ($row['p'] ?? '')) !== '') {
+            return trim((string) $row['p']);
+        }
+
+        $upper = strtoupper(str_replace([' ', '_'], '-', trim($alvoValor)));
+        $static = [];
+        foreach (['ESTAGIARIO', 'SERVIDOR'] as $cargo) {
+            foreach (AccessAreas::ALL as $area) {
+                $static[] = $cargo . '-' . $area;
+            }
+        }
+        if (in_array($upper, $static, true)) {
+            return $upper;
+        }
+
+        throw new InvalidArgumentException('Perfil inválido. Selecione um perfil da lista.');
     }
 
     private function findUserSetorCodigoArea(string $userId): string

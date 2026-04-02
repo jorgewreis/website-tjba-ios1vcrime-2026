@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.43
+
+**Data:** 2026-04-02 20:48:19 | **Commit:** `36d3a90` | **Tipo:** `minor`
+
+- feat: enhance ProdutividadeService with target normalization for sectors and profiles, and update UI for export functionality across various views
+
 ## V. 1.42
 
 **Data:** 2026-04-02 20:29:06 | **Commit:** `2a84ef7` | **Tipo:** `minor`
@@ -4104,6 +4110,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

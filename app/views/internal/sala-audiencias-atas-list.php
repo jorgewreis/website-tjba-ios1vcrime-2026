@@ -9,6 +9,7 @@ if (function_exists('mb_internal_encoding')) {
 require_once __DIR__ . '/../../services/SalaAudienciasAtaService.php';
 
 $service = new SalaAudienciasAtaService(Conection::getInstance()->getConnection());
+$routePage = trim((string) ($_GET['page'] ?? 'salaata'));
 $itemsPerPage = (int) ($_GET['items_per_page'] ?? 25);
 if (!in_array($itemsPerPage, [10, 25, 50, 100], true)) {
     $itemsPerPage = 25;
@@ -50,6 +51,11 @@ $endItem = min($offset + count($rows), $total);
         <div class="display-flex row row-full align-center justify-between padding-x-lg padding-y-md border-bottom">
             <div class="display-flex row row-fit justify-start padding-x-md"><h2>Audiências realizadas</h2></div>
             <div class="display-flex row row-fit justify-end gap-y-md">
+                <?php
+                $listExportPage = $routePage;
+                $listExportQuery = [];
+                include __DIR__ . '/_list_export_buttons.php';
+                ?>
                 <div class="col">
                     <label for="items-per-page">Itens por página</label>
                     <select class="width-300 height-md" id="items-per-page">

@@ -104,7 +104,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <form method="post">
             <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
                 <h2>Informações da regra</h2>
-                <button type="button" class="btn btn-secondary height-md" data-nav-href="/frame.php?page=produtividaderegras">Voltar</button>
             </div>
 
             <?php if ($error !== ''): ?>

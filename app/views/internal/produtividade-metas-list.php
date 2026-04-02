@@ -7,6 +7,7 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 require_once __DIR__ . '/../../helpers/Conection.php';
+require_once __DIR__ . '/../../helpers/ProdutividadeMetaAlvoOptions.php';
 require_once __DIR__ . '/../../services/ProdutividadeService.php';
 
 $connection = Conection::getInstance()->getConnection();
@@ -137,6 +138,13 @@ $baseQuery = [
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
             <h2>Lista de metas</h2>
             <div class="display-flex row row-fit justify-end gap-y-md">
+                <?php if ($isGestao): ?>
+                <?php
+                $listExportPage = $routePage;
+                $listExportQuery = $baseQuery;
+                include __DIR__ . '/_list_export_buttons.php';
+                ?>
+                <?php endif; ?>
                 <button type="button" class="btn btn-secondary height-md" data-nav-href="/frame.php?page=produtividade">Voltar</button>
                 <?php if ($isGestao): ?>
                 <button type="button" class="btn btn-primary height-md" data-nav-href="/frame.php?page=produtividademetascreate">Nova meta</button>
@@ -203,11 +211,28 @@ $baseQuery = [
                         <div class="display-flex row row-fit justify-start gap-y-md flex-wrap">
                             <div class="col width-200">
                                 <span class="minor-info">Tipo de alvo</span>
-                                <span class="major-info"><?php echo htmlspecialchars((string) ($row['tipo_alvo'] ?? ''), ENT_QUOTES); ?></span>
+                                <span class="major-info"><?php
+                                    $__ta = (string) ($row['tipo_alvo'] ?? '');
+                                    $__tipoAlvoLabels = ['setor' => 'Setor', 'perfil' => 'Perfil', 'usuario' => 'Usuário'];
+                                    echo htmlspecialchars($__tipoAlvoLabels[$__ta] ?? $__ta, ENT_QUOTES, 'UTF-8');
+                                ?></span>
                             </div>
                             <div class="col width-400">
                                 <span class="minor-info">Alvo</span>
-                                <span class="major-info"><?php echo htmlspecialchars((string) ($row['alvo_valor'] ?? ''), ENT_QUOTES); ?></span>
+                                <span class="major-info" title="<?php echo htmlspecialchars((string) ($row['alvo_valor'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"><?php
+                                    $__ta = (string) ($row['tipo_alvo'] ?? '');
+                                    $__av = (string) ($row['alvo_valor'] ?? '');
+                                    if ($__ta === 'setor') {
+                                        $__setoresLab = ProdutividadeMetaAlvoOptions::setorChoices();
+                                        $__u = strtoupper(trim($__av));
+                                        $__alvoExib = $__setoresLab[$__u] ?? $__av;
+                                    } elseif ($__ta === 'perfil') {
+                                        $__alvoExib = ProdutividadeMetaAlvoOptions::perfilLabel($__av);
+                                    } else {
+                                        $__alvoExib = $__av;
+                                    }
+                                    echo htmlspecialchars($__alvoExib, ENT_QUOTES, 'UTF-8');
+                                ?></span>
                             </div>
                             <div class="col width-200">
                                 <span class="minor-info">Período</span>

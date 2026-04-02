@@ -126,6 +126,13 @@ $baseQuery = ['page' => $routePage, 'q' => $q, 'ativo' => $ativo, 'items_per_pag
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
             <h2>Lista de regras</h2>
             <div class="display-flex row row-fit justify-end gap-y-md">
+                <?php if ($isGestao): ?>
+                <?php
+                $listExportPage = $routePage;
+                $listExportQuery = $baseQuery;
+                include __DIR__ . '/_list_export_buttons.php';
+                ?>
+                <?php endif; ?>
                 <button type="button" class="btn btn-secondary height-md" data-nav-href="/frame.php?page=produtividade">Voltar</button>
                 <?php if ($isGestao): ?>
                 <button type="button" class="btn btn-primary height-md" data-nav-href="/frame.php?page=produtividaderegrascreate">Nova regra</button>

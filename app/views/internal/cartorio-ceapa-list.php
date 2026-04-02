@@ -155,6 +155,11 @@ if ($totalPages > 0) {
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md">
                 <input type="text" class="width-400 height-md" id="search-input" placeholder="Pesquisar por processo..." value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
+                <?php
+                $listExportPage = $routePage;
+                $listExportQuery = $baseQueryParams;
+                include __DIR__ . '/_list_export_buttons.php';
+                ?>
                 <button type="button" class="btn btn-primary" id="novo-cadastro-btn">Novo cadastro</button>
             </div>
         </div>

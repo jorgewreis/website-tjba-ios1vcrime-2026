@@ -29,7 +29,7 @@ if ($userId !== '') {
 
 $form = [
     'tipo_alvo' => 'setor',
-    'alvo_valor' => '',
+    'alvo_valor' => 'CARTORIO',
     'periodo_tipo' => 'mes',
     'vigencia_inicio' => date('Y-m-d'),
     'vigencia_fim' => '',
@@ -86,7 +86,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <form method="post">
             <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
                 <h2>Informações da meta</h2>
-                <button type="button" class="btn btn-secondary height-md" data-nav-href="/frame.php?page=produtividademetas">Voltar</button>
             </div>
 
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
@@ -98,10 +97,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <option value="usuario"<?php echo $form['tipo_alvo'] === 'usuario' ? ' selected' : ''; ?>>Usuário</option>
                     </select>
                 </div>
-                <div class="col">
-                    <label for="alvo_valor">Alvo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="text" id="alvo_valor" name="alvo_valor" class="width-500 height-md white" value="<?php echo htmlspecialchars($form['alvo_valor'], ENT_QUOTES); ?>" required>
-                </div>
+                <?php
+                $metaFormTipoAlvo = $form['tipo_alvo'];
+                $metaFormAlvoValor = $form['alvo_valor'];
+                include __DIR__ . '/_produtividade_meta_alvo_controls.php';
+                ?>
                 <div class="col">
                     <label for="periodo_tipo">Período <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select id="periodo_tipo" name="periodo_tipo" class="width-300 height-md white" required>

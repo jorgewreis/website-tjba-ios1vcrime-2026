@@ -328,20 +328,17 @@ if ($canLoadLancamentos && $errors === []) {
         </form>
 
         <div class="display-flex row row-full padding-x-md padding-y-sm border-bottom gap-y-md">
-            <span class="status status-current padding-x-md">Total de lançamentos: <?php echo $totalDocuments; ?></span>
-            <span class="status status-success padding-x-md">Pontos no filtro: <?php echo number_format($sumPontos, 2, ',', '.'); ?></span>
-        </div>
-
-        <div class="display-flex row row-full padding-x-md padding-y-sm border-bottom gap-y-md flex-wrap">
-            <span class="status status-current padding-x-md">
+            <span class="status status-pending padding-x-lg">Total de lançamentos: <?php echo $totalDocuments; ?></span>
+            <span class="status status-success padding-x-lg">Pontos no filtro: <?php echo number_format($sumPontos, 2, ',', '.'); ?></span>
+            <span class="status status-pending padding-x-lg">
                 Semana: <?php echo number_format((float) ($resumoCards['week']['current'] ?? 0), 2, ',', '.'); ?>
                 (<?php echo number_format((float) ($resumoCards['week']['variation_percent'] ?? 0), 1, ',', '.'); ?>%)
             </span>
-            <span class="status status-current padding-x-md">
+            <span class="status status-pending padding-x-lg">
                 Mês: <?php echo number_format((float) ($resumoCards['month']['current'] ?? 0), 2, ',', '.'); ?>
                 (<?php echo number_format((float) ($resumoCards['month']['variation_percent'] ?? 0), 1, ',', '.'); ?>%)
             </span>
-            <span class="status status-current padding-x-md">
+            <span class="status status-pending padding-x-lg">
                 Trimestre: <?php echo number_format((float) ($resumoCards['quarter']['current'] ?? 0), 2, ',', '.'); ?>
                 (<?php echo number_format((float) ($resumoCards['quarter']['variation_percent'] ?? 0), 1, ',', '.'); ?>%)
             </span>
@@ -351,7 +348,7 @@ if ($canLoadLancamentos && $errors === []) {
             <h2>Ranking</h2>
         </div>
         <div class="display-flex col col-full padding-x-md padding-y-md border-bottom" id="ranking-section" data-ranking-url="<?php echo htmlspecialchars($rankingApiHref, ENT_QUOTES); ?>">
-            <span class="minor-info" id="ranking-loading">Carregando ranking...</span>
+            <span class="minor-info" id="ranking-loading">Ranking indisponível no momento.</span>
             <div id="ranking-content" class="display-flex col col-full gap-y-md" style="display:none;"></div>
         </div>
 

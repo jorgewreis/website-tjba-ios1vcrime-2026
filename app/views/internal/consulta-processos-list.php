@@ -118,6 +118,11 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                     </div>
                 </div>
                 <div class="display-flex row row-fit justify-end gap-y-md align-end">
+                    <?php
+                    $listExportPage = $routePage;
+                    $listExportQuery = $baseQueryParams;
+                    include __DIR__ . '/_list_export_buttons.php';
+                    ?>
                     <div class="col">
                         <label for="items-per-page">Itens por página</label>
                         <select class="width-300 height-md" name="items_per_page" id="items-per-page">

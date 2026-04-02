@@ -43,6 +43,13 @@ if ($processoId !== '') {
             <div class="display-flex row row-fit justify-start">
                 <h2>Partes do processo</h2>
             </div>
+            <div class="display-flex row row-fit justify-end gap-y-md">
+                <?php
+                $listExportPage = 'processosparteslist';
+                $listExportQuery = ['processo_id' => $processoId];
+                include __DIR__ . '/_list_export_buttons.php';
+                ?>
+            </div>
         </div>
 
         <form method="get" id="form-filters" class="display-flex col col-full" style="width:100%">
