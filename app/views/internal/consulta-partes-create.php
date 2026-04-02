@@ -134,7 +134,6 @@ $profissaoAtual = '';
         </div>
     </div>
 
-    <script src="/assets/js/shared/text-formatter.js"></script>
     <script src="/assets/js/shared/cpf.js"></script>
     <script>
     (function() {

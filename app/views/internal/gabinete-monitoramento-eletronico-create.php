@@ -18,7 +18,6 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
         <?php include __DIR__ . '/_internal_head_styles.php'; ?>
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
         <?php include __DIR__ . '/_toast_script.php'; ?>
-        <script src="/assets/js/shared/text-formatter.js"></script>
     </head>
 <body class="page-internal">
 
@@ -85,7 +84,6 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
     <script src="/assets/js/modules/datajud/cnj.js"></script>
     <script src="/assets/js/modules/datajud/datajud-cycle-helper.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/datajud/datajud-cycle-helper.js') ?: time(); ?>"></script>
     <script src="/assets/js/modules/datajud/datajud-api.js"></script>
-    <script src="/assets/js/shared/text-formatter.js"></script>
     <script>
         (function () {
             if (!window.App || !App.GmeCreate || typeof App.GmeCreate.initialize !== 'function') {

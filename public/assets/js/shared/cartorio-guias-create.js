@@ -35,7 +35,9 @@
 
             return {
                 reu_id: '',
-                denunciado: helpers.formatProperName(helpers.getValue('filter-denunciado'), 255)
+                denunciado: App.ProperNameHelper && App.ProperNameHelper.formatProper
+                    ? App.ProperNameHelper.formatProper(helpers.getValue('filter-denunciado'), 255)
+                    : helpers.formatProperName(helpers.getValue('filter-denunciado'), 255)
             };
         }
 

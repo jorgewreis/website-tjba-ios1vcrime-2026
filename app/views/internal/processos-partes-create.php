@@ -84,33 +84,13 @@ $polosValidos = ['ativo' => 'Ativo', 'passivo' => 'Passivo', 'terceiros' => 'Ter
         </div>
     </div>
     <script>
-    document.getElementById('vincular-btn').addEventListener('click', function() {
-        var processoId = document.getElementById('processo-id').value;
-        var parteId = (document.getElementById('parte-id').value || '').trim();
-        var tipoParte = (document.getElementById('tipo_parte').value || '').trim();
-        var polo = (document.getElementById('polo').value || '').trim();
-        if (!parteId || !tipoParte || !polo) {
-            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Preencha parte, tipo e polo.' });
-            return;
-        }
-        this.disabled = true;
-        fetch('/api/processos-partes/create.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ processo_id: processoId, parte_id: parteId, tipo_parte: tipoParte, polo: polo })
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(d) {
-            if (d.id) {
-                if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Parte vinculada.' });
-                window.location.href = '/frame.php?page=consultaprocessosedit&id=' + encodeURIComponent(processoId);
-            } else {
-                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: d.error || 'Erro.' });
-                document.getElementById('vincular-btn').disabled = false;
+        (function () {
+            if (!window.App || !App.ProcessosPartesCreate || typeof App.ProcessosPartesCreate.initialize !== 'function') {
+                return;
             }
-        })
-        .catch(function() { document.getElementById('vincular-btn').disabled = false; });
-    });
+
+            App.ProcessosPartesCreate.initialize();
+        })();
     </script>
 </body>
 </html>

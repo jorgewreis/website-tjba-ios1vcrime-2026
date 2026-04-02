@@ -31,9 +31,7 @@ final class Security
     public static function requireAuthentication(): void
     {
         if (!self::isAuthenticated()) {
-            self::clearAuthenticatedSession();
-            header('Location: /index.php');
-            exit;
+            self::redirectToLogin();
         }
     }
 
@@ -91,6 +89,20 @@ final class Security
         return is_string($token)
             && isset($_SESSION[self::CSRF_SESSION_KEY])
             && hash_equals($_SESSION[self::CSRF_SESSION_KEY], $token);
+    }
+
+    private static function redirectToLogin(): void
+    {
+        self::clearAuthenticatedSession();
+        $loginUrl = '/index.php';
+        // HTTP redirect padrão.
+        header('Location: ' . $loginUrl);
+        // Garantir que o logout rompa o iframe: força topo.
+        if (!headers_sent()) {
+            header('Content-Type: text/html; charset=UTF-8');
+        }
+        echo "<!DOCTYPE html><html><head><meta http-equiv=\"refresh\" content=\"0;url={$loginUrl}\"></head><body><script>if(window.top){window.top.location.href='{$loginUrl}';}else{window.location.href='{$loginUrl}';}</script></body></html>";
+        exit;
     }
 
     /* ==================== UTILITÁRIOS ==================== */

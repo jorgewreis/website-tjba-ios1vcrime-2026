@@ -85,32 +85,13 @@ $polosValidos = ['ativo' => 'Ativo', 'passivo' => 'Passivo', 'terceiros' => 'Ter
         </div>
     </div>
     <script>
-    document.getElementById('salvar-btn').addEventListener('click', function() {
-        var id = document.getElementById('vinculo-id').value;
-        var processoId = document.getElementById('processo-id').value;
-        var payload = {
-            id: id,
-            tipo_parte: document.getElementById('tipo_parte').value,
-            polo: document.getElementById('polo').value,
-            prioridade_mulher: document.getElementById('prioridade_mulher').checked,
-            prioridade_crianca_adolescente: document.getElementById('prioridade_crianca_adolescente').checked,
-            prioridade_idoso: document.getElementById('prioridade_idoso').checked,
-            prioridade_pessoa_deficiencia: document.getElementById('prioridade_pessoa_deficiencia').checked
-        };
-        this.disabled = true;
-        fetch('/api/processos-partes/update.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-            .then(function(r) { return r.json(); })
-            .then(function(d) {
-                if (d.success) {
-                    if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Vínculo atualizado.' });
-                    window.location.href = '/frame.php?page=consultaprocessosedit&id=' + encodeURIComponent(processoId);
-                } else {
-                    if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: d.error || 'Erro.' });
-                    document.getElementById('salvar-btn').disabled = false;
-                }
-            })
-            .catch(function() { document.getElementById('salvar-btn').disabled = false; });
-    });
+        (function () {
+            if (!window.App || !App.ProcessosPartesEdit || typeof App.ProcessosPartesEdit.initialize !== 'function') {
+                return;
+            }
+
+            App.ProcessosPartesEdit.initialize();
+        })();
     </script>
 </body>
 </html>

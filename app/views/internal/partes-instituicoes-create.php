@@ -28,7 +28,6 @@ $instituicoes = $instituicoesList['rows'] ?? [];
             <?php include __DIR__ . '/_internal_head_styles.php'; ?>
 
     <?php include __DIR__ . '/_toast_script.php'; ?>
-    <script src="/assets/js/shared/text-formatter.js"></script>
 </head>
 <body class="page-internal">
     <div class="spacing-top-page"></div>
@@ -104,96 +103,13 @@ $instituicoes = $instituicoesList['rows'] ?? [];
         </div>
     </div>
     <script>
-    function formatProfissaoCampo(el) {
-        if (!el) return '';
-        var v = el.value || '';
-        if (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
-            v = TextFormatter.formatProperName(v, 120);
-        } else {
-            v = v.trim();
-        }
-        el.value = v;
-        return v || null;
-    }
-    var profissaoEl = document.getElementById('profissao');
-    if (profissaoEl && typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
-        profissaoEl.addEventListener('blur', function() {
-            var t = (this.value || '').trim();
-            if (t === '') return;
-            this.value = TextFormatter.formatProperName(this.value, 120);
-        });
-    }
+        (function () {
+            if (!window.App || !App.PartesInstituicoesCreate || typeof App.PartesInstituicoesCreate.initialize !== 'function') {
+                return;
+            }
 
-    document.getElementById('voltar-btn').addEventListener('click', function() { window.location.href = '/frame.php?page=partesinstituicoeslist'; });
-    document.getElementById('btn-buscar-pessoa').addEventListener('click', function() { window.open('/frame.php?page=consultapartes', '_blank'); });
-    document.getElementById('btn-buscar-instituicao').addEventListener('click', function() { window.open('/frame.php?page=instituicoespublicas', '_blank'); });
-    document.getElementById('instituicao_id').addEventListener('change', function() {
-        var instId = (this.value || '').trim();
-        var sel = document.getElementById('setor_id');
-        sel.innerHTML = '<option value="">— Carregando —</option>';
-        if (!instId) { sel.innerHTML = '<option value="">— Selecione a instituição primeiro —</option>'; return; }
-        fetch('/api/instituicoes-publicas/setores.php?instituicao_id=' + encodeURIComponent(instId))
-            .then(function(r) { return r.json(); })
-            .then(function(d) {
-                var opts = '<option value="">— Nenhum setor —</option>';
-                (d.setores || []).forEach(function(s) {
-                    opts += '<option value="' + (s.id || '') + '">' + (s.nome_setor || s.sigla || s.id) + '</option>';
-                });
-                sel.innerHTML = opts;
-            })
-            .catch(function() { sel.innerHTML = '<option value="">— Erro —</option>'; });
-    });
-    document.getElementById('salvar-btn').addEventListener('click', function() {
-        var btn = this;
-        var parteId = (document.getElementById('parte_id').value || '').trim();
-        var instituicaoId = (document.getElementById('instituicao_id').value || '').trim();
-        var cargoFuncao = (document.getElementById('cargo_funcao').value || '').trim();
-        if (!parteId || !instituicaoId) {
-            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Selecione a pessoa e a instituição.' });
-            return;
-        }
-        if (!cargoFuncao) {
-            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Validação', message: 'Informe o cargo ou função.' });
-            return;
-        }
-        var profEl = document.getElementById('profissao');
-        var profFmt = profEl ? formatProfissaoCampo(profEl) : null;
-        var payload = {
-            parte_id: parteId,
-            instituicao_id: instituicaoId,
-            setor_id: (document.getElementById('setor_id').value || '').trim() || null,
-            profissao: profFmt,
-            cargo_funcao: cargoFuncao,
-            observacoes: (document.getElementById('observacoes').value || '').trim() || null
-        };
-        btn.disabled = true;
-        fetch('/api/pessoas/vinculos-instituicoes/create.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'same-origin',
-            body: JSON.stringify(payload)
-        })
-            .then(function(r) {
-                return r.text().then(function(t) {
-                    var j = {};
-                    try { j = t ? JSON.parse(t) : {}; } catch (e) {}
-                    return { ok: r.ok, j: j };
-                });
-            })
-            .then(function(res) {
-                if (res.ok && res.j && res.j.id) {
-                    if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Vínculo criado.' });
-                    window.location.href = '/frame.php?page=partesinstituicoeslist';
-                    return;
-                }
-                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: (res.j && res.j.error) ? res.j.error : 'Não foi possível salvar o vínculo.' });
-                btn.disabled = false;
-            })
-            .catch(function() {
-                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Falha de conexão ou resposta inválida.' });
-                btn.disabled = false;
-            });
-    });
+            App.PartesInstituicoesCreate.initialize();
+        })();
     </script>
 </body>
 </html>

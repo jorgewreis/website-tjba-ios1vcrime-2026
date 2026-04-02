@@ -27,6 +27,9 @@
     }
 
     function formatProperName(value, maxLength) {
+        if (App.ProperNameHelper && typeof App.ProperNameHelper.formatProper === 'function') {
+            return App.ProperNameHelper.formatProper(value, maxLength || 255);
+        }
         if (typeof global.TextFormatter !== 'undefined' && typeof global.TextFormatter.formatProperName === 'function') {
             return global.TextFormatter.formatProperName(value, maxLength || 255);
         }

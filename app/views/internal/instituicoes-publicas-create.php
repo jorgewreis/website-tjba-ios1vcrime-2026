@@ -11,7 +11,6 @@ if (function_exists('mb_internal_encoding')) mb_internal_encoding('UTF-8');
             <?php include __DIR__ . '/_internal_head_styles.php'; ?>
 
     <?php include __DIR__ . '/_toast_script.php'; ?>
-    <script src="/assets/js/shared/text-formatter.js"></script>
     <script src="/assets/js/shared/cnpj.js"></script>
 </head>
 <body class="page-internal">
@@ -54,64 +53,13 @@ if (function_exists('mb_internal_encoding')) mb_internal_encoding('UTF-8');
         </div>
     </div>
     <script>
-    (function() {
-        var nomeEl = document.getElementById('nome');
-        var nomeFantasiaEl = document.getElementById('nome_fantasia');
-        function formatNomeInstituicao(value) {
-            var nome = String(value || '').trim().replace(/\s+/g, ' ');
-            if (typeof TextFormatter !== 'undefined' && typeof TextFormatter.formatProperName === 'function') {
-                nome = TextFormatter.formatProperName(nome, 255);
+        (function () {
+            if (!window.App || !App.InstituicoesPublicasCreate || typeof App.InstituicoesPublicasCreate.initialize !== 'function') {
+                return;
             }
-            return nome.slice(0, 255);
-        }
-        if (nomeEl) {
-            nomeEl.addEventListener('blur', function() {
-                this.value = formatNomeInstituicao(this.value || '');
-            });
-        }
-        if (nomeFantasiaEl) {
-            nomeFantasiaEl.addEventListener('blur', function() {
-                this.value = (this.value || '').trim().toUpperCase().slice(0, 120);
-            });
-        }
-        if (typeof App !== 'undefined' && App.CNPJ && App.CNPJ.init) {
-            App.CNPJ.init('#cnpj');
-        }
-    })();
-    document.getElementById('cadastrar-btn').addEventListener('click', function() {
-        var nomeRaw = document.getElementById('nome').value || '';
-        var nome = String(nomeRaw).trim().replace(/\s+/g, ' ');
-        if (typeof TextFormatter !== 'undefined' && typeof TextFormatter.formatProperName === 'function') {
-            nome = TextFormatter.formatProperName(nome, 255);
-        } else {
-            nome = nome.slice(0, 255);
-        }
-        document.getElementById('nome').value = nome;
-        if (!nome) { if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Nome é obrigatório.' }); return; }
-        var cnpjRaw = (document.getElementById('cnpj').value || '').replace(/\D/g, '');
-        if (cnpjRaw && cnpjRaw.length === 14 && typeof App !== 'undefined' && App.CNPJ && !App.CNPJ.validar(cnpjRaw)) {
-            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'CNPJ inválido. Verifique os dígitos.' });
-            return;
-        }
-        var nomeFantasiaVal = (document.getElementById('nome_fantasia').value || '').trim().toUpperCase().slice(0, 120);
-        this.disabled = true;
-        fetch('/api/instituicoes-publicas/create.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                nome: nome,
-                nome_fantasia: nomeFantasiaVal === '' ? null : nomeFantasiaVal,
-                cnpj: cnpjRaw === '' ? null : cnpjRaw,
-                observacoes: (document.getElementById('observacoes').value || '').trim() || null
-            })
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(d) {
-            if (d.id) { if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Cadastrada.' }); window.location.href = '/frame.php?page=instituicoespublicasedit&id=' + encodeURIComponent(d.id); }
-            else { if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: d.error || 'Erro.' }); document.getElementById('cadastrar-btn').disabled = false; }
-        })
-        .catch(function() { document.getElementById('cadastrar-btn').disabled = false; });
-    });
+
+            App.InstituicoesPublicasCreate.initialize();
+        })();
     </script>
 </body>
 </html>

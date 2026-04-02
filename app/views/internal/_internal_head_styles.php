@@ -67,6 +67,42 @@ $__cartorioGuiasCreateUiPath = dirname(__DIR__, 3) . '/public/assets/js/shared/c
 $__cartorioGuiasCreateUiV = @filemtime($__cartorioGuiasCreateUiPath) ?: time();
 $__cartorioMedidasCreateUiPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-medidas-protetivas-create-ui.js';
 $__cartorioMedidasCreateUiV = @filemtime($__cartorioMedidasCreateUiPath) ?: time();
+$__recordEditCommonPath = dirname(__DIR__, 3) . '/public/assets/js/shared/record-edit-common.js';
+$__recordEditCommonV = @filemtime($__recordEditCommonPath) ?: time();
+$__instituicoesPublicasEditPath = dirname(__DIR__, 3) . '/public/assets/js/shared/instituicoes-publicas-edit.js';
+$__instituicoesPublicasEditV = @filemtime($__instituicoesPublicasEditPath) ?: time();
+$__consultaPartesEditPath = dirname(__DIR__, 3) . '/public/assets/js/shared/consulta-partes-edit.js';
+$__consultaPartesEditV = @filemtime($__consultaPartesEditPath) ?: time();
+$__consultaProcessosEditPath = dirname(__DIR__, 3) . '/public/assets/js/shared/consulta-processos-edit.js';
+$__consultaProcessosEditV = @filemtime($__consultaProcessosEditPath) ?: time();
+$__gabineteReusPresosEditPath = dirname(__DIR__, 3) . '/public/assets/js/shared/gabinete-reus-presos-edit.js';
+$__gabineteReusPresosEditV = @filemtime($__gabineteReusPresosEditPath) ?: time();
+$__instituicoesPublicasCreatePath = dirname(__DIR__, 3) . '/public/assets/js/shared/instituicoes-publicas-create.js';
+$__instituicoesPublicasCreateV = @filemtime($__instituicoesPublicasCreatePath) ?: time();
+$__partesInstituicoesCreatePath = dirname(__DIR__, 3) . '/public/assets/js/shared/partes-instituicoes-create.js';
+$__partesInstituicoesCreateV = @filemtime($__partesInstituicoesCreatePath) ?: time();
+$__partesInstituicoesEditPath = dirname(__DIR__, 3) . '/public/assets/js/shared/partes-instituicoes-edit.js';
+$__partesInstituicoesEditV = @filemtime($__partesInstituicoesEditPath) ?: time();
+$__processosPartesCreatePath = dirname(__DIR__, 3) . '/public/assets/js/shared/processos-partes-create.js';
+$__processosPartesCreateV = @filemtime($__processosPartesCreatePath) ?: time();
+$__processosPartesEditPath = dirname(__DIR__, 3) . '/public/assets/js/shared/processos-partes-edit.js';
+$__processosPartesEditV = @filemtime($__processosPartesEditPath) ?: time();
+$__ceapaCreatePath = dirname(__DIR__, 3) . '/public/assets/js/shared/ceapa-create.js';
+$__ceapaCreateV = @filemtime($__ceapaCreatePath) ?: time();
+$__ceapaEditPath = dirname(__DIR__, 3) . '/public/assets/js/shared/ceapa-edit.js';
+$__ceapaEditV = @filemtime($__ceapaEditPath) ?: time();
+$__ceapaListPath = dirname(__DIR__, 3) . '/public/assets/js/shared/ceapa-list.js';
+$__ceapaListV = @filemtime($__ceapaListPath) ?: time();
+$__usuariosCreatePath = dirname(__DIR__, 3) . '/public/assets/js/shared/usuarios-create.js';
+$__usuariosCreateV = @filemtime($__usuariosCreatePath) ?: time();
+$__usuariosEditPath = dirname(__DIR__, 3) . '/public/assets/js/shared/usuarios-edit.js';
+$__usuariosEditV = @filemtime($__usuariosEditPath) ?: time();
+$__alterarDadosPath = dirname(__DIR__, 3) . '/public/assets/js/shared/alterar-dados-pessoais.js';
+$__alterarDadosV = @filemtime($__alterarDadosPath) ?: time();
+$__properNameHelperPath = dirname(__DIR__, 3) . '/public/assets/js/shared/proper-name-helper.js';
+$__properNameHelperV = @filemtime($__properNameHelperPath) ?: time();
+$__cartasRecebidasEditPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-cartas-recebidas-edit.js';
+$__cartasRecebidasEditV = @filemtime($__cartasRecebidasEditPath) ?: time();
 
 $__currentUserPerfis = (isset($userPerfils) && is_array($userPerfils)) ? $userPerfils : [];
 $__isEstagiarioProfile = false;
@@ -133,6 +169,24 @@ window.__APP_CONTEXT = Object.assign({}, window.__APP_CONTEXT || {}, {
 <script src="/assets/js/shared/cartorio-medidas-protetivas-create.js?v=<?php echo (int) $__cartorioMedidasCreateV; ?>"></script>
 <script src="/assets/js/shared/cartorio-guias-create-ui.js?v=<?php echo (int) $__cartorioGuiasCreateUiV; ?>"></script>
 <script src="/assets/js/shared/cartorio-medidas-protetivas-create-ui.js?v=<?php echo (int) $__cartorioMedidasCreateUiV; ?>"></script>
+<script src="/assets/js/shared/record-edit-common.js?v=<?php echo (int) $__recordEditCommonV; ?>"></script>
+<script src="/assets/js/shared/instituicoes-publicas-edit.js?v=<?php echo (int) $__instituicoesPublicasEditV; ?>"></script>
+<script src="/assets/js/shared/consulta-partes-edit.js?v=<?php echo (int) $__consultaPartesEditV; ?>"></script>
+<script src="/assets/js/shared/consulta-processos-edit.js?v=<?php echo (int) $__consultaProcessosEditV; ?>"></script>
+<script src="/assets/js/shared/gabinete-reus-presos-edit.js?v=<?php echo (int) $__gabineteReusPresosEditV; ?>"></script>
+<script src="/assets/js/shared/instituicoes-publicas-create.js?v=<?php echo (int) $__instituicoesPublicasCreateV; ?>"></script>
+<script src="/assets/js/shared/partes-instituicoes-create.js?v=<?php echo (int) $__partesInstituicoesCreateV; ?>"></script>
+<script src="/assets/js/shared/partes-instituicoes-edit.js?v=<?php echo (int) $__partesInstituicoesEditV; ?>"></script>
+<script src="/assets/js/shared/processos-partes-create.js?v=<?php echo (int) $__processosPartesCreateV; ?>"></script>
+<script src="/assets/js/shared/processos-partes-edit.js?v=<?php echo (int) $__processosPartesEditV; ?>"></script>
+<script src="/assets/js/shared/ceapa-create.js?v=<?php echo (int) $__ceapaCreateV; ?>"></script>
+<script src="/assets/js/shared/ceapa-edit.js?v=<?php echo (int) $__ceapaEditV; ?>"></script>
+<script src="/assets/js/shared/ceapa-list.js?v=<?php echo (int) $__ceapaListV; ?>"></script>
+<script src="/assets/js/shared/usuarios-create.js?v=<?php echo (int) $__usuariosCreateV; ?>"></script>
+<script src="/assets/js/shared/usuarios-edit.js?v=<?php echo (int) $__usuariosEditV; ?>"></script>
+<script src="/assets/js/shared/alterar-dados-pessoais.js?v=<?php echo (int) $__alterarDadosV; ?>"></script>
+<script src="/assets/js/shared/proper-name-helper.js?v=<?php echo (int) $__properNameHelperV; ?>"></script>
+<script src="/assets/js/shared/cartorio-cartas-recebidas-edit.js?v=<?php echo (int) $__cartasRecebidasEditV; ?>"></script>
 <script>window.__IS_ESTAGIARIO_PROFILE = <?php echo $__isEstagiarioProfile ? 'true' : 'false'; ?>;</script>
 <script>window.__ALLOW_DELETE_ON_EDIT_PAGE = <?php echo $__canDeleteOnThisEditPage ? 'true' : 'false'; ?>;</script>
 <?php if ($__isEstagiarioProfile && $__isEditPage && !$__canDeleteOnThisEditPage): ?>

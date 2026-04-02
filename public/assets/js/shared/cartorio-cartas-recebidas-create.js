@@ -35,7 +35,9 @@
                 return;
             }
 
-            const cidadeOrigem = helpers.formatProperName(helpers.getValue('filter-cidade'), 50);
+            const cidadeOrigem = App.ProperNameHelper && App.ProperNameHelper.formatProper
+                ? App.ProperNameHelper.formatProper(helpers.getValue('filter-cidade'), 50)
+                : helpers.formatProperName(helpers.getValue('filter-cidade'), 50);
             const ufOrigem = helpers.getValue('filter-estado');
             const finalidade = helpers.getValue('filter-tipo');
 

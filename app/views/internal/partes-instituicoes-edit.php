@@ -39,7 +39,6 @@ if (!empty($vinculo['instituicao_id'])) {
             <?php include __DIR__ . '/_internal_head_styles.php'; ?>
 
     <?php include __DIR__ . '/_toast_script.php'; ?>
-    <script src="/assets/js/shared/text-formatter.js"></script>
 </head>
 <body class="page-internal">
     <div class="spacing-top-page"></div>
@@ -106,60 +105,13 @@ if (!empty($vinculo['instituicao_id'])) {
         </div>
     </div>
     <script>
-    function formatProfissaoCampo(el) {
-        if (!el) return '';
-        var v = el.value || '';
-        if (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
-            v = TextFormatter.formatProperName(v, 120);
-        } else {
-            v = v.trim();
-        }
-        el.value = v;
-        return v || null;
-    }
-    var profissaoEl = document.getElementById('profissao');
-    if (profissaoEl && typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
-        profissaoEl.addEventListener('blur', function() {
-            var t = (this.value || '').trim();
-            if (t === '') return;
-            this.value = TextFormatter.formatProperName(this.value, 120);
-        });
-    }
+        (function () {
+            if (!window.App || !App.PartesInstituicoesEdit || typeof App.PartesInstituicoesEdit.initialize !== 'function') {
+                return;
+            }
 
-    document.getElementById('salvar-btn').addEventListener('click', function() {
-        var id = document.getElementById('vinculo-id').value;
-        var dataInclusao = (document.getElementById('data_inclusao').value || '').trim();
-        if (!dataInclusao) {
-            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Data de inclusão é obrigatória.' });
-            return;
-        }
-        var profEl = document.getElementById('profissao');
-        var profFmt = profEl ? formatProfissaoCampo(profEl) : null;
-        var payload = {
-            id: id,
-            setor_id: (document.getElementById('setor_id').value || '').trim() || null,
-            profissao: profFmt,
-            cargo_funcao: (document.getElementById('cargo_funcao').value || '').trim() || null,
-            data_inclusao: dataInclusao,
-            data_inicio: (document.getElementById('data_inicio').value || '').trim() || null,
-            data_fim: (document.getElementById('data_fim').value || '').trim() || null,
-            ativo: document.getElementById('ativo').checked,
-            observacoes: (document.getElementById('observacoes').value || '').trim() || null
-        };
-        this.disabled = true;
-        fetch('/api/pessoas/vinculos-instituicoes/update.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-            .then(function(r) { return r.json(); })
-            .then(function(d) {
-                if (d.success) {
-                    if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Vínculo atualizado.' });
-                    window.location.href = '/frame.php?page=partesinstituicoeslist';
-                } else {
-                    if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: d.error || 'Erro.' });
-                    document.getElementById('salvar-btn').disabled = false;
-                }
-            })
-            .catch(function() { document.getElementById('salvar-btn').disabled = false; });
-    });
+            App.PartesInstituicoesEdit.initialize();
+        })();
     </script>
 </body>
 </html>

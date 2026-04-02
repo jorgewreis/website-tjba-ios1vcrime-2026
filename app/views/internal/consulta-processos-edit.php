@@ -101,55 +101,13 @@ $prioridadesFichaEstado = $processoIdFicha !== ''
     <script src="/assets/js/modules/audiencias/pauta-edit-prioridades.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-edit-prioridades.js') ?: time(); ?>"></script>
     <?php endif; ?>
     <script>
-    function queuePostReloadToast(type, title, message) {
-        if (window.App && App.Page && typeof App.Page.queuePostReloadToast === 'function') {
-            App.Page.queuePostReloadToast(type, title, message, 'cartorio.postReloadToast');
-            return;
-        }
-        try {
-            var key = 'cartorio.postReloadToast';
-            var raw = sessionStorage.getItem(key);
-            var fila = raw ? JSON.parse(raw) : [];
-            var lista = Array.isArray(fila) ? fila : ((fila && fila.message) ? [fila] : []);
-            lista.push({ type: type, title: title, message: message });
-            sessionStorage.setItem(key, JSON.stringify(lista));
-        } catch (e) {}
-    }
-    var requireSecondClick = window.App && App.Page && typeof App.Page.createSecondClickGuard === 'function'
-        ? App.Page.createSecondClickGuard()
-        : (function () {
-            var pendingConfirmations = {};
-            return function (key, message) {
-                var now = Date.now();
-                var validUntil = Number(pendingConfirmations[key] || 0);
-                if (validUntil > now) {
-                    delete pendingConfirmations[key];
-                    return true;
-                }
-                pendingConfirmations[key] = now + 5000;
-                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Confirmação', message: message });
-                return false;
-            };
+        (function () {
+            if (!window.App || !App.ConsultaProcessosEdit || typeof App.ConsultaProcessosEdit.initialize !== 'function') {
+                return;
+            }
+
+            App.ConsultaProcessosEdit.initialize();
         })();
-    document.querySelectorAll('.btn-desvincular').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            var id = this.getAttribute('data-id');
-            var processoId = this.getAttribute('data-processo-id');
-            if (!id || !processoId) return;
-            if (!requireSecondClick('desvincular-processo-parte-' + id, 'Clique novamente em Desvincular em até 5 segundos para confirmar.')) return;
-            this.disabled = true;
-            fetch('/api/processos-partes/delete.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id }) })
-                .then(function(r) { return r.json(); })
-                .then(function(d) {
-                    if (d.deleted) {
-                        queuePostReloadToast('success', 'Sucesso', 'Vínculo removido com sucesso.');
-                        window.location.reload();
-                    }
-                    else { if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: d.error || 'Erro.' }); btn.disabled = false; }
-                })
-                .catch(function() { btn.disabled = false; });
-        });
-    });
     </script>
 </body>
 </html>

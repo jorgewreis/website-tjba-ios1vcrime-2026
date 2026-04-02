@@ -331,100 +331,21 @@ if (!$isUsuarioExterno && $dados !== null) {
 
     <?php if ($dados !== null): ?>
     <script>
-    (function () {
-        var serverError = <?php echo json_encode($mensagemErro, JSON_UNESCAPED_UNICODE); ?>;
-        var serverSuccess = <?php echo json_encode($mensagemSucesso, JSON_UNESCAPED_UNICODE); ?>;
-        if (typeof showToast === 'function') {
-            if (serverError) {
-                showToast({ type: 'error', variant: 'full', title: 'Erro', message: serverError });
-            } else if (serverSuccess) {
-                showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: serverSuccess });
-            }
-        }
-        var interno = <?php echo json_encode(!$isUsuarioExterno, JSON_UNESCAPED_UNICODE); ?>;
-        var initial = {
-            email: <?php echo json_encode($dados['email'] ?? '', JSON_UNESCAPED_UNICODE); ?>,
-            telefone: <?php echo json_encode($dados['telefone'] ?? '', JSON_UNESCAPED_UNICODE); ?>,
-            sexo: <?php echo json_encode($dados['sexo'] ?? '', JSON_UNESCAPED_UNICODE); ?>
+        window.__ALTERAR_DADOS_CTX = {
+            serverError: <?php echo json_encode($mensagemErro, JSON_UNESCAPED_UNICODE); ?>,
+            serverSuccess: <?php echo json_encode($mensagemSucesso, JSON_UNESCAPED_UNICODE); ?>,
+            interno: <?php echo json_encode(!$isUsuarioExterno, JSON_UNESCAPED_UNICODE); ?>,
+            initial: {
+                email: <?php echo json_encode($dados['email'] ?? '', JSON_UNESCAPED_UNICODE); ?>,
+                telefone: <?php echo json_encode($dados['telefone'] ?? '', JSON_UNESCAPED_UNICODE); ?>,
+                sexo: <?php echo json_encode($dados['sexo'] ?? '', JSON_UNESCAPED_UNICODE); ?>,
+                avatarSlug: <?php echo json_encode($avatarSlugForJs, JSON_UNESCAPED_UNICODE); ?>
+            },
+            avatarEntries: <?php echo json_encode($avatarUiEntries, JSON_UNESCAPED_UNICODE); ?>
         };
-        if (interno) {
-            initial.avatarSlug = <?php echo json_encode($avatarSlugForJs, JSON_UNESCAPED_UNICODE); ?>;
+        if (window.App && App.AlterarDados && typeof App.AlterarDados.initialize === 'function') {
+            App.AlterarDados.initialize(window.__ALTERAR_DADOS_CTX);
         }
-
-        function getCurrent() {
-            var emailEl = document.getElementById('edit-email');
-            var telEl = document.getElementById('edit-telefone');
-            var cur = {
-                email: emailEl ? (emailEl.value || '').trim() : '',
-                telefone: telEl ? (telEl.value || '').trim() : '',
-                sexo: (document.getElementById('edit-sexo')?.value || '').trim()
-            };
-            if (interno) {
-                var avEl = document.getElementById('edit-avatar-slug');
-                cur.avatarSlug = avEl ? (avEl.value || '').trim() : '';
-            }
-            return cur;
-        }
-        function hasChanges() {
-            var cur = getCurrent();
-            var base = (initial.email || '') !== (cur.email || '') ||
-                (initial.telefone || '') !== (cur.telefone || '') ||
-                (initial.sexo || '') !== (cur.sexo || '');
-            if (interno) {
-                base = base || (initial.avatarSlug || '') !== (cur.avatarSlug || '');
-            }
-            return base;
-        }
-        function updateSalvarState() {
-            var btn = document.getElementById('salvar-btn');
-            if (btn) btn.disabled = !hasChanges();
-        }
-
-        document.getElementById('voltar-btn')?.addEventListener('click', function () {
-            window.location.href = '/frame.php?page=dashboard';
-        });
-
-        var observedFields = ['edit-email', 'edit-telefone', 'edit-sexo'];
-        observedFields.forEach(function (id) {
-            var el = document.getElementById(id);
-            if (el) {
-                el.addEventListener('input', updateSalvarState);
-                el.addEventListener('change', updateSalvarState);
-            }
-        });
-        var avSel = document.getElementById('edit-avatar-slug');
-        var avatarUiEntries = <?php echo json_encode($avatarUiEntries, JSON_UNESCAPED_UNICODE); ?>;
-        function avatarEntryBySlug(slug) {
-            var s = (slug || '').trim();
-            for (var i = 0; i < avatarUiEntries.length; i++) {
-                if (avatarUiEntries[i].slug === s) return avatarUiEntries[i];
-            }
-            return null;
-        }
-        function syncAvatarPreview() {
-            var img = document.getElementById('avatar-preview-img');
-            var initialsEl = document.getElementById('avatar-preview-initials');
-            if (!img || !initialsEl || !avSel) return;
-            var entry = avatarEntryBySlug(avSel.value);
-            if (!entry || entry.is_initial) {
-                img.setAttribute('hidden', 'hidden');
-                img.removeAttribute('src');
-                initialsEl.removeAttribute('hidden');
-            } else {
-                initialsEl.setAttribute('hidden', 'hidden');
-                img.src = entry.url;
-                img.removeAttribute('hidden');
-            }
-        }
-        if (avSel) {
-            avSel.addEventListener('change', function () {
-                syncAvatarPreview();
-                updateSalvarState();
-            });
-            syncAvatarPreview();
-        }
-        updateSalvarState();
-    })();
     </script>
     <?php endif; ?>
 </body>

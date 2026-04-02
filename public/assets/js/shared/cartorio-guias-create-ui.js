@@ -153,7 +153,10 @@
         if (denunciadoInput) {
             denunciadoInput.addEventListener('blur', function () {
                 let nome = String(denunciadoInput.value || '').trim();
-                if (typeof global.TextFormatter !== 'undefined' && global.TextFormatter.formatProperName) {
+                if (App.ProperNameHelper && typeof App.ProperNameHelper.formatProper === 'function') {
+                    nome = App.ProperNameHelper.formatProper(nome, 255);
+                    denunciadoInput.value = nome;
+                } else if (typeof global.TextFormatter !== 'undefined' && global.TextFormatter.formatProperName) {
                     nome = global.TextFormatter.formatProperName(nome, 255);
                     denunciadoInput.value = nome;
                 }

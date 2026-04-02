@@ -75,7 +75,9 @@
                 return;
             }
 
-            const cidadeDestino = helpers.formatProperName(helpers.getValue('filter-cidade'), 50);
+            const cidadeDestino = App.ProperNameHelper && App.ProperNameHelper.formatProper
+                ? App.ProperNameHelper.formatProper(helpers.getValue('filter-cidade'), 50)
+                : helpers.formatProperName(helpers.getValue('filter-cidade'), 50);
             if (normalizeCidadeForCompare(cidadeDestino) === 'ilheus') {
                 feedback('O cadastro não é permitido para a cidade de Ilhéus (comarca de origem).', 'error');
                 return;

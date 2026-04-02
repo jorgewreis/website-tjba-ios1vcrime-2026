@@ -18,7 +18,6 @@ $routePage = trim((string) ($_GET['page'] ?? 'reuspresoscreate'));
         <?php include __DIR__ . '/_internal_head_styles.php'; ?>
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
         <?php include __DIR__ . '/_toast_script.php'; ?>
-        <script src="/assets/js/shared/text-formatter.js"></script>
     </head>
 <body class="page-internal">
 

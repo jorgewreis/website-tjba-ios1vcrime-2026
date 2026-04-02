@@ -250,7 +250,6 @@ try {
     <script src="/assets/js/modules/datajud/datajud-cycle-helper.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/datajud/datajud-cycle-helper.js') ?: time(); ?>"></script>
     <script src="/assets/js/modules/datajud/datajud-api.js"></script>
     <script src="/assets/js/modules/cartorio/cartas-expedidas/user.js"></script>
-    <script src="/assets/js/shared/text-formatter.js"></script>
     <script>
         window.__currentUserName = <?php echo json_encode($currentUserName, JSON_UNESCAPED_UNICODE); ?>;
     </script>

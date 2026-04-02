@@ -49,7 +49,9 @@
         // Se o nome foi selecionado na lista (readOnly), não altere o texto.
         if (nomeInput.readOnly) return;
         var nome = String(nomeInput.value || '').trim();
-        if (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
+        if (App && App.ProperNameHelper && typeof App.ProperNameHelper.formatProper === 'function') {
+            nome = App.ProperNameHelper.formatProper(nome, 255);
+        } else if (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
             nome = TextFormatter.formatProperName(nome, 255);
         }
         nomeInput.value = nome;
@@ -57,7 +59,9 @@
 
     function normalizeSelectedName(val) {
         var s = String(val || '').trim();
-        if (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
+        if (App && App.ProperNameHelper && typeof App.ProperNameHelper.formatProper === 'function') {
+            s = App.ProperNameHelper.formatProper(s, 255);
+        } else if (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
             s = TextFormatter.formatProperName(s, 255);
         }
         return s;

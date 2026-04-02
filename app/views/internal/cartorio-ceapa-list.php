@@ -336,75 +336,10 @@ if ($totalPages > 0) {
 
     <script>
         (function () {
-            const applyFilters = function () {
-                const status = document.getElementById('filter-status')?.value ?? '';
-                const processo = document.getElementById('search-input')?.value?.trim() ?? '';
-                const tipoSuspensao = document.getElementById('filter-tipo-suspensao')?.value ?? '';
-                const perPage = document.getElementById('items-per-page')?.value ?? '25';
-                const params = new URLSearchParams(window.location.search);
-                params.set('page', '<?php echo $routePage; ?>');
-                params.set('page_number', '1');
-                params.set('items_per_page', perPage);
-                if (status) params.set('status', status); else params.delete('status');
-                if (processo) params.set('processo', processo); else params.delete('processo');
-                if (tipoSuspensao) params.set('tipo_suspensao', tipoSuspensao); else params.delete('tipo_suspensao');
-                window.location.href = '?' + params.toString();
-            };
-
-            document.getElementById('filter-status')?.addEventListener('change', applyFilters);
-            document.getElementById('filter-tipo-suspensao')?.addEventListener('change', applyFilters);
-            document.getElementById('items-per-page')?.addEventListener('change', applyFilters);
-            document.getElementById('search-input')?.addEventListener('keypress', function (e) {
-                if (e.key === 'Enter') applyFilters();
-            });
-
-            document.getElementById('novo-cadastro-btn')?.addEventListener('click', function () {
-                window.location.href = '/frame.php?page=ceapacreate';
-            });
-
-            document.querySelectorAll('.btn-editar[data-ceapa-id]').forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    const id = this.dataset.ceapaId;
-                    if (id) window.location.href = '/frame.php?page=ceapaedit&id=' + encodeURIComponent(id);
-                });
-            });
-        })();
-
-        (function () {
-            const pending = {};
-            function requireSecondClick(key, msg) {
-                const now = Date.now();
-                if ((pending[key] || 0) > now) { delete pending[key]; return true; }
-                pending[key] = now + 5000;
-                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Confirmação', message: msg });
-                return false;
+            if (!window.App || !App.CeapaList || typeof App.CeapaList.initialize !== 'function') {
+                return;
             }
-            document.addEventListener('click', function (e) {
-                const btn = e.target.closest('.js-desalocar');
-                if (!btn) return;
-                const alocadoId = btn.getAttribute('data-alocado-id') || '';
-                const tipo      = btn.getAttribute('data-tipo') || '';
-                const endpoint  = btn.getAttribute('data-endpoint') || '';
-                if (!alocadoId || !endpoint) return;
-                if (!requireSecondClick('desalocar-' + alocadoId, 'Clique novamente para confirmar a remoção da alocação.')) return;
-                fetch(endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ alocado_id: alocadoId, tipo: tipo }),
-                    credentials: 'same-origin'
-                }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
-                .then(function (res) {
-                    if (res.ok && res.j && res.j.deleted) {
-                        if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Alocação removida.' });
-                        setTimeout(function () { window.location.reload(); }, 800);
-                    } else {
-                        const msg = (res.j && res.j.error) ? res.j.error : 'Falha ao remover alocação.';
-                        if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: msg });
-                    }
-                }).catch(function () {
-                    if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
-                });
-            });
+            App.CeapaList.initialize();
         })();
     </script>
 </body>

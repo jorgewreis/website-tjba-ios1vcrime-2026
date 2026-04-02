@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.20
+
+**Data:** 2026-04-02 11:58:16 | **Commit:** `3b81168` | **Tipo:** `minor`
+
+- feat: add JavaScript files for managing public institutions, user creation, and editing processes
+
 ## V. 1.19.0002
 
 **Data:** 2026-04-02 10:39:10 | **Commit:** `e5f67ba` | **Tipo:** `patch`
@@ -3936,6 +3942,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

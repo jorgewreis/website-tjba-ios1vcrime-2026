@@ -212,7 +212,10 @@
         if (reuNome) {
             reuNome.addEventListener('blur', function () {
                 let nome = (reuNome.value || '').trim();
-                if (typeof global.TextFormatter !== 'undefined' && typeof global.TextFormatter.formatProperName === 'function') {
+                if (App.ProperNameHelper && typeof App.ProperNameHelper.formatProper === 'function') {
+                    nome = App.ProperNameHelper.formatProper(nome, 255);
+                    reuNome.value = nome;
+                } else if (typeof global.TextFormatter !== 'undefined' && typeof global.TextFormatter.formatProperName === 'function') {
                     nome = global.TextFormatter.formatProperName(nome, 255);
                     reuNome.value = nome;
                 }

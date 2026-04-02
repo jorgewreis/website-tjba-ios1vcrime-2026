@@ -4,6 +4,9 @@ declare(strict_types=1);
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/security.php';
 require_once __DIR__ . '/../app/helpers/bootstrap.php';
+require_once __DIR__ . '/../app/repositories/FeriadosRepository.php';
+require_once __DIR__ . '/../app/helpers/RandomPhrase.php';
+require_once __DIR__ . '/../app/helpers/RandomPhrase.php';
 
 // Evita HTML em cache com token CSRF antigo após logout (login falhava até F5).
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
@@ -14,6 +17,41 @@ header('Expires: 0');
 if (Security::isAuthenticated()) {
     header('Location: /home.php');
     exit;
+}
+
+$hoje = new DateTimeImmutable('today');
+$isFimDeSemana = in_array((int) $hoje->format('N'), [6, 7], true);
+$feriadoInfo = null;
+try {
+    $conn = Conection::getInstance()->getConnection();
+    $feriadosRepo = new FeriadosRepository($conn);
+    $feriadoInfo = $feriadosRepo->getByDate($hoje);
+} catch (Throwable $e) {
+    error_log('index feriado check: ' . $e->getMessage());
+}
+$isFeriado = $feriadoInfo !== null;
+$isDiaNaoUtil = $isFimDeSemana || $isFeriado;
+
+function formatarDataExtenso(DateTimeInterface $data): string
+{
+    $dias = ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
+    $meses = [1=>'janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+    $dia = (int) $data->format('j');
+    $mes = $meses[(int) $data->format('n')] ?? $data->format('n');
+    return $dia . ' de ' . $mes;
+}
+
+$infoExpediente = null;
+if ($isFimDeSemana) {
+    $diaNome = ['segunda','terça','quarta','quinta','sexta','sábado','domingo'][(int)$hoje->format('N') - 1];
+    $infoExpediente = 'Hoje é ' . $diaNome . ', não temos expediente nesta data.';
+} elseif ($isFeriado && $feriadoInfo) {
+    $dataExtenso = formatarDataExtenso($hoje);
+    $descricao = trim((string) ($feriadoInfo['descricao'] ?? ''));
+    if ($descricao === '') {
+        $descricao = trim((string) ($feriadoInfo['tipo_feriado'] ?? 'feriado'));
+    }
+    $infoExpediente = 'Hoje é ' . $dataExtenso . ', feriado ' . $descricao . ', não temos expediente hoje.';
 }
 
 $csrfToken = Security::generateCSRFToken();
@@ -67,14 +105,16 @@ $csrfToken = Security::generateCSRFToken();
                     <div class="title-system">
                         <span class="title">PRIMEIRA VARA</span>
                         <span class="info-title">CRIMINAL</span>
-                        <p class="text">A excelência nasce de um fluxo inteligente, padronização segura, responsabilidade clara e foco na efetividade jurisdicional.
-                        </p>
+                        <p class="text"><?php echo htmlspecialchars(RandomPhrase::getRandom(), ENT_QUOTES, 'UTF-8'); ?></p>
                     </div>
                     <!-- FOOTER - SYSTEM -->
                     <div class="footer-page" style="position: absolute; bottom: 0;">                        
                         <div class="info-page">
+                            <?php if ($isDiaNaoUtil && $infoExpediente): ?>
+                                <span class="info-line"><?php echo htmlspecialchars($infoExpediente, ENT_QUOTES, 'UTF-8'); ?></span>
+                            <?php endif; ?>
                             <span class="info-line">Rua Dr. Hygino Filho, bloco C, 1º andar, sala 132 - Jardim Atlântico, Ilhéus - BA</span>
-                            <span class="info-line">Tel.: 73 3234-3428 - Whatsapp: 71 99610-8241 - Email: ilheus1vcriminal@tjba.jus.br</span>
+                            <span class="info-line">Tel.: 73 3234-3428 - WhatsApp: 71 99610-8241 - Email: ilheus1vcriminal@tjba.jus.br</span>
                         </div>
                         <div class="info-app">Sistema desenvolvido integralmente por Jorge Reis Developer - 2026 - Todos os direitos reservados</div>
                     </div>

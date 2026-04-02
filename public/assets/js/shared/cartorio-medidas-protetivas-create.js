@@ -28,7 +28,9 @@
             return {
                 parte_id: '',
                 cpf: helpers.onlyDigits(global.document.getElementById('reu-cpf')?.value || ''),
-                nome_completo: helpers.formatProperName(reuNome?.value || '', 255),
+                nome_completo: App.ProperNameHelper && App.ProperNameHelper.formatProper
+                    ? App.ProperNameHelper.formatProper(reuNome?.value || '', 255)
+                    : helpers.formatProperName(reuNome?.value || '', 255),
                 sexo: helpers.getValue('reu-sexo'),
                 data_nascimento: helpers.getValue('reu-data-nascimento')
             };
@@ -59,7 +61,9 @@
                 return Object.assign({
                     parte_id: '',
                     cpf: helpers.onlyDigits(card.querySelector('.vitima-cpf')?.value || ''),
-                    nome_completo: helpers.formatProperName(nomeInput?.value || '', 255),
+                    nome_completo: App.ProperNameHelper && App.ProperNameHelper.formatProper
+                        ? App.ProperNameHelper.formatProper(nomeInput?.value || '', 255)
+                        : helpers.formatProperName(nomeInput?.value || '', 255),
                     sexo: (card.querySelector('.vitima-sexo')?.value || '').trim(),
                     data_nascimento: (card.querySelector('.vitima-data-nascimento')?.value || '').trim()
                 }, base);

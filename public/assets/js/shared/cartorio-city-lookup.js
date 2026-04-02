@@ -18,7 +18,9 @@
         }
 
         cidadeInput.addEventListener('blur', function () {
-            cidadeInput.value = helpers.formatProperName(cidadeInput.value, settings.formatMaxLength || 50);
+            cidadeInput.value = (App.ProperNameHelper && App.ProperNameHelper.formatProper)
+                ? App.ProperNameHelper.formatProper(cidadeInput.value, settings.formatMaxLength || 50)
+                : helpers.formatProperName(cidadeInput.value, settings.formatMaxLength || 50);
             const cidade = cidadeInput.value.trim();
             if (cidade.length < 2) {
                 return;
@@ -43,7 +45,9 @@
                     }
 
                     if (status.toLowerCase() === 'agregada' && data.nome) {
-                        cidadeInput.value = helpers.formatProperName(data.nome, settings.formatMaxLength || 50);
+                            cidadeInput.value = (App.ProperNameHelper && App.ProperNameHelper.formatProper)
+                                ? App.ProperNameHelper.formatProper(data.nome, settings.formatMaxLength || 50)
+                                : helpers.formatProperName(data.nome, settings.formatMaxLength || 50);
                     }
                 })
                 .catch(function () {

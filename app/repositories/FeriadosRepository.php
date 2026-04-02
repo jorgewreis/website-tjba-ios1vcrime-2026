@@ -40,6 +40,26 @@ final class FeriadosRepository
     }
 
     /**
+     * Retorna o feriado/dia não útil ativo que inclui a data fornecida, ou null se não houver.
+     *
+     * @return array{id:string,tipo_feriado:string,data_inicio:string,data_fim:string,regra_data:string,descricao:?string,ativo:int}|null
+     */
+    public function getByDate(\DateTimeInterface $data): ?array
+    {
+        $date = $data->format('Y-m-d');
+        $sql = sprintf(
+            'SELECT `id`, `tipo_feriado`, `data_inicio`, `data_fim`, `regra_data`, `descricao`, `ativo`
+             FROM `%s` WHERE `ativo` = 1 AND :date BETWEEN `data_inicio` AND `data_fim` LIMIT 1',
+            $this->table
+        );
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bindValue(':date', $date);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row !== false ? $row : null;
+    }
+
+    /**
      * @param array{tipo_feriado?: string, ativo?: int|null, q?: string} $filters
      * @return array{rows: list<array<string, mixed>>, total: int}
      */
