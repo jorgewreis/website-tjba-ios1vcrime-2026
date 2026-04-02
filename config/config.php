@@ -158,11 +158,18 @@ function bootstrapSession(bool $forceStart = false): void
 
     $cookieParams = appSessionCookieParams();
 
-    // Diretório de sessões dentro do projeto — evita dependência do /var/lib/php/sessions
-    // do servidor (que pode não ter permissão de escrita para o usuário do processo PHP).
+    // Resolve o diretório de sessões da aplicação:
+    // 1ª opção: tmp/sessions/ na raiz do projeto (quando o servidor permitir).
+    // 2ª opção: subdiretório exclusivo dentro do temp do sistema (sempre gravável pelo processo PHP).
     $sessionPath = dirname(__DIR__) . '/tmp/sessions';
     if (!is_dir($sessionPath)) {
-        mkdir($sessionPath, 0750, true);
+        @mkdir($sessionPath, 0750, true);
+    }
+    if (!is_dir($sessionPath) || !is_writable($sessionPath)) {
+        $sessionPath = rtrim(sys_get_temp_dir(), '/\\') . '/ios1vcrime_sess';
+        if (!is_dir($sessionPath)) {
+            @mkdir($sessionPath, 0750, true);
+        }
     }
     if (is_dir($sessionPath) && is_writable($sessionPath)) {
         ini_set('session.save_path', $sessionPath);

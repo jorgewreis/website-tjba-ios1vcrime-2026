@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.32
+
+**Data:** 2026-04-02 16:09:35 | **Commit:** `a8b3244` | **Tipo:** `minor`
+
+- refactor: improve session directory handling in bootstrapSession function
+
 ## V. 1.31.0001
 
 **Data:** 2026-04-02 16:05:23 | **Commit:** `060f5e4` | **Tipo:** `patch`
@@ -4014,6 +4020,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
