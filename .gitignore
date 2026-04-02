@@ -94,6 +94,8 @@ temp/
 # Database / SQL dumps
 # =========================
 *.sql
+!docs/schema/
+!docs/schema/*.sql
 *.sqlite
 *.sqlite3
 *.db

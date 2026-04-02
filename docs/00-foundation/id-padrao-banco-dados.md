@@ -46,6 +46,12 @@
 | SAL     | salario_minimo           |
 | ALR     | alocacoes_regras         |
 | DOC     | documentos               |
+| PRG     | produtividade_regras     |
+| PLC     | produtividade_lancamentos |
+| PMT     | produtividade_metas      |
+| PLG     | produtividade_log        |
+| PBG     | produtividade_badges     |
+| PBC     | produtividade_badges_concedidos |
 
 Ao criar **novas tabelas**, definir um prefixo de 3 letras único e documentá-lo aqui.
 
