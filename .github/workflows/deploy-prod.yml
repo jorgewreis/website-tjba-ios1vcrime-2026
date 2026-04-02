@@ -4,20 +4,11 @@ on:
   push:
     branches: ["main"]
   workflow_dispatch:
-    inputs:
-      debug:
-        description: "Diagnóstico extra (SSH -vvv, rsync -vv, set -x no sync)"
-        required: false
-        default: false
-        type: boolean
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: production
-
-    env:
-      DEPLOY_DEBUG: ${{ github.event_name == 'workflow_dispatch' && inputs.debug || false }}
 
     steps:
       - name: Checkout
@@ -48,12 +39,7 @@ jobs:
           DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
         run: |
           set -e
-          EXTRA=()
-          if [ "${DEPLOY_DEBUG}" = "true" ]; then
-            EXTRA=(-vvv)
-            echo "::notice::DEPLOY_DEBUG: SSH com -vvv (saída longa nos logs)."
-          fi
-          ssh "${EXTRA[@]}" -i ~/.ssh/id_ed25519 \
+          ssh -i ~/.ssh/id_ed25519 \
             -o IdentitiesOnly=yes \
             -o PreferredAuthentications=publickey \
             -o PubkeyAuthentication=yes \
@@ -70,12 +56,7 @@ jobs:
           PROD_PATH: ${{ secrets.PROD_PATH }}
         run: |
           set -e
-          RSYNC_EXTRA=()
-          if [ "${DEPLOY_DEBUG}" = "true" ]; then
-            set -x
-            RSYNC_EXTRA=(-vv)
-          fi
-          rsync "${RSYNC_EXTRA[@]}" -az \
+          rsync -az \
             --no-times --omit-dir-times \
             --no-perms --no-owner --no-group \
             --inplace \

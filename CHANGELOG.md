@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.12
+
+**Data:** 2026-04-01 21:19:50 | **Commit:** `6ddccac` | **Tipo:** `minor`
+
+- refactor: remove debug options from deployment workflows for cleaner execution
+
 ## V. 1.11
 
 **Data:** 2026-04-01 21:18:01 | **Commit:** `4513bf4` | **Tipo:** `minor`
@@ -3876,6 +3882,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
