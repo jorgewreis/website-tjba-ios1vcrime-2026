@@ -158,6 +158,16 @@ function bootstrapSession(bool $forceStart = false): void
 
     $cookieParams = appSessionCookieParams();
 
+    // Diretório de sessões dentro do projeto — evita dependência do /var/lib/php/sessions
+    // do servidor (que pode não ter permissão de escrita para o usuário do processo PHP).
+    $sessionPath = dirname(__DIR__) . '/tmp/sessions';
+    if (!is_dir($sessionPath)) {
+        mkdir($sessionPath, 0750, true);
+    }
+    if (is_dir($sessionPath) && is_writable($sessionPath)) {
+        ini_set('session.save_path', $sessionPath);
+    }
+
     ini_set('session.use_strict_mode', '1');
     ini_set('session.use_only_cookies', '1');
     ini_set('session.cookie_httponly', '1');
