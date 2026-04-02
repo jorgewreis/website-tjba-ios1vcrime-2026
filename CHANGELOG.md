@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.25
+
+**Data:** 2026-04-02 13:22:11 | **Commit:** `dd251a5` | **Tipo:** `minor`
+
+- refactor: simplify status message handling in datajud-cycle-helper.js
+
 ## V. 1.24
 
 **Data:** 2026-04-02 13:18:18 | **Commit:** `f2883ec` | **Tipo:** `minor`
@@ -3966,6 +3972,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

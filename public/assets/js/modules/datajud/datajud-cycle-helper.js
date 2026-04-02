@@ -337,7 +337,7 @@
             if (classeDescricaoField) {
                 classeDescricaoField.value = classe && (classe.descricao || classe.codigo) ? (classe.descricao || classe.codigo || '') : '';
             }
-            setStatusMessage(statusElement, '*Classe obtida via DataJud', 'var(--color-success-active)');
+            setStatusMessage(statusElement, 'Classe', 'var(--color-success-active)');
             if (processoInput.id === 'gab-mon-processo' || processoInput.id === 'filter-processo' || processoInput.id === 'audiencia-processo') {
                 global.dispatchEvent(new CustomEvent('gabineteMonDatajudClassePronta', {
                     detail: { numeroProcesso: processoInput.value },
@@ -374,13 +374,10 @@
                     if (classeDescricaoField) {
                         classeDescricaoField.value = global.__datajudBancoPrefill.descricao || '';
                     }
-                    setStatusMessage(statusElement, '*Classe', 'var(--color-gray-700)');
+                    setStatusMessage(statusElement, 'Classe', 'var(--color-gray-700)');
                 } else {
                     classeInput.value = fallbackText;
-                    var statusMsg = (kind === 'sigilo' && detail && detail.message)
-                        ? String(detail.message)
-                        : MSG_EMPTY_CLASSE;
-                    setStatusMessage(statusElement, statusMsg, statusColor);
+                    setStatusMessage(statusElement, 'Classe', statusColor);
                     if (classeCodigoField) {
                         classeCodigoField.value = '';
                     }
@@ -399,7 +396,7 @@
                     if (classeDescricaoField) {
                         classeDescricaoField.value = global.__datajudBancoPrefill.descricao || '';
                     }
-                    setStatusMessage(statusElement, '*Classe', 'var(--color-gray-700)');
+                    setStatusMessage(statusElement, 'Classe', 'var(--color-gray-700)');
                 } else {
                     classeInput.value = fallbackText;
                     setStatusMessage(statusElement, 'Classe', statusColor);
