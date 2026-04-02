@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.28
+
+**Data:** 2026-04-02 15:26:42 | **Commit:** `eb617f8` | **Tipo:** `minor`
+
+- refactor: update iframe handling and script integration in forms
+
 ## V. 1.27
 
 **Data:** 2026-04-02 15:20:17 | **Commit:** `8d40fe7` | **Tipo:** `minor`
@@ -3984,6 +3990,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

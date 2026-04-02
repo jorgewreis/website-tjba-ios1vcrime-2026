@@ -84,7 +84,6 @@ $leftBannerInfo = $leftBannerInfo ?? null;
                         id="login-iframe"
                         src="<?php echo htmlspecialchars($iframeSrc, ENT_QUOTES, 'UTF-8'); ?>"
                         title="Conteúdo da página"
-                        scrolling="no"
                     ></iframe>
                 </div>
 

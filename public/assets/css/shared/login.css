@@ -232,18 +232,22 @@ body {
         font-weight: 500;
     }
 
-    /* iframe ocupa 100% do page-right, sem borda nem scroll interno */
+    /* iframe preenche 100% do page-right sem borda nem espaçamento */
     .page-right-iframe {
         padding: 0 !important;
         overflow: hidden;
+        position: relative;
     }
     .page-right-iframe iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
         width: 100%;
-        min-height: 100%;
+        height: 100%;
         border: none;
         display: block;
         background-color: var(--color-background-elevated);
-        /* altura ajustada dinamicamente via postMessage APP_RESIZE */
+        overflow: auto;
     }
 }
 

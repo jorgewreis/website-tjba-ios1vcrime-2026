@@ -50,8 +50,11 @@ $faculdades = [
         html, body {
             margin: 0;
             padding: 0;
+            width: 100%;
+            height: 100%;
             background-color: var(--color-background-elevated);
             overflow-x: hidden;
+            overflow-y: auto;
         }
     </style>
 </head>
@@ -155,7 +158,7 @@ $faculdades = [
         </div>
     </form>
 
-    <script src="/assets/js/shared/navigate-buttons.js" defer></script>
+    <script src="/assets/js/shared/navigate-buttons-iframe.js" defer></script>
     <script src="/assets/js/shared/cpf.js" defer></script>
     <script src="/assets/js/shared/toast-helper.js" defer></script>
     <script src="/assets/js/shared/text-formatter.js"></script>
@@ -163,20 +166,6 @@ $faculdades = [
         // Shim para compatibilidade com libs que usam App.Toast
         window.App = window.App || {};
         App.Toast = { show: function(opts) { showToast(opts); } };
-
-        // Ajuste dinâmico de altura no parent
-        (function () {
-            function sendResize() {
-                if (window.parent !== window) {
-                    window.parent.postMessage({ type: 'APP_RESIZE', height: document.body.scrollHeight }, '*');
-                }
-            }
-            if (typeof ResizeObserver !== 'undefined') {
-                new ResizeObserver(sendResize).observe(document.body);
-            }
-            window.addEventListener('load', sendResize);
-            document.addEventListener('DOMContentLoaded', sendResize);
-        })();
 
         document.addEventListener('DOMContentLoaded', async function () {
             await App.CPF.init('#cpf');
