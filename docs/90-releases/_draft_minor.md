@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-_Nenhuma entrada pendente._
+- **Feat: melhorias no codigo** `[bf837e1]`
 
