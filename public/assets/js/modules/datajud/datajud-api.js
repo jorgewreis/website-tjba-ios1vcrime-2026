@@ -638,9 +638,24 @@
 
                             }
 
+                            var indisp = processo.indisponivel_na_base_publica === true
+                                || (body && body.indisponivel_na_base_publica === true);
+
                             var classe = processo.classe;
 
                             var sigiloMsg = body && body.sigilo_mensagem ? String(body.sigilo_mensagem) : '';
+
+                            if (indisp) {
+
+                                DC.finishFailure(session, domLatest, 'sigilo', {
+
+                                    message: sigiloMsg || 'Não há registro público deste processo na consulta ao DataJud. Informe a classe manualmente se necessário.',
+
+                                });
+
+                                return;
+
+                            }
 
                             if (hasClasseUtil(classe)) {
 

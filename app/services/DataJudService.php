@@ -73,7 +73,8 @@ final class DataJudService
             return DataJudResponseMapper::mapSourceToPayload($source, $numero, $redact);
         }
 
-        throw new RuntimeException('Processo não encontrado na base do DataJud.');
+        // 0 hits: na API pública isso ocorre com frequência em processos sigilosos (fora do índice público).
+        return DataJudResponseMapper::mapEmptyPublicSearch($numero);
     }
 
     private function getBaseUrl(): string

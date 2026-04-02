@@ -63,6 +63,36 @@ final class DataJudResponseMapper
         ];
     }
 
+    /**
+     * Resposta quando a API pública não retorna documento (0 hits).
+     * Processos sigilosos costumam não aparecer na base pública — não é o mesmo que “número inválido”.
+     *
+     * @return array<string, mixed>
+     */
+    public static function mapEmptyPublicSearch(string $numeroDigitos): array
+    {
+        return [
+            'numero' => $numeroDigitos,
+            'tribunal' => null,
+            'classe' => ['codigo' => null, 'descricao' => null],
+            'assuntos' => [],
+            'prioridades' => [],
+            'polo_passivo' => [],
+            'movimentos' => [],
+            'orgao_julgador' => [],
+            'nivel_sigilo' => null,
+            'grau' => null,
+            'formato' => [],
+            'sistema' => [],
+            'data_ajuizamento' => null,
+            'ultima_atualizacao' => null,
+            'id' => null,
+            'indisponivel_na_base_publica' => true,
+            'sigilo_restrito' => false,
+            'sigilo_mensagem' => 'Não há registro público deste processo na consulta ao DataJud. Isso é comum em processos com sigilo ou ainda não publicados na base; informe a classe manualmente se necessário.',
+        ];
+    }
+
     public static function formatarClasse(array $source): array
     {
         $classe = $source['classe'] ?? $source['classeProcessual'] ?? null;

@@ -43,12 +43,14 @@ try {
 
 $sigiloRestrito = !empty($data['sigilo_restrito']);
 $sigiloMensagem = isset($data['sigilo_mensagem']) ? $data['sigilo_mensagem'] : null;
+$indisponivelPublico = !empty($data['indisponivel_na_base_publica']);
 unset($data['sigilo_restrito'], $data['sigilo_mensagem']);
 
 respond([
     'data' => $data,
     'sigilo_restrito' => $sigiloRestrito,
     'sigilo_mensagem' => $sigiloMensagem,
+    'indisponivel_na_base_publica' => $indisponivelPublico,
 ]);
 
 function respond(array $payload, int $status = 200): void
