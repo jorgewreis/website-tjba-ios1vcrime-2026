@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.15
+
+**Data:** 2026-04-01 21:26:20 | **Commit:** `40bf0dd` | **Tipo:** `minor`
+
+- feat: improve SSH check script with key fingerprint display and enhanced error diagnostics
+
 ## V. 1.14
 
 **Data:** 2026-04-01 21:25:05 | **Commit:** `1cab479` | **Tipo:** `minor`
@@ -3894,6 +3900,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
