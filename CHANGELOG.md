@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.19
+
+**Data:** 2026-04-01 21:57:37 | **Commit:** `d34228c` | **Tipo:** `minor`
+
+- feat: simplificar validação de login SSH e melhorar mensagens de erro
+
 ## V. 1.18
 
 **Data:** 2026-04-01 21:53:49 | **Commit:** `85d9b0c` | **Tipo:** `minor`
@@ -3918,6 +3924,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
