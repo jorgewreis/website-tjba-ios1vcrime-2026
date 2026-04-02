@@ -306,202 +306,23 @@ $tiposOptions = [
     (function () {
         var idGuia = <?php echo json_encode($idGuia, JSON_UNESCAPED_UNICODE); ?>;
 
-        document.getElementById('voltar-btn')?.addEventListener('click', function () {
-            window.location.href = '/frame.php?page=guias';
-        });
-
-        (function () {
-            var dataFato = document.getElementById('edit-data-fato');
-            if (dataFato) {
-                var today = new Date();
-                today.setDate(today.getDate() - 1);
-                dataFato.setAttribute('max', today.toISOString().split('T')[0]);
-            }
-        })();
-
-        if (!idGuia) return;
-
-        function showToastMsg(type, title, message) {
-            if (window.App && App.Page && typeof App.Page.notify === 'function') {
-                App.Page.notify(type, title, message);
-                return;
-            }
-            if (typeof showToast === 'function') {
-                showToast({ type: type, variant: 'full', title: title, message: message });
-            }
-        }
-        function queuePostReloadToast(type, title, message) {
-            if (window.App && App.Page && typeof App.Page.queuePostReloadToast === 'function') {
-                App.Page.queuePostReloadToast(type, title, message, 'cartorio.postReloadToast');
-                return;
-            }
-            try {
-                var key = 'cartorio.postReloadToast';
-                var raw = sessionStorage.getItem(key);
-                var fila = raw ? JSON.parse(raw) : [];
-                var lista = Array.isArray(fila) ? fila : ((fila && fila.message) ? [fila] : []);
-                lista.push({ type: type, title: title, message: message });
-                sessionStorage.setItem(key, JSON.stringify(lista));
-            } catch (e) {}
+        if (!window.App || !App.CartorioGuiasEdit || typeof App.CartorioGuiasEdit.initialize !== 'function') {
+            return;
         }
 
-        var salvarBtn = document.getElementById('salvar-btn');
-        var initialData = window.__initialGuiaData || {};
-        function getCurrentState() {
-            var tipoEl = document.getElementById('edit-tipo');
-            var regimeEl = document.getElementById('edit-regime');
-            var dataFatoEl = document.getElementById('edit-data-fato');
-            var diasMultaEl = document.getElementById('edit-dias-multa');
-            var observacoesEl = document.getElementById('edit-observacoes');
-            var diasVal = (diasMultaEl && diasMultaEl.value !== '') ? parseInt(diasMultaEl.value, 10) : '';
-            if (diasVal !== '' && isNaN(diasVal)) diasVal = '';
-            return {
-                tipo: tipoEl ? (tipoEl.value || '').trim() : '',
-                regime: regimeEl ? (regimeEl.value || '').trim() : '',
-                data_fato: dataFatoEl ? (dataFatoEl.value || '').trim() : '',
-                dias_multa: diasVal,
-                observacoes: observacoesEl ? (observacoesEl.value || '').trim() : ''
-            };
-        }
-        function hasChanges() {
-            var cur = getCurrentState();
-            if ((initialData.tipo || '') !== (cur.tipo || '')) return true;
-            if ((initialData.regime || '') !== (cur.regime || '')) return true;
-            if ((initialData.data_fato || '') !== (cur.data_fato || '')) return true;
-            if (String(initialData.dias_multa ?? '') !== String(cur.dias_multa ?? '')) return true;
-            if ((initialData.observacoes || '') !== (cur.observacoes || '')) return true;
-            return false;
-        }
-        function updateButtonState() {
-            if (salvarBtn) salvarBtn.disabled = !hasChanges();
-        }
-        ['edit-tipo', 'edit-regime', 'edit-data-fato', 'edit-dias-multa', 'edit-observacoes'].forEach(function (id) {
-            var el = document.getElementById(id);
-            if (el) {
-                el.addEventListener('input', updateButtonState);
-                el.addEventListener('change', updateButtonState);
-            }
-        });
-        updateButtonState();
-
-        salvarBtn?.addEventListener('click', function () {
-            var regimeVal = document.getElementById('edit-regime')?.value?.trim() || '';
-            var dataFatoVal = document.getElementById('edit-data-fato')?.value || '';
-            if (regimeVal && ['Aberto', 'Semiaberto', 'Fechado'].indexOf(regimeVal) === -1) {
-                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Regime inválido. Selecione Aberto, Semiaberto ou Fechado.' });
-                return;
-            }
-            if (dataFatoVal) {
-                var hoje = new Date();
-                hoje.setHours(0, 0, 0, 0);
-                if (new Date(dataFatoVal) >= hoje) {
-                    if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'A data do fato deve ser anterior à data de hoje.' });
-                    return;
-                }
-            }
-            var payload = {
-                id: idGuia,
-                numero_processo: document.getElementById('edit-processo')?.value?.trim() || '',
-                denunciado: document.getElementById('edit-denunciado')?.value?.trim() || '',
-                tipo: document.getElementById('edit-tipo')?.value || 'Guia - Tipo não informado',
-                regime: regimeVal,
-                data_fato: dataFatoVal,
-                dias_multa: document.getElementById('edit-dias-multa')?.value || '',
-                observacoes: document.getElementById('edit-observacoes')?.value?.trim() || ''
-            };
-            var diasVal = document.getElementById('edit-dias-multa')?.value;
-            if (diasVal !== '' && !isNaN(parseInt(diasVal, 10))) payload.dias_multa = parseInt(diasVal, 10);
-
-            salvarBtn.disabled = true;
-            fetch('/api/cartorio-guias/update.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-                if (data.error) {
-                    showToastMsg('error', 'Erro', data.error);
-                    updateButtonState();
-                } else {
-                    showToastMsg('success', 'Sucesso', 'Alterações salvas.');
-                    if (data.valor_multa_calculado) {
-                        showToastMsg('success', 'Cálculo automático', 'Cálculo realizado automaticamente pelo sistema. Valor da pena de multa: ' + data.valor_multa_calculado + '.');
-                    }
-                    window.location.href = '/frame.php?page=guias';
-                }
-            })
-            .catch(function () {
-                showToastMsg('error', 'Erro', 'Erro ao salvar.');
-                updateButtonState();
-            });
-        });
-
-        document.getElementById('cancelar-tarefa-btn')?.addEventListener('click', function () {
-            var btn = this;
-            btn.disabled = true;
-            fetch('/api/cartorio-guias/cancel.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: idGuia })
-            })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-                if (data.error || data.deleted === false) {
-                    showToastMsg('error', 'Erro', data.error || 'Erro ao excluir.');
-                    btn.disabled = false;
-                } else {
-                    showToastMsg('success', 'Sucesso', 'Guia cancelada.');
-                    window.location.href = '/frame.php?page=guias';
-                }
-            })
-            .catch(function () {
-                showToastMsg('error', 'Erro', 'Erro ao cancelar.');
-                btn.disabled = false;
-            });
-        });
-
-        var pendingConfirmations = {};
-        function requireSecondClick(key, message) {
-            var now = Date.now();
-            var validUntil = Number(pendingConfirmations[key] || 0);
-            if (validUntil > now) {
-                delete pendingConfirmations[key];
-                return true;
-            }
-            pendingConfirmations[key] = now + 5000;
-            showToastMsg('info', 'Confirmação', message);
-            return false;
-        }
-
-        document.getElementById('excluir-btn')?.addEventListener('click', function () {
-            if (!requireSecondClick('excluir-guia', 'Clique novamente em Excluir em até 5 segundos para confirmar a exclusão da guia.')) return;
-            var btn = this;
-            btn.disabled = true;
-            fetch('/api/cartorio-guias/delete.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: idGuia })
-            })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-                if (data.error) {
-                    showToastMsg('error', 'Erro', data.error);
-                    btn.disabled = false;
-                } else {
-                    (Array.isArray(data.subtarefas_toasts) ? data.subtarefas_toasts : []).forEach(function (msg) {
-                        queuePostReloadToast('info', 'Subtarefa excluída', msg);
-                    });
-                    if (data.tarefa_toast) {
-                        queuePostReloadToast('success', 'Sucesso', data.tarefa_toast);
-                    }
-                    window.location.href = '/frame.php?page=guias';
-                }
-            })
-            .catch(function () {
-                showToastMsg('error', 'Erro', 'Erro ao excluir.');
-                btn.disabled = false;
-            });
+        App.CartorioGuiasEdit.initialize({
+            entityId: idGuia,
+            initialData: window.__initialGuiaData || {},
+            backButtonId: 'voltar-btn',
+            backHref: '/frame.php?page=guias',
+            saveButtonId: 'salvar-btn',
+            cancelButtonId: 'cancelar-tarefa-btn',
+            deleteButtonId: 'excluir-btn',
+            updateEndpoint: '/api/cartorio-guias/update.php',
+            cancelEndpoint: '/api/cartorio-guias/cancel.php',
+            deleteEndpoint: '/api/cartorio-guias/delete.php',
+            deleteConfirmKey: 'excluir-guia',
+            deleteConfirmMessage: 'Clique novamente em Excluir em até 5 segundos para confirmar a exclusão da guia.'
         });
 
     })();

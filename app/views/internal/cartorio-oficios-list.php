@@ -587,222 +587,100 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
     <script src="/assets/js/shared/text-formatter.js"></script>
     <script>
         (function () {
-            const notify = (type, title, message) => {
-                if (window.App && App.Page && typeof App.Page.notify === 'function') {
-                    App.Page.notify(type, title, message);
-                    return;
-                }
-                if (typeof showToast === 'function') {
-                    showToast({ type, variant: 'full', title, message });
-                }
-            };
-            const POST_RELOAD_TOAST_KEY = 'cartorio.postReloadToast';
-            const queuePostReloadToast = (payload) => {
-                if (window.App && App.Page && typeof App.Page.queuePostReloadToast === 'function') {
-                    App.Page.queuePostReloadToast(payload, null, null, POST_RELOAD_TOAST_KEY);
-                    return;
-                }
-                try {
-                    const raw = sessionStorage.getItem(POST_RELOAD_TOAST_KEY);
-                    const fila = raw ? JSON.parse(raw) : [];
-                    const lista = Array.isArray(fila) ? fila : (fila && fila.message ? [fila] : []);
-                    lista.push(payload);
-                    sessionStorage.setItem(POST_RELOAD_TOAST_KEY, JSON.stringify(lista));
-                } catch (e) {}
-            };
-            const highlightCreatedOficio = (oficioId) => {
-                const id = (oficioId || '').toString().trim();
-                if (!id) return;
-                const row = document.getElementById(id);
-                if (!row) return;
-                row.classList.add('status-finished');
-                window.setTimeout(function () {
-                    row.classList.remove('status-finished');
-                }, 10000);
-            };
-            const flushPostReloadToast = () => {
-                if (window.App && App.Page && typeof App.Page.flushPostReloadToast === 'function') {
-                    const list = App.Page.flushPostReloadToast(POST_RELOAD_TOAST_KEY, { type: 'info', title: 'Informação' });
-                    (Array.isArray(list) ? list : []).forEach(function (item) {
-                        if (item && item.highlight_oficio_id) highlightCreatedOficio(item.highlight_oficio_id);
-                    });
-                    return;
-                }
-                try {
-                    const raw = sessionStorage.getItem(POST_RELOAD_TOAST_KEY);
-                    if (!raw) return;
-                    sessionStorage.removeItem(POST_RELOAD_TOAST_KEY);
-                    const data = JSON.parse(raw);
-                    const lista = Array.isArray(data) ? data : (data && data.message ? [data] : []);
-                    lista.forEach(function (item) {
-                        if (item && item.message) notify(item.type || 'info', item.title || 'Informação', item.message);
-                        if (item && item.highlight_oficio_id) highlightCreatedOficio(item.highlight_oficio_id);
-                    });
-                } catch (e) {}
-            };
-            flushPostReloadToast();
-
             const formaSel = document.getElementById('oficio-forma-cumprimento');
             const meioRow = document.getElementById('oficio-meio-envio-row');
-            const cartorioTipoSelect = document.getElementById('oficio-tipo');
-            const cartorioProcessoHint = document.getElementById('cartorio-processo-hint');
-            const cartorioProcessoLabel = document.querySelector('label[for="filter-processo"]');
-
-            function cartorioOficioEhAdministrativo() {
-                const opt = cartorioTipoSelect?.selectedOptions?.[0];
-                return opt && opt.getAttribute('data-oficio-grupo') === 'administrativo';
-            }
-
-            function atualizarRegraProcessoCartorio() {
-                const admin = cartorioOficioEhAdministrativo();
-                if (cartorioProcessoHint) {
-                    cartorioProcessoHint.textContent = admin ? 'opcional' : '*obrigatório';
-                    cartorioProcessoHint.className = admin ? 'label-hint-automatizado' : 'label-hint-obrigatorio';
-                }
-                if (cartorioProcessoLabel) {
-                    cartorioProcessoLabel.title = admin
-                        ? 'Para tipos administrativos o número do processo pode ficar em branco.'
-                        : '';
-                }
-            }
-
-            cartorioTipoSelect?.addEventListener('change', atualizarRegraProcessoCartorio);
-            atualizarRegraProcessoCartorio();
 
             function toggleMeioEnvio() {
                 if (!meioRow || !formaSel) return;
-                const v = formaSel.value;
-                meioRow.style.display = (v === 'cartorio') ? '' : 'none';
+                meioRow.style.display = formaSel.value === 'cartorio' ? '' : 'none';
             }
+
             formaSel?.addEventListener('change', toggleMeioEnvio);
+
+            if (!window.App || !App.OficiosList || typeof App.OficiosList.initialize !== 'function') {
+                return;
+            }
+
+            const ctx = App.OficiosList.initialize({
+                storageKey: 'cartorio.postReloadToast',
+                highlightField: 'highlight_oficio_id',
+                routePage: '<?php echo htmlspecialchars($routePage, ENT_QUOTES); ?>',
+                typeSelectId: 'oficio-tipo',
+                processHintId: 'cartorio-processo-hint',
+                processLabelSelector: 'label[for="filter-processo"]',
+                clearButtonId: 'btn-oficio-limpar',
+                createButtonId: 'btn-oficio-registrar',
+                createEndpoint: '/api/cartorio-oficios/create.php',
+                editButtonSelector: '.btn-editar[data-oficio-id]',
+                editHrefBuilder: function (id) {
+                    return '/frame.php?page=oficioscartorioedit&id=' + encodeURIComponent(id);
+                },
+                enableDesalocar: true,
+                onClear: function () {
+                    const meio = document.getElementById('oficio-meio-envio');
+                    const forma = document.getElementById('oficio-forma-cumprimento');
+                    if (meio) meio.selectedIndex = 0;
+                    if (forma) {
+                        const optCcm = forma.querySelector('option[value="ccm"]');
+                        if (optCcm) {
+                            forma.value = 'ccm';
+                        } else {
+                            forma.selectedIndex = 0;
+                        }
+                    }
+                    toggleMeioEnvio();
+                },
+                buildRequest: function (sharedCtx) {
+                    const proc = document.getElementById('filter-processo')?.value?.trim() || '';
+                    const tipo = document.getElementById('oficio-tipo')?.value || '';
+                    const forma = document.getElementById('oficio-forma-cumprimento')?.value || '';
+                    const meio = document.getElementById('oficio-meio-envio')?.value || '';
+                    let cc = document.getElementById('hidden-classe-codigo')?.value || '';
+                    let cd = document.getElementById('hidden-classe-descricao')?.value || '';
+                    const admin = sharedCtx.isAdministrative();
+
+                    if (!tipo || !forma) {
+                        sharedCtx.notify('error', 'Validação', 'Preencha tipo e forma de cumprimento.');
+                        return null;
+                    }
+                    if (!admin && !proc) {
+                        sharedCtx.notify('error', 'Validação', 'Preencha o número do processo.');
+                        return null;
+                    }
+                    if (forma === 'cartorio' && !meio) {
+                        sharedCtx.notify('error', 'Validação', 'Selecione o meio de envio.');
+                        return null;
+                    }
+                    if (admin && !proc) {
+                        cc = '';
+                        cd = '';
+                    }
+
+                    return {
+                        numero_processo: proc,
+                        tipo_oficio: tipo,
+                        forma_cumprimento: forma,
+                        meio_envio: forma === 'cartorio' ? meio : '',
+                        classe_codigo: cc,
+                        classe_descricao: cd
+                    };
+                },
+                buildSuccessPayload: function (data) {
+                    const numeroOficio = (data.numero_oficio || '').toString().trim();
+                    return {
+                        type: 'success',
+                        title: 'Sucesso',
+                        message: numeroOficio ? ('Ofício ' + numeroOficio + ' registrado com sucesso.') : 'Ofício registrado com sucesso.',
+                        highlight_oficio_id: data.id
+                    };
+                }
+            });
+
             toggleMeioEnvio();
-
-            document.getElementById('btn-oficio-limpar')?.addEventListener('click', function () {
-                const p = document.getElementById('filter-processo');
-                const t = document.getElementById('oficio-tipo');
-                const m = document.getElementById('oficio-meio-envio');
-                const fc = document.getElementById('oficio-forma-cumprimento');
-                if (p) p.value = '';
-                if (t) t.selectedIndex = 0;
-                if (m) m.selectedIndex = 0;
-                if (fc) {
-                    const optCcm = fc.querySelector('option[value="ccm"]');
-                    if (optCcm) {
-                        fc.value = 'ccm';
-                    } else {
-                        fc.selectedIndex = 0;
-                    }
-                }
-                const hcc = document.getElementById('hidden-classe-codigo');
-                const hcd = document.getElementById('hidden-classe-descricao');
-                const cl = document.getElementById('filter-classe');
-                if (hcc) hcc.value = '';
-                if (hcd) hcd.value = '';
-                if (cl) cl.value = '';
-                toggleMeioEnvio();
-                atualizarRegraProcessoCartorio();
-            });
-
-            document.getElementById('btn-oficio-registrar')?.addEventListener('click', function () {
-                const proc = document.getElementById('filter-processo')?.value?.trim() || '';
-                const tipo = document.getElementById('oficio-tipo')?.value || '';
-                const forma = document.getElementById('oficio-forma-cumprimento')?.value || '';
-                const meio = document.getElementById('oficio-meio-envio')?.value || '';
-                let cc = document.getElementById('hidden-classe-codigo')?.value || '';
-                let cd = document.getElementById('hidden-classe-descricao')?.value || '';
-                const admin = cartorioOficioEhAdministrativo();
-                if (!tipo || !forma) {
-                    notify('error', 'Validação', 'Preencha tipo e forma de cumprimento.');
-                    return;
-                }
-                if (!admin && !proc) {
-                    notify('error', 'Validação', 'Preencha o número do processo.');
-                    return;
-                }
-                if (forma === 'cartorio' && !meio) {
-                    notify('error', 'Validação', 'Selecione o meio de envio.');
-                    return;
-                }
-                if (admin && !proc) {
-                    cc = '';
-                    cd = '';
-                }
-                const body = {
-                    numero_processo: proc,
-                    tipo_oficio: tipo,
-                    forma_cumprimento: forma,
-                    meio_envio: forma === 'cartorio' ? meio : '',
-                    classe_codigo: cc,
-                    classe_descricao: cd
-                };
-                fetch('/api/cartorio-oficios/create.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body),
-                    credentials: 'same-origin'
-                })
-                .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
-                .then(function (res) {
-                    if (res.ok && res.j && res.j.id) {
-                        const numeroOficio = (res.j.numero_oficio || '').toString().trim();
-                        const msg = numeroOficio
-                            ? ('Ofício ' + numeroOficio + ' registrado com sucesso.')
-                            : 'Ofício registrado com sucesso.';
-                        queuePostReloadToast({
-                            type: 'success',
-                            title: 'Sucesso',
-                            message: msg,
-                            highlight_oficio_id: res.j.id
-                        });
-                        window.location.reload();
-                    } else {
-                        notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao registrar.');
-                    }
-                })
-                .catch(function () {
-                    notify('error', 'Erro', 'Erro de conexão.');
-                });
-            });
-
-            const applyFilters = function () {
-                const processo = document.getElementById('search-input')?.value?.trim() ?? '';
-                const perPage = document.getElementById('items-per-page')?.value ?? '25';
-                const params = new URLSearchParams(window.location.search);
-                params.set('page', '<?php echo htmlspecialchars($routePage, ENT_QUOTES); ?>');
-                params.set('page_number', '1');
-                params.set('items_per_page', perPage);
-                if (processo) {
-                    params.set('processo', processo);
-                    params.delete('status');
-                    params.delete('ano');
-                } else {
-                    params.delete('processo');
-                    const status = document.getElementById('filter-status')?.value ?? '';
-                    const ano = document.getElementById('filter-ano')?.value ?? '';
-                    if (status) params.set('status', status); else params.delete('status');
-                    if (ano) params.set('ano', ano); else params.delete('ano');
-                }
-                window.location.href = '?' + params.toString();
-            };
-
-            document.getElementById('filter-status')?.addEventListener('change', applyFilters);
-            document.getElementById('filter-ano')?.addEventListener('change', applyFilters);
-            document.getElementById('items-per-page')?.addEventListener('change', applyFilters);
-            document.getElementById('search-input')?.addEventListener('keypress', function (e) {
-                if (e.key === 'Enter') applyFilters();
-            });
-
-            document.querySelectorAll('.btn-editar[data-oficio-id]').forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    const id = this.dataset.oficioId;
-                    if (id) window.location.href = '/frame.php?page=oficioscartorioedit&id=' + encodeURIComponent(id);
-                });
-            });
 
             document.querySelectorAll('input[name="open-subtask"]').forEach(function (radio) {
                 radio.addEventListener('change', function () {
-                    const oid = this.value;
-                    const targetId = 'subtask-' + oid;
+                    const targetId = 'subtask-' + this.value;
                     document.querySelectorAll('.col.subtask').forEach(function (row) {
                         const isTarget = row.id === targetId;
                         row.classList.toggle('subtask-collapsed', !isTarget);
@@ -825,54 +703,17 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                     .then(function (r) { return r.json(); })
                     .then(function (data) {
                         if (data.success) {
-                            queuePostReloadToast({ type: 'success', title: 'Sucesso', message: 'Subtarefa concluída com sucesso.' });
+                            ctx.queuePostReloadToast({ type: 'success', title: 'Sucesso', message: 'Subtarefa concluída com sucesso.' });
                             window.location.reload();
                         } else {
-                            notify('error', 'Erro', data.error || 'Erro ao concluir.');
+                            ctx.notify('error', 'Erro', data.error || 'Erro ao concluir.');
                             btn.disabled = false;
                         }
                     })
                     .catch(function () {
-                        notify('error', 'Erro', 'Erro de conexão.');
+                        ctx.notify('error', 'Erro', 'Erro de conexão.');
                         btn.disabled = false;
                     });
-                });
-            });
-        })();
-
-        (function () {
-            const pending = {};
-            function requireSecondClick(key, msg) {
-                const now = Date.now();
-                if ((pending[key] || 0) > now) { delete pending[key]; return true; }
-                pending[key] = now + 5000;
-                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Confirmação', message: msg });
-                return false;
-            }
-            document.addEventListener('click', function (e) {
-                const btn = e.target.closest('.js-desalocar');
-                if (!btn) return;
-                const alocadoId = btn.getAttribute('data-alocado-id') || '';
-                const tipo      = btn.getAttribute('data-tipo') || '';
-                const endpoint  = btn.getAttribute('data-endpoint') || '';
-                if (!alocadoId || !endpoint) return;
-                if (!requireSecondClick('desalocar-' + alocadoId, 'Clique novamente para confirmar a remoção da alocação.')) return;
-                fetch(endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ alocado_id: alocadoId, tipo: tipo }),
-                    credentials: 'same-origin'
-                }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
-                .then(function (res) {
-                    if (res.ok && res.j && res.j.deleted) {
-                        if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Alocação removida.' });
-                        setTimeout(function () { window.location.reload(); }, 800);
-                    } else {
-                        const msg = (res.j && res.j.error) ? res.j.error : 'Falha ao remover alocação.';
-                        if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: msg });
-                    }
-                }).catch(function () {
-                    if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
                 });
             });
         })();

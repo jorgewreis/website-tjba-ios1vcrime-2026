@@ -27,6 +27,18 @@ $__cartorioTaskListPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartor
 $__cartorioTaskListV = @filemtime($__cartorioTaskListPath) ?: time();
 $__oficiosEditPath = dirname(__DIR__, 3) . '/public/assets/js/shared/oficios-edit.js';
 $__oficiosEditV = @filemtime($__oficiosEditPath) ?: time();
+$__oficiosListPath = dirname(__DIR__, 3) . '/public/assets/js/shared/oficios-list.js';
+$__oficiosListV = @filemtime($__oficiosListPath) ?: time();
+$__gmeListPath = dirname(__DIR__, 3) . '/public/assets/js/shared/gme-list.js';
+$__gmeListV = @filemtime($__gmeListPath) ?: time();
+$__gmeEditPath = dirname(__DIR__, 3) . '/public/assets/js/shared/gme-edit.js';
+$__gmeEditV = @filemtime($__gmeEditPath) ?: time();
+$__gmeCreatePath = dirname(__DIR__, 3) . '/public/assets/js/shared/gme-create.js';
+$__gmeCreateV = @filemtime($__gmeCreatePath) ?: time();
+$__cartorioSimpleEditPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-simple-edit.js';
+$__cartorioSimpleEditV = @filemtime($__cartorioSimpleEditPath) ?: time();
+$__cartorioGuiasEditPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-guias-edit.js';
+$__cartorioGuiasEditV = @filemtime($__cartorioGuiasEditPath) ?: time();
 
 $__currentUserPerfis = (isset($userPerfils) && is_array($userPerfils)) ? $userPerfils : [];
 $__isEstagiarioProfile = false;
@@ -73,6 +85,12 @@ window.__APP_CONTEXT = Object.assign({}, window.__APP_CONTEXT || {}, {
 <script src="/assets/js/shared/list-search.js?v=<?php echo (int) $__listSearchV; ?>"></script>
 <script src="/assets/js/shared/cartorio-task-list.js?v=<?php echo (int) $__cartorioTaskListV; ?>"></script>
 <script src="/assets/js/shared/oficios-edit.js?v=<?php echo (int) $__oficiosEditV; ?>"></script>
+<script src="/assets/js/shared/oficios-list.js?v=<?php echo (int) $__oficiosListV; ?>"></script>
+<script src="/assets/js/shared/gme-list.js?v=<?php echo (int) $__gmeListV; ?>"></script>
+<script src="/assets/js/shared/gme-edit.js?v=<?php echo (int) $__gmeEditV; ?>"></script>
+<script src="/assets/js/shared/gme-create.js?v=<?php echo (int) $__gmeCreateV; ?>"></script>
+<script src="/assets/js/shared/cartorio-simple-edit.js?v=<?php echo (int) $__cartorioSimpleEditV; ?>"></script>
+<script src="/assets/js/shared/cartorio-guias-edit.js?v=<?php echo (int) $__cartorioGuiasEditV; ?>"></script>
 <script>window.__IS_ESTAGIARIO_PROFILE = <?php echo $__isEstagiarioProfile ? 'true' : 'false'; ?>;</script>
 <script>window.__ALLOW_DELETE_ON_EDIT_PAGE = <?php echo $__canDeleteOnThisEditPage ? 'true' : 'false'; ?>;</script>
 <?php if ($__isEstagiarioProfile && $__isEditPage && !$__canDeleteOnThisEditPage): ?>

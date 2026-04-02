@@ -411,125 +411,19 @@ $statusLabelUi = static function (string $s): string {
 
     <script>
         (function () {
-            const notify = (type, title, message) => {
-                if (window.App && App.Page && typeof App.Page.notify === 'function') {
-                    App.Page.notify(type, title, message);
-                    return;
-                }
-                if (typeof showToast === 'function') showToast({ type, variant: 'full', title, message });
-            };
-            const queuePostReloadToast = (type, title, message) => {
-                if (window.App && App.Page && typeof App.Page.queuePostReloadToast === 'function') {
-                    App.Page.queuePostReloadToast(type, title, message, 'gme.postReloadToast');
-                    return;
-                }
-                try {
-                    const key = 'gme.postReloadToast';
-                    const raw = sessionStorage.getItem(key);
-                    const fila = raw ? JSON.parse(raw) : [];
-                    const lista = Array.isArray(fila) ? fila : (fila && fila.message ? [fila] : []);
-                    lista.push({ type, title, message });
-                    sessionStorage.setItem(key, JSON.stringify(lista));
-                } catch (e) {}
-            };
-            const flushPostReloadToast = () => {
-                if (window.App && App.Page && typeof App.Page.flushPostReloadToast === 'function') {
-                    App.Page.flushPostReloadToast('gme.postReloadToast', { type: 'info', title: 'Informação' });
-                    return;
-                }
-                try {
-                    const raw = sessionStorage.getItem('gme.postReloadToast');
-                    if (!raw) return;
-                    sessionStorage.removeItem('gme.postReloadToast');
-                    const data = JSON.parse(raw);
-                    const lista = Array.isArray(data) ? data : (data && data.message ? [data] : []);
-                    lista.forEach(function (item) {
-                        if (item && item.message) notify(item.type || 'info', item.title || 'Informação', item.message);
-                    });
-                } catch (e) {}
-            };
-            flushPostReloadToast();
+            if (!window.App || !App.GmeList || typeof App.GmeList.initialize !== 'function') {
+                return;
+            }
 
-            document.getElementById('novo-cadastro-btn')?.addEventListener('click', function () {
-                window.location.href = '/frame.php?page=monitoramentogabinetecreate';
-            });
-
-            const applyFilters = function () {
-                const status = document.getElementById('filter-status')?.value ?? '';
-                const processo = document.getElementById('search-input')?.value?.trim() ?? '';
-                const perPage = document.getElementById('items-per-page')?.value ?? '25';
-                const params = new URLSearchParams(window.location.search);
-                params.set('page', '<?php echo htmlspecialchars($routePage, ENT_QUOTES); ?>');
-                params.set('page_number', '1');
-                params.set('items_per_page', perPage);
-                if (status) params.set('status', status); else params.delete('status');
-                if (processo) params.set('processo', processo); else params.delete('processo');
-                window.location.href = '?' + params.toString();
-            };
-
-            document.getElementById('filter-status')?.addEventListener('change', applyFilters);
-            document.getElementById('items-per-page')?.addEventListener('change', applyFilters);
-            document.getElementById('search-input')?.addEventListener('keypress', function (e) {
-                if (e.key === 'Enter') applyFilters();
-            });
-
-            document.querySelectorAll('.btn-editar[data-monitoramento-id]').forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    const id = this.dataset.monitoramentoId;
-                    if (id) window.location.href = '/frame.php?page=monitoramentogabineteedit&id=' + encodeURIComponent(id);
-                });
-            });
-
-            document.querySelectorAll('input[name="open-subtask"]').forEach(function (radio) {
-                radio.addEventListener('change', function () {
-                    const mid = this.value;
-                    const targetId = 'subtask-' + mid;
-                    document.querySelectorAll('.gme-subtask-panel').forEach(function (row) {
-                        const isTarget = row.id === targetId;
-                        row.classList.toggle('subtask-collapsed', !isTarget);
-                        row.setAttribute('aria-hidden', isTarget ? 'false' : 'true');
-                    });
-                });
-            });
-
-            document.querySelectorAll('.btn-gme-concluir').forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    const sid = this.getAttribute('data-subtarefa-id');
-                    const precisa = this.getAttribute('data-precisa-data') === '1';
-                    if (!sid) return;
-                    let dataInicio = null;
-                    if (precisa) {
-                        const inp = document.getElementById('data-inicio-' + sid);
-                        dataInicio = inp && inp.value ? inp.value : '';
-                        if (!dataInicio) {
-                            notify('error', 'Validação', 'Informe a data de início.');
-                            return;
-                        }
-                    }
-                    this.disabled = true;
-                    const body = { subtarefa_id: sid };
-                    if (dataInicio) body.data_inicio = dataInicio;
-                    fetch('/api/gabinete-monitoramento-eletronico/concluir-subtarefa.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(body),
-                        credentials: 'same-origin'
-                    })
-                    .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
-                    .then(function (res) {
-                        if (res.ok && res.j && res.j.success) {
-                            queuePostReloadToast('success', 'Sucesso', 'Operação concluída.');
-                            window.location.reload();
-                        } else {
-                            notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao concluir.');
-                            btn.disabled = false;
-                        }
-                    })
-                    .catch(function () {
-                        notify('error', 'Erro', 'Erro de conexão.');
-                        btn.disabled = false;
-                    });
-                });
+            App.GmeList.initialize({
+                storageKey: 'gme.postReloadToast',
+                routePage: '<?php echo htmlspecialchars($routePage, ENT_QUOTES); ?>',
+                newHref: '/frame.php?page=monitoramentogabinetecreate',
+                editHrefBuilder: function (id) {
+                    return '/frame.php?page=monitoramentogabineteedit&id=' + encodeURIComponent(id);
+                },
+                concludeEndpoint: '/api/gabinete-monitoramento-eletronico/concluir-subtarefa.php',
+                concludeSuccessMessage: 'Operação concluída.'
             });
         })();
     </script>

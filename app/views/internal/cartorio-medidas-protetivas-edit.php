@@ -257,160 +257,29 @@ $ordemParaTipo = [
         </script>
         <script>
             (function () {
-                var pageTools = window.App && App.Page ? App.Page : null;
-                function queuePostReloadToast(type, title, message) {
-                    if (pageTools && typeof pageTools.queuePostReloadToast === 'function') {
-                        pageTools.queuePostReloadToast(type, title, message, 'cartorio.postReloadToast');
-                        return;
-                    }
-                    try {
-                        var key = 'cartorio.postReloadToast';
-                        var raw = sessionStorage.getItem(key);
-                        var fila = raw ? JSON.parse(raw) : [];
-                        var lista = Array.isArray(fila) ? fila : ((fila && fila.message) ? [fila] : []);
-                        lista.push({ type: type, title: title, message: message });
-                        sessionStorage.setItem(key, JSON.stringify(lista));
-                    } catch (e) {}
-                }
-                var requireSecondClick = pageTools && typeof pageTools.createSecondClickGuard === 'function'
-                    ? pageTools.createSecondClickGuard()
-                    : (function () {
-                        var pendingConfirmations = {};
-                        return function (key, message) {
-                            var now = Date.now();
-                            var validUntil = Number(pendingConfirmations[key] || 0);
-                            if (validUntil > now) {
-                                delete pendingConfirmations[key];
-                                return true;
-                            }
-                            pendingConfirmations[key] = now + 5000;
-                            if (typeof showToast === 'function') {
-                                showToast({ type: 'info', variant: 'full', title: 'Confirmação', message: message });
-                            }
-                            return false;
-                        };
-                    })();
-                var voltarBtn = document.getElementById('voltar-btn');
-                if (voltarBtn) {
-                    voltarBtn.addEventListener('click', function (e) {
-                        e.preventDefault();
-                        window.location.href = '/frame.php?page=medidasprotetivas';
-                    }, { capture: true });
+                if (!window.App || !App.CartorioSimpleEdit || typeof App.CartorioSimpleEdit.initialize !== 'function') {
+                    return;
                 }
 
-                var abrirCejuscBtn = document.getElementById('abrir-cejusc-btn');
-                if (abrirCejuscBtn) {
-                    abrirCejuscBtn.addEventListener('click', function () {
-                        var cejuscId = (abrirCejuscBtn.getAttribute('data-cejusc-id') || '').trim();
-                        if (!cejuscId) return;
-                        window.location.href = '/frame.php?page=cejuscedit&id=' + encodeURIComponent(cejuscId);
-                    });
-                }
-
-                var salvarBtn = document.getElementById('salvar-btn');
-                var observacoesEl = document.getElementById('edit-observacoes');
-                function updateSalvarState() {
-                    if (!salvarBtn) return;
-                    var current = (observacoesEl && observacoesEl.value) ? observacoesEl.value.trim() : '';
-                    salvarBtn.disabled = current === (window.__initialObservacoes || '');
-                }
-                observacoesEl?.addEventListener('input', updateSalvarState);
-                updateSalvarState();
-
-                salvarBtn?.addEventListener('click', function () {
-                    if (salvarBtn.disabled) return;
-                    var payload = { id: window.__currentMedidaId, observacoes: (observacoesEl?.value || '').trim() };
-                    salvarBtn.disabled = true;
-                    fetch('/api/cartorio-medidas-protetivas/update.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    })
-                    .then(function (response) { return response.json(); })
-                    .then(function (data) {
-                        if (data.success) {
-                            if (typeof showToast === 'function') {
-                                showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Alterações salvas.' });
-                            }
-                            window.__initialObservacoes = payload.observacoes;
-                            updateSalvarState();
-                            return;
-                        }
-                        if (typeof showToast === 'function') {
-                            showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao salvar.' });
-                        }
-                        salvarBtn.disabled = false;
-                    })
-                    .catch(function () {
-                        if (typeof showToast === 'function') {
-                            showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
-                        }
-                        salvarBtn.disabled = false;
-                    });
-                });
-
-                var btnCancelar = document.getElementById('cancelar-tarefa-btn');
-                btnCancelar?.addEventListener('click', function () {
-                    btnCancelar.disabled = true;
-                    fetch('/api/cartorio-medidas-protetivas/cancel.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ id: window.__currentMedidaId })
-                    })
-                    .then(function (response) { return response.json(); })
-                    .then(function (data) {
-                        if (data.success) {
-                            if (typeof showToast === 'function') {
-                                showToast({ type: 'info', variant: 'full', title: 'Informação', message: 'Tarefa cancelada com sucesso.' });
-                            }
-                            window.setTimeout(function () { window.location.reload(); }, 250);
-                            return;
-                        }
-                        if (typeof showToast === 'function') {
-                            showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao cancelar.' });
-                        }
-                        btnCancelar.disabled = false;
-                    })
-                    .catch(function () {
-                        if (typeof showToast === 'function') {
-                            showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
-                        }
-                        btnCancelar.disabled = false;
-                    });
-                });
-
-                var btnExcluir = document.getElementById('excluir-tarefa-btn');
-                btnExcluir?.addEventListener('click', function () {
-                    if (!requireSecondClick('excluir-medida-protetiva', 'Clique novamente em Excluir em até 5 segundos para confirmar a exclusão desta medida protetiva.')) return;
-                    btnExcluir.disabled = true;
-                    fetch('/api/cartorio-medidas-protetivas/delete.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ id: window.__currentMedidaId })
-                    })
-                    .then(function (response) { return response.json(); })
-                    .then(function (data) {
-                        if (data.deleted) {
-                            (Array.isArray(data.subtarefas_toasts) ? data.subtarefas_toasts : []).forEach(function (msg) {
-                                queuePostReloadToast('info', 'Subtarefa excluída', msg);
-                            });
-                            if (data.tarefa_toast) {
-                                queuePostReloadToast('success', 'Sucesso', data.tarefa_toast);
-                            }
-                            window.location.href = '/frame.php?page=medidasprotetivas';
-                            return;
-                        }
-                        if (typeof showToast === 'function') {
-                            showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao excluir.' });
-                        }
-                        btnExcluir.disabled = false;
-                    })
-                    .catch(function () {
-                        if (typeof showToast === 'function') {
-                            showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
-                        }
-                        btnExcluir.disabled = false;
-                    });
+                App.CartorioSimpleEdit.initialize({
+                    entityId: window.__currentMedidaId,
+                    backButtonId: 'voltar-btn',
+                    backHref: '/frame.php?page=medidasprotetivas',
+                    linkedButtonId: 'abrir-cejusc-btn',
+                    linkedHrefBuilder: function (button) {
+                        var cejuscId = (button.getAttribute('data-cejusc-id') || '').trim();
+                        return cejuscId ? ('/frame.php?page=cejuscedit&id=' + encodeURIComponent(cejuscId)) : '';
+                    },
+                    saveButtonId: 'salvar-btn',
+                    observationFieldId: 'edit-observacoes',
+                    initialObservation: window.__initialObservacoes || '',
+                    updateEndpoint: '/api/cartorio-medidas-protetivas/update.php',
+                    cancelButtonId: 'cancelar-tarefa-btn',
+                    cancelEndpoint: '/api/cartorio-medidas-protetivas/cancel.php',
+                    deleteButtonId: 'excluir-tarefa-btn',
+                    deleteEndpoint: '/api/cartorio-medidas-protetivas/delete.php',
+                    deleteConfirmKey: 'excluir-medida-protetiva',
+                    deleteConfirmMessage: 'Clique novamente em Excluir em até 5 segundos para confirmar a exclusão desta medida protetiva.'
                 });
             })();
         </script>

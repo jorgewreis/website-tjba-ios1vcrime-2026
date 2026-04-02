@@ -177,128 +177,26 @@ $podeCancelarTarefa = $podeCancelarTarefa && !$tarefaCancelada && !$tarefaFinali
     <?php if ($row !== null && $errorMessage === ''): ?>
     <script>
         (function () {
-            const notify = (type, title, message) => {
-                if (window.App && App.Page && typeof App.Page.notify === 'function') {
-                    App.Page.notify(type, title, message);
-                    return;
-                }
-                if (typeof showToast === 'function') showToast({ type, variant: 'full', title, message });
-            };
-            const queuePostReloadToast = (type, title, message) => {
-                if (window.App && App.Page && typeof App.Page.queuePostReloadToast === 'function') {
-                    App.Page.queuePostReloadToast(type, title, message, 'gme.postReloadToast');
-                    return;
-                }
-                try {
-                    const key = 'gme.postReloadToast';
-                    const raw = sessionStorage.getItem(key);
-                    const fila = raw ? JSON.parse(raw) : [];
-                    const lista = Array.isArray(fila) ? fila : (fila && fila.message ? [fila] : []);
-                    lista.push({ type, title, message });
-                    sessionStorage.setItem(key, JSON.stringify(lista));
-                } catch (e) {}
-            };
-            const mid = document.getElementById('hidden-gme-id')?.value || '';
-            const saveBtn = document.getElementById('salvar-btn');
-            const trackRoot = document.getElementById('gab-mon-edit-track');
-
-            function snapshotTrackableValues() {
-                if (!trackRoot) return '';
-                const els = Array.from(trackRoot.querySelectorAll('input:not([type="hidden"]), select, textarea')).filter(function (el) {
-                    return !el.readOnly && !el.disabled;
-                });
-                return els.map(function (el) {
-                    return (el.id || el.name || '') + '\t' + String(el.value);
-                }).join('\n');
+            if (!window.App || !App.GmeEdit || typeof App.GmeEdit.initialize !== 'function') {
+                return;
             }
 
-            let initialTrackSnapshot = snapshotTrackableValues();
-            function syncSalvarDisabled() {
-                if (!saveBtn) return;
-                saveBtn.disabled = snapshotTrackableValues() === initialTrackSnapshot;
-            }
-
-            if (trackRoot && saveBtn) {
-                Array.from(trackRoot.querySelectorAll('input:not([type="hidden"]), select, textarea')).forEach(function (el) {
-                    if (el.readOnly || el.disabled) return;
-                    el.addEventListener('input', syncSalvarDisabled);
-                    el.addEventListener('change', syncSalvarDisabled);
-                });
-                syncSalvarDisabled();
-            }
-
-            document.getElementById('gab-mon-voltar-btn')?.addEventListener('click', function () {
-                window.location.href = '/frame.php?page=monitoramentogabinete';
-            });
-
-            saveBtn?.addEventListener('click', function () {
-                if (saveBtn.disabled) return;
-                notify('info', 'Somente leitura', 'Esta tela exibe os dados do registro. Alterações de datas e subtarefas são feitas na lista.');
-            });
-
-            const pendingConfirmations = {};
-            function requireSecondClick(key, message) {
-                const now = Date.now();
-                const validUntil = Number(pendingConfirmations[key] || 0);
-                if (validUntil > now) {
-                    delete pendingConfirmations[key];
-                    return true;
-                }
-                pendingConfirmations[key] = now + 5000;
-                notify('info', 'Confirmação', message);
-                return false;
-            }
-
-            document.getElementById('gab-mon-cancelar-btn')?.addEventListener('click', function () {
-                if (!requireSecondClick('gab-mon-cancelar', 'Clique novamente em Cancelar monitoramento em até 5 segundos para confirmar.')) return;
-                const btn = this;
-                btn.disabled = true;
-                fetch('/api/gabinete-monitoramento-eletronico/cancel.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: mid }),
-                    credentials: 'same-origin'
-                })
-                .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
-                .then(function (res) {
-                    if (res.ok && res.j && res.j.success) {
-                        queuePostReloadToast('success', 'Sucesso', 'Monitoramento cancelado.');
-                        window.location.href = '/frame.php?page=monitoramentogabinete';
-                    } else {
-                        notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao cancelar.');
-                        btn.disabled = false;
-                    }
-                })
-                .catch(function () {
-                    notify('error', 'Erro', 'Erro de conexão.');
-                    btn.disabled = false;
-                });
-            });
-
-            document.getElementById('gab-mon-excluir-btn')?.addEventListener('click', function () {
-                if (!requireSecondClick('gab-mon-excluir', 'Clique novamente em Excluir em até 5 segundos para confirmar a exclusão.')) return;
-                const btn = this;
-                btn.disabled = true;
-                fetch('/api/gabinete-monitoramento-eletronico/delete.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: mid }),
-                    credentials: 'same-origin'
-                })
-                .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
-                .then(function (res) {
-                    if (res.ok && res.j && (res.j.deleted || res.j.message)) {
-                        queuePostReloadToast('success', 'Sucesso', (res.j.message) || 'Registro excluído.');
-                        window.location.href = '/frame.php?page=monitoramentogabinete';
-                    } else {
-                        notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao excluir.');
-                        btn.disabled = false;
-                    }
-                })
-                .catch(function () {
-                    notify('error', 'Erro', 'Erro de conexão.');
-                    btn.disabled = false;
-                });
+            App.GmeEdit.initialize({
+                idFieldId: 'hidden-gme-id',
+                backButtonId: 'gab-mon-voltar-btn',
+                saveButtonId: 'salvar-btn',
+                trackRootId: 'gab-mon-edit-track',
+                cancelButtonId: 'gab-mon-cancelar-btn',
+                deleteButtonId: 'gab-mon-excluir-btn',
+                cancelEndpoint: '/api/gabinete-monitoramento-eletronico/cancel.php',
+                deleteEndpoint: '/api/gabinete-monitoramento-eletronico/delete.php',
+                listHref: '/frame.php?page=monitoramentogabinete',
+                storageKey: 'gme.postReloadToast',
+                cancelConfirmKey: 'gab-mon-cancelar',
+                cancelConfirmMessage: 'Clique novamente em Cancelar monitoramento em até 5 segundos para confirmar.',
+                deleteConfirmKey: 'gab-mon-excluir',
+                deleteConfirmMessage: 'Clique novamente em Excluir em até 5 segundos para confirmar a exclusão.',
+                cancelSuccessMessage: 'Monitoramento cancelado.'
             });
         })();
     </script>

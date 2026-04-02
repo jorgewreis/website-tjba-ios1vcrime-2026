@@ -359,156 +359,49 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
     <script src="/assets/js/modules/datajud/datajud-api.js"></script>
     <script>
         (function () {
-            const notify = (type, title, message) => {
-                if (window.App && App.Page && typeof App.Page.notify === 'function') {
-                    App.Page.notify(type, title, message);
-                    return;
-                }
-                if (typeof showToast === 'function') showToast({ type, variant: 'full', title, message });
-            };
-            const queuePostReloadToast = (type, title, message) => {
-                if (window.App && App.Page && typeof App.Page.queuePostReloadToast === 'function') {
-                    App.Page.queuePostReloadToast(type, title, message, 'cartorio.postReloadToast');
-                    return;
-                }
-                try {
-                    const key = 'cartorio.postReloadToast';
-                    const raw = sessionStorage.getItem(key);
-                    const fila = raw ? JSON.parse(raw) : [];
-                    const lista = Array.isArray(fila) ? fila : (fila && fila.message ? [fila] : []);
-                    lista.push({ type, title, message });
-                    sessionStorage.setItem(key, JSON.stringify(lista));
-                } catch (e) {}
-            };
-            const flushPostReloadToast = () => {
-                if (window.App && App.Page && typeof App.Page.flushPostReloadToast === 'function') {
-                    App.Page.flushPostReloadToast('cartorio.postReloadToast', { type: 'info', title: 'Informação' });
-                    return;
-                }
-                try {
-                    const raw = sessionStorage.getItem('cartorio.postReloadToast');
-                    if (!raw) return;
-                    sessionStorage.removeItem('cartorio.postReloadToast');
-                    const data = JSON.parse(raw);
-                    const lista = Array.isArray(data) ? data : (data && data.message ? [data] : []);
-                    lista.forEach(function (item) {
-                        if (item && item.message) notify(item.type || 'info', item.title || 'Informação', item.message);
-                    });
-                } catch (e) {}
-            };
-            flushPostReloadToast();
-
-            const gabineteTipoSelect = document.getElementById('gab-oficio-tipo');
-            const gabProcessoHint = document.getElementById('gab-processo-hint');
-            const gabProcessoLabel = document.querySelector('label[for="filter-processo"]');
-
-            function gabineteOficioEhAdministrativo() {
-                const opt = gabineteTipoSelect?.selectedOptions?.[0];
-                return opt && opt.getAttribute('data-oficio-grupo') === 'administrativo';
+            if (!window.App || !App.OficiosList || typeof App.OficiosList.initialize !== 'function') {
+                return;
             }
 
-            function atualizarRegraProcessoGabinete() {
-                const admin = gabineteOficioEhAdministrativo();
-                if (gabProcessoHint) {
-                    gabProcessoHint.textContent = admin ? 'opcional' : '*obrigatório';
-                    gabProcessoHint.className = admin ? 'label-hint-automatizado' : 'label-hint-obrigatorio';
-                }
-                if (gabProcessoLabel) {
-                    gabProcessoLabel.title = admin
-                        ? 'Para tipos administrativos o número do processo pode ficar em branco.'
-                        : '';
-                }
-            }
+            App.OficiosList.initialize({
+                storageKey: 'cartorio.postReloadToast',
+                routePage: '<?php echo htmlspecialchars($routePage, ENT_QUOTES); ?>',
+                typeSelectId: 'gab-oficio-tipo',
+                processHintId: 'gab-processo-hint',
+                processLabelSelector: 'label[for="filter-processo"]',
+                clearButtonId: 'btn-gab-oficio-limpar',
+                createButtonId: 'btn-gab-oficio-registrar',
+                createEndpoint: '/api/gabinete-oficios/create.php',
+                editButtonSelector: '.btn-editar[data-oficio-id]',
+                editHrefBuilder: function (id) {
+                    return '/frame.php?page=oficiosgabineteedit&id=' + encodeURIComponent(id);
+                },
+                buildRequest: function (ctx) {
+                    const proc = document.getElementById('filter-processo')?.value?.trim() || '';
+                    const tipo = document.getElementById('gab-oficio-tipo')?.value || '';
+                    const cc = document.getElementById('hidden-classe-codigo')?.value || '';
+                    const cd = document.getElementById('hidden-classe-descricao')?.value || '';
+                    const admin = ctx.isAdministrative();
 
-            gabineteTipoSelect?.addEventListener('change', atualizarRegraProcessoGabinete);
-            atualizarRegraProcessoGabinete();
+                    if (!tipo) {
+                        ctx.notify('error', 'Validação', 'Selecione o tipo de ofício.');
+                        return null;
+                    }
+                    if (!admin && !proc) {
+                        ctx.notify('error', 'Validação', 'Preencha o número do processo.');
+                        return null;
+                    }
 
-            document.getElementById('btn-gab-oficio-limpar')?.addEventListener('click', function () {
-                const p = document.getElementById('filter-processo');
-                const t = document.getElementById('gab-oficio-tipo');
-                const cl = document.getElementById('filter-classe');
-                if (p) p.value = '';
-                if (t) t.selectedIndex = 0;
-                if (cl) cl.value = '';
-                const hcc = document.getElementById('hidden-classe-codigo');
-                const hcd = document.getElementById('hidden-classe-descricao');
-                if (hcc) hcc.value = '';
-                if (hcd) hcd.value = '';
-                atualizarRegraProcessoGabinete();
-            });
-
-            document.getElementById('btn-gab-oficio-registrar')?.addEventListener('click', function () {
-                const proc = document.getElementById('filter-processo')?.value?.trim() || '';
-                const tipo = document.getElementById('gab-oficio-tipo')?.value || '';
-                const cc = document.getElementById('hidden-classe-codigo')?.value || '';
-                const cd = document.getElementById('hidden-classe-descricao')?.value || '';
-                const admin = gabineteOficioEhAdministrativo();
-                if (!tipo) {
-                    notify('error', 'Validação', 'Selecione o tipo de ofício.');
-                    return;
-                }
-                if (!admin && !proc) {
-                    notify('error', 'Validação', 'Preencha o número do processo.');
-                    return;
-                }
-                fetch('/api/gabinete-oficios/create.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
+                    return {
                         numero_processo: proc,
                         tipo_oficio: tipo,
                         classe_codigo: admin && !proc ? '' : cc,
                         classe_descricao: admin && !proc ? '' : cd
-                    }),
-                    credentials: 'same-origin'
-                })
-                .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
-                .then(function (res) {
-                    if (res.ok && res.j && res.j.id) {
-                        queuePostReloadToast('success', 'Sucesso', 'Ofício registrado com sucesso.');
-                        window.location.reload();
-                    } else {
-                        notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao registrar.');
-                    }
-                })
-                .catch(function () {
-                    notify('error', 'Erro', 'Erro de conexão.');
-                });
-            });
-
-            const applyFilters = function () {
-                const processo = document.getElementById('search-input')?.value?.trim() ?? '';
-                const perPage = document.getElementById('items-per-page')?.value ?? '25';
-                const params = new URLSearchParams(window.location.search);
-                params.set('page', '<?php echo htmlspecialchars($routePage, ENT_QUOTES); ?>');
-                params.set('page_number', '1');
-                params.set('items_per_page', perPage);
-                if (processo) {
-                    params.set('processo', processo);
-                    params.delete('status');
-                    params.delete('ano');
-                } else {
-                    params.delete('processo');
-                    const status = document.getElementById('filter-status')?.value ?? '';
-                    const ano = document.getElementById('filter-ano')?.value ?? '';
-                    if (status) params.set('status', status); else params.delete('status');
-                    if (ano) params.set('ano', ano); else params.delete('ano');
+                    };
+                },
+                buildSuccessPayload: function () {
+                    return { type: 'success', title: 'Sucesso', message: 'Ofício registrado com sucesso.' };
                 }
-                window.location.href = '?' + params.toString();
-            };
-
-            document.getElementById('filter-status')?.addEventListener('change', applyFilters);
-            document.getElementById('filter-ano')?.addEventListener('change', applyFilters);
-            document.getElementById('items-per-page')?.addEventListener('change', applyFilters);
-            document.getElementById('search-input')?.addEventListener('keypress', function (e) {
-                if (e.key === 'Enter') applyFilters();
-            });
-
-            document.querySelectorAll('.btn-editar[data-oficio-id]').forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    const id = this.dataset.oficioId;
-                    if (id) window.location.href = '/frame.php?page=oficiosgabineteedit&id=' + encodeURIComponent(id);
-                });
             });
         })();
     </script>

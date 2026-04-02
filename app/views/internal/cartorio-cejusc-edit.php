@@ -221,116 +221,23 @@ $timelineData = $tarefa !== null
         </script>
         <script>
             (function () {
-                var pageTools = window.App && App.Page ? App.Page : null;
-                function queuePostReloadToast(type, title, message) {
-                    if (pageTools && typeof pageTools.queuePostReloadToast === 'function') {
-                        pageTools.queuePostReloadToast(type, title, message, 'cartorio.postReloadToast');
-                        return;
-                    }
-                    try {
-                        var key = 'cartorio.postReloadToast';
-                        var raw = sessionStorage.getItem(key);
-                        var fila = raw ? JSON.parse(raw) : [];
-                        var lista = Array.isArray(fila) ? fila : ((fila && fila.message) ? [fila] : []);
-                        lista.push({ type: type, title: title, message: message });
-                        sessionStorage.setItem(key, JSON.stringify(lista));
-                    } catch (e) {}
-                }
-                var requireSecondClick = pageTools && typeof pageTools.createSecondClickGuard === 'function'
-                    ? pageTools.createSecondClickGuard()
-                    : (function () {
-                        var pendingConfirmations = {};
-                        return function (key, message) {
-                            var now = Date.now();
-                            var validUntil = Number(pendingConfirmations[key] || 0);
-                            if (validUntil > now) {
-                                delete pendingConfirmations[key];
-                                return true;
-                            }
-                            pendingConfirmations[key] = now + 5000;
-                            if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Confirmação', message: message });
-                            return false;
-                        };
-                    })();
-                var btn = document.getElementById('voltar-btn');
-                if (btn) {
-                    btn.addEventListener('click', function (e) {
-                        e.preventDefault();
-                        window.location.href = '/frame.php?page=cejusc';
-                    }, { capture: true });
+                if (!window.App || !App.CartorioSimpleEdit || typeof App.CartorioSimpleEdit.initialize !== 'function') {
+                    return;
                 }
 
-                var btnCancelar = document.getElementById('cancelar-tarefa-btn');
-                if (btnCancelar && window.__currentCejuscId) {
-                    btnCancelar.addEventListener('click', function () {
-                        btnCancelar.disabled = true;
-                        fetch('/api/cartorio-cejusc/cancel.php', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ id: window.__currentCejuscId })
-                        })
-                        .then(function (r) { return r.json(); })
-                        .then(function (data) {
-                            if (data.success) {
-                                if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Informação', message: 'Tarefa cancelada com sucesso.' });
-                                window.setTimeout(function () { window.location.reload(); }, 250);
-                            } else {
-                                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao cancelar.' });
-                                btnCancelar.disabled = false;
-                            }
-                        })
-                        .catch(function () {
-                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
-                            btnCancelar.disabled = false;
-                        });
-                    });
-                }
-
-                var btnExcluir = document.getElementById('excluir-tarefa-btn');
-                if (btnExcluir && window.__currentCejuscId) {
-                    btnExcluir.addEventListener('click', function () {
-                        if (!requireSecondClick('excluir-cejusc', 'Clique novamente em Excluir em até 5 segundos para confirmar a exclusão desta tarefa.')) return;
-                        btnExcluir.disabled = true;
-                        fetch('/api/cartorio-cejusc/delete.php', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ id: window.__currentCejuscId })
-                        })
-                        .then(function (r) { return r.json(); })
-                        .then(function (data) {
-                            if (data.deleted) {
-                                (Array.isArray(data.subtarefas_toasts) ? data.subtarefas_toasts : []).forEach(function (msg) {
-                                    queuePostReloadToast('info', 'Subtarefa excluída', msg);
-                                });
-                                if (data.tarefa_toast) {
-                                    queuePostReloadToast('success', 'Sucesso', data.tarefa_toast);
-                                }
-                                window.location.href = '/frame.php?page=cejusc';
-                            } else {
-                                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao excluir.' });
-                                btnExcluir.disabled = false;
-                            }
-                        })
-                        .catch(function () {
-                            if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
-                            btnExcluir.disabled = false;
-                        });
-                    });
-                }
+                App.CartorioSimpleEdit.initialize({
+                    entityId: window.__currentCejuscId,
+                    backButtonId: 'voltar-btn',
+                    backHref: '/frame.php?page=cejusc',
+                    cancelButtonId: 'cancelar-tarefa-btn',
+                    cancelEndpoint: '/api/cartorio-cejusc/cancel.php',
+                    deleteButtonId: 'excluir-tarefa-btn',
+                    deleteEndpoint: '/api/cartorio-cejusc/delete.php',
+                    deleteConfirmKey: 'excluir-cejusc',
+                    deleteConfirmMessage: 'Clique novamente em Excluir em até 5 segundos para confirmar a exclusão desta tarefa.'
+                });
             })();
         </script>
     <?php endif; ?>
-
-    <script>
-        (function () {
-            var btn = document.getElementById('voltar-btn');
-            if (btn) {
-                btn.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    window.location.href = '/frame.php?page=cejusc';
-                }, { capture: true });
-            }
-        })();
-    </script>
 </body>
 </html>
