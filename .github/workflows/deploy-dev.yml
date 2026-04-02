@@ -38,6 +38,18 @@ jobs:
         run: bash .github/scripts/deploy-ssh-check.sh
 
 
+      - name: Garantir diretório destino (DEV)
+        env:
+          DEPLOY_USER: ${{ env.DEPLOY_USER_EFFECTIVE }}
+          DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
+          DEV_PATH: ${{ secrets.DEV_PATH }}
+        run: |
+          ssh -i ~/.ssh/id_ed25519 \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "mkdir -p \"${DEV_PATH}\" && echo \"Diretório OK: ${DEV_PATH}\""
+
       # Se composer falhar com "Permission denied" em vendor: no servidor, rode uma vez:
       #   sudo chown -R DEPLOY_USER: DEV_PATH
       - name: Sync files to server (DEV)
@@ -51,6 +63,7 @@ jobs:
             --no-times --omit-dir-times \
             --no-perms --no-owner --no-group \
             --inplace \
+            --mkpath \
             --exclude ".git/" \
             --exclude ".github/" \
             --exclude ".env" \

@@ -33,6 +33,27 @@ cat /tmp/gha_ssh_kfl.txt
 echo "Chave pública correspondente (uma linha; deve estar em ~/.ssh/authorized_keys do DEPLOY_USER no servidor):"
 ssh-keygen -y -f ~/.ssh/id_ed25519
 
+echo "----- Teste TCP (porta 22) antes do ssh-keyscan -----"
+TCP_STATUS="unknown"
+if command -v nc >/dev/null 2>&1; then
+  if nc -zw5 "${DEPLOY_HOST}" 22 >/dev/null 2>&1; then
+    TCP_STATUS="open"
+  else
+    TCP_STATUS="closed_or_filtered (nc)"
+  fi
+elif timeout 5 bash -c "echo >/dev/tcp/${DEPLOY_HOST}/22" 2>/dev/null; then
+  TCP_STATUS="open"
+else
+  TCP_STATUS="closed_or_filtered (bash /dev/tcp)"
+fi
+echo "TCP 22 para DEPLOY_HOST: ${TCP_STATUS}"
+
+if [[ "$TCP_STATUS" == closed_or_filtered* ]]; then
+  echo "::error::Porta 22 do DEPLOY_HOST está bloqueada (firewall DROP ou sem serviço SSH) — o runner do GitHub não consegue abrir TCP para o servidor. Abrir TCP 22 para conexões externas ou para as faixas de IP dos runners do GitHub."
+  exit 1
+fi
+echo "------------------------------------------------------"
+
 run_keyscan() {
   local extra=("$@")
   ssh-keyscan "${extra[@]}" -H -T 20 "${DEPLOY_HOST}" >"$KS_OUT" 2>/tmp/gha_keyscan.err
@@ -43,20 +64,17 @@ if run_keyscan; then
   echo "ssh-keyscan: host registrado em known_hosts."
 elif run_keyscan -4; then
   cat "$KS_OUT" >> ~/.ssh/known_hosts
-  echo "::notice::ssh-keyscan só funcionou com IPv4 (-4). Confira IPv6/rota ou use em DEPLOY_HOST o mesmo FQDN/IP que resolve para IPv4."
+  echo "::notice::ssh-keyscan só funcionou com IPv4 (-4). Confira IPv6 ou use IP direto em DEPLOY_HOST."
   echo "ssh-keyscan: host registrado em known_hosts (IPv4)."
 else
-  echo "::error::ssh-keyscan falhou para DEPLOY_HOST (porta 22 inacessível a partir do GitHub, timeout, ou DNS diferente do getent)."
-  echo "Saída stderr:"
-  cat /tmp/gha_keyscan.err || true
-  if grep -qi 'refused\|Connection refused' /tmp/gha_keyscan.err 2>/dev/null; then
-    echo "::notice::Possível causa: nada a escutar na porta 22 nesse destino, ou firewall a bloquear IPs dos runners do GitHub."
-  fi
-  if grep -qi 'timed out\|timeout\|No route' /tmp/gha_keyscan.err 2>/dev/null; then
-    echo "::notice::Possível causa: firewall/security group a bloquear SSH de fora; permitir TCP 22 de origens públicas (ou faixas documentadas do GitHub Actions)."
-  fi
-  if grep -qi 'getaddrinfo\|Name or service not known' /tmp/gha_keyscan.err 2>/dev/null; then
-    echo "::notice::Possível causa: nome em DEPLOY_HOST não resolve neste runner — confirme o secret e teste DNS público."
+  KS_BYTES="$(wc -c < "$KS_OUT" | tr -d ' ')"
+  KS_ERR_BYTES="$(wc -c < /tmp/gha_keyscan.err | tr -d ' ')"
+  echo "::error::ssh-keyscan falhou (stdout ${KS_BYTES} bytes; stderr ${KS_ERR_BYTES} bytes)."
+  if [ "${KS_ERR_BYTES}" -gt 0 ]; then
+    echo "Stderr do keyscan:"
+    cat /tmp/gha_keyscan.err
+  else
+    echo "::notice::Stderr vazio = timeout silencioso — firewall DROP na porta 22 a partir desta rede (GitHub Actions). Permitir TCP 22 de IPs externos (ou das faixas docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#ip-addresses)."
   fi
   exit 1
 fi

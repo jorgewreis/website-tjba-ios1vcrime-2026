@@ -40,6 +40,18 @@ jobs:
           DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
         run: bash .github/scripts/deploy-ssh-check.sh
 
+      - name: Garantir diretório destino (PROD)
+        env:
+          DEPLOY_USER: ${{ env.DEPLOY_USER_EFFECTIVE }}
+          DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
+          PROD_PATH: ${{ secrets.PROD_PATH }}
+        run: |
+          ssh -i ~/.ssh/id_ed25519 \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "mkdir -p \"${PROD_PATH}\" && echo \"Diretório OK: ${PROD_PATH}\""
+
       - name: Sync files to server (PROD)
         env:
           DEPLOY_USER: ${{ env.DEPLOY_USER_EFFECTIVE }}
@@ -51,6 +63,7 @@ jobs:
             --no-times --omit-dir-times \
             --no-perms --no-owner --no-group \
             --inplace \
+            --mkpath \
             --exclude ".git/" \
             --exclude ".github/" \
             --exclude ".env" \

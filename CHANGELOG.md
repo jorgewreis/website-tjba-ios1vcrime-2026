@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.18
+
+**Data:** 2026-04-01 21:53:49 | **Commit:** `85d9b0c` | **Tipo:** `minor`
+
+- feat: add directory creation step for DEV and PROD environments in deployment workflows
+
 ## V. 1.17
 
 **Data:** 2026-04-01 21:36:53 | **Commit:** `0794403` | **Tipo:** `minor`
@@ -3912,6 +3918,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
