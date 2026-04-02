@@ -1,0 +1,157 @@
+<?php
+declare(strict_types=1);
+
+header('Content-Type: text/html; charset=UTF-8');
+if (function_exists('mb_internal_encoding')) {
+    mb_internal_encoding('UTF-8');
+}
+
+require_once __DIR__ . '/../../helpers/Conection.php';
+require_once __DIR__ . '/../../services/ProdutividadeService.php';
+
+$connection = Conection::getInstance()->getConnection();
+$service = new ProdutividadeService($connection);
+$userId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
+
+$isGestao = false;
+if ($userId !== '') {
+    $stmtPerfis = $connection->prepare('SELECT DISTINCT UPPER(TRIM(perfil)) AS perfil FROM usuario_perfil WHERE usuario = ? AND perfil IS NOT NULL');
+    $stmtPerfis->execute([$userId]);
+    $perfis = $stmtPerfis->fetchAll(PDO::FETCH_COLUMN);
+    foreach ($perfis as $perfil) {
+        $p = strtoupper(trim((string) $perfil));
+        if ($p === 'ADMIN' || $p === 'CHEFIA' || $p === 'DIRETORA' || $p === 'MAGISTRADA') {
+            $isGestao = true;
+            break;
+        }
+    }
+}
+
+$form = [
+    'tipo_ato' => '',
+    'tipo_documento' => '',
+    'sistema_modulo' => '',
+    'pontos_por_ato' => '0,00',
+    'pontos_multiplicador' => '1,00',
+    'ativo' => '1',
+    'observacoes' => '',
+];
+$error = '';
+$success = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $form = [
+        'tipo_ato' => trim((string) ($_POST['tipo_ato'] ?? '')),
+        'tipo_documento' => trim((string) ($_POST['tipo_documento'] ?? '')),
+        'sistema_modulo' => trim((string) ($_POST['sistema_modulo'] ?? '')),
+        'pontos_por_ato' => trim((string) ($_POST['pontos_por_ato'] ?? '0')),
+        'pontos_multiplicador' => trim((string) ($_POST['pontos_multiplicador'] ?? '1')),
+        'ativo' => isset($_POST['ativo']) ? '1' : '0',
+        'observacoes' => trim((string) ($_POST['observacoes'] ?? '')),
+    ];
+
+    try {
+        if (!$isGestao) {
+            throw new InvalidArgumentException('Acesso permitido apenas para perfis de gestão.');
+        }
+        $id = $service->createRule($userId, $form);
+        $success = 'Regra criada com sucesso.';
+        $form = [
+            'tipo_ato' => '',
+            'tipo_documento' => '',
+            'sistema_modulo' => '',
+            'pontos_por_ato' => '0,00',
+            'pontos_multiplicador' => '1,00',
+            'ativo' => '1',
+            'observacoes' => '',
+        ];
+        $_SESSION['produtividade_regras_flash_success'] = $success;
+        header('Location: /frame.php?page=produtividaderegrasedit&id=' . urlencode($id));
+        exit;
+    } catch (Throwable $e) {
+        $error = $e->getMessage();
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Produtividade - Nova regra</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <?php include __DIR__ . '/_internal_head_styles.php'; ?>
+        <?php include __DIR__ . '/_toast_script.php'; ?>
+    </head>
+<body class="page-internal">
+    <div class="spacing-top-page"></div>
+    <div class="header-page">
+        <div class="location">
+            <span class="all">Interno - Produtividade - Regras -</span>
+            <span class="specific">Cadastro</span>
+        </div>
+        <h1 class="title-page">Nova regra de produtividade</h1>
+        <p class="description-page">Defina o tipo de movimentação e a pontuação aplicada por ato.</p>
+    </div>
+
+    <div class="container-full card-page">
+        <form method="post">
+            <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+                <h2>Informações da regra</h2>
+                <button type="button" class="btn btn-secondary height-md" data-nav-href="/frame.php?page=produtividaderegras">Voltar</button>
+            </div>
+
+            <?php if ($error !== ''): ?>
+            <div class="display-flex row row-full padding-x-md padding-y-sm border-bottom">
+                <span class="status status-cancelled"><?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?></span>
+            </div>
+            <?php endif; ?>
+
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
+                <div class="col">
+                    <label for="tipo_ato">Tipo de ato <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <input type="text" id="tipo_ato" name="tipo_ato" class="width-500 height-md white" value="<?php echo htmlspecialchars($form['tipo_ato'], ENT_QUOTES); ?>" required>
+                </div>
+                <div class="col">
+                    <label for="tipo_documento">Tipo de documento</label>
+                    <input type="text" id="tipo_documento" name="tipo_documento" class="width-400 height-md white" value="<?php echo htmlspecialchars($form['tipo_documento'], ENT_QUOTES); ?>">
+                </div>
+                <div class="col">
+                    <label for="sistema_modulo">Sistema/módulo</label>
+                    <input type="text" id="sistema_modulo" name="sistema_modulo" class="width-300 height-md white" value="<?php echo htmlspecialchars($form['sistema_modulo'], ENT_QUOTES); ?>">
+                </div>
+            </div>
+
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
+                <div class="col">
+                    <label for="pontos_por_ato">Pontos por ato <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <input type="text" id="pontos_por_ato" name="pontos_por_ato" class="width-200 height-md white" value="<?php echo htmlspecialchars($form['pontos_por_ato'], ENT_QUOTES); ?>" required>
+                </div>
+                <div class="col">
+                    <label for="pontos_multiplicador">Multiplicador <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <input type="text" id="pontos_multiplicador" name="pontos_multiplicador" class="width-200 height-md white" value="<?php echo htmlspecialchars($form['pontos_multiplicador'], ENT_QUOTES); ?>" required>
+                </div>
+                <div class="col">
+                    <label class="inline" style="margin-top:30px;">
+                        <input type="checkbox" name="ativo" value="1"<?php echo $form['ativo'] === '1' ? ' checked' : ''; ?>>
+                        Regra ativa
+                    </label>
+                </div>
+            </div>
+
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
+                <div class="col col-full">
+                    <label for="observacoes">Observações</label>
+                    <textarea id="observacoes" name="observacoes" class="width-1200 white" rows="4"><?php echo htmlspecialchars($form['observacoes'], ENT_QUOTES); ?></textarea>
+                </div>
+            </div>
+
+            <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
+                <button type="button" class="btn btn-secondary height-md" data-nav-href="/frame.php?page=produtividaderegras">Cancelar</button>
+                <button type="submit" class="btn btn-primary height-md" <?php echo $isGestao ? '' : 'disabled'; ?>>Salvar regra</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
+

@@ -73,7 +73,10 @@ final class PageAccessRegistry
             'cartasrecebidasedit' => $areaCartorio,
             'cartasrecebidascreate' => $areaCartorio,
             'cartasrecebidasrules' => $areaCartorio,
-            'produtividade' => $areaCartorio,
+            'produtividade' => ['kind' => 'all_internal'],
+            'produtividaderegras' => ['kind' => 'gestao'],
+            'produtividaderegrascreate' => ['kind' => 'gestao'],
+            'produtividaderegrasedit' => ['kind' => 'gestao'],
 
             'oficiosgabinete' => $areaGabinete,
             'oficiosgabineteedit' => $areaGabinete,

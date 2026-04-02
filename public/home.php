@@ -545,7 +545,8 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                 section: 'Admin',
                 items: [
                     { icon: 'fi fi-rs-id-badge', label: 'Usuários', target: 'usuarioslist', allowedPerfis: ['ADMIN'] },
-                    { icon: 'fi fi-rs-calendar', label: 'Feriados', target: 'feriadoslist', allowedPerfis: ['ADMIN', 'CHEFIA', 'DIRETORA'] }
+                    { icon: 'fi fi-rs-calendar', label: 'Feriados', target: 'feriadoslist', allowedPerfis: ['ADMIN', 'CHEFIA', 'DIRETORA'] },
+                    { icon: 'fi fi-rs-clock-up-arrow', label: 'Regras de Produtividade', target: 'produtividaderegras', allowedPerfis: ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'] }
                 ]
             }
         ];
