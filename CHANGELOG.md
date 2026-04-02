@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.11
+
+**Data:** 2026-04-01 21:18:01 | **Commit:** `4513bf4` | **Tipo:** `minor`
+
+- feat: add deployment host preparation step and refactor environment variable usage in workflows
+
 ## V. 1.10
 
 **Data:** 2026-04-01 21:14:31 | **Commit:** `0279ca1` | **Tipo:** `minor`
@@ -3870,6 +3876,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

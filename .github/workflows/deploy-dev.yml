@@ -20,6 +20,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Preparar DEPLOY_HOST (trim + DNS no runner)
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: bash .github/scripts/deploy-host-prepare.sh
+
       - name: Preflight (secrets obrigatórios)
         env:
           DEPLOY_KEY_B64: ${{ secrets.DEPLOY_KEY_B64 }}
@@ -31,13 +36,13 @@ jobs:
       - name: Setup SSH (decode + validar chave + keyscan)
         env:
           DEPLOY_KEY_B64: ${{ secrets.DEPLOY_KEY_B64 }}
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
         run: bash .github/scripts/deploy-ssh-setup.sh
 
       - name: SSH sanity check
         env:
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
         run: |
           set -e
           EXTRA=()
@@ -61,7 +66,7 @@ jobs:
       - name: Sync files to server (DEV)
         env:
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
           DEV_PATH: ${{ secrets.DEV_PATH }}
         run: |
           set -e
@@ -93,7 +98,7 @@ jobs:
           ssh -i ~/.ssh/id_ed25519 \
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=yes \
-            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" << 'EOF'
+            "${{ secrets.DEPLOY_USER }}@${{ env.DEPLOY_HOST_EFFECTIVE }}" << 'EOF'
             set -e
             cd "${{ secrets.DEV_PATH }}"
 
