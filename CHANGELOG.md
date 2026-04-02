@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.23
+
+**Data:** 2026-04-02 13:13:56 | **Commit:** `6a93841` | **Tipo:** `minor`
+
+- feat: enhance DataJud integration with new configuration options and improved error handling
+
 ## V. 1.22
 
 **Data:** 2026-04-02 13:04:44 | **Commit:** `ab781e2` | **Tipo:** `minor`
@@ -3954,6 +3960,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

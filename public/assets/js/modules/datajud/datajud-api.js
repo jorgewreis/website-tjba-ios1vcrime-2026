@@ -640,11 +640,23 @@
 
                             var classe = processo.classe;
 
+                            var sigiloMsg = body && body.sigilo_mensagem ? String(body.sigilo_mensagem) : '';
+
                             if (hasClasseUtil(classe)) {
 
                                 DC.finishSuccess(session, domLatest, classe);
 
                                 postSyncClasse(rawDigits, classe);
+
+                                if (body && body.sigilo_restrito && sigiloMsg) {
+
+                                    showToastSync({ type: 'info', message: sigiloMsg });
+
+                                }
+
+                            } else if (body && body.sigilo_restrito) {
+
+                                DC.finishFailure(session, domLatest, 'sigilo', { message: sigiloMsg || 'Processo com restrição de sigilo na base pública do DataJud.' });
 
                             } else {
 

@@ -29,8 +29,24 @@ if (is_file($envPath) && (getenv('DATAJUD_API_KEY') === false || getenv('DATAJUD
     }
 }
 
+$defaultAlias = $_ENV['DATAJUD_DEFAULT_ALIAS'] ?? getenv('DATAJUD_DEFAULT_ALIAS') ?: '';
+$defaultAlias = trim((string) $defaultAlias);
+if ($defaultAlias === '') {
+    $defaultAlias = 'tjba';
+}
+
+$baseUrl = $_ENV['DATAJUD_BASE_URL'] ?? getenv('DATAJUD_BASE_URL') ?: '';
+$baseUrl = trim((string) $baseUrl);
+if ($baseUrl === '') {
+    $baseUrl = 'https://api-publica.datajud.cnj.jus.br';
+}
+
 return [
-    'endpoint' => 'https://api-publica.datajud.cnj.jus.br/api_publica_tjba/_search',
+    'base_url' => $baseUrl,
+    'default_alias' => $defaultAlias,
+    /** @deprecated Mantido para compat.: URL completa antiga; o serviço deriva base_url se necessário */
+    'endpoint' => $baseUrl . '/api_publica_' . $defaultAlias . '/_search',
     'api_key' => $_ENV['DATAJUD_API_KEY'] ?? getenv('DATAJUD_API_KEY') ?: '',
     'timeout' => 30,
+    'connect_timeout' => 10,
 ];

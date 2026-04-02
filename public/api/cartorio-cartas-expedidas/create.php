@@ -10,7 +10,7 @@ require_once $basePath . '/app/services/DataJudService.php';
 require_once $basePath . '/app/services/CartasExpedidasService.php';
 
 $connection = Conection::getInstance()->getConnection();
-$dataJudConfig = require $basePath . '/api/datajud/config.php';
+$dataJudConfig = require $basePath . '/public/api/datajud/config.php';
 $dataJudService = new DataJudService($dataJudConfig);
 
 $payload = file_get_contents('php://input') ?: '';

@@ -363,7 +363,7 @@
             var fallbackText = FALLBACK_CLASSE;
             var statusColor = 'var(--color-gray-700)';
 
-            if (kind === 'partial' || kind === 'empty') {
+            if (kind === 'partial' || kind === 'empty' || kind === 'sigilo') {
                 if (global.__datajudBancoPrefill && global.__datajudBancoPrefill.display) {
                     classeInput.value = global.__datajudBancoPrefill.display;
                     classeInput.readOnly = true;
@@ -377,7 +377,10 @@
                     setStatusMessage(statusElement, '*Classe', 'var(--color-gray-700)');
                 } else {
                     classeInput.value = fallbackText;
-                    setStatusMessage(statusElement, MSG_EMPTY_CLASSE, statusColor);
+                    var statusMsg = (kind === 'sigilo' && detail && detail.message)
+                        ? String(detail.message)
+                        : MSG_EMPTY_CLASSE;
+                    setStatusMessage(statusElement, statusMsg, statusColor);
                     if (classeCodigoField) {
                         classeCodigoField.value = '';
                     }
@@ -421,6 +424,8 @@
                 showDataToastError(detail && detail.message ? detail.message : MSG_HTTP_GENERIC);
             } else if (kind === 'network') {
                 showDataToastError(MSG_HTTP_GENERIC);
+            } else if (kind === 'sigilo') {
+                showDataToast(detail && detail.message ? detail.message : 'Processo com restrição de sigilo na base pública do DataJud.', 'info');
             } else if (kind === 'partial') {
                 showDataToastError(MSG_EMPTY_CLASSE);
             }
