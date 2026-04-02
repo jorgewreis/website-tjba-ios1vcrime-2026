@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.22
+
+**Data:** 2026-04-02 13:04:44 | **Commit:** `ab781e2` | **Tipo:** `minor`
+
+- feat: adicionar função para resetar campos do DataJud e integrar com a limpeza de formulário
+
 ## V. 1.21
 
 **Data:** 2026-04-02 12:33:01 | **Commit:** `6f4fd0d` | **Tipo:** `minor`
@@ -3948,6 +3954,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

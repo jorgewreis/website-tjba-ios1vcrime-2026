@@ -195,9 +195,18 @@
 
             if (processInput) { processInput.value = ''; }
             if (typeSelect) { typeSelect.selectedIndex = 0; }
-            if (classInput) { classInput.value = ''; }
-            if (hiddenClassCode) { hiddenClassCode.value = ''; }
-            if (hiddenClassDescription) { hiddenClassDescription.value = ''; }
+            if (global.DataJudCycle && typeof global.DataJudCycle.resetInputs === 'function') {
+                global.DataJudCycle.resetInputs({
+                    processInput: processInput || null,
+                    classeInput: classInput || null,
+                    classeCodigo: hiddenClassCode || null,
+                    classeDescricao: hiddenClassDescription || null
+                });
+            } else {
+                if (classInput) { classInput.value = ''; classInput.removeAttribute('data-datajud-initial'); }
+                if (hiddenClassCode) { hiddenClassCode.value = ''; }
+                if (hiddenClassDescription) { hiddenClassDescription.value = ''; }
+            }
 
             if (typeof config.onClear === 'function') {
                 config.onClear(ctx);

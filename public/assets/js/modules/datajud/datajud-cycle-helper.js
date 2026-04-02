@@ -104,6 +104,16 @@
         classeInput.style.removeProperty('background-color');
     }
 
+    function resetClasseFields(classeInput, classeCodigoField, classeDescricaoField) {
+        if (classeInput) {
+            clearClasseLoadingVisual(classeInput);
+            classeInput.value = '';
+            classeInput.removeAttribute('data-datajud-initial');
+        }
+        if (classeCodigoField) classeCodigoField.value = '';
+        if (classeDescricaoField) classeDescricaoField.value = '';
+    }
+
     function getClasseLoadingPlaceholder(attemptIndex) {
         var n = Number(attemptIndex);
         if (!n || n < 1 || n !== n) {
@@ -449,6 +459,20 @@
 
         clearSelectLoading: function (selectEl) {
             clearSelectLoadingVisual(selectEl);
+        },
+
+        /**
+         * Reseta campos ligados ao DataJud (processo/classe) em ações de limpar formulário.
+         * @param {{processInput?: HTMLElement, classeInput?: HTMLElement, classeCodigo?: HTMLElement, classeDescricao?: HTMLElement}} opts
+         */
+        resetInputs: function (opts) {
+            const o = opts || {};
+            if (o.processInput) {
+                o.processInput.value = '';
+                o.processInput.classList.remove('status-warning');
+                o.processInput.removeAttribute('aria-busy');
+            }
+            resetClasseFields(o.classeInput, o.classeCodigo, o.classeDescricao);
         }
     };
 })(typeof window !== 'undefined' ? window : this);
