@@ -158,14 +158,11 @@ final class ProdutividadeRegrasRepository
                 continue;
             }
 
-            $label = $tipoAto;
-            if ($tipoDoc !== '' && $modulo !== '') {
-                $label .= ' de ' . $tipoDoc . ' no ' . $modulo;
-            } elseif ($tipoDoc !== '') {
-                $label .= ' de ' . $tipoDoc;
-            } elseif ($modulo !== '') {
-                $label .= ' no ' . $modulo;
-            }
+            $label = implode(' - ', [
+                $tipoDoc !== '' ? $tipoDoc : 'Sem documento',
+                $tipoAto !== '' ? $tipoAto : 'Sem ato',
+                $modulo !== '' ? $modulo : 'Sem sistema',
+            ]);
             $out[] = [
                 'id' => (string) ($row['id'] ?? ''),
                 'label' => $label,

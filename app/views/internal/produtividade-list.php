@@ -151,6 +151,9 @@ $baseQuery = [
         <div class="display-flex row row-full padding-x-md padding-y-sm border-bottom">
             <div class="col col-full">
                 <div id="regra_sugestoes"></div>
+                <select id="regra_sugestoes_select" class="width-600 height-md white" style="display:none; margin-top:8px;">
+                    <option value="">Selecione uma opção da lista</option>
+                </select>
             </div>
         </div>
 

@@ -21,38 +21,53 @@
         var input = document.getElementById('regra_busca');
         var hidden = document.getElementById('regra_id');
         var list = document.getElementById('regra_sugestoes');
-        if (!input || !hidden || !list) {
+        var select = document.getElementById('regra_sugestoes_select');
+        if (!input || !hidden || !list || !select) {
             return;
+        }
+
+        function clearSelect() {
+            select.innerHTML = '';
+            var placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = 'Selecione uma opção da lista';
+            select.appendChild(placeholder);
+            select.value = '';
+            select.style.display = 'none';
         }
 
         var timer = null;
         function render(rows) {
             list.innerHTML = '';
+            clearSelect();
             if (!rows || rows.length === 0) {
-                var empty = document.createElement('button');
-                empty.type = 'button';
-                empty.className = 'btn btn-secondary-outline height-md';
-                empty.textContent = 'Nenhuma tarefa encontrada';
-                empty.disabled = true;
+                var empty = document.createElement('span');
+                empty.className = 'minor-info';
+                empty.textContent = 'Nenhuma regra ativa encontrada';
                 list.appendChild(empty);
                 return;
             }
             rows.forEach(function (row) {
-                var btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'btn btn-secondary-outline height-md';
-                btn.style.width = '100%';
-                btn.style.textAlign = 'left';
-                btn.textContent = row.label + ' | ' + row.pontos_por_ato + ' x ' + row.pontos_multiplicador;
-                btn.addEventListener('click', function () {
-                    hidden.value = row.id || '';
-                    input.value = row.label || '';
-                    list.innerHTML = '';
-                    syncCreateButtonState();
-                });
-                list.appendChild(btn);
+                var option = document.createElement('option');
+                option.value = row.id || '';
+                option.textContent = row.label || '';
+                select.appendChild(option);
             });
+            select.style.display = '';
         }
+
+        select.addEventListener('change', function () {
+            var selectedOption = select.options[select.selectedIndex];
+            var selectedId = selectedOption ? (selectedOption.value || '') : '';
+            hidden.value = selectedId;
+            if (selectedId === '') {
+                syncCreateButtonState();
+                return;
+            }
+            input.value = selectedOption.textContent || input.value;
+            list.innerHTML = '';
+            syncCreateButtonState();
+        });
 
         input.addEventListener('input', function () {
             hidden.value = '';
@@ -63,10 +78,11 @@
             }
             if (q.length < 2) {
                 list.innerHTML = '';
+                clearSelect();
                 return;
             }
             timer = setTimeout(function () {
-                fetch('/api/produtividade/regras/search.php?q=' + encodeURIComponent(q) + '&limit=8', {
+                fetch('/api/produtividade/regras/search.php?q=' + encodeURIComponent(q) + '&limit=30', {
                     credentials: 'same-origin'
                 })
                     .then(function (response) {
@@ -78,15 +94,19 @@
                         if (!result.ok) {
                             notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Falha ao buscar regras ativas.');
                             list.innerHTML = '';
+                            clearSelect();
                             return;
                         }
                         render((result.data && result.data.rows) ? result.data.rows : []);
                     })
                     .catch(function () {
                         list.innerHTML = '';
+                        clearSelect();
                     });
             }, 300);
         });
+
+        clearSelect();
     }
 
     function setupDatajudProcessModel() {
