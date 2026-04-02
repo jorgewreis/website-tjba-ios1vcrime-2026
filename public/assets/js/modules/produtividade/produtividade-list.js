@@ -82,7 +82,7 @@
                 return;
             }
             timer = setTimeout(function () {
-                fetch('/api/produtividade/regras/search.php?q=' + encodeURIComponent(q) + '&limit=30', {
+                fetch('/api/produtividade/regras/search.php?q=' + encodeURIComponent(q) + '&limit=10', {
                     credentials: 'same-origin'
                 })
                     .then(function (response) {

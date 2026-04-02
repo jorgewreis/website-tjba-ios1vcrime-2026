@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.39.0001
+
+**Data:** 2026-04-02 19:34:51 | **Commit:** `393f4b0` | **Tipo:** `patch`
+
+- fix: correct order of context concatenation in ProdutividadeRegrasRepository and enhance task description display in produtividade-list view
+
 ## V. 1.39
 
 **Data:** 2026-04-02 18:46:01 | **Commit:** `afb66cd` | **Tipo:** `minor`
@@ -4080,6 +4086,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

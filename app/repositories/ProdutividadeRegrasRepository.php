@@ -151,7 +151,7 @@ final class ProdutividadeRegrasRepository
             $tipoAto = trim((string) ($row['tipo_ato'] ?? ''));
             $tipoDoc = trim((string) ($row['tipo_documento'] ?? ''));
             $modulo = trim((string) ($row['sistema_modulo'] ?? ''));
-            $fullContext = trim($tipoAto . ' ' . $tipoDoc . ' ' . $modulo);
+            $fullContext = trim($tipoDoc . ' ' . $tipoAto . ' ' . $modulo);
             $fullContextNorm = $this->normalizeForSearch($fullContext);
 
             if ($queryNorm !== '' && mb_strpos($fullContextNorm, $queryNorm, 0, 'UTF-8') === false) {

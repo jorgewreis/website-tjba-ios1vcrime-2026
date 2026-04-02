@@ -238,12 +238,30 @@ $baseQuery = [
             </div>
             <?php else: ?>
                 <?php foreach ($rows as $row): ?>
+                <?php
+                $tipoDoc = trim((string) ($row['tipo_documento'] ?? ''));
+                $tipoAto = trim((string) ($row['tipo_ato'] ?? ''));
+                $sistemaModulo = trim((string) ($row['sistema_modulo'] ?? ''));
+                $descricaoTarefa = implode(' - ', [
+                    $tipoDoc !== '' ? $tipoDoc : 'Sem documento',
+                    $tipoAto !== '' ? $tipoAto : 'Sem ato',
+                    $sistemaModulo !== '' ? $sistemaModulo : 'Sem sistema',
+                ]);
+                ?>
                 <div class="display-flex col col-full register border-bottom">
                     <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                         <div class="display-flex row row-fit justify-start gap-y-md flex-wrap">
+                            <div class="col width-300">
+                                <span class="minor-info">Data/hora</span>
+                                <span class="major-info"><?php echo htmlspecialchars(date('d/m/Y H:i', strtotime((string) ($row['data_hora_ato'] ?? 'now'))), ENT_QUOTES); ?></span>
+                            </div>
                             <div class="col width-500">
-                                <span class="minor-info">Regra</span>
-                                <span class="major-info"><?php echo htmlspecialchars((string) ($row['tipo_ato'] ?? '—'), ENT_QUOTES); ?></span>
+                                <span class="minor-info">Processo</span>
+                                <span class="major-info"><?php echo htmlspecialchars((string) ($row['numero_processo'] ?? '—'), ENT_QUOTES); ?></span>
+                            </div>
+                            <div class="col width-500">
+                                <span class="minor-info">Descrição da tarefa</span>
+                                <span class="major-info"><?php echo htmlspecialchars($descricaoTarefa, ENT_QUOTES); ?></span>
                             </div>
                             <div class="col width-200">
                                 <span class="minor-info">Qtd</span>
@@ -254,20 +272,11 @@ $baseQuery = [
                                 <span class="major-info"><?php echo number_format((float) ($row['pontos_calculados'] ?? 0), 2, ',', '.'); ?></span>
                             </div>
                             <div class="col width-500">
-                                <span class="minor-info">Processo</span>
-                                <span class="major-info"><?php echo htmlspecialchars((string) ($row['numero_processo'] ?? '—'), ENT_QUOTES); ?></span>
-                            </div>
-                            <?php if ($isGestao): ?>
-                            <div class="col width-500">
                                 <span class="minor-info">Usuário</span>
                                 <span class="major-info"><?php echo htmlspecialchars((string) ($row['usuario_nome'] ?? $row['usuario_id'] ?? ''), ENT_QUOTES); ?></span>
                             </div>
-                            <?php endif; ?>
                         </div>
                         <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                            <span class="status <?php echo (string) ($row['status'] ?? '') === 'anulado' ? 'status-cancelled' : 'status-success'; ?> padding-x-lg">
-                                <?php echo (string) ($row['status'] ?? '') === 'anulado' ? 'Anulado' : 'Ativo'; ?>
-                            </span>
                             <?php if ((string) ($row['status'] ?? '') === 'ativo' && (string) ($row['tipo_lancamento'] ?? '') === 'manual'): ?>
                             <button type="button" class="btn btn-danger-outline height-md" data-anular-id="<?php echo htmlspecialchars((string) ($row['id'] ?? ''), ENT_QUOTES); ?>">Anular</button>
                             <?php endif; ?>
