@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.31
+
+**Data:** 2026-04-02 16:00:15 | **Commit:** `4e46167` | **Tipo:** `minor`
+
+- feat: implement database accessibility check in login form
+
 ## V. 1.30
 
 **Data:** 2026-04-02 15:54:01 | **Commit:** `add96f1` | **Tipo:** `minor`
@@ -4002,6 +4008,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

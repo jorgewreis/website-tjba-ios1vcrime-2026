@@ -11,6 +11,15 @@ if (Security::isAuthenticated()) {
 }
 
 $csrfToken = Security::generateCSRFToken();
+
+// Verifica se o banco de dados está acessível
+$_sistemaOnline = false;
+try {
+    Conection::getInstance()->getConnection();
+    $_sistemaOnline = true;
+} catch (Throwable $_e) {
+    error_log('login-form DB check: ' . $_e->getMessage());
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -55,11 +64,16 @@ $csrfToken = Security::generateCSRFToken();
 <body>
 
     <div class="title-page" style="margin-top: 30px;">
-        <span class="title">Bem vindo</span>
-        <span class="info-title">Sistema online: porque filas são coisa do passado</span>
+        <?php if ($_sistemaOnline): ?>
+            <span class="title">Bem vindo</span>
+            <span class="info-title">Sistema online: porque filas são coisa do passado</span>
+        <?php else: ?>
+            <span class="title" style="color: var(--color-danger);">Ops...</span>
+            <span class="info-title">Sistema offline no momento. Enquanto isso, as filas agradecem.</span>
+        <?php endif; ?>
     </div>
 
-    <form class="form-login" id="loginForm">
+    <form class="form-login" id="loginForm" <?php if (!$_sistemaOnline): ?>aria-disabled="true"<?php endif; ?>>
         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
         <div class="display-flex row row-full justify-start align-center padding-x-lg padding-y-md">
             <div class="col">
@@ -222,6 +236,22 @@ $csrfToken = Security::generateCSRFToken();
             });
         });
     </script>
+
+    <?php if (!$_sistemaOnline): ?>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var form = document.getElementById('loginForm');
+            if (!form) return;
+            // Desabilita todos os campos e o botão de submit
+            form.querySelectorAll('input, select, button[type="submit"]').forEach(function (el) {
+                el.disabled = true;
+            });
+            // Substitui o botão de entrar por aviso
+            var btn = form.querySelector('button[type="submit"]');
+            if (btn) btn.textContent = 'Sistema indisponível';
+        });
+    </script>
+    <?php endif; ?>
 
 </body>
 </html>
