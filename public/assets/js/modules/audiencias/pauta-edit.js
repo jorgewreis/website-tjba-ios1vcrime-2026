@@ -180,7 +180,7 @@
 
         var novo = document.createElement('option');
         novo.value = '__novo__';
-        novo.textContent = 'Cadastrar novo: ' + nomeDigitado;
+        novo.textContent = 'Outro nome (digite abaixo)';
         select.appendChild(novo);
 
         select.dataset.mode = 'people';

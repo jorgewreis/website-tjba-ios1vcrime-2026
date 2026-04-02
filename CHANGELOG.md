@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.34.0001
+
+**Data:** 2026-04-02 16:46:20 | **Commit:** `1912f4e` | **Tipo:** `patch`
+
+- fix: update option text for new entry in pauta-edit.js to improve clarity
+
 ## V. 1.34
 
 **Data:** 2026-04-02 16:40:56 | **Commit:** `cf9a1ac` | **Tipo:** `minor`
@@ -4032,6 +4038,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
