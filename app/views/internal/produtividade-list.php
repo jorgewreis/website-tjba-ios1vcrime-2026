@@ -122,17 +122,18 @@ $baseQuery = [
 
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md align-end">
             <div class="col">
-                <label for="numero_processo">Processo</label>
-                <input type="text" id="numero_processo" class="width-400 height-md white" placeholder="0000000-00.0000.0.00.0000">
+                <label for="filter-processo">Processo</label>
+                <input type="text" id="filter-processo" class="width-400 height-md white" placeholder="0000000-00.0000.0.00.0000">
             </div>
             <div class="col">
-                <label for="classe_processo">Classe</label>
-                <input type="text" id="classe_processo" class="width-500 height-md white" placeholder="Classe do processo">
+                <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
+                <input type="text" id="filter-classe" class="width-500 height-md white" data-datajud-related="true" placeholder="Preenchida automaticamente pelo DataJud" readonly>
             </div>
             <div class="col">
                 <label for="regra_busca">Tarefa<span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="hidden" id="regra_id" value="">
-                <input type="text" id="regra_busca" class="width-600 height-md white" placeholder="Ex.: 0001- Expedição de Mandado de Prisão no BNMP">
+                <input type="text" id="regra_busca" class="width-700 height-md white" placeholder="Ex.: 0001- Expedição de Mandado de Prisão no BNMP">
+                <span class="minor-info">Selecione uma opção para habilitar o cadastro.</span>
             </div>
             <div class="col">
                 <label for="quantidade">Qtd <span class="label-hint-obrigatorio">*</span></label>
@@ -143,9 +144,11 @@ $baseQuery = [
                 <input type="text" id="observacoes" class="width-400 height-md white" placeholder="Detalhes relevantes">
             </div>
             <div class="col">
-                <button type="button" class="btn btn-primary height-md" id="salvar-lancamento-manual">Cadastrar</button>
+                <button type="button" class="btn btn-primary height-md" id="salvar-lancamento-manual" disabled>Cadastrar</button>
             </div>
         </div>
+        <input type="hidden" id="hidden-classe-codigo" value="">
+        <input type="hidden" id="hidden-classe-descricao" value="">
         <div class="display-flex row row-full padding-x-md padding-y-sm border-bottom">
             <div class="col col-full">
                 <div id="regra_sugestoes"></div>
@@ -285,6 +288,7 @@ $baseQuery = [
         <?php endif; ?>
     </div>
 
+    <?php include __DIR__ . '/_datajud_scripts.php'; ?>
     <script src="/assets/js/modules/produtividade/produtividade-list.js"></script>
 </body>
 </html>

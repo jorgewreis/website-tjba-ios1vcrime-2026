@@ -1,6 +1,12 @@
 (function () {
     'use strict';
 
+    function syncCreateButtonState() {
+        if (typeof window.__produtividadeSyncCreateButtonState === 'function') {
+            window.__produtividadeSyncCreateButtonState();
+        }
+    }
+
     function notify(type, title, message) {
         if (typeof window.showToast === 'function') {
             window.showToast({ type: type, title: title, message: message });
@@ -42,6 +48,7 @@
                     hidden.value = row.id || '';
                     input.value = row.label || '';
                     list.innerHTML = '';
+                    syncCreateButtonState();
                 });
                 list.appendChild(btn);
             });
@@ -49,6 +56,7 @@
 
         input.addEventListener('input', function () {
             hidden.value = '';
+            syncCreateButtonState();
             var q = input.value.trim();
             if (timer) {
                 clearTimeout(timer);
@@ -72,37 +80,60 @@
         });
     }
 
-    function setupClasseByProcesso() {
-        var processo = document.getElementById('numero_processo');
-        var classe = document.getElementById('classe_processo');
+    function setupDatajudProcessModel() {
+        var processo = document.getElementById('filter-processo');
+        var classe = document.getElementById('filter-classe');
         if (!processo || !classe) {
+            return;
+        }
+        if (window.App && App.CartorioCreateBootstrap && typeof App.CartorioCreateBootstrap.bindClasseResetOnShortProcess === 'function') {
+            App.CartorioCreateBootstrap.bindClasseResetOnShortProcess({
+                processInputId: 'filter-processo',
+                classeFieldId: 'filter-classe',
+                codigoFieldId: 'hidden-classe-codigo',
+                descricaoFieldId: 'hidden-classe-descricao'
+            });
+        }
+    }
+
+    function setupCnjValidation() {
+        var processo = document.getElementById('filter-processo');
+        if (!processo) {
             return;
         }
 
         processo.addEventListener('blur', function () {
-            var digits = (processo.value || '').replace(/\D/g, '');
-            if (digits.length !== 20) {
+            var valor = (processo.value || '').trim();
+            if (valor === '') {
                 return;
             }
-            fetch('/api/datajud/search-processo.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ numero: digits }),
-                credentials: 'same-origin'
-            })
-                .then(function (response) { return response.json(); })
-                .then(function (data) {
-                    var desc = '';
-                    if (data && data.data && data.data.classe) {
-                        desc = (data.data.classe.descricao || data.data.classe.codigo || '').trim();
-                    }
-                    if (desc !== '') {
-                        classe.value = desc;
-                    }
-                })
-                .catch(function () {
-                    // silencioso
+
+            // Reusa o validador padrão do projeto (CNJ + formatação).
+            if (window.App && App.CartorioCreateHelpers && typeof App.CartorioCreateHelpers.normalizeProcessValue === 'function') {
+                var normalized = App.CartorioCreateHelpers.normalizeProcessValue(valor, {
+                    inputId: 'filter-processo',
+                    feedback: function (message, type) {
+                        notify(type || 'error', 'Erro', message);
+                    },
+                    requiredMessage: 'Informe o número do processo.',
+                    invalidMessage: 'O número do processo está incompleto ou inválido (20 dígitos).'
                 });
+                if (!normalized.ok) {
+                    processo.value = '';
+                    return;
+                }
+                processo.value = normalized.value;
+                return;
+            }
+
+            if (typeof window.normalizeAndValidateCNJValue === 'function') {
+                var result = window.normalizeAndValidateCNJValue(valor, { toastOnInvalid: true });
+                if (!result.ok) {
+                    processo.value = '';
+                    return;
+                }
+                processo.value = result.formatted;
+            }
         });
     }
 
@@ -113,16 +144,40 @@
         }
 
         btn.addEventListener('click', function () {
+            var processoInput = document.getElementById('filter-processo');
+            if (processoInput && typeof processoInput.blur === 'function') {
+                processoInput.blur();
+            }
             var regraId = (document.getElementById('regra_id') || {}).value || '';
             var quantidade = (document.getElementById('quantidade') || {}).value || '';
-            var numeroProcesso = (document.getElementById('numero_processo') || {}).value || '';
-            var classeProcesso = (document.getElementById('classe_processo') || {}).value || '';
-            var dataHoraAto = (document.getElementById('data_hora_ato') || {}).value || '';
+            var numeroProcesso = (document.getElementById('filter-processo') || {}).value || '';
+            var classeProcesso = (document.getElementById('filter-classe') || {}).value || '';
             var observacoes = (document.getElementById('observacoes') || {}).value || '';
+            var classeDescricao = (document.getElementById('hidden-classe-descricao') || {}).value || '';
 
             if (regraId.trim() === '') {
                 notify('error', 'Erro', 'Selecione uma regra válida.');
                 return;
+            }
+
+            if (classeProcesso === 'Aguarde...') {
+                notify('error', 'Erro', 'Aguarde a consulta ao DataJud terminar antes de cadastrar.');
+                return;
+            }
+
+            if (numeroProcesso.trim() !== '' && window.App && App.CartorioCreateHelpers && typeof App.CartorioCreateHelpers.normalizeProcessValue === 'function') {
+                var normalized = App.CartorioCreateHelpers.normalizeProcessValue(numeroProcesso, {
+                    inputId: 'filter-processo',
+                    feedback: function (message, type) {
+                        notify(type || 'error', 'Erro', message);
+                    },
+                    requiredMessage: 'Informe o número do processo.',
+                    invalidMessage: 'O número do processo está incompleto ou inválido (20 dígitos).'
+                });
+                if (!normalized.ok) {
+                    return;
+                }
+                numeroProcesso = normalized.value;
             }
 
             btn.disabled = true;
@@ -133,8 +188,7 @@
                     regra_id: regraId,
                     quantidade: quantidade,
                     numero_processo: numeroProcesso,
-                    classe_processo: classeProcesso,
-                    data_hora_ato: dataHoraAto,
+                    classe_processo: (classeDescricao || classeProcesso || '').trim(),
                     observacoes: observacoes
                 }),
                 credentials: 'same-origin'
@@ -156,7 +210,7 @@
                     notify('error', 'Erro', 'Erro de conexão ao registrar lançamento.');
                 })
                 .finally(function () {
-                    btn.disabled = false;
+                    syncCreateButtonState();
                 });
         });
     }
@@ -235,8 +289,36 @@
         }
     }
 
+    function setupCreateButtonGate() {
+        var btn = document.getElementById('salvar-lancamento-manual');
+        var regraIdInput = document.getElementById('regra_id');
+        var processoInput = document.getElementById('filter-processo');
+        var quantidadeInput = document.getElementById('quantidade');
+        if (!btn || !regraIdInput || !processoInput || !quantidadeInput) {
+            return;
+        }
+
+        window.__produtividadeSyncCreateButtonState = function () {
+            var hasRegra = (regraIdInput.value || '').trim() !== '';
+            var hasProcesso = (processoInput.value || '').trim() !== '';
+            var qtd = parseInt(String(quantidadeInput.value || '0'), 10);
+            var hasQuantidade = !isNaN(qtd) && qtd > 0;
+
+            btn.disabled = !(hasRegra && hasProcesso && hasQuantidade);
+        };
+
+        processoInput.addEventListener('input', syncCreateButtonState);
+        processoInput.addEventListener('blur', syncCreateButtonState);
+        quantidadeInput.addEventListener('input', syncCreateButtonState);
+        quantidadeInput.addEventListener('change', syncCreateButtonState);
+
+        syncCreateButtonState();
+    }
+
+    setupCreateButtonGate();
     setupRuleSearch();
-    setupClasseByProcesso();
+    setupDatajudProcessModel();
+    setupCnjValidation();
     setupCreateManual();
     setupAnulacao();
     setupFilterSubmit();

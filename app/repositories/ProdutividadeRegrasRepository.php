@@ -133,30 +133,58 @@ final class ProdutividadeRegrasRepository
     {
         $query = trim($query);
         $limit = max(1, min(20, $limit));
+        $tokens = array_values(array_filter(
+            preg_split('/\s+/u', mb_strtolower($query, 'UTF-8')) ?: [],
+            static function ($token): bool {
+                return trim((string) $token) !== '';
+            }
+        ));
+        $tokens = array_slice($tokens, 0, 6);
+
+        $contextExpr = 'CONCAT(
+            COALESCE(`tipo_ato`, \'\'),
+            \' de \',
+            COALESCE(NULLIF(`tipo_documento`, \'\'), \'documento\'),
+            \' no \',
+            COALESCE(NULLIF(`sistema_modulo`, \'\'), \'sistema não informado\')
+        )';
+
+        $tokenWhere = '';
+        $tokenParams = [];
+        if ($tokens !== []) {
+            $parts = [];
+            foreach ($tokens as $i => $token) {
+                $param = ':tok' . $i;
+                $parts[] = sprintf('%s COLLATE utf8mb4_general_ci LIKE %s', $contextExpr, $param);
+                $tokenParams[$param] = '%' . $token . '%';
+            }
+            $tokenWhere = ' OR (' . implode(' AND ', $parts) . ')';
+        }
+
         $sql = sprintf(
             'SELECT `id`, `tipo_ato`, `tipo_documento`, `sistema_modulo`, `pontos_por_ato`, `pontos_multiplicador`
              FROM `%s`
              WHERE `ativo` = 1
                AND (
                     :q = \'\'
-                    OR `tipo_ato` LIKE :likeQ
-                    OR `tipo_documento` LIKE :likeQ
-                    OR `sistema_modulo` LIKE :likeQ
-                    OR CONCAT(
-                        COALESCE(`tipo_ato`, \'\'),
-                        \' de \',
-                        COALESCE(NULLIF(`tipo_documento`, \'\'), \'documento\'),
-                        \' no \',
-                        COALESCE(NULLIF(`sistema_modulo`, \'\'), \'sistema não informado\')
-                    ) LIKE :likeQ
+                    OR `tipo_ato` COLLATE utf8mb4_general_ci LIKE :likeQ
+                    OR `tipo_documento` COLLATE utf8mb4_general_ci LIKE :likeQ
+                    OR `sistema_modulo` COLLATE utf8mb4_general_ci LIKE :likeQ
+                    OR %s COLLATE utf8mb4_general_ci LIKE :likeQ
+                    %s
                )
              ORDER BY `tipo_ato` ASC, `sistema_modulo` ASC, `tipo_documento` ASC
              LIMIT :limit',
-            $this->table
+            $this->table,
+            $contextExpr,
+            $tokenWhere
         );
         $statement = $this->connection->prepare($sql);
         $statement->bindValue(':q', $query);
         $statement->bindValue(':likeQ', '%' . $query . '%');
+        foreach ($tokenParams as $param => $value) {
+            $statement->bindValue($param, $value);
+        }
         $statement->bindValue(':limit', $limit, PDO::PARAM_INT);
         $statement->execute();
 

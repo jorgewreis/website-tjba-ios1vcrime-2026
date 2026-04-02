@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.37
+
+**Data:** 2026-04-02 18:31:46 | **Commit:** `59dbd7f` | **Tipo:** `minor`
+
+- feat: enhance Produtividade search functionality with improved token-based query handling and UI updates for process and class inputs
+
 ## V. 1.36
 
 **Data:** 2026-04-02 18:21:52 | **Commit:** `e683d0b` | **Tipo:** `minor`
@@ -4062,6 +4068,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
