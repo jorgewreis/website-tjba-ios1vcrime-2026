@@ -112,9 +112,7 @@ try {
         }, { capture: true });
     </script>
     <!-- Padrão: número do processo = cnj.js (correção/formatação CNJ no blur); DataJud = classe processual; nome de pessoa = text-formatter.js. -->
-    <script src="/assets/js/modules/datajud/cnj.js"></script>
-    <script src="/assets/js/modules/datajud/datajud-cycle-helper.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/datajud/datajud-cycle-helper.js') ?: time(); ?>"></script>
-    <script src="/assets/js/modules/datajud/datajud-api.js"></script>
+    <?php include __DIR__ . '/_datajud_scripts.php'; ?>
     <script>
         (function () {
             var processoInput = document.getElementById('filter-processo');

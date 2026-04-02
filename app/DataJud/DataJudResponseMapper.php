@@ -6,6 +6,9 @@ declare(strict_types=1);
  */
 final class DataJudResponseMapper
 {
+    /** Texto alinhado ao toast do front (`DataJudCycle.MSG_TOAST_SIGILO_PUBLICO`). */
+    private const MSG_TOAST_SIGILO_PUBLICO = 'Não há dados públicos completos no DataJud para este processo (sigilo ou indisponível na base). Informe a classe manualmente se necessário.';
+
     /**
      * Indica se o nível de sigilo deve ocultar dados sensíveis na resposta pública.
      */
@@ -57,9 +60,7 @@ final class DataJudResponseMapper
             'ultima_atualizacao' => $source['dataHoraUltimaAtualizacao'] ?? null,
             'id' => $source['id'] ?? null,
             'sigilo_restrito' => $redactSigilo,
-            'sigilo_mensagem' => $redactSigilo
-                ? 'Este processo possui restrição de sigilo na base pública do DataJud. Partes e movimentos não são exibidos; informe a classe manualmente se necessário.'
-                : null,
+            'sigilo_mensagem' => $redactSigilo ? self::MSG_TOAST_SIGILO_PUBLICO : null,
         ];
     }
 
@@ -89,7 +90,7 @@ final class DataJudResponseMapper
             'id' => null,
             'indisponivel_na_base_publica' => true,
             'sigilo_restrito' => false,
-            'sigilo_mensagem' => 'Não há registro público deste processo na consulta ao DataJud. Isso é comum em processos com sigilo ou ainda não publicados na base; informe a classe manualmente se necessário.',
+            'sigilo_mensagem' => self::MSG_TOAST_SIGILO_PUBLICO,
         ];
     }
 

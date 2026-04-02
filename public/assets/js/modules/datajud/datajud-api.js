@@ -643,15 +643,9 @@
 
                             var classe = processo.classe;
 
-                            var sigiloMsg = body && body.sigilo_mensagem ? String(body.sigilo_mensagem) : '';
-
                             if (indisp) {
 
-                                DC.finishFailure(session, domLatest, 'sigilo', {
-
-                                    message: sigiloMsg || 'Não há registro público deste processo na consulta ao DataJud. Informe a classe manualmente se necessário.',
-
-                                });
+                                DC.finishFailure(session, domLatest, 'sigilo', {});
 
                                 return;
 
@@ -663,15 +657,15 @@
 
                                 postSyncClasse(rawDigits, classe);
 
-                                if (body && body.sigilo_restrito && sigiloMsg) {
+                                if (body && body.sigilo_restrito) {
 
-                                    showToastSync({ type: 'info', message: sigiloMsg });
+                                    showToastSync({ type: 'info', message: DC.MSG_TOAST_SIGILO_PUBLICO });
 
                                 }
 
                             } else if (body && body.sigilo_restrito) {
 
-                                DC.finishFailure(session, domLatest, 'sigilo', { message: sigiloMsg || 'Processo com restrição de sigilo na base pública do DataJud.' });
+                                DC.finishFailure(session, domLatest, 'sigilo', {});
 
                             } else {
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.26
+
+**Data:** 2026-04-02 13:34:13 | **Commit:** `31db859` | **Tipo:** `minor`
+
+- refactor: centralize sigilo message handling in DataJudResponseMapper and JavaScript
+
 ## V. 1.25
 
 **Data:** 2026-04-02 13:22:11 | **Commit:** `dd251a5` | **Tipo:** `minor`
@@ -3972,6 +3978,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

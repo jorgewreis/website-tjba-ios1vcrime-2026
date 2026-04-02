@@ -328,9 +328,7 @@ if ($ultimaMov !== null) {
     </div>
 
     <?php if ($errorMessage === '' && $reu !== null && !$arquivado): ?>
-    <script src="/assets/js/modules/datajud/cnj.js"></script>
-    <script src="/assets/js/modules/datajud/datajud-cycle-helper.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/datajud/datajud-cycle-helper.js') ?: time(); ?>"></script>
-    <script src="/assets/js/modules/datajud/datajud-api.js"></script>
+    <?php include __DIR__ . '/_datajud_scripts.php'; ?>
     <?php endif; ?>
     <script>
         (function () {

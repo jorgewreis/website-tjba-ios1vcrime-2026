@@ -581,9 +581,7 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
         </div>
     </div>
 
-    <script src="/assets/js/modules/datajud/cnj.js"></script>
-    <script src="/assets/js/modules/datajud/datajud-cycle-helper.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/datajud/datajud-cycle-helper.js') ?: time(); ?>"></script>
-    <script src="/assets/js/modules/datajud/datajud-api.js"></script>
+    <?php include __DIR__ . '/_datajud_scripts.php'; ?>
     <script>
         (function () {
             const formaSel = document.getElementById('oficio-forma-cumprimento');

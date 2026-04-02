@@ -24,6 +24,11 @@
     var MSG_NO_RESULT = 'A consulta ao DataJud não retornou resultados a tempo. Tente novamente ou informe a classe manualmente.';
     var MSG_HTTP_GENERIC = 'Não foi possível concluir a consulta ao DataJud.';
     var MSG_EMPTY_CLASSE = 'Processo encontrado sem classe cadastrada no DataJud.';
+    /**
+     * Única mensagem de toast (info) para sigilo / sem registro público / dados parciais na API pública.
+     * Usada em todas as telas (Pauta, Cartório, Gabinete, etc.) para o mesmo cenário.
+     */
+    var MSG_TOAST_SIGILO_PUBLICO = 'Não há dados públicos completos no DataJud para este processo (sigilo ou indisponível na base). Informe a classe manualmente se necessário.';
     /** Curto para não estourar inputs estreitos (ex.: classe em formulários). */
     var PLACEHOLDER_LOADING = 'Consultando DataJud…';
     var FALLBACK_CLASSE = 'Classe não informada';
@@ -172,6 +177,7 @@
         MSG_NO_RESULT: MSG_NO_RESULT,
         MSG_HTTP_GENERIC: MSG_HTTP_GENERIC,
         MSG_EMPTY_CLASSE: MSG_EMPTY_CLASSE,
+        MSG_TOAST_SIGILO_PUBLICO: MSG_TOAST_SIGILO_PUBLICO,
         PLACEHOLDER_LOADING: PLACEHOLDER_LOADING,
         FALLBACK_CLASSE: FALLBACK_CLASSE,
         DATAJUD_SELECT_LOADING_VALUE: DATAJUD_SELECT_LOADING_VALUE,
@@ -422,7 +428,7 @@
             } else if (kind === 'network') {
                 showDataToastError(MSG_HTTP_GENERIC);
             } else if (kind === 'sigilo') {
-                showDataToast(detail && detail.message ? detail.message : 'Processo com restrição de sigilo na base pública do DataJud.', 'info');
+                showDataToast(MSG_TOAST_SIGILO_PUBLICO, 'info');
             } else if (kind === 'partial') {
                 showDataToastError(MSG_EMPTY_CLASSE);
             }

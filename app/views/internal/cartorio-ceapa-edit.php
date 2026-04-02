@@ -205,9 +205,7 @@ $podeExcluirTarefa = !$isEstagiarioEdit || $isCriadorTarefa;
     <?php if ($lockClasse): ?>
     <script>window.DATAJUD_SKIP_CLASSE_SYNC = true;</script>
     <?php endif; ?>
-    <script src="/assets/js/modules/datajud/cnj.js"></script>
-    <script src="/assets/js/modules/datajud/datajud-cycle-helper.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/datajud/datajud-cycle-helper.js') ?: time(); ?>"></script>
-    <script src="/assets/js/modules/datajud/datajud-api.js"></script>
+    <?php include __DIR__ . '/_datajud_scripts.php'; ?>
     <script>
         (function () {
             if (!window.App || !App.CeapaEdit || typeof App.CeapaEdit.initialize !== 'function') {

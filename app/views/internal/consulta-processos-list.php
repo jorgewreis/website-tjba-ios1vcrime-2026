@@ -80,7 +80,8 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
 
         <?php include __DIR__ . '/_toast_script.php'; ?>
         <?php include __DIR__ . '/_copy_process_script.php'; ?>
-        <script src="/assets/js/modules/datajud/cnj.js"></script>
+        <?php /* Apenas formatação CNJ no filtro; não inclui consulta de classe ao DataJud (lista local). */ ?>
+        <script src="/assets/js/modules/datajud/cnj.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/datajud/cnj.js') ?: time(); ?>"></script>
     </head>
 <body class="page-internal">
 
