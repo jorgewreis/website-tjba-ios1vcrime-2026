@@ -13,14 +13,21 @@ $connection = Conection::getInstance()->getConnection();
 $service = new ProdutividadeService($connection);
 $userId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
 $routePage = trim((string) ($_GET['page'] ?? 'produtividade'));
+$today = date('Y-m-d');
 
 $filters = [
     'status' => trim((string) ($_GET['status'] ?? 'ativo')),
     'tipo_lancamento' => trim((string) ($_GET['tipo_lancamento'] ?? 'manual')),
-    'data_inicio' => trim((string) ($_GET['data_inicio'] ?? '')),
-    'data_fim' => trim((string) ($_GET['data_fim'] ?? '')),
+    'data_inicio' => trim((string) ($_GET['data_inicio'] ?? $today)),
+    'data_fim' => trim((string) ($_GET['data_fim'] ?? $today)),
     'usuario_id' => trim((string) ($_GET['usuario_id'] ?? '')),
 ];
+if ($filters['data_inicio'] === '') {
+    $filters['data_inicio'] = $today;
+}
+if ($filters['data_fim'] === '') {
+    $filters['data_fim'] = $today;
+}
 $allowedPerPage = [10, 25, 50, 100];
 $itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 25;
 if (!in_array($itemsPerPage, $allowedPerPage, true)) {
@@ -37,15 +44,42 @@ $canSeeRegrasButton = false;
 $errors = [];
 $usuariosFiltro = [];
 $userPerfis = [];
+$canLoadLancamentos = true;
 
-try {
-    $result = $service->listLancamentos($userId, $filters, $itemsPerPage, $offset);
-    $rows = $result['rows'] ?? [];
-    $totalDocuments = (int) ($result['total'] ?? 0);
-    $sumPontos = (float) ($result['sum_pontos'] ?? 0);
-    $isGestao = (bool) ($result['is_gestao'] ?? false);
-} catch (Throwable $e) {
-    $errors[] = 'Erro ao carregar lançamentos: ' . $e->getMessage();
+if ($filters['data_inicio'] !== '' && $filters['data_fim'] !== '') {
+    $startDate = DateTime::createFromFormat('Y-m-d', $filters['data_inicio']);
+    $endDate = DateTime::createFromFormat('Y-m-d', $filters['data_fim']);
+
+    if (!$startDate || !$endDate) {
+        $errors[] = 'Período inválido. Use datas válidas para filtrar os lançamentos.';
+        $canLoadLancamentos = false;
+    } else {
+        $startDate->setTime(0, 0, 0);
+        $endDate->setTime(0, 0, 0);
+
+        if ($startDate > $endDate) {
+            $errors[] = 'A data inicial não pode ser maior que a data final.';
+            $canLoadLancamentos = false;
+        } else {
+            $intervalDays = (int) $startDate->diff($endDate)->days;
+            if ($intervalDays > 60) {
+                $errors[] = 'O intervalo entre data inicial e data final não pode ultrapassar 60 dias.';
+                $canLoadLancamentos = false;
+            }
+        }
+    }
+}
+
+if ($canLoadLancamentos) {
+    try {
+        $result = $service->listLancamentos($userId, $filters, $itemsPerPage, $offset);
+        $rows = $result['rows'] ?? [];
+        $totalDocuments = (int) ($result['total'] ?? 0);
+        $sumPontos = (float) ($result['sum_pontos'] ?? 0);
+        $isGestao = (bool) ($result['is_gestao'] ?? false);
+    } catch (Throwable $e) {
+        $errors[] = 'Erro ao carregar lançamentos: ' . $e->getMessage();
+    }
 }
 
 if ($userId !== '') {
@@ -68,6 +102,7 @@ if ($isGestao) {
 $totalPages = $totalDocuments > 0 ? (int) ceil($totalDocuments / $itemsPerPage) : 0;
 if ($totalPages > 0 && $currentPage > $totalPages) {
     $currentPage = $totalPages;
+    $offset = ($currentPage - 1) * $itemsPerPage;
 }
 
 $baseQuery = [
@@ -287,14 +322,17 @@ $baseQuery = [
             <?php endif; ?>
         <?php endif; ?>
 
-        <?php if ($errors === [] && $totalPages > 1): ?>
+        <?php if ($errors === [] && $totalDocuments > 0): ?>
         <div class="display-flex row row-full justify-end align-center gap-y-sm padding-x-md padding-y-md border-top">
-            <?php for ($p = 1; $p <= $totalPages; $p++): ?>
-                <?php $query = http_build_query(array_merge($baseQuery, ['page_number' => $p])); ?>
-                <button type="button" class="pagination-number<?php echo $p === $currentPage ? ' active' : ''; ?>" data-nav-href="/frame.php?<?php echo htmlspecialchars($query, ENT_QUOTES); ?>">
-                    <?php echo $p; ?>
-                </button>
-            <?php endfor; ?>
+            <span class="minor-info">Página <?php echo max(1, $currentPage); ?> de <?php echo max(1, $totalPages); ?></span>
+            <?php if ($totalPages > 1): ?>
+                <?php for ($p = 1; $p <= $totalPages; $p++): ?>
+                    <?php $query = http_build_query(array_merge($baseQuery, ['page_number' => $p])); ?>
+                    <button type="button" class="pagination-number<?php echo $p === $currentPage ? ' active' : ''; ?>" data-nav-href="/frame.php?<?php echo htmlspecialchars($query, ENT_QUOTES); ?>">
+                        <?php echo $p; ?>
+                    </button>
+                <?php endfor; ?>
+            <?php endif; ?>
         </div>
         <?php endif; ?>
     </div>

@@ -128,6 +128,10 @@ $baseQuery = ['page' => $routePage, 'q' => $q, 'ativo' => $ativo, 'items_per_pag
         <?php endforeach; ?>
 
         <?php if ($errors === []): ?>
+            <div class="display-flex row row-full padding-x-md padding-y-sm border-bottom gap-y-md">
+                <span class="status status-current padding-x-md">Total de regras: <?php echo $totalDocuments; ?></span>
+                <span class="minor-info">Página <?php echo max(1, $currentPage); ?> de <?php echo max(1, $totalPages); ?></span>
+            </div>
             <?php if ($rows === []): ?>
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom">
                 <span class="minor-info">Nenhuma regra encontrada.</span>
@@ -172,7 +176,7 @@ $baseQuery = ['page' => $routePage, 'q' => $q, 'ativo' => $ativo, 'items_per_pag
             <?php endif; ?>
         <?php endif; ?>
 
-        <?php if ($errors === [] && $totalPages > 1): ?>
+        <?php if ($errors === [] && $totalDocuments > 0 && $totalPages > 1): ?>
         <div class="display-flex row row-full justify-end align-center gap-y-sm padding-x-md padding-y-md border-top">
             <?php for ($p = 1; $p <= $totalPages; $p++): ?>
                 <?php $query = http_build_query(array_merge($baseQuery, ['page_number' => $p])); ?>
@@ -183,6 +187,18 @@ $baseQuery = ['page' => $routePage, 'q' => $q, 'ativo' => $ativo, 'items_per_pag
         </div>
         <?php endif; ?>
     </div>
+    <script>
+    (function () {
+        var form = document.querySelector('form[method="get"]');
+        var perPage = document.getElementById('items_per_page');
+        if (!form || !perPage) {
+            return;
+        }
+        perPage.addEventListener('change', function () {
+            form.submit();
+        });
+    })();
+    </script>
 </body>
 </html>
 

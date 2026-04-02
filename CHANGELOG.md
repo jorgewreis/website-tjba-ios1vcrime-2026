@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.40
+
+**Data:** 2026-04-02 19:44:25 | **Commit:** `877d07a` | **Tipo:** `minor`
+
+- feat: enhance Produtividade list and rules creation with date validation and improved user feedback
+
 ## V. 1.39.0001
 
 **Data:** 2026-04-02 19:34:51 | **Commit:** `393f4b0` | **Tipo:** `patch`
@@ -4086,6 +4092,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

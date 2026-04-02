@@ -34,7 +34,6 @@ $form = [
     'pontos_por_ato' => '0,00',
     'pontos_multiplicador' => '1,00',
     'ativo' => '1',
-    'observacoes' => '',
 ];
 $error = '';
 $success = '';
@@ -54,8 +53,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'sistema_modulo' => trim((string) ($_POST['sistema_modulo'] ?? '')),
         'pontos_por_ato' => trim((string) ($_POST['pontos_por_ato'] ?? '0')),
         'pontos_multiplicador' => trim((string) ($_POST['pontos_multiplicador'] ?? '1')),
-        'ativo' => isset($_POST['ativo']) ? '1' : '0',
-        'observacoes' => trim((string) ($_POST['observacoes'] ?? '')),
+        'ativo' => '1',
+        'observacoes' => '',
     ];
 
     try {
@@ -71,10 +70,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'pontos_por_ato' => '0,00',
             'pontos_multiplicador' => '1,00',
             'ativo' => '1',
-            'observacoes' => '',
         ];
         $_SESSION['produtividade_regras_flash_success'] = $success;
-        header('Location: /frame.php?page=produtividaderegrasedit&id=' . urlencode($id));
+        header('Location: /frame.php?page=produtividaderegras');
         exit;
     } catch (Throwable $e) {
         $error = $e->getMessage();
@@ -165,23 +163,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <label for="pontos_multiplicador">Multiplicador <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="text" id="pontos_multiplicador" name="pontos_multiplicador" class="width-200 height-md white" value="<?php echo htmlspecialchars($form['pontos_multiplicador'], ENT_QUOTES); ?>" required>
                 </div>
-                <div class="col">
-                    <label class="inline" style="margin-top:30px;">
-                        <input type="checkbox" name="ativo" value="1"<?php echo $form['ativo'] === '1' ? ' checked' : ''; ?>>
-                        Regra ativa
-                    </label>
-                </div>
-            </div>
-
-            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
-                <div class="col col-full">
-                    <label for="observacoes">Observações</label>
-                    <textarea id="observacoes" name="observacoes" class="width-1200 white" rows="4"><?php echo htmlspecialchars($form['observacoes'], ENT_QUOTES); ?></textarea>
-                </div>
             </div>
 
             <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
-                <button type="button" class="btn btn-secondary height-md" data-nav-href="/frame.php?page=produtividaderegras">Cancelar</button>
+                <button type="button" class="btn btn-secondary height-md" data-nav-href="/frame.php?page=produtividaderegras">Voltar</button>
                 <button type="submit" class="btn btn-primary height-md" <?php echo $isGestao ? '' : 'disabled'; ?>>Salvar regra</button>
             </div>
         </form>
@@ -195,6 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         function sync() {
             if (select.value === '__OUTRO__') {
+                select.style.display = 'none';
                 input.style.display = '';
                 input.required = true;
                 input.focus();
@@ -202,16 +188,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if (select.value === '') {
                 input.value = '';
+                select.style.display = '';
                 input.style.display = 'none';
                 input.required = false;
                 return;
             }
             input.value = select.value;
+            select.style.display = '';
             input.style.display = 'none';
             input.required = inputId === 'tipo_ato';
         }
 
         select.addEventListener('change', sync);
+        input.addEventListener('blur', function () {
+            if (select.style.display === 'none' && input.value.trim() === '') {
+                select.value = '';
+                sync();
+            }
+        });
         sync();
     }
 

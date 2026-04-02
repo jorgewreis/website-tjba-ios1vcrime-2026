@@ -310,9 +310,66 @@
         if (!form) {
             return;
         }
+        var dataInicio = document.getElementById('data_inicio');
+        var dataFim = document.getElementById('data_fim');
+
+        function parseDate(value) {
+            var parts = String(value || '').split('-');
+            if (parts.length !== 3) {
+                return null;
+            }
+            var y = parseInt(parts[0], 10);
+            var m = parseInt(parts[1], 10);
+            var d = parseInt(parts[2], 10);
+            if (isNaN(y) || isNaN(m) || isNaN(d)) {
+                return null;
+            }
+            return new Date(y, m - 1, d);
+        }
+
+        function isValidRange() {
+            if (!dataInicio || !dataFim) {
+                return true;
+            }
+            var ini = (dataInicio.value || '').trim();
+            var fim = (dataFim.value || '').trim();
+            if (ini === '' || fim === '') {
+                return true;
+            }
+
+            var dtIni = parseDate(ini);
+            var dtFim = parseDate(fim);
+            if (!dtIni || !dtFim) {
+                notify('error', 'Erro', 'Período inválido. Use datas válidas para filtrar.');
+                return false;
+            }
+
+            if (dtIni.getTime() > dtFim.getTime()) {
+                notify('error', 'Erro', 'A data inicial não pode ser maior que a data final.');
+                return false;
+            }
+
+            var diffMs = dtFim.getTime() - dtIni.getTime();
+            var diffDays = Math.floor(diffMs / 86400000);
+            if (diffDays > 60) {
+                notify('error', 'Erro', 'O intervalo entre data inicial e data final não pode ultrapassar 60 dias.');
+                return false;
+            }
+            return true;
+        }
+
+        form.addEventListener('submit', function (event) {
+            if (!isValidRange()) {
+                event.preventDefault();
+            }
+        });
+
         var perPage = document.getElementById('items_per_page');
         if (perPage) {
             perPage.addEventListener('change', function () {
+                if (!isValidRange()) {
+                    return;
+                }
                 form.submit();
             });
         }
