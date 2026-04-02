@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.14
+
+**Data:** 2026-04-01 21:25:05 | **Commit:** `1cab479` | **Tipo:** `minor`
+
+- refactor: remove deploy-host-prepare script and update workflow to streamline SSH target preparation
+
 ## V. 1.13
 
 **Data:** 2026-04-01 21:21:09 | **Commit:** `c4c875c` | **Tipo:** `minor`
@@ -3888,6 +3894,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

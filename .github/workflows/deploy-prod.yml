@@ -14,10 +14,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Preparar DEPLOY_HOST (trim + DNS no runner)
+      - name: Preparar alvo SSH (host + usuário, trim + DNS)
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-        run: bash .github/scripts/deploy-host-prepare.sh
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: bash .github/scripts/deploy-ssh-target-prepare.sh
 
       - name: Preflight (secrets obrigatórios)
         env:
@@ -35,13 +36,13 @@ jobs:
 
       - name: SSH sanity check
         env:
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_USER: ${{ env.DEPLOY_USER_EFFECTIVE }}
           DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
         run: bash .github/scripts/deploy-ssh-check.sh
 
       - name: Sync files to server (PROD)
         env:
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_USER: ${{ env.DEPLOY_USER_EFFECTIVE }}
           DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
           PROD_PATH: ${{ secrets.PROD_PATH }}
         run: |
@@ -69,7 +70,7 @@ jobs:
           ssh -i ~/.ssh/id_ed25519 \
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=yes \
-            "${{ secrets.DEPLOY_USER }}@${{ env.DEPLOY_HOST_EFFECTIVE }}" << 'EOF'
+            "${{ env.DEPLOY_USER_EFFECTIVE }}@${{ env.DEPLOY_HOST_EFFECTIVE }}" << 'EOF'
             set -e
             cd "${{ secrets.PROD_PATH }}"
 
