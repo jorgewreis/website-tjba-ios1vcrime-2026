@@ -22,6 +22,8 @@ if (isset($_COOKIE['tjba_1vcrime_remember_cpf'])) {
     <link rel="stylesheet" href="/assets/css/shared/reset.css">
     <link rel="stylesheet" href="/assets/css/shared/color.css">
     <link rel="stylesheet" href="/assets/css/shared/form.css">
+    <link rel="stylesheet" href="/assets/css/shared/table.css">
+    <link rel="stylesheet" href="/assets/css/shared/layout.css">
     <link rel="stylesheet" href="/assets/css/shared/login.css">
 
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
