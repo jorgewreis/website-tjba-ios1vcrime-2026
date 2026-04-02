@@ -162,6 +162,70 @@ final class ProdutividadeLancamentosRepository
     }
 
     /**
+     * @return list<array<string, mixed>>
+     */
+    public function fetchForExport(array $filters, int $limit = 5000): array
+    {
+        [$where, $params] = $this->buildFilter($filters);
+        $sql = sprintf(
+            'SELECT l.`id`, l.`usuario_id`, l.`regra_id`, l.`tipo_lancamento`, l.`status`, l.`quantidade`, l.`pontos_calculados`,
+                    l.`numero_processo`, l.`classe_processo`, l.`observacoes`, l.`data_hora_ato`, l.`criado_em`, l.`anulado_por`, l.`anulado_em`, l.`motivo_anulacao`,
+                    r.`tipo_ato`, r.`tipo_documento`, r.`sistema_modulo`,
+                    CONCAT(COALESCE(u.`nome`, \'\'), CASE WHEN COALESCE(u.`sobrenome`, \'\') = \'\' THEN \'\' ELSE CONCAT(\' \', u.`sobrenome`) END) AS usuario_nome
+             FROM `%s` l
+             LEFT JOIN `produtividade_regras` r ON r.`id` = l.`regra_id`
+             LEFT JOIN `usuarios` u ON u.`id_usuario` = l.`usuario_id`
+             %s
+             ORDER BY l.`data_hora_ato` DESC, l.`id` DESC
+             LIMIT :limit',
+            $this->table,
+            $where !== [] ? 'WHERE ' . implode(' AND ', $where) : ''
+        );
+        $statement = $this->connection->prepare($sql);
+        foreach ($params as $name => $value) {
+            $statement->bindValue($name, $value);
+        }
+        $statement->bindValue(':limit', max(1, min(10000, $limit)), PDO::PARAM_INT);
+        $statement->execute();
+
+        return $statement->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function fetchRanking(array $filters, int $limit = 200): array
+    {
+        [$where, $params] = $this->buildRankingFilter($filters);
+        $sql = sprintf(
+            'SELECT l.`usuario_id`,
+                    CONCAT(COALESCE(u.`nome`, \'\'), CASE WHEN COALESCE(u.`sobrenome`, \'\') = \'\' THEN \'\' ELSE CONCAT(\' \', u.`sobrenome`) END) AS usuario_nome,
+                    COALESCE(s.`nome`, \'Sem setor\') AS setor_nome,
+                    UPPER(COALESCE(s.`codigo_area`, \'\')) AS setor_codigo_area,
+                    COALESCE(SUM(l.`pontos_calculados`), 0) AS pontos_total,
+                    COUNT(*) AS total_lancamentos
+             FROM `%s` l
+             LEFT JOIN `usuarios` u ON u.`id_usuario` = l.`usuario_id`
+             LEFT JOIN `usuario_setor` us ON us.`usuario` = l.`usuario_id`
+             LEFT JOIN `setores` s ON s.`id_setor` = us.`setor`
+             %s
+             GROUP BY l.`usuario_id`, usuario_nome, setor_nome, setor_codigo_area
+             ORDER BY pontos_total DESC, usuario_nome ASC
+             LIMIT :limit',
+            $this->table,
+            $where !== [] ? 'WHERE ' . implode(' AND ', $where) : ''
+        );
+        $statement = $this->connection->prepare($sql);
+        foreach ($params as $name => $value) {
+            $statement->bindValue($name, $value);
+        }
+        $statement->bindValue(':limit', max(1, min(500, $limit)), PDO::PARAM_INT);
+        $statement->execute();
+
+        return $statement->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
      * @return array{0:list<string>,1:array<string,mixed>}
      */
     private function buildFilter(array $filters): array
@@ -197,6 +261,22 @@ final class ProdutividadeLancamentosRepository
         if ($dataFim !== '') {
             $where[] = 'l.`data_hora_ato` <= :data_fim';
             $params[':data_fim'] = $dataFim . ' 23:59:59';
+        }
+
+        return [$where, $params];
+    }
+
+    /**
+     * @return array{0:list<string>,1:array<string,mixed>}
+     */
+    private function buildRankingFilter(array $filters): array
+    {
+        [$where, $params] = $this->buildFilter($filters);
+
+        $setorCodigoArea = strtoupper(trim((string) ($filters['setor_codigo_area'] ?? '')));
+        if ($setorCodigoArea !== '') {
+            $where[] = 'UPPER(COALESCE(s.`codigo_area`, \'\')) = :setor_codigo_area';
+            $params[':setor_codigo_area'] = $setorCodigoArea;
         }
 
         return [$where, $params];

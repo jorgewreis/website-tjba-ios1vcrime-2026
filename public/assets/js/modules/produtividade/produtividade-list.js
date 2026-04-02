@@ -401,6 +401,88 @@
         syncCreateButtonState();
     }
 
+    function setupRanking() {
+        var section = document.getElementById('ranking-section');
+        var loading = document.getElementById('ranking-loading');
+        var content = document.getElementById('ranking-content');
+        if (!section || !loading || !content) {
+            return;
+        }
+
+        var url = section.getAttribute('data-ranking-url') || '';
+        if (!url) {
+            loading.textContent = 'Ranking indisponível.';
+            return;
+        }
+
+        function renderSetor(setor) {
+            var wrapper = document.createElement('div');
+            wrapper.className = 'display-flex col col-full border-bottom padding-y-sm';
+
+            var title = document.createElement('h3');
+            title.textContent = (setor && setor.setor_nome ? setor.setor_nome : 'Sem setor');
+            wrapper.appendChild(title);
+
+            var rows = (setor && Array.isArray(setor.rows)) ? setor.rows : [];
+            if (rows.length === 0) {
+                var empty = document.createElement('span');
+                empty.className = 'minor-info';
+                empty.textContent = 'Sem dados para este setor no período selecionado.';
+                wrapper.appendChild(empty);
+                return wrapper;
+            }
+
+            rows.forEach(function (item) {
+                var line = document.createElement('div');
+                line.className = 'display-flex row row-full justify-between padding-y-sm';
+
+                var left = document.createElement('span');
+                left.className = 'major-info';
+                left.textContent = '#' + String(item.posicao || '-') + ' - ' + (item.usuario_nome || 'Usuário');
+
+                var right = document.createElement('span');
+                right.className = 'major-info';
+                right.textContent = String(Number(item.pontos_total || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })) + ' pts';
+
+                line.appendChild(left);
+                line.appendChild(right);
+                wrapper.appendChild(line);
+            });
+
+            return wrapper;
+        }
+
+        fetch(url, { credentials: 'same-origin' })
+            .then(function (response) {
+                return response.json().then(function (data) {
+                    return { ok: response.ok, data: data };
+                });
+            })
+            .then(function (result) {
+                if (!result.ok) {
+                    notify('error', 'Erro', result.data && result.data.error ? result.data.error : 'Falha ao carregar ranking.');
+                    loading.textContent = 'Não foi possível carregar o ranking.';
+                    return;
+                }
+
+                var setores = result.data && Array.isArray(result.data.setores) ? result.data.setores : [];
+                content.innerHTML = '';
+                if (setores.length === 0) {
+                    loading.textContent = 'Sem dados de ranking para os filtros selecionados.';
+                    return;
+                }
+
+                setores.forEach(function (setor) {
+                    content.appendChild(renderSetor(setor));
+                });
+                loading.style.display = 'none';
+                content.style.display = '';
+            })
+            .catch(function () {
+                loading.textContent = 'Erro de conexão ao carregar ranking.';
+            });
+    }
+
     setupCreateButtonGate();
     setupRuleSearch();
     setupDatajudProcessModel();
@@ -408,5 +490,6 @@
     setupCreateManual();
     setupAnulacao();
     setupFilterSubmit();
+    setupRanking();
 })();
 

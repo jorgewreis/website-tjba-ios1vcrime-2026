@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.42
+
+**Data:** 2026-04-02 20:29:06 | **Commit:** `2a84ef7` | **Tipo:** `minor`
+
+- feat: add functionality for managing productivity goals, including listing, creating, and updating metas, along with UI enhancements for ranking display
+
 ## V. 1.41
 
 **Data:** 2026-04-02 19:49:13 | **Commit:** `bfedb2f` | **Tipo:** `minor`
@@ -4098,6 +4104,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

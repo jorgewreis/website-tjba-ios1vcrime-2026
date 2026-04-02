@@ -41,6 +41,7 @@ $totalDocuments = 0;
 $sumPontos = 0.0;
 $isGestao = false;
 $canSeeRegrasButton = false;
+$canSeeMetasButton = false;
 $errors = [];
 $usuariosFiltro = [];
 $userPerfis = [];
@@ -105,7 +106,8 @@ if ($userId !== '') {
     $stmtPerfis = $connection->prepare('SELECT DISTINCT UPPER(TRIM(perfil)) AS perfil FROM usuario_perfil WHERE usuario = ? AND perfil IS NOT NULL');
     $stmtPerfis->execute([$userId]);
     $userPerfis = $stmtPerfis->fetchAll(PDO::FETCH_COLUMN);
-    $canSeeRegrasButton = in_array('ADMIN', $userPerfis, true) || in_array('CHEFIA', $userPerfis, true);
+    $canSeeRegrasButton = in_array('ADMIN', $userPerfis, true) || in_array('CHEFIA', $userPerfis, true) || in_array('DIRETORA', $userPerfis, true) || in_array('MAGISTRADA', $userPerfis, true);
+    $canSeeMetasButton = $canSeeRegrasButton;
 }
 
 if ($isGestao) {
@@ -156,6 +158,29 @@ $baseQuery = [
     'usuario_id' => $filters['usuario_id'],
     'items_per_page' => $itemsPerPage,
 ];
+$exportQuery = [
+    'status' => $filters['status'],
+    'tipo_lancamento' => $filters['tipo_lancamento'],
+    'data_inicio' => $filters['data_inicio'],
+    'data_fim' => $filters['data_fim'],
+    'usuario_id' => $filters['usuario_id'],
+];
+$exportCsvHref = '/api/produtividade/export-csv.php?' . http_build_query($exportQuery);
+$exportPdfHref = '/api/produtividade/export-pdf.php?' . http_build_query($exportQuery);
+$rankingApiHref = '/api/produtividade/ranking.php?' . http_build_query($exportQuery);
+
+$resumoCards = [
+    'week' => ['current' => 0.0, 'previous' => 0.0, 'variation_percent' => 0.0],
+    'month' => ['current' => 0.0, 'previous' => 0.0, 'variation_percent' => 0.0],
+    'quarter' => ['current' => 0.0, 'previous' => 0.0, 'variation_percent' => 0.0],
+];
+if ($canLoadLancamentos && $errors === []) {
+    try {
+        $resumoCards = $service->getResumoCards($userId, $filters);
+    } catch (Throwable $e) {
+        $errors[] = 'Erro ao carregar resumo de período: ' . $e->getMessage();
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -193,6 +218,9 @@ $baseQuery = [
             <div class="display-flex row row-fit justify-end gap-y-md">
                 <?php if ($canSeeRegrasButton): ?>
                 <button type="button" class="btn btn-secondary height-md" data-nav-href="/frame.php?page=produtividaderegras">Regras</button>
+                <?php endif; ?>
+                <?php if ($canSeeMetasButton): ?>
+                <button type="button" class="btn btn-secondary-outline height-md" data-nav-href="/frame.php?page=produtividademetas">Metas</button>
                 <?php endif; ?>
             </div>
         </div>
@@ -294,12 +322,37 @@ $baseQuery = [
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-end">
                 <button type="submit" class="btn btn-primary height-md">Filtrar</button>
+                <button type="button" class="btn btn-secondary-outline height-md" data-nav-href="<?php echo htmlspecialchars($exportCsvHref, ENT_QUOTES); ?>" data-nav-target="_blank">Exportar CSV</button>
+                <button type="button" class="btn btn-secondary-outline height-md" data-nav-href="<?php echo htmlspecialchars($exportPdfHref, ENT_QUOTES); ?>" data-nav-target="_blank">Exportar PDF</button>
             </div>
         </form>
 
         <div class="display-flex row row-full padding-x-md padding-y-sm border-bottom gap-y-md">
             <span class="status status-current padding-x-md">Total de lançamentos: <?php echo $totalDocuments; ?></span>
             <span class="status status-success padding-x-md">Pontos no filtro: <?php echo number_format($sumPontos, 2, ',', '.'); ?></span>
+        </div>
+
+        <div class="display-flex row row-full padding-x-md padding-y-sm border-bottom gap-y-md flex-wrap">
+            <span class="status status-current padding-x-md">
+                Semana: <?php echo number_format((float) ($resumoCards['week']['current'] ?? 0), 2, ',', '.'); ?>
+                (<?php echo number_format((float) ($resumoCards['week']['variation_percent'] ?? 0), 1, ',', '.'); ?>%)
+            </span>
+            <span class="status status-current padding-x-md">
+                Mês: <?php echo number_format((float) ($resumoCards['month']['current'] ?? 0), 2, ',', '.'); ?>
+                (<?php echo number_format((float) ($resumoCards['month']['variation_percent'] ?? 0), 1, ',', '.'); ?>%)
+            </span>
+            <span class="status status-current padding-x-md">
+                Trimestre: <?php echo number_format((float) ($resumoCards['quarter']['current'] ?? 0), 2, ',', '.'); ?>
+                (<?php echo number_format((float) ($resumoCards['quarter']['variation_percent'] ?? 0), 1, ',', '.'); ?>%)
+            </span>
+        </div>
+
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <h2>Ranking</h2>
+        </div>
+        <div class="display-flex col col-full padding-x-md padding-y-md border-bottom" id="ranking-section" data-ranking-url="<?php echo htmlspecialchars($rankingApiHref, ENT_QUOTES); ?>">
+            <span class="minor-info" id="ranking-loading">Carregando ranking...</span>
+            <div id="ranking-content" class="display-flex col col-full gap-y-md" style="display:none;"></div>
         </div>
 
         <?php foreach ($errors as $error): ?>

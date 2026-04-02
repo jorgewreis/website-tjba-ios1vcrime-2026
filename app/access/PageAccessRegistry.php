@@ -77,6 +77,9 @@ final class PageAccessRegistry
             'produtividaderegras' => ['kind' => 'gestao'],
             'produtividaderegrascreate' => ['kind' => 'gestao'],
             'produtividaderegrasedit' => ['kind' => 'gestao'],
+            'produtividademetas' => ['kind' => 'gestao'],
+            'produtividademetascreate' => ['kind' => 'gestao'],
+            'produtividademetasedit' => ['kind' => 'gestao'],
 
             'oficiosgabinete' => $areaGabinete,
             'oficiosgabineteedit' => $areaGabinete,

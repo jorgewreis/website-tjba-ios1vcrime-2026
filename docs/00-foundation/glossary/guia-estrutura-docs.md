@@ -170,6 +170,19 @@ docs/modules/m03-tasks/
   sources/original.pdf
 ```
 
+## 3.4 Índice de specs em `docs/20-modules/specs/` (repositório)
+
+No repositório SGC, as especificações por módulo costumam ficar em **`docs/20-modules/specs/`** (estrutura numérica alinhada a `docs/10-architecture`, `docs/00-foundation`, etc.). Use esta pasta como ponto de partida para escopo funcional, dados e roadmap antes de alterar código.
+
+| Documento | Assunto |
+|-----------|---------|
+| [modulo-produtividade-interna.md](../../20-modules/specs/modulo-produtividade-interna.md) | Produtividade interna: o que já está implementado, legado, Fases 3 e 4 (ranking/metas/export vs. automação/badges/dashboard) |
+| [cartorio-guias.md](../../20-modules/specs/cartorio-guias.md) | Cartório — guias |
+| [cartorio-cejusc.md](../../20-modules/specs/cartorio-cejusc.md) | Cartório — CEJUSC |
+| [cartorio-ceapa.md](../../20-modules/specs/cartorio-ceapa.md) | Cartório — CEAPA |
+| [cartorio-cartas-recebidas.md](../../20-modules/specs/cartorio-cartas-recebidas.md) | Cartório — cartas recebidas |
+| [cartorio-cartas-expedidas.md](../../20-modules/specs/cartorio-cartas-expedidas.md) | Cartório — cartas expedidas |
+
 ---
 
 # 4. `docs/security` — Segurança, LGPD e auditoria
@@ -270,6 +283,7 @@ Se você publicar PDFs de release (por exigência institucional), coloque aqui. 
 - `foundation/`: `overview/`, `scope/`, `glossary/`, `stakeholders/`, `templates/`, `sources/`
 - `architecture/`: `adr/`, `specs/`, `standards/`, `diagrams/`, `sources/`, `published/` (opcional)
 - `modules/`: por módulo → `spec/`, `flows/`, `ui/`, `data/`, `permissions/`, `integrations/`, `examples/`, `sources/`
+- **No repositório:** `20-modules/specs/` — índice em §3.4 (specs por módulo em Markdown)
 - `security/`: `auth/`, `rbac/`, `data-classification/`, `audit-logging/`, `lgpd/`, `checklists/`, `incident-response/`, `sources/`
 - `operations/`: `environments/`, `deploy/`, `backups/`, `jobs/`, `monitoring/`, `troubleshooting/`, `access/`, `sources/`
 - `releases/`: `changelog/`, `notes/`, `migration-guides/`, `release-checklists/`, `sources/`
