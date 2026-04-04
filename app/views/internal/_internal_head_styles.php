@@ -123,11 +123,6 @@ $__isEditPage = $__currentPage !== '' && (bool) preg_match('/edit$/i', $__curren
 $__canDeleteOnThisEditPage = false;
 $__sessionUserId = trim((string) (($userId ?? null) ?: ($_SESSION['id_usuario'] ?? '')));
 $__sessionUserName = trim((string) ($_SESSION['nome'] ?? ''));
-$__fallbackPerfis = [];
-$__fallbackPerfil = trim((string) ($_SESSION['user_profile'] ?? ''));
-if ($__fallbackPerfil !== '') {
-    $__fallbackPerfis[] = $__fallbackPerfil;
-}
 if ($__isEditPage && $__currentPage === 'reuspresosedit') {
     $__canDeleteOnThisEditPage = in_array('ESTAGIARIO-GABINETE', $__normalizedPerfis, true)
         || in_array('SERVIDOR-GABINETE', $__normalizedPerfis, true);
@@ -137,7 +132,7 @@ if ($__isEditPage && $__currentPage === 'reuspresosedit') {
 <script>
 window.__APP_CONTEXT = Object.assign({}, window.__APP_CONTEXT || {}, {
     initialPerfis: <?php echo json_encode(array_values($__normalizedPerfis), JSON_UNESCAPED_UNICODE); ?>,
-    fallbackPerfis: <?php echo json_encode(array_values($__fallbackPerfis), JSON_UNESCAPED_UNICODE); ?>,
+    fallbackPerfis: [],
     allowedRulePerfis: ['ADMIN', 'DIRETORA', 'MAGISTRADA'],
     currentUser: {
         id: <?php echo json_encode($__sessionUserId, JSON_UNESCAPED_UNICODE); ?>,

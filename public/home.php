@@ -25,7 +25,6 @@ if (!$user) {
 }
 
 $userName = $_SESSION['nome'] ?? ($user['nome'] ?? '');
-$userProfile = Security::getUserProfile() ?? '';
 $userSetores = [];
 
 $sessionUserId = trim((string) ($_SESSION['id_usuario'] ?? ($user['id_usuario'] ?? '')));
@@ -60,6 +59,32 @@ if ($sessionUserId !== '') {
         $userPerfisDb = $usuario->listarPerfisUsuario($sessionUserId);
     } catch (Throwable $e) {
         $userPerfisDb = [];
+    }
+}
+
+// user_profile na sessão é definido no login (perfil com maior rank). Se o cadastro mudou
+// sem novo login, o valor pode ficar obsoleto (ex.: ADMIN removido) e poluir fallback no cliente.
+if ($sessionUserId !== '' && is_array($userPerfisDb)) {
+    $principalRank = 0;
+    $principal = null;
+    foreach ($userPerfisDb as $raw) {
+        $u = strtoupper(trim((string) $raw));
+        if ($u === '') {
+            continue;
+        }
+        $r = Security::getPerfilRank($u);
+        if ($r > $principalRank) {
+            $principalRank = $r;
+            $principal = $u;
+        }
+    }
+    $current = trim((string) ($_SESSION['user_profile'] ?? ''));
+    if ($principalRank > 0 && $principal !== null) {
+        if (strcasecmp($current, $principal) !== 0) {
+            $_SESSION['user_profile'] = $principal;
+        }
+    } elseif ($current !== '') {
+        unset($_SESSION['user_profile']);
     }
 }
 
@@ -450,13 +475,12 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                             </div>
                             <div id="avatar-profile-popover" class="avatar-popover" role="tooltip">
                                 <div class="avatar-popover-name"><?php echo htmlspecialchars($userDisplayFullName !== '' ? $userDisplayFullName : 'Usuário', ENT_QUOTES, 'UTF-8'); ?></div>
-                                <div class="avatar-popover-roles"><?php echo htmlspecialchars($avatarBadgePerfisLine !== '' ? $avatarBadgePerfisLine : '—', ENT_QUOTES, 'UTF-8'); ?></div>
+                                <div class="avatar-popover-roles"></div>
                                 <?php if ($podeAlternarModoAdmin): ?>
                                 <div class="avatar-popover-mode" role="group" aria-label="Modo de acesso">
-                                    <span class="avatar-popover-mode-label">Modo de trabalho</span>
                                     <div class="avatar-popover-mode-actions">
                                         <button type="button" class="btn btn-secondary-outline height-sm avatar-popover-mode-btn<?php echo $modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="1" aria-pressed="<?php echo $modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Administrador</button>
-                                        <button type="button" class="btn btn-secondary-outline height-sm avatar-popover-mode-btn<?php echo !$modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="0" aria-pressed="<?php echo !$modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Operacional</button>
+                                        <button type="button" class="btn btn-secondary-outline height-sm avatar-popover-mode-btn<?php echo !$modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="0" aria-pressed="<?php echo !$modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Usuário: <?php echo htmlspecialchars($avatarBadgePerfisLine !== '' ? $avatarBadgePerfisLine : '—', ENT_QUOTES, 'UTF-8'); ?></button>
                                     </div>
                                 </div>
                                 <?php endif; ?>
@@ -470,12 +494,11 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                         <div class="nav-item nav-item-user-summary">
                             <div class="user-summary-inline" id="user-summary-navbar" title="<?php echo htmlspecialchars($avatarSummaryTitle !== '' ? $avatarSummaryTitle : 'Usuário', ENT_QUOTES, 'UTF-8'); ?>">
                                 <span class="user-summary-name"><?php echo htmlspecialchars($userDisplayFullName !== '' ? $userDisplayFullName : 'Usuário', ENT_QUOTES, 'UTF-8'); ?></span>
-                                <span class="user-summary-roles"><?php echo htmlspecialchars($avatarBadgePerfisLine !== '' ? $avatarBadgePerfisLine : '—', ENT_QUOTES, 'UTF-8'); ?></span>
+
                                 <?php if ($podeAlternarModoAdmin): ?>
                                 <div class="user-summary-mode" role="group" aria-label="Modo de acesso">
-                                    <span class="user-summary-mode-label">Modo</span>
-                                    <button type="button" class="btn btn-secondary-outline height-sm user-summary-mode-btn<?php echo $modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="1" aria-pressed="<?php echo $modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Administrador</button>
-                                    <button type="button" class="btn btn-secondary-outline height-sm user-summary-mode-btn<?php echo !$modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="0" aria-pressed="<?php echo !$modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Operacional</button>
+                                    <button type="button" class="user-summary-roles<?php echo $modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="1" aria-pressed="<?php echo $modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Administrador</button>
+                                    <button type="button" class="user-summary-roles<?php echo !$modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="0" aria-pressed="<?php echo !$modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Usuário (<span class="user-summary-roles"><?php echo htmlspecialchars($avatarBadgePerfisLine !== '' ? $avatarBadgePerfisLine : '—', ENT_QUOTES, 'UTF-8'); ?></span>)</button>
                                 </div>
                                 <?php endif; ?>
                             </div>
@@ -630,14 +653,15 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
         }, $userPerfisEfectivos))), JSON_UNESCAPED_UNICODE); ?>;
         const PODE_ALTERNAR_MODO_ADMIN = <?php echo json_encode($podeAlternarModoAdmin, JSON_UNESCAPED_UNICODE); ?>;
         let modoAdminAtivo = <?php echo json_encode($modoAdminAtivoNavbar, JSON_UNESCAPED_UNICODE); ?>;
-        const FALLBACK_PERFIS = <?php echo json_encode($userProfile ? [$userProfile] : []); ?>;
+        /** Com supressão de ADMIN na sessão, o menu lateral não deve listar a seção Admin (CHEFIA sozinha não reabre esse bloco). */
+        const SESSAO_SUPRIMIU_ADMIN_MENU = <?php echo json_encode($sessionUserId !== '' && EffectiveAccessProfiles::isAdminSuppressed(), JSON_UNESCAPED_UNICODE); ?>;
         const USER_SETORES = <?php echo json_encode(array_values(array_filter(array_map(static function ($s) {
             return trim((string) $s);
         }, $userSetores))), JSON_UNESCAPED_UNICODE); ?>;
 
         window.__APP_CONTEXT = Object.assign({}, window.__APP_CONTEXT || {}, {
             initialPerfis: INITIAL_USER_PERFIS,
-            fallbackPerfis: FALLBACK_PERFIS,
+            fallbackPerfis: [],
             allowedRulePerfis: ['ADMIN', 'DIRETORA', 'MAGISTRADA'],
             currentUser: {
                 id: <?php echo json_encode($sessionUserId, JSON_UNESCAPED_UNICODE); ?>,
@@ -713,7 +737,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             if (window.App && App.User && typeof App.User.fetchPerfis === 'function') {
                 return App.User.fetchPerfis('/admin/api/getPerfis.php', {
                     initialPerfis: INITIAL_USER_PERFIS,
-                    fallbackPerfis: FALLBACK_PERFIS,
+                    fallbackPerfis: [],
                     refresh: refresh === true
                 });
             }
@@ -722,13 +746,13 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                 if (response.ok) {
                     const result = await response.json();
                     if (result && result.success && Array.isArray(result.perfis)) {
-                        return normalizePerfis([].concat(result.perfis, FALLBACK_PERFIS || []));
+                        return normalizePerfis(result.perfis);
                     }
                 }
             } catch (error) {
                 // usa bootstrap
             }
-            return normalizePerfis([].concat(INITIAL_USER_PERFIS || [], FALLBACK_PERFIS || []));
+            return normalizePerfis([].concat(INITIAL_USER_PERFIS || []));
         }
 
         function computePermittedMenuSectionsFromPerfis(perfis) {
@@ -740,7 +764,11 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                 return ['Consultas'];
             }
             if (norm.includes('ADMIN') || norm.includes('CHEFIA')) {
-                return ['Cartório', 'Gabinete', 'Sala de Audiências', 'Estudantes', 'Consultas', 'Admin'];
+                const comAcessoAmplo = ['Cartório', 'Gabinete', 'Sala de Audiências', 'Estudantes', 'Consultas'];
+                if (!SESSAO_SUPRIMIU_ADMIN_MENU) {
+                    comAcessoAmplo.push('Admin');
+                }
+                return comAcessoAmplo;
             }
             const sections = [];
             norm.forEach((p) => {

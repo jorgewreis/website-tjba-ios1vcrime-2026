@@ -30,9 +30,10 @@
 
     function getBootstrapPerfis(options) {
         const ctx = getAppContext();
+        // Não mesclar ctx.fallbackPerfis: o user_profile da sessão é legado e pode ficar
+        // desatualizado (ex.: era ADMIN e foi removido do cadastro), reintroduzindo ADMIN no cliente.
         return normalizePerfis([]
             .concat(ctx.initialPerfis || [])
-            .concat(ctx.fallbackPerfis || [])
             .concat((options && options.initialPerfis) || [])
             .concat((options && options.fallbackPerfis) || []));
     }
@@ -49,7 +50,7 @@
             return perfisPromiseByEndpoint[cacheKey];
         }
 
-        const promise = (async function () {
+        const work = (async function () {
             try {
                 const response = await fetch(cacheKey, {
                     credentials: 'same-origin',
@@ -58,17 +59,32 @@
                 if (response.ok) {
                     const payload = await response.json();
                     if (payload && Array.isArray(payload.perfis)) {
-                        return normalizePerfis([].concat(payload.perfis).concat(opts.extraPerfis || []));
+                        return {
+                            ok: true,
+                            perfis: normalizePerfis([].concat(payload.perfis).concat(opts.extraPerfis || []))
+                        };
                     }
                 }
             } catch (error) {
                 // ignora; usa bootstrap abaixo
             }
 
-            return normalizePerfis([]
-                .concat(getBootstrapPerfis(opts))
-                .concat(opts.extraPerfis || []));
+            return {
+                ok: false,
+                perfis: normalizePerfis([]
+                    .concat(getBootstrapPerfis(opts))
+                    .concat(opts.extraPerfis || []))
+            };
         })();
+
+        const promise = work.then(({ ok, perfis }) => {
+            if (ok) {
+                perfisPromiseByEndpoint[cacheKey] = Promise.resolve(perfis);
+            } else if (!opts.refresh) {
+                delete perfisPromiseByEndpoint[cacheKey];
+            }
+            return perfis;
+        });
 
         if (!opts.refresh) {
             perfisPromiseByEndpoint[cacheKey] = promise;

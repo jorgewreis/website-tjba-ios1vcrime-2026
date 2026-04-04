@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.53
+
+**Data:** 2026-04-04 15:12:44 | **Commit:** `450fc60` | **Tipo:** `minor`
+
+- refactor: remove fallback user profile handling and update user context management to prevent legacy profile pollution
+
 ## V. 1.52
 
 **Data:** 2026-04-04 14:58:17 | **Commit:** `c3546fd` | **Tipo:** `minor`
@@ -4170,6 +4176,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
