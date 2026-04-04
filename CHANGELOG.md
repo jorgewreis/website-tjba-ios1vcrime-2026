@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.62
+
+**Data:** 2026-04-04 16:22:57 | **Commit:** `cf4ccb2` | **Tipo:** `minor`
+
+- refactor: update user summary styling for improved layout and text visibility
+
 ## V. 1.61
 
 **Data:** 2026-04-04 16:18:02 | **Commit:** `ed655d4` | **Tipo:** `minor`
@@ -4230,6 +4236,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
