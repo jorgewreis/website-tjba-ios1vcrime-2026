@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.46
+
+**Data:** 2026-04-04 11:32:31 | **Commit:** `daeb205` | **Tipo:** `minor`
+
+- refactor: remove visible label from export dropdown in _list_export_buttons.php and update documentation accordingly
+
 ## V. 1.45
 
 **Data:** 2026-04-04 11:22:51 | **Commit:** `8baad9f` | **Tipo:** `minor`
@@ -4122,6 +4128,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

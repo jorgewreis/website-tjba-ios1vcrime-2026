@@ -12,7 +12,7 @@ As exportações **não** usam dois botões separados. O padrão é um **`<selec
 
 Após escolher CSV ou PDF, o controle **volta** para a primeira opção (comportamento em `public/assets/js/shared/navigate-buttons.js`, classe `list-export-select`).
 
-O markup compartilhado fica em **`app/views/internal/_list_export_buttons.php`**, com label visível **Exportação** e `aria-label="Exportar lista"` no `<select>`.
+O markup compartilhado fica em **`app/views/internal/_list_export_buttons.php`**, com `aria-label="Exportar lista"` no `<select>` (sem label visível).
 
 ## Integração no PHP
 

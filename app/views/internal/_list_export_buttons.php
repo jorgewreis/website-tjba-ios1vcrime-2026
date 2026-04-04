@@ -46,7 +46,6 @@ if ($__idSuffix === '') {
 $__selectId = 'list-export-' . preg_replace('/[^a-zA-Z0-9_-]/', '-', $__idSuffix);
 ?>
 <div class="col">
-    <label for="<?php echo htmlspecialchars($__selectId, ENT_QUOTES, 'UTF-8'); ?>">Exportação</label>
     <select
         id="<?php echo htmlspecialchars($__selectId, ENT_QUOTES, 'UTF-8'); ?>"
         class="list-export-select width-300 height-md white"
