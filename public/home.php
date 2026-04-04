@@ -368,6 +368,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             line-height: 1.4;
             word-break: break-word;
             margin-right: 10px;
+            text-transform: uppercase;
         }
         .avatar-popover-mode {
             margin-top: 10px;
@@ -394,11 +395,11 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
         @media (min-width: 1280px) {
             .user-summary-mode {
                 display: flex;
+                flex-direction: row;
+                flex-wrap: wrap;   
                 gap: 10px;
-            }
-            .user-summary-roles.is-active {
-                color: var(--color-primary);
-                font-weight: 600;
+                align-items: center;
+                justify-content: flex-start;
             }
             .avatar-popover .avatar-popover-mode {
                 display: none;
@@ -469,8 +470,8 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                                 <?php if ($podeAlternarModoAdmin): ?>
                                 <div class="avatar-popover-mode" role="group" aria-label="Modo">
                                     <div class="avatar-popover-mode-actions">
-                                        <button type="button" class="avatar-popover-roles<?php echo $modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="1" aria-pressed="<?php echo $modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Modo Administrador</button>
-                                        <button type="button" class="avatar-popover-roles<?php echo !$modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="0" aria-pressed="<?php echo !$modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Modo Operacional: <?php echo htmlspecialchars($avatarBadgePerfisLine !== '' ? $avatarBadgePerfisLine : '—', ENT_QUOTES, 'UTF-8'); ?></button>
+                                        <button type="button" class="avatar-popover-roles<?php echo $modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="1" aria-pressed="<?php echo $modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Admin</button>
+                                        <button type="button" class="avatar-popover-roles<?php echo !$modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="0" aria-pressed="<?php echo !$modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Operacional <?php echo htmlspecialchars($avatarBadgePerfisLine !== '' ? $avatarBadgePerfisLine : '—', ENT_QUOTES, 'UTF-8'); ?></button>
                                     </div>
                                 </div>
                                 <?php endif; ?>
@@ -486,8 +487,8 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                                 <span class="user-summary-name"><?php echo htmlspecialchars($userDisplayFullName !== '' ? $userDisplayFullName : 'Usuário', ENT_QUOTES, 'UTF-8'); ?></span>
                                 <?php if ($podeAlternarModoAdmin): ?>
                                 <div class="user-summary-mode" role="group" aria-label="Modo de acesso">
-                                    <button type="button" class="user-summary-roles<?php echo $modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="1" aria-pressed="<?php echo $modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Modo Administrador</button>
-                                    <button type="button" class="user-summary-roles<?php echo !$modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="0" aria-pressed="<?php echo !$modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Modo Operacional: <?php echo htmlspecialchars($avatarBadgePerfisLine !== '' ? $avatarBadgePerfisLine : '—', ENT_QUOTES, 'UTF-8'); ?></button>
+                                    <button type="button" class="user-summary-roles<?php echo $modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="1" aria-pressed="<?php echo $modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Admin</button>
+                                    <button type="button" class="user-summary-roles<?php echo !$modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="0" aria-pressed="<?php echo !$modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Operacional <?php echo htmlspecialchars($avatarBadgePerfisLine !== '' ? $avatarBadgePerfisLine : '—', ENT_QUOTES, 'UTF-8'); ?></button>
                                 </div>
                                 <?php endif; ?>
                             </div>

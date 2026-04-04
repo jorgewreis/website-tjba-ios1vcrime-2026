@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.60
+
+**Data:** 2026-04-04 16:14:03 | **Commit:** `4ccb5f6` | **Tipo:** `minor`
+
+- refactor: update user role toggle button labels and enhance layout for improved accessibility and visual consistency
+
 ## V. 1.59
 
 **Data:** 2026-04-04 16:09:40 | **Commit:** `c79b149` | **Tipo:** `minor`
@@ -4218,6 +4224,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
