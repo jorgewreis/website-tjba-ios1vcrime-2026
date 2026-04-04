@@ -370,7 +370,7 @@ final class MedidasProtetivasService
                 'referencia_sistema' => 'cartorio-medidas-protetivas',
                 'numero_processo' => (string) ($medidaAtual['numero_processo_origem'] ?? ''),
                 'classe_processo' => $classeMedida,
-                'quantidade' => (string) $qtd,
+                'quantidade' => $qtd,
             ]);
         }
         $subtarefas = $this->subtarefasRepository->findByMedidaId($medidaId);

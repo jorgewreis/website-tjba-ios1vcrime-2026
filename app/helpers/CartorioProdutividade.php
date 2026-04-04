@@ -74,7 +74,12 @@ final class CartorioProdutividade
     public static function record(PDO $connection, string $actorUserId, string $eventCode, array $context = []): void
     {
         $actorUserId = trim($actorUserId);
-        if ($actorUserId === '' || $actorUserId === 'sistema') {
+        if ($actorUserId === '' || strcasecmp($actorUserId, 'sistema') === 0) {
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                $actorUserId = trim((string) ($_SESSION['id_usuario'] ?? ''));
+            }
+        }
+        if ($actorUserId === '' || strcasecmp($actorUserId, 'sistema') === 0) {
             return;
         }
         $registry = self::loadRegistry();
@@ -109,7 +114,18 @@ final class CartorioProdutividade
             $payload['pontos_calculados_override'] = self::pontosFormulaGeracaoPdf($nDocs);
         }
         try {
-            $svc->registrarAuto($actorUserId, $payload);
+            $result = $svc->registrarAuto($actorUserId, $payload);
+            if (empty($result['created'])) {
+                $reason = (string) ($result['reason'] ?? '');
+                if ($reason !== 'duplicado') {
+                    error_log(sprintf(
+                        'CartorioProdutividade::record sem lançamento (event=%s, reason=%s, usuario=%s)',
+                        $eventCode,
+                        $reason,
+                        $actorUserId
+                    ));
+                }
+            }
         } catch (Throwable $e) {
             error_log('CartorioProdutividade::record falhou: ' . $e->getMessage());
         }

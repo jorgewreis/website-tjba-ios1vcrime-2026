@@ -42,7 +42,8 @@
                 fetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ subtarefa_id: subtarefaId })
+                    body: JSON.stringify({ subtarefa_id: subtarefaId }),
+                    credentials: 'same-origin'
                 })
                     .then(function (response) { return response.json(); })
                     .then(function (data) {

@@ -662,6 +662,7 @@ if ($totalPages > 0) {
                             fetch('/api/cartorio-cartas-expedidas/concluir-subtarefa.php', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
+                                credentials: 'same-origin',
                                 body: JSON.stringify({
                                     subtarefa_id: subtarefaId,
                                     dados_especificos: dadosEspecificos

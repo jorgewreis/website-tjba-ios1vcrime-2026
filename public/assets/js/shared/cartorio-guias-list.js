@@ -171,7 +171,8 @@
                 fetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify(payload),
+                    credentials: 'same-origin'
                 })
                     .then(function (response) {
                         return response.json().then(function (data) {
@@ -216,7 +217,8 @@
                 fetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ subtarefa_id: subtarefaId })
+                    body: JSON.stringify({ subtarefa_id: subtarefaId }),
+                    credentials: 'same-origin'
                 })
                     .then(function (response) {
                         return response.json().then(function (data) {
@@ -254,7 +256,8 @@
                 fetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: guiaId })
+                    body: JSON.stringify({ id: guiaId }),
+                    credentials: 'same-origin'
                 })
                     .then(function (response) {
                         return response.json().then(function (data) {

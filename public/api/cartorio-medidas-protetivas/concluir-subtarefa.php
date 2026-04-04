@@ -6,6 +6,7 @@ header('Content-Type: application/json; charset=UTF-8');
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
+require_once $basePath . '/app/helpers/CartorioSubtarefaUsuarioSessao.php';
 require_once $basePath . '/app/services/MedidasProtetivasService.php';
 
 $connection = Conection::getInstance()->getConnection();
@@ -17,37 +18,10 @@ if (!is_array($parsed)) {
 }
 
 $subtarefaId = trim((string) ($parsed['subtarefa_id'] ?? $parsed['subtarefaId'] ?? $_GET['subtarefa_id'] ?? ''));
-$dadosRecebidos = $parsed['dados_especificos'] ?? null;
-
-$nomeUsuario = '';
-$usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
-if ($usuarioId !== '') {
-    $stmt = $connection->prepare('SELECT `nome`, `sobrenome` FROM `usuarios` WHERE `id_usuario` = :id LIMIT 1');
-    $stmt->bindValue(':id', $usuarioId);
-    $stmt->execute();
-    $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
-    if ($usuario !== false) {
-        $nome = trim((string) ($usuario['nome'] ?? ''));
-        $sobrenome = trim((string) ($usuario['sobrenome'] ?? ''));
-        $nomeUsuario = $sobrenome !== '' ? $nome . ' ' . $sobrenome : $nome;
-    }
-}
-
-$dadosEspecificos = null;
-$merge = [];
-if ($nomeUsuario !== '') {
-    $merge['nome'] = $nomeUsuario;
-    $merge['usuario_id'] = $usuarioId;
-}
-if ($dadosRecebidos !== null) {
-    $arr = is_string($dadosRecebidos) ? json_decode($dadosRecebidos, true) : $dadosRecebidos;
-    if (is_array($arr)) {
-        $merge = array_merge($arr, $merge);
-    }
-}
-if (!empty($merge)) {
-    $dadosEspecificos = json_encode($merge, JSON_UNESCAPED_UNICODE);
-}
+$dadosEspecificos = CartorioSubtarefaUsuarioSessao::mergeDadosEspecificosComSessao(
+    $connection,
+    $parsed['dados_especificos'] ?? null
+);
 
 if ($subtarefaId === '') {
     http_response_code(400);

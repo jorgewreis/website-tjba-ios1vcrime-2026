@@ -615,13 +615,33 @@ final class GuiasService
         return $resultado;
     }
 
+    /**
+     * Normaliza rótulos legados da UI/BD para o tipo canónico do repositório (event_code em registry).
+     */
+    private function canonicalTipoSubtarefaGuia(string $tipo): string
+    {
+        $t = strtolower(trim($tipo));
+        if ($t === '') {
+            return '';
+        }
+        return match ($t) {
+            'geracao_pdf', 'pdf' => 'gerar_pdf',
+            'informar_detalhes', 'detalhamento' => 'detalhamento_informacoes',
+            'calcular_multa', 'calculo_multa' => 'calculo_pena_multa',
+            'expedir_guia', 'expedicao' => 'expedicao_guia',
+            'confirmar_juntada', 'juntada_autos', 'juntada_guia_autos', 'juntada_nos_autos' => 'juntada_automatica',
+            'enviar_guia', 'envio' => 'envio_guia',
+            default => $t,
+        };
+    }
+
     private function registrarProdutividadeSubtarefaGuia(string $subtarefaId, array $subtarefa, string $guiaId, string $usuarioId, array $dadosConclusao = []): void
     {
         $usuarioId = trim($usuarioId);
         if ($usuarioId === '' || $usuarioId === 'sistema') {
             return;
         }
-        $tipo = trim((string) ($subtarefa['tipo'] ?? ''));
+        $tipo = $this->canonicalTipoSubtarefaGuia(trim((string) ($subtarefa['tipo'] ?? '')));
         if ($tipo === '') {
             return;
         }

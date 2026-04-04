@@ -84,7 +84,8 @@
                     body: JSON.stringify({
                         subtarefa_id: subtarefaId,
                         dados_especificos: { qtd: qtdInt }
-                    })
+                    }),
+                    credentials: 'same-origin'
                 })
                     .then(function (response) { return response.json(); })
                     .then(function (data) {
