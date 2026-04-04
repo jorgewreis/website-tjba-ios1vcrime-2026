@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.57
+
+**Data:** 2026-04-04 15:28:20 | **Commit:** `d809db3` | **Tipo:** `minor`
+
+- refactor: simplify access evaluation logic by consolidating role checks and updating section visibility
+
 ## V. 1.56
 
 **Data:** 2026-04-04 15:23:44 | **Commit:** `549cd69` | **Tipo:** `minor`
@@ -4194,6 +4200,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

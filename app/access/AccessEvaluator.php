@@ -98,11 +98,7 @@ final class AccessEvaluator
                 return false;
 
             case 'estudantes_readonly':
-                if (ProfileNormalizer::isElevated($norm)) {
-                    return true;
-                }
-
-                return ProfileNormalizer::hasAnyCargoAreaComposite($norm);
+                return in_array('ADMIN', $norm, true);
 
             default:
                 return false;
@@ -129,7 +125,15 @@ final class AccessEvaluator
         }
 
         if (ProfileNormalizer::isElevated($norm)) {
-            return ['Cartório', 'Gabinete', 'Sala de Audiências', 'Estudantes', 'Consultas', 'Audiências', 'Admin'];
+            $com = ['Cartório', 'Gabinete', 'Sala de Audiências'];
+            if (in_array('ADMIN', $norm, true)) {
+                $com[] = 'Estudantes';
+            }
+            $com[] = 'Consultas';
+            $com[] = 'Audiências';
+            $com[] = 'Admin';
+
+            return $com;
         }
 
         foreach ($norm as $p) {
@@ -146,21 +150,6 @@ final class AccessEvaluator
 
         if (ProfileNormalizer::hasAnyCargoAreaComposite($norm)) {
             $sections[] = 'Consultas';
-        }
-
-        $canEstudantes = false;
-        foreach ($norm as $p) {
-            if (strpos($p, 'SERVIDOR-') === 0) {
-                $canEstudantes = true;
-                break;
-            }
-        }
-        if ($canEstudantes) {
-            $sections[] = 'Estudantes';
-        }
-
-        if (ProfileNormalizer::isElevated($norm)) {
-            $sections[] = 'Admin';
         }
 
         $unique = array_values(array_unique($sections));

@@ -367,6 +367,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             color: var(--color-text-secondary);
             line-height: 1.4;
             word-break: break-word;
+            margin-right: 10px;
         }
         .avatar-popover-mode {
             margin-top: 10px;
@@ -749,7 +750,10 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                 return ['Consultas'];
             }
             if (norm.includes('ADMIN') || norm.includes('CHEFIA')) {
-                const comAcessoAmplo = ['Cartório', 'Gabinete', 'Sala de Audiências', 'Estudantes', 'Consultas'];
+                const comAcessoAmplo = ['Cartório', 'Gabinete', 'Sala de Audiências', 'Consultas'];
+                if (norm.includes('ADMIN')) {
+                    comAcessoAmplo.push('Estudantes');
+                }
                 if (!SESSAO_SUPRIMIU_ADMIN_MENU) {
                     comAcessoAmplo.push('Admin');
                 }
@@ -776,9 +780,6 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             });
             if (hasComposite) {
                 sections.push('Consultas');
-            }
-            if (norm.some((p) => p.indexOf('SERVIDOR-') === 0)) {
-                sections.push('Estudantes');
             }
             const order = ['Cartório', 'Gabinete', 'Sala de Audiências', 'Estudantes', 'Consultas', 'Admin'];
             const uniq = [...new Set(sections)];
