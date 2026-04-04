@@ -163,10 +163,12 @@ final class ProdutividadeRegrasRepository
         $query = trim($query);
         $limit = max(1, min(20, $limit));
         $queryNorm = $this->normalizeForSearch($query);
+        // Regras com sistema_modulo "cartorio-*" são só para lançamento automático (API cartório).
         $sql = sprintf(
             'SELECT `id`, `tipo_ato`, `tipo_documento`, `sistema_modulo`, `pontos_por_ato`, `pontos_multiplicador`
              FROM `%s`
              WHERE `ativo` = 1
+             AND NOT (TRIM(COALESCE(`sistema_modulo`, \'\')) LIKE \'cartorio-%%\')
              ORDER BY `tipo_ato` ASC, `sistema_modulo` ASC, `tipo_documento` ASC
              LIMIT 500',
             $this->table

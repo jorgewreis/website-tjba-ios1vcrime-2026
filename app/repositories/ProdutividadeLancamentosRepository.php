@@ -139,6 +139,32 @@ final class ProdutividadeLancamentosRepository
         return (float) $statement->fetchColumn();
     }
 
+
+    public function sumNetAutomaticoAtivo(string $referenciaItemId, string $referenciaSistema): float
+    {
+        $referenciaItemId = trim($referenciaItemId);
+        $referenciaSistema = trim($referenciaSistema);
+        if ($referenciaItemId === '' || $referenciaSistema === '') {
+            return 0.0;
+        }
+
+        $sql = sprintf(
+            'SELECT COALESCE(SUM(l.`pontos_calculados`), 0)
+             FROM `%s` l
+             WHERE l.`referencia_item_id` = :ref_id
+               AND l.`referencia_sistema` = :ref_sys
+               AND l.`tipo_lancamento` = \'automatico\'
+               AND l.`status` = \'ativo\'',
+            $this->table
+        );
+        $statement = $this->connection->prepare($sql);
+        $statement->bindValue(':ref_id', $referenciaItemId);
+        $statement->bindValue(':ref_sys', $referenciaSistema);
+        $statement->execute();
+
+        return (float) $statement->fetchColumn();
+    }
+
     public function anular(string $id, string $anuladoPor, string $motivo): bool
     {
         $sql = sprintf(

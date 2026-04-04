@@ -9,6 +9,7 @@ require_once __DIR__ . '/../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
+require_once __DIR__ . '/../helpers/CartorioProdutividade.php';
 
 final class OficiosCartorioService
 {
@@ -236,6 +237,17 @@ final class OficiosCartorioService
                 $this->alocadosRepository->addAlocado($id, $criadoPor, OficiosCartorioAlocadosRepository::TIPO_SPECIFIC);
             }
 
+            if ($criadoPor !== null && $criadoPor !== '') {
+                $rotuloOficio = CartorioProdutividade::labelTipoOficio($tipoOficio);
+                CartorioProdutividade::record($this->connection, $criadoPor, 'cartorio-oficios.create', [
+                    'referencia_item_id' => $id,
+                    'referencia_sistema' => 'cartorio-oficios',
+                    'numero_processo' => $numeroFormatado,
+                    'classe_processo' => $rotuloOficio,
+                    'tipo_oficio' => $rotuloOficio,
+                ]);
+            }
+
             $this->connection->commit();
             return $id;
         } catch (\Throwable $e) {
@@ -277,10 +289,34 @@ final class OficiosCartorioService
             if ($s2 !== null) {
                 $this->subtarefasRepository->atualizarStatus((string) $s2['id'], 'em_andamento');
             }
+            $tipo = trim((string) ($st['tipo'] ?? ''));
+            if ($atualizadoPor !== null && trim($atualizadoPor) !== '' && $tipo !== '') {
+                $rotuloOficio = CartorioProdutividade::labelTipoOficio((string) ($oficio['tipo_oficio'] ?? ''));
+                CartorioProdutividade::record($this->connection, trim($atualizadoPor), 'cartorio-oficios.subtarefa.' . $tipo, [
+                    'referencia_item_id' => $subtarefaId,
+                    'referencia_sistema' => 'cartorio-oficios',
+                    'numero_processo' => (string) ($oficio['numero_processo'] ?? ''),
+                    'classe_processo' => $rotuloOficio,
+                    'tipo_oficio' => $rotuloOficio,
+                    'meio_envio' => CartorioProdutividade::labelMeioEnvio((string) ($oficio['meio_envio'] ?? '')),
+                ]);
+            }
             return ['tarefa_principal_concluida' => false];
         }
         if ($ordem === 2) {
             $this->repository->updateStatus($oficioId, 'finalizada', $atualizadoPor);
+            $tipo = trim((string) ($st['tipo'] ?? ''));
+            if ($atualizadoPor !== null && trim($atualizadoPor) !== '' && $tipo !== '') {
+                $rotuloOficio = CartorioProdutividade::labelTipoOficio((string) ($oficio['tipo_oficio'] ?? ''));
+                CartorioProdutividade::record($this->connection, trim($atualizadoPor), 'cartorio-oficios.subtarefa.' . $tipo, [
+                    'referencia_item_id' => $subtarefaId,
+                    'referencia_sistema' => 'cartorio-oficios',
+                    'numero_processo' => (string) ($oficio['numero_processo'] ?? ''),
+                    'classe_processo' => $rotuloOficio,
+                    'tipo_oficio' => $rotuloOficio,
+                    'meio_envio' => CartorioProdutividade::labelMeioEnvio((string) ($oficio['meio_envio'] ?? '')),
+                ]);
+            }
             return ['tarefa_principal_concluida' => true];
         }
         throw new InvalidArgumentException('Ordem de subtarefa inválida.');

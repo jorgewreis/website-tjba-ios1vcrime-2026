@@ -241,6 +241,28 @@ final class CartasRecebidasRepository
         return $result === false ? null : $result;
     }
 
+    /**
+     * Carta + nome da classe processual do processo de origem (join em processos/classes).
+     *
+     * @return array<string, mixed>|null
+     */
+    public function findWithClasseProcessualNome(string $id): ?array
+    {
+        $coll = self::COLLATION;
+        $from = $this->buildFromClause();
+        $sql = sprintf(
+            'SELECT cr.*, COALESCE(cl.`nome`, \'\') AS `classe_nome_processual` FROM %s WHERE cr.`id` COLLATE %s = :id LIMIT 1',
+            $from,
+            $coll
+        );
+        $statement = $this->connection->prepare($sql);
+        $statement->bindValue(':id', $id);
+        $statement->execute();
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+
+        return $result === false ? null : $result;
+    }
+
     public function getTableName(): string
     {
         return $this->table;

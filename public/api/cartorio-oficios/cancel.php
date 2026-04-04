@@ -50,6 +50,11 @@ $uid = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) :
 try {
     $service = new OficiosCartorioService($connection);
     $updated = $service->cancel($id, $uid !== '' ? $uid : null);
+    $__mir = $updated;
+    if ($__mir) {
+        require_once $basePath . '/app/helpers/CartorioProdutividade.php';
+        CartorioProdutividade::mirrorEstornoSaldoSession($connection, $id, 'cartorio-oficios', 'Ofício cancelado.');
+    }
     echo json_encode(['success' => $updated], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $exception) {
     http_response_code(400);

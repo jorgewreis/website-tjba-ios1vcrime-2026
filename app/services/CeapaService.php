@@ -10,6 +10,7 @@ require_once __DIR__ . '/../repositories/PartesRepository.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
+require_once __DIR__ . '/../helpers/CartorioProdutividade.php';
 
 final class CeapaService
 {
@@ -161,6 +162,16 @@ final class CeapaService
         }
         if ($usuarioCadastroId !== '') {
             $this->alocadosRepository->addAlocado($id, $usuarioCadastroId, CeapaAlocadosRepository::TIPO_SPECIFIC);
+        }
+
+        if ($usuarioCadastroId !== '' && $usuarioCadastroId !== 'sistema') {
+            CartorioProdutividade::record($this->connection, $usuarioCadastroId, 'cartorio-ceapa.create', [
+                'referencia_item_id' => $id,
+                'referencia_sistema' => 'cartorio-ceapa',
+                'numero_processo' => $numeroFormatado,
+                'classe_processo' => $tipoSuspensao,
+                'tipo_suspensao' => $tipoSuspensao,
+            ]);
         }
 
         return $id;

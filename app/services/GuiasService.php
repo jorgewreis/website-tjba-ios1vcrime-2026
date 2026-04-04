@@ -13,6 +13,7 @@ require_once __DIR__ . '/../repositories/SalarioMinimoRepository.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
+require_once __DIR__ . '/../helpers/CartorioProdutividade.php';
 
 final class GuiasService
 {
@@ -267,6 +268,29 @@ final class GuiasService
 
         // Se o cadastro já veio com data_fato e dias_multa, concluir a subtarefa 1 e ativar a 2
         $this->sincronizarDetalhamentoAposUpdate($idGuia, $usuarioCadastroId);
+        $uidProd = trim((string) ($payload['usuario_cadastro_id'] ?? ''));
+        if ($uidProd !== '' && $uidProd !== 'sistema') {
+            $temDetalhamento = false;
+            foreach (['data_fato', 'dias_multa', 'regime', 'observacoes'] as $k) {
+                if (isset($payload[$k]) && trim((string) $payload[$k]) !== '') {
+                    $temDetalhamento = true;
+                    break;
+                }
+            }
+            $q = $temDetalhamento ? 2 : 1;
+            $guiaRow = $this->repository->findById($idGuia);
+            $np = $guiaRow !== null ? trim((string) ($guiaRow['numero_processo'] ?? '')) : $numeroFormatado;
+            $cl = $guiaRow !== null ? trim((string) ($guiaRow['tipo'] ?? '')) : $tipo;
+            $tipoGuia = CartorioProdutividade::labelTipoGuia($cl);
+            CartorioProdutividade::record($this->connection, $uidProd, 'cartorio-guias.create', [
+                'quantidade' => $q,
+                'referencia_item_id' => $idGuia,
+                'referencia_sistema' => 'cartorio-guias',
+                'numero_processo' => $np,
+                'classe_processo' => $tipoGuia,
+                'tipo_guia' => $tipoGuia,
+            ]);
+        }
 
         return $idGuia;
     }
@@ -528,6 +552,7 @@ final class GuiasService
             }
             $this->repository->update($guiaId, ['status' => 'em_andamento']);
             $resultado['tarefa_principal_concluida'] = false;
+            $this->registrarProdutividadeSubtarefaGuia($subtarefaId, $subtarefa, $guiaId, $usuarioIdMovimentacao ?? '', $dadosArray);
             return $resultado;
         }
 
@@ -586,7 +611,46 @@ final class GuiasService
                 . ' - ' . ($denunciado !== '' ? $denunciado : 'denunciado não informado') . ').';
         }
 
+        $this->registrarProdutividadeSubtarefaGuia($subtarefaId, $subtarefa, $guiaId, $usuarioIdMovimentacao ?? '', $dadosArray);
         return $resultado;
+    }
+
+    private function registrarProdutividadeSubtarefaGuia(string $subtarefaId, array $subtarefa, string $guiaId, string $usuarioId, array $dadosConclusao = []): void
+    {
+        $usuarioId = trim($usuarioId);
+        if ($usuarioId === '' || $usuarioId === 'sistema') {
+            return;
+        }
+        $tipo = trim((string) ($subtarefa['tipo'] ?? ''));
+        if ($tipo === '') {
+            return;
+        }
+        $guia = $this->repository->findById($guiaId);
+        $np = $guia !== null ? trim((string) ($guia['numero_processo'] ?? '')) : '';
+        $cl = $guia !== null ? trim((string) ($guia['tipo'] ?? '')) : '';
+        $tipoGuia = CartorioProdutividade::labelTipoGuia($cl);
+        $destinatario = '';
+        $dadosJson = trim((string) ($subtarefa['dados_especificos'] ?? ''));
+        if ($dadosJson !== '') {
+            $dados = json_decode($dadosJson, true);
+            if (is_array($dados)) {
+                $destinatario = trim((string) ($dados['destinatario'] ?? ''));
+            }
+        }
+        $destinatarioObs = CartorioProdutividade::nonEmpty($destinatario, 'destinatário não informado');
+        $event = 'cartorio-guias.subtarefa.' . $tipo;
+        $ctx = [
+            'referencia_item_id' => $subtarefaId,
+            'referencia_sistema' => 'cartorio-guias',
+            'numero_processo' => $np,
+            'classe_processo' => $tipoGuia,
+            'tipo_guia' => $tipoGuia,
+            'destinatario' => $destinatarioObs,
+        ];
+        if ($tipo === 'gerar_pdf') {
+            $ctx['pdf_documentos_count'] = max(0, (int) ($dadosConclusao['qtd_docs'] ?? 0));
+        }
+        CartorioProdutividade::record($this->connection, $usuarioId, $event, $ctx);
     }
 
     public function cancelarSubtarefa(string $subtarefaId): void

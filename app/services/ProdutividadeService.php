@@ -96,6 +96,12 @@ final class ProdutividadeService
         if ($regra === null) {
             throw new InvalidArgumentException('Regra inválida ou inativa.');
         }
+        $moduloRegra = trim((string) ($regra['sistema_modulo'] ?? ''));
+        if ($moduloRegra !== '' && str_starts_with($moduloRegra, 'cartorio-')) {
+            throw new InvalidArgumentException(
+                'Esta tarefa é pontuada automaticamente pelo sistema do cartório e não pode ser lançada manualmente.'
+            );
+        }
 
         $quantidade = (int) ($payload['quantidade'] ?? 0);
         if ($quantidade <= 0) {
@@ -265,19 +271,28 @@ final class ProdutividadeService
 
         $contextoHash = null;
         if ($referenciaItemId !== '') {
-            $contextoHash = hash('sha256', implode('|', [
-                $actorUserId,
-                $tipoAto,
-                $tipoDocumento,
-                $sistemaModulo,
-                $referenciaItemId,
-                date('Y-m-d H:i', strtotime($dataHoraAto)),
-            ]));
+            $forcedHash = trim((string) ($payload['contexto_hash_forced'] ?? ''));
+            if ($forcedHash !== '') {
+                $contextoHash = $forcedHash;
+            } else {
+                $contextoHash = hash('sha256', implode('|', [
+                    $actorUserId,
+                    $tipoAto,
+                    $tipoDocumento,
+                    $sistemaModulo,
+                    $referenciaItemId,
+                    date('Y-m-d H:i', strtotime($dataHoraAto)),
+                ]));
+            }
         }
 
         $pontosPorAto = (float) ($regra['pontos_por_ato'] ?? 0);
         $multiplicador = (float) ($regra['pontos_multiplicador'] ?? 1);
-        $pontosCalculados = $quantidade * $pontosPorAto * $multiplicador;
+        if (array_key_exists('pontos_calculados_override', $payload)) {
+            $pontosCalculados = (float) $payload['pontos_calculados_override'];
+        } else {
+            $pontosCalculados = $quantidade * $pontosPorAto * $multiplicador;
+        }
 
         $this->connection->beginTransaction();
         try {
@@ -324,6 +339,34 @@ final class ProdutividadeService
         }
 
         return ['created' => true, 'id' => $lancamentoId, 'reason' => 'ok'];
+    }
+
+    public function registrarEstornoSaldoReferencia(string $actorUserId, string $referenciaItemId, string $referenciaSistema, string $motivoObs = ''): void
+    {
+        $this->assertAuthenticated($actorUserId);
+        $referenciaItemId = trim($referenciaItemId);
+        $referenciaSistema = trim($referenciaSistema);
+        if ($referenciaItemId === '' || $referenciaSistema === '') {
+            return;
+        }
+        $net = $this->lancamentosRepository->sumNetAutomaticoAtivo($referenciaItemId, $referenciaSistema);
+        if ($net <= 0.00001) {
+            return;
+        }
+        $neg = -1 * $net;
+        $obs = trim($motivoObs) !== '' ? trim($motivoObs) : 'Estorno de produtividade (encerramento de tarefa).';
+        $hash = hash('sha256', 'estorno-neto|' . $referenciaItemId . '|' . $referenciaSistema);
+        $this->registrarAuto($actorUserId, [
+            'tipo_ato' => 'Estorno',
+            'tipo_documento' => 'Espelho cartório',
+            'sistema_modulo' => 'cartorio-interno',
+            'quantidade' => 1,
+            'referencia_item_id' => $referenciaItemId,
+            'referencia_sistema' => $referenciaSistema,
+            'observacoes' => $obs,
+            'contexto_hash_forced' => $hash,
+            'pontos_calculados_override' => $neg,
+        ]);
     }
 
     public function listLancamentos(string $actorUserId, array $filters, int $limit, int $offset): array

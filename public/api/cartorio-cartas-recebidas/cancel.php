@@ -49,6 +49,11 @@ if ($id === '') {
 try {
     $service = new CartasRecebidasService($connection);
     $updated = $service->cancel($id);
+    $__mir = $updated;
+    if ($__mir) {
+        require_once $basePath . '/app/helpers/CartorioProdutividade.php';
+        CartorioProdutividade::mirrorEstornoSaldoSession($connection, $id, 'cartorio-cartas-recebidas', 'Carta recebida cancelada.');
+    }
     echo json_encode(['success' => $updated], JSON_UNESCAPED_UNICODE);
 } catch (\InvalidArgumentException $exception) {
     http_response_code(400);

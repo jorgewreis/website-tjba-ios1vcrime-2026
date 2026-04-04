@@ -85,10 +85,22 @@ Documento vivo: consolida o que já está entregue no módulo, com foco em opera
 
 ---
 
+## Cartório — eventos automáticos (planeado)
+
+Extensão do módulo: cobrir **todo o cartório interno** com lançamentos automáticos a partir de um **catálogo de `event_code`**, helper central, regras em `produtividade_regras`, estornos espelhados onde aplicável e documentação de catálogo em `docs/20-modules/specs/cartorio-produtividade-movimentacoes.md` (a criar na Fase 1).
+
+- **Plano canónico (decisões + fases + inventário):** [`.cursor/plans/produtividade-cartorio-plano.md`](../../../.cursor/plans/produtividade-cartorio-plano.md)
+- **Textos na listagem:** após implementação, todas as movimentações com produtividade terão entrada em `app/config/cartorio-produtividade-list-texts.php`, com **frase fixa ou template** (placeholders como finalidade da carta) por `event_code`; subtarefas com redação distinta usam **códigos distintos**; revisão **caso a caso** no plano (Fases 4–5, secção 5.2).
+- **Governação:** fonte de verdade só no Git; progresso também refletido em `docs/90-releases/notes/` ao fechar cada fase.
+
+Até à conclusão desse trabalho, o estado “entregue” deste spec continua a refletir **Fase 4** (automação inicial em Guias + badges); a secção acima descreve o **roadmap** alinhado ao plano.
+
+---
+
 ## Observação sobre legado
 
 - [app/services/Produtividade.php](../../../app/services/Produtividade.php) permanece no repositório para compatibilidade histórica, mas o fluxo de guias já usa o serviço novo.
-- Próximos incrementos recomendados: aplicar `registrarAuto` nos demais módulos prioritários (cartório, gabinete e audiências) em PRs pequenos.
+- Próximos incrementos: seguir o plano em [`.cursor/plans/produtividade-cartorio-plano.md`](../../../.cursor/plans/produtividade-cartorio-plano.md) para o **cartório**; outros domínios (gabinete, audiências) em PRs pequenos quando priorizados.
 
 ---
 
@@ -106,6 +118,7 @@ Documento vivo: consolida o que já está entregue no módulo, com foco em opera
 
 | Área | Caminhos principais |
 |------|---------------------|
+| Plano cartório (automação completa) | [`.cursor/plans/produtividade-cartorio-plano.md`](../../../.cursor/plans/produtividade-cartorio-plano.md) |
 | Schema | `docs/schema/produtividade.sql` |
 | Serviço | `app/services/ProdutividadeService.php` |
 | Integração automática inicial | `app/services/Guias.php` |

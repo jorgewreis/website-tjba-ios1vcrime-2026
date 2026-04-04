@@ -12,6 +12,7 @@ require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
+require_once __DIR__ . '/../helpers/CartorioProdutividade.php';
 
 final class CejuscService
 {
@@ -203,6 +204,21 @@ final class CejuscService
 
         $this->repository->updateStatus($idTarefa, 'em_andamento');
 
+        if ($usuarioCadastroId !== '' && $usuarioCadastroId !== 'sistema') {
+            $tarefaRow = $this->repository->findById($idTarefa);
+            $reuNome = $tarefaRow !== null
+                ? trim((string) ($tarefaRow['reu_nome'] ?? ''))
+                : '';
+            $reuNomeObs = CartorioProdutividade::nonEmpty($reuNome, 'réu não informado');
+            CartorioProdutividade::record($this->connection, $usuarioCadastroId, 'cartorio-cejusc.create', [
+                'referencia_item_id' => $idTarefa,
+                'referencia_sistema' => 'cartorio-cejusc',
+                'numero_processo' => $numeroFormatado,
+                'classe_processo' => $reuNomeObs,
+                'reu_nome' => $reuNomeObs,
+            ]);
+        }
+
         return $idTarefa;
     }
 
@@ -271,6 +287,19 @@ final class CejuscService
         }
 
         $this->subtarefasRepository->marcarConcluida($subtarefaId);
+        $tipoSubtarefa = trim((string) ($subtarefa['tipo'] ?? ''));
+        if ($usuarioIdMovimentacao !== null && $usuarioIdMovimentacao !== '' && $usuarioIdMovimentacao !== 'sistema' && $tipoSubtarefa !== '') {
+            $tarefaAtual = $this->repository->findById($cejuscId) ?? [];
+            $reuNome = trim((string) ($tarefaAtual['reu_nome'] ?? $tarefaAtual['nome_reu'] ?? ''));
+            $reuNomeObs = CartorioProdutividade::nonEmpty($reuNome, 'réu não informado');
+            CartorioProdutividade::record($this->connection, $usuarioIdMovimentacao, 'cartorio-cejusc.subtarefa.' . $tipoSubtarefa, [
+                'referencia_item_id' => $subtarefaId,
+                'referencia_sistema' => 'cartorio-cejusc',
+                'numero_processo' => (string) ($tarefaAtual['numero_processo_origem'] ?? ''),
+                'classe_processo' => $reuNomeObs,
+                'reu_nome' => $reuNomeObs,
+            ]);
+        }
 
         if ($ordem === 1) {
             $ordem2 = $this->subtarefasRepository->findByCejuscIdEOrdem($cejuscId, 2);

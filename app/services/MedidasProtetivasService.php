@@ -15,6 +15,7 @@ require_once __DIR__ . '/../services/CejuscService.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
+require_once __DIR__ . '/../helpers/CartorioProdutividade.php';
 
 final class MedidasProtetivasService
 {
@@ -254,6 +255,19 @@ final class MedidasProtetivasService
 
             $this->processoPrioridadesService->registrarViolenciaDomesticaMedidaProtetiva($processoId);
 
+            if ($usuarioCadastroId !== '' && $usuarioCadastroId !== 'sistema') {
+                $classeObs = CartorioProdutividade::nonEmpty(
+                    $classeDescricao !== '' ? $classeDescricao : $classeCodigo,
+                    'classe não informada'
+                );
+                CartorioProdutividade::record($this->connection, $usuarioCadastroId, 'cartorio-medidas-protetivas.create', [
+                    'referencia_item_id' => $medidaId,
+                    'referencia_sistema' => 'cartorio-medidas-protetivas',
+                    'numero_processo' => $numeroFormatado,
+                    'classe_processo' => $classeObs,
+                ]);
+            }
+
             $this->connection->commit();
             return [
                 'id' => $medidaId,
@@ -344,6 +358,21 @@ final class MedidasProtetivasService
         }
 
         $this->subtarefasRepository->atualizarStatus($subtarefaId, 'concluida');
+        $tipoSubtarefa = trim((string) ($subtarefa['tipo'] ?? ''));
+        if ($usuarioIdMovimentacao !== '' && $usuarioIdMovimentacao !== 'sistema' && $tipoSubtarefa !== '') {
+            $medidaAtual = $this->repository->findById($medidaId) ?? [];
+            $classeMedida = CartorioProdutividade::nonEmpty(
+                trim((string) ($medidaAtual['classe_nome'] ?? $medidaAtual['classe_codigo'] ?? '')),
+                'classe não informada'
+            );
+            CartorioProdutividade::record($this->connection, $usuarioIdMovimentacao, 'cartorio-medidas-protetivas.subtarefa.' . $tipoSubtarefa, [
+                'referencia_item_id' => $subtarefaId,
+                'referencia_sistema' => 'cartorio-medidas-protetivas',
+                'numero_processo' => (string) ($medidaAtual['numero_processo_origem'] ?? ''),
+                'classe_processo' => $classeMedida,
+                'quantidade' => (string) $qtd,
+            ]);
+        }
         $subtarefas = $this->subtarefasRepository->findByMedidaId($medidaId);
         $proximaOrdem = $ordem + 1;
         $proxima = null;

@@ -392,11 +392,17 @@ if ($canLoadLancamentos && $errors === []) {
                 $tipoDoc = trim((string) ($row['tipo_documento'] ?? ''));
                 $tipoAto = trim((string) ($row['tipo_ato'] ?? ''));
                 $sistemaModulo = trim((string) ($row['sistema_modulo'] ?? ''));
-                $descricaoTarefa = implode(' - ', [
-                    $tipoDoc !== '' ? $tipoDoc : 'Sem documento',
-                    $tipoAto !== '' ? $tipoAto : 'Sem ato',
-                    $sistemaModulo !== '' ? $sistemaModulo : 'Sem sistema',
-                ]);
+                $obsRow = trim((string) ($row['observacoes'] ?? ''));
+                $tipoLan = trim((string) ($row['tipo_lancamento'] ?? ''));
+                if ($obsRow !== '' && $tipoLan === 'automatico') {
+                    $descricaoTarefa = $obsRow;
+                } else {
+                    $descricaoTarefa = implode(' - ', [
+                        $tipoDoc !== '' ? $tipoDoc : 'Sem documento',
+                        $tipoAto !== '' ? $tipoAto : 'Sem ato',
+                        $sistemaModulo !== '' ? $sistemaModulo : 'Sem sistema',
+                    ]);
+                }
                 ?>
                 <div class="display-flex col col-full register border-bottom">
                     <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">

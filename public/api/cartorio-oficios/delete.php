@@ -48,6 +48,11 @@ if ($id === '') {
 try {
     $service = new OficiosCartorioService($connection);
     $resultado = $service->delete($id);
+    $__deleted = is_array($resultado) ? (bool) ($resultado['deleted'] ?? false) : (bool) $resultado;
+    if ($__deleted) {
+        require_once $basePath . '/app/helpers/CartorioProdutividade.php';
+        CartorioProdutividade::mirrorEstornoSaldoSession($connection, $id, 'cartorio-oficios', 'Ofício excluído.');
+    }
     echo json_encode(is_array($resultado) ? $resultado : ['deleted' => (bool) $resultado], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $exception) {
     http_response_code(400);

@@ -57,6 +57,10 @@ try {
     }
 
     $deleted = $service->delete($id);
+    if ($deleted) {
+        require_once $basePath . '/app/helpers/CartorioProdutividade.php';
+        CartorioProdutividade::mirrorEstornoSaldoSession($connection, $id, 'cartorio-ceapa', 'Tarefa CEAPA excluída.');
+    }
     echo json_encode(['deleted' => $deleted], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $exception) {
     http_response_code(400);

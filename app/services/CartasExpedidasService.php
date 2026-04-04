@@ -14,6 +14,7 @@ require_once __DIR__ . '/DataJudService.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
+require_once __DIR__ . '/../helpers/CartorioProdutividade.php';
 
 final class CartasExpedidasService
 {
@@ -285,6 +286,22 @@ final class CartasExpedidasService
             null
         );
 
+        if ($usuarioCadastroId !== '' && $usuarioCadastroId !== 'sistema') {
+            $cartaComClasse = $this->repository->findWithClasseProcessualNome($idCarta)
+                ?? $this->repository->find($idCarta)
+                ?? [];
+            $nomeClasse = trim((string) ($cartaComClasse['classe_nome_processual'] ?? ''));
+            $tipoCarta = CartorioProdutividade::labelClasseCarta($nomeClasse);
+            CartorioProdutividade::record($this->connection, $usuarioCadastroId, 'cartorio-cartas-expedidas.create', [
+                'referencia_item_id' => $idCarta,
+                'referencia_sistema' => 'cartorio-cartas-expedidas',
+                'numero_processo' => $numeroFormatado,
+                'classe_processo' => $tipoCarta,
+                'tipo_carta' => $tipoCarta,
+                'finalidade' => CartorioProdutividade::nonEmpty($finalidade, 'finalidade não informada'),
+            ]);
+        }
+
         return $idCarta;
     }
 
@@ -376,6 +393,30 @@ final class CartasExpedidasService
         }
 
         $this->subtarefasRepository->marcarConcluidaComDados($subtarefaId, $dadosJson);
+        $tipoSubtarefa = trim((string) ($subtarefa['tipo'] ?? ''));
+        if ($usuarioIdMovimentacao !== '' && $usuarioIdMovimentacao !== 'sistema' && $tipoSubtarefa !== '') {
+            $cartaAtual = $this->repository->findWithClasseProcessualNome($cartaId)
+                ?? $this->repository->find($cartaId)
+                ?? [];
+            $nomeClasse = trim((string) ($cartaAtual['classe_nome_processual'] ?? ''));
+            $tipoCarta = CartorioProdutividade::labelClasseCarta($nomeClasse);
+            $cidadeDestino = trim((string) ($cartaAtual['cidade_destino'] ?? ''));
+            $ufDestino = trim((string) ($cartaAtual['uf_destino'] ?? ''));
+            $comarcaDestino = $cidadeDestino !== '' ? $cidadeDestino . ($ufDestino !== '' ? '/' . $ufDestino : '') : '';
+            $ctxExp = [
+                'referencia_item_id' => $subtarefaId,
+                'referencia_sistema' => 'cartorio-cartas-expedidas',
+                'numero_processo' => (string) ($cartaAtual['numero_processo_origem'] ?? ''),
+                'classe_processo' => $tipoCarta,
+                'tipo_carta' => $tipoCarta,
+                'finalidade' => CartorioProdutividade::nonEmpty((string) ($cartaAtual['finalidade'] ?? ''), 'finalidade não informada'),
+                'comarca_destino' => CartorioProdutividade::nonEmpty($comarcaDestino, 'destino não informado'),
+            ];
+            if ($tipoSubtarefa === 'aguardando_gerar_pdf') {
+                $ctxExp['pdf_documentos_count'] = max(0, (int) ($dadosArray['qtd_docs_gerados'] ?? 0));
+            }
+            CartorioProdutividade::record($this->connection, $usuarioIdMovimentacao, 'cartorio-cartas-expedidas.subtarefa.' . $tipoSubtarefa, $ctxExp);
+        }
 
         $proximoTipo = $this->subtarefasRepository->obterProximoTipo($ordem);
         if ($proximoTipo !== null) {

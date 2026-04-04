@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.49
+
+**Data:** 2026-04-04 13:55:53 | **Commit:** `9a3363c` | **Tipo:** `minor`
+
+- feat: expand internal productivity module with automated event handling for cartório, including roadmap and governance updates
+
 ## V. 1.48
 
 **Data:** 2026-04-04 11:43:50 | **Commit:** `b0465aa` | **Tipo:** `minor`
@@ -4140,6 +4146,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
