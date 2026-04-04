@@ -294,7 +294,12 @@ final class ProdutividadeService
             $pontosCalculados = $quantidade * $pontosPorAto * $multiplicador;
         }
 
-        $this->connection->beginTransaction();
+        // Cartório (e outros) frequentemente chamam registrarAuto dentro de transação já aberta;
+        // PDO não permite beginTransaction aninhado — participar da transação externa.
+        $ownTransaction = !$this->connection->inTransaction();
+        if ($ownTransaction) {
+            $this->connection->beginTransaction();
+        }
         try {
             $lancamentoId = $this->lancamentosRepository->insert([
                 'usuario_id' => $actorUserId,
@@ -320,15 +325,21 @@ final class ProdutividadeService
                 'tipo_ato' => $tipoAto,
                 'tipo_documento' => $tipoDocumento,
             ]);
-            $this->connection->commit();
+            if ($ownTransaction) {
+                $this->connection->commit();
+            }
         } catch (PDOException $e) {
-            $this->connection->rollBack();
+            if ($ownTransaction) {
+                $this->connection->rollBack();
+            }
             if (($e->errorInfo[1] ?? null) === 1062) {
                 return ['created' => false, 'id' => null, 'reason' => 'duplicado'];
             }
             throw $e;
         } catch (Throwable $e) {
-            $this->connection->rollBack();
+            if ($ownTransaction) {
+                $this->connection->rollBack();
+            }
             throw $e;
         }
 

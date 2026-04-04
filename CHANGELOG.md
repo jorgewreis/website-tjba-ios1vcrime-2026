@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.50.0001
+
+**Data:** 2026-04-04 14:20:18 | **Commit:** `e99eb63` | **Tipo:** `patch`
+
+- fix: prevent nested transactions in ProdutividadeService by checking existing transaction state before beginning or committing transactions
+
 ## V. 1.50
 
 **Data:** 2026-04-04 14:15:37 | **Commit:** `c4f7659` | **Tipo:** `minor`
@@ -4152,6 +4158,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
