@@ -479,8 +479,8 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                                 <?php if ($podeAlternarModoAdmin): ?>
                                 <div class="avatar-popover-mode" role="group" aria-label="Modo de acesso">
                                     <div class="avatar-popover-mode-actions">
-                                        <button type="button" class="btn btn-secondary-outline height-sm avatar-popover-mode-btn<?php echo $modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="1" aria-pressed="<?php echo $modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Administrador</button>
-                                        <button type="button" class="btn btn-secondary-outline height-sm avatar-popover-mode-btn<?php echo !$modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="0" aria-pressed="<?php echo !$modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Usuário: <?php echo htmlspecialchars($avatarBadgePerfisLine !== '' ? $avatarBadgePerfisLine : '—', ENT_QUOTES, 'UTF-8'); ?></button>
+                                        <button type="button" class="avatar-popover-mode-btn<?php echo $modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="1" aria-pressed="<?php echo $modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Administrador</button>
+                                        <button type="button" class="avatar-popover-mode-btn<?php echo !$modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="0" aria-pressed="<?php echo !$modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Usuário: <?php echo htmlspecialchars($avatarBadgePerfisLine !== '' ? $avatarBadgePerfisLine : '—', ENT_QUOTES, 'UTF-8'); ?></button>
                                     </div>
                                 </div>
                                 <?php endif; ?>

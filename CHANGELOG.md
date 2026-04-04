@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.55
+
+**Data:** 2026-04-04 15:18:42 | **Commit:** `2c19c8b` | **Tipo:** `minor`
+
+- refactor: simplify button styling in admin mode toggle for improved UI consistency
+
 ## V. 1.54
 
 **Data:** 2026-04-04 15:14:23 | **Commit:** `00c2c10` | **Tipo:** `minor`
@@ -4182,6 +4188,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
