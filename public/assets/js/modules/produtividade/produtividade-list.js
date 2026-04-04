@@ -363,16 +363,6 @@
                 event.preventDefault();
             }
         });
-
-        var perPage = document.getElementById('items_per_page');
-        if (perPage) {
-            perPage.addEventListener('change', function () {
-                if (!isValidRange()) {
-                    return;
-                }
-                form.submit();
-            });
-        }
     }
 
     function setupCreateButtonGate() {

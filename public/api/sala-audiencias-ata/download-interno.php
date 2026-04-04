@@ -4,7 +4,7 @@ declare(strict_types=1);
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
-require_once $basePath . '/app/models/Usuario.php';
+require_once $basePath . '/app/helpers/UsuarioPerfisAutorizacao.php';
 require_once $basePath . '/app/access/AccessEvaluator.php';
 require_once $basePath . '/app/services/SalaAudienciasAtaService.php';
 
@@ -23,11 +23,7 @@ try {
         echo 'Sessão expirada.';
         exit;
     }
-    $usuario = new Usuario();
-    $perfils = $usuario->listarPerfisUsuario($usuarioId);
-    if (!is_array($perfils)) {
-        $perfils = [];
-    }
+    $perfils = UsuarioPerfisAutorizacao::perfisDoUsuario($usuarioId);
     if (!AccessEvaluator::canAccessPage('salaata', $perfils)) {
         http_response_code(403);
         header('Content-Type: text/plain; charset=UTF-8');

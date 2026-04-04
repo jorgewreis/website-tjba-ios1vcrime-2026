@@ -7,6 +7,7 @@ $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/CeapaService.php';
+require_once $basePath . '/app/helpers/UsuarioPerfisAutorizacao.php';
 
 if (!bootstrapRequireTrustedPostRequest()) {
     http_response_code(403);
@@ -44,9 +45,7 @@ try {
         exit;
     }
 
-    $stmt = $connection->prepare('SELECT DISTINCT UPPER(TRIM(perfil)) AS perfil FROM usuario_perfil WHERE usuario = ? AND perfil IS NOT NULL');
-    $stmt->execute([$userId]);
-    $perfis = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    $perfis = UsuarioPerfisAutorizacao::perfisDoUsuario($userId);
     $isEstagiario = in_array('ESTAGIARIO', $perfis, true);
     $isCriador = trim((string) ($registro['usuario_cadastro_id'] ?? '')) === $userId;
 

@@ -5,6 +5,8 @@ require_once __DIR__ . '/../../../config/config.php';
 require_once __DIR__ . '/../../../config/security.php';
 require_once __DIR__ . '/../../../app/helpers/Conection.php';
 require_once __DIR__ . '/../../../app/models/Usuario.php';
+require_once __DIR__ . '/../../../app/helpers/UsuarioPerfisAutorizacao.php';
+require_once __DIR__ . '/../../../app/helpers/EffectiveAccessProfiles.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -32,19 +34,20 @@ try {
         exit;
     }
 
-    $pdo = Conection::getInstance()->getConnection();
-    $stmt = $pdo->prepare("
-        SELECT DISTINCT UPPER(TRIM(perfil)) as perfil
-        FROM usuario_perfil 
-        WHERE usuario = ? AND perfil IS NOT NULL
-    ");
-    $stmt->execute([$userId]);
-    $perfis = $stmt->fetchAll(PDO::FETCH_COLUMN);
-    
+    $usuario = new Usuario();
+    $perfisCadastro = $usuario->listarPerfisUsuario($userId);
+    if (!is_array($perfisCadastro)) {
+        $perfisCadastro = [];
+    }
+    $perfis = UsuarioPerfisAutorizacao::perfisDoUsuario($userId);
+
     http_response_code(200);
     echo json_encode([
         'success' => true,
-        'perfis' => array_values($perfis ?? [])
+        'perfis' => array_values($perfis),
+        'perfis_cadastro' => array_values($perfisCadastro),
+        'admin_suprimido_sessao' => EffectiveAccessProfiles::isAdminSuppressed(),
+        'pode_alternar_modo_admin' => EffectiveAccessProfiles::canOfferAdminModeToggle($perfisCadastro),
     ]);
     
 } catch (Exception $e) {

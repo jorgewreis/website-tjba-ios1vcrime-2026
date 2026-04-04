@@ -174,10 +174,9 @@ $statusOptions = [
 $perfisPermitidosExcluir = ['ADMIN', 'CHEFIA'];
 $userPerfisEdit = [];
 $userIdEdit = $_SESSION['id_usuario'] ?? null;
-if ($userIdEdit !== null && $userIdEdit !== '') {
-    $stmtPerfis = $connection->prepare('SELECT DISTINCT UPPER(TRIM(perfil)) AS perfil FROM usuario_perfil WHERE usuario = ? AND perfil IS NOT NULL');
-    $stmtPerfis->execute([$userIdEdit]);
-    $userPerfisEdit = $stmtPerfis->fetchAll(PDO::FETCH_COLUMN);
+if ($userIdEdit !== null && trim((string) $userIdEdit) !== '') {
+    require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
+    $userPerfisEdit = UsuarioPerfisAutorizacao::perfisDoUsuario(trim((string) $userIdEdit));
 }
 $podeExcluirTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosExcluir)) > 0;
 

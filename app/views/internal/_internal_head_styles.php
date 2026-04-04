@@ -23,6 +23,8 @@ $__pageHelpersPath = dirname(__DIR__, 3) . '/public/assets/js/shared/page-helper
 $__pageHelpersV = @filemtime($__pageHelpersPath) ?: time();
 $__listSearchPath = dirname(__DIR__, 3) . '/public/assets/js/shared/list-search.js';
 $__listSearchV = @filemtime($__listSearchPath) ?: time();
+$__autoSubmitFiltersPath = dirname(__DIR__, 3) . '/public/assets/js/shared/auto-submit-filters.js';
+$__autoSubmitFiltersV = @filemtime($__autoSubmitFiltersPath) ?: time();
 $__cartorioTaskListPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-task-list.js';
 $__cartorioTaskListV = @filemtime($__cartorioTaskListPath) ?: time();
 $__oficiosEditPath = dirname(__DIR__, 3) . '/public/assets/js/shared/oficios-edit.js';
@@ -147,6 +149,7 @@ window.__APP_CONTEXT = Object.assign({}, window.__APP_CONTEXT || {}, {
 <script src="/assets/js/shared/user-context.js?v=<?php echo (int) $__userContextV; ?>"></script>
 <script src="/assets/js/shared/page-helpers.js?v=<?php echo (int) $__pageHelpersV; ?>"></script>
 <script src="/assets/js/shared/list-search.js?v=<?php echo (int) $__listSearchV; ?>"></script>
+<script src="/assets/js/shared/auto-submit-filters.js?v=<?php echo (int) $__autoSubmitFiltersV; ?>" defer></script>
 <script src="/assets/js/shared/cartorio-task-list.js?v=<?php echo (int) $__cartorioTaskListV; ?>"></script>
 <script src="/assets/js/shared/oficios-edit.js?v=<?php echo (int) $__oficiosEditV; ?>"></script>
 <script src="/assets/js/shared/oficios-list.js?v=<?php echo (int) $__oficiosListV; ?>"></script>

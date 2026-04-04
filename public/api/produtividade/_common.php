@@ -7,6 +7,7 @@ $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/ProdutividadeService.php';
+require_once $basePath . '/app/helpers/UsuarioPerfisAutorizacao.php';
 
 /**
  * @return array<string, mixed>
@@ -34,10 +35,7 @@ function produtividadeIsGestao(PDO $connection, string $userId): bool
         return false;
     }
 
-    $statement = $connection->prepare('SELECT DISTINCT UPPER(TRIM(`perfil`)) AS `perfil` FROM `usuario_perfil` WHERE `usuario` = :usuario AND `perfil` IS NOT NULL');
-    $statement->bindValue(':usuario', $userId);
-    $statement->execute();
-    $rows = $statement->fetchAll(PDO::FETCH_COLUMN);
+    $rows = UsuarioPerfisAutorizacao::perfisDoUsuario($userId);
     foreach ($rows as $perfil) {
         $p = strtoupper(trim((string) $perfil));
         if ($p === 'ADMIN' || $p === 'CHEFIA' || $p === 'DIRETORA' || $p === 'MAGISTRADA') {

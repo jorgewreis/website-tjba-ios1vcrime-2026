@@ -37,10 +37,9 @@ if ($userId === '') {
     exit;
 }
 
+require_once $basePath . '/app/helpers/UsuarioPerfisAutorizacao.php';
 $perfisGestao = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
-$stmt = $connection->prepare('SELECT DISTINCT UPPER(TRIM(perfil)) AS perfil FROM usuario_perfil WHERE usuario = ? AND perfil IS NOT NULL');
-$stmt->execute([$userId]);
-$perfis    = $stmt->fetchAll(PDO::FETCH_COLUMN);
+$perfis = UsuarioPerfisAutorizacao::perfisDoUsuario($userId);
 $isGestao  = count(array_intersect($perfis, $perfisGestao)) > 0;
 
 if (in_array($tipo, ['rule', 'all'], true) && !$isGestao) {

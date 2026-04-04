@@ -6,6 +6,7 @@ header('Content-Type: application/json; charset=UTF-8');
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
+require_once $basePath . '/app/helpers/UsuarioPerfisAutorizacao.php';
 require_once $basePath . '/app/models/Usuario.php';
 require_once $basePath . '/app/access/AccessEvaluator.php';
 require_once $basePath . '/app/access/ProfileNormalizer.php';
@@ -26,18 +27,19 @@ try {
         exit;
     }
 
-    $usuario = new Usuario();
-    $perfils = $usuario->listarPerfisUsuario($usuarioId);
-    if (!is_array($perfils)) {
-        $perfils = [];
-    }
-    if (!AccessEvaluator::canAccessPage('estudapainel', $perfils)) {
+    $perfilsEfetivos = UsuarioPerfisAutorizacao::perfisDoUsuario($usuarioId);
+    if (!AccessEvaluator::canAccessPage('estudapainel', $perfilsEfetivos)) {
         http_response_code(403);
         echo json_encode(['success' => false, 'error' => 'Acesso negado.'], JSON_UNESCAPED_UNICODE);
         exit;
     }
-    $norm = ProfileNormalizer::normalize($perfils);
-    if (!UserAccessHelper::isUsuarioExterno($perfils) || !ProfileNormalizer::hasEstudante($norm)) {
+    $usuario = new Usuario();
+    $perfilsCadastro = $usuario->listarPerfisUsuario($usuarioId);
+    if (!is_array($perfilsCadastro)) {
+        $perfilsCadastro = [];
+    }
+    $norm = ProfileNormalizer::normalize($perfilsCadastro);
+    if (!UserAccessHelper::isUsuarioExterno($perfilsCadastro) || !ProfileNormalizer::hasEstudante($norm)) {
         http_response_code(403);
         echo json_encode(['success' => false, 'error' => 'Acesso restrito ao perfil estudante.'], JSON_UNESCAPED_UNICODE);
         exit;

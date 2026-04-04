@@ -104,7 +104,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
             </div>
         </div>
 
-        <form method="get" id="form-filters" class="display-flex col col-full" style="width:100%">
+        <form method="get" id="form-filters" class="display-flex col col-full" style="width:100%" data-auto-submit-filters>
             <input type="hidden" name="page" value="<?php echo htmlspecialchars($routePage); ?>">
             <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="display-flex row row-fit justify-start gap-y-md">
@@ -132,10 +132,6 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                             <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
                         </select>
                     </div>
-                    <div class="col">
-                        <label class="display-none" for="btn-consultar-proc">Consultar</label>
-                        <button type="submit" class="btn btn-primary height-md" id="btn-consultar-proc">Consultar</button>
-                    </div>
                 </div>
             </div>
         </form>
@@ -143,7 +139,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
         <?php if (!$filtrou): ?>
                 <div class="display-flex col col-full register border-bottom status-current border-bottom" style="margin-bottom: 15px;">
                 <div class="display-flex row row-full padding-x-sm padding-y-sm">
-                    <span class="padding-y-md major-info">Informe o número do processo ou o nome da parte e clique em Consultar para exibir os resultados.</span>
+                    <span class="padding-y-md major-info">Informe o número do processo ou o nome da parte; a lista atualiza ao digitar (com pausa) ou ao alterar itens por página.</span>
                 </div>
             </div>
         <?php elseif (!empty($rows)): ?>

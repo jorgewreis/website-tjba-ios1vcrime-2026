@@ -62,7 +62,7 @@ if ($parteId !== '') {
             </div>
         </div>
 
-        <form method="get" id="form-filters" class="display-flex col col-full" style="width:100%">
+        <form method="get" id="form-filters" class="display-flex col col-full" style="width:100%" data-auto-submit-filters>
             <input type="hidden" name="page" value="partesinstituicoeslist">
             <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="display-flex row row-fit justify-start gap-y-md">
@@ -75,18 +75,13 @@ if ($parteId !== '') {
                         <input type="text" class="width-400 height-md" id="instituicao_id" name="instituicao_id" placeholder="Ex: INS-..." value="<?php echo htmlspecialchars($instituicaoId); ?>">
                     </div>
                 </div>
-                <div class="display-flex row row-fit justify-end gap-y-md align-end">
-                    <div class="col">
-                        <button type="submit" class="btn btn-primary height-md">Consultar</button>
-                    </div>
-                </div>
             </div>
         </form>
 
         <?php if ($parteId === '' && $instituicaoId === ''): ?>
             <div class="display-flex col col-full register border-bottom">
                 <div class="display-flex row row-full padding-x-sm padding-y-sm">
-                    <span class="major-info">Informe o ID da pessoa ou da instituição e clique em Consultar.</span>
+                    <span class="major-info">Informe o ID da pessoa ou da instituição; a lista atualiza ao alterar os campos.</span>
                 </div>
             </div>
         <?php elseif (!empty($rows)): ?>

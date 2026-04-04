@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.52
+
+**Data:** 2026-04-04 14:58:17 | **Commit:** `c3546fd` | **Tipo:** `minor`
+
+- feat: implement auto-submit filters in various list forms and enhance user guidance messages for improved interactivity
+
 ## V. 1.51
 
 **Data:** 2026-04-04 14:26:34 | **Commit:** `b9beac2` | **Tipo:** `minor`
@@ -4164,6 +4170,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

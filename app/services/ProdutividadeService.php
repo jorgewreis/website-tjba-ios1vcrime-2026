@@ -7,6 +7,7 @@ require_once __DIR__ . '/../repositories/ProdutividadeLogRepository.php';
 require_once __DIR__ . '/../repositories/ProdutividadeMetasRepository.php';
 require_once __DIR__ . '/../repositories/ProdutividadeBadgesRepository.php';
 require_once __DIR__ . '/../access/AccessAreas.php';
+require_once __DIR__ . '/../helpers/UsuarioPerfisAutorizacao.php';
 
 final class ProdutividadeService
 {
@@ -809,11 +810,7 @@ final class ProdutividadeService
 
     private function isGestaoUser(string $userId): bool
     {
-        $sql = 'SELECT DISTINCT UPPER(TRIM(`perfil`)) AS `perfil` FROM `usuario_perfil` WHERE `usuario` = :usuario AND `perfil` IS NOT NULL';
-        $statement = $this->connection->prepare($sql);
-        $statement->bindValue(':usuario', $userId);
-        $statement->execute();
-        $perfis = $statement->fetchAll(PDO::FETCH_COLUMN);
+        $perfis = UsuarioPerfisAutorizacao::perfisDoUsuario($userId);
         foreach ($perfis as $perfil) {
             $p = strtoupper(trim((string) $perfil));
             if ($p === 'ADMIN' || $p === 'CHEFIA' || $p === 'DIRETORA' || $p === 'MAGISTRADA') {
@@ -1180,11 +1177,7 @@ final class ProdutividadeService
         $today = date('Y-m-d');
         $setor = $this->findUserSetorCodigoArea($usuarioId);
 
-        $statementPerfis = $this->connection->prepare('SELECT DISTINCT TRIM(`perfil`) AS p FROM `usuario_perfil` WHERE `usuario` = ?');
-        $statementPerfis->execute([$usuarioId]);
-        $perfis = array_values(array_filter(array_map(static function ($value): string {
-            return trim((string) $value);
-        }, (array) $statementPerfis->fetchAll(PDO::FETCH_COLUMN))));
+        $perfis = UsuarioPerfisAutorizacao::perfisDoUsuario($usuarioId);
 
         $sql = 'SELECT *
                 FROM `produtividade_metas`

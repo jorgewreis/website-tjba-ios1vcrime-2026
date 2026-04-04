@@ -4,6 +4,7 @@ declare(strict_types=1);
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
+require_once $basePath . '/app/helpers/UsuarioPerfisAutorizacao.php';
 require_once $basePath . '/app/models/Usuario.php';
 require_once $basePath . '/app/access/AccessEvaluator.php';
 require_once $basePath . '/app/access/ProfileNormalizer.php';
@@ -25,19 +26,20 @@ try {
         echo 'Sessão expirada.';
         exit;
     }
-    $usuario = new Usuario();
-    $perfils = $usuario->listarPerfisUsuario($usuarioId);
-    if (!is_array($perfils)) {
-        $perfils = [];
-    }
-    if (!AccessEvaluator::canAccessPage('estudaata', $perfils)) {
+    $perfilsEfetivos = UsuarioPerfisAutorizacao::perfisDoUsuario($usuarioId);
+    if (!AccessEvaluator::canAccessPage('estudaata', $perfilsEfetivos)) {
         http_response_code(403);
         header('Content-Type: text/plain; charset=UTF-8');
         echo 'Acesso negado.';
         exit;
     }
-    $norm = ProfileNormalizer::normalize($perfils);
-    if (!UserAccessHelper::isUsuarioExterno($perfils) || !ProfileNormalizer::hasEstudante($norm)) {
+    $usuario = new Usuario();
+    $perfilsCadastro = $usuario->listarPerfisUsuario($usuarioId);
+    if (!is_array($perfilsCadastro)) {
+        $perfilsCadastro = [];
+    }
+    $norm = ProfileNormalizer::normalize($perfilsCadastro);
+    if (!UserAccessHelper::isUsuarioExterno($perfilsCadastro) || !ProfileNormalizer::hasEstudante($norm)) {
         http_response_code(403);
         header('Content-Type: text/plain; charset=UTF-8');
         echo 'Acesso negado.';

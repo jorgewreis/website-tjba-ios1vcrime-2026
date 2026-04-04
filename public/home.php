@@ -63,6 +63,17 @@ if ($sessionUserId !== '') {
     }
 }
 
+require_once __DIR__ . '/../app/helpers/EffectiveAccessProfiles.php';
+require_once __DIR__ . '/../app/helpers/UsuarioPerfisAutorizacao.php';
+
+$userPerfisEfectivos = [];
+$podeAlternarModoAdmin = false;
+if ($sessionUserId !== '') {
+    $userPerfisEfectivos = UsuarioPerfisAutorizacao::perfisDoUsuario($sessionUserId);
+    $podeAlternarModoAdmin = EffectiveAccessProfiles::canOfferAdminModeToggle(is_array($userPerfisDb) ? $userPerfisDb : []);
+}
+$modoAdminAtivoNavbar = !$podeAlternarModoAdmin || !EffectiveAccessProfiles::isAdminSuppressed();
+
 require_once __DIR__ . '/../app/helpers/UserAccessHelper.php';
 require_once __DIR__ . '/../app/helpers/AvatarCatalog.php';
 require_once __DIR__ . '/../app/helpers/AvatarInitialsPalette.php';
@@ -98,7 +109,7 @@ if ($sessionUserId !== '') {
     }
 
     $badgeParts = [];
-    foreach ($userPerfisDb as $p) {
+    foreach ($userPerfisEfectivos as $p) {
         $u = strtoupper(trim((string) $p));
         if ($u === 'DIRETORA' || $u === 'MAGISTRADA') {
             $u = 'CHEFIA';
@@ -332,6 +343,51 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             line-height: 1.4;
             word-break: break-word;
         }
+        .avatar-popover-mode {
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid var(--color-border);
+            width: 100%;
+        }
+        .avatar-popover-mode-label {
+            display: block;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--color-text-secondary);
+            margin-bottom: 6px;
+        }
+        .avatar-popover-mode-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .avatar-popover-mode-btn.is-active,
+        .user-summary-mode-btn.is-active {
+            border-color: var(--color-primary, #2563eb);
+            background: color-mix(in srgb, var(--color-primary, #2563eb) 12%, transparent);
+        }
+        .user-summary-mode {
+            display: none;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+            margin-top: 4px;
+            max-width: 400px;
+        }
+        .user-summary-mode-label {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--color-text-secondary);
+            margin-right: 2px;
+        }
+        @media (min-width: 1280px) {
+            .user-summary-mode {
+                display: flex;
+            }
+            .avatar-popover .avatar-popover-mode {
+                display: none;
+            }
+        }
     </style>
     
     <!-- Ícones: fi-rs-* (regular-straight), fi-br-* (bold-rounded) -->
@@ -395,6 +451,15 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                             <div id="avatar-profile-popover" class="avatar-popover" role="tooltip">
                                 <div class="avatar-popover-name"><?php echo htmlspecialchars($userDisplayFullName !== '' ? $userDisplayFullName : 'Usuário', ENT_QUOTES, 'UTF-8'); ?></div>
                                 <div class="avatar-popover-roles"><?php echo htmlspecialchars($avatarBadgePerfisLine !== '' ? $avatarBadgePerfisLine : '—', ENT_QUOTES, 'UTF-8'); ?></div>
+                                <?php if ($podeAlternarModoAdmin): ?>
+                                <div class="avatar-popover-mode" role="group" aria-label="Modo de acesso">
+                                    <span class="avatar-popover-mode-label">Modo de trabalho</span>
+                                    <div class="avatar-popover-mode-actions">
+                                        <button type="button" class="btn btn-secondary-outline height-sm avatar-popover-mode-btn<?php echo $modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="1" aria-pressed="<?php echo $modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Administrador</button>
+                                        <button type="button" class="btn btn-secondary-outline height-sm avatar-popover-mode-btn<?php echo !$modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="0" aria-pressed="<?php echo !$modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Operacional</button>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                         <div class="layout-menu-toggle">
@@ -406,6 +471,13 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                             <div class="user-summary-inline" id="user-summary-navbar" title="<?php echo htmlspecialchars($avatarSummaryTitle !== '' ? $avatarSummaryTitle : 'Usuário', ENT_QUOTES, 'UTF-8'); ?>">
                                 <span class="user-summary-name"><?php echo htmlspecialchars($userDisplayFullName !== '' ? $userDisplayFullName : 'Usuário', ENT_QUOTES, 'UTF-8'); ?></span>
                                 <span class="user-summary-roles"><?php echo htmlspecialchars($avatarBadgePerfisLine !== '' ? $avatarBadgePerfisLine : '—', ENT_QUOTES, 'UTF-8'); ?></span>
+                                <?php if ($podeAlternarModoAdmin): ?>
+                                <div class="user-summary-mode" role="group" aria-label="Modo de acesso">
+                                    <span class="user-summary-mode-label">Modo</span>
+                                    <button type="button" class="btn btn-secondary-outline height-sm user-summary-mode-btn<?php echo $modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="1" aria-pressed="<?php echo $modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Administrador</button>
+                                    <button type="button" class="btn btn-secondary-outline height-sm user-summary-mode-btn<?php echo !$modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="0" aria-pressed="<?php echo !$modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Operacional</button>
+                                </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -555,7 +627,9 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
 
         const INITIAL_USER_PERFIS = <?php echo json_encode(array_values(array_filter(array_map(static function ($p) {
             return trim((string) $p);
-        }, $userPerfisDb))), JSON_UNESCAPED_UNICODE); ?>;
+        }, $userPerfisEfectivos))), JSON_UNESCAPED_UNICODE); ?>;
+        const PODE_ALTERNAR_MODO_ADMIN = <?php echo json_encode($podeAlternarModoAdmin, JSON_UNESCAPED_UNICODE); ?>;
+        let modoAdminAtivo = <?php echo json_encode($modoAdminAtivoNavbar, JSON_UNESCAPED_UNICODE); ?>;
         const FALLBACK_PERFIS = <?php echo json_encode($userProfile ? [$userProfile] : []); ?>;
         const USER_SETORES = <?php echo json_encode(array_values(array_filter(array_map(static function ($s) {
             return trim((string) $s);
@@ -595,28 +669,66 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             return out;
         }
 
-        async function fetchUserPerfis() {
+        async function postAdminMode(modoAdmin) {
+            const res = await fetch('/api/session/set-admin-mode.php', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ modo_admin: modoAdmin })
+            });
+            let data = null;
+            try {
+                data = await res.json();
+            } catch (e) {
+                data = null;
+            }
+            if (!res.ok || !data || !data.success) {
+                const msg = (data && (data.error || data.message)) ? String(data.error || data.message) : 'Falha ao alterar modo.';
+                throw new Error(msg);
+            }
+            return data;
+        }
+
+        function clearDynamicMenuItems() {
+            const menuRoot = document.querySelector('.menu-inner');
+            if (!menuRoot) {
+                return;
+            }
+            menuRoot.querySelectorAll(':scope > li').forEach((li, idx) => {
+                if (idx > 0) {
+                    li.remove();
+                }
+            });
+        }
+
+        async function rebuildDynamicMenu(refreshPerfis) {
+            clearDynamicMenuItems();
+            const perfis = await fetchUserPerfis(refreshPerfis === true);
+            const permittedSections = getPermittedSections(perfis);
+            buildMenuForSections(permittedSections, normalizePerfis(perfis));
+            appendLogoutItem();
+        }
+
+        async function fetchUserPerfis(refresh) {
             if (window.App && App.User && typeof App.User.fetchPerfis === 'function') {
                 return App.User.fetchPerfis('/admin/api/getPerfis.php', {
                     initialPerfis: INITIAL_USER_PERFIS,
-                    fallbackPerfis: FALLBACK_PERFIS
+                    fallbackPerfis: FALLBACK_PERFIS,
+                    refresh: refresh === true
                 });
             }
-            let fromApi = [];
             try {
                 const response = await fetch('/admin/api/getPerfis.php');
-
                 if (response.ok) {
                     const result = await response.json();
-                    if (result.success && Array.isArray(result.perfis) && result.perfis.length > 0) {
-                        fromApi = result.perfis;
+                    if (result && result.success && Array.isArray(result.perfis)) {
+                        return normalizePerfis([].concat(result.perfis, FALLBACK_PERFIS || []));
                     }
                 }
             } catch (error) {
-                fromApi = [];
+                // usa bootstrap
             }
-
-            return normalizePerfis([].concat(INITIAL_USER_PERFIS || [], fromApi, FALLBACK_PERFIS || []));
+            return normalizePerfis([].concat(INITIAL_USER_PERFIS || [], FALLBACK_PERFIS || []));
         }
 
         function computePermittedMenuSectionsFromPerfis(perfis) {
@@ -835,10 +947,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
         }
 
         async function initDynamicMenu() {
-            const perfis = await fetchUserPerfis();
-            const permittedSections = getPermittedSections(perfis);
-            buildMenuForSections(permittedSections, normalizePerfis(perfis));
-            appendLogoutItem();
+            await rebuildDynamicMenu(false);
         }
 
         function syncThemeToFrame(theme) {
@@ -891,6 +1000,34 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             await initDynamicMenu();
             App.Menu.initMenu();
             App.Menu.initActive();
+
+            if (PODE_ALTERNAR_MODO_ADMIN) {
+                const modeButtons = document.querySelectorAll('button[data-admin-mode]');
+                modeButtons.forEach((btn) => {
+                    btn.addEventListener('click', async (ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        const wantAdmin = btn.getAttribute('data-admin-mode') === '1';
+                        if (wantAdmin === modoAdminAtivo) {
+                            return;
+                        }
+                        modeButtons.forEach((b) => {
+                            b.disabled = true;
+                        });
+                        try {
+                            await postAdminMode(wantAdmin);
+                            window.location.reload();
+                        } catch (err) {
+                            modeButtons.forEach((b) => {
+                                b.disabled = false;
+                            });
+                            if (window.App && App.Toast && typeof App.Toast.show === 'function') {
+                                App.Toast.show({ type: 'error', title: 'Erro', message: String(err && err.message ? err.message : err) });
+                            }
+                        }
+                    });
+                });
+            }
 
             /* Submenu flutuante do botão Configurações (ícone engrenagem) */
             (function initSettingsDropdown() {

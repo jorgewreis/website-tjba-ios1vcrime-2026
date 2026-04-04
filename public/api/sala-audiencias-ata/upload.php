@@ -6,7 +6,7 @@ header('Content-Type: application/json; charset=UTF-8');
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
-require_once $basePath . '/app/models/Usuario.php';
+require_once $basePath . '/app/helpers/UsuarioPerfisAutorizacao.php';
 require_once $basePath . '/app/access/AccessEvaluator.php';
 require_once $basePath . '/app/services/SalaAudienciasAtaService.php';
 
@@ -47,11 +47,7 @@ try {
         echo json_encode(['success' => false, 'error' => 'Sessão expirada. Faça login novamente.'], JSON_UNESCAPED_UNICODE);
         exit;
     }
-    $usuario = new Usuario();
-    $perfils = $usuario->listarPerfisUsuario($usuarioId);
-    if (!is_array($perfils)) {
-        $perfils = [];
-    }
+    $perfils = UsuarioPerfisAutorizacao::perfisDoUsuario($usuarioId);
     if (!AccessEvaluator::canAccessPage('salaata', $perfils)) {
         http_response_code(403);
         echo json_encode(['success' => false, 'error' => 'Acesso negado.'], JSON_UNESCAPED_UNICODE);

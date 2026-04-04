@@ -14,9 +14,8 @@ $currentUserId   = trim((string) ($_SESSION['id_usuario'] ?? ''));
 $perfisGestaoLst = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
 $isGestao        = false;
 if ($currentUserId !== '') {
-    $stmtPerfis = $connection->prepare('SELECT DISTINCT UPPER(TRIM(perfil)) AS perfil FROM usuario_perfil WHERE usuario = ? AND perfil IS NOT NULL');
-    $stmtPerfis->execute([$currentUserId]);
-    $perfisUsuario = $stmtPerfis->fetchAll(PDO::FETCH_COLUMN);
+    require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
+    $perfisUsuario = UsuarioPerfisAutorizacao::perfisDoUsuario($currentUserId);
     $isGestao = count(array_intersect($perfisUsuario, $perfisGestaoLst)) > 0;
 }
 

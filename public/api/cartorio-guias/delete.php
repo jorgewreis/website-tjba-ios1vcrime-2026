@@ -16,12 +16,11 @@ if (!bootstrapRequireTrustedPostRequest()) {
 }
 
 $connection = Conection::getInstance()->getConnection();
+require_once $basePath . '/app/helpers/UsuarioPerfisAutorizacao.php';
 $userPerfis = [];
 $userId = $_SESSION['id_usuario'] ?? null;
-if ($userId !== null && $userId !== '') {
-    $stmt = $connection->prepare('SELECT DISTINCT UPPER(TRIM(perfil)) AS perfil FROM usuario_perfil WHERE usuario = ? AND perfil IS NOT NULL');
-    $stmt->execute([$userId]);
-    $userPerfis = $stmt->fetchAll(PDO::FETCH_COLUMN);
+if ($userId !== null && trim((string) $userId) !== '') {
+    $userPerfis = UsuarioPerfisAutorizacao::perfisDoUsuario(trim((string) $userId));
 }
 $podeExcluir = count(array_intersect($userPerfis, ['ADMIN', 'CHEFIA'])) > 0;
 if (!$podeExcluir) {

@@ -36,12 +36,11 @@ $connection = Conection::getInstance()->getConnection();
 
 $perfisAlterarRegra = ['ADMIN', 'DIRETORA', 'MAGISTRADA'];
 
+require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
 $userPerfis = [];
 $userId = $_SESSION['id_usuario'] ?? null;
-if ($userId !== null && $userId !== '') {
-    $stmt = $connection->prepare('SELECT DISTINCT UPPER(TRIM(perfil)) AS perfil FROM usuario_perfil WHERE usuario = ? AND perfil IS NOT NULL');
-    $stmt->execute([$userId]);
-    $userPerfis = $stmt->fetchAll(PDO::FETCH_COLUMN);
+if ($userId !== null && trim((string) $userId) !== '') {
+    $userPerfis = UsuarioPerfisAutorizacao::perfisDoUsuario(trim((string) $userId));
 }
 $podeAlterarRegra = count(array_intersect($userPerfis, $perfisAlterarRegra)) > 0;
 

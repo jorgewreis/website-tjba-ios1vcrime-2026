@@ -8,6 +8,7 @@ require_once __DIR__ . '/../app/models/Usuario.php';
 require_once __DIR__ . '/../app/helpers/Conection.php';
 require_once __DIR__ . '/../app/access/AccessEvaluator.php';
 require_once __DIR__ . '/../app/access/AccessPolicyVersion.php';
+require_once __DIR__ . '/../app/helpers/UsuarioPerfisAutorizacao.php';
 
 Security::requireAuthentication();
 
@@ -193,10 +194,7 @@ do {
         break;
     }
 
-    $userPerfils = $usuario->listarPerfisUsuario($userId);
-    if (!is_array($userPerfils)) {
-        $userPerfils = [];
-    }
+    $userPerfils = UsuarioPerfisAutorizacao::perfisDoUsuario($userId);
 
     $isExterno = UserAccessHelper::isUsuarioExterno($userPerfils);
     if ($isExterno && $page === 'dashboard') {

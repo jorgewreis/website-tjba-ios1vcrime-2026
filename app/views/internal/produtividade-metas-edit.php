@@ -7,6 +7,7 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 require_once __DIR__ . '/../../helpers/Conection.php';
+require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
 require_once __DIR__ . '/../../services/ProdutividadeService.php';
 
 $connection = Conection::getInstance()->getConnection();
@@ -16,9 +17,7 @@ $metaId = trim((string) ($_GET['id'] ?? ''));
 
 $isGestao = false;
 if ($userId !== '') {
-    $stmtPerfis = $connection->prepare('SELECT DISTINCT UPPER(TRIM(perfil)) AS perfil FROM usuario_perfil WHERE usuario = ? AND perfil IS NOT NULL');
-    $stmtPerfis->execute([$userId]);
-    $perfis = $stmtPerfis->fetchAll(PDO::FETCH_COLUMN);
+    $perfis = UsuarioPerfisAutorizacao::perfisDoUsuario($userId);
     foreach ($perfis as $perfil) {
         $p = strtoupper(trim((string) $perfil));
         if ($p === 'ADMIN' || $p === 'CHEFIA' || $p === 'DIRETORA' || $p === 'MAGISTRADA') {

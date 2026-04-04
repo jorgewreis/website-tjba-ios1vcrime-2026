@@ -13,6 +13,7 @@ require_once __DIR__ . '/../../helpers/AvatarCatalog.php';
 require_once __DIR__ . '/../../helpers/SetoresAccessHelper.php';
 require_once __DIR__ . '/../../helpers/SexoHelper.php';
 require_once __DIR__ . '/../../../config/security.php';
+require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
 
 Security::requireAuthentication();
 
@@ -20,11 +21,8 @@ Security::requireAuthentication();
 $perfisPermitidos = ['ADMIN', 'CHEFIA'];
 $userPerfis = [];
 $userId = Security::getUserId();
-if ($userId !== null && $userId !== '') {
-    $connection = Conection::getInstance()->getConnection();
-    $stmt = $connection->prepare('SELECT DISTINCT UPPER(TRIM(perfil)) AS perfil FROM usuario_perfil WHERE usuario = ? AND perfil IS NOT NULL');
-    $stmt->execute([$userId]);
-    $userPerfis = $stmt->fetchAll(PDO::FETCH_COLUMN);
+if ($userId !== null && trim((string) $userId) !== '') {
+    $userPerfis = UsuarioPerfisAutorizacao::perfisDoUsuario(trim((string) $userId));
 }
 $podeCadastrar = count(array_intersect($userPerfis, $perfisPermitidos)) > 0;
 

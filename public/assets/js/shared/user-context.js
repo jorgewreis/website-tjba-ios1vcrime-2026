@@ -37,6 +37,11 @@
             .concat((options && options.fallbackPerfis) || []));
     }
 
+    function clearPerfisCache(endpoint) {
+        const key = String(endpoint || '/admin/api/getPerfis.php');
+        delete perfisPromiseByEndpoint[key];
+    }
+
     async function fetchPerfis(endpoint = '/admin/api/getPerfis.php', options) {
         const opts = options || {};
         const cacheKey = String(endpoint || '/admin/api/getPerfis.php');
@@ -45,7 +50,6 @@
         }
 
         const promise = (async function () {
-            let perfisApi = [];
             try {
                 const response = await fetch(cacheKey, {
                     credentials: 'same-origin',
@@ -54,16 +58,15 @@
                 if (response.ok) {
                     const payload = await response.json();
                     if (payload && Array.isArray(payload.perfis)) {
-                        perfisApi = payload.perfis;
+                        return normalizePerfis([].concat(payload.perfis).concat(opts.extraPerfis || []));
                     }
                 }
             } catch (error) {
-                perfisApi = [];
+                // ignora; usa bootstrap abaixo
             }
 
             return normalizePerfis([]
                 .concat(getBootstrapPerfis(opts))
-                .concat(perfisApi)
                 .concat(opts.extraPerfis || []));
         })();
 
@@ -183,6 +186,7 @@
 
     App.User = {
         normalizePerfis,
+        clearPerfisCache,
         fetchPerfis,
         hasAnyPerfil,
         canChangeRule,

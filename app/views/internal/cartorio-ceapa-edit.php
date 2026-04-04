@@ -75,9 +75,8 @@ $lockClasse = trim($classeNome) !== '' && $classeNome !== 'Classe não informada
 $userPerfisEdit = [];
 $userIdEdit = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
 if ($userIdEdit !== '') {
-    $stmtPerfis = $connection->prepare('SELECT DISTINCT UPPER(TRIM(perfil)) AS perfil FROM usuario_perfil WHERE usuario = ? AND perfil IS NOT NULL');
-    $stmtPerfis->execute([$userIdEdit]);
-    $userPerfisEdit = $stmtPerfis->fetchAll(PDO::FETCH_COLUMN);
+    require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
+    $userPerfisEdit = UsuarioPerfisAutorizacao::perfisDoUsuario($userIdEdit);
 }
 $isEstagiarioEdit = in_array('ESTAGIARIO', $userPerfisEdit, true);
 $isCriadorTarefa = $tarefa !== null && trim((string) ($tarefa['usuario_cadastro_id'] ?? '')) === $userIdEdit;

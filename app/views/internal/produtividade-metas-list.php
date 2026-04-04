@@ -7,6 +7,7 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 require_once __DIR__ . '/../../helpers/Conection.php';
+require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
 require_once __DIR__ . '/../../helpers/ProdutividadeMetaAlvoOptions.php';
 require_once __DIR__ . '/../../services/ProdutividadeService.php';
 
@@ -17,9 +18,7 @@ $routePage = trim((string) ($_GET['page'] ?? 'produtividademetas'));
 
 $isGestao = false;
 if ($userId !== '') {
-    $stmtPerfis = $connection->prepare('SELECT DISTINCT UPPER(TRIM(perfil)) AS perfil FROM usuario_perfil WHERE usuario = ? AND perfil IS NOT NULL');
-    $stmtPerfis->execute([$userId]);
-    $perfis = $stmtPerfis->fetchAll(PDO::FETCH_COLUMN);
+    $perfis = UsuarioPerfisAutorizacao::perfisDoUsuario($userId);
     foreach ($perfis as $perfil) {
         $p = strtoupper(trim((string) $perfil));
         if ($p === 'ADMIN' || $p === 'CHEFIA' || $p === 'DIRETORA' || $p === 'MAGISTRADA') {
@@ -152,7 +151,7 @@ $baseQuery = [
             </div>
         </div>
 
-        <form method="get" class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
+        <form method="get" class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md" data-auto-submit-filters>
             <input type="hidden" name="page" value="<?php echo htmlspecialchars($routePage, ENT_QUOTES); ?>">
             <div class="display-flex row row-fit justify-start gap-y-md">
                 <div class="col">
@@ -193,9 +192,6 @@ $baseQuery = [
                         <?php endforeach; ?>
                     </select>
                 </div>
-            </div>
-            <div class="display-flex row row-fit justify-end gap-y-md align-end">
-                <button type="submit" class="btn btn-primary height-md">Consultar</button>
             </div>
         </form>
 
@@ -316,18 +312,6 @@ if (typeof showToast === 'function') {
 }
 </script>
 <?php endif; ?>
-<script>
-(function () {
-    var form = document.querySelector('form[method="get"]');
-    var perPage = document.getElementById('items_per_page');
-    if (!form || !perPage) {
-        return;
-    }
-    perPage.addEventListener('change', function () {
-        form.submit();
-    });
-})();
-</script>
 </body>
 </html>
 

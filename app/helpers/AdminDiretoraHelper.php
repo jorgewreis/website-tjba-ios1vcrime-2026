@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../../config/security.php';
+require_once __DIR__ . '/UsuarioPerfisAutorizacao.php';
 
 /**
  * Verifica se o usuário logado possui perfil ADMIN ou DIRETORA.
@@ -10,20 +11,13 @@ require_once __DIR__ . '/../../config/security.php';
  */
 function getPerfisUsuarioAtual(PDO $connection): array
 {
+    unset($connection);
     $userId = Security::getUserId();
     if ($userId === null || $userId === '') {
         return [];
     }
-    $stmt = $connection->prepare(
-        'SELECT DISTINCT UPPER(TRIM(perfil)) AS perfil FROM usuario_perfil WHERE usuario = ? AND perfil IS NOT NULL'
-    );
-    $stmt->execute([$userId]);
-    $rows = $stmt->fetchAll(PDO::FETCH_COLUMN);
-    if (!is_array($rows)) {
-        return [];
-    }
 
-    return array_values(array_filter(array_map('strval', $rows)));
+    return UsuarioPerfisAutorizacao::perfisDoUsuario(trim((string) $userId));
 }
 
 function usuarioEhAdminOuDiretora(PDO $connection): bool

@@ -7,6 +7,7 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 require_once __DIR__ . '/../../helpers/Conection.php';
+require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
 require_once __DIR__ . '/../../services/ProdutividadeService.php';
 
 $connection = Conection::getInstance()->getConnection();
@@ -17,7 +18,7 @@ $today = date('Y-m-d');
 
 $filters = [
     'status' => trim((string) ($_GET['status'] ?? 'ativo')),
-    'tipo_lancamento' => trim((string) ($_GET['tipo_lancamento'] ?? 'manual')),
+    'tipo_lancamento' => trim((string) ($_GET['tipo_lancamento'] ?? '')),
     'data_inicio' => trim((string) ($_GET['data_inicio'] ?? $today)),
     'data_fim' => trim((string) ($_GET['data_fim'] ?? $today)),
     'usuario_id' => trim((string) ($_GET['usuario_id'] ?? '')),
@@ -104,9 +105,7 @@ if ($totalDocuments === 0) {
 }
 
 if ($userId !== '') {
-    $stmtPerfis = $connection->prepare('SELECT DISTINCT UPPER(TRIM(perfil)) AS perfil FROM usuario_perfil WHERE usuario = ? AND perfil IS NOT NULL');
-    $stmtPerfis->execute([$userId]);
-    $userPerfis = $stmtPerfis->fetchAll(PDO::FETCH_COLUMN);
+    $userPerfis = UsuarioPerfisAutorizacao::perfisDoUsuario($userId);
     $canSeeRegrasButton = in_array('ADMIN', $userPerfis, true) || in_array('CHEFIA', $userPerfis, true) || in_array('DIRETORA', $userPerfis, true) || in_array('MAGISTRADA', $userPerfis, true);
     $canSeeMetasButton = $canSeeRegrasButton;
     $canSeeBadgesButton = $canSeeRegrasButton;
@@ -214,7 +213,7 @@ if ($canLoadLancamentos && $errors === []) {
             <span class="specific">Produtividade</span>
         </div>
         <h1 class="title-page">Produtividade</h1>
-        <p class="description-page">Lançamentos de produtividade com pontuação por ato e cadastro manual.</p>
+        <p class="description-page">Lançamentos de produtividade por ato: cadastro manual e registros automáticos do cartório. Por padrão o filtro Tipo lista todos os lançamentos.</p>
     </div>
 
     <div class="container-full card-page">
@@ -275,7 +274,7 @@ if ($canLoadLancamentos && $errors === []) {
             <div class="display-flex row row-fit justify-end gap-y-md"></div>
         </div>
 
-        <form method="get" id="filtro-produtividade-form" class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
+        <form method="get" id="filtro-produtividade-form" class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md" data-auto-submit-filters>
             <input type="hidden" name="page" value="<?php echo htmlspecialchars($routePage, ENT_QUOTES); ?>">
             <div class="display-flex row row-fit justify-start gap-y-md">
                 <div class="col">
@@ -329,7 +328,6 @@ if ($canLoadLancamentos && $errors === []) {
                 </div>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-end">
-                <button type="submit" class="btn btn-primary height-md">Filtrar</button>
                 <?php
                 $listExportCsvUrl = $exportCsvHref;
                 $listExportPdfUrl = $exportPdfHref;

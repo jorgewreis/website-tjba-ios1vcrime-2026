@@ -37,12 +37,11 @@ if ($idMedida === '') {
 
 $perfisPermitidosExcluir = ['ADMIN', 'CHEFIA'];
 $perfisPermitidosCancelar = ['ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA'];
+require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
 $userPerfis = [];
 $userId = $_SESSION['id_usuario'] ?? null;
-if ($userId !== null && $userId !== '') {
-    $stmt = $connection->prepare('SELECT DISTINCT UPPER(TRIM(perfil)) AS perfil FROM usuario_perfil WHERE usuario = ? AND perfil IS NOT NULL');
-    $stmt->execute([$userId]);
-    $userPerfis = $stmt->fetchAll(PDO::FETCH_COLUMN);
+if ($userId !== null && trim((string) $userId) !== '') {
+    $userPerfis = UsuarioPerfisAutorizacao::perfisDoUsuario(trim((string) $userId));
 }
 $podeExcluirTarefa = count(array_intersect($userPerfis, $perfisPermitidosExcluir)) > 0;
 $podeCancelarTarefa = count(array_intersect($userPerfis, $perfisPermitidosCancelar)) > 0;

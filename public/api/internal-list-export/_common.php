@@ -5,6 +5,7 @@ $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/config/security.php';
 require_once $basePath . '/app/models/Usuario.php';
+require_once $basePath . '/app/helpers/UsuarioPerfisAutorizacao.php';
 require_once $basePath . '/app/access/AccessEvaluator.php';
 require_once $basePath . '/app/helpers/ListExportHelper.php';
 require_once $basePath . '/app/helpers/InternalListExportHandlers.php';
@@ -29,11 +30,7 @@ function internal_list_export_bootstrap(): array
     }
 
     $pdo = Conection::getInstance()->getConnection();
-    $usuario = new Usuario();
-    $userPerfils = $usuario->listarPerfisUsuario($userId);
-    if (!is_array($userPerfils)) {
-        $userPerfils = [];
-    }
+    $userPerfils = UsuarioPerfisAutorizacao::perfisDoUsuario($userId);
 
     if (!AccessEvaluator::canAccessPage($listPage, $userPerfils)) {
         internal_list_export_http_error(403, 'Acesso negado.');

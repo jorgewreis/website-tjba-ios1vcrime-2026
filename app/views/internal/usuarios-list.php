@@ -9,6 +9,7 @@ if (function_exists('mb_internal_encoding')) {
 require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../services/UsuariosService.php';
 require_once __DIR__ . '/../../../config/security.php';
+require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -16,10 +17,8 @@ $connection = Conection::getInstance()->getConnection();
 $perfisComAcessoRowAction = ['ADMIN', 'MAGISTRADA', 'DIRETORA'];
 $userPerfis = [];
 $userId = Security::getUserId();
-if ($userId !== null && $userId !== '') {
-    $stmt = $connection->prepare('SELECT DISTINCT UPPER(TRIM(perfil)) AS perfil FROM usuario_perfil WHERE usuario = ? AND perfil IS NOT NULL');
-    $stmt->execute([$userId]);
-    $userPerfis = $stmt->fetchAll(PDO::FETCH_COLUMN);
+if ($userId !== null && trim((string) $userId) !== '') {
+    $userPerfis = UsuarioPerfisAutorizacao::perfisDoUsuario(trim((string) $userId));
 }
 $showRowAction = count(array_intersect($userPerfis, $perfisComAcessoRowAction)) > 0;
 
@@ -159,7 +158,7 @@ $statusClasses = [
             </div>
         </div>
 
-        <form method="get" id="form-filters" class="display-flex col col-full" style="width:100%">
+        <form method="get" id="form-filters" class="display-flex col col-full" style="width:100%" data-auto-submit-filters>
             <input type="hidden" name="page" value="<?php echo htmlspecialchars($routePage); ?>">
             <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="display-flex row row-fit justify-start gap-y-md">
@@ -214,9 +213,6 @@ $statusClasses = [
                             <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
                             <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
                         </select>
-                    </div>
-                    <div class="col">
-                        <button type="submit" class="btn btn-primary height-md">Consultar</button>
                     </div>
                 </div>
             </div>
@@ -306,27 +302,6 @@ $statusClasses = [
 
     <script>
     (function () {
-        var form = document.getElementById('form-filters');
-        var itemsPerPage = document.getElementById('items-per-page');
-        var filterTipo = document.getElementById('filter-tipo');
-        var filterPerfil = document.getElementById('filter-perfil');
-
-        if (itemsPerPage && form) {
-            itemsPerPage.addEventListener('change', function () {
-                form.submit();
-            });
-        }
-        if (filterTipo && form) {
-            filterTipo.addEventListener('change', function () {
-                form.submit();
-            });
-        }
-        if (filterPerfil && form) {
-            filterPerfil.addEventListener('change', function () {
-                form.submit();
-            });
-        }
-
         var novoBtn = document.getElementById('novo-cadastro-btn');
         if (novoBtn) {
             novoBtn.addEventListener('click', function () {

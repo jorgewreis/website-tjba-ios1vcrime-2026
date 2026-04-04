@@ -279,7 +279,8 @@ final class Security
                 $_SESSION[self::SESSION_TOKEN_KEY],
                 $_SESSION[self::SESSION_USER_NAME],
                 $_SESSION[self::SESSION_LAST_ACTIVITY],
-                $_SESSION[self::CSRF_SESSION_KEY]
+                $_SESSION[self::CSRF_SESSION_KEY],
+                $_SESSION['access_suppress_admin_profile']
             );
         }
 
