@@ -393,14 +393,20 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             font-weight: 600;
         }
         @media (min-width: 1280px) {
-            .user-summary-mode {
+            .user-summary-roles {
                 display: flex;
                 flex-direction: row;
                 flex-wrap: wrap;   
                 gap: 10px;
                 align-items: center;
                 justify-content: flex-start;
+                text-transform: uppercase;
             }
+            .user-summary-roles.is-active {
+                color: var(--color-primary);
+                font-weight: 600;
+            }
+
             .avatar-popover .avatar-popover-mode {
                 display: none;
             }

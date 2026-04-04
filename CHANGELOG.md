@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.61
+
+**Data:** 2026-04-04 16:18:02 | **Commit:** `ed655d4` | **Tipo:** `minor`
+
+- refactor: enhance user summary roles styling for improved visibility and consistency
+
 ## V. 1.60
 
 **Data:** 2026-04-04 16:14:03 | **Commit:** `4ccb5f6` | **Tipo:** `minor`
@@ -4224,6 +4230,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
