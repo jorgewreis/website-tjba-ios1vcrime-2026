@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.58
+
+**Data:** 2026-04-04 15:57:11 | **Commit:** `1eef5b6` | **Tipo:** `minor`
+
+- refactor: remove obsolete comments regarding user profile session management to improve code clarity
+
 ## V. 1.57.0001
 
 **Data:** 2026-04-04 15:39:20 | **Commit:** `0b6c091` | **Tipo:** `patch`
@@ -4206,6 +4212,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -64,8 +64,6 @@ if ($sessionUserId !== '') {
     }
 }
 
-// user_profile na sessão é definido no login (perfil com maior rank). Se o cadastro mudou
-// sem novo login, o valor pode ficar obsoleto (ex.: ADMIN removido) e poluir fallback no cliente.
 if ($sessionUserId !== '' && is_array($userPerfisDb)) {
     $principalRank = 0;
     $principal = null;
