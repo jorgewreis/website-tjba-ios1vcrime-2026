@@ -54,6 +54,35 @@ final class ProdutividadeRegrasRepository
         return $row === false ? null : $row;
     }
 
+    public function findAtivaByContext(string $tipoAto, string $tipoDocumento, string $sistemaModulo): ?array
+    {
+        $tipoAto = trim($tipoAto);
+        $tipoDocumento = trim($tipoDocumento);
+        $sistemaModulo = trim($sistemaModulo);
+        if ($tipoAto === '') {
+            return null;
+        }
+
+        $sql = sprintf(
+            'SELECT `id`, `tipo_ato`, `tipo_documento`, `sistema_modulo`, `pontos_por_ato`, `pontos_multiplicador`, `ativo`, `observacoes`, `criado_por`, `criado_em`, `atualizado_em`
+             FROM `%s`
+             WHERE `ativo` = 1
+               AND UPPER(TRIM(`tipo_ato`)) = UPPER(:tipo_ato)
+               AND UPPER(TRIM(COALESCE(`tipo_documento`, \'\'))) = UPPER(:tipo_documento)
+               AND UPPER(TRIM(COALESCE(`sistema_modulo`, \'\'))) = UPPER(:sistema_modulo)
+             LIMIT 1',
+            $this->table
+        );
+        $statement = $this->connection->prepare($sql);
+        $statement->bindValue(':tipo_ato', $tipoAto);
+        $statement->bindValue(':tipo_documento', $tipoDocumento);
+        $statement->bindValue(':sistema_modulo', $sistemaModulo);
+        $statement->execute();
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+
+        return $row === false ? null : $row;
+    }
+
     /**
      * @return list<array<string, mixed>>
      */

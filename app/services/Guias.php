@@ -6,7 +6,7 @@ require_once __DIR__ . '/../helpers/AuditLoggerHelper.php';
 require_once __DIR__ . '/ClasseManager.php';
 require_once __DIR__ . '/ProcessoManager.php';
 require_once __DIR__ . '/ReuManager.php';
-require_once __DIR__ . '/Produtividade.php';
+require_once __DIR__ . '/ProdutividadeService.php';
 
 class Guias
 {
@@ -14,7 +14,7 @@ class Guias
     private ClasseManager $classeManager;
     private ProcessoManager $processoManager;
     private ReuManager $reuManager;
-    private Produtividade $produtividade;
+    private ProdutividadeService $produtividadeService;
 
     public function __construct(PDO $pdo)
     {
@@ -22,7 +22,7 @@ class Guias
         $this->classeManager = new ClasseManager($pdo);
         $this->processoManager = new ProcessoManager($pdo);
         $this->reuManager = new ReuManager($pdo);
-        $this->produtividade = new Produtividade($pdo);
+        $this->produtividadeService = new ProdutividadeService($pdo);
     }
 
     private function calcularStatusGuiaPorSubtarefas(string $idGuia): string
@@ -379,13 +379,23 @@ class Guias
                 }
 
                 $pontosProd = $temDetalhamento ? 2.0 : 1.0;
-                $this->produtividade->registrarCadastroGuia(
-                    $idGuia,
-                    (string)($dados['processo'] ?? ''),
-                    $usuarioProd,
-                    $agora,
-                    $temDetalhamento
-                );
+                try {
+                    $this->produtividadeService->registrarAuto($usuarioProd, [
+                        'tipo_ato' => 'Cadastro de guia',
+                        'tipo_documento' => 'Guia',
+                        'sistema_modulo' => 'cartorio-guias',
+                        'quantidade' => $temDetalhamento ? 2 : 1,
+                        'referencia_item_id' => $idGuia,
+                        'referencia_sistema' => 'guias',
+                        'numero_processo' => (string)($dados['processo'] ?? ''),
+                        'classe_processo' => (string)($dados['classe_desc'] ?? $dados['classe_cod'] ?? ''),
+                        'observacoes' => 'Registro automático no cadastro de guia.',
+                        'data_hora_ato' => $agora,
+                    ]);
+                } catch (Throwable $e) {
+                    // Produtividade é acessória ao fluxo de cadastro da guia.
+                    error_log('Falha ao registrar produtividade automática em guia: ' . $e->getMessage());
+                }
             }
 
             $this->pdo->commit();

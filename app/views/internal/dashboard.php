@@ -2,6 +2,49 @@
 declare(strict_types=1);
 
 Security::requireAuthentication();
+
+require_once __DIR__ . '/../../helpers/Conection.php';
+require_once __DIR__ . '/../../services/ProdutividadeService.php';
+
+$connection = Conection::getInstance()->getConnection();
+$service = new ProdutividadeService($connection);
+$userId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
+
+$prodWeekPoints = 0.0;
+$prodRankingPos = null;
+$prodRankingSetor = '';
+$prodError = '';
+if ($userId !== '') {
+    try {
+        $today = date('Y-m-d');
+        $resumo = $service->getResumoCards($userId, [
+            'status' => 'ativo',
+            'tipo_lancamento' => '',
+            'data_inicio' => $today,
+            'data_fim' => $today,
+        ]);
+        $prodWeekPoints = (float) (($resumo['week']['current'] ?? 0));
+
+        $ranking = $service->listRanking($userId, [
+            'status' => 'ativo',
+            'tipo_lancamento' => '',
+            'data_inicio' => date('Y-m-d', strtotime('monday this week')),
+            'data_fim' => date('Y-m-d', strtotime('sunday this week')),
+        ], 200);
+        $setores = $ranking['setores'] ?? [];
+        foreach ($setores as $setor) {
+            foreach (($setor['rows'] ?? []) as $row) {
+                if ((string) ($row['usuario_id'] ?? '') === $userId) {
+                    $prodRankingPos = (int) ($row['posicao'] ?? 0);
+                    $prodRankingSetor = (string) ($setor['setor_nome'] ?? '');
+                    break 2;
+                }
+            }
+        }
+    } catch (Throwable $e) {
+        $prodError = $e->getMessage();
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -40,6 +83,34 @@ Security::requireAuthentication();
         </div>
     </div>
 
+    <div class="container-full card-page margin-top-md" id="produtividade-dashboard-widget">
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <h2>Produtividade da semana</h2>
+            <button type="button" class="btn btn-secondary-outline height-md" data-nav-href="/frame.php?page=produtividade">Abrir módulo</button>
+        </div>
+        <div class="display-flex row row-full padding-x-md padding-y-md gap-y-md border-bottom">
+            <div class="col width-300">
+                <span class="minor-info">Pontos na semana</span>
+                <span class="major-info"><?php echo number_format($prodWeekPoints, 2, ',', '.'); ?> pts</span>
+            </div>
+            <div class="col width-500">
+                <span class="minor-info">Posição no ranking do setor</span>
+                <span class="major-info">
+                    <?php if ($prodRankingPos !== null && $prodRankingPos > 0): ?>
+                        #<?php echo (int) $prodRankingPos; ?><?php echo $prodRankingSetor !== '' ? ' em ' . htmlspecialchars($prodRankingSetor, ENT_QUOTES, 'UTF-8') : ''; ?>
+                    <?php else: ?>
+                        Sem posição no período
+                    <?php endif; ?>
+                </span>
+            </div>
+        </div>
+        <?php if ($prodError !== ''): ?>
+        <div class="display-flex row row-full padding-x-md padding-y-sm border-bottom">
+            <span class="status status-cancelled"><?php echo htmlspecialchars('Erro ao carregar widget de produtividade: ' . $prodError, ENT_QUOTES, 'UTF-8'); ?></span>
+        </div>
+        <?php endif; ?>
+    </div>
+
     <div class="footer-page">
         <div class="location">
             <span class="all">Aplicativo web desenvolvido integralmente por </span>
@@ -48,5 +119,6 @@ Security::requireAuthentication();
         </div>
     </div>
     <?php include __DIR__ . '/_profile_saved_reload_parent.php'; ?>
+    <script src="/assets/js/modules/produtividade/badge-popup.js"></script>
 </body>
 </html>

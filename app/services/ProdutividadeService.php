@@ -5,6 +5,7 @@ require_once __DIR__ . '/../repositories/ProdutividadeRegrasRepository.php';
 require_once __DIR__ . '/../repositories/ProdutividadeLancamentosRepository.php';
 require_once __DIR__ . '/../repositories/ProdutividadeLogRepository.php';
 require_once __DIR__ . '/../repositories/ProdutividadeMetasRepository.php';
+require_once __DIR__ . '/../repositories/ProdutividadeBadgesRepository.php';
 require_once __DIR__ . '/../access/AccessAreas.php';
 
 final class ProdutividadeService
@@ -14,6 +15,7 @@ final class ProdutividadeService
     private ProdutividadeLancamentosRepository $lancamentosRepository;
     private ProdutividadeLogRepository $logRepository;
     private ProdutividadeMetasRepository $metasRepository;
+    private ProdutividadeBadgesRepository $badgesRepository;
 
     public function __construct(PDO $connection)
     {
@@ -22,6 +24,7 @@ final class ProdutividadeService
         $this->lancamentosRepository = new ProdutividadeLancamentosRepository($connection);
         $this->logRepository = new ProdutividadeLogRepository($connection);
         $this->metasRepository = new ProdutividadeMetasRepository($connection);
+        $this->badgesRepository = new ProdutividadeBadgesRepository($connection);
     }
 
     public function listRules(string $actorUserId, array $filters, int $limit, int $offset): array
@@ -154,6 +157,11 @@ final class ProdutividadeService
                 'numero_processo' => $numeroProcesso,
             ]);
             $this->connection->commit();
+            try {
+                $this->verificarBadges($actorUserId);
+            } catch (Throwable $ignored) {
+                // Badge não pode quebrar o fluxo principal do lançamento.
+            }
             return $lancamentoId;
         } catch (PDOException $e) {
             $this->connection->rollBack();
@@ -215,6 +223,107 @@ final class ProdutividadeService
             $this->connection->rollBack();
             throw $e;
         }
+    }
+
+    /**
+     * @return array{created:bool,id:?string,reason:string}
+     */
+    public function registrarAuto(string $actorUserId, array $payload): array
+    {
+        $this->assertAuthenticated($actorUserId);
+
+        $tipoAto = trim((string) ($payload['tipo_ato'] ?? ''));
+        $tipoDocumento = trim((string) ($payload['tipo_documento'] ?? ''));
+        $sistemaModulo = trim((string) ($payload['sistema_modulo'] ?? ''));
+        $regra = $this->regrasRepository->findAtivaByContext($tipoAto, $tipoDocumento, $sistemaModulo);
+        if ($regra === null) {
+            return ['created' => false, 'id' => null, 'reason' => 'regra_inexistente_ou_inativa'];
+        }
+
+        $quantidade = (int) ($payload['quantidade'] ?? 1);
+        if ($quantidade <= 0) {
+            $quantidade = 1;
+        }
+
+        $dataHoraAto = trim((string) ($payload['data_hora_ato'] ?? ''));
+        if ($dataHoraAto === '') {
+            $dataHoraAto = date('Y-m-d H:i:s');
+        } else {
+            $ts = strtotime($dataHoraAto);
+            if ($ts === false) {
+                $dataHoraAto = date('Y-m-d H:i:s');
+            } else {
+                $dataHoraAto = date('Y-m-d H:i:s', $ts);
+            }
+        }
+
+        $referenciaItemId = trim((string) ($payload['referencia_item_id'] ?? ''));
+        $referenciaSistema = trim((string) ($payload['referencia_sistema'] ?? $sistemaModulo));
+        $numeroProcesso = trim((string) ($payload['numero_processo'] ?? ''));
+        $classeProcesso = trim((string) ($payload['classe_processo'] ?? ''));
+        $observacoes = trim((string) ($payload['observacoes'] ?? ''));
+
+        $contextoHash = null;
+        if ($referenciaItemId !== '') {
+            $contextoHash = hash('sha256', implode('|', [
+                $actorUserId,
+                $tipoAto,
+                $tipoDocumento,
+                $sistemaModulo,
+                $referenciaItemId,
+                date('Y-m-d H:i', strtotime($dataHoraAto)),
+            ]));
+        }
+
+        $pontosPorAto = (float) ($regra['pontos_por_ato'] ?? 0);
+        $multiplicador = (float) ($regra['pontos_multiplicador'] ?? 1);
+        $pontosCalculados = $quantidade * $pontosPorAto * $multiplicador;
+
+        $this->connection->beginTransaction();
+        try {
+            $lancamentoId = $this->lancamentosRepository->insert([
+                'usuario_id' => $actorUserId,
+                'regra_id' => (string) ($regra['id'] ?? ''),
+                'tipo_lancamento' => 'automatico',
+                'status' => 'ativo',
+                'quantidade' => $quantidade,
+                'pontos_calculados' => number_format($pontosCalculados, 2, '.', ''),
+                'contexto_hash' => $contextoHash,
+                'referencia_item_id' => $referenciaItemId !== '' ? $referenciaItemId : null,
+                'referencia_sistema' => $referenciaSistema !== '' ? $referenciaSistema : null,
+                'numero_processo' => $numeroProcesso !== '' ? $numeroProcesso : null,
+                'classe_processo' => $classeProcesso !== '' ? $classeProcesso : null,
+                'observacoes' => $observacoes !== '' ? $observacoes : null,
+                'data_hora_ato' => $dataHoraAto,
+            ]);
+            $this->logRepository->insert($lancamentoId, $actorUserId, 'criar_automatico', [
+                'regra_id' => (string) ($regra['id'] ?? ''),
+                'quantidade' => $quantidade,
+                'pontos_calculados' => $pontosCalculados,
+                'referencia_item_id' => $referenciaItemId,
+                'sistema_modulo' => $sistemaModulo,
+                'tipo_ato' => $tipoAto,
+                'tipo_documento' => $tipoDocumento,
+            ]);
+            $this->connection->commit();
+        } catch (PDOException $e) {
+            $this->connection->rollBack();
+            if (($e->errorInfo[1] ?? null) === 1062) {
+                return ['created' => false, 'id' => null, 'reason' => 'duplicado'];
+            }
+            throw $e;
+        } catch (Throwable $e) {
+            $this->connection->rollBack();
+            throw $e;
+        }
+
+        try {
+            $this->verificarBadges($actorUserId);
+        } catch (Throwable $ignored) {
+            // Badge não pode quebrar o fluxo principal do lançamento.
+        }
+
+        return ['created' => true, 'id' => $lancamentoId, 'reason' => 'ok'];
     }
 
     public function listLancamentos(string $actorUserId, array $filters, int $limit, int $offset): array
@@ -280,6 +389,101 @@ final class ProdutividadeService
     {
         $this->assertGestao($actorUserId);
         return $this->metasRepository->setAtivo($id, $ativo);
+    }
+
+    public function listBadges(string $actorUserId, array $filters, int $limit, int $offset): array
+    {
+        $this->assertGestao($actorUserId);
+        return [
+            'rows' => $this->badgesRepository->fetchList($filters, $limit, $offset),
+            'total' => $this->badgesRepository->count($filters),
+        ];
+    }
+
+    public function findBadge(string $actorUserId, string $id): ?array
+    {
+        $this->assertGestao($actorUserId);
+        return $this->badgesRepository->findById($id);
+    }
+
+    public function createBadge(string $actorUserId, array $payload): string
+    {
+        $this->assertGestao($actorUserId);
+        $row = $this->normalizeBadgePayload($payload);
+        return $this->badgesRepository->insert($row);
+    }
+
+    public function updateBadge(string $actorUserId, string $id, array $payload): bool
+    {
+        $this->assertGestao($actorUserId);
+        $current = $this->badgesRepository->findById($id);
+        if ($current === null) {
+            throw new InvalidArgumentException('Badge não encontrado.');
+        }
+        $row = $this->normalizeBadgePayload($payload, $current);
+        return $this->badgesRepository->update($id, $row);
+    }
+
+    public function setBadgeAtivo(string $actorUserId, string $id, bool $ativo): bool
+    {
+        $this->assertGestao($actorUserId);
+        return $this->badgesRepository->setAtivo($id, $ativo);
+    }
+
+    /**
+     * @return list<array<string,mixed>>
+     */
+    public function verificarBadges(string $usuarioId): array
+    {
+        $this->assertAuthenticated($usuarioId);
+        $concedidos = [];
+        $badges = $this->badgesRepository->listAtivos();
+        foreach ($badges as $badge) {
+            $tipo = trim((string) ($badge['tipo'] ?? ''));
+            $threshold = (float) ($badge['valor_threshold'] ?? 0);
+            if ($threshold <= 0) {
+                continue;
+            }
+            [$start, $end] = $this->resolveBadgePeriodRange((string) ($badge['periodo'] ?? 'total'));
+
+            $atingiu = false;
+            if ($tipo === 'pontuacao_cumulativa') {
+                $atingiu = $this->sumPontosUsuarioPeriodo($usuarioId, $start, $end) >= $threshold;
+            } elseif ($tipo === 'ato_especifico') {
+                $regraId = trim((string) ($badge['regra_id'] ?? ''));
+                if ($regraId !== '') {
+                    $atingiu = $this->sumQuantidadeRegraUsuarioPeriodo($usuarioId, $regraId, $start, $end) >= $threshold;
+                }
+            }
+
+            if (!$atingiu) {
+                continue;
+            }
+            if ($this->badgesRepository->concederSeNaoExiste((string) ($badge['id'] ?? ''), $usuarioId)) {
+                $concedidos[] = $badge;
+            }
+        }
+
+        return $concedidos;
+    }
+
+    /**
+     * @return list<array<string,mixed>>
+     */
+    public function listBadgesPendentes(string $actorUserId, int $limit = 10): array
+    {
+        $this->assertAuthenticated($actorUserId);
+        return $this->badgesRepository->listPendentesByUsuario($actorUserId, $limit);
+    }
+
+    public function marcarBadgeNotificado(string $actorUserId, string $concedidoId): bool
+    {
+        $this->assertAuthenticated($actorUserId);
+        $concedidoId = trim($concedidoId);
+        if ($concedidoId === '') {
+            throw new InvalidArgumentException('ID da concessão é obrigatório.');
+        }
+        return $this->badgesRepository->marcarNotificado($concedidoId, $actorUserId);
     }
 
     public function listRanking(string $actorUserId, array $filters, int $limit = 200): array
@@ -407,6 +611,8 @@ final class ProdutividadeService
         $prevQuarterEnd = $prevQuarterStart->modify('+2 months')->modify('last day of this month');
         $quarterPrevious = $this->sumForRange($base, $prevQuarterStart, $prevQuarterEnd);
 
+        $projection = $this->projetarPeriodo($actorUserId, $filters);
+
         return [
             'week' => [
                 'current' => $weekCurrent,
@@ -423,6 +629,104 @@ final class ProdutividadeService
                 'previous' => $quarterPrevious,
                 'variation_percent' => $this->calcVariationPercent($quarterCurrent, $quarterPrevious),
             ],
+            'projection' => $projection,
+        ];
+    }
+
+    public function projetarPeriodo(string $actorUserId, array $filters): array
+    {
+        $this->assertAuthenticated($actorUserId);
+        $isGestao = $this->isGestaoUser($actorUserId);
+        $base = $filters;
+        if (!$isGestao) {
+            $base['usuario_id'] = $actorUserId;
+        }
+
+        $start = trim((string) ($base['data_inicio'] ?? ''));
+        $end = trim((string) ($base['data_fim'] ?? ''));
+        if (!$this->isValidDate($start) || !$this->isValidDate($end)) {
+            return ['projected_points' => 0.0, 'current_points' => 0.0, 'business_days_total' => 0, 'business_days_with_launch' => 0];
+        }
+
+        $dtStart = new DateTimeImmutable($start);
+        $dtEnd = new DateTimeImmutable($end);
+        if ($dtStart > $dtEnd) {
+            return ['projected_points' => 0.0, 'current_points' => 0.0, 'business_days_total' => 0, 'business_days_with_launch' => 0];
+        }
+
+        $currentPoints = $this->sumForRange($base, $dtStart, $dtEnd);
+        $businessDaysTotal = $this->countBusinessDays($dtStart, $dtEnd);
+        if ($businessDaysTotal <= 0) {
+            return ['projected_points' => $currentPoints, 'current_points' => $currentPoints, 'business_days_total' => 0, 'business_days_with_launch' => 0];
+        }
+
+        $businessDaysWithLaunch = $this->countBusinessDaysWithLancamento($base, $dtStart, $dtEnd);
+        if ($businessDaysWithLaunch <= 0 || $currentPoints <= 0) {
+            return [
+                'projected_points' => 0.0,
+                'current_points' => $currentPoints,
+                'business_days_total' => $businessDaysTotal,
+                'business_days_with_launch' => $businessDaysWithLaunch,
+            ];
+        }
+
+        $avgPerActiveBusinessDay = $currentPoints / $businessDaysWithLaunch;
+        $projected = $avgPerActiveBusinessDay * $businessDaysTotal;
+        return [
+            'projected_points' => $projected,
+            'current_points' => $currentPoints,
+            'business_days_total' => $businessDaysTotal,
+            'business_days_with_launch' => $businessDaysWithLaunch,
+        ];
+    }
+
+    public function getMetaResumoUsuario(string $actorUserId, array $filters): array
+    {
+        $this->assertAuthenticated($actorUserId);
+        $targetUserId = trim((string) ($filters['usuario_id'] ?? ''));
+        if ($targetUserId === '' || !$this->isGestaoUser($actorUserId)) {
+            $targetUserId = $actorUserId;
+        }
+
+        $periodoTipo = 'mes';
+        $start = trim((string) ($filters['data_inicio'] ?? ''));
+        $end = trim((string) ($filters['data_fim'] ?? ''));
+        if ($this->isValidDate($start) && $this->isValidDate($end)) {
+            $days = (int) ((new DateTimeImmutable($start))->diff(new DateTimeImmutable($end))->days);
+            if ($days <= 7) {
+                $periodoTipo = 'semana';
+            } elseif ($days > 31) {
+                $periodoTipo = 'trimestre';
+            }
+        }
+
+        $meta = $this->findMetaAtivaParaUsuario($targetUserId, $periodoTipo);
+        if ($meta === null) {
+            return ['has_meta' => false];
+        }
+
+        $vigenciaInicio = (string) ($meta['vigencia_inicio'] ?? '');
+        $vigenciaFim = trim((string) ($meta['vigencia_fim'] ?? ''));
+        if (!$this->isValidDate($vigenciaInicio)) {
+            return ['has_meta' => false];
+        }
+        $rangeStart = new DateTimeImmutable($vigenciaInicio);
+        $rangeEnd = $this->isValidDate($vigenciaFim) ? new DateTimeImmutable($vigenciaFim) : new DateTimeImmutable('today');
+        if ($rangeEnd < $rangeStart) {
+            $rangeEnd = $rangeStart;
+        }
+        $pontos = $this->sumForRange(['usuario_id' => $targetUserId, 'status' => 'ativo'], $rangeStart, $rangeEnd);
+        $metaPontos = (float) ($meta['pontos_meta'] ?? 0);
+        $percent = $metaPontos > 0 ? min(100.0, ($pontos / $metaPontos) * 100.0) : 0.0;
+
+        return [
+            'has_meta' => true,
+            'tipo_alvo' => (string) ($meta['tipo_alvo'] ?? ''),
+            'alvo_valor' => (string) ($meta['alvo_valor'] ?? ''),
+            'periodo_tipo' => (string) ($meta['periodo_tipo'] ?? ''),
+            'meta_pontos' => $metaPontos,
+            'pontos_atuais' => $pontos,
+            'percentual' => $percent,
         ];
     }
 
@@ -550,6 +854,49 @@ final class ProdutividadeService
         ];
     }
 
+    private function normalizeBadgePayload(array $payload, ?array $current = null): array
+    {
+        $nome = trim((string) ($payload['nome'] ?? ($current['nome'] ?? '')));
+        if ($nome === '') {
+            throw new InvalidArgumentException('Nome do badge é obrigatório.');
+        }
+        $tipo = trim((string) ($payload['tipo'] ?? ($current['tipo'] ?? '')));
+        if (!in_array($tipo, ['pontuacao_cumulativa', 'ato_especifico'], true)) {
+            throw new InvalidArgumentException('Tipo de badge inválido.');
+        }
+        $periodo = trim((string) ($payload['periodo'] ?? ($current['periodo'] ?? 'total')));
+        if (!in_array($periodo, ['total', 'mensal', 'semanal', 'diario'], true)) {
+            throw new InvalidArgumentException('Período do badge inválido.');
+        }
+        $thresholdRaw = str_replace(',', '.', trim((string) ($payload['valor_threshold'] ?? ($current['valor_threshold'] ?? '0'))));
+        $threshold = (float) $thresholdRaw;
+        if ($threshold <= 0) {
+            throw new InvalidArgumentException('Valor de threshold deve ser maior que zero.');
+        }
+        $regraId = trim((string) ($payload['regra_id'] ?? ($current['regra_id'] ?? '')));
+        if ($tipo === 'ato_especifico' && $regraId === '') {
+            throw new InvalidArgumentException('Badge por ato específico exige uma regra vinculada.');
+        }
+        if ($regraId !== '' && $this->regrasRepository->findById($regraId) === null) {
+            throw new InvalidArgumentException('Regra vinculada do badge não encontrada.');
+        }
+        $ativoIn = $payload['ativo'] ?? ($current['ativo'] ?? 1);
+        $ativo = ((int) $ativoIn) === 1 ? 1 : 0;
+        $descricao = trim((string) ($payload['descricao'] ?? ($current['descricao'] ?? '')));
+        $icone = trim((string) ($payload['icone'] ?? ($current['icone'] ?? '')));
+
+        return [
+            'nome' => $nome,
+            'descricao' => $descricao !== '' ? $descricao : null,
+            'icone' => $icone !== '' ? $icone : null,
+            'tipo' => $tipo,
+            'regra_id' => $regraId !== '' ? $regraId : null,
+            'valor_threshold' => number_format($threshold, 2, '.', ''),
+            'periodo' => $periodo,
+            'ativo' => $ativo,
+        ];
+    }
+
     private function isValidDate(string $value): bool
     {
         if ($value === '') {
@@ -644,6 +991,171 @@ final class ProdutividadeService
         $rangeFilters['data_inicio'] = $start->format('Y-m-d');
         $rangeFilters['data_fim'] = $end->format('Y-m-d');
         return $this->lancamentosRepository->sumPontos($rangeFilters);
+    }
+
+    private function countBusinessDays(DateTimeImmutable $start, DateTimeImmutable $end): int
+    {
+        $count = 0;
+        $current = $start;
+        while ($current <= $end) {
+            $dow = (int) $current->format('N');
+            if ($dow <= 5) {
+                $count++;
+            }
+            $current = $current->modify('+1 day');
+        }
+
+        return $count;
+    }
+
+    private function countBusinessDaysWithLancamento(array $filters, DateTimeImmutable $start, DateTimeImmutable $end): int
+    {
+        $local = $filters;
+        $local['status'] = 'ativo';
+        $local['data_inicio'] = $start->format('Y-m-d');
+        $local['data_fim'] = $end->format('Y-m-d');
+
+        $usuarioId = trim((string) ($local['usuario_id'] ?? ''));
+        $whereUsuario = '';
+        if ($usuarioId !== '') {
+            $whereUsuario = ' AND l.`usuario_id` = :usuario_id';
+        }
+
+        $sql = 'SELECT DATE(l.`data_hora_ato`) AS dia
+                FROM `produtividade_lancamentos` l
+                WHERE l.`status` = \'ativo\'
+                  AND l.`data_hora_ato` >= :data_inicio
+                  AND l.`data_hora_ato` <= :data_fim' . $whereUsuario . '
+                GROUP BY DATE(l.`data_hora_ato`)';
+        $statement = $this->connection->prepare($sql);
+        $statement->bindValue(':data_inicio', $start->format('Y-m-d') . ' 00:00:00');
+        $statement->bindValue(':data_fim', $end->format('Y-m-d') . ' 23:59:59');
+        if ($whereUsuario !== '') {
+            $statement->bindValue(':usuario_id', $usuarioId);
+        }
+        $statement->execute();
+        $dias = $statement->fetchAll(PDO::FETCH_COLUMN);
+
+        $count = 0;
+        foreach ($dias as $dia) {
+            $dt = DateTimeImmutable::createFromFormat('Y-m-d', (string) $dia);
+            if ($dt !== false && (int) $dt->format('N') <= 5) {
+                $count++;
+            }
+        }
+
+        return $count;
+    }
+
+    /**
+     * @return array{0:?DateTimeImmutable,1:?DateTimeImmutable}
+     */
+    private function resolveBadgePeriodRange(string $periodo): array
+    {
+        $now = new DateTimeImmutable('now');
+        if ($periodo === 'diario') {
+            $start = $now->setTime(0, 0, 0);
+            $end = $now->setTime(23, 59, 59);
+            return [$start, $end];
+        }
+        if ($periodo === 'semanal') {
+            $start = $now->modify('monday this week')->setTime(0, 0, 0);
+            $end = $start->modify('+6 days')->setTime(23, 59, 59);
+            return [$start, $end];
+        }
+        if ($periodo === 'mensal') {
+            $start = $now->modify('first day of this month')->setTime(0, 0, 0);
+            $end = $now->modify('last day of this month')->setTime(23, 59, 59);
+            return [$start, $end];
+        }
+
+        return [null, null];
+    }
+
+    private function sumPontosUsuarioPeriodo(string $usuarioId, ?DateTimeImmutable $start, ?DateTimeImmutable $end): float
+    {
+        $sql = 'SELECT COALESCE(SUM(`pontos_calculados`), 0)
+                FROM `produtividade_lancamentos`
+                WHERE `usuario_id` = :usuario_id
+                  AND `status` = \'ativo\'';
+        if ($start !== null && $end !== null) {
+            $sql .= ' AND `data_hora_ato` >= :data_inicio AND `data_hora_ato` <= :data_fim';
+        }
+        $statement = $this->connection->prepare($sql);
+        $statement->bindValue(':usuario_id', $usuarioId);
+        if ($start !== null && $end !== null) {
+            $statement->bindValue(':data_inicio', $start->format('Y-m-d H:i:s'));
+            $statement->bindValue(':data_fim', $end->format('Y-m-d H:i:s'));
+        }
+        $statement->execute();
+        return (float) $statement->fetchColumn();
+    }
+
+    private function sumQuantidadeRegraUsuarioPeriodo(string $usuarioId, string $regraId, ?DateTimeImmutable $start, ?DateTimeImmutable $end): float
+    {
+        $sql = 'SELECT COALESCE(SUM(`quantidade`), 0)
+                FROM `produtividade_lancamentos`
+                WHERE `usuario_id` = :usuario_id
+                  AND `regra_id` = :regra_id
+                  AND `status` = \'ativo\'';
+        if ($start !== null && $end !== null) {
+            $sql .= ' AND `data_hora_ato` >= :data_inicio AND `data_hora_ato` <= :data_fim';
+        }
+        $statement = $this->connection->prepare($sql);
+        $statement->bindValue(':usuario_id', $usuarioId);
+        $statement->bindValue(':regra_id', $regraId);
+        if ($start !== null && $end !== null) {
+            $statement->bindValue(':data_inicio', $start->format('Y-m-d H:i:s'));
+            $statement->bindValue(':data_fim', $end->format('Y-m-d H:i:s'));
+        }
+        $statement->execute();
+        return (float) $statement->fetchColumn();
+    }
+
+    private function findMetaAtivaParaUsuario(string $usuarioId, string $periodoTipo): ?array
+    {
+        $today = date('Y-m-d');
+        $setor = $this->findUserSetorCodigoArea($usuarioId);
+
+        $statementPerfis = $this->connection->prepare('SELECT DISTINCT TRIM(`perfil`) AS p FROM `usuario_perfil` WHERE `usuario` = ?');
+        $statementPerfis->execute([$usuarioId]);
+        $perfis = array_values(array_filter(array_map(static function ($value): string {
+            return trim((string) $value);
+        }, (array) $statementPerfis->fetchAll(PDO::FETCH_COLUMN))));
+
+        $sql = 'SELECT *
+                FROM `produtividade_metas`
+                WHERE `ativo` = 1
+                  AND `periodo_tipo` = :periodo_tipo
+                  AND `vigencia_inicio` <= :today
+                  AND (`vigencia_fim` IS NULL OR `vigencia_fim` >= :today)
+                ORDER BY
+                    CASE `tipo_alvo`
+                        WHEN \'usuario\' THEN 1
+                        WHEN \'perfil\' THEN 2
+                        WHEN \'setor\' THEN 3
+                        ELSE 4
+                    END ASC';
+        $statement = $this->connection->prepare($sql);
+        $statement->bindValue(':periodo_tipo', $periodoTipo);
+        $statement->bindValue(':today', $today);
+        $statement->execute();
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($rows as $row) {
+            $tipo = trim((string) ($row['tipo_alvo'] ?? ''));
+            $alvo = trim((string) ($row['alvo_valor'] ?? ''));
+            if ($tipo === 'usuario' && $alvo === $usuarioId) {
+                return $row;
+            }
+            if ($tipo === 'perfil' && in_array($alvo, $perfis, true)) {
+                return $row;
+            }
+            if ($tipo === 'setor' && $setor !== '' && strtoupper($alvo) === strtoupper($setor)) {
+                return $row;
+            }
+        }
+
+        return null;
     }
 
     private function calcVariationPercent(float $current, float $previous): float

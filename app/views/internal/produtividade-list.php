@@ -42,6 +42,7 @@ $sumPontos = 0.0;
 $isGestao = false;
 $canSeeRegrasButton = false;
 $canSeeMetasButton = false;
+$canSeeBadgesButton = false;
 $errors = [];
 $usuariosFiltro = [];
 $userPerfis = [];
@@ -108,6 +109,7 @@ if ($userId !== '') {
     $userPerfis = $stmtPerfis->fetchAll(PDO::FETCH_COLUMN);
     $canSeeRegrasButton = in_array('ADMIN', $userPerfis, true) || in_array('CHEFIA', $userPerfis, true) || in_array('DIRETORA', $userPerfis, true) || in_array('MAGISTRADA', $userPerfis, true);
     $canSeeMetasButton = $canSeeRegrasButton;
+    $canSeeBadgesButton = $canSeeRegrasButton;
 }
 
 if ($isGestao) {
@@ -173,10 +175,13 @@ $resumoCards = [
     'week' => ['current' => 0.0, 'previous' => 0.0, 'variation_percent' => 0.0],
     'month' => ['current' => 0.0, 'previous' => 0.0, 'variation_percent' => 0.0],
     'quarter' => ['current' => 0.0, 'previous' => 0.0, 'variation_percent' => 0.0],
+    'projection' => ['projected_points' => 0.0, 'current_points' => 0.0, 'business_days_total' => 0, 'business_days_with_launch' => 0],
 ];
+$metaResumo = ['has_meta' => false];
 if ($canLoadLancamentos && $errors === []) {
     try {
         $resumoCards = $service->getResumoCards($userId, $filters);
+        $metaResumo = $service->getMetaResumoUsuario($userId, $filters);
     } catch (Throwable $e) {
         $errors[] = 'Erro ao carregar resumo de período: ' . $e->getMessage();
     }
@@ -221,6 +226,9 @@ if ($canLoadLancamentos && $errors === []) {
                 <?php endif; ?>
                 <?php if ($canSeeMetasButton): ?>
                 <button type="button" class="btn btn-secondary-outline height-md" data-nav-href="/frame.php?page=produtividademetas">Metas</button>
+                <?php endif; ?>
+                <?php if ($canSeeBadgesButton): ?>
+                <button type="button" class="btn btn-secondary-outline height-md" data-nav-href="/frame.php?page=produtividadebadges">Badges</button>
                 <?php endif; ?>
             </div>
         </div>
@@ -342,6 +350,17 @@ if ($canLoadLancamentos && $errors === []) {
                 Trimestre: <?php echo number_format((float) ($resumoCards['quarter']['current'] ?? 0), 2, ',', '.'); ?>
                 (<?php echo number_format((float) ($resumoCards['quarter']['variation_percent'] ?? 0), 1, ',', '.'); ?>%)
             </span>
+            <span class="status status-pending padding-x-lg">
+                Projeção: <?php echo number_format((float) ($resumoCards['projection']['projected_points'] ?? 0), 2, ',', '.'); ?> pts
+            </span>
+            <?php if ((bool) ($metaResumo['has_meta'] ?? false)): ?>
+            <span class="status status-success padding-x-lg">
+                Meta <?php echo htmlspecialchars((string) ($metaResumo['periodo_tipo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>:
+                <?php echo number_format((float) ($metaResumo['pontos_atuais'] ?? 0), 2, ',', '.'); ?> /
+                <?php echo number_format((float) ($metaResumo['meta_pontos'] ?? 0), 2, ',', '.'); ?>
+                (<?php echo number_format((float) ($metaResumo['percentual'] ?? 0), 1, ',', '.'); ?>%)
+            </span>
+            <?php endif; ?>
         </div>
 
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
@@ -455,6 +474,7 @@ if ($canLoadLancamentos && $errors === []) {
 
     <?php include __DIR__ . '/_datajud_scripts.php'; ?>
     <script src="/assets/js/modules/produtividade/produtividade-list.js"></script>
+    <script src="/assets/js/modules/produtividade/badge-popup.js"></script>
 </body>
 </html>
 
