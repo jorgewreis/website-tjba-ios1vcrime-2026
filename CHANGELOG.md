@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.45
+
+**Data:** 2026-04-04 11:22:51 | **Commit:** `8baad9f` | **Tipo:** `minor`
+
+- feat: implement CSV/PDF export functionality using a select dropdown in Produtividade views, enhancing user experience and code organization
+
 ## V. 1.44
 
 **Data:** 2026-04-04 10:55:40 | **Commit:** `6e6d7cd` | **Tipo:** `minor`
@@ -4116,6 +4122,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

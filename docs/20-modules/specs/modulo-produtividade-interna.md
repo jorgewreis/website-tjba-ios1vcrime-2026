@@ -51,7 +51,7 @@ Documento vivo: consolida o que já está entregue no módulo, com foco em opera
 ### Interface
 
 - Lista principal: [app/views/internal/produtividade-list.php](../../../app/views/internal/produtividade-list.php)
-  - filtros + ranking + export + resumo + projeção + status de meta.
+  - filtros + ranking + export (select CSV/PDF via `_list_export_buttons.php`, URLs `export-csv.php` / `export-pdf.php`) + resumo + projeção + status de meta.
 - Regras: `produtividade-regras-list/create/edit.php`.
 - Metas: `produtividade-metas-list/create/edit.php`.
 - Badges: `produtividade-badges-list/create/edit.php`.

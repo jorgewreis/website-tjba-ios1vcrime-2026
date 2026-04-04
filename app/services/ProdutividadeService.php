@@ -868,8 +868,9 @@ final class ProdutividadeService
         if (!in_array($periodo, ['total', 'mensal', 'semanal', 'diario'], true)) {
             throw new InvalidArgumentException('Período do badge inválido.');
         }
-        $thresholdRaw = str_replace(',', '.', trim((string) ($payload['valor_threshold'] ?? ($current['valor_threshold'] ?? '0'))));
-        $threshold = (float) $thresholdRaw;
+        $thresholdRaw = trim((string) ($payload['valor_threshold'] ?? ($current['valor_threshold'] ?? '0')));
+        $thresholdDigits = preg_replace('/[^0-9]/', '', str_replace(["\xc2\xa0", ' '], '', $thresholdRaw));
+        $threshold = $thresholdDigits === '' ? 0.0 : (float) $thresholdDigits;
         if ($threshold <= 0) {
             throw new InvalidArgumentException('Valor de threshold deve ser maior que zero.');
         }
@@ -1127,8 +1128,8 @@ final class ProdutividadeService
                 FROM `produtividade_metas`
                 WHERE `ativo` = 1
                   AND `periodo_tipo` = :periodo_tipo
-                  AND `vigencia_inicio` <= :today
-                  AND (`vigencia_fim` IS NULL OR `vigencia_fim` >= :today)
+                  AND `vigencia_inicio` <= :today_inicio
+                  AND (`vigencia_fim` IS NULL OR `vigencia_fim` >= :today_fim)
                 ORDER BY
                     CASE `tipo_alvo`
                         WHEN \'usuario\' THEN 1
@@ -1138,7 +1139,8 @@ final class ProdutividadeService
                     END ASC';
         $statement = $this->connection->prepare($sql);
         $statement->bindValue(':periodo_tipo', $periodoTipo);
-        $statement->bindValue(':today', $today);
+        $statement->bindValue(':today_inicio', $today);
+        $statement->bindValue(':today_fim', $today);
         $statement->execute();
         $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
         foreach ($rows as $row) {

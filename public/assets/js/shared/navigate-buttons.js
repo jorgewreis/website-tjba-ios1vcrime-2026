@@ -27,4 +27,22 @@
             window.location.href = href;
         }
     });
+
+    document.addEventListener('change', function (e) {
+        var sel = e.target && e.target.closest ? e.target.closest('select.list-export-select') : null;
+        if (!sel) {
+            return;
+        }
+        var v = String(sel.value || '');
+        var href = '';
+        if (v === 'csv') {
+            href = String(sel.getAttribute('data-csv-href') || '').trim();
+        } else if (v === 'pdf') {
+            href = String(sel.getAttribute('data-pdf-href') || '').trim();
+        }
+        if (href !== '' && href !== '#') {
+            window.open(href, '_blank', 'noopener,noreferrer');
+        }
+        sel.selectedIndex = 0;
+    });
 })();

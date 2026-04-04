@@ -330,8 +330,12 @@ if ($canLoadLancamentos && $errors === []) {
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-end">
                 <button type="submit" class="btn btn-primary height-md">Filtrar</button>
-                <button type="button" class="btn btn-secondary-outline height-md" data-nav-href="<?php echo htmlspecialchars($exportCsvHref, ENT_QUOTES); ?>" data-nav-target="_blank">Exportar CSV</button>
-                <button type="button" class="btn btn-secondary-outline height-md" data-nav-href="<?php echo htmlspecialchars($exportPdfHref, ENT_QUOTES); ?>" data-nav-target="_blank">Exportar PDF</button>
+                <?php
+                $listExportCsvUrl = $exportCsvHref;
+                $listExportPdfUrl = $exportPdfHref;
+                $listExportControlId = 'produtividade-lancamentos';
+                include __DIR__ . '/_list_export_buttons.php';
+                ?>
             </div>
         </form>
 

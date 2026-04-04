@@ -326,6 +326,9 @@ Você já tem uma boa estrutura. Exemplos de arquivos por área:
 - `docs/00-foundation/overview/funcionalidades-areas-publica-e-restrita.md`
 - `docs/00-foundation/overview/estrutura-do-repositorio.md` (recomendado)
 
+### docs/00-foundation/ (outros padrões)
+- `docs/00-foundation/exportacao-listas-internas.md` — select CSV/PDF nas listagens internas (`_list_export_buttons.php` + `navigate-buttons.js`).
+
 ### docs/10-architecture/charter/
 - `docs/10-architecture/charter/plano-de-gerenciamento-do-cronograma.md`
 - `docs/10-architecture/charter/SAD.md`  

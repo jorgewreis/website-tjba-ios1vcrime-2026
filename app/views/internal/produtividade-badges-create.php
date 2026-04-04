@@ -19,7 +19,7 @@ $form = [
     'icone' => '',
     'tipo' => 'pontuacao_cumulativa',
     'regra_id' => '',
-    'valor_threshold' => '1,00',
+    'valor_threshold' => '1',
     'periodo' => 'total',
     'ativo' => '1',
 ];
@@ -66,6 +66,11 @@ try {
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <?php include __DIR__ . '/_internal_head_styles.php'; ?>
         <?php include __DIR__ . '/_toast_script.php'; ?>
+        <?php
+        $__badgesFormJs = dirname(__DIR__, 3) . '/public/assets/js/modules/produtividade/badges-form.js';
+        $__badgesFormV = @filemtime($__badgesFormJs) ?: time();
+        ?>
+        <script src="/assets/js/modules/produtividade/badges-form.js?v=<?php echo (int) $__badgesFormV; ?>" defer></script>
     </head>
 <body class="page-internal">
     <div class="spacing-top-page"></div>
@@ -102,8 +107,8 @@ try {
                     </select>
                 </div>
                 <div class="col">
-                    <label for="valor_threshold">Threshold <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="text" id="valor_threshold" name="valor_threshold" class="width-200 height-md white" value="<?php echo htmlspecialchars($form['valor_threshold'], ENT_QUOTES); ?>" required>
+                    <label for="valor_threshold">Meta (pontos ou quantidade) <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <input type="text" id="valor_threshold" name="valor_threshold" class="width-200 height-md white" value="<?php echo htmlspecialchars($form['valor_threshold'], ENT_QUOTES); ?>" inputmode="numeric" pattern="[0-9]+" maxlength="12" placeholder="Apenas números" autocomplete="off" required>
                 </div>
             </div>
 
