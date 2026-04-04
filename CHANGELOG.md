@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.56
+
+**Data:** 2026-04-04 15:23:44 | **Commit:** `549cd69` | **Tipo:** `minor`
+
+- refactor: update avatar popover button styles and improve layout for better user experience
+
 ## V. 1.55
 
 **Data:** 2026-04-04 15:18:42 | **Commit:** `2c19c8b` | **Tipo:** `minor`
@@ -4188,6 +4194,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

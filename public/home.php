@@ -384,26 +384,11 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
         .avatar-popover-mode-actions {
             display: flex;
             flex-wrap: wrap;
-            gap: 6px;
+            gap: 10px;
         }
-        .avatar-popover-mode-btn.is-active,
-        .user-summary-mode-btn.is-active {
-            border-color: var(--color-primary, #2563eb);
-            background: color-mix(in srgb, var(--color-primary, #2563eb) 12%, transparent);
-        }
-        .user-summary-mode {
-            display: none;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 6px;
-            margin-top: 4px;
-            max-width: 400px;
-        }
-        .user-summary-mode-label {
-            font-size: 10px;
+        .avatar-popover-roles.is-active {
+            color: var(--color-primary);
             font-weight: 600;
-            color: var(--color-text-secondary);
-            margin-right: 2px;
         }
         @media (min-width: 1280px) {
             .user-summary-mode {
@@ -479,8 +464,8 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                                 <?php if ($podeAlternarModoAdmin): ?>
                                 <div class="avatar-popover-mode" role="group" aria-label="Modo de acesso">
                                     <div class="avatar-popover-mode-actions">
-                                        <button type="button" class="avatar-popover-mode-btn<?php echo $modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="1" aria-pressed="<?php echo $modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Administrador</button>
-                                        <button type="button" class="avatar-popover-mode-btn<?php echo !$modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="0" aria-pressed="<?php echo !$modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Usuário: <?php echo htmlspecialchars($avatarBadgePerfisLine !== '' ? $avatarBadgePerfisLine : '—', ENT_QUOTES, 'UTF-8'); ?></button>
+                                        <button type="button" class="avatar-popover-roles<?php echo $modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="1" aria-pressed="<?php echo $modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Administrador</button>
+                                        <button type="button" class="avatar-popover-roles<?php echo !$modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="0" aria-pressed="<?php echo !$modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Perfil atual:<?php echo htmlspecialchars($avatarBadgePerfisLine !== '' ? $avatarBadgePerfisLine : '—', ENT_QUOTES, 'UTF-8'); ?></button>
                                     </div>
                                 </div>
                                 <?php endif; ?>
