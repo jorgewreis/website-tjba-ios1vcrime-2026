@@ -56,9 +56,9 @@ final class ProdutividadeRegrasRepository
 
     public function findAtivaByContext(string $tipoAto, string $tipoDocumento, string $sistemaModulo): ?array
     {
-        $tipoAto = trim($tipoAto);
-        $tipoDocumento = trim($tipoDocumento);
-        $sistemaModulo = trim($sistemaModulo);
+        $tipoAto = self::normalizeCatalogToken($tipoAto);
+        $tipoDocumento = self::normalizeCatalogToken($tipoDocumento);
+        $sistemaModulo = self::normalizeCatalogToken($sistemaModulo);
         if ($tipoAto === '') {
             return null;
         }
@@ -81,6 +81,22 @@ final class ProdutividadeRegrasRepository
         $row = $statement->fetch(PDO::FETCH_ASSOC);
 
         return $row === false ? null : $row;
+    }
+
+    private static function normalizeCatalogToken(string $value): string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return '';
+        }
+        if (class_exists(\Normalizer::class)) {
+            $n = \Normalizer::normalize($value, \Normalizer::FORM_C);
+            if (is_string($n)) {
+                return $n;
+            }
+        }
+
+        return $value;
     }
 
     /**

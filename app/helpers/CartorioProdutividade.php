@@ -108,6 +108,13 @@ final class CartorioProdutividade
             'observacoes' => $observacoes,
             'data_hora_ato' => trim((string) ($context['data_hora_ato'] ?? '')) ?: date('Y-m-d H:i:s'),
         ];
+        $regraIds = self::loadRegraIds();
+        if (isset($regraIds[$eventCode])) {
+            $rid = trim((string) $regraIds[$eventCode]);
+            if ($rid !== '') {
+                $payload['regra_id'] = $rid;
+            }
+        }
         if (self::eventoUsaFormulaGeracaoPdf($eventCode)) {
             $payload['quantidade'] = 1;
             $nDocs = self::extrairContagemDocumentosPdf($eventCode, $context);
@@ -160,6 +167,19 @@ final class CartorioProdutividade
     public static function loadRegistry(): array
     {
         $path = __DIR__ . '/../config/cartorio-produtividade-registry.php';
+        if (!is_file($path)) {
+            return [];
+        }
+        $data = require $path;
+        return is_array($data) ? $data : [];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function loadRegraIds(): array
+    {
+        $path = __DIR__ . '/../config/cartorio-produtividade-regra-ids.php';
         if (!is_file($path)) {
             return [];
         }

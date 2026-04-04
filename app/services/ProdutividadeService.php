@@ -241,7 +241,15 @@ final class ProdutividadeService
         $tipoAto = trim((string) ($payload['tipo_ato'] ?? ''));
         $tipoDocumento = trim((string) ($payload['tipo_documento'] ?? ''));
         $sistemaModulo = trim((string) ($payload['sistema_modulo'] ?? ''));
-        $regra = $this->regrasRepository->findAtivaByContext($tipoAto, $tipoDocumento, $sistemaModulo);
+
+        $regraIdHint = trim((string) ($payload['regra_id'] ?? ''));
+        $regra = null;
+        if ($regraIdHint !== '') {
+            $regra = $this->regrasRepository->findAtivaById($regraIdHint);
+        }
+        if ($regra === null) {
+            $regra = $this->regrasRepository->findAtivaByContext($tipoAto, $tipoDocumento, $sistemaModulo);
+        }
         if ($regra === null) {
             return ['created' => false, 'id' => null, 'reason' => 'regra_inexistente_ou_inativa'];
         }
