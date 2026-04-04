@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.57.0001
+
+**Data:** 2026-04-04 15:39:20 | **Commit:** `0b6c091` | **Tipo:** `patch`
+
+- chore: update rsync command in deployment workflows to use checksum for improved file synchronization accuracy
+
 ## V. 1.57
 
 **Data:** 2026-04-04 15:28:20 | **Commit:** `d809db3` | **Tipo:** `minor`
@@ -4200,6 +4206,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

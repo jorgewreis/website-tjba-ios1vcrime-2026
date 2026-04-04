@@ -59,7 +59,8 @@ jobs:
           DEV_PATH: ${{ secrets.DEV_PATH }}
         run: |
           set -e
-          rsync -az \
+          # --checksum: evita rsync a ignorar ficheiros quando tamanho+mtime coincidem mas o conteúdo mudou.
+          rsync -azc \
             --no-times --omit-dir-times \
             --no-perms --no-owner --no-group \
             --inplace \

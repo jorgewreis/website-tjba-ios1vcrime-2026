@@ -59,7 +59,9 @@ jobs:
           PROD_PATH: ${{ secrets.PROD_PATH }}
         run: |
           set -e
-          rsync -az \
+          # --checksum: o "quick check" (tamanho+mtime) pode saltar ficheiros com mesmo tamanho
+          # e mtime parecido; garante que o conteúdo em disco no servidor acompanha o repositório.
+          rsync -azc \
             --no-times --omit-dir-times \
             --no-perms --no-owner --no-group \
             --inplace \
