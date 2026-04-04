@@ -12,7 +12,7 @@ $connection = Conection::getInstance()->getConnection();
 
 $routePage = trim((string) ($_GET['page'] ?? 'oficiosgabinete'));
 $statusFilter = trim($_GET['status'] ?? '');
-$processoFilter = trim($_GET['processo'] ?? '');
+$oficioFilter = trim($_GET['oficio'] ?? '');
 $anoFilter = trim($_GET['ano'] ?? '');
 $allowedPerPage = [10, 25, 50, 100];
 $itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 25;
@@ -49,7 +49,7 @@ if ($anoFromGet !== '' && ctype_digit($anoFromGet) && in_array((int) $anoFromGet
 
 $filters = [
     'status' => $statusFilter,
-    'processo' => $processoFilter,
+    'oficio' => $oficioFilter,
     'ano' => $anoFilter,
 ];
 
@@ -89,8 +89,11 @@ $baseQueryParams = [];
 if ($routePage !== '') {
     $baseQueryParams['page'] = $routePage;
 }
-if ($processoFilter !== '') {
-    $baseQueryParams['processo'] = $processoFilter;
+if ($oficioFilter !== '') {
+    $baseQueryParams['oficio'] = $oficioFilter;
+    if ($anoFilter !== '') {
+        $baseQueryParams['ano'] = $anoFilter;
+    }
 } else {
     if ($statusFilter !== '') {
         $baseQueryParams['status'] = $statusFilter;
@@ -165,7 +168,7 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
                 <h2>Lista de ofícios</h2>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md">
-                <input type="text" class="width-400 height-md" id="search-input" placeholder="Pesquisar por processo..." value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
+                <input type="text" class="width-400 height-md" id="search-input" placeholder="Ex.: 42 · 42/2026 · 2026/42 · 422026 (qualquer status)" aria-label="Pesquisar por número do ofício" value="<?php echo htmlspecialchars($oficioFilter, ENT_QUOTES); ?>">
                 <?php
                 $listExportPage = $routePage;
                 $listExportQuery = $baseQueryParams;

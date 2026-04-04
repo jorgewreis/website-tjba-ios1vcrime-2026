@@ -160,12 +160,12 @@ $baseQuery = [
                                 <span class="minor-info">Nome</span>
                                 <span class="major-info"><?php echo htmlspecialchars((string) ($row['nome'] ?? ''), ENT_QUOTES); ?></span>
                             </div>
-                            <div class="col width-300">
+                            <div class="col width-600">
                                 <span class="minor-info">Tipo</span>
-                                <span class="major-info"><?php echo htmlspecialchars((string) ($row['tipo'] ?? ''), ENT_QUOTES); ?></span>
+                                <span class="major-info"><?php echo htmlspecialchars((string) ($row['descricao'] ?? ''), ENT_QUOTES); ?></span>
                             </div>
                             <div class="col width-200">
-                                <span class="minor-info">Threshold</span>
+                                <span class="minor-info">Meta</span>
                                 <span class="major-info"><?php echo number_format((float) ($row['valor_threshold'] ?? 0), 2, ',', '.'); ?></span>
                             </div>
                             <div class="col width-200">

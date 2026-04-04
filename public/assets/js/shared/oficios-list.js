@@ -102,19 +102,24 @@
 
     function bindFilters(config) {
         const applyFilters = function () {
-            const processo = global.document.getElementById(config.searchInputId || 'search-input')?.value?.trim() ?? '';
+            const oficio = global.document.getElementById(config.searchInputId || 'search-input')?.value?.trim() ?? '';
             const perPage = global.document.getElementById(config.itemsPerPageId || 'items-per-page')?.value ?? '25';
             const params = new URLSearchParams(global.location.search);
             params.set('page', String(config.routePage || ''));
             params.set('page_number', '1');
             params.set('items_per_page', perPage);
 
-            if (processo) {
-                params.set('processo', processo);
+            if (oficio) {
+                params.set('oficio', oficio);
                 params.delete('status');
-                params.delete('ano');
+                const ano = global.document.getElementById(config.yearId || 'filter-ano')?.value ?? '';
+                if (ano) {
+                    params.set('ano', ano);
+                } else {
+                    params.delete('ano');
+                }
             } else {
-                params.delete('processo');
+                params.delete('oficio');
                 const status = global.document.getElementById(config.statusId || 'filter-status')?.value ?? '';
                 const ano = global.document.getElementById(config.yearId || 'filter-ano')?.value ?? '';
                 if (status) { params.set('status', status); } else { params.delete('status'); }

@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/IdGenerator.php';
+require_once __DIR__ . '/../helpers/OficiosListSearchHelper.php';
 
 final class OficiosGabineteRepository
 {
@@ -196,10 +197,10 @@ final class OficiosGabineteRepository
         $conditions = [];
         $params = [];
 
-        $processo = trim((string) ($filters['processo'] ?? ''));
-        if ($processo !== '') {
-            $conditions[] = sprintf('%s.`numero_processo` LIKE :f_proc', $alias);
-            $params[':f_proc'] = '%' . $processo . '%';
+        [$oficioConds, $oficioParams] = OficiosListSearchHelper::buildOficioConditions($alias, $filters);
+        if ($oficioConds !== []) {
+            $conditions = array_merge($conditions, $oficioConds);
+            $params = array_merge($params, $oficioParams);
 
             return [implode(' AND ', $conditions), $params];
         }

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.47
+
+**Data:** 2026-04-04 11:41:44 | **Commit:** `8210d13` | **Tipo:** `minor`
+
+- refactor: update layout and labels in produtividade-badges-list.php for improved clarity and consistency
+
 ## V. 1.46
 
 **Data:** 2026-04-04 11:32:31 | **Commit:** `daeb205` | **Tipo:** `minor`
@@ -4128,6 +4134,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

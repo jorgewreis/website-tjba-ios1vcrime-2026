@@ -328,7 +328,7 @@ final class InternalListExportHandlers
         $anos = $service->listAnosComOficios();
         $filters = [
             'status' => trim((string) ($get['status'] ?? '')),
-            'processo' => trim((string) ($get['processo'] ?? '')),
+            'oficio' => trim((string) ($get['oficio'] ?? '')),
             'ano' => self::resolveAnoOficios($anos, $get),
         ];
         $rows = $service->listOficios($filters, self::MAX_ROWS, 0)['rows'] ?? [];
@@ -358,7 +358,7 @@ final class InternalListExportHandlers
         $anos = $service->listAnosComOficios();
         $filters = [
             'status' => trim((string) ($get['status'] ?? '')),
-            'processo' => trim((string) ($get['processo'] ?? '')),
+            'oficio' => trim((string) ($get['oficio'] ?? '')),
             'ano' => self::resolveAnoOficios($anos, $get),
         ];
         $rows = $service->listOficios($filters, self::MAX_ROWS, 0)['rows'] ?? [];
