@@ -78,11 +78,11 @@ final class OficiosListSearchHelper
 
         $t = trim($oficio);
 
-        // Explícito: sequencial / ano (barra, traço, ponto)
-        if (preg_match('/^(\d+)\s*[/\-.]\s*(\d{4})$/u', $t, $m)) {
+        // Explícito: sequencial / ano (barra, traço, ponto) — delimitador # para não confundir com / na classe
+        if (preg_match('#^(\d+)\s*[/\-.]\s*(\d{4})$#u', $t, $m)) {
             $addExact((int) $m[1], (int) $m[2]);
         }
-        if (preg_match('/^(\d{4})\s*[/\-.]\s*(\d+)$/u', $t, $m)) {
+        if (preg_match('#^(\d{4})\s*[/\-.]\s*(\d+)$#u', $t, $m)) {
             $addExact((int) $m[2], (int) $m[1]);
         }
 
@@ -95,7 +95,9 @@ final class OficiosListSearchHelper
         }
 
         $digits = preg_replace('/\D/', '', $t);
-        $hasStructuralSep = (bool) preg_match('/[/\-.]/', $t) || (bool) preg_match('/^\d+\s+\d{4}$/u', $t) || (bool) preg_match('/^\d{4}\s+\d+$/u', $t);
+        $hasStructuralSep = (bool) preg_match('#[/\-.]#u', $t)
+            || (bool) preg_match('/^\d+\s+\d{4}$/u', $t)
+            || (bool) preg_match('/^\d{4}\s+\d+$/u', $t);
 
         if ($digits !== '' && ctype_digit($digits)) {
             $len = strlen($digits);

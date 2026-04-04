@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.48
+
+**Data:** 2026-04-04 11:43:50 | **Commit:** `b0465aa` | **Tipo:** `minor`
+
+- refactor: update regex patterns in OficiosListSearchHelper for improved clarity and consistency in matching formats
+
 ## V. 1.47
 
 **Data:** 2026-04-04 11:41:44 | **Commit:** `8210d13` | **Tipo:** `minor`
@@ -4134,6 +4140,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
