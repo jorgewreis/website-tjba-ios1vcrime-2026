@@ -105,65 +105,6 @@ final class ListExportPresentation
             . '<div style="height:6px;"></div>';
     }
 
-    public static function subtarefaLabelFromTipo(string $tipo): string
-    {
-        $tipo = trim($tipo);
-        static $map = [
-            // Guias
-            'detalhamento_informacoes' => 'Detalhar data do fato e dias-multa',
-            'calculo_pena_multa' => 'Calcular pena de multa',
-            'expedicao_guia' => 'Expedir a Guia',
-            'juntada_automatica' => 'Juntar a Guia aos autos',
-            'gerar_pdf' => 'Gerar documentos em PDF',
-            'geracao_pdf' => 'Gerar documentos em PDF',
-            'pdf' => 'Gerar documentos em PDF',
-            'envio_guia' => 'Enviar a Guia',
-            'juntada_termo_envio' => 'Juntar o termo de envio',
-            // CEJUSC / ofícios cartório (mesmo código em alguns fluxos)
-            'gerar_pdf_decisao' => 'Gerar PDF da decisão',
-            'enviar_decisao' => 'Envio da decisão por e-mail',
-            'juntar_termo_envio' => 'Juntar termo de envio',
-            // Cartas expedidas + guias (tipo compartilhado)
-            'aguardando_assinatura' => 'Assinatura pela Magistrada',
-            // Cartas expedidas
-            'aguardando_gerar_pdf' => 'Imprimir peças em PDF',
-            'aguardando_envio' => 'Enviar Carta expedida',
-            'aguardando_juntada_termo' => 'Juntar comprovante de envio',
-            'aguardando_informacoes' => 'Informar detalhes',
-            'aguardando_devolucao' => 'Juntar carta devolvida',
-            // Cartas recebidas
-            'ato_ordinatorio_cumprimento' => 'Expedir Ato Ordinatório - Cumprimento',
-            'expedicao_documento' => 'Expedição de mandado/ofício',
-            'juntada_certidao_oficial' => 'Juntar certidão do oficial de justiça',
-            'ato_ordinatorio_devolucao' => 'Expedir Ato Ordinatório - Devolução',
-            'envio_processo' => 'Devolver Carta ao Juízo Deprecante',
-            'arquivamento_definitivo' => 'Arquivar definitivamente com baixa',
-            'devolucao_origem' => 'Aguardando devolução',
-            'devolução_origem' => 'Aguardando devolução',
-            // Medidas protetivas
-            'cadastro_partes_pje' => 'Cadastro de partes no PJe',
-            'expedicao_mandados_intimacao' => 'Expedição de mandados de intimação',
-            // Editais
-            'expedicao_edital' => 'Expedição de Edital',
-            'envio_djen' => 'Envio para publicação no DJEN',
-            'certificacao_publicacao' => 'Data da publicação',
-            'certificacao_decurso_prazo' => 'Aguardando decurso do prazo',
-            // Monitoramento eletrônico
-            'iniciar_monitoramento' => 'Iniciar monitoramento',
-            'encerrar_monitoramento' => 'Encerrar monitoramento',
-            // Ofícios cartório
-            'enviar_oficio' => 'Enviar ofício',
-        ];
-
-        if (isset($map[$tipo])) {
-            return $map[$tipo];
-        }
-
-        return $tipo === ''
-            ? ''
-            : mb_convert_case(str_replace('_', ' ', $tipo), MB_CASE_TITLE, 'UTF-8');
-    }
-
     public static function formatCell(string $columnKey, mixed $value): string
     {
         if ($value === null) {
@@ -181,23 +122,6 @@ final class ListExportPresentation
                     $lines[] = $ini;
                 }
             }
-
-            return implode('; ', $lines);
-        }
-
-        if ($columnKey === 'Subtarefas' && is_array($value)) {
-            $lines = [];
-            foreach ($value as $item) {
-                if (!is_array($item)) {
-                    continue;
-                }
-                if (trim((string) ($item['status'] ?? '')) !== 'em_andamento') {
-                    continue;
-                }
-                $tipo = (string) ($item['tipo'] ?? '');
-                $lines[] = self::subtarefaLabelFromTipo($tipo);
-            }
-            $lines = array_values(array_filter($lines, static fn (string $s): bool => $s !== ''));
 
             return implode('; ', $lines);
         }

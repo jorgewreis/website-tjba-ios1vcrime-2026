@@ -23,6 +23,7 @@ require_once __DIR__ . '/../services/ProdutividadeService.php';
 require_once __DIR__ . '/../repositories/SalaAudienciasAtaRepository.php';
 require_once __DIR__ . '/../repositories/PartesTelefonesRepository.php';
 require_once __DIR__ . '/../repositories/PartesInstituicoesRepository.php';
+require_once __DIR__ . '/ListExportPrincipalStatusTitle.php';
 
 final class InternalListExportHandlers
 {
@@ -77,30 +78,15 @@ final class InternalListExportHandlers
     }
 
     /**
-     * Exportação: em Subtarefas ficam apenas itens com status em_andamento (status atual da tarefa principal).
+     * Coluna de exportação: mesmo texto do title do status da tarefa principal na lista (ver views).
      *
      * @param list<array<string, mixed>> $rows
      * @return list<array<string, mixed>>
      */
-    private static function withExportSubtarefasSomenteEmAndamento(array $rows): array
+    private static function withExportPrincipalStatusTitle(array $rows, string $module): array
     {
         foreach ($rows as $i => $row) {
-            $all = [];
-            if (!empty($row['SubtarefasAll']) && is_array($row['SubtarefasAll'])) {
-                $all = $row['SubtarefasAll'];
-            } elseif (!empty($row['Subtarefas']) && is_array($row['Subtarefas'])) {
-                $all = $row['Subtarefas'];
-            }
-            $emAndamento = [];
-            foreach ($all as $st) {
-                if (!is_array($st)) {
-                    continue;
-                }
-                if (trim((string) ($st['status'] ?? '')) === 'em_andamento') {
-                    $emAndamento[] = $st;
-                }
-            }
-            $rows[$i]['Subtarefas'] = $emAndamento;
+            $rows[$i]['StatusTituloPrincipal'] = ListExportPrincipalStatusTitle::forRow($module, $row);
         }
 
         return $rows;
@@ -114,6 +100,62 @@ final class InternalListExportHandlers
         $t = strtotime($mysql);
 
         return $t !== false ? date('d/m/Y H:i', $t) : $mysql;
+    }
+
+    /** Mesmo padrão visual das listas: "Cidade - UF". */
+    private static function formatExportComarcaCidadeUf(string $cidade, string $uf): string
+    {
+        $c = trim($cidade);
+        $u = trim($uf);
+        if ($c === '' && $u === '') {
+            return '';
+        }
+        if ($c === '') {
+            return $u;
+        }
+        if ($u === '') {
+            return $c;
+        }
+
+        return $c . ' - ' . $u;
+    }
+
+    /**
+     * Alinhado à lista de editais: data final do decurso (d/m/Y) e complemento (dias restantes, vence hoje ou decorrido).
+     *
+     * @param array<string, mixed> $decursoInfo
+     */
+    private static function formatExportEditalDecursoResumo(array $decursoInfo): string
+    {
+        $dataFmt = trim((string) ($decursoInfo['data_limite_formatada'] ?? ''));
+        if ($dataFmt === '') {
+            $dataLimite = trim((string) ($decursoInfo['data_limite_decurso'] ?? ''));
+            if ($dataLimite !== '') {
+                $t = strtotime($dataLimite);
+                $dataFmt = $t !== false ? date('d/m/Y', $t) : $dataLimite;
+            }
+        }
+        if ($dataFmt === '') {
+            return '—';
+        }
+
+        $libera = (bool) ($decursoInfo['libera_conclusao'] ?? false);
+        $dias = (int) ($decursoInfo['dias_restantes'] ?? 0);
+        $prazoCumprido = (bool) ($decursoInfo['prazo_cumprido'] ?? false);
+
+        if ($libera) {
+            return $dataFmt . ' (prazo decorrido)';
+        }
+        if ($prazoCumprido && !$libera) {
+            return $dataFmt . ' (vence hoje)';
+        }
+        if ($dias > 0) {
+            $suf = $dias === 1 ? '1 dia restante' : $dias . ' dias restantes';
+
+            return $dataFmt . ' (' . $suf . ')';
+        }
+
+        return $dataFmt;
     }
 
     private static function labelFormaCumprimentoCartorio(string $v): string
@@ -223,7 +265,10 @@ final class InternalListExportHandlers
             'processo' => trim((string) ($get['processo'] ?? '')),
         ];
         $service = new GuiasService($pdo);
-        $rows = self::withExportSubtarefasSomenteEmAndamento($service->listGuias($filters, self::MAX_ROWS, 0)['rows'] ?? []);
+        $rows = self::withExportPrincipalStatusTitle(
+            $service->listGuias($filters, self::MAX_ROWS, 0)['rows'] ?? [],
+            ListExportPrincipalStatusTitle::MODULE_GUIAS
+        );
 
         return [
             'title' => 'Lista de guias',
@@ -233,7 +278,7 @@ final class InternalListExportHandlers
                 ['key' => 'Tipo', 'label' => 'Tipo'],
                 ['key' => 'Denunciado', 'label' => 'Denunciado'],
                 ['key' => 'Alocados', 'label' => 'Alocações'],
-                ['key' => 'Subtarefas', 'label' => 'Subtarefas'],
+                ['key' => 'StatusTituloPrincipal', 'label' => 'Situação da tarefa'],
             ],
             'rows' => $rows,
         ];
@@ -249,7 +294,10 @@ final class InternalListExportHandlers
             'processo' => trim((string) ($get['processo'] ?? '')),
         ];
         $service = new CejuscService($pdo);
-        $rows = self::withExportSubtarefasSomenteEmAndamento($service->listTarefas($filters, self::MAX_ROWS, 0)['rows'] ?? []);
+        $rows = self::withExportPrincipalStatusTitle(
+            $service->listTarefas($filters, self::MAX_ROWS, 0)['rows'] ?? [],
+            ListExportPrincipalStatusTitle::MODULE_CEJUSC
+        );
 
         return [
             'title' => 'Lista de tarefas CEJUSC',
@@ -258,7 +306,7 @@ final class InternalListExportHandlers
                 ['key' => 'Processo', 'label' => 'Processo'],
                 ['key' => 'ReuNome', 'label' => 'Réu'],
                 ['key' => 'Alocados', 'label' => 'Alocações'],
-                ['key' => 'Subtarefas', 'label' => 'Subtarefas'],
+                ['key' => 'StatusTituloPrincipal', 'label' => 'Situação da tarefa'],
             ],
             'rows' => $rows,
         ];
@@ -302,7 +350,16 @@ final class InternalListExportHandlers
             'processo' => trim((string) ($get['processo'] ?? '')),
         ];
         $service = new EditaisService($pdo);
-        $rows = self::withExportSubtarefasSomenteEmAndamento($service->listEditais($filters, self::MAX_ROWS, 0)['rows'] ?? []);
+        $rows = self::withExportPrincipalStatusTitle(
+            $service->listEditais($filters, self::MAX_ROWS, 0)['rows'] ?? [],
+            ListExportPrincipalStatusTitle::MODULE_EDITAIS
+        );
+        foreach ($rows as $i => $row) {
+            $info = $row['DecursoInfo'] ?? [];
+            $rows[$i]['DecursoExport'] = is_array($info)
+                ? self::formatExportEditalDecursoResumo($info)
+                : '—';
+        }
 
         return [
             'title' => 'Lista de editais',
@@ -310,8 +367,9 @@ final class InternalListExportHandlers
             'columns' => [
                 ['key' => 'Processo', 'label' => 'Processo'],
                 ['key' => 'TipoEdital', 'label' => 'Tipo de edital'],
+                ['key' => 'DecursoExport', 'label' => 'Data final do prazo / dias restantes'],
                 ['key' => 'Alocados', 'label' => 'Alocações'],
-                ['key' => 'Subtarefas', 'label' => 'Subtarefas'],
+                ['key' => 'StatusTituloPrincipal', 'label' => 'Situação da tarefa'],
             ],
             'rows' => $rows,
         ];
@@ -327,7 +385,10 @@ final class InternalListExportHandlers
             'processo' => trim((string) ($get['processo'] ?? '')),
         ];
         $service = new MedidasProtetivasService($pdo);
-        $rows = self::withExportSubtarefasSomenteEmAndamento($service->listMedidasProtetivas($filters, self::MAX_ROWS, 0)['rows'] ?? []);
+        $rows = self::withExportPrincipalStatusTitle(
+            $service->listMedidasProtetivas($filters, self::MAX_ROWS, 0)['rows'] ?? [],
+            ListExportPrincipalStatusTitle::MODULE_MEDIDAS
+        );
 
         return [
             'title' => 'Lista de medidas protetivas',
@@ -336,7 +397,7 @@ final class InternalListExportHandlers
                 ['key' => 'Processo', 'label' => 'Processo'],
                 ['key' => 'ReuNome', 'label' => 'Réu'],
                 ['key' => 'Alocados', 'label' => 'Alocações'],
-                ['key' => 'Subtarefas', 'label' => 'Subtarefas'],
+                ['key' => 'StatusTituloPrincipal', 'label' => 'Situação da tarefa'],
             ],
             'rows' => $rows,
         ];
@@ -371,7 +432,7 @@ final class InternalListExportHandlers
             'oficio' => trim((string) ($get['oficio'] ?? '')),
             'ano' => self::resolveAnoOficios($anos, $get),
         ];
-        $rows = self::withExportSubtarefasSomenteEmAndamento($service->listOficios($filters, self::MAX_ROWS, 0)['rows'] ?? []);
+        $rows = $service->listOficios($filters, self::MAX_ROWS, 0)['rows'] ?? [];
         $out = [];
         foreach ($rows as $r) {
             $out[] = [
@@ -383,7 +444,10 @@ final class InternalListExportHandlers
                 'MeioEnvio' => self::labelMeioEnvioCartorio((string) ($r['MeioEnvio'] ?? '')),
                 'CriadoPor' => trim((string) ($r['CriadoPorNome'] ?? '')),
                 'Alocados' => $r['Alocados'] ?? [],
-                'Subtarefas' => $r['Subtarefas'] ?? [],
+                'StatusTituloPrincipal' => ListExportPrincipalStatusTitle::forRow(
+                    ListExportPrincipalStatusTitle::MODULE_OFICIOS_CARTORIO,
+                    $r
+                ),
             ];
         }
 
@@ -399,7 +463,7 @@ final class InternalListExportHandlers
                 ['key' => 'MeioEnvio', 'label' => 'Meio de envio'],
                 ['key' => 'CriadoPor', 'label' => 'Registrado por'],
                 ['key' => 'Alocados', 'label' => 'Alocações'],
-                ['key' => 'Subtarefas', 'label' => 'Subtarefas'],
+                ['key' => 'StatusTituloPrincipal', 'label' => 'Situação da tarefa'],
             ],
             'rows' => $out,
         ];
@@ -453,7 +517,10 @@ final class InternalListExportHandlers
             'processo' => trim((string) ($get['processo'] ?? '')),
         ];
         $service = new GabineteMonitoramentoEletronicoService($pdo);
-        $rows = self::withExportSubtarefasSomenteEmAndamento($service->listMonitoramentos($filters, self::MAX_ROWS, 0)['rows'] ?? []);
+        $rows = self::withExportPrincipalStatusTitle(
+            $service->listMonitoramentos($filters, self::MAX_ROWS, 0)['rows'] ?? [],
+            ListExportPrincipalStatusTitle::MODULE_MONITORAMENTO_GABINETE
+        );
 
         return [
             'title' => 'Lista de monitoramentos eletrônicos',
@@ -463,7 +530,7 @@ final class InternalListExportHandlers
                 ['key' => 'ReuNome', 'label' => 'Réu'],
                 ['key' => 'DataInicio', 'label' => 'Início'],
                 ['key' => 'DuracaoLabel', 'label' => 'Duração'],
-                ['key' => 'Subtarefas', 'label' => 'Subtarefas'],
+                ['key' => 'StatusTituloPrincipal', 'label' => 'Situação da tarefa'],
             ],
             'rows' => $rows,
         ];
@@ -520,7 +587,16 @@ final class InternalListExportHandlers
             'processo' => trim((string) ($get['processo'] ?? '')),
         ];
         $service = new CartasExpedidasService($pdo);
-        $rows = self::withExportSubtarefasSomenteEmAndamento($service->listCartas($filters, self::MAX_ROWS, 0)['rows'] ?? []);
+        $rows = self::withExportPrincipalStatusTitle(
+            $service->listCartas($filters, self::MAX_ROWS, 0)['rows'] ?? [],
+            ListExportPrincipalStatusTitle::MODULE_CARTAS_EXPEDIDAS
+        );
+        foreach ($rows as $i => $row) {
+            $rows[$i]['ComarcaDestino'] = self::formatExportComarcaCidadeUf(
+                (string) ($row['Comarca'] ?? ''),
+                (string) ($row['Estado'] ?? '')
+            );
+        }
 
         return [
             'title' => 'Lista de cartas expedidas',
@@ -528,8 +604,9 @@ final class InternalListExportHandlers
             'columns' => [
                 ['key' => 'Processo', 'label' => 'Processo'],
                 ['key' => 'Finalidade', 'label' => 'Finalidade'],
+                ['key' => 'ComarcaDestino', 'label' => 'Comarca de destino'],
                 ['key' => 'Alocados', 'label' => 'Alocações'],
-                ['key' => 'Subtarefas', 'label' => 'Subtarefas'],
+                ['key' => 'StatusTituloPrincipal', 'label' => 'Situação da tarefa'],
             ],
             'rows' => $rows,
         ];
@@ -546,7 +623,16 @@ final class InternalListExportHandlers
             'processo' => trim((string) ($get['processo'] ?? '')),
         ];
         $service = new CartasRecebidasService($pdo);
-        $rows = self::withExportSubtarefasSomenteEmAndamento($service->listCartas($filters, self::MAX_ROWS, 0)['rows'] ?? []);
+        $rows = self::withExportPrincipalStatusTitle(
+            $service->listCartas($filters, self::MAX_ROWS, 0)['rows'] ?? [],
+            ListExportPrincipalStatusTitle::MODULE_CARTAS_RECEBIDAS
+        );
+        foreach ($rows as $i => $row) {
+            $rows[$i]['ComarcaOrigem'] = self::formatExportComarcaCidadeUf(
+                (string) ($row['Comarca'] ?? ''),
+                (string) ($row['Estado'] ?? '')
+            );
+        }
 
         return [
             'title' => 'Lista de cartas recebidas',
@@ -554,8 +640,9 @@ final class InternalListExportHandlers
             'columns' => [
                 ['key' => 'Processo', 'label' => 'Processo'],
                 ['key' => 'Finalidade', 'label' => 'Finalidade'],
+                ['key' => 'ComarcaOrigem', 'label' => 'Comarca de origem'],
                 ['key' => 'Alocados', 'label' => 'Alocações'],
-                ['key' => 'Subtarefas', 'label' => 'Subtarefas'],
+                ['key' => 'StatusTituloPrincipal', 'label' => 'Situação da tarefa'],
             ],
             'rows' => $rows,
         ];
