@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-_Nenhuma entrada pendente._
+- **chore: add phpmailer dependency to composer.json and update composer.lock; enhance PasswordResetService with class existence check for PHPMailer** `[fce0645]`
 
