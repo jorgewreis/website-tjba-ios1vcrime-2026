@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-_Nenhuma entrada pendente._
+- **fix: update password history check implementation and improve error handling in password reset process** `[9db7ac4]`
 
