@@ -182,7 +182,7 @@ final class ListExportPresentation
                 }
             }
 
-            return implode("\n", $lines);
+            return implode('; ', $lines);
         }
 
         if ($columnKey === 'Subtarefas' && is_array($value)) {
@@ -191,12 +191,15 @@ final class ListExportPresentation
                 if (!is_array($item)) {
                     continue;
                 }
+                if (trim((string) ($item['status'] ?? '')) !== 'em_andamento') {
+                    continue;
+                }
                 $tipo = (string) ($item['tipo'] ?? '');
                 $lines[] = self::subtarefaLabelFromTipo($tipo);
             }
             $lines = array_values(array_filter($lines, static fn (string $s): bool => $s !== ''));
 
-            return implode("\n", $lines);
+            return implode('; ', $lines);
         }
 
         if ($columnKey === 'subtarefas_processos' && is_array($value)) {

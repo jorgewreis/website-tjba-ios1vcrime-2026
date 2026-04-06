@@ -77,17 +77,30 @@ final class InternalListExportHandlers
     }
 
     /**
-     * Exportação: lista completa de subtarefas (não só pendentes), quando existir SubtarefasAll.
+     * Exportação: em Subtarefas ficam apenas itens com status em_andamento (status atual da tarefa principal).
      *
      * @param list<array<string, mixed>> $rows
      * @return list<array<string, mixed>>
      */
-    private static function withExportSubtarefas(array $rows): array
+    private static function withExportSubtarefasSomenteEmAndamento(array $rows): array
     {
         foreach ($rows as $i => $row) {
+            $all = [];
             if (!empty($row['SubtarefasAll']) && is_array($row['SubtarefasAll'])) {
-                $rows[$i]['Subtarefas'] = $row['SubtarefasAll'];
+                $all = $row['SubtarefasAll'];
+            } elseif (!empty($row['Subtarefas']) && is_array($row['Subtarefas'])) {
+                $all = $row['Subtarefas'];
             }
+            $emAndamento = [];
+            foreach ($all as $st) {
+                if (!is_array($st)) {
+                    continue;
+                }
+                if (trim((string) ($st['status'] ?? '')) === 'em_andamento') {
+                    $emAndamento[] = $st;
+                }
+            }
+            $rows[$i]['Subtarefas'] = $emAndamento;
         }
 
         return $rows;
@@ -210,7 +223,7 @@ final class InternalListExportHandlers
             'processo' => trim((string) ($get['processo'] ?? '')),
         ];
         $service = new GuiasService($pdo);
-        $rows = self::withExportSubtarefas($service->listGuias($filters, self::MAX_ROWS, 0)['rows'] ?? []);
+        $rows = self::withExportSubtarefasSomenteEmAndamento($service->listGuias($filters, self::MAX_ROWS, 0)['rows'] ?? []);
 
         return [
             'title' => 'Lista de guias',
@@ -236,7 +249,7 @@ final class InternalListExportHandlers
             'processo' => trim((string) ($get['processo'] ?? '')),
         ];
         $service = new CejuscService($pdo);
-        $rows = self::withExportSubtarefas($service->listTarefas($filters, self::MAX_ROWS, 0)['rows'] ?? []);
+        $rows = self::withExportSubtarefasSomenteEmAndamento($service->listTarefas($filters, self::MAX_ROWS, 0)['rows'] ?? []);
 
         return [
             'title' => 'Lista de tarefas CEJUSC',
@@ -289,7 +302,7 @@ final class InternalListExportHandlers
             'processo' => trim((string) ($get['processo'] ?? '')),
         ];
         $service = new EditaisService($pdo);
-        $rows = self::withExportSubtarefas($service->listEditais($filters, self::MAX_ROWS, 0)['rows'] ?? []);
+        $rows = self::withExportSubtarefasSomenteEmAndamento($service->listEditais($filters, self::MAX_ROWS, 0)['rows'] ?? []);
 
         return [
             'title' => 'Lista de editais',
@@ -314,7 +327,7 @@ final class InternalListExportHandlers
             'processo' => trim((string) ($get['processo'] ?? '')),
         ];
         $service = new MedidasProtetivasService($pdo);
-        $rows = self::withExportSubtarefas($service->listMedidasProtetivas($filters, self::MAX_ROWS, 0)['rows'] ?? []);
+        $rows = self::withExportSubtarefasSomenteEmAndamento($service->listMedidasProtetivas($filters, self::MAX_ROWS, 0)['rows'] ?? []);
 
         return [
             'title' => 'Lista de medidas protetivas',
@@ -358,7 +371,7 @@ final class InternalListExportHandlers
             'oficio' => trim((string) ($get['oficio'] ?? '')),
             'ano' => self::resolveAnoOficios($anos, $get),
         ];
-        $rows = self::withExportSubtarefas($service->listOficios($filters, self::MAX_ROWS, 0)['rows'] ?? []);
+        $rows = self::withExportSubtarefasSomenteEmAndamento($service->listOficios($filters, self::MAX_ROWS, 0)['rows'] ?? []);
         $out = [];
         foreach ($rows as $r) {
             $out[] = [
@@ -440,7 +453,7 @@ final class InternalListExportHandlers
             'processo' => trim((string) ($get['processo'] ?? '')),
         ];
         $service = new GabineteMonitoramentoEletronicoService($pdo);
-        $rows = self::withExportSubtarefas($service->listMonitoramentos($filters, self::MAX_ROWS, 0)['rows'] ?? []);
+        $rows = self::withExportSubtarefasSomenteEmAndamento($service->listMonitoramentos($filters, self::MAX_ROWS, 0)['rows'] ?? []);
 
         return [
             'title' => 'Lista de monitoramentos eletrônicos',
@@ -507,7 +520,7 @@ final class InternalListExportHandlers
             'processo' => trim((string) ($get['processo'] ?? '')),
         ];
         $service = new CartasExpedidasService($pdo);
-        $rows = self::withExportSubtarefas($service->listCartas($filters, self::MAX_ROWS, 0)['rows'] ?? []);
+        $rows = self::withExportSubtarefasSomenteEmAndamento($service->listCartas($filters, self::MAX_ROWS, 0)['rows'] ?? []);
 
         return [
             'title' => 'Lista de cartas expedidas',
@@ -533,7 +546,7 @@ final class InternalListExportHandlers
             'processo' => trim((string) ($get['processo'] ?? '')),
         ];
         $service = new CartasRecebidasService($pdo);
-        $rows = self::withExportSubtarefas($service->listCartas($filters, self::MAX_ROWS, 0)['rows'] ?? []);
+        $rows = self::withExportSubtarefasSomenteEmAndamento($service->listCartas($filters, self::MAX_ROWS, 0)['rows'] ?? []);
 
         return [
             'title' => 'Lista de cartas recebidas',
