@@ -297,6 +297,8 @@ final class PasswordResetService
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
             );
 
+            $this->upgradeRecuperacaoSenhaSchemaIfNeeded();
+
             $this->storageReady = true;
         } catch (Throwable $e) {
             error_log('PasswordResetService: armazenamento indisponível: ' . $e->getMessage());
@@ -304,6 +306,74 @@ final class PasswordResetService
         }
 
         return $this->storageReady;
+    }
+
+    /**
+     * Instalações antigas podem ter criado `recuperacao_senha` antes do hash SHA-256 (64 hex)
+     * ou sem a coluna `ip`. `CREATE TABLE IF NOT EXISTS` não corrige isso — o INSERT quebra
+     * e o usuário vê apenas a mensagem genérica de "processar recuperação".
+     */
+    private function upgradeRecuperacaoSenhaSchemaIfNeeded(): void
+    {
+        try {
+            $dbName = $this->pdo->query('SELECT DATABASE()')->fetchColumn();
+            if (!is_string($dbName) || $dbName === '') {
+                return;
+            }
+
+            $stmt = $this->pdo->prepare(
+                'SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH
+                   FROM INFORMATION_SCHEMA.COLUMNS
+                  WHERE TABLE_SCHEMA = ?
+                    AND TABLE_NAME = ?'
+            );
+            $stmt->execute([$dbName, self::TABLE]);
+            $cols = [];
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                if (is_array($row) && isset($row['COLUMN_NAME'])) {
+                    $cols[(string) $row['COLUMN_NAME']] = $row;
+                }
+            }
+
+            if ($cols === []) {
+                return;
+            }
+
+            if (!isset($cols['usado'])) {
+                $this->pdo->exec(
+                    'ALTER TABLE ' . self::TABLE . ' ADD COLUMN usado TINYINT(1) NOT NULL DEFAULT 0'
+                );
+            }
+
+            if (!isset($cols['ip'])) {
+                $after = isset($cols['usado']) ? ' AFTER usado' : '';
+                $this->pdo->exec(
+                    'ALTER TABLE ' . self::TABLE . " ADD COLUMN ip VARCHAR(45) NOT NULL DEFAULT ''" . $after
+                );
+            }
+
+            if (!isset($cols['data_solicitacao'])) {
+                $this->pdo->exec(
+                    'ALTER TABLE ' . self::TABLE
+                    . ' ADD COLUMN data_solicitacao DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP'
+                );
+            }
+
+            $tokenMeta = $cols['token'] ?? null;
+            if (is_array($tokenMeta)) {
+                $dataType = strtolower((string) ($tokenMeta['DATA_TYPE'] ?? ''));
+                $maxLen = $tokenMeta['CHARACTER_MAXIMUM_LENGTH'];
+                $maxLenInt = ($maxLen !== null && $maxLen !== '') ? (int) $maxLen : 0;
+                $tooShortChar = ($dataType === 'varchar' || $dataType === 'char') && $maxLenInt > 0 && $maxLenInt < 64;
+                if ($tooShortChar) {
+                    $this->pdo->exec(
+                        'ALTER TABLE ' . self::TABLE . ' MODIFY COLUMN token VARCHAR(191) NOT NULL'
+                    );
+                }
+            }
+        } catch (Throwable $e) {
+            error_log('PasswordResetService: upgrade schema recuperacao_senha: ' . $e->getMessage());
+        }
     }
 
     private function generateId(string $prefix): string

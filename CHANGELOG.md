@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.69
+
+**Data:** 2026-04-06 13:34:43 | **Commit:** `01bd4d1` | **Tipo:** `minor`
+
+- refactor: implement schema upgrade for recuperacao_senha to ensure compatibility with legacy installations and improve error handling
+
 ## V. 1.68
 
 **Data:** 2026-04-06 13:31:08 | **Commit:** `4059b9d` | **Tipo:** `minor`
@@ -4272,6 +4278,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
