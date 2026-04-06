@@ -135,6 +135,9 @@ define('LOGIN_RATE_LIMIT_BASE_LOCK_SECONDS', 900); // 15 minutos
 define('LOGIN_RATE_LIMIT_MAX_LOCK_SECONDS', 28800); // 8 horas
 define('PASSWORD_RESET_TOKEN_TTL_SECONDS', 3600); // 1 hora
 
+/** Provisório: false = não consulta historico_senha na alteração de senha (tela / API alterar_senha). Reativar: true. */
+define('PASSWORD_HISTORY_ON_CHANGE_ENABLED', false);
+
 // Timezone
 date_default_timezone_set(envValue('APP_TIMEZONE', 'America/Bahia'));
 

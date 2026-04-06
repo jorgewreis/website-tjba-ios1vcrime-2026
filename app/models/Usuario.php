@@ -254,7 +254,9 @@ final class Usuario
             return ['success' => false, 'message' => 'A nova senha deve ser diferente da senha atual.'];
         }
 
-        if (isPasswordHistoryCheckEnabled() && $this->passwordMatchesStoredHistory($idUsuario, $novaSenha)) {
+        $checkHistory = PASSWORD_HISTORY_ON_CHANGE_ENABLED
+            && (!function_exists('isPasswordHistoryCheckEnabled') || isPasswordHistoryCheckEnabled());
+        if ($checkHistory && $this->passwordMatchesStoredHistory($idUsuario, $novaSenha)) {
             return ['success' => false, 'message' => 'A nova senha não pode repetir nenhuma das últimas senhas utilizadas.'];
         }
 

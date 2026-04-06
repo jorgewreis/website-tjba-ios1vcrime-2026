@@ -135,7 +135,19 @@ $csrfToken = Security::generateCSRFToken();
                         })
                     });
 
-                    const data = await response.json().catch(() => ({}));
+                    const raw = await response.text();
+                    let data = {};
+                    try {
+                        data = raw ? JSON.parse(raw) : {};
+                    } catch (parseErr) {
+                        showToast({
+                            type: 'error',
+                            title: 'Erro',
+                            message: 'Resposta inválida do servidor (HTTP ' + response.status + '). Confirme se o deploy inclui config.php atualizado ou contacte o suporte.'
+                        });
+                        if (btn) { btn.disabled = false; btn.textContent = originalText; }
+                        return;
+                    }
 
                     if (data.success) {
                         showToast({
@@ -154,7 +166,12 @@ $csrfToken = Security::generateCSRFToken();
                         if (btn) { btn.disabled = false; btn.textContent = originalText; }
                     }
                 } catch (err) {
-                    showToast({ type: 'error', title: 'Erro', message: 'Erro de conexão. Tente novamente.' });
+                    var detail = (err && err.message) ? err.message : '';
+                    showToast({
+                        type: 'error',
+                        title: 'Erro',
+                        message: detail ? ('Falha na comunicação: ' + detail) : 'Erro de conexão. Tente novamente.'
+                    });
                     if (btn) { btn.disabled = false; btn.textContent = originalText; }
                 }
             });

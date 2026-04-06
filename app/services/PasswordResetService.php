@@ -482,7 +482,8 @@ final class PasswordResetService
             return true;
         }
 
-        if (!isPasswordHistoryCheckEnabled()) {
+        $skipHistorico = function_exists('isPasswordHistoryCheckEnabled') && !isPasswordHistoryCheckEnabled();
+        if ($skipHistorico) {
             return false;
         }
 
