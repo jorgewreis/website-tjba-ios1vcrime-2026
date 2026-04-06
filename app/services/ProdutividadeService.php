@@ -393,14 +393,7 @@ final class ProdutividadeService
     {
         $this->assertAuthenticated($actorUserId);
         $isGestao = $this->isGestaoUser($actorUserId);
-        if (!$isGestao) {
-            $filters['usuario_id'] = $actorUserId;
-        } else {
-            $filtroUsuario = trim((string) ($filters['usuario_id'] ?? ''));
-            if ($filtroUsuario !== '') {
-                $filters['usuario_id'] = $filtroUsuario;
-            }
-        }
+        $filters = $this->applyProdutividadeLancamentosEscopoFiltros($actorUserId, $filters, $isGestao);
 
         $rows = $this->lancamentosRepository->fetchList($filters, $limit, $offset);
         $total = $this->lancamentosRepository->count($filters);
@@ -624,15 +617,7 @@ final class ProdutividadeService
     {
         $this->assertAuthenticated($actorUserId);
         $isGestao = $this->isGestaoUser($actorUserId);
-
-        if (!$isGestao) {
-            $filters['usuario_id'] = $actorUserId;
-        } else {
-            $filtroUsuario = trim((string) ($filters['usuario_id'] ?? ''));
-            if ($filtroUsuario !== '') {
-                $filters['usuario_id'] = $filtroUsuario;
-            }
-        }
+        $filters = $this->applyProdutividadeLancamentosEscopoFiltros($actorUserId, $filters, $isGestao);
 
         $rows = $this->lancamentosRepository->fetchForExport($filters, $limit);
         $sum = 0.0;
@@ -651,10 +636,7 @@ final class ProdutividadeService
     {
         $this->assertAuthenticated($actorUserId);
         $isGestao = $this->isGestaoUser($actorUserId);
-        $base = $filters;
-        if (!$isGestao) {
-            $base['usuario_id'] = $actorUserId;
-        }
+        $base = $this->applyProdutividadeLancamentosEscopoFiltros($actorUserId, $filters, $isGestao);
 
         $now = new DateTimeImmutable('now');
         $weekStart = $now->modify('monday this week');
@@ -700,10 +682,7 @@ final class ProdutividadeService
     {
         $this->assertAuthenticated($actorUserId);
         $isGestao = $this->isGestaoUser($actorUserId);
-        $base = $filters;
-        if (!$isGestao) {
-            $base['usuario_id'] = $actorUserId;
-        }
+        $base = $this->applyProdutividadeLancamentosEscopoFiltros($actorUserId, $filters, $isGestao);
 
         $start = trim((string) ($base['data_inicio'] ?? ''));
         $end = trim((string) ($base['data_fim'] ?? ''));
@@ -819,6 +798,38 @@ final class ProdutividadeService
         }
 
         return false;
+    }
+
+    /**
+     * Gestão: vê todos (opcional filtro por usuário). Demais perfis: se lotados em setor com código de área,
+     * veem lançamentos de todos os usuários daquela área (ex.: cartório); sem setor, apenas os próprios.
+     *
+     * @param array<string, mixed> $filters
+     * @return array<string, mixed>
+     */
+    private function applyProdutividadeLancamentosEscopoFiltros(string $actorUserId, array $filters, bool $isGestao): array
+    {
+        if ($isGestao) {
+            unset($filters['setor_codigo_area']);
+            $filtroUsuario = trim((string) ($filters['usuario_id'] ?? ''));
+            if ($filtroUsuario === '') {
+                unset($filters['usuario_id']);
+            } else {
+                $filters['usuario_id'] = $filtroUsuario;
+            }
+
+            return $filters;
+        }
+
+        unset($filters['setor_codigo_area'], $filters['usuario_id']);
+        $setor = $this->findUserSetorCodigoArea($actorUserId);
+        if ($setor !== '') {
+            $filters['setor_codigo_area'] = $setor;
+        } else {
+            $filters['usuario_id'] = $actorUserId;
+        }
+
+        return $filters;
     }
 
     private function normalizeRulePayload(array $payload, ?array $current = null): array
@@ -1076,22 +1087,36 @@ final class ProdutividadeService
         $local['data_fim'] = $end->format('Y-m-d');
 
         $usuarioId = trim((string) ($local['usuario_id'] ?? ''));
-        $whereUsuario = '';
+        $setorCodigoArea = strtoupper(trim((string) ($local['setor_codigo_area'] ?? '')));
+
+        $whereExtra = '';
         if ($usuarioId !== '') {
-            $whereUsuario = ' AND l.`usuario_id` = :usuario_id';
+            $whereExtra .= ' AND l.`usuario_id` = :usuario_id';
+        }
+        if ($setorCodigoArea !== '') {
+            $whereExtra .= ' AND EXISTS (
+                SELECT 1 FROM `usuario_setor` us_f
+                INNER JOIN `setores` s_f ON s_f.`id_setor` = us_f.`setor`
+                WHERE us_f.`usuario` = l.`usuario_id`
+                  AND s_f.`ativo` = 1
+                  AND UPPER(TRIM(COALESCE(s_f.`codigo_area`, \'\'))) = :setor_codigo_area_proj
+            )';
         }
 
         $sql = 'SELECT DATE(l.`data_hora_ato`) AS dia
                 FROM `produtividade_lancamentos` l
                 WHERE l.`status` = \'ativo\'
                   AND l.`data_hora_ato` >= :data_inicio
-                  AND l.`data_hora_ato` <= :data_fim' . $whereUsuario . '
+                  AND l.`data_hora_ato` <= :data_fim' . $whereExtra . '
                 GROUP BY DATE(l.`data_hora_ato`)';
         $statement = $this->connection->prepare($sql);
         $statement->bindValue(':data_inicio', $start->format('Y-m-d') . ' 00:00:00');
         $statement->bindValue(':data_fim', $end->format('Y-m-d') . ' 23:59:59');
-        if ($whereUsuario !== '') {
+        if ($usuarioId !== '') {
             $statement->bindValue(':usuario_id', $usuarioId);
+        }
+        if ($setorCodigoArea !== '') {
+            $statement->bindValue(':setor_codigo_area_proj', $setorCodigoArea);
         }
         $statement->execute();
         $dias = $statement->fetchAll(PDO::FETCH_COLUMN);

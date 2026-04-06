@@ -14,6 +14,16 @@ if ($userId === '') {
     exit;
 }
 
+$formatarDataHoraProdutividade = static function (?string $mysql): string {
+    $mysql = trim((string) $mysql);
+    if ($mysql === '') {
+        return '';
+    }
+    $t = strtotime($mysql);
+
+    return $t !== false ? date('d/m/Y H:i', $t) : $mysql;
+};
+
 $filters = [
     'usuario_id' => trim((string) ($_GET['usuario_id'] ?? '')),
     'status' => trim((string) ($_GET['status'] ?? 'ativo')),
@@ -32,22 +42,17 @@ try {
     $html .= '<style>body{font-family:Arial,sans-serif;font-size:11px;color:#1a1a1a;}table{width:100%;border-collapse:collapse;margin-top:4px;}th,td{border:1px solid #ddd;padding:4px 6px;text-align:left;vertical-align:top;white-space:pre-line;word-break:break-word;}th{background:#f5f5f5;}</style>';
     $html .= '</head><body>';
     $html .= ListExportPresentation::htmlInstitutionalBlock();
-    $html .= ListExportPresentation::htmlReportIntro('Lista de lançamentos de produtividade', $filterSummary, count($rows));
+    $html .= ListExportPresentation::htmlReportIntro('Lista de produtividade', $filterSummary, count($rows));
     $html .= '<table><thead><tr>';
-    $html .= '<th>Data/hora</th><th>Usuário</th><th>Módulo</th><th>Documento</th><th>Ato</th><th>Tipo lançamento</th><th>Processo</th><th>Qtd</th><th>Pontos</th><th>Observações</th>';
+    $html .= '<th>Data/hora</th><th>Processo</th><th>Observações</th><th>Usuário</th><th>Pontos</th>';
     $html .= '</tr></thead><tbody>';
     foreach ($rows as $row) {
         $html .= '<tr>';
-        $html .= '<td>' . htmlspecialchars((string) ($row['data_hora_ato'] ?? ''), ENT_QUOTES, 'UTF-8') . '</td>';
+        $html .= '<td>' . htmlspecialchars($formatarDataHoraProdutividade((string) ($row['data_hora_ato'] ?? '')), ENT_QUOTES, 'UTF-8') . '</td>';
+        $html .= '<td>' . htmlspecialchars(trim((string) ($row['numero_processo'] ?? '')), ENT_QUOTES, 'UTF-8') . '</td>';
+        $html .= '<td>' . htmlspecialchars(trim((string) ($row['observacoes'] ?? '')), ENT_QUOTES, 'UTF-8') . '</td>';
         $html .= '<td>' . htmlspecialchars(trim((string) ($row['usuario_nome'] ?? $row['usuario_id'] ?? '')), ENT_QUOTES, 'UTF-8') . '</td>';
-        $html .= '<td>' . htmlspecialchars((string) ($row['sistema_modulo'] ?? ''), ENT_QUOTES, 'UTF-8') . '</td>';
-        $html .= '<td>' . htmlspecialchars((string) ($row['tipo_documento'] ?? ''), ENT_QUOTES, 'UTF-8') . '</td>';
-        $html .= '<td>' . htmlspecialchars((string) ($row['tipo_ato'] ?? ''), ENT_QUOTES, 'UTF-8') . '</td>';
-        $html .= '<td>' . htmlspecialchars((string) ($row['tipo_lancamento'] ?? ''), ENT_QUOTES, 'UTF-8') . '</td>';
-        $html .= '<td>' . htmlspecialchars((string) ($row['numero_processo'] ?? ''), ENT_QUOTES, 'UTF-8') . '</td>';
-        $html .= '<td>' . (int) ($row['quantidade'] ?? 0) . '</td>';
-        $html .= '<td>' . number_format((float) ($row['pontos_calculados'] ?? 0), 2, ',', '.') . '</td>';
-        $html .= '<td>' . htmlspecialchars((string) ($row['observacoes'] ?? ''), ENT_QUOTES, 'UTF-8') . '</td>';
+        $html .= '<td>' . htmlspecialchars(number_format((float) ($row['pontos_calculados'] ?? 0), 2, ',', '.'), ENT_QUOTES, 'UTF-8') . '</td>';
         $html .= '</tr>';
     }
     $html .= '</tbody></table></body></html>';

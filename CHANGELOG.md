@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.66
+
+**Data:** 2026-04-06 10:08:37 | **Commit:** `ca32cc3` | **Tipo:** `minor`
+
+- refactor: enhance productivity filters and export functionality by consolidating user and sector area logic, improving data presentation in CSV/PDF exports, and updating UI descriptions for clarity
+
 ## V. 1.65
 
 **Data:** 2026-04-06 09:59:01 | **Commit:** `90b8cdc` | **Tipo:** `minor`
@@ -4254,6 +4260,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

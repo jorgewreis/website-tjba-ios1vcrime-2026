@@ -14,6 +14,16 @@ if ($userId === '') {
     exit;
 }
 
+$formatarDataHoraProdutividade = static function (?string $mysql): string {
+    $mysql = trim((string) $mysql);
+    if ($mysql === '') {
+        return '';
+    }
+    $t = strtotime($mysql);
+
+    return $t !== false ? date('d/m/Y H:i', $t) : $mysql;
+};
+
 $filters = [
     'usuario_id' => trim((string) ($_GET['usuario_id'] ?? '')),
     'status' => trim((string) ($_GET['status'] ?? 'ativo')),
@@ -43,15 +53,10 @@ try {
 
     $headers = [
         'Data/hora',
-        'Usuário',
-        'Setor/Módulo',
-        'Tipo documento',
-        'Tipo ato',
-        'Tipo lançamento',
         'Processo',
-        'Quantidade',
-        'Pontos',
         'Observações',
+        'Usuário',
+        'Pontos',
     ];
     ListExportPresentation::writeCsvPreamble(
         $output,
@@ -64,16 +69,11 @@ try {
 
     foreach ($rows as $row) {
         fputcsv($output, [
-            (string) ($row['data_hora_ato'] ?? ''),
+            $formatarDataHoraProdutividade((string) ($row['data_hora_ato'] ?? '')),
+            trim((string) ($row['numero_processo'] ?? '')),
+            trim((string) ($row['observacoes'] ?? '')),
             trim((string) ($row['usuario_nome'] ?? $row['usuario_id'] ?? '')),
-            (string) ($row['sistema_modulo'] ?? ''),
-            (string) ($row['tipo_documento'] ?? ''),
-            (string) ($row['tipo_ato'] ?? ''),
-            (string) ($row['tipo_lancamento'] ?? ''),
-            (string) ($row['numero_processo'] ?? ''),
-            (string) ($row['quantidade'] ?? ''),
             number_format((float) ($row['pontos_calculados'] ?? 0), 2, ',', '.'),
-            (string) ($row['observacoes'] ?? ''),
         ], ';');
     }
 

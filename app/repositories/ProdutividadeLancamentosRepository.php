@@ -289,6 +289,18 @@ final class ProdutividadeLancamentosRepository
             $params[':data_fim'] = $dataFim . ' 23:59:59';
         }
 
+        $setorCodigoArea = strtoupper(trim((string) ($filters['setor_codigo_area'] ?? '')));
+        if ($setorCodigoArea !== '') {
+            $where[] = 'EXISTS (
+                SELECT 1 FROM `usuario_setor` us_f
+                INNER JOIN `setores` s_f ON s_f.`id_setor` = us_f.`setor`
+                WHERE us_f.`usuario` = l.`usuario_id`
+                  AND s_f.`ativo` = 1
+                  AND UPPER(TRIM(COALESCE(s_f.`codigo_area`, \'\'))) = :setor_codigo_area_lanc
+            )';
+            $params[':setor_codigo_area_lanc'] = $setorCodigoArea;
+        }
+
         return [$where, $params];
     }
 
@@ -297,15 +309,7 @@ final class ProdutividadeLancamentosRepository
      */
     private function buildRankingFilter(array $filters): array
     {
-        [$where, $params] = $this->buildFilter($filters);
-
-        $setorCodigoArea = strtoupper(trim((string) ($filters['setor_codigo_area'] ?? '')));
-        if ($setorCodigoArea !== '') {
-            $where[] = 'UPPER(COALESCE(s.`codigo_area`, \'\')) = :setor_codigo_area';
-            $params[':setor_codigo_area'] = $setorCodigoArea;
-        }
-
-        return [$where, $params];
+        return $this->buildFilter($filters);
     }
 }
 

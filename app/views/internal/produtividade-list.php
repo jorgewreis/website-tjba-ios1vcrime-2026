@@ -213,7 +213,7 @@ if ($canLoadLancamentos && $errors === []) {
             <span class="specific">Produtividade</span>
         </div>
         <h1 class="title-page">Produtividade</h1>
-        <p class="description-page">Lançamentos de produtividade por ato: cadastro manual e registros automáticos do cartório. Por padrão o filtro Tipo lista todos os lançamentos.</p>
+        <p class="description-page">Lançamentos de produtividade por ato: cadastro manual e registros automáticos. Servidores e estagiários lotados em um setor com área (cartório, gabinete ou salas de audiências) veem os lançamentos de toda a equipe daquela área no período; quem não possui setor ativo vê apenas os próprios. Perfis de gestão continuam com visão global e filtro por servidor. Por padrão o filtro Tipo lista todos os lançamentos.</p>
     </div>
 
     <div class="container-full card-page">
