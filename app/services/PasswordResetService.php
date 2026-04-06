@@ -71,6 +71,17 @@ final class PasswordResetService
             ];
         }
 
+        // #region agent log
+        @file_put_contents(dirname(__DIR__, 2) . '/debug-eaaf8e.log', json_encode([
+            'sessionId' => 'eaaf8e',
+            'timestamp' => (int) round(microtime(true) * 1000),
+            'location' => 'PasswordResetService.php:requestReset:user_matched',
+            'message' => 'Usuario row found for CPF+email',
+            'data' => ['idUsuarioLen' => strlen((string) ($user['id_usuario'] ?? ''))],
+            'hypothesisId' => 'H0',
+        ], JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND);
+        // #endregion
+
         $plainToken = Security::generateSecureToken(32);
         $tokenHash = Security::hashAccessToken($plainToken);
         $resetId = $this->generateId('REC');
@@ -81,6 +92,17 @@ final class PasswordResetService
         $this->pdo->beginTransaction();
 
         try {
+            // #region agent log
+            @file_put_contents(dirname(__DIR__, 2) . '/debug-eaaf8e.log', json_encode([
+                'sessionId' => 'eaaf8e',
+                'timestamp' => (int) round(microtime(true) * 1000),
+                'location' => 'PasswordResetService.php:requestReset:tx_begin',
+                'message' => 'Transaction started',
+                'data' => ['tokenHashLen' => strlen($tokenHash), 'resetIdLen' => strlen($resetId)],
+                'hypothesisId' => 'H4',
+            ], JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND);
+            // #endregion
+
             $invalidateStmt = $this->pdo->prepare("
                 UPDATE " . self::TABLE . "
                    SET usado = 1
@@ -88,6 +110,17 @@ final class PasswordResetService
                    AND usado = 0
             ");
             $invalidateStmt->execute([$user['id_usuario']]);
+
+            // #region agent log
+            @file_put_contents(dirname(__DIR__, 2) . '/debug-eaaf8e.log', json_encode([
+                'sessionId' => 'eaaf8e',
+                'timestamp' => (int) round(microtime(true) * 1000),
+                'location' => 'PasswordResetService.php:requestReset:after_invalidate',
+                'message' => 'UPDATE invalidate executed',
+                'data' => ['rowCount' => $invalidateStmt->rowCount()],
+                'hypothesisId' => 'H2',
+            ], JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND);
+            // #endregion
 
             $insertStmt = $this->pdo->prepare("
                 INSERT INTO " . self::TABLE . " (
@@ -97,6 +130,17 @@ final class PasswordResetService
                 )
             ");
             $insertStmt->execute([$resetId, $user['id_usuario'], $tokenHash, $expiresAt, $ip]);
+
+            // #region agent log
+            @file_put_contents(dirname(__DIR__, 2) . '/debug-eaaf8e.log', json_encode([
+                'sessionId' => 'eaaf8e',
+                'timestamp' => (int) round(microtime(true) * 1000),
+                'location' => 'PasswordResetService.php:requestReset:after_insert',
+                'message' => 'INSERT recuperacao_senha executed',
+                'data' => ['rowCount' => $insertStmt->rowCount()],
+                'hypothesisId' => 'H1',
+            ], JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND);
+            // #endregion
 
             $sendResult = $this->sendEmail((string) $user['email'], (string) $user['nome'], $resetUrl);
             if (!$sendResult['ok']) {
@@ -118,6 +162,24 @@ final class PasswordResetService
                     : 'A solicitação foi registrada, mas o envio de e-mail não está ativo neste ambiente. Contate o suporte.',
             ];
         } catch (Throwable $e) {
+            // #region agent log
+            $dbg = [
+                'exClass' => get_class($e),
+                'hypothesisId' => 'H1-H5',
+            ];
+            if ($e instanceof PDOException) {
+                $dbg['sqlstate'] = (string) ($e->errorInfo[0] ?? '');
+                $dbg['driverCode'] = $e->errorInfo[1] ?? null;
+            }
+            @file_put_contents(dirname(__DIR__, 2) . '/debug-eaaf8e.log', json_encode([
+                'sessionId' => 'eaaf8e',
+                'timestamp' => (int) round(microtime(true) * 1000),
+                'location' => 'PasswordResetService.php:requestReset:catch',
+                'message' => 'requestReset Throwable',
+                'data' => $dbg,
+            ], JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND);
+            // #endregion
+
             if ($this->pdo->inTransaction()) {
                 $this->pdo->rollBack();
             }

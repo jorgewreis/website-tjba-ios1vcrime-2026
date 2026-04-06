@@ -33,6 +33,17 @@ try {
         exit;
     }
 
+    // #region agent log
+    @file_put_contents(__DIR__ . '/../debug-eaaf8e.log', json_encode([
+        'sessionId' => 'eaaf8e',
+        'timestamp' => (int) round(microtime(true) * 1000),
+        'location' => 'envia_mail.php:before_service',
+        'message' => 'CSRF ok, invoking PasswordResetService',
+        'data' => ['cpfLen' => strlen($cpf), 'emailLen' => strlen($email)],
+        'hypothesisId' => 'H0',
+    ], JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND);
+    // #endregion
+
     $service = new PasswordResetService();
     $result  = $service->process($cpf, $email);
 

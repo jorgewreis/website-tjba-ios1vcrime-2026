@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.68
+
+**Data:** 2026-04-06 13:31:08 | **Commit:** `4059b9d` | **Tipo:** `minor`
+
+- refactor: add detailed logging to PasswordResetService and envia_mail for improved debugging and traceability
+
 ## V. 1.67
 
 **Data:** 2026-04-06 10:25:17 | **Commit:** `3f54686` | **Tipo:** `minor`
@@ -4266,6 +4272,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
