@@ -28,7 +28,7 @@ Documento vivo: consolida o que já está entregue no módulo, com foco em opera
 
 - [app/services/ProdutividadeService.php](../../../app/services/ProdutividadeService.php):
   - Regras: listagem, busca, create/update e ativação.
-  - Lançamento manual e anulação: perfis **ADMIN** e **CHEFIA** anulam sem limite de tempo; demais usuários só anulam o próprio lançamento **ativo** dentro de **30 minutos** após `criado_em` (API e botão na listagem usam a mesma regra via `ProdutividadeService`).
+  - Lançamento manual e anulação: perfis de gestão (**ADMIN**, **CHEFIA**, **DIRETORA**, **MAGISTRADA** — diretora e magistrada enquadradas como chefia, alinhado a `isGestaoUser`) anulam sem limite de tempo; demais usuários só anulam o próprio lançamento **ativo** dentro de **30 minutos** após `criado_em` (API e botão na listagem usam a mesma regra via `ProdutividadeService`).
   - **`registrarAuto`** com resolução de regra por (`tipo_ato`, `tipo_documento`, `sistema_modulo`), no-op silencioso sem regra ativa e tratamento idempotente de duplicidade.
   - Metas: list/find/create/update/set-ativo.
   - Ranking por setor e exportações.

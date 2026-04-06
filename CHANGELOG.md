@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.74
+
+**Data:** 2026-04-06 14:50:45 | **Commit:** `873bcdf` | **Tipo:** `minor`
+
+- refactor: update manual launch cancellation rules to include additional management profiles and simplify user role checks
+
 ## V. 1.73
 
 **Data:** 2026-04-06 14:49:46 | **Commit:** `4e0514a` | **Tipo:** `minor`
@@ -4326,6 +4332,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -810,7 +810,8 @@ final class ProdutividadeService
     }
 
     /**
-     * Anulação de lançamento manual: apenas ADMIN e CHEFIA (sem janela); autor do lançamento dentro de 30 min após criado_em.
+     * Anulação de lançamento manual: perfis de gestão ({@see self::isGestaoUser}: ADMIN, CHEFIA, DIRETORA e MAGISTRADA —
+     * DIRETORA/MAGISTRADA enquadradas como chefia) sem janela; autor do lançamento dentro de 30 min após criado_em.
      *
      * @param array<string, mixed> $row Registro já validado como manual e ativo
      */
@@ -835,25 +836,12 @@ final class ProdutividadeService
      */
     private function actorPodeAnularLancamentoManualSemChecarTipoStatus(string $actorUserId, array $row): bool
     {
-        if ($this->isAdminOrChefiaUsuario($actorUserId)) {
+        if ($this->isGestaoUser($actorUserId)) {
             return true;
         }
         $ownerId = trim((string) ($row['usuario_id'] ?? ''));
 
         return $ownerId === $actorUserId && $this->isDentroJanelaAnulacaoAutor($row);
-    }
-
-    private function isAdminOrChefiaUsuario(string $userId): bool
-    {
-        $perfis = UsuarioPerfisAutorizacao::perfisDoUsuario($userId);
-        foreach ($perfis as $perfil) {
-            $p = strtoupper(trim((string) $perfil));
-            if ($p === 'ADMIN' || $p === 'CHEFIA') {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /**
