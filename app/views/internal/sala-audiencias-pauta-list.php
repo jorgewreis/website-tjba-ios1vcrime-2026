@@ -10,6 +10,14 @@ require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../helpers/PrioridadesProcessuaisCatalog.php';
 require_once __DIR__ . '/../../services/SalaAudienciasPautaService.php';
 require_once __DIR__ . '/../../services/ProcessoManager.php';
+require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
+
+$currentUserId = trim((string) ($_SESSION['id_usuario'] ?? ''));
+$isGestao = false;
+if ($currentUserId !== '') {
+    $perfisUsuario = UsuarioPerfisAutorizacao::perfisDoUsuario($currentUserId);
+    $isGestao = count(array_intersect($perfisUsuario, ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'])) > 0;
+}
 
 $pdo = Conection::getInstance()->getConnection();
 $service = new SalaAudienciasPautaService($pdo);
@@ -297,9 +305,47 @@ $endItem = min($offset + count($rows), $total);
                             <i class="fi fi-rr-stop-square"></i>
                         </button>
                         <?php endif; ?>
+                        <div class="display-flex row row-fit justify-end gap-y-sm align-center">
                         <button type="button" class="btn btn-editar" data-audiencia-edit="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="Editar audiência">
                             <i class="fi fi-rr-pen-square"></i>
                         </button>
+                        <div class="display-flex row row-fit justify-end gap-y-sm allocate-chips-row allocate-users">
+                        <?php
+                            $alocados = $row['Alocados'] ?? [];
+                            foreach ($alocados as $alocado) {
+                                $tipo = $alocado['tipo'] ?? 'specific';
+                                $iniciais = htmlspecialchars($alocado['iniciais'] ?? '—', ENT_QUOTES);
+                                $nomeCompleto = $alocado['nome_completo'] ?? '';
+                                $nomeLabel = $nomeCompleto !== '' ? $nomeCompleto : ($alocado['iniciais'] ?? '—');
+                                if ($tipo === 'rule') {
+                                    $chipTitle = 'Servidor responsável (regra): ' . $nomeLabel;
+                                } elseif ($tipo === 'all') {
+                                    $chipTitle = 'Responsável pelo cadastro: ' . $nomeLabel;
+                                } else {
+                                    $chipTitle = 'Alocado: ' . $nomeLabel;
+                                }
+                                $classeTipo = in_array($tipo, ['rule', 'specific', 'all'], true) ? ' ' . $tipo : '';
+                                $alocadoIdStr = htmlspecialchars($alocado['alocado_id'] ?? '', ENT_QUOTES);
+                                $usuarioIdStr = $alocado['usuario_id'] ?? '';
+                                $podeRemover = $isGestao || ($tipo === 'specific' && $usuarioIdStr === $currentUserId);
+                                ?>
+                                <span class="user-allocate-wrap">
+                                    <span class="user-allocate<?php echo $classeTipo; ?>" title="<?php echo htmlspecialchars($chipTitle, ENT_QUOTES); ?>"><?php echo $iniciais; ?></span>
+                                    <?php if ($podeRemover): ?>
+                                    <button type="button"
+                                        class="user-allocate-remove js-desalocar"
+                                        data-alocado-id="<?php echo $alocadoIdStr; ?>"
+                                        data-tipo="<?php echo htmlspecialchars($tipo, ENT_QUOTES); ?>"
+                                        data-endpoint="/api/sala-audiencias-pauta/desalocar.php"
+                                        title="Remover alocação"
+                                        aria-label="Remover alocação">×</button>
+                                    <?php endif; ?>
+                                </span>
+                                <?php
+                            }
+                            ?>
+                        </div>
+                        </div>
                     <div class="col">
                         <div class="width-300 padding-x-lg status <?php echo htmlspecialchars($classeStatus, ENT_QUOTES); ?>">
                             <?php echo htmlspecialchars($textoStatus, ENT_QUOTES); ?>
@@ -377,5 +423,16 @@ $endItem = min($offset + count($rows), $total);
     </div>
 
     <script src="/assets/js/modules/audiencias/pauta-list.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-list.js') ?: time(); ?>"></script>
+    <script>
+        (function () {
+            if (!window.App || !App.CartorioTaskList || typeof App.CartorioTaskList.initialize !== 'function') {
+                return;
+            }
+            App.CartorioTaskList.initialize({
+                storageKey: 'salapauta.postReloadToast',
+                enableDesalocar: true
+            });
+        })();
+    </script>
 </body>
 </html>

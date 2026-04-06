@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../repositories/SalaAudienciasPautaRepository.php';
+require_once __DIR__ . '/../repositories/SalaAudienciasPautaAlocadosRepository.php';
 require_once __DIR__ . '/../repositories/SalaAudienciasPautaParteRepository.php';
 require_once __DIR__ . '/../repositories/SalaAudienciasTiposRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
@@ -16,6 +17,7 @@ final class SalaAudienciasPautaService
 {
     private PDO $connection;
     private SalaAudienciasPautaRepository $pautaRepository;
+    private SalaAudienciasPautaAlocadosRepository $alocadosRepository;
     private SalaAudienciasPautaParteRepository $parteRepository;
     private SalaAudienciasTiposRepository $tiposRepository;
     private ProcessosRepository $processosRepository;
@@ -28,6 +30,7 @@ final class SalaAudienciasPautaService
     {
         $this->connection = $connection;
         $this->pautaRepository = new SalaAudienciasPautaRepository($connection);
+        $this->alocadosRepository = new SalaAudienciasPautaAlocadosRepository($connection);
         $this->parteRepository = new SalaAudienciasPautaParteRepository($connection);
         $this->tiposRepository = new SalaAudienciasTiposRepository($connection);
         $this->processosRepository = new ProcessosRepository($connection);
@@ -50,9 +53,12 @@ final class SalaAudienciasPautaService
             return $id !== '';
         }));
         $cumprimentosByPauta = $this->parteRepository->listCumprimentosByPautaIds($pautaIds);
+        $alocadosByPauta = $this->alocadosRepository->findByPautaIds($pautaIds);
         foreach ($rows as $idx => $row) {
             $idPauta = trim((string) ($row['id_pauta'] ?? ''));
             $rows[$idx]['partes_cumprimento'] = $idPauta !== '' ? ($cumprimentosByPauta[$idPauta] ?? []) : [];
+            $rawAl = $idPauta !== '' ? ($alocadosByPauta[$idPauta] ?? []) : [];
+            $rows[$idx]['Alocados'] = $this->formatAlocadosPresentation($rawAl);
         }
 
         return [
@@ -64,7 +70,83 @@ final class SalaAudienciasPautaService
 
     public function find(string $id): ?array
     {
-        return $this->pautaRepository->findById($id);
+        $row = $this->pautaRepository->findById($id);
+        if ($row === null) {
+            return null;
+        }
+        $idPauta = trim((string) ($row['id_pauta'] ?? ''));
+        $byPauta = $idPauta !== '' ? $this->alocadosRepository->findByPautaIds([$idPauta]) : [];
+        $rawAl = $idPauta !== '' ? ($byPauta[$idPauta] ?? []) : [];
+        $row['Alocados'] = $this->formatAlocadosPresentation($rawAl);
+
+        return $row;
+    }
+
+    public function addAlocadoUsuario(string $idPauta, string $usuarioAlvoId): void
+    {
+        $idPauta = trim($idPauta);
+        if ($this->pautaRepository->findById($idPauta) === null) {
+            throw new InvalidArgumentException('Audiência não encontrada.');
+        }
+        $usuarioAlvoId = trim($usuarioAlvoId);
+        if ($usuarioAlvoId === '') {
+            throw new InvalidArgumentException('Usuário é obrigatório.');
+        }
+        if ($this->alocadosRepository->countByPautaId($idPauta) >= 5) {
+            throw new InvalidArgumentException('Limite de 5 servidores alocados por audiência.');
+        }
+        $this->alocadosRepository->addAlocado($idPauta, $usuarioAlvoId, SalaAudienciasPautaAlocadosRepository::TIPO_SPECIFIC);
+    }
+
+    public function removeAlocado(string $alocadoId, string $tipo, string $requestUserId): bool
+    {
+        $alocadoId = trim($alocadoId);
+        $requestUserId = trim($requestUserId);
+        if ($alocadoId === '' || $requestUserId === '') {
+            return false;
+        }
+
+        return $this->alocadosRepository->deleteById($alocadoId);
+    }
+
+    /**
+     * @param list<array<string, mixed>> $alocadosRaw
+     * @return list<array{alocado_id: string, iniciais: string, nome_completo: string, usuario_id: string, tipo: string}>
+     */
+    private function formatAlocadosPresentation(array $alocadosRaw): array
+    {
+        $max = 5;
+        $alocados = [];
+        foreach (array_slice($alocadosRaw, 0, $max) as $a) {
+            $tipo = $this->normalizeTipoAlocado((string) ($a['tipo'] ?? ''));
+            $alocados[] = [
+                'alocado_id' => (string) ($a['id'] ?? ''),
+                'iniciais' => (string) ($a['iniciais'] ?? '—'),
+                'nome_completo' => (string) ($a['nome_completo'] ?? ''),
+                'usuario_id' => (string) ($a['usuario_id'] ?? ''),
+                'tipo' => $tipo,
+            ];
+        }
+        usort($alocados, static function (array $a, array $b): int {
+            static $order = ['rule' => 0, 'all' => 1, 'specific' => 2];
+
+            return ($order[$a['tipo']] ?? 9) <=> ($order[$b['tipo']] ?? 9);
+        });
+
+        return $alocados;
+    }
+
+    private function normalizeTipoAlocado(string $tipo): string
+    {
+        $t = trim($tipo);
+        if ($t === SalaAudienciasPautaAlocadosRepository::TIPO_RULE || $t === 'rule') {
+            return 'rule';
+        }
+        if ($t === SalaAudienciasPautaAlocadosRepository::TIPO_ALL || $t === 'all') {
+            return 'all';
+        }
+
+        return 'specific';
     }
 
     public function findParte(string $idParte): ?array
@@ -130,6 +212,9 @@ final class SalaAudienciasPautaService
                 'atualizado_por' => $usuarioId,
             ]);
             $this->sincronizarDuracaoEHorariosPauta($id);
+            if ($usuarioId !== null && trim((string) $usuarioId) !== '') {
+                $this->alocadosRepository->addAlocado($id, trim((string) $usuarioId), SalaAudienciasPautaAlocadosRepository::TIPO_ALL);
+            }
             $this->connection->commit();
             return $id;
         } catch (Throwable $e) {
@@ -176,6 +261,10 @@ final class SalaAudienciasPautaService
         if ($ok) {
             $this->pautaRepository->ensureEffectiveTimesByStatus($id, $status, $usuarioId);
             $this->sincronizarDuracaoEHorariosPauta($id);
+            $usuarioAloc = trim((string) ($payload['usuario_id'] ?? ''));
+            if ($usuarioAloc !== '') {
+                $this->addAlocadoUsuario($id, $usuarioAloc);
+            }
         }
 
         return $ok;
@@ -256,7 +345,12 @@ final class SalaAudienciasPautaService
 
     public function delete(string $id, ?string $usuarioId): bool
     {
-        return $this->pautaRepository->softDelete($id, $usuarioId);
+        $ok = $this->pautaRepository->softDelete($id, $usuarioId);
+        if ($ok) {
+            $this->alocadosRepository->deleteByPautaId($id);
+        }
+
+        return $ok;
     }
 
     public function addParte(string $idPauta, array $payload, ?string $usuarioId): string

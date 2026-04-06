@@ -233,11 +233,18 @@ final class InternalListExportHandlers
         $rows = $service->list($filters, self::MAX_ROWS, 0)['rows'] ?? [];
         $out = [];
         foreach ($rows as $r) {
+            $uaRaw = trim((string) ($r['ultimo_acesso'] ?? ''));
+            $ultimoAcessoLabel = '—';
+            if ($uaRaw !== '') {
+                $ts = strtotime($uaRaw);
+                $ultimoAcessoLabel = $ts !== false ? date('d/m/Y H:i', $ts) : '—';
+            }
             $out[] = [
                 'nome_completo' => $r['nome_completo'] ?? '',
                 'tipo' => ($r['tipo'] ?? '') === 'externo' ? 'Externo' : 'Interno',
                 'setores' => str_replace('AUDIENCIA', 'Sala de Audiências', trim((string) ($r['setores'] ?? ''))),
                 'cargo' => $r['cargo'] ?? '',
+                'ultimo_acesso' => $ultimoAcessoLabel,
             ];
         }
 
@@ -249,6 +256,7 @@ final class InternalListExportHandlers
                 ['key' => 'tipo', 'label' => 'Tipo'],
                 ['key' => 'setores', 'label' => 'Setor'],
                 ['key' => 'cargo', 'label' => 'Cargo'],
+                ['key' => 'ultimo_acesso', 'label' => 'Último acesso'],
             ],
             'rows' => $out,
         ];

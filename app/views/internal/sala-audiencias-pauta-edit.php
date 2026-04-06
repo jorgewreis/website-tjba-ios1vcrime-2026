@@ -7,6 +7,8 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 require_once __DIR__ . '/../../helpers/PrioridadesProcessuaisCatalog.php';
+require_once __DIR__ . '/../../helpers/Conection.php';
+require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
 require_once __DIR__ . '/../../services/SalaAudienciasPautaService.php';
 require_once __DIR__ . '/../../repositories/GabineteReuPresoProcessoRepository.php';
 require_once __DIR__ . '/../../repositories/GabineteReuPresoRepository.php';
@@ -17,6 +19,19 @@ $id = trim((string) ($_GET['id'] ?? ''));
 $service = new SalaAudienciasPautaService(Conection::getInstance()->getConnection());
 $row = $id !== '' ? $service->find($id) : null;
 $partes = $row !== null ? $service->listPartes((string) $row['id_pauta']) : [];
+
+$currentUserIdEdit = trim((string) ($_SESSION['id_usuario'] ?? ''));
+$isGestaoEdit = false;
+if ($currentUserIdEdit !== '') {
+    $perfisEd = UsuarioPerfisAutorizacao::perfisDoUsuario($currentUserIdEdit);
+    $isGestaoEdit = count(array_intersect($perfisEd, ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'])) > 0;
+}
+$usuariosAlocacaoLista = [];
+if ($row !== null) {
+    $pdoU = Conection::getInstance()->getConnection();
+    $stmtU = $pdoU->query('SELECT `id_usuario`, `nome`, `sobrenome` FROM `usuarios` WHERE `cadastro_ativo` = 1 ORDER BY `nome` ASC, `sobrenome` ASC');
+    $usuariosAlocacaoLista = $stmtU ? $stmtU->fetchAll(PDO::FETCH_ASSOC) : [];
+}
 $prioridadesEdicaoInicial = null;
 if ($row !== null) {
     try {
@@ -374,6 +389,64 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
 
         <?php if ($row !== null): ?>
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <h2>Servidores alocados</h2>
+        </div>
+        <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md">
+            <p class="description-page" style="margin:0;">Até cinco servidores por audiência. Quem cadastra é incluído automaticamente como responsável.</p>
+            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
+                <div class="col">
+                    <label for="pauta-alocar-usuario">Incluir servidor</label>
+                    <select class="width-500 height-md" id="pauta-alocar-usuario">
+                        <option value="" selected disabled>Selecione…</option>
+                        <?php foreach ($usuariosAlocacaoLista as $uAl): ?>
+                            <?php
+                            $uidAl = htmlspecialchars((string) ($uAl['id_usuario'] ?? ''), ENT_QUOTES);
+                            $nomAl = trim(trim((string) ($uAl['nome'] ?? '')) . ' ' . trim((string) ($uAl['sobrenome'] ?? '')));
+                            ?>
+                            <option value="<?php echo $uidAl; ?>"><?php echo htmlspecialchars($nomAl, ENT_QUOTES); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <button type="button" class="btn btn-primary height-md" id="btn-pauta-alocar">Alocar</button>
+            </div>
+            <div class="display-flex row row-fit justify-start gap-y-sm flex-wrap allocate-chips-row allocate-users" id="pauta-alocados-chips">
+                <?php
+                $alocadosEd = $row['Alocados'] ?? [];
+                foreach ($alocadosEd as $alocadoEd) {
+                    $tipoEd = $alocadoEd['tipo'] ?? 'specific';
+                    $iniciaisEd = htmlspecialchars($alocadoEd['iniciais'] ?? '—', ENT_QUOTES);
+                    $nomeCompletoEd = $alocadoEd['nome_completo'] ?? '';
+                    $nomeLabelEd = $nomeCompletoEd !== '' ? $nomeCompletoEd : ($alocadoEd['iniciais'] ?? '—');
+                    if ($tipoEd === 'rule') {
+                        $chipTitleEd = 'Servidor responsável (regra): ' . $nomeLabelEd;
+                    } elseif ($tipoEd === 'all') {
+                        $chipTitleEd = 'Responsável pelo cadastro: ' . $nomeLabelEd;
+                    } else {
+                        $chipTitleEd = 'Alocado: ' . $nomeLabelEd;
+                    }
+                    $classeTipoEd = in_array($tipoEd, ['rule', 'specific', 'all'], true) ? ' ' . $tipoEd : '';
+                    $alocadoIdEd = htmlspecialchars($alocadoEd['alocado_id'] ?? '', ENT_QUOTES);
+                    $usuarioIdEd = $alocadoEd['usuario_id'] ?? '';
+                    $podeRemoverEd = $isGestaoEdit || ($tipoEd === 'specific' && $usuarioIdEd === $currentUserIdEdit);
+                    ?>
+                    <span class="user-allocate-wrap">
+                        <span class="user-allocate<?php echo $classeTipoEd; ?>" title="<?php echo htmlspecialchars($chipTitleEd, ENT_QUOTES); ?>"><?php echo $iniciaisEd; ?></span>
+                        <?php if ($podeRemoverEd): ?>
+                        <button type="button"
+                            class="user-allocate-remove js-desalocar"
+                            data-alocado-id="<?php echo $alocadoIdEd; ?>"
+                            data-tipo="<?php echo htmlspecialchars($tipoEd, ENT_QUOTES); ?>"
+                            data-endpoint="/api/sala-audiencias-pauta/desalocar.php"
+                            title="Remover alocação"
+                            aria-label="Remover alocação">×</button>
+                        <?php endif; ?>
+                    </span>
+                    <?php
+                }
+                ?>
+            </div>
+        </div>
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
             <h2>Prioridades processuais</h2>
         </div>
         <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md" id="prioridades-processuais-wrap">
@@ -696,5 +769,16 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
 
     <script src="/assets/js/modules/audiencias/pauta-edit.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-edit.js') ?: time(); ?>"></script>
     <script src="/assets/js/modules/audiencias/pauta-edit-prioridades.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-edit-prioridades.js') ?: time(); ?>"></script>
+    <script>
+        (function () {
+            if (!window.App || !App.CartorioTaskList || typeof App.CartorioTaskList.initialize !== 'function') {
+                return;
+            }
+            App.CartorioTaskList.initialize({
+                storageKey: 'salapauta.edit.postReloadToast',
+                enableDesalocar: true
+            });
+        })();
+    </script>
 </body>
 </html>

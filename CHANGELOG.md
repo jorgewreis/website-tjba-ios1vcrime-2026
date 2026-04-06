@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.67
+
+**Data:** 2026-04-06 10:25:17 | **Commit:** `3f54686` | **Tipo:** `minor`
+
+- refactor: enhance audience management by integrating user allocation features, improving data presentation for allocated servers, and updating access handling in the service layer
+
 ## V. 1.66
 
 **Data:** 2026-04-06 10:08:37 | **Commit:** `ca32cc3` | **Tipo:** `minor`
@@ -4260,6 +4266,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

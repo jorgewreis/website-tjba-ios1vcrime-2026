@@ -26,7 +26,7 @@ final class EstudantesListRepository
      */
     public function fetchAll(): array
     {
-        $sql = 'SELECT e.id, e.nome_completo, e.cpf FROM ' . $this->table . ' e';
+        $sql = 'SELECT e.id, e.nome_completo, e.cpf, e.ultimo_login FROM ' . $this->table . ' e';
         $stmt = $this->connection->prepare($sql);
         $stmt->execute();
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -38,13 +38,16 @@ final class EstudantesListRepository
         if ($cpfs !== []) {
             $placeholders = implode(',', array_fill(0, count($cpfs), '?'));
             $stUsuarios = $this->connectionStatus
-                ? $this->connectionStatus->prepare("SELECT id_usuario, cpf FROM usuarios WHERE cpf IN ($placeholders)")
-                : $this->connection->prepare("SELECT id_usuario, cpf FROM usuarios WHERE cpf IN ($placeholders)");
+                ? $this->connectionStatus->prepare("SELECT id_usuario, cpf, ultimo_acesso FROM usuarios WHERE cpf IN ($placeholders)")
+                : $this->connection->prepare("SELECT id_usuario, cpf, ultimo_acesso FROM usuarios WHERE cpf IN ($placeholders)");
             $stUsuarios->execute(array_values($cpfs));
             foreach ($stUsuarios->fetchAll(PDO::FETCH_ASSOC) as $uRow) {
                 $cpfKey = trim((string) ($uRow['cpf'] ?? ''));
                 if ($cpfKey !== '') {
-                    $usuariosByCpf[$cpfKey] = trim((string) ($uRow['id_usuario'] ?? ''));
+                    $usuariosByCpf[$cpfKey] = [
+                        'id_usuario' => trim((string) ($uRow['id_usuario'] ?? '')),
+                        'ultimo_acesso' => $uRow['ultimo_acesso'] ?? null,
+                    ];
                 }
             }
         }
@@ -66,10 +69,46 @@ final class EstudantesListRepository
             $rows[$i]['status'] = isset($bloqueados[$row['cpf'] ?? '']) ? 'bloqueado' : 'ativo';
             $rows[$i]['origem'] = 'estudantes';
             $cpfKey = trim((string) ($row['cpf'] ?? ''));
-            $rows[$i]['id_usuario'] = $usuariosByCpf[$cpfKey] ?? ($row['id'] ?? '');
+            $uMeta = $usuariosByCpf[$cpfKey] ?? null;
+            $idUsuario = '';
+            $ultimoUsuario = null;
+            if (is_array($uMeta)) {
+                $idUsuario = $uMeta['id_usuario'] ?? '';
+                $ultimoUsuario = $uMeta['ultimo_acesso'] ?? null;
+            }
+            $rows[$i]['id_usuario'] = $idUsuario !== '' ? $idUsuario : ($row['id'] ?? '');
+            $ultimoEstudante = $row['ultimo_login'] ?? null;
+            $uaStr = $ultimoUsuario !== null && $ultimoUsuario !== '' ? trim((string) $ultimoUsuario) : null;
+            $elStr = is_string($ultimoEstudante) ? trim($ultimoEstudante) : ($ultimoEstudante !== null && $ultimoEstudante !== '' ? trim((string) $ultimoEstudante) : null);
+            $rows[$i]['ultimo_acesso'] = self::pickLatestAccess($elStr !== '' ? $elStr : null, $uaStr !== '' ? $uaStr : null);
         }
 
         return $rows;
+    }
+
+    private static function pickLatestAccess(?string $a, ?string $b): ?string
+    {
+        $a = $a !== null ? trim($a) : '';
+        $b = $b !== null ? trim($b) : '';
+        if ($a === '' && $b === '') {
+            return null;
+        }
+        if ($a === '') {
+            return $b !== '' ? $b : null;
+        }
+        if ($b === '') {
+            return $a;
+        }
+        $ta = strtotime($a);
+        $tb = strtotime($b);
+        if ($ta === false) {
+            return $b;
+        }
+        if ($tb === false) {
+            return $a;
+        }
+
+        return $ta >= $tb ? $a : $b;
     }
 
     public function count(): int

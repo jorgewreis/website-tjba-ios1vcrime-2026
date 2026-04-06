@@ -100,6 +100,18 @@ $statusClasses = [
     'bloqueado' => 'status-cancelled',
     'inativo'  => 'status-cancelled',
 ];
+
+$formatUltimoAcesso = static function (?string $raw): string {
+    if ($raw === null || trim($raw) === '') {
+        return '—';
+    }
+    $ts = strtotime($raw);
+    if ($ts === false) {
+        return '—';
+    }
+
+    return date('d/m/Y H:i', $ts);
+};
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -248,6 +260,10 @@ $statusClasses = [
                             <div class="col width-500 parte-cargo">
                                 <span class="minor-info">Cargo</span>
                                 <span class="major-info"><?php echo $cargo !== '' ? htmlspecialchars($cargo) : '—'; ?></span>
+                            </div>
+                            <div class="col width-280 parte-ultimo-acesso">
+                                <span class="minor-info">Último acesso</span>
+                                <span class="major-info"><?php echo htmlspecialchars($formatUltimoAcesso(isset($row['ultimo_acesso']) ? trim((string) $row['ultimo_acesso']) : null), ENT_QUOTES, 'UTF-8'); ?></span>
                             </div>
                     </div>
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">

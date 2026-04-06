@@ -617,6 +617,48 @@
         refreshHoraEditDisponiveis();
     });
 
+    document.getElementById('btn-pauta-alocar')?.addEventListener('click', function () {
+        var idPauta = String(window.PAUTA_EDIT_ID || document.getElementById('audiencia-edit-id')?.value || '').trim();
+        var sel = document.getElementById('pauta-alocar-usuario');
+        var uid = sel ? String(sel.value || '').trim() : '';
+        if (!idPauta) {
+            notify('error', 'Erro', 'Audiência inválida.');
+            return;
+        }
+        if (!uid) {
+            notify('info', 'Alocação', 'Selecione um servidor.');
+            return;
+        }
+        var btnAl = document.getElementById('btn-pauta-alocar');
+        if (btnAl) {
+            btnAl.disabled = true;
+        }
+        fetch('/api/sala-audiencias-pauta/alocar.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ id: idPauta, usuario_id: uid })
+        })
+            .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+            .then(function (res) {
+                if (btnAl) {
+                    btnAl.disabled = false;
+                }
+                if (res.ok && res.j && res.j.success) {
+                    notify('success', 'Sucesso', 'Servidor alocado.');
+                    window.location.reload();
+                    return;
+                }
+                notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao alocar.');
+            })
+            .catch(function () {
+                if (btnAl) {
+                    btnAl.disabled = false;
+                }
+                notify('error', 'Erro', 'Erro de conexão.');
+            });
+    });
+
     initParteNomeSelectFromProcesso();
 
     refreshHoraEditDisponiveis(function () {
