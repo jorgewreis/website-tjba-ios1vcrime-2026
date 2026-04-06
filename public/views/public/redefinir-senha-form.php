@@ -6,8 +6,10 @@ require_once __DIR__ . '/../../../config/security.php';
 require_once __DIR__ . '/../../../app/helpers/bootstrap.php';
 require_once __DIR__ . '/../../../app/services/PasswordResetService.php';
 
-$service   = new PasswordResetService();
-$token     = trim((string) ($_GET['token'] ?? ''));
+$service = new PasswordResetService();
+// Token vem do e-mail na query (?token=); no POST também vai no hidden — não depender só de $_GET,
+// porque action="" pode submeter sem preservar a query string e o link “morre” após o primeiro passo.
+$token     = trim((string) ($_POST['token'] ?? $_GET['token'] ?? ''));
 $tokenData = $service->validateResetToken($token);
 
 $mensagemErro    = '';

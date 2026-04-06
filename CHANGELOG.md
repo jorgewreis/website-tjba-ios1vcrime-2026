@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.71.0002
+
+**Data:** 2026-04-06 14:17:07 | **Commit:** `6f09df0` | **Tipo:** `patch`
+
+- fix: update password reset token retrieval to support both GET and POST methods for improved reliability
+
 ## V. 1.71.0001
 
 **Data:** 2026-04-06 14:11:34 | **Commit:** `9db7ac4` | **Tipo:** `patch`
@@ -4302,6 +4308,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
