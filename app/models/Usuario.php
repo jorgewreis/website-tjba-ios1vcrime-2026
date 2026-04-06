@@ -254,7 +254,7 @@ final class Usuario
             return ['success' => false, 'message' => 'A nova senha deve ser diferente da senha atual.'];
         }
 
-        if ($this->hasRecentPasswordReuse($idUsuario, $novaSenha)) {
+        if (isPasswordHistoryCheckEnabled() && $this->passwordMatchesStoredHistory($idUsuario, $novaSenha)) {
             return ['success' => false, 'message' => 'A nova senha não pode repetir nenhuma das últimas senhas utilizadas.'];
         }
 
@@ -464,15 +464,12 @@ final class Usuario
         return $lastTouch <= 0 || (time() - $lastTouch) >= self::LAST_ACCESS_REFRESH_SECONDS;
     }
 
-    private function hasRecentPasswordReuse(string $idUsuario, string $novaSenha, int $historyLimit = 5): bool
+    /**
+     * Verifica se a candidata coincide com algum hash em `historico_senha` (últimas N trocas).
+     * A comparação com a senha atual já foi feita em alterarSenha() antes desta chamada.
+     */
+    private function passwordMatchesStoredHistory(string $idUsuario, string $novaSenha, int $historyLimit = 5): bool
     {
-        $stmtAtual = $this->pdo->prepare('SELECT senha_hash FROM usuarios WHERE id_usuario = ? LIMIT 1');
-        $stmtAtual->execute([$idUsuario]);
-        $atual = $stmtAtual->fetchColumn();
-        if (is_string($atual) && $atual !== '' && Security::verifyPassword($novaSenha, $atual)) {
-            return true;
-        }
-
         try {
             $stmtHistorico = $this->pdo->prepare('
                 SELECT senha_hash

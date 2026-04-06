@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.71
+
+**Data:** 2026-04-06 14:04:37 | **Commit:** `21ab4bd` | **Tipo:** `minor`
+
+- feat: implement password history check feature to enhance security by preventing reuse of recent passwords
+
 ## V. 1.70
 
 **Data:** 2026-04-06 13:57:48 | **Commit:** `6a01495` | **Tipo:** `minor`
@@ -4290,6 +4296,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

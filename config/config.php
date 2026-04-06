@@ -52,6 +52,23 @@ function envValue(string $key, ?string $default = null): ?string
 }
 
 /**
+ * Quando false (PASSWORD_HISTORY_CHECK=0 no .env), não consulta `historico_senha` para bloquear reutilização.
+ * A nova senha continua obrigada a ser diferente da senha atual (alteração e reset).
+ * Use false se o banco não mantém histórico (trigger `trg_historico_senha_update` não aplicado).
+ */
+function isPasswordHistoryCheckEnabled(): bool
+{
+    $raw = envValue('PASSWORD_HISTORY_CHECK', '1');
+    if ($raw === null || $raw === '') {
+        return true;
+    }
+
+    $v = strtolower(trim($raw));
+
+    return !in_array($v, ['0', 'false', 'no', 'off'], true);
+}
+
+/**
  * Interrompe a execução com erro controlado de configuração.
  */
 function failConfiguration(array $missingKeys): never

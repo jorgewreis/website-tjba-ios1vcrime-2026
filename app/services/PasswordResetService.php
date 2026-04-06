@@ -482,6 +482,10 @@ final class PasswordResetService
             return true;
         }
 
+        if (!isPasswordHistoryCheckEnabled()) {
+            return false;
+        }
+
         try {
             $stmtHistorico = $this->pdo->prepare('
                 SELECT senha_hash
