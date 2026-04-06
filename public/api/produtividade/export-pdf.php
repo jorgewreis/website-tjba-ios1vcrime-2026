@@ -44,11 +44,12 @@ try {
     $html .= ListExportPresentation::htmlInstitutionalBlock();
     $html .= ListExportPresentation::htmlReportIntro('Lista de produtividade', $filterSummary, count($rows));
     $html .= '<table><thead><tr>';
-    $html .= '<th>Data/hora</th><th>Processo</th><th>Observações</th><th>Usuário</th><th>Pontos</th>';
+    $html .= '<th>Data/hora</th><th>Classe processual</th><th>Número do processo</th><th>Observações</th><th>Usuário</th><th>Pontos</th>';
     $html .= '</tr></thead><tbody>';
     foreach ($rows as $row) {
         $html .= '<tr>';
         $html .= '<td>' . htmlspecialchars($formatarDataHoraProdutividade((string) ($row['data_hora_ato'] ?? '')), ENT_QUOTES, 'UTF-8') . '</td>';
+        $html .= '<td>' . htmlspecialchars(trim((string) ($row['classe_processo'] ?? '')), ENT_QUOTES, 'UTF-8') . '</td>';
         $html .= '<td>' . htmlspecialchars(trim((string) ($row['numero_processo'] ?? '')), ENT_QUOTES, 'UTF-8') . '</td>';
         $html .= '<td>' . htmlspecialchars(trim((string) ($row['observacoes'] ?? '')), ENT_QUOTES, 'UTF-8') . '</td>';
         $html .= '<td>' . htmlspecialchars(trim((string) ($row['usuario_nome'] ?? $row['usuario_id'] ?? '')), ENT_QUOTES, 'UTF-8') . '</td>';

@@ -401,6 +401,8 @@ if ($canLoadLancamentos && $errors === []) {
                         $sistemaModulo !== '' ? $sistemaModulo : 'Sem sistema',
                     ]);
                 }
+                $classeProcessoRotulo = trim((string) ($row['classe_processo'] ?? ''));
+                $labelColunaProcesso = $classeProcessoRotulo !== '' ? $classeProcessoRotulo : 'Processo';
                 ?>
                 <div class="display-flex col col-full register border-bottom">
                     <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
@@ -410,8 +412,8 @@ if ($canLoadLancamentos && $errors === []) {
                                 <span class="major-info"><?php echo htmlspecialchars(date('d/m/Y H:i', strtotime((string) ($row['data_hora_ato'] ?? 'now'))), ENT_QUOTES); ?></span>
                             </div>
                             <div class="col width-500">
-                                <span class="minor-info">Processo</span>
-                                <span class="major-info"><?php echo htmlspecialchars((string) ($row['numero_processo'] ?? '—'), ENT_QUOTES); ?></span>
+                                <span class="minor-info"><?php echo htmlspecialchars($labelColunaProcesso, ENT_QUOTES, 'UTF-8'); ?></span>
+                                <span class="major-info"><?php echo htmlspecialchars((string) ($row['numero_processo'] ?? '—'), ENT_QUOTES, 'UTF-8'); ?></span>
                             </div>
                             <div class="col width-700">
                                 <span class="minor-info">Descrição da tarefa</span>

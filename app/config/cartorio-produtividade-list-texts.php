@@ -41,31 +41,31 @@ return array (
   ),
   'cartorio-cartas-expedidas.create' => 
   array (
-    'observacao' => '{tipo_carta} cadastrada — finalidade: {finalidade}.',
+    'observacao' => 'Carta Precatória cadastrada — finalidade: {finalidade}.',
   ),
   'cartorio-cartas-expedidas.subtarefa.aguardando_assinatura' => 
   array (
-    'observacao' => '{tipo_carta} assinada pela magistrada.',
+    'observacao' => 'Carta Precatória assinada pela magistrada.',
   ),
   'cartorio-cartas-expedidas.subtarefa.aguardando_gerar_pdf' => 
   array (
-    'observacao' => 'PDF da {tipo_carta} gerado.',
+    'observacao' => 'PDF da Carta Precatória gerado.',
   ),
   'cartorio-cartas-expedidas.subtarefa.aguardando_envio' => 
   array (
-    'observacao' => '{tipo_carta} enviada para {comarca_destino}.',
+    'observacao' => 'Carta Precatória enviada para {comarca_destino}.',
   ),
   'cartorio-cartas-expedidas.subtarefa.aguardando_juntada_termo' => 
   array (
-    'observacao' => 'Termo de envio da {tipo_carta} juntado.',
+    'observacao' => 'Termo de envio da Carta Precatória juntado.',
   ),
   'cartorio-cartas-expedidas.subtarefa.aguardando_informacoes' => 
   array (
-    'observacao' => 'Informações de destino da {tipo_carta} registradas.',
+    'observacao' => 'Informações de destino da Carta Precatória registradas.',
   ),
   'cartorio-cartas-expedidas.subtarefa.aguardando_devolucao' => 
   array (
-    'observacao' => 'Juntada de {tipo_carta} devolvida.',
+    'observacao' => 'Juntada de Carta Precatória devolvida.',
   ),
   'cartorio-oficios.create' => 
   array (
@@ -81,7 +81,7 @@ return array (
   ),
   'cartorio-medidas-protetivas.create' => 
   array (
-    'observacao' => 'Medida protetiva cadastrada — classe: {classe_processo}.',
+    'observacao' => 'Medida protetiva cadastrada.',
   ),
   'cartorio-medidas-protetivas.subtarefa.cadastro_partes_pje' => 
   array (

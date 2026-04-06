@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.72
+
+**Data:** 2026-04-06 14:40:23 | **Commit:** `6e0eb49` | **Tipo:** `minor`
+
+- refactor: update process labels and export formats to enhance clarity in productivity reports
+
 ## V. 1.71.0003
 
 **Data:** 2026-04-06 14:20:53 | **Commit:** `725adb4` | **Tipo:** `patch`
@@ -4314,6 +4320,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
