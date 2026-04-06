@@ -435,6 +435,11 @@ final class PasswordResetService
         }
         require_once $autoload;
 
+        if (!class_exists(\PHPMailer\PHPMailer\PHPMailer::class)) {
+            error_log('[RESET SENHA] Pacote phpmailer/phpmailer ausente no vendor. Execute: composer install (ou composer require phpmailer/phpmailer).');
+            return ['ok' => true, 'sent' => false];
+        }
+
         $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
 
         try {

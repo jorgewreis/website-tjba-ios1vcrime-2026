@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.69.0001
+
+**Data:** 2026-04-06 13:47:26 | **Commit:** `fce0645` | **Tipo:** `patch`
+
+- chore: add phpmailer dependency to composer.json and update composer.lock; enhance PasswordResetService with class existence check for PHPMailer
+
 ## V. 1.69
 
 **Data:** 2026-04-06 13:34:43 | **Commit:** `01bd4d1` | **Tipo:** `minor`
@@ -4278,6 +4284,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
