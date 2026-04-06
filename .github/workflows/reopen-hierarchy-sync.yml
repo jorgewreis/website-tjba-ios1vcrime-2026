@@ -10,7 +10,7 @@ jobs:
       issues: write
     steps:
       - name: Mover Filho e Pai para Em Revisão
-        uses: actions/github-script@v6
+        uses: actions/github-script@v8
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.70
+
+**Data:** 2026-04-06 13:57:48 | **Commit:** `6a01495` | **Tipo:** `minor`
+
+- refactor: remove agent logging from PasswordResetService and envia_mail to streamline code and improve maintainability
+
 ## V. 1.69.0001
 
 **Data:** 2026-04-06 13:47:26 | **Commit:** `fce0645` | **Tipo:** `patch`
@@ -4284,6 +4290,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

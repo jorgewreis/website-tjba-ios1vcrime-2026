@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Atualizar Status no Projeto
-        uses: actions/github-script@v6
+        uses: actions/github-script@v8
         with:
           # IMPORTANTE: Use um PAT (Personal Access Token) salvo nos secrets
           # O token padrão GITHUB_TOKEN geralmente não tem escopo para editar Projetos V2
