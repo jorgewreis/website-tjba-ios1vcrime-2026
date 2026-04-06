@@ -275,6 +275,10 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
                             <span class="minor-info">Ofício</span>
                             <span class="major-info"><?php echo htmlspecialchars($nAno, ENT_QUOTES); ?></span>
                         </div>
+                        <div class="col width-200">
+                            <span class="minor-info">Gerado em</span>
+                            <span class="major-info"><?php echo gabinete_oficios_list_formatar_data_hora($row['Data'] ?? null); ?></span>
+                        </div>
                         <div class="col width-500 col-process process-info" title="clique para copiar">
                             <span class="minor-info text-ellipsis" <?php echo $classeStyle; ?>><?php echo htmlspecialchars($classeNome); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars((string) ($row['Processo'] ?? '')); ?></span>
@@ -288,7 +292,7 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
                             $nomeCriadorGab = trim((string) ($row['CriadoPorNome'] ?? ''));
                             $nomeCriadorGab = $nomeCriadorGab !== '' ? $nomeCriadorGab : '—';
                             ?>
-                            <span class="minor-info"><?php echo htmlspecialchars(gabinete_oficios_list_formatar_data_hora($row['Data'] ?? null)); ?></span>
+                            <span class="minor-info">Registrado por</span>
                             <span class="major-info text-ellipsis" title="<?php echo $nomeCriadorGab !== '—' ? htmlspecialchars($nomeCriadorGab, ENT_QUOTES) : ''; ?>"><?php echo htmlspecialchars($nomeCriadorGab); ?></span>
                         </div>
                     </div>

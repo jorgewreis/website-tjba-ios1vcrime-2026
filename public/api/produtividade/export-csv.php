@@ -2,6 +2,8 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/_common.php';
+require_once dirname(__DIR__, 3) . '/app/helpers/ListExportPresentation.php';
+require_once dirname(__DIR__, 3) . '/app/helpers/ListExportFilterSummary.php';
 
 $connection = Conection::getInstance()->getConnection();
 $service = new ProdutividadeService($connection);
@@ -23,6 +25,8 @@ $filters = [
 try {
     $result = $service->listLancamentosForExport($userId, $filters, 5000);
     $rows = $result['rows'] ?? [];
+    $sumPontos = (float) ($result['sum_pontos'] ?? 0.0);
+    $filterSummary = ListExportFilterSummary::forProdutividadeLancamentos($_GET, $sumPontos);
 
     $filename = 'produtividade-' . date('Ymd-His') . '.csv';
     header_remove('Content-Type');
@@ -36,20 +40,27 @@ try {
     }
 
     fwrite($output, "\xEF\xBB\xBF");
-    fputcsv($output, [
+
+    $headers = [
         'Data/hora',
         'Usuário',
         'Setor/Módulo',
         'Tipo documento',
         'Tipo ato',
         'Tipo lançamento',
-        'Status',
         'Processo',
-        'Classe',
         'Quantidade',
         'Pontos',
         'Observações',
-    ], ';');
+    ];
+    ListExportPresentation::writeCsvPreamble(
+        $output,
+        count($headers),
+        'Lista de lançamentos de produtividade',
+        $filterSummary,
+        count($rows)
+    );
+    fputcsv($output, $headers, ';');
 
     foreach ($rows as $row) {
         fputcsv($output, [
@@ -59,9 +70,7 @@ try {
             (string) ($row['tipo_documento'] ?? ''),
             (string) ($row['tipo_ato'] ?? ''),
             (string) ($row['tipo_lancamento'] ?? ''),
-            (string) ($row['status'] ?? ''),
             (string) ($row['numero_processo'] ?? ''),
-            (string) ($row['classe_processo'] ?? ''),
             (string) ($row['quantidade'] ?? ''),
             number_format((float) ($row['pontos_calculados'] ?? 0), 2, ',', '.'),
             (string) ($row['observacoes'] ?? ''),

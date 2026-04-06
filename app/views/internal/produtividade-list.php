@@ -413,7 +413,7 @@ if ($canLoadLancamentos && $errors === []) {
                                 <span class="minor-info">Processo</span>
                                 <span class="major-info"><?php echo htmlspecialchars((string) ($row['numero_processo'] ?? '—'), ENT_QUOTES); ?></span>
                             </div>
-                            <div class="col width-500">
+                            <div class="col width-700">
                                 <span class="minor-info">Descrição da tarefa</span>
                                 <span class="major-info"><?php echo htmlspecialchars($descricaoTarefa, ENT_QUOTES); ?></span>
                             </div>

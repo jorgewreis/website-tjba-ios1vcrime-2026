@@ -2,11 +2,13 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/_common.php';
+require_once dirname(__DIR__, 3) . '/app/helpers/ListExportFilterSummary.php';
 
 try {
     $ctx = internal_list_export_bootstrap();
     $spec = InternalListExportHandlers::dispatch($ctx['listPage'], $ctx['pdo'], $ctx['userId'], $_GET);
-    ListExportHelper::streamPdf($spec['slug'], $spec['title'], $spec['columns'], $spec['rows']);
+    $filterSummary = ListExportFilterSummary::forInternalList($ctx['listPage'], $_GET);
+    ListExportHelper::streamPdf($spec['slug'], $spec['title'], $filterSummary, $spec['columns'], $spec['rows']);
 } catch (InvalidArgumentException $e) {
     $msg = $e->getMessage();
     $code = str_contains($msg, 'gestão') ? 403 : 400;

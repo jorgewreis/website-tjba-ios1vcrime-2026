@@ -417,6 +417,10 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                             <span class="minor-info">Ofício</span>
                             <span class="major-info"><?php echo htmlspecialchars($nAno, ENT_QUOTES); ?></span>
                         </div>
+                        <div class="col width-200">
+                            <span class="minor-info">Gerado em</span>
+                            <span class="major-info"><?php echo oficios_list_formatar_data_hora($row['Data'] ?? null); ?></span>
+                        </div>
                         <div class="col width-500 col-process process-info" title="clique para copiar">
                             <span class="minor-info text-ellipsis" title="<?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?>" <?php echo $classeStyle; ?>><?php echo htmlspecialchars($classeNome); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars((string) ($row['Processo'] ?? '')); ?></span>

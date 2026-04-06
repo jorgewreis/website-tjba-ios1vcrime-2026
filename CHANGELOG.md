@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.63
+
+**Data:** 2026-04-06 09:34:36 | **Commit:** `d50e394` | **Tipo:** `minor`
+
+- refactor: enhance internal list export functionality by adding subtasks export, improving CSV/PDF generation with filter summaries, and updating layout for better readability
+
 ## V. 1.62
 
 **Data:** 2026-04-04 16:22:57 | **Commit:** `cf4ccb2` | **Tipo:** `minor`
@@ -4236,6 +4242,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

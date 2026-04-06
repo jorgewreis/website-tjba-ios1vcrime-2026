@@ -77,6 +77,52 @@ final class InternalListExportHandlers
     }
 
     /**
+     * Exportação: lista completa de subtarefas (não só pendentes), quando existir SubtarefasAll.
+     *
+     * @param list<array<string, mixed>> $rows
+     * @return list<array<string, mixed>>
+     */
+    private static function withExportSubtarefas(array $rows): array
+    {
+        foreach ($rows as $i => $row) {
+            if (!empty($row['SubtarefasAll']) && is_array($row['SubtarefasAll'])) {
+                $rows[$i]['Subtarefas'] = $row['SubtarefasAll'];
+            }
+        }
+
+        return $rows;
+    }
+
+    private static function formatExportDateTime(?string $mysql): string
+    {
+        if ($mysql === null || $mysql === '') {
+            return '';
+        }
+        $t = strtotime($mysql);
+
+        return $t !== false ? date('d/m/Y H:i', $t) : $mysql;
+    }
+
+    private static function labelFormaCumprimentoCartorio(string $v): string
+    {
+        return match ($v) {
+            'ccm' => 'Oficial de Justiça (CCM)',
+            'cartorio' => 'Pelo cartório',
+            default => $v !== '' ? $v : '—',
+        };
+    }
+
+    private static function labelMeioEnvioCartorio(string $v): string
+    {
+        return match ($v) {
+            'email' => 'E-mail',
+            'malote_digital' => 'Malote digital',
+            'pessoalmente' => 'Pessoalmente',
+            default => $v !== '' ? $v : '—',
+        };
+    }
+
+    /**
      * @param array<string, mixed> $get
      */
     private static function feriados(PDO $pdo, string $userId, array $get): array
@@ -94,7 +140,6 @@ final class InternalListExportHandlers
         $out = [];
         foreach ($rows as $r) {
             $out[] = [
-                'id' => $r['id'] ?? '',
                 'data_inicio' => $r['data_inicio'] ?? '',
                 'data_fim' => $r['data_fim'] ?? '',
                 'tipo_feriado' => $r['tipo_feriado'] ?? '',
@@ -103,10 +148,9 @@ final class InternalListExportHandlers
         }
 
         return [
-            'title' => 'Feriados',
+            'title' => 'Lista de feriados',
             'slug' => 'feriados',
             'columns' => [
-                ['key' => 'id', 'label' => 'ID'],
                 ['key' => 'data_inicio', 'label' => 'Data início'],
                 ['key' => 'data_fim', 'label' => 'Data fim'],
                 ['key' => 'tipo_feriado', 'label' => 'Tipo'],
@@ -139,21 +183,17 @@ final class InternalListExportHandlers
                 'tipo' => ($r['tipo'] ?? '') === 'externo' ? 'Externo' : 'Interno',
                 'setores' => str_replace('AUDIENCIA', 'Sala de Audiências', trim((string) ($r['setores'] ?? ''))),
                 'cargo' => $r['cargo'] ?? '',
-                'status' => $r['status'] ?? '',
-                'id_usuario' => $r['id_usuario'] ?? $r['id'] ?? '',
             ];
         }
 
         return [
-            'title' => 'Usuários',
+            'title' => 'Lista de usuários',
             'slug' => 'usuarios',
             'columns' => [
-                ['key' => 'id_usuario', 'label' => 'ID'],
                 ['key' => 'nome_completo', 'label' => 'Nome'],
                 ['key' => 'tipo', 'label' => 'Tipo'],
                 ['key' => 'setores', 'label' => 'Setor'],
                 ['key' => 'cargo', 'label' => 'Cargo'],
-                ['key' => 'status', 'label' => 'Status'],
             ],
             'rows' => $out,
         ];
@@ -170,18 +210,15 @@ final class InternalListExportHandlers
             'processo' => trim((string) ($get['processo'] ?? '')),
         ];
         $service = new GuiasService($pdo);
-        $rows = $service->listGuias($filters, self::MAX_ROWS, 0)['rows'] ?? [];
+        $rows = self::withExportSubtarefas($service->listGuias($filters, self::MAX_ROWS, 0)['rows'] ?? []);
 
         return [
-            'title' => 'Guias',
+            'title' => 'Lista de guias',
             'slug' => 'guias',
             'columns' => [
-                ['key' => 'IdGuia', 'label' => 'ID'],
                 ['key' => 'Processo', 'label' => 'Processo'],
-                ['key' => 'Classe', 'label' => 'Classe'],
                 ['key' => 'Tipo', 'label' => 'Tipo'],
                 ['key' => 'Denunciado', 'label' => 'Denunciado'],
-                ['key' => 'Status', 'label' => 'Status'],
                 ['key' => 'Alocados', 'label' => 'Alocações'],
                 ['key' => 'Subtarefas', 'label' => 'Subtarefas'],
             ],
@@ -199,17 +236,14 @@ final class InternalListExportHandlers
             'processo' => trim((string) ($get['processo'] ?? '')),
         ];
         $service = new CejuscService($pdo);
-        $rows = $service->listTarefas($filters, self::MAX_ROWS, 0)['rows'] ?? [];
+        $rows = self::withExportSubtarefas($service->listTarefas($filters, self::MAX_ROWS, 0)['rows'] ?? []);
 
         return [
-            'title' => 'CEJUSC',
+            'title' => 'Lista de tarefas CEJUSC',
             'slug' => 'cejusc',
             'columns' => [
-                ['key' => 'IdCarta', 'label' => 'ID'],
                 ['key' => 'Processo', 'label' => 'Processo'],
-                ['key' => 'ClasseNome', 'label' => 'Classe'],
                 ['key' => 'ReuNome', 'label' => 'Réu'],
-                ['key' => 'Status', 'label' => 'Status'],
                 ['key' => 'Alocados', 'label' => 'Alocações'],
                 ['key' => 'Subtarefas', 'label' => 'Subtarefas'],
             ],
@@ -231,16 +265,15 @@ final class InternalListExportHandlers
         $rows = $service->listTarefas($filters, self::MAX_ROWS, 0)['rows'] ?? [];
 
         return [
-            'title' => 'CEAPA',
+            'title' => 'Lista de tarefas CEAPA',
             'slug' => 'ceapa',
             'columns' => [
-                ['key' => 'IdCarta', 'label' => 'ID'],
                 ['key' => 'Processo', 'label' => 'Processo'],
-                ['key' => 'ClasseNome', 'label' => 'Classe'],
+                ['key' => 'TipoSuspensao', 'label' => 'Tipo de suspensão'],
+                ['key' => 'DecisaoCumprir', 'label' => 'Decisão a cumprir'],
+                ['key' => 'DataDecisao', 'label' => 'Data da decisão'],
                 ['key' => 'ReuNome', 'label' => 'Réu'],
-                ['key' => 'Status', 'label' => 'Status'],
                 ['key' => 'Alocados', 'label' => 'Alocações'],
-                ['key' => 'Subtarefas', 'label' => 'Subtarefas'],
             ],
             'rows' => $rows,
         ];
@@ -256,17 +289,14 @@ final class InternalListExportHandlers
             'processo' => trim((string) ($get['processo'] ?? '')),
         ];
         $service = new EditaisService($pdo);
-        $rows = $service->listEditais($filters, self::MAX_ROWS, 0)['rows'] ?? [];
+        $rows = self::withExportSubtarefas($service->listEditais($filters, self::MAX_ROWS, 0)['rows'] ?? []);
 
         return [
-            'title' => 'Editais',
+            'title' => 'Lista de editais',
             'slug' => 'editais',
             'columns' => [
-                ['key' => 'IdEdital', 'label' => 'ID'],
                 ['key' => 'Processo', 'label' => 'Processo'],
-                ['key' => 'ClasseNome', 'label' => 'Classe'],
-                ['key' => 'ReuNome', 'label' => 'Réu'],
-                ['key' => 'Status', 'label' => 'Status'],
+                ['key' => 'TipoEdital', 'label' => 'Tipo de edital'],
                 ['key' => 'Alocados', 'label' => 'Alocações'],
                 ['key' => 'Subtarefas', 'label' => 'Subtarefas'],
             ],
@@ -284,17 +314,14 @@ final class InternalListExportHandlers
             'processo' => trim((string) ($get['processo'] ?? '')),
         ];
         $service = new MedidasProtetivasService($pdo);
-        $rows = $service->listMedidasProtetivas($filters, self::MAX_ROWS, 0)['rows'] ?? [];
+        $rows = self::withExportSubtarefas($service->listMedidasProtetivas($filters, self::MAX_ROWS, 0)['rows'] ?? []);
 
         return [
-            'title' => 'Medidas protetivas',
+            'title' => 'Lista de medidas protetivas',
             'slug' => 'medidas-protetivas',
             'columns' => [
-                ['key' => 'IdMedida', 'label' => 'ID'],
                 ['key' => 'Processo', 'label' => 'Processo'],
-                ['key' => 'ClasseNome', 'label' => 'Classe'],
                 ['key' => 'ReuNome', 'label' => 'Réu'],
-                ['key' => 'Status', 'label' => 'Status'],
                 ['key' => 'Alocados', 'label' => 'Alocações'],
                 ['key' => 'Subtarefas', 'label' => 'Subtarefas'],
             ],
@@ -331,21 +358,37 @@ final class InternalListExportHandlers
             'oficio' => trim((string) ($get['oficio'] ?? '')),
             'ano' => self::resolveAnoOficios($anos, $get),
         ];
-        $rows = $service->listOficios($filters, self::MAX_ROWS, 0)['rows'] ?? [];
+        $rows = self::withExportSubtarefas($service->listOficios($filters, self::MAX_ROWS, 0)['rows'] ?? []);
+        $out = [];
+        foreach ($rows as $r) {
+            $out[] = [
+                'OficioNumero' => ((int) ($r['NumeroSeq'] ?? 0)) . '/' . ((int) ($r['Ano'] ?? 0)),
+                'Processo' => (string) ($r['Processo'] ?? ''),
+                'TipoOficio' => (string) ($r['TipoOficio'] ?? ''),
+                'GeradoEm' => self::formatExportDateTime(isset($r['Data']) ? (string) $r['Data'] : null),
+                'FormaCumprimento' => self::labelFormaCumprimentoCartorio((string) ($r['FormaCumprimento'] ?? '')),
+                'MeioEnvio' => self::labelMeioEnvioCartorio((string) ($r['MeioEnvio'] ?? '')),
+                'CriadoPor' => trim((string) ($r['CriadoPorNome'] ?? '')),
+                'Alocados' => $r['Alocados'] ?? [],
+                'Subtarefas' => $r['Subtarefas'] ?? [],
+            ];
+        }
 
         return [
-            'title' => 'Ofícios (cartório)',
+            'title' => 'Lista de ofícios (cartório)',
             'slug' => 'oficios-cartorio',
             'columns' => [
-                ['key' => 'IdOficio', 'label' => 'ID'],
+                ['key' => 'OficioNumero', 'label' => 'Ofício'],
                 ['key' => 'Processo', 'label' => 'Processo'],
-                ['key' => 'ClasseNome', 'label' => 'Classe'],
-                ['key' => 'ReuNome', 'label' => 'Réu'],
-                ['key' => 'Status', 'label' => 'Status'],
+                ['key' => 'TipoOficio', 'label' => 'Tipo de ofício'],
+                ['key' => 'GeradoEm', 'label' => 'Gerado em'],
+                ['key' => 'FormaCumprimento', 'label' => 'Forma de cumprimento'],
+                ['key' => 'MeioEnvio', 'label' => 'Meio de envio'],
+                ['key' => 'CriadoPor', 'label' => 'Registrado por'],
                 ['key' => 'Alocados', 'label' => 'Alocações'],
                 ['key' => 'Subtarefas', 'label' => 'Subtarefas'],
             ],
-            'rows' => $rows,
+            'rows' => $out,
         ];
     }
 
@@ -362,20 +405,28 @@ final class InternalListExportHandlers
             'ano' => self::resolveAnoOficios($anos, $get),
         ];
         $rows = $service->listOficios($filters, self::MAX_ROWS, 0)['rows'] ?? [];
+        $out = [];
+        foreach ($rows as $r) {
+            $out[] = [
+                'OficioNumero' => ((int) ($r['NumeroSeq'] ?? 0)) . '/' . ((int) ($r['Ano'] ?? 0)),
+                'Processo' => (string) ($r['Processo'] ?? ''),
+                'TipoOficio' => (string) ($r['TipoOficio'] ?? ''),
+                'GeradoEm' => self::formatExportDateTime(isset($r['Data']) ? (string) $r['Data'] : null),
+                'CriadoPor' => trim((string) ($r['CriadoPorNome'] ?? '')),
+            ];
+        }
 
         return [
-            'title' => 'Ofícios (gabinete)',
+            'title' => 'Lista de ofícios (gabinete)',
             'slug' => 'oficios-gabinete',
             'columns' => [
-                ['key' => 'IdOficio', 'label' => 'ID'],
+                ['key' => 'OficioNumero', 'label' => 'Ofício'],
                 ['key' => 'Processo', 'label' => 'Processo'],
-                ['key' => 'ClasseNome', 'label' => 'Classe'],
-                ['key' => 'ReuNome', 'label' => 'Réu'],
-                ['key' => 'Status', 'label' => 'Status'],
-                ['key' => 'Alocados', 'label' => 'Alocações'],
-                ['key' => 'Subtarefas', 'label' => 'Subtarefas'],
+                ['key' => 'TipoOficio', 'label' => 'Tipo de ofício'],
+                ['key' => 'GeradoEm', 'label' => 'Gerado em'],
+                ['key' => 'CriadoPor', 'label' => 'Registrado por'],
             ],
-            'rows' => $rows,
+            'rows' => $out,
         ];
     }
 
@@ -389,20 +440,16 @@ final class InternalListExportHandlers
             'processo' => trim((string) ($get['processo'] ?? '')),
         ];
         $service = new GabineteMonitoramentoEletronicoService($pdo);
-        $rows = $service->listMonitoramentos($filters, self::MAX_ROWS, 0)['rows'] ?? [];
+        $rows = self::withExportSubtarefas($service->listMonitoramentos($filters, self::MAX_ROWS, 0)['rows'] ?? []);
 
         return [
-            'title' => 'Monitoramento eletrônico',
+            'title' => 'Lista de monitoramentos eletrônicos',
             'slug' => 'monitoramento-eletronico',
             'columns' => [
-                ['key' => 'IdMon', 'label' => 'ID'],
                 ['key' => 'Processo', 'label' => 'Processo'],
-                ['key' => 'ClasseNome', 'label' => 'Classe'],
                 ['key' => 'ReuNome', 'label' => 'Réu'],
-                ['key' => 'Status', 'label' => 'Status'],
                 ['key' => 'DataInicio', 'label' => 'Início'],
                 ['key' => 'DuracaoLabel', 'label' => 'Duração'],
-                ['key' => 'Alocados', 'label' => 'Alocações'],
                 ['key' => 'Subtarefas', 'label' => 'Subtarefas'],
             ],
             'rows' => $rows,
@@ -423,7 +470,6 @@ final class InternalListExportHandlers
         $out = [];
         foreach ($rows as $r) {
             $out[] = [
-                'id' => $r['id'] ?? '',
                 'reu_nome' => $r['nome'] ?? '',
                 'processo_principal' => $r['ProcessoPrincipalLabel'] ?? $r['processo_principal_numero'] ?? '',
                 'data_prisao' => $r['DataPrisao'] ?? '',
@@ -435,17 +481,16 @@ final class InternalListExportHandlers
         }
 
         return [
-            'title' => 'Réus presos',
+            'title' => 'Lista de réus presos',
             'slug' => 'reus-presos',
             'columns' => [
-                ['key' => 'id', 'label' => 'ID'],
                 ['key' => 'reu_nome', 'label' => 'Nome'],
                 ['key' => 'processo_principal', 'label' => 'Processo principal'],
                 ['key' => 'data_prisao', 'label' => 'Data prisão'],
                 ['key' => 'tempo_custodia', 'label' => 'Tempo custódia'],
                 ['key' => 'proxima_revisao', 'label' => 'Próxima revisão'],
                 ['key' => 'revisao_hint', 'label' => 'Prazo revisão'],
-                ['key' => 'subtarefas_processos', 'label' => 'Subtarefas processos'],
+                ['key' => 'subtarefas_processos', 'label' => 'Processos vinculados'],
             ],
             'rows' => $out,
         ];
@@ -462,17 +507,14 @@ final class InternalListExportHandlers
             'processo' => trim((string) ($get['processo'] ?? '')),
         ];
         $service = new CartasExpedidasService($pdo);
-        $rows = $service->listCartas($filters, self::MAX_ROWS, 0)['rows'] ?? [];
+        $rows = self::withExportSubtarefas($service->listCartas($filters, self::MAX_ROWS, 0)['rows'] ?? []);
 
         return [
-            'title' => 'Cartas expedidas',
+            'title' => 'Lista de cartas expedidas',
             'slug' => 'cartas-expedidas',
             'columns' => [
-                ['key' => 'IdCarta', 'label' => 'ID'],
                 ['key' => 'Processo', 'label' => 'Processo'],
-                ['key' => 'ClasseNome', 'label' => 'Classe'],
                 ['key' => 'Finalidade', 'label' => 'Finalidade'],
-                ['key' => 'Status', 'label' => 'Status'],
                 ['key' => 'Alocados', 'label' => 'Alocações'],
                 ['key' => 'Subtarefas', 'label' => 'Subtarefas'],
             ],
@@ -491,17 +533,14 @@ final class InternalListExportHandlers
             'processo' => trim((string) ($get['processo'] ?? '')),
         ];
         $service = new CartasRecebidasService($pdo);
-        $rows = $service->listCartas($filters, self::MAX_ROWS, 0)['rows'] ?? [];
+        $rows = self::withExportSubtarefas($service->listCartas($filters, self::MAX_ROWS, 0)['rows'] ?? []);
 
         return [
-            'title' => 'Cartas recebidas',
+            'title' => 'Lista de cartas recebidas',
             'slug' => 'cartas-recebidas',
             'columns' => [
-                ['key' => 'IdCarta', 'label' => 'ID'],
                 ['key' => 'Processo', 'label' => 'Processo'],
-                ['key' => 'ClasseNome', 'label' => 'Classe'],
                 ['key' => 'Finalidade', 'label' => 'Finalidade'],
-                ['key' => 'Status', 'label' => 'Status'],
                 ['key' => 'Alocados', 'label' => 'Alocações'],
                 ['key' => 'Subtarefas', 'label' => 'Subtarefas'],
             ],
@@ -533,15 +572,12 @@ final class InternalListExportHandlers
         foreach ($rows as $r) {
             $parts = $r['partes_cumprimento'] ?? [];
             $out[] = [
-                'id_pauta' => $r['id_pauta'] ?? '',
                 'data_audiencia' => $r['data_audiencia'] ?? '',
                 'hora_audiencia' => $r['hora_audiencia'] ?? '',
                 'numero_processo' => $r['numero_processo'] ?? '',
-                'classe_nome' => $r['classe_nome'] ?? '',
                 'tipo_audiencia' => $r['tipo_audiencia'] ?? '',
-                'status' => $r['status'] ?? '',
                 'localizacao' => $r['localizacao'] ?? '',
-                'partes_cumprimento' => $parts,
+                'partes_cumprimento' => is_array($parts) ? $parts : [],
             ];
         }
 
@@ -549,15 +585,12 @@ final class InternalListExportHandlers
             'title' => 'Pauta de audiências',
             'slug' => 'pauta-audiencias',
             'columns' => [
-                ['key' => 'id_pauta', 'label' => 'ID'],
                 ['key' => 'data_audiencia', 'label' => 'Data'],
                 ['key' => 'hora_audiencia', 'label' => 'Hora'],
                 ['key' => 'numero_processo', 'label' => 'Processo'],
-                ['key' => 'classe_nome', 'label' => 'Classe'],
                 ['key' => 'tipo_audiencia', 'label' => 'Tipo'],
-                ['key' => 'status', 'label' => 'Status'],
                 ['key' => 'localizacao', 'label' => 'Local'],
-                ['key' => 'partes_cumprimento', 'label' => 'Partes/cumprimento'],
+                ['key' => 'partes_cumprimento', 'label' => 'Partes'],
             ],
             'rows' => $out,
         ];
@@ -573,33 +606,25 @@ final class InternalListExportHandlers
         $out = [];
         foreach ($rows as $r) {
             $out[] = [
-                'id_pauta' => $r['id_pauta'] ?? '',
                 'data_audiencia' => $r['data_audiencia'] ?? '',
                 'hora_audiencia' => $r['hora_audiencia'] ?? '',
                 'numero_processo' => $r['numero_processo'] ?? '',
-                'classe_nome' => $r['classe_nome'] ?? '',
                 'tipo_audiencia' => $r['tipo_audiencia'] ?? '',
-                'status' => $r['status'] ?? '',
                 'localizacao' => $r['localizacao'] ?? '',
-                'id_ata' => $r['id_ata'] ?? '',
                 'arquivo_relativo' => $r['arquivo_relativo'] ?? '',
                 'uploaded_at' => $r['uploaded_at'] ?? '',
             ];
         }
 
         return [
-            'title' => 'Atas de audiências',
+            'title' => 'Lista das atas de audiências',
             'slug' => 'atas-audiencias',
             'columns' => [
-                ['key' => 'id_pauta', 'label' => 'ID pauta'],
                 ['key' => 'data_audiencia', 'label' => 'Data'],
                 ['key' => 'hora_audiencia', 'label' => 'Hora'],
                 ['key' => 'numero_processo', 'label' => 'Processo'],
-                ['key' => 'classe_nome', 'label' => 'Classe'],
                 ['key' => 'tipo_audiencia', 'label' => 'Tipo'],
-                ['key' => 'status', 'label' => 'Status'],
                 ['key' => 'localizacao', 'label' => 'Local'],
-                ['key' => 'id_ata', 'label' => 'ID ata'],
                 ['key' => 'arquivo_relativo', 'label' => 'Arquivo'],
                 ['key' => 'uploaded_at', 'label' => 'Enviado em'],
             ],
@@ -617,7 +642,7 @@ final class InternalListExportHandlers
         $inst = trim((string) ($get['instituicao_id'] ?? ''));
         if ($nome === '' && $cpf === '' && $inst === '') {
             return [
-                'title' => 'Consulta de partes',
+                'title' => 'Lista da consulta de partes',
                 'slug' => 'consulta-partes',
                 'columns' => [
                     ['key' => 'msg', 'label' => 'Mensagem'],
@@ -648,7 +673,6 @@ final class InternalListExportHandlers
                 $row['instituicoes'] = [];
             }
             $outRows[] = [
-                'id' => $row['id'] ?? $row['ID'] ?? '',
                 'nome_completo' => $row['nome_completo'] ?? '',
                 'cpf' => $row['cpf'] ?? '',
                 'telefones' => $row['telefones'],
@@ -657,10 +681,9 @@ final class InternalListExportHandlers
         }
 
         return [
-            'title' => 'Consulta de partes',
+            'title' => 'Lista da consulta de partes',
             'slug' => 'consulta-partes',
             'columns' => [
-                ['key' => 'id', 'label' => 'ID'],
                 ['key' => 'nome_completo', 'label' => 'Nome'],
                 ['key' => 'cpf', 'label' => 'CPF'],
                 ['key' => 'telefones', 'label' => 'Telefones'],
@@ -679,7 +702,7 @@ final class InternalListExportHandlers
         $parteNome = trim((string) ($get['parte_nome'] ?? ''));
         if ($numero === '' && $parteNome === '') {
             return [
-                'title' => 'Consulta de processos',
+                'title' => 'Lista da consulta de processos',
                 'slug' => 'consulta-processos',
                 'columns' => [['key' => 'msg', 'label' => 'Mensagem']],
                 'rows' => [['msg' => 'Aplique filtros na lista e exporte novamente.']],
@@ -687,17 +710,22 @@ final class InternalListExportHandlers
         }
         $service = new ConsultaProcessosService($pdo);
         $rows = $service->list(['numero' => $numero, 'parte_nome' => $parteNome], self::MAX_ROWS, 0)['rows'] ?? [];
+        $out = [];
+        foreach ($rows as $r) {
+            $out[] = [
+                'numero_processo' => $r['numero_processo'] ?? '',
+                'total_partes' => $r['total_partes'] ?? '',
+            ];
+        }
 
         return [
-            'title' => 'Consulta de processos',
+            'title' => 'Lista da consulta de processos',
             'slug' => 'consulta-processos',
             'columns' => [
-                ['key' => 'id', 'label' => 'ID'],
                 ['key' => 'numero_processo', 'label' => 'Número'],
-                ['key' => 'classe_nome', 'label' => 'Classe'],
                 ['key' => 'total_partes', 'label' => 'Qtd. partes'],
             ],
-            'rows' => $rows,
+            'rows' => $out,
         ];
     }
 
@@ -709,7 +737,7 @@ final class InternalListExportHandlers
         $nome = trim((string) ($get['nome'] ?? ''));
         if ($nome === '') {
             return [
-                'title' => 'Instituições públicas',
+                'title' => 'Lista de instituições públicas',
                 'slug' => 'instituicoes-publicas',
                 'columns' => [['key' => 'msg', 'label' => 'Mensagem']],
                 'rows' => [['msg' => 'Aplique filtros na lista e exporte novamente.']],
@@ -717,16 +745,22 @@ final class InternalListExportHandlers
         }
         $service = new InstituicoesPublicasService($pdo);
         $rows = $service->list(['nome' => $nome], self::MAX_ROWS, 0)['rows'] ?? [];
+        $out = [];
+        foreach ($rows as $r) {
+            $out[] = [
+                'nome' => $r['nome'] ?? '',
+                'sigla' => $r['sigla'] ?? '',
+            ];
+        }
 
         return [
-            'title' => 'Instituições públicas',
+            'title' => 'Lista de instituições públicas',
             'slug' => 'instituicoes-publicas',
             'columns' => [
-                ['key' => 'id', 'label' => 'ID'],
                 ['key' => 'nome', 'label' => 'Nome'],
                 ['key' => 'sigla', 'label' => 'Sigla'],
             ],
-            'rows' => $rows,
+            'rows' => $out,
         ];
     }
 
@@ -738,7 +772,7 @@ final class InternalListExportHandlers
         $processoId = trim((string) ($get['processo_id'] ?? ''));
         if ($processoId === '') {
             return [
-                'title' => 'Vínculos processo-parte',
+                'title' => 'Lista de vínculos processo–parte',
                 'slug' => 'processo-partes',
                 'columns' => [['key' => 'msg', 'label' => 'Mensagem']],
                 'rows' => [['msg' => 'Informe o ID do processo e consulte antes de exportar.']],
@@ -748,7 +782,7 @@ final class InternalListExportHandlers
         $processo = $service->get($processoId);
         if ($processo === null) {
             return [
-                'title' => 'Vínculos processo-parte',
+                'title' => 'Lista de vínculos processo–parte',
                 'slug' => 'processo-partes',
                 'columns' => [['key' => 'msg', 'label' => 'Mensagem']],
                 'rows' => [['msg' => 'Processo não encontrado.']],
@@ -759,7 +793,6 @@ final class InternalListExportHandlers
         foreach ($partes as $p) {
             $out[] = [
                 'processo' => $processo['numero_processo'] ?? $processoId,
-                'parte_id' => $p['parte_id'] ?? '',
                 'nome_completo' => $p['nome_completo'] ?? '',
                 'cpf' => $p['cpf'] ?? '',
                 'tipo_parte' => $p['tipo_parte'] ?? '',
@@ -768,11 +801,10 @@ final class InternalListExportHandlers
         }
 
         return [
-            'title' => 'Vínculos processo-parte',
+            'title' => 'Lista de vínculos processo–parte',
             'slug' => 'processo-partes',
             'columns' => [
                 ['key' => 'processo', 'label' => 'Processo'],
-                ['key' => 'parte_id', 'label' => 'ID parte'],
                 ['key' => 'nome_completo', 'label' => 'Nome'],
                 ['key' => 'cpf', 'label' => 'CPF'],
                 ['key' => 'tipo_parte', 'label' => 'Tipo parte'],
@@ -791,12 +823,14 @@ final class InternalListExportHandlers
         $instituicaoId = trim((string) ($get['instituicao_id'] ?? ''));
         if ($parteId === '' && $instituicaoId === '') {
             return [
-                'title' => 'Vínculos pessoa-instituição',
+                'title' => 'Lista de vínculos pessoa–instituição',
                 'slug' => 'partes-instituicoes',
                 'columns' => [['key' => 'msg', 'label' => 'Mensagem']],
                 'rows' => [['msg' => 'Informe ID da pessoa ou da instituição e consulte antes de exportar.']],
             ];
         }
+        require_once __DIR__ . '/../repositories/PartesRepository.php';
+
         $repo = new PartesInstituicoesRepository($pdo);
         if ($parteId !== '') {
             $rows = $repo->findByParteId($parteId);
@@ -804,22 +838,56 @@ final class InternalListExportHandlers
             $rows = $repo->findByInstituicaoId($instituicaoId);
         }
 
+        $pessoaNomeCtx = '';
+        $pessoaCpfCtx = '';
+        if ($parteId !== '') {
+            $pRow = (new PartesRepository($pdo))->findById($parteId);
+            if ($pRow !== null) {
+                $pessoaNomeCtx = trim((string) ($pRow['nome_completo'] ?? ''));
+                $pessoaCpfCtx = trim((string) ($pRow['cpf'] ?? ''));
+            }
+        }
+
+        $instituicaoCtx = '';
+        if ($instituicaoId !== '' && $parteId === '') {
+            $instSvc = new InstituicoesPublicasService($pdo);
+            $iRow = $instSvc->find($instituicaoId);
+            if ($iRow !== null) {
+                $n = trim((string) ($iRow['nome'] ?? ''));
+                $s = trim((string) ($iRow['sigla'] ?? ''));
+                $instituicaoCtx = $n !== '' && $s !== '' ? $s . ' — ' . $n : ($n !== '' ? $n : $s);
+            }
+        }
+
+        $out = [];
+        foreach ($rows as $r) {
+            $instNome = trim((string) ($r['instituicao_nome'] ?? ''));
+            $instSigla = trim((string) ($r['instituicao_sigla'] ?? ''));
+            $instLabel = $instNome !== '' && $instSigla !== ''
+                ? $instSigla . ' — ' . $instNome
+                : ($instNome !== '' ? $instNome : $instSigla);
+            $out[] = [
+                'pessoa' => $parteId !== '' ? $pessoaNomeCtx : trim((string) ($r['parte_nome'] ?? '')),
+                'cpf' => $parteId !== '' ? $pessoaCpfCtx : trim((string) ($r['parte_cpf'] ?? '')),
+                'instituicao' => $parteId !== '' ? $instLabel : $instituicaoCtx,
+                'cargo_funcao' => trim((string) ($r['cargo_funcao'] ?? '')),
+                'profissao' => trim((string) ($r['profissao'] ?? '')),
+                'data_inclusao' => trim((string) ($r['data_inclusao'] ?? '')),
+            ];
+        }
+
         return [
-            'title' => 'Vínculos pessoa-instituição',
+            'title' => 'Lista de vínculos pessoa–instituição',
             'slug' => 'partes-instituicoes',
             'columns' => [
-                ['key' => 'id', 'label' => 'ID vínculo'],
-                ['key' => 'parte_id', 'label' => 'ID pessoa'],
-                ['key' => 'parte_nome', 'label' => 'Pessoa'],
-                ['key' => 'parte_cpf', 'label' => 'CPF'],
-                ['key' => 'instituicao_id', 'label' => 'ID instituição'],
-                ['key' => 'instituicao_nome', 'label' => 'Instituição'],
+                ['key' => 'pessoa', 'label' => 'Pessoa'],
+                ['key' => 'cpf', 'label' => 'CPF'],
+                ['key' => 'instituicao', 'label' => 'Instituição'],
                 ['key' => 'cargo_funcao', 'label' => 'Cargo/função'],
                 ['key' => 'profissao', 'label' => 'Profissão'],
-                ['key' => 'ativo', 'label' => 'Ativo'],
                 ['key' => 'data_inclusao', 'label' => 'Data inclusão'],
             ],
-            'rows' => $rows,
+            'rows' => $out,
         ];
     }
 
@@ -854,10 +922,9 @@ final class InternalListExportHandlers
         $rows = array_slice($rows, 0, self::MAX_ROWS);
 
         return [
-            'title' => 'Regras de produtividade',
+            'title' => 'Lista de regras de produtividade',
             'slug' => 'produtividade-regras',
             'columns' => [
-                ['key' => 'id', 'label' => 'ID'],
                 ['key' => 'tipo_ato', 'label' => 'Tipo ato'],
                 ['key' => 'tipo_documento', 'label' => 'Tipo documento'],
                 ['key' => 'sistema_modulo', 'label' => 'Módulo'],
@@ -910,10 +977,9 @@ final class InternalListExportHandlers
         $rows = array_slice($rows, 0, self::MAX_ROWS);
 
         return [
-            'title' => 'Metas de produtividade',
+            'title' => 'Lista de metas de produtividade',
             'slug' => 'produtividade-metas',
             'columns' => [
-                ['key' => 'id', 'label' => 'ID'],
                 ['key' => 'tipo_alvo', 'label' => 'Tipo alvo'],
                 ['key' => 'alvo_valor', 'label' => 'Alvo'],
                 ['key' => 'periodo_tipo', 'label' => 'Período'],
@@ -963,10 +1029,9 @@ final class InternalListExportHandlers
         $rows = array_slice($rows, 0, self::MAX_ROWS);
 
         return [
-            'title' => 'Badges de produtividade',
+            'title' => 'Lista de badges de produtividade',
             'slug' => 'produtividade-badges',
             'columns' => [
-                ['key' => 'id', 'label' => 'ID'],
                 ['key' => 'nome', 'label' => 'Nome'],
                 ['key' => 'tipo', 'label' => 'Tipo'],
                 ['key' => 'regra_id', 'label' => 'Regra'],
