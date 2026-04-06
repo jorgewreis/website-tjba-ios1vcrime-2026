@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.71.0003
+
+**Data:** 2026-04-06 14:20:53 | **Commit:** `725adb4` | **Tipo:** `patch`
+
+- fix: enhance password reset form to ensure token retrieval from multiple sources and improve user feedback on success or failure
+
 ## V. 1.71.0002
 
 **Data:** 2026-04-06 14:17:07 | **Commit:** `6f09df0` | **Tipo:** `patch`
@@ -4308,6 +4314,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

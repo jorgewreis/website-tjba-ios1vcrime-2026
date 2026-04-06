@@ -7,10 +7,25 @@ require_once __DIR__ . '/../../../app/helpers/bootstrap.php';
 require_once __DIR__ . '/../../../app/services/PasswordResetService.php';
 
 $service = new PasswordResetService();
-// Token vem do e-mail na query (?token=); no POST também vai no hidden — não depender só de $_GET,
-// porque action="" pode submeter sem preservar a query string e o link “morre” após o primeiro passo.
-$token     = trim((string) ($_POST['token'] ?? $_GET['token'] ?? ''));
+
+// Token: POST (hidden) > GET > query na REQUEST_URI (alguns proxies/iframe não repõem $_GET no POST).
+$token = '';
+if (isset($_POST['token']) && is_string($_POST['token'])) {
+    $token = trim($_POST['token']);
+}
+if ($token === '' && isset($_GET['token']) && is_string($_GET['token'])) {
+    $token = trim($_GET['token']);
+}
+if ($token === '' && !empty($_SERVER['REQUEST_URI'])) {
+    $uri = (string) $_SERVER['REQUEST_URI'];
+    if (preg_match('/[?&]token=([^&]+)/', $uri, $m)) {
+        $token = trim(rawurldecode($m[1]));
+    }
+}
+
 $tokenData = $service->validateResetToken($token);
+// action explícito com ?token= garante que, no POST, o PHP receba $_GET['token'] mesmo se o hidden falhar.
+$formAction = '/views/public/redefinir-senha-form.php' . ($token !== '' ? ('?token=' . rawurlencode($token)) : '');
 
 $mensagemErro    = '';
 $mensagemSucesso = '';
@@ -89,8 +104,17 @@ $csrfToken = Security::generateCSRFToken();
         <span class="info-title">Defina uma nova senha com <?php echo htmlspecialchars(Security::passwordPolicySummary(), ENT_QUOTES, 'UTF-8'); ?>.</span>
     </div>
 
-    <?php if ($tokenData !== null): ?>
-        <form class="form-login" id="formRedefinirSenha" method="post" action="">
+    <?php if ($mensagemSucesso !== ''): ?>
+        <div class="form-login">
+            <div class="display-flex row row-full justify-start align-center padding-x-sm padding-y-md border-bottom">
+                <span>Senha redefinida com sucesso. Você já pode fechar esta janela e entrar com a nova senha.</span>
+            </div>
+            <div class="display-flex row row-full justify-start align-center padding-x-sm padding-y-md">
+                <button type="button" class="btn btn-primary" data-nav-href="/index.php">Ir para o login</button>
+            </div>
+        </div>
+    <?php elseif ($tokenData !== null): ?>
+        <form class="form-login" id="formRedefinirSenha" method="post" action="<?php echo htmlspecialchars($formAction, ENT_QUOTES, 'UTF-8'); ?>">
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
             <input type="hidden" name="token" value="<?php echo htmlspecialchars($token, ENT_QUOTES, 'UTF-8'); ?>">
 
@@ -119,7 +143,7 @@ $csrfToken = Security::generateCSRFToken();
     <?php else: ?>
         <div class="form-login">
             <div class="display-flex row row-full justify-start align-center padding-x-sm padding-y-md border-bottom">
-                <span>Esse link não está mais válido. Solicite uma nova recuperação de senha.</span>
+                <span>Esse link não é válido ou já foi utilizado. Solicite uma nova recuperação de senha.</span>
             </div>
             <div class="display-flex row row-full justify-start align-center padding-x-sm padding-y-md">
                 <button type="button" class="btn btn-secondary" data-nav-href="/recupera_senha.php">Solicitar novo link</button>
