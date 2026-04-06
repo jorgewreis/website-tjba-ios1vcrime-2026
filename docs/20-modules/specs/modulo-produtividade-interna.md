@@ -28,7 +28,7 @@ Documento vivo: consolida o que já está entregue no módulo, com foco em opera
 
 - [app/services/ProdutividadeService.php](../../../app/services/ProdutividadeService.php):
   - Regras: listagem, busca, create/update e ativação.
-  - Lançamento manual e anulação com janela de 1h para o autor (gestão sem limite).
+  - Lançamento manual e anulação: perfis **ADMIN** e **CHEFIA** anulam sem limite de tempo; demais usuários só anulam o próprio lançamento **ativo** dentro de **30 minutos** após `criado_em` (API e botão na listagem usam a mesma regra via `ProdutividadeService`).
   - **`registrarAuto`** com resolução de regra por (`tipo_ato`, `tipo_documento`, `sistema_modulo`), no-op silencioso sem regra ativa e tratamento idempotente de duplicidade.
   - Metas: list/find/create/update/set-ativo.
   - Ranking por setor e exportações.
@@ -51,7 +51,8 @@ Documento vivo: consolida o que já está entregue no módulo, com foco em opera
 ### Interface
 
 - Lista principal: [app/views/internal/produtividade-list.php](../../../app/views/internal/produtividade-list.php)
-  - filtros + ranking + export (select CSV/PDF via `_list_export_buttons.php`, URLs `export-csv.php` / `export-pdf.php`) + resumo + projeção + status de meta.
+  - filtros + ranking + export (select CSV/PDF via `_list_export_buttons.php`, URLs `export-csv.php` / `export-pdf.php`) + resumo + projeção + status de meta;
+  - botão **Anular** só quando `ProdutividadeService::canActorAnularLancamentoManual` for verdadeiro (alinhado à API `lancamentos/anular.php`).
 - Regras: `produtividade-regras-list/create/edit.php`.
 - Metas: `produtividade-metas-list/create/edit.php`.
 - Badges: `produtividade-badges-list/create/edit.php`.

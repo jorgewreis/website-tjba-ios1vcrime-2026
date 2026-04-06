@@ -49,7 +49,7 @@ try {
     foreach ($rows as $row) {
         $html .= '<tr>';
         $html .= '<td>' . htmlspecialchars($formatarDataHoraProdutividade((string) ($row['data_hora_ato'] ?? '')), ENT_QUOTES, 'UTF-8') . '</td>';
-        $html .= '<td>' . htmlspecialchars(trim((string) ($row['classe_processo'] ?? '')), ENT_QUOTES, 'UTF-8') . '</td>';
+        $html .= '<td>' . htmlspecialchars(trim((string) ($row['classe_judicial_nome'] ?? '')), ENT_QUOTES, 'UTF-8') . '</td>';
         $html .= '<td>' . htmlspecialchars(trim((string) ($row['numero_processo'] ?? '')), ENT_QUOTES, 'UTF-8') . '</td>';
         $html .= '<td>' . htmlspecialchars(trim((string) ($row['observacoes'] ?? '')), ENT_QUOTES, 'UTF-8') . '</td>';
         $html .= '<td>' . htmlspecialchars(trim((string) ($row['usuario_nome'] ?? $row['usuario_id'] ?? '')), ENT_QUOTES, 'UTF-8') . '</td>';

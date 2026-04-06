@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.73
+
+**Data:** 2026-04-06 14:49:46 | **Commit:** `4e0514a` | **Tipo:** `minor`
+
+- feat: add SQL fragment for joining judicial classes and update productivity list to display judicial class names
+
 ## V. 1.72
 
 **Data:** 2026-04-06 14:40:23 | **Commit:** `6e0eb49` | **Tipo:** `minor`
@@ -4320,6 +4326,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

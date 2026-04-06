@@ -401,8 +401,9 @@ if ($canLoadLancamentos && $errors === []) {
                         $sistemaModulo !== '' ? $sistemaModulo : 'Sem sistema',
                     ]);
                 }
-                $classeProcessoRotulo = trim((string) ($row['classe_processo'] ?? ''));
-                $labelColunaProcesso = $classeProcessoRotulo !== '' ? $classeProcessoRotulo : 'Processo';
+                // Classe judicial vinda de processos + classes (CNJ), não de produtividade_lancamentos.classe_processo (contexto do módulo).
+                $classeJudicialRotulo = trim((string) ($row['classe_judicial_nome'] ?? ''));
+                $labelColunaProcesso = $classeJudicialRotulo !== '' ? $classeJudicialRotulo : 'Processo';
                 ?>
                 <div class="display-flex col col-full register border-bottom">
                     <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
@@ -433,7 +434,7 @@ if ($canLoadLancamentos && $errors === []) {
                             </div>
                         </div>
                         <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                            <?php if ((string) ($row['status'] ?? '') === 'ativo' && (string) ($row['tipo_lancamento'] ?? '') === 'manual'): ?>
+                            <?php if ($service->canActorAnularLancamentoManual($userId, $row)): ?>
                             <button type="button" class="btn btn-danger-outline height-md" data-anular-id="<?php echo htmlspecialchars((string) ($row['id'] ?? ''), ENT_QUOTES); ?>">Anular</button>
                             <?php endif; ?>
                         </div>

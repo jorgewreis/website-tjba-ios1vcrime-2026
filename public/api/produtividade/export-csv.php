@@ -71,7 +71,7 @@ try {
     foreach ($rows as $row) {
         fputcsv($output, [
             $formatarDataHoraProdutividade((string) ($row['data_hora_ato'] ?? '')),
-            trim((string) ($row['classe_processo'] ?? '')),
+            trim((string) ($row['classe_judicial_nome'] ?? '')),
             trim((string) ($row['numero_processo'] ?? '')),
             trim((string) ($row['observacoes'] ?? '')),
             trim((string) ($row['usuario_nome'] ?? $row['usuario_id'] ?? '')),

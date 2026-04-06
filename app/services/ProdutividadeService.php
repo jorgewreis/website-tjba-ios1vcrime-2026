@@ -201,19 +201,7 @@ final class ProdutividadeService
             throw new InvalidArgumentException('Lançamento já está anulado.');
         }
 
-        $ownerId = trim((string) ($row['usuario_id'] ?? ''));
-        $criadoEm = trim((string) ($row['criado_em'] ?? ''));
-        $isGestao = $this->isGestaoUser($actorUserId);
-        if ($ownerId !== $actorUserId && !$isGestao) {
-            throw new InvalidArgumentException('Você não tem permissão para anular este lançamento.');
-        }
-
-        if (!$isGestao && $ownerId === $actorUserId) {
-            $limite = strtotime($criadoEm . ' +1 hour');
-            if ($limite === false || time() > $limite) {
-                throw new InvalidArgumentException('Prazo de 1 hora para anulação do próprio lançamento expirou.');
-            }
-        }
+        $this->assertPodeAnularLancamentoManual($actorUserId, $row);
 
         $this->connection->beginTransaction();
         try {
@@ -230,6 +218,27 @@ final class ProdutividadeService
             $this->connection->rollBack();
             throw $e;
         }
+    }
+
+    /**
+     * Espelha as regras de {@see self::anularLancamentoManual} para exibir o botão na listagem.
+     *
+     * @param array<string, mixed> $row Linha com tipo_lancamento, status, usuario_id, criado_em
+     */
+    public function canActorAnularLancamentoManual(string $actorUserId, array $row): bool
+    {
+        $actorUserId = trim($actorUserId);
+        if ($actorUserId === '') {
+            return false;
+        }
+        if ((string) ($row['tipo_lancamento'] ?? '') !== 'manual') {
+            return false;
+        }
+        if ((string) ($row['status'] ?? '') !== 'ativo') {
+            return false;
+        }
+
+        return $this->actorPodeAnularLancamentoManualSemChecarTipoStatus($actorUserId, $row);
     }
 
     /**
@@ -798,6 +807,70 @@ final class ProdutividadeService
         }
 
         return false;
+    }
+
+    /**
+     * Anulação de lançamento manual: apenas ADMIN e CHEFIA (sem janela); autor do lançamento dentro de 30 min após criado_em.
+     *
+     * @param array<string, mixed> $row Registro já validado como manual e ativo
+     */
+    private function assertPodeAnularLancamentoManual(string $actorUserId, array $row): void
+    {
+        if ($this->actorPodeAnularLancamentoManualSemChecarTipoStatus($actorUserId, $row)) {
+            return;
+        }
+
+        $ownerId = trim((string) ($row['usuario_id'] ?? ''));
+        if ($ownerId !== $actorUserId) {
+            throw new InvalidArgumentException('Você não tem permissão para anular este lançamento.');
+        }
+
+        throw new InvalidArgumentException('Prazo de 30 minutos para anulação do próprio lançamento expirou.');
+    }
+
+    /**
+     * Pré-condição: lançamento manual e ativo já validados.
+     *
+     * @param array<string, mixed> $row
+     */
+    private function actorPodeAnularLancamentoManualSemChecarTipoStatus(string $actorUserId, array $row): bool
+    {
+        if ($this->isAdminOrChefiaUsuario($actorUserId)) {
+            return true;
+        }
+        $ownerId = trim((string) ($row['usuario_id'] ?? ''));
+
+        return $ownerId === $actorUserId && $this->isDentroJanelaAnulacaoAutor($row);
+    }
+
+    private function isAdminOrChefiaUsuario(string $userId): bool
+    {
+        $perfis = UsuarioPerfisAutorizacao::perfisDoUsuario($userId);
+        foreach ($perfis as $perfil) {
+            $p = strtoupper(trim((string) $perfil));
+            if ($p === 'ADMIN' || $p === 'CHEFIA') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param array<string, mixed> $row Deve conter criado_em
+     */
+    private function isDentroJanelaAnulacaoAutor(array $row): bool
+    {
+        $criadoEm = trim((string) ($row['criado_em'] ?? ''));
+        if ($criadoEm === '') {
+            return false;
+        }
+        $limite = strtotime($criadoEm . ' +30 minutes');
+        if ($limite === false) {
+            return false;
+        }
+
+        return time() <= $limite;
     }
 
     /**

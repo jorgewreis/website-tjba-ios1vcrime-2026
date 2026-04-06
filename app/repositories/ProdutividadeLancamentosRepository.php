@@ -14,6 +14,20 @@ final class ProdutividadeLancamentosRepository
         $this->table = $table;
     }
 
+    /**
+     * Liga lançamento ao cadastro de processos pelo CNJ (20 dígitos, máscara ignorada) e à classe judicial.
+     */
+    private function sqlFragmentJoinProcessoClasseJudicial(): string
+    {
+        return 'LEFT JOIN `processos` pr_cnj ON REPLACE(REPLACE(TRIM(COALESCE(pr_cnj.`numero_processo`, \'\')), \'-\', \'\'), \'.\', \'\') = REPLACE(REPLACE(TRIM(COALESCE(l.`numero_processo`, \'\')), \'-\', \'\'), \'.\', \'\') AND LENGTH(REPLACE(REPLACE(TRIM(COALESCE(l.`numero_processo`, \'\')), \'-\', \'\'), \'.\', \'\')) = 20 '
+            . 'LEFT JOIN `classes` cl_cnj ON cl_cnj.`id` = pr_cnj.`classe_id`';
+    }
+
+    private function sqlExpressionClasseJudicialNome(): string
+    {
+        return 'TRIM(COALESCE(cl_cnj.`nome`, \'\')) AS classe_judicial_nome';
+    }
+
     public function findById(string $id): ?array
     {
         $id = trim($id);
@@ -80,14 +94,18 @@ final class ProdutividadeLancamentosRepository
             'SELECT l.`id`, l.`usuario_id`, l.`regra_id`, l.`tipo_lancamento`, l.`status`, l.`quantidade`, l.`pontos_calculados`,
                     l.`numero_processo`, l.`classe_processo`, l.`observacoes`, l.`data_hora_ato`, l.`criado_em`, l.`anulado_por`, l.`anulado_em`, l.`motivo_anulacao`,
                     r.`tipo_ato`, r.`tipo_documento`, r.`sistema_modulo`,
-                    CONCAT(COALESCE(u.`nome`, \'\'), CASE WHEN COALESCE(u.`sobrenome`, \'\') = \'\' THEN \'\' ELSE CONCAT(\' \', u.`sobrenome`) END) AS usuario_nome
+                    CONCAT(COALESCE(u.`nome`, \'\'), CASE WHEN COALESCE(u.`sobrenome`, \'\') = \'\' THEN \'\' ELSE CONCAT(\' \', u.`sobrenome`) END) AS usuario_nome,
+                    %s
              FROM `%s` l
              LEFT JOIN `produtividade_regras` r ON r.`id` = l.`regra_id`
              LEFT JOIN `usuarios` u ON u.`id_usuario` = l.`usuario_id`
              %s
+             %s
              ORDER BY l.`data_hora_ato` DESC, l.`id` DESC
              LIMIT :limit OFFSET :offset',
+            $this->sqlExpressionClasseJudicialNome(),
             $this->table,
+            $this->sqlFragmentJoinProcessoClasseJudicial(),
             $where !== [] ? 'WHERE ' . implode(' AND ', $where) : ''
         );
         $statement = $this->connection->prepare($sql);
@@ -197,14 +215,18 @@ final class ProdutividadeLancamentosRepository
             'SELECT l.`id`, l.`usuario_id`, l.`regra_id`, l.`tipo_lancamento`, l.`status`, l.`quantidade`, l.`pontos_calculados`,
                     l.`numero_processo`, l.`classe_processo`, l.`observacoes`, l.`data_hora_ato`, l.`criado_em`, l.`anulado_por`, l.`anulado_em`, l.`motivo_anulacao`,
                     r.`tipo_ato`, r.`tipo_documento`, r.`sistema_modulo`,
-                    CONCAT(COALESCE(u.`nome`, \'\'), CASE WHEN COALESCE(u.`sobrenome`, \'\') = \'\' THEN \'\' ELSE CONCAT(\' \', u.`sobrenome`) END) AS usuario_nome
+                    CONCAT(COALESCE(u.`nome`, \'\'), CASE WHEN COALESCE(u.`sobrenome`, \'\') = \'\' THEN \'\' ELSE CONCAT(\' \', u.`sobrenome`) END) AS usuario_nome,
+                    %s
              FROM `%s` l
              LEFT JOIN `produtividade_regras` r ON r.`id` = l.`regra_id`
              LEFT JOIN `usuarios` u ON u.`id_usuario` = l.`usuario_id`
              %s
+             %s
              ORDER BY l.`data_hora_ato` DESC, l.`id` DESC
              LIMIT :limit',
+            $this->sqlExpressionClasseJudicialNome(),
             $this->table,
+            $this->sqlFragmentJoinProcessoClasseJudicial(),
             $where !== [] ? 'WHERE ' . implode(' AND ', $where) : ''
         );
         $statement = $this->connection->prepare($sql);
