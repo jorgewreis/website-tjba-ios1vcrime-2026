@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.78
+
+**Data:** 2026-04-09 10:05:58 | **Commit:** `3279acf` | **Tipo:** `minor`
+
+- feat: add validation and processing for 'dias_multa' in GuiasService and update related JavaScript handling in cartorio-guias-edit.js
+
 ## V. 1.77
 
 **Data:** 2026-04-09 10:02:15 | **Commit:** `7007bd1` | **Tipo:** `minor`
@@ -4350,6 +4356,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

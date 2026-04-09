@@ -140,6 +140,16 @@
                 }
             }
 
+            const diasMultaRaw = (global.document.getElementById('edit-dias-multa')?.value || '').trim();
+            let diasMultaPayload = null;
+            if (diasMultaRaw !== '') {
+                const parsed = parseInt(diasMultaRaw, 10);
+                if (Number.isNaN(parsed) || parsed < 0) {
+                    notify('error', 'Erro', 'Informe um número válido (≥ 0) para dias de multa ou deixe em branco.');
+                    return;
+                }
+                diasMultaPayload = parsed;
+            }
             const payload = {
                 id: idGuia,
                 numero_processo: global.document.getElementById('edit-processo')?.value?.trim() || '',
@@ -147,13 +157,9 @@
                 tipo: global.document.getElementById('edit-tipo')?.value || 'Guia - Tipo não informado',
                 regime: regimeVal,
                 data_fato: dataFatoVal,
-                dias_multa: global.document.getElementById('edit-dias-multa')?.value || '',
+                dias_multa: diasMultaPayload,
                 observacoes: global.document.getElementById('edit-observacoes')?.value?.trim() || ''
             };
-            const diasVal = global.document.getElementById('edit-dias-multa')?.value;
-            if (diasVal !== '' && !isNaN(parseInt(diasVal, 10))) {
-                payload.dias_multa = parseInt(diasVal, 10);
-            }
 
             saveButton.disabled = true;
             fetch(settings.updateEndpoint || '/api/cartorio-guias/update.php', {

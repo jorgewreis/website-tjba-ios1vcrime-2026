@@ -356,6 +356,14 @@ final class GuiasService
                 throw new InvalidArgumentException('A data do fato não pode ser futura.');
             }
         }
+        if (array_key_exists('dias_multa', $filtered)) {
+            $dm = $filtered['dias_multa'];
+            if ($dm === null || $dm === '') {
+                $filtered['dias_multa'] = null;
+            } else {
+                $filtered['dias_multa'] = (int) $dm;
+            }
+        }
 
         $updated = $this->repository->update($id, $filtered);
         if ($updated && (array_key_exists('data_fato', $filtered) || array_key_exists('dias_multa', $filtered))) {

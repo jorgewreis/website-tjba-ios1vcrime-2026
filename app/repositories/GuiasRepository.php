@@ -172,7 +172,11 @@ final class GuiasRepository
                 continue;
             }
             $set[] = "`{$col}` = :{$col}";
-            $params[":{$col}"] = $payload[$col];
+            $val = $payload[$col];
+            if ($col === 'dias_multa') {
+                $val = ($val === null || $val === '') ? null : (int) $val;
+            }
+            $params[":{$col}"] = $val;
         }
         if (empty($set)) {
             return false;
