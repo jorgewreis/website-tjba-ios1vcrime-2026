@@ -25,19 +25,18 @@ if ($userId !== '') {
         ]);
         $prodWeekPoints = (float) (($resumo['week']['current'] ?? 0));
 
-        $ranking = $service->listRanking($userId, [
-            'status' => 'ativo',
-            'tipo_lancamento' => '',
-            'data_inicio' => date('Y-m-d', strtotime('monday this week')),
-            'data_fim' => date('Y-m-d', strtotime('sunday this week')),
-        ], 200);
-        $setores = $ranking['setores'] ?? [];
-        foreach ($setores as $setor) {
-            foreach (($setor['rows'] ?? []) as $row) {
-                if ((string) ($row['usuario_id'] ?? '') === $userId) {
-                    $prodRankingPos = (int) ($row['posicao'] ?? 0);
-                    $prodRankingSetor = (string) ($setor['setor_nome'] ?? '');
-                    break 2;
+        if ($service->usuarioPodeVerRankingProdutividade($userId)) {
+            $ranking = $service->listRanking($userId, [
+                'status' => 'ativo',
+            ], 200);
+            $setores = $ranking['setores'] ?? [];
+            foreach ($setores as $setor) {
+                foreach (($setor['rows'] ?? []) as $row) {
+                    if ((string) ($row['usuario_id'] ?? '') === $userId) {
+                        $prodRankingPos = (int) ($row['posicao'] ?? 0);
+                        $prodRankingSetor = (string) ($setor['setor_nome'] ?? '');
+                        break 2;
+                    }
                 }
             }
         }
@@ -94,7 +93,7 @@ if ($userId !== '') {
                 <span class="major-info"><?php echo number_format($prodWeekPoints, 2, ',', '.'); ?> pts</span>
             </div>
             <div class="col width-500">
-                <span class="minor-info">Posição no ranking do setor</span>
+                <span class="minor-info">Posição no ranking mensal do setor (Cartório/Gabinete)</span>
                 <span class="major-info">
                     <?php if ($prodRankingPos !== null && $prodRankingPos > 0): ?>
                         #<?php echo (int) $prodRankingPos; ?><?php echo $prodRankingSetor !== '' ? ' em ' . htmlspecialchars($prodRankingSetor, ENT_QUOTES, 'UTF-8') : ''; ?>

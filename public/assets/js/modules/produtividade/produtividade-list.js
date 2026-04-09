@@ -417,7 +417,7 @@
             if (rows.length === 0) {
                 var empty = document.createElement('span');
                 empty.className = 'minor-info';
-                empty.textContent = 'Sem dados para este setor no período selecionado.';
+                empty.textContent = 'Sem dados para este setor no mês atual.';
                 wrapper.appendChild(empty);
                 return wrapper;
             }
@@ -458,7 +458,7 @@
                 var setores = result.data && Array.isArray(result.data.setores) ? result.data.setores : [];
                 content.innerHTML = '';
                 if (setores.length === 0) {
-                    loading.textContent = 'Sem dados de ranking para os filtros selecionados.';
+                    loading.textContent = 'Sem dados de ranking no mês atual (Cartório/Gabinete).';
                     return;
                 }
 

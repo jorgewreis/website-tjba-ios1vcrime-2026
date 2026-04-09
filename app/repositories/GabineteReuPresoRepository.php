@@ -90,6 +90,9 @@ final class GabineteReuPresoRepository
     /**
      * @param array<string, string> $filters nome, processo (CNJ parcial)
      * @return list<array<string, mixed>>
+     *
+     * Ordenação: tempo de custódia (maior primeiro), usando `data_prisao` do processo principal —
+     * datas mais antigas primeiro; sem data de prisão por último; desempate por nome.
      */
     public function fetchListAtivos(array $filters, int $limit, int $offset): array
     {
@@ -131,8 +134,6 @@ final class GabineteReuPresoRepository
              LEFT JOIN `processos` pr ON pr.`id` = pp.`processo_id`
              WHERE %s
              ORDER BY
-                 (g.`proxima_revisao` IS NULL) ASC,
-                 g.`proxima_revisao` ASC,
                  (pp.`data_prisao` IS NULL) ASC,
                  pp.`data_prisao` ASC,
                  g.`nome` ASC

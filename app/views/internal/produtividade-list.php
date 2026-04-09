@@ -111,6 +111,15 @@ if ($userId !== '') {
     $canSeeBadgesButton = $canSeeRegrasButton;
 }
 
+$showRankingBlock = false;
+if ($userId !== '') {
+    try {
+        $showRankingBlock = $service->usuarioPodeVerRankingProdutividade($userId);
+    } catch (Throwable $e) {
+        $showRankingBlock = false;
+    }
+}
+
 if ($isGestao) {
     $stmt = $connection->query(
         'SELECT DISTINCT u.`id_usuario`, u.`nome`, u.`sobrenome`
@@ -168,7 +177,7 @@ $exportQuery = [
 ];
 $exportCsvHref = '/api/produtividade/export-csv.php?' . http_build_query($exportQuery);
 $exportPdfHref = '/api/produtividade/export-pdf.php?' . http_build_query($exportQuery);
-$rankingApiHref = '/api/produtividade/ranking.php?' . http_build_query($exportQuery);
+$rankingApiHref = '/api/produtividade/ranking.php';
 
 $resumoCards = [
     'week' => ['current' => 0.0, 'previous' => 0.0, 'variation_percent' => 0.0],
@@ -353,7 +362,7 @@ if ($canLoadLancamentos && $errors === []) {
                 (<?php echo number_format((float) ($resumoCards['quarter']['variation_percent'] ?? 0), 1, ',', '.'); ?>%)
             </span>
             <span class="status status-pending padding-x-lg">
-                Projeção: <?php echo number_format((float) ($resumoCards['projection']['projected_points'] ?? 0), 2, ',', '.'); ?> pts
+                Projeção (mês, seu usuário): <?php echo number_format((float) ($resumoCards['projection']['projected_points'] ?? 0), 2, ',', '.'); ?> pts
             </span>
             <?php if ((bool) ($metaResumo['has_meta'] ?? false)): ?>
             <span class="status status-success padding-x-lg">
@@ -365,13 +374,15 @@ if ($canLoadLancamentos && $errors === []) {
             <?php endif; ?>
         </div>
 
+        <?php if ($showRankingBlock): ?>
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
-            <h2>Ranking</h2>
+            <h2>Ranking (mês atual — Cartório e Gabinete)</h2>
         </div>
         <div class="display-flex col col-full padding-x-md padding-y-md border-bottom" id="ranking-section" data-ranking-url="<?php echo htmlspecialchars($rankingApiHref, ENT_QUOTES); ?>">
-            <span class="minor-info" id="ranking-loading">Ranking indisponível no momento.</span>
+            <span class="minor-info" id="ranking-loading">Carregando ranking do mês…</span>
             <div id="ranking-content" class="display-flex col col-full gap-y-md" style="display:none;"></div>
         </div>
+        <?php endif; ?>
 
         <?php foreach ($errors as $error): ?>
         <div class="display-flex row row-full padding-x-md padding-y-sm border-bottom">

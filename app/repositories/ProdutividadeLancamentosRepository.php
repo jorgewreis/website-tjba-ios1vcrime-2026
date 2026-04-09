@@ -327,11 +327,22 @@ final class ProdutividadeLancamentosRepository
     }
 
     /**
+     * Ranking: apenas usuários lotados em Cartório ou Gabinete (exclui Sala de Audiências e demais).
+     *
      * @return array{0:list<string>,1:array<string,mixed>}
      */
     private function buildRankingFilter(array $filters): array
     {
-        return $this->buildFilter($filters);
+        [$where, $params] = $this->buildFilter($filters);
+        $where[] = 'EXISTS (
+            SELECT 1 FROM `usuario_setor` us_gr
+            INNER JOIN `setores` s_gr ON s_gr.`id_setor` = us_gr.`setor`
+            WHERE us_gr.`usuario` = l.`usuario_id`
+              AND s_gr.`ativo` = 1
+              AND UPPER(TRIM(COALESCE(s_gr.`codigo_area`, \'\'))) IN (\'CARTORIO\', \'GABINETE\')
+        )';
+
+        return [$where, $params];
     }
 }
 

@@ -555,10 +555,32 @@ final class ProdutividadeService
     {
         $this->assertAuthenticated($actorUserId);
         $isGestao = $this->isGestaoUser($actorUserId);
-        $rankingFilters = $this->normalizeRankingFilters($filters);
+
+        $status = trim((string) ($filters['status'] ?? 'ativo'));
+        if ($status === '') {
+            $status = 'ativo';
+        }
+
+        $now = new DateTimeImmutable('now');
+        $rankingFilters = [
+            'status' => $status,
+            'tipo_lancamento' => '',
+            'usuario_id' => '',
+            'data_inicio' => $now->modify('first day of this month')->format('Y-m-d'),
+            'data_fim' => $now->modify('last day of this month')->format('Y-m-d'),
+            'setor_codigo_area' => '',
+        ];
 
         if (!$isGestao) {
             $setorCodigoArea = $this->findUserSetorCodigoArea($actorUserId);
+            if ($setorCodigoArea === strtoupper(AccessAreas::AUDIENCIAS)) {
+                return [
+                    'is_gestao' => false,
+                    'total_setores' => 0,
+                    'setores' => [],
+                    'ranking_oculto' => true,
+                ];
+            }
             if ($setorCodigoArea !== '') {
                 $rankingFilters['setor_codigo_area'] = $setorCodigoArea;
             } else {
@@ -665,7 +687,7 @@ final class ProdutividadeService
         $prevQuarterEnd = $prevQuarterStart->modify('+2 months')->modify('last day of this month');
         $quarterPrevious = $this->sumForRange($base, $prevQuarterStart, $prevQuarterEnd);
 
-        $projection = $this->projetarPeriodo($actorUserId, $filters);
+        $projection = $this->projetarPeriodoMensalUsuarioLogado($actorUserId);
 
         return [
             'week' => [
@@ -687,12 +709,45 @@ final class ProdutividadeService
         ];
     }
 
+    /**
+     * Projeção do mês civil corrente apenas para o usuário logado (ignora filtro de lista e escopo de gestão).
+     *
+     * @return array{projected_points:float,current_points:float,business_days_total:int,business_days_with_launch:int}
+     */
+    public function projetarPeriodoMensalUsuarioLogado(string $actorUserId): array
+    {
+        $this->assertAuthenticated($actorUserId);
+        $now = new DateTimeImmutable('now');
+        $monthStart = $now->modify('first day of this month');
+        $monthEnd = $now->modify('last day of this month');
+        $base = [
+            'usuario_id' => $actorUserId,
+            'status' => 'ativo',
+            'tipo_lancamento' => '',
+            'data_inicio' => $monthStart->format('Y-m-d'),
+            'data_fim' => $monthEnd->format('Y-m-d'),
+            'setor_codigo_area' => '',
+        ];
+
+        return $this->projetarPeriodoComFiltrosBase($base);
+    }
+
     public function projetarPeriodo(string $actorUserId, array $filters): array
     {
         $this->assertAuthenticated($actorUserId);
         $isGestao = $this->isGestaoUser($actorUserId);
         $base = $this->applyProdutividadeLancamentosEscopoFiltros($actorUserId, $filters, $isGestao);
 
+        return $this->projetarPeriodoComFiltrosBase($base);
+    }
+
+    /**
+     * @param array<string, mixed> $base Filtros já resolvidos (incl. data_inicio / data_fim)
+     *
+     * @return array{projected_points:float,current_points:float,business_days_total:int,business_days_with_launch:int}
+     */
+    private function projetarPeriodoComFiltrosBase(array $base): array
+    {
         $start = trim((string) ($base['data_inicio'] ?? ''));
         $end = trim((string) ($base['data_fim'] ?? ''));
         if (!$this->isValidDate($start) || !$this->isValidDate($end)) {
@@ -729,6 +784,17 @@ final class ProdutividadeService
             'business_days_total' => $businessDaysTotal,
             'business_days_with_launch' => $businessDaysWithLaunch,
         ];
+    }
+
+    /** Ranking de produtividade: visível para Cartório e Gabinete; oculto para Sala de Audiências (perfis de gestão continuam vendo o ranking filtrado). */
+    public function usuarioPodeVerRankingProdutividade(string $userId): bool
+    {
+        $this->assertAuthenticated($userId);
+        if ($this->isGestaoUser($userId)) {
+            return true;
+        }
+
+        return $this->findUserSetorCodigoArea($userId) !== strtoupper(AccessAreas::AUDIENCIAS);
     }
 
     public function getMetaResumoUsuario(string $actorUserId, array $filters): array
@@ -1087,34 +1153,6 @@ final class ProdutividadeService
         $statement->execute();
         $value = $statement->fetchColumn();
         return strtoupper(trim((string) $value));
-    }
-
-    private function normalizeRankingFilters(array $filters): array
-    {
-        $out = [
-            'status' => trim((string) ($filters['status'] ?? 'ativo')),
-            'tipo_lancamento' => trim((string) ($filters['tipo_lancamento'] ?? '')),
-            'data_inicio' => trim((string) ($filters['data_inicio'] ?? '')),
-            'data_fim' => trim((string) ($filters['data_fim'] ?? '')),
-            'usuario_id' => trim((string) ($filters['usuario_id'] ?? '')),
-            'setor_codigo_area' => strtoupper(trim((string) ($filters['setor_codigo_area'] ?? ''))),
-        ];
-
-        if ($out['data_inicio'] !== '' && $out['data_fim'] !== '') {
-            $dtIni = DateTime::createFromFormat('Y-m-d', $out['data_inicio']);
-            $dtFim = DateTime::createFromFormat('Y-m-d', $out['data_fim']);
-            if ($dtIni && $dtFim) {
-                if ($dtIni > $dtFim) {
-                    throw new InvalidArgumentException('A data inicial não pode ser maior que a data final.');
-                }
-                $days = (int) $dtIni->diff($dtFim)->days;
-                if ($days > 60) {
-                    throw new InvalidArgumentException('O intervalo entre data inicial e data final não pode ultrapassar 60 dias.');
-                }
-            }
-        }
-
-        return $out;
     }
 
     private function sumForRange(array $filters, DateTimeImmutable $start, DateTimeImmutable $end): float

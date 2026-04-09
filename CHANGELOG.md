@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.75
+
+**Data:** 2026-04-09 09:33:32 | **Commit:** `4d65aae` | **Tipo:** `minor`
+
+- feat: enhance productivity ranking visibility for users in Cartório and Gabinete, and update related filters and projections
+
 ## V. 1.74
 
 **Data:** 2026-04-06 14:50:45 | **Commit:** `873bcdf` | **Tipo:** `minor`
@@ -4332,6 +4338,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

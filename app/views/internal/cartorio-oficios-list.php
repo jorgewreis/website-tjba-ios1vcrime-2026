@@ -417,7 +417,7 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                             <span class="minor-info">Ofício</span>
                             <span class="major-info"><?php echo htmlspecialchars($nAno, ENT_QUOTES); ?></span>
                         </div>
-                        <div class="col width-200">
+                        <div class="col width-400">
                             <span class="minor-info">Gerado em</span>
                             <span class="major-info"><?php echo oficios_list_formatar_data_hora($row['Data'] ?? null); ?></span>
                         </div>
