@@ -248,8 +248,10 @@ if ($totalPages > 0) {
                                     $chipTitle = 'Servidor responsável (regra): ' . $nomeLabel;
                                 } elseif ($tipo === 'all') {
                                     $chipTitle = 'Servidor alocado: ' . $nomeLabel;
+                                } elseif ($tipo === 'specific') {
+                                    $chipTitle = 'Alocação direta: ' . $nomeLabel;
                                 } else {
-                                    $chipTitle = 'Autoalocado: ' . $nomeLabel;
+                                    $chipTitle = 'Alocação: ' . $nomeLabel;
                                 }
                                 $classeTipo   = in_array($tipo, ['rule', 'specific', 'all'], true) ? ' ' . $tipo : '';
                                 $alocadoIdStr = htmlspecialchars($alocado['alocado_id'] ?? '', ENT_QUOTES);

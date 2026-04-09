@@ -61,8 +61,10 @@ if ($__showAlocDirEd && !$__bloqueadaEd && count($__alocsEd) < 5) {
                                 $chipTitleAl = 'Servidor responsável (regra): ' . $nomeLabelAl;
                             } elseif ($tipoAl === 'all') {
                                 $chipTitleAl = 'Servidor alocado: ' . $nomeLabelAl;
+                            } elseif ($tipoAl === 'specific') {
+                                $chipTitleAl = 'Alocação direta: ' . $nomeLabelAl;
                             } else {
-                                $chipTitleAl = 'Autoalocado: ' . $nomeLabelAl;
+                                $chipTitleAl = 'Alocação: ' . $nomeLabelAl;
                             }
                             $classeTipoAl = in_array($tipoAl, ['rule', 'specific', 'all'], true) ? ' ' . $tipoAl : '';
                             $alocadoIdStrAl = htmlspecialchars($alocado['alocado_id'] ?? '', ENT_QUOTES, 'UTF-8');

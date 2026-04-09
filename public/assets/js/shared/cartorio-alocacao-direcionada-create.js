@@ -39,6 +39,7 @@
             const span = global.document.createElement('span');
             span.className = 'status status-pending padding-x-sm';
             span.textContent = label;
+            span.title = 'Alocação direta: ' + label;
             const rm = global.document.createElement('button');
             rm.type = 'button';
             rm.className = 'btn btn-secondary-outline height-sm';

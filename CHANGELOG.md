@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.79
+
+**Data:** 2026-04-09 10:12:16 | **Commit:** `c57b435` | **Tipo:** `minor`
+
+- feat: update chip title logic for user allocation types across multiple views to include 'Alocação direta' for specific allocations
+
 ## V. 1.78
 
 **Data:** 2026-04-09 10:05:58 | **Commit:** `3279acf` | **Tipo:** `minor`
@@ -4356,6 +4362,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
