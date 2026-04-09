@@ -14,6 +14,7 @@ require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
 require_once __DIR__ . '/../helpers/CartorioProdutividade.php';
+require_once __DIR__ . '/../helpers/AlocacaoTarefasPerfisHelper.php';
 
 final class CartasRecebidasService
 {
@@ -174,17 +175,32 @@ final class CartasRecebidasService
 
         $usuarioCadastroId = trim((string) ($payload['usuario_cadastro_id'] ?? ''));
 
-        if ($usuarioCadastroId !== '') {
+        if ($usuarioCadastroId !== ''
+            && !AlocacaoTarefasPerfisHelper::usuarioComPerfilChefiaSemAutoalocacao($usuarioCadastroId)) {
             $this->alocadosRepository->addAlocado($idCarta, $usuarioCadastroId, CartasRecebidasAlocadosRepository::TIPO_ALL);
         }
 
         $regra = $this->alocacoesRegrasRepository->findByRegra(self::REGRA_ALOCAR_CARTAS);
         if ($regra !== null) {
             $usuarioIdRegra = trim((string) ($regra['usuario_id'] ?? ''));
-            if ($usuarioIdRegra !== '' && $usuarioIdRegra !== $usuarioCadastroId) {
+            if ($usuarioIdRegra !== '' && $usuarioIdRegra !== $usuarioCadastroId
+                && !AlocacaoTarefasPerfisHelper::usuarioComPerfilChefiaSemAutoalocacao($usuarioIdRegra)) {
                 $this->alocadosRepository->addAlocado($idCarta, $usuarioIdRegra, CartasRecebidasAlocadosRepository::TIPO_RULE);
             }
         }
+
+        AlocacaoTarefasPerfisHelper::registrarAlocacoesDirecionadasNoCadastro(
+            $this->connection,
+            $usuarioCadastroId,
+            $payload,
+            function (string $uid) use ($idCarta): void {
+                try {
+                    $this->alocadosRepository->addAlocado($idCarta, $uid, CartasRecebidasAlocadosRepository::TIPO_SPECIFIC);
+                } catch (Throwable $e) {
+                    // limite ou duplicata
+                }
+            }
+        );
 
         $repo = $this->subtarefasRepository;
         $repo->create($idCarta, $repo::TIPO_ORDEM_1, 1, 'em_andamento', null);

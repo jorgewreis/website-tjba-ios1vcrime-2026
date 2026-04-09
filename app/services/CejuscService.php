@@ -13,6 +13,7 @@ require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
 require_once __DIR__ . '/../helpers/CartorioProdutividade.php';
+require_once __DIR__ . '/../helpers/AlocacaoTarefasPerfisHelper.php';
 
 final class CejuscService
 {
@@ -186,17 +187,32 @@ final class CejuscService
 
         $usuarioCadastroId = trim((string) ($payload['usuario_cadastro_id'] ?? ''));
 
-        if ($usuarioCadastroId !== '') {
+        if ($usuarioCadastroId !== ''
+            && !AlocacaoTarefasPerfisHelper::usuarioComPerfilChefiaSemAutoalocacao($usuarioCadastroId)) {
             $this->alocadosRepository->addAlocado($idTarefa, $usuarioCadastroId, CejuscAlocadosRepository::TIPO_ALL);
         }
 
         $regra = $this->alocacoesRegrasRepository->findByRegra(self::REGRA_ALOCAR_CEJUSC);
         if ($regra !== null) {
             $usuarioIdRegra = trim((string) ($regra['usuario_id'] ?? ''));
-            if ($usuarioIdRegra !== '' && $usuarioIdRegra !== $usuarioCadastroId) {
+            if ($usuarioIdRegra !== '' && $usuarioIdRegra !== $usuarioCadastroId
+                && !AlocacaoTarefasPerfisHelper::usuarioComPerfilChefiaSemAutoalocacao($usuarioIdRegra)) {
                 $this->alocadosRepository->addAlocado($idTarefa, $usuarioIdRegra, CejuscAlocadosRepository::TIPO_RULE);
             }
         }
+
+        AlocacaoTarefasPerfisHelper::registrarAlocacoesDirecionadasNoCadastro(
+            $this->connection,
+            $usuarioCadastroId,
+            $payload,
+            function (string $uid) use ($idTarefa): void {
+                try {
+                    $this->alocadosRepository->addAlocado($idTarefa, $uid, CejuscAlocadosRepository::TIPO_SPECIFIC);
+                } catch (Throwable $e) {
+                    // limite ou duplicata
+                }
+            }
+        );
 
         $this->subtarefasRepository->create($idTarefa, CejuscSubtarefasRepository::TIPO_ORDEM_1, 1, 'em_andamento', null);
         $this->subtarefasRepository->create($idTarefa, CejuscSubtarefasRepository::TIPO_ORDEM_2, 2, 'pendente', null);

@@ -80,6 +80,8 @@ try {
             </div>
         </div>
 
+        <?php $cartorioAlocacaoPrefix = 'cejusc'; include __DIR__ . '/_cartorio_alocacao_direcionada_create.php'; ?>
+
         <div class="display-flex row row-full info padding-x-md padding-y-md">
             <?php if ($hasRuleAllocation): ?>
                 <span>*Conforme regra de alocação, o envio de Decisões ao Cejusc será alocado automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
@@ -281,6 +283,9 @@ try {
     </script>
     <script>
         (function () {
+            var alocState = (window.App && App.CartorioAlocacaoDirecionadaCreate && typeof App.CartorioAlocacaoDirecionadaCreate.init === 'function')
+                ? App.CartorioAlocacaoDirecionadaCreate.init('cejusc')
+                : null;
             var btn = document.getElementById('cadastrar-btn');
             var showFeedback = function (message, type) {
                 if (window.App && App.Page && typeof App.Page.notify === 'function') {
@@ -383,6 +388,13 @@ try {
                         payload.classe_codigo = classeCodigoField.value.trim();
                     } else {
                         payload.classe_codigo = (classeVal || '').replace(/\s+/g, '').substring(0, 20);
+                    }
+                }
+
+                if (alocState && typeof alocState.getIds === 'function') {
+                    var extraIds = alocState.getIds();
+                    if (extraIds && extraIds.length) {
+                        payload.alocar_usuario_ids = extraIds;
                     }
                 }
 

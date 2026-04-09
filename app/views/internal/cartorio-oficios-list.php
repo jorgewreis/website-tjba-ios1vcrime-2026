@@ -533,6 +533,7 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
             <?php else: ?>
                 <span>*Não existe nenhum usuário alocado automaticamente para esta tarefa no momento.</span>
             <?php endif; ?>
+            <span class="minor-info" style="display:block;margin-top:8px;">*Perfis CHEFIA, DIRETORA e MAGISTRADA não recebem autoalocação ao cadastrar nem pela regra. Ofícios do cartório usam apenas alocação por regra do sistema (sem indicação manual de servidores nesta tela).</span>
         </div>
 
         <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">

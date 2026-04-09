@@ -9,6 +9,7 @@ if (function_exists('mb_internal_encoding')) {
 require_once __DIR__ . '/../../services/OficiosCartorioService.php';
 require_once __DIR__ . '/../../repositories/OficiosCartorioRepository.php';
 require_once __DIR__ . '/../../repositories/OficiosCartorioSubtarefasRepository.php';
+require_once __DIR__ . '/../../repositories/OficiosCartorioAlocadosRepository.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -68,8 +69,34 @@ if ($userIdEdit !== null && trim((string) $userIdEdit) !== '') {
     require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
     $userPerfisEdit = UsuarioPerfisAutorizacao::perfisDoUsuario(trim((string) $userIdEdit));
 }
-$perfisPermitidosExcluir = ['ADMIN', 'CHEFIA'];
-$perfisPermitidosCancelar = ['ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA'];
+$perfisGestaoLstEdit = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
+$isGestaoEdit = count(array_intersect($userPerfisEdit, $perfisGestaoLstEdit)) > 0;
+
+$alocadosEdit = [];
+if ($oficio !== null) {
+    $tipoOrderEdit = ['rule' => 0, 'all' => 1, 'specific' => 2];
+    $repoAloc = new OficiosCartorioAlocadosRepository($connection);
+    $alocadosRaw = $repoAloc->findByOficioId($idOficio);
+    foreach (array_slice($alocadosRaw, 0, 5) as $a) {
+        $tipo = trim((string) ($a['tipo'] ?? ''));
+        if (!in_array($tipo, ['rule', 'all', 'specific'], true)) {
+            $tipo = 'specific';
+        }
+        $alocadosEdit[] = [
+            'alocado_id' => trim((string) ($a['id'] ?? '')),
+            'iniciais' => $a['iniciais'] ?? '—',
+            'nome_completo' => $a['nome_completo'] ?? '',
+            'usuario_id' => trim((string) ($a['usuario_id'] ?? '')),
+            'tipo' => $tipo,
+        ];
+    }
+    usort($alocadosEdit, static function (array $a, array $b) use ($tipoOrderEdit): int {
+        return ($tipoOrderEdit[$a['tipo']] ?? 9) <=> ($tipoOrderEdit[$b['tipo']] ?? 9);
+    });
+}
+
+$perfisPermitidosExcluir = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
+$perfisPermitidosCancelar = ['ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
 $podeExcluirTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosExcluir)) > 0 && $podeExcluirNumero;
 $podeCancelarTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosCancelar)) > 0;
 $tarefaFinalizadaOuCancelada = in_array($statusAtual, ['finalizada', 'cancelada'], true);
@@ -100,7 +127,7 @@ $subLabels = [
             <span class="specific">Edição</span>
         </div>
         <h1 class="title-page">Editar ofício</h1>
-        <p class="description-page">Consulta dos dados do ofício. Cancelar ou excluir conforme permissão e regras.</p>
+        <p class="description-page">Consulta dos dados do ofício e das alocações (por regra e cadastrante, quando aplicável). Cancelar ou excluir conforme permissão e regras.</p>
     </div>
 
     <div class="container-full card-page">
@@ -146,6 +173,48 @@ $subLabels = [
                 <?php endforeach; ?>
             </div>
             <?php endif; ?>
+
+            <div class="display-flex row row-full align-center padding-x-md padding-y-sm border-bottom"><h3 style="margin:0;font-size:1rem;">Alocações</h3></div>
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-sm align-center flex-wrap">
+                <div class="display-flex row row-fit flex-wrap gap-y-sm allocate-chips-row allocate-users">
+                <?php if (!empty($alocadosEdit)): ?>
+                    <?php foreach ($alocadosEdit as $alocado):
+                        $tipoAl = $alocado['tipo'] ?? 'specific';
+                        $iniciaisAl = htmlspecialchars($alocado['iniciais'] ?? '—', ENT_QUOTES);
+                        $nomeCompletoAl = $alocado['nome_completo'] ?? '';
+                        $nomeLabelAl = $nomeCompletoAl !== '' ? $nomeCompletoAl : ($alocado['iniciais'] ?? '—');
+                        if ($tipoAl === 'rule') {
+                            $chipTitleAl = 'Servidor responsável (regra): ' . $nomeLabelAl;
+                        } elseif ($tipoAl === 'all') {
+                            $chipTitleAl = 'Servidor alocado: ' . $nomeLabelAl;
+                        } else {
+                            $chipTitleAl = 'Autoalocado: ' . $nomeLabelAl;
+                        }
+                        $classeTipoAl = in_array($tipoAl, ['rule', 'specific', 'all'], true) ? ' ' . $tipoAl : '';
+                        $alocadoIdStrAl = htmlspecialchars($alocado['alocado_id'] ?? '', ENT_QUOTES);
+                        $usuarioIdStrAl = $alocado['usuario_id'] ?? '';
+                        $uidEditCmp = trim((string) ($userIdEdit ?? ''));
+                        $podeRemoverAl = $isGestaoEdit || ($tipoAl === 'specific' && $usuarioIdStrAl === $uidEditCmp);
+                        ?>
+                    <span class="user-allocate-wrap">
+                        <span class="user-allocate<?php echo $classeTipoAl; ?>" title="<?php echo htmlspecialchars($chipTitleAl, ENT_QUOTES); ?>"><?php echo $iniciaisAl; ?></span>
+                        <?php if ($podeRemoverAl): ?>
+                        <button type="button"
+                            class="user-allocate-remove js-desalocar"
+                            data-alocado-id="<?php echo $alocadoIdStrAl; ?>"
+                            data-tipo="<?php echo htmlspecialchars($tipoAl, ENT_QUOTES); ?>"
+                            data-endpoint="/api/cartorio-oficios/desalocar.php"
+                            title="Remover alocação"
+                            aria-label="Remover alocação">×</button>
+                        <?php endif; ?>
+                    </span>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <span class="minor-info">Nenhuma alocação registrada.</span>
+                <?php endif; ?>
+                </div>
+            </div>
+
             <input type="hidden" id="hidden-oficio-id" value="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>">
         <?php endif; ?>
 
@@ -187,7 +256,8 @@ $subLabels = [
                 listHref: '/frame.php?page=oficioscartorio',
                 storageKey: 'cartorio.postReloadToast',
                 deleteConfirmKey: 'excluir-oficio-cartorio',
-                deleteConfirmMessage: 'Clique novamente em Excluir em até 5 segundos para confirmar a exclusão.'
+                deleteConfirmMessage: 'Clique novamente em Excluir em até 5 segundos para confirmar a exclusão.',
+                enableDesalocar: true
             });
         })();
     </script>

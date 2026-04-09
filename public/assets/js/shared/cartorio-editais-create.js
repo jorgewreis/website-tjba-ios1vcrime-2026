@@ -17,6 +17,11 @@
             return;
         }
 
+        let alocState = null;
+        if (settings.alocacaoPrefix && App.CartorioAlocacaoDirecionadaCreate && typeof App.CartorioAlocacaoDirecionadaCreate.init === 'function') {
+            alocState = App.CartorioAlocacaoDirecionadaCreate.init(settings.alocacaoPrefix);
+        }
+
         button.addEventListener('click', function () {
             const processo = helpers.normalizeProcessValue(helpers.getValue('filter-processo'), {
                 inputId: 'filter-processo',
@@ -52,6 +57,13 @@
                 tipo_edital: tipoEdital,
                 prazo_dias: prazoDias
             }, helpers.buildClassePayload({ classeValue: classeVal }));
+
+            if (alocState && typeof alocState.getIds === 'function') {
+                const extra = alocState.getIds();
+                if (extra && extra.length) {
+                    payload.alocar_usuario_ids = extra;
+                }
+            }
 
             fetch(settings.createEndpoint || '/api/cartorio-editais/create.php', {
                 method: 'POST',

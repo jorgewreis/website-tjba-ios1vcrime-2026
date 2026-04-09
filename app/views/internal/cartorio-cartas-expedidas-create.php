@@ -219,6 +219,8 @@ try {
             </div>
         </div>
 
+        <?php $cartorioAlocacaoPrefix = 'cartas-exp'; include __DIR__ . '/_cartorio_alocacao_direcionada_create.php'; ?>
+
         <div class="display-flex row row-full info padding-x-md padding-y-md">
             <?php if ($hasRuleAllocation): ?>
                 <span>*Conforme regra de divisão de tarefas, todas as Cartas Expedidas serão alocadas automaticamente e deverão ser remetidas por <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
@@ -269,7 +271,7 @@ try {
                 return;
             }
 
-            App.CartorioCartasExpedidasCreate.initialize();
+            App.CartorioCartasExpedidasCreate.initialize({ alocacaoPrefix: 'cartas-exp' });
         })();
     </script>
 

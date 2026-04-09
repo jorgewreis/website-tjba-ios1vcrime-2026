@@ -105,9 +105,15 @@
         });
     }
 
-    function initialize() {
+    function initialize(config) {
         if (!common) {
             return;
+        }
+
+        const settings = config || {};
+        let alocState = null;
+        if (settings.alocacaoPrefix && App.CartorioAlocacaoDirecionadaCreate && typeof App.CartorioAlocacaoDirecionadaCreate.init === 'function') {
+            alocState = App.CartorioAlocacaoDirecionadaCreate.init(settings.alocacaoPrefix);
         }
 
         const processoInput = global.document.getElementById('filter-processo');
@@ -218,6 +224,13 @@
                 payload.classe_descricao = classeVal;
                 if (!payload.classe_codigo && classeVal) {
                     payload.classe_codigo = classeVal.replace(/\s+/g, '').substring(0, 20);
+                }
+            }
+
+            if (alocState && typeof alocState.getIds === 'function') {
+                const extra = alocState.getIds();
+                if (extra && extra.length) {
+                    payload.alocar_usuario_ids = extra;
                 }
             }
 

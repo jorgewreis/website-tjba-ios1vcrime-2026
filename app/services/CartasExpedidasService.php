@@ -15,6 +15,7 @@ require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
 require_once __DIR__ . '/../helpers/CartorioProdutividade.php';
+require_once __DIR__ . '/../helpers/AlocacaoTarefasPerfisHelper.php';
 
 final class CartasExpedidasService
 {
@@ -258,16 +259,18 @@ final class CartasExpedidasService
 
         $usuarioCadastroId = trim((string) ($payload['usuario_cadastro_id'] ?? ''));
 
-        // 1) Quem cadastrou a carta é alocado com tipo 'all' (usuário principal da tarefa).
-        if ($usuarioCadastroId !== '') {
+        // 1) Quem cadastrou a carta é alocado com tipo 'all' (usuário principal da tarefa). CHEFIA não é autoalocado.
+        if ($usuarioCadastroId !== ''
+            && !AlocacaoTarefasPerfisHelper::usuarioComPerfilChefiaSemAutoalocacao($usuarioCadastroId)) {
             $this->alocadosRepository->addAlocado($idCarta, $usuarioCadastroId, CartasExpedidasAlocadosRepository::TIPO_ALL);
         }
 
-        // 2) Alocação por regra (tipo 'rule'): omitir se for o mesmo usuário que cadastrou.
+        // 2) Alocação por regra (tipo 'rule'): omitir se for o mesmo usuário que cadastrou ou se o da regra for CHEFIA.
         $regra = $this->alocacoesRegrasRepository->findByRegra(self::REGRA_ALOCAR_CARTAS);
         if ($regra !== null) {
             $usuarioIdRegra = trim((string) ($regra['usuario_id'] ?? ''));
-            if ($usuarioIdRegra !== '' && $usuarioIdRegra !== $usuarioCadastroId) {
+            if ($usuarioIdRegra !== '' && $usuarioIdRegra !== $usuarioCadastroId
+                && !AlocacaoTarefasPerfisHelper::usuarioComPerfilChefiaSemAutoalocacao($usuarioIdRegra)) {
                 $this->alocadosRepository->addAlocado($idCarta, $usuarioIdRegra, CartasExpedidasAlocadosRepository::TIPO_RULE);
             }
         }
@@ -277,6 +280,19 @@ final class CartasExpedidasService
         if ($usuarioPrincipalId !== '' && $usuarioPrincipalId !== $usuarioCadastroId) {
             $this->alocadosRepository->addAlocado($idCarta, $usuarioPrincipalId, CartasExpedidasAlocadosRepository::TIPO_ALL);
         }
+
+        AlocacaoTarefasPerfisHelper::registrarAlocacoesDirecionadasNoCadastro(
+            $this->connection,
+            $usuarioCadastroId,
+            $payload,
+            function (string $uid) use ($idCarta): void {
+                try {
+                    $this->alocadosRepository->addAlocado($idCarta, $uid, CartasExpedidasAlocadosRepository::TIPO_SPECIFIC);
+                } catch (Throwable $e) {
+                    // limite ou duplicata
+                }
+            }
+        );
 
         $this->subtarefasRepository->create(
             $idCarta,

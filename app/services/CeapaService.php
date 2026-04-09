@@ -11,6 +11,7 @@ require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/CartorioProdutividade.php';
+require_once __DIR__ . '/../helpers/AlocacaoTarefasPerfisHelper.php';
 
 final class CeapaService
 {
@@ -156,13 +157,28 @@ final class CeapaService
         $regra = $this->alocacoesRegrasRepository->findByRegra(self::REGRA_ALOCAR_CEAPA);
         if ($regra !== null) {
             $usuarioIdRegra = trim((string) ($regra['usuario_id'] ?? ''));
-            if ($usuarioIdRegra !== '' && $usuarioIdRegra !== $usuarioCadastroId) {
+            if ($usuarioIdRegra !== '' && $usuarioIdRegra !== $usuarioCadastroId
+                && !AlocacaoTarefasPerfisHelper::usuarioComPerfilChefiaSemAutoalocacao($usuarioIdRegra)) {
                 $this->alocadosRepository->addAlocado($id, $usuarioIdRegra, CeapaAlocadosRepository::TIPO_RULE);
             }
         }
-        if ($usuarioCadastroId !== '') {
+        if ($usuarioCadastroId !== ''
+            && !AlocacaoTarefasPerfisHelper::usuarioComPerfilChefiaSemAutoalocacao($usuarioCadastroId)) {
             $this->alocadosRepository->addAlocado($id, $usuarioCadastroId, CeapaAlocadosRepository::TIPO_SPECIFIC);
         }
+
+        AlocacaoTarefasPerfisHelper::registrarAlocacoesDirecionadasNoCadastro(
+            $this->connection,
+            $usuarioCadastroId,
+            $payload,
+            function (string $uid) use ($id): void {
+                try {
+                    $this->alocadosRepository->addAlocado($id, $uid, CeapaAlocadosRepository::TIPO_SPECIFIC);
+                } catch (Throwable $e) {
+                    // limite ou duplicata
+                }
+            }
+        );
 
         if ($usuarioCadastroId !== '' && $usuarioCadastroId !== 'sistema') {
             CartorioProdutividade::record($this->connection, $usuarioCadastroId, 'cartorio-ceapa.create', [

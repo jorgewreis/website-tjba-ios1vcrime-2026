@@ -111,6 +111,8 @@ try {
             </div>
         </div>
 
+        <?php $cartorioAlocacaoPrefix = 'guias'; include __DIR__ . '/_cartorio_alocacao_direcionada_create.php'; ?>
+
         <div class="display-flex row row-full info padding-x-md padding-y-md">
             <?php if ($hasRuleAllocation): ?>
                 <span>*Conforme regra de alocação, a expedição e envio das Guias serão alocadas automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
@@ -146,7 +148,7 @@ try {
                 return;
             }
 
-            App.CartorioGuiasCreate.initialize();
+            App.CartorioGuiasCreate.initialize({ alocacaoPrefix: 'guias' });
         })();
     </script>
 </body>

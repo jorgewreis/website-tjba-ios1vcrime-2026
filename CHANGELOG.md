@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.76
+
+**Data:** 2026-04-09 09:47:56 | **Commit:** `a653cac` | **Tipo:** `minor`
+
+- feat: integrate AlocacaoTarefasPerfisHelper to refine user allocation logic across multiple services, ensuring CHEFIA profiles are not auto-allocated
+
 ## V. 1.75
 
 **Data:** 2026-04-09 09:33:32 | **Commit:** `4d65aae` | **Tipo:** `minor`
@@ -4338,6 +4344,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -10,6 +10,7 @@ require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/CartorioProdutividade.php';
+require_once __DIR__ . '/../helpers/AlocacaoTarefasPerfisHelper.php';
 
 final class OficiosCartorioService
 {
@@ -223,17 +224,20 @@ final class OficiosCartorioService
                 $this->subtarefasRepository->create($id, OficiosCartorioSubtarefasRepository::TIPO_JUNTAR, 2, 'pendente');
             }
 
-            // Alocação automática por regra só para cumprimento pelo Cartório; CCM só aloca o cadastrante (specific).
+            // Ofícios: só alocação por regra (Cartório) e autoalocação do cadastrante quando aplicável; sem alocação direcionada por payload.
+            // Perfis de chefia (CHEFIA, DIRETORA, MAGISTRADA) não são autoalocados (regra nem cadastro).
             if ($forma === 'cartorio') {
                 $regra = $this->alocacoesRegrasRepository->findByRegra(self::REGRA_ALOCAR_OFICIOS);
                 if ($regra !== null) {
                     $usuarioIdRegra = trim((string) ($regra['usuario_id'] ?? ''));
-                    if ($usuarioIdRegra !== '' && $usuarioIdRegra !== $criadoPor) {
+                    if ($usuarioIdRegra !== '' && $usuarioIdRegra !== $criadoPor
+                        && !AlocacaoTarefasPerfisHelper::usuarioComPerfilChefiaSemAutoalocacao($usuarioIdRegra)) {
                         $this->alocadosRepository->addAlocado($id, $usuarioIdRegra, OficiosCartorioAlocadosRepository::TIPO_RULE);
                     }
                 }
             }
-            if ($criadoPor !== null && $criadoPor !== '') {
+            if ($criadoPor !== null && $criadoPor !== ''
+                && !AlocacaoTarefasPerfisHelper::usuarioComPerfilChefiaSemAutoalocacao($criadoPor)) {
                 $this->alocadosRepository->addAlocado($id, $criadoPor, OficiosCartorioAlocadosRepository::TIPO_SPECIFIC);
             }
 

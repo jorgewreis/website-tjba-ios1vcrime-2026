@@ -86,6 +86,9 @@ try {
                 <input type="number" class="width-300 height-md" id="filter-prazo-dias" min="1" placeholder="Ex.: 15" required title="Prazo em dias a partir da data de publicação">
             </div>
         </div>
+
+        <?php $cartorioAlocacaoPrefix = 'editais'; include __DIR__ . '/_cartorio_alocacao_direcionada_create.php'; ?>
+
         <div class="display-flex row row-full info padding-x-md padding-y-md">
             <?php if ($hasRuleAllocation): ?>
                 <span>*Conforme regra de alocação, os Editais serão alocados automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
@@ -122,7 +125,7 @@ try {
                 return;
             }
 
-            App.CartorioEditaisCreate.initialize();
+            App.CartorioEditaisCreate.initialize({ alocacaoPrefix: 'editais' });
         })();
     </script>
 </body>

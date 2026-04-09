@@ -31,6 +31,11 @@
             return;
         }
 
+        let alocState = null;
+        if (settings.alocacaoPrefix && App.CartorioAlocacaoDirecionadaCreate && typeof App.CartorioAlocacaoDirecionadaCreate.init === 'function') {
+            alocState = App.CartorioAlocacaoDirecionadaCreate.init(settings.alocacaoPrefix);
+        }
+
         const requiredFields = [
             { id: 'filter-processo', label: 'Número do processo' },
             { id: 'filter-tipo', label: 'Finalidade' },
@@ -106,6 +111,13 @@
                 cidade: cidadeDestino,
                 usuario: usuarioAtual
             }, helpers.buildClassePayload({ classeValue: classeVal }));
+
+            if (alocState && typeof alocState.getIds === 'function') {
+                const extra = alocState.getIds();
+                if (extra && extra.length) {
+                    payload.alocar_usuario_ids = extra;
+                }
+            }
 
             button.disabled = true;
             feedback('Enviando dados...', 'info', 'Informação');

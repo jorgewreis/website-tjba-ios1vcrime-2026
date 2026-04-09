@@ -16,6 +16,7 @@ require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
 require_once __DIR__ . '/../helpers/CartorioProdutividade.php';
+require_once __DIR__ . '/../helpers/AlocacaoTarefasPerfisHelper.php';
 
 final class MedidasProtetivasService
 {
@@ -231,17 +232,32 @@ final class MedidasProtetivasService
             ]);
 
             $usuarioCadastroId = trim((string) ($payload['usuario_cadastro_id'] ?? ''));
-            if ($usuarioCadastroId !== '') {
+            if ($usuarioCadastroId !== ''
+                && !AlocacaoTarefasPerfisHelper::usuarioComPerfilChefiaSemAutoalocacao($usuarioCadastroId)) {
                 $this->alocadosRepository->addAlocado($medidaId, $usuarioCadastroId, MedidasProtetivasAlocadosRepository::TIPO_ALL);
             }
 
             $regra = $this->alocacoesRegrasRepository->findByRegra(self::REGRA_ALOCAR_MP);
             if ($regra !== null) {
                 $usuarioIdRegra = trim((string) ($regra['usuario_id'] ?? ''));
-                if ($usuarioIdRegra !== '' && $usuarioIdRegra !== $usuarioCadastroId) {
+                if ($usuarioIdRegra !== '' && $usuarioIdRegra !== $usuarioCadastroId
+                    && !AlocacaoTarefasPerfisHelper::usuarioComPerfilChefiaSemAutoalocacao($usuarioIdRegra)) {
                     $this->alocadosRepository->addAlocado($medidaId, $usuarioIdRegra, MedidasProtetivasAlocadosRepository::TIPO_RULE);
                 }
             }
+
+            AlocacaoTarefasPerfisHelper::registrarAlocacoesDirecionadasNoCadastro(
+                $this->connection,
+                $usuarioCadastroId,
+                $payload,
+                function (string $uid) use ($medidaId): void {
+                    try {
+                        $this->alocadosRepository->addAlocado($medidaId, $uid, MedidasProtetivasAlocadosRepository::TIPO_SPECIFIC);
+                    } catch (Throwable $e) {
+                        // limite ou duplicata
+                    }
+                }
+            );
 
             $cejuscResult = $this->cejuscService->createFromMedidaIfNotExists([
                 'numero_processo_origem' => $numeroFormatado,
@@ -302,7 +318,8 @@ final class MedidasProtetivasService
         $this->subtarefasRepository->create($medidaId, MedidasProtetivasSubtarefasRepository::TIPO_ORDEM_2, 2, 'pendente', null);
         $this->repository->update($medidaId, ['status' => 'em_andamento']);
 
-        if ($usuarioId !== null && trim($usuarioId) !== '') {
+        if ($usuarioId !== null && trim($usuarioId) !== ''
+            && !AlocacaoTarefasPerfisHelper::usuarioComPerfilChefiaSemAutoalocacao(trim($usuarioId))) {
             $this->alocadosRepository->addAlocado($medidaId, trim($usuarioId), MedidasProtetivasAlocadosRepository::TIPO_SPECIFIC);
         }
     }

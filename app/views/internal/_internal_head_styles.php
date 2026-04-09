@@ -51,6 +51,8 @@ $__cartorioGuiasListPath = dirname(__DIR__, 3) . '/public/assets/js/shared/carto
 $__cartorioGuiasListV = @filemtime($__cartorioGuiasListPath) ?: time();
 $__cartorioCreateHelpersPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-create-helpers.js';
 $__cartorioCreateHelpersV = @filemtime($__cartorioCreateHelpersPath) ?: time();
+$__cartorioAlocacaoDirCreatePath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-alocacao-direcionada-create.js';
+$__cartorioAlocacaoDirCreateV = @filemtime($__cartorioAlocacaoDirCreatePath) ?: time();
 $__cartorioCartasExpedidasCreatePath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-cartas-expedidas-create.js';
 $__cartorioCartasExpedidasCreateV = @filemtime($__cartorioCartasExpedidasCreatePath) ?: time();
 $__cartorioCartasRecebidasCreatePath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-cartas-recebidas-create.js';
@@ -158,6 +160,7 @@ window.__APP_CONTEXT = Object.assign({}, window.__APP_CONTEXT || {}, {
 <script src="/assets/js/shared/cartorio-medidas-protetivas-list.js?v=<?php echo (int) $__cartorioMedidasListV; ?>"></script>
 <script src="/assets/js/shared/cartorio-guias-list.js?v=<?php echo (int) $__cartorioGuiasListV; ?>"></script>
 <script src="/assets/js/shared/cartorio-create-helpers.js?v=<?php echo (int) $__cartorioCreateHelpersV; ?>"></script>
+<script src="/assets/js/shared/cartorio-alocacao-direcionada-create.js?v=<?php echo (int) $__cartorioAlocacaoDirCreateV; ?>"></script>
 <script src="/assets/js/shared/cartorio-create-bootstrap.js?v=<?php echo (int) $__cartorioCreateBootstrapV; ?>"></script>
 <script src="/assets/js/shared/cartorio-city-lookup.js?v=<?php echo (int) $__cartorioCityLookupV; ?>"></script>
 <script src="/assets/js/shared/cartorio-cartas-expedidas-create.js?v=<?php echo (int) $__cartorioCartasExpedidasCreateV; ?>"></script>

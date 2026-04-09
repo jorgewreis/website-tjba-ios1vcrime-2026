@@ -121,6 +121,8 @@ try {
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom" id="vitimas-container"></div>
 
+        <?php $cartorioAlocacaoPrefix = 'medidas'; include __DIR__ . '/_cartorio_alocacao_direcionada_create.php'; ?>
+
         <div class="display-flex row row-full info padding-x-md padding-y-md">
             <?php if ($hasRuleAllocation): ?>
                 <span>*Conforme regra de alocação, as medidas protetivas serão alocadas automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
@@ -212,7 +214,7 @@ try {
                 return;
             }
 
-            App.CartorioMedidasProtetivasCreate.initialize();
+            App.CartorioMedidasProtetivasCreate.initialize({ alocacaoPrefix: 'medidas' });
         })();
     </script>
 </body>

@@ -19,6 +19,11 @@
             return;
         }
 
+        let alocState = null;
+        if (settings.alocacaoPrefix && App.CartorioAlocacaoDirecionadaCreate && typeof App.CartorioAlocacaoDirecionadaCreate.init === 'function') {
+            alocState = App.CartorioAlocacaoDirecionadaCreate.init(settings.alocacaoPrefix);
+        }
+
         function collectReu() {
             const useSelect = reuSelect && reuSelect.style.display !== 'none' && reuSelect.value !== '' && reuSelect.value !== 'outro' && reuSelect.value !== '__novo__';
             if (useSelect) {
@@ -149,6 +154,13 @@
                 reu: reu,
                 vitimas: vitimas
             }, helpers.buildClassePayload({ classeValue: classeVal }));
+
+            if (alocState && typeof alocState.getIds === 'function') {
+                const extra = alocState.getIds();
+                if (extra && extra.length) {
+                    payload.alocar_usuario_ids = extra;
+                }
+            }
 
             button.disabled = true;
 

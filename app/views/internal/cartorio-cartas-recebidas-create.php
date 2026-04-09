@@ -208,6 +208,8 @@ try {
             </script>
         <?php endif; ?>
 
+        <?php $cartorioAlocacaoPrefix = 'cartas-rec'; include __DIR__ . '/_cartorio_alocacao_direcionada_create.php'; ?>
+
         <div class="display-flex row row-full info padding-x-md padding-y-md">
             <?php if ($hasRuleAllocation): ?>
                 <span>*Conforme regra de alocação, as Cartas Recebidas serão alocadas automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
@@ -253,7 +255,7 @@ try {
                 return;
             }
 
-            App.CartorioCartasRecebidasCreate.initialize();
+            App.CartorioCartasRecebidasCreate.initialize({ alocacaoPrefix: 'cartas-rec' });
         })();
     </script>
 </body>

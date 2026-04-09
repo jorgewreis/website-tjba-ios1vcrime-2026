@@ -16,7 +16,7 @@ if (!bootstrapRequireTrustedPostRequest()) {
 
 $connection = Conection::getInstance()->getConnection();
 
-$perfisPermitidosCancelar = ['ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA'];
+$perfisPermitidosCancelar = ['ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
 require_once $basePath . '/app/helpers/UsuarioPerfisAutorizacao.php';
 $userPerfis = [];
 $userId = $_SESSION['id_usuario'] ?? null;

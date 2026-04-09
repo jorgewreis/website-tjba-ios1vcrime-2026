@@ -12,6 +12,7 @@ require_once __DIR__ . '/../repositories/ProcessosPartesRepository.php';
 require_once __DIR__ . '/../helpers/SalaAudienciasDuracaoEstimadaHelper.php';
 require_once __DIR__ . '/../helpers/PrioridadesProcessuaisCatalog.php';
 require_once __DIR__ . '/ProcessoPrioridadesService.php';
+require_once __DIR__ . '/../helpers/AlocacaoTarefasPerfisHelper.php';
 
 final class SalaAudienciasPautaService
 {
@@ -212,8 +213,10 @@ final class SalaAudienciasPautaService
                 'atualizado_por' => $usuarioId,
             ]);
             $this->sincronizarDuracaoEHorariosPauta($id);
-            if ($usuarioId !== null && trim((string) $usuarioId) !== '') {
-                $this->alocadosRepository->addAlocado($id, trim((string) $usuarioId), SalaAudienciasPautaAlocadosRepository::TIPO_ALL);
+            $uidCad = $usuarioId !== null ? trim((string) $usuarioId) : '';
+            if ($uidCad !== ''
+                && !AlocacaoTarefasPerfisHelper::usuarioComPerfilChefiaSemAutoalocacao($uidCad)) {
+                $this->alocadosRepository->addAlocado($id, $uidCad, SalaAudienciasPautaAlocadosRepository::TIPO_ALL);
             }
             $this->connection->commit();
             return $id;

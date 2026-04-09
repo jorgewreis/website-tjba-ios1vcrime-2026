@@ -17,6 +17,11 @@
             return;
         }
 
+        let alocState = null;
+        if (settings.alocacaoPrefix && App.CartorioAlocacaoDirecionadaCreate && typeof App.CartorioAlocacaoDirecionadaCreate.init === 'function') {
+            alocState = App.CartorioAlocacaoDirecionadaCreate.init(settings.alocacaoPrefix);
+        }
+
         button.addEventListener('click', async function (event) {
             event.preventDefault();
             if (button.disabled) {
@@ -68,6 +73,13 @@
                 finalidade: finalidade,
                 prazo_dias: prazo
             }, helpers.buildClassePayload({ classeValue: classeVal }));
+
+            if (alocState && typeof alocState.getIds === 'function') {
+                const extra = alocState.getIds();
+                if (extra && extra.length) {
+                    payload.alocar_usuario_ids = extra;
+                }
+            }
 
             button.disabled = true;
             feedback('Enviando dados...', 'info', 'Informação');

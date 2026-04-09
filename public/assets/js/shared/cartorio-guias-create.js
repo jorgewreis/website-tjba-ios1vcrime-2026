@@ -17,6 +17,11 @@
             return;
         }
 
+        let alocState = null;
+        if (settings.alocacaoPrefix && App.CartorioAlocacaoDirecionadaCreate && typeof App.CartorioAlocacaoDirecionadaCreate.init === 'function') {
+            alocState = App.CartorioAlocacaoDirecionadaCreate.init(settings.alocacaoPrefix);
+        }
+
         function getDenunciadoPayload() {
             const denunciadoSelect = global.document.getElementById('filter-denunciado-select');
             const useSelect = denunciadoSelect
@@ -42,6 +47,12 @@
         }
 
         function doCreate(payload) {
+            if (alocState && typeof alocState.getIds === 'function') {
+                const extra = alocState.getIds();
+                if (extra && extra.length) {
+                    payload.alocar_usuario_ids = extra;
+                }
+            }
             feedback('Enviando dados...', 'info', 'Informação');
             fetch(settings.createEndpoint || '/api/cartorio-guias/create.php', {
                 method: 'POST',

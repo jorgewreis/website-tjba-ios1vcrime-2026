@@ -12,6 +12,7 @@ require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
 require_once __DIR__ . '/../helpers/CartorioProdutividade.php';
+require_once __DIR__ . '/../helpers/AlocacaoTarefasPerfisHelper.php';
 
 final class EditaisService
 {
@@ -157,17 +158,32 @@ final class EditaisService
 
         $usuarioCadastroId = trim((string) ($payload['usuario_cadastro_id'] ?? ''));
 
-        if ($usuarioCadastroId !== '') {
+        if ($usuarioCadastroId !== ''
+            && !AlocacaoTarefasPerfisHelper::usuarioComPerfilChefiaSemAutoalocacao($usuarioCadastroId)) {
             $this->alocadosRepository->addAlocado($idEdital, $usuarioCadastroId, EditaisAlocadosRepository::TIPO_SPECIFIC);
         }
 
         $regra = $this->alocacoesRegrasRepository->findByRegra(self::REGRA_ALOCAR_EDITAIS);
         if ($regra !== null) {
             $usuarioIdRegra = trim((string) ($regra['usuario_id'] ?? ''));
-            if ($usuarioIdRegra !== '') {
+            if ($usuarioIdRegra !== '' && $usuarioIdRegra !== $usuarioCadastroId
+                && !AlocacaoTarefasPerfisHelper::usuarioComPerfilChefiaSemAutoalocacao($usuarioIdRegra)) {
                 $this->alocadosRepository->addAlocado($idEdital, $usuarioIdRegra, EditaisAlocadosRepository::TIPO_RULE);
             }
         }
+
+        AlocacaoTarefasPerfisHelper::registrarAlocacoesDirecionadasNoCadastro(
+            $this->connection,
+            $usuarioCadastroId,
+            $payload,
+            function (string $uid) use ($idEdital): void {
+                try {
+                    $this->alocadosRepository->addAlocado($idEdital, $uid, EditaisAlocadosRepository::TIPO_SPECIFIC);
+                } catch (Throwable $e) {
+                    // limite ou duplicata
+                }
+            }
+        );
 
         if ($usuarioCadastroId !== '' && $usuarioCadastroId !== 'sistema') {
             CartorioProdutividade::record($this->connection, $usuarioCadastroId, 'cartorio-editais.create', [
@@ -205,7 +221,8 @@ final class EditaisService
 
         $this->repository->update($editalId, ['status' => 'em_andamento']);
 
-        if ($usuarioId !== null && trim($usuarioId) !== '') {
+        if ($usuarioId !== null && trim($usuarioId) !== ''
+            && !AlocacaoTarefasPerfisHelper::usuarioComPerfilChefiaSemAutoalocacao(trim($usuarioId))) {
             $this->alocadosRepository->addAlocado($editalId, trim($usuarioId), EditaisAlocadosRepository::TIPO_SPECIFIC);
         }
     }
