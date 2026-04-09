@@ -9,6 +9,7 @@ if (function_exists('mb_internal_encoding')) {
 require_once __DIR__ . '/../../services/OficiosCartorioService.php';
 require_once __DIR__ . '/../../repositories/OficiosCartorioSubtarefasRepository.php';
 require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
+require_once __DIR__ . '/../../helpers/CartorioAlocacaoChipHelper.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -433,28 +434,26 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">
                         <div class="display-flex row row-fit justify-end gap-y-sm allocate-chips-row allocate-users">
                         <?php
-                        $alocados = $row['Alocados'] ?? [];
+                        $alocados = CartorioAlocacaoChipHelper::ordenarAlocadosPorTipo($row['Alocados'] ?? []);
                         foreach ($alocados as $alocado) {
-                            $tipo         = $alocado['tipo'] ?? 'specific';
-                            $iniciais     = htmlspecialchars($alocado['iniciais'] ?? '—', ENT_QUOTES);
-                            $nomeCompleto = $alocado['nome_completo'] ?? '';
-                            $nomeLabel    = $nomeCompleto !== '' ? $nomeCompleto : ($alocado['iniciais'] ?? '—');
-                            if ($tipo === 'rule') {
-                                $chipTitle = 'Servidor responsável (regra): ' . $nomeLabel;
-                            } elseif ($tipo === 'all') {
-                                $chipTitle = 'Servidor alocado: ' . $nomeLabel;
-                            } elseif ($tipo === 'specific') {
-                                $chipTitle = 'Alocação direta: ' . $nomeLabel;
-                            } else {
-                                $chipTitle = 'Alocação: ' . $nomeLabel;
+                            $chip = CartorioAlocacaoChipHelper::buildChipData($alocado, [
+                                'entity_id' => (string) ($idOficio ?? ''),
+                                'origem' => 'oficios.list',
+                            ]);
+                            if ($chip === null) {
+                                continue;
                             }
-                            $classeTipo   = in_array($tipo, ['rule', 'specific', 'all'], true) ? ' ' . $tipo : '';
-                            $alocadoIdStr = htmlspecialchars($alocado['alocado_id'] ?? '', ENT_QUOTES);
-                            $usuarioIdStr = $alocado['usuario_id'] ?? '';
+                            $tipo         = $chip['tipo'];
+                            $iniciais     = htmlspecialchars($chip['iniciais'], ENT_QUOTES);
+                            $chipTitle    = $chip['title'];
+                            $chipAria     = $chip['aria_label'];
+                            $classeTipo   = $chip['classe_tipo'];
+                            $alocadoIdStr = htmlspecialchars($chip['alocado_id'], ENT_QUOTES);
+                            $usuarioIdStr = $chip['usuario_id'];
                             $podeRemover  = $isGestao || ($tipo === 'specific' && $usuarioIdStr === $currentUserId);
                             ?>
                             <span class="user-allocate-wrap">
-                                <span class="user-allocate<?php echo $classeTipo; ?>" title="<?php echo htmlspecialchars($chipTitle, ENT_QUOTES); ?>"><?php echo $iniciais; ?></span>
+                                <span class="user-allocate<?php echo $classeTipo; ?>" title="<?php echo htmlspecialchars($chipTitle, ENT_QUOTES); ?>" aria-label="<?php echo htmlspecialchars($chipAria, ENT_QUOTES); ?>"><?php echo $iniciais; ?></span>
                                 <?php if ($podeRemover): ?>
                                 <button type="button"
                                     class="user-allocate-remove js-desalocar"

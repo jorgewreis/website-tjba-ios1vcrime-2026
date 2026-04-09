@@ -10,6 +10,7 @@ require_once __DIR__ . '/../../services/OficiosCartorioService.php';
 require_once __DIR__ . '/../../repositories/OficiosCartorioRepository.php';
 require_once __DIR__ . '/../../repositories/OficiosCartorioSubtarefasRepository.php';
 require_once __DIR__ . '/../../repositories/OficiosCartorioAlocadosRepository.php';
+require_once __DIR__ . '/../../helpers/CartorioAlocacaoChipHelper.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -74,25 +75,17 @@ $isGestaoEdit = count(array_intersect($userPerfisEdit, $perfisGestaoLstEdit)) > 
 
 $alocadosEdit = [];
 if ($oficio !== null) {
-    $tipoOrderEdit = ['rule' => 0, 'all' => 1, 'specific' => 2];
     $repoAloc = new OficiosCartorioAlocadosRepository($connection);
     $alocadosRaw = $repoAloc->findByOficioId($idOficio);
-    foreach (array_slice($alocadosRaw, 0, 5) as $a) {
-        $tipo = trim((string) ($a['tipo'] ?? ''));
-        if (!in_array($tipo, ['rule', 'all', 'specific'], true)) {
-            $tipo = 'specific';
-        }
+    foreach (array_slice(CartorioAlocacaoChipHelper::ordenarAlocadosPorTipo($alocadosRaw), 0, 5) as $a) {
         $alocadosEdit[] = [
             'alocado_id' => trim((string) ($a['id'] ?? '')),
             'iniciais' => $a['iniciais'] ?? '—',
             'nome_completo' => $a['nome_completo'] ?? '',
             'usuario_id' => trim((string) ($a['usuario_id'] ?? '')),
-            'tipo' => $tipo,
+            'tipo' => trim((string) ($a['tipo'] ?? '')),
         ];
     }
-    usort($alocadosEdit, static function (array $a, array $b) use ($tipoOrderEdit): int {
-        return ($tipoOrderEdit[$a['tipo']] ?? 9) <=> ($tipoOrderEdit[$b['tipo']] ?? 9);
-    });
 }
 
 $perfisPermitidosExcluir = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
@@ -179,27 +172,25 @@ $subLabels = [
                 <div class="display-flex row row-fit flex-wrap gap-y-sm allocate-chips-row allocate-users">
                 <?php if (!empty($alocadosEdit)): ?>
                     <?php foreach ($alocadosEdit as $alocado):
-                        $tipoAl = $alocado['tipo'] ?? 'specific';
-                        $iniciaisAl = htmlspecialchars($alocado['iniciais'] ?? '—', ENT_QUOTES);
-                        $nomeCompletoAl = $alocado['nome_completo'] ?? '';
-                        $nomeLabelAl = $nomeCompletoAl !== '' ? $nomeCompletoAl : ($alocado['iniciais'] ?? '—');
-                        if ($tipoAl === 'rule') {
-                            $chipTitleAl = 'Servidor responsável (regra): ' . $nomeLabelAl;
-                        } elseif ($tipoAl === 'all') {
-                            $chipTitleAl = 'Servidor alocado: ' . $nomeLabelAl;
-                        } elseif ($tipoAl === 'specific') {
-                            $chipTitleAl = 'Alocação direta: ' . $nomeLabelAl;
-                        } else {
-                            $chipTitleAl = 'Alocação: ' . $nomeLabelAl;
+                        $chipAl = CartorioAlocacaoChipHelper::buildChipData($alocado, [
+                            'entity_id' => (string) ($idOficio ?? ''),
+                            'origem' => 'oficios.edit',
+                        ]);
+                        if ($chipAl === null) {
+                            continue;
                         }
-                        $classeTipoAl = in_array($tipoAl, ['rule', 'specific', 'all'], true) ? ' ' . $tipoAl : '';
-                        $alocadoIdStrAl = htmlspecialchars($alocado['alocado_id'] ?? '', ENT_QUOTES);
-                        $usuarioIdStrAl = $alocado['usuario_id'] ?? '';
+                        $tipoAl = $chipAl['tipo'];
+                        $iniciaisAl = htmlspecialchars($chipAl['iniciais'], ENT_QUOTES);
+                        $chipTitleAl = $chipAl['title'];
+                        $chipAriaAl = $chipAl['aria_label'];
+                        $classeTipoAl = $chipAl['classe_tipo'];
+                        $alocadoIdStrAl = htmlspecialchars($chipAl['alocado_id'], ENT_QUOTES);
+                        $usuarioIdStrAl = $chipAl['usuario_id'];
                         $uidEditCmp = trim((string) ($userIdEdit ?? ''));
                         $podeRemoverAl = $isGestaoEdit || ($tipoAl === 'specific' && $usuarioIdStrAl === $uidEditCmp);
                         ?>
                     <span class="user-allocate-wrap">
-                        <span class="user-allocate<?php echo $classeTipoAl; ?>" title="<?php echo htmlspecialchars($chipTitleAl, ENT_QUOTES); ?>"><?php echo $iniciaisAl; ?></span>
+                        <span class="user-allocate<?php echo $classeTipoAl; ?>" title="<?php echo htmlspecialchars($chipTitleAl, ENT_QUOTES); ?>" aria-label="<?php echo htmlspecialchars($chipAriaAl, ENT_QUOTES); ?>"><?php echo $iniciaisAl; ?></span>
                         <?php if ($podeRemoverAl): ?>
                         <button type="button"
                             class="user-allocate-remove js-desalocar"

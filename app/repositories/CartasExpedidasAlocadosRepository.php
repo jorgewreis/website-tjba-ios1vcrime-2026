@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/UserInitialsHelper.php';
+require_once __DIR__ . '/../helpers/CartorioAlocacaoTipo.php';
 
 final class CartasExpedidasAlocadosRepository
 {
@@ -27,11 +28,11 @@ final class CartasExpedidasAlocadosRepository
     }
 
     /** Tipo: alocação por regra definida no banco (auto na criação). */
-    public const TIPO_RULE = 'rule';
+    public const TIPO_RULE = CartorioAlocacaoTipo::RULE;
     /** Tipo: alocação por alteração de subtarefas ou dados da tarefa principal. */
-    public const TIPO_SPECIFIC = 'specific';
+    public const TIPO_SPECIFIC = CartorioAlocacaoTipo::SPECIFIC;
     /** Tipo: alocação definida no cadastro como usuário principal da tarefa e subtarefas. */
-    public const TIPO_ALL = 'all';
+    public const TIPO_ALL = CartorioAlocacaoTipo::ALL;
 
     /**
      * Adiciona um alocado à carta. Evita duplicata (mesmo usuario na mesma carta).
@@ -68,7 +69,7 @@ final class CartasExpedidasAlocadosRepository
             30
         );
 
-        $tipoVal = $tipo === self::TIPO_RULE ? self::TIPO_RULE : ($tipo === self::TIPO_ALL ? self::TIPO_ALL : self::TIPO_SPECIFIC);
+        $tipoVal = CartorioAlocacaoTipo::normalizar($tipo, [self::TIPO_RULE, self::TIPO_ALL, self::TIPO_SPECIFIC], self::TIPO_SPECIFIC);
 
         $sql = sprintf(
             'INSERT INTO `%s` (`id`, `carta_expedida_id`, `usuario_id`, `tipo`, `created_at`) VALUES (:id, :carta_expedida_id, :usuario_id, :tipo, NOW())',

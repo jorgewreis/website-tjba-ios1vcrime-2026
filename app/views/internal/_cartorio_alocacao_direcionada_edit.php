@@ -28,6 +28,7 @@ if ($__capEd === '') {
 
 require_once __DIR__ . '/../../helpers/AlocacaoTarefasPerfisHelper.php';
 require_once __DIR__ . '/../../helpers/AlocacaoRegrasUsuariosHelper.php';
+require_once __DIR__ . '/../../helpers/CartorioAlocacaoChipHelper.php';
 
 $__entityEd = trim((string) $cartorioAlocacaoEntityId);
 $__desalocarEp = trim((string) $cartorioAlocacaoDesalocarEndpoint);
@@ -38,6 +39,7 @@ $__uidEd = trim((string) ($cartorioAlocacaoUserId ?? ''));
 $__gestaoEd = !empty($cartorioAlocacaoIsGestao);
 
 $__showAlocDirEd = ($__uidEd !== '' && AlocacaoTarefasPerfisHelper::usuarioAdminOuChefiaPodeAlocarOutrosCadastro($__uidEd));
+$__alocsEd = CartorioAlocacaoChipHelper::ordenarAlocadosPorTipo($__alocsEd);
 $__usersAlocEd = [];
 if ($__showAlocDirEd && !$__bloqueadaEd && count($__alocsEd) < 5) {
     try {
@@ -53,26 +55,24 @@ if ($__showAlocDirEd && !$__bloqueadaEd && count($__alocsEd) < 5) {
                     <div class="display-flex row row-fit flex-wrap gap-y-sm allocate-chips-row allocate-users">
                     <?php if (!empty($__alocsEd)): ?>
                         <?php foreach ($__alocsEd as $alocado):
-                            $tipoAl = $alocado['tipo'] ?? 'specific';
-                            $iniciaisAl = htmlspecialchars($alocado['iniciais'] ?? '—', ENT_QUOTES, 'UTF-8');
-                            $nomeCompletoAl = $alocado['nome_completo'] ?? '';
-                            $nomeLabelAl = $nomeCompletoAl !== '' ? $nomeCompletoAl : ($alocado['iniciais'] ?? '—');
-                            if ($tipoAl === 'rule') {
-                                $chipTitleAl = 'Servidor responsável (regra): ' . $nomeLabelAl;
-                            } elseif ($tipoAl === 'all') {
-                                $chipTitleAl = 'Servidor alocado: ' . $nomeLabelAl;
-                            } elseif ($tipoAl === 'specific') {
-                                $chipTitleAl = 'Alocação direta: ' . $nomeLabelAl;
-                            } else {
-                                $chipTitleAl = 'Alocação: ' . $nomeLabelAl;
+                            $chipAl = CartorioAlocacaoChipHelper::buildChipData($alocado, [
+                                'entity_id' => $__entityEd,
+                                'origem' => $__capEd . '.edit',
+                            ]);
+                            if ($chipAl === null) {
+                                continue;
                             }
-                            $classeTipoAl = in_array($tipoAl, ['rule', 'specific', 'all'], true) ? ' ' . $tipoAl : '';
-                            $alocadoIdStrAl = htmlspecialchars($alocado['alocado_id'] ?? '', ENT_QUOTES, 'UTF-8');
-                            $usuarioIdStrAl = $alocado['usuario_id'] ?? '';
+                            $tipoAl = $chipAl['tipo'];
+                            $iniciaisAl = htmlspecialchars($chipAl['iniciais'], ENT_QUOTES, 'UTF-8');
+                            $chipTitleAl = $chipAl['title'];
+                            $chipAriaAl = $chipAl['aria_label'];
+                            $classeTipoAl = $chipAl['classe_tipo'];
+                            $alocadoIdStrAl = htmlspecialchars($chipAl['alocado_id'], ENT_QUOTES, 'UTF-8');
+                            $usuarioIdStrAl = $chipAl['usuario_id'];
                             $podeRemoverAl = $__gestaoEd || ($tipoAl === 'specific' && trim((string) $usuarioIdStrAl) === $__uidEd);
                             ?>
                         <span class="user-allocate-wrap">
-                            <span class="user-allocate<?php echo $classeTipoAl; ?>" title="<?php echo htmlspecialchars($chipTitleAl, ENT_QUOTES, 'UTF-8'); ?>"><?php echo $iniciaisAl; ?></span>
+                            <span class="user-allocate<?php echo $classeTipoAl; ?>" title="<?php echo htmlspecialchars($chipTitleAl, ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?php echo htmlspecialchars($chipAriaAl, ENT_QUOTES, 'UTF-8'); ?>"><?php echo $iniciaisAl; ?></span>
                             <?php if ($podeRemoverAl && $__desalocarEp !== ''): ?>
                             <button type="button"
                                 class="user-allocate-remove js-desalocar"

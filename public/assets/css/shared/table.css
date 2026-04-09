@@ -544,13 +544,13 @@
         transition: all 0.2s ease;
     }
     .user-allocate.all{
-        border-color: var(--color-primary);
-        color: var(--color-primary-active);
+        border-color: var(--color-border);
+        color: var(--color-text-secondary);
     }
     .user-allocate.all:hover {
-        background-color: var(--color-primary);
-        border-color: var(--color-primary);
-        color: var(--color-background-elevated);
+        background-color: var(--color-background-elevated);
+        border-color: var(--color-border);
+        color: var(--color-text-secondary);
         transition: all 0.2s ease;
     }
     .user-allocate.rule {
@@ -564,13 +564,13 @@
         transition: all 0.2s ease;
     }
     .user-allocate.specific {
-        border-color: var(--color-border);
-        color: var(--color-text-secondary);
+        border-color: var(--color-primary);
+        color: var(--color-primary-active);
     }
     .user-allocate.specific:hover {
-        background-color: var(--color-background-elevated);
-        border-color: var(--color-border);
-        color: var(--color-text-secondary);
+        background-color: var(--color-primary);
+        border-color: var(--color-primary);
+        color: var(--color-background-elevated);
         transition: all 0.2s ease;
     }
 

@@ -1,0 +1,16 @@
+---
+description: Contrato único de chips de alocação para módulos de cartório.
+globs: app/helpers/CartorioAlocacaoTipo.php,app/helpers/CartorioAlocacaoChipHelper.php,app/repositories/*AlocadosRepository.php,app/views/internal/cartorio-*-list.php,app/views/internal/_cartorio_alocacao_direcionada_edit.php,app/views/internal/cartorio-oficios-edit.php,public/assets/css/shared/table.css,public/assets/js/shared/cartorio-alocacao-direcionada-create.js
+---
+
+# Contrato de alocações (cartório)
+
+- Tipos canônicos: `all`, `rule`, `specific` via `CartorioAlocacaoTipo` (evitar strings soltas).
+- Renderização de chip deve usar `CartorioAlocacaoChipHelper` (title/aria, classe CSS, filtro de inválidos, ordenação).
+- Ordem de exibição obrigatória: `all` -> `rule` -> `specific` -> outros; desempate por iniciais A-Z.
+- `title` e `aria-label` devem ser idênticos, no formato médio com separador ` - `.
+- Tipo inválido não renderiza chip e deve gerar log JSON (`tipo`, `entity_id`, `usuario_id`, `origem`).
+- Cores no CSS: `.user-allocate.all` neutra, `.user-allocate.rule` warning, `.user-allocate.specific` primária.
+- Preview de alocação direta no create deve reutilizar DOM de chip (`user-allocate-wrap` + `user-allocate specific`).
+- Novas telas de cartório com chips devem seguir este contrato antes de duplicar lógica em view.
+

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/UserInitialsHelper.php';
+require_once __DIR__ . '/../helpers/CartorioAlocacaoTipo.php';
 
 final class EditaisAlocadosRepository
 {
@@ -11,8 +12,9 @@ final class EditaisAlocadosRepository
 
     private const COLLATION = 'utf8mb4_unicode_ci';
 
-    public const TIPO_RULE = 'rule';
-    public const TIPO_SPECIFIC = 'specific';
+    public const TIPO_RULE = CartorioAlocacaoTipo::RULE;
+    public const TIPO_SPECIFIC = CartorioAlocacaoTipo::SPECIFIC;
+    public const TIPO_ALL = CartorioAlocacaoTipo::ALL;
 
     public function __construct(PDO $connection, string $table = 'editais_alocados')
     {
@@ -55,7 +57,7 @@ final class EditaisAlocadosRepository
             30
         );
 
-        $tipoVal = $tipo === self::TIPO_RULE ? self::TIPO_RULE : self::TIPO_SPECIFIC;
+        $tipoVal = CartorioAlocacaoTipo::normalizar($tipo, [self::TIPO_RULE, self::TIPO_SPECIFIC], self::TIPO_SPECIFIC);
 
         $sql = sprintf(
             'INSERT INTO `%s` (`id`, `edital_id`, `usuario_id`, `tipo`, `created_at`) VALUES (:id, :edital_id, :usuario_id, :tipo, NOW())',

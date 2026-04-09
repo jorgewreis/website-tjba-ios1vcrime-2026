@@ -30,20 +30,34 @@
 
         const ids = [];
 
+        function initialsFromLabel(label) {
+            const words = String(label || '').trim().split(/\s+/).filter(Boolean);
+            if (words.length === 0) {
+                return '—';
+            }
+            if (words.length === 1) {
+                return words[0].slice(0, 2).toUpperCase();
+            }
+            return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+        }
+
         function renderChip(id, label) {
+            const titleText = 'Alocação direta: ' + label + ' - incluído manualmente por alocação direcionada';
             const wrap = global.document.createElement('span');
-            wrap.className = 'display-flex row row-fit align-center gap-y-sm';
-            wrap.style.marginRight = '8px';
-            wrap.style.marginBottom = '6px';
+            wrap.className = 'user-allocate-wrap';
             wrap.dataset.userId = id;
+
             const span = global.document.createElement('span');
-            span.className = 'status status-pending padding-x-sm';
-            span.textContent = label;
-            span.title = 'Alocação direta: ' + label;
+            span.className = 'user-allocate specific';
+            span.textContent = initialsFromLabel(label);
+            span.title = titleText;
+            span.setAttribute('aria-label', titleText);
+
             const rm = global.document.createElement('button');
             rm.type = 'button';
-            rm.className = 'btn btn-secondary-outline height-sm';
-            rm.setAttribute('aria-label', 'Remover ' + label);
+            rm.className = 'user-allocate-remove';
+            rm.setAttribute('aria-label', 'Remover alocação de ' + label);
+            rm.title = 'Remover alocação';
             rm.textContent = '×';
             rm.addEventListener('click', function () {
                 const ix = ids.indexOf(id);

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/UserInitialsHelper.php';
+require_once __DIR__ . '/../helpers/CartorioAlocacaoTipo.php';
 
 final class MedidasProtetivasAlocadosRepository
 {
@@ -11,9 +12,9 @@ final class MedidasProtetivasAlocadosRepository
 
     private const COLLATION = 'utf8mb4_unicode_ci';
 
-    public const TIPO_RULE = 'rule';
-    public const TIPO_SPECIFIC = 'specific';
-    public const TIPO_ALL = 'all';
+    public const TIPO_RULE = CartorioAlocacaoTipo::RULE;
+    public const TIPO_SPECIFIC = CartorioAlocacaoTipo::SPECIFIC;
+    public const TIPO_ALL = CartorioAlocacaoTipo::ALL;
 
     public function __construct(PDO $connection, string $table = 'medidas_protetivas_alocados')
     {
@@ -45,7 +46,7 @@ final class MedidasProtetivasAlocadosRepository
             return (string) $row['id'];
         }
 
-        $tipoVal = in_array($tipo, [self::TIPO_RULE, self::TIPO_SPECIFIC, self::TIPO_ALL], true) ? $tipo : self::TIPO_SPECIFIC;
+        $tipoVal = CartorioAlocacaoTipo::normalizar($tipo, [self::TIPO_RULE, self::TIPO_ALL, self::TIPO_SPECIFIC], self::TIPO_SPECIFIC);
         $id = IdGenerator::generateUniquePrefixedId($this->connection, $this->table, 'id', 'MPA', 30);
 
         $statement = $this->connection->prepare(
