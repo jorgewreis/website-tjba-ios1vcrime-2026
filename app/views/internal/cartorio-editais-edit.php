@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
+require_once __DIR__ . '/../../repositories/EditaisAlocadosRepository.php';
 require_once __DIR__ . '/../../repositories/EditaisSubtarefasRepository.php';
 require_once __DIR__ . '/../../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../../repositories/ClassesRepository.php';
@@ -104,6 +105,32 @@ if ($userIdEdit !== null && trim((string) $userIdEdit) !== '') {
 $podeExcluirTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosExcluir)) > 0;
 $podeCancelarTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosCancelar)) > 0;
 $tarefaFinalizadaOuCancelada = in_array($statusAtual, ['cancelada', 'concluída'], true);
+$perfisGestaoAlocEdital = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
+$isGestaoAlocEditEdital = count(array_intersect($userPerfisEdit, $perfisGestaoAlocEdital)) > 0;
+
+$alocadosEditEdital = [];
+if ($edital !== null) {
+    $tipoOrderAloc = ['rule' => 0, 'all' => 1, 'specific' => 2];
+    $repoAlocEdital = new EditaisAlocadosRepository($connection);
+    $alocadosRawEdital = $repoAlocEdital->findByEditalId($idEdital);
+    foreach (array_slice($alocadosRawEdital, 0, 5) as $a) {
+        $tipo = trim((string) ($a['tipo'] ?? ''));
+        if (!in_array($tipo, ['rule', 'all', 'specific'], true)) {
+            $tipo = 'specific';
+        }
+        $alocadosEditEdital[] = [
+            'alocado_id' => trim((string) ($a['id'] ?? '')),
+            'iniciais' => $a['iniciais'] ?? '—',
+            'nome_completo' => $a['nome_completo'] ?? '',
+            'usuario_id' => trim((string) ($a['usuario_id'] ?? '')),
+            'tipo' => $tipo,
+        ];
+    }
+    usort($alocadosEditEdital, static function (array $a, array $b) use ($tipoOrderAloc): int {
+        return ($tipoOrderAloc[$a['tipo']] ?? 9) <=> ($tipoOrderAloc[$b['tipo']] ?? 9);
+    });
+}
+
 $timelineData = $edital !== null
     ? cartorioTimelineBuildViewData('editais', [
         'task' => $edital,
@@ -172,6 +199,18 @@ $timelineData = $edital !== null
                     <input type="text" id="edit-observacoes" class="width-800 height-md" value="<?php echo htmlspecialchars($observacoesValue, ENT_QUOTES); ?>" placeholder="Opcional">
                 </div>
             </div>
+
+            <?php
+            $cartorioAlocacaoPrefix = 'editais';
+            $cartorioAlocacaoEntityId = $idEdital;
+            $cartorioAlocacaoDesalocarEndpoint = '/api/cartorio-editais/desalocar.php';
+            $cartorioAlocacaoAlocarEndpoint = '/api/cartorio-editais/alocar.php';
+            $cartorioAlocacaoAlocados = $alocadosEditEdital;
+            $cartorioAlocacaoBloqueada = $tarefaFinalizadaOuCancelada;
+            $cartorioAlocacaoUserId = $userIdEdit !== null ? trim((string) $userIdEdit) : '';
+            $cartorioAlocacaoIsGestao = $isGestaoAlocEditEdital;
+            include __DIR__ . '/_cartorio_alocacao_direcionada_edit.php';
+            ?>
 
             <?php include __DIR__ . '/_cartorio_timeline.php'; ?>
 

@@ -371,6 +371,30 @@ final class CejuscService
         return $this->alocadosRepository->deleteById($alocadoId);
     }
 
+    public function alocarUsuarioDirecionado(string $cejuscId, string $targetUsuarioId, string $actorId): void
+    {
+        $cejuscId = trim($cejuscId);
+        if ($cejuscId === '') {
+            throw new InvalidArgumentException('Identificador do registro inválido.');
+        }
+        $row = $this->repository->findById($cejuscId);
+        if ($row === null) {
+            throw new InvalidArgumentException('Registro Cejusc não encontrado.');
+        }
+        $st = trim((string) ($row['status'] ?? ''));
+        if (in_array($st, ['cancelada', 'concluída'], true)) {
+            throw new InvalidArgumentException('Não é possível alterar alocações neste status.');
+        }
+        AlocacaoTarefasPerfisHelper::registrarAlocacaoDirecionadaNaEdicao(
+            $this->connection,
+            $actorId,
+            $targetUsuarioId,
+            function (string $uid) use ($cejuscId): void {
+                $this->alocadosRepository->addAlocado($cejuscId, $uid, CejuscAlocadosRepository::TIPO_SPECIFIC);
+            }
+        );
+    }
+
     private function formatarCNJ(string $digits): string
     {
         if (strlen($digits) !== 20) {

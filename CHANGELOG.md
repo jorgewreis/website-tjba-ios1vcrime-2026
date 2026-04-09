@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.77
+
+**Data:** 2026-04-09 10:02:15 | **Commit:** `7007bd1` | **Tipo:** `minor`
+
+- feat: implement directed user allocation functionality across various services, enhancing task management and user eligibility checks
+
 ## V. 1.76
 
 **Data:** 2026-04-09 09:47:56 | **Commit:** `a653cac` | **Tipo:** `minor`
@@ -4344,6 +4350,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

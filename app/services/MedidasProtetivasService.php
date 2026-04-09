@@ -563,6 +563,30 @@ final class MedidasProtetivasService
         return $this->alocadosRepository->deleteById($alocadoId);
     }
 
+    public function alocarUsuarioDirecionado(string $medidaId, string $targetUsuarioId, string $actorId): void
+    {
+        $medidaId = trim($medidaId);
+        if ($medidaId === '') {
+            throw new InvalidArgumentException('Identificador da medida inválido.');
+        }
+        $row = $this->repository->findById($medidaId);
+        if ($row === null) {
+            throw new InvalidArgumentException('Medida protetiva não encontrada.');
+        }
+        $st = trim((string) ($row['status'] ?? ''));
+        if (in_array($st, ['cancelada', 'concluída'], true)) {
+            throw new InvalidArgumentException('Não é possível alterar alocações neste status.');
+        }
+        AlocacaoTarefasPerfisHelper::registrarAlocacaoDirecionadaNaEdicao(
+            $this->connection,
+            $actorId,
+            $targetUsuarioId,
+            function (string $uid) use ($medidaId): void {
+                $this->alocadosRepository->addAlocado($medidaId, $uid, MedidasProtetivasAlocadosRepository::TIPO_SPECIFIC);
+            }
+        );
+    }
+
     private function formatarCNJ(string $digits): string
     {
         if (strlen($digits) !== 20) {

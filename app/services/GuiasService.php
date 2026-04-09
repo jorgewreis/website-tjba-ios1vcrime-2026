@@ -777,6 +777,30 @@ final class GuiasService
         return $this->alocadosRepository->deleteById($alocadoId);
     }
 
+    public function alocarUsuarioDirecionado(string $guiaId, string $targetUsuarioId, string $actorId): void
+    {
+        $guiaId = trim($guiaId);
+        if ($guiaId === '') {
+            throw new InvalidArgumentException('Identificador da guia inválido.');
+        }
+        $row = $this->repository->findById($guiaId);
+        if ($row === null) {
+            throw new InvalidArgumentException('Guia não encontrada.');
+        }
+        $st = trim((string) ($row['status'] ?? ''));
+        if (in_array($st, ['cancelada', 'concluída'], true)) {
+            throw new InvalidArgumentException('Não é possível alterar alocações neste status.');
+        }
+        AlocacaoTarefasPerfisHelper::registrarAlocacaoDirecionadaNaEdicao(
+            $this->connection,
+            $actorId,
+            $targetUsuarioId,
+            function (string $uid) use ($guiaId): void {
+                $this->alocadosRepository->addAlocado($guiaId, $uid, GuiasAlocadosRepository::TIPO_SPECIFIC);
+            }
+        );
+    }
+
     private function formatarCNJ(string $digits): string
     {
         if (strlen($digits) !== 20) {

@@ -388,6 +388,30 @@ final class CartasRecebidasService
         return $this->alocadosRepository->deleteById($alocadoId);
     }
 
+    public function alocarUsuarioDirecionado(string $cartaId, string $targetUsuarioId, string $actorId): void
+    {
+        $cartaId = trim($cartaId);
+        if ($cartaId === '') {
+            throw new InvalidArgumentException('Identificador da carta inválido.');
+        }
+        $row = $this->repository->find($cartaId);
+        if ($row === null) {
+            throw new InvalidArgumentException('Carta recebida não encontrada.');
+        }
+        $st = trim((string) ($row['status'] ?? ''));
+        if (in_array($st, ['cancelada', 'concluída'], true)) {
+            throw new InvalidArgumentException('Não é possível alterar alocações neste status.');
+        }
+        AlocacaoTarefasPerfisHelper::registrarAlocacaoDirecionadaNaEdicao(
+            $this->connection,
+            $actorId,
+            $targetUsuarioId,
+            function (string $uid) use ($cartaId): void {
+                $this->alocadosRepository->addAlocado($cartaId, $uid, CartasRecebidasAlocadosRepository::TIPO_SPECIFIC);
+            }
+        );
+    }
+
     private function parseDate($value): ?string
     {
         if ($value === null || $value === '') {

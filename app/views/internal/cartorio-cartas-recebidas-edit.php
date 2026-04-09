@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
+require_once __DIR__ . '/../../repositories/CartasRecebidasAlocadosRepository.php';
 require_once __DIR__ . '/../../repositories/CartasRecebidasSubtarefasRepository.php';
 require_once __DIR__ . '/../../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../../repositories/ClassesRepository.php';
@@ -186,6 +187,32 @@ $podeExcluirTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosExc
 $perfisPermitidosCancelar = ['ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA'];
 $podeCancelarTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosCancelar)) > 0;
 $tarefaFinalizadaOuCancelada = in_array($statusAtual ?? '', ['cancelada', 'concluída'], true);
+$perfisGestaoAlocCartRec = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
+$isGestaoAlocEditCartRec = count(array_intersect($userPerfisEdit, $perfisGestaoAlocCartRec)) > 0;
+
+$alocadosEditCartRec = [];
+if ($carta !== null) {
+    $tipoOrderAloc = ['rule' => 0, 'all' => 1, 'specific' => 2];
+    $repoAlocCartRec = new CartasRecebidasAlocadosRepository($connection);
+    $alocadosRawCartRec = $repoAlocCartRec->findByCartaId($idCarta);
+    foreach (array_slice($alocadosRawCartRec, 0, 5) as $a) {
+        $tipo = trim((string) ($a['tipo'] ?? ''));
+        if (!in_array($tipo, ['rule', 'all', 'specific'], true)) {
+            $tipo = 'specific';
+        }
+        $alocadosEditCartRec[] = [
+            'alocado_id' => trim((string) ($a['id'] ?? '')),
+            'iniciais' => $a['iniciais'] ?? '—',
+            'nome_completo' => $a['nome_completo'] ?? '',
+            'usuario_id' => trim((string) ($a['usuario_id'] ?? '')),
+            'tipo' => $tipo,
+        ];
+    }
+    usort($alocadosEditCartRec, static function (array $a, array $b) use ($tipoOrderAloc): int {
+        return ($tipoOrderAloc[$a['tipo']] ?? 9) <=> ($tipoOrderAloc[$b['tipo']] ?? 9);
+    });
+}
+
 $timelineData = $carta !== null
     ? cartorioTimelineBuildViewData('cartas_recebidas', [
         'task' => $carta,
@@ -312,7 +339,18 @@ $stateOptions = [
                         <?php endforeach; ?>
                     </select>
                 </div>
-            </div>            
+            </div>
+            <?php
+            $cartorioAlocacaoPrefix = 'cartas-rec';
+            $cartorioAlocacaoEntityId = $idCarta;
+            $cartorioAlocacaoDesalocarEndpoint = '/api/cartorio-cartas-recebidas/desalocar.php';
+            $cartorioAlocacaoAlocarEndpoint = '/api/cartorio-cartas-recebidas/alocar.php';
+            $cartorioAlocacaoAlocados = $alocadosEditCartRec;
+            $cartorioAlocacaoBloqueada = $tarefaFinalizadaOuCancelada;
+            $cartorioAlocacaoUserId = $userIdEdit !== null ? trim((string) $userIdEdit) : '';
+            $cartorioAlocacaoIsGestao = $isGestaoAlocEditCartRec;
+            include __DIR__ . '/_cartorio_alocacao_direcionada_edit.php';
+            ?>
             <!-- Timeline de subtarefas -->
             <?php include __DIR__ . '/_cartorio_timeline.php'; ?>
 

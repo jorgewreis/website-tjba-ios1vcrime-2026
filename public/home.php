@@ -117,16 +117,18 @@ $userDisplayFullName = trim((string) ($userName ?? ''));
 $avatarBadgePerfisLine = '';
 $avatarNomeNav = '';
 $avatarSobrenomeNav = '';
+$userCargoNav = '';
 
 if ($sessionUserId !== '') {
     try {
         $pdoName = Conection::getInstance()->getConnection();
-        $stName = $pdoName->prepare('SELECT nome, sobrenome FROM usuarios WHERE id_usuario = ? LIMIT 1');
+        $stName = $pdoName->prepare('SELECT nome, sobrenome, cargo FROM usuarios WHERE id_usuario = ? LIMIT 1');
         $stName->execute([$sessionUserId]);
         $rowName = $stName->fetch(PDO::FETCH_ASSOC);
         if ($rowName) {
             $avatarNomeNav = trim((string) ($rowName['nome'] ?? ''));
             $avatarSobrenomeNav = trim((string) ($rowName['sobrenome'] ?? ''));
+            $userCargoNav = trim((string) ($rowName['cargo'] ?? ''));
             $userDisplayFullName = trim($avatarNomeNav . ' ' . $avatarSobrenomeNav);
         }
     } catch (Throwable $e) {
@@ -193,8 +195,22 @@ if ($sessionUserId !== '') {
 }
 
 $avatarSummaryTitle = $userDisplayFullName;
-if ($avatarBadgePerfisLine !== '') {
-    $avatarSummaryTitle .= ' | ' . $avatarBadgePerfisLine;
+if ($podeAlternarModoAdmin) {
+    if ($avatarBadgePerfisLine !== '') {
+        $avatarSummaryTitle .= ' | ' . $avatarBadgePerfisLine;
+    }
+} else {
+    if ($userCargoNav !== '') {
+        $avatarSummaryTitle .= ' | ' . $userCargoNav;
+    } elseif ($avatarBadgePerfisLine !== '') {
+        $avatarSummaryTitle .= ' | ' . $avatarBadgePerfisLine;
+    }
+}
+
+/** Texto exibido na navbar quando não há alternância Admin/Operacional (somente cargo cadastrado, com fallback). */
+$navbarCargoDisplay = '';
+if ($sessionUserId !== '' && !$podeAlternarModoAdmin) {
+    $navbarCargoDisplay = $userCargoNav !== '' ? $userCargoNav : ($avatarBadgePerfisLine !== '' ? $avatarBadgePerfisLine : '—');
 }
 
 $flashProfileSavedToast = null;
@@ -388,6 +404,32 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             flex-wrap: wrap;
             gap: 10px;
         }
+        .avatar-popover-cargo {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--color-border);
+            font-size: 11px;
+            line-height: 1.35;
+            word-break: break-word;
+        }
+        .user-summary-cargo {
+            display: block;
+            margin-top: 4px;
+            font-size: 11px;
+            line-height: 1.3;
+            max-width: 280px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        @media (min-width: 1280px) {
+            .user-summary-cargo {
+                display: inline;
+                margin-top: 0;
+                margin-left: 10px;
+                vertical-align: baseline;
+            }
+        }
         .avatar-popover-roles.is-active {
             color: var(--color-primary);
             font-weight: 600;
@@ -479,9 +521,11 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                                 <div class="avatar-popover-mode" role="group" aria-label="Modo">
                                     <div class="avatar-popover-mode-actions">
                                         <button type="button" class="avatar-popover-roles<?php echo $modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="1" aria-pressed="<?php echo $modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Admin</button>
-                                        <button type="button" class="avatar-popover-roles<?php echo !$modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="0" aria-pressed="<?php echo !$modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Operacional <?php echo htmlspecialchars($avatarBadgePerfisLine !== '' ? $avatarBadgePerfisLine : '—', ENT_QUOTES, 'UTF-8'); ?></button>
+                                        <button type="button" class="avatar-popover-roles<?php echo !$modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="0" aria-pressed="<?php echo !$modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Operacional</button>
                                     </div>
                                 </div>
+                                <?php elseif ($navbarCargoDisplay !== ''): ?>
+                                <div class="avatar-popover-cargo minor-info"><?php echo htmlspecialchars($navbarCargoDisplay, ENT_QUOTES, 'UTF-8'); ?></div>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -496,8 +540,10 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                                 <?php if ($podeAlternarModoAdmin): ?>
                                 <div class="user-summary-mode" role="group" aria-label="Modo de acesso">
                                     <button type="button" class="user-summary-roles<?php echo $modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="1" aria-pressed="<?php echo $modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Admin</button>
-                                    <button type="button" class="user-summary-roles<?php echo !$modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="0" aria-pressed="<?php echo !$modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Operacional <?php echo htmlspecialchars($avatarBadgePerfisLine !== '' ? $avatarBadgePerfisLine : '—', ENT_QUOTES, 'UTF-8'); ?></button>
+                                    <button type="button" class="user-summary-roles<?php echo !$modoAdminAtivoNavbar ? ' is-active' : ''; ?>" data-admin-mode="0" aria-pressed="<?php echo !$modoAdminAtivoNavbar ? 'true' : 'false'; ?>">Operacional</button>
                                 </div>
+                                <?php elseif ($navbarCargoDisplay !== ''): ?>
+                                <span class="user-summary-cargo minor-info" aria-label="Cargo"><?php echo htmlspecialchars($navbarCargoDisplay, ENT_QUOTES, 'UTF-8'); ?></span>
                                 <?php endif; ?>
                             </div>
                         </div>

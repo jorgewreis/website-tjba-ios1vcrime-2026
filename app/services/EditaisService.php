@@ -650,6 +650,30 @@ final class EditaisService
         return $this->alocadosRepository->deleteById($alocadoId);
     }
 
+    public function alocarUsuarioDirecionado(string $editalId, string $targetUsuarioId, string $actorId): void
+    {
+        $editalId = trim($editalId);
+        if ($editalId === '') {
+            throw new InvalidArgumentException('Identificador do edital inválido.');
+        }
+        $row = $this->repository->findById($editalId);
+        if ($row === null) {
+            throw new InvalidArgumentException('Edital não encontrado.');
+        }
+        $st = trim((string) ($row['status'] ?? ''));
+        if (in_array($st, ['cancelada', 'concluída'], true)) {
+            throw new InvalidArgumentException('Não é possível alterar alocações neste status.');
+        }
+        AlocacaoTarefasPerfisHelper::registrarAlocacaoDirecionadaNaEdicao(
+            $this->connection,
+            $actorId,
+            $targetUsuarioId,
+            function (string $uid) use ($editalId): void {
+                $this->alocadosRepository->addAlocado($editalId, $uid, EditaisAlocadosRepository::TIPO_SPECIFIC);
+            }
+        );
+    }
+
     private function formatarCNJ(string $digits): string
     {
         if (strlen($digits) !== 20) {

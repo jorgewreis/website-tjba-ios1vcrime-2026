@@ -89,6 +89,30 @@ final class CeapaService
         return $this->alocadosRepository->deleteById($alocadoId);
     }
 
+    public function alocarUsuarioDirecionado(string $ceapaId, string $targetUsuarioId, string $actorId): void
+    {
+        $ceapaId = trim($ceapaId);
+        if ($ceapaId === '') {
+            throw new InvalidArgumentException('Identificador do registro inválido.');
+        }
+        $row = $this->repository->findById($ceapaId);
+        if ($row === null) {
+            throw new InvalidArgumentException('Registro CEAPA não encontrado.');
+        }
+        $st = trim((string) ($row['status_cumprimento'] ?? ''));
+        if ($st === 'finalizada') {
+            throw new InvalidArgumentException('Não é possível alterar alocações neste status.');
+        }
+        AlocacaoTarefasPerfisHelper::registrarAlocacaoDirecionadaNaEdicao(
+            $this->connection,
+            $actorId,
+            $targetUsuarioId,
+            function (string $uid) use ($ceapaId): void {
+                $this->alocadosRepository->addAlocado($ceapaId, $uid, CeapaAlocadosRepository::TIPO_SPECIFIC);
+            }
+        );
+    }
+
     public function getStatusCounts(array $filters): array
     {
         return $this->repository->countByStatus($filters);

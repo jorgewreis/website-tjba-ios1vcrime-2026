@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../../repositories/MedidasProtetivasSubtarefasRepository.php';
+require_once __DIR__ . '/../../repositories/MedidasProtetivasAlocadosRepository.php';
 require_once __DIR__ . '/../../helpers/CartorioTimelineHelper.php';
 require_once __DIR__ . '/../../helpers/PrioridadesProcessuaisCatalog.php';
 require_once __DIR__ . '/../../services/MedidasProtetivasService.php';
@@ -48,6 +49,32 @@ $podeCancelarTarefa = count(array_intersect($userPerfis, $perfisPermitidosCancel
 
 $statusAtual = trim((string) ($medida['status'] ?? 'pendente'));
 $tarefaFinalizadaOuCancelada = in_array($statusAtual, ['cancelada', 'concluída'], true);
+$perfisGestaoAlocMedida = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
+$isGestaoAlocEditMedida = count(array_intersect($userPerfis, $perfisGestaoAlocMedida)) > 0;
+
+$alocadosEditMedida = [];
+if ($medida !== null) {
+    $tipoOrderAloc = ['rule' => 0, 'all' => 1, 'specific' => 2];
+    $repoAlocMedida = new MedidasProtetivasAlocadosRepository($connection);
+    $alocadosRawMedida = $repoAlocMedida->findByMedidaId($idMedida);
+    foreach (array_slice($alocadosRawMedida, 0, 5) as $a) {
+        $tipo = trim((string) ($a['tipo'] ?? ''));
+        if (!in_array($tipo, ['rule', 'all', 'specific'], true)) {
+            $tipo = 'specific';
+        }
+        $alocadosEditMedida[] = [
+            'alocado_id' => trim((string) ($a['id'] ?? '')),
+            'iniciais' => $a['iniciais'] ?? '—',
+            'nome_completo' => $a['nome_completo'] ?? '',
+            'usuario_id' => trim((string) ($a['usuario_id'] ?? '')),
+            'tipo' => $tipo,
+        ];
+    }
+    usort($alocadosEditMedida, static function (array $a, array $b) use ($tipoOrderAloc): int {
+        return ($tipoOrderAloc[$a['tipo']] ?? 9) <=> ($tipoOrderAloc[$b['tipo']] ?? 9);
+    });
+}
+
 $timelineData = $medida !== null
     ? cartorioTimelineBuildViewData('medidas_protetivas', [
         'task' => $medida,
@@ -221,6 +248,18 @@ $ordemParaTipo = [
                     <input type="text" id="edit-observacoes" class="width-800 height-md" value="<?php echo htmlspecialchars((string) ($medida['observacoes'] ?? ''), ENT_QUOTES); ?>" placeholder="Opcional">
                 </div>
             </div>
+
+            <?php
+            $cartorioAlocacaoPrefix = 'medidas';
+            $cartorioAlocacaoEntityId = $idMedida;
+            $cartorioAlocacaoDesalocarEndpoint = '/api/cartorio-medidas-protetivas/desalocar.php';
+            $cartorioAlocacaoAlocarEndpoint = '/api/cartorio-medidas-protetivas/alocar.php';
+            $cartorioAlocacaoAlocados = $alocadosEditMedida;
+            $cartorioAlocacaoBloqueada = $tarefaFinalizadaOuCancelada;
+            $cartorioAlocacaoUserId = $userId !== null ? trim((string) $userId) : '';
+            $cartorioAlocacaoIsGestao = $isGestaoAlocEditMedida;
+            include __DIR__ . '/_cartorio_alocacao_direcionada_edit.php';
+            ?>
 
             <?php include __DIR__ . '/_cartorio_timeline.php'; ?>
 

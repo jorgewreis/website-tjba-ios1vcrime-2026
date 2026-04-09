@@ -7,6 +7,7 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 require_once __DIR__ . '/../../repositories/GuiasSubtarefasRepository.php';
+require_once __DIR__ . '/../../repositories/GuiasAlocadosRepository.php';
 require_once __DIR__ . '/../../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../../helpers/CartorioTimelineHelper.php';
@@ -157,8 +158,33 @@ if ($userId !== null && trim((string) $userId) !== '') {
 }
 $podeExcluir = count(array_intersect($userPerfis, $perfisExcluir)) > 0;
 $podeCancelar = count(array_intersect($userPerfis, $perfisCancelar)) > 0;
+$perfisGestaoAloc = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
+$isGestaoAlocEdit = count(array_intersect($userPerfis, $perfisGestaoAloc)) > 0;
 $statusAtual = $guia['status'] ?? '';
 $tarefaFinalizadaOuCancelada = in_array($statusAtual, ['cancelada', 'concluída'], true);
+
+$alocadosEdit = [];
+if ($guia !== null) {
+    $tipoOrderAloc = ['rule' => 0, 'all' => 1, 'specific' => 2];
+    $repoAlocGuia = new GuiasAlocadosRepository($connection);
+    $alocadosRawGuia = $repoAlocGuia->findByGuiaId($idGuia);
+    foreach (array_slice($alocadosRawGuia, 0, 5) as $a) {
+        $tipo = trim((string) ($a['tipo'] ?? ''));
+        if (!in_array($tipo, ['rule', 'all', 'specific'], true)) {
+            $tipo = 'specific';
+        }
+        $alocadosEdit[] = [
+            'alocado_id' => trim((string) ($a['id'] ?? '')),
+            'iniciais' => $a['iniciais'] ?? '—',
+            'nome_completo' => $a['nome_completo'] ?? '',
+            'usuario_id' => trim((string) ($a['usuario_id'] ?? '')),
+            'tipo' => $tipo,
+        ];
+    }
+    usort($alocadosEdit, static function (array $a, array $b) use ($tipoOrderAloc): int {
+        return ($tipoOrderAloc[$a['tipo']] ?? 9) <=> ($tipoOrderAloc[$b['tipo']] ?? 9);
+    });
+}
 $timelineData = $guia !== null
     ? cartorioTimelineBuildViewData('guias', [
         'task' => $guia,
@@ -264,6 +290,20 @@ $tiposOptions = [
                     <input type="text" id="edit-observacoes" class="width-800 height-md" value="<?php echo htmlspecialchars((string) ($guia['observacoes'] ?? ''), ENT_QUOTES); ?>" placeholder="Opcional">
                 </div>
             </div>
+
+            <?php if ($guia !== null): ?>
+                <?php
+                $cartorioAlocacaoPrefix = 'guias';
+                $cartorioAlocacaoEntityId = $idGuia;
+                $cartorioAlocacaoDesalocarEndpoint = '/api/cartorio-guias/desalocar.php';
+                $cartorioAlocacaoAlocarEndpoint = '/api/cartorio-guias/alocar.php';
+                $cartorioAlocacaoAlocados = $alocadosEdit;
+                $cartorioAlocacaoBloqueada = $tarefaFinalizadaOuCancelada;
+                $cartorioAlocacaoUserId = $userId !== null ? trim((string) $userId) : '';
+                $cartorioAlocacaoIsGestao = $isGestaoAlocEdit;
+                include __DIR__ . '/_cartorio_alocacao_direcionada_edit.php';
+                ?>
+            <?php endif; ?>
 
             <?php if ($guia !== null): ?>
                 <?php include __DIR__ . '/_cartorio_timeline.php'; ?>

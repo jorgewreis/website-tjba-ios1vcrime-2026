@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../../services/CeapaService.php';
+require_once __DIR__ . '/../../repositories/CeapaAlocadosRepository.php';
 require_once __DIR__ . '/../../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../../repositories/ClassesRepository.php';
 
@@ -81,6 +82,32 @@ if ($userIdEdit !== '') {
 $isEstagiarioEdit = in_array('ESTAGIARIO', $userPerfisEdit, true);
 $isCriadorTarefa = $tarefa !== null && trim((string) ($tarefa['usuario_cadastro_id'] ?? '')) === $userIdEdit;
 $podeExcluirTarefa = !$isEstagiarioEdit || $isCriadorTarefa;
+$perfisGestaoAlocCeapa = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
+$isGestaoAlocEditCeapa = count(array_intersect($userPerfisEdit, $perfisGestaoAlocCeapa)) > 0;
+$tarefaBloqueadaAlocCeapa = ($statusCumprimento === 'finalizada');
+
+$alocadosEditCeapa = [];
+if ($tarefa !== null) {
+    $tipoOrderAloc = ['rule' => 0, 'all' => 1, 'specific' => 2];
+    $repoAlocCeapa = new CeapaAlocadosRepository($connection);
+    $alocadosRawCeapa = $repoAlocCeapa->findByCeapaId($idTarefa);
+    foreach (array_slice($alocadosRawCeapa, 0, 5) as $a) {
+        $tipo = trim((string) ($a['tipo'] ?? ''));
+        if (!in_array($tipo, ['rule', 'all', 'specific'], true)) {
+            $tipo = 'specific';
+        }
+        $alocadosEditCeapa[] = [
+            'alocado_id' => trim((string) ($a['id'] ?? '')),
+            'iniciais' => $a['iniciais'] ?? '—',
+            'nome_completo' => $a['nome_completo'] ?? '',
+            'usuario_id' => trim((string) ($a['usuario_id'] ?? '')),
+            'tipo' => $tipo,
+        ];
+    }
+    usort($alocadosEditCeapa, static function (array $a, array $b) use ($tipoOrderAloc): int {
+        return ($tipoOrderAloc[$a['tipo']] ?? 9) <=> ($tipoOrderAloc[$b['tipo']] ?? 9);
+    });
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -177,6 +204,20 @@ $podeExcluirTarefa = !$isEstagiarioEdit || $isCriadorTarefa;
                     <textarea class="width-800 height-md" id="filter-observacoes-cumprimento" placeholder="Descreva observações sobre o cumprimento"><?php echo htmlspecialchars($observacoesCumprimento, ENT_QUOTES); ?></textarea>
                 </div>
             </div>
+
+            <?php if ($tarefa !== null): ?>
+                <?php
+                $cartorioAlocacaoPrefix = 'ceapa';
+                $cartorioAlocacaoEntityId = $idTarefa;
+                $cartorioAlocacaoDesalocarEndpoint = '/api/cartorio-ceapa/desalocar.php';
+                $cartorioAlocacaoAlocarEndpoint = '/api/cartorio-ceapa/alocar.php';
+                $cartorioAlocacaoAlocados = $alocadosEditCeapa;
+                $cartorioAlocacaoBloqueada = $tarefaBloqueadaAlocCeapa;
+                $cartorioAlocacaoUserId = $userIdEdit;
+                $cartorioAlocacaoIsGestao = $isGestaoAlocEditCeapa;
+                include __DIR__ . '/_cartorio_alocacao_direcionada_edit.php';
+                ?>
+            <?php endif; ?>
 
             <input type="hidden" id="hidden-ceapa-id" value="<?php echo htmlspecialchars($idTarefa, ENT_QUOTES); ?>">
         <?php endif; ?>

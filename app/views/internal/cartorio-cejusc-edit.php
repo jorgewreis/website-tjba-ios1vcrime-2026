@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
+require_once __DIR__ . '/../../repositories/CejuscAlocadosRepository.php';
 require_once __DIR__ . '/../../repositories/CejuscSubtarefasRepository.php';
 require_once __DIR__ . '/../../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../../repositories/ClassesRepository.php';
@@ -120,6 +121,32 @@ if ($userIdEdit !== null && trim((string) $userIdEdit) !== '') {
 $podeExcluirTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosExcluir)) > 0;
 $podeCancelarTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosCancelar)) > 0;
 $tarefaFinalizadaOuCancelada = in_array($statusAtual, ['cancelada', 'concluída'], true);
+$perfisGestaoAlocCej = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
+$isGestaoAlocEditCej = count(array_intersect($userPerfisEdit, $perfisGestaoAlocCej)) > 0;
+
+$alocadosEditCej = [];
+if ($tarefa !== null) {
+    $tipoOrderAloc = ['rule' => 0, 'all' => 1, 'specific' => 2];
+    $repoAlocCej = new CejuscAlocadosRepository($connection);
+    $alocadosRawCej = $repoAlocCej->findByCejuscId($idTarefa);
+    foreach (array_slice($alocadosRawCej, 0, 5) as $a) {
+        $tipo = trim((string) ($a['tipo'] ?? ''));
+        if (!in_array($tipo, ['rule', 'all', 'specific'], true)) {
+            $tipo = 'specific';
+        }
+        $alocadosEditCej[] = [
+            'alocado_id' => trim((string) ($a['id'] ?? '')),
+            'iniciais' => $a['iniciais'] ?? '—',
+            'nome_completo' => $a['nome_completo'] ?? '',
+            'usuario_id' => trim((string) ($a['usuario_id'] ?? '')),
+            'tipo' => $tipo,
+        ];
+    }
+    usort($alocadosEditCej, static function (array $a, array $b) use ($tipoOrderAloc): int {
+        return ($tipoOrderAloc[$a['tipo']] ?? 9) <=> ($tipoOrderAloc[$b['tipo']] ?? 9);
+    });
+}
+
 $timelineData = $tarefa !== null
     ? cartorioTimelineBuildViewData('cejusc', [
         'task' => $tarefa,
@@ -182,6 +209,18 @@ $timelineData = $tarefa !== null
                     <input type="text" id="filter-reu" class="width-600 height-md readonly" value="<?php echo htmlspecialchars($reuNome, ENT_QUOTES); ?>" readonly>
                 </div>
             </div>
+
+            <?php
+            $cartorioAlocacaoPrefix = 'cejusc';
+            $cartorioAlocacaoEntityId = $idTarefa;
+            $cartorioAlocacaoDesalocarEndpoint = '/api/cartorio-cejusc/desalocar.php';
+            $cartorioAlocacaoAlocarEndpoint = '/api/cartorio-cejusc/alocar.php';
+            $cartorioAlocacaoAlocados = $alocadosEditCej;
+            $cartorioAlocacaoBloqueada = $tarefaFinalizadaOuCancelada;
+            $cartorioAlocacaoUserId = $userIdEdit !== null ? trim((string) $userIdEdit) : '';
+            $cartorioAlocacaoIsGestao = $isGestaoAlocEditCej;
+            include __DIR__ . '/_cartorio_alocacao_direcionada_edit.php';
+            ?>
 
             <?php include __DIR__ . '/_cartorio_timeline.php'; ?>
 

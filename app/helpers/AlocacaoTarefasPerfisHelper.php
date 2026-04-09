@@ -108,4 +108,36 @@ final class AlocacaoTarefasPerfisHelper
             $addSpecific($uidAlvo);
         }
     }
+
+    /**
+     * Alocação direcionada na edição: um usuário por vez, com as mesmas regras de elegibilidade do cadastro.
+     *
+     * @param callable(string):void $addSpecific Recebe o id do usuário alvo e persiste como alocado tipo específico.
+     */
+    public static function registrarAlocacaoDirecionadaNaEdicao(
+        PDO $connection,
+        string $actorId,
+        string $targetUsuarioId,
+        callable $addSpecific
+    ): void {
+        $actorId = trim($actorId);
+        $targetUsuarioId = trim($targetUsuarioId);
+        if ($actorId === '' || $targetUsuarioId === '') {
+            throw new \InvalidArgumentException('Usuário alvo é obrigatório.');
+        }
+        if ($targetUsuarioId === $actorId) {
+            throw new \InvalidArgumentException('Não é possível alocar a si mesmo.');
+        }
+        if (!self::usuarioAdminOuChefiaPodeAlocarOutrosCadastro($actorId)) {
+            throw new \InvalidArgumentException('Sem permissão para alocar servidores.');
+        }
+        if (!AlocacaoRegrasUsuariosHelper::isUsuarioElegivelParaRegraInterna($connection, $targetUsuarioId)) {
+            throw new \InvalidArgumentException('Usuário selecionado não é elegível para alocação.');
+        }
+        try {
+            $addSpecific($targetUsuarioId);
+        } catch (\RuntimeException $e) {
+            throw new \InvalidArgumentException($e->getMessage());
+        }
+    }
 }
