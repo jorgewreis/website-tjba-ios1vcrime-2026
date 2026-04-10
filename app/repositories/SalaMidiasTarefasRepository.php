@@ -136,6 +136,34 @@ final class SalaMidiasTarefasRepository
         return (int) $statement->fetchColumn();
     }
 
+    public function countByStatus(array $filters): array
+    {
+        [$where, $params] = $this->buildWhere($filters, false);
+        $sql = sprintf(
+            'SELECT t.`status` AS st, COUNT(*) AS total
+             FROM `%s` t
+             %s
+             GROUP BY t.`status`',
+            $this->table,
+            $where !== '' ? 'WHERE ' . $where : ''
+        );
+        $statement = $this->connection->prepare($sql);
+        foreach ($params as $k => $v) {
+            $statement->bindValue($k, $v);
+        }
+        $statement->execute();
+        $out = ['pendente' => 0, 'em_andamento' => 0, 'concluida' => 0, 'cancelada' => 0];
+        while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+            $key = trim((string) ($row['st'] ?? ''));
+            if (!array_key_exists($key, $out)) {
+                $out[$key] = 0;
+            }
+            $out[$key] += (int) ($row['total'] ?? 0);
+        }
+
+        return $out;
+    }
+
     public function softDelete(string $id, ?string $usuarioId): bool
     {
         $statement = $this->connection->prepare(
@@ -148,7 +176,7 @@ final class SalaMidiasTarefasRepository
         return $statement->rowCount() > 0;
     }
 
-    private function buildWhere(array $filters): array
+    private function buildWhere(array $filters, bool $includeStatus = true): array
     {
         $conds = ['t.`ativo` = 1'];
         $params = [];
@@ -160,7 +188,7 @@ final class SalaMidiasTarefasRepository
         }
 
         $status = trim((string) ($filters['status'] ?? ''));
-        if ($status !== '') {
+        if ($includeStatus && $status !== '') {
             $conds[] = 't.`status` = :status';
             $params[':status'] = $status;
         }

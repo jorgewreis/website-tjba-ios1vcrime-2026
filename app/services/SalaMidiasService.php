@@ -62,6 +62,11 @@ final class SalaMidiasService
         return $row;
     }
 
+    public function getStatusCounts(array $filters): array
+    {
+        return $this->tarefasRepository->countByStatus($filters);
+    }
+
     public function create(array $payload, string $usuarioId): string
     {
         $usuarioId = trim($usuarioId);
@@ -252,7 +257,7 @@ final class SalaMidiasService
             LEFT JOIN `classes` cl ON cl.`id` = pr.`classe_id`
             WHERE p.`ativo` = 1
               AND p.`data_audiencia` = :data_audiencia
-              AND p.`status` IN (\'realizada\', \'finalizada\')';
+              AND p.`status` = \'finalizada\'';
         $params = [':data_audiencia' => $dataYmd];
         $numeroProcesso = trim($numeroProcesso);
         if ($numeroProcesso !== '') {
@@ -268,6 +273,38 @@ final class SalaMidiasService
         $statement->execute();
 
         return $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    public function findUltimaPautaFinalizadaPorProcesso(string $numeroProcesso): ?array
+    {
+        $numeroProcesso = trim($numeroProcesso);
+        if ($numeroProcesso === '') {
+            return null;
+        }
+
+        $sql = '
+            SELECT
+                p.`id_pauta`,
+                p.`tipo_audiencia`,
+                p.`data_audiencia`,
+                p.`hora_audiencia`,
+                p.`status`,
+                pr.`numero_processo`,
+                COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS classe_nome
+            FROM `sala_audiencias_pauta` p
+            LEFT JOIN `processos` pr ON pr.`id` = p.`processo`
+            LEFT JOIN `classes` cl ON cl.`id` = pr.`classe_id`
+            WHERE p.`ativo` = 1
+              AND p.`status` = \'finalizada\'
+              AND pr.`numero_processo` = :numero_processo
+            ORDER BY p.`data_audiencia` DESC, p.`hora_audiencia` DESC
+            LIMIT 1';
+        $statement = $this->connection->prepare($sql);
+        $statement->bindValue(':numero_processo', $numeroProcesso);
+        $statement->execute();
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+
+        return $row === false ? null : $row;
     }
 
     public function ensureAutoFromPautaIfEligible(string $pautaId, ?string $usuarioId): ?string

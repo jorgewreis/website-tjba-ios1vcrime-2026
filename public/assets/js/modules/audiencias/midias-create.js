@@ -15,13 +15,19 @@
     var classeDescricao = byId('hidden-classe-descricao');
     var dataInput = byId('midias-data-audiencia');
     var pautaSelect = byId('midias-pauta-id');
-    var tipoInput = byId('midias-tipo-audiencia');
     var qtdInput = byId('midias-qtd');
     var btnCadastrar = byId('btn-midias-cadastrar');
+    var btnVoltar = byId('midias-create-voltar');
 
     var alocCreate = (window.App && window.App.CartorioAlocacaoDirecionadaCreate)
         ? window.App.CartorioAlocacaoDirecionadaCreate.init('midias')
         : { getIds: function () { return []; } };
+
+    if (btnVoltar) {
+        btnVoltar.addEventListener('click', function () {
+            window.location.href = '/frame.php?page=salamidias';
+        });
+    }
 
     function normalizeProcesso(raw) {
         if (typeof window.normalizeAndValidateCNJValue === 'function') {
@@ -37,7 +43,6 @@
         var dataAud = String(dataInput && dataInput.value ? dataInput.value : '').trim();
         if (!dataAud) {
             pautaSelect.innerHTML = '<option value="">Selecione a audiência</option>';
-            tipoInput.value = '';
             return;
         }
         var processo = normalizeProcesso(processoInput ? processoInput.value : '');
@@ -64,7 +69,7 @@
                     pautaSelect.appendChild(opt);
                 });
                 if (rows.length === 0) {
-                    notify('info', 'Sem audiências', 'Não há audiências finalizadas/realizadas para os filtros informados.');
+                    notify('info', 'Sem audiências', 'Não há audiências finalizadas para os filtros informados.');
                 }
             })
             .catch(function () {
@@ -72,15 +77,67 @@
             });
     }
 
+    function preloadUltimaAudienciaPorProcesso() {
+        var processo = normalizeProcesso(processoInput ? processoInput.value : '');
+        if (!processo) {
+            return;
+        }
+        fetch('/api/sala-midias/pauta-ultima-por-processo.php?numero_processo=' + encodeURIComponent(processo), {
+            credentials: 'same-origin'
+        })
+            .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+            .then(function (res) {
+                if (!res.ok || !res.j) {
+                    return;
+                }
+                var row = res.j.row;
+                if (!row || !row.id_pauta) {
+                    return;
+                }
+                var dataAud = String(row.data_audiencia || '').trim();
+                if (dataInput && dataAud) {
+                    dataInput.value = dataAud;
+                }
+                if (classeInput) {
+                    classeInput.value = String(row.classe_nome || classeInput.value || '').trim();
+                }
+                if (classeDescricao) {
+                    classeDescricao.value = String(row.classe_nome || classeDescricao.value || '').trim();
+                }
+                loadPautas();
+                window.setTimeout(function () {
+                    var options = pautaSelect ? pautaSelect.options : [];
+                    for (var i = 0; i < options.length; i += 1) {
+                        if (String(options[i].value || '') === String(row.id_pauta)) {
+                            pautaSelect.selectedIndex = i;
+                            pautaSelect.dispatchEvent(new Event('change'));
+                            break;
+                        }
+                    }
+                }, 120);
+            })
+            .catch(function () {
+                // sem toast para não poluir UX a cada blur
+            });
+    }
+
     dataInput && dataInput.addEventListener('change', loadPautas);
-    processoInput && processoInput.addEventListener('blur', loadPautas);
+    processoInput && processoInput.addEventListener('keydown', function (event) {
+        if (event.key !== 'Enter') {
+            return;
+        }
+        event.preventDefault();
+        preloadUltimaAudienciaPorProcesso();
+    });
+    processoInput && processoInput.addEventListener('blur', function () {
+        preloadUltimaAudienciaPorProcesso();
+        loadPautas();
+    });
     pautaSelect && pautaSelect.addEventListener('change', function () {
         var opt = pautaSelect.options[pautaSelect.selectedIndex];
         if (!opt || !opt.value) {
-            tipoInput.value = '';
             return;
         }
-        tipoInput.value = String(opt.getAttribute('data-tipo-audiencia') || '');
         var proc = String(opt.getAttribute('data-processo') || '');
         var cls = String(opt.getAttribute('data-classe') || '');
         if (processoInput && proc) {
@@ -99,7 +156,8 @@
         var classe = String((classeDescricao && classeDescricao.value) || (classeInput && classeInput.value) || '').trim();
         var dataAud = String(dataInput && dataInput.value ? dataInput.value : '').trim();
         var pautaId = String(pautaSelect && pautaSelect.value ? pautaSelect.value : '').trim();
-        var tipoAud = String(tipoInput && tipoInput.value ? tipoInput.value : '').trim();
+        var selectedOption = pautaSelect && pautaSelect.options ? pautaSelect.options[pautaSelect.selectedIndex] : null;
+        var tipoAud = String(selectedOption && selectedOption.getAttribute('data-tipo-audiencia') ? selectedOption.getAttribute('data-tipo-audiencia') : '').trim();
         var qtdMidias = parseInt(String(qtdInput && qtdInput.value ? qtdInput.value : '1'), 10);
         var maxDate = String(dataInput && dataInput.getAttribute('max') ? dataInput.getAttribute('max') : '').trim();
 
