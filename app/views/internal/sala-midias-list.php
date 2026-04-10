@@ -100,12 +100,6 @@ $subtarefaLabels = [
     'upload_midia' => 'Upload de Mídia na Pasta Pública',
     'certidao_upload_midia' => 'Certidão de Upload de Mídia no PJe',
 ];
-$buttonTitleByTipo = [
-    'download_midia' => 'Concluir download',
-    'sincronizacao_midia' => 'Concluir sincronização',
-    'upload_midia' => 'Concluir upload',
-    'certidao_upload_midia' => 'Concluir certidão',
-];
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -114,6 +108,7 @@ $buttonTitleByTipo = [
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Sala de Audiências - Mídias</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
     <?php include __DIR__ . '/_internal_head_styles.php'; ?>
     <?php include __DIR__ . '/_toast_script.php'; ?>
 </head>
@@ -185,6 +180,7 @@ $buttonTitleByTipo = [
                 $subtarefas = is_array($row['Subtarefas'] ?? null) ? $row['Subtarefas'] : [];
                 $alocados = CartorioAlocacaoChipHelper::ordenarAlocadosPorTipo($row['Alocados'] ?? []);
                 $tarefaConcluida = in_array($statusRow, ['concluida', 'cancelada'], true);
+                $qtdMidiasRow = max(1, (int) ($row['qtd_midias'] ?? 1));
                 $progressStatuses = ['pendente', 'pendente', 'pendente', 'pendente'];
                 $orderMap = ['download_midia' => 1, 'sincronizacao_midia' => 2, 'upload_midia' => 3, 'certidao_upload_midia' => 4];
                 foreach ($subtarefas as $st) {
@@ -209,6 +205,21 @@ $buttonTitleByTipo = [
                     $currentSubtarefaTitle = $statusRow === 'cancelada' ? 'Cancelada' : 'Em andamento';
                 }
                 $mostrarBarraStatus = ($statusRow !== 'concluida' && $statusRow !== 'cancelada');
+                $subtarefaAtiva = null;
+                foreach ($subtarefas as $sub) {
+                    if (trim((string) ($sub['status'] ?? '')) === 'em_andamento') {
+                        $subtarefaAtiva = $sub;
+                        break;
+                    }
+                }
+                if ($subtarefaAtiva === null) {
+                    foreach ($subtarefas as $sub) {
+                        if (trim((string) ($sub['status'] ?? '')) === 'pendente') {
+                            $subtarefaAtiva = $sub;
+                            break;
+                        }
+                    }
+                }
                 ?>
                 <div class="display-flex col col-full register border-bottom" data-midia-id="<?php echo htmlspecialchars($id, ENT_QUOTES, 'UTF-8'); ?>" id="<?php echo htmlspecialchars($id, ENT_QUOTES, 'UTF-8'); ?>">
                     <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
@@ -295,41 +306,55 @@ $buttonTitleByTipo = [
                     </div>
                     <?php if (!$tarefaConcluida): ?>
                     <div class="display-flex col col-full subtask subtask-collapsed" id="subtask-midias-<?php echo htmlspecialchars($id, ENT_QUOTES, 'UTF-8'); ?>" aria-hidden="true">
-                        <?php foreach ($subtarefas as $sub): ?>
+                        <?php if ($subtarefaAtiva !== null): ?>
                             <?php
-                            $subId = trim((string) ($sub['id'] ?? ''));
-                            $subCode = trim((string) ($sub['codigo'] ?? ''));
-                            $subLabel = $subtarefaLabels[$subCode] ?? trim((string) ($sub['titulo'] ?? 'Subtarefa'));
-                            $subStatus = trim((string) ($sub['status'] ?? 'pendente'));
+                            $subId = trim((string) ($subtarefaAtiva['id'] ?? ''));
+                            $subCode = trim((string) ($subtarefaAtiva['codigo'] ?? ''));
+                            $subLabel = $subtarefaLabels[$subCode] ?? trim((string) ($subtarefaAtiva['titulo'] ?? 'Subtarefa'));
+                            $subStatus = trim((string) ($subtarefaAtiva['status'] ?? 'pendente'));
                             $concluivel = in_array($subStatus, ['pendente', 'em_andamento'], true) && $statusRow !== 'cancelada';
+                            $isDownload = $subCode === 'download_midia';
+                            $isSyncOrUpload = in_array($subCode, ['sincronizacao_midia', 'upload_midia'], true);
                             ?>
-                            <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top" data-subtarefa-id="<?php echo htmlspecialchars($subId, ENT_QUOTES, 'UTF-8'); ?>">
-                                <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                            <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top" data-subtarefa-id="<?php echo htmlspecialchars($subId, ENT_QUOTES, 'UTF-8'); ?>" data-subtarefa-codigo="<?php echo htmlspecialchars($subCode, ENT_QUOTES, 'UTF-8'); ?>">
+                                <div class="display-flex row row-fit justify-start gap-y-sm align-center subtask-row-fields">
                                     <div class="col task-status">
                                         <div class="padding-x-lg height-sm status status-pending"><?php echo htmlspecialchars($subLabel, ENT_QUOTES, 'UTF-8'); ?></div>
                                     </div>
-                                    <div class="col">
-                                        <span class="minor-info">Sistema: <?php echo htmlspecialchars((string) ($sub['sistema'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
-                                    </div>
-                                    <div class="col">
-                                        <span class="minor-info">Pontos: <?php echo htmlspecialchars((string) ($sub['pontos_calculados'] ?? '0.00'), ENT_QUOTES, 'UTF-8'); ?></span>
-                                    </div>
-                                    <div class="col">
-                                        <span class="minor-info">Status: <?php echo htmlspecialchars(str_replace('_', ' ', $subStatus), ENT_QUOTES, 'UTF-8'); ?></span>
-                                    </div>
+                                    <?php if ($isDownload): ?>
+                                        <div class="col">
+                                            <input
+                                                type="number"
+                                                class="width-300 height-sm js-midias-qtd-midias"
+                                                min="1"
+                                                step="1"
+                                                value="<?php echo (int) $qtdMidiasRow; ?>"
+                                                placeholder="Qtd. de mídias para download"
+                                                title="Informe a quantidade de mídias para download">
+                                        </div>
+                                    <?php elseif ($isSyncOrUpload): ?>
+                                        <div class="col">
+                                            <input
+                                                type="number"
+                                                class="width-300 height-sm readonly js-midias-qtd-midias"
+                                                value="<?php echo (int) $qtdMidiasRow; ?>"
+                                                readonly
+                                                title="Quantidade de mídias definida no download">
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="display-flex row row-fit justify-end align-center">
                                     <?php if ($concluivel): ?>
                                     <button type="button"
                                         class="btn btn-primary height-sm js-midias-concluir-subtarefa"
                                         data-subtarefa-id="<?php echo htmlspecialchars($subId, ENT_QUOTES, 'UTF-8'); ?>"
-                                        title="<?php echo htmlspecialchars($buttonTitleByTipo[$subCode] ?? 'Concluir subtarefa', ENT_QUOTES, 'UTF-8'); ?>">
-                                        <span class="value-button"><?php echo htmlspecialchars($buttonTitleByTipo[$subCode] ?? 'Concluir subtarefa', ENT_QUOTES, 'UTF-8'); ?></span>
+                                        title="Informar resolução da subtarefa">
+                                        <span class="value-button">Informar resolução da subtarefa</span>
                                     </button>
                                     <?php endif; ?>
                                 </div>
                             </div>
-                        <?php endforeach; ?>
+                        <?php endif; ?>
                     </div>
                     <?php endif; ?>
                 </div>

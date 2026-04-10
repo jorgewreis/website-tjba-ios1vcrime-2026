@@ -178,8 +178,22 @@ final class SalaMidiasService
             throw new InvalidArgumentException('Tarefa principal não encontrada.');
         }
 
-        $qtd = max(1, (int) ($tarefa['qtd_midias'] ?? 1));
         $codigo = trim((string) ($subtarefa['codigo'] ?? ''));
+        $qtd = max(1, (int) ($tarefa['qtd_midias'] ?? 1));
+        if ($codigo === 'download_midia' && isset($dados['qtd_midias'])) {
+            $qtdInformada = (int) $dados['qtd_midias'];
+            if ($qtdInformada < 1) {
+                throw new InvalidArgumentException('Quantidade de mídias inválida para concluir download.');
+            }
+            $qtd = $qtdInformada;
+            $this->tarefasRepository->update($midiaId, [
+                'qtd_midias' => $qtd,
+                'status' => trim((string) ($tarefa['status'] ?? 'em_andamento')),
+                'observacoes' => $tarefa['observacoes'] ?? null,
+                'atualizado_por' => $usuarioId,
+            ]);
+            $tarefa['qtd_midias'] = $qtd;
+        }
         $pontos = $this->calcularPontosSubtarefa($codigo, $qtd);
 
         $dadosJson = $dados === [] ? null : json_encode($dados, JSON_UNESCAPED_UNICODE);

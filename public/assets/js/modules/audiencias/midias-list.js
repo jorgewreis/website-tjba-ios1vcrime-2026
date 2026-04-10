@@ -142,6 +142,23 @@
             if (!subtarefaId) {
                 return;
             }
+            var row = button.closest('[data-subtarefa-id]');
+            var subtarefaCodigo = String((row && row.getAttribute('data-subtarefa-codigo')) || '').trim();
+            var qtdInput = row ? row.querySelector('.js-midias-qtd-midias') : null;
+            var dados = {};
+            if (subtarefaCodigo === 'download_midia') {
+                var qtd = parseInt(String(qtdInput && qtdInput.value ? qtdInput.value : '0'), 10);
+                if (!qtd || qtd < 1) {
+                    notify('error', 'Validação', 'Informe uma quantidade de mídias válida para o download.');
+                    return;
+                }
+                dados.qtd_midias = qtd;
+            } else if ((subtarefaCodigo === 'sincronizacao_midia' || subtarefaCodigo === 'upload_midia') && qtdInput) {
+                var qtdReadonly = parseInt(String(qtdInput.value || '0'), 10);
+                if (qtdReadonly > 0) {
+                    dados.qtd_midias = qtdReadonly;
+                }
+            }
             if (!requireSecondClick('midias-sub-' + subtarefaId, 'Clique novamente para confirmar a conclusão da subtarefa.')) {
                 return;
             }
@@ -152,7 +169,8 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     subtarefa_id: subtarefaId,
-                    status: 'concluida'
+                    status: 'concluida',
+                    dados: dados
                 })
             })
                 .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
