@@ -119,6 +119,8 @@ final class CartorioProdutividade
             $payload['quantidade'] = 1;
             $nDocs = self::extrairContagemDocumentosPdf($eventCode, $context);
             $payload['pontos_calculados_override'] = self::pontosFormulaGeracaoPdf($nDocs);
+        } elseif (array_key_exists('pontos_calculados_override', $context)) {
+            $payload['pontos_calculados_override'] = (float) $context['pontos_calculados_override'];
         }
         try {
             $result = $svc->registrarAuto($actorUserId, $payload);

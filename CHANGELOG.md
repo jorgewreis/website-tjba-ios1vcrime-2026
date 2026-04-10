@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.84
+
+**Data:** 2026-04-10 15:11:41 | **Commit:** `8f7d71b` | **Tipo:** `minor`
+
+- feat: add sala de mídias task creation and update functionality with productivity tracking in SalaMidiasService and related configurations
+
 ## V. 1.83
 
 **Data:** 2026-04-10 14:48:59 | **Commit:** `8289303` | **Tipo:** `minor`
@@ -4386,6 +4392,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

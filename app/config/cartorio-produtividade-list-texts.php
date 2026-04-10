@@ -163,6 +163,14 @@ return array (
   array (
     'observacao' => 'Tarefa CEAPA cadastrada — {tipo_suspensao}.',
   ),
+  'sala-midias.create' =>
+  array (
+    'observacao' => 'Cadastro de tarefa de mídia ({origem}) — {tipo_audiencia}.',
+  ),
+  'sala-midias.update' =>
+  array (
+    'observacao' => 'Alteração de tarefa de mídia — {tipo_audiencia}.',
+  ),
   'sala-midias.subtarefa.download_midia' =>
   array (
     'observacao' => 'Download de mídia realizado no Lifesize.',

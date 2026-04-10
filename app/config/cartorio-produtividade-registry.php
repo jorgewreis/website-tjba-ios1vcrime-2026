@@ -323,6 +323,22 @@ return array (
     'quantidade_default' => 1,
     'referencia_sistema' => 'cartorio-ceapa',
   ),
+  'sala-midias.create' =>
+  array (
+    'tipo_ato' => 'Sala de Audiências',
+    'tipo_documento' => 'sala-midias.create',
+    'sistema_modulo' => 'sala-midias',
+    'quantidade_default' => 1,
+    'referencia_sistema' => 'sala-midias',
+  ),
+  'sala-midias.update' =>
+  array (
+    'tipo_ato' => 'Sala de Audiências',
+    'tipo_documento' => 'sala-midias.update',
+    'sistema_modulo' => 'sala-midias',
+    'quantidade_default' => 1,
+    'referencia_sistema' => 'sala-midias',
+  ),
   'sala-midias.subtarefa.download_midia' =>
   array (
     'tipo_ato' => 'Sala de Audiências',

@@ -131,6 +131,9 @@ final class SalaMidiasService
 
             $this->connection->commit();
 
+            $origemSalva = $origem === 'automatico' ? 'automatico' : 'manual';
+            $this->registrarProdutividadeCadastroTarefa($id, $usuarioId, $numeroProcesso, $classe, $tipoAudiencia, $origemSalva);
+
             return $id;
         } catch (Throwable $e) {
             $this->connection->rollBack();
@@ -152,13 +155,30 @@ final class SalaMidiasService
         if (!in_array($status, ['pendente', 'em_andamento', 'concluida', 'cancelada'], true)) {
             $status = 'em_andamento';
         }
+        $obsNova = trim((string) ($payload['observacoes'] ?? $row['observacoes'] ?? '')) ?: null;
+        $obsVelha = trim((string) ($row['observacoes'] ?? '')) ?: null;
+        $mudou = (int) ($row['qtd_midias'] ?? 1) !== $qtdMidias
+            || trim((string) ($row['status'] ?? '')) !== $status
+            || $obsVelha !== $obsNova;
 
-        return $this->tarefasRepository->update($id, [
+        $ok = $this->tarefasRepository->update($id, [
             'qtd_midias' => $qtdMidias,
             'status' => $status,
-            'observacoes' => trim((string) ($payload['observacoes'] ?? $row['observacoes'] ?? '')) ?: null,
+            'observacoes' => $obsNova,
             'atualizado_por' => $usuarioId,
         ]);
+        if ($ok && $mudou) {
+            $atual = $this->tarefasRepository->findById($id) ?? $row;
+            $this->registrarProdutividadeEdicaoTarefa(
+                $id,
+                $usuarioId,
+                trim((string) ($atual['numero_processo'] ?? '')),
+                trim((string) ($atual['classe_processo'] ?? '')),
+                trim((string) ($atual['tipo_audiencia'] ?? ''))
+            );
+        }
+
+        return $ok;
     }
 
     public function delete(string $id, ?string $usuarioId): bool
@@ -443,12 +463,47 @@ final class SalaMidiasService
         }
         CartorioProdutividade::record($this->connection, $usuarioId, $eventByCodigo[$codigo], [
             'quantidade' => ($codigo === 'sincronizacao_midia' || $codigo === 'upload_midia') ? $qtdMidias : 1,
+            'pontos_calculados_override' => $pontos,
             'referencia_item_id' => $subtarefaId,
             'referencia_sistema' => 'sala-midias',
             'numero_processo' => trim((string) ($tarefa['numero_processo'] ?? '')),
             'classe_processo' => trim((string) ($tarefa['classe_processo'] ?? '')),
             'qtd_midias' => $qtdMidias,
-            'pontos' => number_format($pontos, 2, '.', ''),
+        ]);
+    }
+
+    private function registrarProdutividadeCadastroTarefa(
+        string $midiaId,
+        string $usuarioId,
+        string $numeroProcesso,
+        string $classeProcesso,
+        string $tipoAudiencia,
+        string $origem
+    ): void {
+        $origemLabel = $origem === 'automatico' ? 'automática' : 'manual';
+        CartorioProdutividade::record($this->connection, $usuarioId, 'sala-midias.create', [
+            'referencia_item_id' => $midiaId,
+            'referencia_sistema' => 'sala-midias',
+            'numero_processo' => $numeroProcesso,
+            'classe_processo' => $classeProcesso,
+            'tipo_audiencia' => $tipoAudiencia,
+            'origem' => $origemLabel,
+        ]);
+    }
+
+    private function registrarProdutividadeEdicaoTarefa(
+        string $midiaId,
+        string $usuarioId,
+        string $numeroProcesso,
+        string $classeProcesso,
+        string $tipoAudiencia
+    ): void {
+        CartorioProdutividade::record($this->connection, $usuarioId, 'sala-midias.update', [
+            'referencia_item_id' => $midiaId,
+            'referencia_sistema' => 'sala-midias',
+            'numero_processo' => $numeroProcesso,
+            'classe_processo' => $classeProcesso,
+            'tipo_audiencia' => $tipoAudiencia,
         ]);
     }
 

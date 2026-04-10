@@ -47,6 +47,8 @@ return [
     'cartorio-cartas-recebidas.subtarefa.juntada_termo_envio' => 'PRG-DE9FE653361B20C0304DC496F6',
     'cartorio-cartas-recebidas.subtarefa.arquivamento_definitivo' => 'PRG-2369E8BB6B5914F8A2A0998BDB',
     'cartorio-ceapa.create' => 'PRG-C299A59B8C1F2F0EBD87BC8F4D',
+    'sala-midias.create' => 'PRG-61E8A9034F2B1D9C7A6E5F4B3D8',
+    'sala-midias.update' => 'PRG-82FA0C136B4D3E9F281B0A8D7C6E',
     'sala-midias.subtarefa.download_midia' => 'PRG-8F171457EE0B47F2972C1EBD59',
     'sala-midias.subtarefa.sincronizacao_midia' => 'PRG-2B09AFDD2C2A43A8B4F86678D6',
     'sala-midias.subtarefa.upload_midia' => 'PRG-E03B5D7D4A594E6FAF4EC5FB0A',

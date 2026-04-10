@@ -162,7 +162,7 @@
         var maxDate = String(dataInput && dataInput.getAttribute('max') ? dataInput.getAttribute('max') : '').trim();
 
         if (!processo || !classe || !dataAud || !pautaId || !tipoAud) {
-            notify('error', 'Validação', 'Preencha processo, classe, data, audiência e tipo.');
+            notify('error', 'Validação', 'Preencha processo, classe, data e audiência finalizada.');
             return;
         }
         if (maxDate && dataAud > maxDate) {

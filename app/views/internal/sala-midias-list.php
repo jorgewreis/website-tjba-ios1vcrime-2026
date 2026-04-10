@@ -100,6 +100,12 @@ $subtarefaLabels = [
     'upload_midia' => 'Upload de Mídia na Pasta Pública',
     'certidao_upload_midia' => 'Certidão de Upload de Mídia no PJe',
 ];
+$buttonTitleByTipo = [
+    'download_midia' => 'Informar download',
+    'sincronizacao_midia' => 'Informar sincronização',
+    'upload_midia' => 'Informar upload',
+    'certidao_upload_midia' => 'Informar expedição de certidão',
+];
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -348,8 +354,8 @@ $subtarefaLabels = [
                                     <button type="button"
                                         class="btn btn-primary height-sm js-midias-concluir-subtarefa"
                                         data-subtarefa-id="<?php echo htmlspecialchars($subId, ENT_QUOTES, 'UTF-8'); ?>"
-                                        title="Informar resolução da subtarefa">
-                                        <span class="value-button">Informar resolução da subtarefa</span>
+                                        title="<?php echo htmlspecialchars($buttonTitleByTipo[$subCode] ?? 'Informar resolução da subtarefa', ENT_QUOTES, 'UTF-8'); ?>">
+                                        <span class="value-button"><?php echo htmlspecialchars($buttonTitleByTipo[$subCode] ?? 'Informar resolução da subtarefa', ENT_QUOTES, 'UTF-8'); ?></span>
                                     </button>
                                     <?php endif; ?>
                                 </div>
