@@ -102,22 +102,57 @@ final class SalaMidiasService
         }
         $this->assertDataNaoFutura($dataAudiencia);
 
+        if ($pautaId !== '') {
+            $existentePauta = $this->tarefasRepository->findAnyByPautaId($pautaId);
+            if ($existentePauta !== null) {
+                $ativo = (int) ($existentePauta['ativo'] ?? 0);
+                if ($ativo === 1) {
+                    throw new InvalidArgumentException('Já existe cadastro de mídias para esta audiência.');
+                }
+                throw new InvalidArgumentException(
+                    'Esta audiência já possui registro de mídias (inativo). Não é possível cadastrar novamente o mesmo vínculo.'
+                );
+            }
+        } else {
+            $digits = preg_replace('/\D+/', '', $numeroProcesso);
+            if ($digits !== '') {
+                $tipoNorm = mb_strtolower(trim($tipoAudiencia), 'UTF-8');
+                $dupManual = $this->tarefasRepository->findActiveManualDuplicate($digits, $dataAudiencia, $tipoNorm);
+                if ($dupManual !== null) {
+                    throw new InvalidArgumentException(
+                        'Já existe cadastro de mídias para este processo, data e tipo de audiência.'
+                    );
+                }
+            }
+        }
+
         $this->connection->beginTransaction();
         try {
-            $id = $this->tarefasRepository->create([
-                'pauta_id' => $pautaId !== '' ? $pautaId : null,
-                'processo_id' => null,
-                'numero_processo' => $numeroProcesso,
-                'classe_processo' => $classe,
-                'data_audiencia' => $dataAudiencia,
-                'tipo_audiencia' => $tipoAudiencia,
-                'qtd_midias' => $qtdMidias,
-                'origem' => $origem === 'automatico' ? 'automatico' : 'manual',
-                'status' => 'pendente',
-                'observacoes' => trim((string) ($payload['observacoes'] ?? '')) ?: null,
-                'criado_por' => $usuarioId,
-                'atualizado_por' => $usuarioId,
-            ]);
+            try {
+                $id = $this->tarefasRepository->create([
+                    'pauta_id' => $pautaId !== '' ? $pautaId : null,
+                    'processo_id' => null,
+                    'numero_processo' => $numeroProcesso,
+                    'classe_processo' => $classe,
+                    'data_audiencia' => $dataAudiencia,
+                    'tipo_audiencia' => $tipoAudiencia,
+                    'qtd_midias' => $qtdMidias,
+                    'origem' => $origem === 'automatico' ? 'automatico' : 'manual',
+                    'status' => 'pendente',
+                    'observacoes' => trim((string) ($payload['observacoes'] ?? '')) ?: null,
+                    'criado_por' => $usuarioId,
+                    'atualizado_por' => $usuarioId,
+                ]);
+            } catch (\PDOException $e) {
+                $state = $e->errorInfo[0] ?? '';
+                $msg = $e->getMessage();
+                if ($state === '23000'
+                    && (strpos($msg, 'uk_sala_midias_tarefa_pauta') !== false
+                        || stripos($msg, 'Duplicate') !== false)) {
+                    throw new InvalidArgumentException('Já existe cadastro de mídias para esta audiência.');
+                }
+                throw $e;
+            }
 
             $this->inicializarSubtarefas($id);
             $this->aplicarAutoAlocacaoRegraECadastro($id, $usuarioId);
@@ -302,7 +337,11 @@ final class SalaMidiasService
             LEFT JOIN `classes` cl ON cl.`id` = pr.`classe_id`
             WHERE p.`ativo` = 1
               AND p.`data_audiencia` = :data_audiencia
-              AND p.`status` = \'finalizada\'';
+              AND p.`status` = \'finalizada\'
+              AND NOT EXISTS (
+                  SELECT 1 FROM `sala_midias_tarefa` sm
+                  WHERE sm.`pauta_id` = p.`id_pauta`
+              )';
         $params = [':data_audiencia' => $dataYmd];
         $numeroProcesso = trim($numeroProcesso);
         if ($numeroProcesso !== '') {
@@ -342,6 +381,10 @@ final class SalaMidiasService
             WHERE p.`ativo` = 1
               AND p.`status` = \'finalizada\'
               AND pr.`numero_processo` = :numero_processo
+              AND NOT EXISTS (
+                  SELECT 1 FROM `sala_midias_tarefa` sm
+                  WHERE sm.`pauta_id` = p.`id_pauta`
+              )
             ORDER BY p.`data_audiencia` DESC, p.`hora_audiencia` DESC
             LIMIT 1';
         $statement = $this->connection->prepare($sql);

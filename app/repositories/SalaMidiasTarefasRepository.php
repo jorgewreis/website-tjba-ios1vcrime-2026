@@ -100,6 +100,52 @@ final class SalaMidiasTarefasRepository
         return $row === false ? null : $row;
     }
 
+    /**
+     * Qualquer registro com o mesmo `pauta_id` (ativo ou inativo), para checagem de duplicidade na UK.
+     */
+    public function findAnyByPautaId(string $pautaId): ?array
+    {
+        $statement = $this->connection->prepare(
+            sprintf('SELECT * FROM `%s` WHERE `pauta_id` = :pauta_id LIMIT 1', $this->table)
+        );
+        $statement->bindValue(':pauta_id', $pautaId);
+        $statement->execute();
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+
+        return $row === false ? null : $row;
+    }
+
+    /**
+     * Cadastro manual (sem `pauta_id`): mesma audiência = mesmo processo (CNJ, só dígitos) + data + tipo.
+     *
+     * @param string $processoDigits Apenas dígitos do número do processo
+     * @param string $tipoLower Tipo de audiência em minúsculas (trim)
+     */
+    public function findActiveManualDuplicate(string $processoDigits, string $dataYmd, string $tipoLower): ?array
+    {
+        if ($processoDigits === '' || $dataYmd === '' || $tipoLower === '') {
+            return null;
+        }
+        $statement = $this->connection->prepare(
+            sprintf(
+                'SELECT * FROM `%s` WHERE `ativo` = 1 AND `pauta_id` IS NULL AND `data_audiencia` = :data',
+                $this->table
+            )
+        );
+        $statement->bindValue(':data', $dataYmd);
+        $statement->execute();
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        foreach ($rows as $row) {
+            $digits = preg_replace('/\D+/', '', (string) ($row['numero_processo'] ?? ''));
+            $tipo = mb_strtolower(trim((string) ($row['tipo_audiencia'] ?? '')), 'UTF-8');
+            if ($digits === $processoDigits && $tipo === $tipoLower) {
+                return $row;
+            }
+        }
+
+        return null;
+    }
+
     public function fetchList(array $filters, int $limit, int $offset): array
     {
         [$where, $params] = $this->buildWhere($filters);

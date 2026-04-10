@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.86
+
+**Data:** 2026-04-10 15:27:26 | **Commit:** `68553e3` | **Tipo:** `minor`
+
+- feat: add methods for duplicate media registration checks in SalaMidiasTarefasRepository and enhance validation in SalaMidiasService
+
 ## V. 1.85
 
 **Data:** 2026-04-10 15:22:22 | **Commit:** `355ac5e` | **Tipo:** `minor`
@@ -4398,6 +4404,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
