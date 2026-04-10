@@ -323,4 +323,36 @@ return array (
     'quantidade_default' => 1,
     'referencia_sistema' => 'cartorio-ceapa',
   ),
+  'sala-midias.subtarefa.download_midia' =>
+  array (
+    'tipo_ato' => 'Sala de Audiências',
+    'tipo_documento' => 'sala-midias.subtarefa.download_midia',
+    'sistema_modulo' => 'sala-midias',
+    'quantidade_default' => 1,
+    'referencia_sistema' => 'sala-midias',
+  ),
+  'sala-midias.subtarefa.sincronizacao_midia' =>
+  array (
+    'tipo_ato' => 'Sala de Audiências',
+    'tipo_documento' => 'sala-midias.subtarefa.sincronizacao_midia',
+    'sistema_modulo' => 'sala-midias',
+    'quantidade_default' => 1,
+    'referencia_sistema' => 'sala-midias',
+  ),
+  'sala-midias.subtarefa.upload_midia' =>
+  array (
+    'tipo_ato' => 'Sala de Audiências',
+    'tipo_documento' => 'sala-midias.subtarefa.upload_midia',
+    'sistema_modulo' => 'sala-midias',
+    'quantidade_default' => 1,
+    'referencia_sistema' => 'sala-midias',
+  ),
+  'sala-midias.subtarefa.certidao_upload_midia' =>
+  array (
+    'tipo_ato' => 'Sala de Audiências',
+    'tipo_documento' => 'sala-midias.subtarefa.certidao_upload_midia',
+    'sistema_modulo' => 'sala-midias',
+    'quantidade_default' => 1,
+    'referencia_sistema' => 'sala-midias',
+  ),
 );

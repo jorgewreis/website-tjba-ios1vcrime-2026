@@ -659,6 +659,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                 section: 'Sala de Audiências',
                 items: [
                     { icon: 'fi fi-rs-clipboard-list-check', label: 'Pauta de Audiências', target: 'salapauta' },
+                    { icon: 'fi fi-rs-photo-video', label: 'Mídias', target: 'salamidias' },
                     { icon: 'fi fi-rs-document', label: 'Atas de Audiências', target: 'salaata' },
                     { icon: 'fi fi-rs-calendar-day', label: 'Painel do dia', target: 'salapaineldia' }
                 ]

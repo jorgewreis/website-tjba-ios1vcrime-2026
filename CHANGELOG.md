@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.81
+
+**Data:** 2026-04-10 14:17:01 | **Commit:** `c9d5b66` | **Tipo:** `minor`
+
+- feat: add sala de mídias functionality with new access rules, text configurations, and service integrations for enhanced media management
+
 ## V. 1.80
 
 **Data:** 2026-04-09 12:28:20 | **Commit:** `425d027` | **Tipo:** `minor`
@@ -4368,6 +4374,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -235,25 +235,37 @@ final class GuiasService
 
         $usuarioCadastroId = trim((string) ($payload['usuario_cadastro_id'] ?? ''));
 
-        if ($usuarioCadastroId !== ''
-            && !AlocacaoTarefasPerfisHelper::usuarioComPerfilChefiaSemAutoalocacao($usuarioCadastroId)) {
+        $regraRow = $this->alocacoesRegrasRepository->findByRegra(self::REGRA_ALOCAR_GUIAS);
+        $usuarioIdRegra = ($regraRow !== null) ? trim((string) ($regraRow['usuario_id'] ?? '')) : '';
+
+        $chefiaCadastro = $usuarioCadastroId !== ''
+            && AlocacaoTarefasPerfisHelper::usuarioComPerfilChefiaSemAutoalocacao($usuarioCadastroId);
+        $chefiaRegra = $usuarioIdRegra !== ''
+            && AlocacaoTarefasPerfisHelper::usuarioComPerfilChefiaSemAutoalocacao($usuarioIdRegra);
+
+        // Cadastrante: normalmente autoalocado como `all`; se for o mesmo usuário da regra ALLOCATE-GUIAS, usar `rule`
+        // (evita duplicata e exibe chip “regra” conforme o cartório).
+        if ($usuarioCadastroId !== '' && !$chefiaCadastro) {
+            $mesmoUsuarioDaRegra = $usuarioIdRegra !== '' && $usuarioIdRegra === $usuarioCadastroId;
             try {
-                $this->alocadosRepository->addAlocado($idGuia, $usuarioCadastroId, GuiasAlocadosRepository::TIPO_ALL);
+                if ($mesmoUsuarioDaRegra) {
+                    if (!$chefiaRegra) {
+                        $this->alocadosRepository->addAlocado($idGuia, $usuarioCadastroId, GuiasAlocadosRepository::TIPO_RULE);
+                    }
+                } else {
+                    $this->alocadosRepository->addAlocado($idGuia, $usuarioCadastroId, GuiasAlocadosRepository::TIPO_ALL);
+                }
             } catch (RuntimeException $e) {
                 // limite já atingido ou duplicata, ignorar
             }
         }
 
-        $regra = $this->alocacoesRegrasRepository->findByRegra(self::REGRA_ALOCAR_GUIAS);
-        if ($regra !== null) {
-            $usuarioIdRegra = trim((string) ($regra['usuario_id'] ?? ''));
-            if ($usuarioIdRegra !== '' && $usuarioIdRegra !== $usuarioCadastroId
-                && !AlocacaoTarefasPerfisHelper::usuarioComPerfilChefiaSemAutoalocacao($usuarioIdRegra)) {
-                try {
-                    $this->alocadosRepository->addAlocado($idGuia, $usuarioIdRegra, GuiasAlocadosRepository::TIPO_RULE);
-                } catch (RuntimeException $e) {
-                    // limite ou duplicata
-                }
+        // Servidor definido na regra (outra pessoa além do cadastrante já coberto acima)
+        if ($usuarioIdRegra !== '' && !$chefiaRegra && $usuarioIdRegra !== $usuarioCadastroId) {
+            try {
+                $this->alocadosRepository->addAlocado($idGuia, $usuarioIdRegra, GuiasAlocadosRepository::TIPO_RULE);
+            } catch (RuntimeException $e) {
+                // limite ou duplicata
             }
         }
 

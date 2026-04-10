@@ -163,6 +163,22 @@ return array (
   array (
     'observacao' => 'Tarefa CEAPA cadastrada — {tipo_suspensao}.',
   ),
+  'sala-midias.subtarefa.download_midia' =>
+  array (
+    'observacao' => 'Download de mídia realizado no Lifesize.',
+  ),
+  'sala-midias.subtarefa.sincronizacao_midia' =>
+  array (
+    'observacao' => 'Sincronização de mídia concluída no PJe ({qtd_midias} mídia(s)).',
+  ),
+  'sala-midias.subtarefa.upload_midia' =>
+  array (
+    'observacao' => 'Upload de mídia concluído na Pasta Pública ({qtd_midias} mídia(s)).',
+  ),
+  'sala-midias.subtarefa.certidao_upload_midia' =>
+  array (
+    'observacao' => 'Certidão de upload de mídia registrada no PJe.',
+  ),
   'cartorio-interno.estorno-saldo' => 
   array (
     'observacao' => 'Estorno de produtividade (encerramento de tarefa).',
