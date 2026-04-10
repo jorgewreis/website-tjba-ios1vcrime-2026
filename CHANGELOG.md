@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.85
+
+**Data:** 2026-04-10 15:22:22 | **Commit:** `355ac5e` | **Tipo:** `minor`
+
+- feat: update task status handling across multiple services to use 'pendente' instead of 'em_andamento' and enhance filtering options in views for better task management
+
 ## V. 1.84
 
 **Data:** 2026-04-10 15:11:41 | **Commit:** `8f7d71b` | **Tipo:** `minor`
@@ -4392,6 +4398,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

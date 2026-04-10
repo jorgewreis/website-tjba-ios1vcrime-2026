@@ -37,7 +37,7 @@ final class SalaMidiasTarefasRepository
         $statement->bindValue(':tipo_audiencia', $row['tipo_audiencia']);
         $statement->bindValue(':qtd_midias', (int) $row['qtd_midias'], PDO::PARAM_INT);
         $statement->bindValue(':origem', $row['origem'] ?? 'manual');
-        $statement->bindValue(':status', $row['status'] ?? 'em_andamento');
+        $statement->bindValue(':status', $row['status'] ?? 'pendente');
         $statement->bindValue(':observacoes', $row['observacoes'] ?? null);
         $statement->bindValue(':criado_por', $row['criado_por'] ?? null);
         $statement->bindValue(':atualizado_por', $row['atualizado_por'] ?? null);
@@ -191,6 +191,9 @@ final class SalaMidiasTarefasRepository
         if ($includeStatus && $status !== '') {
             $conds[] = 't.`status` = :status';
             $params[':status'] = $status;
+        } elseif ($includeStatus && $status === '' && !empty($filters['excluir_concluida'])) {
+            $conds[] = 't.`status` <> :excl_status_concluida';
+            $params[':excl_status_concluida'] = 'concluida';
         }
 
         $data = trim((string) ($filters['data_audiencia'] ?? ''));

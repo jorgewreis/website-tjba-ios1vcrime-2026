@@ -13,6 +13,7 @@ require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
 require_once __DIR__ . '/../helpers/CartorioProdutividade.php';
 require_once __DIR__ . '/../helpers/AlocacaoTarefasPerfisHelper.php';
+require_once __DIR__ . '/../helpers/CartorioTarefaStatusPrincipalHelper.php';
 
 final class EditaisService
 {
@@ -210,7 +211,12 @@ final class EditaisService
         }
         $existentes = $this->subtarefasRepository->findByEditalId($editalId);
         if (count($existentes) > 0) {
-            $this->repository->update($editalId, ['status' => 'em_andamento']);
+            $status = CartorioTarefaStatusPrincipalHelper::principalStatusPadrao(
+                $existentes,
+                ['concluida'],
+                'concluída'
+            );
+            $this->repository->update($editalId, ['status' => $status]);
             return;
         }
 
@@ -219,7 +225,7 @@ final class EditaisService
         $this->subtarefasRepository->create($editalId, EditaisSubtarefasRepository::TIPO_ORDEM_3, 3, 'pendente', null);
         $this->subtarefasRepository->create($editalId, EditaisSubtarefasRepository::TIPO_ORDEM_4, 4, 'pendente', null);
 
-        $this->repository->update($editalId, ['status' => 'em_andamento']);
+        $this->repository->update($editalId, ['status' => 'pendente']);
 
         if ($usuarioId !== null && trim($usuarioId) !== ''
             && !AlocacaoTarefasPerfisHelper::usuarioComPerfilChefiaSemAutoalocacao(trim($usuarioId))) {

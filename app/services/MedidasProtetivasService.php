@@ -17,6 +17,7 @@ require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
 require_once __DIR__ . '/../helpers/CartorioProdutividade.php';
 require_once __DIR__ . '/../helpers/AlocacaoTarefasPerfisHelper.php';
+require_once __DIR__ . '/../helpers/CartorioTarefaStatusPrincipalHelper.php';
 
 final class MedidasProtetivasService
 {
@@ -310,13 +311,18 @@ final class MedidasProtetivasService
 
         $existentes = $this->subtarefasRepository->findByMedidaId($medidaId);
         if (count($existentes) > 0) {
-            $this->repository->update($medidaId, ['status' => 'em_andamento']);
+            $status = CartorioTarefaStatusPrincipalHelper::principalStatusPadrao(
+                $existentes,
+                ['concluida'],
+                'concluída'
+            );
+            $this->repository->update($medidaId, ['status' => $status]);
             return;
         }
 
         $this->subtarefasRepository->create($medidaId, MedidasProtetivasSubtarefasRepository::TIPO_ORDEM_1, 1, 'em_andamento', null);
         $this->subtarefasRepository->create($medidaId, MedidasProtetivasSubtarefasRepository::TIPO_ORDEM_2, 2, 'pendente', null);
-        $this->repository->update($medidaId, ['status' => 'em_andamento']);
+        $this->repository->update($medidaId, ['status' => 'pendente']);
 
         if ($usuarioId !== null && trim($usuarioId) !== ''
             && !AlocacaoTarefasPerfisHelper::usuarioComPerfilChefiaSemAutoalocacao(trim($usuarioId))) {

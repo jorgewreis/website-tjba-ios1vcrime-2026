@@ -211,7 +211,7 @@ final class CartasRecebidasService
         $repo->create($idCarta, $repo::TIPO_ORDEM_6, 6, 'pendente', null);
         $repo->create($idCarta, $repo::TIPO_ORDEM_7, 7, 'pendente', null);
 
-        $this->repository->update($idCarta, ['status' => 'em_andamento']);
+        $this->repository->update($idCarta, ['status' => 'pendente']);
 
         if ($usuarioCadastroId !== '' && $usuarioCadastroId !== 'sistema') {
             $cartaComClasse = $this->repository->findWithClasseProcessualNome($idCarta)
@@ -536,7 +536,7 @@ final class CartasRecebidasService
         $repo->create($cartaId, $repo::TIPO_ORDEM_5, 5, 'pendente', null);
         $repo->create($cartaId, $repo::TIPO_ORDEM_6, 6, 'pendente', null);
         $repo->create($cartaId, $repo::TIPO_ORDEM_7, 7, 'pendente', null);
-        $this->repository->update($cartaId, ['status' => 'em_andamento']);
+        $this->repository->update($cartaId, ['status' => 'pendente']);
         if ($usuarioId !== null && trim($usuarioId) !== '') {
             $this->alocadosRepository->addAlocado($cartaId, trim($usuarioId));
         }

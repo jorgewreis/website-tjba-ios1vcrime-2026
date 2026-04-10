@@ -15,6 +15,7 @@ require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
 require_once __DIR__ . '/../helpers/CartorioProdutividade.php';
 require_once __DIR__ . '/../helpers/AlocacaoTarefasPerfisHelper.php';
+require_once __DIR__ . '/../helpers/CartorioTarefaStatusPrincipalHelper.php';
 
 final class GuiasService
 {
@@ -292,7 +293,7 @@ final class GuiasService
         $repo->create($idGuia, $repo::TIPO_ORDEM_7, 7, 'pendente', null);
         $repo->create($idGuia, $repo::TIPO_ORDEM_8, 8, 'pendente', null);
 
-        $this->repository->update($idGuia, ['status' => 'em_andamento']);
+        $this->repository->update($idGuia, ['status' => 'pendente']);
 
         // Se o cadastro já veio com data_fato e dias_multa, concluir a subtarefa 1 e ativar a 2
         $this->sincronizarDetalhamentoAposUpdate($idGuia, $usuarioCadastroId);
@@ -751,7 +752,13 @@ final class GuiasService
         $existentes = $this->subtarefasRepository->findByGuiaId($guiaId);
         if (count($existentes) === 0) {
             $this->subtarefasRepository->ensureOitoSubtarefas($guiaId);
-            $this->repository->update($guiaId, ['status' => 'em_andamento']);
+            $todas = $this->subtarefasRepository->findByGuiaId($guiaId);
+            $status = CartorioTarefaStatusPrincipalHelper::principalStatusPadrao(
+                $todas,
+                ['concluida', GuiasSubtarefasRepository::STATUS_PULADA],
+                'concluída'
+            );
+            $this->repository->update($guiaId, ['status' => $status]);
             if ($usuarioId !== null && trim($usuarioId) !== '') {
                 try {
                     $this->alocadosRepository->addAlocado($guiaId, trim($usuarioId));
@@ -765,7 +772,13 @@ final class GuiasService
         if ($ordem1 !== null && trim((string) ($ordem1['status'] ?? '')) !== 'concluida' && trim((string) ($ordem1['status'] ?? '')) !== GuiasSubtarefasRepository::STATUS_CANCELADA) {
             $this->subtarefasRepository->atualizarStatus((string) $ordem1['id'], 'em_andamento');
         }
-        $this->repository->update($guiaId, ['status' => 'em_andamento']);
+        $todas = $this->subtarefasRepository->findByGuiaId($guiaId);
+        $status = CartorioTarefaStatusPrincipalHelper::principalStatusPadrao(
+            $todas,
+            ['concluida', GuiasSubtarefasRepository::STATUS_PULADA],
+            'concluída'
+        );
+        $this->repository->update($guiaId, ['status' => $status]);
         if ($usuarioId !== null && trim($usuarioId) !== '') {
             try {
                 $this->alocadosRepository->addAlocado($guiaId, trim($usuarioId));

@@ -250,7 +250,7 @@ if ($totalPages > 0) {
                 <div class="col">
                     <label for="filter-status">Filtrar por status</label>
                     <select class="width-500 height-md" id="filter-status">
-                        <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Mostrar todos</option>
+                        <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Todas exceto finalizadas</option>
                         <option value="pendente"<?php echo $statusFilter === 'pendente' ? ' selected' : ''; ?>>
                             Pendente (<?php echo htmlspecialchars((string) ($statusCounts['pendente'] ?? 0)); ?>)
                         </option>

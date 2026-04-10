@@ -14,6 +14,7 @@ require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
 require_once __DIR__ . '/../helpers/CartorioProdutividade.php';
 require_once __DIR__ . '/../helpers/AlocacaoTarefasPerfisHelper.php';
+require_once __DIR__ . '/../helpers/CartorioTarefaStatusPrincipalHelper.php';
 
 final class CejuscService
 {
@@ -218,7 +219,7 @@ final class CejuscService
         $this->subtarefasRepository->create($idTarefa, CejuscSubtarefasRepository::TIPO_ORDEM_2, 2, 'pendente', null);
         $this->subtarefasRepository->create($idTarefa, CejuscSubtarefasRepository::TIPO_ORDEM_3, 3, 'pendente', null);
 
-        $this->repository->updateStatus($idTarefa, 'em_andamento');
+        $this->repository->updateStatus($idTarefa, 'pendente');
 
         if ($usuarioCadastroId !== '' && $usuarioCadastroId !== 'sistema') {
             $tarefaRow = $this->repository->findById($idTarefa);
@@ -476,13 +477,19 @@ final class CejuscService
             if ($ordem1 !== null && trim((string) ($ordem1['status'] ?? '')) !== 'concluida') {
                 $this->subtarefasRepository->atualizarStatus((string) $ordem1['id'], 'em_andamento');
             }
-            $this->repository->updateStatus($cejuscId, 'em_andamento');
+            $todas = $this->subtarefasRepository->findByCejuscId($cejuscId);
+            $status = CartorioTarefaStatusPrincipalHelper::principalStatusPadrao(
+                $todas,
+                ['concluida'],
+                'concluída'
+            );
+            $this->repository->updateStatus($cejuscId, $status);
             return;
         }
         $this->subtarefasRepository->create($cejuscId, CejuscSubtarefasRepository::TIPO_ORDEM_1, 1, 'em_andamento', null);
         $this->subtarefasRepository->create($cejuscId, CejuscSubtarefasRepository::TIPO_ORDEM_2, 2, 'pendente', null);
         $this->subtarefasRepository->create($cejuscId, CejuscSubtarefasRepository::TIPO_ORDEM_3, 3, 'pendente', null);
-        $this->repository->updateStatus($cejuscId, 'em_andamento');
+        $this->repository->updateStatus($cejuscId, 'pendente');
         if ($usuarioId !== null && trim($usuarioId) !== '') {
             $this->alocadosRepository->addAlocado($cejuscId, trim($usuarioId));
         }

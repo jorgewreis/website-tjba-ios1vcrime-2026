@@ -32,6 +32,7 @@ final class SalaMidiasService
 
     public function list(array $filters, int $limit, int $offset): array
     {
+        $filters = $this->normalizeListFilters($filters);
         $rows = $this->tarefasRepository->fetchList($filters, $limit, $offset);
         $ids = array_values(array_filter(array_map(static function (array $row): string {
             return trim((string) ($row['id'] ?? ''));
@@ -112,7 +113,7 @@ final class SalaMidiasService
                 'tipo_audiencia' => $tipoAudiencia,
                 'qtd_midias' => $qtdMidias,
                 'origem' => $origem === 'automatico' ? 'automatico' : 'manual',
-                'status' => 'em_andamento',
+                'status' => 'pendente',
                 'observacoes' => trim((string) ($payload['observacoes'] ?? '')) ?: null,
                 'criado_por' => $usuarioId,
                 'atualizado_por' => $usuarioId,
@@ -237,18 +238,28 @@ final class SalaMidiasService
         }
 
         $subtarefas = $this->subtarefasRepository->findByMidiaId($midiaId);
-        $allConcluidas = true;
+        $nConcluidas = 0;
         foreach ($subtarefas as $st) {
-            if (trim((string) ($st['status'] ?? '')) !== SalaMidiasSubtarefasRepository::STATUS_CONCLUIDA) {
-                $allConcluidas = false;
-                break;
+            if (trim((string) ($st['status'] ?? '')) === SalaMidiasSubtarefasRepository::STATUS_CONCLUIDA) {
+                $nConcluidas++;
             }
         }
-        if ($allConcluidas) {
+        $totalSub = count($subtarefas);
+        $tarefaAtual = $this->tarefasRepository->findById($midiaId) ?? $tarefa;
+        $qtdTarefa = max(1, (int) ($tarefaAtual['qtd_midias'] ?? $qtd));
+
+        if ($totalSub > 0 && $nConcluidas === $totalSub) {
             $this->tarefasRepository->update($midiaId, [
-                'qtd_midias' => $qtd,
+                'qtd_midias' => $qtdTarefa,
                 'status' => 'concluida',
-                'observacoes' => $tarefa['observacoes'] ?? null,
+                'observacoes' => $tarefaAtual['observacoes'] ?? null,
+                'atualizado_por' => $usuarioId,
+            ]);
+        } elseif ($nConcluidas >= 1) {
+            $this->tarefasRepository->update($midiaId, [
+                'qtd_midias' => $qtdTarefa,
+                'status' => 'em_andamento',
+                'observacoes' => $tarefaAtual['observacoes'] ?? null,
                 'atualizado_por' => $usuarioId,
             ]);
         }
@@ -388,6 +399,20 @@ final class SalaMidiasService
             }
             throw $e;
         }
+    }
+
+    /**
+     * Lista padrão: sem filtro de status, oculta tarefas finalizadas (concluídas).
+     *
+     * @param array<string, mixed> $filters
+     * @return array<string, mixed>
+     */
+    private function normalizeListFilters(array $filters): array
+    {
+        $status = trim((string) ($filters['status'] ?? ''));
+        $filters['excluir_concluida'] = $status === '';
+
+        return $filters;
     }
 
     private function inicializarSubtarefas(string $midiaId): void

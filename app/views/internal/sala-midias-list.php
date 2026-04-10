@@ -127,7 +127,7 @@ $buttonTitleByTipo = [
         <span class="specific">Mídias</span>
     </div>
     <h1 class="title-page">Mídias de audiências</h1>
-    <p class="description-page">Controle de tarefas de download, sincronização, upload e certidão de upload de mídia.</p>
+    <p class="description-page">Controle de tarefas de download, sincronização, upload e certidão de upload de mídia. Tarefas finalizadas aparecem apenas ao filtrar por &quot;Finalizada&quot;.</p>
 </div>
 
 <div class="container-full card-page">
@@ -147,7 +147,7 @@ $buttonTitleByTipo = [
             <div class="col">
                 <label for="filter-status">Filtrar por status</label>
                 <select class="width-500 height-md" id="filter-status">
-                    <option value=""<?php echo $status === '' ? ' selected' : ''; ?>>Mostrar todos</option>
+                    <option value=""<?php echo $status === '' ? ' selected' : ''; ?>>Todas exceto finalizadas</option>
                     <option value="pendente"<?php echo $status === 'pendente' ? ' selected' : ''; ?>>Pendente (<?php echo (int) ($statusCounts['pendente'] ?? 0); ?>)</option>
                     <option value="em_andamento"<?php echo $status === 'em_andamento' ? ' selected' : ''; ?>>Em andamento (<?php echo (int) ($statusCounts['em_andamento'] ?? 0); ?>)</option>
                     <option value="concluida"<?php echo $status === 'concluida' ? ' selected' : ''; ?>>Finalizada (<?php echo (int) ($statusCounts['concluida'] ?? 0); ?>)</option>
