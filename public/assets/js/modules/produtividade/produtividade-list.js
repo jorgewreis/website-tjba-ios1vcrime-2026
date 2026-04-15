@@ -405,19 +405,14 @@
             return;
         }
 
-        function renderSetor(setor) {
+        function renderRankingRows(rows) {
             var wrapper = document.createElement('div');
             wrapper.className = 'display-flex col col-full border-bottom padding-y-sm';
 
-            var title = document.createElement('h3');
-            title.textContent = (setor && setor.setor_nome ? setor.setor_nome : 'Sem setor');
-            wrapper.appendChild(title);
-
-            var rows = (setor && Array.isArray(setor.rows)) ? setor.rows : [];
-            if (rows.length === 0) {
+            if (!rows || rows.length === 0) {
                 var empty = document.createElement('span');
                 empty.className = 'minor-info';
-                empty.textContent = 'Sem dados para este setor no mês atual.';
+                empty.textContent = 'Sem dados de ranking no mês atual (Cartório/Gabinete).';
                 wrapper.appendChild(empty);
                 return wrapper;
             }
@@ -455,16 +450,15 @@
                     return;
                 }
 
-                var setores = result.data && Array.isArray(result.data.setores) ? result.data.setores : [];
+                var rows = result.data && Array.isArray(result.data.rows) ? result.data.rows : [];
+                var top5 = rows.slice(0, 5);
                 content.innerHTML = '';
-                if (setores.length === 0) {
+                if (top5.length === 0) {
                     loading.textContent = 'Sem dados de ranking no mês atual (Cartório/Gabinete).';
                     return;
                 }
 
-                setores.forEach(function (setor) {
-                    content.appendChild(renderSetor(setor));
-                });
+                content.appendChild(renderRankingRows(top5));
                 loading.style.display = 'none';
                 content.style.display = '';
             })

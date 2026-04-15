@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.91
+
+**Data:** 2026-04-15 11:46:20 | **Commit:** `3880ec8` | **Tipo:** `minor`
+
+- refactor: simplify ranking logic in productivity service and views by removing sector-based grouping, enhancing clarity and performance
+
 ## V. 1.90
 
 **Data:** 2026-04-15 11:30:29 | **Commit:** `f685100` | **Tipo:** `minor`
@@ -4434,6 +4440,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

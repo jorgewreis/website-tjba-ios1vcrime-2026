@@ -16,12 +16,11 @@ $resumo = [
     'month' => ['current' => 0.0, 'previous' => 0.0, 'variation_percent' => 0.0],
 ];
 $rankingTop5 = [];
+$allRankingRows = [];
 $userRankingRow = null;
-$sectorName = '';
 $rankingOculto = false;
 $podeVerRanking = false;
 $alocacaoCards = [];
-$sectorBlock = null;
 
 $mesesPt = ['', 'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
 $mesRef = $mesesPt[(int) date('n')] . ' de ' . date('Y');
@@ -36,24 +35,10 @@ if ($userId !== '') {
         if ($podeVerRanking) {
             $rankingPayload = $service->listRanking($userId, ['status' => 'ativo'], 200);
             $rankingOculto = !empty($rankingPayload['ranking_oculto']);
-            $rankingSet = $rankingPayload['setores'] ?? [];
-            $sectorBlock = null;
-            foreach ($rankingSet as $setor) {
-                foreach (($setor['rows'] ?? []) as $row) {
-                    if ((string) ($row['usuario_id'] ?? '') === $userId) {
-                        $sectorBlock = $setor;
-                        break 2;
-                    }
-                }
-            }
-            if ($sectorBlock === null && count($rankingSet) === 1) {
-                $sectorBlock = $rankingSet[0];
-            }
-            if ($sectorBlock !== null) {
-                $sectorName = (string) ($sectorBlock['setor_nome'] ?? '');
-                $rows = $sectorBlock['rows'] ?? [];
-                $rankingTop5 = array_slice($rows, 0, 5);
-                foreach ($rows as $row) {
+            $allRankingRows = $rankingPayload['rows'] ?? [];
+            if ($allRankingRows !== [] && !$rankingOculto) {
+                $rankingTop5 = array_slice($allRankingRows, 0, 5);
+                foreach ($allRankingRows as $row) {
                     if ((string) ($row['usuario_id'] ?? '') === $userId) {
                         $userRankingRow = $row;
                         break;
@@ -219,7 +204,7 @@ $monthVarFmt = $monthVar > 0
                         <div class="dashboard-interno-card-head">
                             <div>
                                 <h2>Ranking mensal</h2>
-                                <span class="minor-info"><?php echo htmlspecialchars($mesRef, ENT_QUOTES, 'UTF-8'); ?><?php echo $sectorName !== '' ? ' · ' . htmlspecialchars($sectorName, ENT_QUOTES, 'UTF-8') : ''; ?></span>
+                                <span class="minor-info"><?php echo htmlspecialchars($mesRef, ENT_QUOTES, 'UTF-8'); ?> · top 5 (Cartório e Gabinete)</span>
                             </div>
                             <button type="button" class="btn btn-secondary-outline height-md" data-nav-href="/frame.php?page=produtividade">Abrir módulo</button>
                         </div>
@@ -228,12 +213,9 @@ $monthVarFmt = $monthVar > 0
                                 <p class="minor-info">O ranking de produtividade não está disponível para o seu perfil de lotação (ex.: Sala de Audiências).</p>
                             <?php elseif ($rankingOculto): ?>
                                 <p class="minor-info">Ranking indisponível para o seu perfil neste período.</p>
-                            <?php elseif ($sectorBlock === null): ?>
-                                <p class="minor-info">Não foi possível carregar o ranking do seu setor neste mês.</p>
+                            <?php elseif ($allRankingRows === []): ?>
+                                <p class="minor-info">Ainda não há pontos registrados no ranking neste mês.</p>
                             <?php else: ?>
-                                <?php if ($rankingTop5 === []): ?>
-                                    <p class="minor-info">Ainda não há pontos registrados no ranking do setor neste mês.</p>
-                                <?php else: ?>
                                     <ul class="dashboard-ranking-list">
                                         <?php foreach ($rankingTop5 as $row): ?>
                                             <?php
@@ -248,15 +230,11 @@ $monthVarFmt = $monthVar > 0
                                             </li>
                                         <?php endforeach; ?>
                                     </ul>
-                                <?php endif; ?>
 
                                 <?php if ($userRankingRow !== null): ?>
                                     <div class="dashboard-ranking-me">
                                         <strong>Sua posição:</strong> #<?php echo (int) ($userRankingRow['posicao'] ?? 0); ?>
                                         · <?php echo number_format((float) ($userRankingRow['pontos_total'] ?? 0), 2, ',', '.'); ?> pts
-                                        <?php if ($sectorName !== ''): ?>
-                                            <span class="minor-info"> — <?php echo htmlspecialchars($sectorName, ENT_QUOTES, 'UTF-8'); ?></span>
-                                        <?php endif; ?>
                                     </div>
                                 <?php elseif ($rankingTop5 !== []): ?>
                                     <p class="minor-info margin-top-md">Você ainda não possui pontos no ranking deste mês; sua posição aparecerá quando houver lançamentos válidos.</p>

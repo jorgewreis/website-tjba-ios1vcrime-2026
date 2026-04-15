@@ -591,68 +591,31 @@ final class ProdutividadeService
             if ($setorCodigoArea === strtoupper(AccessAreas::AUDIENCIAS)) {
                 return [
                     'is_gestao' => false,
-                    'total_setores' => 0,
-                    'setores' => [],
                     'ranking_oculto' => true,
+                    'rows' => [],
                 ];
-            }
-            if ($setorCodigoArea !== '') {
-                $rankingFilters['setor_codigo_area'] = $setorCodigoArea;
-            } else {
-                $rankingFilters['usuario_id'] = $actorUserId;
             }
         }
 
         $rows = $this->lancamentosRepository->fetchRanking($rankingFilters, $limit);
-        $sectors = [];
+        $out = [];
+        $position = 1;
         foreach ($rows as $row) {
-            $codigo = strtoupper(trim((string) ($row['setor_codigo_area'] ?? '')));
-            if ($codigo === '') {
-                $codigo = '__SEM_SETOR__';
-            }
-            if (!isset($sectors[$codigo])) {
-                $sectors[$codigo] = [
-                    'codigo_area' => $codigo === '__SEM_SETOR__' ? '' : $codigo,
-                    'setor_nome' => trim((string) ($row['setor_nome'] ?? 'Sem setor')),
-                    'total_pontos' => 0.0,
-                    'rows' => [],
-                ];
-            }
             $pontos = (float) ($row['pontos_total'] ?? 0);
-            $sectors[$codigo]['rows'][] = [
+            $out[] = [
+                'posicao' => $position,
                 'usuario_id' => (string) ($row['usuario_id'] ?? ''),
                 'usuario_nome' => trim((string) ($row['usuario_nome'] ?? '')) !== '' ? trim((string) $row['usuario_nome']) : (string) ($row['usuario_id'] ?? ''),
                 'pontos_total' => $pontos,
                 'total_lancamentos' => (int) ($row['total_lancamentos'] ?? 0),
             ];
-            $sectors[$codigo]['total_pontos'] += $pontos;
+            $position++;
         }
-
-        $out = [];
-        foreach ($sectors as $sector) {
-            usort($sector['rows'], static function (array $a, array $b): int {
-                if ($a['pontos_total'] === $b['pontos_total']) {
-                    return strcmp((string) $a['usuario_nome'], (string) $b['usuario_nome']);
-                }
-                return $a['pontos_total'] > $b['pontos_total'] ? -1 : 1;
-            });
-            $position = 1;
-            foreach ($sector['rows'] as &$item) {
-                $item['posicao'] = $position;
-                $position++;
-            }
-            unset($item);
-            $out[] = $sector;
-        }
-
-        usort($out, static function (array $a, array $b): int {
-            return strcmp((string) $a['setor_nome'], (string) $b['setor_nome']);
-        });
 
         return [
             'is_gestao' => $isGestao,
-            'total_setores' => count($out),
-            'setores' => $out,
+            'ranking_oculto' => false,
+            'rows' => $out,
         ];
     }
 
@@ -801,7 +764,7 @@ final class ProdutividadeService
         ];
     }
 
-    /** Ranking de produtividade: visível para Cartório e Gabinete; oculto para Sala de Audiências (perfis de gestão continuam vendo o ranking filtrado). */
+    /** Ranking de produtividade: visível para Cartório e Gabinete; oculto para Sala de Audiências (gestão vê ranking global do mês). */
     public function usuarioPodeVerRankingProdutividade(string $userId): bool
     {
         $this->assertAuthenticated($userId);

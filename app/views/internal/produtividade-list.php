@@ -376,7 +376,10 @@ if ($canLoadLancamentos && $errors === []) {
 
         <?php if ($showRankingBlock): ?>
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
-            <h2>Ranking (mês atual — Cartório e Gabinete)</h2>
+            <div class="display-flex col col-fit gap-y-sm">
+                <h2>Ranking</h2>
+                <span class="minor-info">Top 5</span>
+            </div>
         </div>
         <div class="display-flex col col-full padding-x-md padding-y-md border-bottom" id="ranking-section" data-ranking-url="<?php echo htmlspecialchars($rankingApiHref, ENT_QUOTES); ?>">
             <span class="minor-info" id="ranking-loading">Carregando ranking do mês…</span>
@@ -435,7 +438,7 @@ if ($canLoadLancamentos && $errors === []) {
         <?php endif; ?>
 
         <?php if ($errors === [] && $canLoadLancamentos): ?>
-        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm border-top">
+        <div class="display-flex row row-full justify-between padding-x-md padding-y-lg">
             <span class="pagination-info">
                 Mostrando <?php echo (int) $startItem; ?>-<?php echo (int) $endItem; ?> de <?php echo (int) $totalDocuments; ?> <?php echo htmlspecialchars($documentsLabel, ENT_QUOTES, 'UTF-8'); ?>
                 (<?php echo (int) $totalPages; ?> <?php echo htmlspecialchars($pagesLabel, ENT_QUOTES, 'UTF-8'); ?>, <?php echo (int) $itemsPerPage; ?> <?php echo htmlspecialchars($itemsLabel, ENT_QUOTES, 'UTF-8'); ?> por página)

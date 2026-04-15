@@ -248,16 +248,12 @@ final class ProdutividadeLancamentosRepository
         $sql = sprintf(
             'SELECT l.`usuario_id`,
                     CONCAT(COALESCE(u.`nome`, \'\'), CASE WHEN COALESCE(u.`sobrenome`, \'\') = \'\' THEN \'\' ELSE CONCAT(\' \', u.`sobrenome`) END) AS usuario_nome,
-                    COALESCE(s.`nome`, \'Sem setor\') AS setor_nome,
-                    UPPER(COALESCE(s.`codigo_area`, \'\')) AS setor_codigo_area,
                     COALESCE(SUM(l.`pontos_calculados`), 0) AS pontos_total,
                     COUNT(*) AS total_lancamentos
              FROM `%s` l
              LEFT JOIN `usuarios` u ON u.`id_usuario` = l.`usuario_id`
-             LEFT JOIN `usuario_setor` us ON us.`usuario` = l.`usuario_id`
-             LEFT JOIN `setores` s ON s.`id_setor` = us.`setor`
              %s
-             GROUP BY l.`usuario_id`, usuario_nome, setor_nome, setor_codigo_area
+             GROUP BY l.`usuario_id`, u.`nome`, u.`sobrenome`
              ORDER BY pontos_total DESC, usuario_nome ASC
              LIMIT :limit',
             $this->table,
@@ -327,7 +323,8 @@ final class ProdutividadeLancamentosRepository
     }
 
     /**
-     * Ranking: apenas usuários lotados em Cartório ou Gabinete (exclui Sala de Audiências e demais).
+     * Filtros do ranking: apenas usuários com lotação Cartório ou Gabinete (via EXISTS em buildRankingFilter).
+     * Resultado agregado por usuário (pontos no período), sem segmentar por setor.
      *
      * @return array{0:list<string>,1:array<string,mixed>}
      */
