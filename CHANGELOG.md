@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.94.0001
+
+**Data:** 2026-04-15 12:13:21 | **Commit:** `c3bdf42` | **Tipo:** `patch`
+
+- fix: restore loading message in ranking section of productivity list view for better user feedback
+
 ## V. 1.94
 
 **Data:** 2026-04-15 12:09:31 | **Commit:** `7b7dc15` | **Tipo:** `minor`
@@ -4458,6 +4464,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

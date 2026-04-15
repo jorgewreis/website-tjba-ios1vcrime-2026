@@ -280,20 +280,20 @@ if ($canLoadLancamentos && $errors === []) {
         
         <!-- RANKING -->
         <?php if ($showRankingBlock): ?>
-        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+        <div class="display-flex row row-full align-center justify-between padding-x-lg padding-y-md border-bottom">
             <div class="display-flex col col-fit gap-y-sm">
                 <h2>Ranking</h2>
             </div>
         </div>
-        <div class="display-flex col col-full padding-x-md padding-y-md border-bottom" id="ranking-section" data-ranking-url="<?php echo htmlspecialchars($rankingApiHref, ENT_QUOTES); ?>">
-            <!-- <span class="minor-info" id="ranking-loading">Carregando ranking do mês…</span> -->
+        <div class="display-flex col col-full padding-x-md padding-y-md" id="ranking-section" data-ranking-url="<?php echo htmlspecialchars($rankingApiHref, ENT_QUOTES); ?>">
+            <span class="minor-info" id="ranking-loading">Carregando ranking do mês…</span>
             <div id="ranking-content" class="display-flex col col-full gap-y-md" style="display:none;"></div>
         </div>
         <?php endif; ?>
         <!-- FIM RANKING -->
 
         <!-- LANÇAMENTOS -->
-        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+        <div class="display-flex row row-full align-center justify-between padding-x-lg padding-y-md filters">
             <h2>Lançamentos</h2>
             <div class="display-flex row row-fit justify-end gap-y-md"></div>
         </div>
