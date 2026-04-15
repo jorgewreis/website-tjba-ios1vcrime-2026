@@ -418,42 +418,14 @@ if ($canLoadLancamentos && $errors === []) {
                 ?>
                 <div class="display-flex col col-full register border-bottom">
                     <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
-                        <div class="display-flex row row-fit justify-start gap-y-md flex-wrap">
-
-                            <!-- teste -->
-                            <div class="row width-full gap-x-sm" style="font-family: monospace; font-size: 12px;">
+                        <div class="display-flex row row-fit justify-start gap-y-md flex-wrap" style="width: calc(100% - 50px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            <div class="row width-full gap-x-sm padding-x-md padding-y-sm" style="font-family: monospace; font-size: 12px;">
                                 <?php echo htmlspecialchars(date('d/m/Y H:i', strtotime((string) ($row['data_hora_ato'] ?? 'now'))) . ' | ' . (string) ($row['numero_processo'] ?? '—') . ' | ' . (string) ($descricaoTarefa ?? '') . ' x' . (int) ($row['quantidade'] ?? 0) . ' - ' . number_format((float) ($row['pontos_calculados'] ?? 0), 2, ',', '.') . ' pts | ' . (string) ($row['usuario_nome'] ?? $row['usuario_id'] ?? '') , ENT_QUOTES); ?>
                             </div>
-                            <!-- fim teste -->
-
-                            <!-- <div class="col width-300">
-                                <span class="minor-info">Data/hora</span>
-                                <span class="major-info"><?php echo htmlspecialchars(date('d/m/Y H:i', strtotime((string) ($row['data_hora_ato'] ?? 'now'))), ENT_QUOTES); ?></span>
-                            </div>
-                            <div class="col width-500">
-                                <span class="minor-info"><?php echo htmlspecialchars($labelColunaProcesso, ENT_QUOTES, 'UTF-8'); ?></span>
-                                <span class="major-info"><?php echo htmlspecialchars((string) ($row['numero_processo'] ?? '—'), ENT_QUOTES, 'UTF-8'); ?></span>
-                            </div>
-                            <div class="col width-700">
-                                <span class="minor-info">Descrição da tarefa</span>
-                                <span class="major-info"><?php echo htmlspecialchars($descricaoTarefa, ENT_QUOTES); ?></span>
-                            </div>
-                            <div class="col width-200">
-                                <span class="minor-info">Qtd</span>
-                                <span class="major-info"><?php echo (int) ($row['quantidade'] ?? 0); ?></span>
-                            </div>
-                            <div class="col width-200">
-                                <span class="minor-info">Pontos</span>
-                                <span class="major-info"><?php echo number_format((float) ($row['pontos_calculados'] ?? 0), 2, ',', '.'); ?></span>
-                            </div>
-                            <div class="col width-500">
-                                <span class="minor-info">Usuário</span>
-                                <span class="major-info"><?php echo htmlspecialchars((string) ($row['usuario_nome'] ?? $row['usuario_id'] ?? ''), ENT_QUOTES); ?></span>
-                            </div> -->
                         </div>
                         <div class="display-flex row row-fit justify-end gap-y-sm align-center">
                             <?php if ($service->canActorAnularLancamentoManual($userId, $row)): ?>
-                            <button type="button" class="btn btn-danger-outline height-md" data-anular-id="<?php echo htmlspecialchars((string) ($row['id'] ?? ''), ENT_QUOTES); ?>">Anular</button>
+                            <button type="button" class="btn btn-danger-outline" data-anular-id="<?php echo htmlspecialchars((string) ($row['id'] ?? ''), ENT_QUOTES); ?>" style="display: flex; align-items: center; justify-content: center; width: 20px; height: 20px !important; padding: 5px; margin-right: 10px; border-radius: 4px; border: 1px solid var(--color-border); font-family: monospace; font-size: 12px;">x</button>
                             <?php endif; ?>
                         </div>
                     </div>
