@@ -245,19 +245,26 @@ final class ProdutividadeLancamentosRepository
     public function fetchRanking(array $filters, int $limit = 200): array
     {
         [$where, $params] = $this->buildRankingFilter($filters);
+        // Agrega só em `l` (sem JOIN antes do GROUP BY) para não perder linhas nem depender de ONLY_FULL_GROUP_BY.
+        $whereSql = $where !== [] ? 'WHERE ' . implode(' AND ', $where) : '';
         $sql = sprintf(
-            'SELECT l.`usuario_id`,
+            'SELECT agg.`usuario_id`,
                     CONCAT(COALESCE(u.`nome`, \'\'), CASE WHEN COALESCE(u.`sobrenome`, \'\') = \'\' THEN \'\' ELSE CONCAT(\' \', u.`sobrenome`) END) AS usuario_nome,
-                    COALESCE(SUM(l.`pontos_calculados`), 0) AS pontos_total,
-                    COUNT(*) AS total_lancamentos
-             FROM `%s` l
-             LEFT JOIN `usuarios` u ON u.`id_usuario` = l.`usuario_id`
-             %s
-             GROUP BY l.`usuario_id`, u.`nome`, u.`sobrenome`
-             ORDER BY pontos_total DESC, usuario_nome ASC
+                    agg.`pontos_total`,
+                    agg.`total_lancamentos`
+             FROM (
+                  SELECT l.`usuario_id`,
+                         COALESCE(SUM(l.`pontos_calculados`), 0) AS pontos_total,
+                         COUNT(*) AS total_lancamentos
+                  FROM `%s` l
+                  %s
+                  GROUP BY l.`usuario_id`
+             ) agg
+             LEFT JOIN `usuarios` u ON u.`id_usuario` = agg.`usuario_id`
+             ORDER BY agg.`pontos_total` DESC, u.`nome` ASC, u.`sobrenome` ASC
              LIMIT :limit',
             $this->table,
-            $where !== [] ? 'WHERE ' . implode(' AND ', $where) : ''
+            $whereSql
         );
         $statement = $this->connection->prepare($sql);
         foreach ($params as $name => $value) {

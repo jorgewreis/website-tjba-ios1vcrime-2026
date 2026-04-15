@@ -412,7 +412,7 @@
             if (!rows || rows.length === 0) {
                 var empty = document.createElement('span');
                 empty.className = 'minor-info';
-                empty.textContent = 'Sem dados de ranking no mês atual (Cartório/Gabinete).';
+                empty.textContent = 'Sem dados de ranking no mês atual';
                 wrapper.appendChild(empty);
                 return wrapper;
             }
@@ -423,7 +423,7 @@
 
                 var left = document.createElement('span');
                 left.className = 'major-info';
-                left.textContent = '#' + String(item.posicao || '-') + ' - ' + (item.usuario_nome || 'Usuário');
+                left.textContent = String(item.posicao || '-') + '. ' + (item.usuario_nome || 'Usuário');
 
                 var right = document.createElement('span');
                 right.className = 'major-info';
@@ -451,10 +451,17 @@
                 }
 
                 var rows = result.data && Array.isArray(result.data.rows) ? result.data.rows : [];
+                if (rows.length === 0 && result.data && Array.isArray(result.data.setores)) {
+                    result.data.setores.forEach(function (setor) {
+                        (setor.rows || []).forEach(function (r) {
+                            rows.push(r);
+                        });
+                    });
+                }
                 var top5 = rows.slice(0, 5);
                 content.innerHTML = '';
                 if (top5.length === 0) {
-                    loading.textContent = 'Sem dados de ranking no mês atual (Cartório/Gabinete).';
+                    loading.textContent = 'Sem dados de ranking no mês atual.';
                     return;
                 }
 

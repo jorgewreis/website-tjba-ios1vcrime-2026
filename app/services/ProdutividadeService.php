@@ -593,6 +593,7 @@ final class ProdutividadeService
                     'is_gestao' => false,
                     'ranking_oculto' => true,
                     'rows' => [],
+                    'setores' => [],
                 ];
             }
         }
@@ -616,6 +617,14 @@ final class ProdutividadeService
             'is_gestao' => $isGestao,
             'ranking_oculto' => false,
             'rows' => $out,
+            // Compatibilidade com clientes que ainda leem `setores` (uma lista unificada).
+            'setores' => $out === [] ? [] : [
+                [
+                    'codigo_area' => '',
+                    'setor_nome' => '',
+                    'rows' => $out,
+                ],
+            ],
         ];
     }
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.92
+
+**Data:** 2026-04-15 11:54:31 | **Commit:** `23c97a0` | **Tipo:** `minor`
+
+- refactor: improve ranking query logic in ProdutividadeLancamentosRepository and enhance data structure in ProdutividadeService for better compatibility and clarity
+
 ## V. 1.91
 
 **Data:** 2026-04-15 11:46:20 | **Commit:** `3880ec8` | **Tipo:** `minor`
@@ -4440,6 +4446,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
