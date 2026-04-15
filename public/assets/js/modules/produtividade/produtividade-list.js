@@ -405,6 +405,24 @@
             return;
         }
 
+        /** Dois primeiros nomes: primeiro + segundo, ou primeiro + de/da/do/das/dos + terceiro. */
+        function rankingDoisPrimeirosNomes(full) {
+            var s = (full || '').trim();
+            if (!s) {
+                return 'Usuário';
+            }
+            var parts = s.split(/\s+/).filter(Boolean);
+            if (parts.length === 1) {
+                return parts[0];
+            }
+            var particles = { de: true, da: true, do: true, das: true, dos: true };
+            var p1 = parts[1].toLowerCase();
+            if (particles[p1] && parts.length >= 3) {
+                return parts[0] + ' ' + parts[1] + ' ' + parts[2];
+            }
+            return parts[0] + ' ' + parts[1];
+        }
+
         function renderRankingRows(rows) {
             var wrapper = document.createElement('div');
             wrapper.className = 'display-flex col col-full border-bottom padding-y-sm';
@@ -423,7 +441,7 @@
 
                 var left = document.createElement('span');
                 left.className = 'major-info';
-                left.textContent = String(item.posicao || '-') + '. ' + (item.usuario_nome || 'Usuário');
+                left.textContent = String(item.posicao || '-') + '. ' + rankingDoisPrimeirosNomes(item.usuario_nome || '');
 
                 var right = document.createElement('span');
                 right.className = 'major-info';

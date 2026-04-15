@@ -6,6 +6,7 @@ Security::requireAuthentication();
 require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../services/ProdutividadeService.php';
 require_once __DIR__ . '/../../helpers/DashboardInternoAlocacaoResumoHelper.php';
+require_once __DIR__ . '/../../helpers/ProdutividadeRankingDisplayHelper.php';
 
 $connection = Conection::getInstance()->getConnection();
 $service = new ProdutividadeService($connection);
@@ -220,12 +221,12 @@ $monthVarFmt = $monthVar > 0
                                         <?php foreach ($rankingTop5 as $row): ?>
                                             <?php
                                             $isMe = (string) ($row['usuario_id'] ?? '') === $userId;
-                                            $nome = (string) ($row['usuario_nome'] ?? '');
+                                            $nome = ProdutividadeRankingDisplayHelper::doisPrimeirosNomes((string) ($row['usuario_nome'] ?? ''));
                                             $pts = (float) ($row['pontos_total'] ?? 0);
                                             $pos = (int) ($row['posicao'] ?? 0);
                                             ?>
                                             <li class="dashboard-ranking-row<?php echo $isMe ? ' is-me' : ''; ?>">
-                                                <span><span class="dashboard-ranking-pos">#<?php echo $pos; ?></span> <?php echo htmlspecialchars($nome, ENT_QUOTES, 'UTF-8'); ?><?php echo $isMe ? ' <span class="minor-info">(você)</span>' : ''; ?></span>
+                                                <span><span class="dashboard-ranking-pos"><?php echo $pos; ?>.</span> <?php echo htmlspecialchars($nome !== '' ? $nome : 'Usuário', ENT_QUOTES, 'UTF-8'); ?><?php echo $isMe ? ' <span class="minor-info">(você)</span>' : ''; ?></span>
                                                 <span><?php echo number_format($pts, 2, ',', '.'); ?> pts</span>
                                             </li>
                                         <?php endforeach; ?>
@@ -233,7 +234,7 @@ $monthVarFmt = $monthVar > 0
 
                                 <?php if ($userRankingRow !== null): ?>
                                     <div class="dashboard-ranking-me">
-                                        <strong>Sua posição:</strong> #<?php echo (int) ($userRankingRow['posicao'] ?? 0); ?>
+                                        <strong>Sua posição:</strong> <?php echo (int) ($userRankingRow['posicao'] ?? 0); ?>.
                                         · <?php echo number_format((float) ($userRankingRow['pontos_total'] ?? 0), 2, ',', '.'); ?> pts
                                     </div>
                                 <?php elseif ($rankingTop5 !== []): ?>

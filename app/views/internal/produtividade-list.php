@@ -286,7 +286,7 @@ if ($canLoadLancamentos && $errors === []) {
             </div>
         </div>
         <div class="display-flex col col-full padding-x-md padding-y-md border-bottom" id="ranking-section" data-ranking-url="<?php echo htmlspecialchars($rankingApiHref, ENT_QUOTES); ?>">
-            <span class="minor-info" id="ranking-loading">Carregando ranking do mês…</span>
+            <!-- <span class="minor-info" id="ranking-loading">Carregando ranking do mês…</span> -->
             <div id="ranking-content" class="display-flex col col-full gap-y-md" style="display:none;"></div>
         </div>
         <?php endif; ?>

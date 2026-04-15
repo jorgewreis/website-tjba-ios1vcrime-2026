@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.94
+
+**Data:** 2026-04-15 12:09:31 | **Commit:** `7b7dc15` | **Tipo:** `minor`
+
+- refactor: enhance user name display in ranking sections and add helper function for name formatting in productivity views
+
 ## V. 1.93
 
 **Data:** 2026-04-15 12:03:21 | **Commit:** `184d200` | **Tipo:** `minor`
@@ -4452,6 +4458,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
