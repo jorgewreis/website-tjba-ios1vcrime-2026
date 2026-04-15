@@ -86,6 +86,22 @@ final class ProdutividadeService
         return $this->regrasRepository->searchAtivas($query, $limit);
     }
 
+    /**
+     * Regras cujo `sistema_modulo` pertence a fluxos com pontuação exclusivamente automática
+     * (cartório, sala de mídias) não entram na busca de lançamento manual nem podem ser salvas via API manual.
+     *
+     * @param array<string, mixed> $regra
+     */
+    private function regraReservadaAoLancamentoAutomatico(array $regra): bool
+    {
+        $modulo = trim((string) ($regra['sistema_modulo'] ?? ''));
+        if ($modulo === '') {
+            return false;
+        }
+
+        return str_starts_with($modulo, 'cartorio-') || str_starts_with($modulo, 'sala-midias');
+    }
+
     public function createManualLancamento(string $actorUserId, array $payload): string
     {
         $this->assertAuthenticated($actorUserId);
@@ -97,10 +113,9 @@ final class ProdutividadeService
         if ($regra === null) {
             throw new InvalidArgumentException('Regra inválida ou inativa.');
         }
-        $moduloRegra = trim((string) ($regra['sistema_modulo'] ?? ''));
-        if ($moduloRegra !== '' && str_starts_with($moduloRegra, 'cartorio-')) {
+        if ($this->regraReservadaAoLancamentoAutomatico($regra)) {
             throw new InvalidArgumentException(
-                'Esta tarefa é pontuada automaticamente pelo sistema do cartório e não pode ser lançada manualmente.'
+                'Esta tarefa é pontuada automaticamente pelo sistema e não pode ser lançada manualmente.'
             );
         }
 

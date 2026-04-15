@@ -407,8 +407,8 @@ if ($canLoadLancamentos && $errors === []) {
                     $descricaoTarefa = $obsRow;
                 } else {
                     $descricaoTarefa = implode(' - ', [
-                        $tipoDoc !== '' ? $tipoDoc : 'Sem documento',
                         $tipoAto !== '' ? $tipoAto : 'Sem ato',
+                        $tipoDoc !== '' ? $tipoDoc : 'Sem documento',
                         $sistemaModulo !== '' ? $sistemaModulo : 'Sem sistema',
                     ]);
                 }

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87
+
+**Data:** 2026-04-15 10:49:26 | **Commit:** `5a9c42c` | **Tipo:** `minor`
+
+- feat: update productivity rules handling to exclude 'cartorio' and 'sala de mídias' modules from manual launches and enhance search functionality in ProdutividadeService
+
 ## V. 1.86
 
 **Data:** 2026-04-10 15:27:26 | **Commit:** `68553e3` | **Tipo:** `minor`
@@ -4404,6 +4410,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -179,12 +179,14 @@ final class ProdutividadeRegrasRepository
         $query = trim($query);
         $limit = max(1, min(20, $limit));
         $queryNorm = $this->normalizeForSearch($query);
-        // Regras com sistema_modulo "cartorio-*" são só para lançamento automático (API cartório).
+        // Regras de cartório e sala de mídias são pontuadas apenas pelos fluxos do sistema
+        // (alinhado a ProdutividadeService::regraReservadaAoLancamentoAutomatico).
         $sql = sprintf(
             'SELECT `id`, `tipo_ato`, `tipo_documento`, `sistema_modulo`, `pontos_por_ato`, `pontos_multiplicador`
              FROM `%s`
              WHERE `ativo` = 1
              AND NOT (TRIM(COALESCE(`sistema_modulo`, \'\')) LIKE \'cartorio-%%\')
+             AND NOT (TRIM(COALESCE(`sistema_modulo`, \'\')) LIKE \'sala-midias%%\')
              ORDER BY `tipo_ato` ASC, `sistema_modulo` ASC, `tipo_documento` ASC
              LIMIT 500',
             $this->table
@@ -206,8 +208,8 @@ final class ProdutividadeRegrasRepository
             }
 
             $label = implode(' - ', [
-                $tipoDoc !== '' ? $tipoDoc : 'Sem documento',
                 $tipoAto !== '' ? $tipoAto : 'Sem ato',
+                $tipoDoc !== '' ? $tipoDoc : 'Sem documento',
                 $modulo !== '' ? $modulo : 'Sem sistema',
             ]);
             $out[] = [
