@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0001
+
+**Data:** 2026-04-15 10:56:41 | **Commit:** `814a869` | **Tipo:** `patch`
+
+- docs: add release notes for version 1.87 detailing updates to productivity rules and search functionality
+
 ## V. 1.87
 
 **Data:** 2026-04-15 10:49:26 | **Commit:** `5a9c42c` | **Tipo:** `minor`
@@ -4410,6 +4416,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
