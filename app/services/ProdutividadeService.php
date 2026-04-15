@@ -618,10 +618,12 @@ final class ProdutividadeService
             'ranking_oculto' => false,
             'rows' => $out,
             // Compatibilidade com clientes que ainda leem `setores` (uma lista unificada).
+            // `setor_nome` não pode ser string vazia: em JS é falsy e clientes antigos
+            // caíam no fallback literal "Sem setor" ao renderizar o bloco por setor.
             'setores' => $out === [] ? [] : [
                 [
                     'codigo_area' => '',
-                    'setor_nome' => '',
+                    'setor_nome' => "\u{200B}",
                     'rows' => $out,
                 ],
             ],
