@@ -421,8 +421,8 @@ if ($canLoadLancamentos && $errors === []) {
                         <div class="display-flex row row-fit justify-start gap-y-md flex-wrap">
 
                             <!-- teste -->
-                            <div class="row width-full" styld="font-family: monospace;">
-                                <?php echo htmlspecialchars(date('d/m/Y H:i', strtotime((string) ($row['data_hora_ato'] ?? 'now'))) . '|' . (string) ($row['numero_processo'] ?? '—') . '|' . (string) ($descricaoTarefa ?? '') . '| x' . (int) ($row['quantidade'] ?? 0) . '| ' . number_format((float) ($row['pontos_calculados'] ?? 0), 2, ',', '.') . 'pts |' . (string) ($row['usuario_nome'] ?? $row['usuario_id'] ?? '') . '|' . (string) ($row['observacoes'] ?? '') , ENT_QUOTES); ?>
+                            <div class="row width-full gap-x-sm" style="font-family: monospace; font-size: 12px;">
+                                <?php echo htmlspecialchars(date('d/m/Y H:i', strtotime((string) ($row['data_hora_ato'] ?? 'now'))) . ' | ' . (string) ($row['numero_processo'] ?? '—') . ' | ' . (string) ($descricaoTarefa ?? '') . ' x' . (int) ($row['quantidade'] ?? 0) . ' - ' . number_format((float) ($row['pontos_calculados'] ?? 0), 2, ',', '.') . ' pts | ' . (string) ($row['usuario_nome'] ?? $row['usuario_id'] ?? '') , ENT_QUOTES); ?>
                             </div>
                             <!-- fim teste -->
 

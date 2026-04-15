@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.89
+
+**Data:** 2026-04-15 11:18:42 | **Commit:** `7b48b41` | **Tipo:** `minor`
+
+- feat: enhance productivity list view formatting and add Roboto Mono font for improved readability
+
 ## V. 1.88
 
 **Data:** 2026-04-15 11:00:21 | **Commit:** `9762fee` | **Tipo:** `minor`
@@ -4422,6 +4428,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
