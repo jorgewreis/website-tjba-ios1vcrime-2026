@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.95
+
+**Data:** 2026-04-15 12:20:36 | **Commit:** `1c336f9` | **Tipo:** `minor`
+
+- feat: implement ranking display logic in productivity list view, including error handling and user feedback for ranking availability
+
 ## V. 1.94.0001
 
 **Data:** 2026-04-15 12:13:21 | **Commit:** `c3bdf42` | **Tipo:** `patch`
@@ -4464,6 +4470,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

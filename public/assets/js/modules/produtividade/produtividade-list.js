@@ -391,107 +391,6 @@
         syncCreateButtonState();
     }
 
-    function setupRanking() {
-        var section = document.getElementById('ranking-section');
-        var loading = document.getElementById('ranking-loading');
-        var content = document.getElementById('ranking-content');
-        if (!section || !loading || !content) {
-            return;
-        }
-
-        var url = section.getAttribute('data-ranking-url') || '';
-        if (!url) {
-            loading.textContent = 'Ranking indisponível.';
-            return;
-        }
-
-        /** Dois primeiros nomes: primeiro + segundo, ou primeiro + de/da/do/das/dos + terceiro. */
-        function rankingDoisPrimeirosNomes(full) {
-            var s = (full || '').trim();
-            if (!s) {
-                return 'Usuário';
-            }
-            var parts = s.split(/\s+/).filter(Boolean);
-            if (parts.length === 1) {
-                return parts[0];
-            }
-            var particles = { de: true, da: true, do: true, das: true, dos: true };
-            var p1 = parts[1].toLowerCase();
-            if (particles[p1] && parts.length >= 3) {
-                return parts[0] + ' ' + parts[1] + ' ' + parts[2];
-            }
-            return parts[0] + ' ' + parts[1];
-        }
-
-        function renderRankingRows(rows) {
-            var wrapper = document.createElement('div');
-            wrapper.className = 'display-flex col col-full border-bottom padding-y-sm';
-
-            if (!rows || rows.length === 0) {
-                var empty = document.createElement('span');
-                empty.className = 'minor-info';
-                empty.textContent = 'Sem dados de ranking no mês atual';
-                wrapper.appendChild(empty);
-                return wrapper;
-            }
-
-            rows.forEach(function (item) {
-                var line = document.createElement('div');
-                line.className = 'display-flex row row-full justify-between padding-y-sm';
-
-                var left = document.createElement('span');
-                left.className = 'major-info';
-                left.textContent = String(item.posicao || '-') + '. ' + rankingDoisPrimeirosNomes(item.usuario_nome || '');
-
-                var right = document.createElement('span');
-                right.className = 'major-info';
-                right.textContent = String(Number(item.pontos_total || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })) + ' pts';
-
-                line.appendChild(left);
-                line.appendChild(right);
-                wrapper.appendChild(line);
-            });
-
-            return wrapper;
-        }
-
-        fetch(url, { credentials: 'same-origin' })
-            .then(function (response) {
-                return response.json().then(function (data) {
-                    return { ok: response.ok, data: data };
-                });
-            })
-            .then(function (result) {
-                if (!result.ok) {
-                    notify('error', 'Erro', result.data && result.data.error ? result.data.error : 'Falha ao carregar ranking.');
-                    loading.textContent = 'Não foi possível carregar o ranking.';
-                    return;
-                }
-
-                var rows = result.data && Array.isArray(result.data.rows) ? result.data.rows : [];
-                if (rows.length === 0 && result.data && Array.isArray(result.data.setores)) {
-                    result.data.setores.forEach(function (setor) {
-                        (setor.rows || []).forEach(function (r) {
-                            rows.push(r);
-                        });
-                    });
-                }
-                var top5 = rows.slice(0, 5);
-                content.innerHTML = '';
-                if (top5.length === 0) {
-                    loading.textContent = 'Sem dados de ranking no mês atual.';
-                    return;
-                }
-
-                content.appendChild(renderRankingRows(top5));
-                loading.style.display = 'none';
-                content.style.display = '';
-            })
-            .catch(function () {
-                loading.textContent = 'Erro de conexão ao carregar ranking.';
-            });
-    }
-
     setupCreateButtonGate();
     setupRuleSearch();
     setupDatajudProcessModel();
@@ -499,6 +398,5 @@
     setupCreateManual();
     setupAnulacao();
     setupFilterSubmit();
-    setupRanking();
 })();
 

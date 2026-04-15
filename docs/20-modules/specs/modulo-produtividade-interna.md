@@ -45,7 +45,7 @@ Documento vivo: consolida o que já está entregue no módulo, com foco em opera
 
 ### APIs
 
-- Núcleo: `public/api/produtividade/regras/*`, `lancamentos/*`, `metas/*`, `ranking.php`, `export-csv.php`, `export-pdf.php`.
+- Núcleo: `public/api/produtividade/regras/*`, `lancamentos/*`, `metas/*`, `export-csv.php`, `export-pdf.php`. O ranking mensal é obtido em PHP via `ProdutividadeService::listRanking` (lista e dashboard), sem endpoint HTTP dedicado.
 - Badges: `public/api/produtividade/badges/list.php`, `create.php`, `update.php`, `delete.php`, `set-ativo.php`, `pendentes.php`, `marcar-notificado.php`.
 
 ### Interface
@@ -76,7 +76,7 @@ Documento vivo: consolida o que já está entregue no módulo, com foco em opera
 
 - Widget em [app/views/internal/dashboard.php](../../../app/views/internal/dashboard.php):
   - pontos da semana;
-  - posição do usuário no ranking do setor;
+  - posição do usuário no ranking mensal (Cartório/Gabinete, unificado);
   - atalho para o módulo.
 
 ### Primeira automação integrada

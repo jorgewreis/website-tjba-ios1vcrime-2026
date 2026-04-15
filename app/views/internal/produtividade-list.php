@@ -9,6 +9,7 @@ if (function_exists('mb_internal_encoding')) {
 require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
 require_once __DIR__ . '/../../services/ProdutividadeService.php';
+require_once __DIR__ . '/../../helpers/ProdutividadeRankingDisplayHelper.php';
 
 $connection = Conection::getInstance()->getConnection();
 $service = new ProdutividadeService($connection);
@@ -120,6 +121,22 @@ if ($userId !== '') {
     }
 }
 
+$rankingBlockRows = [];
+$rankingBlockOculto = false;
+if ($showRankingBlock && $userId !== '') {
+    try {
+        $rankingPayload = $service->listRanking($userId, ['status' => 'ativo'], 200);
+        $rankingBlockOculto = !empty($rankingPayload['ranking_oculto']);
+        $allRanking = $rankingPayload['rows'] ?? [];
+        if (!$rankingBlockOculto && $allRanking !== []) {
+            $rankingBlockRows = array_slice($allRanking, 0, 5);
+        }
+    } catch (Throwable $e) {
+        $rankingBlockRows = [];
+        $rankingBlockOculto = false;
+    }
+}
+
 if ($isGestao) {
     $stmt = $connection->query(
         'SELECT DISTINCT u.`id_usuario`, u.`nome`, u.`sobrenome`
@@ -177,8 +194,6 @@ $exportQuery = [
 ];
 $exportCsvHref = '/api/produtividade/export-csv.php?' . http_build_query($exportQuery);
 $exportPdfHref = '/api/produtividade/export-pdf.php?' . http_build_query($exportQuery);
-$rankingApiHref = '/api/produtividade/ranking.php';
-
 $resumoCards = [
     'week' => ['current' => 0.0, 'previous' => 0.0, 'variation_percent' => 0.0],
     'month' => ['current' => 0.0, 'previous' => 0.0, 'variation_percent' => 0.0],
@@ -285,9 +300,31 @@ if ($canLoadLancamentos && $errors === []) {
                 <h2>Ranking</h2>
             </div>
         </div>
-        <div class="display-flex col col-full padding-x-md padding-y-md" id="ranking-section" data-ranking-url="<?php echo htmlspecialchars($rankingApiHref, ENT_QUOTES); ?>">
-            <span class="minor-info" id="ranking-loading">Carregando ranking do mês…</span>
-            <div id="ranking-content" class="display-flex col col-full gap-y-md" style="display:none;"></div>
+        <div class="display-flex col col-full padding-x-md padding-y-md border-bottom" id="ranking-section">
+            <?php if ($rankingBlockOculto): ?>
+                <span class="minor-info">Ranking indisponível para o seu perfil neste período.</span>
+            <?php elseif ($rankingBlockRows === []): ?>
+                <span class="minor-info">Sem dados de ranking no mês atual (Cartório/Gabinete).</span>
+            <?php else: ?>
+                <div class="display-flex col col-full gap-y-md">
+                    <div class="display-flex col col-full border-bottom padding-y-sm">
+                        <?php foreach ($rankingBlockRows as $row): ?>
+                            <?php
+                            $nomeRank = ProdutividadeRankingDisplayHelper::doisPrimeirosNomes((string) ($row['usuario_nome'] ?? ''));
+                            if ($nomeRank === '') {
+                                $nomeRank = 'Usuário';
+                            }
+                            $posRank = (int) ($row['posicao'] ?? 0);
+                            $ptsRank = (float) ($row['pontos_total'] ?? 0);
+                            ?>
+                        <div class="display-flex row row-full justify-between padding-y-sm">
+                            <span class="major-info"><?php echo $posRank; ?>. <?php echo htmlspecialchars($nomeRank, ENT_QUOTES, 'UTF-8'); ?></span>
+                            <span class="major-info"><?php echo number_format($ptsRank, 2, ',', '.'); ?> pts</span>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
         </div>
         <?php endif; ?>
         <!-- FIM RANKING -->
