@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88
+
+**Data:** 2026-04-15 11:00:21 | **Commit:** `9762fee` | **Tipo:** `minor`
+
+- feat: add temporary debug output for productivity list view to display formatted task details
+
 ## V. 1.87.0001
 
 **Data:** 2026-04-15 10:56:41 | **Commit:** `814a869` | **Tipo:** `patch`
@@ -4416,6 +4422,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
