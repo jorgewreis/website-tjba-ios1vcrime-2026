@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96
+
+**Data:** 2026-04-15 12:32:17 | **Commit:** `ae1b688` | **Tipo:** `minor`
+
+- refactor: improve layout and styling in productivity list view, enhancing readability and visual consistency
+
 ## V. 1.95
 
 **Data:** 2026-04-15 12:20:36 | **Commit:** `1c336f9` | **Tipo:** `minor`
@@ -4470,6 +4476,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

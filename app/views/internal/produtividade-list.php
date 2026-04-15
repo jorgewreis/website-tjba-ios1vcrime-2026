@@ -256,7 +256,7 @@ if ($canLoadLancamentos && $errors === []) {
             </div>
         </div>
 
-        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md align-end">
+        <div class="display-flex row row-full padding-x-md padding-y-md gap-y-md align-end">
             <div class="col">
                 <label for="filter-processo">Processo</label>
                 <input type="text" id="filter-processo" class="width-400 height-md white" placeholder="0000000-00.0000.0.00.0000">
@@ -306,8 +306,8 @@ if ($canLoadLancamentos && $errors === []) {
             <?php elseif ($rankingBlockRows === []): ?>
                 <span class="minor-info">Sem dados de ranking no mês atual (Cartório/Gabinete).</span>
             <?php else: ?>
-                <div class="display-flex col col-full gap-y-md">
-                    <div class="display-flex col col-full border-bottom padding-y-sm">
+                <div class="display-flex col col-full">
+                    <div class="display-flex col col-full padding-y-sm">
                         <?php foreach ($rankingBlockRows as $row): ?>
                             <?php
                             $nomeRank = ProdutividadeRankingDisplayHelper::doisPrimeirosNomes((string) ($row['usuario_nome'] ?? ''));
@@ -317,9 +317,9 @@ if ($canLoadLancamentos && $errors === []) {
                             $posRank = (int) ($row['posicao'] ?? 0);
                             $ptsRank = (float) ($row['pontos_total'] ?? 0);
                             ?>
-                        <div class="display-flex row row-full justify-between padding-y-sm">
-                            <span class="major-info"><?php echo $posRank; ?>. <?php echo htmlspecialchars($nomeRank, ENT_QUOTES, 'UTF-8'); ?></span>
-                            <span class="major-info"><?php echo number_format($ptsRank, 2, ',', '.'); ?> pts</span>
+                        <div class="display-flex row row-full justify-between padding-y-sm border-bottom">
+                            <span class="major-info" style="font-family: monospace; font-size: 12px; font-weight: 600;"><?php echo $posRank; ?>. <?php echo htmlspecialchars($nomeRank, ENT_QUOTES, 'UTF-8'); ?></span>
+                            <span class="major-info" style="font-family: monospace; font-size: 12px;"><?php echo number_format($ptsRank, 2, ',', '.'); ?> pts</span>
                         </div>
                         <?php endforeach; ?>
                     </div>
@@ -330,7 +330,7 @@ if ($canLoadLancamentos && $errors === []) {
         <!-- FIM RANKING -->
 
         <!-- LANÇAMENTOS -->
-        <div class="display-flex row row-full align-center justify-between padding-x-lg padding-y-md filters">
+        <div class="display-flex row row-full align-center justify-between border-bottom padding-x-lg padding-y-md filters">
             <h2>Lançamentos</h2>
             <div class="display-flex row row-fit justify-end gap-y-md"></div>
         </div>
@@ -462,8 +462,8 @@ if ($canLoadLancamentos && $errors === []) {
                 ?>
                 <div class="display-flex col col-full register border-bottom">
                     <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
-                        <div class="display-flex row row-fit justify-start gap-y-md flex-wrap" style="width: calc(100% - 50px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                            <div class="row width-full gap-x-sm padding-x-md padding-y-sm" style="font-family: monospace; font-size: 12px;">
+                        <div class="display-flex row row-fit justify-start gap-y-md flex-wrap" style="width: calc(100% - 50px);">
+                            <div class="row width-full gap-x-sm padding-x-md padding-y-sm" style="font-family: monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                                 <?php echo htmlspecialchars(date('d/m/Y H:i', strtotime((string) ($row['data_hora_ato'] ?? 'now'))) . ' | ' . (string) ($row['numero_processo'] ?? '—') . ' | ' . (string) ($descricaoTarefa ?? '') . ' x' . (int) ($row['quantidade'] ?? 0) . ' - ' . number_format((float) ($row['pontos_calculados'] ?? 0), 2, ',', '.') . ' pts | ' . (string) ($row['usuario_nome'] ?? $row['usuario_id'] ?? '') , ENT_QUOTES); ?>
                             </div>
                         </div>
