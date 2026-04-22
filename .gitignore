@@ -117,3 +117,9 @@ database/backup/
 config.local.php
 config.local.json
 .config/
+
+# =========================
+# Scripts de manutenção (versionar)
+# =========================
+!/scripts/
+!/scripts/*.php
