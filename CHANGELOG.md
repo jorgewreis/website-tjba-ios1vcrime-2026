@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0011
+
+**Data:** 2026-04-22 11:36:33 | **Commit:** `2eb9cf2` | **Tipo:** `patch`
+
+- refactor(sala-audiencias): compacta minhas inscricoes em uma linha e renomeia labels da midia
+
 ## V. 1.96.0010
 
 **Data:** 2026-04-22 11:26:04 | **Commit:** `5c1fd11` | **Tipo:** `patch`
@@ -4536,6 +4542,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
