@@ -217,9 +217,52 @@ final class SalaMidiasService
         return $ok;
     }
 
-    public function delete(string $id, ?string $usuarioId): bool
+    /**
+     * Exclui (hard delete) a tarefa de mídia e todas as subtarefas/alocações vinculadas.
+     *
+     * @return array{deleted: bool, subtarefas_toasts: list<string>, tarefa_toast: string}
+     */
+    public function delete(string $id, ?string $usuarioId = null): array
     {
-        return $this->tarefasRepository->softDelete($id, $usuarioId);
+        $id = trim($id);
+        if ($id === '') {
+            throw new InvalidArgumentException('O identificador informado é inválido.');
+        }
+
+        $subtarefaLabels = [
+            'download_midia' => 'Download de Mídia',
+            'sincronizacao_midia' => 'Sincronização de Mídia',
+            'upload_midia' => 'Upload de Mídia',
+            'certidao_upload_midia' => 'Certidão de Upload de Mídia',
+        ];
+
+        $subtarefas = $this->subtarefasRepository->findByMidiaId($id);
+        $mensagensSubtarefas = [];
+        foreach ($subtarefas as $subtarefa) {
+            $codigo = trim((string) ($subtarefa['codigo'] ?? ''));
+            $titulo = trim((string) ($subtarefa['titulo'] ?? ''));
+            $label = $subtarefaLabels[$codigo] ?? ($titulo !== '' ? $titulo : $codigo);
+            if ($label !== '') {
+                $mensagensSubtarefas[] = 'Subtarefa excluída: ' . $label . '.';
+            }
+        }
+
+        $this->connection->beginTransaction();
+        try {
+            $this->subtarefasRepository->deleteByMidiaId($id);
+            $this->alocadosRepository->deleteByMidiaId($id);
+            $deleted = $this->tarefasRepository->delete($id);
+            $this->connection->commit();
+        } catch (Throwable $e) {
+            $this->connection->rollBack();
+            throw $e;
+        }
+
+        return [
+            'deleted' => $deleted,
+            'subtarefas_toasts' => $mensagensSubtarefas,
+            'tarefa_toast' => 'Tarefa principal de mídias excluída com sucesso.',
+        ];
     }
 
     public function concluirSubtarefa(string $subtarefaId, string $usuarioId, array $dados = []): void

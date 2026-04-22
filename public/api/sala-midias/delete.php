@@ -11,8 +11,16 @@ try {
         salaMidiasJson(['error' => 'Sessão expirada.'], 401);
         exit;
     }
-    if (!AccessEvaluator::canAccessPage('salamidiasedit', UsuarioPerfisAutorizacao::perfisDoUsuario($usuarioId))) {
+    $perfis = UsuarioPerfisAutorizacao::perfisDoUsuario($usuarioId);
+    if (!AccessEvaluator::canAccessPage('salamidiasedit', $perfis)) {
         salaMidiasJson(['error' => 'Acesso negado.'], 403);
+        exit;
+    }
+
+    /** Exclusão restrita a admin ou chefia. */
+    $perfisPermitidosExcluir = ['ADMIN', 'CHEFIA'];
+    if (count(array_intersect($perfis, $perfisPermitidosExcluir)) === 0) {
+        salaMidiasJson(['error' => 'Seu perfil não tem permissão para excluir. Apenas admin ou chefia.'], 403);
         exit;
     }
 
@@ -24,7 +32,8 @@ try {
     }
 
     $service = new SalaMidiasService(Conection::getInstance()->getConnection());
-    salaMidiasJson(['deleted' => $service->delete($id, $usuarioId)]);
+    $resultado = $service->delete($id, $usuarioId);
+    salaMidiasJson($resultado);
 } catch (InvalidArgumentException $e) {
     salaMidiasJson(['error' => $e->getMessage()], 400);
 } catch (Throwable $e) {

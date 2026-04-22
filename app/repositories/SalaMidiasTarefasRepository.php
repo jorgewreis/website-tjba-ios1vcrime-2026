@@ -222,6 +222,17 @@ final class SalaMidiasTarefasRepository
         return $statement->rowCount() > 0;
     }
 
+    public function delete(string $id): bool
+    {
+        $statement = $this->connection->prepare(
+            sprintf('DELETE FROM `%s` WHERE `id` = :id LIMIT 1', $this->table)
+        );
+        $statement->bindValue(':id', $id);
+        $statement->execute();
+
+        return $statement->rowCount() > 0;
+    }
+
     private function buildWhere(array $filters, bool $includeStatus = true): array
     {
         $conds = ['t.`ativo` = 1'];

@@ -2,11 +2,21 @@
     var pageCtx = window.SALA_MIDIAS_LIST || {};
     var routePage = String(pageCtx.routePage || 'salamidias');
     var filters = pageCtx.filters || {};
+    var POST_RELOAD_TOAST_KEY = 'cartorio.postReloadToast';
+    var pageTools = window.App && window.App.Page ? window.App.Page : null;
 
     function notify(type, title, message) {
+        if (pageTools && typeof pageTools.notify === 'function') {
+            pageTools.notify(type, title, message);
+            return;
+        }
         if (typeof window.showToast === 'function') {
             window.showToast({ type: type, title: title, message: message });
         }
+    }
+
+    if (pageTools && typeof pageTools.flushPostReloadToast === 'function') {
+        pageTools.flushPostReloadToast(POST_RELOAD_TOAST_KEY, { type: 'info', title: 'Informação' });
     }
 
     var lockMap = {};

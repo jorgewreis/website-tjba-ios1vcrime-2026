@@ -79,9 +79,13 @@ $cartorioAlocacaoBloqueada = $bloqueada;
 $cartorioAlocacaoUserId = trim((string) ($_SESSION['id_usuario'] ?? ''));
 require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
 $cartorioAlocacaoIsGestao = false;
+$perfisPermitidosExcluir = ['ADMIN', 'CHEFIA'];
+$podeExcluirTarefa = false;
+$userPerfisEdit = [];
 if ($cartorioAlocacaoUserId !== '') {
-    $perfis = UsuarioPerfisAutorizacao::perfisDoUsuario($cartorioAlocacaoUserId);
-    $cartorioAlocacaoIsGestao = count(array_intersect($perfis, ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'])) > 0;
+    $userPerfisEdit = UsuarioPerfisAutorizacao::perfisDoUsuario($cartorioAlocacaoUserId);
+    $cartorioAlocacaoIsGestao = count(array_intersect($userPerfisEdit, ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'])) > 0;
+    $podeExcluirTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosExcluir)) > 0;
 }
 ?>
 <!DOCTYPE html>
@@ -219,6 +223,9 @@ if ($cartorioAlocacaoUserId !== '') {
             <button type="button" class="btn btn-secondary" id="midias-edit-voltar">Voltar</button>
             <?php if (!$bloqueada): ?>
                 <button type="button" class="btn btn-primary" id="btn-midias-salvar">Salvar alterações</button>
+            <?php endif; ?>
+            <?php if ($podeExcluirTarefa): ?>
+                <button type="button" class="btn btn-danger" id="excluir-tarefa-btn" title="Excluir esta tarefa e todas as subtarefas vinculadas">Excluir tarefa</button>
             <?php endif; ?>
         </div>
     </form>
