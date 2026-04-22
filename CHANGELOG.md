@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0014
+
+**Data:** 2026-04-22 11:53:26 | **Commit:** `b022c31` | **Tipo:** `patch`
+
+- fix(sala-audiencias): corrige contagem de estudantes inscritos no painel do dia
+
 ## V. 1.96.0013
 
 **Data:** 2026-04-22 11:47:52 | **Commit:** `0223675` | **Tipo:** `patch`
@@ -4554,6 +4560,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -34,6 +34,7 @@ $pautaIdsHoje = array_values(array_filter(array_map(static function (array $row)
     return $id !== '';
 }));
 $inscritosByPauta = $inscricaoRepository->listDetalhesByPautaIds($pautaIdsHoje);
+$totalInscritosByPauta = $inscricaoRepository->countInscritosPorPautaIds($pautaIdsHoje);
 $timelineItemsHoje = [];
 foreach ($rows as $rowTimeline) {
     $statusTimeline = strtolower(trim((string) ($rowTimeline['status'] ?? '')));
@@ -357,6 +358,7 @@ function painelResumoInscrito(array $inscrito): string
                 $processoSigiloso = !empty($row['processo_sigiloso']);
                 $idPautaAtual = trim((string) ($row['id_pauta'] ?? ''));
                 $inscritosRow = $idPautaAtual !== '' ? ($inscritosByPauta[$idPautaAtual] ?? []) : [];
+                $totalInscritosReal = $idPautaAtual !== '' ? (int) ($totalInscritosByPauta[$idPautaAtual] ?? count($inscritosRow)) : count($inscritosRow);
             ?>
             <?php if ($prioridadesRow !== [] || $processoSigiloso): ?>
             <div class="display-flex col col-full grp-subtask-panel" id="subtask-grp-<?php echo htmlspecialchars((string) ($row['id_pauta'] ?? ''), ENT_QUOTES); ?>">
@@ -392,7 +394,7 @@ function painelResumoInscrito(array $inscrito): string
                     <div class="display-flex row row-fit justify-start gap-y-md flex-wrap grp-sub-left">
                         <div class="col">
                             <span class="minor-info">Estudantes inscritos</span>
-                            <span class="major-info"><?php echo count($inscritosRow); ?> inscrito(s)</span>
+                            <span class="major-info"><?php echo (int) $totalInscritosReal; ?> inscrito(s)</span>
                         </div>
                     </div>
                 </div>

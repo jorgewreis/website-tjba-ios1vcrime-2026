@@ -65,9 +65,16 @@ final class SalaAudienciasEstudanteInscricaoRepository
             return [];
         }
 
+        /*
+         * O LEFT JOIN com estudantes usa uma subquery agregada por CPF para
+         * evitar multiplicacao de linhas quando a tabela `estudantes` possui
+         * mais de um registro para o mesmo CPF (ex.: historico/rematricula).
+         * Sem isso, o count() da UI contava linhas duplicadas em vez das
+         * inscricoes reais.
+         */
         $placeholders = implode(', ', array_fill(0, count($pautaIds), '?'));
         $sql = sprintf(
-            'SELECT i.`id`, i.`pauta`, i.`created_at` AS `inscrito_em`,
+            'SELECT i.`id`, i.`pauta`, i.`usuario`, i.`created_at` AS `inscrito_em`,
                     COALESCE(
                         NULLIF(TRIM(e.`nome_completo`), \'\'),
                         NULLIF(TRIM(CONCAT(COALESCE(u.`nome`, \'\'), \' \', COALESCE(u.`sobrenome`, \'\'))), \'\'),
@@ -88,7 +95,15 @@ final class SalaAudienciasEstudanteInscricaoRepository
                     ) AS `faculdade`
              FROM `%s` i
              LEFT JOIN `usuarios` u ON u.`id_usuario` = i.`usuario`
-             LEFT JOIN `estudantes` e ON e.`cpf` = u.`cpf`
+             LEFT JOIN (
+                 SELECT `cpf`,
+                        MAX(NULLIF(TRIM(`nome_completo`), \'\')) AS `nome_completo`,
+                        MAX(NULLIF(TRIM(`telefone`), \'\'))      AS `telefone`,
+                        MAX(NULLIF(TRIM(`faculdade`), \'\'))     AS `faculdade`
+                 FROM `estudantes`
+                 WHERE `cpf` IS NOT NULL AND TRIM(`cpf`) <> \'\'
+                 GROUP BY `cpf`
+             ) e ON e.`cpf` = u.`cpf`
              WHERE i.`pauta` IN (' . $placeholders . ')
              ORDER BY i.`pauta` ASC, i.`created_at` ASC, i.`id` ASC',
             $this->table
@@ -102,11 +117,18 @@ final class SalaAudienciasEstudanteInscricaoRepository
 
         $rows = $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
         $grouped = [];
+        $seenIds = [];
         foreach ($rows as $row) {
             $pautaId = trim((string) ($row['pauta'] ?? ''));
-            if ($pautaId === '') {
+            $inscricaoId = trim((string) ($row['id'] ?? ''));
+            if ($pautaId === '' || $inscricaoId === '') {
                 continue;
             }
+            if (isset($seenIds[$inscricaoId])) {
+                // Defesa extra contra multiplicacao residual.
+                continue;
+            }
+            $seenIds[$inscricaoId] = true;
             if (!isset($grouped[$pautaId])) {
                 $grouped[$pautaId] = [];
             }
@@ -115,6 +137,57 @@ final class SalaAudienciasEstudanteInscricaoRepository
         }
 
         return $grouped;
+    }
+
+    /**
+     * Contagem de inscritos por pauta, direto no banco, sem passar por JOINs.
+     * Serve como fonte de verdade confiavel para o total mostrado na UI.
+     *
+     * @param list<string> $pautaIds
+     * @return array<string, int>
+     */
+    public function countInscritosPorPautaIds(array $pautaIds): array
+    {
+        $pautaIds = array_values(array_unique(array_filter(array_map(static function ($id): string {
+            return trim((string) $id);
+        }, $pautaIds), static function (string $id): bool {
+            return $id !== '';
+        })));
+        if ($pautaIds === []) {
+            return [];
+        }
+
+        $placeholders = implode(', ', array_fill(0, count($pautaIds), '?'));
+        $sql = sprintf(
+            'SELECT `pauta`, COUNT(*) AS `total`
+             FROM `%s`
+             WHERE `pauta` IN (' . $placeholders . ')
+             GROUP BY `pauta`',
+            $this->table
+        );
+
+        $st = $this->connection->prepare($sql);
+        foreach ($pautaIds as $idx => $pautaId) {
+            $st->bindValue($idx + 1, $pautaId);
+        }
+        $st->execute();
+
+        $out = [];
+        while (($row = $st->fetch(PDO::FETCH_ASSOC)) !== false) {
+            $pautaId = trim((string) ($row['pauta'] ?? ''));
+            if ($pautaId === '') {
+                continue;
+            }
+            $out[$pautaId] = (int) ($row['total'] ?? 0);
+        }
+
+        foreach ($pautaIds as $pautaId) {
+            if (!isset($out[$pautaId])) {
+                $out[$pautaId] = 0;
+            }
+        }
+
+        return $out;
     }
 
     /**
