@@ -390,19 +390,14 @@ function painelResumoInscrito(array $inscrito): string
             </div>
             <?php endif; ?>
             <div class="display-flex col col-full grp-subtask-panel" id="subtask-grp-estudantes-<?php echo htmlspecialchars((string) ($row['id_pauta'] ?? ''), ENT_QUOTES); ?>">
-                <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top align-start flex-wrap grp-sub-line grp-sub-line-primary" style="font-family: monospace; font-size: 11px;">
-                    <div class="display-flex row row-fit justify-start gap-y-md flex-wrap grp-sub-left">
-                        <div class="col">
-                            <span class="minor-info">Estudantes inscritos</span>
-                            <span class="major-info"><?php echo (int) $totalInscritosReal; ?> inscrito(s)</span>
-                        </div>
-                    </div>
-                </div>
-                <?php if ($inscritosRow === []): ?>
+                <?php if ($totalInscritosReal <= 0 && $inscritosRow === []): ?>
                 <div class="display-flex row row-full subtask padding-x-sm padding-y-sm border-top" style="font-family: monospace; font-size: 11px;">
                     <span class="minor-info">Nenhum estudante inscrito.</span>
                 </div>
                 <?php else: ?>
+                <div class="display-flex row row-full subtask padding-x-sm padding-y-sm border-top grp-sub-line grp-sub-line-primary" style="font-family: monospace; font-size: 11px;">
+                    <span class="minor-info">Estudantes inscritos (<?php echo (int) max($totalInscritosReal, count($inscritosRow)); ?>):</span>
+                </div>
                     <?php foreach ($inscritosRow as $inscrito): ?>
                     <div class="display-flex row row-full subtask padding-x-sm padding-y-sm border-top" style="font-family: monospace; font-size: 11px;">
                         <span class="major-info" style="white-space: normal; word-break: break-word;"><?php echo htmlspecialchars(painelResumoInscrito($inscrito), ENT_QUOTES, 'UTF-8'); ?></span>
