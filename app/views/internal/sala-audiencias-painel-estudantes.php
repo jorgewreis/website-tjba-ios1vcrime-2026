@@ -175,6 +175,24 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
             } elseif ($statusRow === 'adiada') {
                 $statusRow = 'redesignada';
             }
+            $labelsStatusAud = [
+                'designada' => 'Designada',
+                'em_andamento' => 'Em andamento',
+                'finalizada' => 'Finalizada',
+                'realizada' => 'Realizada',
+                'redesignada' => 'Redesignada',
+                'cancelada' => 'Cancelada',
+            ];
+            $textoStatusAud = $labelsStatusAud[$statusRow] ?? ucfirst(str_replace('_', ' ', $statusRow));
+            $classeStatusAud = 'status-pending';
+            if ($statusRow === 'cancelada') {
+                $classeStatusAud = 'status-cancelled';
+            } elseif ($statusRow === 'em_andamento') {
+                $classeStatusAud = 'status-current';
+            } elseif (in_array($statusRow, ['realizada', 'finalizada'], true)) {
+                $classeStatusAud = 'status-finished';
+            }
+            $exibirStatusAoInvesDeInscricao = ($statusRow !== 'designada');
             $inicioEfetivoRaw = trim((string) ($row['data_hora_inicio_efetivo'] ?? ''));
             $fimEfetivoRaw = trim((string) ($row['data_hora_fim_efetivo'] ?? ''));
             $horaExibicao = painelEstudanteHoraPorStatus(
@@ -221,7 +239,11 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
                     </div>
                 </div>
                 <div class="display-flex row row-fit justify-end gap-y-sm align-center" data-inscricao-ui="<?php echo htmlspecialchars($idPautaRaw, ENT_QUOTES, 'UTF-8'); ?>">
-                    <?php if ($ja): ?>
+                    <?php if ($exibirStatusAoInvesDeInscricao): ?>
+                    <div class="width-300 padding-x-lg status <?php echo htmlspecialchars($classeStatusAud, ENT_QUOTES); ?>" data-status-pauta="<?php echo htmlspecialchars($idPautaRaw, ENT_QUOTES, 'UTF-8'); ?>">
+                        <?php echo htmlspecialchars($textoStatusAud, ENT_QUOTES); ?>
+                    </div>
+                    <?php elseif ($ja): ?>
                     <span class="minor-info text-success">Voce esta inscrito.</span>
                     <?php elseif ($lotado): ?>
                     <span class="minor-info text-error">Vagas esgotadas.</span>
@@ -519,6 +541,11 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
             var prioridadeBloqueio = !!item.tem_prioridade_bloqueio;
             var pode = !!item.pode_inscrever;
             var pauta = String(item.id_pauta || wrapper.getAttribute('data-inscricao-ui') || '').trim();
+            var status = normalizeStatus(item.status);
+            if (status && status !== 'designada') {
+                wrapper.innerHTML = '<div class="width-300 padding-x-lg status ' + statusClass(status) + '" data-status-pauta="' + escapeHtml(pauta) + '">' + escapeHtml(statusLabel(status)) + '</div>';
+                return;
+            }
             if (ja) {
                 wrapper.innerHTML = '<span class="minor-info text-success">Voce esta inscrito.</span>';
             } else if (lotado) {

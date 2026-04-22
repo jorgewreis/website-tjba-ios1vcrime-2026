@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0008
+
+**Data:** 2026-04-22 11:18:05 | **Commit:** `d89b805` | **Tipo:** `patch`
+
+- feat(sala-audiencias): mostra status da audiencia na coluna de inscricao quando nao designada
+
 ## V. 1.96.0007
 
 **Data:** 2026-04-22 11:12:39 | **Commit:** `059616e` | **Tipo:** `patch`
@@ -4518,6 +4524,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
