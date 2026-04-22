@@ -1,0 +1,13 @@
+# Diretório de armazenamento de atas de audiências.
+#
+# Este arquivo apenas preserva o diretório no repositório. Não remova.
+#
+# Os PDFs das atas são gravados aqui pelo endpoint:
+#   POST /api/sala-audiencias-ata/upload.php
+#
+# Requisitos no servidor:
+#   - Permissão de gravação para o usuário do PHP (ex.: www-data).
+#   - O diretório fica FORA de `public/`, portanto não é acessível via URL direta.
+#   - Downloads devem passar pelos endpoints:
+#       GET /api/sala-audiencias-ata/download.php          (estudantes inscritos)
+#       GET /api/sala-audiencias-ata/download-interno.php  (perfis internos)

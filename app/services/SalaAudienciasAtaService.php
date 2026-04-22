@@ -113,8 +113,13 @@ final class SalaAudienciasAtaService
 
         $basePath = dirname(__DIR__, 2);
         $dir = $basePath . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . 'sala-audiencias-atas';
-        if (!is_dir($dir) && !mkdir($dir, 0750, true) && !is_dir($dir)) {
-            throw new RuntimeException('Não foi possível criar o diretório de armazenamento.');
+        if (!is_dir($dir)) {
+            error_log('[SalaAudienciasAtaService::uploadPdf] Diretório ausente: ' . $dir);
+            throw new RuntimeException('Diretório de armazenamento de atas indisponível no servidor. Contate o administrador.');
+        }
+        if (!is_writable($dir)) {
+            error_log('[SalaAudienciasAtaService::uploadPdf] Diretório sem permissão de escrita: ' . $dir);
+            throw new RuntimeException('Diretório de armazenamento de atas sem permissão de escrita. Contate o administrador.');
         }
 
         $existing = $this->ataRepository->findByPauta($idPauta);

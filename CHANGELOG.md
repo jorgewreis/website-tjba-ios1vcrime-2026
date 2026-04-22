@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0001
+
+**Data:** 2026-04-22 09:38:36 | **Commit:** `8a26c49` | **Tipo:** `patch`
+
+- fix: enhance error handling in SalaAudienciasAtaService for directory checks and remove redundant confirmation click in midias-list.js
+
 ## V. 1.96
 
 **Data:** 2026-04-15 12:32:17 | **Commit:** `ae1b688` | **Tipo:** `minor`
@@ -4476,6 +4482,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

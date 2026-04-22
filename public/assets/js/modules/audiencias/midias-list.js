@@ -159,9 +159,6 @@
                     dados.qtd_midias = qtdReadonly;
                 }
             }
-            if (!requireSecondClick('midias-sub-' + subtarefaId, 'Clique novamente para confirmar a conclusão da subtarefa.')) {
-                return;
-            }
             button.disabled = true;
             fetch('/api/sala-midias/subtarefa-status.php', {
                 method: 'POST',
