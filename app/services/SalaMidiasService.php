@@ -446,6 +446,7 @@ final class SalaMidiasService
         }
         $pauta = $this->pautaRepository->findById($pautaId);
         if ($pauta === null) {
+            error_log('[SalaMidias.ensureAutoFromPautaIfEligible] pauta nao encontrada: ' . $pautaId);
             return null;
         }
         $status = strtolower(trim((string) ($pauta['status'] ?? '')));
@@ -458,24 +459,45 @@ final class SalaMidiasService
             return trim((string) ($existing['id'] ?? '')) ?: null;
         }
 
+        $numeroProcesso = trim((string) ($pauta['numero_processo'] ?? ''));
+        if ($numeroProcesso === '') {
+            error_log('[SalaMidias.ensureAutoFromPautaIfEligible] pauta ' . $pautaId . ' sem numero_processo. Tarefa automatica de midia nao criada.');
+            return null;
+        }
+
+        $classeProcesso = trim((string) ($pauta['classe_nome'] ?? ''));
+        if ($classeProcesso === '') {
+            $classeProcesso = 'Classe não informada';
+        }
+
+        $dataAudiencia = trim((string) ($pauta['data_audiencia'] ?? ''));
+        $tipoAudiencia = trim((string) ($pauta['tipo_audiencia'] ?? ''));
+        if ($dataAudiencia === '' || $tipoAudiencia === '') {
+            error_log('[SalaMidias.ensureAutoFromPautaIfEligible] pauta ' . $pautaId . ' com data/tipo ausentes. Tarefa automatica nao criada.');
+            return null;
+        }
+
         $actor = trim((string) $usuarioId);
         if ($actor === '') {
             $actor = trim((string) ($_SESSION['id_usuario'] ?? ''));
         }
         if ($actor === '') {
+            error_log('[SalaMidias.ensureAutoFromPautaIfEligible] pauta ' . $pautaId . ' sem usuario responsavel. Tarefa automatica nao criada.');
             return null;
         }
 
         try {
-            return $this->create([
+            $novoId = $this->create([
                 'pauta_id' => $pautaId,
-                'numero_processo' => trim((string) ($pauta['numero_processo'] ?? '')),
-                'classe_processo' => trim((string) ($pauta['classe_nome'] ?? 'Classe não informada')),
-                'data_audiencia' => trim((string) ($pauta['data_audiencia'] ?? '')),
-                'tipo_audiencia' => trim((string) ($pauta['tipo_audiencia'] ?? '')),
+                'numero_processo' => $numeroProcesso,
+                'classe_processo' => $classeProcesso,
+                'data_audiencia' => $dataAudiencia,
+                'tipo_audiencia' => $tipoAudiencia,
                 'qtd_midias' => 1,
                 'origem' => 'automatico',
             ], $actor);
+            error_log('[SalaMidias.ensureAutoFromPautaIfEligible] tarefa automatica criada: id=' . $novoId . ' pauta=' . $pautaId);
+            return $novoId;
         } catch (PDOException $e) {
             if (strpos((string) $e->getMessage(), 'uk_sala_midias_tarefa_pauta') !== false
                 || strpos((string) $e->getMessage(), 'Duplicate') !== false) {
