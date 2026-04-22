@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0017
+
+**Data:** 2026-04-22 12:09:37 | **Commit:** `781560e` | **Tipo:** `patch`
+
+- fix(sala-audiencias): inscrever-me continua funcionando apos polling recriar o botao
+
 ## V. 1.96.0016
 
 **Data:** 2026-04-22 12:03:49 | **Commit:** `9bfcd08` | **Tipo:** `patch`
@@ -4572,6 +4578,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
