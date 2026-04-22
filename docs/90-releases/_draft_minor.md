@@ -146,4 +146,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix: enhance error handling in SalaAudienciasAtaService for directory checks and remove redundant confirmation click in midias-list.js** `[8a26c49]`
 - **fix(sala-midias): corrige erro SQLSTATE HY093 por placeholder repetido** `[b143125]`
 - **feat(sala-midias): adiciona exclusao de tarefa com subtarefas e alocacoes** `[935e3c5]`
+- **fix(sala-midias): sincronizacao e upload pre-populam qtd com valor do download** `[32ebc5e]`
 
