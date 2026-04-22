@@ -154,4 +154,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(sala-audiencias): painel estudante mostra inscritos e oculta coluna quando indisponivel** `[7455636]`
 - **feat(sala-audiencias): enriquece minhas inscricoes com realizacao, ata e midia** `[5c1fd11]`
 - **refactor(sala-audiencias): compacta minhas inscricoes em uma linha e renomeia labels da midia** `[2eb9cf2]`
+- **fix(sala-audiencias): download da ata em minhas inscricoes abre em nova aba** `[2469201]`
 
