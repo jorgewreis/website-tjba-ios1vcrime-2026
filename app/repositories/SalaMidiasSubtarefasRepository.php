@@ -89,7 +89,7 @@ final class SalaMidiasSubtarefasRepository
                  `pontos_calculados` = COALESCE(:pontos, `pontos_calculados`),
                  `dados_json` = COALESCE(:dados_json, `dados_json`),
                  `finalizado_por` = :finalizado_por,
-                 `finalizado_em` = CASE WHEN :status = \'concluida\' THEN NOW() ELSE `finalizado_em` END,
+                 `finalizado_em` = CASE WHEN :status_check = \'concluida\' THEN NOW() ELSE `finalizado_em` END,
                  `updated_at` = NOW()
              WHERE `id` = :id
              LIMIT 1',
@@ -98,6 +98,7 @@ final class SalaMidiasSubtarefasRepository
         $statement = $this->connection->prepare($sql);
         $statement->bindValue(':id', $id);
         $statement->bindValue(':status', $status);
+        $statement->bindValue(':status_check', $status);
         $statement->bindValue(':pontos', $pontosCalculados);
         $statement->bindValue(':dados_json', $dadosJson);
         $statement->bindValue(':finalizado_por', $finalizadoPor);

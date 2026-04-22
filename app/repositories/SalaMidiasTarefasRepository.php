@@ -229,8 +229,11 @@ final class SalaMidiasTarefasRepository
 
         $search = trim((string) ($filters['search'] ?? ''));
         if ($search !== '') {
-            $conds[] = '(t.`numero_processo` LIKE :search OR t.`classe_processo` LIKE :search OR t.`tipo_audiencia` LIKE :search)';
-            $params[':search'] = '%' . $search . '%';
+            $conds[] = '(t.`numero_processo` LIKE :search_processo OR t.`classe_processo` LIKE :search_classe OR t.`tipo_audiencia` LIKE :search_tipo)';
+            $like = '%' . $search . '%';
+            $params[':search_processo'] = $like;
+            $params[':search_classe'] = $like;
+            $params[':search_tipo'] = $like;
         }
 
         $status = trim((string) ($filters['status'] ?? ''));

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0002
+
+**Data:** 2026-04-22 09:44:38 | **Commit:** `b143125` | **Tipo:** `patch`
+
+- fix(sala-midias): corrige erro SQLSTATE HY093 por placeholder repetido
+
 ## V. 1.96.0001
 
 **Data:** 2026-04-22 09:38:36 | **Commit:** `8a26c49` | **Tipo:** `patch`
@@ -4482,6 +4488,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
