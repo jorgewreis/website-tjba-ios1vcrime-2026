@@ -147,4 +147,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(sala-midias): corrige erro SQLSTATE HY093 por placeholder repetido** `[b143125]`
 - **feat(sala-midias): adiciona exclusao de tarefa com subtarefas e alocacoes** `[935e3c5]`
 - **fix(sala-midias): sincronizacao e upload pre-populam qtd com valor do download** `[32ebc5e]`
+- **refactor(sala-midias): oculta input readonly de qtd em sincronizacao e upload** `[b682feb]`
 
