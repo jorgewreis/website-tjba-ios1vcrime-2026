@@ -5,9 +5,12 @@ declare(strict_types=1);
  * Backfill de tarefas automaticas de midia para audiencias ja finalizadas
  * que ficaram sem registro em sala_midias_tarefa.
  *
- * Uso:
+ * Uso (na raiz do repositório ou com caminho absoluto ao PHP):
  *   php scripts/backfill-sala-midias-auto.php
  *   php scripts/backfill-sala-midias-auto.php --dry-run
+ *
+ * Requisito: arquivo `.env` na raiz do projeto com DB_HOST, DB_NAME, DB_USER
+ * e DB_PASS (copie de `.env.example` se ainda não existir).
  *
  * O script lista todas as pautas com status 'realizada' ou 'finalizada' e
  * invoca SalaMidiasService::ensureAutoFromPautaIfEligible para cada uma.
@@ -25,7 +28,33 @@ if (php_sapi_name() !== 'cli') {
 }
 
 $basePath = dirname(__DIR__);
-require_once $basePath . '/config/config.php';
+$envPath = $basePath . DIRECTORY_SEPARATOR . '.env';
+$envExamplePath = $basePath . DIRECTORY_SEPARATOR . '.env.example';
+
+if (!is_file($envPath)) {
+    fwrite(STDERR, "Arquivo .env não encontrado.\n");
+    fwrite(STDERR, 'Esperado em: ' . $envPath . "\n");
+    if (is_file($envExamplePath)) {
+        fwrite(STDERR, "Copie o modelo e preencha o banco:\n");
+        fwrite(STDERR, "  copy .env.example .env   (Windows)\n");
+        fwrite(STDERR, "  cp .env.example .env     (Linux/macOS)\n");
+    }
+    fwrite(STDERR, "Defina DB_HOST, DB_NAME, DB_USER e DB_PASS no .env.\n");
+    exit(1);
+}
+
+try {
+    require_once $basePath . '/config/config.php';
+} catch (RuntimeException $e) {
+    if (str_contains($e->getMessage(), 'Configuracao obrigatoria ausente')) {
+        fwrite(STDERR, $e->getMessage() . "\n");
+        fwrite(STDERR, "Edite o arquivo .env na raiz do projeto e preencha as variáveis de banco.\n");
+        fwrite(STDERR, 'Arquivo: ' . $envPath . "\n");
+        exit(1);
+    }
+    throw $e;
+}
+
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/services/SalaMidiasService.php';
 

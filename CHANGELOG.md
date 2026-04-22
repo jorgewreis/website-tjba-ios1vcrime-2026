@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0020
+
+**Data:** 2026-04-22 12:41:21 | **Commit:** `2a614df` | **Tipo:** `patch`
+
+- fix(scripts): mensagem clara quando .env ou DB_* faltam no backfill
+
 ## V. 1.96.0019
 
 **Data:** 2026-04-22 12:31:49 | **Commit:** `ddfa847` | **Tipo:** `patch`
@@ -4590,6 +4596,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
