@@ -105,6 +105,8 @@ $__usuariosEditPath = dirname(__DIR__, 3) . '/public/assets/js/shared/usuarios-e
 $__usuariosEditV = @filemtime($__usuariosEditPath) ?: time();
 $__alterarDadosPath = dirname(__DIR__, 3) . '/public/assets/js/shared/alterar-dados-pessoais.js';
 $__alterarDadosV = @filemtime($__alterarDadosPath) ?: time();
+$__textFormatterPath = dirname(__DIR__, 3) . '/public/assets/js/shared/text-formatter.js';
+$__textFormatterV = @filemtime($__textFormatterPath) ?: time();
 $__properNameHelperPath = dirname(__DIR__, 3) . '/public/assets/js/shared/proper-name-helper.js';
 $__properNameHelperV = @filemtime($__properNameHelperPath) ?: time();
 $__cartasRecebidasEditPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-cartas-recebidas-edit.js';
@@ -189,6 +191,7 @@ window.__APP_CONTEXT = Object.assign({}, window.__APP_CONTEXT || {}, {
 <script src="/assets/js/shared/usuarios-create.js?v=<?php echo (int) $__usuariosCreateV; ?>"></script>
 <script src="/assets/js/shared/usuarios-edit.js?v=<?php echo (int) $__usuariosEditV; ?>"></script>
 <script src="/assets/js/shared/alterar-dados-pessoais.js?v=<?php echo (int) $__alterarDadosV; ?>"></script>
+<script src="/assets/js/shared/text-formatter.js?v=<?php echo (int) $__textFormatterV; ?>"></script>
 <script src="/assets/js/shared/proper-name-helper.js?v=<?php echo (int) $__properNameHelperV; ?>"></script>
 <script src="/assets/js/shared/cartorio-cartas-recebidas-edit.js?v=<?php echo (int) $__cartasRecebidasEditV; ?>"></script>
 <script>window.__IS_ESTAGIARIO_PROFILE = <?php echo $__isEstagiarioProfile ? 'true' : 'false'; ?>;</script>

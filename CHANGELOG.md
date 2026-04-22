@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0006
+
+**Data:** 2026-04-22 10:31:47 | **Commit:** `0fe9b8f` | **Tipo:** `patch`
+
+- fix(text-formatter): carrega text-formatter.js nas telas internas e aplica em pauta-parte-edit
+
 ## V. 1.96.0005
 
 **Data:** 2026-04-22 10:10:30 | **Commit:** `b682feb` | **Tipo:** `patch`
@@ -4506,6 +4512,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

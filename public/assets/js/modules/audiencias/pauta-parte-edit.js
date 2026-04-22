@@ -37,6 +37,30 @@
         return value;
     }
 
+    /**
+     * Formata nome de pessoa respeitando as excecoes (de, da, do, das, dos, e, em, no, na).
+     * Usa TextFormatter.formatProperName quando disponivel; delega ao helper do App em fallback.
+     */
+    function formatProperName(value, maxLen) {
+        var v = String(value == null ? '' : value);
+        var max = typeof maxLen === 'number' && maxLen > 0 ? maxLen : 255;
+        if (window.TextFormatter && typeof window.TextFormatter.formatProperName === 'function') {
+            return window.TextFormatter.formatProperName(v, max);
+        }
+        if (window.App && App.ProperNameHelper && typeof App.ProperNameHelper.formatProper === 'function') {
+            return App.ProperNameHelper.formatProper(v, max);
+        }
+        return v.trim();
+    }
+
+    function applyProperNameOnBlur(id, maxLen) {
+        var el = document.getElementById(id);
+        if (!el || el.readOnly) return;
+        el.addEventListener('blur', function () {
+            el.value = formatProperName(el.value, maxLen);
+        });
+    }
+
     function toggleDefensorFields() {
         var tipoParte = String(document.getElementById('parte-edit-tipo')?.value || '').trim();
         var wrapper = document.getElementById('parte-edit-defensor-wrapper');
@@ -135,6 +159,19 @@
     });
 
     document.getElementById('btn-parte-edit-salvar')?.addEventListener('click', function () {
+        var nomeEl = document.getElementById('parte-edit-nome');
+        if (nomeEl && !nomeEl.readOnly) {
+            nomeEl.value = formatProperName(nomeEl.value, 255);
+        }
+        var defPubOutroEl = document.getElementById('parte-edit-defensor-publico-outro');
+        if (defPubOutroEl && !defPubOutroEl.readOnly && defPubOutroEl.offsetParent !== null) {
+            defPubOutroEl.value = formatProperName(defPubOutroEl.value, 255);
+        }
+        var defPrivOutroEl = document.getElementById('parte-edit-defensor-privado-outro');
+        if (defPrivOutroEl && !defPrivOutroEl.readOnly && defPrivOutroEl.offsetParent !== null) {
+            defPrivOutroEl.value = formatProperName(defPrivOutroEl.value, 255);
+        }
+
         var nome = requiredValue('parte-edit-nome', 'Nome da parte');
         if (!nome) return;
         var tipo = requiredValue('parte-edit-tipo', 'Tipo de parte');
@@ -193,4 +230,8 @@
     document.getElementById('parte-edit-defensor-privado')?.addEventListener('change', toggleDefensorFields);
     document.getElementById('parte-edit-defensor-publico')?.addEventListener('change', toggleDefensorFields);
     toggleDefensorFields();
+
+    applyProperNameOnBlur('parte-edit-nome', 255);
+    applyProperNameOnBlur('parte-edit-defensor-publico-outro', 255);
+    applyProperNameOnBlur('parte-edit-defensor-privado-outro', 255);
 })();
