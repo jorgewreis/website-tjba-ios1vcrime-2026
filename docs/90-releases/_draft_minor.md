@@ -155,4 +155,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(sala-audiencias): enriquece minhas inscricoes com realizacao, ata e midia** `[5c1fd11]`
 - **refactor(sala-audiencias): compacta minhas inscricoes em uma linha e renomeia labels da midia** `[2eb9cf2]`
 - **fix(sala-audiencias): download da ata em minhas inscricoes abre em nova aba** `[2469201]`
+- **fix(sala-midias): criacao automatica de tarefa quando pauta vira finalizada** `[0223675]`
 
