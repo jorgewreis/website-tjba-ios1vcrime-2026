@@ -377,34 +377,91 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
             } elseif (in_array($stRow, ['realizada', 'finalizada'], true)) {
                 $classeStatusEst = 'status-finished';
             }
+
+            $realizadaEmTexto = '';
+            if (in_array($stRow, ['em_andamento', 'realizada', 'finalizada'], true) && $inicioEfetivoRaw !== '') {
+                $tsInicioMinhas = strtotime($inicioEfetivoRaw);
+                if ($tsInicioMinhas !== false) {
+                    $realizadaEmTexto = date('d/m/Y H:i', $tsInicioMinhas);
+                }
+            }
+
+            $idAtaMinhas = trim((string) ($m['id_ata'] ?? ''));
+            $expiresAtMinhasRaw = trim((string) ($m['expires_at'] ?? ''));
+            $atasDisponivel = false;
+            if ($idAtaMinhas !== '' && $expiresAtMinhasRaw !== '') {
+                $expiresTs = strtotime($expiresAtMinhasRaw);
+                $atasDisponivel = $expiresTs !== false && $expiresTs > time();
+            }
+
+            $midiaStatusMinhas = strtolower(trim((string) ($m['midia_status'] ?? '')));
+            $midiaLabel = '';
+            if ($midiaStatusMinhas === 'concluida') {
+                $midiaLabel = 'Disponível';
+            } elseif ($midiaStatusMinhas === 'em_andamento') {
+                $midiaLabel = 'Em produção';
+            } elseif ($midiaStatusMinhas === 'pendente') {
+                $midiaLabel = 'Aguardando início';
+            } elseif ($midiaStatusMinhas === 'cancelada') {
+                $midiaLabel = 'Indisponível';
+            }
+
+            $exibirLinhaDetalhes = ($realizadaEmTexto !== '' || $atasDisponivel || $midiaLabel !== '');
             ?>
-        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm border-bottom align-center flex-wrap gap-y-sm">
-            <div class="display-flex row row-fit justify-start gap-y-sm align-center flex-wrap">
-                <div
-                    class="col width-500 js-time-block"
-                    data-pauta="<?php echo htmlspecialchars($idPautaMinhasRaw, ENT_QUOTES, 'UTF-8'); ?>"
-                    data-status="<?php echo htmlspecialchars($stRow, ENT_QUOTES, 'UTF-8'); ?>"
-                    data-data-audiencia="<?php echo htmlspecialchars((string) ($m['data_audiencia'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
-                    data-hora-audiencia="<?php echo htmlspecialchars((string) ($m['hora_audiencia'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
-                    data-inicio="<?php echo htmlspecialchars((string) ($m['data_hora_inicio_efetivo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
-                    data-fim="<?php echo htmlspecialchars((string) ($m['data_hora_fim_efetivo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
-                    data-duracao-estimada="<?php echo (int) ($m['duracao_estimada_minutos'] ?? 0); ?>"
-                >
-                    <span class="minor-info">Horario</span>
-                    <div class="js-time-lines">
-                    <span class="major-info"><?php echo htmlspecialchars($horaExibicaoMinhas, ENT_QUOTES, 'UTF-8'); ?></span>
+        <div class="display-flex col col-full border-bottom">
+            <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center flex-wrap gap-y-sm">
+                <div class="display-flex row row-fit justify-start gap-y-sm align-center flex-wrap">
+                    <div
+                        class="col width-500 js-time-block"
+                        data-pauta="<?php echo htmlspecialchars($idPautaMinhasRaw, ENT_QUOTES, 'UTF-8'); ?>"
+                        data-status="<?php echo htmlspecialchars($stRow, ENT_QUOTES, 'UTF-8'); ?>"
+                        data-data-audiencia="<?php echo htmlspecialchars((string) ($m['data_audiencia'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                        data-hora-audiencia="<?php echo htmlspecialchars((string) ($m['hora_audiencia'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                        data-inicio="<?php echo htmlspecialchars((string) ($m['data_hora_inicio_efetivo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                        data-fim="<?php echo htmlspecialchars((string) ($m['data_hora_fim_efetivo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                        data-duracao-estimada="<?php echo (int) ($m['duracao_estimada_minutos'] ?? 0); ?>"
+                    >
+                        <span class="minor-info">Horario</span>
+                        <div class="js-time-lines">
+                        <span class="major-info"><?php echo htmlspecialchars($horaExibicaoMinhas, ENT_QUOTES, 'UTF-8'); ?></span>
+                        </div>
+                    </div>
+                    <div class="col width-500">
+                        <span class="minor-info text-ellipsis"><?php echo htmlspecialchars($classeAudienciaMinhas, ENT_QUOTES, 'UTF-8'); ?></span>
+                        <span class="major-info"><?php echo htmlspecialchars((string) ($m['numero_processo'] ?? '—'), ENT_QUOTES, 'UTF-8'); ?></span>
                     </div>
                 </div>
-                <div class="col width-500">
-                    <span class="minor-info text-ellipsis"><?php echo htmlspecialchars($classeAudienciaMinhas, ENT_QUOTES, 'UTF-8'); ?></span>
-                    <span class="major-info"><?php echo htmlspecialchars((string) ($m['numero_processo'] ?? '—'), ENT_QUOTES, 'UTF-8'); ?></span>
+                <div class="display-flex row row-fit justify-end padding-x-md">
+                    <div class="width-300 padding-x-lg status <?php echo htmlspecialchars($classeStatusEst, ENT_QUOTES); ?>" data-status-pauta="<?php echo htmlspecialchars($idPautaMinhasRaw, ENT_QUOTES, 'UTF-8'); ?>">
+                        <?php echo htmlspecialchars($textoStatusEst, ENT_QUOTES); ?>
+                    </div>
                 </div>
             </div>
-            <div class="display-flex row row-fit justify-end padding-x-md">
-                <div class="width-300 padding-x-lg status <?php echo htmlspecialchars($classeStatusEst, ENT_QUOTES); ?>" data-status-pauta="<?php echo htmlspecialchars($idPautaMinhasRaw, ENT_QUOTES, 'UTF-8'); ?>">
-                    <?php echo htmlspecialchars($textoStatusEst, ENT_QUOTES); ?>
+            <?php if ($exibirLinhaDetalhes): ?>
+            <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm gap-y-sm flex-wrap align-center border-top">
+                <div class="display-flex row row-fit justify-start gap-y-sm flex-wrap">
+                    <?php if ($realizadaEmTexto !== ''): ?>
+                    <div class="col width-400">
+                        <span class="minor-info">Realizada em</span>
+                        <span class="major-info"><?php echo htmlspecialchars($realizadaEmTexto, ENT_QUOTES, 'UTF-8'); ?></span>
+                    </div>
+                    <?php endif; ?>
+                    <?php if ($midiaLabel !== ''): ?>
+                    <div class="col width-400">
+                        <span class="minor-info">Mídia</span>
+                        <span class="major-info"><?php echo htmlspecialchars($midiaLabel, ENT_QUOTES, 'UTF-8'); ?></span>
+                    </div>
+                    <?php endif; ?>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-sm flex-wrap align-center padding-x-md">
+                    <?php if ($atasDisponivel): ?>
+                    <button type="button" class="btn btn-primary-outline height-sm" data-nav-href="/api/sala-audiencias-ata/download.php?pauta=<?php echo urlencode($idPautaMinhasRaw); ?>" title="Baixar PDF da ata desta audiência">Baixar ata</button>
+                    <?php else: ?>
+                    <span class="minor-info">Ata ainda não disponível.</span>
+                    <?php endif; ?>
                 </div>
             </div>
+            <?php endif; ?>
         </div>
         <?php endforeach; ?>
         <div class="display-flex row row-full justify-between padding-x-lg padding-y-lg">
