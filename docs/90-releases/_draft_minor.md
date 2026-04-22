@@ -148,4 +148,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(sala-midias): adiciona exclusao de tarefa com subtarefas e alocacoes** `[935e3c5]`
 - **fix(sala-midias): sincronizacao e upload pre-populam qtd com valor do download** `[32ebc5e]`
 - **refactor(sala-midias): oculta input readonly de qtd em sincronizacao e upload** `[b682feb]`
+- **fix(text-formatter): carrega text-formatter.js nas telas internas e aplica em pauta-parte-edit** `[0fe9b8f]`
 
