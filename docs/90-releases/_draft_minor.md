@@ -160,4 +160,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(sala-audiencias): lista simples de inscritos no painel do dia** `[8c399f0]`
 - **refactor(sala-audiencias): remove duplicidade na secao de inscritos do painel do dia** `[9bfcd08]`
 - **fix(sala-audiencias): inscrever-me continua funcionando apos polling recriar o botao** `[781560e]`
+- **fix(sala-midias): criacao automatica robusta e script de backfill** `[f046f57]`
 
