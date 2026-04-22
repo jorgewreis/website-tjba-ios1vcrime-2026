@@ -451,12 +451,30 @@ final class SalaMidiasService
         }
         $status = strtolower(trim((string) ($pauta['status'] ?? '')));
         if (!in_array($status, ['realizada', 'finalizada'], true)) {
+            error_log('[SalaMidias.ensureAutoFromPautaIfEligible] pauta ' . $pautaId . ' com status ' . ($status ?: '(vazio)') . ' nao elegivel (precisa ser realizada ou finalizada).');
             return null;
         }
 
-        $existing = $this->tarefasRepository->findByPautaId($pautaId);
-        if ($existing !== null) {
-            return trim((string) ($existing['id'] ?? '')) ?: null;
+        $actor = trim((string) $usuarioId);
+        if ($actor === '') {
+            $actor = trim((string) ($_SESSION['id_usuario'] ?? ''));
+        }
+
+        // Tarefa ja ativa para a pauta: nao faz nada.
+        $existingAtivo = $this->tarefasRepository->findByPautaId($pautaId);
+        if ($existingAtivo !== null) {
+            return trim((string) ($existingAtivo['id'] ?? '')) ?: null;
+        }
+
+        // Reaproveita tarefa inativa (soft-deleted) reativando-a em vez de criar nova.
+        $existingAny = $this->tarefasRepository->findAnyByPautaId($pautaId);
+        if ($existingAny !== null) {
+            $idExistente = trim((string) ($existingAny['id'] ?? ''));
+            if ($idExistente !== '') {
+                $this->tarefasRepository->reactivate($idExistente, $actor !== '' ? $actor : null);
+                error_log('[SalaMidias.ensureAutoFromPautaIfEligible] tarefa inativa reativada: id=' . $idExistente . ' pauta=' . $pautaId);
+                return $idExistente;
+            }
         }
 
         $numeroProcesso = trim((string) ($pauta['numero_processo'] ?? ''));
@@ -477,34 +495,60 @@ final class SalaMidiasService
             return null;
         }
 
-        $actor = trim((string) $usuarioId);
-        if ($actor === '') {
-            $actor = trim((string) ($_SESSION['id_usuario'] ?? ''));
-        }
         if ($actor === '') {
             error_log('[SalaMidias.ensureAutoFromPautaIfEligible] pauta ' . $pautaId . ' sem usuario responsavel. Tarefa automatica nao criada.');
             return null;
         }
 
+        /*
+         * Criacao direta via repositorio + inicializacao de subtarefas. Nao usa
+         * $this->create(...) porque la ha validacoes restritivas (findAnyByPautaId
+         * bloqueando re-criacao, assertDataNaoFutura, etc.) que podem abortar o
+         * hook automatico de forma silenciosa. A auto-criacao usa caminho enxuto.
+         */
+        $this->connection->beginTransaction();
         try {
-            $novoId = $this->create([
+            $novoId = $this->tarefasRepository->create([
                 'pauta_id' => $pautaId,
+                'processo_id' => null,
                 'numero_processo' => $numeroProcesso,
                 'classe_processo' => $classeProcesso,
                 'data_audiencia' => $dataAudiencia,
                 'tipo_audiencia' => $tipoAudiencia,
                 'qtd_midias' => 1,
                 'origem' => 'automatico',
-            ], $actor);
+                'status' => 'pendente',
+                'observacoes' => null,
+                'criado_por' => $actor,
+                'atualizado_por' => $actor,
+            ]);
+            $this->inicializarSubtarefas($novoId);
+            $this->aplicarAutoAlocacaoRegraECadastro($novoId, $actor);
+            $this->connection->commit();
+
+            $this->registrarProdutividadeCadastroTarefa(
+                $novoId,
+                $actor,
+                $numeroProcesso,
+                $classeProcesso,
+                $tipoAudiencia,
+                'automatico'
+            );
+
             error_log('[SalaMidias.ensureAutoFromPautaIfEligible] tarefa automatica criada: id=' . $novoId . ' pauta=' . $pautaId);
             return $novoId;
         } catch (PDOException $e) {
-            if (strpos((string) $e->getMessage(), 'uk_sala_midias_tarefa_pauta') !== false
-                || strpos((string) $e->getMessage(), 'Duplicate') !== false) {
+            $this->connection->rollBack();
+            $msg = (string) $e->getMessage();
+            if (strpos($msg, 'uk_sala_midias_tarefa_pauta') !== false || stripos($msg, 'Duplicate') !== false) {
                 $dupe = $this->tarefasRepository->findByPautaId($pautaId);
-
                 return $dupe !== null ? trim((string) ($dupe['id'] ?? '')) : null;
             }
+            error_log('[SalaMidias.ensureAutoFromPautaIfEligible] erro PDO ao criar tarefa pauta=' . $pautaId . ': ' . $msg);
+            throw $e;
+        } catch (Throwable $e) {
+            $this->connection->rollBack();
+            error_log('[SalaMidias.ensureAutoFromPautaIfEligible] erro geral ao criar tarefa pauta=' . $pautaId . ': ' . $e->getMessage());
             throw $e;
         }
     }

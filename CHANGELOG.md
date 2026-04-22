@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0018
+
+**Data:** 2026-04-22 12:18:11 | **Commit:** `f046f57` | **Tipo:** `patch`
+
+- fix(sala-midias): criacao automatica robusta e script de backfill
+
 ## V. 1.96.0017
 
 **Data:** 2026-04-22 12:09:37 | **Commit:** `781560e` | **Tipo:** `patch`
@@ -4578,6 +4584,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

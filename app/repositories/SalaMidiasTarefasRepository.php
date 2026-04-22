@@ -222,6 +222,18 @@ final class SalaMidiasTarefasRepository
         return $statement->rowCount() > 0;
     }
 
+    public function reactivate(string $id, ?string $usuarioId): bool
+    {
+        $statement = $this->connection->prepare(
+            sprintf('UPDATE `%s` SET `ativo` = 1, `atualizado_por` = :usuario_id, `atualizado_em` = NOW() WHERE `id` = :id LIMIT 1', $this->table)
+        );
+        $statement->bindValue(':id', $id);
+        $statement->bindValue(':usuario_id', $usuarioId);
+        $statement->execute();
+
+        return $statement->rowCount() > 0;
+    }
+
     public function delete(string $id): bool
     {
         $statement = $this->connection->prepare(
