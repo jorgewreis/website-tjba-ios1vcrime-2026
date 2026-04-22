@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0007
+
+**Data:** 2026-04-22 11:12:39 | **Commit:** `059616e` | **Tipo:** `patch`
+
+- fix(sala-audiencias): bloqueia inscricao de estudantes em processos sensiveis [security]
+
 ## V. 1.96.0006
 
 **Data:** 2026-04-22 10:31:47 | **Commit:** `0fe9b8f` | **Tipo:** `patch`
@@ -4512,6 +4518,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

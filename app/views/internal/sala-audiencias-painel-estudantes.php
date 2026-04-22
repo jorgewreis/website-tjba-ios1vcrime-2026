@@ -167,6 +167,7 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
             $lotado = !empty($row['vagas_esgotadas']);
             $sigiloso = !empty($row['processo_sigiloso']);
             $menor = !empty($row['envolve_menor']);
+            $prioridadeBloqueio = !empty($row['tem_prioridade_bloqueio']);
             $totalIns = (int) ($row['total_inscritos_pauta'] ?? 0);
             $statusRow = trim((string) ($row['status'] ?? ''));
             if ($statusRow === 'agendada') {
@@ -227,6 +228,8 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
                     <?php elseif ($sigiloso): ?>
                     <span class="minor-info text-error">Inscricao indisponivel.</span>
                     <?php elseif ($menor): ?>
+                    <span class="minor-info text-error">Inscricao indisponivel.</span>
+                    <?php elseif ($prioridadeBloqueio): ?>
                     <span class="minor-info text-error">Inscricao indisponivel.</span>
                     <?php elseif ($podeInscricaoComoEstudante && $pode): ?>
                     <button type="button" class="btn btn-primary btn-inscrever-ata" data-pauta="<?php echo $idPauta; ?>">Inscrever-me</button>
@@ -513,6 +516,7 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
             var ja = !!item.ja_inscrito;
             var sigiloso = !!item.processo_sigiloso;
             var menor = !!item.envolve_menor;
+            var prioridadeBloqueio = !!item.tem_prioridade_bloqueio;
             var pode = !!item.pode_inscrever;
             var pauta = String(item.id_pauta || wrapper.getAttribute('data-inscricao-ui') || '').trim();
             if (ja) {
@@ -523,6 +527,8 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
                 wrapper.innerHTML = '<span class="minor-info text-error">Processo sigiloso.</span>';
             } else if (menor) {
                 wrapper.innerHTML = '<span class="minor-info text-error">Proibida inscrição de estudantes.</span>';
+            } else if (prioridadeBloqueio) {
+                wrapper.innerHTML = '<span class="minor-info text-error">Inscricao indisponivel.</span>';
             } else if (pode && pauta) {
                 wrapper.innerHTML = '<button type="button" class="btn btn-primary btn-inscrever-ata" data-pauta="' + escapeHtml(pauta) + '">Inscrever-me</button>';
             } else {

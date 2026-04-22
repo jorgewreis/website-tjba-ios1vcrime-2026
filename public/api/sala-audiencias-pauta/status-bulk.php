@@ -62,11 +62,20 @@ try {
 
     $pdo = Conection::getInstance()->getConnection();
     $marks = implode(',', array_fill(0, count($ids), '?'));
+    /*
+     * Os códigos bloqueantes devem espelhar
+     * PrioridadesProcessuaisCatalog::codigosBloqueantesInscricaoEstudante().
+     */
     $sql = "SELECT a.`id_pauta`, a.`status`, a.`data_audiencia`, a.`hora_audiencia`, a.`data_hora_inicio_efetivo`, a.`data_hora_fim_efetivo`, a.`duracao_estimada_minutos`,
                    COALESCE(p.`sigiloso`, 0) AS `processo_sigiloso`,
                    CASE WHEN i.`id` IS NOT NULL THEN 1 ELSE 0 END AS `ja_inscrito`,
                    (SELECT COUNT(*) FROM `sala_audiencias_pauta_parte` pp WHERE pp.`pauta` = a.`id_pauta` AND pp.`ativo` = 1 AND pp.`maioridade` = 'menor') AS `qtd_menor`,
-                   (SELECT COUNT(*) FROM `sala_audiencias_estudante_inscricao` inv WHERE inv.`pauta` = a.`id_pauta`) AS `total_inscritos_pauta`
+                   (SELECT COUNT(*) FROM `sala_audiencias_estudante_inscricao` inv WHERE inv.`pauta` = a.`id_pauta`) AS `total_inscritos_pauta`,
+                   CASE WHEN EXISTS (
+                        SELECT 1 FROM `processo_prioridades` pri
+                        WHERE pri.`processo_id` = a.`processo`
+                          AND pri.`codigo` IN ('sigiloso', 'crianca_adolescente', 'violencia_domestica')
+                   ) THEN 1 ELSE 0 END AS `tem_prioridade_bloqueio`
             FROM `sala_audiencias_pauta` a
             LEFT JOIN `processos` p ON p.`id` = a.`processo`
             LEFT JOIN `sala_audiencias_estudante_inscricao` i ON i.`pauta` = a.`id_pauta` AND i.`usuario` = ?
@@ -95,8 +104,13 @@ try {
         $jaInscrito = (int) ($r['ja_inscrito'] ?? 0) === 1;
         $sigiloso = (int) ($r['processo_sigiloso'] ?? 0) !== 0;
         $envolveMenor = (int) ($r['qtd_menor'] ?? 0) > 0;
+        $temPrioridadeBloqueio = (int) ($r['tem_prioridade_bloqueio'] ?? 0) !== 0;
         $vagasEsgotadas = $totalIns >= SalaAudienciasAtaService::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA;
-        $podeInscrever = !$jaInscrito && !$vagasEsgotadas && !$sigiloso && !$envolveMenor;
+        $podeInscrever = !$jaInscrito
+            && !$vagasEsgotadas
+            && !$sigiloso
+            && !$envolveMenor
+            && !$temPrioridadeBloqueio;
         $items[$id] = [
             'id_pauta' => $id,
             'status' => $status,
@@ -108,6 +122,7 @@ try {
             'processo_sigiloso' => $sigiloso,
             'ja_inscrito' => $jaInscrito,
             'envolve_menor' => $envolveMenor,
+            'tem_prioridade_bloqueio' => $temPrioridadeBloqueio,
             'vagas_esgotadas' => $vagasEsgotadas,
             'total_inscritos_pauta' => $totalIns,
             'pode_inscrever' => $podeInscrever,

@@ -57,6 +57,17 @@ final class PrioridadesProcessuaisCatalog
         return 'sigiloso';
     }
 
+    /**
+     * Códigos de prioridade processual que impedem a inscrição de estudantes
+     * em audiências (confidencialidade reforçada).
+     *
+     * @return list<string>
+     */
+    public static function codigosBloqueantesInscricaoEstudante(): array
+    {
+        return ['sigiloso', 'crianca_adolescente', 'violencia_domestica'];
+    }
+
     /** @deprecated use codigoAutomaticaParteMenor + labelForCodigo */
     public static function prioridadeAutomaticaParteMenor(): string
     {

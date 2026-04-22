@@ -154,6 +154,10 @@ final class SalaAudienciasEstudanteInscricaoRepository
      */
     public function listHojeDesignadasElegiveis(string $idUsuario): array
     {
+        /*
+         * Os códigos bloqueantes precisam espelhar
+         * PrioridadesProcessuaisCatalog::codigosBloqueantesInscricaoEstudante().
+         */
         $sql = '
             SELECT a.`id_pauta`, a.`tipo_audiencia`, a.`data_audiencia`, a.`hora_audiencia`, a.`localizacao`, a.`status`,
                    a.`data_hora_inicio_efetivo`, a.`data_hora_fim_efetivo`, a.`duracao_estimada_minutos`,
@@ -162,7 +166,12 @@ final class SalaAudienciasEstudanteInscricaoRepository
                    CASE WHEN i.`id` IS NOT NULL THEN 1 ELSE 0 END AS `ja_inscrito`,
                    (SELECT COUNT(*) FROM `sala_audiencias_pauta_parte` pp
                     WHERE pp.`pauta` = a.`id_pauta` AND pp.`ativo` = 1 AND pp.`maioridade` = \'menor\') AS `qtd_menor`,
-                   (SELECT COUNT(*) FROM `' . $this->table . '` inv WHERE inv.`pauta` = a.`id_pauta`) AS `total_inscritos_pauta`
+                   (SELECT COUNT(*) FROM `' . $this->table . '` inv WHERE inv.`pauta` = a.`id_pauta`) AS `total_inscritos_pauta`,
+                   CASE WHEN EXISTS (
+                        SELECT 1 FROM `processo_prioridades` pri
+                        WHERE pri.`processo_id` = a.`processo`
+                          AND pri.`codigo` IN (\'sigiloso\', \'crianca_adolescente\', \'violencia_domestica\')
+                   ) THEN 1 ELSE 0 END AS `tem_prioridade_bloqueio`
             FROM `sala_audiencias_pauta` a
             LEFT JOIN `processos` p ON p.`id` = a.`processo`
             LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id`

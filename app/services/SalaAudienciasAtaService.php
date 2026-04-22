@@ -4,6 +4,8 @@ declare(strict_types=1);
 require_once __DIR__ . '/../repositories/SalaAudienciasPautaRepository.php';
 require_once __DIR__ . '/../repositories/SalaAudienciasAtaRepository.php';
 require_once __DIR__ . '/../repositories/SalaAudienciasEstudanteInscricaoRepository.php';
+require_once __DIR__ . '/../repositories/ProcessoPrioridadesRepository.php';
+require_once __DIR__ . '/../helpers/PrioridadesProcessuaisCatalog.php';
 
 final class SalaAudienciasAtaService
 {
@@ -50,13 +52,19 @@ final class SalaAudienciasAtaService
         foreach ($rows as $row) {
             $processoSigiloso = (int) ($row['processo_sigiloso'] ?? 0) !== 0;
             $envolveMenor = (int) ($row['qtd_menor'] ?? 0) > 0;
+            $temPrioridadeBloqueio = (int) ($row['tem_prioridade_bloqueio'] ?? 0) !== 0;
             $total = (int) ($row['total_inscritos_pauta'] ?? 0);
             $jaInscrito = (int) ($row['ja_inscrito'] ?? 0) === 1;
             $row['vagas_esgotadas'] = $total >= self::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA;
             $row['processo_sigiloso'] = $processoSigiloso;
             $row['envolve_menor'] = $envolveMenor;
+            $row['tem_prioridade_bloqueio'] = $temPrioridadeBloqueio;
             $row['ja_inscrito'] = $jaInscrito;
-            $row['pode_inscrever'] = !$jaInscrito && !$row['vagas_esgotadas'] && !$processoSigiloso && !$envolveMenor;
+            $row['pode_inscrever'] = !$jaInscrito
+                && !$row['vagas_esgotadas']
+                && !$processoSigiloso
+                && !$envolveMenor
+                && !$temPrioridadeBloqueio;
             $out[] = $row;
         }
 
@@ -238,6 +246,18 @@ final class SalaAudienciasAtaService
         $stc->execute();
         if ((int) $stc->fetchColumn() > 0) {
             throw new InvalidArgumentException('Esta audiência envolve menor e não permite inscrição de estudantes.');
+        }
+
+        $processoIdPauta = trim((string) ($pauta['processo'] ?? ''));
+        if ($processoIdPauta !== '') {
+            $codigosBloqueio = PrioridadesProcessuaisCatalog::codigosBloqueantesInscricaoEstudante();
+            $prioridadesRepo = new ProcessoPrioridadesRepository($this->connection);
+            foreach ($prioridadesRepo->findByProcessoId($processoIdPauta) as $prioridade) {
+                $codigo = trim((string) ($prioridade['codigo'] ?? ''));
+                if ($codigo !== '' && in_array($codigo, $codigosBloqueio, true)) {
+                    throw new InvalidArgumentException('Esta audiência não está disponível para inscrição de estudantes.');
+                }
+            }
         }
 
         $totalInscritos = $this->inscricaoRepository->countInscritosPorPauta($idPauta);
