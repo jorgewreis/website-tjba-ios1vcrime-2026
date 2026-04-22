@@ -187,6 +187,24 @@ $buttonTitleByTipo = [
                 $alocados = CartorioAlocacaoChipHelper::ordenarAlocadosPorTipo($row['Alocados'] ?? []);
                 $tarefaConcluida = in_array($statusRow, ['concluida', 'cancelada'], true);
                 $qtdMidiasRow = max(1, (int) ($row['qtd_midias'] ?? 1));
+                $qtdDownloadInformada = null;
+                foreach ($subtarefas as $subScan) {
+                    if (trim((string) ($subScan['codigo'] ?? '')) !== 'download_midia') {
+                        continue;
+                    }
+                    $djRaw = trim((string) ($subScan['dados_json'] ?? ''));
+                    if ($djRaw !== '') {
+                        $djParsed = json_decode($djRaw, true);
+                        if (is_array($djParsed) && isset($djParsed['qtd_midias'])) {
+                            $qtdCandidata = (int) $djParsed['qtd_midias'];
+                            if ($qtdCandidata >= 1) {
+                                $qtdDownloadInformada = $qtdCandidata;
+                            }
+                        }
+                    }
+                    break;
+                }
+                $qtdMidiasInput = $qtdDownloadInformada ?? $qtdMidiasRow;
                 $progressStatuses = ['pendente', 'pendente', 'pendente', 'pendente'];
                 $orderMap = ['download_midia' => 1, 'sincronizacao_midia' => 2, 'upload_midia' => 3, 'certidao_upload_midia' => 4];
                 foreach ($subtarefas as $st) {
@@ -334,7 +352,7 @@ $buttonTitleByTipo = [
                                                 class="width-300 height-sm js-midias-qtd-midias"
                                                 min="1"
                                                 step="1"
-                                                value="<?php echo (int) $qtdMidiasRow; ?>"
+                                                value="<?php echo (int) $qtdMidiasInput; ?>"
                                                 placeholder="Qtd. de mídias para download"
                                                 title="Informe a quantidade de mídias para download">
                                         </div>
@@ -343,7 +361,7 @@ $buttonTitleByTipo = [
                                             <input
                                                 type="number"
                                                 class="width-300 height-sm readonly js-midias-qtd-midias"
-                                                value="<?php echo (int) $qtdMidiasRow; ?>"
+                                                value="<?php echo (int) $qtdMidiasInput; ?>"
                                                 readonly
                                                 title="Quantidade de mídias definida no download">
                                         </div>

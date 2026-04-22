@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0004
+
+**Data:** 2026-04-22 10:08:30 | **Commit:** `32ebc5e` | **Tipo:** `patch`
+
+- fix(sala-midias): sincronizacao e upload pre-populam qtd com valor do download
+
 ## V. 1.96.0003
 
 **Data:** 2026-04-22 09:52:54 | **Commit:** `935e3c5` | **Tipo:** `patch`
@@ -4494,6 +4500,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
