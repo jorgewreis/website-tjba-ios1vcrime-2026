@@ -193,6 +193,7 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
                 $classeStatusAud = 'status-finished';
             }
             $exibirStatusAoInvesDeInscricao = ($statusRow !== 'designada');
+            $ocultarInfoInscritos = $exibirStatusAoInvesDeInscricao || $sigiloso || $menor || $prioridadeBloqueio;
             $inicioEfetivoRaw = trim((string) ($row['data_hora_inicio_efetivo'] ?? ''));
             $fimEfetivoRaw = trim((string) ($row['data_hora_fim_efetivo'] ?? ''));
             $horaExibicao = painelEstudanteHoraPorStatus(
@@ -233,9 +234,9 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
                         <span class="minor-info">Tipo</span>
                         <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) $row['tipo_audiencia'], ENT_QUOTES, 'UTF-8'); ?></span>
                     </div>
-                    <div class="col width-300" data-vagas-pauta="<?php echo htmlspecialchars($idPautaRaw, ENT_QUOTES, 'UTF-8'); ?>" data-max-vagas="<?php echo (int) $maxVagas; ?>">
-                        <span class="minor-info">Vagas</span>
-                        <span class="major-info js-vagas-text"><?php echo $totalIns; ?> / <?php echo (int) $maxVagas; ?><?php echo $lotado ? ' (lotado)' : ''; ?></span>
+                    <div class="col width-300" data-vagas-pauta="<?php echo htmlspecialchars($idPautaRaw, ENT_QUOTES, 'UTF-8'); ?>" data-max-vagas="<?php echo (int) $maxVagas; ?>"<?php echo $ocultarInfoInscritos ? ' style="display:none;"' : ''; ?>>
+                        <span class="minor-info">Inscritos</span>
+                        <span class="major-info js-vagas-text"><?php echo $totalIns; ?><?php echo $lotado ? ' (lotado)' : ''; ?></span>
                     </div>
                 </div>
                 <div class="display-flex row row-fit justify-end gap-y-sm align-center" data-inscricao-ui="<?php echo htmlspecialchars($idPautaRaw, ENT_QUOTES, 'UTF-8'); ?>">
@@ -573,14 +574,22 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
                 }
             });
             if (!wrap) return;
+            var status = normalizeStatus(item.status);
+            var indisponivel = (status && status !== 'designada')
+                || !!item.processo_sigiloso
+                || !!item.envolve_menor
+                || !!item.tem_prioridade_bloqueio;
+            if (indisponivel) {
+                wrap.style.display = 'none';
+                return;
+            }
+            wrap.style.display = '';
             var text = wrap.querySelector('.js-vagas-text');
             if (!text) return;
-            var max = parseInt(wrap.getAttribute('data-max-vagas') || '5', 10);
-            if (!Number.isFinite(max) || max <= 0) max = 5;
             var total = parseInt(item.total_inscritos_pauta || 0, 10);
             if (!Number.isFinite(total) || total < 0) total = 0;
             var suffix = item.vagas_esgotadas ? ' (lotado)' : '';
-            text.textContent = total + ' / ' + max + suffix;
+            text.textContent = total + suffix;
         }
         function collectPautas() {
             var ids = {};
