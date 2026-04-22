@@ -338,7 +338,6 @@ $buttonTitleByTipo = [
                             $subStatus = trim((string) ($subtarefaAtiva['status'] ?? 'pendente'));
                             $concluivel = in_array($subStatus, ['pendente', 'em_andamento'], true) && $statusRow !== 'cancelada';
                             $isDownload = $subCode === 'download_midia';
-                            $isSyncOrUpload = in_array($subCode, ['sincronizacao_midia', 'upload_midia'], true);
                             ?>
                             <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top" data-subtarefa-id="<?php echo htmlspecialchars($subId, ENT_QUOTES, 'UTF-8'); ?>" data-subtarefa-codigo="<?php echo htmlspecialchars($subCode, ENT_QUOTES, 'UTF-8'); ?>">
                                 <div class="display-flex row row-fit justify-start gap-y-sm align-center subtask-row-fields">
@@ -355,15 +354,6 @@ $buttonTitleByTipo = [
                                                 value="<?php echo (int) $qtdMidiasInput; ?>"
                                                 placeholder="Qtd. de mídias para download"
                                                 title="Informe a quantidade de mídias para download">
-                                        </div>
-                                    <?php elseif ($isSyncOrUpload): ?>
-                                        <div class="col">
-                                            <input
-                                                type="number"
-                                                class="width-300 height-sm readonly js-midias-qtd-midias"
-                                                value="<?php echo (int) $qtdMidiasInput; ?>"
-                                                readonly
-                                                title="Quantidade de mídias definida no download">
                                         </div>
                                     <?php endif; ?>
                                 </div>

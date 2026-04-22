@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0005
+
+**Data:** 2026-04-22 10:10:30 | **Commit:** `b682feb` | **Tipo:** `patch`
+
+- refactor(sala-midias): oculta input readonly de qtd em sincronizacao e upload
+
 ## V. 1.96.0004
 
 **Data:** 2026-04-22 10:08:30 | **Commit:** `32ebc5e` | **Tipo:** `patch`
@@ -4500,6 +4506,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
