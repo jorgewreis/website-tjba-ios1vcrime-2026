@@ -149,4 +149,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(sala-midias): sincronizacao e upload pre-populam qtd com valor do download** `[32ebc5e]`
 - **refactor(sala-midias): oculta input readonly de qtd em sincronizacao e upload** `[b682feb]`
 - **fix(text-formatter): carrega text-formatter.js nas telas internas e aplica em pauta-parte-edit** `[0fe9b8f]`
+- **fix(sala-audiencias): bloqueia inscricao de estudantes em processos sensiveis [security]** `[059616e]`
 
