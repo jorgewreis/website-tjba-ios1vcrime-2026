@@ -145,4 +145,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(timeline): adjust timeline bar styles and status classification for improved visual consistency and maintainability** `[eef7788]`
 - **fix: enhance error handling in SalaAudienciasAtaService for directory checks and remove redundant confirmation click in midias-list.js** `[8a26c49]`
 - **fix(sala-midias): corrige erro SQLSTATE HY093 por placeholder repetido** `[b143125]`
+- **feat(sala-midias): adiciona exclusao de tarefa com subtarefas e alocacoes** `[935e3c5]`
 
