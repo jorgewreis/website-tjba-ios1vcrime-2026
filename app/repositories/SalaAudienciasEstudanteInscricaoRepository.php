@@ -75,6 +75,7 @@ final class SalaAudienciasEstudanteInscricaoRepository
         $placeholders = implode(', ', array_fill(0, count($pautaIds), '?'));
         $sql = sprintf(
             'SELECT i.`id`, i.`pauta`, i.`usuario`, i.`created_at` AS `inscrito_em`,
+                    COALESCE(NULLIF(TRIM(u.`cpf`), \'\'), \'\') AS `cpf`,
                     COALESCE(
                         NULLIF(TRIM(e.`nome_completo`), \'\'),
                         NULLIF(TRIM(CONCAT(COALESCE(u.`nome`, \'\'), \' \', COALESCE(u.`sobrenome`, \'\'))), \'\'),

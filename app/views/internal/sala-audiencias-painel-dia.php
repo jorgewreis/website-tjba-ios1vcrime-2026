@@ -107,31 +107,31 @@ function painelResumoInscrito(array $inscrito): string
     $ordem = max(1, (int) ($inscrito['ordem_inscricao'] ?? 0));
     $inscritoEmRaw = trim((string) ($inscrito['inscrito_em'] ?? ''));
     $inscritoEmTs = $inscritoEmRaw !== '' ? strtotime($inscritoEmRaw) : false;
-    $inscritoEmLabel = $inscritoEmTs !== false
-        ? date('d/m/Y', $inscritoEmTs) . ' às ' . date('H:i:s', $inscritoEmTs)
-        : 'data não informada';
+    $horaLabel = $inscritoEmTs !== false ? date('H:i:s', $inscritoEmTs) : '--:--:--';
 
     $nome = trim((string) ($inscrito['nome_completo'] ?? ''));
     if ($nome === '') {
         $nome = 'Estudante não identificado';
     }
 
-    $telefone = trim((string) ($inscrito['telefone'] ?? ''));
-    if ($telefone === '') {
-        $telefone = 'telefone não informado';
+    $cpfDigits = preg_replace('/\D+/', '', (string) ($inscrito['cpf'] ?? ''));
+    if (strlen((string) $cpfDigits) === 11) {
+        $cpfLabel = substr($cpfDigits, 0, 3) . '.' . substr($cpfDigits, 3, 3) . '.' . substr($cpfDigits, 6, 3) . '-' . substr($cpfDigits, 9, 2);
+    } else {
+        $cpfLabel = 'CPF não informado';
     }
 
-    $faculdade = trim((string) ($inscrito['faculdade'] ?? ''));
-    if ($faculdade === '' || $faculdade === '-') {
-        $faculdade = 'Faculdade não informada';
+    $telefone = trim((string) ($inscrito['telefone'] ?? ''));
+    if ($telefone === '') {
+        $telefone = 'Telefone não informado';
     }
 
     return sprintf(
-        '%d. Cadastrado em %s - %s (%s - %s)',
+        '%02d. %s - %s - %s - %s',
         $ordem,
-        $inscritoEmLabel,
+        $horaLabel,
         $nome,
-        $faculdade,
+        $cpfLabel,
         $telefone
     );
 }
