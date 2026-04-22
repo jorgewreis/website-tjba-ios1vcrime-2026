@@ -478,7 +478,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                 </div>
                 <div class="width-300" data-ata-info="<?php echo htmlspecialchars($idPautaMinhasRaw, ENT_QUOTES, 'UTF-8'); ?>"<?php echo !$audienciaRealizada ? ' style="display:none;"' : ''; ?>>
                     <?php if ($atasDisponivel): ?>
-                    <button type="button" class="btn btn-primary-outline height-sm" data-nav-href="/api/sala-audiencias-ata/download.php?pauta=<?php echo urlencode($idPautaMinhasRaw); ?>" title="Baixar PDF da ata desta audiência">Baixar ata</button>
+                    <button type="button" class="btn btn-primary-outline height-sm" data-nav-href="/api/sala-audiencias-ata/download.php?pauta=<?php echo urlencode($idPautaMinhasRaw); ?>" data-nav-target="_blank" title="Baixar PDF da ata desta audiência">Baixar ata</button>
                     <?php else: ?>
                     <span class="minor-info">Ata ainda não disponível.</span>
                     <?php endif; ?>
