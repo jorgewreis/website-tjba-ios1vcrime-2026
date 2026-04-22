@@ -161,4 +161,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(sala-audiencias): remove duplicidade na secao de inscritos do painel do dia** `[9bfcd08]`
 - **fix(sala-audiencias): inscrever-me continua funcionando apos polling recriar o botao** `[781560e]`
 - **fix(sala-midias): criacao automatica robusta e script de backfill** `[f046f57]`
+- **chore(gitignore): explicitar versionamento da pasta scripts** `[ddfa847]`
 
