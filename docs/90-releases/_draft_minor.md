@@ -163,4 +163,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(sala-midias): criacao automatica robusta e script de backfill** `[f046f57]`
 - **chore(gitignore): explicitar versionamento da pasta scripts** `[ddfa847]`
 - **fix(scripts): mensagem clara quando .env ou DB_* faltam no backfill** `[2a614df]`
+- **fix(cartorio-guias-list): update date validation logic to prevent future and today dates** `[b30fa22]`
 
