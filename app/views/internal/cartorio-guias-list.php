@@ -280,14 +280,14 @@ if ($totalPages > 0) {
                         </div>
                         <div class="col width-500 col-process process-info" title="clique para copiar">
                             <?php
-                                $classeGuia = !empty($row['Classe']) ? $row['Classe'] : 'Classe não informada';
-                                $classeStyleGuia = $classeGuia !== 'Classe não informada' ? 'style="color: var(--primary-color-active); font-weight: 600;"' : '';
+                                $classeGuia = !empty($row['Classe']) ? $row['Classe'] : 'Processo';
+                                $classeStyleGuia = $classeGuia !== 'Processo' ? 'style="color: var(--color-primary-active); font-weight: 600;"' : '';
                             ?>
                             <span class="minor-info text-ellipsis" title="<?php echo htmlspecialchars($classeGuia, ENT_QUOTES); ?>" <?php echo $classeStyleGuia; ?>><?php echo htmlspecialchars($classeGuia); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars($row['Processo'] ?? ''); ?></span>
                         </div>
                         <div class="col width-500 col-tipo-guia" title="clique para copiar">
-                            <span class="minor-info text-ellipsis" style="font-weight: 600;"><?php echo htmlspecialchars($row['Tipo'] ?? '—'); ?></span>
+                            <span class="minor-info text-ellipsis" style="font-weight: 600; color: var(--color-gray-900);"><?php echo htmlspecialchars($row['Tipo'] ?? '—'); ?></span>
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars($row['Denunciado'] ?? '—'); ?></span>
                         </div>                        
                     </div>

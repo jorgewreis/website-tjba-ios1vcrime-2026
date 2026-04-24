@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0025
+
+**Data:** 2026-04-24 10:56:09 | **Commit:** `972a65a` | **Tipo:** `patch`
+
+- fix(cartorio-guias-list): update default class label and styling for better clarity
+
 ## V. 1.96.0024
 
 **Data:** 2026-04-24 10:48:18 | **Commit:** `526c753` | **Tipo:** `patch`
@@ -4620,6 +4626,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
