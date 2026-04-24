@@ -776,7 +776,8 @@ body {
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    padding: 20px;
+    height: 80px;
+    padding: 0 20px;
     border-bottom: 1px solid var(--color-border-subtle);
 }
 
@@ -786,6 +787,7 @@ body {
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    padding: 20px;
+    height: 80px;
+    padding: 0 20px;
     border-top: 1px solid var(--color-border-subtle);
 }

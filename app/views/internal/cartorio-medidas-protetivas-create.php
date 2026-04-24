@@ -49,16 +49,25 @@ try {
             <span class="all">Interno - Medidas Protetivas -</span>
             <span class="specific">Cadastro</span>
         </div>
-        <h1 class="title-page">Cadastro de Medida Protetiva</h1>
-        <p class="description-page">Registre o processo, identifique o réu e prepare automaticamente o vínculo posterior com o fluxo do Cejusc.</p>
+        <h1 class="title-page">Medidas Protetivas</h1>
+        <p class="description-page">Cadastro de medidas protetivas para acompanhamento e expedição.</p>
     </div>
 
     <div class="container-full card-page">
         <div class="card-title">
             <div class="display-flex row row-fit justify-start">
-                <h2>Dados para cadastro</h2>
+                <h2>Cadastro</h2>
             </div>
-            <div class="display-flex row row-fit justify-end gap-y-md"></div>
+            <div class="display-flex row row-fit justify-end gap-y-md">
+                <div class="card-allocate-rule">
+                    <?php $cartorioAlocacaoPrefix = 'medidas'; include __DIR__ . '/_cartorio_alocacao_direcionada_create.php'; ?>
+                    <?php if ($hasRuleAllocation): ?>
+                        <span>*Conforme regra, as medidas protetivas serão alocadas automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
+                    <?php else: ?>
+                        <span>*Não existe nenhum usuário alocado para esta tarefa por regra.</span>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter">
@@ -100,16 +109,6 @@ try {
                 <label for="reu-data-nascimento">Data de nascimento</label>
                 <input type="date" class="width-400 height-md" id="reu-data-nascimento">
             </div>
-        </div>
-
-        <?php $cartorioAlocacaoPrefix = 'medidas'; include __DIR__ . '/_cartorio_alocacao_direcionada_create.php'; ?>
-
-        <div class="display-flex row row-full info padding-x-md padding-y-md">
-            <?php if ($hasRuleAllocation): ?>
-                <span>*Conforme regra de alocação, as medidas protetivas serão alocadas automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
-            <?php else: ?>
-                <span>*Não existe nenhum usuário alocado automaticamente para esta tarefa no momento.</span>
-            <?php endif; ?>
         </div>
 
         <div class="card-buttons">

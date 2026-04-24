@@ -347,7 +347,9 @@
             if (global.__datajudBancoPrefill !== undefined) {
                 global.__datajudBancoPrefill = null;
             }
-            var representation = (classe && (classe.descricao || classe.codigo)) ? String(classe.descricao || classe.codigo || '') : 'Classe';
+            var representation = (classe && (classe.descricao || classe.codigo))
+                ? String(classe.descricao || classe.codigo || '').trim()
+                : '';
             classeInput.value = representation;
             classeInput.readOnly = true;
             classeInput.classList.add('status-finished');
@@ -359,7 +361,7 @@
             if (classeDescricaoField) {
                 classeDescricaoField.value = classe && (classe.descricao || classe.codigo) ? (classe.descricao || classe.codigo || '') : '';
             }
-            setStatusMessage(statusElement, 'Classe', 'var(--color-success-active)');
+            setStatusMessage(statusElement, '', null);
             dispatchDatajudClasseResolved(processoInput, true);
             if (processoInput.id === 'gab-mon-processo' || processoInput.id === 'filter-processo' || processoInput.id === 'audiencia-processo') {
                 global.dispatchEvent(new CustomEvent('gabineteMonDatajudClassePronta', {
@@ -397,10 +399,10 @@
                     if (classeDescricaoField) {
                         classeDescricaoField.value = global.__datajudBancoPrefill.descricao || '';
                     }
-                    setStatusMessage(statusElement, 'Classe', 'var(--color-gray-700)');
+                    setStatusMessage(statusElement, '', null);
                 } else {
                     classeInput.value = fallbackText;
-                    setStatusMessage(statusElement, 'Classe', statusColor);
+                    setStatusMessage(statusElement, '', null);
                     if (classeCodigoField) {
                         classeCodigoField.value = '';
                     }
@@ -419,10 +421,10 @@
                     if (classeDescricaoField) {
                         classeDescricaoField.value = global.__datajudBancoPrefill.descricao || '';
                     }
-                    setStatusMessage(statusElement, 'Classe', 'var(--color-gray-700)');
+                    setStatusMessage(statusElement, '', null);
                 } else {
                     classeInput.value = fallbackText;
-                    setStatusMessage(statusElement, 'Classe', statusColor);
+                    setStatusMessage(statusElement, '', null);
                     if (classeCodigoField) {
                         classeCodigoField.value = '';
                     }
