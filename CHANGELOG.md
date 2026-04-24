@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0023
+
+**Data:** 2026-04-24 10:26:16 | **Commit:** `2563a17` | **Tipo:** `patch`
+
+- feat(guias-service): add automatic penalty value synchronization
+
 ## V. 1.96.0022
 
 **Data:** 2026-04-24 10:23:44 | **Commit:** `35f0e4f` | **Tipo:** `patch`
@@ -4608,6 +4614,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

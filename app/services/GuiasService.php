@@ -64,10 +64,38 @@ final class GuiasService
         return round(($salario * $diasMulta) / 30, 2);
     }
 
+    /**
+     * Garante cálculo automático de valor_multa quando já existem data_fato e dias_multa.
+     * Também atualiza em banco quando encontrar guia com valor ausente.
+     */
+    private function sincronizarValorMultaSePossivel(array $guia): array
+    {
+        $idGuia = trim((string) ($guia['id'] ?? $guia['IdGuia'] ?? ''));
+        $dataFato = trim((string) ($guia['data_fato'] ?? ''));
+        $diasMulta = isset($guia['dias_multa']) && $guia['dias_multa'] !== null ? (int) $guia['dias_multa'] : 0;
+        $valorAtual = $guia['valor_multa'] ?? null;
+        $valorAusente = $valorAtual === null || $valorAtual === '';
+
+        if ($idGuia === '' || $dataFato === '' || $diasMulta <= 0 || !$valorAusente) {
+            return $guia;
+        }
+
+        $valorCalculado = $this->calcularValorPenaMulta($dataFato, $diasMulta);
+        if ($valorCalculado === null) {
+            return $guia;
+        }
+
+        $this->repository->update($idGuia, ['valor_multa' => $valorCalculado]);
+        $guia['valor_multa'] = $valorCalculado;
+        return $guia;
+    }
+
     public function listGuias(array $filters, int $limit, int $offset): array
     {
         $rows = $this->repository->fetchList($filters, $limit, $offset);
         foreach ($rows as $i => $row) {
+            $rows[$i] = $this->sincronizarValorMultaSePossivel($row);
+            $row = $rows[$i];
             $idGuia = (string) ($row['IdGuia'] ?? '');
             if ($idGuia !== '') {
                 $this->subtarefasRepository->ensureOitoSubtarefas($idGuia);
@@ -115,7 +143,12 @@ final class GuiasService
 
     public function find(string $id): ?array
     {
-        return $this->repository->findById($id);
+        $guia = $this->repository->findById($id);
+        if ($guia === null) {
+            return null;
+        }
+
+        return $this->sincronizarValorMultaSePossivel($guia);
     }
 
     /**
