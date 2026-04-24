@@ -170,4 +170,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(cartorio-guias-list): update default class label and styling for better clarity** `[972a65a]`
 - **refactor(medidas-protetivas): streamline victim handling and improve error validation** `[7315cab]`
 - **refactor(cartorio-medidas-protetivas): enhance UI and improve data handling** `[aeaed0c]`
+- **refactor(cartorio-medidas-protetivas): update UI and improve layout for medidas protetivas creation** `[6741b38]`
 
