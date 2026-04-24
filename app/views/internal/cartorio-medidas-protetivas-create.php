@@ -50,7 +50,7 @@ try {
             <span class="specific">Cadastro</span>
         </div>
         <h1 class="title-page">Cadastro de Medida Protetiva</h1>
-        <p class="description-page">Registre o processo, identifique o réu, relacione as vítimas e prepare automaticamente o vínculo posterior com o fluxo do Cejusc.</p>
+        <p class="description-page">Registre o processo, identifique o réu e prepare automaticamente o vínculo posterior com o fluxo do Cejusc.</p>
     </div>
 
     <div class="container-full card-page">
@@ -66,22 +66,16 @@ try {
                 <input type="text" class="width-400 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" required>
             </div>
             <div class="col filter">
-                <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe processual <span class="label-hint-automatizado">*automatizado</span></label>
+                <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
                 <input type="text" class="width-600 height-md" id="filter-classe" data-datajud-related="true" placeholder="Preenchido automaticamente pelo DataJud" readonly>
             </div>
         </div>
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
 
-        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
-            <div class="display-flex row row-fit justify-start">
-                <h2>Réu</h2>
-            </div>
-            <div class="display-flex row row-fit justify-end gap-y-md"></div>
-        </div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md" id="reu-row-principal">
             <div class="col filter">
-                <label for="reu-select">Réu / Denunciado <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <label for="reu-select">Requerido(a) <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <select class="width-800 height-md" id="reu-select" style="display: none;" aria-label="Réus vinculados ao processo ou sugestões por nome">
                     <!-- preenchido via JS: réus do processo ou sugestões (nome + CPF) + Outro / Cadastrar novo -->
                 </select>
@@ -90,36 +84,22 @@ try {
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md" id="reu-campos-complementares" style="display: none;">
             <div class="col filter">
-                <label for="reu-cpf">CPF <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <label for="reu-cpf">CPF <span class="label-hint-automatizado">(opcional)</span></label>
                 <input type="text" class="width-300 height-md" id="reu-cpf" placeholder="000.000.000-00">
             </div>
             <div class="col filter">
-                <label for="reu-sexo">Sexo <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <label for="reu-sexo">Sexo</label>
                 <select class="width-300 height-md" id="reu-sexo">
-                    <option value="">Selecione</option>
                     <option value="Feminino">Feminino</option>
-                    <option value="Masculino">Masculino</option>
+                    <option value="Masculino" selected>Masculino</option>
                     <option value="Outro">Outro</option>
                 </select>
             </div>
             <div class="col filter">
-                <label for="reu-data-nascimento">Data de nascimento <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <label for="reu-data-nascimento">Data de nascimento <span class="label-hint-automatizado">(opcional)</span></label>
                 <input type="date" class="width-300 height-md" id="reu-data-nascimento">
             </div>
         </div>
-
-        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
-            <div class="display-flex row row-fit justify-start">
-                <h2>Vítimas</h2>
-            </div>
-            <div class="display-flex row row-fit justify-end gap-y-md"></div>
-        </div>
-        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
-            <div class="col filter">
-                <button class="btn btn-primary-outline height-sm" id="add-vitima-btn" type="button">Adicionar vítima</button>
-            </div>
-        </div>
-        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom" id="vitimas-container"></div>
 
         <?php $cartorioAlocacaoPrefix = 'medidas'; include __DIR__ . '/_cartorio_alocacao_direcionada_create.php'; ?>
 
@@ -147,62 +127,6 @@ try {
             <span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span>
         </div>
     </div>
-
-    <template id="vitima-template">
-        <div class="vitima-card">
-            <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
-                <div class="display-flex row row-fit justify-start">
-                    <h2><span class="vitima-card-index">Vítima</span></h2>
-                </div>
-                <div class="display-flex row row-fit justify-end gap-y-md"></div>
-            </div>
-            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md vitima-row-principal">
-                <div class="col filter">
-                    <label>Vítima (nome)</label>
-                    <select class="width-600 height-md vitima-select" style="display: none;" aria-label="Sugestões por nome"></select>
-                    <input type="text" class="width-600 height-md vitima-nome" placeholder="Digite o nome completo" maxlength="255">
-                </div>
-            </div>
-            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md vitima-campos-complementares" style="display: none;">
-                <div class="col filter">
-                    <label>CPF <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="text" class="width-200 height-md vitima-cpf" placeholder="000.000.000-00">
-                </div>
-                <div class="col filter">
-                    <label>Sexo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <select class="width-200 height-md vitima-sexo">
-                        <option value="">Selecione</option>
-                        <option value="Feminino">Feminino</option>
-                        <option value="Masculino">Masculino</option>
-                        <option value="Outro">Outro</option>
-                    </select>
-                </div>
-                <div class="col filter">
-                    <label>Data de nascimento <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="date" class="width-200 height-md vitima-data-nascimento">
-                </div>
-            </div>
-            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
-                <div class="col filter">
-                    <label><input type="checkbox" class="vitima-mulher"> Mulher</label>
-                </div>
-                <div class="col filter">
-                    <label><input type="checkbox" class="vitima-crianca"> Criança/Adolescente</label>
-                </div>
-                <div class="col filter">
-                    <label><input type="checkbox" class="vitima-idoso"> Idoso</label>
-                </div>
-                <div class="col filter">
-                    <label><input type="checkbox" class="vitima-pcd"> Pessoa com deficiência</label>
-                </div>
-            </div>
-            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
-                <div class="col filter">
-                    <button class="btn btn-danger-outline height-sm btn-remover-vitima" type="button">Remover</button>
-                </div>
-            </div>
-        </div>
-    </template>
 
     <?php include __DIR__ . '/_datajud_scripts.php'; ?>
     <script>

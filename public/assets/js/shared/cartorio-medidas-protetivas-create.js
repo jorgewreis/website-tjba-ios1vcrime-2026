@@ -41,61 +41,16 @@
             };
         }
 
-        function collectVitimas() {
-            return Array.from(global.document.querySelectorAll('.vitima-card')).map(function (card) {
-                const selectEl = card.querySelector('.vitima-select');
-                const nomeInput = card.querySelector('.vitima-nome');
-                const useSelect = selectEl && selectEl.style.display !== 'none' && selectEl.value !== '' && selectEl.value !== '__novo__';
-                const base = {
-                    mulher: !!card.querySelector('.vitima-mulher')?.checked,
-                    crianca_adolescente: !!card.querySelector('.vitima-crianca')?.checked,
-                    idoso: !!card.querySelector('.vitima-idoso')?.checked,
-                    pessoa_deficiencia: !!card.querySelector('.vitima-pcd')?.checked
-                };
-
-                if (useSelect) {
-                    return Object.assign({
-                        parte_id: selectEl.value,
-                        cpf: '',
-                        nome_completo: '',
-                        sexo: '',
-                        data_nascimento: ''
-                    }, base);
-                }
-
-                return Object.assign({
-                    parte_id: '',
-                    cpf: helpers.onlyDigits(card.querySelector('.vitima-cpf')?.value || ''),
-                    nome_completo: App.ProperNameHelper && App.ProperNameHelper.formatProper
-                        ? App.ProperNameHelper.formatProper(nomeInput?.value || '', 255)
-                        : helpers.formatProperName(nomeInput?.value || '', 255),
-                    sexo: (card.querySelector('.vitima-sexo')?.value || '').trim(),
-                    data_nascimento: (card.querySelector('.vitima-data-nascimento')?.value || '').trim()
-                }, base);
-            }).filter(function (vitima) {
-                return vitima.parte_id || vitima.cpf || vitima.nome_completo || vitima.sexo || vitima.data_nascimento || vitima.mulher || vitima.crianca_adolescente || vitima.idoso || vitima.pessoa_deficiencia;
-            });
-        }
-
         function validateReu(reu) {
             if (reu.parte_id) {
                 return '';
             }
-            if (!reu.cpf || !reu.nome_completo || !reu.sexo || !reu.data_nascimento) {
-                return 'Preencha CPF, nome completo, sexo e data de nascimento do réu (ou selecione um réu existente).';
+            const nome = (reu.nome_completo || '').trim();
+            if (!nome) {
+                return 'Informe o nome completo do réu ou selecione um réu existente.';
             }
-            return '';
-        }
-
-        function validateVitimas(vitimas) {
-            for (let i = 0; i < vitimas.length; i += 1) {
-                const vitima = vitimas[i];
-                if (vitima.parte_id) {
-                    continue;
-                }
-                if (!vitima.cpf || !vitima.nome_completo || !vitima.sexo || !vitima.data_nascimento) {
-                    return 'Preencha CPF, nome completo, sexo e data de nascimento para cada vítima informada (ou selecione uma pessoa existente).';
-                }
+            if (reu.cpf && reu.cpf.length > 0 && reu.cpf.length !== 11) {
+                return 'CPF do réu incompleto. Informe 11 dígitos ou deixe em branco.';
             }
             return '';
         }
@@ -134,25 +89,9 @@
                 return;
             }
 
-            const vitimas = collectVitimas();
-            const vitimasError = validateVitimas(vitimas);
-            if (vitimasError) {
-                feedback(vitimasError, 'error');
-                return;
-            }
-
-            for (let i = 0; i < vitimas.length; i += 1) {
-                const vitima = vitimas[i];
-                if (!vitima.parte_id && vitima.cpf && vitima.cpf.length === 11 && App.CPF && !App.CPF.validar(vitima.cpf)) {
-                    feedback('CPF inválido na vítima ' + (i + 1) + '. Verifique os dígitos.', 'error');
-                    return;
-                }
-            }
-
             const payload = Object.assign({
                 processo: processo.value,
-                reu: reu,
-                vitimas: vitimas
+                reu: reu
             }, helpers.buildClassePayload({ classeValue: classeVal }));
 
             if (alocState && typeof alocState.getIds === 'function') {

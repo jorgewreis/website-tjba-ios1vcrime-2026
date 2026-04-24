@@ -156,21 +156,35 @@ final class MedidasProtetivasService
 
         $parteReuId = $this->resolveParteIdFromPayload($reuPayload, 'réu');
 
-        $vitimas = $payload['vitimas'] ?? [];
-        if (!is_array($vitimas)) {
-            $vitimas = [];
-        }
-
         $this->connection->beginTransaction();
         try {
             if ($parteReuId === null) {
-                $reuData = $this->validatePartePayload($reuPayload, 'réu');
-                $parteReuId = $this->partesRepository->ensureParte(
-                    $reuData['cpf'],
-                    $reuData['nome_completo'],
-                    $reuData['sexo'],
-                    $reuData['data_nascimento']
-                );
+                $nomeCompleto = TextFormatter::formatProperName((string) ($reuPayload['nome_completo'] ?? ''), 255);
+                if ($nomeCompleto === '') {
+                    throw new InvalidArgumentException('Informe o nome completo do réu ou selecione um réu existente.');
+                }
+                $cpfDigits = preg_replace('/\D+/', '', (string) ($reuPayload['cpf'] ?? ''));
+                $cpfParaEnsure = null;
+                if ($cpfDigits !== '') {
+                    if (strlen($cpfDigits) !== 11) {
+                        throw new InvalidArgumentException('CPF do réu incompleto. Informe 11 dígitos ou deixe em branco.');
+                    }
+                    $cpfParaEnsure = $cpfDigits;
+                }
+                $parteReuId = $this->partesRepository->ensureParteByNomeOuCpf($nomeCompleto, $cpfParaEnsure);
+
+                $sexoReu = trim((string) ($reuPayload['sexo'] ?? ''));
+                $dataNascReu = trim((string) ($reuPayload['data_nascimento'] ?? ''));
+                $reuUpdate = [];
+                if ($sexoReu !== '') {
+                    $reuUpdate['sexo'] = $sexoReu;
+                }
+                if ($dataNascReu !== '') {
+                    $reuUpdate['data_nascimento'] = $dataNascReu;
+                }
+                if ($reuUpdate !== []) {
+                    $this->partesRepository->update($parteReuId, $reuUpdate);
+                }
             }
             $vinculoReuExistente = $this->processosPartesRepository->findByProcessoAndParte($processoId, $parteReuId);
             if ($vinculoReuExistente === null) {
@@ -180,40 +194,6 @@ final class MedidasProtetivasService
                     ProcessosPartesRepository::TIPO_REU,
                     ProcessosPartesRepository::POLO_PASSIVO
                 );
-            }
-
-            foreach ($vitimas as $index => $vitimaPayload) {
-                if (!is_array($vitimaPayload)) {
-                    throw new InvalidArgumentException('Formato inválido para vítima na posição ' . ($index + 1) . '.');
-                }
-                if ($this->isPartePayloadEmpty($vitimaPayload)) {
-                    continue;
-                }
-
-                $parteVitimaId = $this->resolveParteIdFromPayload($vitimaPayload, 'vítima #' . ($index + 1));
-                if ($parteVitimaId === null) {
-                    $vitimaData = $this->validatePartePayload($vitimaPayload, 'vítima #' . ($index + 1));
-                    $parteVitimaId = $this->partesRepository->ensureParte(
-                        $vitimaData['cpf'],
-                        $vitimaData['nome_completo'],
-                        $vitimaData['sexo'],
-                        $vitimaData['data_nascimento']
-                    );
-                }
-
-                $flags = $this->extractPrioridadeFlags($vitimaPayload);
-                $vinculoVitimaExistente = $this->processosPartesRepository->findByProcessoAndParte($processoId, $parteVitimaId);
-                if ($vinculoVitimaExistente === null) {
-                    $this->processosPartesRepository->addParte(
-                        $processoId,
-                        $parteVitimaId,
-                        ProcessosPartesRepository::TIPO_VITIMA,
-                        ProcessosPartesRepository::POLO_ATIVO,
-                        $flags
-                    );
-                }
-
-                $this->processoPrioridadesService->registrarPrioridadesFlagsVitimaMedida($processoId, $flags);
             }
 
             $medidaId = IdGenerator::generateUniquePrefixedId(
@@ -492,59 +472,6 @@ final class MedidasProtetivasService
             return $parte['id'];
         }
         throw new InvalidArgumentException('Parte informada para ' . $label . ' não foi encontrada.');
-    }
-
-    private function validatePartePayload(array $payload, string $label): array
-    {
-        $cpf = preg_replace('/\D+/', '', (string) ($payload['cpf'] ?? ''));
-        $nomeCompleto = TextFormatter::formatProperName((string) ($payload['nome_completo'] ?? ''), 255);
-        $sexo = trim((string) ($payload['sexo'] ?? ''));
-        $dataNascimento = trim((string) ($payload['data_nascimento'] ?? ''));
-
-        if ($cpf === '') {
-            throw new InvalidArgumentException('Informe o CPF para ' . $label . '.');
-        }
-        if ($nomeCompleto === '') {
-            throw new InvalidArgumentException('Informe o nome completo para ' . $label . '.');
-        }
-        if ($sexo === '') {
-            throw new InvalidArgumentException('Informe o sexo para ' . $label . '.');
-        }
-        if ($dataNascimento === '') {
-            throw new InvalidArgumentException('Informe a data de nascimento para ' . $label . '.');
-        }
-
-        return [
-            'cpf' => $cpf,
-            'nome_completo' => $nomeCompleto,
-            'sexo' => $sexo,
-            'data_nascimento' => $dataNascimento,
-        ];
-    }
-
-    private function extractPrioridadeFlags(array $payload): array
-    {
-        return [
-            'prioridade_mulher' => !empty($payload['mulher']),
-            'prioridade_crianca_adolescente' => !empty($payload['crianca_adolescente']),
-            'prioridade_idoso' => !empty($payload['idoso']),
-            'prioridade_pessoa_deficiencia' => !empty($payload['pessoa_deficiencia']),
-        ];
-    }
-
-    private function isPartePayloadEmpty(array $payload): bool
-    {
-        if (trim((string) ($payload['parte_id'] ?? '')) !== '') {
-            return false;
-        }
-        $keys = ['cpf', 'nome_completo', 'sexo', 'data_nascimento'];
-        foreach ($keys as $key) {
-            if (trim((string) ($payload[$key] ?? '')) !== '') {
-                return false;
-            }
-        }
-
-        return empty($payload['mulher']) && empty($payload['crianca_adolescente']) && empty($payload['idoso']) && empty($payload['pessoa_deficiencia']);
     }
 
     private function normalizeTipoAlocado(string $tipo): string

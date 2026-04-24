@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0026
+
+**Data:** 2026-04-24 12:45:29 | **Commit:** `7315cab` | **Tipo:** `patch`
+
+- refactor(medidas-protetivas): streamline victim handling and improve error validation
+
 ## V. 1.96.0025
 
 **Data:** 2026-04-24 10:56:09 | **Commit:** `972a65a` | **Tipo:** `patch`
@@ -4626,6 +4632,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
