@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0029
+
+**Data:** 2026-04-24 13:31:59 | **Commit:** `4ea1033` | **Tipo:** `patch`
+
+- feat(layout): add new card-allocate-rule style for improved UI consistency
+
 ## V. 1.96.0028
 
 **Data:** 2026-04-24 13:23:10 | **Commit:** `6741b38` | **Tipo:** `patch`
@@ -4644,6 +4650,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
