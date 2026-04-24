@@ -164,4 +164,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **chore(gitignore): explicitar versionamento da pasta scripts** `[ddfa847]`
 - **fix(scripts): mensagem clara quando .env ou DB_* faltam no backfill** `[2a614df]`
 - **fix(cartorio-guias-list): update date validation logic to prevent future and today dates** `[b30fa22]`
+- **fix(guias-service): update date validation logic and improve error message** `[35f0e4f]`
 
