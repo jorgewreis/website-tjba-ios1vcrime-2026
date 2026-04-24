@@ -7,6 +7,25 @@
         return String(value || '').trim().toLowerCase();
     }
 
+    function formatAsDateInputValue(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return year + '-' + month + '-' + day;
+    }
+
+    function applyDataFatoMaxDateConstraint() {
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+        const limiteMaximo = new Date(hoje);
+        limiteMaximo.setDate(limiteMaximo.getDate() - 10);
+        const maxValue = formatAsDateInputValue(limiteMaximo);
+
+        global.document.querySelectorAll('.subtask-data-fato').forEach(function (input) {
+            input.setAttribute('max', maxValue);
+        });
+    }
+
     function buildFilterNavigator(routePage) {
         return function applyFilters() {
             const tipo = global.document.getElementById('filter-tipo')?.value || '';
@@ -111,8 +130,8 @@
                 limiteMinimo.setDate(limiteMinimo.getDate() - 10);
                 const dataFatoDate = new Date(dataFatoValor + 'T00:00:00');
 
-                if (isNaN(dataFatoDate.getTime()) || dataFatoDate > hoje || dataFatoDate < limiteMinimo) {
-                    notify('error', 'Atenção', 'A data do fato deve estar dentro dos últimos 10 dias e não pode ser futura.');
+                if (isNaN(dataFatoDate.getTime()) || dataFatoDate >= limiteMinimo) {
+                    notify('error', 'Atenção', 'A data do fato deve ser anterior aos últimos 10 dias (não pode ser de hoje, futura ou dentro desse período).');
                     return false;
                 }
             }
@@ -307,6 +326,7 @@
                 apply: buildFilterNavigator(settings.routePage || 'guias')
             },
             onReady: function (ctx) {
+                applyDataFatoMaxDateConstraint();
                 bindConcludeButtons(ctx, settings.concludeEndpoint || '/api/cartorio-guias/concluir-subtarefa.php');
                 bindCancelButtons(ctx, settings.cancelEndpoint || '/api/cartorio-guias/cancelar-subtarefa.php');
                 bindCreateButtons(ctx, settings.createEndpoint || '/api/cartorio-guias/criar-primeira-subtarefa.php');
