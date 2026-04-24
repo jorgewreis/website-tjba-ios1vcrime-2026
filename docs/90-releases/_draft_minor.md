@@ -166,4 +166,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(cartorio-guias-list): update date validation logic to prevent future and today dates** `[b30fa22]`
 - **fix(guias-service): update date validation logic and improve error message** `[35f0e4f]`
 - **feat(guias-service): add automatic penalty value synchronization** `[2563a17]`
+- **refactor(cartorio-guias-list): enhance layout and input field sizes for better usability** `[526c753]`
 
