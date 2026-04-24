@@ -290,6 +290,12 @@ $tiposOptions = [
                     <input type="text" id="edit-observacoes" class="width-800 height-md" value="<?php echo htmlspecialchars((string) ($guia['observacoes'] ?? ''), ENT_QUOTES); ?>" placeholder="Opcional">
                 </div>
             </div>
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
+                <div class="col filter">
+                    <label for="edit-valor-multa">Valor da pena de multa (automático)</label>
+                    <input type="text" id="edit-valor-multa" class="width-300 height-md readonly" value="<?php echo isset($guia['valor_multa']) && $guia['valor_multa'] !== null && $guia['valor_multa'] !== '' ? htmlspecialchars('R$ ' . number_format((float) $guia['valor_multa'], 2, ',', '.'), ENT_QUOTES) : ''; ?>" placeholder="Calculado automaticamente" readonly>
+                </div>
+            </div>
 
             <?php if ($guia !== null): ?>
                 <?php

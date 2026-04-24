@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0022
+
+**Data:** 2026-04-24 10:23:44 | **Commit:** `35f0e4f` | **Tipo:** `patch`
+
+- fix(guias-service): update date validation logic and improve error message
+
 ## V. 1.96.0021
 
 **Data:** 2026-04-24 10:17:23 | **Commit:** `b30fa22` | **Tipo:** `patch`
@@ -4602,6 +4608,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

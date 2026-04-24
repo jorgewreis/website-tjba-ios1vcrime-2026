@@ -557,8 +557,8 @@ final class GuiasService
                 }
                 $hoje = new \DateTime('today');
                 $limiteInferior = (clone $hoje)->modify('-10 days');
-                if ($dtFato > $hoje || $dtFato < $limiteInferior) {
-                    throw new InvalidArgumentException('A data do fato deve estar dentro dos últimos 10 dias e não pode ser futura.');
+                if ($dtFato >= $limiteInferior) {
+                    throw new InvalidArgumentException('A data do fato deve ser anterior aos últimos 10 dias (não pode ser de hoje, futura ou dentro desse período).');
                 }
             }
             $temDados = $dataFato !== '' && $diasMulta > 0;
