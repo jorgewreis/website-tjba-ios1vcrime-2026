@@ -171,4 +171,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(medidas-protetivas): streamline victim handling and improve error validation** `[7315cab]`
 - **refactor(cartorio-medidas-protetivas): enhance UI and improve data handling** `[aeaed0c]`
 - **refactor(cartorio-medidas-protetivas): update UI and improve layout for medidas protetivas creation** `[6741b38]`
+- **feat(layout): add new card-allocate-rule style for improved UI consistency** `[4ea1033]`
 
