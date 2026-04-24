@@ -197,6 +197,72 @@
         if (App.CPF && App.CPF.init) {
             App.CPF.init('#reu-cpf');
         }
+
+        const labelProcessoTitulo = global.document.getElementById('label-processo-titulo');
+        const labelProcessoObrigatorio = global.document.getElementById('label-processo-obrigatorio');
+        const TEXTO_LABEL_PROCESSO_PADRAO = 'Processo';
+
+        function definirVisibilidadeObrigatorioProcesso(visivel) {
+            if (!labelProcessoObrigatorio) {
+                return;
+            }
+            labelProcessoObrigatorio.style.display = visivel ? '' : 'none';
+        }
+
+        function textoClasseParaRotulo() {
+            const desc = global.document.getElementById('hidden-classe-descricao');
+            const hiddenClasse = global.document.getElementById('filter-classe');
+            const t = (desc && desc.value ? String(desc.value).trim() : '')
+                || (hiddenClasse && hiddenClasse.value ? String(hiddenClasse.value).trim() : '');
+            return t;
+        }
+
+        function normalizarComparacaoClasse(s) {
+            return String(s || '').trim().toLocaleLowerCase('pt-BR');
+        }
+
+        function rotuloEhClasseNaoInformada(texto) {
+            const marker = (global.DataJudCycle && global.DataJudCycle.FALLBACK_CLASSE)
+                ? String(global.DataJudCycle.FALLBACK_CLASSE)
+                : 'Classe não informada';
+            const t = normalizarComparacaoClasse(texto);
+            const m = normalizarComparacaoClasse(marker);
+            return t !== '' && t === m;
+        }
+
+        function aplicarRotuloProcessoAposDatajud(ev) {
+            if (!ev.detail || ev.detail.processoInputId !== 'filter-processo' || !labelProcessoTitulo) {
+                return;
+            }
+            const info = global.document.getElementById('processo-ap-info');
+            if (ev.detail.success) {
+                const txt = textoClasseParaRotulo();
+                if (txt && !rotuloEhClasseNaoInformada(txt)) {
+                    labelProcessoTitulo.textContent = txt;
+                    definirVisibilidadeObrigatorioProcesso(false);
+                    if (info) {
+                        info.textContent = '';
+                        info.style.removeProperty('color');
+                    }
+                } else {
+                    labelProcessoTitulo.textContent = TEXTO_LABEL_PROCESSO_PADRAO;
+                    definirVisibilidadeObrigatorioProcesso(true);
+                }
+            } else {
+                labelProcessoTitulo.textContent = TEXTO_LABEL_PROCESSO_PADRAO;
+                definirVisibilidadeObrigatorioProcesso(true);
+            }
+        }
+
+        global.addEventListener('datajudClasseResolved', aplicarRotuloProcessoAposDatajud);
+
+        global.addEventListener('cnjValidated', function (ev) {
+            const digits = ev.detail && ev.detail.digits ? String(ev.detail.digits) : '';
+            if (digits.length !== 20 && labelProcessoTitulo) {
+                labelProcessoTitulo.textContent = TEXTO_LABEL_PROCESSO_PADRAO;
+                definirVisibilidadeObrigatorioProcesso(true);
+            }
+        });
     }
 
     App.CartorioMedidasProtetivasCreateUI = {

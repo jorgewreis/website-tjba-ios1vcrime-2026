@@ -768,3 +768,24 @@ body {
         box-sizing: border-box;
     }
 }
+
+/* LINHAS PERSONALIZADAS */
+.card-title {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 20px;
+    border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.card-buttons {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 20px;
+    border-top: 1px solid var(--color-border-subtle);
+}

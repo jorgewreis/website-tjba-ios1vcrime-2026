@@ -133,9 +133,9 @@ if ($totalPages > 0) {
 
     <div class="container-full card-page">
 
-        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+        <div class="card-title">
             <div class="display-flex row row-fit justify-start">
-                <h2>Lista de medidas protetivas</h2>
+                <h2>Lista</h2>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md">
                 <input type="text" class="width-400 height-md" id="search-input" placeholder="Pesquisar por processo..." value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">

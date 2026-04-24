@@ -66,7 +66,20 @@
             }
 
             const classeVal = helpers.getValue('filter-classe');
-            if (classeVal === 'Aguarde...') {
+            const DC = global.DataJudCycle;
+            let classeEmCarregamento = classeVal === 'Aguarde...';
+            if (DC && typeof DC.getClasseLoadingPlaceholder === 'function' && DC.MAX_FETCH_ATTEMPTS) {
+                for (let i = 1; i <= DC.MAX_FETCH_ATTEMPTS; i += 1) {
+                    if (classeVal === DC.getClasseLoadingPlaceholder(i)) {
+                        classeEmCarregamento = true;
+                        break;
+                    }
+                }
+            }
+            if (!classeEmCarregamento && DC && classeVal === DC.PLACEHOLDER_LOADING) {
+                classeEmCarregamento = true;
+            }
+            if (classeEmCarregamento) {
                 feedback('Aguarde a consulta ao DataJud terminar antes de cadastrar.', 'error');
                 return;
             }

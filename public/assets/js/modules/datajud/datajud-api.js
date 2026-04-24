@@ -484,6 +484,16 @@
 
                         }
 
+                        if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function' && domFresh.processoInput) {
+
+                            window.dispatchEvent(new CustomEvent('datajudClasseResolved', {
+
+                                detail: { processoInputId: domFresh.processoInput.id || '', success: true },
+
+                            }));
+
+                        }
+
                     }
 
                 }

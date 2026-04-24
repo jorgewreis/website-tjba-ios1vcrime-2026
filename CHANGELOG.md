@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0027
+
+**Data:** 2026-04-24 13:12:49 | **Commit:** `aeaed0c` | **Tipo:** `patch`
+
+- refactor(cartorio-medidas-protetivas): enhance UI and improve data handling
+
 ## V. 1.96.0026
 
 **Data:** 2026-04-24 12:45:29 | **Commit:** `7315cab` | **Tipo:** `patch`
@@ -4632,6 +4638,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

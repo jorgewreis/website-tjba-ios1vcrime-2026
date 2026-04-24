@@ -99,6 +99,19 @@
         }
     }
 
+    /** Permite telas sem campo visível de classe (ex.: medidas protetivas) reagirem ao resultado do DataJud. */
+    function dispatchDatajudClasseResolved(processoInput, success) {
+        if (typeof global.dispatchEvent !== 'function' || !processoInput) {
+            return;
+        }
+        global.dispatchEvent(new CustomEvent('datajudClasseResolved', {
+            detail: {
+                processoInputId: processoInput.id || '',
+                success: success === true,
+            },
+        }));
+    }
+
     function clearClasseLoadingVisual(classeInput) {
         if (!classeInput) {
             return;
@@ -259,6 +272,9 @@
             if (dom && dom.statusElement) {
                 setStatusMessage(dom.statusElement, '', null);
             }
+            if (dom && dom.processoInput) {
+                dispatchDatajudClasseResolved(dom.processoInput, false);
+            }
         },
 
         /**
@@ -344,6 +360,7 @@
                 classeDescricaoField.value = classe && (classe.descricao || classe.codigo) ? (classe.descricao || classe.codigo || '') : '';
             }
             setStatusMessage(statusElement, 'Classe', 'var(--color-success-active)');
+            dispatchDatajudClasseResolved(processoInput, true);
             if (processoInput.id === 'gab-mon-processo' || processoInput.id === 'filter-processo' || processoInput.id === 'audiencia-processo') {
                 global.dispatchEvent(new CustomEvent('gabineteMonDatajudClassePronta', {
                     detail: { numeroProcesso: processoInput.value },
@@ -414,6 +431,9 @@
                     }
                 }
             }
+
+            var codigoAposFalha = classeCodigoField ? String(classeCodigoField.value || '').trim() : '';
+            dispatchDatajudClasseResolved(processoInput, codigoAposFalha !== '');
 
             var hadBancoPrefill = !!(global.__datajudBancoPrefill && global.__datajudBancoPrefill.display);
 

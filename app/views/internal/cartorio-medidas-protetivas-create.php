@@ -54,26 +54,29 @@ try {
     </div>
 
     <div class="container-full card-page">
-        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+        <div class="card-title">
             <div class="display-flex row row-fit justify-start">
-                <h2>Informações obrigatórias</h2>
+                <h2>Dados para cadastro</h2>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md"></div>
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter">
-                <label for="filter-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <label for="filter-processo" class="display-flex col gap-y-sm" style="align-items: flex-start;">
+                    <span>
+                        <span id="label-processo-titulo">Processo</span>
+                        <span id="label-processo-obrigatorio" class="label-hint-obrigatorio">*obrigatório</span>
+                    </span>
+                    <span id="processo-ap-info" class="minor-info" aria-live="polite"></span>
+                </label>
                 <input type="text" class="width-400 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" required>
             </div>
-            <div class="col filter">
-                <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
-                <input type="text" class="width-600 height-md" id="filter-classe" data-datajud-related="true" placeholder="Preenchido automaticamente pelo DataJud" readonly>
-            </div>
         </div>
+        <input type="hidden" id="filter-classe" data-datajud-related="true" value="" autocomplete="off">
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
 
-        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md" id="reu-row-principal">
+        <div class="display-flex row row-full padding-x-md padding-y-md gap-y-md" id="reu-row-principal">
             <div class="col filter">
                 <label for="reu-select">Requerido(a) <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <select class="width-800 height-md" id="reu-select" style="display: none;" aria-label="Réus vinculados ao processo ou sugestões por nome">
@@ -81,10 +84,8 @@ try {
                 </select>
                 <input type="text" class="width-800 height-md" id="reu-nome" placeholder="Digite o nome completo" maxlength="255" aria-label="Nome do réu quando não há réus ou opção Outro">
             </div>
-        </div>
-        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md" id="reu-campos-complementares" style="display: none;">
             <div class="col filter">
-                <label for="reu-cpf">CPF <span class="label-hint-automatizado">(opcional)</span></label>
+                <label for="reu-cpf">CPF</label>
                 <input type="text" class="width-300 height-md" id="reu-cpf" placeholder="000.000.000-00">
             </div>
             <div class="col filter">
@@ -96,8 +97,8 @@ try {
                 </select>
             </div>
             <div class="col filter">
-                <label for="reu-data-nascimento">Data de nascimento <span class="label-hint-automatizado">(opcional)</span></label>
-                <input type="date" class="width-300 height-md" id="reu-data-nascimento">
+                <label for="reu-data-nascimento">Data de nascimento</label>
+                <input type="date" class="width-400 height-md" id="reu-data-nascimento">
             </div>
         </div>
 
@@ -111,10 +112,14 @@ try {
             <?php endif; ?>
         </div>
 
-        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
-            <button class="btn btn-primary-outline" id="alterar-regra-btn" style="display: none;">Alterar regra de alocação</button>
-            <button class="btn btn-secondary" id="voltar-btn" data-allow-during-loading="true">Voltar</button>
-            <button class="btn btn-primary" id="cadastrar-btn" type="button">Cadastrar</button>
+        <div class="card-buttons">
+            <div class="col row-fit justify-start">
+                <button class="btn btn-secondary" id="voltar-btn" data-allow-during-loading="true">Voltar</button>
+                <button class="btn btn-primary-outline" id="alterar-regra-btn" style="display: none;">Alterar regra de alocação</button>                
+            </div>
+            <div class="col row-fit justify-end">
+                <button class="btn btn-primary" id="cadastrar-btn" type="button">Cadastrar</button>
+            </div>
         </div>
 
         
