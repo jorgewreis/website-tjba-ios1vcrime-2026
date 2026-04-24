@@ -287,11 +287,7 @@ if ($totalPages > 0) {
                             <span class="major-info"><?php echo htmlspecialchars($row['Processo'] ?? ''); ?></span>
                         </div>
                         <div class="col width-500 col-tipo-guia" title="clique para copiar">
-                            <span class="minor-info">Tipo</span>
-                            <span class="major-info text-ellipsis"><?php echo htmlspecialchars($row['Tipo'] ?? '—'); ?></span>
-                        </div>
-                        <div class="col width-500 col-reu" title="clique para copiar">
-                            <span class="minor-info">Denunciado</span>
+                            <span class="minor-info text-ellipsis" style="font-weight: 600;"><?php echo htmlspecialchars($row['Tipo'] ?? '—'); ?></span>
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars($row['Denunciado'] ?? '—'); ?></span>
                         </div>                        
                     </div>
@@ -431,10 +427,10 @@ if ($totalPages > 0) {
                             <?php endif; ?>
                             <?php if ($isOrdem2): ?>
                                 <?php $valorMultaRow = isset($row['valor_multa']) && $row['valor_multa'] !== null && $row['valor_multa'] !== '' ? 'R$ ' . number_format((float) $row['valor_multa'], 2, ',', '.') : ''; ?>
-                                <div class="col"><input type="text" class="subtask-valor-multa width-100 height-sm readonly" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" readonly placeholder="Valor (automático)" title="Valor total da pena de multa" value="<?php echo htmlspecialchars($valorMultaRow, ENT_QUOTES); ?>"></div>
+                                <div class="col"><input type="text" class="subtask-valor-multa width-300 height-sm readonly" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" readonly placeholder="Valor (automático)" title="Valor total da pena de multa" value="<?php echo htmlspecialchars($valorMultaRow, ENT_QUOTES); ?>"></div>
                             <?php endif; ?>
                             <?php if ($isOrdem3): ?>
-                                <div class="col"><select class="subtask-tipo-guia width-400 height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Tipo da guia expedida">
+                                <div class="col"><select class="subtask-tipo-guia width-500 height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Tipo da guia expedida">
                                     <option value="">Selecione o tipo da guia</option>
                                     <?php foreach ($tiposGuiaExpedicaoOptions as $tipoGuiaOption): ?>
                                         <option value="<?php echo htmlspecialchars($tipoGuiaOption, ENT_QUOTES); ?>"<?php echo $tipoGuiaAtual === $tipoGuiaOption ? ' selected' : ''; ?>><?php echo htmlspecialchars($tipoGuiaOption, ENT_QUOTES); ?></option>

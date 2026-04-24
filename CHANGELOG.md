@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0024
+
+**Data:** 2026-04-24 10:48:18 | **Commit:** `526c753` | **Tipo:** `patch`
+
+- refactor(cartorio-guias-list): enhance layout and input field sizes for better usability
+
 ## V. 1.96.0023
 
 **Data:** 2026-04-24 10:26:16 | **Commit:** `2563a17` | **Tipo:** `patch`
@@ -4614,6 +4620,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
