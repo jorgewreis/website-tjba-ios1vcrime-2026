@@ -168,4 +168,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(guias-service): add automatic penalty value synchronization** `[2563a17]`
 - **refactor(cartorio-guias-list): enhance layout and input field sizes for better usability** `[526c753]`
 - **fix(cartorio-guias-list): update default class label and styling for better clarity** `[972a65a]`
+- **refactor(medidas-protetivas): streamline victim handling and improve error validation** `[7315cab]`
 
