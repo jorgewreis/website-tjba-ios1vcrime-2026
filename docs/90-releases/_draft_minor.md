@@ -175,4 +175,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(cartorio-cartas-expedidas): update UI elements for clarity and consistency** `[2411861]`
 - **refactor(cartorio-cartas-expedidas): enhance UI labels and layout for better readability** `[a565e97]`
 - **refactor(cartorio-cartas-expedidas): improve label clarity and consistency in cartas expedidas list** `[bf2c053]`
+- **refactor(cartorio-cartas-expedidas): update filters layout and status display for improved UI** `[8befdf7]`
 
