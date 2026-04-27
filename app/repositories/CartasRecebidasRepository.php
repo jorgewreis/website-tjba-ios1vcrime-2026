@@ -28,26 +28,13 @@ final class CartasRecebidasRepository
     {
         [$whereClause, $params] = $this->buildFilterClause($filters, 'cr', true);
 
-        $coll = self::COLLATION;
-        $orderField = sprintf(
-            "FIELD(cr.`status` COLLATE %s, %s)",
-            $coll,
-            implode(
-                ', ',
-                array_map(
-                    fn (string $status) => $this->connection->quote($status),
-                    self::STATUS_ORDER
-                )
-            )
-        );
-
         $fromClause = $this->buildFromClause();
 
+        // Ordem oficial da listagem: data de cadastro (mais recente primeiro).
         $sql = sprintf(
-            'SELECT cr.`id` AS `IdCarta`, cr.`numero_processo_origem` AS `Processo`, cr.`finalidade` AS `Finalidade`, cr.`prazo_dias` AS `Prazo`, cr.`cidade_origem` AS `Comarca`, cr.`uf_origem` AS `Estado`, cr.`data_recebimento` AS `DataRecebimento`, cr.`status` AS `Status`, cr.`created_at` AS `Data`, COALESCE(cl.`nome`, \'Classe não informada\') AS `ClasseNome` FROM %s %s ORDER BY %s, cr.`created_at` DESC LIMIT :limit OFFSET :offset',
+            'SELECT cr.`id` AS `IdCarta`, cr.`numero_processo_origem` AS `Processo`, cr.`finalidade` AS `Finalidade`, cr.`prazo_dias` AS `Prazo`, cr.`cidade_origem` AS `Comarca`, cr.`uf_origem` AS `Estado`, cr.`data_recebimento` AS `DataRecebimento`, cr.`status` AS `Status`, cr.`created_at` AS `Data`, COALESCE(cl.`nome`, \'Classe não informada\') AS `ClasseNome` FROM %s %s ORDER BY cr.`created_at` DESC LIMIT :limit OFFSET :offset',
             $fromClause,
-            $whereClause ? 'WHERE ' . $whereClause : '',
-            $orderField
+            $whereClause ? 'WHERE ' . $whereClause : ''
         );
 
         $statement = $this->connection->prepare($sql);

@@ -87,11 +87,13 @@ $statusCounts = array_merge(array_fill_keys($statusOptions, 0), $service->getSta
 $subtarefaLabels = [
     CartasRecebidasSubtarefasRepository::TIPO_ORDEM_1 => 'Expedir Ato Ordinatório - Cumprimento',
     CartasRecebidasSubtarefasRepository::TIPO_ORDEM_2 => 'Expedição de mandado/ofício',
-    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_3 => 'Juntar de certidão do oficial de justiça',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_3 => 'Juntar certidão do oficial de justiça',
     CartasRecebidasSubtarefasRepository::TIPO_ORDEM_4 => 'Expedir Ato Ordinatório - Devolução',
     CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5 => 'Devolver Carta ao Juízo Deprecante',
     CartasRecebidasSubtarefasRepository::TIPO_ORDEM_6 => 'Juntar comprovante de envio',
     CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7 => 'Arquivar definitivamente com baixa',
+    'devolucao_origem' => 'Aguardando cumprimento e devolução',	
+    'devolução_origem' => 'Aguardando cumprimento e devolução',
 ];
 $ordemLabels = [
     1 => $subtarefaLabels[CartasRecebidasSubtarefasRepository::TIPO_ORDEM_1],

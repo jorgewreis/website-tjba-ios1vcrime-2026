@@ -34,6 +34,7 @@ final class CartasExpedidasRepository
 
         $fromClause = $this->buildFromClause();
 
+        // Ordem oficial da listagem: data de cadastro (mais recente primeiro).
         $sql = sprintf(
             'SELECT ce.`id` AS `IdCarta`, ce.`numero_processo_origem` AS `Processo`, ce.`finalidade` AS `Finalidade`, ce.`prazo_dias` AS `Prazo`, ce.`cidade_destino` AS `Comarca`, ce.`uf_destino` AS `Estado`, ce.`status` AS `Status`, ce.`created_at` AS `Data`, COALESCE(cl.`nome`, \'Classe não informada\') AS `ClasseNome` FROM %s %s ORDER BY ce.`created_at` DESC LIMIT :limit OFFSET :offset',
             $fromClause,

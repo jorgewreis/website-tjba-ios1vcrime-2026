@@ -224,9 +224,9 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
 
     <div class="container-full card-page">
 
-        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+        <div class="card-title">
             <div class="display-flex row row-fit justify-start">
-                <h2>Lista de ofícios</h2>
+                <h2>Cadastro</h2>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md">
                 <input type="text" class="width-400 height-md" id="search-input" placeholder="Ex.: 42 · 42/2026 · 2026/42 · 422026 (qualquer status)" aria-label="Pesquisar por número do ofício" value="<?php echo htmlspecialchars($oficioFilter, ENT_QUOTES); ?>">
@@ -235,19 +235,24 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                 $listExportQuery = $baseQueryParams;
                 include __DIR__ . '/_list_export_buttons.php';
                 ?>
-            </div>
+                <div class="card-allocate-rule">
+                    <?php if ($hasRuleAllocation): ?>
+                        <span>*Conforme regra de alocação, o envio de ofícios será alocado automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
+                    <?php else: ?>
+                        <span>*Não existe nenhum usuário alocado automaticamente para esta tarefa no momento.</span>
+                    <?php endif; ?>
+                </div>
+            </div>            
         </div>
 
         <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md">
-            <h3 class="title-section" style="margin:0;font-size:1rem;font-weight:600;">Registrar ofício</h3>
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
-                    <label for="filter-processo">Número do processo <span id="cartorio-processo-hint" class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <label for="filter-processo" class="display-flex col gap-y-sm" style="align-items: flex-start;">
+                        <span>Número do processo <span id="cartorio-processo-hint" class="label-hint-obrigatorio">*obrigatório</span></span>
+                        <span id="processo-ap-info" class="minor-info" aria-live="polite"></span>
+                    </label>
                     <input type="text" class="width-400 height-md" id="filter-processo" name="processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off">
-                </div>
-                <div class="col">
-                    <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
-                    <input type="text" class="width-600 height-md" id="filter-classe" data-datajud-related="true" placeholder="Preenchido automaticamente pelo DataJud" readonly>
                 </div>
                 <div class="col">
                     <label for="oficio-tipo">Tipo de ofício <span class="label-hint-obrigatorio">*obrigatório</span></label>
@@ -292,6 +297,7 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                     </select>
                 </div>
             </div>
+            <input type="hidden" id="filter-classe" data-datajud-related="true" value="" autocomplete="off">
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" id="oficio-meio-envio-row" style="gap:12px;">
                 <div class="col">
                     <label for="oficio-meio-envio">Meio de envio</label>
@@ -311,7 +317,13 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
 
-        <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
+        <div class="card-title">
+            <div class="display-flex row row-fit justify-start">
+                <h2>Lista</h2>
+            </div>
+        </div>
+
+        <div class="card-filters">
             <div class="display-flex row row-fit justify-start gap-y-md flex-wrap">
                 <div class="col">
                     <label for="filter-status">Filtrar por status</label>
@@ -323,7 +335,7 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                     </select>
                 </div>
                 <div class="col">
-                    <label for="filter-ano">Ano do ofício</label>
+                    <label for="filter-ano">Filtrar por ano</label>
                     <select class="width-300 height-md" id="filter-ano"<?php echo $anosComOficios === [] ? ' disabled' : ''; ?>>
                         <?php if ($anosComOficios === []): ?>
                         <option value="">—</option>
@@ -419,7 +431,7 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                             <span class="major-info"><?php echo htmlspecialchars($nAno, ENT_QUOTES); ?></span>
                         </div>
                         <div class="col width-400">
-                            <span class="minor-info">Gerado em</span>
+                            <span class="minor-info">Cadastrado em</span>
                             <span class="major-info"><?php echo oficios_list_formatar_data_hora($row['Data'] ?? null); ?></span>
                         </div>
                         <div class="col width-500 col-process process-info" title="clique para copiar">
@@ -528,20 +540,11 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
             </div>
         <?php endif; ?>
 
-        <div class="display-flex row row-full info padding-x-md padding-y-md border-top">
-            <?php if ($hasRuleAllocation): ?>
-                <span>*Conforme regra de alocação, os ofícios do cartório serão alocados automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
-            <?php else: ?>
-                <span>*Não existe nenhum usuário alocado automaticamente para esta tarefa no momento.</span>
-            <?php endif; ?>
-            <span class="minor-info" style="display:block;margin-top:8px;">*Perfis CHEFIA, DIRETORA e MAGISTRADA não recebem autoalocação ao cadastrar nem pela regra. Ofícios do cartório usam apenas alocação por regra do sistema (sem indicação manual de servidores nesta tela).</span>
-        </div>
-
         <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
             <button type="button" class="btn btn-primary-outline" id="alterar-regra-btn" style="display: none;">Alterar regra de alocação</button>
         </div>
 
-        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
+        <div class="card-buttons">
             <span class="pagination-info">
                 Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $totalDocuments; ?> <?php echo $documentsLabel; ?>
                 (<?php echo $totalPages; ?> <?php echo $pagesLabel; ?>, <?php echo $itemsPerPage; ?> <?php echo $itemsLabel; ?> por página)
