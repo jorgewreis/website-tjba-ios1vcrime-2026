@@ -172,4 +172,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(cartorio-medidas-protetivas): enhance UI and improve data handling** `[aeaed0c]`
 - **refactor(cartorio-medidas-protetivas): update UI and improve layout for medidas protetivas creation** `[6741b38]`
 - **feat(layout): add new card-allocate-rule style for improved UI consistency** `[4ea1033]`
+- **refactor(cartorio-cartas-expedidas): update UI elements for clarity and consistency** `[2411861]`
 
