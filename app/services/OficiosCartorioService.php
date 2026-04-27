@@ -397,13 +397,21 @@ final class OficiosCartorioService
     /** @param list<array<string,mixed>> $all */
     private function filterSubtarefasAbertas(array $all): array
     {
-        $out = [];
+        $primeiraPendente = null;
         foreach ($all as $s) {
             $st = (string) ($s['status'] ?? '');
-            if ($st === 'pendente' || $st === 'em_andamento') {
-                $out[] = $s;
+            if ($st === 'em_andamento') {
+                return [$s];
+            }
+            if ($st === 'pendente' && $primeiraPendente === null) {
+                $primeiraPendente = $s;
             }
         }
-        return $out;
+
+        if ($primeiraPendente !== null) {
+            return [$primeiraPendente];
+        }
+
+        return [];
     }
 }

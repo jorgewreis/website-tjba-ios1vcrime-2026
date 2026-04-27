@@ -250,7 +250,7 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                 <div class="col">
                     <label for="filter-processo" class="display-flex col gap-y-sm" style="align-items: flex-start;">
                         <span>Número do processo <span id="cartorio-processo-hint" class="label-hint-obrigatorio">*obrigatório</span></span>
-                        <span id="processo-ap-info" class="minor-info" aria-live="polite"></span>
+                        <span id="processo-ap-info" class="minor-info" aria-live="polite" style="display: none;"></span>
                     </label>
                     <input type="text" class="width-400 height-md" id="filter-processo" name="processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off">
                 </div>
@@ -309,9 +309,9 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                     </select>
                 </div>
             </div>
-            <div class="display-flex row row-fit justify-start gap-y-md">
-                <button type="button" class="btn btn-primary" id="btn-oficio-registrar">Registrar</button>
-                <button type="button" class="btn btn-secondary-outline" id="btn-oficio-limpar">Limpar formulário</button>
+            <div class="card-buttons">
+                <button type="button" class="btn btn-secondary-outline" id="btn-oficio-limpar">Limpar</button>
+                <button type="button" class="btn btn-primary" id="btn-oficio-registrar">Cadastrar</button>
             </div>
         </div>
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">

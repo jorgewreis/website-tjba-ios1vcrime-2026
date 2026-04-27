@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0042
+
+**Data:** 2026-04-27 09:58:36 | **Commit:** `f7010f2` | **Tipo:** `patch`
+
+- refactor(oficios-cartorio): improve task filtering logic and update UI elements
+
 ## V. 1.96.0041
 
 **Data:** 2026-04-27 09:50:09 | **Commit:** `e574c5f` | **Tipo:** `patch`
@@ -4722,6 +4728,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
