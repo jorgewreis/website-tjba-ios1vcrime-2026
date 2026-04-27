@@ -92,9 +92,6 @@ $subtarefaLabels = [
     CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5 => 'Devolver Carta ao Juízo Deprecante',
     CartasRecebidasSubtarefasRepository::TIPO_ORDEM_6 => 'Juntar comprovante de envio',
     CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7 => 'Arquivar definitivamente com baixa',
-    // Tipos que podem vir do banco com nome alternativo
-    'devolucao_origem' => 'Aguardando devolução',
-    'devolução_origem' => 'Aguardando devolução',
 ];
 $ordemLabels = [
     1 => $subtarefaLabels[CartasRecebidasSubtarefasRepository::TIPO_ORDEM_1],
@@ -106,15 +103,13 @@ $ordemLabels = [
     7 => $subtarefaLabels[CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7],
 ];
 $taskTitleByTipo = [
-    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_1 => 'Aguardando expedição do Ato Ordinatório - Cumprimento',
-    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_2 => 'Aguardando expedição de mandado/ofício',
-    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_3 => 'Aguardando juntada de certidão do oficial de justiça',
-    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_4 => 'Aguardando expedição do Ato Ordinatório - Devolução',
-    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5 => 'Aguardando devolução da Carta ao Juízo Deprecante',
-    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_6 => 'Aguardando juntada de comprovante de envio',
-    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7 => 'Aguardando arquivamento definitivo com baixa',
-    'devolucao_origem' => 'Aguardando devolução',
-    'devolução_origem' => 'Aguardando devolução',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_1 => 'Ag. Ato Ordinatório',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_2 => 'Ag. expedição de mandado',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_3 => 'Ag. juntada de certidão',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_4 => 'Ag. Ato Ordinatório',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5 => 'Ag. devolução da Carta',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_6 => 'Ag. juntada do Termo',
+    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7 => 'Ag. arquivamento definitivo',
 ];
 $buttonTitleByTipo = [
     CartasRecebidasSubtarefasRepository::TIPO_ORDEM_1 => 'Informar expedição',
@@ -124,8 +119,6 @@ $buttonTitleByTipo = [
     CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5 => 'Informar devolução',
     CartasRecebidasSubtarefasRepository::TIPO_ORDEM_6 => 'Informar juntada',
     CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7 => 'Informar arquivamento definitivo',
-    'devolucao_origem' => 'Informar devolução',
-    'devolução_origem' => 'Informar devolução',
 ];
 $resultadoCumprimentoOptions = [
     'cumprido_integralmente' => 'Cumprido integralmente',

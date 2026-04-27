@@ -114,25 +114,33 @@ try {
             <span class="all">Interno - Cartório - Cartas Recebidas -</span>
             <span class="specific">Cadastro</span>
         </div>
-        <h1 class="title-page">Cadastro de Carta Recebida</h1>
-        <p class="description-page">Preencha os dados da carta precatória recebida de outro tribunal.</p>
+        <h1 class="title-page">Cartas Recebidas</h1>
+        <p class="description-page">Cadastro de cartas precatórias recebidas de outros tribunais.</p>
     </div>
 
     <div class="container-full card-page">
-        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+        <div class="card-title">
             <div class="display-flex row row-fit justify-start">
-                <h2>Informações obrigatórias</h2>
+                <h2>Cadastro</h2>
             </div>
-            <div class="display-flex row row-fit justify-end gap-y-md"></div>
+            <div class="display-flex row row-fit justify-end gap-y-md">
+                <div class="card-allocate-rule">
+                    <?php $cartorioAlocacaoPrefix = 'cartas-rec'; include __DIR__ . '/_cartorio_alocacao_direcionada_create.php'; ?>
+                    <?php if ($hasRuleAllocation): ?>
+                        <span>*Conforme regra, as Cartas Recebidas serão alocadas automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
+                    <?php else: ?>
+                        <span>*Não existe nenhum usuário alocado para esta tarefa por regra.</span>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter">
-                <label for="filter-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <label for="filter-processo" class="display-flex col gap-y-sm" style="align-items: flex-start;">
+                    <span>Processo <span class="label-hint-obrigatorio">*obrigatório</span></span>
+                    <span id="processo-ap-info" class="minor-info" aria-live="polite"></span>
+                </label>
                 <input type="text" class="width-400 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" required>
-            </div>
-            <div class="col filter">
-                <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
-                <input type="text" class="width-600 height-md" id="filter-classe" data-datajud-related="true" placeholder="Preenchido automaticamente pelo DataJud" readonly>
             </div>
             <div class="col filter">
                 <label for="filter-tipo">Finalidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
@@ -148,6 +156,7 @@ try {
                 </select>
             </div>
         </div>
+        <input type="hidden" id="filter-classe" data-datajud-related="true" value="" autocomplete="off">
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter">
                 <label for="filter-cidade">Cidade de origem <span class="label-hint-obrigatorio">*obrigatório</span></label>
@@ -208,23 +217,15 @@ try {
             </script>
         <?php endif; ?>
 
-        <?php $cartorioAlocacaoPrefix = 'cartas-rec'; include __DIR__ . '/_cartorio_alocacao_direcionada_create.php'; ?>
-
-        <div class="display-flex row row-full info padding-x-md padding-y-md">
-            <?php if ($hasRuleAllocation): ?>
-                <span>*Conforme regra de alocação, as Cartas Recebidas serão alocadas automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
-            <?php else: ?>
-                <span>*Não existe nenhum usuário alocado automaticamente para esta tarefa no momento.</span>
-            <?php endif; ?>
+        <div class="card-buttons">
+            <div class="col row-fit justify-start">
+                <button class="btn btn-secondary" id="voltar-btn" data-allow-during-loading="true">Voltar</button>
+                <button class="btn btn-primary-outline" id="alterar-regra-btn" style="display: none;">Alterar regra de alocação</button>
+            </div>
+            <div class="col row-fit justify-end">
+                <button class="btn btn-primary" id="cadastrar-btn" type="button">Cadastrar</button>
+            </div>
         </div>
-
-        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
-            <button class="btn btn-primary-outline" id="alterar-regra-btn" style="display: none;">Alterar regra de alocação</button>
-            <button class="btn btn-secondary" id="voltar-btn" data-allow-during-loading="true">Voltar</button>
-            <button class="btn btn-primary" id="cadastrar-btn" type="button">Cadastrar</button>
-        </div>
-
-        
     </div>
 
     <div class="footer-page">

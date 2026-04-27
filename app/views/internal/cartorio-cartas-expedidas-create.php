@@ -142,12 +142,11 @@ try {
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
-                <label for="filter-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <label for="filter-processo" class="display-flex col gap-y-sm" style="align-items: flex-start;">
+                    <span>Processo <span class="label-hint-obrigatorio">*obrigatório</span></span>
+                    <span id="processo-ap-info" class="minor-info" aria-live="polite"></span>
+                </label>
                 <input type="text" class="width-400 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" required>
-            </div>
-            <div class="col">
-                <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
-                <input type="text" class="width-600 height-md" id="filter-classe" data-datajud-related="true" placeholder="Preenchido automaticamente pelo DataJud" readonly>                
             </div>
             <div class="col">
                 <label for="filter-tipo">Finalidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
@@ -163,6 +162,7 @@ try {
                 </select>
             </div>
         </div>
+        <input type="hidden" id="filter-classe" data-datajud-related="true" value="" autocomplete="off">
 
         <?php if ($cnjError): ?>
             <script>

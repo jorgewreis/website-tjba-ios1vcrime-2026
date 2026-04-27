@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0039
+
+**Data:** 2026-04-27 08:59:23 | **Commit:** `3ecf36f` | **Tipo:** `patch`
+
+- refactor(cartorio-cartas-recebidas): update task labels for brevity and clarity
+
 ## V. 1.96.0038
 
 **Data:** 2026-04-27 08:52:07 | **Commit:** `34391d4` | **Tipo:** `patch`
@@ -4704,6 +4710,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
