@@ -97,12 +97,12 @@ $subtarefaLabels = [
     'aguardando_devolucao' => 'Juntar carta devolvida',
 ];
 $taskTitleByTipo = [
-    'aguardando_assinatura' => 'Ag. Assinatura',
+    'aguardando_assinatura' => 'Aguardando assinatura',
     'aguardando_gerar_pdf' => 'Ag. Impressão em PDF',
-    'aguardando_envio' => 'Ag. Envio',
+    'aguardando_envio' => 'Aguardando envio',
     'aguardando_juntada_termo' => 'Ag. Juntada de Termo',
-    'aguardando_informacoes' => 'Ag. Cumprimento',
-    'aguardando_devolucao' => 'Ag. Devolução',
+    'aguardando_informacores' => 'Aguardando cumprimento',
+    'aguardando_devolucao' => 'Aguardando devolução',
 ];
 $buttonTitleByTipo = [
     'aguardando_assinatura' => 'Informar assinatura',
@@ -232,7 +232,7 @@ if ($totalPages > 0) {
         </div>
 
         <!-- Filtros (modelo) -->
-        <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
+        <div class="card-filters">
             <div class="display-flex row row-fit justify-start gap-y-md">                
                 <div class="col">
                     <label for="filter-status">Filtrar por status</label>
@@ -418,8 +418,8 @@ if ($totalPages > 0) {
                             } elseif ($mostrarBarraStatus) {
                                 $labelStatus = $isEmAndamento ? 'Em andamento' : 'Pendente';
                                 $classStatus = $isEmAndamento ? 'status-current' : 'status-pending';
-                                echo '<div class="status ' . $classStatus . ' status-with-progress">';
-                                echo '<span class="status-task-label width-300">' . htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES) . '</span>';
+                                echo '<div class="status width-300' . $classStatus . ' status-with-progress">';
+                                echo '<span class="status-task-label" style="justify-content: flex-start; font-size: 10px;">' . htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES) . '</span>';
                                 $concluidosBarra = 1 + count(array_filter($progressStatuses, fn($x) => $x === 'concluida'));
                                 echo '<div class="status-task-progress" role="progressbar" aria-valuenow="' . $concluidosBarra . '" aria-valuemin="0" aria-valuemax="7" aria-label="Progresso das subtarefas">';
                                 foreach ($segmentosBarra as $seg) {

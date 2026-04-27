@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0033
+
+**Data:** 2026-04-27 08:06:24 | **Commit:** `8befdf7` | **Tipo:** `patch`
+
+- refactor(cartorio-cartas-expedidas): update filters layout and status display for improved UI
+
 ## V. 1.96.0032
 
 **Data:** 2026-04-27 07:51:20 | **Commit:** `bf2c053` | **Tipo:** `patch`
@@ -4668,6 +4674,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
