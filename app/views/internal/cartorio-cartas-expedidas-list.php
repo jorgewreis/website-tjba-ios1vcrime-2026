@@ -418,7 +418,7 @@ if ($totalPages > 0) {
                             } elseif ($mostrarBarraStatus) {
                                 $labelStatus = $isEmAndamento ? 'Em andamento' : 'Pendente';
                                 $classStatus = $isEmAndamento ? 'status-current' : 'status-pending';
-                                echo '<div class="status width-300' . $classStatus . ' status-with-progress">';
+                                echo '<div class="status width-300 ' . $classStatus . ' status-with-progress">';
                                 echo '<span class="status-task-label" style="justify-content: flex-start; font-size: 10px;">' . htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES) . '</span>';
                                 $concluidosBarra = 1 + count(array_filter($progressStatuses, fn($x) => $x === 'concluida'));
                                 echo '<div class="status-task-progress" role="progressbar" aria-valuenow="' . $concluidosBarra . '" aria-valuemin="0" aria-valuemax="7" aria-label="Progresso das subtarefas">';
