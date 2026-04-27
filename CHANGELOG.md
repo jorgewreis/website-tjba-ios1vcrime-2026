@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0037
+
+**Data:** 2026-04-27 08:41:39 | **Commit:** `1827bae` | **Tipo:** `patch`
+
+- refactor(cartorio-cartas-expedidas): simplify SQL query and enhance UI layout
+
 ## V. 1.96.0036
 
 **Data:** 2026-04-27 08:23:32 | **Commit:** `49af461` | **Tipo:** `patch`
@@ -4692,6 +4698,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

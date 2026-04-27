@@ -32,26 +32,12 @@ final class CartasExpedidasRepository
     {
         [$whereClause, $params] = $this->buildFilterClause($filters, 'ce', true);
 
-        $coll = self::COLLATION;
-        $orderField = sprintf(
-            "FIELD(ce.`status` COLLATE %s, %s)",
-            $coll,
-            implode(
-                ', ',
-                array_map(
-                    fn (string $status) => $this->connection->quote($status),
-                    self::STATUS_ORDER
-                )
-            )
-        );
-
         $fromClause = $this->buildFromClause();
 
         $sql = sprintf(
-            'SELECT ce.`id` AS `IdCarta`, ce.`numero_processo_origem` AS `Processo`, ce.`finalidade` AS `Finalidade`, ce.`prazo_dias` AS `Prazo`, ce.`cidade_destino` AS `Comarca`, ce.`uf_destino` AS `Estado`, ce.`status` AS `Status`, ce.`created_at` AS `Data`, COALESCE(cl.`nome`, \'Classe não informada\') AS `ClasseNome` FROM %s %s ORDER BY %s, ce.`created_at` DESC LIMIT :limit OFFSET :offset',
+            'SELECT ce.`id` AS `IdCarta`, ce.`numero_processo_origem` AS `Processo`, ce.`finalidade` AS `Finalidade`, ce.`prazo_dias` AS `Prazo`, ce.`cidade_destino` AS `Comarca`, ce.`uf_destino` AS `Estado`, ce.`status` AS `Status`, ce.`created_at` AS `Data`, COALESCE(cl.`nome`, \'Classe não informada\') AS `ClasseNome` FROM %s %s ORDER BY ce.`created_at` DESC LIMIT :limit OFFSET :offset',
             $fromClause,
-            $whereClause ? 'WHERE ' . $whereClause : '',
-            $orderField
+            $whereClause ? 'WHERE ' . $whereClause : ''
         );
 
         $statement = $this->connection->prepare($sql);
