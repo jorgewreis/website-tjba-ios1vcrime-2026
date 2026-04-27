@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0032
+
+**Data:** 2026-04-27 07:51:20 | **Commit:** `bf2c053` | **Tipo:** `patch`
+
+- refactor(cartorio-cartas-expedidas): improve label clarity and consistency in cartas expedidas list
+
 ## V. 1.96.0031
 
 **Data:** 2026-04-27 07:47:11 | **Commit:** `a565e97` | **Tipo:** `patch`
@@ -4662,6 +4668,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

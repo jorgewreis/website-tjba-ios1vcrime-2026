@@ -89,20 +89,20 @@ $statusCounts = array_merge(array_fill_keys($statusOptions, 0), $service->getSta
 $statusCounts['em_andamento'] = (int) ($statusCounts['em_andamento'] ?? 0) + (int) ($statusCounts['aguardando assinatura'] ?? 0) + (int) ($statusCounts['aguardando envio'] ?? 0) + (int) ($statusCounts['aguardando juntada do termo'] ?? 0) + (int) ($statusCounts['aguardando juntada de termo'] ?? 0) + (int) ($statusCounts['aguardando cumprimento'] ?? 0);
 
 $subtarefaLabels = [
-    'aguardando_assinatura' => 'Ag. assinatura',
-    'aguardando_gerar_pdf' => 'Ag. impressão em PDF',
-    'aguardando_envio' => 'Ag. envio',
-    'aguardando_juntada_termo' => 'Ag. juntada',
-    'aguardando_informacoes' => 'Ag. cumprimento',
-    'aguardando_devolucao' => 'Ag. devolução',
+    'aguardando_assinatura' => 'Assinar Carta expedida (Magistrada)',
+    'aguardando_gerar_pdf' => 'Imprimir peças em PDF',
+    'aguardando_envio' => 'Enviar Carta expedida',
+    'aguardando_juntada_termo' => 'Juntar comprovante de envio',
+    'aguardando_informacoes' => 'Informar detalhes',
+    'aguardando_devolucao' => 'Juntar carta devolvida',
 ];
 $taskTitleByTipo = [
-    'aguardando_assinatura' => 'Aguardando assinatura pela Magistrada',
-    'aguardando_gerar_pdf' => 'Aguardando impressão de peças em PDF',
-    'aguardando_envio' => 'Aguardando envio de Carta expedida',
-    'aguardando_juntada_termo' => 'Aguardando comprovante de envio',
-    'aguardando_informacoes' => 'Aguardando cumprimento',
-    'aguardando_devolucao' => 'Aguardando devolução',
+    'aguardando_assinatura' => 'Ag. Assinatura',
+    'aguardando_gerar_pdf' => 'Ag. Impressão em PDF',
+    'aguardando_envio' => 'Ag. Envio',
+    'aguardando_juntada_termo' => 'Ag. Juntada de Termo',
+    'aguardando_informacoes' => 'Ag. Cumprimento',
+    'aguardando_devolucao' => 'Ag. Devolução',
 ];
 $buttonTitleByTipo = [
     'aguardando_assinatura' => 'Informar assinatura',
@@ -414,11 +414,11 @@ if ($totalPages > 0) {
                             if ($st === 'concluída') {
                                 echo '<div class="width-300 padding-x-lg status status-finished">Finalizada</div>';
                             } elseif ($st === 'cancelada') {
-                                echo '<div class="width-300 padding-x-lg status status-cancelled">Cancelada</div>';
+                                echo '<div class="padding-x-lg status status-cancelled">Cancelada</div>';
                             } elseif ($mostrarBarraStatus) {
                                 $labelStatus = $isEmAndamento ? 'Em andamento' : 'Pendente';
                                 $classStatus = $isEmAndamento ? 'status-current' : 'status-pending';
-                                echo '<div class="width-300 status ' . $classStatus . ' status-with-progress">';
+                                echo '<div class="status ' . $classStatus . ' status-with-progress">';
                                 echo '<span class="status-task-label width-300">' . htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES) . '</span>';
                                 $concluidosBarra = 1 + count(array_filter($progressStatuses, fn($x) => $x === 'concluida'));
                                 echo '<div class="status-task-progress" role="progressbar" aria-valuenow="' . $concluidosBarra . '" aria-valuemin="0" aria-valuemax="7" aria-label="Progresso das subtarefas">';
