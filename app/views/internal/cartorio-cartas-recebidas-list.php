@@ -230,9 +230,9 @@ if ($totalPages > 0) {
 
     <div class="container-full card-page">
 
-        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+        <div class="card-title">
             <div class="display-flex row row-fit justify-start">
-                <h2>Lista de documentos</h2>
+                <h2>Lista</h2>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md">
                 <input type="text" class="width-400 height-md" id="search-input" placeholder="Pesquisar na lista..." value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
@@ -245,12 +245,12 @@ if ($totalPages > 0) {
             </div>
         </div>
 
-        <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
+        <div class="card-filters">
             <div class="display-flex row row-fit justify-start gap-y-md">                
                 <div class="col">
                     <label for="filter-status">Filtrar por status</label>
                     <select class="width-500 height-md" id="filter-status">
-                        <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Todas exceto finalizadas</option>
+                        <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Mostrar todas</option>
                         <option value="pendente"<?php echo $statusFilter === 'pendente' ? ' selected' : ''; ?>>
                             Pendente (<?php echo htmlspecialchars((string) ($statusCounts['pendente'] ?? 0)); ?>)
                         </option>
@@ -317,12 +317,8 @@ if ($totalPages > 0) {
                             <span class="minor-info text-ellipsis" title="<?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?>" <?php echo $classeStyle; ?>><?php echo htmlspecialchars($classeNome); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars($row['Processo']); ?></span>
                         </div>
-                        <div class="col width-500 col-comarca" title="clique para copiar">
-                            <span class="minor-info">Comarca de origem</span>
-                            <span class="major-info text-ellipsis"><?php echo htmlspecialchars($row['Comarca'] . ' - ' . $row['Estado']); ?></span>
-                        </div>
-                        <div class="col width-600 col-finalidade" title="clique para copiar">
-                            <span class="minor-info">Finalidade</span>
+                        <div class="col width-700 col-comarca" title="clique para copiar">
+                            <span class="minor-info text-ellipsis" style="font-weight: 600; color: var(--color-gray-900);"><?php echo htmlspecialchars('Comarca: ' . $row['Comarca'] . ' - ' . $row['Estado']); ?></span>
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars($row['Finalidade']); ?> — <?php echo htmlspecialchars($row['Prazo'] . ' dias'); ?></span>
                         </div>
                     </div>
@@ -412,7 +408,7 @@ if ($totalPages > 0) {
                                 $labelStatus = $isEmAndamento ? 'Em andamento' : 'Pendente';
                                 $classStatus = $isEmAndamento ? 'status-current' : 'status-pending';
                                 echo '<div class="width-300 status ' . $classStatus . ' status-with-progress">';
-                                echo '<span class="status-task-label width-300">' . htmlspecialchars($labelStatus, ENT_QUOTES) . '</span>';
+                                echo '<span class="status-task-label width-300" style="justify-content: flex-start; font-size: 10px;">' . htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES) . '</span>';
                                 $concluidosBarra = 1 + count(array_filter($progressStatuses, function ($x) { return $x === 'concluida' || $x === 'cancelada'; }));
                                 echo '<div class="status-task-progress" role="progressbar" aria-valuenow="' . $concluidosBarra . '" aria-valuemin="0" aria-valuemax="8" aria-label="Progresso das subtarefas">';
                                 foreach ($segmentosBarra as $seg) {
@@ -513,7 +509,7 @@ if ($totalPages > 0) {
             </div>
         <?php endif; ?>
 
-        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
+        <div class="card-buttons">
             <span class="pagination-info">
                 Mostrando <?php echo htmlspecialchars((string) $startItem); ?>-<?php echo htmlspecialchars((string) $endItem); ?> de <?php echo htmlspecialchars((string) $totalDocuments); ?> <?php echo htmlspecialchars($documentsLabel); ?>
                 (<?php echo htmlspecialchars((string) $totalPages); ?> <?php echo htmlspecialchars($pagesLabel); ?>, <?php echo htmlspecialchars((string) $itemsPerPage); ?> <?php echo htmlspecialchars($itemsLabel); ?> por página)

@@ -148,7 +148,7 @@ if ($totalPages > 0) {
             </div>
         </div>
 
-        <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
+        <div class="card-filters">
             <div class="display-flex row row-fit justify-start gap-y-md">
                 <div class="col">
                     <label for="filter-status">Filtrar por status</label>
@@ -229,12 +229,6 @@ if ($totalPages > 0) {
                             <span class="minor-info">Réu</span>
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['ReuNome'] ?? '—')); ?></span>
                         </div>
-                        <?php if (!empty($row['CejuscTarefaId'])): ?>
-                        <div class="col width-400 col-cejusc">
-                            <span class="minor-info">Cejusc</span>
-                            <button type="button" class="btn btn-primary-outline height-sm btn-open-cejusc" title="Abrir tarefa" data-cejusc-id="<?php echo htmlspecialchars((string) $row['CejuscTarefaId'], ENT_QUOTES); ?>">Abrir tarefa</button>
-                        </div>
-                        <?php endif; ?>
                     </div>
                 
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">
@@ -365,7 +359,7 @@ if ($totalPages > 0) {
             </div>
         <?php endif; ?>
 
-        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
+        <div class="card-buttons">
             <span class="pagination-info">Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $totalDocuments; ?> registros</span>
             <?php if ($totalPages > 0): ?>
                 <div class="pagination-controls">

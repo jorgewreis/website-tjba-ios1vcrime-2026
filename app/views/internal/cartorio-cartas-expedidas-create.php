@@ -120,14 +120,8 @@ try {
         </div>
 
         <!-- Título e descrição da página -->
-        <h1 class="title-page">Cadastro de Carta Expedida</h1>
-        <p class="description-page">Caso tenha alguma dificuldade no preenchimento do cadastro, verifique os arquivos abaixo para obter ajuda.</p>
-        
-        <!-- Badges de arquivos para download -->
-        <!-- <button type="button" class="badge file" data-nav-href="/documents/pdf/PJBA - 1VCR - POP - Expedição e Envio de Cartas Precatórias.pdf" data-nav-target="_blank">
-            <img src="/assets/icons/Office-File-Pdf-1--Streamline-Ultimate.png" alt="Ícone de arquivo PDF">
-            <span>Passo a passo - Expedição de Cartas Precatórias</span>
-        </button> -->
+        <h1 class="title-page">Cartas Expedidas</h1>
+        <p class="description-page">Cadastro de cartas expedidas para envio e acompanhamento.</p>
     </div>
 
     <div class="container-full card-page">       

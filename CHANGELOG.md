@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0038
+
+**Data:** 2026-04-27 08:52:07 | **Commit:** `34391d4` | **Tipo:** `patch`
+
+- refactor(cartorio-cartas): enhance UI and improve layout consistency
+
 ## V. 1.96.0037
 
 **Data:** 2026-04-27 08:41:39 | **Commit:** `1827bae` | **Tipo:** `patch`
@@ -4698,6 +4704,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
