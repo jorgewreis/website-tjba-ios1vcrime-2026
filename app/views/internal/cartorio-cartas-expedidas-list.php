@@ -207,18 +207,18 @@ if ($totalPages > 0) {
         <p class="description-page">Controle de cartas precatórias, rogatórias e de ordem expedidas pelo cartório.</p>
          
         <!-- Badges de arquivos para download -->
-        <button type="button" class="badge file" data-nav-href="/documents/pdf/PJBA - 1VCR - POP - Expedição e Envio de Cartas Precatórias.pdf" data-nav-target="_blank">
+        <!-- <button type="button" class="badge file" data-nav-href="/documents/pdf/PJBA - 1VCR - POP - Expedição e Envio de Cartas Precatórias.pdf" data-nav-target="_blank">
             <img src="/assets/icons/Office-File-Pdf-1--Streamline-Ultimate.png" alt="Ícone de arquivo PDF">
             <span>Passo a passo - Expedição de Cartas Precatórias</span>
-        </button>
+        </button> -->
     </div>
 
     <div class="container-full card-page">
 
         <!-- TITLE TABLE (modelo) -->
-        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+        <div class="card-title">
             <div class="display-flex row row-fit justify-start">
-                <h2>Lista de documentos</h2>
+                <h2>Lista</h2>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md">
                 <input type="text" class="width-400 height-md" id="search-input" placeholder="Pesquisar na lista..." value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
@@ -237,7 +237,7 @@ if ($totalPages > 0) {
                 <div class="col">
                     <label for="filter-status">Filtrar por status</label>
                     <select class="width-500 height-md" id="filter-status">
-                        <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Todas exceto finalizadas</option>
+                        <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Mostrar todas</option>
                         <option value="pendente"<?php echo $statusFilter === 'pendente' ? ' selected' : ''; ?>>
                             Pendente (<?php echo htmlspecialchars((string) ($statusCounts['pendente'] ?? 0)); ?>)
                         </option>
@@ -327,12 +327,8 @@ if ($totalPages > 0) {
                             <span class="minor-info text-ellipsis" title="<?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?>" <?php echo $classeStyle; ?>><?php echo htmlspecialchars($classeNome); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars($row['Processo']); ?></span>
                         </div>
-                        <div class="col width-500 col-comarca" title="clique para copiar">
-                            <span class="minor-info">Comarca de destino</span>
-                            <span class="major-info text-ellipsis"><?php echo htmlspecialchars($row['Comarca'] . ' - ' . $row['Estado']); ?></span>
-                        </div>
-                        <div class="col width-600 col-finalidade" title="clique para copiar">
-                            <span class="minor-info">Finalidade</span>
+                        <div class="col width-500 col-comarca">
+                            <span class="minor-info text-ellipsis"><?php echo htmlspecialchars('Comarca: '. $row['Comarca'] . ' - ' . $row['Estado']); ?></span>
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars($row['Finalidade']); ?> — <?php echo htmlspecialchars($row['Prazo'] . ' dias'); ?></span>
                         </div>
                     </div>

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0030
+
+**Data:** 2026-04-27 07:28:03 | **Commit:** `2411861` | **Tipo:** `patch`
+
+- refactor(cartorio-cartas-expedidas): update UI elements for clarity and consistency
+
 ## V. 1.96.0029
 
 **Data:** 2026-04-24 13:31:59 | **Commit:** `4ea1033` | **Tipo:** `patch`
@@ -4650,6 +4656,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
