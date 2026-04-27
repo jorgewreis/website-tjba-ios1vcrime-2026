@@ -245,7 +245,7 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
             </div>            
         </div>
 
-        <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md">
+        <div class="display-flex col col-full padding-x-md padding-y-md gap-y-md">
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
                     <label for="filter-processo" class="display-flex col gap-y-sm" style="align-items: flex-start;">
@@ -296,9 +296,8 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                         <option value="cartorio">pelo Cartório</option>
                     </select>
                 </div>
-            </div>
-            <input type="hidden" id="filter-classe" data-datajud-related="true" value="" autocomplete="off">
-            <div class="display-flex row row-full flex-wrap align-end gap-y-md" id="oficio-meio-envio-row" style="gap:12px;">
+            
+                <input type="hidden" id="filter-classe" data-datajud-related="true" value="" autocomplete="off">
                 <div class="col">
                     <label for="oficio-meio-envio">Meio de envio</label>
                     <select class="width-400 height-md" id="oficio-meio-envio" name="meio_envio">
@@ -309,10 +308,11 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                     </select>
                 </div>
             </div>
-            <div class="card-buttons">
-                <button type="button" class="btn btn-secondary-outline" id="btn-oficio-limpar">Limpar</button>
-                <button type="button" class="btn btn-primary" id="btn-oficio-registrar">Cadastrar</button>
-            </div>
+        </div>
+        
+        <div class="card-buttons">
+            <button type="button" class="btn btn-secondary-outline" id="btn-oficio-limpar">Limpar</button>
+            <button type="button" class="btn btn-primary" id="btn-oficio-registrar">Cadastrar</button>
         </div>
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0043
+
+**Data:** 2026-04-27 10:03:55 | **Commit:** `c44b88e` | **Tipo:** `patch`
+
+- refactor(cartorio-oficios): improve layout and button organization
+
 ## V. 1.96.0042
 
 **Data:** 2026-04-27 09:58:36 | **Commit:** `f7010f2` | **Tipo:** `patch`
@@ -4728,6 +4734,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
