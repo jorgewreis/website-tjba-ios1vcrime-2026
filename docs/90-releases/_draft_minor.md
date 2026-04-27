@@ -174,4 +174,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(layout): add new card-allocate-rule style for improved UI consistency** `[4ea1033]`
 - **refactor(cartorio-cartas-expedidas): update UI elements for clarity and consistency** `[2411861]`
 - **refactor(cartorio-cartas-expedidas): enhance UI labels and layout for better readability** `[a565e97]`
+- **refactor(cartorio-cartas-expedidas): improve label clarity and consistency in cartas expedidas list** `[bf2c053]`
 
