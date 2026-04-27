@@ -89,12 +89,12 @@ $statusCounts = array_merge(array_fill_keys($statusOptions, 0), $service->getSta
 $statusCounts['em_andamento'] = (int) ($statusCounts['em_andamento'] ?? 0) + (int) ($statusCounts['aguardando assinatura'] ?? 0) + (int) ($statusCounts['aguardando envio'] ?? 0) + (int) ($statusCounts['aguardando juntada do termo'] ?? 0) + (int) ($statusCounts['aguardando juntada de termo'] ?? 0) + (int) ($statusCounts['aguardando cumprimento'] ?? 0);
 
 $subtarefaLabels = [
-    'aguardando_assinatura' => 'Assinar Carta expedida (Magistrada)',
-    'aguardando_gerar_pdf' => 'Imprimir peças em PDF',
-    'aguardando_envio' => 'Enviar Carta expedida',
-    'aguardando_juntada_termo' => 'Juntar comprovante de envio',
-    'aguardando_informacoes' => 'Informar detalhes',
-    'aguardando_devolucao' => 'Juntar carta devolvida',
+    'aguardando_assinatura' => 'Ag. assinatura',
+    'aguardando_gerar_pdf' => 'Ag. impressão em PDF',
+    'aguardando_envio' => 'Ag. envio',
+    'aguardando_juntada_termo' => 'Ag. juntada',
+    'aguardando_informacoes' => 'Ag. cumprimento',
+    'aguardando_devolucao' => 'Ag. devolução',
 ];
 $taskTitleByTipo = [
     'aguardando_assinatura' => 'Aguardando assinatura pela Magistrada',
@@ -327,8 +327,8 @@ if ($totalPages > 0) {
                             <span class="minor-info text-ellipsis" title="<?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?>" <?php echo $classeStyle; ?>><?php echo htmlspecialchars($classeNome); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars($row['Processo']); ?></span>
                         </div>
-                        <div class="col width-500 col-comarca">
-                            <span class="minor-info text-ellipsis"><?php echo htmlspecialchars('Comarca: '. $row['Comarca'] . ' - ' . $row['Estado']); ?></span>
+                        <div class="col width-700 col-comarca">
+                            <span class="minor-info text-ellipsis" style="font-weight: 600; color: var(--color-gray-900);"><?php echo htmlspecialchars('Comarca: '. $row['Comarca'] . ' - ' . $row['Estado']); ?></span>
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars($row['Finalidade']); ?> — <?php echo htmlspecialchars($row['Prazo'] . ' dias'); ?></span>
                         </div>
                     </div>
@@ -419,7 +419,7 @@ if ($totalPages > 0) {
                                 $labelStatus = $isEmAndamento ? 'Em andamento' : 'Pendente';
                                 $classStatus = $isEmAndamento ? 'status-current' : 'status-pending';
                                 echo '<div class="width-300 status ' . $classStatus . ' status-with-progress">';
-                                echo '<span class="status-task-label width-300">' . htmlspecialchars($labelStatus, ENT_QUOTES) . '</span>';
+                                echo '<span class="status-task-label width-300">' . htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES) . '</span>';
                                 $concluidosBarra = 1 + count(array_filter($progressStatuses, fn($x) => $x === 'concluida'));
                                 echo '<div class="status-task-progress" role="progressbar" aria-valuenow="' . $concluidosBarra . '" aria-valuemin="0" aria-valuemax="7" aria-label="Progresso das subtarefas">';
                                 foreach ($segmentosBarra as $seg) {
