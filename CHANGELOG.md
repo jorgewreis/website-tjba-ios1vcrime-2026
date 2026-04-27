@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0035
+
+**Data:** 2026-04-27 08:21:14 | **Commit:** `24f16f4` | **Tipo:** `patch`
+
+- refactor(cartorio-cartas-expedidas): standardize task labels for consistency
+
 ## V. 1.96.0034
 
 **Data:** 2026-04-27 08:12:27 | **Commit:** `d6823e8` | **Tipo:** `patch`
@@ -4680,6 +4686,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
