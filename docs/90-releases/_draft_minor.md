@@ -185,4 +185,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(cartorio-cartas): improve layout and enhance task labels** `[70a5b2f]`
 - **refactor(cartorio-cartas): standardize ordering and improve SQL readability** `[e574c5f]`
 - **refactor(oficios-cartorio): improve task filtering logic and update UI elements** `[f7010f2]`
+- **refactor(cartorio-oficios): improve layout and button organization** `[c44b88e]`
 
