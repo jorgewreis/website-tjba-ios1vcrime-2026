@@ -98,7 +98,7 @@ $subtarefaLabels = [
 ];
 $taskTitleByTipo = [
     'aguardando_assinatura' => 'Aguardando assinatura',
-    'aguardando_gerar_pdf' => 'Ag. impressão em PDF',
+    'aguardando_gerar_pdf' => 'Aguardando impressão em PDF',
     'aguardando_envio' => 'Aguardando envio',
     'aguardando_juntada_termo' => 'Ag. juntada de Termo',
     'aguardando_informacoes' => 'Aguardando cumprimento',
@@ -437,6 +437,16 @@ if ($totalPages > 0) {
 
                 <?php if (!$tarefaConcluida): ?>
                 <div class="display-flex col col-full subtask subtask-collapsed" id="subtask-<?php echo htmlspecialchars($idCarta); ?>" aria-hidden="true">
+                    <?php foreach ($subtarefas as $st):
+                        $stId = $st['id'] ?? '';
+                        $stTipo = $st['tipo'] ?? '';
+                        $stTipoNormalizado = strtolower(trim((string) $stTipo));
+                        $isGerarPdf = in_array($stTipoNormalizado, ['aguardando_gerar_pdf', 'gerar_pdf', 'geracao_pdf'], true);
+                        $isEnvio = in_array($stTipoNormalizado, ['aguardando_envio', 'envio_processo', 'enviar_processo', 'envio'], true);
+                        $isInformacoes = in_array($stTipoNormalizado, ['aguardando_informacoes', 'informar_dados', 'detalhamento_informacoes', 'Aguardando cumprimento'], true);
+                        $isDevolucao = in_array($stTipoNormalizado, ['aguardando_devolucao', 'confirmar_juntada', 'juntada_devolucao', 'juntar_devolucao', 'Aguardando devolução'], true);
+                        $stLabel = $subtarefaLabels[$stTipo] ?? $stTipo;
+                    ?>
                     <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
                         <div class="display-flex row row-fit justify-start gap-y-sm align-center subtask-row-fields">
                             <div class="col task-status">
