@@ -181,4 +181,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(cartorio-cartas-expedidas): update task label for clarity and add subtask display logic** `[49af461]`
 - **refactor(cartorio-cartas-expedidas): simplify SQL query and enhance UI layout** `[1827bae]`
 - **refactor(cartorio-cartas): enhance UI and improve layout consistency** `[34391d4]`
+- **refactor(cartorio-cartas-recebidas): update task labels for brevity and clarity** `[3ecf36f]`
 
