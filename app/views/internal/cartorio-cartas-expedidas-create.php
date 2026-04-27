@@ -172,7 +172,7 @@ try {
             </script>
         <?php endif; ?>
 
-        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
+        <div class="display-flex row row-full padding-x-md padding-y-md gap-y-md">
             <div class="col">
                 <label for="filter-cidade">Cidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="width-600 height-md" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="50" required>

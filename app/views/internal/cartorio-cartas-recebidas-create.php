@@ -134,11 +134,11 @@ try {
                 </div>
             </div>
         </div>
-        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
+        <div class="display-flex row row-full padding-x-md padding-y-md gap-y-md">
             <div class="col filter">
                 <label for="filter-processo" class="display-flex col gap-y-sm" style="align-items: flex-start;">
                     <span>Processo <span class="label-hint-obrigatorio">*obrigatório</span></span>
-                    <span id="processo-ap-info" class="minor-info" aria-live="polite"></span>
+                    <span id="processo-ap-info" class="minor-info" aria-live="polite" style="display: none;"></span>
                 </label>
                 <input type="text" class="width-400 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" required>
             </div>
