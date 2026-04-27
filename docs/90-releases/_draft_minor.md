@@ -178,4 +178,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(cartorio-cartas-expedidas): update filters layout and status display for improved UI** `[8befdf7]`
 - **fix(cartorio-cartas-expedidas): correct CSS class spacing for status display** `[d6823e8]`
 - **refactor(cartorio-cartas-expedidas): standardize task labels for consistency** `[24f16f4]`
+- **refactor(cartorio-cartas-expedidas): update task label for clarity and add subtask display logic** `[49af461]`
 
