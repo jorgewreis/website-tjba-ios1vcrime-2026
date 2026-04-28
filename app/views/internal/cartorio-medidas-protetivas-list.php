@@ -69,10 +69,12 @@ $statusCounts = array_merge(array_fill_keys($statusOptions, 0), $service->getSta
 $subtarefaLabels = [
     'cadastro_partes_pje' => 'Cadastro de partes no PJe',
     'expedicao_mandados_intimacao' => 'Expedição de mandados de intimação',
+    'cadastro_bnmp' => 'Cadastro no BNMP',
 ];
 $ordemLabels = [
     1 => $subtarefaLabels['cadastro_partes_pje'],
     2 => $subtarefaLabels['expedicao_mandados_intimacao'],
+    3 => $subtarefaLabels['cadastro_bnmp'],
 ];
 
 $baseQueryParams = ['page' => $routePage, 'items_per_page' => $itemsPerPage];
@@ -128,7 +130,7 @@ if ($totalPages > 0) {
             <span class="specific">Lista</span>
         </div>
         <h1 class="title-page">Medidas Protetivas</h1>
-        <p class="description-page">Cadastro inicial, cadastro de partes no PJe, expedição de mandados e integração automática com o Cejusc.</p>
+        <p class="description-page">Cadastro inicial, cadastro de partes no PJe, expedição de mandados, cadastro no BNMP e integração automática com o Cejusc.</p>
     </div>
 
     <div class="container-full card-page">
@@ -180,10 +182,10 @@ if ($totalPages > 0) {
                 $statusTarefa = (string) ($row['Status'] ?? '');
                 $tarefaConcluida = in_array($statusTarefa, ['concluída', 'concluida', 'finalizada'], true);
                 $allSt = $row['SubtarefasAll'] ?? [];
-                $progressStatuses = ['pendente', 'pendente'];
+                $progressStatuses = ['pendente', 'pendente', 'pendente'];
                 foreach ($allSt as $subtarefa) {
                     $ordem = (int) ($subtarefa['ordem'] ?? 0);
-                    if ($ordem >= 1 && $ordem <= 2) {
+                    if ($ordem >= 1 && $ordem <= 3) {
                         $progressStatuses[$ordem - 1] = (string) ($subtarefa['status'] ?? 'pendente');
                     }
                 }
@@ -279,7 +281,7 @@ if ($totalPages > 0) {
                             <?php elseif ($mostrarBarraStatus): ?>
                                 <div class="width-300 status <?php echo $st === 'em_andamento' ? 'status-current' : 'status-pending'; ?> status-with-progress">
                                     <span class="status-task-label width-300"><?php echo $st === 'em_andamento' ? 'Em andamento' : 'Pendente'; ?></span>
-                                    <div class="status-task-progress" role="progressbar" aria-valuenow="<?php echo count(array_filter($progressStatuses, static fn ($value) => $value === 'concluida')); ?>" aria-valuemin="0" aria-valuemax="2">
+                                    <div class="status-task-progress" role="progressbar" aria-valuenow="<?php echo count(array_filter($progressStatuses, static fn ($value) => $value === 'concluida')); ?>" aria-valuemin="0" aria-valuemax="3">
                                         <?php foreach ($progressStatuses as $index => $statusSeg): ?>
                                             <div class="status-task-progress-segment <?php echo htmlspecialchars($statusSeg === 'concluida' ? 'concluida' : ($statusSeg === 'em_andamento' ? 'em_andamento' : 'pendente')); ?>" title="<?php echo htmlspecialchars($ordemLabels[$index + 1]); ?>"></div>
                                         <?php endforeach; ?>
@@ -319,7 +321,7 @@ if ($totalPages > 0) {
                                         step="1"
                                         inputmode="numeric"
                                     >
-                                    <?php else: ?>
+                                    <?php elseif ($stTipo === 'expedicao_mandados_intimacao'): ?>
                                     <input
                                         type="number"
                                         class="subtask-qtd width-300 height-sm"

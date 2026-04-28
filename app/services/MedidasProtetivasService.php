@@ -302,6 +302,7 @@ final class MedidasProtetivasService
 
         $this->subtarefasRepository->create($medidaId, MedidasProtetivasSubtarefasRepository::TIPO_ORDEM_1, 1, 'em_andamento', null);
         $this->subtarefasRepository->create($medidaId, MedidasProtetivasSubtarefasRepository::TIPO_ORDEM_2, 2, 'pendente', null);
+        $this->subtarefasRepository->create($medidaId, MedidasProtetivasSubtarefasRepository::TIPO_ORDEM_3, 3, 'pendente', null);
         $this->repository->update($medidaId, ['status' => 'pendente']);
 
         if ($usuarioId !== null && trim($usuarioId) !== ''
@@ -329,7 +330,7 @@ final class MedidasProtetivasService
                 throw new InvalidArgumentException('Dados específicos inválidos.');
             }
             $tipoSub = trim((string) ($subtarefa['tipo'] ?? ''));
-            $qtd = array_key_exists('qtd', $dadosArray) ? (int) $dadosArray['qtd'] : -1;
+            $qtd = array_key_exists('qtd', $dadosArray) ? (int) $dadosArray['qtd'] : 1;
 
             if ($tipoSub === MedidasProtetivasSubtarefasRepository::TIPO_ORDEM_1) {
                 if ($qtd < self::QTD_PARTES_PJE_MIN || $qtd > self::QTD_QUANTIDADE_MAX) {
@@ -338,13 +339,16 @@ final class MedidasProtetivasService
                         . self::QTD_PARTES_PJE_MIN . ' e ' . self::QTD_QUANTIDADE_MAX . '.'
                     );
                 }
-            } else {
+            } elseif ($tipoSub === MedidasProtetivasSubtarefasRepository::TIPO_ORDEM_2) {
                 if ($qtd < 1) {
                     throw new InvalidArgumentException('Informe uma quantidade maior que zero para concluir a subtarefa.');
                 }
                 if ($qtd > self::QTD_QUANTIDADE_MAX) {
                     throw new InvalidArgumentException('A quantidade não pode ser maior que ' . self::QTD_QUANTIDADE_MAX . '.');
                 }
+            } else {
+                // Subtarefas sem complemento numérico (ex.: cadastro no BNMP) usam quantidade fixa 1 na produtividade.
+                $qtd = 1;
             }
 
             $usuarioIdMovimentacao = trim((string) ($dadosArray['usuario_id'] ?? ''));
@@ -368,10 +372,11 @@ final class MedidasProtetivasService
                 trim((string) ($medidaAtual['classe_nome'] ?? $medidaAtual['classe_codigo'] ?? '')),
                 'classe não informada'
             );
+            $numeroProcessoMedida = trim((string) ($medidaAtual['numero_processo'] ?? $medidaAtual['numero_processo_origem'] ?? ''));
             CartorioProdutividade::record($this->connection, $usuarioIdMovimentacao, 'cartorio-medidas-protetivas.subtarefa.' . $tipoSubtarefa, [
                 'referencia_item_id' => $subtarefaId,
                 'referencia_sistema' => 'cartorio-medidas-protetivas',
-                'numero_processo' => (string) ($medidaAtual['numero_processo_origem'] ?? ''),
+                'numero_processo' => $numeroProcessoMedida,
                 'classe_processo' => $classeMedida,
                 'quantidade' => $qtd,
             ]);
@@ -394,7 +399,7 @@ final class MedidasProtetivasService
 
         $this->repository->update($medidaId, ['status' => 'concluída']);
         $medida = $this->repository->findById($medidaId);
-        $processo = trim((string) ($medida['numero_processo_origem'] ?? ''));
+        $processo = trim((string) ($medida['numero_processo'] ?? $medida['numero_processo_origem'] ?? ''));
         $reu = trim((string) ($medida['reu_nome_completo'] ?? ''));
         return [
             'tarefa_principal_concluida' => true,

@@ -10,10 +10,12 @@ final class MedidasProtetivasSubtarefasRepository
 
     public const TIPO_ORDEM_1 = 'cadastro_partes_pje';
     public const TIPO_ORDEM_2 = 'expedicao_mandados_intimacao';
+    public const TIPO_ORDEM_3 = 'cadastro_bnmp';
 
     private const ORDEM_POR_TIPO = [
         self::TIPO_ORDEM_1 => 1,
         self::TIPO_ORDEM_2 => 2,
+        self::TIPO_ORDEM_3 => 3,
     ];
 
     private const STATUS_EM_ANDAMENTO = 'em_andamento';
@@ -30,8 +32,8 @@ final class MedidasProtetivasSubtarefasRepository
     {
         $medidaId = trim($medidaId);
         $tipo = trim($tipo);
-        if ($medidaId === '' || $tipo === '' || $ordem < 1 || $ordem > 2) {
-            throw new InvalidArgumentException('medida_id, tipo e ordem (1-2) são obrigatórios.');
+        if ($medidaId === '' || $tipo === '' || $ordem < 1 || $ordem > 3) {
+            throw new InvalidArgumentException('medida_id, tipo e ordem (1-3) são obrigatórios.');
         }
         if (!isset(self::ORDEM_POR_TIPO[$tipo]) || self::ORDEM_POR_TIPO[$tipo] !== $ordem) {
             throw new InvalidArgumentException('Tipo e ordem inválidos.');
@@ -143,12 +145,36 @@ final class MedidasProtetivasSubtarefasRepository
         }
 
         $existentes = $this->findByMedidaId($medidaId);
-        if (count($existentes) > 0) {
+        if (count($existentes) === 0) {
+            $this->create($medidaId, self::TIPO_ORDEM_1, 1, self::STATUS_EM_ANDAMENTO, null);
+            $this->create($medidaId, self::TIPO_ORDEM_2, 2, self::STATUS_PENDENTE, null);
+            $this->create($medidaId, self::TIPO_ORDEM_3, 3, self::STATUS_PENDENTE, null);
             return;
         }
 
-        $this->create($medidaId, self::TIPO_ORDEM_1, 1, self::STATUS_EM_ANDAMENTO, null);
-        $this->create($medidaId, self::TIPO_ORDEM_2, 2, self::STATUS_PENDENTE, null);
+        $tiposExistentes = [];
+        $statusOrdem1 = self::STATUS_PENDENTE;
+        $statusOrdem2 = self::STATUS_PENDENTE;
+        foreach ($existentes as $row) {
+            $tipoExistente = trim((string) ($row['tipo'] ?? ''));
+            if ($tipoExistente !== '') {
+                $tiposExistentes[$tipoExistente] = true;
+            }
+            if ($tipoExistente === self::TIPO_ORDEM_1) {
+                $statusOrdem1 = trim((string) ($row['status'] ?? self::STATUS_PENDENTE));
+            }
+            if ($tipoExistente === self::TIPO_ORDEM_2) {
+                $statusOrdem2 = trim((string) ($row['status'] ?? self::STATUS_PENDENTE));
+            }
+        }
+
+        if (!isset($tiposExistentes[self::TIPO_ORDEM_3])) {
+            $statusNova = self::STATUS_PENDENTE;
+            if ($statusOrdem1 === self::STATUS_CONCLUIDA && $statusOrdem2 === self::STATUS_CONCLUIDA) {
+                $statusNova = self::STATUS_CONCLUIDA;
+            }
+            $this->create($medidaId, self::TIPO_ORDEM_3, 3, $statusNova, null);
+        }
     }
 
     public function deleteByMedidaId(string $medidaId): void

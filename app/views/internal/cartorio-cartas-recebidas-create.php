@@ -125,7 +125,6 @@ try {
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md">
                 <div class="card-allocate-rule">
-                    <?php $cartorioAlocacaoPrefix = 'cartas-rec'; include __DIR__ . '/_cartorio_alocacao_direcionada_create.php'; ?>
                     <?php if ($hasRuleAllocation): ?>
                         <span>*Conforme regra, as Cartas Recebidas serão alocadas automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
                     <?php else: ?>
@@ -206,6 +205,10 @@ try {
                 </select>
             </div>
         </div>        
+
+        <!-- Alocação de servidor -->
+        <?php $cartorioAlocacaoPrefix = 'cartas-rec'; include __DIR__ . '/_cartorio_alocacao_direcionada_create.php'; ?>
+
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
 
@@ -218,11 +221,11 @@ try {
         <?php endif; ?>
 
         <div class="card-buttons">
-            <div class="col row-fit justify-start">
+            <div class="display-flex row row-fit justify-start gap-y-md">
                 <button class="btn btn-secondary" id="voltar-btn" data-allow-during-loading="true">Voltar</button>
                 <button class="btn btn-primary-outline" id="alterar-regra-btn" style="display: none;">Alterar regra de alocação</button>
             </div>
-            <div class="col row-fit justify-end">
+            <div class="display-flex row row-fit justify-end">
                 <button class="btn btn-primary" id="cadastrar-btn" type="button">Cadastrar</button>
             </div>
         </div>

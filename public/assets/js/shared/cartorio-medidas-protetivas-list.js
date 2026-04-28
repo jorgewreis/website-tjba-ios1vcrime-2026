@@ -41,49 +41,50 @@
                     return;
                 }
 
+                const exigeQuantidade = !!qtdInput;
                 let minQ = tipo === 'cadastro_partes_pje' ? 0 : 1;
                 let maxQ = 10;
-                const qtdRaw = qtdInput ? String(qtdInput.value || '').trim() : '';
-                const qtdInt = parseInt(qtdRaw, 10);
+                let qtdInt = 1;
+                if (exigeQuantidade) {
+                    const qtdRaw = String(qtdInput.value || '').trim();
+                    qtdInt = parseInt(qtdRaw, 10);
 
-                if (qtdInput && qtdInput.getAttribute('data-qtd-min') !== null) {
-                    minQ = parseInt(qtdInput.getAttribute('data-qtd-min'), 10);
-                    if (isNaN(minQ)) {
-                        minQ = tipo === 'cadastro_partes_pje' ? 0 : 1;
+                    if (qtdInput.getAttribute('data-qtd-min') !== null) {
+                        minQ = parseInt(qtdInput.getAttribute('data-qtd-min'), 10);
+                        if (isNaN(minQ)) {
+                            minQ = tipo === 'cadastro_partes_pje' ? 0 : 1;
+                        }
                     }
-                }
 
-                if (qtdInput && qtdInput.getAttribute('data-qtd-max') !== null) {
-                    maxQ = parseInt(qtdInput.getAttribute('data-qtd-max'), 10);
-                    if (isNaN(maxQ)) {
-                        maxQ = 10;
+                    if (qtdInput.getAttribute('data-qtd-max') !== null) {
+                        maxQ = parseInt(qtdInput.getAttribute('data-qtd-max'), 10);
+                        if (isNaN(maxQ)) {
+                            maxQ = 10;
+                        }
                     }
-                }
 
-                if (qtdRaw === '' || isNaN(qtdInt)) {
-                    ctx.notify('error', 'Campo obrigatório', 'Informe a quantidade.');
-                    if (qtdInput) {
+                    if (qtdRaw === '' || isNaN(qtdInt)) {
+                        ctx.notify('error', 'Campo obrigatório', 'Informe a quantidade.');
                         qtdInput.focus();
+                        return;
                     }
-                    return;
-                }
 
-                if (qtdInt < minQ || qtdInt > maxQ) {
-                    ctx.notify('error', 'Quantidade inválida', 'Use um valor entre ' + minQ + ' e ' + maxQ + '.');
-                    if (qtdInput) {
+                    if (qtdInt < minQ || qtdInt > maxQ) {
+                        ctx.notify('error', 'Quantidade inválida', 'Use um valor entre ' + minQ + ' e ' + maxQ + '.');
                         qtdInput.focus();
+                        return;
                     }
-                    return;
                 }
 
                 button.disabled = true;
 
+                const dadosEspecificos = exigeQuantidade ? { qtd: qtdInt } : {};
                 fetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         subtarefa_id: subtarefaId,
-                        dados_especificos: { qtd: qtdInt }
+                        dados_especificos: dadosEspecificos
                     }),
                     credentials: 'same-origin'
                 })

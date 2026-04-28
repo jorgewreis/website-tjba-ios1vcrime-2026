@@ -29,7 +29,7 @@ if ($__showAlocDir) {
 ?>
 <?php if ($__showAlocDir): ?>
             <div class="display-flex col col-full gap-y-sm padding-x-md padding-y-md border-bottom">
-                <span class="minor-info">Alocar servidores à tarefa (opcional) — perfis ADMIN, CHEFIA, DIRETORA ou MAGISTRADA</span>
+                <span class="minor-info">Alocar servidor à tarefa</span>
                 <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                     <div class="col">
                         <label for="<?php echo htmlspecialchars($__capAloc, ENT_QUOTES, 'UTF-8'); ?>-alocar-usuario-select">Servidor</label>
