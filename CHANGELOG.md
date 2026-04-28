@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0009
+
+**Data:** 2026-04-28 13:18:57 | **Commit:** `889922d` | **Tipo:** `patch`
+
+- fix(api): enhance logging in status-bulk endpoint for better debugging
+
 ## V. 1.97.0008
 
 **Data:** 2026-04-28 13:09:46 | **Commit:** `0199893` | **Tipo:** `patch`
@@ -4836,6 +4842,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
