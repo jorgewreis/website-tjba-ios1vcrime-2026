@@ -1,0 +1,46 @@
+---
+description: Centralizar notify e fila post-reload em App.Page com exceções explícitas auditáveis.
+globs: public/assets/js/**/*.js
+alwaysApply: true
+---
+
+# Fonte única de toast em JS (`App.Page`)
+
+## Objetivo
+
+- Tornar `App.Page` a fonte única para:
+  - `notify`
+  - `queuePostReloadToast`
+  - `flushPostReloadToast`
+- Eliminar duplicações locais e divergências de comportamento entre módulos.
+
+## Regra obrigatória
+
+- Novo código JS **deve usar**:
+  - `App.Page.notify(type, title, message)`
+  - `App.Page.queuePostReloadToast(typeOrPayload, title, message, storageKey)`
+  - `App.Page.flushPostReloadToast(storageKey, defaults)`
+- É **proibido** criar nova implementação local de `notify`, `queuePostReloadToast` ou `flushPostReloadToast`.
+- `storageKey` custom só é permitido quando o domínio exigir isolamento explícito (ex.: `salapauta.*`, `estudapauta.*`).
+
+## Exceções explícitas (permitidas)
+
+- Exceções são permitidas somente quando houver comportamento adicional real (ex.: destaque de campo após flush).
+- Toda exceção deve:
+  - estar registrada em `docs/00-foundation/governanca-toast-app-page.md`;
+  - ter justificativa técnica;
+  - ter responsável e condição de saída.
+- Diferença apenas de assinatura, nome de variável ou conveniência local **não justifica exceção**.
+
+## Padrão de migração
+
+- Priorizar delegação para `App.Page.*` mantendo compatibilidade de assinatura durante transição.
+- Quando necessário, usar adapter local temporário e registrar no documento de governança.
+- Não alterar semântica de mensagens de usuário sem alinhamento explícito.
+
+## Critérios de aceite de cada migração
+
+- Mesma mensagem de negócio exibida ao usuário.
+- Mesmo tipo de toast (`success`, `error`, `info`) no mesmo evento.
+- Mesmo gatilho de exibição pós-reload.
+- Sem regressão em fluxos de salvar, excluir, desalocar, concluir subtarefa e cancelamento.
