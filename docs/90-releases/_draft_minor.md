@@ -12,4 +12,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(dashboard): enhance allocation card filtering and add type constraint** `[5adb19c]`
 - **fix(audiencias): update status handling and visibility logic in audience panels** `[685bd6f]`
 - **fix(security): improve logout handling and iframe navigation** `[0199893]`
+- **fix(api): enhance logging in status-bulk endpoint for better debugging** `[889922d]`
 
