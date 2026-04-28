@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0005
+
+**Data:** 2026-04-28 12:22:31 | **Commit:** `53e4abe` | **Tipo:** `patch`
+
+- fix(dashboard): simplify dashboard card metrics and improve status filtering
+
 ## V. 1.97.0004
 
 **Data:** 2026-04-28 12:04:32 | **Commit:** `e07d3a7` | **Tipo:** `patch`
@@ -4812,6 +4818,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

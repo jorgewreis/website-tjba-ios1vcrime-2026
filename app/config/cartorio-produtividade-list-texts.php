@@ -93,7 +93,7 @@ return array (
   ),
   'cartorio-medidas-protetivas.subtarefa.cadastro_bnmp' =>
   array (
-    'observacao' => 'Cadastro no BNMP realizado ({quantidade} registro(s)).',
+    'observacao' => 'Cadastro no BNMP realizado',
   ),
   'cartorio-editais.create' => 
   array (

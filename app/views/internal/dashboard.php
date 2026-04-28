@@ -152,12 +152,6 @@ $monthVarFmt = $monthVar > 0
             margin: 0 0 8px;
             font-size: 1rem;
         }
-        .dashboard-aloc-metrics {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 8px;
-            margin-bottom: 10px;
-        }
         .dashboard-aloc-status-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
@@ -276,32 +270,22 @@ $monthVarFmt = $monthVar > 0
                         <?php foreach ($alocacaoCards as $card): ?>
                             <?php
                             $titulo = (string) ($card['titulo'] ?? '');
-                            $page = (string) ($card['frame_page'] ?? '');
-                            $href = '/frame.php?page=' . rawurlencode($page);
-                            $total = (int) ($card['total'] ?? 0);
-                            $emAnd = (int) ($card['em_andamento'] ?? 0);
-                            $emLabel = (string) ($card['em_andamento_label'] ?? 'Em andamento');
-                            $emTitle = (string) ($card['em_andamento_title'] ?? '');
                             $blocos = $card['status_blocos'] ?? [];
+                            $blocosFiltrados = [];
+                            foreach ($blocos as $bloco) {
+                                $label = mb_strtolower(trim((string) ($bloco['label'] ?? '')), 'UTF-8');
+                                if ($label === 'pendente' || $label === 'em andamento') {
+                                    $blocosFiltrados[] = $bloco;
+                                }
+                            }
                             ?>
                             <div class="dashboard-aloc-card">
-                                <div class="display-flex row row-full align-center justify-between gap-sm margin-bottom-sm">
+                                <div class="display-flex row row-full align-center gap-sm margin-bottom-sm">
                                     <h3><?php echo htmlspecialchars($titulo, ENT_QUOTES, 'UTF-8'); ?></h3>
-                                    <button type="button" class="btn btn-primary-outline height-sm" data-nav-href="<?php echo htmlspecialchars($href, ENT_QUOTES, 'UTF-8'); ?>">Abrir</button>
-                                </div>
-                                <div class="dashboard-aloc-metrics">
-                                    <div>
-                                        <span class="minor-info">Cadastradas (total)</span>
-                                        <span class="major-info" title="Total de registros no módulo, todos os status."><?php echo $total; ?></span>
-                                    </div>
-                                    <div>
-                                        <span class="minor-info" title="<?php echo htmlspecialchars($emTitle, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($emLabel, ENT_QUOTES, 'UTF-8'); ?></span>
-                                        <span class="major-info" title="<?php echo htmlspecialchars($emTitle, ENT_QUOTES, 'UTF-8'); ?>"><?php echo $emAnd; ?></span>
-                                    </div>
                                 </div>
                                 <span class="minor-info">Por status</span>
                                 <div class="dashboard-aloc-status-grid margin-top-sm">
-                                    <?php foreach ($blocos as $bloco): ?>
+                                    <?php foreach ($blocosFiltrados as $bloco): ?>
                                         <?php
                                         $bLabel = (string) ($bloco['label'] ?? '');
                                         $bCount = (int) ($bloco['count'] ?? 0);
@@ -312,6 +296,12 @@ $monthVarFmt = $monthVar > 0
                                             <span><?php echo htmlspecialchars($bLabel, ENT_QUOTES, 'UTF-8'); ?></span>
                                         </div>
                                     <?php endforeach; ?>
+                                    <?php if ($blocosFiltrados === []): ?>
+                                        <div class="dashboard-aloc-status" title="Sem tarefas pendentes ou em andamento neste módulo.">
+                                            <span class="count">0</span>
+                                            <span>Sem pendências</span>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         <?php endforeach; ?>

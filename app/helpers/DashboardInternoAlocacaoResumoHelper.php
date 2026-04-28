@@ -39,6 +39,70 @@ final class DashboardInternoAlocacaoResumoHelper
     ];
 
     /**
+     * Mapeamento técnico para contar status apenas dos registros alocados ao usuário.
+     *
+     * @var array<string, array{main_table:string,main_pk:string,status_col:string,aloc_table:string,aloc_fk:string}>
+     */
+    private const STATUS_SOURCE_BY_REGRA = [
+        'ALLOCATE-GUIAS' => [
+            'main_table' => 'guias',
+            'main_pk' => 'id',
+            'status_col' => 'status',
+            'aloc_table' => 'guias_alocados',
+            'aloc_fk' => 'guia_id',
+        ],
+        'ALLOCATE-CEAPA' => [
+            'main_table' => 'ceapa_tarefas',
+            'main_pk' => 'id',
+            'status_col' => 'status_cumprimento',
+            'aloc_table' => 'ceapa_alocados',
+            'aloc_fk' => 'ceapa_id',
+        ],
+        'ALLOCATE-CEJUSC' => [
+            'main_table' => 'cejusc_tarefas',
+            'main_pk' => 'id',
+            'status_col' => 'status',
+            'aloc_table' => 'cejusc_alocados',
+            'aloc_fk' => 'cejusc_tarefa_id',
+        ],
+        'ALLOCATE-CARTASEXPEDIDAS' => [
+            'main_table' => 'cartas_expedidas',
+            'main_pk' => 'id',
+            'status_col' => 'status',
+            'aloc_table' => 'cartas_expedidas_alocados',
+            'aloc_fk' => 'carta_expedida_id',
+        ],
+        'ALLOCATE-CARTASRECEBIDAS' => [
+            'main_table' => 'cartas_recebidas',
+            'main_pk' => 'id',
+            'status_col' => 'status',
+            'aloc_table' => 'cartas_recebidas_alocados',
+            'aloc_fk' => 'carta_recebida_id',
+        ],
+        'ALLOCATE-EDITAIS' => [
+            'main_table' => 'editais',
+            'main_pk' => 'id',
+            'status_col' => 'status',
+            'aloc_table' => 'editais_alocados',
+            'aloc_fk' => 'edital_id',
+        ],
+        'ALLOCATE-MEDIDASPROTETIVAS' => [
+            'main_table' => 'medidas_protetivas',
+            'main_pk' => 'id',
+            'status_col' => 'status',
+            'aloc_table' => 'medidas_protetivas_alocados',
+            'aloc_fk' => 'medida_id',
+        ],
+        'ALLOCATE-CARTORIOOFICIOS' => [
+            'main_table' => 'oficios_cartorio',
+            'main_pk' => 'id',
+            'status_col' => 'status',
+            'aloc_table' => 'cartorio_oficios_alocados',
+            'aloc_fk' => 'oficio_id',
+        ],
+    ];
+
+    /**
      * @return list<array<string, mixed>>
      */
     public static function cardsParaUsuario(PDO $connection, string $userId): array
@@ -64,7 +128,7 @@ final class DashboardInternoAlocacaoResumoHelper
 
         $cards = [];
         foreach (array_keys($rulesToRender) as $code) {
-            $card = self::cardForRegra($connection, $code);
+            $card = self::cardForRegra($connection, $code, $userId);
             if ($card !== null) {
                 $cards[] = $card;
             }
@@ -116,14 +180,12 @@ final class DashboardInternoAlocacaoResumoHelper
     /**
      * @return array<string, mixed>|null
      */
-    private static function cardForRegra(PDO $connection, string $code): ?array
+    private static function cardForRegra(PDO $connection, string $code, string $userId): ?array
     {
-        $filters = [];
+        $byStatus = self::countByStatusForUsuario($connection, $code, $userId);
+        $total = (int) array_sum($byStatus);
         switch ($code) {
             case 'ALLOCATE-GUIAS':
-                $repo = new GuiasRepository($connection);
-                $byStatus = $repo->countByStatus($filters);
-                $total = (int) array_sum($byStatus);
                 $emAnd = (int) ($byStatus['em_andamento'] ?? 0);
 
                 return [
@@ -138,9 +200,6 @@ final class DashboardInternoAlocacaoResumoHelper
                 ];
 
             case 'ALLOCATE-CEAPA':
-                $repo = new CeapaRepository($connection);
-                $byStatus = $repo->countByStatus($filters);
-                $total = (int) array_sum($byStatus);
                 $emAnd = (int) ($byStatus['em_andamento'] ?? 0);
 
                 return [
@@ -155,9 +214,6 @@ final class DashboardInternoAlocacaoResumoHelper
                 ];
 
             case 'ALLOCATE-CEJUSC':
-                $repo = new CejuscRepository($connection);
-                $byStatus = $repo->countByStatus($filters);
-                $total = (int) array_sum($byStatus);
                 $emAnd = (int) ($byStatus['em_andamento'] ?? 0);
 
                 return [
@@ -172,9 +228,6 @@ final class DashboardInternoAlocacaoResumoHelper
                 ];
 
             case 'ALLOCATE-CARTASEXPEDIDAS':
-                $repo = new CartasExpedidasRepository($connection);
-                $byStatus = $repo->countByStatus($filters);
-                $total = (int) array_sum($byStatus);
                 $emAnd = (int) ($byStatus['em_andamento'] ?? 0);
 
                 return [
@@ -189,9 +242,6 @@ final class DashboardInternoAlocacaoResumoHelper
                 ];
 
             case 'ALLOCATE-CARTASRECEBIDAS':
-                $repo = new CartasRecebidasRepository($connection);
-                $byStatus = $repo->countByStatus($filters);
-                $total = (int) array_sum($byStatus);
                 $emAnd = (int) ($byStatus['em_andamento'] ?? 0);
 
                 return [
@@ -206,9 +256,6 @@ final class DashboardInternoAlocacaoResumoHelper
                 ];
 
             case 'ALLOCATE-EDITAIS':
-                $repo = new EditaisRepository($connection);
-                $byStatus = $repo->countByStatus($filters);
-                $total = (int) array_sum($byStatus);
                 $emAnd = (int) ($byStatus['em_andamento'] ?? 0);
 
                 return [
@@ -223,9 +270,6 @@ final class DashboardInternoAlocacaoResumoHelper
                 ];
 
             case 'ALLOCATE-MEDIDASPROTETIVAS':
-                $repo = new MedidasProtetivasRepository($connection);
-                $byStatus = $repo->countByStatus($filters);
-                $total = (int) array_sum($byStatus);
                 $emAnd = (int) ($byStatus['em_andamento'] ?? 0);
 
                 return [
@@ -240,9 +284,6 @@ final class DashboardInternoAlocacaoResumoHelper
                 ];
 
             case 'ALLOCATE-CARTORIOOFICIOS':
-                $repo = new OficiosCartorioRepository($connection);
-                $byStatus = $repo->countByStatus($filters);
-                $total = (int) array_sum($byStatus);
                 $pend = (int) ($byStatus['pendente'] ?? 0);
 
                 return [
@@ -259,6 +300,47 @@ final class DashboardInternoAlocacaoResumoHelper
             default:
                 return null;
         }
+    }
+
+    /**
+     * @return array<string,int>
+     */
+    private static function countByStatusForUsuario(PDO $connection, string $regraCode, string $userId): array
+    {
+        $cfg = self::STATUS_SOURCE_BY_REGRA[$regraCode] ?? null;
+        $userId = trim($userId);
+        if ($cfg === null || $userId === '') {
+            return [];
+        }
+
+        $sql = sprintf(
+            'SELECT m.`%s` AS st, COUNT(DISTINCT m.`%s`) AS total
+             FROM `%s` m
+             INNER JOIN `%s` a ON a.`%s` = m.`%s`
+             WHERE a.`usuario_id` = :usuario_id
+             GROUP BY m.`%s`',
+            $cfg['status_col'],
+            $cfg['main_pk'],
+            $cfg['main_table'],
+            $cfg['aloc_table'],
+            $cfg['aloc_fk'],
+            $cfg['main_pk'],
+            $cfg['status_col']
+        );
+        $stmt = $connection->prepare($sql);
+        $stmt->bindValue(':usuario_id', $userId);
+        $stmt->execute();
+
+        $summary = [];
+        while (($row = $stmt->fetch(PDO::FETCH_ASSOC)) !== false) {
+            $status = strtolower(trim((string) ($row['st'] ?? '')));
+            if ($status === '') {
+                continue;
+            }
+            $summary[$status] = (int) ($row['total'] ?? 0);
+        }
+
+        return $summary;
     }
 
     /**
