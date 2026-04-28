@@ -7,7 +7,7 @@ $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/CeapaService.php';
-require_once $basePath . '/app/helpers/UsuarioPerfisAutorizacao.php';
+require_once $basePath . '/app/helpers/DeleteAuthorization.php';
 
 if (!bootstrapRequireTrustedPostRequest()) {
     http_response_code(403);
@@ -45,9 +45,7 @@ try {
         exit;
     }
 
-    $perfis = UsuarioPerfisAutorizacao::perfisDoUsuario($userId);
-    $perfisPermitidosExcluir = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
-    if (count(array_intersect($perfis, $perfisPermitidosExcluir)) === 0) {
+    if (!DeleteAuthorization::usuarioPodeExcluir($userId)) {
         http_response_code(403);
         echo json_encode(['error' => 'Seu perfil não tem permissão para excluir. Apenas admin, chefia, diretora ou magistrada.'], JSON_UNESCAPED_UNICODE);
         exit;

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0020
+
+**Data:** 2026-04-28 18:44:21 | **Commit:** `445e31d` | **Tipo:** `patch`
+
+- refactor(produtividade): remove legacy Produtividade class and update documentation
+
 ## V. 1.97.0019
 
 **Data:** 2026-04-28 17:30:37 | **Commit:** `585e3f4` | **Tipo:** `patch`
@@ -4902,6 +4908,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

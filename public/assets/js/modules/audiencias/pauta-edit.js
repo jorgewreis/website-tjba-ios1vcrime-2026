@@ -57,6 +57,10 @@
 
     function queuePostReloadToastByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage, storageKey) {
         var targetKey = storageKey || 'salapauta.postReloadToast';
+        if (pageTools && typeof pageTools.queuePostReloadToastByKey === 'function') {
+            pageTools.queuePostReloadToastByKey(key, vars || {}, fallbackType, fallbackTitle, fallbackMessage, targetKey);
+            return;
+        }
         var catalog = window.App && window.App.ToastCatalog ? window.App.ToastCatalog : null;
         if (!catalog || typeof catalog.resolve !== 'function') {
             if (pageTools && typeof pageTools.queuePostReloadToast === 'function') {

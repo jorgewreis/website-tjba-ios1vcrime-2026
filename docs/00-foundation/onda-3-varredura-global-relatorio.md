@@ -19,9 +19,9 @@
 - Blocos de cancelamento/exclusao em endpoints com estrutura muito parecida (auth, validacao de id, chamada de service, payload JSON).
 - Regras de produtividade espelhadas em multiplos services e endpoints (com helper central `CartorioProdutividade` ja em uso).
 
-### Candidatos a codigo possivelmente sem uso (sem remocao nesta onda)
-- `public/assets/js/shared/navigation.js`: apenas definicao de `setupNavigationButton` encontrada; sem referencias de uso no repositorio.
-- `app/services/Produtividade.php`: sem instanciacao `new Produtividade(...)` encontrada; documentacao interna ja o classifica como compatibilidade historica.
+### Candidatos a codigo possivelmente sem uso (status atualizado em auditoria posterior)
+- `public/assets/js/shared/navigation.js`: **removido** depois de confirmada ausencia de referencias.
+- `app/services/Produtividade.php`: **removido** apos auditoria do modulo Produtividade (sem referencias); fluxo canonico em `ProdutividadeService`.
 
 ## Classificacao de risco e backlog
 
@@ -36,8 +36,8 @@
 3. Reduzir duplicacao de notificacoes por modulo com catalogo central + chaves padronizadas.
 
 ### Alto risco (depende de decisao explicita antes de remover)
-1. Remover definitivamente `navigation.js` (se confirmado sem consumo externo).
-2. Remover `app/services/Produtividade.php` (se confirmado sem bootstrap dinamico/uso externo).
+1. ~~Remover definitivamente `navigation.js`~~ — feito em auditoria posterior (sem referencias).
+2. ~~Remover `app/services/Produtividade.php`~~ — feito apos auditoria do modulo Produtividade.
 3. Refatorar blocos de API compartilhados para camada comum (risco de regressao de contrato HTTP).
 
 ## Decisoes guiadas (sensivel)
@@ -57,14 +57,10 @@
 - Acao: `notifyByKey` local passa a priorizar `App.Page.notifyByKey`.
 - Garantia: mantido fallback local para `App.ToastCatalog.notifyByKey` e `notify(...)`.
 
-### 3) Sinalizacao de legado sem remocao
-- Arquivo: `public/assets/js/shared/navigation.js`
-- Acao: comentario explicito de legado e recomendacao de `navigate-buttons.js`.
-- Arquivo: `app/services/Produtividade.php`
-- Acao: docblock explicito de compatibilidade historica.
+### 3) Legado identificado na Onda 3 (limpeza aplicada depois)
+- `navigation.js` e `app/services/Produtividade.php` foram tratados em auditoria guiada posterior (remocao apos ausencia de referencias).
 
 ## Validacao executada
-- `php -l app/services/Produtividade.php` -> sem erro de sintaxe.
 - Diagnostico IDE (`ReadLints`) nos arquivos JS alterados -> sem erros.
 
 ## Status final da Onda 3 (plano anexado)

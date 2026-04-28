@@ -225,8 +225,8 @@ Arquivos de exemplo:
   **Por quê:** centraliza busca, cadastro e prioridades dos processos jurídicos.
 - `app/services/ReuManager.php`  
   **Por quê:** gerencia réus, CPF e vínculos com processos (`processoReus`).
-- `app/services/Produtividade.php`  
-  **Por quê:** registra pontuações e eventos de produtividade no sistema.
+- `app/services/ProdutividadeService.php`  
+  **Por quê:** regras, lançamentos, metas e badges do módulo Produtividade interno (substitui o antigo `Produtividade.php`, removido por falta de uso).
 - `app/services/Guias.php`  
   **Por quê:** orquestra cadastro de guias, serviços dependentes e auditoria (AuditLogger).
 - `app/services/ProcessoClasseSyncService.php`  

@@ -70,6 +70,31 @@
         }
     }
 
+    function queuePostReloadToastByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage, storageKey) {
+        const catalog = App.ToastCatalog;
+        if (!catalog || typeof catalog.resolve !== 'function') {
+            queuePostReloadToast(fallbackType, fallbackTitle, fallbackMessage, storageKey);
+            return Promise.resolve();
+        }
+
+        return catalog.resolve(key, vars || {})
+            .then(function (toast) {
+                if (!toast || !toast.message) {
+                    queuePostReloadToast(fallbackType, fallbackTitle, fallbackMessage, storageKey);
+                    return;
+                }
+                queuePostReloadToast(
+                    toast.type || fallbackType,
+                    toast.title || fallbackTitle,
+                    toast.message,
+                    storageKey
+                );
+            })
+            .catch(function () {
+                queuePostReloadToast(fallbackType, fallbackTitle, fallbackMessage, storageKey);
+            });
+    }
+
     function flushPostReloadToast(storageKey, defaults) {
         const key = String(storageKey || 'cartorio.postReloadToast');
         const fallback = defaults || {};
@@ -118,6 +143,7 @@
         notifyByKey,
         createSecondClickGuard,
         queuePostReloadToast,
+        queuePostReloadToastByKey,
         flushPostReloadToast,
         getFramePhpHref,
         escapeHtml

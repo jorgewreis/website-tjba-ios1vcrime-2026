@@ -100,7 +100,7 @@ Até à conclusão desse trabalho, o estado “entregue” deste spec continua a
 
 ## Observação sobre legado
 
-- [app/services/Produtividade.php](../../../app/services/Produtividade.php) permanece no repositório para compatibilidade histórica, mas o fluxo de guias já usa o serviço novo.
+- A classe antiga em `app/services/Produtividade.php` foi **removida** após auditoria do módulo: não havia referências no código; o fluxo atual usa exclusivamente [app/services/ProdutividadeService.php](../../../app/services/ProdutividadeService.php).
 - Próximos incrementos: seguir o plano em [`.cursor/plans/produtividade-cartorio-plano.md`](../../../.cursor/plans/produtividade-cartorio-plano.md) para o **cartório**; outros domínios (gabinete, audiências) em PRs pequenos quando priorizados.
 
 ---

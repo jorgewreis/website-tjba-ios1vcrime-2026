@@ -48,6 +48,16 @@
     }
 
     function queuePostReloadToastByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage, storageKey) {
+        if (App.Page && typeof App.Page.queuePostReloadToastByKey === 'function') {
+            return App.Page.queuePostReloadToastByKey(
+                key,
+                vars || {},
+                fallbackType,
+                fallbackTitle,
+                fallbackMessage,
+                storageKey
+            );
+        }
         const catalog = App.ToastCatalog;
         if (!catalog || typeof catalog.resolve !== 'function') {
             queuePostReloadToast(fallbackType, fallbackTitle, fallbackMessage, storageKey);

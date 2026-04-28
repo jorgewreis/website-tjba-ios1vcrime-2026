@@ -271,6 +271,12 @@
     }
 
     function postJson(url, body) {
+        var common = window.App && window.App.RecordEditCommon ? window.App.RecordEditCommon : null;
+        if (common && typeof common.postJson === 'function') {
+            return common.postJson(url, body).then(function (result) {
+                return { ok: !!result.ok, j: result.data || {} };
+            });
+        }
         return fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
