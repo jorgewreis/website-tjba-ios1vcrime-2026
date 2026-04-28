@@ -220,9 +220,16 @@
 
         if (form) {
             form.addEventListener('submit', function (e) {
+                const runId = 'run-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+                // #region agent log
+                fetch('http://127.0.0.1:7494/ingest/64db24e1-3fcf-482a-aa07-c0ab6247ae38',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'07d2e0'},body:JSON.stringify({sessionId:'07d2e0',runId:runId,hypothesisId:'H6',location:'usuarios-create.js:224',message:'Submit iniciado em usuarios-create',data:{tipo:tipo&&tipo.value?tipo.value:'',cargo:cargo&&cargo.value?cargo.value:'',setor:setor&&setor.value?setor.value:'',perfilExterno:perfilExterno&&perfilExterno.value?perfilExterno.value:''},timestamp:Date.now()})}).catch(()=>{});
+                // #endregion
                 [nome, sobrenome].forEach(function (el) { formatProper(el, 100); });
                 if (!isFormValid()) {
                     e.preventDefault();
+                    // #region agent log
+                    fetch('http://127.0.0.1:7494/ingest/64db24e1-3fcf-482a-aa07-c0ab6247ae38',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'07d2e0'},body:JSON.stringify({sessionId:'07d2e0',runId:runId,hypothesisId:'H6',location:'usuarios-create.js:229',message:'Submit bloqueado por validação frontend em usuarios-create',data:{cpfValido:validarCPFInput(),emailValido:validarEmailInput(),senhaValida:validarSenhaInput()},timestamp:Date.now()})}).catch(()=>{});
+                    // #endregion
                     notify('error', 'Validação', 'Revise os campos obrigatórios e corrija os dados informados.');
                 }
             });

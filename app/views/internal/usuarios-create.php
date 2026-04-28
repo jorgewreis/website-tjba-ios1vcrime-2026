@@ -52,7 +52,28 @@ $formValues = [
     'data_nascimento' => '',
 ];
 
+$debugLogPath = dirname(__DIR__, 3) . '/debug-07d2e0.log';
+$debugRunId = 'usuarios-create-' . date('YmdHis') . '-' . substr(bin2hex(random_bytes(4)), 0, 8);
+$debugLog = static function (string $hypothesisId, string $location, string $message, array $data = []) use ($debugLogPath, $debugRunId): void {
+    $row = [
+        'sessionId' => '07d2e0',
+        'runId' => $debugRunId,
+        'hypothesisId' => $hypothesisId,
+        'location' => $location,
+        'message' => $message,
+        'data' => $data,
+        'timestamp' => (int) round(microtime(true) * 1000),
+    ];
+    @file_put_contents($debugLogPath, json_encode($row, JSON_UNESCAPED_UNICODE) . PHP_EOL, FILE_APPEND);
+};
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $debugLog('H7', 'usuarios-create.php:73', 'POST recebido em usuarios-create', [
+        'hasCpf' => isset($_POST['cpf']) && trim((string) $_POST['cpf']) !== '',
+        'hasEmail' => isset($_POST['email']) && trim((string) $_POST['email']) !== '',
+        'tipo' => trim((string) ($_POST['tipo'] ?? '')),
+        'perfilExterno' => trim((string) ($_POST['perfil_externo'] ?? '')),
+    ]);
     $csrf = trim((string) ($_POST['csrf_token'] ?? ''));
     if (!Security::verifyCSRFToken($csrf)) {
         $mensagemErro = 'Token de segurança inválido. Tente novamente.';
@@ -139,7 +160,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $stmt = $connection->prepare('SELECT id_usuario FROM usuarios WHERE cpf = ? LIMIT 1');
                 $stmt->execute([$cpf]);
-                if ($stmt->fetch()) {
+                $existsCpfRaw = (bool) $stmt->fetch();
+                $debugLog('H8', 'usuarios-create.php:160', 'Consulta duplicidade por CPF em usuarios', [
+                    'cpfConsultadoLength' => strlen($cpf),
+                    'existsCpfRaw' => $existsCpfRaw,
+                ]);
+                if ($existsCpfRaw) {
                     $mensagemErro = 'Já existe um cadastro com este CPF.';
                     $connection->rollBack();
                 } else {
@@ -173,6 +199,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $senhaHash,
                             AvatarCatalog::getDefaultSlug(),
                         ]);
+                        $debugLog('H9', 'usuarios-create.php:194', 'INSERT usuarios com coluna sexo executado', [
+                            'hasSexoColumn' => true,
+                        ]);
                     } else {
                         $stmt = $connection->prepare("
                             INSERT INTO usuarios (
@@ -198,6 +227,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $senhaHash,
                             AvatarCatalog::getDefaultSlug(),
                         ]);
+                        $debugLog('H9', 'usuarios-create.php:220', 'INSERT usuarios sem coluna sexo executado', [
+                            'hasSexoColumn' => false,
+                        ]);
                     }
 
                     if ($perfil !== '') {
@@ -216,6 +248,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
 
                     $connection->commit();
+                    $debugLog('H9', 'usuarios-create.php:239', 'Commit concluído em usuarios-create', [
+                        'perfil' => $perfil,
+                        'setorLabel' => $setorLabel,
+                    ]);
                     $_SESSION['usuarios_create_success'] = 'Cadastro realizado com sucesso. O usuário ficará com status Pendente até ativação por admin ou diretora.';
                     header('Location: /frame.php?page=usuarioslist');
                     exit;
@@ -225,6 +261,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $connection->rollBack();
                 }
                 error_log('usuarios-create: ' . $e->getMessage());
+                $debugLog('H10', 'usuarios-create.php:250', 'Throwable em usuarios-create', [
+                    'message' => $e->getMessage(),
+                ]);
                 $mensagemErro = 'Erro ao salvar. Tente novamente ou contate o suporte.';
             }
         }

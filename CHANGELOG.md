@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0047
+
+**Data:** 2026-04-28 10:16:27 | **Commit:** `e698c1f` | **Tipo:** `patch`
+
+- feat(usuarios-create): enhance frontend logging for form submission and validation
+
 ## V. 1.96.0046
 
 **Data:** 2026-04-28 10:12:44 | **Commit:** `d5e52ca` | **Tipo:** `patch`
@@ -4752,6 +4758,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
