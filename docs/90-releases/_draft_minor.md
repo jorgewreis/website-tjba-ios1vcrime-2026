@@ -193,4 +193,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(cadastro_estudantes): enhance CPF duplication check and logging** `[20e0adc]`
 - **fix(cadastro_estudantes): improve CPF duplication handling and error messaging** `[c45f9dd]`
 - **refactor(usuarios-create): remove debug logging and streamline CPF duplication check** `[e500ad1]`
+- **fix(cadastro_estudantes): enhance CPF duplication checks and logging details** `[7d6e5c9]`
 
