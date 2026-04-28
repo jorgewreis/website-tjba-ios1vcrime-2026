@@ -128,10 +128,20 @@ try {
     $stmt->execute([$cpfFormatado]);
     $estudanteRow = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     $existsEstudanteCpf = $estudanteRow !== null;
+    $stmtCountFormatado = $pdo->prepare("SELECT COUNT(*) FROM estudantes WHERE cpf = ?");
+    $stmtCountFormatado->execute([$cpfFormatado]);
+    $countEstudantesCpfFormatado = (int) $stmtCountFormatado->fetchColumn();
+    $stmtCountNumerico = $pdo->prepare("SELECT COUNT(*) FROM estudantes WHERE REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', '') = ?");
+    $stmtCountNumerico->execute([$cpfNumerico]);
+    $countEstudantesCpfNumerico = (int) $stmtCountNumerico->fetchColumn();
+    $dbName = (string) ($pdo->query('SELECT DATABASE()')->fetchColumn() ?: '');
     $debugLog('H2', 'cadastro_estudantes.php:104', 'Resultado verificação duplicidade em estudantes', [
         'existsEstudanteCpf' => $existsEstudanteCpf,
         'estudanteId' => $existsEstudanteCpf ? (string) ($estudanteRow['id'] ?? '') : '',
         'cpfFormatoConsulta' => strlen($cpfFormatado),
+        'countEstudantesCpfFormatado' => $countEstudantesCpfFormatado,
+        'countEstudantesCpfNumerico' => $countEstudantesCpfNumerico,
+        'database' => $dbName,
     ]);
 
     // Verificação: CPF já em usuarios (acesso ao sistema)
@@ -161,11 +171,21 @@ try {
             'errorCode' => $errorCode,
             'existsEstudanteCpf' => $existsEstudanteCpf,
             'existsUsuarioCpf' => $existsUsuarioCpf,
+            'countEstudantesCpfFormatado' => $countEstudantesCpfFormatado,
+            'countEstudantesCpfNumerico' => $countEstudantesCpfNumerico,
+            'database' => $dbName,
         ]);
         echo json_encode([
             'success' => false,
             'error_code' => $errorCode,
             'message' => $message,
+            'debug_meta' => [
+                'database' => $dbName,
+                'count_estudantes_cpf_formatado' => $countEstudantesCpfFormatado,
+                'count_estudantes_cpf_numerico' => $countEstudantesCpfNumerico,
+                'exists_estudantes' => $existsEstudanteCpf,
+                'exists_usuarios' => $existsUsuarioCpf,
+            ],
         ]);
         exit;
     }
