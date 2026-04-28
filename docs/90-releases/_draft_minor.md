@@ -10,4 +10,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(dashboard): add allocation rules and user-specific allocation discovery** `[e07d3a7]`
 - **fix(dashboard): simplify dashboard card metrics and improve status filtering** `[53e4abe]`
 - **fix(dashboard): enhance allocation card filtering and add type constraint** `[5adb19c]`
+- **fix(audiencias): update status handling and visibility logic in audience panels** `[685bd6f]`
 
