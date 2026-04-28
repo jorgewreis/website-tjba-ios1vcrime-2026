@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0002
+
+**Data:** 2026-04-28 11:06:59 | **Commit:** `74c515e` | **Tipo:** `patch`
+
+- fix(cadastro-form): prevent multiple form submissions and update timeout handling
+
 ## V. 1.97.0001
 
 **Data:** 2026-04-28 11:01:22 | **Commit:** `218485d` | **Tipo:** `patch`
@@ -4794,6 +4800,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

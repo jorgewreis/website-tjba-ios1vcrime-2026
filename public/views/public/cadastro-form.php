@@ -174,6 +174,10 @@ $faculdades = [
 
             const form = document.getElementById('formEstudante');
             const inputNome = document.getElementById('nome_completo');
+            if (!form || form.dataset.submitBound === '1') {
+                return;
+            }
+            form.dataset.submitBound = '1';
 
             function formatarNome(val) {
                 if (typeof TextFormatter !== 'undefined' && typeof TextFormatter.formatProperName === 'function') {
@@ -258,7 +262,7 @@ $faculdades = [
                             message: data.message || 'Cadastro realizado com sucesso.'
                         });
                         form.reset();
-                        global.setTimeout(redirectToLogin, 1800);
+                        window.setTimeout(redirectToLogin, 1800);
                     } else {
                         showToast({ type: 'error', title: 'Erro', message: data.message || 'Erro ao enviar. Tente novamente.' });
                     }
