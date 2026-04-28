@@ -10,4 +10,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(toast): expand notification messages and improve handling across various modules** `[b3c2100]`
 - **feat(toast): add new success messages for audience management and improve notification handling** `[cfeead2]`
 - **feat(toast): add new error and confirmation messages for various actions** `[5644a5c]`
+- **refactor(confirmations): streamline confirmation actions for task deletions and removals** `[593b574]`
 
