@@ -1,5 +1,6 @@
 // navigation.js
-// Funções de navegação para páginas
+// LEGADO: preferir navigate-buttons.js (data-nav-href) para novos fluxos.
+// Mantido apenas por compatibilidade com chamadas antigas de setupNavigationButton.
 
 function setupNavigationButton(btnId, targetPage) {
     if (typeof document === 'undefined') {

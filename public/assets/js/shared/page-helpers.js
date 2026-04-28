@@ -24,6 +24,18 @@
         }
     }
 
+    function notifyByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        const catalog = App.ToastCatalog;
+        if (!catalog || typeof catalog.notifyByKey !== 'function') {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+            return Promise.resolve();
+        }
+
+        return catalog.notifyByKey(key, vars || {}).catch(function () {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+        });
+    }
+
     function createSecondClickGuard(options) {
         const opts = options || {};
         const ttlMs = Number(opts.ttlMs) || 5000;
@@ -103,6 +115,7 @@
 
     App.Page = {
         notify,
+        notifyByKey,
         createSecondClickGuard,
         queuePostReloadToast,
         flushPostReloadToast,

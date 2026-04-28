@@ -19,6 +19,10 @@
     }
 
     function notifyByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        if (pageTools && typeof pageTools.notifyByKey === 'function') {
+            pageTools.notifyByKey(key, vars || {}, fallbackType, fallbackTitle, fallbackMessage);
+            return;
+        }
         var catalog = window.App && window.App.ToastCatalog ? window.App.ToastCatalog : null;
         if (!catalog || typeof catalog.notifyByKey !== 'function') {
             notify(fallbackType, fallbackTitle, fallbackMessage);

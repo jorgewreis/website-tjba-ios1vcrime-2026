@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0019
+
+**Data:** 2026-04-28 17:30:37 | **Commit:** `585e3f4` | **Tipo:** `patch`
+
+- refactor(notifications): enhance notifyByKey function across multiple modules
+
 ## V. 1.97.0018
 
 **Data:** 2026-04-28 17:02:45 | **Commit:** `a2bfca9` | **Tipo:** `patch`
@@ -4896,6 +4902,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

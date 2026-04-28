@@ -1,6 +1,10 @@
 <?php
 declare(strict_types=1);
 
+/**
+ * Classe legada de produtividade.
+ * Mantida por compatibilidade histórica; novos fluxos devem usar serviços atuais por módulo.
+ */
 class Produtividade
 {
     private PDO $pdo;
