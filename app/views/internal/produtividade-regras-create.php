@@ -163,9 +163,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             </div>
 
-            <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
-                <button type="button" class="btn btn-secondary height-md" data-nav-href="/frame.php?page=produtividaderegras">Voltar</button>
-                <button type="submit" class="btn btn-primary height-md" <?php echo $isGestao ? '' : 'disabled'; ?>>Salvar regra</button>
+            <div class="card-buttons">
+                <div class="display-flex row row-fit gap-y-md align-center justify-start">
+                    <button type="button" class="btn btn-secondary height-md" data-nav-href="/frame.php?page=produtividaderegras">Voltar</button>
+                </div>
+                <div class="display-flex row row-fit gap-y-md align-center justify-end">
+                    <button type="submit" class="btn btn-primary height-md" <?php echo $isGestao ? '' : 'disabled'; ?>>Salvar regra</button>
+                </div>
             </div>
         </form>
     </div>

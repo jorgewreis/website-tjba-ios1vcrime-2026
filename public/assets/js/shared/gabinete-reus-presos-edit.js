@@ -11,6 +11,9 @@
 
         const settings = config || {};
         const reuId = String(global.document.getElementById('hidden-grp-id')?.value || '').trim();
+        const requireSecondClick = (typeof common.createSecondClickGuard === 'function')
+            ? common.createSecondClickGuard()
+            : null;
 
         function goBack() {
             global.location.href = settings.backHref || '/frame.php?page=reuspresos';
@@ -475,6 +478,15 @@
         });
 
         global.document.getElementById('btn-grp-arquivar')?.addEventListener('click', function () {
+            if (typeof requireSecondClick === 'function') {
+                const confirmed = requireSecondClick(
+                    'gabinete-reus-presos-arquivar',
+                    'Clique novamente para confirmar o arquivamento definitivo.'
+                );
+                if (!confirmed) {
+                    return;
+                }
+            }
             postJson('/api/gabinete-reus-presos/archive.php', { id: reuId }).then(function (res) {
                 if (res.ok && res.j && res.j.success) {
                     if (typeof common.notifyByKey === 'function') {

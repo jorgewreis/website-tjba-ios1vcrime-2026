@@ -312,6 +312,7 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
         
         <div class="card-buttons">
             <button type="button" class="btn btn-secondary-outline" id="btn-oficio-limpar">Limpar</button>
+            <button type="button" class="btn btn-primary-outline" id="alterar-regra-btn" style="display: none;">Alterar regra de alocação</button>
             <button type="button" class="btn btn-primary" id="btn-oficio-registrar">Cadastrar</button>
         </div>
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
@@ -539,10 +540,6 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                 </div>
             </div>
         <?php endif; ?>
-
-        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
-            <button type="button" class="btn btn-primary-outline" id="alterar-regra-btn" style="display: none;">Alterar regra de alocação</button>
-        </div>
 
         <div class="card-buttons">
             <span class="pagination-info">

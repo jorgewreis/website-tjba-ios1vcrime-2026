@@ -160,7 +160,7 @@ if ($totalPages > 0) {
                 $listExportQuery = $baseQueryParams;
                 include __DIR__ . '/_list_export_buttons.php';
                 ?>
-                <button type="button" class="btn btn-primary" id="novo-cadastro-btn">Novo cadastro</button>
+                <button type="button" class="btn btn-primary" id="novo-cadastro-btn" data-nav-href="/frame.php?page=ceapacreate">Novo cadastro</button>
             </div>
         </div>
 

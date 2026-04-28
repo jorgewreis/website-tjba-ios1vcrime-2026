@@ -100,7 +100,6 @@
                 }
                 btn.disabled = false;
             });
-            });
         });
     }
 
