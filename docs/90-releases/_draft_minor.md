@@ -12,4 +12,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(toast): add new error and confirmation messages for various actions** `[5644a5c]`
 - **refactor(confirmations): streamline confirmation actions for task deletions and removals** `[593b574]`
 - **refactor(buttons): standardize button layouts and improve accessibility** `[e27d0fd]`
+- **refactor(toast): update toast notification guidelines and improve button accessibility** `[a2bfca9]`
 
