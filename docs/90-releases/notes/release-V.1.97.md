@@ -1,0 +1,209 @@
+![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
+
+**Data de Lançamento:** 28 de abril de 2026
+
+# V. 1.97
+
+> refactor: remove EstudantesListRepository and update related services
+
+## Nível de Impacto
+
+🟡 **MEDIO**
+
+## Alterações
+
+- **Fix: correcao de validacao cnj** `[00cb0c2]`
+- **Feat: implementacao de sistema para remover alocacao de usuario por regra** `[9bcd73c]`
+- **Fix: correcao de erro na remocao de alocacao** `[46e6215]`
+- **Fix: correcao de feedbacks para toasts** `[f737aa2]`
+- **Fix: correcao de movimentacoes das subtarefas** `[5e8ad8b]`
+- **Fix: correcao de movimentacao de subtarefas** `[dc88dc2]`
+- **Feat: nova implementacao edit pages** `[0db7b91]`
+- **Fix: ajustes de estilo** `[cbc4184]`
+- **Fix: pequenos ajustes cartas expedidas** `[074f624]`
+- **Fix: correcao de layouts** `[34777a6]`
+- **Fix: pequenos ajustes** `[56ad09d]`
+- **Fix: correcao de toasts e alerts** `[bda95f6]`
+- **Fix: correcao de edit usuario externo** `[c299674]`
+- **Feat: config de permissoes de usuario** `[56473ed]`
+- **Fix: correcao de usuario estagiario** `[b5b24bf]`
+- **Fix: correcao de input de dados pessoais** `[85b57b5]`
+- **Feat: nova implementacao de paginas de erro melhoradas** `[88bd330]`
+- **Fix: correcao input** `[2dff2b7]`
+- **Fix: correcao de bugs** `[5064596]`
+- **Feat: criacao de novo dashboard para usuario externo** `[cb53908]`
+- **Fix: correcao de perfis** `[b79390d]`
+- **Feat: implementacao de funcao para alterar avatar de usuario** `[b45587b]`
+- **Fix: alteracao do modelo de imagens do avatar** `[135be03]`
+- **Fix: pequenos ajustes do avatar** `[a5a0d41]`
+- **Fix: correcao de regra de iniciais de usuario** `[18edf6e]`
+- **Fix: pequeno ajuste de css** `[97d8896]`
+- **Fix: pequenos ajustes css** `[88e22fb]`
+- **Fix: pequenos ajustes de presos** `[a54091a]`
+- **Fix: mais ajustes** `[06ffbb3]`
+- **Fix: pequenos ajustes** `[f42fe04]`
+- **Fix: correcao de datas de mov** `[687ec43]`
+- **Fix: pequenos ajustes** `[2a21b8e]`
+- **Fix: correcao de classes** `[b714740]`
+- **Fix: pequenas correcoes** `[28372be]`
+- **Fix: correcao de bd** `[6e43043]`
+- **Fix: ajustes de codigo** `[6fc0755]`
+- **Feat: novo modelo pauta de audiencias** `[6dec536]`
+- **Fix: correcao no banco de dados** `[c0d1964]`
+- **Fix: correcao de inputs** `[b2f5a12]`
+- **Fix: correcao de cadastro de parte** `[66276c9]`
+- **Fix: pequenos ajustes** `[1bf1223]`
+- **Fix: pequena correcao de valores** `[f190481]`
+- **Fix: correcao no cadastro de parte** `[dcac95d]`
+- **Feat: mini status de cumprimento de partes** `[eb8966c]`
+- **Fix: pequeno ajuste de tamanho** `[4944bc9]`
+- **Fix: correcao de erros** `[c0e71c4]`
+- **Fix: correcao de function** `[5c29143]`
+- **Fix: correcao de input classe** `[6146c71]`
+- **Fix: correcao reu preso** `[dff7692]`
+- **Fix: correção de mini status de audiencias** `[f5aa79b]`
+- **Fix: melhorias no cadastro** `[349cb30]`
+- **Fix: pequenos ajustes** `[3bb7905]`
+- **Fix: melhorias no codigo** `[28c9d0b]`
+- **Fix: correcao de bug** `[4c020fa]`
+- **Fix: tentativa de correcao** `[8236c27]`
+- **Fix: nova tentativa** `[fbb328a]`
+- **Fix: mais uma tentativa** `[1b268f6]`
+- **Fix: mais outra tentativa** `[bd05682]`
+- **Fix: ultima tentativa padrao de correcao** `[e78cb6d]`
+- **Fix: tentativa de correcao com debug** `[18b60f1]`
+- **Fix: nova tentativa de correcao debug** `[95a7f18]`
+- **Fix: correcao parte 1 debug** `[10e06c3]`
+- **Fix: correcao parte 2 debug** `[a7951ea]`
+- **Fix: tentativa parte 3 debug** `[d79c533]`
+- **Fix: nova tentativa parte 4 debug** `[f0975e4]`
+- **Fix: debug parte 5** `[639cc37]`
+- **Fix: debug parte 6 premium** `[5986784]`
+- **Fix: debug 7 premium** `[6f9a07f]`
+- **Fix: debug premium 8** `[3ddba76]`
+- **Fix: debug parcial ok** `[075047e]`
+- **Fix: novo debug p 1** `[7af4f47]`
+- **Fix: debug p2 premium** `[3681fd2]`
+- **Fix: debug premium 3** `[b582174]`
+- **Fix: debug premium 4** `[0363f20]`
+- **Fix: debug premium 5** `[ddd05f8]`
+- **Fix: debug parte 6** `[b74f4f3]`
+- **Fix: debug parte 7** `[bc55ff1]`
+- **Fix: ajustes finais debug** `[dfc7c3b]`
+- **Fix: ajustes de buttons** `[64cac9c]`
+- **Fix: correcao de modelos buttons** `[5f1ceb8]`
+- **Fix: pequenos ajustes** `[184c4ef]`
+- **Fix: regra de bloqueio de exclusao** `[0f36484]`
+- **Fix: correcao no envio de pdf** `[a2c8ad8]`
+- **Fix: tentativa de envio de pdf** `[3801252]`
+- **Fix: nova tentativa** `[53c9802]`
+- **Fix: melhorias na pagina de atas** `[4fd0f3d]`
+- **Fix: melhorias de dashboard** `[4428525]`
+- **Fix: alteracao do visual do card** `[fe67ce7]`
+- **Fix: melhorias no dashboard externo** `[1c7f6f4]`
+- **Feat: form sexo user** `[e8c9bbc]`
+- **Fix: melhorias no edit user** `[cc5fed6]`
+- **Fix: correcao de layout** `[689b74f]`
+- **Fix: melhorias nas atas** `[a04aa5d]`
+- **Fix: ajuste de paginacao** `[03f09ba]`
+- **Feat: implementacao de data de inicio e fim** `[5c81b28]`
+- **Feat: melhoria na atualização de status** `[ffcf20e]`
+- **Fix: correcao e ajustes** `[cac89bd]`
+- **Fix: correcao de classe** `[c82359b]`
+- **Feat: add CEAPA functionality and improve reu selection in forms** `[009c32e]`
+- **Fix: corrigir referência de chave estrangeira na cláusula FROM do CeapaRepository** `[9c2d8ff]`
+- **Fix: correct label casing for CEAPA in home.php** `[8bd4883]`
+- **Feat: add countByTipoSuspensao method in CeapaRepository and corresponding service method; update views and API to support tipo_suspensao filtering** `[304f8ed]`
+- **Refactor: update cartorio-ceapa-list view layout and add textarea styles in form.css** `[6f1dfee]`
+- **Feat: implement delete functionality in CeapaRepository and CeapaService; update views to support task deletion with confirmation** `[fbcb410]`
+- **Fix: update layout of cartorio-ceapa-list view by adjusting column widths and removing redundant date display** `[7cbd896]`
+- **feat(gabinete-reus-presos-edit): add datetime formatting function and simplify UI labels** `[2cd0ace]`
+- **refactor(gabinete-reus-presos-edit): update button styles and adjust UI for better readability** `[4868e0c]`
+- **feat(gabinete-reus-presos-edit): implement date input restrictions and enhance UI interaction for movement types** `[fa6acf4]`
+- **feat(access): add new access rules for 'ceaparules' and 'oficiosrules'; implement deleteById method in multiple repositories and services for better resource management** `[c8c962a]`
+- **refactor(gabinete-reus-presos-list): remove unused styles and simplify description text for clarity** `[d0e1859]`
+- **style(toast): enhance toast component styles and remove obsolete JavaScript file** `[58fa8dd]`
+- **refactor(views): update input fields to include data attributes for DataJud integration and replace obsolete script references with new module paths** `[0c8e637]`
+- **feat(cartorio): implement automatic allocation rules for CEAPA and Ofícios, including user permission checks and UI updates** `[f6e498d]`
+- **feat(cartorio): refactor user allocation logic to utilize AlocacaoRegrasUsuariosHelper for eligibility checks and streamline user list retrieval across multiple views** `[5f46ccc]`
+- **refactor(cartorio): streamline allocation rule views by consolidating common elements and enhancing user eligibility checks across multiple modules** `[e4da9c4]`
+- **fix(views): remove invisible characters from PHP opening tags in multiple view files** `[47a38f8]`
+- **feat(database): enhance database connection configuration to support dynamic port and improved error logging** `[795a91c]`
+- **feat(views): enhance oficio selection options by categorizing types into groups for better organization and user experience** `[2443f52]`
+- **feat(cartorio): add administrative oficio types and enhance process number validation logic** `[3b3ddcd]`
+- **feat(timeline): add daily timeline visualization for audience schedules, including estimated and actual durations** `[cdf35e8]`
+- **feat(timeline): enhance daily timeline visualization with improved styling and functionality, including hour ticks, current time indicator, and updated color coding for estimated and actual durations** `[b175b3a]`
+- **feat(timeline): enhance timeline components with improved styling, including new shading elements, updated label visibility, and refined bar heights for better visual clarity** `[137e4d5]`
+- **fix(timeline): adjust timeline styling for improved visual consistency, including height and color updates for hour ticks and bars** `[67216d2]`
+- **feat(timeline): refactor timeline rendering logic for improved data handling and visual updates, including enhanced item management and styling adjustments** `[cb2d6a0]`
+- **fix(timeline): refine timeline styling and layout adjustments, including updates to bar heights, colors, and label visibility for enhanced clarity** `[4a0218d]`
+- **fix(timeline): update late bar color to transparent for improved visual distinction in timeline components** `[9e204a0]`
+- **feat(cartorio): enhance oficio creation response and improve toast notifications with highlighting functionality** `[3565620]`
+- **feat(internal): implement conditional delete permissions for estagiario profiles on edit pages** `[f3dfc83]`
+- **feat(audiencias): enhance audience display logic and improve time formatting for student panels** `[35cff4f]`
+- **feat(audiencias): add method to list designated hearings by process ID and integrate into service logic** `[481338c]`
+- **fix(timeline): adjust height and border radius of timeline bars for improved visual consistency** `[3afb484]`
+- **feat(audiencias): improve status normalization and time display for hearings in internal views** `[fa98d16]`
+- **feat(audiencias): add ensureEffectiveTimesByStatus method to manage effective times based on status changes** `[1eaf16f]`
+- **refactor(audiencias): simplify realStartDisplay calculation in internal views for better readability** `[fd7e71e]`
+- **fix(timeline): adjust height of timeline bars and improve sorting logic for better display of scheduled times** `[69066f9]`
+- **refactor(date-parsing): enhance date parsing logic in internal views for improved accuracy and consistency** `[512b286]`
+- **refactor(date-calculation): enhance time conversion logic in internal views to include seconds and improve condition checks for timeline rendering** `[dbb5602]`
+- **refactor(timeline): update timeline bar styles and status classification for improved visual representation and maintainability** `[26827cf]`
+- **refactor(timeline): adjust timeline bar styles and status classification for improved visual consistency and maintainability** `[eef7788]`
+- **fix: enhance error handling in SalaAudienciasAtaService for directory checks and remove redundant confirmation click in midias-list.js** `[8a26c49]`
+- **fix(sala-midias): corrige erro SQLSTATE HY093 por placeholder repetido** `[b143125]`
+- **feat(sala-midias): adiciona exclusao de tarefa com subtarefas e alocacoes** `[935e3c5]`
+- **fix(sala-midias): sincronizacao e upload pre-populam qtd com valor do download** `[32ebc5e]`
+- **refactor(sala-midias): oculta input readonly de qtd em sincronizacao e upload** `[b682feb]`
+- **fix(text-formatter): carrega text-formatter.js nas telas internas e aplica em pauta-parte-edit** `[0fe9b8f]`
+- **fix(sala-audiencias): bloqueia inscricao de estudantes em processos sensiveis [security]** `[059616e]`
+- **feat(sala-audiencias): mostra status da audiencia na coluna de inscricao quando nao designada** `[d89b805]`
+- **refactor(sala-audiencias): painel estudante mostra inscritos e oculta coluna quando indisponivel** `[7455636]`
+- **feat(sala-audiencias): enriquece minhas inscricoes com realizacao, ata e midia** `[5c1fd11]`
+- **refactor(sala-audiencias): compacta minhas inscricoes em uma linha e renomeia labels da midia** `[2eb9cf2]`
+- **fix(sala-audiencias): download da ata em minhas inscricoes abre em nova aba** `[2469201]`
+- **fix(sala-midias): criacao automatica de tarefa quando pauta vira finalizada** `[0223675]`
+- **fix(sala-audiencias): corrige contagem de estudantes inscritos no painel do dia** `[b022c31]`
+- **refactor(sala-audiencias): lista simples de inscritos no painel do dia** `[8c399f0]`
+- **refactor(sala-audiencias): remove duplicidade na secao de inscritos do painel do dia** `[9bfcd08]`
+- **fix(sala-audiencias): inscrever-me continua funcionando apos polling recriar o botao** `[781560e]`
+- **fix(sala-midias): criacao automatica robusta e script de backfill** `[f046f57]`
+- **chore(gitignore): explicitar versionamento da pasta scripts** `[ddfa847]`
+- **fix(scripts): mensagem clara quando .env ou DB_* faltam no backfill** `[2a614df]`
+- **fix(cartorio-guias-list): update date validation logic to prevent future and today dates** `[b30fa22]`
+- **fix(guias-service): update date validation logic and improve error message** `[35f0e4f]`
+- **feat(guias-service): add automatic penalty value synchronization** `[2563a17]`
+- **refactor(cartorio-guias-list): enhance layout and input field sizes for better usability** `[526c753]`
+- **fix(cartorio-guias-list): update default class label and styling for better clarity** `[972a65a]`
+- **refactor(medidas-protetivas): streamline victim handling and improve error validation** `[7315cab]`
+- **refactor(cartorio-medidas-protetivas): enhance UI and improve data handling** `[aeaed0c]`
+- **refactor(cartorio-medidas-protetivas): update UI and improve layout for medidas protetivas creation** `[6741b38]`
+- **feat(layout): add new card-allocate-rule style for improved UI consistency** `[4ea1033]`
+- **refactor(cartorio-cartas-expedidas): update UI elements for clarity and consistency** `[2411861]`
+- **refactor(cartorio-cartas-expedidas): enhance UI labels and layout for better readability** `[a565e97]`
+- **refactor(cartorio-cartas-expedidas): improve label clarity and consistency in cartas expedidas list** `[bf2c053]`
+- **refactor(cartorio-cartas-expedidas): update filters layout and status display for improved UI** `[8befdf7]`
+- **fix(cartorio-cartas-expedidas): correct CSS class spacing for status display** `[d6823e8]`
+- **refactor(cartorio-cartas-expedidas): standardize task labels for consistency** `[24f16f4]`
+- **refactor(cartorio-cartas-expedidas): update task label for clarity and add subtask display logic** `[49af461]`
+- **refactor(cartorio-cartas-expedidas): simplify SQL query and enhance UI layout** `[1827bae]`
+- **refactor(cartorio-cartas): enhance UI and improve layout consistency** `[34391d4]`
+- **refactor(cartorio-cartas-recebidas): update task labels for brevity and clarity** `[3ecf36f]`
+- **refactor(cartorio-cartas): improve layout and enhance task labels** `[70a5b2f]`
+- **refactor(cartorio-cartas): standardize ordering and improve SQL readability** `[e574c5f]`
+- **refactor(oficios-cartorio): improve task filtering logic and update UI elements** `[f7010f2]`
+- **refactor(cartorio-oficios): improve layout and button organization** `[c44b88e]`
+- **feat(cartorio-medidas-protetivas): add cadastro no BNMP functionality** `[9f4c306]`
+- **refactor(cartorio-medidas-protetivas): update messaging and reorganize server allocation** `[0a16be8]`
+- **feat(cadastro-form): add frontend validation logging for user inputs** `[d5e52ca]`
+- **feat(usuarios-create): enhance frontend logging for form submission and validation** `[e698c1f]`
+- **fix(cadastro_estudantes): enhance CPF duplication check and logging** `[20e0adc]`
+- **fix(cadastro_estudantes): improve CPF duplication handling and error messaging** `[c45f9dd]`
+- **refactor(usuarios-create): remove debug logging and streamline CPF duplication check** `[e500ad1]`
+- **fix(cadastro_estudantes): enhance CPF duplication checks and logging details** `[7d6e5c9]`
+- **refactor: remove EstudantesListRepository and update related services** `[4fdd979]`
+
+---
+
+*Documento gerado automaticamente pelo sistema de versionamento.*

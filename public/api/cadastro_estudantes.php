@@ -99,25 +99,46 @@ try {
     $pdo = Conection::getInstance()->getConnection();
 
     // Fonte única: usuários. Compara CPF ignorando máscara para evitar falso negativo por formato.
-    $stmt = $pdo->prepare("SELECT id_usuario FROM usuarios WHERE REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', '') = ? LIMIT 1");
+    $stmt = $pdo->prepare("SELECT id_usuario, cadastro_ativo FROM usuarios WHERE REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', '') = ? LIMIT 1");
     $stmt->execute([$cpfNumerico]);
     $usuarioRow = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     $existsUsuarioCpf = $usuarioRow !== null;
+    $usuarioExistenteId = $existsUsuarioCpf ? trim((string) ($usuarioRow['id_usuario'] ?? '')) : '';
 
     if ($existsUsuarioCpf) {
-        $errorCode = 'STUDENT_DUPLICATE_USUARIOS';
-        $message = 'Já existe um usuário com este CPF no sistema. Utilize a área de login ou recuperação de senha.';
-        echo json_encode([
-            'success' => false,
-            'error_code' => $errorCode,
-            'message' => $message,
-        ]);
-        exit;
+        $stPerfis = $pdo->prepare("SELECT perfil FROM usuario_perfil WHERE usuario = ?");
+        $stPerfis->execute([$usuarioExistenteId]);
+        $perfisExistentes = array_map(
+            static fn ($p): string => strtoupper(trim((string) $p)),
+            $stPerfis->fetchAll(PDO::FETCH_COLUMN) ?: []
+        );
+
+        $isSomenteEstudante = !empty($perfisExistentes)
+            && count(array_diff($perfisExistentes, ['ESTUDANTE'])) === 0;
+        $semPerfil = empty($perfisExistentes);
+
+        if (!$isSomenteEstudante && !$semPerfil) {
+            echo json_encode([
+                'success' => false,
+                'error_code' => 'STUDENT_DUPLICATE_USUARIOS_INTERNAL',
+                'message' => 'Este CPF já está vinculado a um usuário com perfil interno/administrativo. Contate o suporte para vincular como estudante sem sobrescrever o cadastro atual.',
+            ]);
+            exit;
+        }
+
+        if ($isSomenteEstudante) {
+            echo json_encode([
+                'success' => false,
+                'error_code' => 'STUDENT_DUPLICATE_USUARIOS',
+                'message' => 'Já existe um usuário com este CPF no sistema. Utilize a área de login ou recuperação de senha.',
+            ]);
+            exit;
+        }
     }
 
     $pdo->beginTransaction();
 
-    $idUsuario = 'USR-' . strtoupper(bin2hex(random_bytes(13)));
+    $idUsuario = $usuarioExistenteId !== '' ? $usuarioExistenteId : ('USR-' . strtoupper(bin2hex(random_bytes(13))));
     $senhaHash = Security::hashPassword($senha);
 
     $stHasSexo = $pdo->prepare(
@@ -127,28 +148,50 @@ try {
     $hasSexoColumn = ((int) $stHasSexo->fetchColumn()) > 0;
 
     // Fonte única em usuarios: estudante externo com instituição = faculdade informada.
-    if ($hasSexoColumn) {
-        $stmt = $pdo->prepare("
-            INSERT INTO usuarios (
-                id_usuario, nome, sobrenome, sexo, data_nascimento, cargo, instituicao, cpf, telefone, email,
-                senha_hash, meta, ultimo_acesso, token_acesso, token_expira, cadastro_ativo, created_at, updated_at
-            ) VALUES (
-                ?, ?, ?, ?, '-', 'Estudante', ?, ?, ?, ?,
-                ?, '-', NULL, NULL, NULL, 1, NOW(), NOW()
-            )
-        ");
-        $stmt->execute([$idUsuario, $nome, $sobrenome, $sexo, $faculdade, $cpfFormatado, $telefone, $email, $senhaHash]);
+    if ($usuarioExistenteId !== '') {
+        if ($hasSexoColumn) {
+            $stmt = $pdo->prepare("
+                UPDATE usuarios
+                   SET nome = ?, sobrenome = ?, sexo = ?, data_nascimento = '-', cargo = 'Estudante', instituicao = ?,
+                       cpf = ?, telefone = ?, email = ?, senha_hash = ?, cadastro_ativo = 1, updated_at = NOW()
+                 WHERE id_usuario = ?
+                 LIMIT 1
+            ");
+            $stmt->execute([$nome, $sobrenome, $sexo, $faculdade, $cpfFormatado, $telefone, $email, $senhaHash, $idUsuario]);
+        } else {
+            $stmt = $pdo->prepare("
+                UPDATE usuarios
+                   SET nome = ?, sobrenome = ?, data_nascimento = '-', cargo = 'Estudante', instituicao = ?,
+                       cpf = ?, telefone = ?, email = ?, senha_hash = ?, cadastro_ativo = 1, updated_at = NOW()
+                 WHERE id_usuario = ?
+                 LIMIT 1
+            ");
+            $stmt->execute([$nome, $sobrenome, $faculdade, $cpfFormatado, $telefone, $email, $senhaHash, $idUsuario]);
+        }
     } else {
-        $stmt = $pdo->prepare("
-            INSERT INTO usuarios (
-                id_usuario, nome, sobrenome, data_nascimento, cargo, instituicao, cpf, telefone, email,
-                senha_hash, meta, ultimo_acesso, token_acesso, token_expira, cadastro_ativo, created_at, updated_at
-            ) VALUES (
-                ?, ?, ?, '-', 'Estudante', ?, ?, ?, ?,
-                ?, '-', NULL, NULL, NULL, 1, NOW(), NOW()
-            )
-        ");
-        $stmt->execute([$idUsuario, $nome, $sobrenome, $faculdade, $cpfFormatado, $telefone, $email, $senhaHash]);
+        if ($hasSexoColumn) {
+            $stmt = $pdo->prepare("
+                INSERT INTO usuarios (
+                    id_usuario, nome, sobrenome, sexo, data_nascimento, cargo, instituicao, cpf, telefone, email,
+                    senha_hash, meta, ultimo_acesso, token_acesso, token_expira, cadastro_ativo, created_at, updated_at
+                ) VALUES (
+                    ?, ?, ?, ?, '-', 'Estudante', ?, ?, ?, ?,
+                    ?, '-', NULL, NULL, NULL, 1, NOW(), NOW()
+                )
+            ");
+            $stmt->execute([$idUsuario, $nome, $sobrenome, $sexo, $faculdade, $cpfFormatado, $telefone, $email, $senhaHash]);
+        } else {
+            $stmt = $pdo->prepare("
+                INSERT INTO usuarios (
+                    id_usuario, nome, sobrenome, data_nascimento, cargo, instituicao, cpf, telefone, email,
+                    senha_hash, meta, ultimo_acesso, token_acesso, token_expira, cadastro_ativo, created_at, updated_at
+                ) VALUES (
+                    ?, ?, ?, '-', 'Estudante', ?, ?, ?, ?,
+                    ?, '-', NULL, NULL, NULL, 1, NOW(), NOW()
+                )
+            ");
+            $stmt->execute([$idUsuario, $nome, $sobrenome, $faculdade, $cpfFormatado, $telefone, $email, $senhaHash]);
+        }
     }
 
     // Garantir que o perfil ESTUDANTE exista em perfis (evita erro de FK se a tabela tiver restrição)
@@ -159,9 +202,13 @@ try {
         // ignora se a tabela perfis não existir ou tiver estrutura diferente
     }
 
-    $idUsuPerfil = 'USP-' . strtoupper(bin2hex(random_bytes(13)));
-    $stmt = $pdo->prepare("INSERT INTO usuario_perfil (id_usu_perfil, usuario, perfil) VALUES (?, ?, 'ESTUDANTE')");
-    $stmt->execute([$idUsuPerfil, $idUsuario]);
+    $stPerfilExiste = $pdo->prepare("SELECT id_usu_perfil FROM usuario_perfil WHERE usuario = ? AND perfil = 'ESTUDANTE' LIMIT 1");
+    $stPerfilExiste->execute([$idUsuario]);
+    if (!$stPerfilExiste->fetch(PDO::FETCH_ASSOC)) {
+        $idUsuPerfil = 'USP-' . strtoupper(bin2hex(random_bytes(13)));
+        $stmt = $pdo->prepare("INSERT INTO usuario_perfil (id_usu_perfil, usuario, perfil) VALUES (?, ?, 'ESTUDANTE')");
+        $stmt->execute([$idUsuPerfil, $idUsuario]);
+    }
 
     // Alocação automática: Setor "Sala de Audiências" (Tipo externo, Cargo Estudante já definidos acima)
     try {
@@ -169,9 +216,13 @@ try {
         $stmt->execute();
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($row && !empty($row['id_setor'])) {
-            $idUsuSetor = 'USO-' . strtoupper(bin2hex(random_bytes(13)));
-            $stmt = $pdo->prepare("INSERT INTO usuario_setor (id_usu_setor, usuario, setor) VALUES (?, ?, ?)");
-            $stmt->execute([$idUsuSetor, $idUsuario, $row['id_setor']]);
+            $stSetorExiste = $pdo->prepare("SELECT id_usu_setor FROM usuario_setor WHERE usuario = ? AND setor = ? LIMIT 1");
+            $stSetorExiste->execute([$idUsuario, $row['id_setor']]);
+            if (!$stSetorExiste->fetch(PDO::FETCH_ASSOC)) {
+                $idUsuSetor = 'USO-' . strtoupper(bin2hex(random_bytes(13)));
+                $stmt = $pdo->prepare("INSERT INTO usuario_setor (id_usu_setor, usuario, setor) VALUES (?, ?, ?)");
+                $stmt->execute([$idUsuSetor, $idUsuario, $row['id_setor']]);
+            }
         }
     } catch (Throwable $e) {
         // não falha o cadastro se setores/usuario_setor não existirem ou setor não estiver cadastrado
@@ -181,7 +232,9 @@ try {
 
     echo json_encode([
         'success' => true,
-        'message' => 'Cadastro realizado com sucesso. Use seu CPF e senha para acessar o sistema (audiências, pautas e atas).',
+        'message' => $usuarioExistenteId !== ''
+            ? 'Cadastro regularizado com sucesso. Seu acesso de estudante foi ativado neste CPF.'
+            : 'Cadastro realizado com sucesso. Use seu CPF e senha para acessar o sistema (audiências, pautas e atas).',
     ]);
 } catch (PDOException $e) {
     if (isset($pdo) && $pdo->inTransaction()) {

@@ -245,19 +245,20 @@ $faculdades = [
                     const data = await res.json().catch(() => ({}));
 
                     if (data.success) {
+                        const redirectToLogin = function () {
+                            if (window.parent !== window) {
+                                window.parent.location.href = '/index.php';
+                            } else {
+                                window.location.href = '/index.php';
+                            }
+                        };
                         showToast({
                             type: 'success',
                             title: 'Sucesso',
-                            message: data.message || 'Cadastro realizado com sucesso.',
-                            onClose: function () {
-                                if (window.parent !== window) {
-                                    window.parent.location.href = '/index.php';
-                                } else {
-                                    window.location.href = '/index.php';
-                                }
-                            }
+                            message: data.message || 'Cadastro realizado com sucesso.'
                         });
                         form.reset();
+                        global.setTimeout(redirectToLogin, 1800);
                     } else {
                         showToast({ type: 'error', title: 'Erro', message: data.message || 'Erro ao enviar. Tente novamente.' });
                     }

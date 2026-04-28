@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0001
+
+**Data:** 2026-04-28 11:01:22 | **Commit:** `218485d` | **Tipo:** `patch`
+
+- fix(cadastro_estudantes): enhance user registration logic and error handling
+
 ## V. 1.97
 
 **Data:** 2026-04-28 10:53:43 | **Commit:** `4fdd979` | **Tipo:** `minor`
@@ -4788,6 +4794,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
