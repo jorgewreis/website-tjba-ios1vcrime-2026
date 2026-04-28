@@ -191,4 +191,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(cadastro-form): add frontend validation logging for user inputs** `[d5e52ca]`
 - **feat(usuarios-create): enhance frontend logging for form submission and validation** `[e698c1f]`
 - **fix(cadastro_estudantes): enhance CPF duplication check and logging** `[20e0adc]`
+- **fix(cadastro_estudantes): improve CPF duplication handling and error messaging** `[c45f9dd]`
 
