@@ -60,13 +60,28 @@
                 observacoes: String(global.document.getElementById('observacoes')?.value || '').trim() || null
             }).then(function (result) {
                 if (result.data && result.data.id) {
-                    common.notify('success', 'Sucesso', 'Cadastrada.');
+                    if (typeof common.notifyByKey === 'function') {
+                        common.notifyByKey(
+                            'generic.institution.create.success',
+                            {},
+                            'success',
+                            'Sucesso',
+                            'Cadastrada.'
+                        );
+                    } else {
+                        common.notify('success', 'Sucesso', 'Cadastrada.');
+                    }
                     global.location.href = '/frame.php?page=instituicoespublicasedit&id=' + encodeURIComponent(result.data.id);
                     return;
                 }
                 common.notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Erro.');
                 button.disabled = false;
             }).catch(function () {
+                if (typeof common.notifyByKey === 'function') {
+                    common.notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
+                } else {
+                    common.notify('error', 'Erro', 'Erro de conexão.');
+                }
                 button.disabled = false;
             });
         });

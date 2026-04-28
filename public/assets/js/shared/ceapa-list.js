@@ -58,14 +58,38 @@
             btn.disabled = true;
             common.postJson(endpoint, { alocado_id: alocadoId, tipo: tipo }).then(function (result) {
                 if (result.data && result.data.deleted) {
-                    common.notify('success', 'Sucesso', 'Alocação removida.');
+                    if (typeof common.notifyByKey === 'function') {
+                        common.notifyByKey(
+                            'cartorio.allocation.remove.success',
+                            {},
+                            'success',
+                            'Sucesso',
+                            'Alocação removida.'
+                        );
+                    } else {
+                        common.notify('success', 'Sucesso', 'Alocação removida.');
+                    }
                     setTimeout(function () { global.location.reload(); }, 800);
                     return;
                 }
-                common.notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Falha ao remover alocação.');
+                if (typeof common.notifyByKey === 'function') {
+                    common.notifyByKey(
+                        'cartorio.allocation.remove.error',
+                        {},
+                        'error',
+                        'Erro',
+                        (result.data && result.data.error) ? result.data.error : 'Falha ao remover alocação.'
+                    );
+                } else {
+                    common.notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Falha ao remover alocação.');
+                }
                 btn.disabled = false;
             }).catch(function () {
-                common.notify('error', 'Erro', 'Erro de conexão.');
+                if (typeof common.notifyByKey === 'function') {
+                    common.notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
+                } else {
+                    common.notify('error', 'Erro', 'Erro de conexão.');
+                }
                 btn.disabled = false;
             });
         });

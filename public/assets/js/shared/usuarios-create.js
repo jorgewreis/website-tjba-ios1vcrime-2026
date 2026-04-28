@@ -11,6 +11,14 @@
         }
     }
 
+    function notifyByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        if (common && typeof common.notifyByKey === 'function') {
+            common.notifyByKey(key, vars || {}, fallbackType, fallbackTitle, fallbackMessage);
+            return;
+        }
+        notify(fallbackType, fallbackTitle, fallbackMessage);
+    }
+
     const senhaRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{10,}$/;
     function validarSenha(v) {
         return !!(v && senhaRegex.test(v));
@@ -223,7 +231,13 @@
                 [nome, sobrenome].forEach(function (el) { formatProper(el, 100); });
                 if (!isFormValid()) {
                     e.preventDefault();
-                    notify('error', 'Validação', 'Revise os campos obrigatórios e corrija os dados informados.');
+                    notifyByKey(
+                        'generic.validation.review.required',
+                        {},
+                        'error',
+                        'Validação',
+                        'Revise os campos obrigatórios e corrija os dados informados.'
+                    );
                 }
             });
         }
@@ -231,7 +245,13 @@
         syncTipoFields();
         syncCargoToSetor();
         updateCadastrar();
-        notify('info', 'Informação', 'O cadastro será criado com status Pendente.');
+        notifyByKey(
+            'generic.user.create.pending.info',
+            {},
+            'info',
+            'Informação',
+            'O cadastro será criado com status Pendente.'
+        );
     }
 
     App.UsuariosCreate = { initialize: init };

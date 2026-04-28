@@ -11,12 +11,28 @@
         }
     }
 
+    function notifyByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        if (common && typeof common.notifyByKey === 'function') {
+            common.notifyByKey(key, vars || {}, fallbackType, fallbackTitle, fallbackMessage);
+            return;
+        }
+        notify(fallbackType, fallbackTitle, fallbackMessage);
+    }
+
     function initialize(ctx) {
         const context = ctx || global.__ALTERAR_DADOS_CTX || {};
         const serverError = context.serverError || '';
         const serverSuccess = context.serverSuccess || '';
         if (serverError) notify('error', 'Erro', serverError);
-        if (!serverError && serverSuccess) notify('success', 'Sucesso', serverSuccess);
+        if (!serverError && serverSuccess) {
+            notifyByKey(
+                'generic.operation.success',
+                {},
+                'success',
+                'Sucesso',
+                serverSuccess
+            );
+        }
 
         const interno = !!context.interno;
         const avatarEntries = Array.isArray(context.avatarEntries) ? context.avatarEntries : [];

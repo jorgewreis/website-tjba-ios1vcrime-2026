@@ -109,7 +109,11 @@
                 common.notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Nao foi possivel salvar o vinculo.');
                 button.disabled = false;
             }).catch(function () {
-                common.notify('error', 'Erro', 'Falha de conexao ou resposta invalida.');
+                if (typeof common.notifyByKey === 'function') {
+                    common.notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Falha de conexao ou resposta invalida.');
+                } else {
+                    common.notify('error', 'Erro', 'Falha de conexao ou resposta invalida.');
+                }
                 button.disabled = false;
             });
         });

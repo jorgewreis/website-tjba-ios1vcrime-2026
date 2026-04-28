@@ -45,6 +45,14 @@
         }
     }
 
+    function notifyByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        if (common && typeof common.notifyByKey === 'function') {
+            common.notifyByKey(key, vars || {}, fallbackType, fallbackTitle, fallbackMessage);
+            return;
+        }
+        notify(fallbackType, fallbackTitle, fallbackMessage);
+    }
+
     function sanitizePrazo(value) {
         const digits = String(value || '').replace(/\D+/g, '');
         return digits === '' ? '0' : digits.slice(0, 3);
@@ -220,14 +228,14 @@
                     .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
                     .then(function (result) {
                         if (result.ok && result.data && result.data.success) {
-                            notify('info', 'Informação', 'Tarefa cancelada com sucesso.');
+                            notifyByKey('generic.task.cancel.success', {}, 'info', 'Informação', 'Tarefa cancelada com sucesso.');
                             global.setTimeout(function () { global.location.reload(); }, 250);
                             return;
                         }
                         notify('error', 'Erro', (result.data && result.data.error) || 'Erro ao cancelar a tarefa.');
                     })
                     .catch(function () {
-                        notify('error', 'Erro', 'Erro de conexão ao cancelar.');
+                        notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão ao cancelar.');
                     })
                     .finally(function () { btnCancelarTarefa.disabled = false; });
             });
@@ -261,7 +269,7 @@
                         notify('error', 'Erro', data.error || 'Erro ao excluir a tarefa.');
                     })
                     .catch(function () {
-                        notify('error', 'Erro', 'Erro de conexão ao excluir.');
+                        notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão ao excluir.');
                     })
                     .finally(function () { btnExcluirTarefa.disabled = false; });
             });

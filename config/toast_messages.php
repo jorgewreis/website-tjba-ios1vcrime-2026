@@ -15,6 +15,10 @@ return [
         'locale' => 'pt-BR',
     ],
     'messages' => [
+        // =========================
+        // CARTORIO
+        // =========================
+
         // Cartorio - subtarefas
         'cartorio.subtask.conclude.success' => [
             'type' => 'success',
@@ -58,6 +62,24 @@ return [
             'message' => 'Guia cancelada.',
             'vars' => [],
         ],
+        'cartorio.ceapa.update.success' => [
+            'type' => 'success',
+            'title' => 'Sucesso',
+            'message' => 'Cadastro atualizado com sucesso.',
+            'vars' => [],
+        ],
+        'cartorio.ceapa.create.success' => [
+            'type' => 'success',
+            'title' => 'Sucesso',
+            'message' => 'Cadastro CEAPA realizado com sucesso.',
+            'vars' => [],
+        ],
+        'cartorio.ceapa.delete.success' => [
+            'type' => 'success',
+            'title' => 'Sucesso',
+            'message' => 'Cadastro excluído com sucesso.',
+            'vars' => [],
+        ],
         'cartorio.allocation.remove.success' => [
             'type' => 'success',
             'title' => 'Sucesso',
@@ -71,7 +93,10 @@ return [
             'vars' => [],
         ],
 
-        // Oficios
+        // =========================
+        // OFICIOS
+        // =========================
+
         'oficios.cancel.success' => [
             'type' => 'success',
             'title' => 'Sucesso',
@@ -91,11 +116,51 @@ return [
             'vars' => ['numero_oficio'],
         ],
 
-        // Genericos compartilhados
+        // =========================
+        // GME
+        // =========================
+        'gme.monitoring.cancel.success' => [
+            'type' => 'success',
+            'title' => 'Sucesso',
+            'message' => 'Monitoramento Eletronico cancelado.',
+            'vars' => [],
+        ],
+        'gme.monitoring.create.success' => [
+            'type' => 'success',
+            'title' => 'Sucesso',
+            'message' => 'Monitoramento Eletronico cadastrado.',
+            'vars' => [],
+        ],
+
+        // =========================
+        // PRODUTIVIDADE
+        // =========================
+        'produtividade.manual.create.success' => [
+            'type' => 'success',
+            'title' => 'Sucesso',
+            'message' => 'Produtividade registrada com sucesso.',
+            'vars' => [],
+        ],
+        'produtividade.manual.cancel.success' => [
+            'type' => 'success',
+            'title' => 'Sucesso',
+            'message' => 'Produtividade cancelada com sucesso.',
+            'vars' => [],
+        ],
+
+        // =========================
+        // GENERICO (COMPARTILHADO)
+        // =========================
         'generic.operation.success' => [
             'type' => 'success',
             'title' => 'Sucesso',
             'message' => 'Operacao concluida com sucesso.',
+            'vars' => [],
+        ],
+        'generic.record.save.success' => [
+            'type' => 'success',
+            'title' => 'Sucesso',
+            'message' => 'Dados salvos.',
             'vars' => [],
         ],
         'generic.task.cancel.success' => [
@@ -110,28 +175,16 @@ return [
             'message' => 'Registro excluido.',
             'vars' => [],
         ],
-        'gme.monitoring.cancel.success' => [
+        'generic.record.archive.success' => [
             'type' => 'success',
             'title' => 'Sucesso',
-            'message' => 'Monitoramento Eletronico cancelado.',
+            'message' => 'Registro arquivado.',
             'vars' => [],
         ],
-        'gme.monitoring.create.success' => [
+        'generic.process.link.success' => [
             'type' => 'success',
             'title' => 'Sucesso',
-            'message' => 'Monitoramento Eletronico cadastrado.',
-            'vars' => [],
-        ],
-        'produtividade.manual.create.success' => [
-            'type' => 'success',
-            'title' => 'Sucesso',
-            'message' => 'Produtividade registrada com sucesso.',
-            'vars' => [],
-        ],
-        'produtividade.manual.cancel.success' => [
-            'type' => 'success',
-            'title' => 'Sucesso',
-            'message' => 'Produtividade cancelada com sucesso.',
+            'message' => 'Processo vinculado.',
             'vars' => [],
         ],
         'generic.link.remove.success' => [
@@ -150,6 +203,18 @@ return [
             'type' => 'success',
             'title' => 'Sucesso',
             'message' => 'Vínculo criado.',
+            'vars' => [],
+        ],
+        'generic.movement.create.success' => [
+            'type' => 'success',
+            'title' => 'Sucesso',
+            'message' => 'Movimentação registrada.',
+            'vars' => [],
+        ],
+        'generic.movement.delete.success' => [
+            'type' => 'success',
+            'title' => 'Sucesso',
+            'message' => 'Movimentação excluída.',
             'vars' => [],
         ],
         'generic.phone.add.success' => [
@@ -186,6 +251,30 @@ return [
             'type' => 'success',
             'title' => 'Sucesso',
             'message' => 'Setor removido com sucesso.',
+            'vars' => [],
+        ],
+        'generic.validation.review.required' => [
+            'type' => 'error',
+            'title' => 'Validação',
+            'message' => 'Revise os campos obrigatórios e corrija os dados informados.',
+            'vars' => [],
+        ],
+        'generic.user.create.pending.info' => [
+            'type' => 'info',
+            'title' => 'Informação',
+            'message' => 'O cadastro será criado com status Pendente.',
+            'vars' => [],
+        ],
+        'generic.institution.create.success' => [
+            'type' => 'success',
+            'title' => 'Sucesso',
+            'message' => 'Instituição cadastrada.',
+            'vars' => [],
+        ],
+        'generic.cep.lookup.success' => [
+            'type' => 'success',
+            'title' => 'Sucesso',
+            'message' => 'CEP encontrado.',
             'vars' => [],
         ],
         'generic.confirmation.required' => [

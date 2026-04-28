@@ -11,6 +11,14 @@
         }
     }
 
+    function notifyByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        if (common && typeof common.notifyByKey === 'function') {
+            common.notifyByKey(key, vars || {}, fallbackType, fallbackTitle, fallbackMessage);
+            return;
+        }
+        notify(fallbackType, fallbackTitle, fallbackMessage);
+    }
+
     function createSecondClickGuard() {
         if (common && typeof common.createSecondClickGuard === 'function') {
             return common.createSecondClickGuard();
@@ -163,7 +171,13 @@
                 formatProper(sobrenome, 100);
                 if (!isValid()) {
                     e.preventDefault();
-                    notify('error', 'Validação', 'Revise os campos obrigatórios e corrija os dados informados.');
+                    notifyByKey(
+                        'generic.validation.review.required',
+                        {},
+                        'error',
+                        'Validação',
+                        'Revise os campos obrigatórios e corrija os dados informados.'
+                    );
                 }
             });
         }

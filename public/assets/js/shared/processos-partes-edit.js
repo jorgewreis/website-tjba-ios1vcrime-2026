@@ -49,6 +49,11 @@
                 common.notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Erro.');
                 button.disabled = false;
             }).catch(function () {
+                if (typeof common.notifyByKey === 'function') {
+                    common.notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
+                } else {
+                    common.notify('error', 'Erro', 'Erro de conexão.');
+                }
                 button.disabled = false;
             });
         });

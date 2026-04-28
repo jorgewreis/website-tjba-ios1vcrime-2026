@@ -140,7 +140,13 @@
                     if (pessoas.length > 0) {
                         showReuSelectSugestoes(pessoas, reuSelect, reuInput);
                     }
-                }).catch(function () {});
+                }).catch(function () {
+                    if (typeof common.notifyByKey === 'function') {
+                        common.notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
+                    } else {
+                        common.notify('error', 'Erro', 'Erro de conexão.');
+                    }
+                });
         });
 
         reuSelect?.addEventListener('change', function () {
@@ -209,14 +215,28 @@
 
             common.postJson('/api/cartorio-ceapa/update.php', payload).then(function (result) {
                 if (result.data && result.data.success) {
-                    common.notify('success', 'Sucesso', 'Cadastro CEAPA atualizado com sucesso.');
+                    if (typeof common.notifyByKey === 'function') {
+                        common.notifyByKey(
+                            'cartorio.ceapa.update.success',
+                            {},
+                            'success',
+                            'Sucesso',
+                            'Cadastro CEAPA atualizado com sucesso.'
+                        );
+                    } else {
+                        common.notify('success', 'Sucesso', 'Cadastro CEAPA atualizado com sucesso.');
+                    }
                     global.location.href = '/frame.php?page=ceapa';
                     return;
                 }
                 common.notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Não foi possível atualizar.');
                 salvarBtn.disabled = false;
             }).catch(function () {
-                common.notify('error', 'Erro', 'Erro de conexão.');
+                if (typeof common.notifyByKey === 'function') {
+                    common.notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
+                } else {
+                    common.notify('error', 'Erro', 'Erro de conexão.');
+                }
                 salvarBtn.disabled = false;
             });
         });
@@ -232,14 +252,28 @@
             excluirBtn.disabled = true;
             common.postJson('/api/cartorio-ceapa/delete.php', { id: id }).then(function (result) {
                 if (result.data && result.data.deleted) {
-                    common.notify('success', 'Sucesso', 'Cadastro CEAPA excluído com sucesso.');
+                    if (typeof common.notifyByKey === 'function') {
+                        common.notifyByKey(
+                            'cartorio.ceapa.delete.success',
+                            {},
+                            'success',
+                            'Sucesso',
+                            'Cadastro CEAPA excluído com sucesso.'
+                        );
+                    } else {
+                        common.notify('success', 'Sucesso', 'Cadastro CEAPA excluído com sucesso.');
+                    }
                     global.location.href = '/frame.php?page=ceapa';
                     return;
                 }
                 common.notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Não foi possível excluir.');
                 excluirBtn.disabled = false;
             }).catch(function () {
-                common.notify('error', 'Erro', 'Erro de conexão.');
+                if (typeof common.notifyByKey === 'function') {
+                    common.notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
+                } else {
+                    common.notify('error', 'Erro', 'Erro de conexão.');
+                }
                 excluirBtn.disabled = false;
             });
         });

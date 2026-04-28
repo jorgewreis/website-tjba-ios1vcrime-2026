@@ -161,7 +161,13 @@
                     if (pessoas.length > 0) {
                         showReuSelectSugestoes(pessoas, nome, reuSelect, reuInput);
                     }
-                }).catch(function () {});
+                }).catch(function () {
+                    if (typeof common.notifyByKey === 'function') {
+                        common.notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
+                    } else {
+                        common.notify('error', 'Erro', 'Erro de conexão.');
+                    }
+                });
         });
 
         global.document.getElementById('voltar-btn')?.addEventListener('click', function (e) {
@@ -236,14 +242,28 @@
 
             common.postJson('/api/cartorio-ceapa/create.php', payload).then(function (result) {
                 if (result.data && result.data.id) {
-                    common.notify('success', 'Sucesso', 'Cadastro CEAPA realizado com sucesso.');
+                    if (typeof common.notifyByKey === 'function') {
+                        common.notifyByKey(
+                            'cartorio.ceapa.create.success',
+                            {},
+                            'success',
+                            'Sucesso',
+                            'Cadastro CEAPA realizado com sucesso.'
+                        );
+                    } else {
+                        common.notify('success', 'Sucesso', 'Cadastro CEAPA realizado com sucesso.');
+                    }
                     global.location.href = '/frame.php?page=ceapa';
                     return;
                 }
                 common.notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Não foi possível cadastrar.');
                 button.disabled = false;
             }).catch(function () {
-                common.notify('error', 'Erro', 'Erro de conexão.');
+                if (typeof common.notifyByKey === 'function') {
+                    common.notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
+                } else {
+                    common.notify('error', 'Erro', 'Erro de conexão.');
+                }
                 button.disabled = false;
             });
         });

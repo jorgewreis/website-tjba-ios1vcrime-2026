@@ -51,7 +51,11 @@
             saveButton.disabled = true;
             common.postJson('/api/instituicoes-publicas/update.php', payload).then(function (result) {
                 if (result.data && result.data.success) {
-                    common.notify('success', 'Sucesso', 'Salvo.');
+                    if (typeof common.notifyByKey === 'function') {
+                        common.notifyByKey('generic.record.save.success', {}, 'success', 'Sucesso', 'Salvo.');
+                    } else {
+                        common.notify('success', 'Sucesso', 'Salvo.');
+                    }
                 } else {
                     common.notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Erro.');
                 }
@@ -194,7 +198,11 @@
                     global.document.getElementById('new-end-bairro').value = result.data.bairro || '';
                     global.document.getElementById('new-end-cidade').value = result.data.cidade || '';
                     global.document.getElementById('new-end-uf').value = String(result.data.uf || '').toUpperCase().slice(0, 2);
-                    common.notify('success', 'Sucesso', 'CEP encontrado.');
+                    if (typeof common.notifyByKey === 'function') {
+                        common.notifyByKey('generic.cep.lookup.success', {}, 'success', 'Sucesso', 'CEP encontrado.');
+                    } else {
+                        common.notify('success', 'Sucesso', 'CEP encontrado.');
+                    }
                 }
                 button.disabled = false;
             });

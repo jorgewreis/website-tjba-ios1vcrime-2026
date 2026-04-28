@@ -103,13 +103,21 @@
             saveButton.disabled = true;
             common.postJson('/api/pessoas/update.php', payload).then(function (result) {
                 if (result.ok && result.data && result.data.success) {
-                    common.notify('success', 'Sucesso', 'Dados salvos.');
+                    if (typeof common.notifyByKey === 'function') {
+                        common.notifyByKey('generic.record.save.success', {}, 'success', 'Sucesso', 'Dados salvos.');
+                    } else {
+                        common.notify('success', 'Sucesso', 'Dados salvos.');
+                    }
                 } else {
                     common.notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Erro.');
                 }
                 saveButton.disabled = false;
             }).catch(function () {
-                common.notify('error', 'Erro', 'Erro de conexão.');
+                if (typeof common.notifyByKey === 'function') {
+                    common.notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
+                } else {
+                    common.notify('error', 'Erro', 'Erro de conexão.');
+                }
                 saveButton.disabled = false;
             });
         });
@@ -224,7 +232,11 @@
                     global.document.getElementById('new-end-bairro').value = result.data.bairro || '';
                     global.document.getElementById('new-end-cidade').value = result.data.cidade || '';
                     global.document.getElementById('new-end-uf').value = String(result.data.uf || '').toUpperCase().slice(0, 2);
-                    common.notify('success', 'Sucesso', 'CEP encontrado.');
+                    if (typeof common.notifyByKey === 'function') {
+                        common.notifyByKey('generic.cep.lookup.success', {}, 'success', 'Sucesso', 'CEP encontrado.');
+                    } else {
+                        common.notify('success', 'Sucesso', 'CEP encontrado.');
+                    }
                 }
                 button.disabled = false;
             });
