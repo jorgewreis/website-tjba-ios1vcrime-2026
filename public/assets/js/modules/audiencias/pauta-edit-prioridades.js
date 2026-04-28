@@ -19,22 +19,6 @@
     }
 
     var pageTools = window.App && App.Page ? App.Page : null;
-    var requireSecondClick = pageTools && typeof pageTools.createSecondClickGuard === 'function'
-        ? pageTools.createSecondClickGuard()
-        : (function () {
-            var pendingConfirmations = {};
-            return function (key, message) {
-                var now = Date.now();
-                var validUntil = Number(pendingConfirmations[key] || 0);
-                if (validUntil > now) {
-                    delete pendingConfirmations[key];
-                    return true;
-                }
-                pendingConfirmations[key] = now + 5000;
-                notify('info', 'Confirmacao', message);
-                return false;
-            };
-        })();
     var state = normalizeInitial(window.PAUTA_PRIORIDADES_INITIAL || window.PROCESSO_PRIORIDADES_INITIAL);
 
     function normalizeInitial(s) {
@@ -326,10 +310,6 @@
         }
         var codigo = String(btn.getAttribute('data-prioridade-codigo-rem') || '').trim();
         if (!codigo) {
-            return;
-        }
-        var ck = 'prioridade-rem-' + processoId + '-' + codigo;
-        if (!requireSecondClick(ck, 'Clique novamente em Remover em ate 5 segundos para confirmar.')) {
             return;
         }
         postJson('/api/processos/prioridades-remove.php', {

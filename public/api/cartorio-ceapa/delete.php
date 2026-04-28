@@ -46,12 +46,10 @@ try {
     }
 
     $perfis = UsuarioPerfisAutorizacao::perfisDoUsuario($userId);
-    $isEstagiario = in_array('ESTAGIARIO', $perfis, true);
-    $isCriador = trim((string) ($registro['usuario_cadastro_id'] ?? '')) === $userId;
-
-    if ($isEstagiario && !$isCriador) {
+    $perfisPermitidosExcluir = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
+    if (count(array_intersect($perfis, $perfisPermitidosExcluir)) === 0) {
         http_response_code(403);
-        echo json_encode(['error' => 'Estagiário só pode excluir quando for o criador da tarefa.'], JSON_UNESCAPED_UNICODE);
+        echo json_encode(['error' => 'Seu perfil não tem permissão para excluir. Apenas admin, chefia, diretora ou magistrada.'], JSON_UNESCAPED_UNICODE);
         exit;
     }
 

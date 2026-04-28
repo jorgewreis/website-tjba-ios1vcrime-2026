@@ -23,6 +23,18 @@
         });
     }
 
+    function resolveToastMessageByKey(key, vars, fallbackMessage) {
+        var catalog = window.App && window.App.ToastCatalog ? window.App.ToastCatalog : null;
+        if (!catalog || typeof catalog.resolve !== 'function') {
+            return Promise.resolve(fallbackMessage);
+        }
+        return catalog.resolve(key, vars || {}).then(function (toast) {
+            return (toast && toast.message) ? toast.message : fallbackMessage;
+        }).catch(function () {
+            return fallbackMessage;
+        });
+    }
+
     function queuePostReloadToast(type, title, message) {
         if (pageTools && typeof pageTools.queuePostReloadToast === 'function') {
             pageTools.queuePostReloadToast(type, title, message, POST_RELOAD_TOAST_KEY);
@@ -103,6 +115,10 @@
     }
 
     var btnExcluir = document.getElementById('excluir-tarefa-btn');
+    var midiasDeleteConfirmMessage = 'Clique novamente em Excluir tarefa em até 5 segundos para confirmar a exclusão desta tarefa e de todas as subtarefas vinculadas.';
+    resolveToastMessageByKey('audiencias.midias.task.delete.confirm', {}, midiasDeleteConfirmMessage).then(function (message) {
+        midiasDeleteConfirmMessage = message;
+    });
     if (btnExcluir) {
         btnExcluir.addEventListener('click', function () {
             if (!id) {
@@ -111,7 +127,7 @@
             }
             if (!requireSecondClick(
                 'midias-edit-excluir-' + id,
-                'Clique novamente em Excluir tarefa em até 5 segundos para confirmar a exclusão desta tarefa e de todas as subtarefas vinculadas.'
+                midiasDeleteConfirmMessage
             )) {
                 return;
             }
@@ -151,9 +167,6 @@
         }
         var subtarefaId = String(button.getAttribute('data-subtarefa-id') || '').trim();
         if (!subtarefaId) {
-            return;
-        }
-        if (!requireSecondClick('midias-edit-sub-' + subtarefaId, 'Clique novamente para confirmar a conclusão da subtarefa.')) {
             return;
         }
         button.disabled = true;

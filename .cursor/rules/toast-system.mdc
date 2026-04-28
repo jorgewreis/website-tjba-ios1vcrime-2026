@@ -15,7 +15,8 @@ alwaysApply: true
 
 ## Diretriz de confirmação
 
-- Para exclusão, priorize confirmação em padrão do projeto (ex.: duplo clique + toast de confirmação).
+- Duplo clique + toast de confirmação deve ser usado somente para exclusão definitiva de tarefa em telas `*-edit` de Cartório, Gabinete e Audiências.
+- Para cancelamentos e remoções auxiliares (alocação, telefone, endereço, setor, vínculos), usar clique único.
 - Se precisar usar `alert()`, restrinja ao contexto de confirmação de exclusão, sem reutilizar para outros feedbacks.
 
 ## Uso

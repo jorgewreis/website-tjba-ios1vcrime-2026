@@ -39,6 +39,18 @@
         });
     }
 
+    function resolveToastMessageByKey(key, vars, fallbackMessage) {
+        var catalog = window.App && window.App.ToastCatalog ? window.App.ToastCatalog : null;
+        if (!catalog || typeof catalog.resolve !== 'function') {
+            return Promise.resolve(fallbackMessage);
+        }
+        return catalog.resolve(key, vars || {}).then(function (toast) {
+            return (toast && toast.message) ? toast.message : fallbackMessage;
+        }).catch(function () {
+            return fallbackMessage;
+        });
+    }
+
     function queuePostReloadToastByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage, storageKey) {
         var targetKey = storageKey || 'salapauta.postReloadToast';
         var catalog = window.App && window.App.ToastCatalog ? window.App.ToastCatalog : null;
@@ -404,7 +416,6 @@
     // Some UIs use `.button-table` while others use `.btn-editar stop`; handler must be generic.
     document.querySelectorAll('[data-parte-remove]').forEach(function (btn) {
         btn.addEventListener('click', function () {
-            if (!requireSecondClick('pauta-remover-parte-' + btn.getAttribute('data-parte-remove'), 'Clique novamente em Remover parte em ate 5 segundos para confirmar.')) return;
             fetch('/api/sala-audiencias-pauta/partes-delete.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -432,7 +443,6 @@
     });
 
     document.getElementById('btn-audiencia-edit-cancelar')?.addEventListener('click', function () {
-        if (!requireSecondClick('pauta-cancelar-audiencia', 'Clique novamente em Cancelar audiencia em ate 5 segundos para confirmar.')) return;
         var id = String(document.getElementById('audiencia-edit-id')?.value || '').trim();
         fetch('/api/sala-audiencias-pauta/cancel.php', {
             method: 'POST',
@@ -442,8 +452,12 @@
         }).then(function () { window.location.reload(); }).catch(function () { notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.'); });
     });
 
+    var pautaDeleteConfirmMessage = 'Clique novamente em Excluir audiência em até 5 segundos para confirmar.';
+    resolveToastMessageByKey('audiencias.pauta.delete.confirm', {}, pautaDeleteConfirmMessage).then(function (message) {
+        pautaDeleteConfirmMessage = message;
+    });
     document.getElementById('btn-audiencia-edit-excluir')?.addEventListener('click', function () {
-        if (!requireSecondClick('pauta-excluir-audiencia', 'Clique novamente em Excluir audiencia em ate 5 segundos para confirmar.')) return;
+        if (!requireSecondClick('pauta-excluir-audiencia', pautaDeleteConfirmMessage)) return;
         var id = String(document.getElementById('audiencia-edit-id')?.value || '').trim();
         fetch('/api/sala-audiencias-pauta/delete.php', {
             method: 'POST',

@@ -11,22 +11,6 @@
 
         const settings = config || {};
         const reuId = String(global.document.getElementById('hidden-grp-id')?.value || '').trim();
-        const requireSecondClick = common.createSecondClickGuard();
-        let unlinkConfirmMessage = 'Clique novamente em Remover em ate 5 segundos para confirmar.';
-        let movementDeleteConfirmMessage = 'Clique novamente no x em ate 5 segundos para confirmar a exclusao da movimentacao.';
-        let archiveConfirmMessage = 'Clique novamente em Arquivar em ate 5 segundos para confirmar o arquivamento.';
-
-        if (App.ToastCatalog && typeof App.ToastCatalog.resolve === 'function') {
-            App.ToastCatalog.resolve('gabinete.reus_presos.unlink.confirm', {}).then(function (toast) {
-                if (toast && toast.message) unlinkConfirmMessage = toast.message;
-            }).catch(function () {});
-            App.ToastCatalog.resolve('gabinete.reus_presos.movement.delete.confirm', {}).then(function (toast) {
-                if (toast && toast.message) movementDeleteConfirmMessage = toast.message;
-            }).catch(function () {});
-            App.ToastCatalog.resolve('gabinete.reus_presos.archive.confirm', {}).then(function (toast) {
-                if (toast && toast.message) archiveConfirmMessage = toast.message;
-            }).catch(function () {});
-        }
 
         function goBack() {
             global.location.href = settings.backHref || '/frame.php?page=reuspresos';
@@ -210,9 +194,6 @@
         global.document.querySelectorAll('.grp-unlink').forEach(function (button) {
             button.addEventListener('click', function () {
                 const linkId = button.getAttribute('data-link-id');
-                if (!requireSecondClick('unlink-grp-' + linkId, unlinkConfirmMessage)) {
-                    return;
-                }
                 postJson('/api/gabinete-reus-presos/unlink-processo.php', { link_id: linkId }).then(function (res) {
                     if (res.ok && res.j && res.j.success) {
                         if (typeof common.notifyByKey === 'function') {
@@ -469,9 +450,6 @@
                     }
                     return;
                 }
-                if (!requireSecondClick('del-mov-' + movimentacaoId, movementDeleteConfirmMessage)) {
-                    return;
-                }
                 postJson('/api/gabinete-reus-presos/delete-movimentacao.php', {
                     reu_preso_id: reuId,
                     movimentacao_id: movimentacaoId
@@ -497,9 +475,6 @@
         });
 
         global.document.getElementById('btn-grp-arquivar')?.addEventListener('click', function () {
-            if (!requireSecondClick('arquivar-grp', archiveConfirmMessage)) {
-                return;
-            }
             postJson('/api/gabinete-reus-presos/archive.php', { id: reuId }).then(function (res) {
                 if (res.ok && res.j && res.j.success) {
                     if (typeof common.notifyByKey === 'function') {

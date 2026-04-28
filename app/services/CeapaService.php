@@ -396,7 +396,7 @@ final class CeapaService
         if ($status === '' && $allowDefault) {
             return 'pendente';
         }
-        $valid = ['pendente', 'em_andamento', 'finalizada'];
+        $valid = ['pendente', 'em_andamento', 'finalizada', 'cancelado'];
         if (!in_array($status, $valid, true)) {
             throw new InvalidArgumentException('Status de cumprimento inválido.');
         }

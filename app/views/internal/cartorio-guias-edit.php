@@ -148,8 +148,7 @@ if ($guia !== null) {
     }
 }
 
-$perfisExcluir = ['ADMIN', 'CHEFIA'];
-$perfisCancelar = ['ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA'];
+$perfisExcluir = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
 require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
 $userPerfis = [];
 $userId = $_SESSION['id_usuario'] ?? null;
@@ -157,7 +156,7 @@ if ($userId !== null && trim((string) $userId) !== '') {
     $userPerfis = UsuarioPerfisAutorizacao::perfisDoUsuario(trim((string) $userId));
 }
 $podeExcluir = count(array_intersect($userPerfis, $perfisExcluir)) > 0;
-$podeCancelar = count(array_intersect($userPerfis, $perfisCancelar)) > 0;
+$podeCancelar = $userId !== '';
 $perfisGestaoAloc = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
 $isGestaoAlocEdit = count(array_intersect($userPerfis, $perfisGestaoAloc)) > 0;
 $statusAtual = $guia['status'] ?? '';
@@ -315,15 +314,19 @@ $tiposOptions = [
                 <?php include __DIR__ . '/_cartorio_timeline.php'; ?>
             <?php endif; ?>
 
-            <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
-                <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
-                <button type="button" class="btn btn-primary" id="salvar-btn" disabled>Salvar alterações</button>
-                <?php if ($podeCancelar && !$tarefaFinalizadaOuCancelada): ?>
-                    <button type="button" class="btn btn-danger-outline" id="cancelar-tarefa-btn">Cancelar tarefa</button>
-                <?php endif; ?>
-                <?php if ($podeExcluir): ?>
-                    <button type="button" class="btn btn-danger" id="excluir-btn">Excluir guia</button>
-                <?php endif; ?>
+            <div class="card-buttons">
+                <div class="display-flex row row-fit gap-y-md align-center justify-start">
+                    <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
+                    <?php if ($podeCancelar && !$tarefaFinalizadaOuCancelada): ?>
+                        <button type="button" class="btn btn-danger-outline" id="cancelar-tarefa-btn">Cancelar tarefa</button>
+                    <?php endif; ?>
+                    <?php if ($podeExcluir): ?>
+                        <button type="button" class="btn btn-danger" id="excluir-btn">Excluir guia</button>
+                    <?php endif; ?>
+                </div>
+                <div class="display-flex row row-fit gap-y-md align-center justify-end">
+                    <button type="button" class="btn btn-primary" id="salvar-btn" disabled>Salvar alterações</button>
+                </div>
             </div>
         <?php endif; ?>
     </div>

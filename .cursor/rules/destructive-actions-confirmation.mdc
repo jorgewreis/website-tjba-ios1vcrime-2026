@@ -8,9 +8,9 @@ alwaysApply: true
 
 ## Regra obrigatória
 
-- Em ações destrutivas (`excluir`, `cancelar`, `desativar`, `remover`), usar confirmação no padrão do projeto: **duplo clique + toast informativo**.
-- Mensagem de confirmação deve ser exibida via toast, por exemplo: `showToast({ type: 'info', title: 'Confirmação', message: '...' })`. O modelo simple/full é resolvido por `toast.js` (texto curto tende a **simple**; mensagens longas passam a **full** automaticamente).
-- Só executar a ação destrutiva na segunda interação dentro da janela de tempo definida.
+- O padrão de **duplo clique + toast de confirmação** deve existir **somente** para **exclusão definitiva de tarefa** em telas `*-edit` dos módulos **Cartório**, **Gabinete** e **Audiências**.
+- Para `cancelar` tarefa/subtarefa, `remover` alocação, `remover` telefone, `remover` endereço, `remover` setor, `desvincular` e ações equivalentes, usar **clique único**.
+- Em ações de clique único, não exibir toast de pré-confirmação; manter apenas feedback de sucesso/erro após a execução.
 
 ## Alert como exceção
 
@@ -19,6 +19,6 @@ alwaysApply: true
 
 ## Implementação de referência
 
-- Utilizar padrão de helper local como `requireSecondClick(key, message)` para controlar a janela de confirmação.
+- Utilizar helper como `requireSecondClick(key, message)` apenas nos casos cobertos pela regra de duplo clique.
 - Evitar `confirm()` nativo quando o fluxo já suportar confirmação com toast.
 

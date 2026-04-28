@@ -158,12 +158,6 @@ return [
             'message' => 'Falha ao remover alocacao.',
             'vars' => [],
         ],
-        'cartorio.allocation.remove.confirm' => [
-            'type' => 'info',
-            'title' => 'Confirmação',
-            'message' => 'Clique novamente para confirmar a remoção da alocação.',
-            'vars' => [],
-        ],
         'cartorio.allocation.add.success' => [
             'type' => 'success',
             'title' => 'Sucesso',
@@ -445,6 +439,12 @@ return [
             'message' => 'Falha ao salvar.',
             'vars' => [],
         ],
+        'audiencias.pauta.delete.confirm' => [
+            'type' => 'info',
+            'title' => 'Confirmação',
+            'message' => 'Clique novamente em Excluir audiência em até 5 segundos para confirmar.',
+            'vars' => [],
+        ],
         'audiencias.pauta.auto_save.info' => [
             'type' => 'info',
             'title' => 'Atualização automática',
@@ -509,6 +509,12 @@ return [
             'type' => 'success',
             'title' => 'Sucesso',
             'message' => 'Alterações salvas com sucesso.',
+            'vars' => [],
+        ],
+        'audiencias.midias.task.delete.confirm' => [
+            'type' => 'info',
+            'title' => 'Confirmação',
+            'message' => 'Clique novamente em Excluir tarefa em até 5 segundos para confirmar a exclusão desta tarefa e de todas as subtarefas vinculadas.',
             'vars' => [],
         ],
         'audiencias.midias.subtask.conclude.success' => [
@@ -885,36 +891,6 @@ return [
             'message' => 'Clique novamente para confirmar a exclusão.',
             'vars' => [],
         ],
-        'generic.unlink.confirm' => [
-            'type' => 'info',
-            'title' => 'Confirmação',
-            'message' => 'Clique novamente para confirmar a remoção do vínculo.',
-            'vars' => [],
-        ],
-        'generic.phone.remove.confirm' => [
-            'type' => 'info',
-            'title' => 'Confirmação',
-            'message' => 'Clique novamente em Excluir em até 5 segundos para confirmar a remoção do telefone.',
-            'vars' => [],
-        ],
-        'generic.address.remove.confirm' => [
-            'type' => 'info',
-            'title' => 'Confirmação',
-            'message' => 'Clique novamente em Excluir em até 5 segundos para confirmar a remoção do endereço.',
-            'vars' => [],
-        ],
-        'generic.department.remove.confirm' => [
-            'type' => 'info',
-            'title' => 'Confirmação',
-            'message' => 'Clique novamente em Excluir em até 5 segundos para confirmar a remoção do setor.',
-            'vars' => [],
-        ],
-        'generic.user.deactivate.confirm' => [
-            'type' => 'info',
-            'title' => 'Confirmação',
-            'message' => 'Clique novamente em Excluir em até 5 segundos para confirmar a desativação.',
-            'vars' => [],
-        ],
         'generic.cep.lookup.success' => [
             'type' => 'success',
             'title' => 'Sucesso',
@@ -967,24 +943,6 @@ return [
             'type' => 'info',
             'title' => 'Confirmação',
             'message' => 'Clique novamente em Excluir em até 5 segundos para confirmar a exclusão desta tarefa.',
-            'vars' => [],
-        ],
-        'gabinete.reus_presos.unlink.confirm' => [
-            'type' => 'info',
-            'title' => 'Confirmação',
-            'message' => 'Clique novamente em Remover em ate 5 segundos para confirmar.',
-            'vars' => [],
-        ],
-        'gabinete.reus_presos.movement.delete.confirm' => [
-            'type' => 'info',
-            'title' => 'Confirmação',
-            'message' => 'Clique novamente no x em ate 5 segundos para confirmar a exclusao da movimentacao.',
-            'vars' => [],
-        ],
-        'gabinete.reus_presos.archive.confirm' => [
-            'type' => 'info',
-            'title' => 'Confirmação',
-            'message' => 'Clique novamente em Arquivar em ate 5 segundos para confirmar o arquivamento.',
             'vars' => [],
         ],
     ],

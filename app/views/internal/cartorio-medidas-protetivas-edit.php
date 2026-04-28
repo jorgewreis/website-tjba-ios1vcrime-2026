@@ -36,8 +36,7 @@ if ($idMedida === '') {
     }
 }
 
-$perfisPermitidosExcluir = ['ADMIN', 'CHEFIA'];
-$perfisPermitidosCancelar = ['ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA'];
+$perfisPermitidosExcluir = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
 require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
 $userPerfis = [];
 $userId = $_SESSION['id_usuario'] ?? null;
@@ -45,7 +44,7 @@ if ($userId !== null && trim((string) $userId) !== '') {
     $userPerfis = UsuarioPerfisAutorizacao::perfisDoUsuario(trim((string) $userId));
 }
 $podeExcluirTarefa = count(array_intersect($userPerfis, $perfisPermitidosExcluir)) > 0;
-$podeCancelarTarefa = count(array_intersect($userPerfis, $perfisPermitidosCancelar)) > 0;
+$podeCancelarTarefa = $userId !== '';
 
 $statusAtual = trim((string) ($medida['status'] ?? 'pendente'));
 $tarefaFinalizadaOuCancelada = in_array($statusAtual, ['cancelada', 'concluída'], true);
@@ -266,17 +265,21 @@ $ordemParaTipo = [
             <input type="hidden" id="hidden-medida-id" value="<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>">
         <?php endif; ?>
 
-        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
-            <button class="btn btn-secondary" id="voltar-btn">Voltar</button>
-            <?php if ($errorMessage === ''): ?>
-                <button class="btn btn-primary" id="salvar-btn" type="button">Salvar alterações</button>
-                <?php if ($podeCancelarTarefa && !$tarefaFinalizadaOuCancelada): ?>
+        <div class="card-buttons">
+            <div class="display-flex row row-fit gap-y-md align-center justify-start">
+                <button class="btn btn-secondary" id="voltar-btn" type="button">Voltar</button>
+                <?php if ($errorMessage === '' && $podeCancelarTarefa && !$tarefaFinalizadaOuCancelada): ?>
                     <button class="btn btn-danger-outline" id="cancelar-tarefa-btn" type="button">Cancelar tarefa</button>
                 <?php endif; ?>
-                <?php if ($podeExcluirTarefa): ?>
+                <?php if ($errorMessage === '' && $podeExcluirTarefa): ?>
                     <button class="btn btn-danger" id="excluir-tarefa-btn" type="button">Excluir tarefa</button>
                 <?php endif; ?>
-            <?php endif; ?>
+            </div>
+            <div class="display-flex row row-fit gap-y-md align-center justify-end">
+                <?php if ($errorMessage === ''): ?>
+                    <button class="btn btn-primary" id="salvar-btn" type="button">Salvar alterações</button>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 

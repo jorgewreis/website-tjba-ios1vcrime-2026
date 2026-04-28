@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0016
+
+**Data:** 2026-04-28 16:37:03 | **Commit:** `593b574` | **Tipo:** `patch`
+
+- refactor(confirmations): streamline confirmation actions for task deletions and removals
+
 ## V. 1.97.0015
 
 **Data:** 2026-04-28 16:11:06 | **Commit:** `5644a5c` | **Tipo:** `patch`
@@ -4878,6 +4884,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -19,24 +19,6 @@
         notify(fallbackType, fallbackTitle, fallbackMessage);
     }
 
-    function createSecondClickGuard() {
-        if (common && typeof common.createSecondClickGuard === 'function') {
-            return common.createSecondClickGuard();
-        }
-        const pending = {};
-        return function requireSecondClick(key, message) {
-            const now = Date.now();
-            const validUntil = Number(pending[key] || 0);
-            if (validUntil > now) {
-                delete pending[key];
-                return true;
-            }
-            pending[key] = now + 5000;
-            notify('info', 'Confirmação', message);
-            return false;
-        };
-    }
-
     function validarEmail(email) {
         return email && typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
     }
@@ -64,16 +46,6 @@
         const salvar = global.document.getElementById('salvar-btn');
         const voltar = global.document.getElementById('voltar-btn');
         const excluir = global.document.getElementById('excluir-btn');
-        const requireSecondClick = createSecondClickGuard();
-        let deactivateConfirmMessage = 'Clique novamente em Excluir em até 5 segundos para confirmar a desativação.';
-
-        if (App.ToastCatalog && typeof App.ToastCatalog.resolve === 'function') {
-            App.ToastCatalog.resolve('generic.user.deactivate.confirm', {}).then(function (toast) {
-                if (toast && toast.message) deactivateConfirmMessage = toast.message;
-            }).catch(function () {
-                // noop
-            });
-        }
 
         if (voltar) {
             voltar.addEventListener('click', function () { global.location.href = '/frame.php?page=usuarioslist'; });
@@ -193,9 +165,6 @@
 
         if (excluir && formExcluir) {
             excluir.addEventListener('click', function () {
-                if (!requireSecondClick('desativar-usuario', deactivateConfirmMessage)) {
-                    return;
-                }
                 formExcluir.submit();
             });
         }

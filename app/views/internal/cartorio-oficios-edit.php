@@ -89,9 +89,8 @@ if ($oficio !== null) {
 }
 
 $perfisPermitidosExcluir = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
-$perfisPermitidosCancelar = ['ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
 $podeExcluirTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosExcluir)) > 0 && $podeExcluirNumero;
-$podeCancelarTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosCancelar)) > 0;
+$podeCancelarTarefa = $userIdEdit !== '';
 $tarefaFinalizadaOuCancelada = in_array($statusAtual, ['finalizada', 'cancelada'], true);
 
 $subLabels = [
@@ -211,16 +210,17 @@ $subLabels = [
             <input type="hidden" id="hidden-oficio-id" value="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>">
         <?php endif; ?>
 
-        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
-            <button class="btn btn-secondary" id="voltar-btn" type="button">Voltar</button>
-            <?php if ($errorMessage === '' && $oficio !== null): ?>
-                <?php if ($podeCancelarTarefa && !$tarefaFinalizadaOuCancelada): ?>
+        <div class="card-buttons">
+            <div class="display-flex row row-fit gap-y-md align-center justify-start">
+                <button class="btn btn-secondary" id="voltar-btn" type="button">Voltar</button>
+                <?php if ($errorMessage === '' && $oficio !== null && $podeCancelarTarefa && !$tarefaFinalizadaOuCancelada): ?>
                     <button class="btn btn-danger-outline" id="cancelar-oficio-btn" type="button" title="Cancelar ofício (remove subtarefas)">Cancelar ofício</button>
                 <?php endif; ?>
-                <?php if ($podeExcluirTarefa): ?>
+                <?php if ($errorMessage === '' && $oficio !== null && $podeExcluirTarefa): ?>
                     <button class="btn btn-danger" id="excluir-oficio-btn" type="button" title="Excluir somente se for o último número do ano">Excluir ofício</button>
                 <?php endif; ?>
-            <?php endif; ?>
+            </div>
+            <div class="display-flex row row-fit gap-y-md align-center justify-end"></div>
         </div>
     </div>
 

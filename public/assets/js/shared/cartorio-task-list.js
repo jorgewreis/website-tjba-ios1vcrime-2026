@@ -183,25 +183,12 @@
         });
     }
 
-    function resolveToastMessageByKey(key, vars, fallbackMessage) {
-        const toastCatalog = getToastCatalog();
-        if (!toastCatalog || typeof toastCatalog.resolve !== 'function') {
-            return Promise.resolve(fallbackMessage);
-        }
-        return toastCatalog.resolve(key, vars || {}).then(function (toast) {
-            return (toast && toast.message) ? toast.message : fallbackMessage;
-        }).catch(function () {
-            return fallbackMessage;
-        });
-    }
-
     function bindDesalocarButtons(options, pageTools, notify) {
         if (options.enableDesalocar === false) {
             return;
         }
 
         const selector = options.removeSelector || '.js-desalocar';
-        const confirmMessage = options.removeConfirmMessage || 'Clique novamente para confirmar a remoção da alocação.';
         const successMessage = options.removeSuccessMessage || 'Alocação removida.';
         const toastCatalog = getToastCatalog();
         const notifyByKey = function (key, vars, fallbackType, fallbackTitle, fallbackMessage) {
@@ -213,21 +200,6 @@
             }
             notify(fallbackType, fallbackTitle, fallbackMessage);
         };
-        const requireSecondClick = pageTools && typeof pageTools.createSecondClickGuard === 'function'
-            ? pageTools.createSecondClickGuard()
-            : (function () {
-                const pending = {};
-                return function (key, message) {
-                    const now = Date.now();
-                    if ((pending[key] || 0) > now) {
-                        delete pending[key];
-                        return true;
-                    }
-                    pending[key] = now + 5000;
-                    notify('info', 'Confirmação', message);
-                    return false;
-                };
-            })();
 
         global.document.addEventListener('click', function (event) {
             const button = event.target.closest(selector);
@@ -243,12 +215,7 @@
                 return;
             }
 
-            resolveToastMessageByKey('cartorio.allocation.remove.confirm', {}, confirmMessage).then(function (resolvedConfirmMessage) {
-                if (!requireSecondClick('desalocar-' + alocadoId, resolvedConfirmMessage)) {
-                    return;
-                }
-
-                return fetch(endpoint, {
+            return fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ alocado_id: alocadoId, tipo: tipo }),
@@ -302,7 +269,6 @@
                         'Erro de conexão.'
                     );
                 });
-            });
         });
     }
 

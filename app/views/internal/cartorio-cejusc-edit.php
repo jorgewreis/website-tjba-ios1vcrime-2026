@@ -110,8 +110,7 @@ if ($tarefa !== null) {
     }
 }
 
-$perfisPermitidosExcluir = ['ADMIN', 'CHEFIA'];
-$perfisPermitidosCancelar = ['ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA'];
+$perfisPermitidosExcluir = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
 $userPerfisEdit = [];
 $userIdEdit = $_SESSION['id_usuario'] ?? null;
 if ($userIdEdit !== null && trim((string) $userIdEdit) !== '') {
@@ -119,7 +118,7 @@ if ($userIdEdit !== null && trim((string) $userIdEdit) !== '') {
     $userPerfisEdit = UsuarioPerfisAutorizacao::perfisDoUsuario(trim((string) $userIdEdit));
 }
 $podeExcluirTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosExcluir)) > 0;
-$podeCancelarTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosCancelar)) > 0;
+$podeCancelarTarefa = $userIdEdit !== '';
 $tarefaFinalizadaOuCancelada = in_array($statusAtual, ['cancelada', 'concluída'], true);
 $perfisGestaoAlocCej = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
 $isGestaoAlocEditCej = count(array_intersect($userPerfisEdit, $perfisGestaoAlocCej)) > 0;
@@ -227,16 +226,17 @@ $timelineData = $tarefa !== null
             <input type="hidden" id="hidden-carta-id" value="<?php echo htmlspecialchars($idTarefa, ENT_QUOTES); ?>">
         <?php endif; ?>
 
-        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
-            <button class="btn btn-secondary" id="voltar-btn">Voltar</button>
-            <?php if ($errorMessage === ''): ?>
-                <?php if ($podeCancelarTarefa && !$tarefaFinalizadaOuCancelada): ?>
+        <div class="card-buttons">
+            <div class="display-flex row row-fit gap-y-md align-center justify-start">
+                <button class="btn btn-secondary" id="voltar-btn" type="button">Voltar</button>
+                <?php if ($errorMessage === '' && $podeCancelarTarefa && !$tarefaFinalizadaOuCancelada): ?>
                     <button class="btn btn-danger-outline" id="cancelar-tarefa-btn" type="button" title="Alterar status da tarefa para Cancelada">Cancelar tarefa</button>
                 <?php endif; ?>
-                <?php if ($podeExcluirTarefa): ?>
+                <?php if ($errorMessage === '' && $podeExcluirTarefa): ?>
                     <button class="btn btn-danger" id="excluir-tarefa-btn" type="button" title="Excluir esta tarefa e todas as subtarefas">Excluir tarefa</button>
                 <?php endif; ?>
-            <?php endif; ?>
+            </div>
+            <div class="display-flex row row-fit gap-y-md align-center justify-end"></div>
         </div>
 
         <div class="row pagination">

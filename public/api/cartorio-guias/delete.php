@@ -22,10 +22,10 @@ $userId = $_SESSION['id_usuario'] ?? null;
 if ($userId !== null && trim((string) $userId) !== '') {
     $userPerfis = UsuarioPerfisAutorizacao::perfisDoUsuario(trim((string) $userId));
 }
-$podeExcluir = count(array_intersect($userPerfis, ['ADMIN', 'CHEFIA'])) > 0;
+$podeExcluir = count(array_intersect($userPerfis, ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'])) > 0;
 if (!$podeExcluir) {
     http_response_code(403);
-    echo json_encode(['error' => 'Seu perfil não tem permissão para excluir. Apenas admin ou chefia.'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Seu perfil não tem permissão para excluir. Apenas admin, chefia, diretora ou magistrada.'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 

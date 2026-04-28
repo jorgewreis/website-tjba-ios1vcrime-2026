@@ -110,7 +110,7 @@
             });
     }
 
-    function bindDesalocar(settings, notify, requireSecondClick) {
+    function bindDesalocar(settings, notify) {
         if (!settings.enableDesalocar) {
             return;
         }
@@ -128,17 +128,7 @@
                 return;
             }
 
-            const confirmMessageFromConfig = settings.desalocarConfirmMessage || '';
-            resolveToastMessageByKey(
-                'cartorio.allocation.remove.confirm',
-                {},
-                confirmMessageFromConfig || 'Clique novamente para confirmar a remoção da alocação.'
-            ).then(function (confirmMessage) {
-                if (!requireSecondClick('desalocar-' + alocadoId, confirmMessage)) {
-                    return;
-                }
-
-                return fetch(endpoint, {
+            return fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ alocado_id: alocadoId, tipo: tipo }),
@@ -177,7 +167,6 @@
                 .catch(function () {
                     notifyByKey(notify, 'generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
                 });
-            });
         });
     }
 
@@ -310,7 +299,7 @@
             }
         });
 
-        bindDesalocar(settings, notify, requireSecondClick);
+        bindDesalocar(settings, notify);
     }
 
     App.OficiosEdit = {

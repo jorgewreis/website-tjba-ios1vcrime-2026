@@ -56,7 +56,6 @@
             });
         });
 
-        const requireSecondClick = common.createSecondClickGuard();
         global.document.addEventListener('click', function (event) {
             const btn = event.target.closest('.js-desalocar');
             if (!btn) return;
@@ -64,16 +63,8 @@
             const tipo = btn.getAttribute('data-tipo') || '';
             const endpoint = btn.getAttribute('data-endpoint') || '';
             if (!alocadoId || !endpoint) return;
-            resolveToastMessageByKey(
-                'cartorio.allocation.remove.confirm',
-                {},
-                'Clique novamente para confirmar a remoção da alocação.'
-            ).then(function (confirmMessage) {
-                if (!requireSecondClick('desalocar-' + alocadoId, confirmMessage)) {
-                    return;
-                }
-                btn.disabled = true;
-                return common.postJson(endpoint, { alocado_id: alocadoId, tipo: tipo }).then(function (result) {
+            btn.disabled = true;
+            return common.postJson(endpoint, { alocado_id: alocadoId, tipo: tipo }).then(function (result) {
                 if (result.data && result.data.deleted) {
                     if (typeof common.notifyByKey === 'function') {
                         common.notifyByKey(

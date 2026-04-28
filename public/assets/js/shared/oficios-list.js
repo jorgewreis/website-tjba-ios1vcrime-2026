@@ -82,23 +82,6 @@
         return list;
     }
 
-    function buildSecondClickGuard() {
-        if (App.Page && typeof App.Page.createSecondClickGuard === 'function') {
-            return App.Page.createSecondClickGuard();
-        }
-
-        const pending = {};
-        return function requireSecondClick(key, message) {
-            const now = Date.now();
-            if ((pending[key] || 0) > now) {
-                delete pending[key];
-                return true;
-            }
-            pending[key] = now + 5000;
-            notify('info', 'Confirmação', message);
-            return false;
-        };
-    }
 
     function notifyByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage) {
         const catalog = App.ToastCatalog;
@@ -330,7 +313,6 @@
             return;
         }
 
-        const requireSecondClick = buildSecondClickGuard();
         global.document.addEventListener('click', function (event) {
             const button = event.target.closest(config.desalocarSelector || '.js-desalocar');
             if (!button) {
@@ -344,17 +326,7 @@
                 return;
             }
 
-            const confirmMessageFromConfig = config.desalocarConfirmMessage || '';
-            resolveToastMessageByKey(
-                'cartorio.allocation.remove.confirm',
-                {},
-                confirmMessageFromConfig || 'Clique novamente para confirmar a remoção da alocação.'
-            ).then(function (confirmMessage) {
-                if (!requireSecondClick('desalocar-' + alocadoId, confirmMessage)) {
-                    return;
-                }
-
-                return fetch(endpoint, {
+            return fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ alocado_id: alocadoId, tipo: tipo }),
@@ -383,7 +355,6 @@
                 .catch(function () {
                     notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
                 });
-            });
         });
     }
 

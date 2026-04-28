@@ -137,6 +137,7 @@
         const reuInput = global.document.getElementById('filter-reu');
         const processoInput = global.document.getElementById('filter-processo');
         const salvarBtn = global.document.getElementById('salvar-btn');
+        const cancelarBtn = global.document.getElementById('cancelar-btn');
         const excluirBtn = global.document.getElementById('excluir-btn');
         const requireSecondClick = common.createSecondClickGuard();
 
@@ -258,6 +259,41 @@
                     common.notify('error', 'Erro', 'Erro de conexão.');
                 }
                 salvarBtn.disabled = false;
+            });
+        });
+
+        cancelarBtn?.addEventListener('click', function () {
+            const id = getVal('hidden-ceapa-id');
+            if (!id) {
+                return notifyByKey('cartorio.ceapa.validation.id.required', {}, 'error', 'Erro', 'Identificador do cadastro não informado.');
+            }
+
+            cancelarBtn.disabled = true;
+            common.postJson('/api/cartorio-ceapa/cancel.php', { id: id }).then(function (result) {
+                if (result.data && result.data.success) {
+                    if (typeof common.notifyByKey === 'function') {
+                        common.notifyByKey(
+                            'generic.task.cancel.success',
+                            {},
+                            'success',
+                            'Sucesso',
+                            'Tarefa cancelada com sucesso.'
+                        );
+                    } else {
+                        common.notify('success', 'Sucesso', 'Tarefa cancelada com sucesso.');
+                    }
+                    global.location.href = '/frame.php?page=ceapa';
+                    return;
+                }
+                common.notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Não foi possível cancelar.');
+                cancelarBtn.disabled = false;
+            }).catch(function () {
+                if (typeof common.notifyByKey === 'function') {
+                    common.notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
+                } else {
+                    common.notify('error', 'Erro', 'Erro de conexão.');
+                }
+                cancelarBtn.disabled = false;
             });
         });
 

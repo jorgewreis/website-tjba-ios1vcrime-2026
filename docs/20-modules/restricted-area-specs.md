@@ -49,7 +49,7 @@ Regra transversal:
 
 ## 4. Módulos internos principais
 - **Audiências:** pauta, atas, painel e fluxos de estudantes.
-- **Cartório:** cartas, editais, guias, CEJUSC, medidas protetivas e ofícios.
+- **Cartório:** Cartas Expedidas, Cartas Recebidas, CEJUSC, CEAPA, Editais, Guias, Medidas Protetivas, Produtividade e Ofícios do Cartório.
 - **Gabinete:** réus presos, ofícios e monitoramento eletrônico.
 - **Usuários e perfis:** cadastro, edição, perfis e dados pessoais.
 - **Consultas e cadastros auxiliares:** partes, processos, instituições públicas, prioridades e feriados.

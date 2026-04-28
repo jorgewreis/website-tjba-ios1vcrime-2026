@@ -191,11 +191,10 @@ $podeCancelarTarefa = $podeCancelarTarefa && !$tarefaCancelada && !$tarefaFinali
                 deleteEndpoint: '/api/gabinete-monitoramento-eletronico/delete.php',
                 listHref: '/frame.php?page=monitoramentogabinete',
                 storageKey: 'gme.postReloadToast',
-                cancelConfirmKey: 'gab-mon-cancelar',
-                cancelConfirmMessage: 'Clique novamente em Cancelar monitoramento em até 5 segundos para confirmar.',
-                deleteConfirmKey: 'gab-mon-excluir',
-                deleteConfirmMessage: 'Clique novamente em Excluir em até 5 segundos para confirmar a exclusão.',
-                cancelSuccessMessage: 'Monitoramento cancelado.'
+                cancelSuccessMessage: 'Monitoramento cancelado.',
+                deleteConfirmKey: 'gabinete.monitoramento.delete.confirm',
+                deleteConfirmMessage: 'Clique novamente para confirmar a exclusão definitiva do monitoramento.',
+                deleteSuccessMessage: 'Monitoramento excluído.'
             });
         })();
     </script>

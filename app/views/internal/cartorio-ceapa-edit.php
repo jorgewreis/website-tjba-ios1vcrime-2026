@@ -79,9 +79,9 @@ if ($userIdEdit !== '') {
     require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
     $userPerfisEdit = UsuarioPerfisAutorizacao::perfisDoUsuario($userIdEdit);
 }
-$isEstagiarioEdit = in_array('ESTAGIARIO', $userPerfisEdit, true);
-$isCriadorTarefa = $tarefa !== null && trim((string) ($tarefa['usuario_cadastro_id'] ?? '')) === $userIdEdit;
-$podeExcluirTarefa = !$isEstagiarioEdit || $isCriadorTarefa;
+$perfisPermitidosExcluir = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
+$podeExcluirTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosExcluir)) > 0;
+$podeCancelarTarefa = $userIdEdit !== '';
 $perfisGestaoAlocCeapa = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
 $isGestaoAlocEditCeapa = count(array_intersect($userPerfisEdit, $perfisGestaoAlocCeapa)) > 0;
 $tarefaBloqueadaAlocCeapa = ($statusCumprimento === 'finalizada');
@@ -187,6 +187,7 @@ if ($tarefa !== null) {
                         <option value="pendente"<?php echo $statusCumprimento === 'pendente' ? ' selected' : ''; ?>>Pendente</option>
                         <option value="em_andamento"<?php echo $statusCumprimento === 'em_andamento' ? ' selected' : ''; ?>>Em andamento</option>
                         <option value="finalizada"<?php echo $statusCumprimento === 'finalizada' ? ' selected' : ''; ?>>Finalizada</option>
+                        <option value="cancelado"<?php echo $statusCumprimento === 'cancelado' ? ' selected' : ''; ?>>Cancelado</option>
                     </select>
                 </div>
             </div>
@@ -222,14 +223,21 @@ if ($tarefa !== null) {
             <input type="hidden" id="hidden-ceapa-id" value="<?php echo htmlspecialchars($idTarefa, ENT_QUOTES); ?>">
         <?php endif; ?>
 
-        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
-            <button type="button" class="btn btn-secondary" id="voltar-btn" data-allow-during-loading="true">Voltar</button>
-            <?php if ($errorMessage === ''): ?>
-                <?php if ($podeExcluirTarefa): ?>
-                    <button type="button" class="btn btn-danger-outline" id="excluir-btn">Excluir</button>
+        <div class="card-buttons">
+            <div class="display-flex row row-fit gap-y-md align-center justify-start">
+                <button type="button" class="btn btn-secondary" id="voltar-btn" data-allow-during-loading="true">Voltar</button>
+                <?php if ($errorMessage === '' && $podeCancelarTarefa && $statusCumprimento !== 'cancelado' && $statusCumprimento !== 'finalizada'): ?>
+                    <button type="button" class="btn btn-danger-outline" id="cancelar-btn">Cancelar tarefa</button>
                 <?php endif; ?>
-                <button type="button" class="btn btn-primary" id="salvar-btn">Salvar alterações</button>
-            <?php endif; ?>
+                <?php if ($errorMessage === '' && $podeExcluirTarefa): ?>
+                    <button type="button" class="btn btn-danger" id="excluir-btn">Excluir tarefa</button>
+                <?php endif; ?>
+            </div>
+            <div class="display-flex row row-fit gap-y-md align-center justify-end">
+                <?php if ($errorMessage === ''): ?>
+                    <button type="button" class="btn btn-primary" id="salvar-btn">Salvar alterações</button>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 

@@ -19,6 +19,8 @@ Padronizar o uso de notificacoes e fila de toast pos-reload no frontend JavaScri
 - Em migracao, wrappers locais sao aceitos apenas como adapter temporario.
 - Excecoes precisam de justificativa, owner e condicao de saida.
 - Dominio pode manter `storageKey` proprio quando houver isolamento funcional necessario.
+- Confirmacao em 2 cliques deve ser usada somente para exclusao definitiva de tarefa em telas `*-edit` de Cartorio, Gabinete e Audiencias.
+- Cancelamentos e remocoes auxiliares (alocacao, telefone, endereco, setor, desvinculos e equivalentes) devem executar em clique unico.
 
 ## Inventario de classificacao (varredura inicial)
 

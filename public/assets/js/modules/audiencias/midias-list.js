@@ -30,17 +30,6 @@
         pageTools.flushPostReloadToast(POST_RELOAD_TOAST_KEY, { type: 'info', title: 'Informação' });
     }
 
-    var lockMap = {};
-    function requireSecondClick(key, message) {
-        var now = Date.now();
-        if (lockMap[key] && lockMap[key] > now) {
-            delete lockMap[key];
-            return true;
-        }
-        lockMap[key] = now + 5000;
-        notify('info', 'Confirmação', message);
-        return false;
-    }
 
     function buildListUrl(overrides) {
         var query = {
@@ -229,9 +218,6 @@
         var alocadoId = String(rm.getAttribute('data-alocado-id') || '').trim();
         var endpoint = String(rm.getAttribute('data-endpoint') || '').trim();
         if (!alocadoId || !endpoint) {
-            return;
-        }
-        if (!requireSecondClick('midias-desalocar-' + alocadoId, 'Clique novamente para confirmar a remoção da alocação.')) {
             return;
         }
         rm.disabled = true;

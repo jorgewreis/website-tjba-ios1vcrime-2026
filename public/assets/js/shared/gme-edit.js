@@ -36,25 +36,6 @@
         }
     }
 
-    function createSecondClickGuard() {
-        if (App.Page && typeof App.Page.createSecondClickGuard === 'function') {
-            return App.Page.createSecondClickGuard();
-        }
-
-        const pending = {};
-        return function requireSecondClick(key, message) {
-            const now = Date.now();
-            const validUntil = Number(pending[key] || 0);
-            if (validUntil > now) {
-                delete pending[key];
-                return true;
-            }
-            pending[key] = now + 5000;
-            notify('info', 'Confirmação', message);
-            return false;
-        };
-    }
-
     function bindBackButton(buttonId, href) {
         global.document.getElementById(buttonId)?.addEventListener('click', function () {
             global.location.href = href;
@@ -166,7 +147,9 @@
     function initialize(config) {
         const settings = config || {};
         const storageKey = settings.storageKey || 'gme.postReloadToast';
-        const requireSecondClick = createSecondClickGuard();
+        const requireSecondClick = (App.RecordEditCommon && typeof App.RecordEditCommon.createSecondClickGuard === 'function')
+            ? App.RecordEditCommon.createSecondClickGuard()
+            : null;
 
         bindBackButton(settings.backButtonId, settings.listHref);
         bindReadOnlyTracker(settings.trackRootId, settings.saveButtonId);
@@ -174,9 +157,6 @@
         bindJsonAction(settings.cancelButtonId, settings.cancelEndpoint, function () {
             return { id: global.document.getElementById(settings.idFieldId)?.value || '' };
         }, {
-            beforeSend: function () {
-                return requireSecondClick(settings.cancelConfirmKey, settings.cancelConfirmMessage);
-            },
             onResult: function (result, button) {
                 if (result.ok && result.data && result.data.success) {
                     if (settings.cancelSuccessMessage) {
@@ -203,7 +183,11 @@
             return { id: global.document.getElementById(settings.idFieldId)?.value || '' };
         }, {
             beforeSend: function () {
-                return requireSecondClick(settings.deleteConfirmKey, settings.deleteConfirmMessage);
+                if (typeof requireSecondClick !== 'function') {
+                    return true;
+                }
+                const confirmMessage = settings.deleteConfirmMessage || 'Clique novamente para confirmar a exclusão definitiva da tarefa.';
+                return requireSecondClick('gme-delete', confirmMessage);
             },
             onResult: function (result, button) {
                 if (result.ok && result.data && (result.data.deleted || result.data.message)) {

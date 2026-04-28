@@ -1,22 +1,5 @@
 (function () {
     var pageTools = window.App && App.Page ? App.Page : null;
-    var requireSecondClick = pageTools && typeof pageTools.createSecondClickGuard === 'function'
-        ? pageTools.createSecondClickGuard()
-        : (function () {
-            var pendingConfirmations = {};
-            return function (key, message) {
-                var now = Date.now();
-                var validUntil = Number(pendingConfirmations[key] || 0);
-                if (validUntil > now) {
-                    delete pendingConfirmations[key];
-                    return true;
-                }
-                pendingConfirmations[key] = now + 5000;
-                notify('info', 'Confirmacao', message);
-                return false;
-            };
-        })();
-
     function notify(type, title, message) {
         if (pageTools && typeof pageTools.notify === 'function') {
             pageTools.notify(type, title, message);
@@ -149,7 +132,6 @@
     });
 
     document.getElementById('btn-parte-edit-remover')?.addEventListener('click', function () {
-        if (!requireSecondClick('parte-edit-remover', 'Clique novamente em Remover parte em ate 5 segundos para confirmar.')) return;
         var idParte = String(document.getElementById('parte-edit-id')?.value || '').trim();
         fetch('/api/sala-audiencias-pauta/partes-delete.php', {
             method: 'POST',

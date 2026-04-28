@@ -16,18 +16,10 @@ if (!bootstrapRequireTrustedPostRequest()) {
 
 $connection = Conection::getInstance()->getConnection();
 
-$perfisPermitidosCancelar = ['ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
-require_once $basePath . '/app/helpers/UsuarioPerfisAutorizacao.php';
-$userPerfis = [];
 $userId = $_SESSION['id_usuario'] ?? null;
-if ($userId !== null && trim((string) $userId) !== '') {
-    $userPerfis = UsuarioPerfisAutorizacao::perfisDoUsuario(trim((string) $userId));
-}
-$podeCancelar = count(array_intersect($userPerfis, $perfisPermitidosCancelar)) > 0;
-
-if (!$podeCancelar) {
+if ($userId === null || trim((string) $userId) === '') {
     http_response_code(403);
-    echo json_encode(['error' => 'Seu perfil não tem permissão para cancelar.'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Usuário não autenticado.'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 

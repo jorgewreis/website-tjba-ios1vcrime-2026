@@ -41,23 +41,6 @@
         });
     }
 
-    function buildSecondClickGuard() {
-        if (App.Page && typeof App.Page.createSecondClickGuard === 'function') {
-            return App.Page.createSecondClickGuard();
-        }
-        const pending = {};
-        return function requireSecondClick(key, message) {
-            const now = Date.now();
-            const validUntil = Number(pending[key] || 0);
-            if (validUntil > now) {
-                delete pending[key];
-                return true;
-            }
-            pending[key] = now + 5000;
-            notify('info', 'Confirmação', message);
-            return false;
-        };
-    }
 
     /**
      * @param {{ prefix: string, entityId: string, alocarEndpoint: string }} config
@@ -73,8 +56,6 @@
             return;
         }
 
-        const requireSecondClick = buildSecondClickGuard();
-
         root.addEventListener('click', function (event) {
             const button = event.target.closest('.js-desalocar');
             if (!button || !root.contains(button)) {
@@ -88,16 +69,7 @@
                 return;
             }
 
-            resolveToastMessageByKey(
-                'cartorio.allocation.remove.confirm',
-                {},
-                'Clique novamente para confirmar a remoção da alocação.'
-            ).then(function (confirmMessage) {
-                if (!requireSecondClick('desalocar-' + alocadoId, confirmMessage)) {
-                    return;
-                }
-
-                return fetch(endpoint, {
+            return fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ alocado_id: alocadoId, tipo: tipo }),
@@ -121,7 +93,6 @@
                 .catch(function () {
                     notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
                 });
-            });
         });
 
         if (alocarEndpoint === '') {

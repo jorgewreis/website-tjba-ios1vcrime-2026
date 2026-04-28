@@ -13,8 +13,9 @@ Padronizacao estrutural, visual e comportamental das paginas `*-edit.php` para a
 - Eliminacao de markup legado `row table`.
 - Padrao de toasts com `showToast({ type, title, message })` (variant opcional; ver `docs/00-foundation/sistema-toast.md`).
 - Remocao de `alert()` e substituicao por toasts.
-- Confirmacao de acoes destrutivas via duplo clique com toast informativo.
+- Confirmacao de acoes destrutivas conforme regra vigente: duplo clique apenas para exclusao definitiva de tarefa em telas `*-edit` de Cartorio, Gabinete e Audiencias; demais acoes em clique unico.
 - Feedback de sucesso/erro em operacoes principais (salvar, cancelar, excluir, adicionar/remover vinculos).
+- Barra de acoes padronizada em `card-buttons` com dois grupos: esquerda (`Voltar`, `Cancelar`, `Excluir`) e direita (`Alterar regra de alocacao`, `Cadastrar`, `Salvar`), com exibicao condicional por contexto (`create/edit`), status e permissao.
 
 ## Arquivos atualizados (antes/depois)
 
@@ -34,7 +35,7 @@ Padronizacao estrutural, visual e comportamental das paginas `*-edit.php` para a
 
 - `app/views/internal/cartorio-cejusc-edit.php`
   - **Antes:** secoes em `row table` e exclusao com confirmacao nativa.
-  - **Depois:** secoes em `display-flex`, confirmacao por duplo clique com toast, feedback de cancelamento/exclusao padronizado.
+  - **Depois:** secoes em `display-flex`, feedback de cancelamento/exclusao padronizado e confirmacao de exclusao alinhada ao contrato vigente.
 
 - `app/views/internal/cartorio-cartas-expedidas-edit.php`
   - **Antes:** blocos principais legados, toasts informativos em `simple`.
@@ -78,8 +79,8 @@ Padronizacao estrutural, visual e comportamental das paginas `*-edit.php` para a
 
 ## Seguranca e comportamento
 
-- Endurecimento de acoes destrutivas no front:
-  - substituicao de `confirm()` por confirmacao por duplo clique com janela de 5s e toast de confirmacao.
+- Padronizacao de acoes destrutivas no front:
+  - substituicao de `confirm()` por contrato de confirmacao do projeto (duplo clique somente para exclusao definitiva de tarefa em `*-edit`; demais fluxos em clique unico).
 - Correcao de risco de confirmacao cruzada:
   - chave de confirmacao passou a ser por item (`id`) em listas com multiplos botoes de exclusao/desvinculo.
 - Endurecimento backend em endpoints mutaveis:
