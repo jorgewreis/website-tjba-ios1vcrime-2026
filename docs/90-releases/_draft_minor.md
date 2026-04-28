@@ -188,4 +188,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(cartorio-oficios): improve layout and button organization** `[c44b88e]`
 - **feat(cartorio-medidas-protetivas): add cadastro no BNMP functionality** `[9f4c306]`
 - **refactor(cartorio-medidas-protetivas): update messaging and reorganize server allocation** `[0a16be8]`
+- **feat(cadastro-form): add frontend validation logging for user inputs** `[d5e52ca]`
 
