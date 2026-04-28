@@ -54,10 +54,50 @@
 ### Acao aplicada nesta etapa
 - Removido `public/assets/js/shared/navigation.js` (evidencia de ausencia total de referencias no repositorio).
 - Removido `app/services/Produtividade.php` apos auditoria completa do modulo Produtividade; fluxo canonico em `ProdutividadeService`.
+- Removido `public/assets/js/shared/form-utils.js`: `FormUtils` / nome do arquivo sem referencias em PHP/HTML/JS do repositorio.
 
 ## Validacao tecnica
 - JS lints (arquivos alterados): sem erros.
 - PHP sintaxe (`php -l`) dos arquivos alterados: sem erros.
+- PHP sintaxe (`php -l`) em todos os `public/api/produtividade/**/*.php` (22 arquivos): sem erros.
 
 ## Pendencias para proxima rodada
 - Expandir padronizacao de resposta JSON em endpoints de mesma familia (quando aprovado).
+
+---
+
+## Onda 4 — Consolidacao extra (DELETE + RecordEditCommon toast)
+
+### PHP — autorizacao de exclusao alinhada
+- `DeleteAuthorization::perfisGabineteExclusao()` para fluxos Gabinete / Sala de Midias (`ADMIN`, `CHEFIA`).
+- Endpoints atualizados para usar o helper:
+  - `public/api/cartorio-guias/delete.php`
+  - `public/api/gabinete-oficios/delete.php`
+  - `public/api/gabinete-monitoramento-eletronico/delete.php`
+  - `public/api/sala-midias/delete.php`
+
+### JS — fonte unica via `App.Page`
+- `notifyByKey` em `public/assets/js/shared/record-edit-common.js` passa a delegar primeiro para `App.Page.notifyByKey` (beneficia todas as telas que usam `App.RecordEditCommon`).
+
+### Validacao
+- `php -l` nos PHP alterados: sem erros.
+- Lint JS (`record-edit-common.js`): sem erros.
+
+---
+
+## Onda 5 — Admin feriados + toast shared restante
+
+### PHP
+- `DeleteAuthorization::perfisAdminOuChefia()` (DRY com `perfisGabineteExclusao()`).
+- `public/api/admin/feriados/delete.php` migrado para `DeleteAuthorization::usuarioPodeExcluir(..., perfisAdminOuChefia())` (mensagens 403 inalteradas).
+
+### JS (shared)
+- `notifyByKey` passa a priorizar `App.Page.notifyByKey` quando existir, com fallback ao catalogo local:
+  - `public/assets/js/shared/oficios-list.js`, `oficios-edit.js`
+  - `public/assets/js/shared/gme-list.js`, `gme-edit.js`, `gme-create.js`
+  - `public/assets/js/shared/cartorio-simple-edit.js`, `cartorio-guias-edit.js`, `cartorio-alocacao-direcionada-edit.js`
+  - `public/assets/js/shared/cartorio-editais-list.js`, `cartorio-guias-list.js`, `cartorio-cejusc-list.js`, `cartorio-medidas-protetivas-list.js`
+
+### Validacao
+- `php -l` em `app/helpers/DeleteAuthorization.php` e `public/api/admin/feriados/delete.php`: sem erros.
+- Lint nos JS alterados da Onda 5: sem erros.

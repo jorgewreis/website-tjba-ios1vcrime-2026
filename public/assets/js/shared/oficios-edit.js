@@ -60,6 +60,10 @@
     }
 
     function notifyByKey(notify, key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        if (App.Page && typeof App.Page.notifyByKey === 'function') {
+            App.Page.notifyByKey(key, vars || {}, fallbackType, fallbackTitle, fallbackMessage);
+            return;
+        }
         const catalog = App.ToastCatalog;
         if (!catalog || typeof catalog.notifyByKey !== 'function') {
             notify(fallbackType, fallbackTitle, fallbackMessage);

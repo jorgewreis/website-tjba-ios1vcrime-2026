@@ -7,6 +7,7 @@ $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/OficiosGabineteService.php';
+require_once $basePath . '/app/helpers/DeleteAuthorization.php';
 
 if (!bootstrapRequireTrustedPostRequest()) {
     http_response_code(403);
@@ -16,14 +17,11 @@ if (!bootstrapRequireTrustedPostRequest()) {
 
 $connection = Conection::getInstance()->getConnection();
 
-$perfisPermitidosExcluir = ['ADMIN', 'CHEFIA'];
-require_once $basePath . '/app/helpers/UsuarioPerfisAutorizacao.php';
-$userPerfis = [];
 $userId = $_SESSION['id_usuario'] ?? null;
-if ($userId !== null && trim((string) $userId) !== '') {
-    $userPerfis = UsuarioPerfisAutorizacao::perfisDoUsuario(trim((string) $userId));
-}
-$podeExcluir = count(array_intersect($userPerfis, $perfisPermitidosExcluir)) > 0;
+$podeExcluir = DeleteAuthorization::usuarioPodeExcluir(
+    $userId !== null ? trim((string) $userId) : null,
+    DeleteAuthorization::perfisGabineteExclusao()
+);
 
 if (!$podeExcluir) {
     http_response_code(403);

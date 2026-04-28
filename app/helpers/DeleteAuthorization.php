@@ -11,6 +11,18 @@ final class DeleteAuthorization
         return ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
     }
 
+    /** Admin ou chefia (painel admin, gabinete, sala de mídias, etc.). */
+    public static function perfisAdminOuChefia(): array
+    {
+        return ['ADMIN', 'CHEFIA'];
+    }
+
+    /** Alias semântico: mesmo conjunto que {@see perfisAdminOuChefia()}. */
+    public static function perfisGabineteExclusao(): array
+    {
+        return self::perfisAdminOuChefia();
+    }
+
     public static function usuarioPodeExcluir(?string $userId, ?array $perfisPermitidos = null): bool
     {
         $uid = trim((string) ($userId ?? ''));

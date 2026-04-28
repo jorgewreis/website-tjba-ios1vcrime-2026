@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/_common.php';
 require_once dirname(__DIR__, 3) . '/app/helpers/UsuarioPerfisAutorizacao.php';
+require_once dirname(__DIR__, 3) . '/app/helpers/DeleteAuthorization.php';
 require_once dirname(__DIR__, 3) . '/app/access/AccessEvaluator.php';
 
 try {
@@ -18,8 +19,7 @@ try {
     }
 
     /** Exclusão restrita a admin ou chefia. */
-    $perfisPermitidosExcluir = ['ADMIN', 'CHEFIA'];
-    if (count(array_intersect($perfis, $perfisPermitidosExcluir)) === 0) {
+    if (!DeleteAuthorization::usuarioPodeExcluir($usuarioId, DeleteAuthorization::perfisGabineteExclusao())) {
         salaMidiasJson(['error' => 'Seu perfil não tem permissão para excluir. Apenas admin ou chefia.'], 403);
         exit;
     }
