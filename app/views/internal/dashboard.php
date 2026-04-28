@@ -48,6 +48,25 @@ if ($userId !== '') {
             }
         }
         $alocacaoCards = DashboardInternoAlocacaoResumoHelper::cardsParaUsuario($connection, $userId);
+        $alocacaoCards = array_values(array_filter(
+            $alocacaoCards,
+            static function (array $card): bool {
+                $blocos = $card['status_blocos'] ?? [];
+                $pendente = 0;
+                $emAndamento = 0;
+                foreach ($blocos as $bloco) {
+                    $label = mb_strtolower(trim((string) ($bloco['label'] ?? '')), 'UTF-8');
+                    $count = (int) ($bloco['count'] ?? 0);
+                    if ($label === 'pendente') {
+                        $pendente += $count;
+                    } elseif ($label === 'em andamento') {
+                        $emAndamento += $count;
+                    }
+                }
+
+                return ($pendente + $emAndamento) > 0;
+            }
+        ));
     } catch (Throwable $e) {
         $prodError = $e->getMessage();
     }

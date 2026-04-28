@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0006
+
+**Data:** 2026-04-28 12:28:03 | **Commit:** `5adb19c` | **Tipo:** `patch`
+
+- fix(dashboard): enhance allocation card filtering and add type constraint
+
 ## V. 1.97.0005
 
 **Data:** 2026-04-28 12:22:31 | **Commit:** `53e4abe` | **Tipo:** `patch`
@@ -4818,6 +4824,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

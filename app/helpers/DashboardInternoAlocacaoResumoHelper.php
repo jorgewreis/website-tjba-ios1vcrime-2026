@@ -318,6 +318,7 @@ final class DashboardInternoAlocacaoResumoHelper
              FROM `%s` m
              INNER JOIN `%s` a ON a.`%s` = m.`%s`
              WHERE a.`usuario_id` = :usuario_id
+               AND a.`tipo` IN (\'rule\', \'specific\')
              GROUP BY m.`%s`',
             $cfg['status_col'],
             $cfg['main_pk'],
