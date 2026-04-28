@@ -237,6 +237,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             }
             $exibirStatusAoInvesDeInscricao = ($statusRow !== 'designada');
             $ocultarInfoInscritos = $exibirStatusAoInvesDeInscricao || $sigiloso || $menor || $prioridadeBloqueio;
+            $ocultarPrioridadesCompacto = in_array($statusRow, ['finalizada', 'cancelada'], true);
             $inicioEfetivoRaw = trim((string) ($row['data_hora_inicio_efetivo'] ?? ''));
             $fimEfetivoRaw = trim((string) ($row['data_hora_fim_efetivo'] ?? ''));
             $horaExibicao = painelEstudanteHoraPorStatus(
@@ -317,7 +318,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                     }
                 }
             ?>
-            <?php if ($prioridadesRow !== [] || $sigiloso): ?>
+            <?php if (!$ocultarPrioridadesCompacto && ($prioridadesRow !== [] || $sigiloso)): ?>
             <div class="display-flex col col-full grp-subtask-panel">
                 <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top align-start flex-wrap grp-sub-line grp-sub-line-primary" style="font-family: monospace; font-size: 11px;">
                     <div class="display-flex row row-fit justify-start gap-y-md flex-wrap grp-sub-left">

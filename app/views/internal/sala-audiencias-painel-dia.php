@@ -179,6 +179,15 @@ function painelResumoInscrito(array $inscrito): string
         <?php endif; ?>
 
         <?php foreach ($rows as $row): ?>
+        <?php
+            $statusCompactoRaw = strtolower(preg_replace('/[\s-]+/', '_', trim((string) ($row['status'] ?? ''))));
+            if ($statusCompactoRaw === 'agendada') {
+                $statusCompactoRaw = 'designada';
+            } elseif ($statusCompactoRaw === 'adiada') {
+                $statusCompactoRaw = 'redesignada';
+            }
+            $ocultarInfosCompactas = in_array($statusCompactoRaw, ['finalizada', 'cancelada'], true);
+        ?>
         <div class="display-flex col col-full register border-bottom" data-audiencia-id="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>">
             <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                 <div class="display-flex row row-fit justify-start gap-y-sm align-center">
@@ -198,6 +207,7 @@ function painelResumoInscrito(array $inscrito): string
                         <span class="minor-info">Tipo de audiência</span>
                         <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) $row['tipo_audiencia'], ENT_QUOTES); ?></span>
                     </div>
+                    <?php if (!$ocultarInfosCompactas): ?>
                     <div class="col width-300">
                         <span class="minor-info">Intimações</span>
                         <span class="major-info">
@@ -264,6 +274,7 @@ function painelResumoInscrito(array $inscrito): string
                             <?php endforeach; ?>
                         </span>
                     </div>
+                    <?php endif; ?>
                 </div>
                 <div class="display-flex row row-fit justify-end gap-y-sm align-center padding-y-sm">
                         <?php
@@ -360,7 +371,7 @@ function painelResumoInscrito(array $inscrito): string
                 $inscritosRow = $idPautaAtual !== '' ? ($inscritosByPauta[$idPautaAtual] ?? []) : [];
                 $totalInscritosReal = $idPautaAtual !== '' ? (int) ($totalInscritosByPauta[$idPautaAtual] ?? count($inscritosRow)) : count($inscritosRow);
             ?>
-            <?php if ($prioridadesRow !== [] || $processoSigiloso): ?>
+            <?php if (!$ocultarInfosCompactas && ($prioridadesRow !== [] || $processoSigiloso)): ?>
             <div class="display-flex col col-full grp-subtask-panel" id="subtask-grp-<?php echo htmlspecialchars((string) ($row['id_pauta'] ?? ''), ENT_QUOTES); ?>">
                 <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top align-start flex-wrap grp-sub-line grp-sub-line-primary" style="font-family: monospace; font-size: 11px;">
                     <div class="display-flex row row-fit justify-start gap-y-md flex-wrap grp-sub-left">
@@ -389,6 +400,7 @@ function painelResumoInscrito(array $inscrito): string
                 </div>
             </div>
             <?php endif; ?>
+            <?php if (!$ocultarInfosCompactas): ?>
             <div class="display-flex col col-full grp-subtask-panel" id="subtask-grp-estudantes-<?php echo htmlspecialchars((string) ($row['id_pauta'] ?? ''), ENT_QUOTES); ?>">
                 <?php if ($totalInscritosReal <= 0 && $inscritosRow === []): ?>
                 <div class="display-flex row row-full subtask padding-x-sm padding-y-sm border-top" style="font-family: monospace; font-size: 11px;">
@@ -405,6 +417,7 @@ function painelResumoInscrito(array $inscrito): string
                     <?php endforeach; ?>
                 <?php endif; ?>
             </div>
+            <?php endif; ?>
         </div>
         <?php endforeach; ?>
     </div>
