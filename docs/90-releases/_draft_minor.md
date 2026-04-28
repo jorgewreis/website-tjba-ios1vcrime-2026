@@ -13,4 +13,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(confirmations): streamline confirmation actions for task deletions and removals** `[593b574]`
 - **refactor(buttons): standardize button layouts and improve accessibility** `[e27d0fd]`
 - **refactor(toast): update toast notification guidelines and improve button accessibility** `[a2bfca9]`
+- **refactor(notifications): enhance notifyByKey function across multiple modules** `[585e3f4]`
 
