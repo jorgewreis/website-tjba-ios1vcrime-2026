@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0049
+
+**Data:** 2026-04-28 10:23:11 | **Commit:** `c45f9dd` | **Tipo:** `patch`
+
+- fix(cadastro_estudantes): improve CPF duplication handling and error messaging
+
 ## V. 1.96.0048
 
 **Data:** 2026-04-28 10:20:21 | **Commit:** `20e0adc` | **Tipo:** `patch`
@@ -4764,6 +4770,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -133,32 +133,39 @@ try {
         'estudanteId' => $existsEstudanteCpf ? (string) ($estudanteRow['id'] ?? '') : '',
         'cpfFormatoConsulta' => strlen($cpfFormatado),
     ]);
-    if ($existsEstudanteCpf) {
-        $stmtUsuarioByCpf = $pdo->prepare("SELECT id_usuario FROM usuarios WHERE cpf = ? LIMIT 1");
-        $stmtUsuarioByCpf->execute([$cpfFormatado]);
-        $usuarioVinculado = $stmtUsuarioByCpf->fetch(PDO::FETCH_ASSOC) ?: null;
-        $debugLog('H3', 'cadastro_estudantes.php:113', 'CPF encontrado em estudantes; validando vínculo em usuarios', [
-            'hasUsuarioComMesmoCpf' => $usuarioVinculado !== null,
-            'usuarioId' => $usuarioVinculado !== null ? (string) ($usuarioVinculado['id_usuario'] ?? '') : '',
-        ]);
-        echo json_encode([
-            'success' => false,
-            'message' => 'Já existe um cadastro com este CPF. Não é possível cadastrar novamente. Se você já se cadastrou, utilize a área de login ou entre em contato com o setor responsável.',
-        ]);
-        exit;
-    }
 
     // Verificação: CPF já em usuarios (acesso ao sistema)
     $stmt = $pdo->prepare("SELECT id_usuario FROM usuarios WHERE cpf = ? LIMIT 1");
     $stmt->execute([$cpfFormatado]);
-    $existsUsuarioCpf = (bool) $stmt->fetch();
+    $usuarioRow = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    $existsUsuarioCpf = $usuarioRow !== null;
     $debugLog('H2', 'cadastro_estudantes.php:119', 'Resultado verificação duplicidade em usuarios', [
         'existsUsuarioCpf' => $existsUsuarioCpf,
+        'usuarioId' => $existsUsuarioCpf ? (string) ($usuarioRow['id_usuario'] ?? '') : '',
     ]);
-    if ($existsUsuarioCpf) {
+
+    if ($existsEstudanteCpf || $existsUsuarioCpf) {
+        $errorCode = 'STUDENT_DUPLICATE_UNKNOWN';
+        $message = 'Já existe um cadastro com este CPF no sistema.';
+        if ($existsEstudanteCpf && $existsUsuarioCpf) {
+            $errorCode = 'STUDENT_DUPLICATE_ESTUDANTES_USUARIOS';
+            $message = 'Este CPF já possui cadastro de estudante e usuário de acesso. Utilize a área de login/recuperação de senha.';
+        } elseif ($existsEstudanteCpf) {
+            $errorCode = 'STUDENT_DUPLICATE_ESTUDANTES';
+            $message = 'Este CPF já está cadastrado na base de estudantes. Se você ainda não acessa o sistema, contate o suporte para regularização.';
+        } elseif ($existsUsuarioCpf) {
+            $errorCode = 'STUDENT_DUPLICATE_USUARIOS';
+            $message = 'Já existe um usuário com este CPF no sistema. Utilize a área de login ou recuperação de senha.';
+        }
+        $debugLog('H3', 'cadastro_estudantes.php:136', 'Bloqueio por duplicidade de CPF com origem detalhada', [
+            'errorCode' => $errorCode,
+            'existsEstudanteCpf' => $existsEstudanteCpf,
+            'existsUsuarioCpf' => $existsUsuarioCpf,
+        ]);
         echo json_encode([
             'success' => false,
-            'message' => 'Já existe um usuário com este CPF no sistema. Utilize a área de login ou recuperação de senha.',
+            'error_code' => $errorCode,
+            'message' => $message,
         ]);
         exit;
     }
