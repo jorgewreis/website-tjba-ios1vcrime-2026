@@ -16,6 +16,17 @@ require_once __DIR__ . '/../repositories/OficiosCartorioRepository.php';
  */
 final class DashboardInternoAlocacaoResumoHelper
 {
+    private const REGRA_POR_TABELA_ALOCADOS = [
+        'guias_alocados' => 'ALLOCATE-GUIAS',
+        'ceapa_alocados' => 'ALLOCATE-CEAPA',
+        'cejusc_alocados' => 'ALLOCATE-CEJUSC',
+        'cartas_expedidas_alocados' => 'ALLOCATE-CARTASEXPEDIDAS',
+        'cartas_recebidas_alocados' => 'ALLOCATE-CARTASRECEBIDAS',
+        'editais_alocados' => 'ALLOCATE-EDITAIS',
+        'medidas_protetivas_alocados' => 'ALLOCATE-MEDIDASPROTETIVAS',
+        'cartorio_oficios_alocados' => 'ALLOCATE-CARTORIOOFICIOS',
+    ];
+
     private const ORDEM_REGRAS = [
         'ALLOCATE-GUIAS',
         'ALLOCATE-CEAPA',
@@ -39,14 +50,20 @@ final class DashboardInternoAlocacaoResumoHelper
 
         $alocRepo = new AlocacoesRegrasRepository($connection);
         $regrasRows = $alocRepo->findByUsuarioId($userId);
-        $seen = [];
-        $cards = [];
+        $rulesToRender = [];
         foreach ($regrasRows as $row) {
             $code = strtoupper(trim((string) ($row['regra'] ?? '')));
-            if ($code === '' || isset($seen[$code])) {
-                continue;
+            if ($code !== '') {
+                $rulesToRender[$code] = true;
             }
-            $seen[$code] = true;
+        }
+
+        foreach (self::findRegrasComAlocacoesDiretasDoUsuario($connection, $userId) as $code) {
+            $rulesToRender[$code] = true;
+        }
+
+        $cards = [];
+        foreach (array_keys($rulesToRender) as $code) {
             $card = self::cardForRegra($connection, $code);
             if ($card !== null) {
                 $cards[] = $card;
@@ -65,6 +82,35 @@ final class DashboardInternoAlocacaoResumoHelper
         });
 
         return $cards;
+    }
+
+    /**
+     * Descobre módulos em que o usuário possui registros em tabelas *_alocados
+     * (alocação automática por regra, all, ou específica), mesmo quando ele
+     * não é o usuário definido na regra ALLOCATE-*.
+     *
+     * @return list<string>
+     */
+    private static function findRegrasComAlocacoesDiretasDoUsuario(PDO $connection, string $userId): array
+    {
+        $userId = trim($userId);
+        if ($userId === '') {
+            return [];
+        }
+
+        $found = [];
+        foreach (self::REGRA_POR_TABELA_ALOCADOS as $table => $regraCode) {
+            $stmt = $connection->prepare(
+                sprintf('SELECT 1 FROM `%s` WHERE `usuario_id` = :usuario_id LIMIT 1', $table)
+            );
+            $stmt->bindValue(':usuario_id', $userId);
+            $stmt->execute();
+            if ($stmt->fetchColumn() !== false) {
+                $found[] = $regraCode;
+            }
+        }
+
+        return $found;
     }
 
     /**

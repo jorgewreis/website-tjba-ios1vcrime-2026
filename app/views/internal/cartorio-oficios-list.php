@@ -298,7 +298,7 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                 </div>
             
                 <input type="hidden" id="filter-classe" data-datajud-related="true" value="" autocomplete="off">
-                <div class="col">
+                <div class="col" id="oficio-meio-envio-row">
                     <label for="oficio-meio-envio">Meio de envio</label>
                     <select class="width-400 height-md" id="oficio-meio-envio" name="meio_envio">
                         <option value="">Selecione…</option>
