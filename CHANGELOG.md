@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0046
+
+**Data:** 2026-04-28 10:12:44 | **Commit:** `d5e52ca` | **Tipo:** `patch`
+
+- feat(cadastro-form): add frontend validation logging for user inputs
+
 ## V. 1.96.0045
 
 **Data:** 2026-04-28 10:09:48 | **Commit:** `0a16be8` | **Tipo:** `patch`
@@ -4746,6 +4752,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
