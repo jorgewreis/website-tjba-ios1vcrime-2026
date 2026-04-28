@@ -9,6 +9,24 @@ require_once __DIR__ . '/../../app/helpers/SexoHelper.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
+$debugLogPath = dirname(__DIR__, 2) . '/debug-07d2e0.log';
+$debugRunId = trim((string) ($_SERVER['HTTP_X_DEBUG_RUN_ID'] ?? ''));
+if ($debugRunId === '') {
+    $debugRunId = 'api-' . date('YmdHis') . '-' . substr(bin2hex(random_bytes(4)), 0, 8);
+}
+$debugLog = static function (string $hypothesisId, string $location, string $message, array $data = []) use ($debugLogPath, $debugRunId): void {
+    $row = [
+        'sessionId' => '07d2e0',
+        'runId' => $debugRunId,
+        'hypothesisId' => $hypothesisId,
+        'location' => $location,
+        'message' => $message,
+        'data' => $data,
+        'timestamp' => (int) round(microtime(true) * 1000),
+    ];
+    @file_put_contents($debugLogPath, json_encode($row, JSON_UNESCAPED_UNICODE) . PHP_EOL, FILE_APPEND);
+};
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['success' => false, 'message' => 'Método não permitido.']);
@@ -42,6 +60,13 @@ $whatsapp  = !empty($payload['telefone_whatsapp']);
 $faculdade = mb_substr(trim((string) ($payload['faculdade'] ?? '')), 0, $limites['faculdade']);
 $email     = mb_strtolower(trim((string) ($payload['email'] ?? '')), 'UTF-8');
 $email     = mb_substr($email, 0, $limites['email']);
+$debugLog('H1', 'cadastro_estudantes.php:46', 'Payload normalizado no backend', [
+    'cpfDigitsLength' => strlen(Security::normalizeCPF($cpf)),
+    'telefoneDigitsLength' => strlen((string) preg_replace('/\D/', '', $telefone)),
+    'sexo' => $sexo,
+    'faculdadeSelecionada' => $faculdade !== '',
+    'emailLength' => strlen($email),
+]);
 
 $cpfNumerico = Security::normalizeCPF($cpf);
 if (!Security::validarCPF($cpfNumerico)) {
@@ -101,7 +126,11 @@ try {
     // Verificação de duplicidade: CPF é único no cadastro de estudantes
     $stmt = $pdo->prepare("SELECT id FROM estudantes WHERE cpf = ? LIMIT 1");
     $stmt->execute([$cpfFormatado]);
-    if ($stmt->fetch()) {
+    $existsEstudanteCpf = (bool) $stmt->fetch();
+    $debugLog('H2', 'cadastro_estudantes.php:104', 'Resultado verificação duplicidade em estudantes', [
+        'existsEstudanteCpf' => $existsEstudanteCpf,
+    ]);
+    if ($existsEstudanteCpf) {
         echo json_encode([
             'success' => false,
             'message' => 'Já existe um cadastro com este CPF. Não é possível cadastrar novamente. Se você já se cadastrou, utilize a área de login ou entre em contato com o setor responsável.',
@@ -112,7 +141,11 @@ try {
     // Verificação: CPF já em usuarios (acesso ao sistema)
     $stmt = $pdo->prepare("SELECT id_usuario FROM usuarios WHERE cpf = ? LIMIT 1");
     $stmt->execute([$cpfFormatado]);
-    if ($stmt->fetch()) {
+    $existsUsuarioCpf = (bool) $stmt->fetch();
+    $debugLog('H2', 'cadastro_estudantes.php:119', 'Resultado verificação duplicidade em usuarios', [
+        'existsUsuarioCpf' => $existsUsuarioCpf,
+    ]);
+    if ($existsUsuarioCpf) {
         echo json_encode([
             'success' => false,
             'message' => 'Já existe um usuário com este CPF no sistema. Utilize a área de login ou recuperação de senha.',
@@ -197,6 +230,10 @@ try {
     }
 
     $pdo->commit();
+    $debugLog('H3', 'cadastro_estudantes.php:212', 'Cadastro concluído com sucesso', [
+        'createdUsuario' => true,
+        'createdEstudante' => true,
+    ]);
 
     echo json_encode([
         'success' => true,
@@ -206,6 +243,10 @@ try {
     if (isset($pdo) && $pdo->inTransaction()) {
         $pdo->rollBack();
     }
+    $debugLog('H3', 'cadastro_estudantes.php:223', 'PDOException no cadastro de estudante', [
+        'code' => (string) $e->getCode(),
+        'message' => $e->getMessage(),
+    ]);
     if ($e->getCode() == '42S02') {
         error_log('Tabela estudantes ou usuarios não existe. Execute os SQL em docs/sql/ e database/schema.sql');
         echo json_encode(['success' => false, 'message' => 'Sistema em configuração. Tente novamente mais tarde.']);
@@ -236,6 +277,9 @@ try {
     if (isset($pdo) && $pdo->inTransaction()) {
         $pdo->rollBack();
     }
+    $debugLog('H5', 'cadastro_estudantes.php:248', 'Throwable no cadastro de estudante', [
+        'message' => $e->getMessage(),
+    ]);
     error_log('cadastro_estudantes API: ' . $e->getMessage());
     echo json_encode([
         'success' => false,

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0045
+
+**Data:** 2026-04-28 10:09:48 | **Commit:** `0a16be8` | **Tipo:** `patch`
+
+- refactor(cartorio-medidas-protetivas): update messaging and reorganize server allocation
+
 ## V. 1.96.0044
 
 **Data:** 2026-04-28 09:52:49 | **Commit:** `9f4c306` | **Tipo:** `patch`
@@ -4740,6 +4746,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -61,7 +61,7 @@ try {
             <div class="display-flex row row-fit justify-end gap-y-md">
                 <div class="card-allocate-rule">
                     <?php if ($hasRuleAllocation): ?>
-                        <span>*Conforme regra, as medidas protetivas serão alocadas automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
+                        <span>*Conforme regra, o cadastro no BNMP será alocado automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
                     <?php else: ?>
                         <span>*Não existe nenhum usuário alocado para esta tarefa por regra.</span>
                     <?php endif; ?>
@@ -80,9 +80,6 @@ try {
                 <input type="text" class="width-400 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" required>
             </div>
         </div>
-
-        <!-- Alocação de servidor -->
-        <?php $cartorioAlocacaoPrefix = 'medidas'; include __DIR__ . '/_cartorio_alocacao_direcionada_create.php'; ?>
 
         <input type="hidden" id="filter-classe" data-datajud-related="true" value="" autocomplete="off">
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
@@ -113,7 +110,11 @@ try {
                 <input type="date" class="width-400 height-md" id="reu-data-nascimento">
             </div>
         </div>
+        
+        <!-- Alocação de servidor -->
+        <?php $cartorioAlocacaoPrefix = 'medidas'; include __DIR__ . '/_cartorio_alocacao_direcionada_create.php'; ?>
 
+        <!-- Ações -->
         <div class="card-buttons">
             <div class="display-flex row row-fit justify-start gap-y-md">
                 <button class="btn btn-secondary" id="voltar-btn" data-allow-during-loading="true">Voltar</button>
