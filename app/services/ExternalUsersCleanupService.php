@@ -11,10 +11,10 @@ final class ExternalUsersCleanupService
     }
 
     /**
-     * Remove estudantes sem acesso por mais de N dias.
+     * Remove usuários externos (perfil ESTUDANTE) sem acesso por mais de N dias.
      * Critério: perfil ESTUDANTE e COALESCE(ultimo_acesso, created_at) anterior ao limite.
      *
-     * @return array{deleted_users:int, deleted_students:int}
+     * @return array{deleted_users:int}
      */
     public function purgeInactiveStudents(int $daysWithoutAccess = 30): array
     {
@@ -36,7 +36,7 @@ final class ExternalUsersCleanupService
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         if ($rows === []) {
-            return ['deleted_users' => 0, 'deleted_students' => 0];
+            return ['deleted_users' => 0];
         }
 
         $userIds = [];
@@ -53,14 +53,13 @@ final class ExternalUsersCleanupService
         }
 
         if ($userIds === [] || $cpfs === []) {
-            return ['deleted_users' => 0, 'deleted_students' => 0];
+            return ['deleted_users' => 0];
         }
 
         $userIds = array_values(array_unique($userIds));
         $cpfs = array_values(array_unique($cpfs));
 
         $deletedUsers = 0;
-        $deletedStudents = 0;
 
         $this->connection->beginTransaction();
         try {
@@ -69,8 +68,6 @@ final class ExternalUsersCleanupService
             $this->deleteByIds('recuperacao_senha', 'usuario', $userIds);
             $this->deleteByIds('historico_senha', 'usuario', $userIds);
             $this->deleteByIds('tentativas_login', 'cpf', $cpfs);
-
-            $deletedStudents = $this->deleteByIds('estudantes', 'cpf', $cpfs);
             $deletedUsers = $this->deleteByIds('usuarios', 'id_usuario', $userIds);
 
             $this->connection->commit();
@@ -81,7 +78,7 @@ final class ExternalUsersCleanupService
             throw $e;
         }
 
-        return ['deleted_users' => $deletedUsers, 'deleted_students' => $deletedStudents];
+        return ['deleted_users' => $deletedUsers];
     }
 
     /**

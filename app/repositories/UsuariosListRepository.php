@@ -2,9 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Listagem de servidores internos (tabela usuarios + perfis/setores).
- * Apenas usuários com perfil interno (exclui quem tem só ESTUDANTE).
- * Estudantes vêm da tabela estudantes (EstudantesListRepository).
+ * Listagem de usuários na fonte única `usuarios` (internos e externos).
  */
 final class UsuariosListRepository
 {
@@ -25,12 +23,7 @@ final class UsuariosListRepository
         $this->connection = $connection;
     }
 
-    /**
-     * Lista apenas servidores internos (usuarios com perfil diferente de só ESTUDANTE).
-     * Retorna todos os registros filtrados (sem LIMIT); paginação é feita no serviço após merge com estudantes.
-     *
-     * @return array<int, array>
-     */
+    /** @return array<int, array> */
     public function listServidores(?string $perfilFilter): array
     {
         [$whereClause, $params] = $this->buildServidoresFilter($perfilFilter);
@@ -61,6 +54,36 @@ final class UsuariosListRepository
         return $rows;
     }
 
+    /**
+     * Lista usuários externos com perfil ESTUDANTE.
+     *
+     * @return array<int, array>
+     */
+    public function listExternosEstudantes(): array
+    {
+        $sql = "SELECT v.id_usuario, v.nome, v.sobrenome, v.nome_completo, v.cpf, v.email, v.cargo, v.instituicao, v.telefone, v.ultimo_acesso, v.perfis,
+                'Sala de Audiências' AS setores,
+                COALESCE(tl.bloqueado, 0) AS bloqueado_login,
+                COALESCE(u.cadastro_ativo, 1) AS cadastro_ativo
+                FROM v_usuarios_completo v
+                INNER JOIN usuarios u ON v.id_usuario = u.id_usuario
+                LEFT JOIN tentativas_login tl ON v.cpf = tl.cpf AND tl.bloqueado = 1
+                WHERE v.id_usuario IN (SELECT usuario FROM usuario_perfil WHERE perfil = 'ESTUDANTE')
+                ORDER BY v.nome_completo ASC";
+        $statement = $this->connection->prepare($sql);
+        $statement->execute();
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($rows as $i => $row) {
+            $rows[$i]['status'] = $this->deriveStatus($row);
+            $rows[$i]['tipo'] = 'externo';
+            $rows[$i]['origem'] = 'usuarios';
+            if (trim((string) ($rows[$i]['cargo'] ?? '')) === '') {
+                $rows[$i]['cargo'] = 'Estudante';
+            }
+        }
+        return $rows;
+    }
+
     public function countServidores(?string $perfilFilter): int
     {
         [$whereClause, $params] = $this->buildServidoresFilter($perfilFilter);
@@ -73,6 +96,17 @@ final class UsuariosListRepository
         foreach ($params as $name => $value) {
             $statement->bindValue($name, $value);
         }
+        $statement->execute();
+        return (int) $statement->fetchColumn();
+    }
+
+    public function countExternosEstudantes(): int
+    {
+        $sql = "SELECT COUNT(DISTINCT v.id_usuario) AS total
+                FROM v_usuarios_completo v
+                INNER JOIN usuarios u ON v.id_usuario = u.id_usuario
+                WHERE v.id_usuario IN (SELECT usuario FROM usuario_perfil WHERE perfil = 'ESTUDANTE')";
+        $statement = $this->connection->prepare($sql);
         $statement->execute();
         return (int) $statement->fetchColumn();
     }

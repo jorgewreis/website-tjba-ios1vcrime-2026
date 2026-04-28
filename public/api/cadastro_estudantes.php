@@ -9,24 +9,6 @@ require_once __DIR__ . '/../../app/helpers/SexoHelper.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-$debugLogPath = dirname(__DIR__, 2) . '/.cursor/debug-07d2e0.log';
-$debugRunId = trim((string) ($_SERVER['HTTP_X_DEBUG_RUN_ID'] ?? ''));
-if ($debugRunId === '') {
-    $debugRunId = 'api-' . date('YmdHis') . '-' . substr(bin2hex(random_bytes(4)), 0, 8);
-}
-$debugLog = static function (string $hypothesisId, string $location, string $message, array $data = []) use ($debugLogPath, $debugRunId): void {
-    $row = [
-        'sessionId' => '07d2e0',
-        'runId' => $debugRunId,
-        'hypothesisId' => $hypothesisId,
-        'location' => $location,
-        'message' => $message,
-        'data' => $data,
-        'timestamp' => (int) round(microtime(true) * 1000),
-    ];
-    @file_put_contents($debugLogPath, json_encode($row, JSON_UNESCAPED_UNICODE) . PHP_EOL, FILE_APPEND);
-};
-
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['success' => false, 'message' => 'Método não permitido.']);
@@ -38,7 +20,7 @@ if (!is_array($payload)) {
     $payload = $_POST;
 }
 
-// Limites compatíveis com a tabela estudantes (evitar overflow no banco)
+// Limites compatíveis com o cadastro em usuarios
 $limites = [
     'nome_completo' => 200,
     'telefone'      => 20,
@@ -60,13 +42,6 @@ $whatsapp  = !empty($payload['telefone_whatsapp']);
 $faculdade = mb_substr(trim((string) ($payload['faculdade'] ?? '')), 0, $limites['faculdade']);
 $email     = mb_strtolower(trim((string) ($payload['email'] ?? '')), 'UTF-8');
 $email     = mb_substr($email, 0, $limites['email']);
-$debugLog('H1', 'cadastro_estudantes.php:46', 'Payload normalizado no backend', [
-    'cpfDigitsLength' => strlen(Security::normalizeCPF($cpf)),
-    'telefoneDigitsLength' => strlen((string) preg_replace('/\D/', '', $telefone)),
-    'sexo' => $sexo,
-    'faculdadeSelecionada' => $faculdade !== '',
-    'emailLength' => strlen($email),
-]);
 
 $cpfNumerico = Security::normalizeCPF($cpf);
 if (!Security::validarCPF($cpfNumerico)) {
@@ -123,88 +98,24 @@ if (($policy = Security::validatePasswordPolicy($senha))['valid'] !== true) {
 try {
     $pdo = Conection::getInstance()->getConnection();
 
-    // Verificação de duplicidade: CPF é único no cadastro de estudantes
-    $stmt = $pdo->prepare("SELECT id FROM estudantes WHERE cpf = ? LIMIT 1");
-    $stmt->execute([$cpfFormatado]);
-    $estudanteRow = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
-    $existsEstudanteCpf = $estudanteRow !== null;
-    $stmtCountFormatado = $pdo->prepare("SELECT COUNT(*) FROM estudantes WHERE cpf = ?");
-    $stmtCountFormatado->execute([$cpfFormatado]);
-    $countEstudantesCpfFormatado = (int) $stmtCountFormatado->fetchColumn();
-    $stmtCountNumerico = $pdo->prepare("SELECT COUNT(*) FROM estudantes WHERE REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', '') = ?");
-    $stmtCountNumerico->execute([$cpfNumerico]);
-    $countEstudantesCpfNumerico = (int) $stmtCountNumerico->fetchColumn();
-    $dbName = (string) ($pdo->query('SELECT DATABASE()')->fetchColumn() ?: '');
-    $debugLog('H2', 'cadastro_estudantes.php:104', 'Resultado verificação duplicidade em estudantes', [
-        'existsEstudanteCpf' => $existsEstudanteCpf,
-        'estudanteId' => $existsEstudanteCpf ? (string) ($estudanteRow['id'] ?? '') : '',
-        'cpfFormatoConsulta' => strlen($cpfFormatado),
-        'countEstudantesCpfFormatado' => $countEstudantesCpfFormatado,
-        'countEstudantesCpfNumerico' => $countEstudantesCpfNumerico,
-        'database' => $dbName,
-    ]);
-
-    // Verificação: CPF já em usuarios (acesso ao sistema)
-    $stmt = $pdo->prepare("SELECT id_usuario FROM usuarios WHERE cpf = ? LIMIT 1");
-    $stmt->execute([$cpfFormatado]);
+    // Fonte única: usuários. Compara CPF ignorando máscara para evitar falso negativo por formato.
+    $stmt = $pdo->prepare("SELECT id_usuario FROM usuarios WHERE REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', '') = ? LIMIT 1");
+    $stmt->execute([$cpfNumerico]);
     $usuarioRow = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     $existsUsuarioCpf = $usuarioRow !== null;
-    $debugLog('H2', 'cadastro_estudantes.php:119', 'Resultado verificação duplicidade em usuarios', [
-        'existsUsuarioCpf' => $existsUsuarioCpf,
-        'usuarioId' => $existsUsuarioCpf ? (string) ($usuarioRow['id_usuario'] ?? '') : '',
-    ]);
 
-    if ($existsEstudanteCpf || $existsUsuarioCpf) {
-        $errorCode = 'STUDENT_DUPLICATE_UNKNOWN';
-        $message = 'Já existe um cadastro com este CPF no sistema.';
-        if ($existsEstudanteCpf && $existsUsuarioCpf) {
-            $errorCode = 'STUDENT_DUPLICATE_ESTUDANTES_USUARIOS';
-            $message = 'Este CPF já possui cadastro de estudante e usuário de acesso. Utilize a área de login/recuperação de senha.';
-        } elseif ($existsEstudanteCpf) {
-            $errorCode = 'STUDENT_DUPLICATE_ESTUDANTES';
-            $message = 'Este CPF já está cadastrado na base de estudantes. Se você ainda não acessa o sistema, contate o suporte para regularização.';
-        } elseif ($existsUsuarioCpf) {
-            $errorCode = 'STUDENT_DUPLICATE_USUARIOS';
-            $message = 'Já existe um usuário com este CPF no sistema. Utilize a área de login ou recuperação de senha.';
-        }
-        $debugLog('H3', 'cadastro_estudantes.php:136', 'Bloqueio por duplicidade de CPF com origem detalhada', [
-            'errorCode' => $errorCode,
-            'existsEstudanteCpf' => $existsEstudanteCpf,
-            'existsUsuarioCpf' => $existsUsuarioCpf,
-            'countEstudantesCpfFormatado' => $countEstudantesCpfFormatado,
-            'countEstudantesCpfNumerico' => $countEstudantesCpfNumerico,
-            'database' => $dbName,
-        ]);
+    if ($existsUsuarioCpf) {
+        $errorCode = 'STUDENT_DUPLICATE_USUARIOS';
+        $message = 'Já existe um usuário com este CPF no sistema. Utilize a área de login ou recuperação de senha.';
         echo json_encode([
             'success' => false,
             'error_code' => $errorCode,
             'message' => $message,
-            'debug_meta' => [
-                'database' => $dbName,
-                'count_estudantes_cpf_formatado' => $countEstudantesCpfFormatado,
-                'count_estudantes_cpf_numerico' => $countEstudantesCpfNumerico,
-                'exists_estudantes' => $existsEstudanteCpf,
-                'exists_usuarios' => $existsUsuarioCpf,
-            ],
         ]);
         exit;
     }
 
     $pdo->beginTransaction();
-
-    $stmt = $pdo->prepare("
-        INSERT INTO estudantes (
-            nome_completo, cpf, telefone, telefone_whatsapp, faculdade, email, semestre
-        ) VALUES (?, ?, ?, ?, ?, ?, NULL)
-    ");
-    $stmt->execute([
-        $nomeCompleto,
-        $cpfFormatado,
-        $telefone,
-        $whatsapp ? 1 : 0,
-        $faculdade,
-        $email,
-    ]);
 
     $idUsuario = 'USR-' . strtoupper(bin2hex(random_bytes(13)));
     $senhaHash = Security::hashPassword($senha);
@@ -215,29 +126,29 @@ try {
     $stHasSexo->execute();
     $hasSexoColumn = ((int) $stHasSexo->fetchColumn()) > 0;
 
-    // Tabela usuarios: Tipo externo, Setor (via usuario_setor), Cargo Estudante, Status Ativo (cadastro_ativo=1)
+    // Fonte única em usuarios: estudante externo com instituição = faculdade informada.
     if ($hasSexoColumn) {
         $stmt = $pdo->prepare("
             INSERT INTO usuarios (
                 id_usuario, nome, sobrenome, sexo, data_nascimento, cargo, instituicao, cpf, telefone, email,
                 senha_hash, meta, ultimo_acesso, token_acesso, token_expira, cadastro_ativo, created_at, updated_at
             ) VALUES (
-                ?, ?, ?, ?, '-', 'Estudante', '-', ?, ?, ?,
+                ?, ?, ?, ?, '-', 'Estudante', ?, ?, ?, ?,
                 ?, '-', NULL, NULL, NULL, 1, NOW(), NOW()
             )
         ");
-        $stmt->execute([$idUsuario, $nome, $sobrenome, $sexo, $cpfFormatado, $telefone, $email, $senhaHash]);
+        $stmt->execute([$idUsuario, $nome, $sobrenome, $sexo, $faculdade, $cpfFormatado, $telefone, $email, $senhaHash]);
     } else {
         $stmt = $pdo->prepare("
             INSERT INTO usuarios (
                 id_usuario, nome, sobrenome, data_nascimento, cargo, instituicao, cpf, telefone, email,
                 senha_hash, meta, ultimo_acesso, token_acesso, token_expira, cadastro_ativo, created_at, updated_at
             ) VALUES (
-                ?, ?, ?, '-', 'Estudante', '-', ?, ?, ?,
+                ?, ?, ?, '-', 'Estudante', ?, ?, ?, ?,
                 ?, '-', NULL, NULL, NULL, 1, NOW(), NOW()
             )
         ");
-        $stmt->execute([$idUsuario, $nome, $sobrenome, $cpfFormatado, $telefone, $email, $senhaHash]);
+        $stmt->execute([$idUsuario, $nome, $sobrenome, $faculdade, $cpfFormatado, $telefone, $email, $senhaHash]);
     }
 
     // Garantir que o perfil ESTUDANTE exista em perfis (evita erro de FK se a tabela tiver restrição)
@@ -267,10 +178,6 @@ try {
     }
 
     $pdo->commit();
-    $debugLog('H3', 'cadastro_estudantes.php:212', 'Cadastro concluído com sucesso', [
-        'createdUsuario' => true,
-        'createdEstudante' => true,
-    ]);
 
     echo json_encode([
         'success' => true,
@@ -280,12 +187,8 @@ try {
     if (isset($pdo) && $pdo->inTransaction()) {
         $pdo->rollBack();
     }
-    $debugLog('H3', 'cadastro_estudantes.php:223', 'PDOException no cadastro de estudante', [
-        'code' => (string) $e->getCode(),
-        'message' => $e->getMessage(),
-    ]);
     if ($e->getCode() == '42S02') {
-        error_log('Tabela estudantes ou usuarios não existe. Execute os SQL em docs/sql/ e database/schema.sql');
+        error_log('Tabela usuarios não existe. Execute os SQL em docs/sql/ e database/schema.sql');
         echo json_encode(['success' => false, 'message' => 'Sistema em configuração. Tente novamente mais tarde.']);
     } elseif ($e->getCode() === '23000') {
         $detail = $e->getMessage();
@@ -314,9 +217,6 @@ try {
     if (isset($pdo) && $pdo->inTransaction()) {
         $pdo->rollBack();
     }
-    $debugLog('H5', 'cadastro_estudantes.php:248', 'Throwable no cadastro de estudante', [
-        'message' => $e->getMessage(),
-    ]);
     error_log('cadastro_estudantes API: ' . $e->getMessage());
     echo json_encode([
         'success' => false,

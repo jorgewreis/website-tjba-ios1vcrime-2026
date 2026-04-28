@@ -2,15 +2,11 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../repositories/UsuariosListRepository.php';
-require_once __DIR__ . '/../repositories/EstudantesListRepository.php';
 require_once __DIR__ . '/ExternalUsersCleanupService.php';
 
 final class UsuariosService
 {
     private PDO $connection;
-
-    /** Conexão opcional para a tabela estudantes (outro banco). Se null, usa $connection. */
-    private ?PDO $connectionEstudantes;
 
     /** Ordem de setor para ordenação: Cartório > Gabinete > Sala de audiências > — (interno pode ser AUDIENCIA) */
     private const SETOR_ORDER = [
@@ -22,14 +18,13 @@ final class UsuariosService
         'audiencia'           => 2,
     ];
 
-    public function __construct(PDO $connection, ?PDO $connectionEstudantes = null)
+    public function __construct(PDO $connection)
     {
         $this->connection = $connection;
-        $this->connectionEstudantes = $connectionEstudantes ?? $connection;
     }
 
     /**
-     * Lista unificada: servidores (tabela usuarios) + estudantes (tabela estudantes).
+     * Lista unificada a partir da tabela usuarios.
      * Ordenação: tipo (interno primeiro), setor (Cartório > Gabinete > Sala de audiências), cargo.
      *
      * @return array{rows: array<int, array>, total: int}
@@ -43,7 +38,7 @@ final class UsuariosService
         $perfilFilter = trim((string) ($filters['perfil'] ?? ''));
 
         $servidores = [];
-        $estudantes = [];
+        $externos = [];
 
         if ($tipoFilter !== 'externo') {
             $repoServidores = new UsuariosListRepository($this->connection);
@@ -54,13 +49,13 @@ final class UsuariosService
         }
 
         if ($tipoFilter !== 'interno') {
-            $repoEstudantes = new EstudantesListRepository($this->connectionEstudantes, $this->connection);
+            $repoServidores = new UsuariosListRepository($this->connection);
             if ($perfilFilter === '' || $perfilFilter === 'estudante') {
-                $estudantes = $repoEstudantes->fetchAll();
+                $externos = $repoServidores->listExternosEstudantes();
             }
         }
 
-        $merged = array_merge($servidores, $estudantes);
+        $merged = array_merge($servidores, $externos);
         $this->sortUnified($merged);
         $total = count($merged);
         $rows = array_slice($merged, $offset, $limit);
@@ -120,16 +115,15 @@ final class UsuariosService
     {
         $perfilFilter = trim((string) ($filters['perfil'] ?? ''));
         $repoServidores = new UsuariosListRepository($this->connection);
-        $repoEstudantes = new EstudantesListRepository($this->connectionEstudantes, $this->connection);
 
         $interno = 0;
         $externo = 0;
 
         if ($perfilFilter === '') {
             $interno = $repoServidores->countServidores(null);
-            $externo = $repoEstudantes->count();
+            $externo = $repoServidores->countExternosEstudantes();
         } elseif ($perfilFilter === 'estudante') {
-            $externo = $repoEstudantes->count();
+            $externo = $repoServidores->countExternosEstudantes();
         } else {
             $perfilForServ = $repoServidores::PERFIL_MAP[$perfilFilter] ?? null;
             if ($perfilForServ !== null) {
@@ -150,7 +144,6 @@ final class UsuariosService
     {
         $tipoFilter = trim((string) ($filters['tipo'] ?? ''));
         $repoServidores = new UsuariosListRepository($this->connection);
-        $repoEstudantes = new EstudantesListRepository($this->connectionEstudantes, $this->connection);
 
         $perfilOptions = ['estagiario', 'servidor', 'diretora', 'magistrada', 'admin', 'estudante'];
         $counts = array_fill_keys($perfilOptions, 0);
@@ -162,7 +155,7 @@ final class UsuariosService
             }
         }
         if ($tipoFilter !== 'interno') {
-            $counts['estudante'] = $repoEstudantes->count();
+            $counts['estudante'] = $repoServidores->countExternosEstudantes();
         }
 
         return $counts;

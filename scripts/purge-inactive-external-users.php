@@ -17,5 +17,4 @@ echo json_encode([
     'success' => true,
     'days_without_access' => $daysWithoutAccess,
     'deleted_users' => $result['deleted_users'],
-    'deleted_students' => $result['deleted_students'],
 ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . PHP_EOL;

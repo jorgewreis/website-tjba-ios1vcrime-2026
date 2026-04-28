@@ -65,29 +65,19 @@ final class SalaAudienciasEstudanteInscricaoRepository
             return [];
         }
 
-        /*
-         * O LEFT JOIN com estudantes usa uma subquery agregada por CPF para
-         * evitar multiplicacao de linhas quando a tabela `estudantes` possui
-         * mais de um registro para o mesmo CPF (ex.: historico/rematricula).
-         * Sem isso, o count() da UI contava linhas duplicadas em vez das
-         * inscricoes reais.
-         */
         $placeholders = implode(', ', array_fill(0, count($pautaIds), '?'));
         $sql = sprintf(
             'SELECT i.`id`, i.`pauta`, i.`usuario`, i.`created_at` AS `inscrito_em`,
                     COALESCE(NULLIF(TRIM(u.`cpf`), \'\'), \'\') AS `cpf`,
                     COALESCE(
-                        NULLIF(TRIM(e.`nome_completo`), \'\'),
                         NULLIF(TRIM(CONCAT(COALESCE(u.`nome`, \'\'), \' \', COALESCE(u.`sobrenome`, \'\'))), \'\'),
                         \'Estudante não identificado\'
                     ) AS `nome_completo`,
                     COALESCE(
-                        NULLIF(TRIM(e.`telefone`), \'\'),
                         NULLIF(TRIM(u.`telefone`), \'\'),
                         \'\'
                     ) AS `telefone`,
                     COALESCE(
-                        NULLIF(TRIM(e.`faculdade`), \'\'),
                         CASE
                             WHEN TRIM(COALESCE(u.`instituicao`, \'\')) IN (\'\', \'-\') THEN \'\'
                             ELSE TRIM(u.`instituicao`)
@@ -96,15 +86,6 @@ final class SalaAudienciasEstudanteInscricaoRepository
                     ) AS `faculdade`
              FROM `%s` i
              LEFT JOIN `usuarios` u ON u.`id_usuario` = i.`usuario`
-             LEFT JOIN (
-                 SELECT `cpf`,
-                        MAX(NULLIF(TRIM(`nome_completo`), \'\')) AS `nome_completo`,
-                        MAX(NULLIF(TRIM(`telefone`), \'\'))      AS `telefone`,
-                        MAX(NULLIF(TRIM(`faculdade`), \'\'))     AS `faculdade`
-                 FROM `estudantes`
-                 WHERE `cpf` IS NOT NULL AND TRIM(`cpf`) <> \'\'
-                 GROUP BY `cpf`
-             ) e ON e.`cpf` = u.`cpf`
              WHERE i.`pauta` IN (' . $placeholders . ')
              ORDER BY i.`pauta` ASC, i.`created_at` ASC, i.`id` ASC',
             $this->table

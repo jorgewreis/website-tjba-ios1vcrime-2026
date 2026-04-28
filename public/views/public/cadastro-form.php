@@ -193,16 +193,9 @@ $faculdades = [
 
             form.addEventListener('submit', async function (e) {
                 e.preventDefault();
-                const runId = 'run-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
-                // #region agent log
-                fetch('http://127.0.0.1:7494/ingest/64db24e1-3fcf-482a-aa07-c0ab6247ae38',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'07d2e0'},body:JSON.stringify({sessionId:'07d2e0',runId:runId,hypothesisId:'H4',location:'cadastro-form.php:196',message:'Submit iniciado no cadastro de estudante',data:{},timestamp:Date.now()})}).catch(()=>{});
-                // #endregion
 
                 const cpfDigits = onlyDigits(document.getElementById('cpf').value);
                 if (cpfDigits.length !== 11) {
-                    // #region agent log
-                    fetch('http://127.0.0.1:7494/ingest/64db24e1-3fcf-482a-aa07-c0ab6247ae38',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'07d2e0'},body:JSON.stringify({sessionId:'07d2e0',runId:runId,hypothesisId:'H4',location:'cadastro-form.php:201',message:'Bloqueio frontend: CPF inválido',data:{cpfDigitsLength:cpfDigits.length},timestamp:Date.now()})}).catch(()=>{});
-                    // #endregion
                     showToast({ type: 'error', title: 'Erro', message: 'Informe um CPF válido.' });
                     return;
                 }
@@ -210,26 +203,17 @@ $faculdades = [
                 const senha = (form.querySelector('#senha') && form.querySelector('#senha').value) || '';
                 const senhaRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{<?php echo PASSWORD_MIN_LENGTH; ?>,<?php echo PASSWORD_MAX_LENGTH; ?>}$/;
                 if (!senhaRegex.test(senha)) {
-                    // #region agent log
-                    fetch('http://127.0.0.1:7494/ingest/64db24e1-3fcf-482a-aa07-c0ab6247ae38',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'07d2e0'},body:JSON.stringify({sessionId:'07d2e0',runId:runId,hypothesisId:'H4',location:'cadastro-form.php:210',message:'Bloqueio frontend: senha fora da política',data:{passwordLength:senha.length},timestamp:Date.now()})}).catch(()=>{});
-                    // #endregion
                     showToast({ type: 'error', title: 'Erro', message: 'A senha deve seguir a política: <?php echo addslashes(Security::passwordPolicySummary()); ?>.' });
                     return;
                 }
 
                 if (!form.querySelector('#aceite_termos_lgpd').checked) {
-                    // #region agent log
-                    fetch('http://127.0.0.1:7494/ingest/64db24e1-3fcf-482a-aa07-c0ab6247ae38',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'07d2e0'},body:JSON.stringify({sessionId:'07d2e0',runId:runId,hypothesisId:'H4',location:'cadastro-form.php:216',message:'Bloqueio frontend: LGPD não aceito',data:{},timestamp:Date.now()})}).catch(()=>{});
-                    // #endregion
                     showToast({ type: 'error', title: 'Atenção', message: 'É necessário aceitar os termos sobre LGPD para realizar o cadastro.' });
                     return;
                 }
 
                 const emailVal = (form.querySelector('#email') && form.querySelector('#email').value || '').trim();
                 if (!emailVal) {
-                    // #region agent log
-                    fetch('http://127.0.0.1:7494/ingest/64db24e1-3fcf-482a-aa07-c0ab6247ae38',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'07d2e0'},body:JSON.stringify({sessionId:'07d2e0',runId:runId,hypothesisId:'H4',location:'cadastro-form.php:223',message:'Bloqueio frontend: email vazio',data:{},timestamp:Date.now()})}).catch(()=>{});
-                    // #endregion
                     showToast({ type: 'error', title: 'Erro', message: 'Informe o e-mail (necessário para recuperação de senha).' });
                     return;
                 }
@@ -252,9 +236,6 @@ $faculdades = [
                         email: (formData.get('email') || '').trim().toLowerCase().slice(0, 255),
                         aceite_termos_lgpd: true,
                     };
-                    // #region agent log
-                    fetch('http://127.0.0.1:7494/ingest/64db24e1-3fcf-482a-aa07-c0ab6247ae38',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'07d2e0'},body:JSON.stringify({sessionId:'07d2e0',runId:runId,hypothesisId:'H1',location:'cadastro-form.php:239',message:'Payload pronto para API de cadastro estudante',data:{cpfDigitsLength:payload.cpf.length,hasTelefone:payload.telefone.length>0,sexo:payload.sexo||'',faculdadeSelecionada:payload.faculdade!==''},timestamp:Date.now()})}).catch(()=>{});
-                    // #endregion
 
                     const res = await fetch('/api/cadastro_estudantes.php', {
                         method: 'POST',
@@ -262,9 +243,6 @@ $faculdades = [
                         body: JSON.stringify(payload),
                     });
                     const data = await res.json().catch(() => ({}));
-                    // #region agent log
-                    fetch('http://127.0.0.1:7494/ingest/64db24e1-3fcf-482a-aa07-c0ab6247ae38',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'07d2e0'},body:JSON.stringify({sessionId:'07d2e0',runId:runId,hypothesisId:'H2',location:'cadastro-form.php:246',message:'Resposta recebida da API de cadastro estudante',data:{httpStatus:res.status,success:!!data.success,errorCode:data.error_code||'',message:data.message||'',debugMeta:data.debug_meta||null},timestamp:Date.now()})}).catch(()=>{});
-                    // #endregion
 
                     if (data.success) {
                         showToast({
