@@ -183,6 +183,18 @@
         });
     }
 
+    function resolveToastMessageByKey(key, vars, fallbackMessage) {
+        const toastCatalog = getToastCatalog();
+        if (!toastCatalog || typeof toastCatalog.resolve !== 'function') {
+            return Promise.resolve(fallbackMessage);
+        }
+        return toastCatalog.resolve(key, vars || {}).then(function (toast) {
+            return (toast && toast.message) ? toast.message : fallbackMessage;
+        }).catch(function () {
+            return fallbackMessage;
+        });
+    }
+
     function bindDesalocarButtons(options, pageTools, notify) {
         if (options.enableDesalocar === false) {
             return;
@@ -231,11 +243,12 @@
                 return;
             }
 
-            if (!requireSecondClick('desalocar-' + alocadoId, confirmMessage)) {
-                return;
-            }
+            resolveToastMessageByKey('cartorio.allocation.remove.confirm', {}, confirmMessage).then(function (resolvedConfirmMessage) {
+                if (!requireSecondClick('desalocar-' + alocadoId, resolvedConfirmMessage)) {
+                    return;
+                }
 
-            fetch(endpoint, {
+                return fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ alocado_id: alocadoId, tipo: tipo }),
@@ -289,6 +302,7 @@
                         'Erro de conexão.'
                     );
                 });
+            });
         });
     }
 

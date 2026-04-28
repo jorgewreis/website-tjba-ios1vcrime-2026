@@ -17,7 +17,11 @@
             const polo = String(global.document.getElementById('polo')?.value || '').trim();
 
             if (!tipoParte || !polo) {
-                common.notify('error', 'Erro', 'Preencha tipo e polo.');
+                if (typeof common.notifyByKey === 'function') {
+                    common.notifyByKey('generic.validation.link.type_polo.required', {}, 'error', 'Erro', 'Preencha tipo e polo.');
+                } else {
+                    common.notify('error', 'Erro', 'Preencha tipo e polo.');
+                }
                 return;
             }
 

@@ -53,6 +53,18 @@
         notify(fallbackType, fallbackTitle, fallbackMessage);
     }
 
+    function resolveToastMessageByKey(key, vars, fallbackMessage) {
+        const catalog = App.ToastCatalog;
+        if (!catalog || typeof catalog.resolve !== 'function') {
+            return Promise.resolve(fallbackMessage);
+        }
+        return catalog.resolve(key, vars || {}).then(function (toast) {
+            return (toast && toast.message) ? toast.message : fallbackMessage;
+        }).catch(function () {
+            return fallbackMessage;
+        });
+    }
+
     function sanitizePrazo(value) {
         const digits = String(value || '').replace(/\D+/g, '');
         return digits === '' ? '0' : digits.slice(0, 3);
@@ -243,8 +255,12 @@
 
         if (btnExcluirTarefa && cartaId) {
             const requireSecondClick = createSecondClickGuard();
+            let deleteConfirmMessage = 'Clique novamente em Excluir em até 5 segundos para confirmar a exclusão desta tarefa.';
+            resolveToastMessageByKey('cartorio.cartas.delete.confirm', {}, deleteConfirmMessage).then(function (message) {
+                deleteConfirmMessage = message;
+            });
             btnExcluirTarefa.addEventListener('click', function () {
-                if (!requireSecondClick('excluir-carta-recebida', 'Clique novamente em Excluir em até 5 segundos para confirmar a exclusão desta tarefa.')) {
+                if (!requireSecondClick('excluir-carta-recebida', deleteConfirmMessage)) {
                     return;
                 }
                 btnExcluirTarefa.disabled = true;

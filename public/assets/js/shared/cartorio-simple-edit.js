@@ -67,6 +67,21 @@
         });
     }
 
+    function resolveToastMessageByKey(key, vars, fallbackMessage) {
+        const catalog = App.ToastCatalog;
+        if (!catalog || typeof catalog.resolve !== 'function') {
+            return Promise.resolve(fallbackMessage);
+        }
+
+        return catalog.resolve(key, vars || {})
+            .then(function (toast) {
+                return (toast && toast.message) ? toast.message : fallbackMessage;
+            })
+            .catch(function () {
+                return fallbackMessage;
+            });
+    }
+
     function bindBackButton(buttonId, href) {
         const button = global.document.getElementById(buttonId);
         if (!button || !href) {
@@ -196,12 +211,14 @@
         const requireSecondClick = createSecondClickGuard();
 
         button.addEventListener('click', function () {
-            if (!requireSecondClick(settings.deleteConfirmKey || 'delete-entity', settings.deleteConfirmMessage || 'Clique novamente para confirmar a exclusão.')) {
-                return;
-            }
+            const fallbackConfirmMessage = settings.deleteConfirmMessage || 'Clique novamente para confirmar a exclusão.';
+            resolveToastMessageByKey('generic.delete.confirm', {}, fallbackConfirmMessage).then(function (confirmMessage) {
+                if (!requireSecondClick(settings.deleteConfirmKey || 'delete-entity', confirmMessage)) {
+                    return;
+                }
 
-            button.disabled = true;
-            fetch(settings.deleteEndpoint, {
+                button.disabled = true;
+                return fetch(settings.deleteEndpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id: settings.entityId })
@@ -225,6 +242,7 @@
                     notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
                     button.disabled = false;
                 });
+            });
         });
     }
 

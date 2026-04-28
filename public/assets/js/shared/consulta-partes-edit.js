@@ -12,6 +12,21 @@
         const settings = config || {};
         const storageKey = settings.storageKey || 'cartorio.postReloadToast';
         const requireSecondClick = common.createSecondClickGuard();
+        let phoneRemoveConfirmMessage = 'Clique novamente em Excluir em até 5 segundos para confirmar a remoção do telefone.';
+        let linkRemoveConfirmMessage = 'Clique novamente em Excluir em até 5 segundos para confirmar o desvínculo da instituição.';
+        let addressRemoveConfirmMessage = 'Clique novamente em Excluir em até 5 segundos para confirmar a remoção do endereço.';
+
+        if (App.ToastCatalog && typeof App.ToastCatalog.resolve === 'function') {
+            App.ToastCatalog.resolve('generic.phone.remove.confirm', {}).then(function (toast) {
+                if (toast && toast.message) phoneRemoveConfirmMessage = toast.message;
+            }).catch(function () {});
+            App.ToastCatalog.resolve('generic.unlink.confirm', {}).then(function (toast) {
+                if (toast && toast.message) linkRemoveConfirmMessage = toast.message;
+            }).catch(function () {});
+            App.ToastCatalog.resolve('generic.address.remove.confirm', {}).then(function (toast) {
+                if (toast && toast.message) addressRemoveConfirmMessage = toast.message;
+            }).catch(function () {});
+        }
 
         function getParteId() {
             return String(global.document.getElementById('parte-id')?.value || '').trim();
@@ -71,7 +86,11 @@
             const saveButton = this;
             const cpfRaw = String(global.document.getElementById('cpf')?.value || '').replace(/\D/g, '');
             if (cpfRaw && cpfRaw.length === 11 && App.CPF && !App.CPF.validar(cpfRaw)) {
-                common.notify('error', 'Erro', 'CPF inválido. Verifique os dígitos.');
+                if (typeof common.notifyByKey === 'function') {
+                    common.notifyByKey('generic.validation.cpf.invalid', {}, 'error', 'Erro', 'CPF inválido. Verifique os dígitos.');
+                } else {
+                    common.notify('error', 'Erro', 'CPF inválido. Verifique os dígitos.');
+                }
                 return;
             }
             const nomeVal = String(global.document.getElementById('nome_completo')?.value || '').trim();
@@ -126,7 +145,11 @@
             const addButton = this;
             const parteId = getParteId();
             if (!parteId) {
-                common.notify('error', 'Erro', 'ID da pessoa não encontrado. Recarregue a página.');
+                if (typeof common.notifyByKey === 'function') {
+                    common.notifyByKey('generic.validation.entity.id.required', {}, 'error', 'Erro', 'ID da pessoa não encontrado. Recarregue a página.');
+                } else {
+                    common.notify('error', 'Erro', 'ID da pessoa não encontrado. Recarregue a página.');
+                }
                 return;
             }
             const numero = String(global.document.getElementById('new-tel-numero')?.value || '').replace(/\D/g, '').trim();
@@ -170,7 +193,7 @@
         global.document.querySelectorAll('.btn-del-tel').forEach(function (button) {
             button.addEventListener('click', function () {
                 const id = button.getAttribute('data-id');
-                if (!requireSecondClick('excluir-telefone-parte-' + (id || ''), 'Clique novamente em Excluir em até 5 segundos para confirmar a remoção do telefone.')) {
+                if (!requireSecondClick('excluir-telefone-parte-' + (id || ''), phoneRemoveConfirmMessage)) {
                     return;
                 }
                 common.postJson('/api/pessoas/telefones/delete.php', { id: id }).then(function (result) {
@@ -198,7 +221,7 @@
         global.document.querySelectorAll('.btn-del-vinculo').forEach(function (button) {
             button.addEventListener('click', function () {
                 const id = button.getAttribute('data-id');
-                if (!requireSecondClick('desvincular-instituicao-parte-' + (id || ''), 'Clique novamente em Excluir em até 5 segundos para confirmar o desvínculo da instituição.')) {
+                if (!requireSecondClick('desvincular-instituicao-parte-' + (id || ''), linkRemoveConfirmMessage)) {
                     return;
                 }
                 common.postJson('/api/pessoas/vinculos-instituicoes/delete.php', { id: id }).then(function (result) {
@@ -246,7 +269,11 @@
             const addButton = this;
             const parteId = getParteId();
             if (!parteId) {
-                common.notify('error', 'Erro', 'ID da pessoa não encontrado. Recarregue a página.');
+                if (typeof common.notifyByKey === 'function') {
+                    common.notifyByKey('generic.validation.entity.id.required', {}, 'error', 'Erro', 'ID da pessoa não encontrado. Recarregue a página.');
+                } else {
+                    common.notify('error', 'Erro', 'ID da pessoa não encontrado. Recarregue a página.');
+                }
                 return;
             }
             const logradouro = String(global.document.getElementById('new-end-logradouro')?.value || '').trim();
@@ -297,7 +324,7 @@
         global.document.querySelectorAll('.btn-del-end').forEach(function (button) {
             button.addEventListener('click', function () {
                 const id = button.getAttribute('data-id');
-                if (!requireSecondClick('excluir-endereco-parte-' + (id || ''), 'Clique novamente em Excluir em até 5 segundos para confirmar a remoção do endereço.')) {
+                if (!requireSecondClick('excluir-endereco-parte-' + (id || ''), addressRemoveConfirmMessage)) {
                     return;
                 }
                 if (!id) {

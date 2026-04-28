@@ -112,6 +112,21 @@
         });
     }
 
+    function resolveToastMessageByKey(key, vars, fallbackMessage) {
+        const catalog = App.ToastCatalog;
+        if (!catalog || typeof catalog.resolve !== 'function') {
+            return Promise.resolve(fallbackMessage);
+        }
+
+        return catalog.resolve(key, vars || {})
+            .then(function (toast) {
+                return (toast && toast.message) ? toast.message : fallbackMessage;
+            })
+            .catch(function () {
+                return fallbackMessage;
+            });
+    }
+
     function queueByKey(storageKey, key, vars, fallbackPayload) {
         const catalog = App.ToastCatalog;
         if (!catalog || typeof catalog.resolve !== 'function') {
@@ -329,11 +344,17 @@
                 return;
             }
 
-            if (!requireSecondClick('desalocar-' + alocadoId, config.desalocarConfirmMessage || 'Clique novamente para confirmar a remoção da alocação.')) {
-                return;
-            }
+            const confirmMessageFromConfig = config.desalocarConfirmMessage || '';
+            resolveToastMessageByKey(
+                'cartorio.allocation.remove.confirm',
+                {},
+                confirmMessageFromConfig || 'Clique novamente para confirmar a remoção da alocação.'
+            ).then(function (confirmMessage) {
+                if (!requireSecondClick('desalocar-' + alocadoId, confirmMessage)) {
+                    return;
+                }
 
-            fetch(endpoint, {
+                return fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ alocado_id: alocadoId, tipo: tipo }),
@@ -362,6 +383,7 @@
                 .catch(function () {
                     notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
                 });
+            });
         });
     }
 

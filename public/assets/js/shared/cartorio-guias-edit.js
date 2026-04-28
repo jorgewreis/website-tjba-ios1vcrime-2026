@@ -68,6 +68,19 @@
         });
     }
 
+    function resolveToastMessageByKey(key, vars, fallbackMessage) {
+        const catalog = App.ToastCatalog;
+        if (!catalog || typeof catalog.resolve !== 'function') {
+            return Promise.resolve(fallbackMessage);
+        }
+
+        return catalog.resolve(key, vars || {}).then(function (toast) {
+            return (toast && toast.message) ? toast.message : fallbackMessage;
+        }).catch(function () {
+            return fallbackMessage;
+        });
+    }
+
     function initialize(config) {
         const settings = Object.assign({
             storageKey: 'cartorio.postReloadToast'
@@ -235,8 +248,12 @@
         });
 
         const requireSecondClick = createSecondClickGuard();
+        let deleteConfirmMessage = settings.deleteConfirmMessage || 'Clique novamente em Excluir para confirmar a exclusão.';
+        resolveToastMessageByKey('cartorio.guias.delete.confirm', {}, deleteConfirmMessage).then(function (message) {
+            deleteConfirmMessage = message;
+        });
         global.document.getElementById(settings.deleteButtonId || 'excluir-btn')?.addEventListener('click', function () {
-            if (!requireSecondClick(settings.deleteConfirmKey || 'excluir-guia', settings.deleteConfirmMessage || 'Clique novamente em Excluir para confirmar a exclusão.')) {
+            if (!requireSecondClick(settings.deleteConfirmKey || 'excluir-guia', deleteConfirmMessage)) {
                 return;
             }
 

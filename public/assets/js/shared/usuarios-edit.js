@@ -65,6 +65,15 @@
         const voltar = global.document.getElementById('voltar-btn');
         const excluir = global.document.getElementById('excluir-btn');
         const requireSecondClick = createSecondClickGuard();
+        let deactivateConfirmMessage = 'Clique novamente em Excluir em até 5 segundos para confirmar a desativação.';
+
+        if (App.ToastCatalog && typeof App.ToastCatalog.resolve === 'function') {
+            App.ToastCatalog.resolve('generic.user.deactivate.confirm', {}).then(function (toast) {
+                if (toast && toast.message) deactivateConfirmMessage = toast.message;
+            }).catch(function () {
+                // noop
+            });
+        }
 
         if (voltar) {
             voltar.addEventListener('click', function () { global.location.href = '/frame.php?page=usuarioslist'; });
@@ -184,7 +193,7 @@
 
         if (excluir && formExcluir) {
             excluir.addEventListener('click', function () {
-                if (!requireSecondClick('desativar-usuario', 'Clique novamente em Excluir em até 5 segundos para confirmar a desativação.')) {
+                if (!requireSecondClick('desativar-usuario', deactivateConfirmMessage)) {
                     return;
                 }
                 formExcluir.submit();

@@ -13,6 +13,21 @@
         const requireSecondClick = common.createSecondClickGuard();
         const storageKey = settings.storageKey || 'cartorio.postReloadToast';
         const instId = global.document.getElementById('inst-id')?.value || '';
+        let phoneRemoveConfirmMessage = 'Clique novamente em Excluir em até 5 segundos para confirmar a remoção do telefone.';
+        let departmentRemoveConfirmMessage = 'Clique novamente em Excluir em até 5 segundos para confirmar a remoção do setor.';
+        let addressRemoveConfirmMessage = 'Clique novamente em Excluir em até 5 segundos para confirmar a remoção do endereço.';
+
+        if (App.ToastCatalog && typeof App.ToastCatalog.resolve === 'function') {
+            App.ToastCatalog.resolve('generic.phone.remove.confirm', {}).then(function (toast) {
+                if (toast && toast.message) phoneRemoveConfirmMessage = toast.message;
+            }).catch(function () {});
+            App.ToastCatalog.resolve('generic.department.remove.confirm', {}).then(function (toast) {
+                if (toast && toast.message) departmentRemoveConfirmMessage = toast.message;
+            }).catch(function () {});
+            App.ToastCatalog.resolve('generic.address.remove.confirm', {}).then(function (toast) {
+                if (toast && toast.message) addressRemoveConfirmMessage = toast.message;
+            }).catch(function () {});
+        }
 
         global.document.getElementById('voltar-btn')?.addEventListener('click', function () {
             global.location.href = settings.backHref || '/frame.php?page=instituicoespublicas';
@@ -111,7 +126,7 @@
         global.document.querySelectorAll('.btn-del-tel').forEach(function (button) {
             button.addEventListener('click', function () {
                 const id = button.getAttribute('data-id');
-                if (!requireSecondClick('excluir-telefone-instituicao-' + (id || ''), 'Clique novamente em Excluir em até 5 segundos para confirmar a remoção do telefone.')) {
+                if (!requireSecondClick('excluir-telefone-instituicao-' + (id || ''), phoneRemoveConfirmMessage)) {
                     return;
                 }
                 common.postJson('/api/instituicoes-publicas/telefones/delete.php', { id: id }).then(function (result) {
@@ -176,7 +191,7 @@
         global.document.querySelectorAll('.btn-del-setor').forEach(function (button) {
             button.addEventListener('click', function () {
                 const id = button.getAttribute('data-id');
-                if (!requireSecondClick('excluir-setor-instituicao-' + (id || ''), 'Clique novamente em Excluir em até 5 segundos para confirmar a remoção do setor.')) {
+                if (!requireSecondClick('excluir-setor-instituicao-' + (id || ''), departmentRemoveConfirmMessage)) {
                     return;
                 }
                 common.postJson('/api/instituicoes-publicas/setores/delete.php', { id: id }).then(function (result) {
@@ -268,7 +283,7 @@
         global.document.querySelectorAll('.btn-del-end').forEach(function (button) {
             button.addEventListener('click', function () {
                 const id = button.getAttribute('data-id');
-                if (!requireSecondClick('excluir-endereco-instituicao-' + (id || ''), 'Clique novamente em Excluir em até 5 segundos para confirmar a remoção do endereço.')) {
+                if (!requireSecondClick('excluir-endereco-instituicao-' + (id || ''), addressRemoveConfirmMessage)) {
                     return;
                 }
                 common.postJson('/api/instituicoes-publicas/enderecos/delete.php', { id: id }).then(function (result) {

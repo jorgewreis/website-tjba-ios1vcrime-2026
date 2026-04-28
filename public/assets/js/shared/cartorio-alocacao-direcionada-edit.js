@@ -29,6 +29,18 @@
         });
     }
 
+    function resolveToastMessageByKey(key, vars, fallbackMessage) {
+        const catalog = App.ToastCatalog;
+        if (!catalog || typeof catalog.resolve !== 'function') {
+            return Promise.resolve(fallbackMessage);
+        }
+        return catalog.resolve(key, vars || {}).then(function (toast) {
+            return (toast && toast.message) ? toast.message : fallbackMessage;
+        }).catch(function () {
+            return fallbackMessage;
+        });
+    }
+
     function buildSecondClickGuard() {
         if (App.Page && typeof App.Page.createSecondClickGuard === 'function') {
             return App.Page.createSecondClickGuard();
@@ -76,11 +88,16 @@
                 return;
             }
 
-            if (!requireSecondClick('desalocar-' + alocadoId, 'Clique novamente para confirmar a remoção da alocação.')) {
-                return;
-            }
+            resolveToastMessageByKey(
+                'cartorio.allocation.remove.confirm',
+                {},
+                'Clique novamente para confirmar a remoção da alocação.'
+            ).then(function (confirmMessage) {
+                if (!requireSecondClick('desalocar-' + alocadoId, confirmMessage)) {
+                    return;
+                }
 
-            fetch(endpoint, {
+                return fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ alocado_id: alocadoId, tipo: tipo }),
@@ -104,6 +121,7 @@
                 .catch(function () {
                     notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
                 });
+            });
         });
 
         if (alocarEndpoint === '') {
@@ -142,7 +160,13 @@
                         }, 600);
                         return;
                     }
-                    notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Falha ao alocar.');
+                    notifyByKey(
+                        'cartorio.allocation.add.error',
+                        {},
+                        'error',
+                        'Erro',
+                        (result.data && result.data.error) ? result.data.error : 'Falha ao alocar.'
+                    );
                 })
                 .catch(function () {
                     btnAdd.disabled = false;

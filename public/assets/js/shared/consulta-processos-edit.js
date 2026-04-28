@@ -12,6 +12,14 @@
         const settings = config || {};
         const storageKey = settings.storageKey || 'cartorio.postReloadToast';
         const requireSecondClick = common.createSecondClickGuard();
+        let unlinkConfirmMessage = 'Clique novamente em Desvincular em até 5 segundos para confirmar.';
+        if (App.ToastCatalog && typeof App.ToastCatalog.resolve === 'function') {
+            App.ToastCatalog.resolve('generic.unlink.confirm', {}).then(function (toast) {
+                if (toast && toast.message) unlinkConfirmMessage = toast.message;
+            }).catch(function () {
+                // noop
+            });
+        }
 
         global.document.querySelectorAll('.btn-desvincular').forEach(function (button) {
             button.addEventListener('click', function () {
@@ -20,7 +28,7 @@
                 if (!id || !processoId) {
                     return;
                 }
-                if (!requireSecondClick('desvincular-processo-parte-' + id, 'Clique novamente em Desvincular em até 5 segundos para confirmar.')) {
+                if (!requireSecondClick('desvincular-processo-parte-' + id, unlinkConfirmMessage)) {
                     return;
                 }
                 button.disabled = true;
