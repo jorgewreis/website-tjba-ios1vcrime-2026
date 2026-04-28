@@ -16,4 +16,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(notifications): enhance notifyByKey function across multiple modules** `[585e3f4]`
 - **refactor(produtividade): remove legacy Produtividade class and update documentation** `[445e31d]`
 - **refactor(authorization): enhance deletion authorization logic and streamline endpoint integration** `[1d3c606]`
+- **refactor(toast): implement dedicated storage key for Sala de Midias and enhance API response handling** `[f130ac5]`
 
