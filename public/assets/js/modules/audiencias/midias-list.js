@@ -2,7 +2,7 @@
     var pageCtx = window.SALA_MIDIAS_LIST || {};
     var routePage = String(pageCtx.routePage || 'salamidias');
     var filters = pageCtx.filters || {};
-    var POST_RELOAD_TOAST_KEY = 'cartorio.postReloadToast';
+    var POST_RELOAD_TOAST_KEY = 'salamidias.postReloadToast';
     var pageTools = window.App && window.App.Page ? window.App.Page : null;
 
     function notify(type, title, message) {

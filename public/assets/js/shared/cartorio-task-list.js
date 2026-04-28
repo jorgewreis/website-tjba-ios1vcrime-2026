@@ -192,6 +192,10 @@
         const successMessage = options.removeSuccessMessage || 'Alocação removida.';
         const toastCatalog = getToastCatalog();
         const notifyByKey = function (key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+            if (pageTools && typeof pageTools.notifyByKey === 'function') {
+                pageTools.notifyByKey(key, vars || {}, fallbackType, fallbackTitle, fallbackMessage);
+                return;
+            }
             if (toastCatalog && typeof toastCatalog.notifyByKey === 'function') {
                 toastCatalog.notifyByKey(key, vars || {}).catch(function () {
                     notify(fallbackType, fallbackTitle, fallbackMessage);

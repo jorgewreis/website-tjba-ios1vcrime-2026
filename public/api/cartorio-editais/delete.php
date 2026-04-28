@@ -1,17 +1,15 @@
 <?php
 declare(strict_types=1);
 
-header('Content-Type: application/json; charset=UTF-8');
-
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
+require_once $basePath . '/app/helpers/ApiJsonResponse.php';
 require_once $basePath . '/app/services/EditaisService.php';
 require_once $basePath . '/app/helpers/DeleteAuthorization.php';
 
 if (!bootstrapRequireTrustedPostRequest()) {
-    http_response_code(403);
-    echo json_encode(['error' => 'Requisição inválida.'], JSON_UNESCAPED_UNICODE);
+    ApiJsonResponse::send(['error' => 'Requisição inválida.'], 403);
     exit;
 }
 
@@ -23,21 +21,15 @@ $podeExcluir = DeleteAuthorization::usuarioPodeExcluir(
 );
 
 if (!$podeExcluir) {
-    http_response_code(403);
-    echo json_encode(['error' => 'Seu perfil não tem permissão para excluir. Apenas admin, chefia, diretora ou magistrada.'], JSON_UNESCAPED_UNICODE);
+    ApiJsonResponse::send(['error' => 'Seu perfil não tem permissão para excluir. Apenas admin, chefia, diretora ou magistrada.'], 403);
     exit;
 }
 
-$rawPayload = file_get_contents('php://input') ?: '';
-$parsed = json_decode($rawPayload, true);
-if (!is_array($parsed)) {
-    $parsed = $_POST;
-}
+$parsed = ApiJsonResponse::readJsonPayload();
 
 $id = trim((string) ($parsed['id'] ?? $_GET['id'] ?? ''));
 if ($id === '') {
-    http_response_code(400);
-    echo json_encode(['error' => 'Identificador obrigatório para exclusão.'], JSON_UNESCAPED_UNICODE);
+    ApiJsonResponse::send(['error' => 'Identificador obrigatório para exclusão.'], 400);
     exit;
 }
 
@@ -49,11 +41,9 @@ try {
         require_once $basePath . '/app/helpers/CartorioProdutividade.php';
         CartorioProdutividade::mirrorEstornoSaldoSession($connection, $id, 'cartorio-editais', 'Edital excluído.');
     }
-    echo json_encode(is_array($resultado) ? $resultado : ['deleted' => (bool) $resultado], JSON_UNESCAPED_UNICODE);
+    ApiJsonResponse::send(is_array($resultado) ? $resultado : ['deleted' => (bool) $resultado], 200);
 } catch (\InvalidArgumentException $exception) {
-    http_response_code(400);
-    echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);
+    ApiJsonResponse::send(['error' => $exception->getMessage()], 400);
 } catch (\Throwable $exception) {
-    http_response_code(500);
-    echo json_encode(['error' => 'Erro ao excluir edital: ' . $exception->getMessage()], JSON_UNESCAPED_UNICODE);
+    ApiJsonResponse::send(['error' => 'Erro ao excluir edital: ' . $exception->getMessage()], 500);
 }

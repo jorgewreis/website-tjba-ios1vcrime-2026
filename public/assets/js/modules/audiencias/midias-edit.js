@@ -1,5 +1,5 @@
 (function () {
-    var POST_RELOAD_TOAST_KEY = 'cartorio.postReloadToast';
+    var POST_RELOAD_TOAST_KEY = 'salamidias.postReloadToast';
     var pageTools = window.App && window.App.Page ? window.App.Page : null;
 
     function notify(type, title, message) {
@@ -53,16 +53,21 @@
         } catch (e) { /* noop */ }
     }
 
-    var lockMap = {};
-    function requireSecondClick(key, message) {
-        var now = Date.now();
-        if (lockMap[key] && lockMap[key] > now) {
-            delete lockMap[key];
-            return true;
-        }
-        lockMap[key] = now + 5000;
-        notify('info', 'Confirmação', message);
-        return false;
+    var requireSecondClick;
+    if (pageTools && typeof pageTools.createSecondClickGuard === 'function') {
+        requireSecondClick = pageTools.createSecondClickGuard();
+    } else {
+        var lockMap = {};
+        requireSecondClick = function (key, message) {
+            var now = Date.now();
+            if (lockMap[key] && lockMap[key] > now) {
+                delete lockMap[key];
+                return true;
+            }
+            lockMap[key] = now + 5000;
+            notify('info', 'Confirmação', message);
+            return false;
+        };
     }
 
     var backBtn = document.getElementById('midias-edit-voltar');

@@ -83,6 +83,13 @@ Garantias do endpoint:
 - **Condicao de saida:** nao se aplica (excecao estrutural valida).
 - **Owner sugerido:** modulo-audiencias.
 
+3. Storage key dedicado — Sala de Midias (lista + edit)
+- **Arquivos afetados:** `public/assets/js/modules/audiencias/midias-list.js`, `public/assets/js/modules/audiencias/midias-edit.js`.
+- **Motivo:** evitar colisao de fila pos-reload com o namespace generico `cartorio.postReloadToast` usado pelo Cartorio; o modulo e Audiencias/Sala de Midias, nao Cartorio.
+- **Escopo da excecao:** usar `salamidias.postReloadToast` como `storageKey` exclusivo deste fluxo.
+- **Condicao de saida:** nao se aplica (excecao estrutural valida).
+- **Owner sugerido:** modulo-audiencias.
+
 ## Backlog de migracao recomendado (ondas pequenas)
 
 1. Onda 1 (baixo risco): `record-edit-common`, `cartorio-task-list`, `gme-list`.
@@ -103,3 +110,4 @@ Garantias do endpoint:
 - 2026-04-28: documento criado com base em varredura global inicial de duplicacoes JS.
 - 2026-04-28: adicionada camada central `App.ToastCatalog` (consumo do endpoint `/api/config/toast-messages.php`) sem migracao funcional de telas.
 - 2026-04-28: validacao tecnica da Onda 1 concluida (schema do catalogo, cache condicional 304 e contrato estavel do endpoint).
+- 2026-04-28 (Onda 6): registrada excecao estrutural `salamidias.postReloadToast` para Sala de Midias; inventario e contratos PHP JSON em `docs/00-foundation/varredura-global-padronizacao-plano-execucao.md`.

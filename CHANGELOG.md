@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0022
+
+**Data:** 2026-04-28 20:16:47 | **Commit:** `f130ac5` | **Tipo:** `patch`
+
+- refactor(toast): implement dedicated storage key for Sala de Midias and enhance API response handling
+
 ## V. 1.97.0021
 
 **Data:** 2026-04-28 20:11:16 | **Commit:** `1d3c606` | **Tipo:** `patch`
@@ -4914,6 +4920,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

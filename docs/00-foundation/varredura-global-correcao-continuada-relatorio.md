@@ -101,3 +101,25 @@
 ### Validacao
 - `php -l` em `app/helpers/DeleteAuthorization.php` e `public/api/admin/feriados/delete.php`: sem erros.
 - Lint nos JS alterados da Onda 5: sem erros.
+
+---
+
+## Onda 6 — Padronizacao global (plano de execucao + micro-lotes)
+
+### Escopo
+- Inventario e contratos registrados em `docs/00-foundation/varredura-global-padronizacao-plano-execucao.md`.
+- Micro-lotes de baixo risco em JS (toast/delegacao e storage key Sala de Midias) e PHP (helper JSON + pilotos em deletes).
+
+### JS
+- `public/assets/js/shared/cartorio-task-list.js`: `notifyByKey` em desalocar passa a priorizar `App.Page.notifyByKey`.
+- `public/assets/js/modules/audiencias/midias-list.js`, `midias-edit.js`: chave `salamidias.postReloadToast`; `midias-edit` usa `App.Page.createSecondClickGuard` quando disponivel.
+
+### PHP
+- Novo: `app/helpers/ApiJsonResponse.php` (`readJsonPayload`, `send`).
+- Pilotos: `public/api/cartorio-guias/delete.php`, `public/api/cartorio-editais/delete.php` usando o helper sem alterar mensagens nem codigos HTTP.
+
+### Governanca
+- `docs/00-foundation/governanca-toast-app-page.md`: excecao estrutural `salamidias.postReloadToast`.
+
+### Validacao (esta onda)
+- Ver secao 5 de `varredura-global-padronizacao-plano-execucao.md` e comandos executados no PR/commit.
