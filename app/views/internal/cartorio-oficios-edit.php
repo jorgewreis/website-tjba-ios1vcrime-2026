@@ -247,6 +247,7 @@ $subLabels = [
                 cancelEndpoint: '/api/cartorio-oficios/cancel.php',
                 deleteEndpoint: '/api/cartorio-oficios/delete.php',
                 listHref: '/frame.php?page=oficioscartorio',
+                numeroOficio: <?php echo json_encode($numeroAno, JSON_UNESCAPED_UNICODE); ?>,
                 storageKey: 'cartorio.postReloadToast',
                 deleteConfirmKey: 'excluir-oficio-cartorio',
                 deleteConfirmMessage: 'Clique novamente em Excluir em até 5 segundos para confirmar a exclusão.',

@@ -134,6 +134,19 @@
                 numero: numero
             }).then(function (result) {
                 if (result.ok && result.data && result.data.id) {
+                    if (typeof common.queuePostReloadToastByKey === 'function') {
+                        common.queuePostReloadToastByKey(
+                            'generic.phone.add.success',
+                            {},
+                            'success',
+                            'Sucesso',
+                            'Telefone adicionado com sucesso.',
+                            storageKey
+                        ).then(function () {
+                            global.location.reload();
+                        });
+                        return;
+                    }
                     common.queuePostReloadToast('success', 'Sucesso', 'Telefone adicionado com sucesso.', storageKey);
                     global.location.reload();
                     return;
@@ -154,6 +167,19 @@
                 }
                 common.postJson('/api/pessoas/telefones/delete.php', { id: id }).then(function (result) {
                     if (result.data && result.data.deleted) {
+                        if (typeof common.queuePostReloadToastByKey === 'function') {
+                            common.queuePostReloadToastByKey(
+                                'generic.phone.remove.success',
+                                {},
+                                'success',
+                                'Sucesso',
+                                'Telefone removido com sucesso.',
+                                storageKey
+                            ).then(function () {
+                                global.location.reload();
+                            });
+                            return;
+                        }
                         common.queuePostReloadToast('success', 'Sucesso', 'Telefone removido com sucesso.', storageKey);
                         global.location.reload();
                     }
@@ -169,6 +195,19 @@
                 }
                 common.postJson('/api/pessoas/vinculos-instituicoes/delete.php', { id: id }).then(function (result) {
                     if (result.data && result.data.deleted) {
+                        if (typeof common.queuePostReloadToastByKey === 'function') {
+                            common.queuePostReloadToastByKey(
+                                'generic.link.remove.success',
+                                {},
+                                'success',
+                                'Sucesso',
+                                'Instituição desvinculada com sucesso.',
+                                storageKey
+                            ).then(function () {
+                                global.location.reload();
+                            });
+                            return;
+                        }
                         common.queuePostReloadToast('success', 'Sucesso', 'Instituição desvinculada com sucesso.', storageKey);
                         global.location.reload();
                     }
@@ -218,6 +257,19 @@
                 principal: global.document.getElementById('new-end-principal')?.checked ? 1 : 0
             }).then(function (result) {
                 if (result.ok && result.data && result.data.id) {
+                    if (typeof common.queuePostReloadToastByKey === 'function') {
+                        common.queuePostReloadToastByKey(
+                            'generic.address.add.success',
+                            {},
+                            'success',
+                            'Sucesso',
+                            'Endereço adicionado com sucesso.',
+                            storageKey
+                        ).then(function () {
+                            global.location.reload();
+                        });
+                        return;
+                    }
                     common.queuePostReloadToast('success', 'Sucesso', 'Endereço adicionado com sucesso.', storageKey);
                     global.location.reload();
                     return;
@@ -241,6 +293,19 @@
                 }
                 common.postJson('/api/pessoas/enderecos/delete.php', { id: id }).then(function (result) {
                     if (result.data && result.data.deleted) {
+                        if (typeof common.queuePostReloadToastByKey === 'function') {
+                            common.queuePostReloadToastByKey(
+                                'generic.address.remove.success',
+                                {},
+                                'success',
+                                'Sucesso',
+                                'Endereço removido com sucesso.',
+                                storageKey
+                            ).then(function () {
+                                global.location.reload();
+                            });
+                            return;
+                        }
                         common.queuePostReloadToast('success', 'Sucesso', 'Endereço removido com sucesso.', storageKey);
                         global.location.reload();
                     }

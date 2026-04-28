@@ -60,6 +60,43 @@
         }
     }
 
+    function notifyByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        const catalog = App.ToastCatalog;
+        if (!catalog || typeof catalog.notifyByKey !== 'function') {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+            return;
+        }
+
+        catalog.notifyByKey(key, vars || {}).catch(function () {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+        });
+    }
+
+    function queueByKey(storageKey, key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        const catalog = App.ToastCatalog;
+        if (!catalog || typeof catalog.resolve !== 'function') {
+            queuePostReloadToast(storageKey, fallbackType, fallbackTitle, fallbackMessage);
+            return Promise.resolve();
+        }
+
+        return catalog.resolve(key, vars || {})
+            .then(function (toast) {
+                if (!toast || !toast.message) {
+                    queuePostReloadToast(storageKey, fallbackType, fallbackTitle, fallbackMessage);
+                    return;
+                }
+                queuePostReloadToast(
+                    storageKey,
+                    toast.type || fallbackType,
+                    toast.title || fallbackTitle,
+                    toast.message
+                );
+            })
+            .catch(function () {
+                queuePostReloadToast(storageKey, fallbackType, fallbackTitle, fallbackMessage);
+            });
+    }
+
     function initialize(config) {
         const settings = config || {};
         const storageKey = settings.storageKey || 'gme.postReloadToast';
@@ -148,15 +185,22 @@
                     })
                     .then(function (result) {
                         if (result.ok && result.data && result.data.success) {
-                            queuePostReloadToast(storageKey, 'success', 'Sucesso', settings.concludeSuccessMessage || 'Operação concluída.');
-                            global.location.reload();
+                            if (settings.concludeSuccessMessage) {
+                                queuePostReloadToast(storageKey, 'success', 'Sucesso', settings.concludeSuccessMessage);
+                                global.location.reload();
+                                return;
+                            }
+                            queueByKey(storageKey, 'generic.operation.success', {}, 'success', 'Sucesso', 'Operação concluída.')
+                                .then(function () {
+                                    global.location.reload();
+                                });
                             return;
                         }
                         notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Falha ao concluir.');
                         button.disabled = false;
                     })
                     .catch(function () {
-                        notify('error', 'Erro', 'Erro de conexão.');
+                        notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
                         button.disabled = false;
                     });
             });

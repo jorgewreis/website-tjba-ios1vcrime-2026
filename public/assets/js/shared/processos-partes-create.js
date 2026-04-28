@@ -30,7 +30,17 @@
                 polo: polo
             }).then(function (result) {
                 if (result.data && result.data.id) {
-                    common.notify('success', 'Sucesso', 'Parte vinculada.');
+                    if (typeof common.notifyByKey === 'function') {
+                        common.notifyByKey(
+                            'generic.link.create.success',
+                            {},
+                            'success',
+                            'Sucesso',
+                            'Parte vinculada.'
+                        );
+                    } else {
+                        common.notify('success', 'Sucesso', 'Parte vinculada.');
+                    }
                     global.location.href = (settings.backBaseHref || '/frame.php?page=consultaprocessosedit&id=') + encodeURIComponent(processoId);
                     return;
                 }

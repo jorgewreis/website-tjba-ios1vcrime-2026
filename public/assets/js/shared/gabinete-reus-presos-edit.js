@@ -41,12 +41,20 @@
             }
             postJson('/api/gabinete-reus-presos/update.php', { id: reuId, nome: nome }).then(function (res) {
                 if (res.ok && res.j && res.j.success) {
-                    common.notify('success', 'Sucesso', 'Nome atualizado.');
+                    if (typeof common.notifyByKey === 'function') {
+                        common.notifyByKey('generic.link.update.success', {}, 'success', 'Sucesso', 'Nome atualizado.');
+                    } else {
+                        common.notify('success', 'Sucesso', 'Nome atualizado.');
+                    }
                 } else {
                     common.notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao salvar.');
                 }
             }).catch(function () {
-                common.notify('error', 'Erro', 'Erro de conexao.');
+                if (typeof common.notifyByKey === 'function') {
+                    common.notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexao.');
+                } else {
+                    common.notify('error', 'Erro', 'Erro de conexao.');
+                }
             });
         });
 
@@ -86,7 +94,17 @@
                         link_id: linkId
                     }).then(function (res) {
                         if (res.ok && res.j && res.j.success) {
-                            common.notify('success', 'Sucesso', 'Processo principal atualizado. Os demais vinculos passam a ser secundarios.');
+                            if (typeof common.notifyByKey === 'function') {
+                                common.notifyByKey(
+                                    'generic.link.update.success',
+                                    {},
+                                    'success',
+                                    'Sucesso',
+                                    'Processo principal atualizado. Os demais vinculos passam a ser secundarios.'
+                                );
+                            } else {
+                                common.notify('success', 'Sucesso', 'Processo principal atualizado. Os demais vinculos passam a ser secundarios.');
+                            }
                             global.location.reload();
                         } else {
                             common.notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha.');
@@ -94,7 +112,11 @@
                             selectEl.setAttribute('data-prev', oldValue);
                         }
                     }).catch(function () {
-                        common.notify('error', 'Erro', 'Erro de conexao.');
+                        if (typeof common.notifyByKey === 'function') {
+                            common.notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexao.');
+                        } else {
+                            common.notify('error', 'Erro', 'Erro de conexao.');
+                        }
                         selectEl.value = oldValue;
                         selectEl.setAttribute('data-prev', oldValue);
                     });
@@ -127,13 +149,21 @@
                 const numeroProcesso = row ? String(row.querySelector('.grp-numero-processo')?.textContent || '').trim() : '';
                 postJson('/api/gabinete-reus-presos/save-processo.php', collectLinkPayload(linkId, numeroProcesso, '', '')).then(function (res) {
                     if (res.ok && res.j && res.j.link_id) {
-                        common.notify('success', 'Sucesso', 'Vinculo atualizado.');
+                        if (typeof common.notifyByKey === 'function') {
+                            common.notifyByKey('generic.link.update.success', {}, 'success', 'Sucesso', 'Vinculo atualizado.');
+                        } else {
+                            common.notify('success', 'Sucesso', 'Vinculo atualizado.');
+                        }
                         global.location.reload();
                     } else {
                         common.notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha.');
                     }
                 }).catch(function () {
-                    common.notify('error', 'Erro', 'Erro de conexao.');
+                    if (typeof common.notifyByKey === 'function') {
+                        common.notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexao.');
+                    } else {
+                        common.notify('error', 'Erro', 'Erro de conexao.');
+                    }
                 });
             });
         });
@@ -146,13 +176,21 @@
                 }
                 postJson('/api/gabinete-reus-presos/unlink-processo.php', { link_id: linkId }).then(function (res) {
                     if (res.ok && res.j && res.j.success) {
-                        common.notify('success', 'Sucesso', 'Vinculo removido.');
+                        if (typeof common.notifyByKey === 'function') {
+                            common.notifyByKey('generic.link.remove.success', {}, 'success', 'Sucesso', 'Vinculo removido.');
+                        } else {
+                            common.notify('success', 'Sucesso', 'Vinculo removido.');
+                        }
                         global.location.reload();
                     } else {
                         common.notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha.');
                     }
                 }).catch(function () {
-                    common.notify('error', 'Erro', 'Erro de conexao.');
+                    if (typeof common.notifyByKey === 'function') {
+                        common.notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexao.');
+                    } else {
+                        common.notify('error', 'Erro', 'Erro de conexao.');
+                    }
                 });
             });
         });
@@ -308,13 +346,21 @@
                     principal: principal
                 }).then(function (res) {
                     if (res.ok && res.j && res.j.link_id) {
-                        common.notify('success', 'Sucesso', 'Processo vinculado.');
+                        if (typeof common.notifyByKey === 'function') {
+                            common.notifyByKey('generic.process.link.success', {}, 'success', 'Sucesso', 'Processo vinculado.');
+                        } else {
+                            common.notify('success', 'Sucesso', 'Processo vinculado.');
+                        }
                         global.location.reload();
                     } else {
                         common.notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha.');
                     }
                 }).catch(function () {
-                    common.notify('error', 'Erro', 'Erro de conexao.');
+                    if (typeof common.notifyByKey === 'function') {
+                        common.notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexao.');
+                    } else {
+                        common.notify('error', 'Erro', 'Erro de conexao.');
+                    }
                 });
             };
 
@@ -341,13 +387,21 @@
                 observacoes: observacoes || undefined
             }).then(function (res) {
                 if (res.ok && res.j && res.j.success) {
-                    common.notify('success', 'Sucesso', 'Movimentacao registrada.');
+                    if (typeof common.notifyByKey === 'function') {
+                        common.notifyByKey('generic.movement.create.success', {}, 'success', 'Sucesso', 'Movimentacao registrada.');
+                    } else {
+                        common.notify('success', 'Sucesso', 'Movimentacao registrada.');
+                    }
                     global.location.reload();
                 } else {
                     common.notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha.');
                 }
             }).catch(function () {
-                common.notify('error', 'Erro', 'Erro de conexao.');
+                if (typeof common.notifyByKey === 'function') {
+                    common.notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexao.');
+                } else {
+                    common.notify('error', 'Erro', 'Erro de conexao.');
+                }
             });
         });
 
@@ -366,13 +420,21 @@
                     movimentacao_id: movimentacaoId
                 }).then(function (res) {
                     if (res.ok && res.j && res.j.success) {
-                        common.notify('success', 'Sucesso', 'Movimentacao excluida.');
+                        if (typeof common.notifyByKey === 'function') {
+                            common.notifyByKey('generic.movement.delete.success', {}, 'success', 'Sucesso', 'Movimentacao excluida.');
+                        } else {
+                            common.notify('success', 'Sucesso', 'Movimentacao excluida.');
+                        }
                         global.location.reload();
                     } else {
                         common.notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha.');
                     }
                 }).catch(function () {
-                    common.notify('error', 'Erro', 'Erro de conexao.');
+                    if (typeof common.notifyByKey === 'function') {
+                        common.notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexao.');
+                    } else {
+                        common.notify('error', 'Erro', 'Erro de conexao.');
+                    }
                 });
             });
         });
@@ -383,13 +445,21 @@
             }
             postJson('/api/gabinete-reus-presos/archive.php', { id: reuId }).then(function (res) {
                 if (res.ok && res.j && res.j.success) {
-                    common.notify('success', 'Sucesso', 'Registro arquivado.');
+                    if (typeof common.notifyByKey === 'function') {
+                        common.notifyByKey('generic.record.archive.success', {}, 'success', 'Sucesso', 'Registro arquivado.');
+                    } else {
+                        common.notify('success', 'Sucesso', 'Registro arquivado.');
+                    }
                     goBack();
                 } else {
                     common.notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha.');
                 }
             }).catch(function () {
-                common.notify('error', 'Erro', 'Erro de conexao.');
+                if (typeof common.notifyByKey === 'function') {
+                    common.notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexao.');
+                } else {
+                    common.notify('error', 'Erro', 'Erro de conexao.');
+                }
             });
         });
     }

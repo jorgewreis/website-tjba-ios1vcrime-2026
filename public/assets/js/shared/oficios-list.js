@@ -100,6 +100,42 @@
         };
     }
 
+    function notifyByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        const catalog = App.ToastCatalog;
+        if (!catalog || typeof catalog.notifyByKey !== 'function') {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+            return;
+        }
+
+        catalog.notifyByKey(key, vars || {}).catch(function () {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+        });
+    }
+
+    function queueByKey(storageKey, key, vars, fallbackPayload) {
+        const catalog = App.ToastCatalog;
+        if (!catalog || typeof catalog.resolve !== 'function') {
+            queuePostReloadToast(storageKey, fallbackPayload);
+            return Promise.resolve();
+        }
+
+        return catalog.resolve(key, vars || {})
+            .then(function (toast) {
+                if (!toast || !toast.message) {
+                    queuePostReloadToast(storageKey, fallbackPayload);
+                    return;
+                }
+                queuePostReloadToast(storageKey, {
+                    type: toast.type || fallbackPayload.type,
+                    title: toast.title || fallbackPayload.title,
+                    message: toast.message
+                });
+            })
+            .catch(function () {
+                queuePostReloadToast(storageKey, fallbackPayload);
+            });
+    }
+
     function bindFilters(config) {
         const applyFilters = function () {
             const oficio = global.document.getElementById(config.searchInputId || 'search-input')?.value?.trim() ?? '';
@@ -247,18 +283,29 @@
                 })
                 .then(function (result) {
                     if (result.ok && result.data && result.data.id) {
-                        const payload = typeof config.buildSuccessPayload === 'function'
-                            ? config.buildSuccessPayload(result.data, ctx)
-                            : { type: 'success', title: 'Sucesso', message: 'Ofício registrado com sucesso.' };
-                        queuePostReloadToast(ctx.storageKey, payload);
-                        global.location.reload();
+                        if (typeof config.buildSuccessPayload === 'function') {
+                            const payload = config.buildSuccessPayload(result.data, ctx);
+                            queuePostReloadToast(ctx.storageKey, payload);
+                            global.location.reload();
+                            return;
+                        }
+
+                        const numeroOficio = String(result.data.numero_oficio || '').trim();
+                        const vars = numeroOficio ? { numero_oficio: numeroOficio } : {};
+                        queueByKey(ctx.storageKey, 'oficios.create.success', vars, {
+                            type: 'success',
+                            title: 'Sucesso',
+                            message: 'Ofício registrado com sucesso.'
+                        }).then(function () {
+                            global.location.reload();
+                        });
                         return;
                     }
 
                     notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Falha ao registrar.');
                 })
                 .catch(function () {
-                    notify('error', 'Erro', 'Erro de conexão.');
+                    notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
                 });
         });
     }
@@ -299,7 +346,11 @@
                 })
                 .then(function (result) {
                     if (result.ok && result.data && result.data.deleted) {
-                        notify('success', 'Sucesso', config.desalocarSuccessMessage || 'Alocação removida.');
+                        if (config.desalocarSuccessMessage) {
+                            notify('success', 'Sucesso', config.desalocarSuccessMessage);
+                        } else {
+                            notifyByKey('cartorio.allocation.remove.success', {}, 'success', 'Sucesso', 'Alocação removida.');
+                        }
                         global.setTimeout(function () {
                             global.location.reload();
                         }, 800);
@@ -309,7 +360,7 @@
                     notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Falha ao remover alocação.');
                 })
                 .catch(function () {
-                    notify('error', 'Erro', 'Erro de conexão.');
+                    notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
                 });
         });
     }

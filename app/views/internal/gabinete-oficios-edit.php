@@ -161,6 +161,7 @@ $statusLabel = $statusAtual === 'finalizada' ? 'Finalizada' : ($statusAtual === 
                 cancelEndpoint: '/api/gabinete-oficios/cancel.php',
                 deleteEndpoint: '/api/gabinete-oficios/delete.php',
                 listHref: '/frame.php?page=oficiosgabinete',
+                numeroOficio: <?php echo json_encode($numeroAno, JSON_UNESCAPED_UNICODE); ?>,
                 storageKey: 'cartorio.postReloadToast',
                 deleteConfirmKey: 'excluir-oficio-gab',
                 deleteConfirmMessage: 'Clique novamente em Excluir em até 5 segundos para confirmar a exclusão.'

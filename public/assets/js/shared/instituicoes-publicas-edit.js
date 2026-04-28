@@ -75,6 +75,19 @@
                 principal: global.document.getElementById('new-tel-principal')?.checked ? 1 : 0
             }).then(function (result) {
                 if (result.data && result.data.id) {
+                    if (typeof common.queuePostReloadToastByKey === 'function') {
+                        common.queuePostReloadToastByKey(
+                            'generic.phone.add.success',
+                            {},
+                            'success',
+                            'Sucesso',
+                            'Telefone adicionado com sucesso.',
+                            storageKey
+                        ).then(function () {
+                            global.location.reload();
+                        });
+                        return;
+                    }
                     common.queuePostReloadToast('success', 'Sucesso', 'Telefone adicionado com sucesso.', storageKey);
                     global.location.reload();
                     return;
@@ -91,6 +104,19 @@
                 }
                 common.postJson('/api/instituicoes-publicas/telefones/delete.php', { id: id }).then(function (result) {
                     if (result.data && result.data.deleted) {
+                        if (typeof common.queuePostReloadToastByKey === 'function') {
+                            common.queuePostReloadToastByKey(
+                                'generic.phone.remove.success',
+                                {},
+                                'success',
+                                'Sucesso',
+                                'Telefone removido com sucesso.',
+                                storageKey
+                            ).then(function () {
+                                global.location.reload();
+                            });
+                            return;
+                        }
                         common.queuePostReloadToast('success', 'Sucesso', 'Telefone removido com sucesso.', storageKey);
                         global.location.reload();
                     }
@@ -110,6 +136,19 @@
                 sigla: String(global.document.getElementById('new-setor-sigla')?.value || '').trim() || null
             }).then(function (result) {
                 if (result.data && result.data.id) {
+                    if (typeof common.queuePostReloadToastByKey === 'function') {
+                        common.queuePostReloadToastByKey(
+                            'generic.department.add.success',
+                            {},
+                            'success',
+                            'Sucesso',
+                            'Setor adicionado com sucesso.',
+                            storageKey
+                        ).then(function () {
+                            global.location.reload();
+                        });
+                        return;
+                    }
                     common.queuePostReloadToast('success', 'Sucesso', 'Setor adicionado com sucesso.', storageKey);
                     global.location.reload();
                     return;
@@ -126,6 +165,19 @@
                 }
                 common.postJson('/api/instituicoes-publicas/setores/delete.php', { id: id }).then(function (result) {
                     if (result.data && result.data.deleted) {
+                        if (typeof common.queuePostReloadToastByKey === 'function') {
+                            common.queuePostReloadToastByKey(
+                                'generic.department.remove.success',
+                                {},
+                                'success',
+                                'Sucesso',
+                                'Setor removido com sucesso.',
+                                storageKey
+                            ).then(function () {
+                                global.location.reload();
+                            });
+                            return;
+                        }
                         common.queuePostReloadToast('success', 'Sucesso', 'Setor removido com sucesso.', storageKey);
                         global.location.reload();
                     }
@@ -168,6 +220,19 @@
                 principal: global.document.getElementById('new-end-principal')?.checked ? 1 : 0
             }).then(function (result) {
                 if (result.ok && result.data && result.data.id) {
+                    if (typeof common.queuePostReloadToastByKey === 'function') {
+                        common.queuePostReloadToastByKey(
+                            'generic.address.add.success',
+                            {},
+                            'success',
+                            'Sucesso',
+                            'Endereço adicionado com sucesso.',
+                            storageKey
+                        ).then(function () {
+                            global.location.reload();
+                        });
+                        return;
+                    }
                     common.queuePostReloadToast('success', 'Sucesso', 'Endereço adicionado com sucesso.', storageKey);
                     global.location.reload();
                     return;
@@ -184,6 +249,19 @@
                 }
                 common.postJson('/api/instituicoes-publicas/enderecos/delete.php', { id: id }).then(function (result) {
                     if (result.data && result.data.deleted) {
+                        if (typeof common.queuePostReloadToastByKey === 'function') {
+                            common.queuePostReloadToastByKey(
+                                'generic.address.remove.success',
+                                {},
+                                'success',
+                                'Sucesso',
+                                'Endereço removido com sucesso.',
+                                storageKey
+                            ).then(function () {
+                                global.location.reload();
+                            });
+                            return;
+                        }
                         common.queuePostReloadToast('success', 'Sucesso', 'Endereço removido com sucesso.', storageKey);
                         global.location.reload();
                     }

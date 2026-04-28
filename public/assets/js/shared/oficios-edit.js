@@ -59,6 +59,42 @@
         };
     }
 
+    function notifyByKey(notify, key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        const catalog = App.ToastCatalog;
+        if (!catalog || typeof catalog.notifyByKey !== 'function') {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+            return;
+        }
+
+        catalog.notifyByKey(key, vars || {}).catch(function () {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+        });
+    }
+
+    function queueByKey(queuePostReloadToast, key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        const catalog = App.ToastCatalog;
+        if (!catalog || typeof catalog.resolve !== 'function') {
+            queuePostReloadToast(fallbackType, fallbackTitle, fallbackMessage);
+            return Promise.resolve();
+        }
+
+        return catalog.resolve(key, vars || {})
+            .then(function (toast) {
+                if (!toast || !toast.message) {
+                    queuePostReloadToast(fallbackType, fallbackTitle, fallbackMessage);
+                    return;
+                }
+                queuePostReloadToast(
+                    toast.type || fallbackType,
+                    toast.title || fallbackTitle,
+                    toast.message
+                );
+            })
+            .catch(function () {
+                queuePostReloadToast(fallbackType, fallbackTitle, fallbackMessage);
+            });
+    }
+
     function bindDesalocar(settings, notify, requireSecondClick) {
         if (!settings.enableDesalocar) {
             return;
@@ -156,6 +192,8 @@
         const notify = buildNotify();
         const queuePostReloadToast = buildQueuePostReloadToast(settings.storageKey || 'cartorio.postReloadToast');
         const requireSecondClick = buildSecondClickGuard(notify);
+        const numeroOficio = String(settings.numeroOficio || '').trim();
+        const oficioVars = numeroOficio ? { numero_oficio: numeroOficio } : {};
         const entityId = (global.document.getElementById(settings.idFieldId)?.value || '').trim();
 
         global.document.getElementById(settings.backButtonId)?.addEventListener('click', function () {
@@ -167,8 +205,21 @@
             body: { id: entityId },
             handleResult: function (result, button) {
                 if (result.ok && result.data && result.data.success) {
-                    queuePostReloadToast('success', 'Sucesso', settings.cancelSuccessMessage || 'Ofício cancelado.');
-                    global.location.href = settings.listHref;
+                    if (settings.cancelSuccessMessage) {
+                        queuePostReloadToast('success', 'Sucesso', settings.cancelSuccessMessage);
+                        global.location.href = settings.listHref;
+                        return true;
+                    }
+                    queueByKey(
+                        queuePostReloadToast,
+                        'oficios.cancel.success',
+                        oficioVars,
+                        'success',
+                        'Sucesso',
+                        'Ofício cancelado.'
+                    ).then(function () {
+                        global.location.href = settings.listHref;
+                    });
                     return true;
                 }
 
@@ -177,7 +228,7 @@
                 return true;
             },
             handleError: function (button) {
-                notify('error', 'Erro', 'Erro de conexão.');
+                notifyByKey(notify, 'generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
                 button.disabled = false;
             }
         });
@@ -190,8 +241,21 @@
             },
             handleResult: function (result, button) {
                 if (result.ok && result.data && (result.data.deleted || result.data.message)) {
-                    queuePostReloadToast('success', 'Sucesso', result.data.message || settings.deleteSuccessMessage || 'Ofício excluído.');
-                    global.location.href = settings.listHref;
+                    if (settings.deleteSuccessMessage) {
+                        queuePostReloadToast('success', 'Sucesso', settings.deleteSuccessMessage);
+                        global.location.href = settings.listHref;
+                        return true;
+                    }
+                    queueByKey(
+                        queuePostReloadToast,
+                        'oficios.delete.success',
+                        oficioVars,
+                        'success',
+                        'Sucesso',
+                        result.data.message || 'Ofício excluído.'
+                    ).then(function () {
+                        global.location.href = settings.listHref;
+                    });
                     return true;
                 }
 
@@ -200,7 +264,7 @@
                 return true;
             },
             handleError: function (button) {
-                notify('error', 'Erro', 'Erro de conexão.');
+                notifyByKey(notify, 'generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
                 button.disabled = false;
             }
         });

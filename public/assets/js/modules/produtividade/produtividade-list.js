@@ -17,6 +17,17 @@
         }
     }
 
+    function notifyByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        var catalog = window.App && window.App.ToastCatalog ? window.App.ToastCatalog : null;
+        if (!catalog || typeof catalog.notifyByKey !== 'function') {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+            return;
+        }
+        catalog.notifyByKey(key, vars || {}).catch(function () {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+        });
+    }
+
     function setupRuleSearch() {
         var input = document.getElementById('regra_busca');
         var hidden = document.getElementById('regra_id');
@@ -232,11 +243,11 @@
                         notify('error', 'Erro', result.data && result.data.error ? result.data.error : 'Falha ao salvar lançamento.');
                         return;
                     }
-                    notify('success', '', 'Lançamento manual registrado com sucesso.');
+                    notifyByKey('produtividade.manual.create.success', {}, 'success', '', 'Lançamento manual registrado com sucesso.');
                     window.location.reload();
                 })
                 .catch(function () {
-                    notify('error', 'Erro', 'Erro de conexão ao registrar lançamento.');
+                    notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão ao registrar lançamento.');
                 })
                 .finally(function () {
                     syncCreateButtonState();
@@ -295,11 +306,11 @@
                             notify('error', 'Erro', result.data && result.data.error ? result.data.error : 'Falha ao anular lançamento.');
                             return;
                         }
-                        notify('success', '', 'Lançamento anulado com sucesso.');
+                        notifyByKey('produtividade.manual.cancel.success', {}, 'success', '', 'Lançamento anulado com sucesso.');
                         window.location.reload();
                     })
                     .catch(function () {
-                        notify('error', 'Erro', 'Erro de conexão ao anular lançamento.');
+                        notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão ao anular lançamento.');
                     });
             });
         });

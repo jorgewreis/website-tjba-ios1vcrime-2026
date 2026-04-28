@@ -92,7 +92,17 @@
                 observacoes: String(global.document.getElementById('observacoes')?.value || '').trim() || null
             }).then(function (result) {
                 if (result.ok && result.data && result.data.id) {
-                    common.notify('success', 'Sucesso', 'Vinculo criado.');
+                    if (typeof common.notifyByKey === 'function') {
+                        common.notifyByKey(
+                            'generic.link.create.success',
+                            {},
+                            'success',
+                            'Sucesso',
+                            'Vinculo criado.'
+                        );
+                    } else {
+                        common.notify('success', 'Sucesso', 'Vinculo criado.');
+                    }
                     global.location.href = settings.backHref || '/frame.php?page=partesinstituicoeslist';
                     return;
                 }

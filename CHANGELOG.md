@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0012
+
+**Data:** 2026-04-28 15:25:32 | **Commit:** `313e8b5` | **Tipo:** `patch`
+
+- feat(toast): enhance notification system with new success messages and centralized handling
+
 ## V. 1.97.0011
 
 **Data:** 2026-04-28 15:06:48 | **Commit:** `976da34` | **Tipo:** `patch`
@@ -4854,6 +4860,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

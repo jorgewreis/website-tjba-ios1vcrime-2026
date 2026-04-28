@@ -26,6 +26,19 @@
                 button.disabled = true;
                 common.postJson('/api/processos-partes/delete.php', { id: id }).then(function (result) {
                     if (result.data && result.data.deleted) {
+                        if (typeof common.queuePostReloadToastByKey === 'function') {
+                            common.queuePostReloadToastByKey(
+                                'generic.link.remove.success',
+                                {},
+                                'success',
+                                'Sucesso',
+                                'Vínculo removido com sucesso.',
+                                storageKey
+                            ).then(function () {
+                                global.location.reload();
+                            });
+                            return;
+                        }
                         common.queuePostReloadToast('success', 'Sucesso', 'Vínculo removido com sucesso.', storageKey);
                         global.location.reload();
                         return;

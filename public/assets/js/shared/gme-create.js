@@ -51,6 +51,42 @@
         return digits.slice(0, 3) + '.' + digits.slice(3, 6) + '.' + digits.slice(6, 9) + '-' + digits.slice(9);
     }
 
+    function notifyByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        const catalog = App.ToastCatalog;
+        if (!catalog || typeof catalog.notifyByKey !== 'function') {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+            return;
+        }
+
+        catalog.notifyByKey(key, vars || {}).catch(function () {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+        });
+    }
+
+    function queueByKey(storageKey, key, vars, fallbackPayload) {
+        const catalog = App.ToastCatalog;
+        if (!catalog || typeof catalog.resolve !== 'function') {
+            queuePostReloadToast(storageKey, fallbackPayload);
+            return Promise.resolve();
+        }
+
+        return catalog.resolve(key, vars || {})
+            .then(function (toast) {
+                if (!toast || !toast.message) {
+                    queuePostReloadToast(storageKey, fallbackPayload);
+                    return;
+                }
+                queuePostReloadToast(storageKey, {
+                    type: toast.type || fallbackPayload.type,
+                    title: toast.title || fallbackPayload.title,
+                    message: toast.message
+                });
+            })
+            .catch(function () {
+                queuePostReloadToast(storageKey, fallbackPayload);
+            });
+    }
+
     function initialize(config) {
         const settings = config || {};
         const storageKey = settings.storageKey || 'gme.postReloadToast';
@@ -323,14 +359,19 @@
                 })
                 .then(function (result) {
                     if (result.ok && result.data && result.data.id) {
-                        queuePostReloadToast(storageKey, { type: 'success', title: 'Sucesso', message: 'Monitoramento registrado.' });
-                        global.location.href = settings.listHref;
+                        queueByKey(storageKey, 'gme.monitoring.create.success', {}, {
+                            type: 'success',
+                            title: 'Sucesso',
+                            message: 'Monitoramento registrado.'
+                        }).then(function () {
+                            global.location.href = settings.listHref;
+                        });
                         return;
                     }
                     notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Falha ao registrar.');
                 })
                 .catch(function () {
-                    notify('error', 'Erro', 'Erro de conexão.');
+                    notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
                 });
         });
     }

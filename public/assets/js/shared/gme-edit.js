@@ -126,6 +126,43 @@
         });
     }
 
+    function notifyByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        const catalog = App.ToastCatalog;
+        if (!catalog || typeof catalog.notifyByKey !== 'function') {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+            return;
+        }
+
+        catalog.notifyByKey(key, vars || {}).catch(function () {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+        });
+    }
+
+    function queueByKey(storageKey, key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        const catalog = App.ToastCatalog;
+        if (!catalog || typeof catalog.resolve !== 'function') {
+            queuePostReloadToast(storageKey, fallbackType, fallbackTitle, fallbackMessage);
+            return Promise.resolve();
+        }
+
+        return catalog.resolve(key, vars || {})
+            .then(function (toast) {
+                if (!toast || !toast.message) {
+                    queuePostReloadToast(storageKey, fallbackType, fallbackTitle, fallbackMessage);
+                    return;
+                }
+                queuePostReloadToast(
+                    storageKey,
+                    toast.type || fallbackType,
+                    toast.title || fallbackTitle,
+                    toast.message
+                );
+            })
+            .catch(function () {
+                queuePostReloadToast(storageKey, fallbackType, fallbackTitle, fallbackMessage);
+            });
+    }
+
     function initialize(config) {
         const settings = config || {};
         const storageKey = settings.storageKey || 'gme.postReloadToast';
@@ -142,15 +179,22 @@
             },
             onResult: function (result, button) {
                 if (result.ok && result.data && result.data.success) {
-                    queuePostReloadToast(storageKey, 'success', 'Sucesso', settings.cancelSuccessMessage || 'Monitoramento cancelado.');
-                    global.location.href = settings.listHref;
+                    if (settings.cancelSuccessMessage) {
+                        queuePostReloadToast(storageKey, 'success', 'Sucesso', settings.cancelSuccessMessage);
+                        global.location.href = settings.listHref;
+                        return;
+                    }
+                    queueByKey(storageKey, 'gme.monitoring.cancel.success', {}, 'success', 'Sucesso', 'Monitoramento cancelado.')
+                        .then(function () {
+                            global.location.href = settings.listHref;
+                        });
                     return;
                 }
                 notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Falha ao cancelar.');
                 button.disabled = false;
             },
             onError: function (button) {
-                notify('error', 'Erro', 'Erro de conexão.');
+                notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
                 button.disabled = false;
             }
         });
@@ -163,15 +207,22 @@
             },
             onResult: function (result, button) {
                 if (result.ok && result.data && (result.data.deleted || result.data.message)) {
-                    queuePostReloadToast(storageKey, 'success', 'Sucesso', result.data.message || settings.deleteSuccessMessage || 'Registro excluído.');
-                    global.location.href = settings.listHref;
+                    if (result.data.message || settings.deleteSuccessMessage) {
+                        queuePostReloadToast(storageKey, 'success', 'Sucesso', result.data.message || settings.deleteSuccessMessage || 'Registro excluído.');
+                        global.location.href = settings.listHref;
+                        return;
+                    }
+                    queueByKey(storageKey, 'generic.record.delete.success', {}, 'success', 'Sucesso', 'Registro excluído.')
+                        .then(function () {
+                            global.location.href = settings.listHref;
+                        });
                     return;
                 }
                 notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Falha ao excluir.');
                 button.disabled = false;
             },
             onError: function (button) {
-                notify('error', 'Erro', 'Erro de conexão.');
+                notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
                 button.disabled = false;
             }
         });

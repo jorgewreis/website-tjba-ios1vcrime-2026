@@ -35,6 +35,43 @@
         }
     }
 
+    function notifyByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        const catalog = App.ToastCatalog;
+        if (!catalog || typeof catalog.notifyByKey !== 'function') {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+            return;
+        }
+
+        catalog.notifyByKey(key, vars || {}).catch(function () {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+        });
+    }
+
+    function queuePostReloadToastByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage, storageKey) {
+        const catalog = App.ToastCatalog;
+        if (!catalog || typeof catalog.resolve !== 'function') {
+            queuePostReloadToast(fallbackType, fallbackTitle, fallbackMessage, storageKey);
+            return Promise.resolve();
+        }
+
+        return catalog.resolve(key, vars || {})
+            .then(function (toast) {
+                if (!toast || !toast.message) {
+                    queuePostReloadToast(fallbackType, fallbackTitle, fallbackMessage, storageKey);
+                    return;
+                }
+                queuePostReloadToast(
+                    toast.type || fallbackType,
+                    toast.title || fallbackTitle,
+                    toast.message,
+                    storageKey
+                );
+            })
+            .catch(function () {
+                queuePostReloadToast(fallbackType, fallbackTitle, fallbackMessage, storageKey);
+            });
+    }
+
     function createSecondClickGuard() {
         if (App.Page && typeof App.Page.createSecondClickGuard === 'function') {
             return App.Page.createSecondClickGuard();
@@ -101,7 +138,9 @@
 
     App.RecordEditCommon = {
         notify: notify,
+        notifyByKey: notifyByKey,
         queuePostReloadToast: queuePostReloadToast,
+        queuePostReloadToastByKey: queuePostReloadToastByKey,
         createSecondClickGuard: createSecondClickGuard,
         postJson: postJson,
         lookupCep: lookupCep

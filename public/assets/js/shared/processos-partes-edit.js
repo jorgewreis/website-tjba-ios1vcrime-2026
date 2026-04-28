@@ -32,7 +32,17 @@
                 prioridade_pessoa_deficiencia: !!global.document.getElementById('prioridade_pessoa_deficiencia')?.checked
             }).then(function (result) {
                 if (result.data && result.data.success) {
-                    common.notify('success', 'Sucesso', 'Vinculo atualizado.');
+                    if (typeof common.notifyByKey === 'function') {
+                        common.notifyByKey(
+                            'generic.link.update.success',
+                            {},
+                            'success',
+                            'Sucesso',
+                            'Vinculo atualizado.'
+                        );
+                    } else {
+                        common.notify('success', 'Sucesso', 'Vinculo atualizado.');
+                    }
                     global.location.href = (settings.backBaseHref || '/frame.php?page=consultaprocessosedit&id=') + encodeURIComponent(processoId);
                     return;
                 }
