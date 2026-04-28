@@ -98,10 +98,18 @@ final class Security
     {
         self::clearAuthenticatedSession();
         $loginUrl = '/index.php';
-        // HTTP redirect padrão.
-        header('Location: ' . $loginUrl);
-        // Garantir que o logout rompa o iframe: força topo.
+
+        // Não usar header('Location') aqui: dentro de iframe o redirect permanece no frame.
+        // A navegação deve ocorrer no topo da janela para evitar login "embutido" no layout interno.
         if (!headers_sent()) {
+            http_response_code(401);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            header('Pragma: no-cache');
+            header('Content-Type: text/html; charset=UTF-8');
+        }
+
+        if (!headers_sent()) {
+            // Mantido por segurança caso algum header acima falhe silenciosamente.
             header('Content-Type: text/html; charset=UTF-8');
         }
         echo "<!DOCTYPE html><html><head><meta http-equiv=\"refresh\" content=\"0;url={$loginUrl}\"></head><body><script>if(window.top){window.top.location.href='{$loginUrl}';}else{window.location.href='{$loginUrl}';}</script></body></html>";
