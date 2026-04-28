@@ -100,7 +100,14 @@
                     }
 
                     if (qtdRaw === '' || isNaN(qtdInt)) {
-                        ctx.notify('error', 'Campo obrigatório', 'Informe a quantidade.');
+                        notifyByKey(
+                            ctx,
+                            'cartorio.medidas.quantity.required',
+                            {},
+                            'error',
+                            'Campo obrigatório',
+                            'Informe a quantidade.'
+                        );
                         qtdInput.focus();
                         return;
                     }
@@ -197,7 +204,14 @@
                     onClick: function (button, event, ctx) {
                         const cejuscId = (button.getAttribute('data-cejusc-id') || '').trim();
                         if (!cejuscId) {
-                            ctx.notify('error', 'Erro', 'Identificador da tarefa do Cejusc não encontrado.');
+                            notifyByKey(
+                                ctx,
+                                'cartorio.medidas.cejusc.id.required',
+                                {},
+                                'error',
+                                'Erro',
+                                'Identificador da tarefa do Cejusc não encontrado.'
+                            );
                             return;
                         }
                         global.location.href = '/frame.php?page=cejuscedit&id=' + encodeURIComponent(cejuscId);

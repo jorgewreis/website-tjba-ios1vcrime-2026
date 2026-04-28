@@ -18,11 +18,57 @@
         }
     }
 
+    function notifyByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        var catalog = window.App && window.App.ToastCatalog ? window.App.ToastCatalog : null;
+        if (!catalog || typeof catalog.notifyByKey !== 'function') {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+            return;
+        }
+        catalog.notifyByKey(key, vars || {}).catch(function () {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+        });
+    }
+
+    function queuePostReloadToastByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage, storageKey) {
+        var targetKey = storageKey || 'salapauta.postReloadToast';
+        var catalog = window.App && window.App.ToastCatalog ? window.App.ToastCatalog : null;
+        if (!catalog || typeof catalog.resolve !== 'function') {
+            if (pageTools && typeof pageTools.queuePostReloadToast === 'function') {
+                pageTools.queuePostReloadToast(fallbackType, fallbackTitle, fallbackMessage, targetKey);
+                return;
+            }
+            try {
+                sessionStorage.setItem(targetKey, JSON.stringify([{ type: fallbackType, title: fallbackTitle, message: fallbackMessage }]));
+            } catch (e) {}
+            return;
+        }
+        catalog.resolve(key, vars || {}).then(function (toast) {
+            var type = (toast && toast.type) || fallbackType;
+            var title = (toast && toast.title) || fallbackTitle;
+            var message = (toast && toast.message) || fallbackMessage;
+            if (pageTools && typeof pageTools.queuePostReloadToast === 'function') {
+                pageTools.queuePostReloadToast(type, title, message, targetKey);
+                return;
+            }
+            try {
+                sessionStorage.setItem(targetKey, JSON.stringify([{ type: type, title: title, message: message }]));
+            } catch (e) {}
+        }).catch(function () {
+            if (pageTools && typeof pageTools.queuePostReloadToast === 'function') {
+                pageTools.queuePostReloadToast(fallbackType, fallbackTitle, fallbackMessage, targetKey);
+                return;
+            }
+            try {
+                sessionStorage.setItem(targetKey, JSON.stringify([{ type: fallbackType, title: fallbackTitle, message: fallbackMessage }]));
+            } catch (e) {}
+        });
+    }
+
     function requiredValue(id, label) {
         var el = document.getElementById(id);
         var value = String(el && el.value ? el.value : '').trim();
         if (!value) {
-            notify('error', 'Validacao', 'Informe: ' + label + '.');
+            notifyByKey('audiencias.validation.required.field', { campo: label }, 'error', 'Validacao', 'Informe: ' + label + '.');
             return '';
         }
         return value;
@@ -36,7 +82,7 @@
             var v = String(dataEl.value || '').trim();
             if (v && minD && v < minD) {
                 dataEl.value = minD;
-                notify('info', 'Data', 'Datas anteriores a hoje não são permitidas.');
+                notifyByKey('audiencias.date.past.not.allowed', {}, 'info', 'Data', 'Datas anteriores a hoje não são permitidas.');
             }
         }
         dataEl.addEventListener('change', clampData);
@@ -86,17 +132,17 @@
             .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
             .then(function (res) {
                 if (!res.ok || !res.j || !Array.isArray(res.j.available)) {
-                    notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao carregar horários.');
+                    notifyByKey('audiencias.schedule.load.error', {}, 'error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao carregar horários.');
                     fillHoraSelectCreate(grade);
                     return;
                 }
                 fillHoraSelectCreate(res.j.available);
                 if (res.j.available.length === 0) {
-                    notify('info', 'Horários', 'Não há horários livres nesta data.');
+                    notifyByKey('audiencias.schedule.unavailable.info', {}, 'info', 'Horários', 'Não há horários livres nesta data.');
                 }
             })
             .catch(function () {
-                notify('error', 'Erro', 'Erro de conexão.');
+                notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
                 fillHoraSelectCreate(grade);
             });
     }
@@ -116,7 +162,7 @@
             ? window.normalizeAndValidateCNJValue(processo, { toastOnInvalid: true })
             : { ok: onlyDigits(processo).length === 20, formatted: processo };
         if (!cnjResult.ok) {
-            notify('error', 'Validacao', 'Número do processo inválido. Informe no padrão CNJ.');
+            notifyByKey('audiencias.validation.process.invalid', {}, 'error', 'Validacao', 'Número do processo inválido. Informe no padrão CNJ.');
             return;
         }
         processo = String(cnjResult.formatted || processo).trim();
@@ -133,7 +179,7 @@
         if (!data) return;
         var minData = String(document.getElementById('audiencia-data')?.getAttribute('min') || '').trim();
         if (minData && data < minData) {
-            notify('error', 'Validacao', 'A data da audiência não pode ser anterior a hoje.');
+            notifyByKey('audiencias.validation.date.before.today', {}, 'error', 'Validacao', 'A data da audiência não pode ser anterior a hoje.');
             return;
         }
         var hora = requiredValue('audiencia-hora', 'Hora');
@@ -146,7 +192,7 @@
         var classeDescricaoCampo = String(document.getElementById('audiencia-classe')?.value || '').trim();
         var classeDescricao = classeDescricaoHidden || classeDescricaoCampo;
         if (!classeDescricao) {
-            notify('error', 'Validacao', 'Informe: Classe (aguarde o DataJud finalizar o preenchimento automático).');
+            notifyByKey('audiencias.validation.class.required', {}, 'error', 'Validacao', 'Informe: Classe (aguarde o DataJud finalizar o preenchimento automático).');
             return;
         }
 
@@ -168,16 +214,21 @@
             .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
             .then(function (res) {
                 if (res.ok && res.j && res.j.id) {
-                    try {
-                        sessionStorage.setItem('salapauta.postReloadToast', JSON.stringify([{ type: 'success', title: 'Sucesso', message: 'Audiência cadastrada.' }]));
-                    } catch (e) {}
+                    queuePostReloadToastByKey(
+                        'audiencias.pauta.create.success',
+                        {},
+                        'success',
+                        'Sucesso',
+                        'Audiência cadastrada.',
+                        'salapauta.postReloadToast'
+                    );
                     window.location.href = '/frame.php?page=salapauta';
                 } else {
                     notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao cadastrar audiência.');
                 }
             })
             .catch(function () {
-                notify('error', 'Erro', 'Erro de conexão.');
+                notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
             });
     });
 })();

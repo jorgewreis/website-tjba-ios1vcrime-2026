@@ -140,14 +140,14 @@
             const regimeVal = global.document.getElementById('edit-regime')?.value?.trim() || '';
             const dataFatoVal = global.document.getElementById('edit-data-fato')?.value || '';
             if (regimeVal && ['Aberto', 'Semiaberto', 'Fechado'].indexOf(regimeVal) === -1) {
-                notify('error', 'Erro', 'Regime inválido. Selecione Aberto, Semiaberto ou Fechado.');
+                notifyByKey('cartorio.guias.validation.regime.invalid', {}, 'error', 'Erro', 'Regime inválido. Selecione Aberto, Semiaberto ou Fechado.');
                 return;
             }
             if (dataFatoVal) {
                 const hoje = new Date();
                 hoje.setHours(0, 0, 0, 0);
                 if (new Date(dataFatoVal) >= hoje) {
-                    notify('error', 'Erro', 'A data do fato deve ser anterior à data de hoje.');
+                    notifyByKey('cartorio.guias.validation.data_fato.before.today', {}, 'error', 'Erro', 'A data do fato deve ser anterior à data de hoje.');
                     return;
                 }
             }
@@ -157,7 +157,7 @@
             if (diasMultaRaw !== '') {
                 const parsed = parseInt(diasMultaRaw, 10);
                 if (Number.isNaN(parsed) || parsed < 0) {
-                    notify('error', 'Erro', 'Informe um número válido (≥ 0) para dias de multa ou deixe em branco.');
+                    notifyByKey('cartorio.guias.validation.dias_multa.invalid', {}, 'error', 'Erro', 'Informe um número válido (≥ 0) para dias de multa ou deixe em branco.');
                     return;
                 }
                 diasMultaPayload = parsed;

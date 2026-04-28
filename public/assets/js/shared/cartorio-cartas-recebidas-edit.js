@@ -175,10 +175,10 @@
             if (salvarBtn.disabled) return;
             const payloadState = currentState();
             if (payloadState.finalidade === '' || payloadState.cidade === '' || payloadState.estado === '') {
-                return notify('error', 'Erro', 'Finalidade, cidade e estado são obrigatórios.');
+                return notifyByKey('cartorio.cartas.validation.required.fields', {}, 'error', 'Erro', 'Finalidade, cidade e estado são obrigatórios.');
             }
             if (!hiddenComarcaInput || !hiddenComarcaInput.value.trim()) {
-                return notify('error', 'Erro', 'Selecione uma cidade válida para que a comarca seja identificada.');
+                return notifyByKey('cartorio.cartas.validation.comarca.required', {}, 'error', 'Erro', 'Selecione uma cidade válida para que a comarca seja identificada.');
             }
 
             const payload = {
@@ -193,7 +193,7 @@
             if (observacoesInput) payload.observacoes = payloadState.observacoes || '';
 
             salvarBtn.disabled = true;
-            notify('info', 'Informação', 'Atualizando dados...');
+            notifyByKey('cartorio.cartas.update.progress.info', {}, 'info', 'Informação', 'Atualizando dados...');
 
             fetch(endpoints.update || '/api/cartorio-cartas-recebidas/update.php', {
                 method: 'POST',

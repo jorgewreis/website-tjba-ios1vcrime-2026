@@ -23,6 +23,17 @@
         }
     }
 
+    function notifyByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        var catalog = window.App && window.App.ToastCatalog ? window.App.ToastCatalog : null;
+        if (!catalog || typeof catalog.notifyByKey !== 'function') {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+            return;
+        }
+        catalog.notifyByKey(key, vars || {}).catch(function () {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+        });
+    }
+
     function parseJsonSafe(r) {
         return r.text().then(function (text) {
             try {
@@ -73,7 +84,7 @@
             }
             var inp = wrap ? wrap.querySelector('input.ata-file-input') : null;
             if (!openFilePicker(inp)) {
-                notify('error', 'Erro', 'Não foi possível abrir o seletor de arquivos.');
+                notifyByKey('audiencias.ata.filepicker.open.error', {}, 'error', 'Erro', 'Não foi possível abrir o seletor de arquivos.');
             }
         });
     });
@@ -89,12 +100,12 @@
             var isPdfMime = !file.type || file.type === 'application/pdf';
             var isPdfName = /\.pdf$/i.test(fileName);
             if (!isPdfMime && !isPdfName) {
-                notify('error', 'Erro', 'Selecione um arquivo PDF válido.');
+                notifyByKey('audiencias.ata.file.invalid.error', {}, 'error', 'Erro', 'Selecione um arquivo PDF válido.');
                 inp.value = '';
                 return;
             }
             if (file.size <= 0 || file.size > MAX_UPLOAD_BYTES) {
-                notify('error', 'Erro', 'O arquivo deve ter no máximo 2 MB.');
+                notifyByKey('audiencias.ata.file.size.error', {}, 'error', 'Erro', 'O arquivo deve ter no máximo 2 MB.');
                 inp.value = '';
                 return;
             }
@@ -116,18 +127,24 @@
                 .then(parseJsonSafe)
                 .then(function (res) {
                     if (res.ok && res.j && res.j.success) {
-                        notify('success', 'Sucesso', 'Ata enviada com sucesso.');
+                        notifyByKey('audiencias.ata.upload.success', {}, 'success', 'Sucesso', 'Ata enviada com sucesso.');
                         window.location.reload();
                         return;
                     }
                     if (!res.ok && (!res.j || !res.j.error)) {
-                        notify('error', 'Erro', 'Falha no envio (HTTP ' + String(res.status || '') + ').');
+                        notifyByKey(
+                            'audiencias.ata.upload.http.error',
+                            { status: String(res.status || '') },
+                            'error',
+                            'Erro',
+                            'Falha no envio (HTTP ' + String(res.status || '') + ').'
+                        );
                         return;
                     }
                     notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao enviar o arquivo.');
                 })
                 .catch(function () {
-                    notify('error', 'Erro', 'Erro de conexão.');
+                    notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
                 });
         });
     });

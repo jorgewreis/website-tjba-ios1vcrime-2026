@@ -140,6 +140,30 @@
 
     function showToastSync(opts) {
 
+        var catalog = window.App && window.App.ToastCatalog ? window.App.ToastCatalog : null;
+        if (catalog && typeof catalog.notifyByKey === 'function') {
+            if (opts && opts.message === 'Classe do processo atualizada no sistema.') {
+                catalog.notifyByKey(
+                    'datajud.process.class.updated.info',
+                    {},
+                    opts.type || 'info',
+                    opts.title || 'Informação',
+                    opts.message
+                ).catch(function () {});
+                return;
+            }
+            if (opts && opts.message === 'Processo e classe registrados no sistema.') {
+                catalog.notifyByKey(
+                    'datajud.process.class.created.info',
+                    {},
+                    opts.type || 'info',
+                    opts.title || 'Informação',
+                    opts.message
+                ).catch(function () {});
+                return;
+            }
+        }
+
         if (typeof window.showToast === 'function') {
 
             window.showToast(opts);
@@ -207,6 +231,10 @@
         function showSyncResult(res) {
 
             if (!res.ok) {
+                console.warn('[DataJud][Sync] Falha ao sincronizar classe no sistema local.', {
+                    status: res.status,
+                    body: res.body || null
+                });
 
                 return;
 
@@ -215,10 +243,12 @@
             var action = res.body && res.body.action;
 
             if (action === 'updated') {
+                console.info('[DataJud][Sync] Classe do processo atualizada no sistema local.');
 
                 showToastSync({ type: 'info', variant: 'simple', message: 'Classe do processo atualizada no sistema.' });
 
             } else if (action === 'created') {
+                console.info('[DataJud][Sync] Processo e classe registrados no sistema local.');
 
                 showToastSync({ type: 'info', variant: 'simple', message: 'Processo e classe registrados no sistema.' });
 
@@ -316,7 +346,7 @@
 
         if (typeof window.DataJudCycle === 'undefined') {
 
-            console.error('datajud-api.js: DataJudCycle não encontrado. Inclua /assets/js/modules/datajud/datajud-cycle-helper.js antes deste script.');
+            console.error('[DataJud][Init] DataJudCycle não encontrado. Inclua /assets/js/modules/datajud/datajud-cycle-helper.js antes deste script.');
 
             return;
 
@@ -502,7 +532,8 @@
 
             .catch(function () {
 
-                /* leitura BD é opcional */
+                /* leitura BD é opcional; log técnico para diagnóstico sem impactar UX */
+                console.warn('[DataJud][ClasseLocal] Falha na leitura opcional de classe no BD local.');
 
             })
 
@@ -719,7 +750,7 @@
 
                             }
 
-                            console.error('Pesquisa DataJud falhou', error);
+                            console.error('[DataJud][Busca] Pesquisa DataJud falhou.', error);
 
                             var domLatest2 = getDom();
 

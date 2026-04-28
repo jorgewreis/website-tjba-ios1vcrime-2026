@@ -12,6 +12,17 @@
         }
     }
 
+    function notifyByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        var catalog = window.App && window.App.ToastCatalog ? window.App.ToastCatalog : null;
+        if (!catalog || typeof catalog.notifyByKey !== 'function') {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+            return;
+        }
+        catalog.notifyByKey(key, vars || {}).catch(function () {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+        });
+    }
+
     function queuePostReloadToast(type, title, message) {
         if (pageTools && typeof pageTools.queuePostReloadToast === 'function') {
             pageTools.queuePostReloadToast(type, title, message, POST_RELOAD_TOAST_KEY);
@@ -50,7 +61,7 @@
     if (btnSalvar) {
         btnSalvar.addEventListener('click', function () {
             if (!id) {
-                notify('error', 'Erro', 'Registro inválido para atualização.');
+                notifyByKey('audiencias.midias.edit.record.invalid.update', {}, 'error', 'Erro', 'Registro inválido para atualização.');
                 return;
             }
             var qtd = parseInt(String(document.getElementById('midias-edit-qtd') && document.getElementById('midias-edit-qtd').value || '1'), 10);
@@ -74,13 +85,19 @@
                         notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao salvar alterações.');
                         return;
                     }
-                    notify('success', 'Sucesso', 'Alterações salvas com sucesso.');
+                    notifyByKey(
+                        'audiencias.midias.task.update.success',
+                        {},
+                        'success',
+                        'Sucesso',
+                        'Alterações salvas com sucesso.'
+                    );
                     window.setTimeout(function () {
                         window.location.reload();
                     }, 450);
                 })
                 .catch(function () {
-                    notify('error', 'Erro', 'Erro de conexão ao salvar alterações.');
+                    notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão ao salvar alterações.');
                 });
         });
     }
@@ -89,7 +106,7 @@
     if (btnExcluir) {
         btnExcluir.addEventListener('click', function () {
             if (!id) {
-                notify('error', 'Erro', 'Registro inválido para exclusão.');
+                notifyByKey('audiencias.midias.edit.record.invalid.delete', {}, 'error', 'Erro', 'Registro inválido para exclusão.');
                 return;
             }
             if (!requireSecondClick(
@@ -122,7 +139,7 @@
                 })
                 .catch(function () {
                     btnExcluir.disabled = false;
-                    notify('error', 'Erro', 'Erro de conexão ao excluir tarefa.');
+                    notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão ao excluir tarefa.');
                 });
         });
     }
@@ -156,14 +173,20 @@
                     notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao concluir subtarefa.');
                     return;
                 }
-                notify('success', 'Sucesso', 'Subtarefa concluída com sucesso.');
+                notifyByKey(
+                    'audiencias.midias.subtask.conclude.success',
+                    {},
+                    'success',
+                    'Sucesso',
+                    'Subtarefa concluída com sucesso.'
+                );
                 window.setTimeout(function () {
                     window.location.reload();
                 }, 450);
             })
             .catch(function () {
                 button.disabled = false;
-                notify('error', 'Erro', 'Erro de conexão ao concluir subtarefa.');
+                notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão ao concluir subtarefa.');
             });
     });
 })();

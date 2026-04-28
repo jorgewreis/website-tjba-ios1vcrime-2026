@@ -93,7 +93,14 @@
                     const dataInput = block ? block.querySelector('.subtask-data-publicacao') : null;
                     const dataPublicacao = dataInput ? (dataInput.value || '').trim() : '';
                     if (!dataPublicacao) {
-                        ctx.notify('error', 'Atenção', 'A data da publicação é obrigatória para concluir esta subtarefa.');
+                        notifyByKey(
+                            ctx,
+                            'cartorio.editais.publication_date.required',
+                            {},
+                            'error',
+                            'Atenção',
+                            'A data da publicação é obrigatória para concluir esta subtarefa.'
+                        );
                         return;
                     }
                     payload.dados_especificos = { data_publicacao: dataPublicacao };

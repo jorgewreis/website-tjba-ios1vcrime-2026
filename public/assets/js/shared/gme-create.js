@@ -305,13 +305,13 @@
             const processoEl = global.document.getElementById(settings.processInputId || 'filter-processo');
             const processo = processoEl?.value?.trim() || '';
             if (processoEl && processoEl.disabled) {
-                notify('info', 'Aguarde', 'Aguarde a consulta ao DataJud terminar antes de registrar.');
+                notifyByKey('gme.monitoring.datajud.wait.info', {}, 'info', 'Aguarde', 'Aguarde a consulta ao DataJud terminar antes de registrar.');
                 return;
             }
 
             const classText = global.document.getElementById(settings.classInputId || 'filter-classe')?.value?.trim() || '';
             if (classText === 'Aguarde...') {
-                notify('info', 'Aguarde', 'Aguarde a consulta ao DataJud terminar antes de registrar.');
+                notifyByKey('gme.monitoring.datajud.wait.info', {}, 'info', 'Aguarde', 'Aguarde a consulta ao DataJud terminar antes de registrar.');
                 return;
             }
 
@@ -323,7 +323,7 @@
             const nomeLivre = reuInputEl?.value?.trim() || '';
 
             if (!processo) {
-                notify('error', 'Validação', 'Informe o número do processo.');
+                notifyByKey('gme.monitoring.validation.process.required', {}, 'error', 'Validação', 'Informe o número do processo.');
                 return;
             }
 
@@ -340,7 +340,7 @@
                 body.reu_id = reuSelecionado.substring('parte:'.length);
             } else {
                 if (!nomeLivre) {
-                    notify('error', 'Validação', 'Informe o nome completo do réu.');
+                    notifyByKey('gme.monitoring.validation.reu.required', {}, 'error', 'Validação', 'Informe o nome completo do réu.');
                     return;
                 }
                 body.reu_complemento = nomeLivre;

@@ -161,7 +161,7 @@
                     const input = global.document.getElementById('data-inicio-' + subtarefaId);
                     dataInicio = input && input.value ? input.value : '';
                     if (!dataInicio) {
-                        notify('error', 'Validação', 'Informe a data de início.');
+                        notifyByKey('gme.monitoring.validation.start_date.required', {}, 'error', 'Validação', 'Informe a data de início.');
                         return;
                     }
                 }

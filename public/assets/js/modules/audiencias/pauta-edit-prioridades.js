@@ -65,6 +65,17 @@
         }
     }
 
+    function notifyByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        var catalog = window.App && window.App.ToastCatalog ? window.App.ToastCatalog : null;
+        if (!catalog || typeof catalog.notifyByKey !== 'function') {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+            return;
+        }
+        catalog.notifyByKey(key, vars || {}).catch(function () {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+        });
+    }
+
     function codigosBloqueados() {
         if (!state || !Array.isArray(state.codigos_bloqueados_remocao)) {
             return [];
@@ -267,7 +278,7 @@
                 notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Não foi possível carregar prioridades.');
             })
             .catch(function () {
-                notify('error', 'Erro', 'Erro de conexão ao carregar prioridades.');
+                notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão ao carregar prioridades.');
             });
     }
 
@@ -287,7 +298,7 @@
     btnAdd.addEventListener('click', function () {
         var val = String(selectEl.value || '').trim();
         if (!val) {
-            notify('error', 'Validacao', 'Selecione uma prioridade no catálogo.');
+            notifyByKey('audiencias.prioridade.required.error', {}, 'error', 'Validacao', 'Selecione uma prioridade no catálogo.');
             return;
         }
         postJson('/api/processos/prioridades-add.php', {
@@ -297,14 +308,14 @@
             .then(function (res) {
                 if (res.ok && res.j && res.j.success && res.j.state) {
                     applyState(res.j.state);
-                    notify('success', 'Sucesso', 'Prioridade registrada.');
+                    notifyByKey('audiencias.prioridade.add.success', {}, 'success', 'Sucesso', 'Prioridade registrada.');
                     selectEl.selectedIndex = 0;
                     return;
                 }
                 notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Não foi possível adicionar.');
             })
             .catch(function () {
-                notify('error', 'Erro', 'Erro de conexão.');
+                notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
             });
     });
 
@@ -328,13 +339,13 @@
             .then(function (res) {
                 if (res.ok && res.j && res.j.success && res.j.state) {
                     applyState(res.j.state);
-                    notify('success', 'Sucesso', 'Prioridade removida.');
+                    notifyByKey('audiencias.prioridade.remove.success', {}, 'success', 'Sucesso', 'Prioridade removida.');
                     return;
                 }
                 notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Não foi possível remover.');
             })
             .catch(function () {
-                notify('error', 'Erro', 'Erro de conexão.');
+                notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
             });
     });
 

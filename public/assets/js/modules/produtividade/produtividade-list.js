@@ -196,12 +196,12 @@
             var classeDescricao = (document.getElementById('hidden-classe-descricao') || {}).value || '';
 
             if (regraId.trim() === '') {
-                notify('error', 'Erro', 'Selecione uma regra válida.');
+                notifyByKey('produtividade.rule.required.error', {}, 'error', 'Erro', 'Selecione uma regra válida.');
                 return;
             }
 
             if (classeProcesso === 'Aguarde...') {
-                notify('error', 'Erro', 'Aguarde a consulta ao DataJud terminar antes de cadastrar.');
+                notifyByKey('produtividade.datajud.wait.error', {}, 'error', 'Erro', 'Aguarde a consulta ao DataJud terminar antes de cadastrar.');
                 return;
             }
 
@@ -286,7 +286,7 @@
 
                 var motivo = window.prompt('Informe o motivo da anulação:');
                 if (!motivo || motivo.trim() === '') {
-                    notify('error', 'Erro', 'Motivo da anulação é obrigatório.');
+                    notifyByKey('produtividade.manual.cancel.reason.required', {}, 'error', 'Erro', 'Motivo da anulação é obrigatório.');
                     return;
                 }
 
@@ -351,19 +351,19 @@
             var dtIni = parseDate(ini);
             var dtFim = parseDate(fim);
             if (!dtIni || !dtFim) {
-                notify('error', 'Erro', 'Período inválido. Use datas válidas para filtrar.');
+                notifyByKey('produtividade.filter.period.invalid', {}, 'error', 'Erro', 'Período inválido. Use datas válidas para filtrar.');
                 return false;
             }
 
             if (dtIni.getTime() > dtFim.getTime()) {
-                notify('error', 'Erro', 'A data inicial não pode ser maior que a data final.');
+                notifyByKey('produtividade.filter.period.start_after_end', {}, 'error', 'Erro', 'A data inicial não pode ser maior que a data final.');
                 return false;
             }
 
             var diffMs = dtFim.getTime() - dtIni.getTime();
             var diffDays = Math.floor(diffMs / 86400000);
             if (diffDays > 60) {
-                notify('error', 'Erro', 'O intervalo entre data inicial e data final não pode ultrapassar 60 dias.');
+                notifyByKey('produtividade.filter.period.max_range.error', {}, 'error', 'Erro', 'O intervalo entre data inicial e data final não pode ultrapassar 60 dias.');
                 return false;
             }
             return true;

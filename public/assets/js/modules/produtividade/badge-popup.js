@@ -2,6 +2,25 @@
     'use strict';
 
     function notifySuccess(message) {
+        var catalog = window.App && window.App.ToastCatalog ? window.App.ToastCatalog : null;
+        if (catalog && typeof catalog.notifyByKey === 'function') {
+            catalog.notifyByKey(
+                'produtividade.badge.unlock.success',
+                { badge_nome: String(message || '').replace(/^Badge desbloqueado:\s*/i, '') },
+                'success',
+                'Sucesso',
+                message
+            ).catch(function () {
+                if (typeof window.showToast === 'function') {
+                    window.showToast({ type: 'success', message: message });
+                    return;
+                }
+                if (window.App && window.App.Toast && typeof window.App.Toast.show === 'function') {
+                    window.App.Toast.show({ type: 'success', message: message });
+                }
+            });
+            return;
+        }
         if (typeof window.showToast === 'function') {
             window.showToast({ type: 'success', message: message });
             return;

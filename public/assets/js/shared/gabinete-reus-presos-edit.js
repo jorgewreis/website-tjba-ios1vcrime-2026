@@ -36,7 +36,11 @@
                 global.document.getElementById('grp-edit-nome').value = nome;
             }
             if (!nome) {
-                common.notify('error', 'Validacao', 'Informe o nome.');
+                if (typeof common.notifyByKey === 'function') {
+                    common.notifyByKey('gabinete.reus_presos.validation.name.required', {}, 'error', 'Validacao', 'Informe o nome.');
+                } else {
+                    common.notify('error', 'Validacao', 'Informe o nome.');
+                }
                 return;
             }
             postJson('/api/gabinete-reus-presos/update.php', { id: reuId, nome: nome }).then(function (res) {
@@ -75,13 +79,33 @@
                     if (totalLinks < 2) {
                         selectEl.value = 'principal';
                         selectEl.setAttribute('data-prev', selectEl.value);
-                        common.notify('error', 'Validacao', 'O unico processo vinculado deve ser o principal.');
+                        if (typeof common.notifyByKey === 'function') {
+                            common.notifyByKey(
+                                'gabinete.reus_presos.validation.single_process_principal',
+                                {},
+                                'error',
+                                'Validacao',
+                                'O unico processo vinculado deve ser o principal.'
+                            );
+                        } else {
+                            common.notify('error', 'Validacao', 'O unico processo vinculado deve ser o principal.');
+                        }
                         return;
                     }
                     if (isPrincipalRow) {
                         selectEl.value = oldValue;
                         selectEl.setAttribute('data-prev', oldValue);
-                        common.notify('info', 'Validacao', 'Defina outro processo como principal antes de marcar este como secundario.');
+                        if (typeof common.notifyByKey === 'function') {
+                            common.notifyByKey(
+                                'gabinete.reus_presos.validation.define_other_principal_first',
+                                {},
+                                'info',
+                                'Validacao',
+                                'Defina outro processo como principal antes de marcar este como secundario.'
+                            );
+                        } else {
+                            common.notify('info', 'Validacao', 'Defina outro processo como principal antes de marcar este como secundario.');
+                        }
                         return;
                     }
                     selectEl.setAttribute('data-prev', nextValue);
@@ -330,7 +354,11 @@
             }
 
             if (!processo) {
-                common.notify('error', 'Validacao', 'Informe o numero do processo.');
+                if (typeof common.notifyByKey === 'function') {
+                    common.notifyByKey('gabinete.reus_presos.validation.process.required', {}, 'error', 'Validacao', 'Informe o numero do processo.');
+                } else {
+                    common.notify('error', 'Validacao', 'Informe o numero do processo.');
+                }
                 return;
             }
 
@@ -377,7 +405,17 @@
             const data = String(global.document.getElementById('grp-mov-data')?.value || '');
             const observacoes = String(global.document.getElementById('grp-mov-obs')?.value || '').trim();
             if (!data) {
-                common.notify('error', 'Validacao', 'Informe a data da movimentacao.');
+                if (typeof common.notifyByKey === 'function') {
+                    common.notifyByKey(
+                        'gabinete.reus_presos.validation.movement.date.required',
+                        {},
+                        'error',
+                        'Validacao',
+                        'Informe a data da movimentacao.'
+                    );
+                } else {
+                    common.notify('error', 'Validacao', 'Informe a data da movimentacao.');
+                }
                 return;
             }
             postJson('/api/gabinete-reus-presos/add-movimentacao.php', {
@@ -409,7 +447,11 @@
             button.addEventListener('click', function () {
                 const movimentacaoId = button.getAttribute('data-mov-id') || '';
                 if (!movimentacaoId) {
-                    common.notify('error', 'Erro', 'Movimentacao invalida.');
+                    if (typeof common.notifyByKey === 'function') {
+                        common.notifyByKey('gabinete.reus_presos.validation.movement.invalid', {}, 'error', 'Erro', 'Movimentacao invalida.');
+                    } else {
+                        common.notify('error', 'Erro', 'Movimentacao invalida.');
+                    }
                     return;
                 }
                 if (!requireSecondClick('del-mov-' + movimentacaoId, 'Clique novamente no x em ate 5 segundos para confirmar a exclusao da movimentacao.')) {

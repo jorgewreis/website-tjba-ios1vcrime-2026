@@ -22,6 +22,52 @@
         }
     }
 
+    function notifyByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        var catalog = window.App && window.App.ToastCatalog ? window.App.ToastCatalog : null;
+        if (!catalog || typeof catalog.notifyByKey !== 'function') {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+            return;
+        }
+        catalog.notifyByKey(key, vars || {}).catch(function () {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+        });
+    }
+
+    function queuePostReloadToastByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage, storageKey) {
+        var targetKey = storageKey || 'salapauta.postReloadToast';
+        var catalog = window.App && window.App.ToastCatalog ? window.App.ToastCatalog : null;
+        if (!catalog || typeof catalog.resolve !== 'function') {
+            if (pageTools && typeof pageTools.queuePostReloadToast === 'function') {
+                pageTools.queuePostReloadToast(fallbackType, fallbackTitle, fallbackMessage, targetKey);
+                return;
+            }
+            try {
+                sessionStorage.setItem(targetKey, JSON.stringify([{ type: fallbackType, title: fallbackTitle, message: fallbackMessage }]));
+            } catch (e) {}
+            return;
+        }
+        catalog.resolve(key, vars || {}).then(function (toast) {
+            var type = (toast && toast.type) || fallbackType;
+            var title = (toast && toast.title) || fallbackTitle;
+            var message = (toast && toast.message) || fallbackMessage;
+            if (pageTools && typeof pageTools.queuePostReloadToast === 'function') {
+                pageTools.queuePostReloadToast(type, title, message, targetKey);
+                return;
+            }
+            try {
+                sessionStorage.setItem(targetKey, JSON.stringify([{ type: type, title: title, message: message }]));
+            } catch (e) {}
+        }).catch(function () {
+            if (pageTools && typeof pageTools.queuePostReloadToast === 'function') {
+                pageTools.queuePostReloadToast(fallbackType, fallbackTitle, fallbackMessage, targetKey);
+                return;
+            }
+            try {
+                sessionStorage.setItem(targetKey, JSON.stringify([{ type: fallbackType, title: fallbackTitle, message: fallbackMessage }]));
+            } catch (e) {}
+        });
+    }
+
     function val(id) {
         var el = document.getElementById(id);
         return el ? String(el.value || '').trim() : '';
@@ -54,22 +100,17 @@
             })
             .then(function (res) {
                 if (res.ok && res.j && res.j.success) {
-                    if (pageTools && typeof pageTools.queuePostReloadToast === 'function') {
-                        pageTools.queuePostReloadToast('success', 'Sucesso', successMessage, 'salapauta.postReloadToast');
-                    } else {
-                        try {
-                            sessionStorage.setItem('salapauta.postReloadToast', JSON.stringify([
-                                { type: 'success', title: 'Sucesso', message: successMessage }
-                            ]));
-                        } catch (e) {}
-                    }
+                    var successKey = 'audiencias.pauta.status.reiniciar.success';
+                    if (acao === 'iniciar') successKey = 'audiencias.pauta.status.iniciar.success';
+                    if (acao === 'encerrar') successKey = 'audiencias.pauta.status.encerrar.success';
+                    queuePostReloadToastByKey(successKey, {}, 'success', 'Sucesso', successMessage, 'salapauta.postReloadToast');
                     window.location.reload();
                     return;
                 }
                 notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Não foi possível atualizar o status.');
             })
             .catch(function () {
-                notify('error', 'Erro', 'Erro de conexão.');
+                notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
             });
     }
 

@@ -38,7 +38,11 @@
             const saveButton = this;
             const cnpjRaw = String(global.document.getElementById('cnpj')?.value || '').replace(/\D/g, '');
             if (cnpjRaw && cnpjRaw.length === 14 && App.CNPJ && !App.CNPJ.validar(cnpjRaw)) {
-                common.notify('error', 'Erro', 'CNPJ inválido. Verifique os dígitos.');
+                if (typeof common.notifyByKey === 'function') {
+                    common.notifyByKey('generic.validation.cnpj.invalid', {}, 'error', 'Erro', 'CNPJ inválido. Verifique os dígitos.');
+                } else {
+                    common.notify('error', 'Erro', 'CNPJ inválido. Verifique os dígitos.');
+                }
                 return;
             }
             const payload = {
@@ -68,7 +72,11 @@
         global.document.getElementById('add-tel-btn')?.addEventListener('click', function () {
             const numero = String(global.document.getElementById('new-tel-numero')?.value || '').trim();
             if (!numero) {
-                common.notify('error', 'Erro', 'Informe o número.');
+                if (typeof common.notifyByKey === 'function') {
+                    common.notifyByKey('generic.validation.phone.required', {}, 'error', 'Erro', 'Informe o número.');
+                } else {
+                    common.notify('error', 'Erro', 'Informe o número.');
+                }
                 return;
             }
             common.postJson('/api/instituicoes-publicas/telefones/create.php', {
@@ -131,7 +139,11 @@
         global.document.getElementById('add-setor-btn')?.addEventListener('click', function () {
             const nomeSetor = String(global.document.getElementById('new-setor-nome')?.value || '').trim();
             if (!nomeSetor) {
-                common.notify('error', 'Erro', 'Informe o nome do setor.');
+                if (typeof common.notifyByKey === 'function') {
+                    common.notifyByKey('generic.validation.department.required', {}, 'error', 'Erro', 'Informe o nome do setor.');
+                } else {
+                    common.notify('error', 'Erro', 'Informe o nome do setor.');
+                }
                 return;
             }
             common.postJson('/api/instituicoes-publicas/setores/create.php', {
@@ -212,7 +224,11 @@
             const logradouro = String(global.document.getElementById('new-end-logradouro')?.value || '').trim();
             const cidade = String(global.document.getElementById('new-end-cidade')?.value || '').trim();
             if (!logradouro && !cidade) {
-                common.notify('error', 'Erro', 'Informe ao menos logradouro ou cidade.');
+                if (typeof common.notifyByKey === 'function') {
+                    common.notifyByKey('generic.validation.address.minimum.required', {}, 'error', 'Erro', 'Informe ao menos logradouro ou cidade.');
+                } else {
+                    common.notify('error', 'Erro', 'Informe ao menos logradouro ou cidade.');
+                }
                 return;
             }
             const cepRaw = String(global.document.getElementById('new-end-cep')?.value || '').replace(/\D/g, '');

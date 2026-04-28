@@ -74,11 +74,19 @@
             const instituicaoId = String(global.document.getElementById('instituicao_id')?.value || '').trim();
             const cargoFuncao = String(global.document.getElementById('cargo_funcao')?.value || '').trim();
             if (!parteId || !instituicaoId) {
-                common.notify('error', 'Erro', 'Selecione a pessoa e a instituicao.');
+                if (typeof common.notifyByKey === 'function') {
+                    common.notifyByKey('generic.validation.person.institution.required', {}, 'error', 'Erro', 'Selecione a pessoa e a instituicao.');
+                } else {
+                    common.notify('error', 'Erro', 'Selecione a pessoa e a instituicao.');
+                }
                 return;
             }
             if (!cargoFuncao) {
-                common.notify('error', 'Validacao', 'Informe o cargo ou funcao.');
+                if (typeof common.notifyByKey === 'function') {
+                    common.notifyByKey('generic.validation.role.required', {}, 'error', 'Validacao', 'Informe o cargo ou funcao.');
+                } else {
+                    common.notify('error', 'Validacao', 'Informe o cargo ou funcao.');
+                }
                 return;
             }
 

@@ -4,6 +4,14 @@
     const App = global.App || (global.App = {});
     const common = App.RecordEditCommon || null;
 
+    function notifyByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        if (typeof common.notifyByKey === 'function') {
+            common.notifyByKey(key, vars || {}, fallbackType, fallbackTitle, fallbackMessage);
+            return;
+        }
+        common.notify(fallbackType, fallbackTitle, fallbackMessage);
+    }
+
     function showReuInput(reuSelect, reuInput) {
         if (reuSelect) {
             reuSelect.style.display = 'none';
@@ -204,15 +212,15 @@
                 ? { reu_id: reuSelect.value, nome_reu: reuSelect.options[reuSelect.selectedIndex]?.textContent || '' }
                 : { reu_id: '', nome_reu: String(reuInput?.value || '').trim() };
 
-            if (!numeroProcesso) return common.notify('error', 'Erro', 'Informe o número do processo.');
-            if (classeVal === 'Aguarde...') return common.notify('error', 'Erro', 'Aguarde a consulta ao DataJud terminar antes de cadastrar.');
-            if (!reuPayload.nome_reu) return common.notify('error', 'Erro', 'Informe o réu.');
-            if (!tipoSuspensao) return common.notify('error', 'Erro', 'Informe o tipo de suspensão.');
-            if (!decisaoCumprir) return common.notify('error', 'Erro', 'Informe a decisão a cumprir.');
-            if (!dataDecisao) return common.notify('error', 'Erro', 'Informe a data da decisão.');
+            if (!numeroProcesso) return notifyByKey('cartorio.ceapa.validation.process.required', {}, 'error', 'Erro', 'Informe o número do processo.');
+            if (classeVal === 'Aguarde...') return notifyByKey('cartorio.ceapa.validation.datajud.wait', {}, 'error', 'Erro', 'Aguarde a consulta ao DataJud terminar antes de cadastrar.');
+            if (!reuPayload.nome_reu) return notifyByKey('cartorio.ceapa.validation.reu.required', {}, 'error', 'Erro', 'Informe o réu.');
+            if (!tipoSuspensao) return notifyByKey('cartorio.ceapa.validation.tipo_suspensao.required', {}, 'error', 'Erro', 'Informe o tipo de suspensão.');
+            if (!decisaoCumprir) return notifyByKey('cartorio.ceapa.validation.decisao.required', {}, 'error', 'Erro', 'Informe a decisão a cumprir.');
+            if (!dataDecisao) return notifyByKey('cartorio.ceapa.validation.data_decisao.required', {}, 'error', 'Erro', 'Informe a data da decisão.');
 
             button.disabled = true;
-            common.notify('info', 'Informação', 'Cadastrando...');
+            notifyByKey('cartorio.ceapa.create.progress.info', {}, 'info', 'Informação', 'Cadastrando...');
 
             const payload = {
                 numero_processo_origem: numeroProcesso,

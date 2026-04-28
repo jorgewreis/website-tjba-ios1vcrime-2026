@@ -5,6 +5,17 @@
         }
     }
 
+    function notifyByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        var catalog = window.App && window.App.ToastCatalog ? window.App.ToastCatalog : null;
+        if (!catalog || typeof catalog.notifyByKey !== 'function') {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+            return;
+        }
+        catalog.notifyByKey(key, vars || {}).catch(function () {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+        });
+    }
+
     function byId(id) {
         return document.getElementById(id);
     }
@@ -69,11 +80,17 @@
                     pautaSelect.appendChild(opt);
                 });
                 if (rows.length === 0) {
-                    notify('info', 'Sem audiências', 'Não há audiências finalizadas para os filtros informados.');
+                    notifyByKey(
+                        'audiencias.midias.schedule.empty.info',
+                        {},
+                        'info',
+                        'Sem audiências',
+                        'Não há audiências finalizadas para os filtros informados.'
+                    );
                 }
             })
             .catch(function () {
-                notify('error', 'Erro', 'Erro de conexão ao carregar audiências.');
+                notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão ao carregar audiências.');
             });
     }
 
@@ -162,11 +179,23 @@
         var maxDate = String(dataInput && dataInput.getAttribute('max') ? dataInput.getAttribute('max') : '').trim();
 
         if (!processo || !classe || !dataAud || !pautaId || !tipoAud) {
-            notify('error', 'Validação', 'Preencha processo, classe, data e audiência finalizada.');
+            notifyByKey(
+                'audiencias.midias.create.required.error',
+                {},
+                'error',
+                'Validação',
+                'Preencha processo, classe, data e audiência finalizada.'
+            );
             return;
         }
         if (maxDate && dataAud > maxDate) {
-            notify('error', 'Validação', 'A data da audiência não pode ser futura.');
+            notifyByKey(
+                'audiencias.midias.create.date.future.error',
+                {},
+                'error',
+                'Validação',
+                'A data da audiência não pode ser futura.'
+            );
             return;
         }
         if (!qtdMidias || qtdMidias < 1) {
@@ -194,13 +223,19 @@
                     notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao cadastrar tarefa.');
                     return;
                 }
-                notify('success', 'Sucesso', 'Tarefa de mídia cadastrada com sucesso.');
+                notifyByKey(
+                    'audiencias.midias.task.create.success',
+                    {},
+                    'success',
+                    'Sucesso',
+                    'Tarefa de mídia cadastrada com sucesso.'
+                );
                 window.setTimeout(function () {
                     window.location.href = '/frame.php?page=salamidias';
                 }, 500);
             })
             .catch(function () {
-                notify('error', 'Erro', 'Erro de conexão ao cadastrar tarefa.');
+                notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão ao cadastrar tarefa.');
             });
     });
 })();

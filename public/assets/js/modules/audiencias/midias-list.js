@@ -15,6 +15,17 @@
         }
     }
 
+    function notifyByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        var catalog = window.App && window.App.ToastCatalog ? window.App.ToastCatalog : null;
+        if (!catalog || typeof catalog.notifyByKey !== 'function') {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+            return;
+        }
+        catalog.notifyByKey(key, vars || {}).catch(function () {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+        });
+    }
+
     if (pageTools && typeof pageTools.flushPostReloadToast === 'function') {
         pageTools.flushPostReloadToast(POST_RELOAD_TOAST_KEY, { type: 'info', title: 'Informação' });
     }
@@ -159,7 +170,13 @@
             if (subtarefaCodigo === 'download_midia') {
                 var qtd = parseInt(String(qtdInput && qtdInput.value ? qtdInput.value : '0'), 10);
                 if (!qtd || qtd < 1) {
-                    notify('error', 'Validação', 'Informe uma quantidade de mídias válida para o download.');
+                    notifyByKey(
+                        'audiencias.midias.subtask.quantity.invalid',
+                        {},
+                        'error',
+                        'Validação',
+                        'Informe uma quantidade de mídias válida para o download.'
+                    );
                     return;
                 }
                 dados.qtd_midias = qtd;
@@ -187,14 +204,20 @@
                         notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao concluir subtarefa.');
                         return;
                     }
-                    notify('success', 'Sucesso', 'Subtarefa concluída com sucesso.');
+                    notifyByKey(
+                        'audiencias.midias.subtask.conclude.success',
+                        {},
+                        'success',
+                        'Sucesso',
+                        'Subtarefa concluída com sucesso.'
+                    );
                     window.setTimeout(function () {
                         window.location.reload();
                     }, 450);
                 })
                 .catch(function () {
                     button.disabled = false;
-                    notify('error', 'Erro', 'Erro de conexão ao concluir subtarefa.');
+                    notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão ao concluir subtarefa.');
                 });
             return;
         }
@@ -227,14 +250,14 @@
                     notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao remover alocação.');
                     return;
                 }
-                notify('success', 'Sucesso', 'Alocação removida.');
+                notifyByKey('cartorio.allocation.remove.success', {}, 'success', 'Sucesso', 'Alocação removida.');
                 window.setTimeout(function () {
                     window.location.reload();
                 }, 400);
             })
             .catch(function () {
                 rm.disabled = false;
-                notify('error', 'Erro', 'Erro de conexão ao remover alocação.');
+                notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão ao remover alocação.');
             });
     });
 

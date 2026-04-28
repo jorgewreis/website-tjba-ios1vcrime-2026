@@ -154,7 +154,7 @@
         return data;
     }
 
-    function validateSpecificData(subtarefaTipo, block, data, notify) {
+    function validateSpecificData(subtarefaTipo, block, data, ctx) {
         const tipo = normalizeTipo(subtarefaTipo);
 
         if (['detalhamento_informacoes', 'informar_detalhes', 'detalhamento'].includes(tipo)) {
@@ -167,33 +167,33 @@
                 const dataFatoDate = new Date(dataFatoValor + 'T00:00:00');
 
                 if (isNaN(dataFatoDate.getTime()) || dataFatoDate >= limiteMinimo) {
-                    notify('error', 'Atenção', 'A data do fato deve ser anterior aos últimos 10 dias (não pode ser de hoje, futura ou dentro desse período).');
+                    notifyByKey(ctx, 'cartorio.guias.validation.data_fato.window.error', {}, 'error', 'Atenção', 'A data do fato deve ser anterior aos últimos 10 dias (não pode ser de hoje, futura ou dentro desse período).');
                     return false;
                 }
             }
         }
 
         if (['juntada_automatica', 'confirmar_juntada', 'juntada_autos', 'juntada_guia_autos', 'juntada_nos_autos'].includes(tipo) && !data.tipo_juntada) {
-            notify('error', 'Atenção', 'Selecione o tipo de juntada (automática ou manual).');
+            notifyByKey(ctx, 'cartorio.guias.validation.juntada.required', {}, 'error', 'Atenção', 'Selecione o tipo de juntada (automática ou manual).');
             return false;
         }
 
         if (['expedicao_guia', 'expedir_guia', 'expedicao'].includes(tipo) && !data.tipo_guia) {
-            notify('error', 'Atenção', 'Selecione o tipo da guia expedida.');
+            notifyByKey(ctx, 'cartorio.guias.validation.tipo_guia.required', {}, 'error', 'Atenção', 'Selecione o tipo da guia expedida.');
             return false;
         }
 
         if (['gerar_pdf', 'geracao_pdf', 'pdf'].includes(tipo)) {
             const qtd = parseInt(block.querySelector('.subtask-qtd-docs')?.value || '0', 10);
             if (qtd < 4) {
-                notify('error', 'Atenção', 'Informe no mínimo 4 documentos.');
+                notifyByKey(ctx, 'cartorio.guias.validation.docs.min.error', {}, 'error', 'Atenção', 'Informe no mínimo 4 documentos.');
                 return false;
             }
             data.qtd_docs = qtd;
         }
 
         if (['envio_guia', 'enviar_guia', 'envio'].includes(tipo) && (!data.tipo_envio || !data.destinatario)) {
-            notify('error', 'Atenção', 'Selecione o tipo de envio e o destinatário.');
+            notifyByKey(ctx, 'cartorio.guias.validation.envio.required', {}, 'error', 'Atenção', 'Selecione o tipo de envio e o destinatário.');
             return false;
         }
 
@@ -212,7 +212,7 @@
                 const subtarefaTipo = normalizeTipo(button.getAttribute('data-subtarefa-tipo') || block?.getAttribute('data-subtarefa-tipo'));
                 const specificData = block ? collectSpecificData(block) : {};
 
-                if (block && !validateSpecificData(subtarefaTipo, block, specificData, ctx.notify)) {
+                if (block && !validateSpecificData(subtarefaTipo, block, specificData, ctx)) {
                     return;
                 }
 

@@ -33,7 +33,11 @@
             const button = this;
             const dataInclusao = String(global.document.getElementById('data_inclusao')?.value || '').trim();
             if (!dataInclusao) {
-                common.notify('error', 'Erro', 'Data de inclusao e obrigatoria.');
+                if (typeof common.notifyByKey === 'function') {
+                    common.notifyByKey('generic.validation.inclusion_date.required', {}, 'error', 'Erro', 'Data de inclusao e obrigatoria.');
+                } else {
+                    common.notify('error', 'Erro', 'Data de inclusao e obrigatoria.');
+                }
                 return;
             }
 

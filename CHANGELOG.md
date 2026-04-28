@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0014
+
+**Data:** 2026-04-28 16:01:09 | **Commit:** `cfeead2` | **Tipo:** `patch`
+
+- feat(toast): add new success messages for audience management and improve notification handling
+
 ## V. 1.97.0013
 
 **Data:** 2026-04-28 15:36:31 | **Commit:** `b3c2100` | **Tipo:** `patch`
@@ -4866,6 +4872,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

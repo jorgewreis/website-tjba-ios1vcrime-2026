@@ -18,6 +18,17 @@
         }
     }
 
+    function notifyByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        const catalog = App.ToastCatalog;
+        if (!catalog || typeof catalog.notifyByKey !== 'function') {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+            return;
+        }
+        catalog.notifyByKey(key, vars || {}).catch(function () {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+        });
+    }
+
     function buildSecondClickGuard() {
         if (App.Page && typeof App.Page.createSecondClickGuard === 'function') {
             return App.Page.createSecondClickGuard();
@@ -82,16 +93,16 @@
                 })
                 .then(function (result) {
                     if (result.ok && result.data && result.data.deleted) {
-                        notify('success', 'Sucesso', 'Alocação removida.');
+                        notifyByKey('cartorio.allocation.remove.success', {}, 'success', 'Sucesso', 'Alocação removida.');
                         global.setTimeout(function () {
                             global.location.reload();
                         }, 800);
                         return;
                     }
-                    notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Falha ao remover alocação.');
+                    notifyByKey('cartorio.allocation.remove.error', {}, 'error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Falha ao remover alocação.');
                 })
                 .catch(function () {
-                    notify('error', 'Erro', 'Erro de conexão.');
+                    notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
                 });
         });
 
@@ -125,7 +136,7 @@
                 .then(function (result) {
                     btnAdd.disabled = false;
                     if (result.ok && result.data && result.data.success) {
-                        notify('success', 'Sucesso', 'Servidor alocado.');
+                        notifyByKey('cartorio.allocation.add.success', {}, 'success', 'Sucesso', 'Servidor alocado.');
                         global.setTimeout(function () {
                             global.location.reload();
                         }, 600);
@@ -135,7 +146,7 @@
                 })
                 .catch(function () {
                     btnAdd.disabled = false;
-                    notify('error', 'Erro', 'Erro de conexão.');
+                    notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
                 });
         });
     }

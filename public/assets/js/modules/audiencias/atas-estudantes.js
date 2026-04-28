@@ -11,6 +11,17 @@
         }
     }
 
+    function notifyByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        var catalog = window.App && window.App.ToastCatalog ? window.App.ToastCatalog : null;
+        if (!catalog || typeof catalog.notifyByKey !== 'function') {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+            return;
+        }
+        catalog.notifyByKey(key, vars || {}).catch(function () {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+        });
+    }
+
     /*
      * Delegacao no document para capturar cliques de btn-inscrever-ata mesmo quando
      * o botao e recriado pelo polling (renderInscricaoUI no painel-estudantes
@@ -39,7 +50,7 @@
             .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
             .then(function (res) {
                 if (res.ok && res.j && res.j.success) {
-                    notify('success', 'Sucesso', 'Inscrição realizada.');
+                    notifyByKey('audiencias.ata.subscribe.success', {}, 'success', 'Sucesso', 'Inscrição realizada.');
                     window.location.reload();
                     return;
                 }
@@ -47,7 +58,7 @@
                 btn.disabled = false;
             })
             .catch(function () {
-                notify('error', 'Erro', 'Erro de conexão.');
+                notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
                 btn.disabled = false;
             });
     });

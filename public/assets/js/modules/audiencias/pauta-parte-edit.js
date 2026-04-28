@@ -27,11 +27,22 @@
         }
     }
 
+    function notifyByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        var catalog = window.App && window.App.ToastCatalog ? window.App.ToastCatalog : null;
+        if (!catalog || typeof catalog.notifyByKey !== 'function') {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+            return;
+        }
+        catalog.notifyByKey(key, vars || {}).catch(function () {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+        });
+    }
+
     function requiredValue(id, label) {
         var el = document.getElementById(id);
         var value = String(el && el.value ? el.value : '').trim();
         if (!value) {
-            notify('error', 'Validacao', 'Informe: ' + label + '.');
+            notifyByKey('audiencias.validation.required.field', { campo: label }, 'error', 'Validacao', 'Informe: ' + label + '.');
             return '';
         }
         return value;
@@ -149,13 +160,13 @@
             .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
             .then(function (res) {
                 if (res.ok && res.j && res.j.success) {
-                    notify('success', 'Sucesso', 'Parte removida.');
+                    notifyByKey('audiencias.pauta.part.remove.success', {}, 'success', 'Sucesso', 'Parte removida.');
                     setTimeout(function () { history.back(); }, 300);
                 } else {
-                    notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao remover parte.');
+                    notifyByKey('audiencias.part.remove.error', {}, 'error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao remover parte.');
                 }
             })
-            .catch(function () { notify('error', 'Erro', 'Erro de conexão.'); });
+            .catch(function () { notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.'); });
     });
 
     document.getElementById('btn-parte-edit-salvar')?.addEventListener('click', function () {
@@ -209,7 +220,7 @@
             .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
             .then(function (res) {
                 if (res.ok && res.j && res.j.success) {
-                    notify('success', 'Sucesso', 'Parte atualizada.');
+                    notifyByKey('audiencias.pauta.update.success', {}, 'success', 'Sucesso', 'Parte atualizada.');
                     setTimeout(function () {
                         var idPauta = String(document.getElementById('parte-edit-pauta-id')?.value || '').trim();
                         if (idPauta) {
@@ -219,10 +230,10 @@
                         }
                     }, 250);
                 } else {
-                    notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao atualizar parte.');
+                    notifyByKey('audiencias.part.update.error', {}, 'error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao atualizar parte.');
                 }
             })
-            .catch(function () { notify('error', 'Erro', 'Erro de conexão.'); });
+            .catch(function () { notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.'); });
     });
 
     document.getElementById('parte-edit-tipo')?.addEventListener('change', toggleDefensorFields);

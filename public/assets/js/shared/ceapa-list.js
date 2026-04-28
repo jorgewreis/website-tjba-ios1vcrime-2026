@@ -4,6 +4,18 @@
     const App = global.App || (global.App = {});
     const common = App.RecordEditCommon || null;
 
+    function resolveToastMessageByKey(key, vars, fallbackMessage) {
+        const catalog = App.ToastCatalog;
+        if (!catalog || typeof catalog.resolve !== 'function') {
+            return Promise.resolve(fallbackMessage);
+        }
+        return catalog.resolve(key, vars || {}).then(function (toast) {
+            return (toast && toast.message) ? toast.message : fallbackMessage;
+        }).catch(function () {
+            return fallbackMessage;
+        });
+    }
+
     function initialize() {
         if (!common) {
             return;
@@ -52,11 +64,16 @@
             const tipo = btn.getAttribute('data-tipo') || '';
             const endpoint = btn.getAttribute('data-endpoint') || '';
             if (!alocadoId || !endpoint) return;
-            if (!requireSecondClick('desalocar-' + alocadoId, 'Clique novamente para confirmar a remoção da alocação.')) {
-                return;
-            }
-            btn.disabled = true;
-            common.postJson(endpoint, { alocado_id: alocadoId, tipo: tipo }).then(function (result) {
+            resolveToastMessageByKey(
+                'cartorio.allocation.remove.confirm',
+                {},
+                'Clique novamente para confirmar a remoção da alocação.'
+            ).then(function (confirmMessage) {
+                if (!requireSecondClick('desalocar-' + alocadoId, confirmMessage)) {
+                    return;
+                }
+                btn.disabled = true;
+                return common.postJson(endpoint, { alocado_id: alocadoId, tipo: tipo }).then(function (result) {
                 if (result.data && result.data.deleted) {
                     if (typeof common.notifyByKey === 'function') {
                         common.notifyByKey(
@@ -91,6 +108,7 @@
                     common.notify('error', 'Erro', 'Erro de conexão.');
                 }
                 btn.disabled = false;
+            });
             });
         });
     }

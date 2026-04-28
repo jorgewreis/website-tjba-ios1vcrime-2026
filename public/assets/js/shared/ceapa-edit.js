@@ -4,6 +4,26 @@
     const App = global.App || (global.App = {});
     const common = App.RecordEditCommon || null;
 
+    function notifyByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        if (typeof common.notifyByKey === 'function') {
+            common.notifyByKey(key, vars || {}, fallbackType, fallbackTitle, fallbackMessage);
+            return;
+        }
+        common.notify(fallbackType, fallbackTitle, fallbackMessage);
+    }
+
+    function resolveToastMessageByKey(key, vars, fallbackMessage) {
+        const catalog = App.ToastCatalog;
+        if (!catalog || typeof catalog.resolve !== 'function') {
+            return Promise.resolve(fallbackMessage);
+        }
+        return catalog.resolve(key, vars || {}).then(function (toast) {
+            return (toast && toast.message) ? toast.message : fallbackMessage;
+        }).catch(function () {
+            return fallbackMessage;
+        });
+    }
+
     function getVal(id) {
         const el = global.document.getElementById(id);
         return el && el.value ? el.value.trim() : '';
@@ -161,7 +181,7 @@
         salvarBtn?.addEventListener('click', function () {
             const id = getVal('hidden-ceapa-id');
             if (!id) {
-                return common.notify('error', 'Erro', 'Identificador do cadastro não informado.');
+                return notifyByKey('cartorio.ceapa.validation.id.required', {}, 'error', 'Erro', 'Identificador do cadastro não informado.');
             }
 
             if (!lockProcesso && processoInput && typeof global.normalizeAndValidateCNJValue === 'function') {
@@ -189,15 +209,15 @@
                 ? { reu_id: reuSelect.value, nome_reu: reuSelect.options[reuSelect.selectedIndex]?.textContent || '' }
                 : { reu_id: '', nome_reu: getVal('filter-reu') };
 
-            if (!numeroProcesso) return common.notify('error', 'Erro', 'Informe o número do processo.');
-            if (classeVal === 'Aguarde...') return common.notify('error', 'Erro', 'Aguarde a consulta ao DataJud terminar.');
-            if (!reuPayload.nome_reu) return common.notify('error', 'Erro', 'Informe o réu.');
-            if (!tipoSuspensao) return common.notify('error', 'Erro', 'Informe o tipo de suspensão.');
-            if (!decisaoCumprir) return common.notify('error', 'Erro', 'Informe a decisão a cumprir.');
-            if (!dataDecisao) return common.notify('error', 'Erro', 'Informe a data da decisão.');
+            if (!numeroProcesso) return notifyByKey('cartorio.ceapa.validation.process.required', {}, 'error', 'Erro', 'Informe o número do processo.');
+            if (classeVal === 'Aguarde...') return notifyByKey('cartorio.ceapa.validation.datajud.wait.edit', {}, 'error', 'Erro', 'Aguarde a consulta ao DataJud terminar.');
+            if (!reuPayload.nome_reu) return notifyByKey('cartorio.ceapa.validation.reu.required', {}, 'error', 'Erro', 'Informe o réu.');
+            if (!tipoSuspensao) return notifyByKey('cartorio.ceapa.validation.tipo_suspensao.required', {}, 'error', 'Erro', 'Informe o tipo de suspensão.');
+            if (!decisaoCumprir) return notifyByKey('cartorio.ceapa.validation.decisao.required', {}, 'error', 'Erro', 'Informe a decisão a cumprir.');
+            if (!dataDecisao) return notifyByKey('cartorio.ceapa.validation.data_decisao.required', {}, 'error', 'Erro', 'Informe a data da decisão.');
 
             salvarBtn.disabled = true;
-            common.notify('info', 'Informação', 'Salvando alterações...');
+            notifyByKey('cartorio.ceapa.edit.progress.info', {}, 'info', 'Informação', 'Salvando alterações...');
 
             const payload = {
                 id: id,
@@ -244,37 +264,43 @@
         excluirBtn?.addEventListener('click', function () {
             const id = getVal('hidden-ceapa-id');
             if (!id) {
-                return common.notify('error', 'Erro', 'Identificador do cadastro não informado.');
+                return notifyByKey('cartorio.ceapa.validation.id.required', {}, 'error', 'Erro', 'Identificador do cadastro não informado.');
             }
-            if (!requireSecondClick('excluir-ceapa', 'Clique novamente em Excluir em até 5 segundos para confirmar a exclusão.')) {
-                return;
-            }
-            excluirBtn.disabled = true;
-            common.postJson('/api/cartorio-ceapa/delete.php', { id: id }).then(function (result) {
-                if (result.data && result.data.deleted) {
-                    if (typeof common.notifyByKey === 'function') {
-                        common.notifyByKey(
-                            'cartorio.ceapa.delete.success',
-                            {},
-                            'success',
-                            'Sucesso',
-                            'Cadastro CEAPA excluído com sucesso.'
-                        );
-                    } else {
-                        common.notify('success', 'Sucesso', 'Cadastro CEAPA excluído com sucesso.');
-                    }
-                    global.location.href = '/frame.php?page=ceapa';
+            resolveToastMessageByKey(
+                'cartorio.ceapa.delete.confirm',
+                {},
+                'Clique novamente em Excluir em até 5 segundos para confirmar a exclusão.'
+            ).then(function (confirmMessage) {
+                if (!requireSecondClick('excluir-ceapa', confirmMessage)) {
                     return;
                 }
-                common.notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Não foi possível excluir.');
-                excluirBtn.disabled = false;
-            }).catch(function () {
-                if (typeof common.notifyByKey === 'function') {
-                    common.notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
-                } else {
-                    common.notify('error', 'Erro', 'Erro de conexão.');
-                }
-                excluirBtn.disabled = false;
+                excluirBtn.disabled = true;
+                return common.postJson('/api/cartorio-ceapa/delete.php', { id: id }).then(function (result) {
+                    if (result.data && result.data.deleted) {
+                        if (typeof common.notifyByKey === 'function') {
+                            common.notifyByKey(
+                                'cartorio.ceapa.delete.success',
+                                {},
+                                'success',
+                                'Sucesso',
+                                'Cadastro CEAPA excluído com sucesso.'
+                            );
+                        } else {
+                            common.notify('success', 'Sucesso', 'Cadastro CEAPA excluído com sucesso.');
+                        }
+                        global.location.href = '/frame.php?page=ceapa';
+                        return;
+                    }
+                    common.notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Não foi possível excluir.');
+                    excluirBtn.disabled = false;
+                }).catch(function () {
+                    if (typeof common.notifyByKey === 'function') {
+                        common.notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
+                    } else {
+                        common.notify('error', 'Erro', 'Erro de conexão.');
+                    }
+                    excluirBtn.disabled = false;
+                });
             });
         });
 

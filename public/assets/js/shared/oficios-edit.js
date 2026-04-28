@@ -130,17 +130,31 @@
                 })
                 .then(function (result) {
                     if (result.ok && result.data && result.data.deleted) {
-                        notify('success', 'Sucesso', settings.desalocarSuccessMessage || 'Alocação removida.');
+                        notifyByKey(
+                            notify,
+                            'cartorio.allocation.remove.success',
+                            {},
+                            'success',
+                            'Sucesso',
+                            settings.desalocarSuccessMessage || 'Alocação removida.'
+                        );
                         global.setTimeout(function () {
                             global.location.reload();
                         }, 800);
                         return;
                     }
 
-                    notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Falha ao remover alocação.');
+                    notifyByKey(
+                        notify,
+                        'cartorio.allocation.remove.error',
+                        {},
+                        'error',
+                        'Erro',
+                        (result.data && result.data.error) ? result.data.error : 'Falha ao remover alocação.'
+                    );
                 })
                 .catch(function () {
-                    notify('error', 'Erro', 'Erro de conexão.');
+                    notifyByKey(notify, 'generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
                 });
         });
     }

@@ -28,6 +28,52 @@
         }
     }
 
+    function notifyByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        var catalog = window.App && window.App.ToastCatalog ? window.App.ToastCatalog : null;
+        if (!catalog || typeof catalog.notifyByKey !== 'function') {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+            return;
+        }
+        catalog.notifyByKey(key, vars || {}).catch(function () {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+        });
+    }
+
+    function queuePostReloadToastByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage, storageKey) {
+        var targetKey = storageKey || 'salapauta.postReloadToast';
+        var catalog = window.App && window.App.ToastCatalog ? window.App.ToastCatalog : null;
+        if (!catalog || typeof catalog.resolve !== 'function') {
+            if (pageTools && typeof pageTools.queuePostReloadToast === 'function') {
+                pageTools.queuePostReloadToast(fallbackType, fallbackTitle, fallbackMessage, targetKey);
+                return;
+            }
+            try {
+                sessionStorage.setItem(targetKey, JSON.stringify([{ type: fallbackType, title: fallbackTitle, message: fallbackMessage }]));
+            } catch (e) {}
+            return;
+        }
+        catalog.resolve(key, vars || {}).then(function (toast) {
+            var type = (toast && toast.type) || fallbackType;
+            var title = (toast && toast.title) || fallbackTitle;
+            var message = (toast && toast.message) || fallbackMessage;
+            if (pageTools && typeof pageTools.queuePostReloadToast === 'function') {
+                pageTools.queuePostReloadToast(type, title, message, targetKey);
+                return;
+            }
+            try {
+                sessionStorage.setItem(targetKey, JSON.stringify([{ type: type, title: title, message: message }]));
+            } catch (e) {}
+        }).catch(function () {
+            if (pageTools && typeof pageTools.queuePostReloadToast === 'function') {
+                pageTools.queuePostReloadToast(fallbackType, fallbackTitle, fallbackMessage, targetKey);
+                return;
+            }
+            try {
+                sessionStorage.setItem(targetKey, JSON.stringify([{ type: fallbackType, title: fallbackTitle, message: fallbackMessage }]));
+            } catch (e) {}
+        });
+    }
+
     function readPartPayload() {
         return {
             nome_parte: String(document.getElementById('parte-nome')?.value || '').trim(),
@@ -235,17 +281,23 @@
                 if (res.ok && res.j && res.j.success) {
                     initialAudienciaSnapshot = currentAudienciaSnapshot();
                     if (autoMessage) {
-                        notify('info', 'Atualização automática', 'Dados da audiência salvos antes de adicionar a parte.');
+                        notifyByKey(
+                            'audiencias.pauta.auto_save.info',
+                            {},
+                            'info',
+                            'Atualização automática',
+                            'Dados da audiência salvos antes de adicionar a parte.'
+                        );
                     } else {
-                        notify('success', 'Sucesso', 'Alterações salvas.');
+                        notifyByKey('audiencias.pauta.update.success', {}, 'success', 'Sucesso', 'Alterações salvas.');
                     }
                     return true;
                 }
-                notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao salvar.');
+                notifyByKey('audiencias.pauta.update.error', {}, 'error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao salvar.');
                 return false;
             })
             .catch(function () {
-                notify('error', 'Erro', 'Erro de conexão.');
+                notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
                 return false;
             });
     }
@@ -303,7 +355,7 @@
             var payload = readPartPayload();
             var missing = validatePart(payload);
             if (missing) {
-                notify('error', 'Validacao', 'Informe: ' + missing + '.');
+                notifyByKey('audiencias.validation.required.field', { campo: missing }, 'error', 'Validacao', 'Informe: ' + missing + '.');
                 return;
             }
             var idPauta = String(document.getElementById('audiencia-edit-id')?.value || '').trim();
@@ -316,15 +368,20 @@
                 .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
                 .then(function (res) {
                     if (res.ok && res.j && res.j.id) {
-                        try {
-                            sessionStorage.setItem('salapauta.postReloadToast', JSON.stringify([{ type: 'success', title: 'Sucesso', message: 'Parte adicionada.' }]));
-                        } catch (e) {}
+                        queuePostReloadToastByKey(
+                            'audiencias.pauta.part.add.success',
+                            {},
+                            'success',
+                            'Sucesso',
+                            'Parte adicionada.',
+                            'salapauta.postReloadToast'
+                        );
                         window.location.reload();
                     } else {
-                        notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao adicionar parte.');
+                        notifyByKey('audiencias.part.add.error', {}, 'error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao adicionar parte.');
                     }
                 })
-                .catch(function () { notify('error', 'Erro', 'Erro de conexão.'); });
+                .catch(function () { notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.'); });
         });
     });
 
@@ -357,12 +414,20 @@
                 .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
                 .then(function (res) {
                     if (res.ok && res.j && res.j.success) {
+                        queuePostReloadToastByKey(
+                            'audiencias.pauta.part.remove.success',
+                            {},
+                            'success',
+                            'Sucesso',
+                            'Parte removida.',
+                            'salapauta.postReloadToast'
+                        );
                         window.location.reload();
                     } else {
-                        notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao remover parte.');
+                        notifyByKey('audiencias.part.remove.error', {}, 'error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao remover parte.');
                     }
                 })
-                .catch(function () { notify('error', 'Erro', 'Erro de conexão.'); });
+                .catch(function () { notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.'); });
         });
     });
 
@@ -374,7 +439,7 @@
             headers: { 'Content-Type': 'application/json' },
             credentials: 'same-origin',
             body: JSON.stringify({ id: id })
-        }).then(function () { window.location.reload(); }).catch(function () { notify('error', 'Erro', 'Erro de conexão.'); });
+        }).then(function () { window.location.reload(); }).catch(function () { notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.'); });
     });
 
     document.getElementById('btn-audiencia-edit-excluir')?.addEventListener('click', function () {
@@ -387,7 +452,7 @@
             body: JSON.stringify({ id: id })
         }).then(function () {
             window.location.href = '/frame.php?page=salapauta';
-        }).catch(function () { notify('error', 'Erro', 'Erro de conexão.'); });
+        }).catch(function () { notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.'); });
     });
 
     document.getElementById('btn-audiencia-edit-salvar')?.addEventListener('click', function () {
@@ -585,7 +650,7 @@
             .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
             .then(function (res) {
                 if (!res.ok || !res.j || !Array.isArray(res.j.available)) {
-                    notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao carregar horários.');
+                    notifyByKey('audiencias.schedule.load.error', {}, 'error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao carregar horários.');
                     fillHoraSelectEdit(grade);
                     if (typeof done === 'function') {
                         done();
@@ -597,7 +662,7 @@
                     var extra = String(window.PAUTA_HORA_FORA_GRADE || '').trim();
                     var cur = String(sel.value || '').trim();
                     if (!(extra && cur === extra)) {
-                        notify('info', 'Horários', 'Não há horários livres nesta data.');
+                        notifyByKey('audiencias.schedule.unavailable.info', {}, 'info', 'Horários', 'Não há horários livres nesta data.');
                     }
                 }
                 if (typeof done === 'function') {
@@ -605,7 +670,7 @@
                 }
             })
             .catch(function () {
-                notify('error', 'Erro', 'Erro de conexão.');
+                notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
                 fillHoraSelectEdit(grade);
                 if (typeof done === 'function') {
                     done();
@@ -622,11 +687,11 @@
         var sel = document.getElementById('pauta-alocar-usuario');
         var uid = sel ? String(sel.value || '').trim() : '';
         if (!idPauta) {
-            notify('error', 'Erro', 'Audiência inválida.');
+            notifyByKey('audiencias.validation.hearing.invalid', {}, 'error', 'Erro', 'Audiência inválida.');
             return;
         }
         if (!uid) {
-            notify('info', 'Alocação', 'Selecione um servidor.');
+            notifyByKey('audiencias.validation.server.required', {}, 'info', 'Alocação', 'Selecione um servidor.');
             return;
         }
         var btnAl = document.getElementById('btn-pauta-alocar');
@@ -645,7 +710,13 @@
                     btnAl.disabled = false;
                 }
                 if (res.ok && res.j && res.j.success) {
-                    notify('success', 'Sucesso', 'Servidor alocado.');
+                    notifyByKey(
+                        'audiencias.pauta.server.allocate.success',
+                        {},
+                        'success',
+                        'Sucesso',
+                        'Servidor alocado.'
+                    );
                     window.location.reload();
                     return;
                 }
@@ -655,7 +726,7 @@
                 if (btnAl) {
                     btnAl.disabled = false;
                 }
-                notify('error', 'Erro', 'Erro de conexão.');
+                notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
             });
     });
 

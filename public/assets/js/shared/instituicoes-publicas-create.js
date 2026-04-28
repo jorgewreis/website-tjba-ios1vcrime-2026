@@ -42,13 +42,21 @@
                 nomeEl.value = nome;
             }
             if (!nome) {
-                common.notify('error', 'Erro', 'Nome e obrigatorio.');
+                if (typeof common.notifyByKey === 'function') {
+                    common.notifyByKey('generic.validation.name.required', {}, 'error', 'Erro', 'Nome e obrigatorio.');
+                } else {
+                    common.notify('error', 'Erro', 'Nome e obrigatorio.');
+                }
                 return;
             }
 
             const cnpjRaw = String(cnpjEl?.value || '').replace(/\D/g, '');
             if (cnpjRaw && cnpjRaw.length === 14 && App.CNPJ && !App.CNPJ.validar(cnpjRaw)) {
-                common.notify('error', 'Erro', 'CNPJ invalido. Verifique os digitos.');
+                if (typeof common.notifyByKey === 'function') {
+                    common.notifyByKey('generic.validation.cnpj.invalid', {}, 'error', 'Erro', 'CNPJ invalido. Verifique os digitos.');
+                } else {
+                    common.notify('error', 'Erro', 'CNPJ invalido. Verifique os digitos.');
+                }
                 return;
             }
 
