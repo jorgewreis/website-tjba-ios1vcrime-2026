@@ -117,10 +117,10 @@ try {
         <!-- Ações -->
         <div class="card-buttons">
             <div class="display-flex row row-fit gap-y-md align-center justify-start">
-                <button class="btn btn-secondary" id="voltar-btn" data-allow-during-loading="true">Voltar</button>
+                <button class="btn btn-secondary" id="voltar-btn" type="button" data-allow-during-loading="true">Voltar</button>
             </div>
             <div class="display-flex row row-fit gap-y-md align-center justify-end">
-                <button class="btn btn-primary-outline" id="alterar-regra-btn" style="display: none;">Alterar regra de alocação</button>
+                <button class="btn btn-primary-outline" id="alterar-regra-btn" type="button" style="display: none;">Alterar regra de alocação</button>
                 <button class="btn btn-primary" id="cadastrar-btn" type="button">Cadastrar</button>
             </div>
         </div>

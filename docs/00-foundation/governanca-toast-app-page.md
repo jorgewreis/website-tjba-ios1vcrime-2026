@@ -22,6 +22,31 @@ Padronizar o uso de notificacoes e fila de toast pos-reload no frontend JavaScri
 - Confirmacao em 2 cliques deve ser usada somente para exclusao definitiva de tarefa em telas `*-edit` de Cartorio, Gabinete e Audiencias.
 - Cancelamentos e remocoes auxiliares (alocacao, telefone, endereco, setor, desvinculos e equivalentes) devem executar em clique unico.
 
+## Contrato do catalogo (runtime)
+
+Fonte principal: `config/toast_messages.php`.
+
+Cada entrada de `messages` deve seguir:
+
+- `type`: `success` | `error` | `info`
+- `title`: string
+- `message`: string (suporta placeholders `{variavel}`)
+- `vars`: array de nomes de variaveis
+
+Endpoint: `public/api/config/toast-messages.php`.
+
+Formato de resposta:
+
+- `meta`: `version`, `locale`, `generatedAt`
+- `messages`: mapa `chave -> configuracao`
+
+Garantias do endpoint:
+
+- normaliza `type` para os valores permitidos;
+- garante `title/message/vars` no payload;
+- `generatedAt` derivado de `filemtime` para manter `ETag` estavel quando o catalogo nao muda;
+- suporte a cache condicional com `ETag` e `Last-Modified`.
+
 ## Inventario de classificacao (varredura inicial)
 
 ### Delegar direto para App.Page (baixo risco)
@@ -77,3 +102,4 @@ Padronizar o uso de notificacoes e fila de toast pos-reload no frontend JavaScri
 
 - 2026-04-28: documento criado com base em varredura global inicial de duplicacoes JS.
 - 2026-04-28: adicionada camada central `App.ToastCatalog` (consumo do endpoint `/api/config/toast-messages.php`) sem migracao funcional de telas.
+- 2026-04-28: validacao tecnica da Onda 1 concluida (schema do catalogo, cache condicional 304 e contrato estavel do endpoint).

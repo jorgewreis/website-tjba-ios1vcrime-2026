@@ -17,20 +17,47 @@ if (!is_array($catalog) || !isset($catalog['messages']) || !is_array($catalog['m
     exit;
 }
 
+/**
+ * Normaliza o payload da mensagem para manter contrato estavel no endpoint.
+ */
+$normalizeMessage = static function (array $raw): array {
+    $type = isset($raw['type']) ? (string) $raw['type'] : 'info';
+    if (!in_array($type, ['success', 'error', 'info'], true)) {
+        $type = 'info';
+    }
+
+    return [
+        'type' => $type,
+        'title' => isset($raw['title']) ? (string) $raw['title'] : 'Informação',
+        'message' => isset($raw['message']) ? (string) $raw['message'] : '',
+        'vars' => isset($raw['vars']) && is_array($raw['vars']) ? array_values($raw['vars']) : [],
+    ];
+};
+
+$messages = [];
+foreach ($catalog['messages'] as $key => $rawMessage) {
+    if (!is_string($key) || $key === '' || !is_array($rawMessage)) {
+        continue;
+    }
+    $messages[$key] = $normalizeMessage($rawMessage);
+}
+
+$meta = array_merge(
+    [
+        'version' => 'unknown',
+        'locale' => 'pt-BR',
+    ],
+    (array) ($catalog['meta'] ?? [])
+);
+
 $fileMTime = filemtime($catalogPath);
 $lastModifiedTs = ($fileMTime !== false) ? (int) $fileMTime : time();
 $lastModified = gmdate('D, d M Y H:i:s', $lastModifiedTs) . ' GMT';
+$meta['generatedAt'] = gmdate('c', $lastModifiedTs);
 
 $body = [
-    'meta' => array_merge(
-        [
-            'version' => 'unknown',
-            'locale' => 'pt-BR',
-            'generatedAt' => gmdate('c', $lastModifiedTs),
-        ],
-        (array) ($catalog['meta'] ?? [])
-    ),
-    'messages' => $catalog['messages'],
+    'meta' => $meta,
+    'messages' => $messages,
 ];
 
 $payload = json_encode($body, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
@@ -57,67 +84,9 @@ if ($ifModifiedSince !== '') {
     }
 }
 
-// #region agent log
-@file_put_contents(
-    dirname(__DIR__, 3) . '/debug-16faad.log',
-    json_encode([
-        'sessionId' => '16faad',
-        'runId' => 'toast-config-endpoint-initial',
-        'hypothesisId' => 'H1',
-        'location' => 'public/api/config/toast-messages.php:etag-check',
-        'message' => 'Avalia precondicao de cache condicional',
-        'data' => [
-            'ifNoneMatch' => $ifNoneMatch !== '' ? 'present' : 'absent',
-            'ifModifiedSince' => $ifModifiedSince !== '' ? 'present' : 'absent',
-            'computedEtag' => $etag,
-            'lastModifiedTs' => $lastModifiedTs,
-        ],
-        'timestamp' => (int) round(microtime(true) * 1000),
-    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . PHP_EOL,
-    FILE_APPEND
-);
-// #endregion
-
 if ($notModifiedByEtag || $notModifiedByDate) {
-    // #region agent log
-    @file_put_contents(
-        dirname(__DIR__, 3) . '/debug-16faad.log',
-        json_encode([
-            'sessionId' => '16faad',
-            'runId' => 'toast-config-endpoint-initial',
-            'hypothesisId' => 'H2',
-            'location' => 'public/api/config/toast-messages.php:304',
-            'message' => 'Resposta 304 emitida por cache condicional',
-            'data' => [
-                'notModifiedByEtag' => $notModifiedByEtag,
-                'notModifiedByDate' => $notModifiedByDate,
-            ],
-            'timestamp' => (int) round(microtime(true) * 1000),
-        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . PHP_EOL,
-        FILE_APPEND
-    );
-    // #endregion
     http_response_code(304);
     exit;
 }
-
-// #region agent log
-@file_put_contents(
-    dirname(__DIR__, 3) . '/debug-16faad.log',
-    json_encode([
-        'sessionId' => '16faad',
-        'runId' => 'toast-config-endpoint-initial',
-        'hypothesisId' => 'H3',
-        'location' => 'public/api/config/toast-messages.php:200',
-        'message' => 'Resposta 200 com catalogo de toast',
-        'data' => [
-            'messageCount' => count($body['messages']),
-            'version' => $body['meta']['version'] ?? 'unknown',
-        ],
-        'timestamp' => (int) round(microtime(true) * 1000),
-    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . PHP_EOL,
-    FILE_APPEND
-);
-// #endregion
 
 echo $payload;

@@ -230,8 +230,11 @@ $tiposOptions = [
                     showToast({ type: 'error', variant: 'full', title: 'Erro', message: <?php echo json_encode($errorMessage, JSON_UNESCAPED_UNICODE); ?> });
                 }
             </script>
-            <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
-                <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
+            <div class="card-buttons">
+                <div class="display-flex row row-fit gap-y-md align-center justify-start">
+                    <button type="button" class="btn btn-secondary" id="voltar-btn">Voltar</button>
+                </div>
+                <div class="display-flex row row-fit gap-y-md align-center justify-end"></div>
             </div>
         <?php else: ?>
             <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Dados da guia</h2></div>

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0018
+
+**Data:** 2026-04-28 17:02:45 | **Commit:** `a2bfca9` | **Tipo:** `patch`
+
+- refactor(toast): update toast notification guidelines and improve button accessibility
+
 ## V. 1.97.0017
 
 **Data:** 2026-04-28 16:46:18 | **Commit:** `e27d0fd` | **Tipo:** `patch`
@@ -4890,6 +4896,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

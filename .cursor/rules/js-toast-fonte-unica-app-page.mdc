@@ -20,6 +20,9 @@ alwaysApply: true
   - `App.Page.notify(type, title, message)`
   - `App.Page.queuePostReloadToast(typeOrPayload, title, message, storageKey)`
   - `App.Page.flushPostReloadToast(storageKey, defaults)`
+- Para mensagens de catálogo, **preferir**:
+  - `App.ToastCatalog.notifyByKey(key, vars, options)`
+  - `App.ToastCatalog.resolve(key, vars, options)` com fallback explícito quando necessário
 - É **proibido** criar nova implementação local de `notify`, `queuePostReloadToast` ou `flushPostReloadToast`.
 - `storageKey` custom só é permitido quando o domínio exigir isolamento explícito (ex.: `salapauta.*`, `estudapauta.*`).
 

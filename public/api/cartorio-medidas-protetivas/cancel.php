@@ -15,6 +15,12 @@ if (!bootstrapRequireTrustedPostRequest()) {
 }
 
 $connection = Conection::getInstance()->getConnection();
+$userId = $_SESSION['id_usuario'] ?? null;
+if ($userId === null || trim((string) $userId) === '') {
+    http_response_code(401);
+    echo json_encode(['error' => 'Usuário não autenticado.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 $payload = file_get_contents('php://input') ?: '';
 $parsed = json_decode($payload, true);
