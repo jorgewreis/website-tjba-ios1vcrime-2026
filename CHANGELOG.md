@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0003
+
+**Data:** 2026-04-28 11:33:44 | **Commit:** `5be85b3` | **Tipo:** `patch`
+
+- fix(config): update session idle timeout and enhance session activity management
+
 ## V. 1.97.0002
 
 **Data:** 2026-04-28 11:06:59 | **Commit:** `74c515e` | **Tipo:** `patch`
@@ -4800,6 +4806,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

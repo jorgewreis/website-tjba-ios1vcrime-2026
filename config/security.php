@@ -33,6 +33,9 @@ final class Security
         if (!self::isAuthenticated()) {
             self::redirectToLogin();
         }
+
+        // Renova janela de inatividade a cada requisição autenticada.
+        self::touchSessionActivity();
     }
 
     public static function getPerfilRank(string $perfil): int

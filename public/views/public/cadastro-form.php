@@ -178,6 +178,7 @@ $faculdades = [
                 return;
             }
             form.dataset.submitBound = '1';
+            let isSubmitting = false;
 
             function formatarNome(val) {
                 if (typeof TextFormatter !== 'undefined' && typeof TextFormatter.formatProperName === 'function') {
@@ -197,9 +198,14 @@ $faculdades = [
 
             form.addEventListener('submit', async function (e) {
                 e.preventDefault();
+                if (isSubmitting) {
+                    return;
+                }
+                isSubmitting = true;
 
                 const cpfDigits = onlyDigits(document.getElementById('cpf').value);
                 if (cpfDigits.length !== 11) {
+                    isSubmitting = false;
                     showToast({ type: 'error', title: 'Erro', message: 'Informe um CPF válido.' });
                     return;
                 }
@@ -207,17 +213,20 @@ $faculdades = [
                 const senha = (form.querySelector('#senha') && form.querySelector('#senha').value) || '';
                 const senhaRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{<?php echo PASSWORD_MIN_LENGTH; ?>,<?php echo PASSWORD_MAX_LENGTH; ?>}$/;
                 if (!senhaRegex.test(senha)) {
+                    isSubmitting = false;
                     showToast({ type: 'error', title: 'Erro', message: 'A senha deve seguir a política: <?php echo addslashes(Security::passwordPolicySummary()); ?>.' });
                     return;
                 }
 
                 if (!form.querySelector('#aceite_termos_lgpd').checked) {
+                    isSubmitting = false;
                     showToast({ type: 'error', title: 'Atenção', message: 'É necessário aceitar os termos sobre LGPD para realizar o cadastro.' });
                     return;
                 }
 
                 const emailVal = (form.querySelector('#email') && form.querySelector('#email').value || '').trim();
                 if (!emailVal) {
+                    isSubmitting = false;
                     showToast({ type: 'error', title: 'Erro', message: 'Informe o e-mail (necessário para recuperação de senha).' });
                     return;
                 }
@@ -263,6 +272,7 @@ $faculdades = [
                         });
                         form.reset();
                         window.setTimeout(redirectToLogin, 1800);
+                        return;
                     } else {
                         showToast({ type: 'error', title: 'Erro', message: data.message || 'Erro ao enviar. Tente novamente.' });
                     }
@@ -270,6 +280,7 @@ $faculdades = [
                     showToast({ type: 'error', title: 'Erro', message: 'Erro de conexão. Tente novamente.' });
                 } finally {
                     if (btn) { btn.disabled = false; btn.textContent = originalText; }
+                    isSubmitting = false;
                 }
             });
         });
