@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0048
+
+**Data:** 2026-04-28 10:20:21 | **Commit:** `20e0adc` | **Tipo:** `patch`
+
+- fix(cadastro_estudantes): enhance CPF duplication check and logging
+
 ## V. 1.96.0047
 
 **Data:** 2026-04-28 10:16:27 | **Commit:** `e698c1f` | **Tipo:** `patch`
@@ -4758,6 +4764,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

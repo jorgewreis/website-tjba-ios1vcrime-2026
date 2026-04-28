@@ -9,7 +9,7 @@ require_once __DIR__ . '/../../app/helpers/SexoHelper.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-$debugLogPath = dirname(__DIR__, 2) . '/debug-07d2e0.log';
+$debugLogPath = dirname(__DIR__, 2) . '/.cursor/debug-07d2e0.log';
 $debugRunId = trim((string) ($_SERVER['HTTP_X_DEBUG_RUN_ID'] ?? ''));
 if ($debugRunId === '') {
     $debugRunId = 'api-' . date('YmdHis') . '-' . substr(bin2hex(random_bytes(4)), 0, 8);
@@ -126,11 +126,21 @@ try {
     // Verificação de duplicidade: CPF é único no cadastro de estudantes
     $stmt = $pdo->prepare("SELECT id FROM estudantes WHERE cpf = ? LIMIT 1");
     $stmt->execute([$cpfFormatado]);
-    $existsEstudanteCpf = (bool) $stmt->fetch();
+    $estudanteRow = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    $existsEstudanteCpf = $estudanteRow !== null;
     $debugLog('H2', 'cadastro_estudantes.php:104', 'Resultado verificação duplicidade em estudantes', [
         'existsEstudanteCpf' => $existsEstudanteCpf,
+        'estudanteId' => $existsEstudanteCpf ? (string) ($estudanteRow['id'] ?? '') : '',
+        'cpfFormatoConsulta' => strlen($cpfFormatado),
     ]);
     if ($existsEstudanteCpf) {
+        $stmtUsuarioByCpf = $pdo->prepare("SELECT id_usuario FROM usuarios WHERE cpf = ? LIMIT 1");
+        $stmtUsuarioByCpf->execute([$cpfFormatado]);
+        $usuarioVinculado = $stmtUsuarioByCpf->fetch(PDO::FETCH_ASSOC) ?: null;
+        $debugLog('H3', 'cadastro_estudantes.php:113', 'CPF encontrado em estudantes; validando vínculo em usuarios', [
+            'hasUsuarioComMesmoCpf' => $usuarioVinculado !== null,
+            'usuarioId' => $usuarioVinculado !== null ? (string) ($usuarioVinculado['id_usuario'] ?? '') : '',
+        ]);
         echo json_encode([
             'success' => false,
             'message' => 'Já existe um cadastro com este CPF. Não é possível cadastrar novamente. Se você já se cadastrou, utilize a área de login ou entre em contato com o setor responsável.',
