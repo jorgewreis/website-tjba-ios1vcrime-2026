@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.96.0050
+
+**Data:** 2026-04-28 10:26:45 | **Commit:** `e500ad1` | **Tipo:** `patch`
+
+- refactor(usuarios-create): remove debug logging and streamline CPF duplication check
+
 ## V. 1.96.0049
 
 **Data:** 2026-04-28 10:23:11 | **Commit:** `c45f9dd` | **Tipo:** `patch`
@@ -4770,6 +4776,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
