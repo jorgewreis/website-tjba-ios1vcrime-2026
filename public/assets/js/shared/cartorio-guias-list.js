@@ -75,6 +75,42 @@
         return messages[subtarefaTipo] || 'Subtarefa concluída.';
     }
 
+    function queueByKey(ctx, key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        const catalog = App.ToastCatalog;
+        if (!catalog || typeof catalog.resolve !== 'function') {
+            ctx.queuePostReloadToast(fallbackType, fallbackTitle, fallbackMessage);
+            return Promise.resolve();
+        }
+
+        return catalog.resolve(key, vars || {})
+            .then(function (toast) {
+                if (!toast || !toast.message) {
+                    ctx.queuePostReloadToast(fallbackType, fallbackTitle, fallbackMessage);
+                    return;
+                }
+                ctx.queuePostReloadToast(
+                    toast.type || fallbackType,
+                    toast.title || fallbackTitle,
+                    toast.message
+                );
+            })
+            .catch(function () {
+                ctx.queuePostReloadToast(fallbackType, fallbackTitle, fallbackMessage);
+            });
+    }
+
+    function notifyByKey(ctx, key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        const catalog = App.ToastCatalog;
+        if (!catalog || typeof catalog.notifyByKey !== 'function') {
+            ctx.notify(fallbackType, fallbackTitle, fallbackMessage);
+            return;
+        }
+
+        catalog.notifyByKey(key, vars || {}).catch(function () {
+            ctx.notify(fallbackType, fallbackTitle, fallbackMessage);
+        });
+    }
+
     function collectSpecificData(block) {
         const data = {};
 
@@ -208,11 +244,25 @@
                             return;
                         }
 
-                        ctx.notify('error', 'Erro', result.data && result.data.error ? result.data.error : 'Erro ao concluir subtarefa.');
+                        notifyByKey(
+                            ctx,
+                            'generic.error.unexpected',
+                            {},
+                            'error',
+                            'Erro',
+                            result.data && result.data.error ? result.data.error : 'Erro ao concluir subtarefa.'
+                        );
                         button.disabled = false;
                     })
                     .catch(function () {
-                        ctx.notify('error', 'Erro', 'Erro ao concluir subtarefa.');
+                        notifyByKey(
+                            ctx,
+                            'generic.error.connection',
+                            {},
+                            'error',
+                            'Erro',
+                            'Erro ao concluir subtarefa.'
+                        );
                         button.disabled = false;
                     });
             });
@@ -246,16 +296,38 @@
                     })
                     .then(function (result) {
                         if (result.ok && result.data && !result.data.error) {
-                            ctx.queuePostReloadToast('success', 'Sucesso', 'Detalhamento cancelado: etapa de data do fato e dias-multa não será concluída.');
-                            global.location.reload();
+                            queueByKey(
+                                ctx,
+                                'cartorio.guias.detalhamento.cancel.success',
+                                {},
+                                'success',
+                                'Sucesso',
+                                'Detalhamento cancelado: etapa de data do fato e dias-multa não será concluída.'
+                            ).then(function () {
+                                global.location.reload();
+                            });
                             return;
                         }
 
-                        ctx.notify('error', 'Erro', result.data && result.data.error ? result.data.error : 'Erro ao cancelar.');
+                        notifyByKey(
+                            ctx,
+                            'generic.error.unexpected',
+                            {},
+                            'error',
+                            'Erro',
+                            result.data && result.data.error ? result.data.error : 'Erro ao cancelar.'
+                        );
                         button.disabled = false;
                     })
                     .catch(function () {
-                        ctx.notify('error', 'Erro', 'Erro de conexão.');
+                        notifyByKey(
+                            ctx,
+                            'generic.error.connection',
+                            {},
+                            'error',
+                            'Erro',
+                            'Erro de conexão.'
+                        );
                         button.disabled = false;
                     });
             });
@@ -285,16 +357,38 @@
                     })
                     .then(function (result) {
                         if (result.ok && result.data && !result.data.error) {
-                            ctx.queuePostReloadToast('success', 'Sucesso', 'Primeira subtarefa criada: detalhamento (data do fato e dias-multa) disponível para conclusão.');
-                            global.location.reload();
+                            queueByKey(
+                                ctx,
+                                'cartorio.guias.first-subtask.create.success',
+                                {},
+                                'success',
+                                'Sucesso',
+                                'Primeira subtarefa criada: detalhamento (data do fato e dias-multa) disponível para conclusão.'
+                            ).then(function () {
+                                global.location.reload();
+                            });
                             return;
                         }
 
-                        ctx.notify('error', 'Erro', result.data && result.data.error ? result.data.error : 'Erro ao criar subtarefa.');
+                        notifyByKey(
+                            ctx,
+                            'generic.error.unexpected',
+                            {},
+                            'error',
+                            'Erro',
+                            result.data && result.data.error ? result.data.error : 'Erro ao criar subtarefa.'
+                        );
                         button.disabled = false;
                     })
                     .catch(function () {
-                        ctx.notify('error', 'Erro', 'Erro ao criar subtarefa.');
+                        notifyByKey(
+                            ctx,
+                            'generic.error.connection',
+                            {},
+                            'error',
+                            'Erro',
+                            'Erro ao criar subtarefa.'
+                        );
                         button.disabled = false;
                     });
             });

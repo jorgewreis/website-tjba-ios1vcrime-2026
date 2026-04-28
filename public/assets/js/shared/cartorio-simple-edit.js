@@ -55,6 +55,18 @@
         };
     }
 
+    function notifyByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        const catalog = App.ToastCatalog;
+        if (!catalog || typeof catalog.notifyByKey !== 'function') {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+            return;
+        }
+
+        catalog.notifyByKey(key, vars || {}).catch(function () {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+        });
+    }
+
     function bindBackButton(buttonId, href) {
         const button = global.document.getElementById(buttonId);
         if (!button || !href) {
@@ -118,7 +130,11 @@
                 .then(function (response) { return response.json(); })
                 .then(function (data) {
                     if (data.success) {
-                        notify('success', 'Sucesso', settings.updateSuccessMessage || 'Alterações salvas.');
+                        if (settings.updateSuccessMessage) {
+                            notify('success', 'Sucesso', settings.updateSuccessMessage);
+                        } else {
+                            notifyByKey('cartorio.guias.edit.save.success', {}, 'success', 'Sucesso', 'Alterações salvas.');
+                        }
                         state.initialObservation = payload.observacoes;
                         syncSaveDisabled();
                         return;
@@ -127,7 +143,7 @@
                     saveButton.disabled = false;
                 })
                 .catch(function () {
-                    notify('error', 'Erro', 'Erro de conexão.');
+                    notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
                     saveButton.disabled = false;
                 });
         });
@@ -149,7 +165,11 @@
                 .then(function (response) { return response.json(); })
                 .then(function (data) {
                     if (data.success) {
-                        notify('info', 'Informação', settings.cancelSuccessMessage || 'Tarefa cancelada com sucesso.');
+                        if (settings.cancelSuccessMessage) {
+                            notify('info', 'Informação', settings.cancelSuccessMessage);
+                        } else {
+                            notifyByKey('generic.task.cancel.success', {}, 'info', 'Informação', 'Tarefa cancelada com sucesso.');
+                        }
                         if (settings.cancelAction === 'redirect') {
                             global.location.href = settings.backHref;
                             return;
@@ -161,7 +181,7 @@
                     button.disabled = false;
                 })
                 .catch(function () {
-                    notify('error', 'Erro', 'Erro de conexão.');
+                    notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
                     button.disabled = false;
                 });
         });
@@ -202,7 +222,7 @@
                     button.disabled = false;
                 })
                 .catch(function () {
-                    notify('error', 'Erro', 'Erro de conexão.');
+                    notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
                     button.disabled = false;
                 });
         });

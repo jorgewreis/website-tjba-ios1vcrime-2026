@@ -7,6 +7,10 @@
         return App.Page || null;
     }
 
+    function getToastCatalog() {
+        return App.ToastCatalog || null;
+    }
+
     function buildNotify(pageTools) {
         return function notify(type, title, message) {
             if (pageTools && typeof pageTools.notify === 'function') {
@@ -187,6 +191,16 @@
         const selector = options.removeSelector || '.js-desalocar';
         const confirmMessage = options.removeConfirmMessage || 'Clique novamente para confirmar a remoção da alocação.';
         const successMessage = options.removeSuccessMessage || 'Alocação removida.';
+        const toastCatalog = getToastCatalog();
+        const notifyByKey = function (key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+            if (toastCatalog && typeof toastCatalog.notifyByKey === 'function') {
+                toastCatalog.notifyByKey(key, vars || {}).catch(function () {
+                    notify(fallbackType, fallbackTitle, fallbackMessage);
+                });
+                return;
+            }
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+        };
         const requireSecondClick = pageTools && typeof pageTools.createSecondClickGuard === 'function'
             ? pageTools.createSecondClickGuard()
             : (function () {
@@ -234,7 +248,17 @@
                 })
                 .then(function (result) {
                     if (result.ok && result.data && result.data.deleted) {
-                        notify('success', 'Sucesso', successMessage);
+                        if (options.removeSuccessMessage) {
+                            notify('success', 'Sucesso', successMessage);
+                        } else {
+                            notifyByKey(
+                                'cartorio.allocation.remove.success',
+                                {},
+                                'success',
+                                'Sucesso',
+                                successMessage
+                            );
+                        }
                         global.setTimeout(function () {
                             global.location.reload();
                         }, 800);
@@ -244,10 +268,26 @@
                     const errorMessage = result.data && result.data.error
                         ? result.data.error
                         : 'Falha ao remover alocação.';
-                    notify('error', 'Erro', errorMessage);
+                    if (result.data && result.data.error) {
+                        notify('error', 'Erro', errorMessage);
+                    } else {
+                        notifyByKey(
+                            'cartorio.allocation.remove.error',
+                            {},
+                            'error',
+                            'Erro',
+                            errorMessage
+                        );
+                    }
                 })
                 .catch(function () {
-                    notify('error', 'Erro', 'Erro de conexão.');
+                    notifyByKey(
+                        'generic.error.connection',
+                        {},
+                        'error',
+                        'Erro',
+                        'Erro de conexão.'
+                    );
                 });
         });
     }

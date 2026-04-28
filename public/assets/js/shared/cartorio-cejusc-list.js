@@ -29,6 +29,42 @@
         };
     }
 
+    function queueByKey(ctx, key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        const catalog = App.ToastCatalog;
+        if (!catalog || typeof catalog.resolve !== 'function') {
+            ctx.queuePostReloadToast(fallbackType, fallbackTitle, fallbackMessage);
+            return Promise.resolve();
+        }
+
+        return catalog.resolve(key, vars || {})
+            .then(function (toast) {
+                if (!toast || !toast.message) {
+                    ctx.queuePostReloadToast(fallbackType, fallbackTitle, fallbackMessage);
+                    return;
+                }
+                ctx.queuePostReloadToast(
+                    toast.type || fallbackType,
+                    toast.title || fallbackTitle,
+                    toast.message
+                );
+            })
+            .catch(function () {
+                ctx.queuePostReloadToast(fallbackType, fallbackTitle, fallbackMessage);
+            });
+    }
+
+    function notifyByKey(ctx, key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        const catalog = App.ToastCatalog;
+        if (!catalog || typeof catalog.notifyByKey !== 'function') {
+            ctx.notify(fallbackType, fallbackTitle, fallbackMessage);
+            return;
+        }
+
+        catalog.notifyByKey(key, vars || {}).catch(function () {
+            ctx.notify(fallbackType, fallbackTitle, fallbackMessage);
+        });
+    }
+
     function bindConcludeButtons(ctx, endpoint) {
         global.document.querySelectorAll('.btn-concluir-subtarefa').forEach(function (button) {
             button.addEventListener('click', function () {
@@ -48,19 +84,41 @@
                     .then(function (response) { return response.json(); })
                     .then(function (data) {
                         if (data.success) {
-                            ctx.queuePostReloadToast('success', 'Sucesso', 'Subtarefa concluída com sucesso.');
-                            if (data.tarefa_principal_concluida && data.tarefa_principal_mensagem) {
-                                ctx.queuePostReloadToast('success', 'Sucesso', data.tarefa_principal_mensagem);
-                            }
-                            global.location.reload();
+                            queueByKey(
+                                ctx,
+                                'cartorio.subtask.conclude.success',
+                                {},
+                                'success',
+                                'Sucesso',
+                                'Subtarefa concluída com sucesso.'
+                            ).then(function () {
+                                if (data.tarefa_principal_concluida && data.tarefa_principal_mensagem) {
+                                    ctx.queuePostReloadToast('success', 'Sucesso', data.tarefa_principal_mensagem);
+                                }
+                                global.location.reload();
+                            });
                             return;
                         }
 
-                        ctx.notify('error', 'Erro', data.error || 'Erro ao concluir.');
+                        notifyByKey(
+                            ctx,
+                            'generic.error.unexpected',
+                            {},
+                            'error',
+                            'Erro',
+                            data.error || 'Erro ao concluir.'
+                        );
                         button.disabled = false;
                     })
                     .catch(function () {
-                        ctx.notify('error', 'Erro', 'Erro de conexão.');
+                        notifyByKey(
+                            ctx,
+                            'generic.error.connection',
+                            {},
+                            'error',
+                            'Erro',
+                            'Erro de conexão.'
+                        );
                         button.disabled = false;
                     });
             });

@@ -56,6 +56,18 @@
         };
     }
 
+    function notifyByKey(key, vars, fallbackType, fallbackTitle, fallbackMessage) {
+        const catalog = App.ToastCatalog;
+        if (!catalog || typeof catalog.notifyByKey !== 'function') {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+            return;
+        }
+
+        catalog.notifyByKey(key, vars || {}).catch(function () {
+            notify(fallbackType, fallbackTitle, fallbackMessage);
+        });
+    }
+
     function initialize(config) {
         const settings = Object.assign({
             storageKey: 'cartorio.postReloadToast'
@@ -174,14 +186,20 @@
                         updateButtonState();
                         return;
                     }
-                    notify('success', 'Sucesso', 'Alterações salvas.');
+                    notifyByKey(
+                        'cartorio.guias.edit.save.success',
+                        {},
+                        'success',
+                        'Sucesso',
+                        'Alterações salvas.'
+                    );
                     if (data.valor_multa_calculado) {
                         notify('success', 'Cálculo automático', 'Cálculo realizado automaticamente pelo sistema. Valor da pena de multa: ' + data.valor_multa_calculado + '.');
                     }
                     global.location.href = settings.backHref || '/frame.php?page=guias';
                 })
                 .catch(function () {
-                    notify('error', 'Erro', 'Erro ao salvar.');
+                    notifyByKey('generic.error.save', {}, 'error', 'Erro', 'Erro ao salvar.');
                     updateButtonState();
                 });
         });
@@ -201,11 +219,17 @@
                         button.disabled = false;
                         return;
                     }
-                    notify('success', 'Sucesso', 'Guia cancelada.');
+                    notifyByKey(
+                        'cartorio.guias.edit.cancel.success',
+                        {},
+                        'success',
+                        'Sucesso',
+                        'Guia cancelada.'
+                    );
                     global.location.href = settings.backHref || '/frame.php?page=guias';
                 })
                 .catch(function () {
-                    notify('error', 'Erro', 'Erro ao cancelar.');
+                    notifyByKey('generic.error.cancel', {}, 'error', 'Erro', 'Erro ao cancelar.');
                     button.disabled = false;
                 });
         });
@@ -239,7 +263,7 @@
                     global.location.href = settings.backHref || '/frame.php?page=guias';
                 })
                 .catch(function () {
-                    notify('error', 'Erro', 'Erro ao excluir.');
+                    notifyByKey('generic.error.delete', {}, 'error', 'Erro', 'Erro ao excluir.');
                     button.disabled = false;
                 });
         });

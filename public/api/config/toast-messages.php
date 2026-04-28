@@ -26,7 +26,7 @@ $body = [
         [
             'version' => 'unknown',
             'locale' => 'pt-BR',
-            'generatedAt' => gmdate('c'),
+            'generatedAt' => gmdate('c', $lastModifiedTs),
         ],
         (array) ($catalog['meta'] ?? [])
     ),

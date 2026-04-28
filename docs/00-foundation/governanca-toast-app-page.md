@@ -9,6 +9,9 @@ Padronizar o uso de notificacoes e fila de toast pos-reload no frontend JavaScri
 - `App.Page.notify(type, title, message)`
 - `App.Page.queuePostReloadToast(typeOrPayload, title, message, storageKey)`
 - `App.Page.flushPostReloadToast(storageKey, defaults)`
+- `App.ToastCatalog.load(options)`
+- `App.ToastCatalog.resolve(key, vars, options)`
+- `App.ToastCatalog.notifyByKey(key, vars, options)`
 
 ## Regras operacionais
 
@@ -71,3 +74,4 @@ Padronizar o uso de notificacoes e fila de toast pos-reload no frontend JavaScri
 ## Historico
 
 - 2026-04-28: documento criado com base em varredura global inicial de duplicacoes JS.
+- 2026-04-28: adicionada camada central `App.ToastCatalog` (consumo do endpoint `/api/config/toast-messages.php`) sem migracao funcional de telas.
