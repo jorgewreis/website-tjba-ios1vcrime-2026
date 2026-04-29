@@ -7,6 +7,8 @@ $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/CartasRecebidasService.php';
+require_once $basePath . '/app/helpers/UsuarioPerfisAutorizacao.php';
+require_once $basePath . '/app/access/AccessEvaluator.php';
 
 if (!bootstrapRequireTrustedPostRequest()) {
     http_response_code(403);
@@ -19,6 +21,12 @@ $userId = $_SESSION['id_usuario'] ?? null;
 if ($userId === null || trim((string) $userId) === '') {
     http_response_code(401);
     echo json_encode(['error' => 'Usuário não autenticado.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+$userPerfis = UsuarioPerfisAutorizacao::perfisDoUsuario(trim((string) $userId));
+if (!AccessEvaluator::canAccessPage('cartasrecebidasedit', $userPerfis)) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Seu perfil não tem permissão para cancelar esta tarefa.'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
