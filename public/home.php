@@ -1253,8 +1253,6 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
         if (frame) {
             frame.addEventListener('load', syncMenuFromFrameSrc);
             setTimeout(syncMenuFromFrameSrc, 0);
-            // Backup para mudanças de rota internas no iframe.
-            setInterval(syncMenuFromFrameSrc, 500);
         }
 
         document.addEventListener('DOMContentLoaded', function () {

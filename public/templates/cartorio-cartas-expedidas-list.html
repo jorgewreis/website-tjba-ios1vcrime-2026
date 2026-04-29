@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Cartas Expedidas - Primeira Vara Crime de Ilhéus</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <!-- IMPORT STYLES -->
+        <link rel="stylesheet" href="./../../public/assets/css/shared/reset.css">
+        <link rel="stylesheet" href="./../../public/assets/css/shared/color.css">
+        <link rel="stylesheet" href="./../../public/assets/css/shared/layout.css">
+        <link rel="stylesheet" href="./../../public/assets/css/shared/page.css">
+        <link rel="stylesheet" href="./../../public/assets/css/shared/form.css">
+        <link rel="stylesheet" href="./../../public/assets/css/shared/table.css">
+        <link rel="stylesheet" href="./../../public/assets/css/shared/toast.css">
+        <link rel="stylesheet" href="./../../public/assets/css/shared/page.css">
+
+        <!-- IMPORT - FLATICON -->
+        <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+    </head>
+<body class="page-internal">
+
+    <!-- SPACING -->
+    <div class="spacing-top-page"></div>
+
+    <!-- HEADER PAGE -->
+    <div class="header-page">
+
+        <!-- MAPA DE NAVEGAÇÃO DO SITE -->
+        <div class="location">
+            <span class="all">Interno - Cartório - Cartas Expedidas -</span>
+            <span class="specific">Lista</span>
+        </div>
+
+        <!-- TÍTULO E DESCRIÇÃO DA PÁGINA -->
+        <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;">Cartas Expedidas</h1>
+        <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Lista de cartas expedidas pelo cartório para controle e envio.</p>
+    </div>
+
+    <!-- CARD PAGE -->
+    <div class="container-full card-page">
+
+        <!-- TITLE CARD -->
+        <div class="card-title" style="padding-top: 40px !important;">
+            <div class="display-flex row row-full justify-start">
+                <h2>Lista</h2>
+            </div>
+        </div>
+
+        <!-- SUBTITLE SECTION CARD -->
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 600; color: var(--color-gray-900); font-size: 13px;">Pesquisa e cadastro de cartas expedidas</span>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md align-center">
+                <input type="text" class="width-400 height-md" id="search-input" placeholder="Pesquisar" value="">
+                <button type="button" class="btn btn-primary" id="novo-cadastro-btn">Novo cadastro</button>
+            </div>            
+        </div>
+
+        <!-- SUBTITLE SECTION CARD - FILTERS -->        
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 600; color: var(--color-gray-900); 
+                font-size: 13px;">Filtros</span>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md align-center">
+                <select class="width-400 height-md" id="filter-status">
+                    <option value="">Todos os status</option>
+                    <option value="pendente">Pendente</option>
+                    <option value="em_andamento">Em andamento</option>
+                    <option value="concluída">Finalizada</option>
+                    <option value="cancelada">Cancelada</option>
+                </select>
+                <select class="width-600 height-md" id="filter-finalidade">
+                    <option value="">Todas as finalidades</option>
+                    <option value="intimação_para_audiência">Intimação para Audiência</option>
+                    <option value="intimação_de_decisão_interlocutória">Intimação de Decisão Interlocutória</option>
+                    <option value="intimação_da_sentença">Intimação da Sentença</option>
+                    <option value="citação_para_apresentar_defesa">Citação para apresentar Defesa</option>
+                    <option value="citação_para_apresentar_alegações_finais">Citação para apresentar Alegações Finais</option>
+                    <option value="suspensão_condicional">Suspensão Condicional</option>
+                    <option value="outra">Outra não listada</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- SUBTITLE SECTION CARD - FILTERS INFO -->
+        <!-- Mostrar apenas se for selecionado algum filtro -->
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" 
+        style="background-color: var(--color-primary-bg-light);">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">                
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-primary-active); 
+                font-size: 12px; padding: 5px 0;">Lista com os seguintes filtros: Status [Pendente] + Finalidade [Intimação para Audiência]</span>
+            </div>
+        </div>
+
+        <!-- SUBTITLE SECTION CARD - ITEMS PER PAGE -->
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 600; color: var(--color-gray-900); 
+                font-size: 13px;">Itens por página</span>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md align-center">
+                <select class="width-300 height-md" id="items-per-page">
+                    <option value="10" selected>10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </div>                
+        </div>
+        
+        <!-- TITLE CARD -->
+        <div class="card-title" style="padding-top: 40px !important;">
+            <div class="display-flex row row-full justify-start">
+                <h2>Resultado</h2>
+            </div>
+        </div>
+
+        <!-- REGISTERS LIST -->
+        <div class="display-flex col col-full register">
+
+            <!-- Mostrar se não houver cartas expedidas -->
+            <div class="display-flex row row-full padding-x-sm padding-y-sm align-center justify-start border-bottom" 
+            style="background-color: var(--color-primary-bg-light);">
+                <div class="display-flex col col-fit align-center justify-start padding-x-lg padding-y-sm">
+                    <span class="text" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px;">Nenhum registro encontrado.</span>
+                </div>
+            </div>
+
+            <!-- Mostrar se houver cartas expedidas -->
+            <div class="display-flex row row-full padding-x-sm padding-y-sm align-center justify-between border-bottom">
+                <!-- LEFT -->
+                <div class="display-flex row row-fit justify-start align-center justify-start">
+                    <!-- DADOS DO PROCESSO -->
+                    <div class="display-flex col col-fit align-center justify-start padding-x-lg padding-y-sm">
+                        <div class="display-flex row row-fit">
+                            <span class="text" style="font-weight: 500; color: var(--color-gray-900); font-size: 10px; width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Ação Penal - Procedimento Ordinário</span>
+                        </div>
+                        <div class="display-flex row row-fit">
+                            <span class="text" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">8000643-80.2023.8.05.0103</span>
+                            <i class="fi fi-rr-copy" title="Clique para copiar" 
+                            style="font-size: 14px; color: var(--color-gray-900); cursor: pointer; margin-left: 8px;"></i>
+                        </div>
+                        <div class="display-flex row row-fit justify-start gap-y-sm align-center justify-start">
+                            <div class="display-flex col col-fit align-center" 
+                            style="background-color: black; border-radius: 4px; color: white; font-weight: 500; font-size: 9px; padding: 2px 8px 1px 8px;">SIGILOSO</div>
+                            <div class="display-flex col col-fit align-center" 
+                            style="background-color: crimson; border-radius: 4px; color: white; font-weight: 500; font-size: 9px; padding: 2px 8px 1px 8px;">RÉU PRESO</div>
+                        </div>
+                    </div>
+
+                    <!-- DADOS DA CARTA -->
+                    <div class="display-flex col col-fit justify-start align-center justify-start padding-x-lg">
+                        <div class="display-flex row row-fit">
+                            <span class="text" style="font-weight: 500; color: var(--color-gray-900); font-size: 10px;">Destino: São Paulo - SP</span>
+                        </div>
+                        <div class="display-flex row row-fit">
+                            <span class="text" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Intimação para Audiência</span>
+                        </div>
+                        <div class="display-flex row row-fit">
+                            <span class="text" style="font-weight: 500; color: var(--color-gray-900); font-size: 11px;">30 dias</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT -->
+                <div class="display-flex row row-fit gap-y-sm align-center justify-end">
+                    <div class="display-flex col padding-x-lg padding-y-sm">
+                        <div class="display-flex row row-fit">
+                            <span class="text" style="font-weight: 500; color: var(--color-gray-900); font-size: 10px;">Cadastrado em: 26/04/2026</span>                            
+                        </div>                        
+                        <div class="display-flex row row-full justify-end align-center" style="margin-top: 8px;">
+                            <button type="button" class="btn btn-primary height-sm" title="Editar">
+                                Editar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+            
+
+        <!-- PAGINATION INFO -->
+        <div class="card-buttons">
+            <span class="pagination-info">
+                Mostrando 1 de 1 página com até 10 itens por página
+            </span>
+            <div class="pagination-controls">
+            </div>
+        </div> 
+    </div>
+
+    <!-- Develop Info -->
+    <div class="footer-page">
+        <div class="location">
+            <span class="all">Aplicativo web desenvolvido integralmente por </span>
+            <span class="specific">Jorge Reis Develop</span>
+            <span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span>
+        </div>
+    </div>
+
+    
+
+</body>
+</html>
