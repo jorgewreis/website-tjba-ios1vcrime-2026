@@ -17,4 +17,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(produtividade): remove legacy Produtividade class and update documentation** `[445e31d]`
 - **refactor(authorization): enhance deletion authorization logic and streamline endpoint integration** `[1d3c606]`
 - **refactor(toast): implement dedicated storage key for Sala de Midias and enhance API response handling** `[f130ac5]`
+- **refactor(home): remove internal route change backup for iframe synchronization** `[27a2d943]`
 
