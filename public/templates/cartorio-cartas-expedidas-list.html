@@ -33,19 +33,17 @@
             <span class="all">Interno - Cartório - Cartas Expedidas -</span>
             <span class="specific">Lista</span>
         </div>
-
-        <!-- TÍTULO E DESCRIÇÃO DA PÁGINA -->
-        <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;">Cartas Expedidas</h1>
-        <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Lista de cartas expedidas pelo cartório para controle e envio.</p>
     </div>
 
     <!-- CARD PAGE -->
     <div class="container-full card-page">
 
         <!-- TITLE CARD -->
-        <div class="card-title" style="padding-top: 40px !important;">
-            <div class="display-flex row row-full justify-start">
-                <h2>Lista</h2>
+        <div class="card-title">
+            <div class="display-flex col col-full justify-start">
+                <!-- TÍTULO E DESCRIÇÃO DA PÁGINA -->
+                <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;">Cartas Expedidas</h1>
+                <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Lista de cartas expedidas pelo cartório para controle e envio.</p>
             </div>
         </div>
 
@@ -123,64 +121,289 @@
         <!-- REGISTERS LIST -->
         <div class="display-flex col col-full register">
 
-            <!-- Mostrar se não houver cartas expedidas -->
+            <!-- Informa a quantidade de registros encontrados (x ou nenhum) -->
             <div class="display-flex row row-full padding-x-sm padding-y-sm align-center justify-start border-bottom" 
             style="background-color: var(--color-primary-bg-light);">
                 <div class="display-flex col col-fit align-center justify-start padding-x-lg padding-y-sm">
-                    <span class="text" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px;">Nenhum registro encontrado.</span>
+                    <span class="text" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px;">16 registros encontrados.</span>
                 </div>
             </div>
 
-            <!-- Mostrar se houver cartas expedidas -->
-            <div class="display-flex row row-full padding-x-sm padding-y-sm align-center justify-between border-bottom">
-                <!-- LEFT -->
-                <div class="display-flex row row-fit justify-start align-center justify-start">
-                    <!-- DADOS DO PROCESSO -->
-                    <div class="display-flex col col-fit align-center justify-start padding-x-lg padding-y-sm">
-                        <div class="display-flex row row-fit">
-                            <span class="text" style="font-weight: 500; color: var(--color-gray-900); font-size: 10px; width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Ação Penal - Procedimento Ordinário</span>
+            <!-- Mostrar somente se houver cartas expedidas -->
+
+            <!-- Linha completa do registro -->
+            <div class="register-line">
+                <!-- Lado esquerdo da linha -->
+                <div class="register-line-left">
+                    <!-- Dados do Processo -->
+                    <div class="register-dados-processo">
+                        <!-- Prioridades do Processo -->
+                        <div class="processo-prioridades">
+                            <div class="badge-prioridade black">Sigiloso</div>
+                            <div class="badge-prioridade red">Réu Preso</div>
+                            <div class="badge-prioridade blue">Idoso</div>
                         </div>
-                        <div class="display-flex row row-fit">
-                            <span class="text" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">8000643-80.2023.8.05.0103</span>
-                            <i class="fi fi-rr-copy" title="Clique para copiar" 
-                            style="font-size: 14px; color: var(--color-gray-900); cursor: pointer; margin-left: 8px;"></i>
+                        <!-- Classe e Número do Processo -->
+                        <div class="processo-classe-numero">
+                            <div class="processo-classe valid">Ação Penal - Procedimento Ordinário - 280</div>
+                            <div class="processo-numero">8000643-80.2023.8.05.0103</div>
+                            <div class="processo-assuntos valid">Tráfico de drogas, entorpecentes e condutas afins</div>
                         </div>
-                        <div class="display-flex row row-fit justify-start gap-y-sm align-center justify-start">
-                            <div class="display-flex col col-fit align-center" 
-                            style="background-color: black; border-radius: 4px; color: white; font-weight: 500; font-size: 9px; padding: 2px 8px 1px 8px;">SIGILOSO</div>
-                            <div class="display-flex col col-fit align-center" 
-                            style="background-color: crimson; border-radius: 4px; color: white; font-weight: 500; font-size: 9px; padding: 2px 8px 1px 8px;">RÉU PRESO</div>
+                        <!-- Button para copiar o número do processo -->
+                        <div class="processo-numero-copy">
+                            <i class="fi fi-rr-copy" title="Copiar número do processo"></i>
                         </div>
                     </div>
-
-                    <!-- DADOS DA CARTA -->
-                    <div class="display-flex col col-fit justify-start align-center justify-start padding-x-lg">
-                        <div class="display-flex row row-fit">
-                            <span class="text" style="font-weight: 500; color: var(--color-gray-900); font-size: 10px;">Destino: São Paulo - SP</span>
+                    <!-- Dados da Carta -->
+                    <div class="register-dados-carta">
+                        <div class="carta-destino">
+                            <div class="carta-destino-label">Destino: <strong>São Paulo - SP</strong></div>
                         </div>
-                        <div class="display-flex row row-fit">
-                            <span class="text" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Intimação para Audiência</span>
+                        <div class="carta-finalidade">
+                            <div class="carta-finalidade-label">Finalidade: <strong>Intimação para Audiência</strong></div>
                         </div>
-                        <div class="display-flex row row-fit">
-                            <span class="text" style="font-weight: 500; color: var(--color-gray-900); font-size: 11px;">30 dias</span>
+                        <div class="carta-prazo">
+                            <div class="carta-prazo-label">Prazo: <strong>30 dias</strong></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- RIGHT -->
-                <div class="display-flex row row-fit gap-y-sm align-center justify-end">
-                    <div class="display-flex col padding-x-lg padding-y-sm">
-                        <div class="display-flex row row-fit">
-                            <span class="text" style="font-weight: 500; color: var(--color-gray-900); font-size: 10px;">Cadastrado em: 26/04/2026</span>                            
-                        </div>                        
-                        <div class="display-flex row row-full justify-end align-center" style="margin-top: 8px;">
-                            <button type="button" class="btn btn-primary height-sm" title="Editar">
+                <!-- Lado direito da linha -->
+                <div class="register-line-right">
+                    <!-- Dados da Subtarefa -->
+                    <div class="register-dados-subtarefa">
+                        <div class="subtarefa-status">
+                            <div class="subtarefa-status-label pending">Aguardando assinatura da magistrada</div>
+                        </div>
+                        <div class="subtarefa-button">
+                            <div class="subtarefa-button-label">
+                                Data da assinatura
+                            </div>
+                            <input type="date" class="width-300 height-sm" id="data-assinatura" value="26/04/2026">
+                        </div>
+                    </div>
+
+                    <!-- Dados de Registro -->
+                    <div class="register-dados-registro">
+                        <div class="registro-cadastro">
+                            <div class="registro-cadastro-label">Cadastrado em: <strong>26/04/2026</strong></div>
+                        </div>
+                        <!-- Buttons -->
+                        <div class="registro-editar">
+                            <button type="button" class="btn btn-primary-outline height-sm" title="Editar">
+                                Editar
+                            </button>
+                            <button type="button" class="btn btn-primary height-sm" title="Concluir">
+                                Prosseguir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <!-- Linha completa do registro -->
+            <div class="register-line">
+                <!-- Lado esquerdo da linha -->
+                <div class="register-line-left">
+                    <!-- Dados do Processo -->
+                    <div class="register-dados-processo">
+                        <!-- Prioridades do Processo -->
+                        <div class="processo-prioridades">
+                            <div class="badge-prioridade black">Sigiloso</div>
+                            <div class="badge-prioridade red">PROTETIVA</div>
+                        </div>
+                        <!-- Classe e Número do Processo -->
+                        <div class="processo-classe-numero">
+                            <div class="processo-classe valid">Medidas Protetivas de Urgência - Lei Maria da Penha</div>
+                            <div class="processo-numero">8000922-23.2025.8.05.0103</div>
+                            <div class="processo-assuntos valid">Lesão Corporal | Contra Mulher</div>
+                        </div>
+                        <!-- Button para copiar o número do processo -->
+                        <div class="processo-numero-copy">
+                            <i class="fi fi-rr-copy" title="Copiar número do processo"></i>
+                        </div>
+                    </div>
+                    <!-- Dados da Carta -->
+                    <div class="register-dados-carta">
+                        <div class="carta-destino">
+                            <div class="carta-destino-label">Destino: <strong>Rio de Janeiro - RJ</strong></div>
+                        </div>
+                        <div class="carta-finalidade">
+                            <div class="carta-finalidade-label">Finalidade: <strong>Intimação da Decisão Interlocutória</strong></div>
+                        </div>
+                        <div class="carta-prazo">
+                            <div class="carta-prazo-label">Prazo: <strong>60 dias</strong></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lado direito da linha -->
+                <div class="register-line-right">
+                    <!-- Dados da Subtarefa -->
+                    <div class="register-dados-subtarefa">
+                        <div class="subtarefa-status">
+                            <div class="subtarefa-status-label current">Aguardando cumprimento</div>
+                        </div>
+                        <div class="subtarefa-button">
+                            <div class="subtarefa-button-label">
+                                Status do cumprimento
+                            </div>
+                            <select class="width-500 height-sm" id="status-cumprimento">
+                                <option value="">Selecione...</option>
+                                <option value="nao_cumprida">Não cumprida</option>
+                                <option value="cumprida_negativamente">Cumprida negativamente</option>
+                                <option value="cumprida_parcialmente">Cumprida parcialmente</option>
+                                <option value="cumprida_integralmente">Cumprida integralmente</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Dados de Registro -->
+                    <div class="register-dados-registro">
+                        <div class="registro-cadastro">
+                            <div class="registro-cadastro-label">Cadastrado em: <strong>29/03/2026</strong></div>
+                        </div>
+                        <!-- Buttons -->
+                        <div class="registro-editar">
+                            <button type="button" class="btn btn-primary-outline height-sm" title="Editar">
+                                Editar
+                            </button>
+                            <button type="button" class="btn btn-primary height-sm" title="Concluir">
+                                Prosseguir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <!-- Linha completa do registro -->
+            <div class="register-line">
+                <!-- Lado esquerdo da linha -->
+                <div class="register-line-left">
+                    <!-- Dados do Processo -->
+                    <div class="register-dados-processo">
+                        <!-- Prioridades do Processo -->
+                        <div class="processo-prioridades">
+                            <!-- Nenhuma prioridade cadastrada -->
+                        </div>
+                        <!-- Classe e Número do Processo -->
+                        <div class="processo-classe-numero">
+                            <div class="processo-classe">Processo</div> 
+                            <!-- Quando não houver classe cadastrada, exibir "Processo" -->
+                            <div class="processo-numero">8000922-23.2025.8.05.0103</div>
+                            <div class="processo-assuntos">Nenhum assunto cadastrado</div>
+                            <!-- Quando não houver assuntos cadastrados, exibir "Nenhum assunto cadastrado" -->
+                        </div>
+                        <!-- Button para copiar o número do processo -->
+                        <div class="processo-numero-copy">
+                            <i class="fi fi-rr-copy" title="Copiar número do processo"></i>
+                        </div>
+                    </div>
+                    <!-- Dados da Carta -->
+                    <div class="register-dados-carta">
+                        <div class="carta-destino">
+                            <div class="carta-destino-label">Destino: <strong>Rio de Janeiro - RJ</strong></div>
+                        </div>
+                        <div class="carta-finalidade">
+                            <div class="carta-finalidade-label">Finalidade: <strong>Intimação da Decisão Interlocutória</strong></div>
+                        </div>
+                        <div class="carta-prazo">
+                            <div class="carta-prazo-label">Prazo: <strong>60 dias</strong></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lado direito da linha -->
+                <div class="register-line-right">
+                    <!-- Dados da Subtarefa -->
+                    <div class="register-dados-subtarefa">
+                        <div class="subtarefa-status">
+                            <div class="registro-cadastro-label">Concluída em: <strong>29/03/2026</strong> - 12d</div>
+                            <div class="subtarefa-status-label finished">Finalizada</div>
+                        </div>
+                    </div>
+                    <!-- Dados de Registro -->
+                    <div class="register-dados-registro">
+                        <div class="registro-cadastro">
+                            <div class="registro-cadastro-label">Cadastrado em: <strong>29/03/2026</strong></div>
+                        </div>
+                        <!-- Buttons -->
+                        <div class="registro-editar">
+                            <button type="button" class="btn btn-primary-outline height-sm" title="Editar">
                                 Editar
                             </button>
                         </div>
                     </div>
                 </div>
+
             </div>
+
+            <!-- Linha completa do registro -->
+            <div class="register-line">
+                <!-- Lado esquerdo da linha -->
+                <div class="register-line-left">
+                    <!-- Dados do Processo -->
+                    <div class="register-dados-processo">
+                        <!-- Prioridades do Processo -->
+                        <div class="processo-prioridades">
+                            <!-- Nenhuma prioridade cadastrada -->
+                        </div>
+                        <!-- Classe e Número do Processo -->
+                        <div class="processo-classe-numero">
+                            <div class="processo-classe">Processo</div> 
+                            <!-- Quando não houver classe cadastrada, exibir "Processo" -->
+                            <div class="processo-numero">8000922-23.2025.8.05.0103</div>
+                            <div class="processo-assuntos">Nenhum assunto cadastrado</div>
+                            <!-- Quando não houver assuntos cadastrados, exibir "Nenhum assunto cadastrado" -->
+                        </div>
+                        <!-- Button para copiar o número do processo -->
+                        <div class="processo-numero-copy">
+                            <i class="fi fi-rr-copy" title="Copiar número do processo"></i>
+                        </div>
+                    </div>
+                    <!-- Dados da Carta -->
+                    <div class="register-dados-carta">
+                        <div class="carta-destino">
+                            <div class="carta-destino-label">Destino: <strong>Rio de Janeiro - RJ</strong></div>
+                        </div>
+                        <div class="carta-finalidade">
+                            <div class="carta-finalidade-label">Finalidade: <strong>Intimação da Decisão Interlocutória</strong></div>
+                        </div>
+                        <div class="carta-prazo">
+                            <div class="carta-prazo-label">Prazo: <strong>60 dias</strong></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lado direito da linha -->
+                <div class="register-line-right">
+                    <!-- Dados da Subtarefa -->
+                    <div class="register-dados-subtarefa">
+                        <div class="subtarefa-status">
+                            <div class="registro-cadastro-label">Cancelada em: <strong>29/03/2026</strong></div>
+                            <div class="subtarefa-status-label cancelled">Cancelada</div>
+                        </div>
+                    </div>
+                    <!-- Dados de Registro -->
+                    <div class="register-dados-registro">
+                        <div class="registro-cadastro">
+                            <div class="registro-cadastro-label">Cadastrado em: <strong>29/03/2026</strong></div>
+                        </div>
+                        <!-- Buttons -->
+                        <div class="registro-editar">
+                            <button type="button" class="btn btn-primary-outline height-sm" title="Editar">
+                                Editar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
         </div>
             
 
