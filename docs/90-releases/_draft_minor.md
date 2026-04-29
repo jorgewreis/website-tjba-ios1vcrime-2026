@@ -4,18 +4,14 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix(api): refine status-bulk endpoint logging and enhance error handling** `[d6456ad]`
-- **feat(toast): integrate toast catalog for improved notification handling** `[976da34]`
-- **feat(toast): enhance notification system with new success messages and centralized handling** `[313e8b5]`
-- **feat(toast): expand notification messages and improve handling across various modules** `[b3c2100]`
-- **feat(toast): add new success messages for audience management and improve notification handling** `[cfeead2]`
-- **feat(toast): add new error and confirmation messages for various actions** `[5644a5c]`
-- **refactor(confirmations): streamline confirmation actions for task deletions and removals** `[593b574]`
-- **refactor(buttons): standardize button layouts and improve accessibility** `[e27d0fd]`
-- **refactor(toast): update toast notification guidelines and improve button accessibility** `[a2bfca9]`
-- **refactor(notifications): enhance notifyByKey function across multiple modules** `[585e3f4]`
-- **refactor(produtividade): remove legacy Produtividade class and update documentation** `[445e31d]`
-- **refactor(authorization): enhance deletion authorization logic and streamline endpoint integration** `[1d3c606]`
-- **refactor(toast): implement dedicated storage key for Sala de Midias and enhance API response handling** `[f130ac5]`
-- **refactor(home): remove internal route change backup for iframe synchronization** `[27a2d943]`
+- **fix(cadastro_estudantes): enhance user registration logic and error handling** `[218485d]`
+- **fix(cadastro-form): prevent multiple form submissions and update timeout handling** `[74c515e]`
+- **fix(config): update session idle timeout and enhance session activity management** `[5be85b3]`
+- **feat(dashboard): add allocation rules and user-specific allocation discovery** `[e07d3a7]`
+- **fix(dashboard): simplify dashboard card metrics and improve status filtering** `[53e4abe]`
+- **fix(dashboard): enhance allocation card filtering and add type constraint** `[5adb19c]`
+- **fix(audiencias): update status handling and visibility logic in audience panels** `[685bd6f]`
+- **fix(security): improve logout handling and iframe navigation** `[0199893]`
+- **fix(api): enhance logging in status-bulk endpoint for better debugging** `[889922d]`
+- **refactor(status-bulk): update log file path and enhance CSS for cartas expedidas** `[10f3b6f]`
 
