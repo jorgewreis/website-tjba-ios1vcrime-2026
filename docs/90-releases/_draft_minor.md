@@ -23,4 +23,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(cartas-recebidas): update default items per page and enhance HTML structure** `[4af9f7b]`
 - **refactor(cartorio-cejusc-list): enhance HTML structure and improve filter functionality** `[3ab9709]`
 - **refactor(cartorio-ceapa-list): update default items per page and enhance HTML structure** `[0f980b1]`
+- **refactor(cartorio-views): standardize "no records found" message and enhance HTML structure** `[ae62d47]`
 
