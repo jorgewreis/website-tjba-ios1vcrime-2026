@@ -27,7 +27,7 @@ $processoFilter = trim($_GET['processo'] ?? '');
 $allowedPerPage = [10, 25, 50, 100];
 $itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 25;
 if (!in_array($itemsPerPage, $allowedPerPage, true)) {
-    $itemsPerPage = 25;
+    $itemsPerPage = 10;
 }
 
 $pageNumberParam = $_GET['page_number'] ?? null;
@@ -276,7 +276,14 @@ if ($totalPages > 0) {
                 <?php
                     $activeFilters = [];
                     if ($statusFilter !== '') {
-                        $activeFilters[] = 'Status [' . htmlspecialchars($statusFilter, ENT_QUOTES) . ']';
+                        $statusFilterLabels = [
+                            'pendente' => 'Pendente',
+                            'em_andamento' => 'Em andamento',
+                            'concluída' => 'Finalizada',
+                            'cancelada' => 'Cancelada',
+                        ];
+                        $statusFilterDisplay = $statusFilterLabels[$statusFilter] ?? $statusFilter;
+                        $activeFilters[] = 'Status [' . htmlspecialchars($statusFilterDisplay, ENT_QUOTES) . ']';
                     }
                     if ($finalidadeFilter !== '') {
                         $activeFilters[] = 'Finalidade [' . htmlspecialchars($finalidadeFilter, ENT_QUOTES) . ']';
@@ -374,7 +381,9 @@ if ($totalPages > 0) {
                 
                 <!-- LINHA COMPLETA DO REGISTRO -->
                 <div class="register-line" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idCarta); ?>">
-                        
+                    
+                    <!-- Lado esquerdo da linha -->
+                    <div class="register-line-left">
                         <div class="col">
                             <?php if (!$tarefaConcluida): ?>
                                 <label class="button-table" title="Expandir detalhes">

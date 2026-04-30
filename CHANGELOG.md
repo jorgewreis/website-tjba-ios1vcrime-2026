@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0028
+
+**Data:** 2026-04-30 09:41:23 | **Commit:** `0a2ac41` | **Tipo:** `patch`
+
+- refactor(cartas-expedidas): update items per page default and enhance status filter display
+
 ## V. 1.97.0027
 
 **Data:** 2026-04-30 09:24:53 | **Commit:** `df3bef2` | **Tipo:** `patch`
@@ -4950,6 +4956,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
