@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0031
+
+**Data:** 2026-04-30 11:15:05 | **Commit:** `4af9f7b` | **Tipo:** `patch`
+
+- refactor(cartas-recebidas): update default items per page and enhance HTML structure
+
 ## V. 1.97.0030
 
 **Data:** 2026-04-30 10:09:55 | **Commit:** `39d463e` | **Tipo:** `patch`
@@ -4968,6 +4974,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
