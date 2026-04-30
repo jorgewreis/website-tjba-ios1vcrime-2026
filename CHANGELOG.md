@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0032
+
+**Data:** 2026-04-30 11:19:28 | **Commit:** `3ab9709` | **Tipo:** `patch`
+
+- refactor(cartorio-cejusc-list): enhance HTML structure and improve filter functionality
+
 ## V. 1.97.0031
 
 **Data:** 2026-04-30 11:15:05 | **Commit:** `4af9f7b` | **Tipo:** `patch`
@@ -4974,6 +4980,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
