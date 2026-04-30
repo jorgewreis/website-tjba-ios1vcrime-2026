@@ -326,263 +326,264 @@ if ($totalPages > 0) {
         </div>
 
             <!-- REGISTERS LIST -->
-            <div class="display-flex col col-full register">
+        <div class="display-flex col col-full register">
+
+        
+            <!-- Informa a quantidade de registros encontrados (x ou nenhum) -->
+            <div class="display-flex row row-full padding-x-sm padding-y-sm align-center justify-start border-bottom" 
+            style="background-color: var(--color-primary-bg-light);">
+                <div class="display-flex col col-fit align-center justify-start padding-x-lg padding-y-sm">
+                    <span class="text" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px;">
+                        <?php
+                            $totalRegistros = (int) ($totalDocuments ?? 0);
+                            if ($totalRegistros === 0) {
+                                echo 'nenhum registro encontrado';
+                            } else {
+                                $totalRegistrosText = $totalRegistros === 1 ? 'registro encontrado' : 'registros encontrados';
+                                echo htmlspecialchars((string) $totalRegistros, ENT_QUOTES) . ' ' . htmlspecialchars($totalRegistrosText, ENT_QUOTES);
+                            }
+                        ?>
+                    </span>
+                </div>
+            </div>
 
             
-                <!-- Informa a quantidade de registros encontrados (x ou nenhum) -->
-                <div class="display-flex row row-full padding-x-sm padding-y-sm align-center justify-start border-bottom" 
-                style="background-color: var(--color-primary-bg-light);">
-                    <div class="display-flex col col-fit align-center justify-start padding-x-lg padding-y-sm">
-                        <span class="text" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px;">
-                            <?php
-                                $totalRegistros = (int) ($totalDocuments ?? 0);
-                                if ($totalRegistros === 0) {
-                                    echo 'nenhum registro encontrado';
-                                } else {
-                                    $totalRegistrosText = $totalRegistros === 1 ? 'registro encontrado' : 'registros encontrados';
-                                    echo htmlspecialchars((string) $totalRegistros, ENT_QUOTES) . ' ' . htmlspecialchars($totalRegistrosText, ENT_QUOTES);
-                                }
-                            ?>
-                        </span>
-                    </div>
-                </div>
-
-                
-                <?php if (!empty($rows)): ?>
-                    <?php foreach ($rows as $row):
-                        $processo = $row['Processo'];
-                        $idCarta = $row['IdCarta'];
-                        $subtarefas = $row['Subtarefas'] ?? [];
-                        $statusTarefa = (string) ($row['Status'] ?? '');
-                        $tarefaConcluida = in_array($statusTarefa, ['concluída', 'concluida', 'finalizada'], true);
-                        $numeroProcessoDestinoAtual = trim((string) ($row['NumeroProcessoDestino'] ?? $row['numero_processo_destino'] ?? ''));
-                        $varaDestinoAtual = trim((string) ($row['VaraDestino'] ?? $row['vara_destino_nome'] ?? $row['vara_destino'] ?? ''));
-                        if (($numeroProcessoDestinoAtual === '' || $varaDestinoAtual === '') && is_array($subtarefas)) {
-                            foreach ($subtarefas as $stInfoTmp) {
-                                if (($stInfoTmp['tipo'] ?? '') !== 'aguardando_informacoes' || empty($stInfoTmp['dados_especificos'])) {
-                                    continue;
-                                }
-                                $dadosInfoTmp = json_decode((string) $stInfoTmp['dados_especificos'], true);
-                                if (!is_array($dadosInfoTmp)) {
-                                    continue;
-                                }
-                                if ($numeroProcessoDestinoAtual === '') {
-                                    $numeroProcessoDestinoAtual = trim((string) ($dadosInfoTmp['numero_processo_destino'] ?? ''));
-                                }
-                                if ($varaDestinoAtual === '') {
-                                    $varaDestinoAtual = trim((string) ($dadosInfoTmp['vara_destino'] ?? ''));
-                                }
-                                if ($numeroProcessoDestinoAtual !== '' && $varaDestinoAtual !== '') {
-                                    break;
-                                }
+            <?php if (!empty($rows)): ?>
+                <?php foreach ($rows as $row):
+                    $processo = $row['Processo'];
+                    $idCarta = $row['IdCarta'];
+                    $subtarefas = $row['Subtarefas'] ?? [];
+                    $statusTarefa = (string) ($row['Status'] ?? '');
+                    $tarefaConcluida = in_array($statusTarefa, ['concluída', 'concluida', 'finalizada'], true);
+                    $numeroProcessoDestinoAtual = trim((string) ($row['NumeroProcessoDestino'] ?? $row['numero_processo_destino'] ?? ''));
+                    $varaDestinoAtual = trim((string) ($row['VaraDestino'] ?? $row['vara_destino_nome'] ?? $row['vara_destino'] ?? ''));
+                    if (($numeroProcessoDestinoAtual === '' || $varaDestinoAtual === '') && is_array($subtarefas)) {
+                        foreach ($subtarefas as $stInfoTmp) {
+                            if (($stInfoTmp['tipo'] ?? '') !== 'aguardando_informacoes' || empty($stInfoTmp['dados_especificos'])) {
+                                continue;
                             }
-                        }
-                    ?>
-                
-                <!-- LINHA COMPLETA DO REGISTRO -->
-                <div class="register-line" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idCarta); ?>">
-                    
-                    <!-- Lado esquerdo da linha -->
-                    <div class="register-line-left">
-                        <div class="col">
-                            <?php if (!$tarefaConcluida): ?>
-                                <label class="button-table" title="Expandir detalhes">
-                                    <input type="radio" name="open-subtask" value="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" aria-controls="subtask-<?php echo htmlspecialchars($idCarta); ?>" aria-expanded="false" />
-                                    <i class="fi fi-rr-angle-small-down"></i>
-                                </label>
-                            <?php endif; ?>
-                        </div>
-                        <div class="col width-500 col-process process-info" title="clique para copiar">
-                            <?php
-                                $classeNome = $row['ClasseNome'] ?? 'Classe não informada';
-                                $classeStyle = $classeNome !== 'Classe não informada' ? 'style="color: var(--primary-color-active); font-weight: 600;"' : '';
-                            ?>
-                            <span class="minor-info text-ellipsis" title="<?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?>" <?php echo $classeStyle; ?>><?php echo htmlspecialchars($classeNome); ?></span>
-                            <span class="major-info"><?php echo htmlspecialchars($row['Processo']); ?></span>
-                        </div>
-                        <div class="col width-700 col-comarca">
-                            <span class="minor-info text-ellipsis" style="font-weight: 600; color: var(--color-gray-900);"><?php echo htmlspecialchars('Comarca: '. $row['Comarca'] . ' - ' . $row['Estado']); ?></span>
-                            <span class="major-info text-ellipsis"><?php echo htmlspecialchars($row['Finalidade']); ?> — <?php echo htmlspecialchars($row['Prazo'] . ' dias'); ?></span>
-                        </div>
-                    </div>
-                    <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                        <button type="button" class="btn btn-editar" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" title="Editar">
-                            <i class="fi fi-rr-pen-square"></i>
-                        </button>
-                        <div class="display-flex row row-fit justify-end gap-y-sm cartas-expedidas-allocate allocate-users">
-                            <?php
-                            $alocados = CartorioAlocacaoChipHelper::ordenarAlocadosPorTipo($row['Alocados'] ?? []);
-                            foreach ($alocados as $alocado) {
-                                $chip = CartorioAlocacaoChipHelper::buildChipData($alocado, [
-                                    'entity_id' => (string) ($idCarta ?? ''),
-                                    'origem' => 'cartas_expedidas.list',
-                                ]);
-                                if ($chip === null) {
-                                    continue;
-                                }
-                                $tipo         = $chip['tipo'];
-                                $iniciais     = htmlspecialchars($chip['iniciais'], ENT_QUOTES);
-                                $chipTitle    = $chip['title'];
-                                $chipAria     = $chip['aria_label'];
-                                $classeTipo   = $chip['classe_tipo'];
-                                $alocadoIdStr = htmlspecialchars($chip['alocado_id'], ENT_QUOTES);
-                                $usuarioIdStr = $chip['usuario_id'];
-                                $podeRemover  = $isGestao || ($tipo === 'specific' && $usuarioIdStr === $currentUserId);
-                                ?>
-                                <span class="user-allocate-wrap">
-                                    <span class="user-allocate<?php echo $classeTipo; ?>" title="<?php echo htmlspecialchars($chipTitle, ENT_QUOTES); ?>" aria-label="<?php echo htmlspecialchars($chipAria, ENT_QUOTES); ?>"><?php echo $iniciais; ?></span>
-                                    <?php if ($podeRemover): ?>
-                                    <button type="button"
-                                        class="user-allocate-remove js-desalocar"
-                                        data-alocado-id="<?php echo $alocadoIdStr; ?>"
-                                        data-tipo="<?php echo htmlspecialchars($tipo, ENT_QUOTES); ?>"
-                                        data-endpoint="/api/cartorio-cartas-expedidas/desalocar.php"
-                                        title="Remover alocação"
-                                        aria-label="Remover alocação">×</button>
-                                    <?php endif; ?>
-                                </span>
-                                <?php
+                            $dadosInfoTmp = json_decode((string) $stInfoTmp['dados_especificos'], true);
+                            if (!is_array($dadosInfoTmp)) {
+                                continue;
                             }
-                            ?>
-                        </div>
-                        <?php
-                        $st = $row['Status'] ?? '';
-                        $allSt = $row['SubtarefasAll'] ?? [];
-                        $progressStatuses = ['pendente', 'pendente', 'pendente', 'pendente', 'pendente', 'pendente'];
-                        foreach ($allSt as $s) {
-                            $o = (int) ($s['ordem'] ?? 0);
-                            if ($o >= 1 && $o <= 6) {
-                                $progressStatuses[$o - 1] = (string) ($s['status'] ?? 'pendente');
+                            if ($numeroProcessoDestinoAtual === '') {
+                                $numeroProcessoDestinoAtual = trim((string) ($dadosInfoTmp['numero_processo_destino'] ?? ''));
                             }
-                        }
-                        $currentSubtarefaTitle = '';
-                        foreach ($allSt as $s) {
-                            if (trim((string) ($s['status'] ?? '')) === 'em_andamento') {
-                                $tipoAtual = $s['tipo'] ?? '';
-                                $currentSubtarefaTitle = $taskTitleByTipo[$tipoAtual] ?? $subtarefaLabels[$tipoAtual] ?? $tipoAtual;
+                            if ($varaDestinoAtual === '') {
+                                $varaDestinoAtual = trim((string) ($dadosInfoTmp['vara_destino'] ?? ''));
+                            }
+                            if ($numeroProcessoDestinoAtual !== '' && $varaDestinoAtual !== '') {
                                 break;
                             }
                         }
-                        if ($currentSubtarefaTitle === '' && $st === 'pendente') {
-                            $currentSubtarefaTitle = $taskTitleByTipo['aguardando_assinatura'] ?? 'Carta aguardando assinatura';
-                        } elseif ($currentSubtarefaTitle === '' && ($st === 'concluída' || $st === 'finalizada')) {
-                            $currentSubtarefaTitle = 'Todas as etapas concluídas';
-                        } elseif ($currentSubtarefaTitle === '') {
-                            $currentSubtarefaTitle = $row['Status'] ?? 'Em andamento';
-                        }
-                        $isEmAndamento = in_array($st, ['em_andamento', 'aguardando assinatura', 'aguardando envio', 'aguardando juntada do termo', 'aguardando juntada de termo', 'aguardando cumprimento'], true);
-                        $mostrarBarraStatus = ($st !== 'concluída' && $st !== 'cancelada');
-                        $segmentosBarra = [];
-                        if ($mostrarBarraStatus) {
-                            $segmentosBarra[] = ['class' => 'concluida', 'title' => 'Carta expedida e cadastrada'];
-                            for ($i = 0; $i < 6; $i++) {
-                                $statusSeg = $progressStatuses[$i] ?? 'pendente';
-                                $segClass = $statusSeg === 'concluida' ? 'concluida' : ($statusSeg === 'em_andamento' ? 'em_andamento' : 'pendente');
-                                $segmentosBarra[] = ['class' => $segClass, 'title' => $ordemLabels[$i + 1] ?? ''];
+                    }
+                ?>
+            
+            <!-- LINHA COMPLETA DO REGISTRO -->
+            <div class="register-line" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idCarta); ?>">
+                
+                <!-- Lado esquerdo da linha -->
+                <div class="register-line-left">
+                    <div class="col">
+                        <?php if (!$tarefaConcluida): ?>
+                            <label class="button-table" title="Expandir detalhes">
+                                <input type="radio" name="open-subtask" value="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" aria-controls="subtask-<?php echo htmlspecialchars($idCarta); ?>" aria-expanded="false" />
+                                <i class="fi fi-rr-angle-small-down"></i>
+                            </label>
+                        <?php endif; ?>
+                    </div>
+                    <div class="col width-500 col-process process-info" title="clique para copiar">
+                        <?php
+                            $classeNome = $row['ClasseNome'] ?? 'Classe não informada';
+                            $classeStyle = $classeNome !== 'Classe não informada' ? 'style="color: var(--primary-color-active); font-weight: 600;"' : '';
+                        ?>
+                        <span class="minor-info text-ellipsis" title="<?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?>" <?php echo $classeStyle; ?>><?php echo htmlspecialchars($classeNome); ?></span>
+                        <span class="major-info"><?php echo htmlspecialchars($row['Processo']); ?></span>
+                    </div>
+                    <div class="col width-700 col-comarca">
+                        <span class="minor-info text-ellipsis" style="font-weight: 600; color: var(--color-gray-900);"><?php echo htmlspecialchars('Comarca: '. $row['Comarca'] . ' - ' . $row['Estado']); ?></span>
+                        <span class="major-info text-ellipsis"><?php echo htmlspecialchars($row['Finalidade']); ?> — <?php echo htmlspecialchars($row['Prazo'] . ' dias'); ?></span>
+                    </div>
+                </div>
+
+                <!-- Lado direito da linha -->
+                <div class="display-flex row row-fit justify-end gap-y-sm align-center">
+                    <button type="button" class="btn btn-editar" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" title="Editar">
+                        <i class="fi fi-rr-pen-square"></i>
+                    </button>
+                    <div class="display-flex row row-fit justify-end gap-y-sm cartas-expedidas-allocate allocate-users">
+                        <?php
+                        $alocados = CartorioAlocacaoChipHelper::ordenarAlocadosPorTipo($row['Alocados'] ?? []);
+                        foreach ($alocados as $alocado) {
+                            $chip = CartorioAlocacaoChipHelper::buildChipData($alocado, [
+                                'entity_id' => (string) ($idCarta ?? ''),
+                                'origem' => 'cartas_expedidas.list',
+                            ]);
+                            if ($chip === null) {
+                                continue;
                             }
+                            $tipo         = $chip['tipo'];
+                            $iniciais     = htmlspecialchars($chip['iniciais'], ENT_QUOTES);
+                            $chipTitle    = $chip['title'];
+                            $chipAria     = $chip['aria_label'];
+                            $classeTipo   = $chip['classe_tipo'];
+                            $alocadoIdStr = htmlspecialchars($chip['alocado_id'], ENT_QUOTES);
+                            $usuarioIdStr = $chip['usuario_id'];
+                            $podeRemover  = $isGestao || ($tipo === 'specific' && $usuarioIdStr === $currentUserId);
+                            ?>
+                            <span class="user-allocate-wrap">
+                                <span class="user-allocate<?php echo $classeTipo; ?>" title="<?php echo htmlspecialchars($chipTitle, ENT_QUOTES); ?>" aria-label="<?php echo htmlspecialchars($chipAria, ENT_QUOTES); ?>"><?php echo $iniciais; ?></span>
+                                <?php if ($podeRemover): ?>
+                                <button type="button"
+                                    class="user-allocate-remove js-desalocar"
+                                    data-alocado-id="<?php echo $alocadoIdStr; ?>"
+                                    data-tipo="<?php echo htmlspecialchars($tipo, ENT_QUOTES); ?>"
+                                    data-endpoint="/api/cartorio-cartas-expedidas/desalocar.php"
+                                    title="Remover alocação"
+                                    aria-label="Remover alocação">×</button>
+                                <?php endif; ?>
+                            </span>
+                            <?php
                         }
                         ?>
-                        <div class="col<?php echo $mostrarBarraStatus && $st !== 'concluída' && $st !== 'cancelada' ? ' status-task' : ''; ?>" title="<?php echo htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES); ?>">
-                            <?php
-                            if ($st === 'concluída') {
-                                echo '<div class="width-300 padding-x-lg status status-finished">Finalizada</div>';
-                            } elseif ($st === 'cancelada') {
-                                echo '<div class="padding-x-lg status status-cancelled">Cancelada</div>';
-                            } elseif ($mostrarBarraStatus) {
-                                $labelStatus = $isEmAndamento ? 'Em andamento' : 'Pendente';
-                                $classStatus = $isEmAndamento ? 'status-current' : 'status-pending';
-                                echo '<div class="status width-300 ' . $classStatus . ' status-with-progress">';
-                                echo '<span class="status-task-label" style="justify-content: flex-start; font-size: 10px;">' . htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES) . '</span>';
-                                $concluidosBarra = 1 + count(array_filter($progressStatuses, fn($x) => $x === 'concluida'));
-                                echo '<div class="status-task-progress" role="progressbar" aria-valuenow="' . $concluidosBarra . '" aria-valuemin="0" aria-valuemax="7" aria-label="Progresso das subtarefas">';
-                                foreach ($segmentosBarra as $seg) {
-                                    echo '<div class="status-task-progress-segment ' . htmlspecialchars($seg['class'], ENT_QUOTES) . '" title="' . htmlspecialchars($seg['title'], ENT_QUOTES) . '"></div>';
-                                }
-                                echo '</div>';
-                                echo '</div>';
-                            } else {
-                                echo '<div class="width-300 padding-x-lg status status-pending">Pendente</div>';
+                    </div>
+                    <?php
+                    $st = $row['Status'] ?? '';
+                    $allSt = $row['SubtarefasAll'] ?? [];
+                    $progressStatuses = ['pendente', 'pendente', 'pendente', 'pendente', 'pendente', 'pendente'];
+                    foreach ($allSt as $s) {
+                        $o = (int) ($s['ordem'] ?? 0);
+                        if ($o >= 1 && $o <= 6) {
+                            $progressStatuses[$o - 1] = (string) ($s['status'] ?? 'pendente');
+                        }
+                    }
+                    $currentSubtarefaTitle = '';
+                    foreach ($allSt as $s) {
+                        if (trim((string) ($s['status'] ?? '')) === 'em_andamento') {
+                            $tipoAtual = $s['tipo'] ?? '';
+                            $currentSubtarefaTitle = $taskTitleByTipo[$tipoAtual] ?? $subtarefaLabels[$tipoAtual] ?? $tipoAtual;
+                            break;
+                        }
+                    }
+                    if ($currentSubtarefaTitle === '' && $st === 'pendente') {
+                        $currentSubtarefaTitle = $taskTitleByTipo['aguardando_assinatura'] ?? 'Carta aguardando assinatura';
+                    } elseif ($currentSubtarefaTitle === '' && ($st === 'concluída' || $st === 'finalizada')) {
+                        $currentSubtarefaTitle = 'Todas as etapas concluídas';
+                    } elseif ($currentSubtarefaTitle === '') {
+                        $currentSubtarefaTitle = $row['Status'] ?? 'Em andamento';
+                    }
+                    $isEmAndamento = in_array($st, ['em_andamento', 'aguardando assinatura', 'aguardando envio', 'aguardando juntada do termo', 'aguardando juntada de termo', 'aguardando cumprimento'], true);
+                    $mostrarBarraStatus = ($st !== 'concluída' && $st !== 'cancelada');
+                    $segmentosBarra = [];
+                    if ($mostrarBarraStatus) {
+                        $segmentosBarra[] = ['class' => 'concluida', 'title' => 'Carta expedida e cadastrada'];
+                        for ($i = 0; $i < 6; $i++) {
+                            $statusSeg = $progressStatuses[$i] ?? 'pendente';
+                            $segClass = $statusSeg === 'concluida' ? 'concluida' : ($statusSeg === 'em_andamento' ? 'em_andamento' : 'pendente');
+                            $segmentosBarra[] = ['class' => $segClass, 'title' => $ordemLabels[$i + 1] ?? ''];
+                        }
+                    }
+                    ?>
+                    <div class="col<?php echo $mostrarBarraStatus && $st !== 'concluída' && $st !== 'cancelada' ? ' status-task' : ''; ?>" title="<?php echo htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES); ?>">
+                        <?php
+                        if ($st === 'concluída') {
+                            echo '<div class="width-300 padding-x-lg status status-finished">Finalizada</div>';
+                        } elseif ($st === 'cancelada') {
+                            echo '<div class="padding-x-lg status status-cancelled">Cancelada</div>';
+                        } elseif ($mostrarBarraStatus) {
+                            $labelStatus = $isEmAndamento ? 'Em andamento' : 'Pendente';
+                            $classStatus = $isEmAndamento ? 'status-current' : 'status-pending';
+                            echo '<div class="status width-300 ' . $classStatus . ' status-with-progress">';
+                            echo '<span class="status-task-label" style="justify-content: flex-start; font-size: 10px;">' . htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES) . '</span>';
+                            $concluidosBarra = 1 + count(array_filter($progressStatuses, fn($x) => $x === 'concluida'));
+                            echo '<div class="status-task-progress" role="progressbar" aria-valuenow="' . $concluidosBarra . '" aria-valuemin="0" aria-valuemax="7" aria-label="Progresso das subtarefas">';
+                            foreach ($segmentosBarra as $seg) {
+                                echo '<div class="status-task-progress-segment ' . htmlspecialchars($seg['class'], ENT_QUOTES) . '" title="' . htmlspecialchars($seg['title'], ENT_QUOTES) . '"></div>';
                             }
-                            ?>
-                        </div>
+                            echo '</div>';
+                            echo '</div>';
+                        } else {
+                            echo '<div class="width-300 padding-x-lg status status-pending">Pendente</div>';
+                        }
+                        ?>
                     </div>
                 </div>
 
-                <?php if (!$tarefaConcluida): ?>
-                <div class="display-flex col col-full subtask subtask-collapsed" id="subtask-<?php echo htmlspecialchars($idCarta); ?>" aria-hidden="true">
-                    <?php foreach ($subtarefas as $st):
-                        $stId = $st['id'] ?? '';
-                        $stTipo = $st['tipo'] ?? '';
-                        $stTipoNormalizado = strtolower(trim((string) $stTipo));
-                        $isGerarPdf = in_array($stTipoNormalizado, ['aguardando_gerar_pdf', 'gerar_pdf', 'geracao_pdf'], true);
-                        $isEnvio = in_array($stTipoNormalizado, ['aguardando_envio', 'envio_processo', 'enviar_processo', 'envio'], true);
-                        $isInformacoes = in_array($stTipoNormalizado, ['aguardando_informacoes', 'informar_dados', 'detalhamento_informacoes', 'Aguardando cumprimento'], true);
-                        $isDevolucao = in_array($stTipoNormalizado, ['aguardando_devolucao', 'confirmar_juntada', 'juntada_devolucao', 'juntar_devolucao', 'Aguardando devolução'], true);
-                        $stLabel = $subtarefaLabels[$stTipo] ?? $stTipo;
-                    ?>
-                    <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
-                        <div class="display-flex row row-fit justify-start gap-y-sm align-center subtask-row-fields">
-                            <div class="col task-status">
-                                <div class="padding-x-lg height-sm status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
-                            </div>
-                            <?php if ($isGerarPdf): ?>
-                                <div class="col">
-                                    <input type="number" class="width-100 height-sm subtask-qtd-docs" value="2" min="2" max="10" placeholder="Qtd de docs (2 a 10)" title="Qtd de docs gerados" />
-                                </div>
-                            <?php elseif ($isEnvio): ?>
-                                <div class="col">
-                                    <select class="width-400 height-sm subtask-metodo-envio" title="Método de envio">
-                                        <option value="">Método de envio</option>
-                                        <option value="Email">E-mail</option>
-                                        <option value="Malote Digital">Malote Digital</option>
-                                        <option value="PJe">PJe</option>
-                                        <option value="eSAJ">eSAJ</option>
-                                        <option value="ePROC">ePROC</option>
-                                    </select>
-                                </div>
-                            <?php elseif ($isInformacoes): ?>
-                                <div class="col">
-                                    <input type="text" class="width-400 height-sm subtask-numero-destino" placeholder="Nº processo" title="Número processo destino" value="<?php echo htmlspecialchars($numeroProcessoDestinoAtual, ENT_QUOTES); ?>" />
-                                </div>
-                                <div class="col">
-                                    <input type="text" class="width-600 height-sm subtask-vara-destino" placeholder="Vara destino" title="Vara destino" value="<?php echo htmlspecialchars($varaDestinoAtual, ENT_QUOTES); ?>" />
-                                </div>
-                            <?php elseif ($isDevolucao): ?>
-                                <div class="col">
-                                    <select class="width-500 height-sm subtask-resultado-devolucao" title="Resultado da devolução">
-                                        <option value="">Resultado</option>
-                                        <option value="devolvida_sem_cumprimento">Não cumprida</option>
-                                        <option value="cumprida_negativamente">Cumprida negativamente</option>
-                                        <option value="cumprida_parcialmente">Cumprida parcialmente</option>
-                                        <option value="cumprida_positivamente">Cumprida integralmente</option>
-                                    </select>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                        <div class="display-flex row row-fit justify-end align-center">
-                            <button type="button" class="btn btn-primary height-sm btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?>">
-                                <span class="value-button"><?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?></span>
-                            </button>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                    <?php if (empty($subtarefas)): ?>
-                        <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top">
-                            <span class="minor-info">Nenhuma sub-tarefa pendente.</span>
-                        </div>
-                    <?php endif; ?>
-                </div>
-                <?php endif; ?>
             </div>
 
-            <?php endforeach; ?>
-            <?php else: ?>
-            <div class="display-flex col col-full register border-bottom">
-                <div class="display-flex row row-full padding-x-sm padding-y-sm">
-                    <span class="major-info">Nenhum documento cadastrado.</span>
+            <!-- SUBTAREFAS DO REGISTRO -->
+            <?php if (!$tarefaConcluida): ?>
+            <div class="display-flex col col-full subtask subtask-collapsed" id="subtask-<?php echo htmlspecialchars($idCarta); ?>" aria-hidden="true">
+                <?php foreach ($subtarefas as $st):
+                    $stId = $st['id'] ?? '';
+                    $stTipo = $st['tipo'] ?? '';
+                    $stTipoNormalizado = strtolower(trim((string) $stTipo));
+                    $isGerarPdf = in_array($stTipoNormalizado, ['aguardando_gerar_pdf', 'gerar_pdf', 'geracao_pdf'], true);
+                    $isEnvio = in_array($stTipoNormalizado, ['aguardando_envio', 'envio_processo', 'enviar_processo', 'envio'], true);
+                    $isInformacoes = in_array($stTipoNormalizado, ['aguardando_informacoes', 'informar_dados', 'detalhamento_informacoes', 'Aguardando cumprimento'], true);
+                    $isDevolucao = in_array($stTipoNormalizado, ['aguardando_devolucao', 'confirmar_juntada', 'juntada_devolucao', 'juntar_devolucao', 'Aguardando devolução'], true);
+                    $stLabel = $subtarefaLabels[$stTipo] ?? $stTipo;
+                ?>
+                <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
+                    <div class="display-flex row row-fit justify-start gap-y-sm align-center subtask-row-fields">
+                        <div class="col task-status">
+                            <div class="padding-x-lg height-sm status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
+                        </div>
+                        <?php if ($isGerarPdf): ?>
+                            <div class="col">
+                                <input type="number" class="width-100 height-sm subtask-qtd-docs" value="2" min="2" max="10" placeholder="Qtd de docs (2 a 10)" title="Qtd de docs gerados" />
+                            </div>
+                        <?php elseif ($isEnvio): ?>
+                            <div class="col">
+                                <select class="width-400 height-sm subtask-metodo-envio" title="Método de envio">
+                                    <option value="">Método de envio</option>
+                                    <option value="Email">E-mail</option>
+                                    <option value="Malote Digital">Malote Digital</option>
+                                    <option value="PJe">PJe</option>
+                                    <option value="eSAJ">eSAJ</option>
+                                    <option value="ePROC">ePROC</option>
+                                </select>
+                            </div>
+                        <?php elseif ($isInformacoes): ?>
+                            <div class="col">
+                                <input type="text" class="width-400 height-sm subtask-numero-destino" placeholder="Nº processo" title="Número processo destino" value="<?php echo htmlspecialchars($numeroProcessoDestinoAtual, ENT_QUOTES); ?>" />
+                            </div>
+                            <div class="col">
+                                <input type="text" class="width-600 height-sm subtask-vara-destino" placeholder="Vara destino" title="Vara destino" value="<?php echo htmlspecialchars($varaDestinoAtual, ENT_QUOTES); ?>" />
+                            </div>
+                        <?php elseif ($isDevolucao): ?>
+                            <div class="col">
+                                <select class="width-500 height-sm subtask-resultado-devolucao" title="Resultado da devolução">
+                                    <option value="">Resultado</option>
+                                    <option value="devolvida_sem_cumprimento">Não cumprida</option>
+                                    <option value="cumprida_negativamente">Cumprida negativamente</option>
+                                    <option value="cumprida_parcialmente">Cumprida parcialmente</option>
+                                    <option value="cumprida_positivamente">Cumprida integralmente</option>
+                                </select>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="display-flex row row-fit justify-end align-center">
+                        <button type="button" class="btn btn-primary height-sm btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?>">
+                            <span class="value-button"><?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?></span>
+                        </button>
+                    </div>
                 </div>
+                <?php endforeach; ?>
+
             </div>
             <?php endif; ?>
+            <?php endforeach; ?>
+        </div>
+
+        
+        <?php else: ?>
+        <div class="display-flex col col-full register border-bottom">
+            <div class="display-flex row row-full padding-x-sm padding-y-sm">
+                <span class="major-info">Nenhum documento cadastrado.</span>
+            </div>
+        </div>
+        <?php endif; ?>
 
         <div class="card-buttons">
             <span class="pagination-info">

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0029
+
+**Data:** 2026-04-30 09:51:51 | **Commit:** `7db183a` | **Tipo:** `patch`
+
+- refactor(cartas-expedidas): streamline HTML structure and improve readability
+
 ## V. 1.97.0028
 
 **Data:** 2026-04-30 09:41:23 | **Commit:** `0a2ac41` | **Tipo:** `patch`
@@ -4956,6 +4962,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
