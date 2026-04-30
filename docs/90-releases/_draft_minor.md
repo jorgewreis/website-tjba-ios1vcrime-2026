@@ -15,4 +15,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(api): enhance logging in status-bulk endpoint for better debugging** `[889922d]`
 - **refactor(status-bulk): update log file path and enhance CSS for cartas expedidas** `[10f3b6f]`
 - **refactor(cartas-expedidas): enhance layout and improve filtering options** `[eb40e86]`
+- **refactor(cartas-expedidas): improve filter layout and structure** `[681adf0]`
 
