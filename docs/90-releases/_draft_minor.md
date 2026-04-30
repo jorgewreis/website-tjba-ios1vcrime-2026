@@ -16,4 +16,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(status-bulk): update log file path and enhance CSS for cartas expedidas** `[10f3b6f]`
 - **refactor(cartas-expedidas): enhance layout and improve filtering options** `[eb40e86]`
 - **refactor(cartas-expedidas): improve filter layout and structure** `[681adf0]`
+- **refactor(cartas-expedidas): enhance filter display and total items message** `[df3bef2]`
 
