@@ -161,11 +161,6 @@ final class GuiasService
 
     public function create(array $payload): string
     {
-        // #region agent log
-        $logPath = dirname(__DIR__, 2) . '/debug-64730a.log';
-        @file_put_contents($logPath, json_encode(['sessionId' => '64730a', 'location' => 'GuiasService.php:create:entry', 'message' => 'create() started', 'data' => ['payloadKeys' => array_keys($payload), 'numeroProcessoLen' => strlen(trim((string) ($payload['numero_processo'] ?? $payload['processo'] ?? '')))], 'timestamp' => round(microtime(true) * 1000), 'hypothesisId' => 'D']) . "\n", FILE_APPEND | LOCK_EX);
-        // #endregion
-
         $numeroProcesso = trim((string) ($payload['numero_processo'] ?? $payload['processo'] ?? ''));
         if ($numeroProcesso === '') {
             throw new InvalidArgumentException('O número do processo é obrigatório.');
@@ -259,11 +254,6 @@ final class GuiasService
                 $row['valor_multa'] = $valorMulta;
             }
         }
-
-        // #region agent log
-        $logPath = dirname(__DIR__, 2) . '/debug-64730a.log';
-        @file_put_contents($logPath, json_encode(['sessionId' => '64730a', 'location' => 'GuiasService.php:create:beforeInsert', 'message' => 'row built', 'data' => ['idGuia' => $idGuia, 'rowKeys' => array_keys($row)], 'timestamp' => round(microtime(true) * 1000), 'hypothesisId' => 'D']) . "\n", FILE_APPEND | LOCK_EX);
-        // #endregion
 
         $this->repository->insert($row);
 
