@@ -81,8 +81,6 @@ h2 {
     flex-direction: row;
     align-items: center;
     justify-content: flex-start;
-
-    margin-bottom: 30px;
 }
     .location .all {
         font-family: 'Poppins', sans-serif;
@@ -92,6 +90,7 @@ h2 {
     .location .specific {
         font-family: 'Poppins', sans-serif;
         font-size: 10px;
+        font-weight: 600;
         color: var(--color-text-primary);
         margin: 0 3px;
     }

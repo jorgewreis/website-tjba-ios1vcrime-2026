@@ -195,88 +195,108 @@ if ($totalPages > 0) {
     <!-- SPACING -->
     <div class="spacing-top-page"></div>
 
-    <!-- Mapa de navegação do site -->
+
+    <!-- HEADER PAGE -->
     <div class="header-page">
+        <!-- MAPA DE NAVEGAÇÃO DO SITE -->
         <div class="location">
             <span class="all">Interno - Cartório - Cartas Expedidas -</span>
-            <span class="specific">Lista de documentos</span>
+            <span class="specific">Lista</span>
         </div>
-
-        <!-- Título e descrição da página -->
-        <h1 class="title-page">Cartas Expedidas</h1>
-        <p class="description-page">Controle de cartas precatórias, rogatórias e de ordem expedidas pelo cartório.</p>
-         
-        <!-- Badges de arquivos para download -->
-        <!-- <button type="button" class="badge file" data-nav-href="/documents/pdf/PJBA - 1VCR - POP - Expedição e Envio de Cartas Precatórias.pdf" data-nav-target="_blank">
-            <img src="/assets/icons/Office-File-Pdf-1--Streamline-Ultimate.png" alt="Ícone de arquivo PDF">
-            <span>Passo a passo - Expedição de Cartas Precatórias</span>
-        </button> -->
     </div>
 
+
+    <!-- CARD PAGE -->
     <div class="container-full card-page">
 
-        <!-- TITLE TABLE (modelo) -->
+        <!-- TITLE CARD -->
         <div class="card-title">
-            <div class="display-flex row row-fit justify-start">
-                <h2>Lista</h2>
-            </div>
-            <div class="display-flex row row-fit justify-end gap-y-md">
-                <input type="text" class="width-400 height-md" id="search-input" placeholder="Pesquisar na lista..." value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
-                <?php
-                $listExportPage = $routePage;
-                $listExportQuery = $baseQueryParams;
-                include __DIR__ . '/_list_export_buttons.php';
-                ?>
-                <button type="button" class="btn btn-primary" id="novo-cadastro-btn">Novo cadastro</button>
+            <div class="display-flex col col-full justify-start">
+                <!-- TÍTULO E DESCRIÇÃO DA PÁGINA -->
+                <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;">Cartas Expedidas</h1>
+                <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Lista de cartas expedidas pelo cartório para controle e envio.</p>
             </div>
         </div>
 
-        <!-- Filtros (modelo) -->
-        <div class="card-filters">
-            <div class="display-flex row row-fit justify-start gap-y-md">                
-                <div class="col">
-                    <label for="filter-status">Filtrar por status</label>
-                    <select class="width-500 height-md" id="filter-status">
-                        <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Mostrar todas</option>
-                        <option value="pendente"<?php echo $statusFilter === 'pendente' ? ' selected' : ''; ?>>
-                            Pendente (<?php echo htmlspecialchars((string) ($statusCounts['pendente'] ?? 0)); ?>)
-                        </option>
-                        <option value="em_andamento"<?php echo $statusFilter === 'em_andamento' ? ' selected' : ''; ?>>
-                            Em andamento (<?php echo htmlspecialchars((string) ($statusCounts['em_andamento'] ?? 0)); ?>)
-                        </option>
-                        <option value="concluída"<?php echo $statusFilter === 'concluída' ? ' selected' : ''; ?>>
-                            Finalizada (<?php echo htmlspecialchars((string) ($statusCounts['concluída'] ?? 0)); ?>)
-                        </option>
-                        <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>
-                            Cancelada (<?php echo htmlspecialchars((string) ($statusCounts['cancelada'] ?? 0)); ?>)
-                        </option>
-                    </select>
-                </div>
-                <div class="col">
-                    <label for="filter-tipo">Filtrar por finalidade</label>
-                    <select class="width-700 height-md" id="filter-tipo">
-                        <option value=""<?php echo $finalidadeFilter === '' ? ' selected' : ''; ?>>Mostrar todas</option>
-                        <?php foreach ($finalidadeCounts as $finalidade => $count): ?>
-                            <option value="<?php echo htmlspecialchars($finalidade, ENT_QUOTES); ?>"<?php echo $finalidadeFilter === $finalidade ? ' selected' : ''; ?>>
-                                <?php echo htmlspecialchars($finalidade, ENT_QUOTES); ?> (<?php echo htmlspecialchars((string) $count); ?>)
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
+        <!-- SUBTITLE SECTION CARD -->
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 600; color: var(--color-gray-900); font-size: 13px;">Pesquisa e cadastro de cartas expedidas</span>
             </div>
-            <div class="display-flex row row-fit justify-end gap-y-md">
-                <div class="col">
-                    <label for="items-per-page">Itens por página</label>
-                    <select class="width-300 height-md" id="items-per-page">
-                        <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
-                        <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
-                        <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
-                        <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
-                    </select>
-                </div>
+            <div class="display-flex row row-fit justify-end gap-y-md align-center">
+                <input type="text" class="width-400 height-md" id="search-input" placeholder="Pesquisar" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
+                    <?php
+                    $listExportPage = $routePage;
+                    $listExportQuery = $baseQueryParams;
+                    include __DIR__ . '/_list_export_buttons.php';
+                    ?>
+                <button type="button" class="btn btn-primary" id="novo-cadastro-btn">Novo cadastro</button>
+            </div>            
+        </div>
+
+        <!-- SUBTITLE SECTION CARD - FILTERS -->        
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 600; color: var(--color-gray-900); 
+                font-size: 13px;">Filtros</span>
+            </div>
+            <select class="width-500 height-md" id="filter-status">
+                <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Todos os status</option>
+                <option value="pendente"<?php echo $statusFilter === 'pendente' ? ' selected' : ''; ?>>
+                    Pendente (<?php echo htmlspecialchars((string) ($statusCounts['pendente'] ?? 0)); ?>)
+                </option>
+                <option value="em_andamento"<?php echo $statusFilter === 'em_andamento' ? ' selected' : ''; ?>>
+                    Em andamento (<?php echo htmlspecialchars((string) ($statusCounts['em_andamento'] ?? 0)); ?>)
+                </option>
+                <option value="concluída"<?php echo $statusFilter === 'concluída' ? ' selected' : ''; ?>>
+                    Finalizada (<?php echo htmlspecialchars((string) ($statusCounts['concluída'] ?? 0)); ?>)
+                </option>
+                <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>
+                    Cancelada (<?php echo htmlspecialchars((string) ($statusCounts['cancelada'] ?? 0)); ?>)
+                </option>
+            </select>
+            <select class="width-700 height-md" id="filter-tipo">
+                <option value=""<?php echo $finalidadeFilter === '' ? ' selected' : ''; ?>>Todas as finalidades</option>
+                <?php foreach ($finalidadeCounts as $finalidade => $count): ?>
+                    <option value="<?php echo htmlspecialchars($finalidade, ENT_QUOTES); ?>"<?php echo $finalidadeFilter === $finalidade ? ' selected' : ''; ?>>
+                        <?php echo htmlspecialchars($finalidade, ENT_QUOTES); ?> (<?php echo htmlspecialchars((string) $count); ?>)
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+
+        <!-- SUBTITLE SECTION CARD - FILTERS INFO -->
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" 
+        style="background-color: var(--color-primary-bg-light);">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">                
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-primary-active); 
+                font-size: 12px; padding: 5px 0;">Lista com os seguintes filtros: Status [Pendente] + Finalidade [Intimação para Audiência]</span>
             </div>
         </div>
         
+        <!-- SUBTITLE SECTION CARD - ITEMS PER PAGE -->
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 600; color: var(--color-gray-900); 
+                font-size: 13px;">Itens por página</span>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md align-center">
+                <select class="width-300 height-md" id="items-per-page">
+                    <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
+                    <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
+                    <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
+                    <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
+                </select>
+            </div>                
+        </div>
+        
+        <!-- TITLE CARD -->
+        <div class="card-title" style="padding-top: 40px !important;">
+            <div class="display-flex row row-full justify-start">
+                <h2>Resultado</h2>
+            </div>
+        </div>
+
         <?php if (!empty($rows)): ?>
             <?php foreach ($rows as $row):
                 $processo = $row['Processo'];
@@ -307,7 +327,24 @@ if ($totalPages > 0) {
                     }
                 }
             ?>
-            <div class="display-flex col col-full register border-bottom" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idCarta); ?>">
+
+            <!-- REGISTERS LIST -->
+            <div class="display-flex col col-full register" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idCarta); ?>">
+
+            
+                <!-- Informa a quantidade de registros encontrados (x ou nenhum) -->
+                <div class="display-flex row row-full padding-x-sm padding-y-sm align-center justify-start border-bottom" 
+                style="background-color: var(--color-primary-bg-light);">
+                    <div class="display-flex col col-fit align-center justify-start padding-x-lg padding-y-sm">
+                        <span class="text" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px;">
+                            <?php
+                             $totalItems = (int) ($totalItems ?? 0);
+                             $totalItemsText = $totalItems > 1 ? 'registros encontrados' : 'registro encontrado';
+                             $itensText = $totalItems == 0 ? 'nenhum' : '';
+                            echo htmlspecialchars((string) ($totalItems ?? 0)); ?> <?php echo htmlspecialchars($totalItemsText, ENT_QUOTES); ?>
+                        </span>
+                    </div>
+                </div>
 
                 <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                     <div class="display-flex row row-fit justify-start gap-y-sm align-center">
