@@ -273,11 +273,24 @@ if ($totalPages > 0) {
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">                
                 <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-primary-active); 
                 font-size: 12px; padding: 5px 0;">
-                <?php if ($statusFilter !== '' && $finalidadeFilter !== ''): ?>
-                    Lista com os seguintes filtros: Status [<?php echo htmlspecialchars($statusFilter, ENT_QUOTES); ?>] + Finalidade [<?php echo htmlspecialchars($finalidadeFilter, ENT_QUOTES); ?>]
-                <?php else: ?>
-                    Lista sem filtros
-                <?php endif; ?>
+                <?php
+                    $activeFilters = [];
+                    if ($statusFilter !== '') {
+                        $activeFilters[] = 'Status [' . htmlspecialchars($statusFilter, ENT_QUOTES) . ']';
+                    }
+                    if ($finalidadeFilter !== '') {
+                        $activeFilters[] = 'Finalidade [' . htmlspecialchars($finalidadeFilter, ENT_QUOTES) . ']';
+                    }
+                    if ($processoFilter !== '') {
+                        $activeFilters[] = 'Processo [' . htmlspecialchars($processoFilter, ENT_QUOTES) . ']';
+                    }
+
+                    if (!empty($activeFilters)) {
+                        echo 'Lista com os seguintes filtros: ' . implode(' + ', $activeFilters);
+                    } else {
+                        echo 'Lista sem filtros';
+                    }
+                ?>
                 </span>
             </div>
         </div>
@@ -315,10 +328,14 @@ if ($totalPages > 0) {
                     <div class="display-flex col col-fit align-center justify-start padding-x-lg padding-y-sm">
                         <span class="text" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px;">
                             <?php
-                             $totalItems = (int) ($totalItems ?? 0);
-                             $totalItemsText = $totalItems > 1 ? 'registros encontrados' : 'registro encontrado';
-                             $itensText = $totalItems == 0 ? 'nenhum' : '';
-                            echo htmlspecialchars((string) ($totalItems ?? 0)); ?> <?php echo htmlspecialchars($totalItemsText, ENT_QUOTES); ?>
+                                $totalRegistros = (int) ($totalDocuments ?? 0);
+                                if ($totalRegistros === 0) {
+                                    echo 'nenhum registro encontrado';
+                                } else {
+                                    $totalRegistrosText = $totalRegistros === 1 ? 'registro encontrado' : 'registros encontrados';
+                                    echo htmlspecialchars((string) $totalRegistros, ENT_QUOTES) . ' ' . htmlspecialchars($totalRegistrosText, ENT_QUOTES);
+                                }
+                            ?>
                         </span>
                     </div>
                 </div>
@@ -357,10 +374,6 @@ if ($totalPages > 0) {
                 
                 <!-- LINHA COMPLETA DO REGISTRO -->
                 <div class="register-line" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idCarta); ?>">
-                    
-                    <!-- LADO ESQUERDO DA LINHA -->
-                    <div class="register-line-left">
-                        <!-- Dados do Processo -->
                         
                         <div class="col">
                             <?php if (!$tarefaConcluida): ?>
