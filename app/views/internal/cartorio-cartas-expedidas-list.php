@@ -240,29 +240,31 @@ if ($totalPages > 0) {
                 <span class="text text-ellipsis" style="font-weight: 600; color: var(--color-gray-900); 
                 font-size: 13px;">Filtros</span>
             </div>
-            <select class="width-500 height-md" id="filter-status">
-                <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Todos os status</option>
-                <option value="pendente"<?php echo $statusFilter === 'pendente' ? ' selected' : ''; ?>>
-                    Pendente (<?php echo htmlspecialchars((string) ($statusCounts['pendente'] ?? 0)); ?>)
-                </option>
-                <option value="em_andamento"<?php echo $statusFilter === 'em_andamento' ? ' selected' : ''; ?>>
-                    Em andamento (<?php echo htmlspecialchars((string) ($statusCounts['em_andamento'] ?? 0)); ?>)
-                </option>
-                <option value="concluída"<?php echo $statusFilter === 'concluída' ? ' selected' : ''; ?>>
-                    Finalizada (<?php echo htmlspecialchars((string) ($statusCounts['concluída'] ?? 0)); ?>)
-                </option>
-                <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>
-                    Cancelada (<?php echo htmlspecialchars((string) ($statusCounts['cancelada'] ?? 0)); ?>)
-                </option>
-            </select>
-            <select class="width-700 height-md" id="filter-tipo">
-                <option value=""<?php echo $finalidadeFilter === '' ? ' selected' : ''; ?>>Todas as finalidades</option>
-                <?php foreach ($finalidadeCounts as $finalidade => $count): ?>
-                    <option value="<?php echo htmlspecialchars($finalidade, ENT_QUOTES); ?>"<?php echo $finalidadeFilter === $finalidade ? ' selected' : ''; ?>>
-                        <?php echo htmlspecialchars($finalidade, ENT_QUOTES); ?> (<?php echo htmlspecialchars((string) $count); ?>)
+            <div class="display-flex row row-fit justify-end gap-y-md align-center">
+                <select class="width-500 height-md" id="filter-status">
+                    <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Todos os status</option>
+                    <option value="pendente"<?php echo $statusFilter === 'pendente' ? ' selected' : ''; ?>>
+                        Pendente (<?php echo htmlspecialchars((string) ($statusCounts['pendente'] ?? 0)); ?>)
                     </option>
-                <?php endforeach; ?>
-            </select>
+                    <option value="em_andamento"<?php echo $statusFilter === 'em_andamento' ? ' selected' : ''; ?>>
+                        Em andamento (<?php echo htmlspecialchars((string) ($statusCounts['em_andamento'] ?? 0)); ?>)
+                    </option>
+                    <option value="concluída"<?php echo $statusFilter === 'concluída' ? ' selected' : ''; ?>>
+                        Finalizada (<?php echo htmlspecialchars((string) ($statusCounts['concluída'] ?? 0)); ?>)
+                    </option>
+                    <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>
+                        Cancelada (<?php echo htmlspecialchars((string) ($statusCounts['cancelada'] ?? 0)); ?>)
+                    </option>
+                </select>
+                <select class="width-700 height-md" id="filter-tipo">
+                    <option value=""<?php echo $finalidadeFilter === '' ? ' selected' : ''; ?>>Todas as finalidades</option>
+                    <?php foreach ($finalidadeCounts as $finalidade => $count): ?>
+                        <option value="<?php echo htmlspecialchars($finalidade, ENT_QUOTES); ?>"<?php echo $finalidadeFilter === $finalidade ? ' selected' : ''; ?>>
+                            <?php echo htmlspecialchars($finalidade, ENT_QUOTES); ?> (<?php echo htmlspecialchars((string) $count); ?>)
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
         </div>
 
         <!-- SUBTITLE SECTION CARD - FILTERS INFO -->
@@ -270,7 +272,13 @@ if ($totalPages > 0) {
         style="background-color: var(--color-primary-bg-light);">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">                
                 <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-primary-active); 
-                font-size: 12px; padding: 5px 0;">Lista com os seguintes filtros: Status [Pendente] + Finalidade [Intimação para Audiência]</span>
+                font-size: 12px; padding: 5px 0;">
+                <?php if ($statusFilter !== '' && $finalidadeFilter !== ''): ?>
+                    Lista com os seguintes filtros: Status [<?php echo htmlspecialchars($statusFilter, ENT_QUOTES); ?>] + Finalidade [<?php echo htmlspecialchars($finalidadeFilter, ENT_QUOTES); ?>]
+                <?php else: ?>
+                    Lista sem filtros
+                <?php endif; ?>
+                </span>
             </div>
         </div>
         
@@ -297,39 +305,8 @@ if ($totalPages > 0) {
             </div>
         </div>
 
-        <?php if (!empty($rows)): ?>
-            <?php foreach ($rows as $row):
-                $processo = $row['Processo'];
-                $idCarta = $row['IdCarta'];
-                $subtarefas = $row['Subtarefas'] ?? [];
-                $statusTarefa = (string) ($row['Status'] ?? '');
-                $tarefaConcluida = in_array($statusTarefa, ['concluída', 'concluida', 'finalizada'], true);
-                $numeroProcessoDestinoAtual = trim((string) ($row['NumeroProcessoDestino'] ?? $row['numero_processo_destino'] ?? ''));
-                $varaDestinoAtual = trim((string) ($row['VaraDestino'] ?? $row['vara_destino_nome'] ?? $row['vara_destino'] ?? ''));
-                if (($numeroProcessoDestinoAtual === '' || $varaDestinoAtual === '') && is_array($subtarefas)) {
-                    foreach ($subtarefas as $stInfoTmp) {
-                        if (($stInfoTmp['tipo'] ?? '') !== 'aguardando_informacoes' || empty($stInfoTmp['dados_especificos'])) {
-                            continue;
-                        }
-                        $dadosInfoTmp = json_decode((string) $stInfoTmp['dados_especificos'], true);
-                        if (!is_array($dadosInfoTmp)) {
-                            continue;
-                        }
-                        if ($numeroProcessoDestinoAtual === '') {
-                            $numeroProcessoDestinoAtual = trim((string) ($dadosInfoTmp['numero_processo_destino'] ?? ''));
-                        }
-                        if ($varaDestinoAtual === '') {
-                            $varaDestinoAtual = trim((string) ($dadosInfoTmp['vara_destino'] ?? ''));
-                        }
-                        if ($numeroProcessoDestinoAtual !== '' && $varaDestinoAtual !== '') {
-                            break;
-                        }
-                    }
-                }
-            ?>
-
             <!-- REGISTERS LIST -->
-            <div class="display-flex col col-full register" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idCarta); ?>">
+            <div class="display-flex col col-full register">
 
             
                 <!-- Informa a quantidade de registros encontrados (x ou nenhum) -->
@@ -346,8 +323,45 @@ if ($totalPages > 0) {
                     </div>
                 </div>
 
-                <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
-                    <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                
+                <?php if (!empty($rows)): ?>
+                    <?php foreach ($rows as $row):
+                        $processo = $row['Processo'];
+                        $idCarta = $row['IdCarta'];
+                        $subtarefas = $row['Subtarefas'] ?? [];
+                        $statusTarefa = (string) ($row['Status'] ?? '');
+                        $tarefaConcluida = in_array($statusTarefa, ['concluída', 'concluida', 'finalizada'], true);
+                        $numeroProcessoDestinoAtual = trim((string) ($row['NumeroProcessoDestino'] ?? $row['numero_processo_destino'] ?? ''));
+                        $varaDestinoAtual = trim((string) ($row['VaraDestino'] ?? $row['vara_destino_nome'] ?? $row['vara_destino'] ?? ''));
+                        if (($numeroProcessoDestinoAtual === '' || $varaDestinoAtual === '') && is_array($subtarefas)) {
+                            foreach ($subtarefas as $stInfoTmp) {
+                                if (($stInfoTmp['tipo'] ?? '') !== 'aguardando_informacoes' || empty($stInfoTmp['dados_especificos'])) {
+                                    continue;
+                                }
+                                $dadosInfoTmp = json_decode((string) $stInfoTmp['dados_especificos'], true);
+                                if (!is_array($dadosInfoTmp)) {
+                                    continue;
+                                }
+                                if ($numeroProcessoDestinoAtual === '') {
+                                    $numeroProcessoDestinoAtual = trim((string) ($dadosInfoTmp['numero_processo_destino'] ?? ''));
+                                }
+                                if ($varaDestinoAtual === '') {
+                                    $varaDestinoAtual = trim((string) ($dadosInfoTmp['vara_destino'] ?? ''));
+                                }
+                                if ($numeroProcessoDestinoAtual !== '' && $varaDestinoAtual !== '') {
+                                    break;
+                                }
+                            }
+                        }
+                    ?>
+                
+                <!-- LINHA COMPLETA DO REGISTRO -->
+                <div class="register-line" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idCarta); ?>">
+                    
+                    <!-- LADO ESQUERDO DA LINHA -->
+                    <div class="register-line-left">
+                        <!-- Dados do Processo -->
+                        
                         <div class="col">
                             <?php if (!$tarefaConcluida): ?>
                                 <label class="button-table" title="Expandir detalhes">

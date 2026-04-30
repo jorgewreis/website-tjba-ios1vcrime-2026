@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0026
+
+**Data:** 2026-04-30 09:19:27 | **Commit:** `681adf0` | **Tipo:** `patch`
+
+- refactor(cartas-expedidas): improve filter layout and structure
+
 ## V. 1.97.0025
 
 **Data:** 2026-04-30 09:11:43 | **Commit:** `eb40e86` | **Tipo:** `patch`
@@ -4938,6 +4944,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
