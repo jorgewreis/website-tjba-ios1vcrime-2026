@@ -197,7 +197,7 @@ if ($totalPages > 0) {
                     <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>Cancelada (<?php echo (int) ($statusCounts['cancelada'] ?? 0); ?>)</option>
                 </select>
                 <select class="width-700 height-md" id="filter-tipo-edital">
-                    <option value=""<?php echo $tipoEditalFilter === '' ? ' selected' : ''; ?>>Todos os tipos de edital</option>
+                    <option value=""<?php echo $tipoEditalFilter === '' ? ' selected' : ''; ?>>Todos os tipos</option>
                     <?php foreach ($tipoEditalOptions as $tipoEditalOption): ?>
                         <option value="<?php echo htmlspecialchars($tipoEditalOption, ENT_QUOTES); ?>"<?php echo $tipoEditalFilter === $tipoEditalOption ? ' selected' : ''; ?>>
                             <?php echo htmlspecialchars($tipoEditalOption); ?>
@@ -210,7 +210,6 @@ if ($totalPages > 0) {
         <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom"
         style="background-color: var(--color-primary-bg-light);">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
-                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px; padding: 5px 0;">
                 <?php
                     $activeFilters = [];
                     if ($statusFilter !== '') {
@@ -230,12 +229,11 @@ if ($totalPages > 0) {
                         $activeFilters[] = 'Processo [' . htmlspecialchars($processoFilter, ENT_QUOTES) . ']';
                     }
                     if (!empty($activeFilters)) {
-                        echo 'Lista com os seguintes filtros: ' . implode(' + ', $activeFilters);
-                    } else {
-                        echo 'Lista sem filtros';
+                        echo '
+                        <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px; padding: 5px 0;">
+                            Lista com os seguintes filtros: ' . implode(' + ', $activeFilters) . '</span>';
                     }
                 ?>
-                </span>
             </div>
         </div>
 

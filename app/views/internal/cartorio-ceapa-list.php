@@ -181,8 +181,8 @@ if ($totalPages > 0) {
                     <option value="em_andamento"<?php echo $statusFilter === 'em_andamento' ? ' selected' : ''; ?>>Em andamento (<?php echo (int) ($statusCounts['em_andamento'] ?? 0); ?>)</option>
                     <option value="finalizada"<?php echo $statusFilter === 'finalizada' ? ' selected' : ''; ?>>Finalizada (<?php echo (int) ($statusCounts['finalizada'] ?? 0); ?>)</option>
                 </select>
-                <select class="width-500 height-md" id="filter-tipo-suspensao">
-                    <option value=""<?php echo $tipoSuspensaoFilter === '' ? ' selected' : ''; ?>>Todos os tipos de suspensão (<?php echo (int) $tipoSuspensaoTotal; ?>)</option>
+                <select class="width-700 height-md" id="filter-tipo-suspensao">
+                    <option value=""<?php echo $tipoSuspensaoFilter === '' ? ' selected' : ''; ?>>Todos os tipos</option>
                     <option value="Acordo de não Persecução Penal"<?php echo $tipoSuspensaoFilter === 'Acordo de não Persecução Penal' ? ' selected' : ''; ?>>Acordo de não Persecução Penal (<?php echo (int) ($tipoSuspensaoCounts['Acordo de não Persecução Penal'] ?? 0); ?>)</option>
                     <option value="Suspensão Condicional do Processo"<?php echo $tipoSuspensaoFilter === 'Suspensão Condicional do Processo' ? ' selected' : ''; ?>>Suspensão Condicional do Processo (<?php echo (int) ($tipoSuspensaoCounts['Suspensão Condicional do Processo'] ?? 0); ?>)</option>
                 </select>
@@ -192,7 +192,6 @@ if ($totalPages > 0) {
         <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom"
         style="background-color: var(--color-primary-bg-light);">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
-                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px; padding: 5px 0;">
                 <?php
                     $activeFilters = [];
                     if ($statusFilter !== '') {
@@ -212,12 +211,11 @@ if ($totalPages > 0) {
                     }
 
                     if (!empty($activeFilters)) {
-                        echo 'Lista com os seguintes filtros: ' . implode(' + ', $activeFilters);
-                    } else {
-                        echo 'Lista sem filtros';
+                        echo '
+                        <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px; padding: 5px 0;">
+                            Lista com os seguintes filtros: ' . implode(' + ', $activeFilters) . '</span>';
                     }
                 ?>
-                </span>
             </div>
         </div>
 

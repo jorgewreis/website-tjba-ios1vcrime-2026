@@ -241,8 +241,8 @@ if ($totalPages > 0) {
                     <option value="concluída"<?php echo $statusFilter === 'concluída' ? ' selected' : ''; ?>>Finalizada (<?php echo (int) ($statusCounts['concluída'] ?? 0); ?>)</option>
                     <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>Cancelada (<?php echo (int) ($statusCounts['cancelada'] ?? 0); ?>)</option>
                 </select>
-                <select class="width-500 height-md" id="filter-tipo">
-                    <option value=""<?php echo $tipoFilter === '' ? ' selected' : ''; ?>>Todos os tipos de guia</option>
+                <select class="width-700 height-md" id="filter-tipo">
+                    <option value=""<?php echo $tipoFilter === '' ? ' selected' : ''; ?>>Todos os tipos</option>
                     <?php foreach ($tipoCountsOrdered as $tipo => $count): if ($count === 0 && $tipoFilter !== $tipo) continue; ?>
                         <option value="<?php echo htmlspecialchars($tipo, ENT_QUOTES); ?>"<?php echo $tipoFilter === $tipo ? ' selected' : ''; ?>>
                             <?php echo htmlspecialchars($tipo, ENT_QUOTES); ?> (<?php echo (int) $count; ?>)
@@ -255,7 +255,6 @@ if ($totalPages > 0) {
         <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom"
         style="background-color: var(--color-primary-bg-light);">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
-                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px; padding: 5px 0;">
                 <?php
                     $activeFilters = [];
                     if ($statusFilter !== '') {
@@ -275,18 +274,17 @@ if ($totalPages > 0) {
                         $activeFilters[] = 'Processo [' . htmlspecialchars($processoFilter, ENT_QUOTES) . ']';
                     }
                     if (!empty($activeFilters)) {
-                        echo 'Lista com os seguintes filtros: ' . implode(' + ', $activeFilters);
-                    } else {
-                        echo 'Lista sem filtros';
+                        echo '
+                        <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px; padding: 5px 0;">
+                            Lista com os seguintes filtros: ' . implode(' + ', $activeFilters) . '</span>';
                     }
                 ?>
-                </span>
             </div>
         </div>
 
         <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
-                <span class="text text-ellipsis" style="font-weight: 700; color: var(--color-gray-900); font-size: 13px;">Itens por página</span>
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Itens por página</span>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-center">
                 <select class="width-300 height-md" id="items-per-page">

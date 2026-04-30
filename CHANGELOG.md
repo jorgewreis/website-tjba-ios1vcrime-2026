@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0035
+
+**Data:** 2026-04-30 12:06:16 | **Commit:** `ff767af` | **Tipo:** `patch`
+
+- refactor(cartorio-views): enhance filter display and HTML structure
+
 ## V. 1.97.0034
 
 **Data:** 2026-04-30 11:44:27 | **Commit:** `ae62d47` | **Tipo:** `patch`
@@ -4992,6 +4998,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
