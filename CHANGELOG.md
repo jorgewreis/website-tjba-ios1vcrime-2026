@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0030
+
+**Data:** 2026-04-30 10:09:55 | **Commit:** `39d463e` | **Tipo:** `patch`
+
+- refactor(cartas-expedidas): adjust default items per page for improved pagination
+
 ## V. 1.97.0029
 
 **Data:** 2026-04-30 09:51:51 | **Commit:** `7db183a` | **Tipo:** `patch`
@@ -4962,6 +4968,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

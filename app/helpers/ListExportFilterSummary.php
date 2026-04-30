@@ -62,7 +62,11 @@ final class ListExportFilterSummary
             case 'cartasexpedidas':
             case 'cartasrecebidas':
                 self::pair($parts, 'Finalidade', (string) ($get['finalidade'] ?? ''));
-                self::pair($parts, 'Status', (string) ($get['status'] ?? ''));
+                self::pair(
+                    $parts,
+                    'Status',
+                    self::mapCartasStatusDisplay((string) ($get['status'] ?? ''))
+                );
                 self::pair($parts, 'Processo', (string) ($get['processo'] ?? ''));
                 break;
 
@@ -194,5 +198,21 @@ final class ListExportFilterSummary
         } else {
             $parts[] = 'Ativo: ' . $s;
         }
+    }
+
+    private static function mapCartasStatusDisplay(string $value): string
+    {
+        $status = trim($value);
+        if ($status === '') {
+            return '';
+        }
+
+        return match ($status) {
+            'pendente' => 'Pendente',
+            'em_andamento' => 'Em andamento',
+            'concluída' => 'Finalizada',
+            'cancelada' => 'Cancelada',
+            default => $status,
+        };
     }
 }
