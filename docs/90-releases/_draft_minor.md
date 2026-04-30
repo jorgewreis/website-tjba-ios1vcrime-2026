@@ -19,4 +19,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(cartas-expedidas): enhance filter display and total items message** `[df3bef2]`
 - **refactor(cartas-expedidas): update items per page default and enhance status filter display** `[0a2ac41]`
 - **refactor(cartas-expedidas): streamline HTML structure and improve readability** `[7db183a]`
+- **refactor(cartas-expedidas): adjust default items per page for improved pagination** `[39d463e]`
 
