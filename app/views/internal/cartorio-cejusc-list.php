@@ -166,7 +166,7 @@ if ($totalPages > 0) {
                 <span class="text text-ellipsis" style="font-weight: 600; color: var(--color-gray-900); font-size: 13px;">Pesquisa e cadastro de tarefas</span>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-center">
-                <input type="text" class="width-400 height-md" id="search-input" placeholder="Pesquisar" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
+                <input type="text" class="height-md" id="search-input" placeholder="Pesquisar" style="width: 295px;" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
                 <?php
                 $listExportPage = $routePage;
                 $listExportQuery = $baseQueryParams;

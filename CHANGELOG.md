@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0036
+
+**Data:** 2026-04-30 12:14:39 | **Commit:** `aff8e9d` | **Tipo:** `patch`
+
+- refactor(cartorio-views): standardize search input width and improve HTML structure
+
 ## V. 1.97.0035
 
 **Data:** 2026-04-30 12:06:16 | **Commit:** `ff767af` | **Tipo:** `patch`
@@ -4998,6 +5004,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
