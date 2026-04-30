@@ -228,7 +228,7 @@ if ($totalPages > 0) {
                         <?php
                             $totalRegistros = (int) ($totalDocuments ?? 0);
                             if ($totalRegistros === 0) {
-                                echo 'nenhum registro encontrado';
+                                echo 'Nenhum registro encontrado';
                             } else {
                                 $totalRegistrosText = $totalRegistros === 1 ? 'registro encontrado' : 'registros encontrados';
                                 echo htmlspecialchars((string) $totalRegistros, ENT_QUOTES) . ' ' . htmlspecialchars($totalRegistrosText, ENT_QUOTES);
@@ -406,21 +406,10 @@ if ($totalPages > 0) {
                             </div>
                         </div>
                     <?php endforeach; ?>
-                    <?php if (empty($subtarefas)): ?>
-                        <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top">
-                            <span class="minor-info">Nenhuma sub-tarefa pendente.</span>
-                        </div>
-                    <?php endif; ?>
                 </div>
                 <?php endif; ?>
             </div>
             <?php endforeach; ?>
-            <?php else: ?>
-                <div class="display-flex col col-full register border-bottom">
-                    <div class="display-flex row row-full padding-x-sm padding-y-sm">
-                        <span class="major-info">Nenhuma medida protetiva cadastrada.</span>
-                    </div>
-                </div>
             <?php endif; ?>
         </div>
 

@@ -223,7 +223,7 @@ if ($totalPages > 0) {
 
         <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
-                <span class="text text-ellipsis" style="font-weight: 600; color: var(--color-gray-900); font-size: 13px;">Itens por página</span>
+                <span class="text text-ellipsis" style="font-weight: 700; color: var(--color-gray-900); font-size: 13px;">Itens por página</span>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-center">
                 <select class="width-300 height-md" id="items-per-page">
@@ -249,7 +249,7 @@ if ($totalPages > 0) {
                         <?php
                             $totalRegistros = (int) ($totalDocuments ?? 0);
                             if ($totalRegistros === 0) {
-                                echo 'nenhum registro encontrado';
+                                echo 'Nenhum registro encontrado';
                             } else {
                                 $totalRegistrosText = $totalRegistros === 1 ? 'registro encontrado' : 'registros encontrados';
                                 echo htmlspecialchars((string) $totalRegistros, ENT_QUOTES) . ' ' . htmlspecialchars($totalRegistrosText, ENT_QUOTES);
@@ -346,12 +346,6 @@ if ($totalPages > 0) {
 
                 </div>
             <?php endforeach; ?>
-            <?php else: ?>
-                <div class="display-flex col col-full register border-bottom">
-                    <div class="display-flex row row-full padding-x-sm padding-y-sm">
-                        <span class="major-info">Nenhum registro cadastrado.</span>
-                    </div>
-                </div>
             <?php endif; ?>
         </div>
 
