@@ -22,4 +22,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(cartas-expedidas): adjust default items per page for improved pagination** `[39d463e]`
 - **refactor(cartas-recebidas): update default items per page and enhance HTML structure** `[4af9f7b]`
 - **refactor(cartorio-cejusc-list): enhance HTML structure and improve filter functionality** `[3ab9709]`
+- **refactor(cartorio-ceapa-list): update default items per page and enhance HTML structure** `[0f980b1]`
 
