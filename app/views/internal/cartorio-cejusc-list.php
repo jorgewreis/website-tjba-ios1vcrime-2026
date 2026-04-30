@@ -24,9 +24,9 @@ $routePage = trim((string) ($_GET['page'] ?? 'cejusc'));
 $statusFilter = trim($_GET['status'] ?? '');
 $processoFilter = trim($_GET['processo'] ?? '');
 $allowedPerPage = [10, 25, 50, 100];
-$itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 25;
+$itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 10;
 if (!in_array($itemsPerPage, $allowedPerPage, true)) {
-    $itemsPerPage = 25;
+    $itemsPerPage = 10;
 }
 
 $pageNumberParam = $_GET['page_number'] ?? null;
@@ -157,13 +157,13 @@ if ($totalPages > 0) {
         <div class="card-title">
             <div class="display-flex col col-full justify-start">
                 <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;">Cejusc</h1>
-                <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Geração da decisão em PDF, envio por e-mail ao Cejusc e juntada do comprovante de envio.</p>
+                <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Acompanhamento do envio da decisão ao Cejusc para que o denunciado participe de curso restaurativo.</p>
             </div>
         </div>
 
         <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
-                <span class="text text-ellipsis" style="font-weight: 600; color: var(--color-gray-900); font-size: 13px;">Pesquisa e cadastro de tarefas CEJUSC</span>
+                <span class="text text-ellipsis" style="font-weight: 600; color: var(--color-gray-900); font-size: 13px;">Pesquisa e cadastro de tarefas</span>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-center">
                 <input type="text" class="width-400 height-md" id="search-input" placeholder="Pesquisar" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
@@ -182,7 +182,7 @@ if ($totalPages > 0) {
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-center">
                 <select class="width-500 height-md" id="filter-status">
-                    <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Todas exceto finalizadas</option>
+                    <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Todos os status</option>
                     <option value="pendente"<?php echo $statusFilter === 'pendente' ? ' selected' : ''; ?>>Pendente (<?php echo (int) ($statusCounts['pendente'] ?? 0); ?>)</option>
                     <option value="em_andamento"<?php echo $statusFilter === 'em_andamento' ? ' selected' : ''; ?>>Em andamento (<?php echo (int) ($statusCounts['em_andamento'] ?? 0); ?>)</option>
                     <option value="concluída"<?php echo $statusFilter === 'concluída' ? ' selected' : ''; ?>>Finalizada (<?php echo (int) ($statusCounts['concluída'] ?? 0); ?>)</option>

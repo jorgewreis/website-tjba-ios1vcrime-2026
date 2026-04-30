@@ -25,9 +25,9 @@ $statusFilter = trim($_GET['status'] ?? '');
 $processoFilter = trim($_GET['processo'] ?? '');
 $tipoEditalFilter = trim($_GET['tipo_edital'] ?? '');
 $allowedPerPage = [10, 25, 50, 100];
-$itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 25;
+$itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 10;
 if (!in_array($itemsPerPage, $allowedPerPage, true)) {
-    $itemsPerPage = 25;
+    $itemsPerPage = 10;
 }
 
 $pageNumberParam = $_GET['page_number'] ?? null;
@@ -152,68 +152,130 @@ if ($totalPages > 0) {
 
     <div class="spacing-top-page"></div>
 
+    <!-- HEADER PAGE -->
     <div class="header-page">
         <div class="location">
             <span class="all">Interno - Editais -</span>
             <span class="specific">Lista</span>
         </div>
-        <h1 class="title-page">Editais</h1>
-        <p class="description-page">Expedição, envio para publicação no DJEN, certificação da publicação e certificação de decurso do prazo.</p>
     </div>
 
     <div class="container-full card-page">
 
-        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
-            <div class="display-flex row row-fit justify-start">
-                <h2>Lista de editais</h2>
+        <div class="card-title">
+            <div class="display-flex col col-full justify-start">
+                <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;">Editais</h1>
+                <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Acompanhamento da expedição, envio ao DJEN, certificação da publicação e decurso do prazo.</p>
             </div>
-            <div class="display-flex row row-fit justify-end gap-y-md">
-                <input type="text" class="width-400 height-md" id="search-input" placeholder="Pesquisar por processo..." value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
+        </div>
+
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 600; color: var(--color-gray-900); font-size: 13px;">Pesquisa e cadastro de editais</span>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md align-center">
+                <input type="text" class="width-400 height-md" id="search-input" placeholder="Pesquisar" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
                 <?php
                 $listExportPage = $routePage;
                 $listExportQuery = $baseQueryParams;
                 include __DIR__ . '/_list_export_buttons.php';
                 ?>
-                <button class="btn btn-primary" id="novo-cadastro-btn">Novo cadastro</button>
+                <button type="button" class="btn btn-primary" id="novo-cadastro-btn">Novo cadastro</button>
             </div>
         </div>
 
-        <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
-            <div class="display-flex row row-fit justify-start gap-y-md">
-                <div class="col">
-                    <label for="filter-status">Filtrar por status</label>
-                    <select class="width-500 height-md" id="filter-status">
-                        <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Todas exceto finalizadas</option>
-                        <option value="pendente"<?php echo $statusFilter === 'pendente' ? ' selected' : ''; ?>>Pendente (<?php echo (int) ($statusCounts['pendente'] ?? 0); ?>)</option>
-                        <option value="em_andamento"<?php echo $statusFilter === 'em_andamento' ? ' selected' : ''; ?>>Em andamento (<?php echo (int) ($statusCounts['em_andamento'] ?? 0); ?>)</option>
-                        <option value="concluída"<?php echo $statusFilter === 'concluída' ? ' selected' : ''; ?>>Finalizada (<?php echo (int) ($statusCounts['concluída'] ?? 0); ?>)</option>
-                        <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>Cancelada (<?php echo (int) ($statusCounts['cancelada'] ?? 0); ?>)</option>
-                    </select>
-                </div>
-                <div class="col">
-                    <label for="filter-tipo-edital">Filtrar por tipo de edital</label>
-                    <select class="width-700 height-md" id="filter-tipo-edital">
-                        <option value=""<?php echo $tipoEditalFilter === '' ? ' selected' : ''; ?>>Mostrar todos</option>
-                        <?php foreach ($tipoEditalOptions as $tipoEditalOption): ?>
-                            <option value="<?php echo htmlspecialchars($tipoEditalOption, ENT_QUOTES); ?>"<?php echo $tipoEditalFilter === $tipoEditalOption ? ' selected' : ''; ?>>
-                                <?php echo htmlspecialchars($tipoEditalOption); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 600; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
             </div>
-            <div class="display-flex row row-fit justify-end gap-y-md">
-                <div class="col">
-                    <label for="items-per-page">Itens por página</label>
-                    <select class="width-300 height-md" id="items-per-page">
-                        <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
-                        <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
-                        <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
-                        <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
-                    </select>
-                </div>
+            <div class="display-flex row row-fit justify-end gap-y-md align-center">
+                <select class="width-500 height-md" id="filter-status">
+                    <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Todos os status</option>
+                    <option value="pendente"<?php echo $statusFilter === 'pendente' ? ' selected' : ''; ?>>Pendente (<?php echo (int) ($statusCounts['pendente'] ?? 0); ?>)</option>
+                    <option value="em_andamento"<?php echo $statusFilter === 'em_andamento' ? ' selected' : ''; ?>>Em andamento (<?php echo (int) ($statusCounts['em_andamento'] ?? 0); ?>)</option>
+                    <option value="concluída"<?php echo $statusFilter === 'concluída' ? ' selected' : ''; ?>>Finalizada (<?php echo (int) ($statusCounts['concluída'] ?? 0); ?>)</option>
+                    <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>Cancelada (<?php echo (int) ($statusCounts['cancelada'] ?? 0); ?>)</option>
+                </select>
+                <select class="width-700 height-md" id="filter-tipo-edital">
+                    <option value=""<?php echo $tipoEditalFilter === '' ? ' selected' : ''; ?>>Todos os tipos de edital</option>
+                    <?php foreach ($tipoEditalOptions as $tipoEditalOption): ?>
+                        <option value="<?php echo htmlspecialchars($tipoEditalOption, ENT_QUOTES); ?>"<?php echo $tipoEditalFilter === $tipoEditalOption ? ' selected' : ''; ?>>
+                            <?php echo htmlspecialchars($tipoEditalOption); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
             </div>
         </div>
+
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom"
+        style="background-color: var(--color-primary-bg-light);">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px; padding: 5px 0;">
+                <?php
+                    $activeFilters = [];
+                    if ($statusFilter !== '') {
+                        $statusFilterLabels = [
+                            'pendente' => 'Pendente',
+                            'em_andamento' => 'Em andamento',
+                            'concluída' => 'Finalizada',
+                            'cancelada' => 'Cancelada',
+                        ];
+                        $statusFilterDisplay = $statusFilterLabels[$statusFilter] ?? $statusFilter;
+                        $activeFilters[] = 'Status [' . htmlspecialchars($statusFilterDisplay, ENT_QUOTES) . ']';
+                    }
+                    if ($tipoEditalFilter !== '') {
+                        $activeFilters[] = 'Tipo de edital [' . htmlspecialchars($tipoEditalFilter, ENT_QUOTES) . ']';
+                    }
+                    if ($processoFilter !== '') {
+                        $activeFilters[] = 'Processo [' . htmlspecialchars($processoFilter, ENT_QUOTES) . ']';
+                    }
+                    if (!empty($activeFilters)) {
+                        echo 'Lista com os seguintes filtros: ' . implode(' + ', $activeFilters);
+                    } else {
+                        echo 'Lista sem filtros';
+                    }
+                ?>
+                </span>
+            </div>
+        </div>
+
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 600; color: var(--color-gray-900); font-size: 13px;">Itens por página</span>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md align-center">
+                <select class="width-300 height-md" id="items-per-page">
+                    <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
+                    <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
+                    <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
+                    <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="card-title" style="padding-top: 40px !important;">
+            <div class="display-flex row row-full justify-start">
+                <h2>Resultado</h2>
+            </div>
+        </div>
+
+        <div class="display-flex col col-full register">
+            <div class="display-flex row row-full padding-x-sm padding-y-sm align-center justify-start border-bottom"
+            style="background-color: var(--color-primary-bg-light);">
+                <div class="display-flex col col-fit align-center justify-start padding-x-lg padding-y-sm">
+                    <span class="text" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px;">
+                        <?php
+                            $totalRegistros = (int) ($totalDocuments ?? 0);
+                            if ($totalRegistros === 0) {
+                                echo 'nenhum registro encontrado';
+                            } else {
+                                $totalRegistrosText = $totalRegistros === 1 ? 'registro encontrado' : 'registros encontrados';
+                                echo htmlspecialchars((string) $totalRegistros, ENT_QUOTES) . ' ' . htmlspecialchars($totalRegistrosText, ENT_QUOTES);
+                            }
+                        ?>
+                    </span>
+                </div>
+            </div>
         <?php if (!empty($rows)): ?>
             <?php foreach ($rows as $row):
                 $idEdital = $row['IdEdital'];
@@ -408,13 +470,14 @@ if ($totalPages > 0) {
                 <?php endif; ?>
             </div>
             <?php endforeach; ?>
-        <?php else: ?>
-            <div class="display-flex col col-full register border-bottom">
-                <div class="display-flex row row-full padding-x-sm padding-y-sm">
-                    <span class="major-info">Nenhum edital cadastrado.</span>
+            <?php else: ?>
+                <div class="display-flex col col-full register border-bottom">
+                    <div class="display-flex row row-full padding-x-sm padding-y-sm">
+                        <span class="major-info">Nenhum edital cadastrado.</span>
+                    </div>
                 </div>
-            </div>
-        <?php endif; ?>
+            <?php endif; ?>
+        </div>
 
         <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
             <span class="pagination-info">

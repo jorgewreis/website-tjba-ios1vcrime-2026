@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0033
+
+**Data:** 2026-04-30 11:31:13 | **Commit:** `0f980b1` | **Tipo:** `patch`
+
+- refactor(cartorio-ceapa-list): update default items per page and enhance HTML structure
+
 ## V. 1.97.0032
 
 **Data:** 2026-04-30 11:19:28 | **Commit:** `3ab9709` | **Tipo:** `patch`
@@ -4980,6 +4986,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
