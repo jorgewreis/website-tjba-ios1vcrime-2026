@@ -25,4 +25,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(cartorio-ceapa-list): update default items per page and enhance HTML structure** `[0f980b1]`
 - **refactor(cartorio-views): standardize "no records found" message and enhance HTML structure** `[ae62d47]`
 - **refactor(cartorio-views): enhance filter display and HTML structure** `[ff767af]`
+- **refactor(cartorio-views): standardize search input width and improve HTML structure** `[aff8e9d]`
 
