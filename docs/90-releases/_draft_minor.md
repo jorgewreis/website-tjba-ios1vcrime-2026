@@ -21,4 +21,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(cartorio-cartas-expedidas-list): improve filter display and HTML structure** `[0b4692e8]`
 - **refactor(cartorio-views): enhance button styles and filter display** `[f532eea4]`
 - **refactor(cartorio-cartas-views): update title and adjust layout for clarity** `[0f599132]`
+- **refactor(cartorio-cartas-views): enhance layout and title clarity** `[6dad944d]`
 
