@@ -233,7 +233,7 @@ if ($totalPages > 0) {
         </div>
 
         <!-- SUBTITLE SECTION CARD -->
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="search">
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="search" style="display: none;">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
                 <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Pesquisa e cadastro</span>
             </div>
@@ -244,17 +244,15 @@ if ($totalPages > 0) {
                 $listExportQuery = $baseQueryParams;
                 include __DIR__ . '/_list_export_buttons.php';
                 ?>
-                <button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
-            </div>
-            <div class="display-flex row row-fit justify-center align-center gap-x-md gap-y-sm">
+                <button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>            
                 <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="search">
-                    <i class="fi fi-rr-arrow-up-short"></i>
+                    <i class="fi fi-rr-angle-small-up"></i>
                 </div>
             </div>
         </div>
 
         <!-- SUBTITLE SECTION CARD - FILTERS -->
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="filters">
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="filters" style="display: none;">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
                 <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
             </div>
@@ -284,16 +282,14 @@ if ($totalPages > 0) {
                         </option>
                     <?php endforeach; ?>
                 </select>
-            </div>
-            <div class="display-flex row row-fit justify-center align-center gap-x-md gap-y-sm">
                 <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="filters">
-                    <i class="fi fi-rr-eye-slash"></i>
+                    <i class="fi fi-rr-angle-small-up"></i>
                 </div>
             </div>
         </div>
 
         <!-- SUBTITLE SECTION CARD - ITEMS PER PAGE -->
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="items">
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="items" style="display: none;">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
                 <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Itens por página</span>
             </div>
@@ -305,10 +301,8 @@ if ($totalPages > 0) {
                     <option value="50" <?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
                     <option value="100" <?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
                 </select>
-            </div>
-            <div class="display-flex row row-fit justify-center align-center gap-x-md gap-y-sm">
                 <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="items">
-                    <i class="fi fi-rr-eye-slash"></i>
+                    <i class="fi fi-rr-angle-small-up"></i>
                 </div>
             </div>
         </div>
@@ -704,7 +698,7 @@ if ($totalPages > 0) {
                 }
 
                 sections.forEach(function(section) {
-                    section.style.display = 'flex';
+                    section.style.display = 'none';
                 });
 
                 document.querySelectorAll('[data-list-section-trigger]').forEach(function(trigger) {
