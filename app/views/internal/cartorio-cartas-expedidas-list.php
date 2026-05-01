@@ -219,7 +219,7 @@ if ($totalPages > 0) {
                 <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;">Cartas Expedidas</h1>
                 <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Lista de cartas expedidas pelo cartório para controle e envio.</p>
             </div>
-            <div class="display-flex row row-fit justify-end align-end gap-x-md gap-y-md">
+            <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md">
                 <div class="title-icon" title="Pesquisar" role="button" tabindex="0" aria-label="Pesquisar" data-list-section-trigger="search">
                     <i class="fi fi-rr-search"></i>
                 </div>

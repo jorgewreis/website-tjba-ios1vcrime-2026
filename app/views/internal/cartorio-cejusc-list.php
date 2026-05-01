@@ -155,15 +155,27 @@ if ($totalPages > 0) {
     <div class="container-full card-page">
 
         <div class="card-title">
-            <div class="display-flex col col-full justify-start">
+            <div class="display-flex col col-fit justify-start">
                 <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;">Cejusc</h1>
                 <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Acompanhamento do envio da decisão ao Cejusc para que o denunciado participe de curso restaurativo.</p>
             </div>
+            <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md">
+                <div class="title-icon" title="Pesquisar" role="button" tabindex="0" aria-label="Pesquisar" data-list-section-trigger="search">
+                    <i class="fi fi-rr-search"></i>
+                </div>
+                <div class="title-icon" title="Filtrar" role="button" tabindex="0" aria-label="Filtrar" data-list-section-trigger="filters">
+                    <i class="fi fi-rr-filter"></i>
+                </div>
+                <div class="title-icon" title="Listar" role="button" tabindex="0" aria-label="Listar" data-list-section-trigger="items">
+                    <i class="fi fi-rr-list"></i>
+                </div>
+                <button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
+            </div>
         </div>
 
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="search" style="display: none;">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
-                <span class="text text-ellipsis" style="font-weight: 600; color: var(--color-gray-900); font-size: 13px;">Pesquisa e cadastro de tarefas</span>
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Pesquisa e cadastro de tarefas</span>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-center">
                 <input type="text" class="height-md" id="search-input" placeholder="Pesquisar" style="width: 295px;" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
@@ -172,13 +184,15 @@ if ($totalPages > 0) {
                 $listExportQuery = $baseQueryParams;
                 include __DIR__ . '/_list_export_buttons.php';
                 ?>
-                <button type="button" class="btn btn-primary" id="novo-cadastro-btn">Novo cadastro</button>
+                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="search">
+                    <i class="fi fi-rr-angle-small-up"></i>
+                </div>
             </div>
         </div>
 
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="filters" style="display: none;">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
-                <span class="text text-ellipsis" style="font-weight: 600; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-center">
                 <select class="width-500 height-md" id="filter-status">
@@ -188,6 +202,9 @@ if ($totalPages > 0) {
                     <option value="concluída"<?php echo $statusFilter === 'concluída' ? ' selected' : ''; ?>>Finalizada (<?php echo (int) ($statusCounts['concluída'] ?? 0); ?>)</option>
                     <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>Cancelada (<?php echo (int) ($statusCounts['cancelada'] ?? 0); ?>)</option>
                 </select>
+                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="filters">
+                    <i class="fi fi-rr-angle-small-up"></i>
+                </div>
             </div>
         </div>
 
@@ -219,9 +236,9 @@ if ($totalPages > 0) {
             </div>
         </div>
 
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="items" style="display: none;">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
-                <span class="text text-ellipsis" style="font-weight: 600; color: var(--color-gray-900); font-size: 13px;">Itens por página</span>
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Itens por página</span>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-center">
                 <select class="width-300 height-md" id="items-per-page">
@@ -230,14 +247,17 @@ if ($totalPages > 0) {
                     <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
                     <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
                 </select>
+                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="items">
+                    <i class="fi fi-rr-angle-small-up"></i>
+                </div>
             </div>
         </div>
 
-        <div class="card-title" style="padding-top: 40px !important;">
+        <!-- <div class="card-title" style="padding-top: 40px !important;">
             <div class="display-flex row row-full justify-start">
                 <h2>Resultado</h2>
             </div>
-        </div>
+        </div> -->
 
         <div class="display-flex col col-full register">
             <div class="display-flex row row-full padding-x-sm padding-y-sm align-center justify-start border-bottom"
@@ -463,6 +483,61 @@ if ($totalPages > 0) {
 
     <script>
         (function () {
+            function initializeListSectionToggles() {
+                const sections = document.querySelectorAll('[data-list-section]');
+
+                function setSectionVisibility(sectionName, isVisible) {
+                    const section = document.querySelector('[data-list-section="' + sectionName + '"]');
+                    if (!section) {
+                        return;
+                    }
+
+                    section.style.display = isVisible ? 'flex' : 'none';
+                }
+
+                function handleToggleClick(event, isVisible) {
+                    const sectionName = event.currentTarget.getAttribute(isVisible ? 'data-list-section-trigger' : 'data-list-section-hide');
+                    if (!sectionName) {
+                        return;
+                    }
+
+                    setSectionVisibility(sectionName, isVisible);
+                }
+
+                function handleToggleKeydown(event, isVisible) {
+                    if (event.key !== 'Enter' && event.key !== ' ') {
+                        return;
+                    }
+
+                    event.preventDefault();
+                    handleToggleClick(event, isVisible);
+                }
+
+                sections.forEach(function (section) {
+                    section.style.display = 'none';
+                });
+
+                document.querySelectorAll('[data-list-section-trigger]').forEach(function (trigger) {
+                    trigger.addEventListener('click', function (event) {
+                        handleToggleClick(event, true);
+                    });
+                    trigger.addEventListener('keydown', function (event) {
+                        handleToggleKeydown(event, true);
+                    });
+                });
+
+                document.querySelectorAll('[data-list-section-hide]').forEach(function (trigger) {
+                    trigger.addEventListener('click', function (event) {
+                        handleToggleClick(event, false);
+                    });
+                    trigger.addEventListener('keydown', function (event) {
+                        handleToggleKeydown(event, false);
+                    });
+                });
+            }
+
+            initializeListSectionToggles();
+
             if (!window.App || !App.CartorioCejuscList || typeof App.CartorioCejuscList.initialize !== 'function') {
                 return;
             }
