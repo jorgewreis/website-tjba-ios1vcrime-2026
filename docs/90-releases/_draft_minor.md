@@ -19,4 +19,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(toast): implement dedicated storage key for Sala de Midias and enhance API response handling** `[f130ac5]`
 - **refactor(home): remove internal route change backup for iframe synchronization** `[27a2d943]`
 - **refactor(cartorio-cartas-expedidas-list): improve filter display and HTML structure** `[0b4692e8]`
+- **refactor(cartorio-views): enhance button styles and filter display** `[f532eea4]`
 
