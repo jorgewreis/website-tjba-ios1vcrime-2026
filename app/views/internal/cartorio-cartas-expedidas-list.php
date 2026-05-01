@@ -224,7 +224,7 @@ if ($totalPages > 0) {
                 <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Pesquisa e cadastro</span>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-center">
-                <input type="text" class="height-md" id="search-input" placeholder="Pesquisar" style="width: 295px;" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
+                <input type="text" class="height-md" id="search-input" placeholder="Pesquisar" style="width: 290px;" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
                     <?php
                     $listExportPage = $routePage;
                     $listExportQuery = $baseQueryParams;
@@ -285,13 +285,14 @@ if ($totalPages > 0) {
         </div>
         
         <!-- TITLE CARD -->
-        <div class="card-title" style="padding-top: 40px !important;">
+        <div class="card-title" style="padding: 40px 0 10px 0 !important;">
             <div class="display-flex row row-full justify-start">
-                <h2>Resultado</h2>
+                <h2>Lista de cartas <strong>expedidas</strong> pelo cartório</h2>
             </div>
         </div>
+        <!-- END TITLE CARD -->
 
-            <!-- REGISTERS LIST -->
+        <!-- REGISTERS LIST -->
         <div class="display-flex col col-full register">
             
             <!-- SUBTITLE SECTION CARD - FILTERS INFO -->       
