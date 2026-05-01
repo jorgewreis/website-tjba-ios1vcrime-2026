@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0045
+
+**Data:** 2026-05-01 14:57:20 | **Commit:** `909f7c86` | **Tipo:** `patch`
+
+- refactor(cartorio-cartas-expedidas-list): adjust button placement and search section visibility
+
 ## V. 1.97.0044
 
 **Data:** 2026-05-01 14:53:37 | **Commit:** `1d3b408f` | **Tipo:** `patch`
@@ -5052,6 +5058,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

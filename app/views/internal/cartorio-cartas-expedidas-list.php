@@ -219,7 +219,7 @@ if ($totalPages > 0) {
                 <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;">Cartas Expedidas</h1>
                 <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Lista de cartas expedidas pelo cartório para controle e envio.</p>
             </div>
-            <div class="display-flex row row-fit justify-end align-end gap-x-md gap-y-sm">
+            <div class="display-flex row row-fit justify-end align-end gap-x-md gap-y-md">
                 <div class="title-icon" title="Pesquisar" role="button" tabindex="0" aria-label="Pesquisar" data-list-section-trigger="search">
                     <i class="fi fi-rr-search"></i>
                 </div>
@@ -229,11 +229,12 @@ if ($totalPages > 0) {
                 <div class="title-icon" title="Listar" role="button" tabindex="0" aria-label="Listar" data-list-section-trigger="items">
                     <i class="fi fi-rr-list"></i>
                 </div>
+                <button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
             </div>
         </div>
 
         <!-- SUBTITLE SECTION CARD -->
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="search" style="display: flex;">
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="search" style="display: none;">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
                 <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Pesquisa e cadastro</span>
             </div>
@@ -244,7 +245,6 @@ if ($totalPages > 0) {
                 $listExportQuery = $baseQueryParams;
                 include __DIR__ . '/_list_export_buttons.php';
                 ?>
-                <button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>            
                 <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="search">
                     <i class="fi fi-rr-angle-small-up"></i>
                 </div>
@@ -698,7 +698,7 @@ if ($totalPages > 0) {
                 }
 
                 sections.forEach(function(section) {
-                    section.style.display = section.getAttribute('data-list-section') === 'search' ? 'flex' : 'none';
+                    section.style.display = 'none';
                 });
 
                 document.querySelectorAll('[data-list-section-trigger]').forEach(function(trigger) {
