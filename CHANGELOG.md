@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0042
+
+**Data:** 2026-05-01 14:44:45 | **Commit:** `ef651e62` | **Tipo:** `patch`
+
+- refactor(cartorio-cartas-expedidas-list): improve HTML structure and spacing
+
 ## V. 1.97.0041
 
 **Data:** 2026-05-01 14:29:28 | **Commit:** `90f2b117` | **Tipo:** `patch`
@@ -5034,6 +5040,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
