@@ -269,35 +269,38 @@ if ($totalPages > 0) {
             </div>
         </div>
 
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom"
-        style="background-color: var(--color-primary-bg-light);">
-            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
-                <?php
-                    $activeFilters = [];
-                    if ($statusFilter !== '') {
-                        $statusFilterLabels = [
-                            'pendente' => 'Pendente',
-                            'em_andamento' => 'Em andamento',
-                            'concluída' => 'Finalizada',
-                            'cancelada' => 'Cancelada',
-                        ];
-                        $statusFilterDisplay = $statusFilterLabels[$statusFilter] ?? $statusFilter;
-                        $activeFilters[] = 'Status [' . htmlspecialchars($statusFilterDisplay, ENT_QUOTES) . ']';
-                    }
-                    if ($tipoFilter !== '') {
-                        $activeFilters[] = 'Tipo [' . htmlspecialchars($tipoFilter, ENT_QUOTES) . ']';
-                    }
-                    if ($processoFilter !== '') {
-                        $activeFilters[] = 'Processo [' . htmlspecialchars($processoFilter, ENT_QUOTES) . ']';
-                    }
-                    if (!empty($activeFilters)) {
-                        echo '
-                        <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px; padding: 5px 0;">
-                            Lista com os seguintes filtros: ' . implode(' + ', $activeFilters) . '</span>';
-                    }
-                ?>
-            </div>
-        </div>
+        <?php
+        $activeFilters = [];
+        if ($statusFilter !== '') {
+            $statusFilterLabels = [
+                'pendente' => 'Pendente',
+                'em_andamento' => 'Em andamento',
+                'concluída' => 'Finalizada',
+                'cancelada' => 'Cancelada',
+            ];
+            $statusFilterDisplay = $statusFilterLabels[$statusFilter] ?? $statusFilter;
+            $activeFilters[] = 'Status [' . htmlspecialchars($statusFilterDisplay, ENT_QUOTES) . ']';
+        }
+        if ($tipoFilter !== '') {
+            $activeFilters[] = 'Tipo [' . htmlspecialchars($tipoFilter, ENT_QUOTES) . ']';
+        }
+        if ($processoFilter !== '') {
+            $activeFilters[] = 'Processo [' . htmlspecialchars($processoFilter, ENT_QUOTES) . ']';
+        }
+        if (!empty($activeFilters)) {
+            echo '
+                    <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" style="background-color: var(--color-primary-bg-light);">
+                        <div class="display-flex row row-fit justify-start align-center padding-x-sm padding-y-sm gap-y-sm">
+                            <span class="text text-ellipsis" style="font-weight: 400; color: var(--color-primary-active); font-size: 12px;">
+                                Lista com os seguintes filtros:
+                            </span>
+                            <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px;">
+                                ' . implode(' + ', $activeFilters) . '
+                            </span>
+                        </div>
+                    </div>';
+        }
+        ?>
 
         <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="items" style="display: none;">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
