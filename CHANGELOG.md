@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0038
+
+**Data:** 2026-05-01 10:14:22 | **Commit:** `f532eea4` | **Tipo:** `patch`
+
+- refactor(cartorio-views): enhance button styles and filter display
+
 ## V. 1.97.0037
 
 **Data:** 2026-05-01 09:51:51 | **Commit:** `0b4692e8` | **Tipo:** `patch`
@@ -5010,6 +5016,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

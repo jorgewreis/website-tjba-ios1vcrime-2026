@@ -632,7 +632,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                     {
                         type: 'submenu',
                         icon: 'fi fi-rs-envelope-open-text',
-                        label: 'Cartas Precatórias',
+                        label: 'Cartas',
                         children: [
                             { label: 'Cartas Expedidas', target: 'cartasexpedidas' },
                             { label: 'Cartas Recebidas', target: 'cartasrecebidas' }

@@ -241,7 +241,7 @@ if ($totalPages > 0) {
         <!-- SUBTITLE SECTION CARD -->
         <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
-                <span class="text text-ellipsis" style="font-weight: 600; color: var(--color-gray-900); font-size: 13px;">Pesquisa e cadastro de cartas recebidas</span>
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Pesquisa e cadastro</span>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-center">
                 <input type="text" class="height-md" id="search-input" placeholder="Pesquisar" style="width: 295px;" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
@@ -250,16 +250,17 @@ if ($totalPages > 0) {
                 $listExportQuery = $baseQueryParams;
                 include __DIR__ . '/_list_export_buttons.php';
                 ?>
-                <button type="button" class="btn btn-primary" id="novo-cadastro-btn">Novo cadastro</button>
+                <button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
             </div>
         </div>
 
         <!-- SUBTITLE SECTION CARD - FILTERS -->
         <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
-                <span class="text text-ellipsis" style="font-weight: 600; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-center">
+                <!-- Filtro - Status -->
                 <select class="width-500 height-md" id="filter-status">
                     <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Todos os status</option>
                     <option value="pendente"<?php echo $statusFilter === 'pendente' ? ' selected' : ''; ?>>
@@ -275,6 +276,7 @@ if ($totalPages > 0) {
                         Cancelada (<?php echo htmlspecialchars((string) ($statusCounts['cancelada'] ?? 0)); ?>)
                     </option>
                 </select>
+                <!-- Filtro - Finalidade -->
                 <select class="width-700 height-md" id="filter-tipo">
                     <option value=""<?php echo $finalidadeFilter === '' ? ' selected' : ''; ?>>Todas as finalidades</option>
                     <?php foreach ($finalidadeCounts as $finalidade => $count): ?>
@@ -286,44 +288,13 @@ if ($totalPages > 0) {
             </div>
         </div>
 
-        <!-- SUBTITLE SECTION CARD - FILTERS INFO -->
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom"
-        style="background-color: var(--color-primary-bg-light);">
-            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
-                <?php
-                    $activeFilters = [];
-                    if ($statusFilter !== '') {
-                        $statusFilterLabels = [
-                            'pendente' => 'Pendente',
-                            'em_andamento' => 'Em andamento',
-                            'concluída' => 'Finalizada',
-                            'cancelada' => 'Cancelada',
-                        ];
-                        $statusFilterDisplay = $statusFilterLabels[$statusFilter] ?? $statusFilter;
-                        $activeFilters[] = 'Status [' . htmlspecialchars($statusFilterDisplay, ENT_QUOTES) . ']';
-                    }
-                    if ($finalidadeFilter !== '') {
-                        $activeFilters[] = 'Finalidade [' . htmlspecialchars($finalidadeFilter, ENT_QUOTES) . ']';
-                    }
-                    if ($processoFilter !== '') {
-                        $activeFilters[] = 'Processo [' . htmlspecialchars($processoFilter, ENT_QUOTES) . ']';
-                    }
-
-                    if (!empty($activeFilters)) {
-                        echo '
-                        <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px; padding: 5px 0;">
-                            Lista com os seguintes filtros: ' . implode(' + ', $activeFilters) . '</span>';
-                    }
-                ?>
-            </div>
-        </div>
-
         <!-- SUBTITLE SECTION CARD - ITEMS PER PAGE -->
         <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
-                <span class="text text-ellipsis" style="font-weight: 600; color: var(--color-gray-900); font-size: 13px;">Itens por página</span>
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Itens por página</span>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-center">
+                <!-- Filtro - Itens por página -->
                 <select class="width-300 height-md" id="items-per-page">
                     <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
                     <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
@@ -342,6 +313,42 @@ if ($totalPages > 0) {
 
         <!-- REGISTERS LIST -->
         <div class="display-flex col col-full register">
+
+            <!-- SUBTITLE SECTION CARD - FILTERS INFO -->       
+            <?php
+                $activeFilters = [];
+                if ($statusFilter !== '') {
+                    $statusFilterLabels = [
+                        'pendente' => 'Pendente',
+                        'em_andamento' => 'Em andamento',
+                        'concluída' => 'Finalizada',
+                        'cancelada' => 'Cancelada',
+                    ];
+                    $statusFilterDisplay = $statusFilterLabels[$statusFilter] ?? $statusFilter;
+                    $activeFilters[] = 'Status [' . htmlspecialchars($statusFilterDisplay, ENT_QUOTES) . ']';
+                }
+                if ($finalidadeFilter !== '') {
+                    $activeFilters[] = 'Finalidade [' . htmlspecialchars($finalidadeFilter, ENT_QUOTES) . ']';
+                }
+                if ($processoFilter !== '') {
+                    $activeFilters[] = 'Processo [' . htmlspecialchars($processoFilter, ENT_QUOTES) . ']';
+                }
+
+                if (!empty($activeFilters)) {
+                    echo '
+                    <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" style="background-color: var(--color-primary-bg-light);">
+                        <div class="display-flex row row-fit justify-start align-center padding-x-sm padding-y-sm gap-y-sm">
+                            <span class="text text-ellipsis" style="font-weight: 400; color: var(--color-primary-active); font-size: 12px;">
+                                Lista com os seguintes filtros:
+                            </span>
+                            <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-primary); font-size: 12px;">
+                                ' . implode(' + ', $activeFilters) . '
+                            </span>
+                        </div>
+                    </div>';
+                }
+            ?>
+
             <!-- Informa a quantidade de registros encontrados (x ou nenhum) -->
             <div class="display-flex row row-full padding-x-sm padding-y-sm align-center justify-start border-bottom"
             style="background-color: var(--color-primary-bg-light);">

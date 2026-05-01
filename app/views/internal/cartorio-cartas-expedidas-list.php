@@ -230,15 +230,14 @@ if ($totalPages > 0) {
                     $listExportQuery = $baseQueryParams;
                     include __DIR__ . '/_list_export_buttons.php';
                     ?>
-                <button type="button" class="btn btn-primary" id="novo-cadastro-btn">Novo cadastro</button>
+                <button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
             </div>            
         </div>
 
         <!-- SUBTITLE SECTION CARD - FILTERS -->        
         <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
-                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); 
-                font-size: 13px;">Filtros</span>
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-center">
                 <!-- Filtro - Status -->
@@ -265,7 +264,16 @@ if ($totalPages > 0) {
                             <?php echo htmlspecialchars($finalidade, ENT_QUOTES); ?> (<?php echo htmlspecialchars((string) $count); ?>)
                         </option>
                     <?php endforeach; ?>
-                </select>            
+                </select>
+            </div>
+        </div>
+
+        <!-- SUBTITLE SECTION CARD - ITEMS PER PAGE -->
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Itens por página</span>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md align-center">
                 <!-- Filtro - Itens por página -->
                 <select class="width-300 height-md" id="items-per-page">
                     <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
@@ -310,10 +318,10 @@ if ($totalPages > 0) {
                     echo '
                     <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" style="background-color: var(--color-primary-bg-light);">
                         <div class="display-flex row row-fit justify-start align-center padding-x-sm padding-y-sm gap-y-sm">
-                            <span class="text text-ellipsis" style="font-weight: 400; color: var(--color-primary); font-size: 12px;">
+                            <span class="text text-ellipsis" style="font-weight: 400; color: var(--color-primary-active); font-size: 12px;">
                                 Lista com os seguintes filtros:
                             </span>
-                            <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px;">
+                            <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-primary); font-size: 12px;">
                                 ' . implode(' + ', $activeFilters) . '
                             </span>
                         </div>
