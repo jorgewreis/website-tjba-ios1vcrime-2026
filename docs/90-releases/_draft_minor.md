@@ -27,4 +27,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(cartorio-cartas-expedidas-list): hide sections by default and update icons** `[702ece5e]`
 - **refactor(cartorio-cartas-expedidas-list): update search section display and comment out title card** `[1d3b408f]`
 - **refactor(cartorio-cartas-expedidas-list): adjust button placement and search section visibility** `[909f7c86]`
+- **refactor(cartorio-list-views): enhance layout and functionality across multiple lists** `[c5b9ec6b]`
 
