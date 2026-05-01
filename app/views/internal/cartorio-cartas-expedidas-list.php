@@ -216,14 +216,14 @@ if ($totalPages > 0) {
                 <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;">Cartas Expedidas</h1>
                 <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Lista de cartas expedidas pelo cartório para controle e envio.</p>
             </div>
-            <div class="display-flex col col-fit justify-end align-end gap-y-md">
-                <div class="title-icon">
+            <div class="display-flex row row-fit justify-end align-end gap-x-md gap-y-sm">
+                <div class="title-icon" title="Pesquisar">
                     <i class="fi fi-rr-search"></i>
                 </div>
-                <div class="title-icon">
+                <div class="title-icon" title="Filtrar">
                     <i class="fi fi-rr-filter"></i>
                 </div>
-                <div class="title-icon">
+                <div class="title-icon" title="Listar">
                     <i class="fi fi-rr-list"></i>
                 </div>
             </div>

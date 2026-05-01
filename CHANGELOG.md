@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0041
+
+**Data:** 2026-05-01 14:29:28 | **Commit:** `90f2b117` | **Tipo:** `patch`
+
+- refactor(cartorio-cartas-expedidas-list): update layout and icon styles
+
 ## V. 1.97.0040
 
 **Data:** 2026-05-01 14:20:12 | **Commit:** `6dad944d` | **Tipo:** `patch`
@@ -5028,6 +5034,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
