@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0044
+
+**Data:** 2026-05-01 14:53:37 | **Commit:** `1d3b408f` | **Tipo:** `patch`
+
+- refactor(cartorio-cartas-expedidas-list): update search section display and comment out title card
+
 ## V. 1.97.0043
 
 **Data:** 2026-05-01 14:50:24 | **Commit:** `702ece5e` | **Tipo:** `patch`
@@ -5046,6 +5052,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

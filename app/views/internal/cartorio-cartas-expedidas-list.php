@@ -233,7 +233,7 @@ if ($totalPages > 0) {
         </div>
 
         <!-- SUBTITLE SECTION CARD -->
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="search" style="display: none;">
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="search" style="display: flex;">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
                 <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Pesquisa e cadastro</span>
             </div>
@@ -308,11 +308,11 @@ if ($totalPages > 0) {
         </div>
 
         <!-- TITLE CARD -->
-        <div class="card-title" style="padding: 40px 0 10px 20px !important;">
+        <!-- <div class="card-title" style="padding: 40px 0 10px 20px !important;">
             <div class="display-flex row row-full justify-start">
                 <h2>Lista</h2>
             </div>
-        </div>
+        </div> -->
         <!-- END TITLE CARD -->
 
         <!-- REGISTERS LIST -->
@@ -698,7 +698,7 @@ if ($totalPages > 0) {
                 }
 
                 sections.forEach(function(section) {
-                    section.style.display = 'none';
+                    section.style.display = section.getAttribute('data-list-section') === 'search' ? 'flex' : 'none';
                 });
 
                 document.querySelectorAll('[data-list-section-trigger]').forEach(function(trigger) {
