@@ -307,7 +307,7 @@ if ($totalPages > 0) {
         <!-- TITLE CARD -->
         <div class="card-title" style="padding: 40px 0 10px 0 !important;">
             <div class="display-flex row row-full justify-start">
-                <h2>Lista de cartas <strong>recebidas</strong> pelo cartório</h2>
+                <h2>Lista</h2>
             </div>
         </div>
         <!-- END TITLE CARD -->
@@ -342,7 +342,7 @@ if ($totalPages > 0) {
                             <span class="text text-ellipsis" style="font-weight: 400; color: var(--color-primary-active); font-size: 12px;">
                                 Lista com os seguintes filtros:
                             </span>
-                            <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-primary); font-size: 12px;">
+                            <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px;">
                                 ' . implode(' + ', $activeFilters) . '
                             </span>
                         </div>

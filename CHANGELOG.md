@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0040
+
+**Data:** 2026-05-01 14:20:12 | **Commit:** `6dad944d` | **Tipo:** `patch`
+
+- refactor(cartorio-cartas-views): enhance layout and title clarity
+
 ## V. 1.97.0039
 
 **Data:** 2026-05-01 10:18:45 | **Commit:** `0f599132` | **Tipo:** `patch`
@@ -5022,6 +5028,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -211,10 +211,21 @@ if ($totalPages > 0) {
 
         <!-- TITLE CARD -->
         <div class="card-title">
-            <div class="display-flex col col-full justify-start">
+            <div class="display-flex col col-fit justify-start">
                 <!-- TÍTULO E DESCRIÇÃO DA PÁGINA -->
                 <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;">Cartas Expedidas</h1>
                 <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Lista de cartas expedidas pelo cartório para controle e envio.</p>
+            </div>
+            <div class="display-flex col col-fit justify-end align-end gap-y-md">
+                <div class="title-icon">
+                    <i class="fi fi-rr-search"></i>
+                </div>
+                <div class="title-icon">
+                    <i class="fi fi-rr-filter"></i>
+                </div>
+                <div class="title-icon">
+                    <i class="fi fi-rr-list"></i>
+                </div>
             </div>
         </div>
 
@@ -285,9 +296,9 @@ if ($totalPages > 0) {
         </div>
         
         <!-- TITLE CARD -->
-        <div class="card-title" style="padding: 40px 0 10px 0 !important;">
+        <div class="card-title" style="padding: 40px 0 10px 20px !important;">
             <div class="display-flex row row-full justify-start">
-                <h2>Lista de cartas <strong>expedidas</strong> pelo cartório</h2>
+                <h2>Lista</h2>
             </div>
         </div>
         <!-- END TITLE CARD -->
@@ -322,7 +333,7 @@ if ($totalPages > 0) {
                             <span class="text text-ellipsis" style="font-weight: 400; color: var(--color-primary-active); font-size: 12px;">
                                 Lista com os seguintes filtros:
                             </span>
-                            <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-primary); font-size: 12px;">
+                            <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px;">
                                 ' . implode(' + ', $activeFilters) . '
                             </span>
                         </div>
