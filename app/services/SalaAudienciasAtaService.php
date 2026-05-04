@@ -36,6 +36,8 @@ final class SalaAudienciasAtaService
         $limit = max(1, min(200, $limit));
         $offset = max(0, $offset);
 
+        $this->purgeAtasExpiradas();
+
         return [
             'rows' => $this->ataRepository->listRealizadasComAta($limit, $offset),
             'total' => $this->ataRepository->countRealizadas(),
@@ -76,6 +78,8 @@ final class SalaAudienciasAtaService
      */
     public function listMinhasInscricoesEstudante(string $usuarioId): array
     {
+        $this->purgeAtasExpiradas();
+
         return $this->inscricaoRepository->listInscricoesVisiveisParaUsuario($usuarioId);
     }
 
@@ -101,6 +105,8 @@ final class SalaAudienciasAtaService
         if ($st !== 'realizada' && $st !== 'finalizada') {
             throw new InvalidArgumentException('Só é permitido enviar ata para audiência com status Realizada ou Finalizada.');
         }
+
+        $this->purgeAtasExpiradas();
 
         if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
             throw new InvalidArgumentException('Falha no envio do arquivo.');
@@ -281,6 +287,8 @@ final class SalaAudienciasAtaService
             throw new InvalidArgumentException('Dados inválidos.');
         }
 
+        $this->purgeAtasExpiradas();
+
         if (!$this->inscricaoRepository->exists($idPauta, $usuarioId)) {
             throw new InvalidArgumentException('Acesso negado: inscrição não encontrada.');
         }
@@ -322,6 +330,8 @@ final class SalaAudienciasAtaService
         if ($idPauta === '') {
             throw new InvalidArgumentException('Dados inválidos.');
         }
+
+        $this->purgeAtasExpiradas();
 
         $ata = $this->ataRepository->findByPauta($idPauta);
         if ($ata === null) {

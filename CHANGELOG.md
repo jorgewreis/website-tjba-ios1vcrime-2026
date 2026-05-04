@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0055
+
+**Data:** 2026-05-04 13:56:26 | **Commit:** `6558770` | **Tipo:** `patch`
+
+- fix(SalaAudienciasAtaRepository, SalaAudienciasAtaService): update expiration logic for ata records
+
 ## V. 1.97.0054
 
 **Data:** 2026-05-04 13:31:55 | **Commit:** `af16927` | **Tipo:** `patch`
@@ -5112,6 +5118,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

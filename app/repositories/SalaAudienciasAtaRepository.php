@@ -45,7 +45,7 @@ final class SalaAudienciasAtaRepository
      */
     public function fetchExpiredBeforeNow(): array
     {
-        $sql = sprintf('SELECT * FROM `%s` WHERE `expires_at` < NOW()', $this->table);
+        $sql = sprintf('SELECT * FROM `%s` WHERE `expires_at` <= NOW()', $this->table);
         $st = $this->connection->query($sql);
         if ($st === false) {
             return [];
@@ -128,7 +128,7 @@ final class SalaAudienciasAtaRepository
              FROM `sala_audiencias_pauta` a
              LEFT JOIN `processos` p ON p.`id` = a.`processo`
              LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id`
-             LEFT JOIN `%s` ata ON ata.`pauta` = a.`id_pauta`
+             LEFT JOIN `%s` ata ON ata.`pauta` = a.`id_pauta` AND ata.`expires_at` > NOW()
              WHERE a.`ativo` = 1 AND a.`status` IN (\'realizada\', \'finalizada\')
              ORDER BY
                 CASE
