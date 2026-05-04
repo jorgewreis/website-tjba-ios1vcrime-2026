@@ -44,6 +44,48 @@ final class Security
     }
 
     /**
+     * Perfil único gravado em sessão (`user_profile`) após login ou sincronização na home.
+     * Se existir ADMIN cumulado com outro perfil reconhecido, nunca retorna ADMIN por padrão:
+     * escolhe o de maior rank entre os demais (empate: ordem alfabética do código do perfil).
+     *
+     * @param list<string> $perfisMaiusculos como em `Usuario::listarPerfisUsuario`
+     */
+    public static function resolveDefaultSessionProfile(array $perfisMaiusculos): ?string
+    {
+        $unicos = [];
+        foreach ($perfisMaiusculos as $p) {
+            $u = strtoupper(trim((string) $p));
+            if ($u !== '') {
+                $unicos[$u] = $u;
+            }
+        }
+        $lista = array_values($unicos);
+        if ($lista === []) {
+            return null;
+        }
+        $temAdmin = in_array('ADMIN', $lista, true);
+        $pool = $temAdmin
+            ? array_values(array_filter($lista, static function (string $x): bool {
+                return $x !== 'ADMIN';
+            }))
+            : $lista;
+        if ($pool === []) {
+            return 'ADMIN';
+        }
+        usort($pool, static function (string $a, string $b): int {
+            $ra = self::getPerfilRank($a);
+            $rb = self::getPerfilRank($b);
+            if ($ra !== $rb) {
+                return $rb <=> $ra;
+            }
+
+            return strcasecmp($a, $b);
+        });
+
+        return $pool[0];
+    }
+
+    /**
      * @deprecated Padrão antigo. Use /admin/api/getPerfis.php + frame.php::hasAccessToSection()
      */
     public static function checkAccess(string $requiredProfile): bool
@@ -291,7 +333,8 @@ final class Security
                 $_SESSION[self::SESSION_USER_NAME],
                 $_SESSION[self::SESSION_LAST_ACTIVITY],
                 $_SESSION[self::CSRF_SESSION_KEY],
-                $_SESSION['access_suppress_admin_profile']
+                $_SESSION['access_suppress_admin_profile'],
+                $_SESSION['access_admin_mode_explicit']
             );
         }
 

@@ -659,6 +659,7 @@ final class ProdutividadeService
         $weekCurrent = $this->sumForRange($base, $weekStart, $weekEnd);
         $weekPrevious = $this->sumForRange($base, $weekStart->modify('-7 days'), $weekEnd->modify('-7 days'));
         $monthCurrent = $this->sumForRange($base, $monthStart, $monthEnd);
+        $monthCurrentToDate = $this->sumForRange($base, $monthStart, $now);
         $monthPrevious = $this->sumForRange($base, $monthStart->modify('-1 month')->modify('first day of this month'), $monthStart->modify('-1 month')->modify('last day of this month'));
         $quarterCurrent = $this->sumForRange($base, $quarterStart, $quarterEnd);
         $prevQuarterStart = $quarterStart->modify('-3 months');
@@ -675,8 +676,10 @@ final class ProdutividadeService
             ],
             'month' => [
                 'current' => $monthCurrent,
+                'current_to_date' => $monthCurrentToDate,
                 'previous' => $monthPrevious,
                 'variation_percent' => $this->calcVariationPercent($monthCurrent, $monthPrevious),
+                'variation_percent_proportional' => $this->calcMonthVariationProportionalPercent($monthCurrentToDate, $monthPrevious, $now),
             ],
             'quarter' => [
                 'current' => $quarterCurrent,
@@ -1323,6 +1326,26 @@ final class ProdutividadeService
             return $current > 0.0 ? 100.0 : 0.0;
         }
         return (($current - $previous) / $previous) * 100.0;
+    }
+
+    /**
+     * Variação proporcional ao avanço do mês civil atual: compara pontos do mês corrente (até hoje)
+     * com o que seria esperado se o ritmo do mês anterior fosse uniforme nos dias já decorridos.
+     *
+     * baseline = (pontos_mês_anterior / dias_no_mês_anterior) * dias_decorridos_mês_atual
+     */
+    private function calcMonthVariationProportionalPercent(float $currentMonthToDate, float $previousMonthFull, DateTimeImmutable $now): float
+    {
+        $elapsed = max(1, (int) $now->format('j'));
+        $firstDayThisMonth = $now->modify('first day of this month');
+        $lastDayPrevMonth = $firstDayThisMonth->modify('-1 day');
+        $daysPrev = max(1, (int) $lastDayPrevMonth->format('t'));
+        $baseline = ($previousMonthFull / $daysPrev) * $elapsed;
+        if ($baseline <= 0.0) {
+            return $currentMonthToDate > 0.0 ? 100.0 : 0.0;
+        }
+
+        return (($currentMonthToDate - $baseline) / $baseline) * 100.0;
     }
 }
 

@@ -117,18 +117,7 @@ final class Usuario
 
     private function perfilPrincipal(array $perfis): ?string
     {
-        $melhorPerfil = null;
-        $maiorRank    = 0;
-
-        foreach ($perfis as $perfil) {
-            $rank = Security::getPerfilRank($perfil);
-            if ($rank > $maiorRank) {
-                $maiorRank    = $rank;
-                $melhorPerfil = $perfil;
-            }
-        }
-
-        return $melhorPerfil;
+        return Security::resolveDefaultSessionProfile($perfis);
     }
 
     public function listarPerfisUsuario(string $idUsuario): array

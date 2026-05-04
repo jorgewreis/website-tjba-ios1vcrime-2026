@@ -63,6 +63,7 @@ if (!EffectiveAccessProfiles::canOfferAdminModeToggle($perfisCadastro)) {
 
 // modo_admin true = usar ADMIN nas autorizações; false = modo operacional (suprimir ADMIN)
 EffectiveAccessProfiles::setAdminSuppressed(!$modoAdmin);
+$_SESSION[EffectiveAccessProfiles::SESSION_ADMIN_MODE_EXPLICIT] = true;
 
 $userIdTrim = trim((string) $userId);
 echo json_encode([

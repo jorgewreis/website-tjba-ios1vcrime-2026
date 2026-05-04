@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once dirname(__DIR__, 2) . '/config/security.php';
+
 /**
  * Quando o usuário tem ADMIN cumulativo com outro perfil, pode ativar "modo operacional"
  * (sessão) que remove ADMIN das verificações de autorização — menu, frame e APIs alinhados.
@@ -8,6 +10,9 @@ declare(strict_types=1);
 final class EffectiveAccessProfiles
 {
     public const SESSION_SUPPRESS_ADMIN = 'access_suppress_admin_profile';
+
+    /** Definido quando o usuário alterna Admin/Operacional via API; ausente = ainda não escolheu (usa padrão operacional). */
+    public const SESSION_ADMIN_MODE_EXPLICIT = 'access_admin_mode_explicit';
 
     public static function isAdminSuppressed(): bool
     {
@@ -69,5 +74,21 @@ final class EffectiveAccessProfiles
         }
 
         return $hasAdmin && count($unique) >= 2;
+    }
+
+    /**
+     * Para quem tem ADMIN + outro perfil: modo operacional (ADMIN suprimido) até o usuário alternar explicitamente.
+     *
+     * @param list<string> $upperPerfisDb
+     */
+    public static function applyDefaultOperacionalIfCumulative(array $upperPerfisDb): void
+    {
+        if (!self::canOfferAdminModeToggle($upperPerfisDb)) {
+            return;
+        }
+        if (!empty($_SESSION[self::SESSION_ADMIN_MODE_EXPLICIT])) {
+            return;
+        }
+        self::setAdminSuppressed(true);
     }
 }

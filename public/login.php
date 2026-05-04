@@ -19,6 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 header('Content-Type: application/json; charset=utf-8');
 
 require_once __DIR__ . '/../app/models/Usuario.php';
+require_once __DIR__ . '/../app/helpers/EffectiveAccessProfiles.php';
 require_once __DIR__ . '/../app/helpers/AvatarInitialsPalette.php';
 require_once __DIR__ . '/../app/services/LoginRateLimiter.php';
 
@@ -90,6 +91,11 @@ Security::initializeAuthenticatedSession(
     $sessionToken,
     (string) ($resultado['nome'] ?? '')
 );
+
+$perfisLogin = $resultado['perfis'] ?? [];
+if (is_array($perfisLogin)) {
+    EffectiveAccessProfiles::applyDefaultOperacionalIfCumulative($perfisLogin);
+}
 
 /* Persistir token */
 $usuario->atualizarToken(

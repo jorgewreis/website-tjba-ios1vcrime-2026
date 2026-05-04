@@ -14,7 +14,7 @@ $userId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']
 
 $prodError = '';
 $resumo = [
-    'month' => ['current' => 0.0, 'previous' => 0.0, 'variation_percent' => 0.0],
+    'month' => ['current' => 0.0, 'current_to_date' => 0.0, 'previous' => 0.0, 'variation_percent' => 0.0, 'variation_percent_proportional' => 0.0],
 ];
 $rankingTop5 = [];
 $allRankingRows = [];
@@ -72,11 +72,22 @@ if ($userId !== '') {
     }
 }
 
-$monthPts = (float) (($resumo['month']['current'] ?? 0));
-$monthVar = (float) (($resumo['month']['variation_percent'] ?? 0));
-$monthVarFmt = $monthVar > 0
-    ? '+' . number_format($monthVar, 1, ',', '.') . '%'
-    : number_format($monthVar, 1, ',', '.') . '%';
+$monthPts = (float) (($resumo['month']['current_to_date'] ?? $resumo['month']['current'] ?? 0));
+$monthVpa = (float) (($resumo['month']['variation_percent_proportional'] ?? 0));
+$monthVpaFmt = $monthVpa > 0
+    ? '+' . number_format($monthVpa, 1, ',', '.') . '%'
+    : number_format($monthVpa, 1, ',', '.') . '%';
+$vpaAbs = abs($monthVpa);
+if ($vpaAbs <= 10.0) {
+    $vpaBadgeClass = 'badge badge-primary dashboard-vpa-badge';
+    $vpaIconClass = 'fi fi-bs-arrow-alt-right';
+} elseif ($monthVpa > 10.0) {
+    $vpaBadgeClass = 'badge badge-success dashboard-vpa-badge';
+    $vpaIconClass = 'fi fi-bs-arrow-trend-up';
+} else {
+    $vpaBadgeClass = 'badge badge-danger dashboard-vpa-badge';
+    $vpaIconClass = 'fi fi-bs-arrow-trend-down';
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -89,6 +100,7 @@ $monthVarFmt = $monthVar > 0
     <?php include __DIR__ . '/_internal_head_styles.php'; ?>
 
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-bold-straight/css/uicons-bold-straight.css">
     <?php include __DIR__ . '/_toast_script.php'; ?>
     <style>
         .dashboard-interno-grid {
@@ -113,6 +125,18 @@ $monthVarFmt = $monthVar > 0
             border-radius: 8px;
             overflow: hidden;
             background: var(--card-bg, #fff);
+        }
+        .badge.dashboard-vpa-badge {
+            text-transform: none;
+            font-variant-numeric: tabular-nums;
+            height: auto;
+            min-height: 22px;
+            padding: 0.2em 0.65em;
+            gap: 0.35em;
+        }
+        .badge.dashboard-vpa-badge > i.fi {
+            font-size: 0.95em;
+            line-height: 1;
         }
         .dashboard-interno-card-head {
             display: flex;
@@ -268,9 +292,12 @@ $monthVarFmt = $monthVar > 0
                             <button type="button" class="btn btn-secondary-outline height-md" data-nav-href="/frame.php?page=produtividade">Abrir módulo</button>
                         </div>
                         <div class="dashboard-interno-card-body">
-                            <span class="minor-info">Total no mês civil</span>
+                            <span class="minor-info">Pontuação no período atual</span>
                             <div class="major-info"><?php echo number_format($monthPts, 2, ',', '.'); ?> pts</div>
-                            <p class="minor-info margin-top-sm">Variação vs. mês anterior: <?php echo htmlspecialchars($monthVarFmt, ENT_QUOTES, 'UTF-8'); ?></p>
+                            <p class="minor-info margin-top-sm display-flex row row-fit align-center gap-sm flex-wrap">
+                                <span>VPA:</span>
+                                <span class="<?php echo htmlspecialchars($vpaBadgeClass, ENT_QUOTES, 'UTF-8'); ?>" title="Variação em relação ao período anterior"><i class="<?php echo htmlspecialchars($vpaIconClass, ENT_QUOTES, 'UTF-8'); ?>" aria-hidden="true"></i><?php echo htmlspecialchars($monthVpaFmt, ENT_QUOTES, 'UTF-8'); ?></span>
+                            </p>
                         </div>
                     </div>
                 </div>

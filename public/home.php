@@ -64,22 +64,13 @@ if ($sessionUserId !== '') {
     }
 }
 
+require_once __DIR__ . '/../app/helpers/EffectiveAccessProfiles.php';
+
 if ($sessionUserId !== '' && is_array($userPerfisDb)) {
-    $principalRank = 0;
-    $principal = null;
-    foreach ($userPerfisDb as $raw) {
-        $u = strtoupper(trim((string) $raw));
-        if ($u === '') {
-            continue;
-        }
-        $r = Security::getPerfilRank($u);
-        if ($r > $principalRank) {
-            $principalRank = $r;
-            $principal = $u;
-        }
-    }
+    EffectiveAccessProfiles::applyDefaultOperacionalIfCumulative($userPerfisDb);
+    $principal = Security::resolveDefaultSessionProfile($userPerfisDb);
     $current = trim((string) ($_SESSION['user_profile'] ?? ''));
-    if ($principalRank > 0 && $principal !== null) {
+    if ($principal !== null && $principal !== '') {
         if (strcasecmp($current, $principal) !== 0) {
             $_SESSION['user_profile'] = $principal;
         }
@@ -88,7 +79,6 @@ if ($sessionUserId !== '' && is_array($userPerfisDb)) {
     }
 }
 
-require_once __DIR__ . '/../app/helpers/EffectiveAccessProfiles.php';
 require_once __DIR__ . '/../app/helpers/UsuarioPerfisAutorizacao.php';
 
 $userPerfisEfectivos = [];
