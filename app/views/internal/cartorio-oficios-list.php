@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 header('Content-Type: text/html; charset=UTF-8');
@@ -48,9 +49,9 @@ $routePage = trim((string) ($_GET['page'] ?? 'oficioscartorio'));
 $statusFilter = trim($_GET['status'] ?? '');
 $oficioFilter = trim($_GET['oficio'] ?? '');
 $allowedPerPage = [10, 25, 50, 100];
-$itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 25;
+$itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 10;
 if (!in_array($itemsPerPage, $allowedPerPage, true)) {
-    $itemsPerPage = 25;
+    $itemsPerPage = 10;
 }
 
 $pageNumberParam = $_GET['page_number'] ?? null;
@@ -198,17 +199,19 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title>Ofícios - Cartório - Primeira Vara Crime de Ilhéus</title>
-        <meta name="description" content="">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <?php include __DIR__ . '/_internal_head_styles.php'; ?>
-        <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
-        <?php include __DIR__ . '/_toast_script.php'; ?>
-        <?php include __DIR__ . '/_copy_process_script.php'; ?>
-    </head>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Ofícios - Cartório - Primeira Vara Crime de Ilhéus</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <?php include __DIR__ . '/_internal_head_styles.php'; ?>
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+    <?php include __DIR__ . '/_toast_script.php'; ?>
+    <?php include __DIR__ . '/_copy_process_script.php'; ?>
+</head>
+
 <body class="page-internal">
 
     <div class="spacing-top-page"></div>
@@ -216,25 +219,50 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
     <div class="header-page">
         <div class="location">
             <span class="all">Interno - Cartório - Ofícios -</span>
-            <span class="specific">Lista e registro</span>
+            <span class="specific">Lista</span>
         </div>
-        <h1 class="title-page">Ofícios</h1>
-        <p class="description-page">Registro de ofícios expedidos pelo cartório, com cumprimento via CCM ou envio pelo próprio cartório.</p>
     </div>
 
     <div class="container-full card-page">
 
         <div class="card-title">
-            <div class="display-flex row row-fit justify-start">
-                <h2>Cadastro</h2>
+            <div class="display-flex col col-fit justify-start">
+                <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;">Ofícios</h1>
+                <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Registro de ofícios expedidos pelo cartório, com cumprimento via CCM ou envio pelo próprio cartório.</p>
             </div>
-            <div class="display-flex row row-fit justify-end gap-y-md">
-                <input type="text" class="width-400 height-md" id="search-input" placeholder="Ex.: 42 · 42/2026 · 2026/42 · 422026 (qualquer status)" aria-label="Pesquisar por número do ofício" value="<?php echo htmlspecialchars($oficioFilter, ENT_QUOTES); ?>">
-                <?php
-                $listExportPage = $routePage;
-                $listExportQuery = $baseQueryParams;
-                include __DIR__ . '/_list_export_buttons.php';
-                ?>
+            <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md">
+                <div class="title-icon" title="Pesquisar" role="button" tabindex="0" aria-label="Pesquisar" data-list-section-trigger="search">
+                    <i class="fi fi-rr-search"></i>
+                </div>
+                <div class="title-icon" title="Filtrar" role="button" tabindex="0" aria-label="Filtrar" data-list-section-trigger="filters">
+                    <i class="fi fi-rr-filter"></i>
+                </div>
+                <div class="title-icon" title="Listar" role="button" tabindex="0" aria-label="Listar" data-list-section-trigger="items">
+                    <i class="fi fi-rr-list"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="display-flex col col-full border-bottom" data-list-section="search" style="display: none;">
+            <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm">
+                <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                    <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Pesquisa na lista</span>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-md align-center">
+                    <input type="text" class="height-md" id="search-input" placeholder="Nº do ofício (ex.: 42, 42/2026) ou processo CNJ" style="width: min(100%, 420px); max-width: 420px;" aria-label="Pesquisar por número do ofício (com ou sem ano) ou por número do processo CNJ" value="<?php echo htmlspecialchars($oficioFilter, ENT_QUOTES); ?>">
+                    <?php
+                    $listExportPage = $routePage;
+                    $listExportQuery = $baseQueryParams;
+                    include __DIR__ . '/_list_export_buttons.php';
+                    ?>
+                    <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="search">
+                        <i class="fi fi-rr-angle-small-up"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="display-flex col col-full padding-x-lg padding-y-sm gap-y-sm border-bottom">
                 <div class="card-allocate-rule">
                     <?php if ($hasRuleAllocation): ?>
                         <span>*Conforme regra de alocação, o envio de ofícios será alocado automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
@@ -242,11 +270,9 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                         <span>*Não existe nenhum usuário alocado automaticamente para esta tarefa no momento.</span>
                     <?php endif; ?>
                 </div>
-            </div>            
         </div>
-
         <div class="display-flex col col-full padding-x-md padding-y-md gap-y-md">
-            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
+                <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
                     <label for="filter-processo" class="display-flex col gap-y-sm" style="align-items: flex-start;">
                         <span>Número do processo <span id="cartorio-processo-hint" class="label-hint-obrigatorio">*obrigatório</span></span>
@@ -259,20 +285,20 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                     <select class="width-600 height-md" id="oficio-tipo" name="tipo_oficio">
                         <option value="">Selecione…</option>
                         <optgroup label="Solicitação">
-                        <option value="Ofício Solicitando Reativação do CPF">Ofício solicitando Reativação do CPF</option>
-                        <option value="Ofício Solicitando Suspensão do CPF">Ofício solicitando Suspensão do CPF</option>
-                        <option value="Ofício Solicitando Agendamento de Audiência">Ofício solicitando Agendamento de Audiência</option>
+                            <option value="Ofício Solicitando Reativação do CPF">Ofício solicitando Reativação do CPF</option>
+                            <option value="Ofício Solicitando Suspensão do CPF">Ofício solicitando Suspensão do CPF</option>
+                            <option value="Ofício Solicitando Agendamento de Audiência">Ofício solicitando Agendamento de Audiência</option>
                         </optgroup>
                         <optgroup label="Encaminhamento">
-                        <option value="Ofício Encaminhando Decisão de Medida Protetiva">Ofício encaminhando Decisão de Medida Protetiva</option>
-                        <option value="Ofício Encaminhando Decisão Interlocutória">Ofício encaminhando Decisão Interlocutória</option>
-                        <option value="Ofício Encaminhando Documentos">Ofício encaminhando Documentos</option>
-                        <option value="Ofício Encaminhando Sentença">Ofício encaminhando Sentença</option>
-                        <option value="Ofício Encaminhando Informação">Ofício encaminhando Informação</option>
+                            <option value="Ofício Encaminhando Decisão de Medida Protetiva">Ofício encaminhando Decisão de Medida Protetiva</option>
+                            <option value="Ofício Encaminhando Decisão Interlocutória">Ofício encaminhando Decisão Interlocutória</option>
+                            <option value="Ofício Encaminhando Documentos">Ofício encaminhando Documentos</option>
+                            <option value="Ofício Encaminhando Sentença">Ofício encaminhando Sentença</option>
+                            <option value="Ofício Encaminhando Informação">Ofício encaminhando Informação</option>
                         </optgroup>
                         <optgroup label="Informando">
-                        <option value="Ofício Informando Baixa ao Cedep">Ofício informando Baixa ao Cedep</option>
-                        <option value="Ofício Informando Condenação ao CEDEP">Ofício informando Condenação ao CEDEP</option>
+                            <option value="Ofício Informando Baixa ao Cedep">Ofício informando Baixa ao Cedep</option>
+                            <option value="Ofício Informando Condenação ao CEDEP">Ofício informando Condenação ao CEDEP</option>
                         </optgroup>
                         <optgroup label="Requisitando">
                             <option value="Ofício Requisitando Policial para Audiência">Ofício requisitando Policial para Audiência</option>
@@ -296,7 +322,7 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                         <option value="cartorio">pelo Cartório</option>
                     </select>
                 </div>
-            
+
                 <input type="hidden" id="filter-classe" data-datajud-related="true" value="" autocomplete="off">
                 <div class="col" id="oficio-meio-envio-row">
                     <label for="oficio-meio-envio">Meio de envio</label>
@@ -307,59 +333,122 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                         <option value="pessoalmente">Pessoalmente</option>
                     </select>
                 </div>
-            </div>
+                </div>
         </div>
-        
-        <div class="card-buttons">
-            <button type="button" class="btn btn-secondary-outline" id="btn-oficio-limpar">Limpar</button>
-            <button type="button" class="btn btn-primary-outline" id="alterar-regra-btn" style="display: none;">Alterar regra de alocação</button>
-            <button type="button" class="btn btn-primary" id="btn-oficio-registrar">Cadastrar</button>
+
+        <div class="card-buttons padding-x-lg padding-y-sm">
+                <div class="display-flex row row-fit justify-start gap-y-md">
+                    <button type="button" class="btn btn-secondary-outline" id="btn-oficio-limpar">Limpar</button>
+                </div>
+                <div class="display-flex row row-fit justify-start gap-y-md">
+                    <button type="button" class="btn btn-primary-outline" id="alterar-regra-btn" style="display: none;">Alterar regra de alocação</button>
+                    <button type="button" class="btn btn-primary" id="btn-oficio-registrar">Cadastrar</button>
+                </div>
         </div>
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
 
-        <div class="card-title">
-            <div class="display-flex row row-fit justify-start">
-                <h2>Lista</h2>
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="filters" style="display: none;">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md align-center">
+                <select class="width-500 height-md" id="filter-status">
+                    <option value="" <?php echo $statusFilter === '' ? ' selected' : ''; ?>>Todos os status</option>
+                    <option value="pendente" <?php echo $statusFilter === 'pendente' ? ' selected' : ''; ?>>
+                        Pendente (<?php echo htmlspecialchars((string) ($statusCounts['pendente'] ?? 0)); ?>)
+                    </option>
+                    <option value="finalizada" <?php echo $statusFilter === 'finalizada' ? ' selected' : ''; ?>>
+                        Finalizada (<?php echo htmlspecialchars((string) ($statusCounts['finalizada'] ?? 0)); ?>)
+                    </option>
+                    <option value="cancelada" <?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>
+                        Cancelada (<?php echo htmlspecialchars((string) ($statusCounts['cancelada'] ?? 0)); ?>)
+                    </option>
+                </select>
+                <select class="width-300 height-md" id="filter-ano" <?php echo $anosComOficios === [] ? ' disabled' : ''; ?>>
+                    <?php if ($anosComOficios === []): ?>
+                        <option value="">—</option>
+                    <?php else: ?>
+                        <?php foreach ($anosComOficios as $y): ?>
+                            <option value="<?php echo (int) $y; ?>" <?php echo $anoFilter === (string) $y ? ' selected' : ''; ?>><?php echo (int) $y; ?></option>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </select>
+                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="filters">
+                    <i class="fi fi-rr-angle-small-up"></i>
+                </div>
             </div>
         </div>
 
-        <div class="card-filters">
-            <div class="display-flex row row-fit justify-start gap-y-md flex-wrap">
-                <div class="col">
-                    <label for="filter-status">Filtrar por status</label>
-                    <select class="width-500 height-md" id="filter-status">
-                        <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Mostrar todos</option>
-                        <option value="pendente"<?php echo $statusFilter === 'pendente' ? ' selected' : ''; ?>>Pendente (<?php echo (int) ($statusCounts['pendente'] ?? 0); ?>)</option>
-                        <option value="finalizada"<?php echo $statusFilter === 'finalizada' ? ' selected' : ''; ?>>Finalizada (<?php echo (int) ($statusCounts['finalizada'] ?? 0); ?>)</option>
-                        <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>Cancelada (<?php echo (int) ($statusCounts['cancelada'] ?? 0); ?>)</option>
-                    </select>
-                </div>
-                <div class="col">
-                    <label for="filter-ano">Filtrar por ano</label>
-                    <select class="width-300 height-md" id="filter-ano"<?php echo $anosComOficios === [] ? ' disabled' : ''; ?>>
-                        <?php if ($anosComOficios === []): ?>
-                        <option value="">—</option>
-                        <?php else: ?>
-                        <?php foreach ($anosComOficios as $y): ?>
-                        <option value="<?php echo (int) $y; ?>"<?php echo $anoFilter === (string) $y ? ' selected' : ''; ?>><?php echo (int) $y; ?></option>
-                        <?php endforeach; ?>
-                        <?php endif; ?>
-                    </select>
-                </div>
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="items" style="display: none;">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Itens por página</span>
             </div>
-            <div class="display-flex row row-fit justify-end gap-y-md">
-                <div class="col">
-                    <label for="items-per-page">Itens por página</label>
-                    <select class="width-300 height-md" id="items-per-page">
-                        <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
-                        <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
-                        <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
-                        <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
-                    </select>
+            <div class="display-flex row row-fit justify-end gap-y-md align-center">
+                <select class="width-300 height-md" id="items-per-page">
+                    <option value="10" <?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
+                    <option value="25" <?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
+                    <option value="50" <?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
+                    <option value="100" <?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
+                </select>
+                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="items">
+                    <i class="fi fi-rr-angle-small-up"></i>
                 </div>
             </div>
         </div>
+
+        <div class="display-flex col col-full register">
+            <?php
+            $activeFilters = [];
+            if ($statusFilter !== '') {
+                $statusFilterLabels = [
+                    'pendente' => 'Pendente',
+                    'finalizada' => 'Finalizada',
+                    'cancelada' => 'Cancelada',
+                ];
+                $statusFilterDisplay = $statusFilterLabels[$statusFilter] ?? $statusFilter;
+                $activeFilters[] = 'Status [' . htmlspecialchars($statusFilterDisplay, ENT_QUOTES) . ']';
+            }
+            if ($oficioFilter !== '') {
+                $buscaDigits = preg_replace('/\D+/', '', $oficioFilter);
+                $buscaRotulo = strlen($buscaDigits) === 20 ? 'Processo' : 'Ofício';
+                $activeFilters[] = $buscaRotulo . ' [' . htmlspecialchars($oficioFilter, ENT_QUOTES) . ']';
+            }
+            if ($anoFilter !== '' && $anosComOficios !== []) {
+                $activeFilters[] = 'Ano [' . htmlspecialchars($anoFilter, ENT_QUOTES) . ']';
+            }
+
+            if (!empty($activeFilters)) {
+                echo '
+                    <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" style="background-color: var(--color-primary-bg-light);">
+                        <div class="display-flex row row-fit justify-start align-center padding-x-sm padding-y-sm gap-y-sm">
+                            <span class="text text-ellipsis" style="font-weight: 400; color: var(--color-primary-active); font-size: 12px;">
+                                Lista com os seguintes filtros:
+                            </span>
+                            <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px;">
+                                ' . implode(' + ', $activeFilters) . '
+                            </span>
+                        </div>
+                    </div>';
+            }
+            ?>
+
+            <div class="display-flex row row-full padding-x-sm padding-y-sm align-center justify-start border-bottom"
+                style="background-color: var(--color-primary-bg-light);">
+                <div class="display-flex col col-fit align-center justify-start padding-x-lg padding-y-sm">
+                    <span class="text" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px;">
+                        <?php
+                        $totalRegistros = (int) ($totalDocuments ?? 0);
+                        if ($totalRegistros === 0) {
+                            echo 'Nenhum registro encontrado';
+                        } else {
+                            $totalRegistrosText = $totalRegistros === 1 ? 'registro encontrado' : 'registros encontrados';
+                            echo htmlspecialchars((string) $totalRegistros, ENT_QUOTES) . ' ' . htmlspecialchars($totalRegistrosText, ENT_QUOTES);
+                        }
+                        ?>
+                    </span>
+                </div>
+            </div>
 
         <?php if (!empty($rows)): ?>
             <?php foreach ($rows as $row):
@@ -413,133 +502,131 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                 $classeStyle = $classeNome !== 'Classe não informada' ? 'style="color: var(--primary-color-active); font-weight: 600;"' : '';
                 $expandir = !$tarefaConcluida && !$tarefaCancelada && $formaC === 'cartorio';
             ?>
-            <div class="display-flex col col-full register border-bottom" data-oficio-id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>">
+                <div class="display-flex col col-full register border-bottom" data-oficio-id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>">
 
-                <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
-                    <div class="display-flex row row-fit justify-start gap-y-sm align-center">
-                        <div class="col">
-                            <?php if ($expandir): ?>
-                                <label class="button-table" title="Expandir detalhes">
-                                    <input type="radio" name="open-subtask" value="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" aria-controls="subtask-<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" aria-expanded="false" />
-                                    <i class="fi fi-rr-angle-small-down"></i>
-                                </label>
-                            <?php else: ?>
-                                <span class="button-table" style="visibility:hidden;" aria-hidden="true"><i class="fi fi-rr-angle-small-down"></i></span>
+                    <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
+                        <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                            <div class="col">
+                                <?php if ($expandir): ?>
+                                    <label class="button-table" title="Expandir detalhes">
+                                        <input type="radio" name="open-subtask" value="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" aria-controls="subtask-<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" aria-expanded="false" />
+                                        <i class="fi fi-rr-angle-small-down"></i>
+                                    </label>
+                                <?php else: ?>
+                                    <span class="button-table" style="visibility:hidden;" aria-hidden="true"><i class="fi fi-rr-angle-small-down"></i></span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="col width-200">
+                                <span class="minor-info">Ofício</span>
+                                <span class="major-info"><?php echo htmlspecialchars($nAno, ENT_QUOTES); ?></span>
+                            </div>
+                            <div class="col width-400">
+                                <span class="minor-info">Cadastrado em</span>
+                                <span class="major-info"><?php echo oficios_list_formatar_data_hora($row['Data'] ?? null); ?></span>
+                            </div>
+                            <div class="col width-500 col-process process-info" title="clique para copiar">
+                                <span class="minor-info text-ellipsis" title="<?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?>" <?php echo $classeStyle; ?>><?php echo htmlspecialchars($classeNome); ?></span>
+                                <span class="major-info"><?php echo htmlspecialchars((string) ($row['Processo'] ?? '')); ?></span>
+                            </div>
+                            <div class="col width-700">
+                                <span class="minor-info">Tipo</span>
+                                <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['TipoOficio'] ?? '')); ?></span>
+                            </div>
+                        </div>
+                        <div class="display-flex row row-fit justify-end gap-y-sm align-center">
+                            <div class="display-flex row row-fit justify-end gap-y-sm allocate-chips-row allocate-users">
+                                <?php
+                                $alocados = CartorioAlocacaoChipHelper::ordenarAlocadosPorTipo($row['Alocados'] ?? []);
+                                foreach ($alocados as $alocado) {
+                                    $chip = CartorioAlocacaoChipHelper::buildChipData($alocado, [
+                                        'entity_id' => (string) ($idOficio ?? ''),
+                                        'origem' => 'oficios.list',
+                                    ]);
+                                    if ($chip === null) {
+                                        continue;
+                                    }
+                                    $tipo         = $chip['tipo'];
+                                    $iniciais     = htmlspecialchars($chip['iniciais'], ENT_QUOTES);
+                                    $chipTitle    = $chip['title'];
+                                    $chipAria     = $chip['aria_label'];
+                                    $classeTipo   = $chip['classe_tipo'];
+                                    $alocadoIdStr = htmlspecialchars($chip['alocado_id'], ENT_QUOTES);
+                                    $usuarioIdStr = $chip['usuario_id'];
+                                    $podeRemover  = $isGestao || ($tipo === 'specific' && $usuarioIdStr === $currentUserId);
+                                ?>
+                                    <span class="user-allocate-wrap">
+                                        <span class="user-allocate<?php echo $classeTipo; ?>" title="<?php echo htmlspecialchars($chipTitle, ENT_QUOTES); ?>" aria-label="<?php echo htmlspecialchars($chipAria, ENT_QUOTES); ?>"><?php echo $iniciais; ?></span>
+                                        <?php if ($podeRemover): ?>
+                                            <button type="button"
+                                                class="user-allocate-remove js-desalocar"
+                                                data-alocado-id="<?php echo $alocadoIdStr; ?>"
+                                                data-tipo="<?php echo htmlspecialchars($tipo, ENT_QUOTES); ?>"
+                                                data-endpoint="/api/cartorio-oficios/desalocar.php"
+                                                title="Remover alocação"
+                                                aria-label="Remover alocação">×</button>
+                                        <?php endif; ?>
+                                    </span>
+                                <?php
+                                }
+                                ?>
+                            </div>
+                            <button type="button" class="btn btn-editar" data-oficio-id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" title="Editar" aria-label="Editar">
+                                <i class="fi fi-rr-pen-square"></i>
+                            </button>
+                            <?php if ($tarefaCancelada): ?>
+                                <div class="col">
+                                    <div class="width-300 padding-x-lg status status-cancelled">Cancelada</div>
+                                </div>
+                            <?php elseif ($tarefaConcluida): ?>
+                            <?php elseif ($mostrarBarraStatus): ?>
+                                <div class="col status-task" title="<?php echo htmlspecialchars($currentSubtarefaTitle); ?>">
+                                    <div class="width-300 status status-pending status-with-progress">
+                                        <span class="status-task-label width-300">Pendente</span>
+                                        <div class="status-task-progress" role="progressbar" aria-valuenow="<?php echo (int) count(array_filter($progressStatuses, function ($x) {
+                                                                                                                return $x === 'concluida';
+                                                                                                            })); ?>" aria-valuemin="0" aria-valuemax="2">
+                                            <?php foreach ($segmentosBarra as $seg): ?>
+                                                <div class="status-task-progress-segment <?php echo htmlspecialchars($seg['class']); ?>" title="<?php echo htmlspecialchars($seg['title']); ?>"></div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </div>
+                                </div>
                             <?php endif; ?>
                         </div>
-                        <div class="col width-200">
-                            <span class="minor-info">Ofício</span>
-                            <span class="major-info"><?php echo htmlspecialchars($nAno, ENT_QUOTES); ?></span>
-                        </div>
-                        <div class="col width-400">
-                            <span class="minor-info">Cadastrado em</span>
-                            <span class="major-info"><?php echo oficios_list_formatar_data_hora($row['Data'] ?? null); ?></span>
-                        </div>
-                        <div class="col width-500 col-process process-info" title="clique para copiar">
-                            <span class="minor-info text-ellipsis" title="<?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?>" <?php echo $classeStyle; ?>><?php echo htmlspecialchars($classeNome); ?></span>
-                            <span class="major-info"><?php echo htmlspecialchars((string) ($row['Processo'] ?? '')); ?></span>
-                        </div>
-                        <div class="col width-700">
-                            <span class="minor-info">Tipo</span>
-                            <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['TipoOficio'] ?? '')); ?></span>
-                        </div>
                     </div>
-                    <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                        <div class="display-flex row row-fit justify-end gap-y-sm allocate-chips-row allocate-users">
-                        <?php
-                        $alocados = CartorioAlocacaoChipHelper::ordenarAlocadosPorTipo($row['Alocados'] ?? []);
-                        foreach ($alocados as $alocado) {
-                            $chip = CartorioAlocacaoChipHelper::buildChipData($alocado, [
-                                'entity_id' => (string) ($idOficio ?? ''),
-                                'origem' => 'oficios.list',
-                            ]);
-                            if ($chip === null) {
-                                continue;
-                            }
-                            $tipo         = $chip['tipo'];
-                            $iniciais     = htmlspecialchars($chip['iniciais'], ENT_QUOTES);
-                            $chipTitle    = $chip['title'];
-                            $chipAria     = $chip['aria_label'];
-                            $classeTipo   = $chip['classe_tipo'];
-                            $alocadoIdStr = htmlspecialchars($chip['alocado_id'], ENT_QUOTES);
-                            $usuarioIdStr = $chip['usuario_id'];
-                            $podeRemover  = $isGestao || ($tipo === 'specific' && $usuarioIdStr === $currentUserId);
-                            ?>
-                            <span class="user-allocate-wrap">
-                                <span class="user-allocate<?php echo $classeTipo; ?>" title="<?php echo htmlspecialchars($chipTitle, ENT_QUOTES); ?>" aria-label="<?php echo htmlspecialchars($chipAria, ENT_QUOTES); ?>"><?php echo $iniciais; ?></span>
-                                <?php if ($podeRemover): ?>
-                                <button type="button"
-                                    class="user-allocate-remove js-desalocar"
-                                    data-alocado-id="<?php echo $alocadoIdStr; ?>"
-                                    data-tipo="<?php echo htmlspecialchars($tipo, ENT_QUOTES); ?>"
-                                    data-endpoint="/api/cartorio-oficios/desalocar.php"
-                                    title="Remover alocação"
-                                    aria-label="Remover alocação">×</button>
-                                <?php endif; ?>
-                            </span>
-                            <?php
-                        }
-                        ?>
-                        </div>
-                        <button type="button" class="btn btn-editar" data-oficio-id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" title="Editar">
-                            <i class="fi fi-rr-pen-square"></i>
-                        </button>
-                        <?php if ($tarefaCancelada): ?>
-                        <div class="col">
-                            <div class="width-300 padding-x-lg status status-cancelled">Cancelada</div>
-                        </div>
-                        <?php elseif ($tarefaConcluida): ?>
-                        <?php elseif ($mostrarBarraStatus): ?>
-                        <div class="col status-task" title="<?php echo htmlspecialchars($currentSubtarefaTitle); ?>">
-                            <div class="width-300 status status-pending status-with-progress">
-                                <span class="status-task-label width-300">Pendente</span>
-                                <div class="status-task-progress" role="progressbar" aria-valuenow="<?php echo (int) count(array_filter($progressStatuses, function ($x) { return $x === 'concluida'; })); ?>" aria-valuemin="0" aria-valuemax="2">
-                                    <?php foreach ($segmentosBarra as $seg): ?>
-                                    <div class="status-task-progress-segment <?php echo htmlspecialchars($seg['class']); ?>" title="<?php echo htmlspecialchars($seg['title']); ?>"></div>
-                                    <?php endforeach; ?>
-                                </div>
-                            </div>
-                        </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
 
-                <?php if ($expandir): ?>
-                <div class="display-flex col col-full subtask subtask-collapsed" id="subtask-<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" aria-hidden="true">
-                    <?php foreach ($subtarefas as $st):
-                        $stId = (string) ($st['id'] ?? '');
-                        $stTipo = (string) ($st['tipo'] ?? '');
-                        $stLabel = $subtarefaLabels[$stTipo] ?? $stTipo;
-                    ?>
-                    <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
-                        <div class="display-flex row row-fit justify-start gap-y-sm align-center">
-                            <div class="col task-status">
-                                <div class="padding-x-lg height-sm status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
-                            </div>
-                        </div>
-                        <div class="display-flex row row-fit justify-end align-center">
-                            <button type="button" class="btn btn-primary height-sm btn-concluir-subtarefa-oficio" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($stLabel, ENT_QUOTES); ?>">
-                                <span class="value-button"><?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?></span>
-                            </button>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                    <?php if (empty($subtarefas)): ?>
-                        <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top">
-                            <span class="minor-info">Nenhuma sub-tarefa pendente.</span>
+                    <?php if ($expandir): ?>
+                        <div class="display-flex col col-full subtask subtask-collapsed" id="subtask-<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" aria-hidden="true">
+                            <?php foreach ($subtarefas as $st):
+                                $stId = (string) ($st['id'] ?? '');
+                                $stTipo = (string) ($st['tipo'] ?? '');
+                                $stLabel = $subtarefaLabels[$stTipo] ?? $stTipo;
+                            ?>
+                                <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
+                                    <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                                        <div class="col task-status">
+                                            <div class="padding-x-lg height-sm status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
+                                        </div>
+                                    </div>
+                                    <div class="display-flex row row-fit justify-end align-center">
+                                        <button type="button" class="btn btn-primary height-sm btn-concluir-subtarefa-oficio" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($stLabel, ENT_QUOTES); ?>">
+                                            <span class="value-button"><?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                            <?php if (empty($subtarefas)): ?>
+                                <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top">
+                                    <span class="minor-info">Nenhuma sub-tarefa pendente.</span>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     <?php endif; ?>
                 </div>
-                <?php endif; ?>
-            </div>
             <?php endforeach; ?>
-        <?php else: ?>
-            <div class="display-flex col col-full register border-bottom">
-                <div class="display-flex row row-full padding-x-sm padding-y-sm">
-                    <span class="major-info">Nenhum ofício cadastrado.</span>
-                </div>
-            </div>
         <?php endif; ?>
+
+        </div>
 
         <div class="card-buttons">
             <span class="pagination-info">
@@ -558,21 +645,23 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                     $nextParams['page_number'] = $nextPage;
                     $nextHref = '?' . http_build_query($nextParams);
                     ?>
-                    <button type="button" class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>" <?php if ($currentPage > 1): ?>data-nav-href="<?php echo htmlspecialchars($prevHref, ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>>
+                    <button type="button" class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>" <?php if ($currentPage > 1): ?>data-nav-href="<?php echo htmlspecialchars($prevHref, ENT_QUOTES); ?>" <?php else: ?>disabled aria-disabled="true" <?php endif; ?>>
                         <img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior">
                     </button>
                     <?php foreach ($paginationButtons as $page): ?>
-                        <?php $pageParams = $baseQueryParams; $pageParams['page_number'] = $page; ?>
-                        <button type="button" class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" <?php if ($page !== $currentPage): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($pageParams), ENT_QUOTES); ?>"<?php else: ?>disabled<?php endif; ?>><?php echo $page; ?></button>
+                        <?php $pageParams = $baseQueryParams;
+                        $pageParams['page_number'] = $page; ?>
+                        <button type="button" class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" <?php if ($page !== $currentPage): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($pageParams), ENT_QUOTES); ?>" <?php else: ?>disabled<?php endif; ?>><?php echo $page; ?></button>
                     <?php endforeach; ?>
                     <?php if ($paginationEllipsis && !empty($trailingPages)): ?>
                         <span class="pagination-symbol pagination-ellipsis" aria-hidden="true"><img src="/assets/icons/Navigation-Menu-Horizontal--Streamline-Ultimate.png" alt="Mais páginas"></span>
                         <?php foreach ($trailingPages as $page): ?>
-                            <?php $pageParams = $baseQueryParams; $pageParams['page_number'] = $page; ?>
-                            <button type="button" class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" <?php if ($page !== $currentPage): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($pageParams), ENT_QUOTES); ?>"<?php else: ?>disabled<?php endif; ?>><?php echo $page; ?></button>
+                            <?php $pageParams = $baseQueryParams;
+                            $pageParams['page_number'] = $page; ?>
+                            <button type="button" class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" <?php if ($page !== $currentPage): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($pageParams), ENT_QUOTES); ?>" <?php else: ?>disabled<?php endif; ?>><?php echo $page; ?></button>
                         <?php endforeach; ?>
                     <?php endif; ?>
-                    <button type="button" class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>" <?php if ($currentPage < $totalPages): ?>data-nav-href="<?php echo htmlspecialchars($nextHref, ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>>
+                    <button type="button" class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>" <?php if ($currentPage < $totalPages): ?>data-nav-href="<?php echo htmlspecialchars($nextHref, ENT_QUOTES); ?>" <?php else: ?>disabled aria-disabled="true" <?php endif; ?>>
                         <img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página">
                     </button>
                 </div>
@@ -590,7 +679,82 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
 
     <?php include __DIR__ . '/_datajud_scripts.php'; ?>
     <script>
-        (function () {
+        (function() {
+            function initializeListSectionToggles() {
+                const sections = document.querySelectorAll('[data-list-section]');
+
+                function setSectionVisibility(sectionName, isVisible) {
+                    const section = document.querySelector('[data-list-section="' + sectionName + '"]');
+                    if (!section) {
+                        return;
+                    }
+                    section.style.display = isVisible ? 'flex' : 'none';
+                }
+
+                function handleToggleClick(event, isVisible) {
+                    const sectionName = event.currentTarget.getAttribute(isVisible ? 'data-list-section-trigger' : 'data-list-section-hide');
+                    if (!sectionName) {
+                        return;
+                    }
+                    setSectionVisibility(sectionName, isVisible);
+                }
+
+                function handleToggleKeydown(event, isVisible) {
+                    if (event.key !== 'Enter' && event.key !== ' ') {
+                        return;
+                    }
+                    event.preventDefault();
+                    handleToggleClick(event, isVisible);
+                }
+
+                sections.forEach(function(section) {
+                    section.style.display = 'none';
+                });
+
+                document.querySelectorAll('[data-list-section-trigger]').forEach(function(trigger) {
+                    trigger.addEventListener('click', function(event) {
+                        handleToggleClick(event, true);
+                    });
+                    trigger.addEventListener('keydown', function(event) {
+                        handleToggleKeydown(event, true);
+                    });
+                });
+
+                document.querySelectorAll('[data-list-section-hide]').forEach(function(trigger) {
+                    trigger.addEventListener('click', function(event) {
+                        handleToggleClick(event, false);
+                    });
+                    trigger.addEventListener('keydown', function(event) {
+                        handleToggleKeydown(event, false);
+                    });
+                });
+            }
+
+            initializeListSectionToggles();
+
+            if (window.App && App.ListSearch && typeof App.ListSearch.initializeProcessSearch === 'function') {
+                App.ListSearch.initializeProcessSearch({
+                    inputId: 'search-input',
+                    itemsPerPageId: 'items-per-page',
+                    searchParamKey: 'oficio',
+                    filters: [{
+                            id: 'filter-status',
+                            param: 'status'
+                        },
+                        {
+                            id: 'filter-ano',
+                            param: 'ano'
+                        },
+                    ],
+                    minSearchDigits: 1,
+                    debounceDelay: 1000,
+                    initialProcessFilter: <?php echo json_encode($oficioFilter, JSON_UNESCAPED_UNICODE); ?>,
+                });
+            }
+        })();
+    </script>
+    <script>
+        (function() {
             const formaSel = document.getElementById('oficio-forma-cumprimento');
             const meioRow = document.getElementById('oficio-meio-envio-row');
 
@@ -616,11 +780,11 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                 createButtonId: 'btn-oficio-registrar',
                 createEndpoint: '/api/cartorio-oficios/create.php',
                 editButtonSelector: '.btn-editar[data-oficio-id]',
-                editHrefBuilder: function (id) {
+                editHrefBuilder: function(id) {
                     return '/frame.php?page=oficioscartorioedit&id=' + encodeURIComponent(id);
                 },
                 enableDesalocar: true,
-                onClear: function () {
+                onClear: function() {
                     const meio = document.getElementById('oficio-meio-envio');
                     const forma = document.getElementById('oficio-forma-cumprimento');
                     if (meio) meio.selectedIndex = 0;
@@ -634,7 +798,7 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                     }
                     toggleMeioEnvio();
                 },
-                buildRequest: function (sharedCtx) {
+                buildRequest: function(sharedCtx) {
                     const proc = document.getElementById('filter-processo')?.value?.trim() || '';
                     const tipo = document.getElementById('oficio-tipo')?.value || '';
                     const forma = document.getElementById('oficio-forma-cumprimento')?.value || '';
@@ -669,7 +833,7 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                         classe_descricao: cd
                     };
                 },
-                buildSuccessPayload: function (data) {
+                buildSuccessPayload: function(data) {
                     const numeroOficio = (data.numero_oficio || '').toString().trim();
                     return {
                         type: 'success',
@@ -682,10 +846,10 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
 
             toggleMeioEnvio();
 
-            document.querySelectorAll('input[name="open-subtask"]').forEach(function (radio) {
-                radio.addEventListener('change', function () {
+            document.querySelectorAll('input[name="open-subtask"]').forEach(function(radio) {
+                radio.addEventListener('change', function() {
                     const targetId = 'subtask-' + this.value;
-                    document.querySelectorAll('.col.subtask').forEach(function (row) {
+                    document.querySelectorAll('.col.subtask').forEach(function(row) {
                         const isTarget = row.id === targetId;
                         row.classList.toggle('subtask-collapsed', !isTarget);
                         row.setAttribute('aria-hidden', isTarget ? 'false' : 'true');
@@ -693,37 +857,47 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                 });
             });
 
-            document.querySelectorAll('.btn-concluir-subtarefa-oficio').forEach(function (btn) {
-                btn.addEventListener('click', function () {
+            document.querySelectorAll('.btn-concluir-subtarefa-oficio').forEach(function(btn) {
+                btn.addEventListener('click', function() {
                     const subtarefaId = this.getAttribute('data-subtarefa-id');
                     if (!subtarefaId) return;
                     this.disabled = true;
                     fetch('/api/cartorio-oficios/concluir-subtarefa.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ subtarefa_id: subtarefaId }),
-                        credentials: 'same-origin'
-                    })
-                    .then(function (r) { return r.json(); })
-                    .then(function (data) {
-                        if (data.success) {
-                            ctx.queuePostReloadToast({ type: 'success', title: 'Sucesso', message: 'Subtarefa concluída com sucesso.' });
-                            window.location.reload();
-                        } else {
-                            ctx.notify('error', 'Erro', data.error || 'Erro ao concluir.');
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                subtarefa_id: subtarefaId
+                            }),
+                            credentials: 'same-origin'
+                        })
+                        .then(function(r) {
+                            return r.json();
+                        })
+                        .then(function(data) {
+                            if (data.success) {
+                                ctx.queuePostReloadToast({
+                                    type: 'success',
+                                    title: 'Sucesso',
+                                    message: 'Subtarefa concluída com sucesso.'
+                                });
+                                window.location.reload();
+                            } else {
+                                ctx.notify('error', 'Erro', data.error || 'Erro ao concluir.');
+                                btn.disabled = false;
+                            }
+                        })
+                        .catch(function() {
+                            ctx.notify('error', 'Erro', 'Erro de conexão.');
                             btn.disabled = false;
-                        }
-                    })
-                    .catch(function () {
-                        ctx.notify('error', 'Erro', 'Erro de conexão.');
-                        btn.disabled = false;
-                    });
+                        });
                 });
             });
         })();
 
-        (function () {
-            window.addEventListener('DOMContentLoaded', function () {
+        (function() {
+            window.addEventListener('DOMContentLoaded', function() {
                 if (!window.App || !App.User || typeof App.User.setupRuleButton !== 'function') return;
                 App.User.setupRuleButton({
                     buttonId: 'alterar-regra-btn',
@@ -733,4 +907,5 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
         })();
     </script>
 </body>
+
 </html>

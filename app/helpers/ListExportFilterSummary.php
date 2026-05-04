@@ -45,7 +45,7 @@ final class ListExportFilterSummary
             case 'oficioscartorio':
             case 'oficiosgabinete':
                 self::pair($parts, 'Status', (string) ($get['status'] ?? ''));
-                self::pair($parts, 'Ofício (busca)', (string) ($get['oficio'] ?? ''));
+                self::pair($parts, 'Ofício ou processo (busca)', (string) ($get['oficio'] ?? ''));
                 self::pair($parts, 'Ano', (string) ($get['ano'] ?? ''));
                 break;
 

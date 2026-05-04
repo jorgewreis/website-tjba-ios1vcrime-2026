@@ -2,12 +2,12 @@
 declare(strict_types=1);
 
 /**
- * Filtro de listagem de ofícios (cartório/gabinete) por número do ofício (sequencial/ano).
+ * Filtro de listagem de ofícios (cartório/gabinete) por texto em `oficio`:
+ * — número do processo (20 dígitos CNJ, com ou sem máscara): igualdade em `numero_processo`;
+ * — número do ofício (sequencial/ano): vários formatos (só sequencial, sequencial+ano, barra,
+ *   traço, espaço, ano/sequencial, dígitos colados tipo 422026 → 42/2026), combinados com OR.
  *
- * Aceita vários formatos (só sequencial, sequencial+ano, barra, traço, espaço, ano/sequencial,
- * dígitos colados tipo 422026 → 42/2026). Combina interpretações com OR para listar tudo que
- * corresponder. Não aplica status: quem chama deve omitir filtro de status quando há busca
- * por ofício (já feito nos repositórios).
+ * Quando há busca por ofício/processo, o repositório não combina com filtro de status (early return).
  */
 final class OficiosListSearchHelper
 {
@@ -27,6 +27,16 @@ final class OficiosListSearchHelper
         $oficio = trim((string) ($filters['oficio'] ?? ''));
         if ($oficio === '') {
             return [[], []];
+        }
+
+        $digitsAll = preg_replace('/\D+/', '', $oficio);
+        if (strlen($digitsAll) === 20) {
+            $formatted = self::formatarCnj20($digitsAll);
+
+            return [
+                [sprintf('%s.`numero_processo` = :f_oficio_processo', $tableAlias)],
+                [':f_oficio_processo' => $formatted],
+            ];
         }
 
         $variants = self::collectMatchVariants($oficio, $filters);
@@ -185,5 +195,22 @@ final class OficiosListSearchHelper
         }
 
         return [['(' . implode(' OR ', $parts) . ')'], $params];
+    }
+
+    private static function formatarCnj20(string $digits): string
+    {
+        if (strlen($digits) !== 20) {
+            return $digits;
+        }
+
+        return sprintf(
+            '%s-%s.%s.%s.%s.%s',
+            substr($digits, 0, 7),
+            substr($digits, 7, 2),
+            substr($digits, 9, 4),
+            substr($digits, 13, 1),
+            substr($digits, 14, 2),
+            substr($digits, 16, 4)
+        );
     }
 }

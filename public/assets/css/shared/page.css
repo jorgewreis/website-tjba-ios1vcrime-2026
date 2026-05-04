@@ -605,7 +605,7 @@ h2 {
 
 @media (min-width: 1280px) {
     .footer-page {
-        /* width: 100%; */
+        width: 100%;
         display: flex;
         flex-direction: column;
         align-items: center;

@@ -6,7 +6,9 @@
     const defaultConfig = {
         minSearchDigits: 3,
         debounceDelay: 1000,
-        routeParamKey: 'page'
+        routeParamKey: 'page',
+        /** Nome do parâmetro GET usado pelo campo principal de busca (ex.: `processo`, `oficio`). */
+        searchParamKey: 'processo'
     };
 
     function normalizeValue(value) {
@@ -50,6 +52,7 @@
         const searchDelay = Number(cfg.debounceDelay) || defaultConfig.debounceDelay;
         const minDigits = Math.max(1, Number(cfg.minSearchDigits) || defaultConfig.minSearchDigits);
         const routeParamKey = cfg.routeParamKey || defaultConfig.routeParamKey;
+        const searchParamKey = normalizeValue(cfg.searchParamKey || defaultConfig.searchParamKey) || 'processo';
         const routeParamValue = new URL(global.location.href).searchParams.get(routeParamKey);
         const initialValue = normalizeValue(cfg.initialProcessFilter || input.value);
         let hasActiveProcessFilter = initialValue.trim().length >= minDigits;
@@ -70,9 +73,9 @@
 
             const searchValue = normalizeValue(input.value).trim();
             if (searchValue.length >= minDigits) {
-                params.set('processo', searchValue);
+                params.set(searchParamKey, searchValue);
             } else {
-                params.delete('processo');
+                params.delete(searchParamKey);
             }
 
             setParam(params, 'items_per_page', itemsSelect.value);
