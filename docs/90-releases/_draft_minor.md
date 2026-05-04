@@ -32,4 +32,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(cartorio-oficios-list): enhance layout and search functionality** `[6c82fb77]`
 - **refactor(cartorio-oficios-list): streamline HTML structure and enhance search section** `[c903260a]`
 - **refactor(gabinete-oficios-list): improve layout and search interface** `[bebf1f9f]`
+- **feat(access-profiles): enhance user profile management with operational mode support** `[67507b8f]`
 
