@@ -30,4 +30,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(reus-presos-list): enhance search functionality and improve filter handling** `[88345bc]`
 - **refactor(partes-instituicoes): normalize cargo/função handling and improve input formatting** `[92c697f]`
 - **refactor(pagination): enhance pagination layout and logic across multiple views** `[cc0712a]`
+- **refactor(sala-audiencias-pauta-edit): enhance partes handling and improve display logic** `[8827835]`
 
