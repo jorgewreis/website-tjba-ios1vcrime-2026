@@ -29,4 +29,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(list-views): enhance layout and functionality across multiple internal views** `[18803ca]`
 - **refactor(reus-presos-list): enhance search functionality and improve filter handling** `[88345bc]`
 - **refactor(partes-instituicoes): normalize cargo/função handling and improve input formatting** `[92c697f]`
+- **refactor(pagination): enhance pagination layout and logic across multiple views** `[cc0712a]`
 
