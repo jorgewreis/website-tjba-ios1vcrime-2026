@@ -13,7 +13,6 @@ $connection = Conection::getInstance()->getConnection();
 $routePage = trim((string) ($_GET['page'] ?? 'oficiosgabinete'));
 $statusFilter = trim($_GET['status'] ?? '');
 $oficioFilter = trim($_GET['oficio'] ?? '');
-$anoFilter = trim($_GET['ano'] ?? '');
 $allowedPerPage = [10, 25, 50, 100];
 $itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 25;
 if (!in_array($itemsPerPage, $allowedPerPage, true)) {
@@ -155,108 +154,199 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
     <div class="header-page">
         <div class="location">
             <span class="all">Interno - Gabinete - Ofícios -</span>
-            <span class="specific">Lista e registro</span>
+            <span class="specific">Lista</span>
         </div>
-        <h1 class="title-page">Ofícios (Gabinete)</h1>
-        <p class="description-page">Registro de ofícios do gabinete (processo e tipo).</p>
     </div>
 
     <div class="container-full card-page">
 
-        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
-            <div class="display-flex row row-fit justify-start">
-                <h2>Lista de ofícios</h2>
+        <div class="card-title">
+            <div class="display-flex col col-fit justify-start">
+                <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;">Ofícios (Gabinete)</h1>
+                <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Registro de ofícios do gabinete por processo e tipo.</p>
             </div>
-            <div class="display-flex row row-fit justify-end gap-y-md">
-                <input type="text" class="width-400 height-md" id="search-input" placeholder="Ex.: 42 · 42/2026 · 2026/42 · 422026 (qualquer status)" aria-label="Pesquisar por número do ofício" value="<?php echo htmlspecialchars($oficioFilter, ENT_QUOTES); ?>">
-                <?php
-                $listExportPage = $routePage;
-                $listExportQuery = $baseQueryParams;
-                include __DIR__ . '/_list_export_buttons.php';
-                ?>
+            <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md">
+                <div class="title-icon" title="Pesquisar" role="button" tabindex="0" aria-label="Pesquisar" data-list-section-trigger="search">
+                    <i class="fi fi-rr-search"></i>
+                </div>
+                <div class="title-icon" title="Filtrar" role="button" tabindex="0" aria-label="Filtrar" data-list-section-trigger="filters">
+                    <i class="fi fi-rr-filter"></i>
+                </div>
+                <div class="title-icon" title="Listar" role="button" tabindex="0" aria-label="Listar" data-list-section-trigger="items">
+                    <i class="fi fi-rr-list"></i>
+                </div>
             </div>
         </div>
 
-        <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md">
-            <h3 class="title-section" style="margin:0;font-size:1rem;font-weight:600;">Registrar ofício</h3>
+        <div class="display-flex col col-full padding-x-md padding-y-md gap-y-md">
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
-                    <label for="filter-processo">Número do processo <span id="gab-processo-hint" class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <label for="filter-processo" class="display-flex col gap-y-sm" style="align-items: flex-start;">
+                        <span>Número do processo <span id="gab-processo-hint" class="label-hint-obrigatorio">*obrigatório</span></span>
+                        <span id="processo-ap-info" class="minor-info" aria-live="polite" style="display: none;"></span>
+                    </label>
                     <input type="text" class="width-400 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off">
                 </div>
                 <div class="col">
-                    <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
+                    <label for="filter-classe">Classe <span class="label-hint-automatizado">*automatizado</span></label>
                     <input type="text" class="width-600 height-md" id="filter-classe" data-datajud-related="true" placeholder="Preenchido automaticamente pelo DataJud" readonly>
-                </div>            
+                </div>
                 <div class="col">
                     <label for="gab-oficio-tipo">Tipo de ofício <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-600 height-md" id="gab-oficio-tipo">
                         <option value="">Selecione…</option>
                         <optgroup label="Encaminhamento">
-                        <option value="Encaminhando Informações">Encaminhando informações</option>
-                        <option value="Encaminhando Mandado de Busca e Apreensao">Encaminhando Mandado de Busca e Apreensão </option>
-                        <option value="Encaminhando Mandado de Prisao">Encaminhando Mandado de Prisão</option>
-                        <option value="Encaminhando Pecas Processuais">Encaminhando Peças Processuais</option>
+                            <option value="Encaminhando Informações">Encaminhando informações</option>
+                            <option value="Encaminhando Mandado de Busca e Apreensao">Encaminhando Mandado de Busca e Apreensão </option>
+                            <option value="Encaminhando Mandado de Prisao">Encaminhando Mandado de Prisão</option>
+                            <option value="Encaminhando Pecas Processuais">Encaminhando Peças Processuais</option>
                         </optgroup>
                         <optgroup label="Solicitação">
-                        <option value="Solicitando Informacoes">Solicitando informações</option>
-                        <option value="Solicitando Pecas Processuais">Solicitando peças processuais</option>
-                        <option value="Solicitando Providencias">Solicitando providências</option>
+                            <option value="Solicitando Informacoes">Solicitando informações</option>
+                            <option value="Solicitando Pecas Processuais">Solicitando peças processuais</option>
+                            <option value="Solicitando Providencias">Solicitando providências</option>
                         </optgroup>
                         <optgroup label="Administrativos">
-                        <option value="Solicitando Afastamento" data-oficio-grupo="administrativo">Solicitando afastamento</option>
-                        <option value="Solicitando Licença Prêmio" data-oficio-grupo="administrativo">Solicitando licença prêmio</option>
-                        <option value="Solicitando Férias" data-oficio-grupo="administrativo">Solicitando férias</option>
-                        <option value="Solicitando Reembolso" data-oficio-grupo="administrativo">Solicitando reembolso</option>
-                        <option value="Outros" data-oficio-grupo="administrativo">Outros</option>
+                            <option value="Solicitando Afastamento" data-oficio-grupo="administrativo">Solicitando afastamento</option>
+                            <option value="Solicitando Licença Prêmio" data-oficio-grupo="administrativo">Solicitando licença prêmio</option>
+                            <option value="Solicitando Férias" data-oficio-grupo="administrativo">Solicitando férias</option>
+                            <option value="Solicitando Reembolso" data-oficio-grupo="administrativo">Solicitando reembolso</option>
+                            <option value="Outros" data-oficio-grupo="administrativo">Outros</option>
                         </optgroup>
                     </select>
                 </div>
             </div>
+        </div>
+
+        <div class="card-buttons padding-x-lg padding-y-sm">
+            <div class="display-flex row row-fit justify-start gap-y-md">
+                <button type="button" class="btn btn-secondary-outline" id="btn-gab-oficio-limpar">Limpar</button>
+            </div>
             <div class="display-flex row row-fit justify-start gap-y-md">
                 <button type="button" class="btn btn-primary" id="btn-gab-oficio-registrar">Registrar</button>
-                <button type="button" class="btn btn-secondary-outline" id="btn-gab-oficio-limpar">Limpar formulário</button>
             </div>
         </div>
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
 
-        <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
-            <div class="display-flex row row-fit justify-start gap-y-md flex-wrap">
-                <div class="col">
-                    <label for="filter-status">Filtrar por status</label>
-                    <select class="width-500 height-md" id="filter-status">
-                        <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Mostrar todos</option>
-                        <option value="pendente"<?php echo $statusFilter === 'pendente' ? ' selected' : ''; ?>>Pendente (<?php echo (int) ($statusCounts['pendente'] ?? 0); ?>)</option>
-                        <option value="finalizada"<?php echo $statusFilter === 'finalizada' ? ' selected' : ''; ?>>Finalizada (<?php echo (int) ($statusCounts['finalizada'] ?? 0); ?>)</option>
-                        <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>Cancelada (<?php echo (int) ($statusCounts['cancelada'] ?? 0); ?>)</option>
-                    </select>
-                </div>
-                <div class="col">
-                    <label for="filter-ano">Ano do ofício</label>
-                    <select class="width-300 height-md" id="filter-ano"<?php echo $anosComOficios === [] ? ' disabled' : ''; ?>>
-                        <?php if ($anosComOficios === []): ?>
-                        <option value="">—</option>
-                        <?php else: ?>
-                        <?php foreach ($anosComOficios as $y): ?>
-                        <option value="<?php echo (int) $y; ?>"<?php echo $anoFilter === (string) $y ? ' selected' : ''; ?>><?php echo (int) $y; ?></option>
-                        <?php endforeach; ?>
-                        <?php endif; ?>
-                    </select>
-                </div>
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="search" style="display: none;">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Pesquisa na lista</span>
             </div>
-            <div class="display-flex row row-fit justify-end gap-y-md">
-                <div class="col">
-                    <label for="items-per-page">Itens por página</label>
-                    <select class="width-300 height-md" id="items-per-page">
-                        <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
-                        <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
-                        <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
-                        <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
-                    </select>
+            <div class="display-flex row row-fit justify-end gap-y-md align-center">
+                <input type="text" class="height-md" id="search-input" placeholder="Nº do ofício (ex.: 42, 42/2026) ou processo CNJ" style="width: min(100%, 420px); max-width: 420px;" aria-label="Pesquisar por número do ofício (com ou sem ano) ou por número do processo CNJ" value="<?php echo htmlspecialchars($oficioFilter, ENT_QUOTES); ?>">
+                <?php
+                $listExportPage = $routePage;
+                $listExportQuery = $baseQueryParams;
+                include __DIR__ . '/_list_export_buttons.php';
+                ?>
+                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="search">
+                    <i class="fi fi-rr-angle-small-up"></i>
                 </div>
             </div>
         </div>
+
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="filters" style="display: none;">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md align-center">
+                <select class="width-500 height-md" id="filter-status">
+                    <option value="" <?php echo $statusFilter === '' ? ' selected' : ''; ?>>Todos os status</option>
+                    <option value="pendente" <?php echo $statusFilter === 'pendente' ? ' selected' : ''; ?>>
+                        Pendente (<?php echo htmlspecialchars((string) ($statusCounts['pendente'] ?? 0)); ?>)
+                    </option>
+                    <option value="finalizada" <?php echo $statusFilter === 'finalizada' ? ' selected' : ''; ?>>
+                        Finalizada (<?php echo htmlspecialchars((string) ($statusCounts['finalizada'] ?? 0)); ?>)
+                    </option>
+                    <option value="cancelada" <?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>
+                        Cancelada (<?php echo htmlspecialchars((string) ($statusCounts['cancelada'] ?? 0)); ?>)
+                    </option>
+                </select>
+                <select class="width-300 height-md" id="filter-ano" <?php echo $anosComOficios === [] ? ' disabled' : ''; ?>>
+                    <?php if ($anosComOficios === []): ?>
+                        <option value="">—</option>
+                    <?php else: ?>
+                        <?php foreach ($anosComOficios as $y): ?>
+                            <option value="<?php echo (int) $y; ?>" <?php echo $anoFilter === (string) $y ? ' selected' : ''; ?>><?php echo (int) $y; ?></option>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </select>
+                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="filters">
+                    <i class="fi fi-rr-angle-small-up"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="items" style="display: none;">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Itens por página</span>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md align-center">
+                <select class="width-300 height-md" id="items-per-page">
+                    <option value="10" <?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
+                    <option value="25" <?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
+                    <option value="50" <?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
+                    <option value="100" <?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
+                </select>
+                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="items">
+                    <i class="fi fi-rr-angle-small-up"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="display-flex col col-full register">
+            <?php
+            $activeFilters = [];
+            if ($statusFilter !== '') {
+                $statusFilterLabels = [
+                    'pendente' => 'Pendente',
+                    'finalizada' => 'Finalizada',
+                    'cancelada' => 'Cancelada',
+                ];
+                $statusFilterDisplay = $statusFilterLabels[$statusFilter] ?? $statusFilter;
+                $activeFilters[] = 'Status [' . htmlspecialchars($statusFilterDisplay, ENT_QUOTES) . ']';
+            }
+            if ($oficioFilter !== '') {
+                $buscaDigits = preg_replace('/\D+/', '', $oficioFilter);
+                $buscaRotulo = strlen($buscaDigits) === 20 ? 'Processo' : 'Ofício';
+                $activeFilters[] = $buscaRotulo . ' [' . htmlspecialchars($oficioFilter, ENT_QUOTES) . ']';
+            }
+            if ($anoFilter !== '' && $anosComOficios !== []) {
+                $activeFilters[] = 'Ano [' . htmlspecialchars($anoFilter, ENT_QUOTES) . ']';
+            }
+
+            if (!empty($activeFilters)) {
+                echo '
+                    <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" style="background-color: var(--color-primary-bg-light);">
+                        <div class="display-flex row row-fit justify-start align-center padding-x-sm padding-y-sm gap-y-sm">
+                            <span class="text text-ellipsis" style="font-weight: 400; color: var(--color-primary-active); font-size: 12px;">
+                                Lista com os seguintes filtros:
+                            </span>
+                            <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px;">
+                                ' . implode(' + ', $activeFilters) . '
+                            </span>
+                        </div>
+                    </div>';
+            }
+            ?>
+
+            <div class="display-flex row row-full padding-x-sm padding-y-sm align-center justify-start border-bottom"
+                style="background-color: var(--color-primary-bg-light);">
+                <div class="display-flex col col-fit align-center justify-start padding-x-lg padding-y-sm">
+                    <span class="text" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px;">
+                        <?php
+                        $totalRegistros = (int) ($totalDocuments ?? 0);
+                        if ($totalRegistros === 0) {
+                            echo 'Nenhum registro encontrado';
+                        } else {
+                            $totalRegistrosText = $totalRegistros === 1 ? 'registro encontrado' : 'registros encontrados';
+                            echo htmlspecialchars((string) $totalRegistros, ENT_QUOTES) . ' ' . htmlspecialchars($totalRegistrosText, ENT_QUOTES);
+                        }
+                        ?>
+                    </span>
+                </div>
+            </div>
 
         <?php if (!empty($rows)): ?>
             <?php foreach ($rows as $row):
@@ -280,7 +370,7 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
                             <span class="major-info"><?php echo gabinete_oficios_list_formatar_data_hora($row['Data'] ?? null); ?></span>
                         </div>
                         <div class="col width-500 col-process process-info" title="clique para copiar">
-                            <span class="minor-info text-ellipsis" <?php echo $classeStyle; ?>><?php echo htmlspecialchars($classeNome); ?></span>
+                            <span class="minor-info text-ellipsis" title="<?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?>" <?php echo $classeStyle; ?>><?php echo htmlspecialchars($classeNome); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars((string) ($row['Processo'] ?? '')); ?></span>
                         </div>
                         <div class="col width-600">
@@ -297,7 +387,7 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
                         </div>
                     </div>
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                        <button type="button" class="btn btn-editar" data-oficio-id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" title="Editar">
+                        <button type="button" class="btn btn-editar" data-oficio-id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" title="Editar" aria-label="Editar">
                             <i class="fi fi-rr-pen-square"></i>
                         </button>
                         <?php if ($st === 'cancelada'): ?>
@@ -309,42 +399,44 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
                 </div>
             </div>
             <?php endforeach; ?>
-        <?php else: ?>
-            <div class="display-flex col col-full register border-bottom">
-                <div class="display-flex row row-full padding-x-sm padding-y-sm">
-                    <span class="major-info">Nenhum ofício cadastrado.</span>
-                </div>
-            </div>
         <?php endif; ?>
 
-        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
+        </div>
+
+        <div class="card-buttons">
             <span class="pagination-info">
-                Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $totalDocuments; ?> <?php echo $documentsLabel; ?>
-                (<?php echo $totalPages; ?> <?php echo $pagesLabel; ?>, <?php echo $itemsPerPage; ?> <?php echo $itemsLabel; ?> por página)
+                Mostrando <?php echo htmlspecialchars((string) $startItem); ?>-<?php echo htmlspecialchars((string) $endItem); ?> de <?php echo htmlspecialchars((string) $totalDocuments); ?> <?php echo htmlspecialchars($documentsLabel); ?>
+                (<?php echo htmlspecialchars((string) $totalPages); ?> <?php echo htmlspecialchars($pagesLabel); ?>, <?php echo htmlspecialchars((string) $itemsPerPage); ?> <?php echo htmlspecialchars($itemsLabel); ?> por página)
             </span>
             <?php if ($totalPages > 0): ?>
                 <div class="pagination-controls">
                     <?php
+                    $prevPage = $currentPage > 1 ? $currentPage - 1 : 1;
                     $prevParams = $baseQueryParams;
-                    $prevParams['page_number'] = $currentPage > 1 ? $currentPage - 1 : 1;
+                    $prevParams['page_number'] = $prevPage;
+                    $prevHref = '?' . http_build_query($prevParams);
+                    $nextPage = $currentPage < $totalPages ? $currentPage + 1 : $currentPage;
                     $nextParams = $baseQueryParams;
-                    $nextParams['page_number'] = $currentPage < $totalPages ? $currentPage + 1 : $currentPage;
+                    $nextParams['page_number'] = $nextPage;
+                    $nextHref = '?' . http_build_query($nextParams);
                     ?>
-                    <button type="button" class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>" <?php if ($currentPage > 1): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($prevParams), ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>>
+                    <button type="button" class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>" <?php if ($currentPage > 1): ?>data-nav-href="<?php echo htmlspecialchars($prevHref, ENT_QUOTES); ?>" <?php else: ?>disabled aria-disabled="true" <?php endif; ?>>
                         <img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior">
                     </button>
                     <?php foreach ($paginationButtons as $page): ?>
-                        <?php $pageParams = $baseQueryParams; $pageParams['page_number'] = $page; ?>
-                        <button type="button" class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" <?php if ($page !== $currentPage): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($pageParams), ENT_QUOTES); ?>"<?php else: ?>disabled<?php endif; ?>><?php echo $page; ?></button>
+                        <?php $pageParams = $baseQueryParams;
+                        $pageParams['page_number'] = $page; ?>
+                        <button type="button" class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" <?php if ($page !== $currentPage): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($pageParams), ENT_QUOTES); ?>" <?php else: ?>disabled<?php endif; ?>><?php echo $page; ?></button>
                     <?php endforeach; ?>
                     <?php if ($paginationEllipsis && !empty($trailingPages)): ?>
                         <span class="pagination-symbol pagination-ellipsis" aria-hidden="true"><img src="/assets/icons/Navigation-Menu-Horizontal--Streamline-Ultimate.png" alt="Mais páginas"></span>
                         <?php foreach ($trailingPages as $page): ?>
-                            <?php $pageParams = $baseQueryParams; $pageParams['page_number'] = $page; ?>
-                            <button type="button" class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" <?php if ($page !== $currentPage): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($pageParams), ENT_QUOTES); ?>"<?php else: ?>disabled<?php endif; ?>><?php echo $page; ?></button>
+                            <?php $pageParams = $baseQueryParams;
+                            $pageParams['page_number'] = $page; ?>
+                            <button type="button" class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" <?php if ($page !== $currentPage): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($pageParams), ENT_QUOTES); ?>" <?php else: ?>disabled<?php endif; ?>><?php echo $page; ?></button>
                         <?php endforeach; ?>
                     <?php endif; ?>
-                    <button type="button" class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>" <?php if ($currentPage < $totalPages): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($nextParams), ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>>
+                    <button type="button" class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>" <?php if ($currentPage < $totalPages): ?>data-nav-href="<?php echo htmlspecialchars($nextHref, ENT_QUOTES); ?>" <?php else: ?>disabled aria-disabled="true" <?php endif; ?>>
                         <img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página">
                     </button>
                 </div>
@@ -362,6 +454,81 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
 
     <?php include __DIR__ . '/_datajud_scripts.php'; ?>
     <script>
+        (function() {
+            function initializeListSectionToggles() {
+                const sections = document.querySelectorAll('[data-list-section]');
+
+                function setSectionVisibility(sectionName, isVisible) {
+                    const section = document.querySelector('[data-list-section="' + sectionName + '"]');
+                    if (!section) {
+                        return;
+                    }
+                    section.style.display = isVisible ? 'flex' : 'none';
+                }
+
+                function handleToggleClick(event, isVisible) {
+                    const sectionName = event.currentTarget.getAttribute(isVisible ? 'data-list-section-trigger' : 'data-list-section-hide');
+                    if (!sectionName) {
+                        return;
+                    }
+                    setSectionVisibility(sectionName, isVisible);
+                }
+
+                function handleToggleKeydown(event, isVisible) {
+                    if (event.key !== 'Enter' && event.key !== ' ') {
+                        return;
+                    }
+                    event.preventDefault();
+                    handleToggleClick(event, isVisible);
+                }
+
+                sections.forEach(function(section) {
+                    section.style.display = 'none';
+                });
+
+                document.querySelectorAll('[data-list-section-trigger]').forEach(function(trigger) {
+                    trigger.addEventListener('click', function(event) {
+                        handleToggleClick(event, true);
+                    });
+                    trigger.addEventListener('keydown', function(event) {
+                        handleToggleKeydown(event, true);
+                    });
+                });
+
+                document.querySelectorAll('[data-list-section-hide]').forEach(function(trigger) {
+                    trigger.addEventListener('click', function(event) {
+                        handleToggleClick(event, false);
+                    });
+                    trigger.addEventListener('keydown', function(event) {
+                        handleToggleKeydown(event, false);
+                    });
+                });
+            }
+
+            initializeListSectionToggles();
+
+            if (window.App && App.ListSearch && typeof App.ListSearch.initializeProcessSearch === 'function') {
+                App.ListSearch.initializeProcessSearch({
+                    inputId: 'search-input',
+                    itemsPerPageId: 'items-per-page',
+                    searchParamKey: 'oficio',
+                    filters: [{
+                            id: 'filter-status',
+                            param: 'status'
+                        },
+                        {
+                            id: 'filter-ano',
+                            param: 'ano'
+                        },
+                    ],
+                    minSearchDigits: 1,
+                    debounceDelay: 1000,
+                    initialProcessFilter: <?php echo json_encode($oficioFilter, JSON_UNESCAPED_UNICODE); ?>,
+                });
+            }
+        })();
+    </script>
+    <script>
         (function () {
             if (!window.App || !App.OficiosList || typeof App.OficiosList.initialize !== 'function') {
                 return;
@@ -376,6 +543,7 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
                 clearButtonId: 'btn-gab-oficio-limpar',
                 createButtonId: 'btn-gab-oficio-registrar',
                 createEndpoint: '/api/gabinete-oficios/create.php',
+                enableDesalocar: false,
                 editButtonSelector: '.btn-editar[data-oficio-id]',
                 editHrefBuilder: function (id) {
                     return '/frame.php?page=oficiosgabineteedit&id=' + encodeURIComponent(id);

@@ -335,7 +335,7 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                 <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Pesquisa na lista</span>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-center">
-                <input type="text" class="height-md" id="search-input" placeholder="Pesquisar" style="width: min(100%, 420px); max-width: 420px;" aria-label="Pesquisar por número do ofício (com ou sem ano) ou por número do processo CNJ" value="<?php echo htmlspecialchars($oficioFilter, ENT_QUOTES); ?>">
+                <input type="text" class="height-md" id="search-input" placeholder="Pesquisar" style="width: 320px;" aria-label="Pesquisar por número do ofício (com ou sem ano) ou por número do processo CNJ" value="<?php echo htmlspecialchars($oficioFilter, ENT_QUOTES); ?>">
                 <?php
                 $listExportPage = $routePage;
                 $listExportQuery = $baseQueryParams;

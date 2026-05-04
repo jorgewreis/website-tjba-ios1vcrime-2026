@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0059
+
+**Data:** 2026-05-04 20:41:38 | **Commit:** `bebf1f9f` | **Tipo:** `patch`
+
+- refactor(gabinete-oficios-list): improve layout and search interface
+
 ## V. 1.97.0058
 
 **Data:** 2026-05-04 20:31:57 | **Commit:** `c903260a` | **Tipo:** `patch`
@@ -5136,6 +5142,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
