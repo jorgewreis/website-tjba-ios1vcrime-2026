@@ -8,13 +8,19 @@ require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/CartasRecebidasService.php';
 
+if (!bootstrapRequireAuthenticatedTrustedPostRequest()) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Requisição inválida.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 $rawPayload = file_get_contents('php://input') ?: '';
 $parsed = json_decode($rawPayload, true);
 if (!is_array($parsed)) {
     $parsed = $_POST;
 }
 
-$subtarefaId = trim((string) ($parsed['subtarefa_id'] ?? $parsed['subtarefaId'] ?? $_GET['subtarefa_id'] ?? ''));
+$subtarefaId = trim((string) ($parsed['subtarefa_id'] ?? $parsed['subtarefaId'] ?? ''));
 
 if ($subtarefaId === '') {
     http_response_code(400);

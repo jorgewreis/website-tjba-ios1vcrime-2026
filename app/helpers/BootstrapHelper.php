@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/AutoloadHelper.php';
 require_once __DIR__ . '/Conection.php';
+require_once __DIR__ . '/../../config/security.php';
 
 /**
  * Retorna a conexão compartilhada com o banco (PDO).
@@ -55,4 +56,13 @@ function bootstrapRequireTrustedPostRequest(): bool
     }
 
     return false;
+}
+
+/**
+ * Requer sessão autenticada além da proteção de POST de mesma origem.
+ * Use em APIs JSON que alteram estado para impedir mutações por URL ou clientes sem login.
+ */
+function bootstrapRequireAuthenticatedTrustedPostRequest(): bool
+{
+    return bootstrapRequireTrustedPostRequest() && Security::isAuthenticated();
 }

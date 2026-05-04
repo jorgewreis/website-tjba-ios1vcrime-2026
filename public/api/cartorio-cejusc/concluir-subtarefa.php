@@ -9,6 +9,12 @@ require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/helpers/CartorioSubtarefaUsuarioSessao.php';
 require_once $basePath . '/app/services/CejuscService.php';
 
+if (!bootstrapRequireAuthenticatedTrustedPostRequest()) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Requisição inválida.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 $connection = Conection::getInstance()->getConnection();
 
 $rawPayload = file_get_contents('php://input') ?: '';
@@ -17,7 +23,7 @@ if (!is_array($parsed)) {
     $parsed = $_POST;
 }
 
-$subtarefaId = trim((string) ($parsed['subtarefa_id'] ?? $parsed['subtarefaId'] ?? $_GET['subtarefa_id'] ?? ''));
+$subtarefaId = trim((string) ($parsed['subtarefa_id'] ?? $parsed['subtarefaId'] ?? ''));
 $dadosEspecificos = CartorioSubtarefaUsuarioSessao::mergeDadosEspecificosComSessao(
     $connection,
     $parsed['dados_especificos'] ?? null
