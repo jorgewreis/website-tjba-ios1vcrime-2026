@@ -14,6 +14,9 @@ require_once __DIR__ . '/../../repositories/GabineteReuPresoProcessoRepository.p
 require_once __DIR__ . '/../../repositories/GabineteReuPresoRepository.php';
 require_once __DIR__ . '/../../repositories/PartesRepository.php';
 require_once __DIR__ . '/../../repositories/ProcessosPartesRepository.php';
+require_once __DIR__ . '/../../repositories/PartesInstituicoesRepository.php';
+require_once __DIR__ . '/../../repositories/PartesTelefonesRepository.php';
+require_once __DIR__ . '/../../repositories/InstituicoesSetoresRepository.php';
 
 $id = trim((string) ($_GET['id'] ?? ''));
 $service = new SalaAudienciasPautaService(Conection::getInstance()->getConnection());
@@ -517,22 +520,77 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
             <h2>Partes cadastradas</h2>
         </div>
+        <?php
+            $pdoPautaEditPartes = Conection::getInstance()->getConnection();
+            $repoPiPautaEdit = new PartesInstituicoesRepository($pdoPautaEditPartes);
+            $repoTelPautaEdit = new PartesTelefonesRepository($pdoPautaEditPartes);
+            $repoSetorPautaEdit = new InstituicoesSetoresRepository($pdoPautaEditPartes);
+            $repoProcPartesPautaEdit = new ProcessosPartesRepository($pdoPautaEditPartes);
+            $processoIdAudiencia = trim((string) ($row['processo'] ?? ''));
+        ?>
         <?php foreach ($partesOrdenadas as $parte): ?>
         <?php
             $defensorTexto = 'Nenhum defensor vinculado';
             $tipoParteAtual = (string) ($parte['tipo_parte'] ?? '');
             $mostrarDefensor = in_array($tipoParteAtual, ['reu', 'vitima'], true);
             $minorInfoParte = (string) ucfirst(str_replace('_', ' ', $tipoParteAtual));
+            $parteIdGlobalRaw = trim((string) ($parte['parte_id_global'] ?? ''));
             $parteGlobalLinkId = '';
+            if ($parteIdGlobalRaw !== '') {
+                $parteGlobalCadastro = $partesRepoLista->findById($parteIdGlobalRaw);
+                if ($parteGlobalCadastro !== null) {
+                    $parteGlobalLinkId = (string) ($parteGlobalCadastro['id'] ?? '');
+                }
+            }
+            $mostrarBtnLinkGlobal = in_array($tipoParteAtual, ['testemunha_denuncia', 'testemunha_defesa'], true) && $parteGlobalLinkId !== '';
 
-            // Botão de vínculo global da parte (somente quando houver cadastro global válido).
-            // Regra: exibir apenas para testemunhas e quando existir correspondência real no cadastro de partes.
-            if (in_array($tipoParteAtual, ['testemunha_denuncia', 'testemunha_defesa'], true)) {
-                $parteIdGlobalRaw = trim((string) ($parte['parte_id_global'] ?? ''));
-                if ($parteIdGlobalRaw !== '') {
-                    $parteGlobal = $partesRepoLista->findById($parteIdGlobalRaw);
-                    if ($parteGlobal !== null) {
-                        $parteGlobalLinkId = (string) ($parteGlobal['id'] ?? '');
+            $parteLigadaAoProcessoDaAudiencia = false;
+            if ($processoIdAudiencia !== '' && $parteIdGlobalRaw !== '') {
+                foreach ($repoProcPartesPautaEdit->findByParteId($parteIdGlobalRaw) as $ppLinha) {
+                    if (trim((string) ($ppLinha['processo_id'] ?? '')) === $processoIdAudiencia) {
+                        $parteLigadaAoProcessoDaAudiencia = true;
+                        break;
+                    }
+                }
+            }
+            $destacarNomeVinculoDb = ($parteGlobalLinkId !== '' || $parteLigadaAoProcessoDaAudiencia);
+
+            $cargoPrefixoTestemunhaDenuncia = '';
+            $linhaCompanhiaTelefoneTestemunha = '';
+            if ($tipoParteAtual === 'testemunha_denuncia' && $parteGlobalLinkId !== '') {
+                $vinculosAtivos = $repoPiPautaEdit->findByParteId($parteIdGlobalRaw, true);
+                $vin = $vinculosAtivos[0] ?? null;
+                if ($vin !== null) {
+                    $cargoPrefixoTestemunhaDenuncia = trim((string) ($vin['cargo_funcao'] ?? ''));
+                    $rotuloInst = trim((string) ($vin['instituicao_nome'] ?? ''));
+                    if ($rotuloInst === '') {
+                        $rotuloInst = trim((string) ($vin['instituicao_sigla'] ?? ''));
+                    }
+                    $setorIdVin = trim((string) ($vin['setor_id'] ?? ''));
+                    if ($setorIdVin !== '') {
+                        $setorRow = $repoSetorPautaEdit->findById($setorIdVin);
+                        $nomeSetor = $setorRow !== null ? trim((string) ($setorRow['nome_setor'] ?? '')) : '';
+                        if ($nomeSetor !== '' && $rotuloInst !== '') {
+                            $rotuloInst .= ' (' . $nomeSetor . ')';
+                        } elseif ($nomeSetor !== '' && $rotuloInst === '') {
+                            $rotuloInst = $nomeSetor;
+                        }
+                    }
+                    $telEscolhido = '';
+                    foreach ($repoTelPautaEdit->findByParteId($parteIdGlobalRaw) as $telRow) {
+                        if ((int) ($telRow['ativo'] ?? 1) !== 1) {
+                            continue;
+                        }
+                        $telEscolhido = trim((string) ($telRow['numero'] ?? ''));
+                        if ($telEscolhido !== '') {
+                            break;
+                        }
+                    }
+                    if ($rotuloInst !== '' || $telEscolhido !== '') {
+                        $linhaCompanhiaTelefoneTestemunha = $rotuloInst;
+                        if ($telEscolhido !== '') {
+                            $linhaCompanhiaTelefoneTestemunha .= ($linhaCompanhiaTelefoneTestemunha !== '' ? ' ' : '') . '(' . $telEscolhido . ')';
+                        }
                     }
                 }
             }
@@ -642,6 +700,18 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                 }
             }
 
+            $styleNomeParteAttrs = [];
+            if ($tipoParteAtual === 'reu') {
+                $styleNomeParteAttrs[] = 'font-weight: 600';
+            }
+            if ($destacarNomeVinculoDb) {
+                $styleNomeParteAttrs[] = 'color: var(--color-primary-active)';
+                $styleNomeParteAttrs[] = 'font-weight: 600';
+            }
+            $styleAttrNomeParte = $styleNomeParteAttrs !== []
+                ? ' style="' . htmlspecialchars(implode('; ', $styleNomeParteAttrs), ENT_QUOTES, 'UTF-8') . '"'
+                : '';
+
             // Mini-status dual: metade esquerda = expedição, metade direita = cumprimento.
             $expedicaoVal = trim((string) ($parte['expedicao'] ?? 'Não expedido'));
             $cumprVal = trim((string) ($parte['cumprimento'] ?? ''));
@@ -659,15 +729,20 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                 <div class="display-flex row row-fit justify-start gap-y-sm align-center">
                     <div class="col width-700">
                         <div class="minor-info"><?php echo $minorInfoParte; ?></div>
-                        <span class="major-info text-ellipsis" <?php echo $tipoParteAtual === 'reu' ? 'style="font-weight: 600;"' : ''; ?>>
+                        <span class="major-info text-ellipsis"<?php echo $styleAttrNomeParte; ?>>
                             <?php
                                 $nomeParteDisplay = (string) ($parte['nome_parte'] ?? '');
                                 // Remove espaços invisíveis que podem vir do BD (ex.: &nbsp; e espaços extras).
                                 $nomeParteDisplay = str_replace("\xC2\xA0", ' ', $nomeParteDisplay);
                                 $nomeParteDisplay = trim(preg_replace('/\s+/u', ' ', $nomeParteDisplay) ?: $nomeParteDisplay);
                             ?>
-                            <?php echo htmlspecialchars($nomeParteDisplay, ENT_QUOTES); ?><?php echo (string) $parte['maioridade'] === 'menor' ? ' (Menor)' : ''; ?>
+                            <?php if ($cargoPrefixoTestemunhaDenuncia !== ''): ?>
+                            <span class="major-info"><?php echo htmlspecialchars($cargoPrefixoTestemunhaDenuncia, ENT_QUOTES, 'UTF-8'); ?></span> 
+                            <?php endif; ?><?php echo htmlspecialchars($nomeParteDisplay, ENT_QUOTES, 'UTF-8'); ?><?php echo (string) $parte['maioridade'] === 'menor' ? ' (Menor)' : ''; ?>
                         </span>
+                        <?php if ($linhaCompanhiaTelefoneTestemunha !== ''): ?>
+                            <span class="minor-info-defesa"><?php echo htmlspecialchars($linhaCompanhiaTelefoneTestemunha, ENT_QUOTES, 'UTF-8'); ?></span>
+                        <?php endif; ?>
                         <?php if ($mostrarDefensor): ?>
                             <span class="minor-info-defesa"><?php echo htmlspecialchars($defensorTexto, ENT_QUOTES); ?></span>
                         <?php endif; ?>
@@ -690,7 +765,7 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                 </div>
                 <div class="display-flex row row-fit justify-end gap-y-sm align-center">
                     <button type="button" class="btn btn-editar" data-parte-edit="<?php echo htmlspecialchars((string) $parte['id_parte'], ENT_QUOTES); ?>" title="Editar parte"><i class="fi fi-rr-pen-square"></i></button>
-                    <?php if ($parteGlobalLinkId !== ''): ?>
+                    <?php if ($mostrarBtnLinkGlobal): ?>
                         <button type="button" class="btn btn-editar" data-parte-global-id="<?php echo htmlspecialchars($parteGlobalLinkId, ENT_QUOTES); ?>" title="Ir para o cadastro da parte"><i class="fi fi-rr-user-link"></i></button>
                     <?php endif; ?>
                     <button type="button" class="btn-editar stop" data-parte-remove="<?php echo htmlspecialchars((string) $parte['id_parte'], ENT_QUOTES); ?>" title="Remover parte"><i class="fi fi-rr-cross-circle"></i></button>
