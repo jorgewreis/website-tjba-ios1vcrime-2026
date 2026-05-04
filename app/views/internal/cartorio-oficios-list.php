@@ -243,36 +243,17 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
             </div>
         </div>
 
-        <div class="display-flex col col-full border-bottom" data-list-section="search" style="display: none;">
-            <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm">
-                <div class="display-flex row row-fit justify-start align-center padding-x-sm">
-                    <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Pesquisa na lista</span>
-                </div>
-                <div class="display-flex row row-fit justify-end gap-y-md align-center">
-                    <input type="text" class="height-md" id="search-input" placeholder="Nº do ofício (ex.: 42, 42/2026) ou processo CNJ" style="width: min(100%, 420px); max-width: 420px;" aria-label="Pesquisar por número do ofício (com ou sem ano) ou por número do processo CNJ" value="<?php echo htmlspecialchars($oficioFilter, ENT_QUOTES); ?>">
-                    <?php
-                    $listExportPage = $routePage;
-                    $listExportQuery = $baseQueryParams;
-                    include __DIR__ . '/_list_export_buttons.php';
-                    ?>
-                    <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="search">
-                        <i class="fi fi-rr-angle-small-up"></i>
-                    </div>
-                </div>
+        <div class="display-flex col col-full padding-x-lg padding-y-sm gap-y-sm border-bottom">
+            <div class="card-allocate-rule">
+                <?php if ($hasRuleAllocation): ?>
+                    <span>*Conforme regra de alocação, o envio de ofícios será alocado automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
+                <?php else: ?>
+                    <span>*Não existe nenhum usuário alocado automaticamente para esta tarefa no momento.</span>
+                <?php endif; ?>
             </div>
         </div>
-
-        <div class="display-flex col col-full padding-x-lg padding-y-sm gap-y-sm border-bottom">
-                <div class="card-allocate-rule">
-                    <?php if ($hasRuleAllocation): ?>
-                        <span>*Conforme regra de alocação, o envio de ofícios será alocado automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
-                    <?php else: ?>
-                        <span>*Não existe nenhum usuário alocado automaticamente para esta tarefa no momento.</span>
-                    <?php endif; ?>
-                </div>
-        </div>
         <div class="display-flex col col-full padding-x-md padding-y-md gap-y-md">
-                <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
+            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
                     <label for="filter-processo" class="display-flex col gap-y-sm" style="align-items: flex-start;">
                         <span>Número do processo <span id="cartorio-processo-hint" class="label-hint-obrigatorio">*obrigatório</span></span>
@@ -333,20 +314,38 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                         <option value="pessoalmente">Pessoalmente</option>
                     </select>
                 </div>
-                </div>
+            </div>
         </div>
 
         <div class="card-buttons padding-x-lg padding-y-sm">
-                <div class="display-flex row row-fit justify-start gap-y-md">
-                    <button type="button" class="btn btn-secondary-outline" id="btn-oficio-limpar">Limpar</button>
-                </div>
-                <div class="display-flex row row-fit justify-start gap-y-md">
-                    <button type="button" class="btn btn-primary-outline" id="alterar-regra-btn" style="display: none;">Alterar regra de alocação</button>
-                    <button type="button" class="btn btn-primary" id="btn-oficio-registrar">Cadastrar</button>
-                </div>
+            <div class="display-flex row row-fit justify-start gap-y-md">
+                <button type="button" class="btn btn-secondary-outline" id="btn-oficio-limpar">Limpar</button>
+            </div>
+            <div class="display-flex row row-fit justify-start gap-y-md">
+                <button type="button" class="btn btn-primary-outline" id="alterar-regra-btn" style="display: none;">Alterar regra de alocação</button>
+                <button type="button" class="btn btn-primary" id="btn-oficio-registrar">Cadastrar</button>
+            </div>
         </div>
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
+
+
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="search" style="display: none;">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Pesquisa na lista</span>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md align-center">
+                <input type="text" class="height-md" id="search-input" placeholder="Pesquisar" style="width: min(100%, 420px); max-width: 420px;" aria-label="Pesquisar por número do ofício (com ou sem ano) ou por número do processo CNJ" value="<?php echo htmlspecialchars($oficioFilter, ENT_QUOTES); ?>">
+                <?php
+                $listExportPage = $routePage;
+                $listExportQuery = $baseQueryParams;
+                include __DIR__ . '/_list_export_buttons.php';
+                ?>
+                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="search">
+                    <i class="fi fi-rr-angle-small-up"></i>
+                </div>
+            </div>
+        </div>
 
         <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="filters" style="display: none;">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
@@ -450,181 +449,181 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                 </div>
             </div>
 
-        <?php if (!empty($rows)): ?>
-            <?php foreach ($rows as $row):
-                $idOficio = (string) ($row['IdOficio'] ?? '');
-                $numSeq = (int) ($row['NumeroSeq'] ?? 0);
-                $ano = (int) ($row['Ano'] ?? 0);
-                $nAno = $numSeq . '/' . $ano;
-                $subtarefas = $row['Subtarefas'] ?? [];
-                $allSt = $row['SubtarefasAll'] ?? [];
-                $statusTarefa = (string) ($row['Status'] ?? '');
-                $formaC = (string) ($row['FormaCumprimento'] ?? '');
-                $tarefaConcluida = in_array($statusTarefa, ['finalizada'], true);
-                $tarefaCancelada = ($statusTarefa === 'cancelada');
-                $mostrarBarraStatus = ($statusTarefa === 'pendente' && $formaC === 'cartorio');
-                $progressStatuses = ['pendente', 'pendente'];
-                foreach ($allSt as $s) {
-                    $o = (int) ($s['ordem'] ?? 0);
-                    if ($o >= 1 && $o <= 2) {
-                        $stSeg = (string) ($s['status'] ?? 'pendente');
-                        $progressStatuses[$o - 1] = $stSeg === 'concluida' ? 'concluida' : ($stSeg === 'em_andamento' ? 'em_andamento' : 'pendente');
-                    }
-                }
-                $currentSubtarefaTitle = '';
-                foreach ($allSt as $s) {
-                    if (trim((string) ($s['status'] ?? '')) === 'em_andamento') {
-                        $tipoS = (string) ($s['tipo'] ?? '');
-                        $currentSubtarefaTitle = $subtarefaLabels[$tipoS] ?? $tipoS;
-                        break;
-                    }
-                }
-                if ($currentSubtarefaTitle === '' && $statusTarefa === 'pendente' && $formaC === 'cartorio') {
-                    $currentSubtarefaTitle = $subtarefaLabels[OficiosCartorioSubtarefasRepository::TIPO_ENVIAR] ?? '';
-                }
-                $segmentosBarra = [];
-                if ($mostrarBarraStatus) {
-                    for ($i = 0; $i < 2; $i++) {
-                        $statusSeg = $progressStatuses[$i] ?? 'pendente';
-                        if ($statusSeg === 'concluida') {
-                            $segClass = 'concluida';
-                        } elseif ($statusSeg === 'em_andamento') {
-                            $segClass = 'em_andamento';
-                        } else {
-                            $segClass = 'pendente';
+            <?php if (!empty($rows)): ?>
+                <?php foreach ($rows as $row):
+                    $idOficio = (string) ($row['IdOficio'] ?? '');
+                    $numSeq = (int) ($row['NumeroSeq'] ?? 0);
+                    $ano = (int) ($row['Ano'] ?? 0);
+                    $nAno = $numSeq . '/' . $ano;
+                    $subtarefas = $row['Subtarefas'] ?? [];
+                    $allSt = $row['SubtarefasAll'] ?? [];
+                    $statusTarefa = (string) ($row['Status'] ?? '');
+                    $formaC = (string) ($row['FormaCumprimento'] ?? '');
+                    $tarefaConcluida = in_array($statusTarefa, ['finalizada'], true);
+                    $tarefaCancelada = ($statusTarefa === 'cancelada');
+                    $mostrarBarraStatus = ($statusTarefa === 'pendente' && $formaC === 'cartorio');
+                    $progressStatuses = ['pendente', 'pendente'];
+                    foreach ($allSt as $s) {
+                        $o = (int) ($s['ordem'] ?? 0);
+                        if ($o >= 1 && $o <= 2) {
+                            $stSeg = (string) ($s['status'] ?? 'pendente');
+                            $progressStatuses[$o - 1] = $stSeg === 'concluida' ? 'concluida' : ($stSeg === 'em_andamento' ? 'em_andamento' : 'pendente');
                         }
-                        $ordemSeg = $i + 1;
-                        $titleSeg = $ordemSeg === 1 ? ($subtarefaLabels[OficiosCartorioSubtarefasRepository::TIPO_ENVIAR] ?? '') : ($subtarefaLabels[OficiosCartorioSubtarefasRepository::TIPO_JUNTAR] ?? '');
-                        $segmentosBarra[] = ['class' => $segClass, 'title' => $titleSeg];
                     }
-                }
-                $classeNome = (string) ($row['ClasseNome'] ?? 'Classe não informada');
-                $classeStyle = $classeNome !== 'Classe não informada' ? 'style="color: var(--primary-color-active); font-weight: 600;"' : '';
-                $expandir = !$tarefaConcluida && !$tarefaCancelada && $formaC === 'cartorio';
-            ?>
-                <div class="display-flex col col-full register border-bottom" data-oficio-id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>">
+                    $currentSubtarefaTitle = '';
+                    foreach ($allSt as $s) {
+                        if (trim((string) ($s['status'] ?? '')) === 'em_andamento') {
+                            $tipoS = (string) ($s['tipo'] ?? '');
+                            $currentSubtarefaTitle = $subtarefaLabels[$tipoS] ?? $tipoS;
+                            break;
+                        }
+                    }
+                    if ($currentSubtarefaTitle === '' && $statusTarefa === 'pendente' && $formaC === 'cartorio') {
+                        $currentSubtarefaTitle = $subtarefaLabels[OficiosCartorioSubtarefasRepository::TIPO_ENVIAR] ?? '';
+                    }
+                    $segmentosBarra = [];
+                    if ($mostrarBarraStatus) {
+                        for ($i = 0; $i < 2; $i++) {
+                            $statusSeg = $progressStatuses[$i] ?? 'pendente';
+                            if ($statusSeg === 'concluida') {
+                                $segClass = 'concluida';
+                            } elseif ($statusSeg === 'em_andamento') {
+                                $segClass = 'em_andamento';
+                            } else {
+                                $segClass = 'pendente';
+                            }
+                            $ordemSeg = $i + 1;
+                            $titleSeg = $ordemSeg === 1 ? ($subtarefaLabels[OficiosCartorioSubtarefasRepository::TIPO_ENVIAR] ?? '') : ($subtarefaLabels[OficiosCartorioSubtarefasRepository::TIPO_JUNTAR] ?? '');
+                            $segmentosBarra[] = ['class' => $segClass, 'title' => $titleSeg];
+                        }
+                    }
+                    $classeNome = (string) ($row['ClasseNome'] ?? 'Classe não informada');
+                    $classeStyle = $classeNome !== 'Classe não informada' ? 'style="color: var(--primary-color-active); font-weight: 600;"' : '';
+                    $expandir = !$tarefaConcluida && !$tarefaCancelada && $formaC === 'cartorio';
+                ?>
+                    <div class="display-flex col col-full register border-bottom" data-oficio-id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>">
 
-                    <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
-                        <div class="display-flex row row-fit justify-start gap-y-sm align-center">
-                            <div class="col">
-                                <?php if ($expandir): ?>
-                                    <label class="button-table" title="Expandir detalhes">
-                                        <input type="radio" name="open-subtask" value="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" aria-controls="subtask-<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" aria-expanded="false" />
-                                        <i class="fi fi-rr-angle-small-down"></i>
-                                    </label>
-                                <?php else: ?>
-                                    <span class="button-table" style="visibility:hidden;" aria-hidden="true"><i class="fi fi-rr-angle-small-down"></i></span>
+                        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
+                            <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                                <div class="col">
+                                    <?php if ($expandir): ?>
+                                        <label class="button-table" title="Expandir detalhes">
+                                            <input type="radio" name="open-subtask" value="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" aria-controls="subtask-<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" aria-expanded="false" />
+                                            <i class="fi fi-rr-angle-small-down"></i>
+                                        </label>
+                                    <?php else: ?>
+                                        <span class="button-table" style="visibility:hidden;" aria-hidden="true"><i class="fi fi-rr-angle-small-down"></i></span>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="col width-200">
+                                    <span class="minor-info">Ofício</span>
+                                    <span class="major-info"><?php echo htmlspecialchars($nAno, ENT_QUOTES); ?></span>
+                                </div>
+                                <div class="col width-400">
+                                    <span class="minor-info">Cadastrado em</span>
+                                    <span class="major-info"><?php echo oficios_list_formatar_data_hora($row['Data'] ?? null); ?></span>
+                                </div>
+                                <div class="col width-500 col-process process-info" title="clique para copiar">
+                                    <span class="minor-info text-ellipsis" title="<?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?>" <?php echo $classeStyle; ?>><?php echo htmlspecialchars($classeNome); ?></span>
+                                    <span class="major-info"><?php echo htmlspecialchars((string) ($row['Processo'] ?? '')); ?></span>
+                                </div>
+                                <div class="col width-700">
+                                    <span class="minor-info">Tipo</span>
+                                    <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['TipoOficio'] ?? '')); ?></span>
+                                </div>
+                            </div>
+                            <div class="display-flex row row-fit justify-end gap-y-sm align-center">
+                                <div class="display-flex row row-fit justify-end gap-y-sm allocate-chips-row allocate-users">
+                                    <?php
+                                    $alocados = CartorioAlocacaoChipHelper::ordenarAlocadosPorTipo($row['Alocados'] ?? []);
+                                    foreach ($alocados as $alocado) {
+                                        $chip = CartorioAlocacaoChipHelper::buildChipData($alocado, [
+                                            'entity_id' => (string) ($idOficio ?? ''),
+                                            'origem' => 'oficios.list',
+                                        ]);
+                                        if ($chip === null) {
+                                            continue;
+                                        }
+                                        $tipo         = $chip['tipo'];
+                                        $iniciais     = htmlspecialchars($chip['iniciais'], ENT_QUOTES);
+                                        $chipTitle    = $chip['title'];
+                                        $chipAria     = $chip['aria_label'];
+                                        $classeTipo   = $chip['classe_tipo'];
+                                        $alocadoIdStr = htmlspecialchars($chip['alocado_id'], ENT_QUOTES);
+                                        $usuarioIdStr = $chip['usuario_id'];
+                                        $podeRemover  = $isGestao || ($tipo === 'specific' && $usuarioIdStr === $currentUserId);
+                                    ?>
+                                        <span class="user-allocate-wrap">
+                                            <span class="user-allocate<?php echo $classeTipo; ?>" title="<?php echo htmlspecialchars($chipTitle, ENT_QUOTES); ?>" aria-label="<?php echo htmlspecialchars($chipAria, ENT_QUOTES); ?>"><?php echo $iniciais; ?></span>
+                                            <?php if ($podeRemover): ?>
+                                                <button type="button"
+                                                    class="user-allocate-remove js-desalocar"
+                                                    data-alocado-id="<?php echo $alocadoIdStr; ?>"
+                                                    data-tipo="<?php echo htmlspecialchars($tipo, ENT_QUOTES); ?>"
+                                                    data-endpoint="/api/cartorio-oficios/desalocar.php"
+                                                    title="Remover alocação"
+                                                    aria-label="Remover alocação">×</button>
+                                            <?php endif; ?>
+                                        </span>
+                                    <?php
+                                    }
+                                    ?>
+                                </div>
+                                <button type="button" class="btn btn-editar" data-oficio-id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" title="Editar" aria-label="Editar">
+                                    <i class="fi fi-rr-pen-square"></i>
+                                </button>
+                                <?php if ($tarefaCancelada): ?>
+                                    <div class="col">
+                                        <div class="width-300 padding-x-lg status status-cancelled">Cancelada</div>
+                                    </div>
+                                <?php elseif ($tarefaConcluida): ?>
+                                <?php elseif ($mostrarBarraStatus): ?>
+                                    <div class="col status-task" title="<?php echo htmlspecialchars($currentSubtarefaTitle); ?>">
+                                        <div class="width-300 status status-pending status-with-progress">
+                                            <span class="status-task-label width-300">Pendente</span>
+                                            <div class="status-task-progress" role="progressbar" aria-valuenow="<?php echo (int) count(array_filter($progressStatuses, function ($x) {
+                                                                                                                    return $x === 'concluida';
+                                                                                                                })); ?>" aria-valuemin="0" aria-valuemax="2">
+                                                <?php foreach ($segmentosBarra as $seg): ?>
+                                                    <div class="status-task-progress-segment <?php echo htmlspecialchars($seg['class']); ?>" title="<?php echo htmlspecialchars($seg['title']); ?>"></div>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        </div>
+                                    </div>
                                 <?php endif; ?>
                             </div>
-                            <div class="col width-200">
-                                <span class="minor-info">Ofício</span>
-                                <span class="major-info"><?php echo htmlspecialchars($nAno, ENT_QUOTES); ?></span>
-                            </div>
-                            <div class="col width-400">
-                                <span class="minor-info">Cadastrado em</span>
-                                <span class="major-info"><?php echo oficios_list_formatar_data_hora($row['Data'] ?? null); ?></span>
-                            </div>
-                            <div class="col width-500 col-process process-info" title="clique para copiar">
-                                <span class="minor-info text-ellipsis" title="<?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?>" <?php echo $classeStyle; ?>><?php echo htmlspecialchars($classeNome); ?></span>
-                                <span class="major-info"><?php echo htmlspecialchars((string) ($row['Processo'] ?? '')); ?></span>
-                            </div>
-                            <div class="col width-700">
-                                <span class="minor-info">Tipo</span>
-                                <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['TipoOficio'] ?? '')); ?></span>
-                            </div>
                         </div>
-                        <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                            <div class="display-flex row row-fit justify-end gap-y-sm allocate-chips-row allocate-users">
-                                <?php
-                                $alocados = CartorioAlocacaoChipHelper::ordenarAlocadosPorTipo($row['Alocados'] ?? []);
-                                foreach ($alocados as $alocado) {
-                                    $chip = CartorioAlocacaoChipHelper::buildChipData($alocado, [
-                                        'entity_id' => (string) ($idOficio ?? ''),
-                                        'origem' => 'oficios.list',
-                                    ]);
-                                    if ($chip === null) {
-                                        continue;
-                                    }
-                                    $tipo         = $chip['tipo'];
-                                    $iniciais     = htmlspecialchars($chip['iniciais'], ENT_QUOTES);
-                                    $chipTitle    = $chip['title'];
-                                    $chipAria     = $chip['aria_label'];
-                                    $classeTipo   = $chip['classe_tipo'];
-                                    $alocadoIdStr = htmlspecialchars($chip['alocado_id'], ENT_QUOTES);
-                                    $usuarioIdStr = $chip['usuario_id'];
-                                    $podeRemover  = $isGestao || ($tipo === 'specific' && $usuarioIdStr === $currentUserId);
-                                ?>
-                                    <span class="user-allocate-wrap">
-                                        <span class="user-allocate<?php echo $classeTipo; ?>" title="<?php echo htmlspecialchars($chipTitle, ENT_QUOTES); ?>" aria-label="<?php echo htmlspecialchars($chipAria, ENT_QUOTES); ?>"><?php echo $iniciais; ?></span>
-                                        <?php if ($podeRemover): ?>
-                                            <button type="button"
-                                                class="user-allocate-remove js-desalocar"
-                                                data-alocado-id="<?php echo $alocadoIdStr; ?>"
-                                                data-tipo="<?php echo htmlspecialchars($tipo, ENT_QUOTES); ?>"
-                                                data-endpoint="/api/cartorio-oficios/desalocar.php"
-                                                title="Remover alocação"
-                                                aria-label="Remover alocação">×</button>
-                                        <?php endif; ?>
-                                    </span>
-                                <?php
-                                }
-                                ?>
-                            </div>
-                            <button type="button" class="btn btn-editar" data-oficio-id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" title="Editar" aria-label="Editar">
-                                <i class="fi fi-rr-pen-square"></i>
-                            </button>
-                            <?php if ($tarefaCancelada): ?>
-                                <div class="col">
-                                    <div class="width-300 padding-x-lg status status-cancelled">Cancelada</div>
-                                </div>
-                            <?php elseif ($tarefaConcluida): ?>
-                            <?php elseif ($mostrarBarraStatus): ?>
-                                <div class="col status-task" title="<?php echo htmlspecialchars($currentSubtarefaTitle); ?>">
-                                    <div class="width-300 status status-pending status-with-progress">
-                                        <span class="status-task-label width-300">Pendente</span>
-                                        <div class="status-task-progress" role="progressbar" aria-valuenow="<?php echo (int) count(array_filter($progressStatuses, function ($x) {
-                                                                                                                return $x === 'concluida';
-                                                                                                            })); ?>" aria-valuemin="0" aria-valuemax="2">
-                                            <?php foreach ($segmentosBarra as $seg): ?>
-                                                <div class="status-task-progress-segment <?php echo htmlspecialchars($seg['class']); ?>" title="<?php echo htmlspecialchars($seg['title']); ?>"></div>
-                                            <?php endforeach; ?>
-                                        </div>
-                                    </div>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                    </div>
 
-                    <?php if ($expandir): ?>
-                        <div class="display-flex col col-full subtask subtask-collapsed" id="subtask-<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" aria-hidden="true">
-                            <?php foreach ($subtarefas as $st):
-                                $stId = (string) ($st['id'] ?? '');
-                                $stTipo = (string) ($st['tipo'] ?? '');
-                                $stLabel = $subtarefaLabels[$stTipo] ?? $stTipo;
-                            ?>
-                                <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
-                                    <div class="display-flex row row-fit justify-start gap-y-sm align-center">
-                                        <div class="col task-status">
-                                            <div class="padding-x-lg height-sm status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
+                        <?php if ($expandir): ?>
+                            <div class="display-flex col col-full subtask subtask-collapsed" id="subtask-<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" aria-hidden="true">
+                                <?php foreach ($subtarefas as $st):
+                                    $stId = (string) ($st['id'] ?? '');
+                                    $stTipo = (string) ($st['tipo'] ?? '');
+                                    $stLabel = $subtarefaLabels[$stTipo] ?? $stTipo;
+                                ?>
+                                    <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
+                                        <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                                            <div class="col task-status">
+                                                <div class="padding-x-lg height-sm status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
+                                            </div>
+                                        </div>
+                                        <div class="display-flex row row-fit justify-end align-center">
+                                            <button type="button" class="btn btn-primary height-sm btn-concluir-subtarefa-oficio" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($stLabel, ENT_QUOTES); ?>">
+                                                <span class="value-button"><?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?></span>
+                                            </button>
                                         </div>
                                     </div>
-                                    <div class="display-flex row row-fit justify-end align-center">
-                                        <button type="button" class="btn btn-primary height-sm btn-concluir-subtarefa-oficio" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($stLabel, ENT_QUOTES); ?>">
-                                            <span class="value-button"><?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?></span>
-                                        </button>
+                                <?php endforeach; ?>
+                                <?php if (empty($subtarefas)): ?>
+                                    <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top">
+                                        <span class="minor-info">Nenhuma sub-tarefa pendente.</span>
                                     </div>
-                                </div>
-                            <?php endforeach; ?>
-                            <?php if (empty($subtarefas)): ?>
-                                <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top">
-                                    <span class="minor-info">Nenhuma sub-tarefa pendente.</span>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            <?php endforeach; ?>
-        <?php endif; ?>
+                                <?php endif; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
 
         </div>
 

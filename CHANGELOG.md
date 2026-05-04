@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0058
+
+**Data:** 2026-05-04 20:31:57 | **Commit:** `c903260a` | **Tipo:** `patch`
+
+- refactor(cartorio-oficios-list): streamline HTML structure and enhance search section
+
 ## V. 1.97.0057
 
 **Data:** 2026-05-04 20:25:46 | **Commit:** `6c82fb77` | **Tipo:** `patch`
@@ -5130,6 +5136,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
