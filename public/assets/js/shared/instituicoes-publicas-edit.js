@@ -13,6 +13,19 @@
         const storageKey = settings.storageKey || 'cartorio.postReloadToast';
         const instId = global.document.getElementById('inst-id')?.value || '';
 
+        function normalizeSiglaUpper(value) {
+            let s = String(value || '').trim();
+            if (s === '') {
+                return '';
+            }
+            try {
+                s = s.toLocaleUpperCase('pt-BR');
+            } catch (e) {
+                s = s.toUpperCase();
+            }
+            return s.slice(0, 120);
+        }
+
         global.document.getElementById('voltar-btn')?.addEventListener('click', function () {
             global.location.href = settings.backHref || '/frame.php?page=instituicoespublicas';
         });
@@ -26,7 +39,7 @@
         }
         if (nomeFantasiaEl) {
             nomeFantasiaEl.addEventListener('blur', function () {
-                nomeFantasiaEl.value = String(nomeFantasiaEl.value || '').trim().toUpperCase().slice(0, 120);
+                nomeFantasiaEl.value = normalizeSiglaUpper(nomeFantasiaEl.value || '');
             });
         }
         if (App.CNPJ && typeof App.CNPJ.init === 'function') {
@@ -47,7 +60,7 @@
             const payload = {
                 id: instId,
                 nome: String(global.document.getElementById('nome')?.value || '').trim().replace(/\s+/g, ' ').slice(0, 255),
-                nome_fantasia: String(global.document.getElementById('nome_fantasia')?.value || '').trim().toUpperCase().slice(0, 120) || null,
+                nome_fantasia: normalizeSiglaUpper(global.document.getElementById('nome_fantasia')?.value || '') || null,
                 cnpj: cnpjRaw || null,
                 observacoes: String(global.document.getElementById('observacoes')?.value || '').trim() || null
             };

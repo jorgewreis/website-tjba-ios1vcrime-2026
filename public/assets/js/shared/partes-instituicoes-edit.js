@@ -18,6 +18,19 @@
         return value || null;
     }
 
+    function normalizeCargoFuncao(value) {
+        let s = String(value || '').trim();
+        if (s === '') {
+            return '';
+        }
+        try {
+            s = s.toLocaleUpperCase('pt-BR');
+        } catch (e) {
+            s = s.toUpperCase();
+        }
+        return s.slice(0, 120);
+    }
+
     function initialize(config) {
         if (!common) {
             return;
@@ -25,8 +38,12 @@
 
         const settings = config || {};
         const profissaoEl = global.document.getElementById('profissao');
+        const cargoFuncaoEl = global.document.getElementById('cargo_funcao');
         profissaoEl?.addEventListener('blur', function () {
             formatProfissao(profissaoEl);
+        });
+        cargoFuncaoEl?.addEventListener('blur', function () {
+            cargoFuncaoEl.value = normalizeCargoFuncao(cargoFuncaoEl.value || '');
         });
 
         global.document.getElementById('salvar-btn')?.addEventListener('click', function () {
@@ -41,12 +58,18 @@
                 return;
             }
 
+            const cargoEl = global.document.getElementById('cargo_funcao');
+            const cargoNorm = normalizeCargoFuncao(cargoEl?.value || '');
+            if (cargoEl) {
+                cargoEl.value = cargoNorm;
+            }
+
             button.disabled = true;
             common.postJson('/api/pessoas/vinculos-instituicoes/update.php', {
                 id: String(global.document.getElementById('vinculo-id')?.value || ''),
                 setor_id: String(global.document.getElementById('setor_id')?.value || '').trim() || null,
                 profissao: formatProfissao(profissaoEl),
-                cargo_funcao: String(global.document.getElementById('cargo_funcao')?.value || '').trim() || null,
+                cargo_funcao: cargoNorm || null,
                 data_inclusao: dataInclusao,
                 data_inicio: String(global.document.getElementById('data_inicio')?.value || '').trim() || null,
                 data_fim: String(global.document.getElementById('data_fim')?.value || '').trim() || null,

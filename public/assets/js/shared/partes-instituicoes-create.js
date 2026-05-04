@@ -18,6 +18,19 @@
         return value || null;
     }
 
+    function normalizeCargoFuncao(value) {
+        let s = String(value || '').trim();
+        if (s === '') {
+            return '';
+        }
+        try {
+            s = s.toLocaleUpperCase('pt-BR');
+        } catch (e) {
+            s = s.toUpperCase();
+        }
+        return s.slice(0, 120);
+    }
+
     function initialize(config) {
         if (!common) {
             return;
@@ -25,10 +38,15 @@
 
         const settings = config || {};
         const profissaoEl = global.document.getElementById('profissao');
+        const cargoFuncaoEl = global.document.getElementById('cargo_funcao');
         const setorEl = global.document.getElementById('setor_id');
 
         profissaoEl?.addEventListener('blur', function () {
             formatProfissao(profissaoEl);
+        });
+
+        cargoFuncaoEl?.addEventListener('blur', function () {
+            cargoFuncaoEl.value = normalizeCargoFuncao(cargoFuncaoEl.value || '');
         });
 
         global.document.getElementById('voltar-btn')?.addEventListener('click', function () {
@@ -72,7 +90,11 @@
             const button = this;
             const parteId = String(global.document.getElementById('parte_id')?.value || '').trim();
             const instituicaoId = String(global.document.getElementById('instituicao_id')?.value || '').trim();
-            const cargoFuncao = String(global.document.getElementById('cargo_funcao')?.value || '').trim();
+            const cargoEl = global.document.getElementById('cargo_funcao');
+            const cargoFuncao = normalizeCargoFuncao(cargoEl?.value || '');
+            if (cargoEl) {
+                cargoEl.value = cargoFuncao;
+            }
             if (!parteId || !instituicaoId) {
                 if (typeof common.notifyByKey === 'function') {
                     common.notifyByKey('generic.validation.person.institution.required', {}, 'error', 'Erro', 'Selecione a pessoa e a instituicao.');
@@ -96,7 +118,7 @@
                 instituicao_id: instituicaoId,
                 setor_id: String(setorEl?.value || '').trim() || null,
                 profissao: formatProfissao(profissaoEl),
-                cargo_funcao: cargoFuncao,
+                cargo_funcao: cargoFuncao || null,
                 observacoes: String(global.document.getElementById('observacoes')?.value || '').trim() || null
             }).then(function (result) {
                 if (result.ok && result.data && result.data.id) {

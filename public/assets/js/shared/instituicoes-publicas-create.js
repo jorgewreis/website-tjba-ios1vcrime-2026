@@ -4,14 +4,23 @@
     const App = global.App || (global.App = {});
     const common = App.RecordEditCommon || null;
 
-    function formatNome(value) {
-        let nome = String(value || '').trim().replace(/\s+/g, ' ');
-        if (App.ProperNameHelper && typeof App.ProperNameHelper.formatProper === 'function') {
-            nome = App.ProperNameHelper.formatProper(nome, 255);
-        } else if (typeof global.TextFormatter !== 'undefined' && typeof global.TextFormatter.formatProperName === 'function') {
-            nome = global.TextFormatter.formatProperName(nome, 255);
+    /** Nome: sem formatação tipo título; só trim, colapsa espaços e limite 255. */
+    function normalizeNomeInstituicao(value) {
+        return String(value || '').trim().replace(/\s+/g, ' ').slice(0, 255);
+    }
+
+    /** Sigla: qualquer caractere, gravada em maiúsculas (alinhado ao PHP mb_strtoupper). */
+    function normalizeSiglaUpper(value) {
+        let s = String(value || '').trim();
+        if (s === '') {
+            return '';
         }
-        return nome.slice(0, 255);
+        try {
+            s = s.toLocaleUpperCase('pt-BR');
+        } catch (e) {
+            s = s.toUpperCase();
+        }
+        return s.slice(0, 120);
     }
 
     function initialize() {
@@ -24,11 +33,11 @@
         const cnpjEl = global.document.getElementById('cnpj');
 
         nomeEl?.addEventListener('blur', function () {
-            nomeEl.value = formatNome(nomeEl.value || '');
+            nomeEl.value = normalizeNomeInstituicao(nomeEl.value || '');
         });
 
         nomeFantasiaEl?.addEventListener('blur', function () {
-            nomeFantasiaEl.value = String(nomeFantasiaEl.value || '').trim().toUpperCase().slice(0, 120);
+            nomeFantasiaEl.value = normalizeSiglaUpper(nomeFantasiaEl.value || '');
         });
 
         if (App.CNPJ && typeof App.CNPJ.init === 'function') {
@@ -37,7 +46,7 @@
 
         global.document.getElementById('cadastrar-btn')?.addEventListener('click', function () {
             const button = this;
-            const nome = formatNome(nomeEl?.value || '');
+            const nome = normalizeNomeInstituicao(nomeEl?.value || '');
             if (nomeEl) {
                 nomeEl.value = nome;
             }
@@ -63,7 +72,7 @@
             button.disabled = true;
             common.postJson('/api/instituicoes-publicas/create.php', {
                 nome: nome,
-                nome_fantasia: String(nomeFantasiaEl?.value || '').trim().toUpperCase().slice(0, 120) || null,
+                nome_fantasia: normalizeSiglaUpper(nomeFantasiaEl?.value || '') || null,
                 cnpj: cnpjRaw || null,
                 observacoes: String(global.document.getElementById('observacoes')?.value || '').trim() || null
             }).then(function (result) {

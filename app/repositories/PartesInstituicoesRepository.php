@@ -146,7 +146,7 @@ final class PartesInstituicoesRepository
         $statement->bindValue(':instituicao_id', $instituicaoId);
         $statement->bindValue(':setor_id', trim((string) ($row['setor_id'] ?? '')) ?: null);
         $statement->bindValue(':profissao', TextFormatter::formatProperName((string) ($row['profissao'] ?? ''), 120) ?: null);
-        $statement->bindValue(':cargo_funcao', TextFormatter::formatProperName((string) ($row['cargo_funcao'] ?? ''), 120) ?: null);
+        $statement->bindValue(':cargo_funcao', $this->normalizeCargoFuncao((string) ($row['cargo_funcao'] ?? '')) ?: null);
         $statement->bindValue(':data_inclusao', $dataInclusao);
         $statement->bindValue(':data_inicio', trim((string) ($row['data_inicio'] ?? '')) ?: null);
         $statement->bindValue(':data_fim', trim((string) ($row['data_fim'] ?? '')) ?: null);
@@ -170,8 +170,11 @@ final class PartesInstituicoesRepository
             $value = $payload[$column];
             if ($column === 'ativo') {
                 $value = (int) (bool) $value;
-            } elseif (in_array($column, ['profissao', 'cargo_funcao'], true)) {
+            } elseif ($column === 'profissao') {
                 $value = TextFormatter::formatProperName((string) $value, 120);
+                $value = $value === '' ? null : $value;
+            } elseif ($column === 'cargo_funcao') {
+                $value = $this->normalizeCargoFuncao((string) $value);
                 $value = $value === '' ? null : $value;
             } elseif ($column === 'setor_id') {
                 $value = trim((string) $value);
@@ -198,6 +201,25 @@ final class PartesInstituicoesRepository
         $statement->execute();
 
         return $statement->rowCount() > 0;
+    }
+
+    /** Cargo/função: trim, maiúsculas (qualquer caractere), limite 120 — ex.: SD/PM. */
+    private function normalizeCargoFuncao(string $value): string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return '';
+        }
+        if (function_exists('mb_strtoupper')) {
+            $value = mb_strtoupper($value, 'UTF-8');
+        } else {
+            $value = strtoupper($value);
+        }
+        if (strlen($value) > 120) {
+            $value = substr($value, 0, 120);
+        }
+
+        return $value;
     }
 
     public function delete(string $id): bool
