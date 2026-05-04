@@ -549,10 +549,13 @@ final class InternalListExportHandlers
      */
     private static function reusPresos(PDO $pdo, string $userId, array $get): array
     {
-        $filters = [
-            'nome' => trim((string) ($get['nome'] ?? '')),
-            'processo' => trim((string) ($get['processo'] ?? '')),
-        ];
+        $q = trim((string) ($get['q'] ?? ''));
+        $filters = $q !== ''
+            ? ['q' => $q]
+            : [
+                'nome' => trim((string) ($get['nome'] ?? '')),
+                'processo' => trim((string) ($get['processo'] ?? '')),
+            ];
         $service = new GabineteReusPresosService($pdo);
         $rows = $service->listAtivos($filters, self::MAX_ROWS, 0)['rows'] ?? [];
         $out = [];

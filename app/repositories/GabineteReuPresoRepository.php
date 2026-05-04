@@ -88,19 +88,36 @@ final class GabineteReuPresoRepository
     }
 
     /**
-     * @param array<string, string> $filters nome, processo (CNJ parcial)
-     * @return list<array<string, mixed>>
-     *
-     * Ordenação: tempo de custódia (maior primeiro), usando `data_prisao` do processo principal —
-     * datas mais antigas primeiro; sem data de prisão por último; desempate por nome.
+     * @param array<string, string> $filters `q` (busca única: nome OU número de processo), ou legado `nome` + `processo` (AND)
+     * @return array{where: list<string>, params: array<string, mixed>}
      */
-    public function fetchListAtivos(array $filters, int $limit, int $offset): array
+    private function buildWhereListAtivos(array $filters): array
     {
-        $nome = trim((string) ($filters['nome'] ?? ''));
-        $processo = trim((string) ($filters['processo'] ?? ''));
-
         $where = ['g.`status` = :ativo'];
         $params = [':ativo' => 'ativo'];
+
+        $q = trim((string) ($filters['q'] ?? ''));
+        if ($q !== '') {
+            $like = '%' . $q . '%';
+            $digits = preg_replace('/\D+/', '', $q);
+            $orParts = ['g.`nome` LIKE :q_nome'];
+            $params[':q_nome'] = $like;
+            if ($digits !== '') {
+                $orParts[] = 'EXISTS (
+                    SELECT 1 FROM `gabinete_reu_preso_processo` gpp2
+                    INNER JOIN `processos` p2 ON p2.`id` = gpp2.`processo_id`
+                    WHERE gpp2.`reu_preso_id` = g.`id`
+                    AND REPLACE(REPLACE(p2.`numero_processo`, \'-\', \'\'), \'.\', \'\') LIKE :q_proc_digits
+                )';
+                $params[':q_proc_digits'] = '%' . $digits . '%';
+            }
+            $where[] = '(' . implode(' OR ', $orParts) . ')';
+
+            return ['where' => $where, 'params' => $params];
+        }
+
+        $nome = trim((string) ($filters['nome'] ?? ''));
+        $processo = trim((string) ($filters['processo'] ?? ''));
 
         if ($nome !== '') {
             $where[] = 'g.`nome` LIKE :nome';
@@ -120,6 +137,21 @@ final class GabineteReuPresoRepository
             }
         }
 
+        return ['where' => $where, 'params' => $params];
+    }
+
+    /**
+     * @param array<string, string> $filters ver {@see buildWhereListAtivos()}
+     * @return list<array<string, mixed>>
+     *
+     * Ordenação: tempo de custódia (maior primeiro), usando `data_prisao` do processo principal —
+     * datas mais antigas primeiro; sem data de prisão por último; desempate por nome.
+     */
+    public function fetchListAtivos(array $filters, int $limit, int $offset): array
+    {
+        $built = $this->buildWhereListAtivos($filters);
+        $where = $built['where'];
+        $params = $built['params'];
         $whereSql = implode(' AND ', $where);
 
         $lastMovSql = '(SELECT CONCAT(m.`tipo_codigo`, \'|\', m.`data_movimentacao`) FROM `gabinete_reu_preso_movimentacao` m WHERE m.`reu_preso_id` = g.`id` ORDER BY m.`data_movimentacao` DESC, m.`created_at` DESC LIMIT 1)';
@@ -157,31 +189,9 @@ final class GabineteReuPresoRepository
 
     public function countListAtivos(array $filters): int
     {
-        $nome = trim((string) ($filters['nome'] ?? ''));
-        $processo = trim((string) ($filters['processo'] ?? ''));
-
-        $where = ['g.`status` = :ativo'];
-        $params = [':ativo' => 'ativo'];
-
-        if ($nome !== '') {
-            $where[] = 'g.`nome` LIKE :nome';
-            $params[':nome'] = '%' . $nome . '%';
-        }
-
-        if ($processo !== '') {
-            $digits = preg_replace('/\D+/', '', $processo);
-            if ($digits !== '') {
-                $where[] = 'EXISTS (
-                    SELECT 1 FROM `gabinete_reu_preso_processo` gpp2
-                    INNER JOIN `processos` p2 ON p2.`id` = gpp2.`processo_id`
-                    WHERE gpp2.`reu_preso_id` = g.`id`
-                    AND REPLACE(REPLACE(p2.`numero_processo`, \'-\', \'\'), \'.\', \'\') LIKE :proc_digits
-                )';
-                $params[':proc_digits'] = '%' . $digits . '%';
-            }
-        }
-
-        $whereSql = implode(' AND ', $where);
+        $built = $this->buildWhereListAtivos($filters);
+        $whereSql = implode(' AND ', $built['where']);
+        $params = $built['params'];
         $sql = sprintf('SELECT COUNT(*) FROM `%s` g WHERE %s', $this->table, $whereSql);
         $st = $this->connection->prepare($sql);
         foreach ($params as $k => $v) {

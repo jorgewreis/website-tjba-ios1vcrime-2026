@@ -24,9 +24,9 @@ $search = trim((string) ($_GET['search'] ?? ''));
 $status = trim((string) ($_GET['status'] ?? ''));
 $dataAudiencia = trim((string) ($_GET['data_audiencia'] ?? ''));
 $allowedPerPage = [10, 25, 50, 100];
-$itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 25;
+$itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 10;
 if (!in_array($itemsPerPage, $allowedPerPage, true)) {
-    $itemsPerPage = 25;
+    $itemsPerPage = 10;
 }
 $currentPage = isset($_GET['page_number']) ? max(1, (int) $_GET['page_number']) : 1;
 $offset = ($currentPage - 1) * $itemsPerPage;
@@ -147,7 +147,7 @@ $buttonTitleByTipo = [
                     <i class="fi fi-rr-list"></i>
                 </div>
                 <button type="button" class="btn btn-secondary-outline height-md" id="regras-btn">Regras</button>
-                <button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Nova tarefa</button>
+                <button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
             </div>
         </div>
 
@@ -174,7 +174,7 @@ $buttonTitleByTipo = [
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-center flex-wrap">
                 <select class="width-500 height-md" id="filter-status">
-                    <option value=""<?php echo $status === '' ? ' selected' : ''; ?>>Todas exceto finalizadas</option>
+                    <option value=""<?php echo $status === '' ? ' selected' : ''; ?>>Todos os status</option>
                     <option value="pendente"<?php echo $status === 'pendente' ? ' selected' : ''; ?>>Pendente (<?php echo (int) ($statusCounts['pendente'] ?? 0); ?>)</option>
                     <option value="em_andamento"<?php echo $status === 'em_andamento' ? ' selected' : ''; ?>>Em andamento (<?php echo (int) ($statusCounts['em_andamento'] ?? 0); ?>)</option>
                     <option value="concluida"<?php echo $status === 'concluida' ? ' selected' : ''; ?>>Finalizada (<?php echo (int) ($statusCounts['concluida'] ?? 0); ?>)</option>

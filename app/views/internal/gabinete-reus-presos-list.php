@@ -12,8 +12,7 @@ require_once __DIR__ . '/../../services/GabineteReusPresosService.php';
 $connection = Conection::getInstance()->getConnection();
 
 $routePage = 'reuspresos';
-$nomeFilter = trim($_GET['nome'] ?? '');
-$processoFilter = trim($_GET['processo'] ?? '');
+$qFilter = trim((string) ($_GET['q'] ?? ''));
 
 $allowedPerPage = [10, 25, 50, 100];
 $itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 25;
@@ -28,10 +27,7 @@ if ($pageNumberParam !== null && $pageNumberParam !== '') {
     $currentPage = 1;
 }
 
-$filters = [
-    'nome' => $nomeFilter,
-    'processo' => $processoFilter,
-];
+$filters = $qFilter !== '' ? ['q' => $qFilter] : [];
 $offset = ($currentPage - 1) * $itemsPerPage;
 
 try {
@@ -70,11 +66,8 @@ $baseQueryParams = [];
 if ($routePage !== '') {
     $baseQueryParams['page'] = $routePage;
 }
-if ($nomeFilter !== '') {
-    $baseQueryParams['nome'] = $nomeFilter;
-}
-if ($processoFilter !== '') {
-    $baseQueryParams['processo'] = $processoFilter;
+if ($qFilter !== '') {
+    $baseQueryParams['q'] = $qFilter;
 }
 $baseQueryParams['items_per_page'] = $itemsPerPage;
 
@@ -196,14 +189,11 @@ if ($totalPages > 0) {
         <div class="card-title">
             <div class="display-flex col col-fit justify-start">
                 <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;">Réus presos</h1>
-                <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Acompanhamento de custódia, processo principal e prazo de reavaliação.</p>
+                <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Acompanhamento de réus presos, processo principal e prazo de reavaliação.</p>
             </div>
-            <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md">
+            <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
                 <div class="title-icon" title="Pesquisar" role="button" tabindex="0" aria-label="Pesquisar" data-list-section-trigger="search">
                     <i class="fi fi-rr-search"></i>
-                </div>
-                <div class="title-icon" title="Filtrar" role="button" tabindex="0" aria-label="Filtrar" data-list-section-trigger="filters">
-                    <i class="fi fi-rr-filter"></i>
                 </div>
                 <div class="title-icon" title="Listar" role="button" tabindex="0" aria-label="Listar" data-list-section-trigger="items">
                     <i class="fi fi-rr-list"></i>
@@ -214,28 +204,16 @@ if ($totalPages > 0) {
 
         <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="search" style="display: none;">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
-                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Exportação</span>
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Pesquisa e exportação</span>
             </div>
-            <div class="display-flex row row-fit justify-end gap-y-md align-center">
+            <div class="display-flex row row-fit justify-end gap-y-md align-center flex-wrap">
+                <input type="text" class="height-md" id="filter-q" placeholder="Nome ou número do processo" style="width: 290px;" value="<?php echo htmlspecialchars($qFilter, ENT_QUOTES); ?>">
                 <?php
                 $listExportPage = $routePage;
                 $listExportQuery = $baseQueryParams;
                 include __DIR__ . '/_list_export_buttons.php';
                 ?>
                 <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="search">
-                    <i class="fi fi-rr-angle-small-up"></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="filters" style="display: none;">
-            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
-                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
-            </div>
-            <div class="display-flex row row-fit justify-end gap-y-md align-center flex-wrap">
-                <input type="text" class="width-600 height-md" id="filter-nome" placeholder="Parte do nome" value="<?php echo htmlspecialchars($nomeFilter, ENT_QUOTES); ?>">
-                <input type="text" class="width-400 height-md" id="filter-processo" placeholder="Número ou trecho (CNJ)" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
-                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="filters">
                     <i class="fi fi-rr-angle-small-up"></i>
                 </div>
             </div>
@@ -260,28 +238,11 @@ if ($totalPages > 0) {
 
         <div class="display-flex col col-full register">
 
-            <?php
-            $activeFiltersGrp = [];
-            if ($nomeFilter !== '') {
-                $activeFiltersGrp[] = 'Nome [' . htmlspecialchars($nomeFilter, ENT_QUOTES) . ']';
-            }
-            if ($processoFilter !== '') {
-                $activeFiltersGrp[] = 'Processo [' . htmlspecialchars($processoFilter, ENT_QUOTES) . ']';
-            }
-            if (!empty($activeFiltersGrp)) {
-                echo '
-                    <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" style="background-color: var(--color-primary-bg-light);">
-                        <div class="display-flex row row-fit justify-start align-center padding-x-sm padding-y-sm gap-y-sm">
-                            <span class="text text-ellipsis" style="font-weight: 400; color: var(--color-primary-active); font-size: 12px;">
-                                Lista com os seguintes filtros:
-                            </span>
-                            <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px;">
-                                ' . implode(' + ', $activeFiltersGrp) . '
-                            </span>
-                        </div>
-                    </div>';
-            }
-            ?>
+            <?php if ($qFilter !== ''): ?>
+            <div class="display-flex row row-full padding-x-sm padding-y-sm filter-summary wrap gap-y-sm border-bottom">
+                <span class="filter-chip">Busca: <?php echo htmlspecialchars($qFilter, ENT_QUOTES); ?></span>
+            </div>
+            <?php endif; ?>
 
             <div class="display-flex row row-full padding-x-sm padding-y-sm align-center justify-start border-bottom" style="background-color: var(--color-primary-bg-light);">
                 <div class="display-flex col col-fit align-center justify-start padding-x-lg padding-y-sm">
@@ -424,23 +385,20 @@ if ($totalPages > 0) {
     <script>
     (function() {
         var applyFilters = function () {
-            var nome = document.getElementById('filter-nome')?.value?.trim() ?? '';
-            var proc = document.getElementById('filter-processo')?.value?.trim() ?? '';
+            var q = document.getElementById('filter-q')?.value?.trim() ?? '';
             var perPage = document.getElementById('items-per-page')?.value ?? '25';
             var params = new URLSearchParams(window.location.search);
             params.set('page', '<?php echo htmlspecialchars($routePage, ENT_QUOTES, 'UTF-8'); ?>');
             params.set('page_number', '1');
             params.set('items_per_page', perPage);
-            if (nome) params.set('nome', nome); else params.delete('nome');
-            if (proc) params.set('processo', proc); else params.delete('processo');
+            if (q) params.set('q', q); else params.delete('q');
+            params.delete('nome');
+            params.delete('processo');
             window.location.href = '?' + params.toString();
         };
 
         document.getElementById('items-per-page')?.addEventListener('change', applyFilters);
-        document.getElementById('filter-nome')?.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') { e.preventDefault(); applyFilters(); }
-        });
-        document.getElementById('filter-processo')?.addEventListener('keypress', function (e) {
+        document.getElementById('filter-q')?.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') { e.preventDefault(); applyFilters(); }
         });
 

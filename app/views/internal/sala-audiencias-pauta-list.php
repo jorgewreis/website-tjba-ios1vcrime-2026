@@ -35,9 +35,9 @@ $periodoFilter = trim((string) ($_GET['periodo'] ?? ''));
 $tipoFilter = trim((string) ($_GET['tipo'] ?? ''));
 $search = trim((string) ($_GET['search'] ?? ''));
 $routePage = trim((string) ($_GET['page'] ?? 'salapauta'));
-$itemsPerPage = (int) ($_GET['items_per_page'] ?? 25);
+$itemsPerPage = (int) ($_GET['items_per_page'] ?? 10);
 if (!in_array($itemsPerPage, [10, 25, 50, 100], true)) {
-    $itemsPerPage = 25;
+    $itemsPerPage = 10;
 }
 $pageNumber = max(1, (int) ($_GET['page_number'] ?? 1));
 $offset = ($pageNumber - 1) * $itemsPerPage;
@@ -109,7 +109,7 @@ $statusFilterLabelsPauta = [
                 <div class="title-icon" title="Listar" role="button" tabindex="0" aria-label="Listar" data-list-section-trigger="items">
                     <i class="fi fi-rr-list"></i>
                 </div>
-                <button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Nova audiência</button>
+                <button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
             </div>
         </div>
 

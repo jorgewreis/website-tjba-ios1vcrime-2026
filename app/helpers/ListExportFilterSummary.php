@@ -55,8 +55,13 @@ final class ListExportFilterSummary
                 break;
 
             case 'reuspresos':
-                self::pair($parts, 'Nome', (string) ($get['nome'] ?? ''));
-                self::pair($parts, 'Processo', (string) ($get['processo'] ?? ''));
+                $qRp = (string) ($get['q'] ?? '');
+                if ($qRp !== '') {
+                    self::pair($parts, 'Busca', $qRp);
+                } else {
+                    self::pair($parts, 'Nome', (string) ($get['nome'] ?? ''));
+                    self::pair($parts, 'Processo', (string) ($get['processo'] ?? ''));
+                }
                 break;
 
             case 'cartasexpedidas':

@@ -74,10 +74,24 @@ if ($perfilFilter !== '') {
 }
 
 $paginationButtons = [];
+$paginationEllipsis = false;
+$trailingPages = [];
 if ($totalPages > 0) {
-    $paginationButtons = $totalPages <= 5 ? range(1, $totalPages) : array_slice(range(1, $totalPages), max(0, $currentPage - 3), 5);
-    if ($totalPages > 5 && $currentPage <= 3) {
-        $paginationButtons = array_merge(range(1, 4), [$totalPages]);
+    if ($totalPages <= 5) {
+        $paginationButtons = range(1, $totalPages);
+    } else {
+        $windowStart = max(1, min($currentPage - 2, $totalPages - 4));
+        $windowEnd = min($totalPages, $windowStart + 4);
+        for ($page = $windowStart; $page <= $windowEnd; $page++) {
+            $paginationButtons[] = $page;
+        }
+        if ($windowEnd < $totalPages) {
+            $paginationEllipsis = true;
+            $extraStart = max($windowEnd + 1, $totalPages - 1);
+            for ($page = $extraStart; $page <= $totalPages; $page++) {
+                $trailingPages[] = $page;
+            }
+        }
     }
 }
 
@@ -162,9 +176,9 @@ $formatUltimoAcesso = static function (?string $raw): string {
                 <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;">Usuários</h1>
                 <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Listagem de servidores internos (estagiários, servidores, diretora, admin, magistrada) e externos (estudantes). Os filtros são aplicados automaticamente.</p>
             </div>
-            <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md">
-                <div class="title-icon" title="Exportação" role="button" tabindex="0" aria-label="Exportação" data-list-section-trigger="search">
-                    <i class="fi fi-rr-download"></i>
+            <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
+                <div class="title-icon" title="Pesquisar" role="button" tabindex="0" aria-label="Pesquisar" data-list-section-trigger="search">
+                    <i class="fi fi-rr-search"></i>
                 </div>
                 <div class="title-icon" title="Filtrar" role="button" tabindex="0" aria-label="Filtrar" data-list-section-trigger="filters">
                     <i class="fi fi-rr-filter"></i>
@@ -357,6 +371,12 @@ $formatUltimoAcesso = static function (?string $raw): string {
                     <?php foreach ($paginationButtons as $p): $qp = $baseQueryParams; $qp['page_number'] = $p; ?>
                         <button type="button" class="pagination-number<?php echo $p === $currentPage ? ' active' : ''; ?>" <?php if ($p !== $currentPage): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($qp), ENT_QUOTES); ?>"<?php else: ?>disabled<?php endif; ?>><?php echo (int) $p; ?></button>
                     <?php endforeach; ?>
+                    <?php if ($paginationEllipsis && !empty($trailingPages)): ?>
+                        <span class="pagination-symbol pagination-ellipsis" aria-hidden="true"><img src="/assets/icons/Navigation-Menu-Horizontal--Streamline-Ultimate.png" alt="Mais páginas"></span>
+                        <?php foreach ($trailingPages as $p): $qp = $baseQueryParams; $qp['page_number'] = $p; ?>
+                            <button type="button" class="pagination-number<?php echo $p === $currentPage ? ' active' : ''; ?>" <?php if ($p !== $currentPage): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($qp), ENT_QUOTES); ?>"<?php else: ?>disabled<?php endif; ?>><?php echo (int) $p; ?></button>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                     <button type="button" class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>" <?php if ($currentPage < $totalPages): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($nextParams), ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>>
                         <img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página">
                     </button>

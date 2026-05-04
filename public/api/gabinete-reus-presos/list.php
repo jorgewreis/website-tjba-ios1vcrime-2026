@@ -18,10 +18,13 @@ if (!in_array($itemsPerPage, $allowedPerPage, true)) {
 $pageNumber = isset($_GET['page_number']) ? max(1, (int) $_GET['page_number']) : 1;
 $offset = ($pageNumber - 1) * $itemsPerPage;
 
-$filters = [
-    'nome' => trim((string) ($_GET['nome'] ?? '')),
-    'processo' => trim((string) ($_GET['processo'] ?? '')),
-];
+$q = trim((string) ($_GET['q'] ?? ''));
+$filters = $q !== ''
+    ? ['q' => $q]
+    : [
+        'nome' => trim((string) ($_GET['nome'] ?? '')),
+        'processo' => trim((string) ($_GET['processo'] ?? '')),
+    ];
 
 try {
     $service = new GabineteReusPresosService($connection);
