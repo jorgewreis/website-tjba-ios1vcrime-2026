@@ -33,4 +33,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(sala-audiencias-pauta-edit): enhance partes handling and improve display logic** `[8827835]`
 - **refactor(sala-audiencias-pauta-edit): remove unused repository and streamline display logic** `[3faf01b]`
 - **feat(sala-midias-list): include copy process script for enhanced functionality** `[af16927]`
+- **fix(SalaAudienciasAtaRepository, SalaAudienciasAtaService): update expiration logic for ata records** `[6558770]`
 
