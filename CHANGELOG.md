@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0056
+
+**Data:** 2026-05-04 14:01:23 | **Commit:** `a27bd79` | **Tipo:** `patch`
+
+- feat(sala-audiencias-atas-list): add download deadline label for ata files
+
 ## V. 1.97.0055
 
 **Data:** 2026-05-04 13:56:26 | **Commit:** `6558770` | **Tipo:** `patch`
@@ -5118,6 +5124,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

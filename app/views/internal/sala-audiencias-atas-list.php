@@ -77,6 +77,33 @@ if ($totalPages > 0) {
         }
     }
 }
+
+/**
+ * Texto da coluna "Ata para download" com data limite e dias restantes (calendário).
+ */
+function sala_audiencias_ata_label_prazo_download(string $expiresAt): string
+{
+    $expiresAt = trim($expiresAt);
+    if ($expiresAt === '') {
+        return 'Disponível para download';
+    }
+    try {
+        $exp = new DateTimeImmutable($expiresAt);
+    } catch (Throwable $e) {
+        return 'Disponível para download';
+    }
+    $today = new DateTimeImmutable('today');
+    $expDay = $exp->setTime(0, 0, 0);
+    $diff = $today->diff($expDay);
+    if ($diff->invert === 1) {
+        return 'Prazo encerrado';
+    }
+    $dataLimite = $exp->format('d/m/Y');
+    $n = (int) $diff->days;
+    $diaWord = $n === 1 ? 'dia' : 'dias';
+
+    return 'Disponível até ' . $dataLimite . ' (' . $n . ' ' . $diaWord . ')';
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -172,6 +199,9 @@ if ($totalPages > 0) {
         <?php foreach ($rows as $row):
             $idPauta = htmlspecialchars((string) ($row['id_pauta'] ?? ''), ENT_QUOTES, 'UTF-8');
             $temAta = !empty($row['id_ata']) && !empty($row['arquivo_relativo']);
+            $labelAtaDownload = $temAta
+                ? sala_audiencias_ata_label_prazo_download((string) ($row['expires_at'] ?? ''))
+                : '';
             $inicioEfetivoRaw = trim((string) ($row['data_hora_inicio_efetivo'] ?? ''));
             $inicioEfetivoTs = $inicioEfetivoRaw !== '' ? strtotime($inicioEfetivoRaw) : false;
             $horaExibicao = $inicioEfetivoTs !== false ? date('H:i', $inicioEfetivoTs) : substr((string) ($row['hora_audiencia'] ?? ''), 0, 5);
@@ -198,7 +228,7 @@ if ($totalPages > 0) {
                     <div class="col width-500">
                         <span class="minor-info">Ata para download</span>
                         <?php if ($temAta): ?>
-                        <span class="major-info text-ellipsis ata-status-text">Disponível para download</span>
+                        <span class="major-info text-ellipsis ata-status-text"><?php echo htmlspecialchars($labelAtaDownload, ENT_QUOTES, 'UTF-8'); ?></span>
                         <?php else: ?>
                         <span class="major-info text-ellipsis ata-status-text">Nenhum arquivo enviado</span>
                         <?php endif; ?>
