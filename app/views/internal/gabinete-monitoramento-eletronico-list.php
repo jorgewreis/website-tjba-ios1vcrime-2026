@@ -142,52 +142,120 @@ $statusLabelUi = static function (string $s): string {
             <span class="all">Interno - Gabinete - Monitoramento Eletrônico -</span>
             <span class="specific">Lista</span>
         </div>
-        <h1 class="title-page">Monitoramento Eletrônico</h1>
-        <p class="description-page">Consulta aos registros de monitoramento eletrônico. Para novo cadastro, use a tela de cadastro.</p>
     </div>
 
     <div class="container-full card-page">
 
-        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
-            <div class="display-flex row row-fit justify-between align-center gap-y-md" style="gap:12px;">
-                <h2 style="margin:0;">Lista de monitoramentos</h2>
+        <div class="card-title">
+            <div class="display-flex col col-fit justify-start">
+                <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;">Monitoramento Eletrônico</h1>
+                <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Consulta aos registros de monitoramento eletrônico. Para novo cadastro, use a tela de cadastro.</p>
             </div>
-            <div class="display-flex row row-fit justify-end gap-y-md">
-                <input type="text" class="width-400 height-md" id="search-input" placeholder="Pesquisar por processo ou réu..." value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
+            <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md">
+                <div class="title-icon" title="Pesquisar" role="button" tabindex="0" aria-label="Pesquisar" data-list-section-trigger="search">
+                    <i class="fi fi-rr-search"></i>
+                </div>
+                <div class="title-icon" title="Filtrar" role="button" tabindex="0" aria-label="Filtrar" data-list-section-trigger="filters">
+                    <i class="fi fi-rr-filter"></i>
+                </div>
+                <div class="title-icon" title="Listar" role="button" tabindex="0" aria-label="Listar" data-list-section-trigger="items">
+                    <i class="fi fi-rr-list"></i>
+                </div>
+                <button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
+            </div>
+        </div>
+
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="search" style="display: none;">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Pesquisa e cadastro</span>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md align-center">
+                <input type="text" class="height-md" id="search-input" placeholder="Pesquisar por processo ou réu..." style="width: 290px;" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
                 <?php
                 $listExportPage = $routePage;
                 $listExportQuery = $baseQueryParams;
                 include __DIR__ . '/_list_export_buttons.php';
                 ?>
-                <button type="button" class="btn btn-primary" id="novo-cadastro-btn">Novo cadastro</button>
+                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="search">
+                    <i class="fi fi-rr-angle-small-up"></i>
+                </div>
             </div>
         </div>
 
-        <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
-            <div class="display-flex row row-fit justify-start gap-y-md flex-wrap">
-                <div class="col">
-                    <label for="filter-status">Filtrar por status</label>
-                    <select class="width-500 height-md" id="filter-status">
-                        <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Mostrar todos</option>
-                        <option value="pendente"<?php echo $statusFilter === 'pendente' ? ' selected' : ''; ?>>Pendente (<?php echo (int) ($statusCounts['pendente'] ?? 0); ?>)</option>
-                        <option value="em_andamento"<?php echo $statusFilter === 'em_andamento' ? ' selected' : ''; ?>>Em andamento (<?php echo (int) ($statusCounts['em_andamento'] ?? 0); ?>)</option>
-                        <option value="finalizada"<?php echo $statusFilter === 'finalizada' ? ' selected' : ''; ?>>Finalizada (<?php echo (int) ($statusCounts['finalizada'] ?? 0); ?>)</option>
-                        <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>Cancelada (<?php echo (int) ($statusCounts['cancelada'] ?? 0); ?>)</option>
-                    </select>
-                </div>
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="filters" style="display: none;">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
             </div>
-            <div class="display-flex row row-fit justify-end gap-y-md">
-                <div class="col">
-                    <label for="items-per-page">Itens por página</label>
-                    <select class="width-300 height-md" id="items-per-page">
-                        <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
-                        <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
-                        <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
-                        <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
-                    </select>
+            <div class="display-flex row row-fit justify-end gap-y-md align-center">
+                <select class="width-500 height-md" id="filter-status">
+                    <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Todos os status</option>
+                    <option value="pendente"<?php echo $statusFilter === 'pendente' ? ' selected' : ''; ?>>Pendente (<?php echo (int) ($statusCounts['pendente'] ?? 0); ?>)</option>
+                    <option value="em_andamento"<?php echo $statusFilter === 'em_andamento' ? ' selected' : ''; ?>>Em andamento (<?php echo (int) ($statusCounts['em_andamento'] ?? 0); ?>)</option>
+                    <option value="finalizada"<?php echo $statusFilter === 'finalizada' ? ' selected' : ''; ?>>Finalizada (<?php echo (int) ($statusCounts['finalizada'] ?? 0); ?>)</option>
+                    <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>Cancelada (<?php echo (int) ($statusCounts['cancelada'] ?? 0); ?>)</option>
+                </select>
+                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="filters">
+                    <i class="fi fi-rr-angle-small-up"></i>
                 </div>
             </div>
         </div>
+
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="items" style="display: none;">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Itens por página</span>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md align-center">
+                <select class="width-300 height-md" id="items-per-page">
+                    <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
+                    <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
+                    <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
+                    <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
+                </select>
+                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="items">
+                    <i class="fi fi-rr-angle-small-up"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="display-flex col col-full register">
+
+            <?php
+            $activeFiltersGme = [];
+            if ($statusFilter !== '') {
+                $activeFiltersGme[] = 'Status [' . htmlspecialchars($statusLabelUi($statusFilter), ENT_QUOTES) . ']';
+            }
+            if ($processoFilter !== '') {
+                $activeFiltersGme[] = 'Processo [' . htmlspecialchars($processoFilter, ENT_QUOTES) . ']';
+            }
+            if (!empty($activeFiltersGme)) {
+                echo '
+                    <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" style="background-color: var(--color-primary-bg-light);">
+                        <div class="display-flex row row-fit justify-start align-center padding-x-sm padding-y-sm gap-y-sm">
+                            <span class="text text-ellipsis" style="font-weight: 400; color: var(--color-primary-active); font-size: 12px;">
+                                Lista com os seguintes filtros:
+                            </span>
+                            <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px;">
+                                ' . implode(' + ', $activeFiltersGme) . '
+                            </span>
+                        </div>
+                    </div>';
+            }
+            ?>
+
+            <div class="display-flex row row-full padding-x-sm padding-y-sm align-center justify-start border-bottom" style="background-color: var(--color-primary-bg-light);">
+                <div class="display-flex col col-fit align-center justify-start padding-x-lg padding-y-sm">
+                    <span class="text" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px;">
+                        <?php
+                        $trGme = (int) ($totalDocuments ?? 0);
+                        if ($trGme === 0) {
+                            echo 'Nenhum registro encontrado';
+                        } else {
+                            echo htmlspecialchars((string) $trGme, ENT_QUOTES) . ' ' . htmlspecialchars($trGme === 1 ? 'registro encontrado' : 'registros encontrados', ENT_QUOTES);
+                        }
+                        ?>
+                    </span>
+                </div>
+            </div>
 
         <?php if (!empty($rows)): ?>
             <?php foreach ($rows as $row):
@@ -357,21 +425,17 @@ $statusLabelUi = static function (string $s): string {
                 <?php endif; ?>
             </div>
             <?php endforeach; ?>
-        <?php else: ?>
-            <div class="display-flex col col-full register border-bottom">
-                <div class="display-flex row row-full padding-x-sm padding-y-sm">
-                    <span class="major-info">Nenhum monitoramento cadastrado.</span>
-                </div>
-            </div>
         <?php endif; ?>
 
-        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
+        </div>
+
+        <div class="card-buttons">
             <span class="pagination-info">
                 Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $totalDocuments; ?> <?php echo $documentsLabel; ?>
                 (<?php echo $totalPages; ?> <?php echo $pagesLabel; ?>, <?php echo $itemsPerPage; ?> <?php echo $itemsLabel; ?> por página)
             </span>
             <?php if ($totalPages > 0): ?>
-                <div class="pagination-controls">
+                <div class="pagination-controls gap-y-sm">
                     <?php
                     $prevParams = $baseQueryParams;
                     $prevParams['page_number'] = $currentPage > 1 ? $currentPage - 1 : 1;
@@ -426,5 +490,6 @@ $statusLabelUi = static function (string $s): string {
             });
         })();
     </script>
+    <?php include __DIR__ . '/_list_section_toggle_script.php'; ?>
 </body>
 </html>

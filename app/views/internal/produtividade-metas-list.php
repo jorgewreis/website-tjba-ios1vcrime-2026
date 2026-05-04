@@ -121,6 +121,7 @@ $baseQuery = [
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <?php include __DIR__ . '/_internal_head_styles.php'; ?>
         <?php include __DIR__ . '/_toast_script.php'; ?>
+        <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
     </head>
 <body class="page-internal">
     <div class="spacing-top-page"></div>
@@ -129,76 +130,133 @@ $baseQuery = [
             <span class="all">Interno - Produtividade -</span>
             <span class="specific">Metas</span>
         </div>
-        <h1 class="title-page">Metas de produtividade</h1>
-        <p class="description-page">Gerencie metas por setor, perfil ou usuário para semana, mês e trimestre.</p>
     </div>
 
     <div class="container-full card-page">
-        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
-            <h2>Lista de metas</h2>
-            <div class="display-flex row row-fit justify-end gap-y-md">
-                <?php if ($isGestao): ?>
-                <?php
-                $listExportPage = $routePage;
-                $listExportQuery = $baseQuery;
-                include __DIR__ . '/_list_export_buttons.php';
-                ?>
-                <?php endif; ?>
+        <div class="card-title">
+            <div class="display-flex col col-fit justify-start">
+                <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;">Metas de produtividade</h1>
+                <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Gerencie metas por setor, perfil ou usuário para semana, mês e trimestre.</p>
+            </div>
+            <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
+                <div class="title-icon" title="Pesquisar" role="button" tabindex="0" aria-label="Pesquisar" data-list-section-trigger="search">
+                    <i class="fi fi-rr-search"></i>
+                </div>
+                <div class="title-icon" title="Filtrar" role="button" tabindex="0" aria-label="Filtrar" data-list-section-trigger="filters">
+                    <i class="fi fi-rr-filter"></i>
+                </div>
+                <div class="title-icon" title="Listar" role="button" tabindex="0" aria-label="Listar" data-list-section-trigger="items">
+                    <i class="fi fi-rr-list"></i>
+                </div>
                 <button type="button" class="btn btn-secondary height-md" data-nav-href="/frame.php?page=produtividade">Voltar</button>
                 <?php if ($isGestao): ?>
-                <button type="button" class="btn btn-primary height-md" data-nav-href="/frame.php?page=produtividademetascreate">Nova meta</button>
+                <button type="button" class="btn btn-primary width-300" data-nav-href="/frame.php?page=produtividademetascreate">Nova meta</button>
                 <?php endif; ?>
             </div>
         </div>
 
-        <form method="get" class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md" data-auto-submit-filters>
+        <form method="get" id="form-filters-metas" class="display-flex col col-full" style="width:100%" data-auto-submit-filters>
             <input type="hidden" name="page" value="<?php echo htmlspecialchars($routePage, ENT_QUOTES); ?>">
-            <div class="display-flex row row-fit justify-start gap-y-md">
-                <div class="col">
-                    <label for="q">Buscar</label>
-                    <input type="text" id="q" name="q" class="width-400 height-md" placeholder="Alvo, tipo ou período" value="<?php echo htmlspecialchars($q, ENT_QUOTES); ?>">
+
+            <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="search" style="display: none;">
+                <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                    <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Pesquisa</span>
                 </div>
-                <div class="col">
-                    <label for="ativo">Status</label>
+                <div class="display-flex row row-fit justify-end gap-y-md align-center flex-wrap">
+                    <input type="text" id="q" name="q" class="height-md" placeholder="Alvo, tipo ou período" style="width: 290px;" value="<?php echo htmlspecialchars($q, ENT_QUOTES); ?>">
+                    <?php if ($isGestao): ?>
+                    <?php
+                    $listExportPage = $routePage;
+                    $listExportQuery = $baseQuery;
+                    include __DIR__ . '/_list_export_buttons.php';
+                    ?>
+                    <?php endif; ?>
+                    <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="search">
+                        <i class="fi fi-rr-angle-small-up"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="filters" style="display: none;">
+                <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                    <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-md align-center flex-wrap">
                     <select id="ativo" name="ativo" class="width-200 height-md">
-                        <option value=""<?php echo $ativo === '' ? ' selected' : ''; ?>>Todos</option>
+                        <option value=""<?php echo $ativo === '' ? ' selected' : ''; ?>>Todos os status</option>
                         <option value="1"<?php echo $ativo === '1' ? ' selected' : ''; ?>>Ativas</option>
                         <option value="0"<?php echo $ativo === '0' ? ' selected' : ''; ?>>Inativas</option>
                     </select>
-                </div>
-                <div class="col">
-                    <label for="tipo_alvo">Tipo de alvo</label>
                     <select id="tipo_alvo" name="tipo_alvo" class="width-200 height-md">
-                        <option value=""<?php echo $tipoAlvo === '' ? ' selected' : ''; ?>>Todos</option>
+                        <option value=""<?php echo $tipoAlvo === '' ? ' selected' : ''; ?>>Todos os alvos</option>
                         <option value="setor"<?php echo $tipoAlvo === 'setor' ? ' selected' : ''; ?>>Setor</option>
                         <option value="perfil"<?php echo $tipoAlvo === 'perfil' ? ' selected' : ''; ?>>Perfil</option>
                         <option value="usuario"<?php echo $tipoAlvo === 'usuario' ? ' selected' : ''; ?>>Usuário</option>
                     </select>
-                </div>
-                <div class="col">
-                    <label for="periodo_tipo">Período</label>
                     <select id="periodo_tipo" name="periodo_tipo" class="width-200 height-md">
-                        <option value=""<?php echo $periodoTipo === '' ? ' selected' : ''; ?>>Todos</option>
+                        <option value=""<?php echo $periodoTipo === '' ? ' selected' : ''; ?>>Todos os períodos</option>
                         <option value="semana"<?php echo $periodoTipo === 'semana' ? ' selected' : ''; ?>>Semana</option>
                         <option value="mes"<?php echo $periodoTipo === 'mes' ? ' selected' : ''; ?>>Mês</option>
                         <option value="trimestre"<?php echo $periodoTipo === 'trimestre' ? ' selected' : ''; ?>>Trimestre</option>
                     </select>
+                    <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="filters">
+                        <i class="fi fi-rr-angle-small-up"></i>
+                    </div>
                 </div>
-                <div class="col">
-                    <label for="items_per_page">Itens por página</label>
-                    <select id="items_per_page" name="items_per_page" class="width-200 height-md">
+            </div>
+
+            <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="items" style="display: none;">
+                <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                    <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Itens por página</span>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-md align-center">
+                    <select id="items_per_page" name="items_per_page" class="width-300 height-md">
                         <?php foreach ($allowedPerPage as $size): ?>
                         <option value="<?php echo $size; ?>"<?php echo $itemsPerPage === $size ? ' selected' : ''; ?>><?php echo $size; ?></option>
                         <?php endforeach; ?>
                     </select>
+                    <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="items">
+                        <i class="fi fi-rr-angle-small-up"></i>
+                    </div>
                 </div>
             </div>
         </form>
 
+        <?php
+        $tipoAlvoChipLabels = ['setor' => 'Setor', 'perfil' => 'Perfil', 'usuario' => 'Usuário'];
+        $periodoChipLabels = ['semana' => 'Semana', 'mes' => 'Mês', 'trimestre' => 'Trimestre'];
+        ?>
+
+        <?php if ($errors === [] && $isGestao): ?>
+        <div class="display-flex col col-full register border-bottom status-current border-bottom" style="margin-bottom: 15px;">
+            <?php if ($q !== '' || $ativo !== '' || $tipoAlvo !== '' || $periodoTipo !== ''): ?>
+            <div class="display-flex row row-full padding-x-sm padding-y-sm filter-summary wrap gap-y-sm">
+                <?php if ($q !== ''): ?>
+                <span class="filter-chip">Busca: <?php echo htmlspecialchars($q); ?></span>
+                <?php endif; ?>
+                <?php if ($ativo !== ''): ?>
+                <span class="filter-chip">Status: <?php echo $ativo === '1' ? 'Ativas' : 'Inativas'; ?></span>
+                <?php endif; ?>
+                <?php if ($tipoAlvo !== ''): ?>
+                <span class="filter-chip">Alvo: <?php echo htmlspecialchars($tipoAlvoChipLabels[$tipoAlvo] ?? $tipoAlvo); ?></span>
+                <?php endif; ?>
+                <?php if ($periodoTipo !== ''): ?>
+                <span class="filter-chip">Período: <?php echo htmlspecialchars($periodoChipLabels[$periodoTipo] ?? $periodoTipo); ?></span>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
+            <div class="display-flex row row-full padding-x-sm padding-y-sm">
+                <span class="padding-y-md major-info">Total: <?php echo (int) $totalDocuments; ?> <?php echo htmlspecialchars($documentsLabel); ?></span>
+            </div>
+        </div>
+        <?php endif; ?>
+
         <?php if ($errors === []): ?>
             <?php if ($rows === []): ?>
-            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom">
-                <span class="minor-info">Nenhuma meta encontrada.</span>
+            <div class="display-flex col col-full register border-bottom">
+                <div class="display-flex row row-full padding-x-sm padding-y-sm">
+                    <span class="minor-info">Nenhuma meta encontrada.</span>
+                </div>
             </div>
             <?php else: ?>
                 <?php foreach ($rows as $row): ?>
@@ -258,13 +316,13 @@ $baseQuery = [
         <?php endif; ?>
 
         <?php if ($errors === []): ?>
-        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm border-top">
+        <div class="card-buttons">
             <span class="pagination-info">
                 Mostrando <?php echo (int) $startItem; ?>-<?php echo (int) $endItem; ?> de <?php echo (int) $totalDocuments; ?> <?php echo htmlspecialchars($documentsLabel, ENT_QUOTES, 'UTF-8'); ?>
                 (<?php echo (int) $totalPages; ?> <?php echo htmlspecialchars($pagesLabel, ENT_QUOTES, 'UTF-8'); ?>, <?php echo (int) $itemsPerPage; ?> <?php echo htmlspecialchars($itemsLabel, ENT_QUOTES, 'UTF-8'); ?> por página)
             </span>
             <?php if ($totalPages > 0): ?>
-                <div class="pagination-controls">
+                <div class="pagination-controls gap-y-sm">
                     <?php
                     $prevPage = $currentPage > 1 ? $currentPage - 1 : 1;
                     $prevParams = array_merge($baseQuery, ['page_number' => $prevPage]);
@@ -295,6 +353,7 @@ $baseQuery = [
         </div>
         <?php endif; ?>
     </div>
+    <?php include __DIR__ . '/_list_section_toggle_script.php'; ?>
 
 <?php if ($success !== ''): ?>
 <script>

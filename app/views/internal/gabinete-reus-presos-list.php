@@ -186,60 +186,119 @@ if ($totalPages > 0) {
 
     <div class="header-page">
         <div class="location">
-            <span class="all">Interno - Gabinete -</span>
-            <span class="specific">Réus Presos</span>
+            <span class="all">Interno - Gabinete - Réus presos -</span>
+            <span class="specific">Lista</span>
         </div>
-        <h1 class="title-page">Réus presos</h1>
-        <p class="description-page">Acompanhamento de custódia, processo principal e prazo de reavaliação.</p>
     </div>
 
     <div class="container-full card-page">
 
-        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
-            <div class="display-flex row row-fit justify-start">
-                <h2 style="margin:0;">Lista</h2>
+        <div class="card-title">
+            <div class="display-flex col col-fit justify-start">
+                <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;">Réus presos</h1>
+                <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Acompanhamento de custódia, processo principal e prazo de reavaliação.</p>
             </div>
-            <div class="display-flex row row-fit justify-end gap-y-md">
+            <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md">
+                <div class="title-icon" title="Pesquisar" role="button" tabindex="0" aria-label="Pesquisar" data-list-section-trigger="search">
+                    <i class="fi fi-rr-search"></i>
+                </div>
+                <div class="title-icon" title="Filtrar" role="button" tabindex="0" aria-label="Filtrar" data-list-section-trigger="filters">
+                    <i class="fi fi-rr-filter"></i>
+                </div>
+                <div class="title-icon" title="Listar" role="button" tabindex="0" aria-label="Listar" data-list-section-trigger="items">
+                    <i class="fi fi-rr-list"></i>
+                </div>
+                <button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
+            </div>
+        </div>
+
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="search" style="display: none;">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Exportação</span>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md align-center">
                 <?php
                 $listExportPage = $routePage;
                 $listExportQuery = $baseQueryParams;
                 include __DIR__ . '/_list_export_buttons.php';
                 ?>
-                <button type="button" class="btn btn-primary height-md" id="novo-cadastro-btn">Novo cadastro</button>
-            </div>
-        </div>
-
-        <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
-            <div class="display-flex row row-fit justify-start gap-y-md flex-wrap">
-                <div class="col">
-                    <label for="filter-nome">Nome do réu</label>
-                    <input type="text" class="width-600 height-md" id="filter-nome" placeholder="Parte do nome" value="<?php echo htmlspecialchars($nomeFilter, ENT_QUOTES); ?>">
-                </div>
-                <div class="col">
-                    <label for="filter-processo">Processo (CNJ)</label>
-                    <input type="text" class="width-400 height-md" id="filter-processo" placeholder="Número ou trecho" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
-                </div>
-            </div>
-            <div class="display-flex row row-fit justify-end gap-y-md align-end">
-                <div class="col">
-                    <label for="items-per-page">Itens por página</label>
-                    <select class="width-300 height-md" id="items-per-page">
-                        <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
-                        <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
-                        <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
-                        <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
-                    </select>
+                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="search">
+                    <i class="fi fi-rr-angle-small-up"></i>
                 </div>
             </div>
         </div>
 
-        <?php if (empty($rows)): ?>
-        <div class="display-flex col col-full register border-bottom status-current border-bottom" style="margin-bottom: 15px;">
-            <div class="display-flex row row-full padding-x-sm padding-y-sm">
-                <span class="padding-y-md major-info">Nenhum réu ativo encontrado com os filtros informados.</span>
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="filters" style="display: none;">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md align-center flex-wrap">
+                <input type="text" class="width-600 height-md" id="filter-nome" placeholder="Parte do nome" value="<?php echo htmlspecialchars($nomeFilter, ENT_QUOTES); ?>">
+                <input type="text" class="width-400 height-md" id="filter-processo" placeholder="Número ou trecho (CNJ)" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
+                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="filters">
+                    <i class="fi fi-rr-angle-small-up"></i>
+                </div>
             </div>
         </div>
-        <?php else: ?>
+
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="items" style="display: none;">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Itens por página</span>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md align-center">
+                <select class="width-300 height-md" id="items-per-page">
+                    <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
+                    <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
+                    <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
+                    <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
+                </select>
+                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="items">
+                    <i class="fi fi-rr-angle-small-up"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="display-flex col col-full register">
+
+            <?php
+            $activeFiltersGrp = [];
+            if ($nomeFilter !== '') {
+                $activeFiltersGrp[] = 'Nome [' . htmlspecialchars($nomeFilter, ENT_QUOTES) . ']';
+            }
+            if ($processoFilter !== '') {
+                $activeFiltersGrp[] = 'Processo [' . htmlspecialchars($processoFilter, ENT_QUOTES) . ']';
+            }
+            if (!empty($activeFiltersGrp)) {
+                echo '
+                    <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" style="background-color: var(--color-primary-bg-light);">
+                        <div class="display-flex row row-fit justify-start align-center padding-x-sm padding-y-sm gap-y-sm">
+                            <span class="text text-ellipsis" style="font-weight: 400; color: var(--color-primary-active); font-size: 12px;">
+                                Lista com os seguintes filtros:
+                            </span>
+                            <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px;">
+                                ' . implode(' + ', $activeFiltersGrp) . '
+                            </span>
+                        </div>
+                    </div>';
+            }
+            ?>
+
+            <div class="display-flex row row-full padding-x-sm padding-y-sm align-center justify-start border-bottom" style="background-color: var(--color-primary-bg-light);">
+                <div class="display-flex col col-fit align-center justify-start padding-x-lg padding-y-sm">
+                    <span class="text" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px;">
+                        <?php
+                        $trGrp = (int) ($totalDocuments ?? 0);
+                        if ($trGrp === 0) {
+                            echo 'Nenhum registro encontrado';
+                        } else {
+                            echo htmlspecialchars((string) $trGrp, ENT_QUOTES) . ' ' . htmlspecialchars($trGrp === 1 ? 'registro encontrado' : 'registros encontrados', ENT_QUOTES);
+                        }
+                        ?>
+                    </span>
+                </div>
+            </div>
+
+        <?php if (!empty($rows)): ?>
             <?php foreach ($rows as $row):
                 $rid = (string) ($row['id'] ?? '');
                 $prox = grpFormatDate($row['proxima_revisao'] ?? null);
@@ -313,13 +372,15 @@ if ($totalPages > 0) {
             <?php endforeach; ?>
         <?php endif; ?>
 
-        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
+        </div>
+
+        <div class="card-buttons">
             <span class="pagination-info">
                 Mostrando <?php echo (int) $startItem; ?>-<?php echo (int) $endItem; ?> de <?php echo (int) $totalDocuments; ?> <?php echo htmlspecialchars($documentsLabel); ?>
                 (<?php echo (int) $totalPages; ?> <?php echo htmlspecialchars($pagesLabel); ?>, <?php echo (int) $itemsPerPage; ?> <?php echo htmlspecialchars($itemsLabel); ?> por página)
             </span>
             <?php if ($totalPages > 0): ?>
-                <div class="pagination-controls">
+                <div class="pagination-controls gap-y-sm">
                     <?php
                     $prevPage = $currentPage > 1 ? $currentPage - 1 : 1;
                     $prevParams = $baseQueryParams;
@@ -394,5 +455,6 @@ if ($totalPages > 0) {
         });
     })();
     </script>
+    <?php include __DIR__ . '/_list_section_toggle_script.php'; ?>
 </body>
 </html>

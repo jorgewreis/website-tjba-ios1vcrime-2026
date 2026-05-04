@@ -54,6 +54,16 @@ $statusCounts = $result['statusCounts'] ?? ['designada' => 0, 'realizada' => 0, 
 $totalPages = max(1, (int) ceil(max(1, $total) / $itemsPerPage));
 $startItem = $total > 0 ? $offset + 1 : 0;
 $endItem = min($offset + count($rows), $total);
+
+$periodoFilterLabelsPauta = ['hoje' => 'Hoje', 'semana' => 'Próximos 7 dias', 'mes' => 'Este mês'];
+$statusFilterLabelsPauta = [
+    'designada' => 'Designada',
+    'em_andamento' => 'Em andamento',
+    'finalizada' => 'Finalizada',
+    'realizada' => 'Realizada',
+    'redesignada' => 'Redesignada',
+    'cancelada' => 'Cancelada',
+];
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -68,22 +78,48 @@ $endItem = min($offset + count($rows), $total);
         <?php include __DIR__ . '/_copy_process_script.php'; ?>
     </head>
 <body class="page-internal">
+
+    <!-- SPACING -->
     <div class="spacing-top-page"></div>
 
+    <!-- HEADER PAGE -->
     <div class="header-page">
         <div class="location">
             <span class="all">Interno - Cartório - Audiências -</span>
-            <span class="specific">Pauta de audiências</span>
+            <span class="specific">Lista</span>
         </div>
-        <h1 class="title-page">Pauta de Audiências</h1>
-        <p class="description-page">Lista de audiências cadastradas, com visão por data, tipo, sala e situação processual.</p>
     </div>
 
+    <!-- CARD PAGE -->
     <div class="container-full card-page">
-        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
-            <div class="display-flex row row-fit justify-start"><h2>Lista de audiências</h2></div>
-            <div class="display-flex row row-fit justify-end gap-y-md">
-                <input type="text" class="width-400 height-md" id="search-input" placeholder="Pesquisar por processo, parte ou sala..." autocomplete="off" value="<?php echo htmlspecialchars($search, ENT_QUOTES); ?>">
+
+        <!-- TITLE CARD -->
+        <div class="card-title">
+            <div class="display-flex col col-fit justify-start">
+                <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;">Pauta de Audiências</h1>
+                <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Lista de audiências cadastradas, com visão por data, tipo, sala e situação processual.</p>
+            </div>
+            <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md">
+                <div class="title-icon" title="Pesquisar" role="button" tabindex="0" aria-label="Pesquisar" data-list-section-trigger="search">
+                    <i class="fi fi-rr-search"></i>
+                </div>
+                <div class="title-icon" title="Filtrar" role="button" tabindex="0" aria-label="Filtrar" data-list-section-trigger="filters">
+                    <i class="fi fi-rr-filter"></i>
+                </div>
+                <div class="title-icon" title="Listar" role="button" tabindex="0" aria-label="Listar" data-list-section-trigger="items">
+                    <i class="fi fi-rr-list"></i>
+                </div>
+                <button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Nova audiência</button>
+            </div>
+        </div>
+
+        <!-- SUBTITLE SECTION CARD -->
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="search" style="display: none;">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Pesquisa e cadastro</span>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md align-center">
+                <input type="text" class="height-md" id="search-input" placeholder="Pesquisar por processo, parte ou sala..." autocomplete="off" style="width: 290px;" value="<?php echo htmlspecialchars($search, ENT_QUOTES); ?>">
                 <?php
                 $listExportPage = $routePage;
                 $listExportQuery = array_filter([
@@ -94,55 +130,114 @@ $endItem = min($offset + count($rows), $total);
                 ], static fn ($v) => $v !== null && $v !== '');
                 include __DIR__ . '/_list_export_buttons.php';
                 ?>
-                <button type="button" class="btn btn-primary" id="novo-cadastro-btn">Nova audiência</button>
+                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="search">
+                    <i class="fi fi-rr-angle-small-up"></i>
+                </div>
             </div>
         </div>
 
-        <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
-            <div class="display-flex row row-fit justify-start gap-y-md flex-wrap">
-                <div class="col">
-                    <label for="filter-status">Status</label>
-                    <select class="width-400 height-md" id="filter-status">
-                        <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Mostrar todos</option>
-                        <option value="designada"<?php echo $statusFilter === 'designada' ? ' selected' : ''; ?>>Designada (<?php echo (int) ($statusCounts['designada'] ?? 0); ?>)</option>
-                        <option value="em_andamento"<?php echo $statusFilter === 'em_andamento' ? ' selected' : ''; ?>>Em andamento (<?php echo (int) ($statusCounts['em_andamento'] ?? 0); ?>)</option>
-                        <option value="finalizada"<?php echo $statusFilter === 'finalizada' ? ' selected' : ''; ?>>Finalizada (<?php echo (int) ($statusCounts['finalizada'] ?? 0); ?>)</option>
-                        <option value="realizada"<?php echo $statusFilter === 'realizada' ? ' selected' : ''; ?>>Realizada (<?php echo (int) ($statusCounts['realizada'] ?? 0); ?>)</option>
-                        <option value="redesignada"<?php echo $statusFilter === 'redesignada' ? ' selected' : ''; ?>>Redesignada (<?php echo (int) ($statusCounts['redesignada'] ?? 0); ?>)</option>
-                        <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>Cancelada (<?php echo (int) ($statusCounts['cancelada'] ?? 0); ?>)</option>
-                    </select>
-                </div>
-                <div class="col">
-                    <label for="filter-periodo">Período</label>
-                    <select class="width-500 height-md" id="filter-periodo">
-                        <option value=""<?php echo $periodoFilter === '' ? ' selected' : ''; ?>>Todo o período</option>
-                        <option value="hoje"<?php echo $periodoFilter === 'hoje' ? ' selected' : ''; ?>>Hoje</option>
-                        <option value="semana"<?php echo $periodoFilter === 'semana' ? ' selected' : ''; ?>>Próximos 7 dias</option>
-                        <option value="mes"<?php echo $periodoFilter === 'mes' ? ' selected' : ''; ?>>Este mês</option>
-                    </select>
-                </div>
-                <div class="col">
-                    <label for="filter-tipo">Tipo de audiência</label>
-                    <select class="width-500 height-md" id="filter-tipo">
-                        <option value=""<?php echo $tipoFilter === '' ? ' selected' : ''; ?>>Mostrar todos</option>
-                        <?php foreach ($tipos as $tp): $tpNome = (string) ($tp['nome'] ?? ''); ?>
-                            <option value="<?php echo htmlspecialchars($tpNome, ENT_QUOTES); ?>"<?php echo $tipoFilter === $tpNome ? ' selected' : ''; ?>><?php echo htmlspecialchars($tpNome, ENT_QUOTES); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
+        <!-- SUBTITLE SECTION CARD - FILTERS -->
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="filters" style="display: none;">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
             </div>
-            <div class="display-flex row row-fit justify-end gap-y-md">
-                <div class="col">
-                    <label for="items-per-page">Itens por página</label>
-                    <select class="width-300 height-md" id="items-per-page">
-                        <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
-                        <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
-                        <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
-                        <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
-                    </select>
+            <div class="display-flex row row-fit justify-end gap-y-md align-center flex-wrap">
+                <select class="width-500 height-md" id="filter-status">
+                    <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Todos os status</option>
+                    <option value="designada"<?php echo $statusFilter === 'designada' ? ' selected' : ''; ?>>Designada (<?php echo (int) ($statusCounts['designada'] ?? 0); ?>)</option>
+                    <option value="em_andamento"<?php echo $statusFilter === 'em_andamento' ? ' selected' : ''; ?>>Em andamento (<?php echo (int) ($statusCounts['em_andamento'] ?? 0); ?>)</option>
+                    <option value="finalizada"<?php echo $statusFilter === 'finalizada' ? ' selected' : ''; ?>>Finalizada (<?php echo (int) ($statusCounts['finalizada'] ?? 0); ?>)</option>
+                    <option value="realizada"<?php echo $statusFilter === 'realizada' ? ' selected' : ''; ?>>Realizada (<?php echo (int) ($statusCounts['realizada'] ?? 0); ?>)</option>
+                    <option value="redesignada"<?php echo $statusFilter === 'redesignada' ? ' selected' : ''; ?>>Redesignada (<?php echo (int) ($statusCounts['redesignada'] ?? 0); ?>)</option>
+                    <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>Cancelada (<?php echo (int) ($statusCounts['cancelada'] ?? 0); ?>)</option>
+                </select>
+                <select class="width-500 height-md" id="filter-periodo">
+                    <option value=""<?php echo $periodoFilter === '' ? ' selected' : ''; ?>>Todo o período</option>
+                    <option value="hoje"<?php echo $periodoFilter === 'hoje' ? ' selected' : ''; ?>>Hoje</option>
+                    <option value="semana"<?php echo $periodoFilter === 'semana' ? ' selected' : ''; ?>>Próximos 7 dias</option>
+                    <option value="mes"<?php echo $periodoFilter === 'mes' ? ' selected' : ''; ?>>Este mês</option>
+                </select>
+                <select class="width-700 height-md" id="filter-tipo">
+                    <option value=""<?php echo $tipoFilter === '' ? ' selected' : ''; ?>>Todos os tipos de audiência</option>
+                    <?php foreach ($tipos as $tp): $tpNome = (string) ($tp['nome'] ?? ''); ?>
+                        <option value="<?php echo htmlspecialchars($tpNome, ENT_QUOTES); ?>"<?php echo $tipoFilter === $tpNome ? ' selected' : ''; ?>><?php echo htmlspecialchars($tpNome, ENT_QUOTES); ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="filters">
+                    <i class="fi fi-rr-angle-small-up"></i>
                 </div>
             </div>
         </div>
+
+        <!-- SUBTITLE SECTION CARD - ITEMS PER PAGE -->
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="items" style="display: none;">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Itens por página</span>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md align-center">
+                <select class="width-300 height-md" id="items-per-page">
+                    <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
+                    <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
+                    <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
+                    <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
+                </select>
+                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="items">
+                    <i class="fi fi-rr-angle-small-up"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- REGISTERS LIST -->
+        <div class="display-flex col col-full register">
+
+            <!-- SUBTITLE SECTION CARD - FILTERS INFO -->
+            <?php
+            $activeFiltersPauta = [];
+            if ($statusFilter !== '') {
+                $activeFiltersPauta[] = 'Status [' . htmlspecialchars($statusFilterLabelsPauta[$statusFilter] ?? $statusFilter, ENT_QUOTES) . ']';
+            }
+            if ($periodoFilter !== '') {
+                $activeFiltersPauta[] = 'Período [' . htmlspecialchars($periodoFilterLabelsPauta[$periodoFilter] ?? $periodoFilter, ENT_QUOTES) . ']';
+            }
+            if ($tipoFilter !== '') {
+                $activeFiltersPauta[] = 'Tipo [' . htmlspecialchars($tipoFilter, ENT_QUOTES) . ']';
+            }
+            if ($search !== '') {
+                $activeFiltersPauta[] = 'Pesquisa [' . htmlspecialchars($search, ENT_QUOTES) . ']';
+            }
+            if (!empty($activeFiltersPauta)) {
+                echo '
+                    <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" style="background-color: var(--color-primary-bg-light);">
+                        <div class="display-flex row row-fit justify-start align-center padding-x-sm padding-y-sm gap-y-sm">
+                            <span class="text text-ellipsis" style="font-weight: 400; color: var(--color-primary-active); font-size: 12px;">
+                                Lista com os seguintes filtros:
+                            </span>
+                            <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px;">
+                                ' . implode(' + ', $activeFiltersPauta) . '
+                            </span>
+                        </div>
+                    </div>';
+            }
+            ?>
+
+            <!-- Informa a quantidade de registros encontrados (x ou nenhum) -->
+            <div class="display-flex row row-full padding-x-sm padding-y-sm align-center justify-start border-bottom" style="background-color: var(--color-primary-bg-light);">
+                <div class="display-flex col col-fit align-center justify-start padding-x-lg padding-y-sm">
+                    <span class="text" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px;">
+                        <?php
+                        $totalRegistrosPauta = (int) ($total ?? 0);
+                        if ($totalRegistrosPauta === 0) {
+                            echo 'Nenhum registro encontrado';
+                        } else {
+                            $trTxt = $totalRegistrosPauta === 1 ? 'registro encontrado' : 'registros encontrados';
+                            echo htmlspecialchars((string) $totalRegistrosPauta, ENT_QUOTES) . ' ' . htmlspecialchars($trTxt, ENT_QUOTES);
+                        }
+                        ?>
+                    </span>
+                </div>
+            </div>
+
+        <?php if (!empty($rows)): ?>
         <?php foreach ($rows as $row): ?>
         <div class="display-flex col col-full register border-bottom" data-audiencia-id="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>">
             <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
@@ -398,10 +493,14 @@ $endItem = min($offset + count($rows), $total);
             <?php endif; ?>
         </div>
         <?php endforeach; ?>
+        <?php endif; ?>
 
-        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
+        </div>
+
+        <!-- PAGINAÇÃO -->
+        <div class="card-buttons">
             <span class="pagination-info">Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $total; ?> audiências (<?php echo $totalPages; ?> página(s), <?php echo $itemsPerPage; ?> itens por página)</span>
-            <div class="pagination-controls">
+            <div class="pagination-controls gap-y-sm">
                 <?php $prev = max(1, $pageNumber - 1); $next = min($totalPages, $pageNumber + 1); ?>
                 <?php
                 $qPrev = $pageNumber > 1 ? '?page=salapauta&page_number=' . $prev . '&items_per_page=' . $itemsPerPage . '&status=' . urlencode($statusFilter) . '&periodo=' . urlencode($periodoFilter) . '&tipo=' . urlencode($tipoFilter) . '&search=' . urlencode($search) : '';
@@ -422,6 +521,64 @@ $endItem = min($offset + count($rows), $total);
         </div>
     </div>
 
+    <script>
+        (function () {
+            function initializeListSectionToggles() {
+                const sections = document.querySelectorAll('[data-list-section]');
+
+                function setSectionVisibility(sectionName, isVisible) {
+                    const section = document.querySelector('[data-list-section="' + sectionName + '"]');
+                    if (!section) {
+                        return;
+                    }
+
+                    section.style.display = isVisible ? 'flex' : 'none';
+                }
+
+                function handleToggleClick(event, isVisible) {
+                    const sectionName = event.currentTarget.getAttribute(isVisible ? 'data-list-section-trigger' : 'data-list-section-hide');
+                    if (!sectionName) {
+                        return;
+                    }
+
+                    setSectionVisibility(sectionName, isVisible);
+                }
+
+                function handleToggleKeydown(event, isVisible) {
+                    if (event.key !== 'Enter' && event.key !== ' ') {
+                        return;
+                    }
+
+                    event.preventDefault();
+                    handleToggleClick(event, isVisible);
+                }
+
+                sections.forEach(function (section) {
+                    section.style.display = 'none';
+                });
+
+                document.querySelectorAll('[data-list-section-trigger]').forEach(function (trigger) {
+                    trigger.addEventListener('click', function (event) {
+                        handleToggleClick(event, true);
+                    });
+                    trigger.addEventListener('keydown', function (event) {
+                        handleToggleKeydown(event, true);
+                    });
+                });
+
+                document.querySelectorAll('[data-list-section-hide]').forEach(function (trigger) {
+                    trigger.addEventListener('click', function (event) {
+                        handleToggleClick(event, false);
+                    });
+                    trigger.addEventListener('keydown', function (event) {
+                        handleToggleKeydown(event, false);
+                    });
+                });
+            }
+
+            initializeListSectionToggles();
+        })();
+    </script>
     <script src="/assets/js/modules/audiencias/pauta-list.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-list.js') ?: time(); ?>"></script>
     <script>
         (function () {

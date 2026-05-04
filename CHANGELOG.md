@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0048
+
+**Data:** 2026-05-04 11:09:22 | **Commit:** `18803ca` | **Tipo:** `patch`
+
+- refactor(list-views): enhance layout and functionality across multiple internal views
+
 ## V. 1.97.0047
 
 **Data:** 2026-05-01 15:30:00 | **Commit:** `71d58bb0` | **Tipo:** `patch`
@@ -5070,6 +5076,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

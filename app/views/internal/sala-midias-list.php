@@ -119,33 +119,60 @@ $buttonTitleByTipo = [
     <?php include __DIR__ . '/_toast_script.php'; ?>
 </head>
 <body class="page-internal">
-<div class="spacing-top-page"></div>
 
-<div class="header-page">
-    <div class="location">
-        <span class="all">Interno - Sala de Audiências -</span>
-        <span class="specific">Mídias</span>
-    </div>
-    <h1 class="title-page">Mídias de audiências</h1>
-    <p class="description-page">Controle de tarefas de download, sincronização, upload e certidão de upload de mídia. Tarefas finalizadas aparecem apenas ao filtrar por &quot;Finalizada&quot;.</p>
-</div>
+    <div class="spacing-top-page"></div>
 
-<div class="container-full card-page">
-    <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
-        <div class="display-flex row row-fit justify-start">
-            <h2>Listagem de tarefas</h2>
-        </div>
-        <div class="display-flex row row-fit justify-end gap-y-md">
-            <input type="text" class="width-400 height-md" id="search-input" placeholder="Pesquisar por processo, classe ou tipo..." value="<?php echo htmlspecialchars($search, ENT_QUOTES, 'UTF-8'); ?>">
-            <button type="button" class="btn btn-secondary-outline" id="regras-btn">Regras</button>
-            <button type="button" class="btn btn-primary" id="novo-cadastro-btn">Nova tarefa</button>
+    <div class="header-page">
+        <div class="location">
+            <span class="all">Interno - Sala de Audiências - Mídias -</span>
+            <span class="specific">Lista</span>
         </div>
     </div>
 
-    <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
-        <div class="display-flex row row-fit justify-start gap-y-md">
-            <div class="col">
-                <label for="filter-status">Filtrar por status</label>
+    <div class="container-full card-page">
+
+        <div class="card-title">
+            <div class="display-flex col col-fit justify-start">
+                <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;">Mídias de audiências</h1>
+                <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Controle de tarefas de download, sincronização, upload e certidão de upload de mídia. Tarefas finalizadas aparecem apenas ao filtrar por &quot;Finalizada&quot;.</p>
+            </div>
+            <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md">
+                <div class="title-icon" title="Pesquisar" role="button" tabindex="0" aria-label="Pesquisar" data-list-section-trigger="search">
+                    <i class="fi fi-rr-search"></i>
+                </div>
+                <div class="title-icon" title="Filtrar" role="button" tabindex="0" aria-label="Filtrar" data-list-section-trigger="filters">
+                    <i class="fi fi-rr-filter"></i>
+                </div>
+                <div class="title-icon" title="Listar" role="button" tabindex="0" aria-label="Listar" data-list-section-trigger="items">
+                    <i class="fi fi-rr-list"></i>
+                </div>
+                <button type="button" class="btn btn-secondary-outline height-md" id="regras-btn">Regras</button>
+                <button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Nova tarefa</button>
+            </div>
+        </div>
+
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="search" style="display: none;">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Pesquisa e cadastro</span>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md align-center">
+                <input type="text" class="height-md" id="search-input" placeholder="Pesquisar por processo, classe ou tipo..." style="width: 290px;" value="<?php echo htmlspecialchars($search, ENT_QUOTES, 'UTF-8'); ?>">
+                <?php
+                $listExportPage = $routePage;
+                $listExportQuery = $baseQueryParams;
+                include __DIR__ . '/_list_export_buttons.php';
+                ?>
+                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="search">
+                    <i class="fi fi-rr-angle-small-up"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="filters" style="display: none;">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md align-center flex-wrap">
                 <select class="width-500 height-md" id="filter-status">
                     <option value=""<?php echo $status === '' ? ' selected' : ''; ?>>Todas exceto finalizadas</option>
                     <option value="pendente"<?php echo $status === 'pendente' ? ' selected' : ''; ?>>Pendente (<?php echo (int) ($statusCounts['pendente'] ?? 0); ?>)</option>
@@ -153,32 +180,80 @@ $buttonTitleByTipo = [
                     <option value="concluida"<?php echo $status === 'concluida' ? ' selected' : ''; ?>>Finalizada (<?php echo (int) ($statusCounts['concluida'] ?? 0); ?>)</option>
                     <option value="cancelada"<?php echo $status === 'cancelada' ? ' selected' : ''; ?>>Cancelada (<?php echo (int) ($statusCounts['cancelada'] ?? 0); ?>)</option>
                 </select>
-            </div>
-            <div class="col">
-                <label for="filter-data-audiencia">Filtrar por data da audiência</label>
                 <input type="date" class="width-300 height-md" id="filter-data-audiencia" value="<?php echo htmlspecialchars($dataAudiencia, ENT_QUOTES, 'UTF-8'); ?>">
+                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="filters">
+                    <i class="fi fi-rr-angle-small-up"></i>
+                </div>
             </div>
         </div>
-        <div class="display-flex row row-fit justify-end gap-y-md">
-            <div class="col">
-                <label for="items-per-page">Itens por página</label>
+
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="items" style="display: none;">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Itens por página</span>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md align-center">
                 <select class="width-300 height-md" id="items-per-page">
                     <?php foreach ($allowedPerPage as $opt): ?>
                         <option value="<?php echo $opt; ?>"<?php echo $itemsPerPage === $opt ? ' selected' : ''; ?>><?php echo $opt; ?></option>
                     <?php endforeach; ?>
                 </select>
-            </div>
-        </div>
-    </div>
-
-    <div class="display-flex col col-full">
-        <?php if ($rows === []): ?>
-            <div class="display-flex col col-full register border-bottom">
-                <div class="display-flex row row-full padding-x-sm padding-y-sm">
-                    <span class="major-info">Nenhuma tarefa de mídia encontrada.</span>
+                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="items">
+                    <i class="fi fi-rr-angle-small-up"></i>
                 </div>
             </div>
-        <?php else: ?>
+        </div>
+
+        <div class="display-flex col col-full register">
+
+            <?php
+            $statusLabelsMidias = [
+                'pendente' => 'Pendente',
+                'em_andamento' => 'Em andamento',
+                'concluida' => 'Finalizada',
+                'cancelada' => 'Cancelada',
+            ];
+            $activeFiltersMidias = [];
+            if ($status !== '') {
+                $activeFiltersMidias[] = 'Status [' . htmlspecialchars($statusLabelsMidias[$status] ?? $status, ENT_QUOTES, 'UTF-8') . ']';
+            }
+            if ($dataAudiencia !== '') {
+                $activeFiltersMidias[] = 'Data da audiência [' . htmlspecialchars($dataAudiencia, ENT_QUOTES, 'UTF-8') . ']';
+            }
+            if ($search !== '') {
+                $activeFiltersMidias[] = 'Pesquisa [' . htmlspecialchars($search, ENT_QUOTES, 'UTF-8') . ']';
+            }
+            if (!empty($activeFiltersMidias)) {
+                echo '
+                    <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" style="background-color: var(--color-primary-bg-light);">
+                        <div class="display-flex row row-fit justify-start align-center padding-x-sm padding-y-sm gap-y-sm">
+                            <span class="text text-ellipsis" style="font-weight: 400; color: var(--color-primary-active); font-size: 12px;">
+                                Lista com os seguintes filtros:
+                            </span>
+                            <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px;">
+                                ' . implode(' + ', $activeFiltersMidias) . '
+                            </span>
+                        </div>
+                    </div>';
+            }
+            ?>
+
+            <div class="display-flex row row-full padding-x-sm padding-y-sm align-center justify-start border-bottom" style="background-color: var(--color-primary-bg-light);">
+                <div class="display-flex col col-fit align-center justify-start padding-x-lg padding-y-sm">
+                    <span class="text" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px;">
+                        <?php
+                        $totalRegMidias = (int) ($total ?? 0);
+                        if ($totalRegMidias === 0) {
+                            echo 'Nenhum registro encontrado';
+                        } else {
+                            $trM = $totalRegMidias === 1 ? 'registro encontrado' : 'registros encontrados';
+                            echo htmlspecialchars((string) $totalRegMidias, ENT_QUOTES, 'UTF-8') . ' ' . htmlspecialchars($trM, ENT_QUOTES, 'UTF-8');
+                        }
+                        ?>
+                    </span>
+                </div>
+            </div>
+
+        <?php if (!empty($rows)): ?>
             <?php foreach ($rows as $row): ?>
                 <?php
                 $id = trim((string) ($row['id'] ?? ''));
@@ -374,15 +449,16 @@ $buttonTitleByTipo = [
                 </div>
             <?php endforeach; ?>
         <?php endif; ?>
-    </div>
 
-    <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
+        </div>
+
+        <div class="card-buttons">
         <span class="pagination-info">
             Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $total; ?> tarefa(s)
             (<?php echo $totalPages; ?> página(s), <?php echo $itemsPerPage; ?> itens por página)
         </span>
         <?php if ($totalPages > 0): ?>
-        <div class="pagination-controls">
+        <div class="pagination-controls gap-y-sm">
             <?php
             $prevPage = $currentPage > 1 ? $currentPage - 1 : 1;
             $prevParams = $baseQueryParams;
@@ -412,8 +488,8 @@ $buttonTitleByTipo = [
             </button>
         </div>
         <?php endif; ?>
+        </div>
     </div>
-</div>
 
 <script>
 window.SALA_MIDIAS_LIST = {
@@ -427,5 +503,6 @@ window.SALA_MIDIAS_LIST = {
 };
 </script>
 <script src="/assets/js/modules/audiencias/midias-list.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/midias-list.js') ?: time(); ?>"></script>
+<?php include __DIR__ . '/_list_section_toggle_script.php'; ?>
 </body>
 </html>

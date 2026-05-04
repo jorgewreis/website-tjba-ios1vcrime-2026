@@ -36,43 +36,98 @@ $endItem = min($offset + count($rows), $total);
         <?php include __DIR__ . '/_copy_process_script.php'; ?>
     </head>
 <body class="page-internal">
+
     <div class="spacing-top-page"></div>
 
     <div class="header-page">
         <div class="location">
-            <span class="all">Interno - Sala de Audiências -</span>
-            <span class="specific">Atas de audiências</span>
+            <span class="all">Interno - Sala de Audiências - Atas -</span>
+            <span class="specific">Lista</span>
         </div>
-        <h1 class="title-page">Atas de Audiências</h1>
-        <p class="description-page">Envio do PDF da ata para audiências realizadas. O arquivo fica disponível aos estudantes inscritos por 30 dias.</p>
     </div>
 
     <div class="container-full card-page">
-        <div class="display-flex row row-full align-center justify-between padding-x-lg padding-y-md border-bottom">
-            <div class="display-flex row row-fit justify-start padding-x-md"><h2>Audiências realizadas</h2></div>
-            <div class="display-flex row row-fit justify-end gap-y-md">
+
+        <div class="card-title">
+            <div class="display-flex col col-fit justify-start">
+                <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;">Atas de Audiências</h1>
+                <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Envio do PDF da ata para audiências realizadas. O arquivo fica disponível aos estudantes inscritos por 30 dias.</p>
+            </div>
+            <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md">
+                <div class="title-icon" title="Pesquisar" role="button" tabindex="0" aria-label="Pesquisar" data-list-section-trigger="search">
+                    <i class="fi fi-rr-search"></i>
+                </div>
+                <div class="title-icon" title="Filtrar" role="button" tabindex="0" aria-label="Filtrar" data-list-section-trigger="filters">
+                    <i class="fi fi-rr-filter"></i>
+                </div>
+                <div class="title-icon" title="Listar" role="button" tabindex="0" aria-label="Listar" data-list-section-trigger="items">
+                    <i class="fi fi-rr-list"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="search" style="display: none;">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Exportação</span>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md align-center">
                 <?php
                 $listExportPage = $routePage;
                 $listExportQuery = [];
                 include __DIR__ . '/_list_export_buttons.php';
                 ?>
-                <div class="col">
-                    <label for="items-per-page">Itens por página</label>
-                    <select class="width-300 height-md" id="items-per-page">
-                        <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
-                        <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
-                        <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
-                        <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
-                    </select>
+                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="search">
+                    <i class="fi fi-rr-angle-small-up"></i>
                 </div>
             </div>
         </div>
 
-        <?php if (count($rows) === 0): ?>
-        <div class="padding-x-md padding-y-lg">
-            <p class="description-page">Nenhuma audiência realizada encontrada.</p>
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="filters" style="display: none;">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md align-center">
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-600); font-size: 13px;">Não há filtros nesta lista.</span>
+                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="filters">
+                    <i class="fi fi-rr-angle-small-up"></i>
+                </div>
+            </div>
         </div>
-        <?php endif; ?>
+
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="items" style="display: none;">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Itens por página</span>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md align-center">
+                <select class="width-300 height-md" id="items-per-page">
+                    <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
+                    <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
+                    <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
+                    <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
+                </select>
+                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="items">
+                    <i class="fi fi-rr-angle-small-up"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="display-flex col col-full register">
+
+            <div class="display-flex row row-full padding-x-sm padding-y-sm align-center justify-start border-bottom" style="background-color: var(--color-primary-bg-light);">
+                <div class="display-flex col col-fit align-center justify-start padding-x-lg padding-y-sm">
+                    <span class="text" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px;">
+                        <?php
+                        $totalAtas = (int) ($total ?? 0);
+                        if ($totalAtas === 0) {
+                            echo 'Nenhum registro encontrado';
+                        } else {
+                            $trAtas = $totalAtas === 1 ? 'registro encontrado' : 'registros encontrados';
+                            echo htmlspecialchars((string) $totalAtas, ENT_QUOTES, 'UTF-8') . ' ' . htmlspecialchars($trAtas, ENT_QUOTES, 'UTF-8');
+                        }
+                        ?>
+                    </span>
+                </div>
+            </div>
 
         <?php foreach ($rows as $row):
             $idPauta = htmlspecialchars((string) ($row['id_pauta'] ?? ''), ENT_QUOTES, 'UTF-8');
@@ -117,9 +172,11 @@ $endItem = min($offset + count($rows), $total);
         </div>
         <?php endforeach; ?>
 
-        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
+        </div>
+
+        <div class="card-buttons">
             <span class="pagination-info">Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $total; ?> audiências (<?php echo $totalPages; ?> página(s), <?php echo $itemsPerPage; ?> itens por página)</span>
-            <div class="pagination-controls">
+            <div class="pagination-controls gap-y-sm">
                 <?php $prev = max(1, $pageNumber - 1); $next = min($totalPages, $pageNumber + 1); ?>
                 <?php
                 $qPrevA = $pageNumber > 1 ? '?page=salaata&page_number=' . $prev . '&items_per_page=' . $itemsPerPage : '';
@@ -142,5 +199,6 @@ $endItem = min($offset + count($rows), $total);
 
     <style>.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}</style>
     <script src="/assets/js/modules/audiencias/atas-list.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/atas-list.js') ?: time(); ?>"></script>
+    <?php include __DIR__ . '/_list_section_toggle_script.php'; ?>
 </body>
 </html>

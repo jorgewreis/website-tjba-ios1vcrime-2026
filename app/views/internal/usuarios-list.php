@@ -135,8 +135,6 @@ $formatUltimoAcesso = static function (?string $raw): string {
             <span class="all">Interno -</span>
             <span class="specific">Usuários</span>
         </div>
-        <h1 class="title-page">Usuários</h1>
-        <p class="description-page">Listagem de servidores internos (estagiários, servidores, diretora, admin, magistrada) e externos (estudantes). Use os filtros e clique em Consultar.</p>
     </div>
 
     <div class="container-full card-page">
@@ -159,76 +157,131 @@ $formatUltimoAcesso = static function (?string $raw): string {
         </div>
         <?php endif; ?>
 
-        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
-            <div class="display-flex row row-fit justify-start">
-                <h2>Lista de usuários</h2>
+        <div class="card-title">
+            <div class="display-flex col col-fit justify-start">
+                <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;">Usuários</h1>
+                <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Listagem de servidores internos (estagiários, servidores, diretora, admin, magistrada) e externos (estudantes). Os filtros são aplicados automaticamente.</p>
             </div>
-            <div class="display-flex row row-fit justify-end gap-y-md">
+            <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md">
+                <div class="title-icon" title="Exportação" role="button" tabindex="0" aria-label="Exportação" data-list-section-trigger="search">
+                    <i class="fi fi-rr-download"></i>
+                </div>
+                <div class="title-icon" title="Filtrar" role="button" tabindex="0" aria-label="Filtrar" data-list-section-trigger="filters">
+                    <i class="fi fi-rr-filter"></i>
+                </div>
+                <div class="title-icon" title="Listar" role="button" tabindex="0" aria-label="Listar" data-list-section-trigger="items">
+                    <i class="fi fi-rr-list"></i>
+                </div>
                 <?php if ($showRowAction): ?>
-                <button type="button" class="btn btn-primary height-md" id="novo-cadastro-btn">Novo cadastro</button>
+                <button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
                 <?php endif; ?>
             </div>
         </div>
 
         <form method="get" id="form-filters" class="display-flex col col-full" style="width:100%" data-auto-submit-filters>
             <input type="hidden" name="page" value="<?php echo htmlspecialchars($routePage); ?>">
-            <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
-                <div class="display-flex row row-fit justify-start gap-y-md">
-                    <div class="col">
-                        <label for="filter-tipo">Tipo</label>
-                        <select class="width-300 height-md" id="filter-tipo" name="tipo">
-                            <option value=""<?php echo $tipoFilter === '' ? ' selected' : ''; ?>>Todos</option>
-                            <option value="interno"<?php echo $tipoFilter === 'interno' ? ' selected' : ''; ?>>
-                                Interno (<?php echo (int) ($tipoCounts['interno'] ?? 0); ?>)
-                            </option>
-                            <option value="externo"<?php echo $tipoFilter === 'externo' ? ' selected' : ''; ?>>
-                                Externo (<?php echo (int) ($tipoCounts['externo'] ?? 0); ?>)
-                            </option>
-                        </select>
-                    </div>
-                    <div class="col">
-                        <label for="filter-perfil">Perfil</label>
-                        <select class="width-500 height-md" id="filter-perfil" name="perfil">
-                            <option value=""<?php echo $perfilFilter === '' ? ' selected' : ''; ?>>Todos</option>
-                            <option value="estagiario"<?php echo $perfilFilter === 'estagiario' ? ' selected' : ''; ?>>
-                                Estagiário (<?php echo (int) ($perfilCounts['estagiario'] ?? 0); ?>)
-                            </option>
-                            <option value="servidor"<?php echo $perfilFilter === 'servidor' ? ' selected' : ''; ?>>
-                                Servidor (<?php echo (int) ($perfilCounts['servidor'] ?? 0); ?>)
-                            </option>
-                            <option value="diretora"<?php echo $perfilFilter === 'diretora' ? ' selected' : ''; ?>>
-                                Diretora (<?php echo (int) ($perfilCounts['diretora'] ?? 0); ?>)
-                            </option>
-                            <option value="magistrada"<?php echo $perfilFilter === 'magistrada' ? ' selected' : ''; ?>>
-                                Magistrada (<?php echo (int) ($perfilCounts['magistrada'] ?? 0); ?>)
-                            </option>
-                            <option value="admin"<?php echo $perfilFilter === 'admin' ? ' selected' : ''; ?>>
-                                Admin (<?php echo (int) ($perfilCounts['admin'] ?? 0); ?>)
-                            </option>
-                            <option value="estudante"<?php echo $perfilFilter === 'estudante' ? ' selected' : ''; ?>>
-                                Estudante (<?php echo (int) ($perfilCounts['estudante'] ?? 0); ?>)
-                            </option>
-                        </select>
-                    </div>
+
+            <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="search" style="display: none;">
+                <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                    <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Exportação</span>
                 </div>
-                <div class="display-flex row row-fit justify-end gap-y-md align-end">
+                <div class="display-flex row row-fit justify-end gap-y-md align-center">
                     <?php
                     $listExportPage = $routePage;
                     $listExportQuery = $baseQueryParams;
                     include __DIR__ . '/_list_export_buttons.php';
                     ?>
-                    <div class="col">
-                        <label for="items-per-page">Itens por página</label>
-                        <select class="width-300 height-md" id="items-per-page" name="items_per_page">
-                            <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
-                            <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
-                            <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
-                            <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
-                        </select>
+                    <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="search">
+                        <i class="fi fi-rr-angle-small-up"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="filters" style="display: none;">
+                <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                    <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-md align-center flex-wrap">
+                    <select class="width-300 height-md" id="filter-tipo" name="tipo">
+                        <option value=""<?php echo $tipoFilter === '' ? ' selected' : ''; ?>>Todos</option>
+                        <option value="interno"<?php echo $tipoFilter === 'interno' ? ' selected' : ''; ?>>
+                            Interno (<?php echo (int) ($tipoCounts['interno'] ?? 0); ?>)
+                        </option>
+                        <option value="externo"<?php echo $tipoFilter === 'externo' ? ' selected' : ''; ?>>
+                            Externo (<?php echo (int) ($tipoCounts['externo'] ?? 0); ?>)
+                        </option>
+                    </select>
+                    <select class="width-500 height-md" id="filter-perfil" name="perfil">
+                        <option value=""<?php echo $perfilFilter === '' ? ' selected' : ''; ?>>Todos</option>
+                        <option value="estagiario"<?php echo $perfilFilter === 'estagiario' ? ' selected' : ''; ?>>
+                            Estagiário (<?php echo (int) ($perfilCounts['estagiario'] ?? 0); ?>)
+                        </option>
+                        <option value="servidor"<?php echo $perfilFilter === 'servidor' ? ' selected' : ''; ?>>
+                            Servidor (<?php echo (int) ($perfilCounts['servidor'] ?? 0); ?>)
+                        </option>
+                        <option value="diretora"<?php echo $perfilFilter === 'diretora' ? ' selected' : ''; ?>>
+                            Diretora (<?php echo (int) ($perfilCounts['diretora'] ?? 0); ?>)
+                        </option>
+                        <option value="magistrada"<?php echo $perfilFilter === 'magistrada' ? ' selected' : ''; ?>>
+                            Magistrada (<?php echo (int) ($perfilCounts['magistrada'] ?? 0); ?>)
+                        </option>
+                        <option value="admin"<?php echo $perfilFilter === 'admin' ? ' selected' : ''; ?>>
+                            Admin (<?php echo (int) ($perfilCounts['admin'] ?? 0); ?>)
+                        </option>
+                        <option value="estudante"<?php echo $perfilFilter === 'estudante' ? ' selected' : ''; ?>>
+                            Estudante (<?php echo (int) ($perfilCounts['estudante'] ?? 0); ?>)
+                        </option>
+                    </select>
+                    <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="filters">
+                        <i class="fi fi-rr-angle-small-up"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="items" style="display: none;">
+                <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                    <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Itens por página</span>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-md align-center">
+                    <select class="width-300 height-md" id="items-per-page" name="items_per_page">
+                        <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
+                        <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
+                        <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
+                        <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
+                    </select>
+                    <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="items">
+                        <i class="fi fi-rr-angle-small-up"></i>
                     </div>
                 </div>
             </div>
         </form>
+
+        <?php
+        $tipoLabelUi = ['interno' => 'Interno', 'externo' => 'Externo'];
+        $perfilLabelUi = [
+            'estagiario' => 'Estagiário',
+            'servidor' => 'Servidor',
+            'diretora' => 'Diretora',
+            'magistrada' => 'Magistrada',
+            'admin' => 'Admin',
+            'estudante' => 'Estudante',
+        ];
+        ?>
+        <div class="display-flex col col-full register border-bottom status-current border-bottom" style="margin-bottom: 15px;">
+            <?php if ($tipoFilter !== '' || $perfilFilter !== ''): ?>
+            <div class="display-flex row row-full padding-x-sm padding-y-sm filter-summary wrap gap-y-sm">
+                <?php if ($tipoFilter !== ''): ?>
+                <span class="filter-chip">Tipo: <?php echo htmlspecialchars($tipoLabelUi[$tipoFilter] ?? $tipoFilter); ?></span>
+                <?php endif; ?>
+                <?php if ($perfilFilter !== ''): ?>
+                <span class="filter-chip">Perfil: <?php echo htmlspecialchars($perfilLabelUi[$perfilFilter] ?? $perfilFilter); ?></span>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
+            <div class="display-flex row row-full padding-x-sm padding-y-sm">
+                <span class="padding-y-md major-info">Total: <?php echo (int) $totalDocuments; ?> <?php echo htmlspecialchars($documentsLabel); ?></span>
+            </div>
+        </div>
 
         <?php if (!empty($rows)): ?>
             <?php foreach ($rows as $row): ?>
@@ -268,7 +321,7 @@ $formatUltimoAcesso = static function (?string $raw): string {
                     </div>
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">
                             <div class="col part-edit">
-                                <button type="button" class="btn btn-editar" title="Editar" data-edit-id="<?php echo htmlspecialchars($editId); ?>"><i class="fi fi-rr-pen-square"></i></button>
+                                <button type="button" class="btn btn-editar" title="Editar" aria-label="Editar" data-edit-id="<?php echo htmlspecialchars($editId); ?>"><i class="fi fi-rr-pen-square"></i></button>
                             </div>
                             <div class="col">
                                 <span class="width-300 status padding-x-lg <?php echo htmlspecialchars($statusClass); ?>"><?php echo htmlspecialchars($statusLabel); ?></span>
@@ -285,24 +338,28 @@ $formatUltimoAcesso = static function (?string $raw): string {
             </div>
         <?php endif; ?>
 
-        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
+        <div class="card-buttons">
             <span class="pagination-info">
-                Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $totalDocuments; ?> <?php echo $documentsLabel; ?>
-                <?php if ($totalPages > 0): ?>(<?php echo $totalPages; ?> <?php echo $pagesLabel; ?>, <?php echo $itemsPerPage; ?> <?php echo $itemsLabel; ?> por página)<?php endif; ?>
+                Mostrando <?php echo (int) $startItem; ?>-<?php echo (int) $endItem; ?> de <?php echo (int) $totalDocuments; ?> <?php echo htmlspecialchars($documentsLabel); ?>
+                <?php if ($totalPages > 0): ?>(<?php echo (int) $totalPages; ?> <?php echo htmlspecialchars($pagesLabel); ?>, <?php echo (int) $itemsPerPage; ?> <?php echo htmlspecialchars($itemsLabel); ?> por página)<?php endif; ?>
             </span>
             <?php if ($totalPages > 0): ?>
-                <div class="pagination-controls">
+                <div class="pagination-controls gap-y-sm">
                     <?php
                     $prevParams = $baseQueryParams;
                     $prevParams['page_number'] = max(1, $currentPage - 1);
                     $nextParams = $baseQueryParams;
                     $nextParams['page_number'] = min($totalPages, $currentPage + 1);
                     ?>
-                    <button type="button" class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>" <?php if ($currentPage > 1): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($prevParams), ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>>‹</button>
+                    <button type="button" class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>" <?php if ($currentPage > 1): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($prevParams), ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>>
+                        <img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior">
+                    </button>
                     <?php foreach ($paginationButtons as $p): $qp = $baseQueryParams; $qp['page_number'] = $p; ?>
-                        <button type="button" class="pagination-number<?php echo $p === $currentPage ? ' active' : ''; ?>" <?php if ($p !== $currentPage): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($qp), ENT_QUOTES); ?>"<?php else: ?>disabled<?php endif; ?>><?php echo $p; ?></button>
+                        <button type="button" class="pagination-number<?php echo $p === $currentPage ? ' active' : ''; ?>" <?php if ($p !== $currentPage): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($qp), ENT_QUOTES); ?>"<?php else: ?>disabled<?php endif; ?>><?php echo (int) $p; ?></button>
                     <?php endforeach; ?>
-                    <button type="button" class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>" <?php if ($currentPage < $totalPages): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($nextParams), ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>>›</button>
+                    <button type="button" class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>" <?php if ($currentPage < $totalPages): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($nextParams), ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>>
+                        <img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página">
+                    </button>
                 </div>
             <?php endif; ?>
         </div>
@@ -335,5 +392,6 @@ $formatUltimoAcesso = static function (?string $raw): string {
         });
     })();
     </script>
+    <?php include __DIR__ . '/_list_section_toggle_script.php'; ?>
 </body>
 </html>
