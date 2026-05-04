@@ -208,13 +208,13 @@ if ($totalPages > 0) {
         </div>
         <?php endforeach; ?>
 
-        <div class="card-buttons">
+        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
             <span class="pagination-info">
                 Mostrando <?php echo (int) $startItem; ?>-<?php echo (int) $endItem; ?> de <?php echo (int) $total; ?> <?php echo htmlspecialchars($documentsLabel); ?>
-                <?php if ($totalPages > 0): ?>(<?php echo (int) $totalPages; ?> <?php echo htmlspecialchars($pagesLabel); ?>, <?php echo (int) $itemsPerPage; ?> <?php echo htmlspecialchars($itemsLabel); ?> por página)<?php endif; ?>
+                (<?php echo (int) $totalPages; ?> <?php echo htmlspecialchars($pagesLabel); ?>, <?php echo (int) $itemsPerPage; ?> <?php echo htmlspecialchars($itemsLabel); ?> por página)
             </span>
             <?php if ($totalPages > 0): ?>
-                <div class="pagination-controls gap-y-sm">
+                <div class="pagination-controls">
                     <?php
                     $prevPage = $pageNumber > 1 ? $pageNumber - 1 : 1;
                     $prevParams = $baseQueryParams;

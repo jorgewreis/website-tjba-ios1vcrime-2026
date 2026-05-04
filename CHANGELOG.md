@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0051
+
+**Data:** 2026-05-04 12:17:38 | **Commit:** `cc0712a` | **Tipo:** `patch`
+
+- refactor(pagination): enhance pagination layout and logic across multiple views
+
 ## V. 1.97.0050
 
 **Data:** 2026-05-04 12:09:34 | **Commit:** `92c697f` | **Tipo:** `patch`
@@ -5088,6 +5094,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

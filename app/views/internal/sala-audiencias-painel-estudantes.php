@@ -50,25 +50,77 @@ if (!in_array($itemsPerPage, [10, 25, 50, 100], true)) {
 $hojePage = max(1, (int) ($_GET['hoje_page'] ?? 1));
 $minhasPage = max(1, (int) ($_GET['minhas_page'] ?? 1));
 
+$salaPainelPagWindow = static function (int $currentPage, int $totalPages): array {
+    $paginationButtons = [];
+    $paginationEllipsis = false;
+    $trailingPages = [];
+    if ($totalPages > 0) {
+        if ($totalPages <= 5) {
+            $paginationButtons = range(1, $totalPages);
+        } else {
+            $windowStart = max(1, min($currentPage - 2, $totalPages - 4));
+            $windowEnd = min($totalPages, $windowStart + 4);
+            for ($page = $windowStart; $page <= $windowEnd; $page++) {
+                $paginationButtons[] = $page;
+            }
+            if ($windowEnd < $totalPages) {
+                $paginationEllipsis = true;
+                $extraStart = max($windowEnd + 1, $totalPages - 1);
+                for ($page = $extraStart; $page <= $totalPages; $page++) {
+                    $trailingPages[] = $page;
+                }
+            }
+        }
+    }
+
+    return [$paginationButtons, $paginationEllipsis, $trailingPages];
+};
+
 $hojeTotal = count($hojeRows);
-$hojeTotalPages = max(1, (int) ceil(max(1, $hojeTotal) / $itemsPerPage));
-if ($hojePage > $hojeTotalPages) {
-    $hojePage = $hojeTotalPages;
+if ($hojeTotal === 0) {
+    $hojeTotalPages = 0;
+    $hojePage = 1;
+    $hojeOffset = 0;
+    $hojePageRows = [];
+} else {
+    $hojeTotalPages = (int) ceil($hojeTotal / $itemsPerPage);
+    if ($hojePage > $hojeTotalPages) {
+        $hojePage = $hojeTotalPages;
+    }
+    $hojeOffset = ($hojePage - 1) * $itemsPerPage;
+    $hojePageRows = array_slice($hojeRows, $hojeOffset, $itemsPerPage);
 }
-$hojeOffset = ($hojePage - 1) * $itemsPerPage;
-$hojePageRows = array_slice($hojeRows, $hojeOffset, $itemsPerPage);
-$hojeStartItem = $hojeTotal > 0 ? $hojeOffset + 1 : 0;
-$hojeEndItem = min($hojeOffset + count($hojePageRows), $hojeTotal);
+$hojeStartItem = count($hojePageRows) > 0 ? $hojeOffset + 1 : 0;
+$hojeEndItem = count($hojePageRows) > 0 ? $hojeOffset + count($hojePageRows) : 0;
 
 $minhasTotal = count($minhasRows);
-$minhasTotalPages = max(1, (int) ceil(max(1, $minhasTotal) / $itemsPerPage));
-if ($minhasPage > $minhasTotalPages) {
-    $minhasPage = $minhasTotalPages;
+if ($minhasTotal === 0) {
+    $minhasTotalPages = 0;
+    $minhasPage = 1;
+    $minhasOffset = 0;
+    $minhasPageRows = [];
+} else {
+    $minhasTotalPages = (int) ceil($minhasTotal / $itemsPerPage);
+    if ($minhasPage > $minhasTotalPages) {
+        $minhasPage = $minhasTotalPages;
+    }
+    $minhasOffset = ($minhasPage - 1) * $itemsPerPage;
+    $minhasPageRows = array_slice($minhasRows, $minhasOffset, $itemsPerPage);
 }
-$minhasOffset = ($minhasPage - 1) * $itemsPerPage;
-$minhasPageRows = array_slice($minhasRows, $minhasOffset, $itemsPerPage);
-$minhasStartItem = $minhasTotal > 0 ? $minhasOffset + 1 : 0;
-$minhasEndItem = min($minhasOffset + count($minhasPageRows), $minhasTotal);
+$minhasStartItem = count($minhasPageRows) > 0 ? $minhasOffset + 1 : 0;
+$minhasEndItem = count($minhasPageRows) > 0 ? $minhasOffset + count($minhasPageRows) : 0;
+
+[$hojePaginationButtons, $hojePaginationEllipsis, $hojeTrailingPages] = $salaPainelPagWindow($hojePage, $hojeTotalPages);
+[$minhasPaginationButtons, $minhasPaginationEllipsis, $minhasTrailingPages] = $salaPainelPagWindow($minhasPage, $minhasTotalPages);
+
+$hojeDocumentsLabel = $hojeTotal === 1 ? 'audiência' : 'audiências';
+$hojePagesLabel = $hojeTotalPages === 1 ? 'página' : 'páginas';
+$hojeItemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
+$minhasDocumentsLabel = $minhasTotal === 1 ? 'audiência' : 'audiências';
+$minhasPagesLabel = $minhasTotalPages === 1 ? 'página' : 'páginas';
+$minhasItemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
+
+$baseQueryPainel = ['page' => 'estudapainel', 'items_per_page' => $itemsPerPage];
 function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string $horaAud, string $inicioRaw, string $fimRaw): string
 {
     $status = trim(strtolower($statusRaw));
@@ -349,18 +401,36 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             <?php endif; ?>
         </div>
         <?php endforeach; ?>
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-lg">
-            <span class="pagination-info">Mostrando <?php echo $hojeStartItem; ?>-<?php echo $hojeEndItem; ?> de <?php echo $hojeTotal; ?> audiências (<?php echo $hojeTotalPages; ?> página(s), <?php echo $itemsPerPage; ?> itens por página)</span>
-            <div class="pagination-controls">
-                <?php $prevHoje = max(1, $hojePage - 1); $nextHoje = min($hojeTotalPages, $hojePage + 1); ?>
-                <?php
-                $qPrevHoje = $hojePage > 1 ? '?page=estudapainel&hoje_page=' . $prevHoje . '&minhas_page=' . $minhasPage . '&items_per_page=' . $itemsPerPage : '';
-                $qNextHoje = $hojePage < $hojeTotalPages ? '?page=estudapainel&hoje_page=' . $nextHoje . '&minhas_page=' . $minhasPage . '&items_per_page=' . $itemsPerPage : '';
-                ?>
-                <button type="button" class="pagination-symbol<?php echo $hojePage <= 1 ? ' disabled' : ''; ?>" <?php echo $qPrevHoje !== '' ? 'data-nav-href="' . htmlspecialchars($qPrevHoje, ENT_QUOTES) . '"' : 'disabled aria-disabled="true"'; ?>><img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior"></button>
-                <button type="button" class="pagination-number active" disabled><?php echo $hojePage; ?></button>
-                <button type="button" class="pagination-symbol<?php echo $hojePage >= $hojeTotalPages ? ' disabled' : ''; ?>" <?php echo $qNextHoje !== '' ? 'data-nav-href="' . htmlspecialchars($qNextHoje, ENT_QUOTES) . '"' : 'disabled aria-disabled="true"'; ?>><img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página"></button>
-            </div>
+        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
+            <span class="pagination-info">
+                Mostrando <?php echo $hojeStartItem; ?>-<?php echo $hojeEndItem; ?> de <?php echo $hojeTotal; ?> <?php echo $hojeDocumentsLabel; ?>
+                (<?php echo $hojeTotalPages; ?> <?php echo $hojePagesLabel; ?>, <?php echo $itemsPerPage; ?> <?php echo $hojeItemsLabel; ?> por página)
+            </span>
+            <?php if ($hojeTotalPages > 0): ?>
+                <div class="pagination-controls">
+                    <?php
+                    $prevHoje = $hojePage > 1 ? $hojePage - 1 : 1;
+                    $prevParamsHoje = array_merge($baseQueryPainel, ['hoje_page' => $prevHoje, 'minhas_page' => $minhasPage]);
+                    $prevHrefHoje = '?' . http_build_query($prevParamsHoje);
+                    $nextHoje = $hojePage < $hojeTotalPages ? $hojePage + 1 : $hojePage;
+                    $nextParamsHoje = array_merge($baseQueryPainel, ['hoje_page' => $nextHoje, 'minhas_page' => $minhasPage]);
+                    $nextHrefHoje = '?' . http_build_query($nextParamsHoje);
+                    ?>
+                    <button type="button" class="pagination-symbol<?php echo $hojePage <= 1 ? ' disabled' : ''; ?>" <?php if ($hojePage > 1): ?>data-nav-href="<?php echo htmlspecialchars($prevHrefHoje, ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>><img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior"></button>
+                    <?php foreach ($hojePaginationButtons as $pBtn): ?>
+                        <?php $pageParamsHoje = array_merge($baseQueryPainel, ['hoje_page' => $pBtn, 'minhas_page' => $minhasPage]); ?>
+                        <button type="button" class="pagination-number<?php echo $pBtn === $hojePage ? ' active' : ''; ?>" <?php if ($pBtn !== $hojePage): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($pageParamsHoje), ENT_QUOTES); ?>"<?php else: ?>disabled<?php endif; ?>><?php echo (int) $pBtn; ?></button>
+                    <?php endforeach; ?>
+                    <?php if ($hojePaginationEllipsis && !empty($hojeTrailingPages)): ?>
+                        <span class="pagination-symbol pagination-ellipsis" aria-hidden="true"><img src="/assets/icons/Navigation-Menu-Horizontal--Streamline-Ultimate.png" alt="Mais páginas"></span>
+                        <?php foreach ($hojeTrailingPages as $pBtn): ?>
+                            <?php $pageParamsHoje = array_merge($baseQueryPainel, ['hoje_page' => $pBtn, 'minhas_page' => $minhasPage]); ?>
+                            <button type="button" class="pagination-number<?php echo $pBtn === $hojePage ? ' active' : ''; ?>" <?php if ($pBtn !== $hojePage): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($pageParamsHoje), ENT_QUOTES); ?>"<?php else: ?>disabled<?php endif; ?>><?php echo (int) $pBtn; ?></button>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                    <button type="button" class="pagination-symbol<?php echo $hojePage >= $hojeTotalPages ? ' disabled' : ''; ?>" <?php if ($hojePage < $hojeTotalPages): ?>data-nav-href="<?php echo htmlspecialchars($nextHrefHoje, ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>><img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página"></button>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -487,18 +557,36 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             </div>
         </div>
         <?php endforeach; ?>
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-lg">
-            <span class="pagination-info">Mostrando <?php echo $minhasStartItem; ?>-<?php echo $minhasEndItem; ?> de <?php echo $minhasTotal; ?> audiências (<?php echo $minhasTotalPages; ?> página(s), <?php echo $itemsPerPage; ?> itens por página)</span>
-            <div class="pagination-controls">
-                <?php $prevMinhas = max(1, $minhasPage - 1); $nextMinhas = min($minhasTotalPages, $minhasPage + 1); ?>
-                <?php
-                $qPrevMinhas = $minhasPage > 1 ? '?page=estudapainel&hoje_page=' . $hojePage . '&minhas_page=' . $prevMinhas . '&items_per_page=' . $itemsPerPage : '';
-                $qNextMinhas = $minhasPage < $minhasTotalPages ? '?page=estudapainel&hoje_page=' . $hojePage . '&minhas_page=' . $nextMinhas . '&items_per_page=' . $itemsPerPage : '';
-                ?>
-                <button type="button" class="pagination-symbol<?php echo $minhasPage <= 1 ? ' disabled' : ''; ?>" <?php echo $qPrevMinhas !== '' ? 'data-nav-href="' . htmlspecialchars($qPrevMinhas, ENT_QUOTES) . '"' : 'disabled aria-disabled="true"'; ?>><img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior"></button>
-                <button type="button" class="pagination-number active" disabled><?php echo $minhasPage; ?></button>
-                <button type="button" class="pagination-symbol<?php echo $minhasPage >= $minhasTotalPages ? ' disabled' : ''; ?>" <?php echo $qNextMinhas !== '' ? 'data-nav-href="' . htmlspecialchars($qNextMinhas, ENT_QUOTES) . '"' : 'disabled aria-disabled="true"'; ?>><img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página"></button>
-            </div>
+        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
+            <span class="pagination-info">
+                Mostrando <?php echo $minhasStartItem; ?>-<?php echo $minhasEndItem; ?> de <?php echo $minhasTotal; ?> <?php echo $minhasDocumentsLabel; ?>
+                (<?php echo $minhasTotalPages; ?> <?php echo $minhasPagesLabel; ?>, <?php echo $itemsPerPage; ?> <?php echo $minhasItemsLabel; ?> por página)
+            </span>
+            <?php if ($minhasTotalPages > 0): ?>
+                <div class="pagination-controls">
+                    <?php
+                    $prevMinhas = $minhasPage > 1 ? $minhasPage - 1 : 1;
+                    $prevParamsMinhas = array_merge($baseQueryPainel, ['hoje_page' => $hojePage, 'minhas_page' => $prevMinhas]);
+                    $prevHrefMinhas = '?' . http_build_query($prevParamsMinhas);
+                    $nextMinhas = $minhasPage < $minhasTotalPages ? $minhasPage + 1 : $minhasPage;
+                    $nextParamsMinhas = array_merge($baseQueryPainel, ['hoje_page' => $hojePage, 'minhas_page' => $nextMinhas]);
+                    $nextHrefMinhas = '?' . http_build_query($nextParamsMinhas);
+                    ?>
+                    <button type="button" class="pagination-symbol<?php echo $minhasPage <= 1 ? ' disabled' : ''; ?>" <?php if ($minhasPage > 1): ?>data-nav-href="<?php echo htmlspecialchars($prevHrefMinhas, ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>><img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior"></button>
+                    <?php foreach ($minhasPaginationButtons as $pBtn): ?>
+                        <?php $pageParamsMinhas = array_merge($baseQueryPainel, ['hoje_page' => $hojePage, 'minhas_page' => $pBtn]); ?>
+                        <button type="button" class="pagination-number<?php echo $pBtn === $minhasPage ? ' active' : ''; ?>" <?php if ($pBtn !== $minhasPage): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($pageParamsMinhas), ENT_QUOTES); ?>"<?php else: ?>disabled<?php endif; ?>><?php echo (int) $pBtn; ?></button>
+                    <?php endforeach; ?>
+                    <?php if ($minhasPaginationEllipsis && !empty($minhasTrailingPages)): ?>
+                        <span class="pagination-symbol pagination-ellipsis" aria-hidden="true"><img src="/assets/icons/Navigation-Menu-Horizontal--Streamline-Ultimate.png" alt="Mais páginas"></span>
+                        <?php foreach ($minhasTrailingPages as $pBtn): ?>
+                            <?php $pageParamsMinhas = array_merge($baseQueryPainel, ['hoje_page' => $hojePage, 'minhas_page' => $pBtn]); ?>
+                            <button type="button" class="pagination-number<?php echo $pBtn === $minhasPage ? ' active' : ''; ?>" <?php if ($pBtn !== $minhasPage): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($pageParamsMinhas), ENT_QUOTES); ?>"<?php else: ?>disabled<?php endif; ?>><?php echo (int) $pBtn; ?></button>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                    <button type="button" class="pagination-symbol<?php echo $minhasPage >= $minhasTotalPages ? ' disabled' : ''; ?>" <?php if ($minhasPage < $minhasTotalPages): ?>data-nav-href="<?php echo htmlspecialchars($nextHrefMinhas, ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>><img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página"></button>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 

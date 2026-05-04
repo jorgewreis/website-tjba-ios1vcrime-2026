@@ -10,18 +10,73 @@ require_once __DIR__ . '/../../services/SalaAudienciasAtaService.php';
 
 $service = new SalaAudienciasAtaService(Conection::getInstance()->getConnection());
 $routePage = trim((string) ($_GET['page'] ?? 'salaata'));
-$itemsPerPage = (int) ($_GET['items_per_page'] ?? 10);
-if (!in_array($itemsPerPage, [10, 25, 50, 100], true)) {
+$allowedPerPage = [10, 25, 50, 100];
+$itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 10;
+if (!in_array($itemsPerPage, $allowedPerPage, true)) {
     $itemsPerPage = 10;
 }
-$pageNumber = max(1, (int) ($_GET['page_number'] ?? 1));
-$offset = ($pageNumber - 1) * $itemsPerPage;
+
+$pageNumberParam = $_GET['page_number'] ?? null;
+if ($pageNumberParam !== null && $pageNumberParam !== '') {
+    $currentPage = max(1, (int) $pageNumberParam);
+} else {
+    $currentPage = 1;
+}
+
+$offset = ($currentPage - 1) * $itemsPerPage;
 $result = $service->listRealizadasParaUpload($itemsPerPage, $offset);
 $rows = $result['rows'] ?? [];
 $total = (int) ($result['total'] ?? 0);
-$totalPages = max(1, (int) ceil(max(1, $total) / $itemsPerPage));
-$startItem = $total > 0 ? $offset + 1 : 0;
-$endItem = min($offset + count($rows), $total);
+
+if ($total === 0) {
+    $totalPages = 0;
+    $currentPage = 1;
+    $offset = 0;
+} else {
+    $totalPages = (int) ceil($total / $itemsPerPage);
+    if ($currentPage > $totalPages) {
+        $currentPage = $totalPages;
+        $offset = ($currentPage - 1) * $itemsPerPage;
+        $result = $service->listRealizadasParaUpload($itemsPerPage, $offset);
+        $rows = $result['rows'] ?? [];
+    }
+}
+
+$displayedCount = count($rows);
+$startItem = $displayedCount > 0 ? $offset + 1 : 0;
+$endItem = $displayedCount > 0 ? $offset + $displayedCount : 0;
+
+$documentsLabel = $total === 1 ? 'audiência' : 'audiências';
+$pagesLabel = $totalPages === 1 ? 'página' : 'páginas';
+$itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
+
+$baseQueryParams = [];
+if ($routePage !== '') {
+    $baseQueryParams['page'] = $routePage;
+}
+$baseQueryParams['items_per_page'] = $itemsPerPage;
+
+$paginationButtons = [];
+$paginationEllipsis = false;
+$trailingPages = [];
+if ($totalPages > 0) {
+    if ($totalPages <= 5) {
+        $paginationButtons = range(1, $totalPages);
+    } else {
+        $windowStart = max(1, min($currentPage - 2, $totalPages - 4));
+        $windowEnd = min($totalPages, $windowStart + 4);
+        for ($page = $windowStart; $page <= $windowEnd; $page++) {
+            $paginationButtons[] = $page;
+        }
+        if ($windowEnd < $totalPages) {
+            $paginationEllipsis = true;
+            $extraStart = max($windowEnd + 1, $totalPages - 1);
+            for ($page = $extraStart; $page <= $totalPages; $page++) {
+                $trailingPages[] = $page;
+            }
+        }
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -159,18 +214,42 @@ $endItem = min($offset + count($rows), $total);
 
         </div>
 
-        <div class="card-buttons">
-            <span class="pagination-info">Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $total; ?> audiências (<?php echo $totalPages; ?> página(s), <?php echo $itemsPerPage; ?> itens por página)</span>
-            <div class="pagination-controls gap-y-sm">
-                <?php $prev = max(1, $pageNumber - 1); $next = min($totalPages, $pageNumber + 1); ?>
-                <?php
-                $qPrevA = $pageNumber > 1 ? '?page=salaata&page_number=' . $prev . '&items_per_page=' . $itemsPerPage : '';
-                $qNextA = $pageNumber < $totalPages ? '?page=salaata&page_number=' . $next . '&items_per_page=' . $itemsPerPage : '';
-                ?>
-                <button type="button" class="pagination-symbol<?php echo $pageNumber <= 1 ? ' disabled' : ''; ?>" <?php echo $qPrevA !== '' ? 'data-nav-href="' . htmlspecialchars($qPrevA, ENT_QUOTES) . '"' : 'disabled aria-disabled="true"'; ?>><img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior"></button>
-                <button type="button" class="pagination-number active" disabled><?php echo $pageNumber; ?></button>
-                <button type="button" class="pagination-symbol<?php echo $pageNumber >= $totalPages ? ' disabled' : ''; ?>" <?php echo $qNextA !== '' ? 'data-nav-href="' . htmlspecialchars($qNextA, ENT_QUOTES) . '"' : 'disabled aria-disabled="true"'; ?>><img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página"></button>
-            </div>
+        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
+            <span class="pagination-info">
+                Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $total; ?> <?php echo $documentsLabel; ?>
+                (<?php echo $totalPages; ?> <?php echo $pagesLabel; ?>, <?php echo $itemsPerPage; ?> <?php echo $itemsLabel; ?> por página)
+            </span>
+            <?php if ($totalPages > 0): ?>
+                <div class="pagination-controls">
+                    <?php
+                    $prevPage = $currentPage > 1 ? $currentPage - 1 : 1;
+                    $prevParams = $baseQueryParams;
+                    $prevParams['page_number'] = $prevPage;
+                    $prevHref = '?' . http_build_query($prevParams);
+                    $nextPage = $currentPage < $totalPages ? $currentPage + 1 : $currentPage;
+                    $nextParams = $baseQueryParams;
+                    $nextParams['page_number'] = $nextPage;
+                    $nextHref = '?' . http_build_query($nextParams);
+                    ?>
+                    <button type="button" class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>" <?php if ($currentPage > 1): ?>data-nav-href="<?php echo htmlspecialchars($prevHref, ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>>
+                        <img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior">
+                    </button>
+                    <?php foreach ($paginationButtons as $page): ?>
+                        <?php $pageParams = $baseQueryParams; $pageParams['page_number'] = $page; ?>
+                        <button type="button" class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" <?php if ($page !== $currentPage): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($pageParams), ENT_QUOTES); ?>"<?php else: ?>disabled<?php endif; ?>><?php echo $page; ?></button>
+                    <?php endforeach; ?>
+                    <?php if ($paginationEllipsis && !empty($trailingPages)): ?>
+                        <span class="pagination-symbol pagination-ellipsis" aria-hidden="true"><img src="/assets/icons/Navigation-Menu-Horizontal--Streamline-Ultimate.png" alt="Mais páginas"></span>
+                        <?php foreach ($trailingPages as $page): ?>
+                            <?php $pageParams = $baseQueryParams; $pageParams['page_number'] = $page; ?>
+                            <button type="button" class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" <?php if ($page !== $currentPage): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($pageParams), ENT_QUOTES); ?>"<?php else: ?>disabled<?php endif; ?>><?php echo $page; ?></button>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                    <button type="button" class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>" <?php if ($currentPage < $totalPages): ?>data-nav-href="<?php echo htmlspecialchars($nextHref, ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>>
+                        <img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página">
+                    </button>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 
