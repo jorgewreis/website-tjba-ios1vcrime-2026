@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0053
+
+**Data:** 2026-05-04 12:53:22 | **Commit:** `3faf01b` | **Tipo:** `patch`
+
+- refactor(sala-audiencias-pauta-edit): remove unused repository and streamline display logic
+
 ## V. 1.97.0052
 
 **Data:** 2026-05-04 12:35:34 | **Commit:** `8827835` | **Tipo:** `patch`
@@ -5100,6 +5106,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

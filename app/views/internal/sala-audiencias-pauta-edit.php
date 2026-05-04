@@ -16,7 +16,6 @@ require_once __DIR__ . '/../../repositories/PartesRepository.php';
 require_once __DIR__ . '/../../repositories/ProcessosPartesRepository.php';
 require_once __DIR__ . '/../../repositories/PartesInstituicoesRepository.php';
 require_once __DIR__ . '/../../repositories/PartesTelefonesRepository.php';
-require_once __DIR__ . '/../../repositories/InstituicoesSetoresRepository.php';
 
 $id = trim((string) ($_GET['id'] ?? ''));
 $service = new SalaAudienciasPautaService(Conection::getInstance()->getConnection());
@@ -524,7 +523,6 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
             $pdoPautaEditPartes = Conection::getInstance()->getConnection();
             $repoPiPautaEdit = new PartesInstituicoesRepository($pdoPautaEditPartes);
             $repoTelPautaEdit = new PartesTelefonesRepository($pdoPautaEditPartes);
-            $repoSetorPautaEdit = new InstituicoesSetoresRepository($pdoPautaEditPartes);
             $repoProcPartesPautaEdit = new ProcessosPartesRepository($pdoPautaEditPartes);
             $processoIdAudiencia = trim((string) ($row['processo'] ?? ''));
         ?>
@@ -565,16 +563,6 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                     $rotuloInst = trim((string) ($vin['instituicao_nome'] ?? ''));
                     if ($rotuloInst === '') {
                         $rotuloInst = trim((string) ($vin['instituicao_sigla'] ?? ''));
-                    }
-                    $setorIdVin = trim((string) ($vin['setor_id'] ?? ''));
-                    if ($setorIdVin !== '') {
-                        $setorRow = $repoSetorPautaEdit->findById($setorIdVin);
-                        $nomeSetor = $setorRow !== null ? trim((string) ($setorRow['nome_setor'] ?? '')) : '';
-                        if ($nomeSetor !== '' && $rotuloInst !== '') {
-                            $rotuloInst .= ' (' . $nomeSetor . ')';
-                        } elseif ($nomeSetor !== '' && $rotuloInst === '') {
-                            $rotuloInst = $nomeSetor;
-                        }
                     }
                     $telEscolhido = '';
                     foreach ($repoTelPautaEdit->findByParteId($parteIdGlobalRaw) as $telRow) {
@@ -708,6 +696,15 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                 $styleNomeParteAttrs[] = 'color: var(--color-primary-active)';
                 $styleNomeParteAttrs[] = 'font-weight: 600';
             }
+            if ($tipoParteAtual === 'testemunha_denuncia') {
+                $styleNomeParteAttrs[] = 'display: block';
+                $styleNomeParteAttrs[] = 'width: 100%';
+                $styleNomeParteAttrs[] = 'max-width: 100%';
+                $styleNomeParteAttrs[] = 'min-width: 0';
+                $styleNomeParteAttrs[] = 'white-space: nowrap';
+                $styleNomeParteAttrs[] = 'overflow: hidden';
+                $styleNomeParteAttrs[] = 'text-overflow: ellipsis';
+            }
             $styleAttrNomeParte = $styleNomeParteAttrs !== []
                 ? ' style="' . htmlspecialchars(implode('; ', $styleNomeParteAttrs), ENT_QUOTES, 'UTF-8') . '"'
                 : '';
@@ -727,7 +724,7 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
         <div class="display-flex col col-full register border-bottom" data-parte-id="<?php echo htmlspecialchars((string) $parte['id_parte'], ENT_QUOTES); ?>">
             <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                 <div class="display-flex row row-fit justify-start gap-y-sm align-center">
-                    <div class="col width-700">
+                    <div class="col width-700"<?php echo $tipoParteAtual === 'testemunha_denuncia' ? ' style="min-width: 0"' : ''; ?>>
                         <div class="minor-info"><?php echo $minorInfoParte; ?></div>
                         <span class="major-info text-ellipsis"<?php echo $styleAttrNomeParte; ?>>
                             <?php
@@ -736,12 +733,10 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                                 $nomeParteDisplay = str_replace("\xC2\xA0", ' ', $nomeParteDisplay);
                                 $nomeParteDisplay = trim(preg_replace('/\s+/u', ' ', $nomeParteDisplay) ?: $nomeParteDisplay);
                             ?>
-                            <?php if ($cargoPrefixoTestemunhaDenuncia !== ''): ?>
-                            <span class="major-info"><?php echo htmlspecialchars($cargoPrefixoTestemunhaDenuncia, ENT_QUOTES, 'UTF-8'); ?></span> 
-                            <?php endif; ?><?php echo htmlspecialchars($nomeParteDisplay, ENT_QUOTES, 'UTF-8'); ?><?php echo (string) $parte['maioridade'] === 'menor' ? ' (Menor)' : ''; ?>
+                            <?php echo $cargoPrefixoTestemunhaDenuncia !== '' ? htmlspecialchars($cargoPrefixoTestemunhaDenuncia, ENT_QUOTES, 'UTF-8') . ' ' : ''; ?><?php echo htmlspecialchars($nomeParteDisplay, ENT_QUOTES, 'UTF-8'); ?><?php echo (string) $parte['maioridade'] === 'menor' ? ' (Menor)' : ''; ?>
                         </span>
                         <?php if ($linhaCompanhiaTelefoneTestemunha !== ''): ?>
-                            <span class="minor-info-defesa"><?php echo htmlspecialchars($linhaCompanhiaTelefoneTestemunha, ENT_QUOTES, 'UTF-8'); ?></span>
+                            <span class="minor-info-defesa" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;"><?php echo htmlspecialchars($linhaCompanhiaTelefoneTestemunha, ENT_QUOTES, 'UTF-8'); ?></span>
                         <?php endif; ?>
                         <?php if ($mostrarDefensor): ?>
                             <span class="minor-info-defesa"><?php echo htmlspecialchars($defensorTexto, ENT_QUOTES); ?></span>
