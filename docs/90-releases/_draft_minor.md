@@ -28,4 +28,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(cartorio-views): standardize search input width and improve HTML structure** `[aff8e9d]`
 - **refactor(list-views): enhance layout and functionality across multiple internal views** `[18803ca]`
 - **refactor(reus-presos-list): enhance search functionality and improve filter handling** `[88345bc]`
+- **refactor(partes-instituicoes): normalize cargo/função handling and improve input formatting** `[92c697f]`
 
