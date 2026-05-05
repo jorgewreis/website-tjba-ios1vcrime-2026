@@ -36,4 +36,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(SalaAudienciasAtaRepository, SalaAudienciasAtaService): update expiration logic for ata records** `[6558770]`
 - **feat(sala-audiencias-atas-list): add download deadline label for ata files** `[a27bd79]`
 - **feat(cnj-validation): integrate CNJ validation across services and views** `[079b3534]`
+- **refactor(button-state): unify button state initialization across create forms** `[331170ec]`
 
