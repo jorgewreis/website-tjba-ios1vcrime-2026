@@ -11,7 +11,7 @@
 
         const settings = config || {};
         const button = global.document.getElementById('cadastrar-btn');
-        const gate = helpers.initCreateButtonGate({ button: button, defaultLabel: 'Cadastrar' });
+        const gate = helpers.initCreateButtonGate({ button: button, initialLabel: 'Novo cadastro', readyLabel: 'Cadastrar' });
         const feedback = helpers.notify;
         const processoInput = global.document.getElementById('filter-processo');
         const reuSelect = global.document.getElementById('reu-select');
@@ -171,10 +171,11 @@
                     } else if (data && data.cejusc_criada === false) {
                         feedback('Tarefa do Cejusc não foi criada, pois já existe uma tarefa para o mesmo processo e réu.', 'warning');
                     }
+                    gate.setInitial();
                     global.location.href = settings.successRedirect || '/frame.php?page=medidasprotetivas';
                 })
                 .catch(function (error) {
-                    gate.setReady();
+                    gate.setInitial();
                     feedback(error && error.message ? error.message : 'Erro ao cadastrar medida protetiva.', 'error');
                 });
         });

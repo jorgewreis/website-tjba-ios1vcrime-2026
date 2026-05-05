@@ -104,8 +104,11 @@
         btnCadastrar.textContent = label;
         btnCadastrar.disabled = disabled === true;
     }
-    setCadastrarState('Aguarde...', true);
+    setCadastrarState('Novo cadastro', false);
     document.getElementById('audiencia-processo')?.addEventListener('input', function () {
+        setCadastrarState('Aguarde...', true);
+    });
+    document.getElementById('audiencia-sala')?.addEventListener('input', function () {
         setCadastrarState('Aguarde...', true);
     });
     window.addEventListener('cnjInvalid', function (event) {
@@ -256,15 +259,16 @@
                         'Audiência cadastrada.',
                         'salapauta.postReloadToast'
                     );
+                    setCadastrarState('Novo cadastro', false);
                     window.location.href = '/frame.php?page=salapauta';
                 } else {
                     notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao cadastrar audiência.');
-                    setCadastrarState('Cadastrar', false);
+                    setCadastrarState('Novo cadastro', false);
                 }
             })
             .catch(function () {
                 notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
-                setCadastrarState('Cadastrar', false);
+                setCadastrarState('Novo cadastro', false);
             });
     });
 })();

@@ -38,7 +38,7 @@
         btnCadastrar.textContent = label;
         btnCadastrar.disabled = disabled === true;
     }
-    setCadastrarState('Aguarde...', true);
+    setCadastrarState('Novo cadastro', false);
     processoInput && processoInput.addEventListener('input', function () { setCadastrarState('Aguarde...', true); });
     window.addEventListener('cnjInvalid', function (event) {
         var id = event && event.detail ? event.detail.inputId : '';
@@ -246,7 +246,7 @@
             .then(function (res) {
                 if (!res.ok || !res.j || !res.j.id) {
                     notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao cadastrar tarefa.');
-                    setCadastrarState('Cadastrar', false);
+                    setCadastrarState('Novo cadastro', false);
                     return;
                 }
                 notifyByKey(
@@ -256,13 +256,14 @@
                     'Sucesso',
                     'Tarefa de mídia cadastrada com sucesso.'
                 );
+                setCadastrarState('Novo cadastro', false);
                 window.setTimeout(function () {
                     window.location.href = '/frame.php?page=salamidias';
                 }, 500);
             })
             .catch(function () {
                 notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão ao cadastrar tarefa.');
-                setCadastrarState('Cadastrar', false);
+                setCadastrarState('Novo cadastro', false);
             });
     });
 })();

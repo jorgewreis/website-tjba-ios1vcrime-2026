@@ -127,7 +127,7 @@
         const processoInput = global.document.getElementById('filter-processo');
         const cadastrarBtn = global.document.getElementById('cadastrar-btn');
         const gate = App.CartorioCreateHelpers && typeof App.CartorioCreateHelpers.initCreateButtonGate === 'function'
-            ? App.CartorioCreateHelpers.initCreateButtonGate({ button: cadastrarBtn, defaultLabel: 'Cadastrar' })
+            ? App.CartorioCreateHelpers.initCreateButtonGate({ button: cadastrarBtn, initialLabel: 'Novo cadastro', readyLabel: 'Cadastrar' })
             : null;
         const reuSelect = global.document.getElementById('filter-reu-select');
         const reuInput = global.document.getElementById('filter-reu');
@@ -137,6 +137,9 @@
 
         bindDataJudReuLookup(processoInput, reuSelect, reuInput);
         processoInput?.addEventListener('input', function () {
+            if (gate) gate.setWaiting();
+        });
+        reuInput?.addEventListener('input', function () {
             if (gate) gate.setWaiting();
         });
         global.addEventListener('cnjInvalid', function (event) {
@@ -277,18 +280,19 @@
                     } else {
                         common.notify('success', 'Sucesso', 'Cadastro CEAPA realizado com sucesso.');
                     }
+                    if (gate) gate.setInitial();
                     global.location.href = '/frame.php?page=ceapa';
                     return;
                 }
                 common.notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Não foi possível cadastrar.');
-                if (gate) gate.setReady();
+                if (gate) gate.setInitial();
             }).catch(function () {
                 if (typeof common.notifyByKey === 'function') {
                     common.notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
                 } else {
                     common.notify('error', 'Erro', 'Erro de conexão.');
                 }
-                if (gate) gate.setReady();
+                if (gate) gate.setInitial();
             });
         });
 

@@ -121,9 +121,11 @@
     function initCreateButtonGate(options) {
         const settings = options || {};
         const button = settings.button || null;
-        const defaultLabel = String(settings.defaultLabel || 'Cadastrar');
+        const initialLabel = String(settings.initialLabel || 'Novo cadastro');
+        const readyLabel = String(settings.readyLabel || 'Cadastrar');
         if (!button) {
             return {
+                setInitial: function () {},
                 setWaiting: function () {},
                 setError: function () {},
                 setReady: function () {},
@@ -138,6 +140,9 @@
         };
 
         const api = {
+            setInitial: function () {
+                apply(initialLabel, false);
+            },
             setWaiting: function () {
                 apply('Aguarde...', true);
             },
@@ -145,7 +150,7 @@
                 apply('Erro', true);
             },
             setReady: function () {
-                apply(defaultLabel, false);
+                apply(readyLabel, false);
             },
             setSubmitting: function () {
                 apply('Aguarde...', true);
@@ -155,7 +160,7 @@
             }
         };
 
-        api.setWaiting();
+        api.setInitial();
         return api;
     }
 

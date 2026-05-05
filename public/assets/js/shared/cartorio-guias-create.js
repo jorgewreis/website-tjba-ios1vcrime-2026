@@ -11,7 +11,7 @@
 
         const settings = config || {};
         const button = global.document.getElementById('cadastrar-btn');
-        const gate = helpers.initCreateButtonGate({ button: button, defaultLabel: 'Cadastrar' });
+        const gate = helpers.initCreateButtonGate({ button: button, initialLabel: 'Novo cadastro', readyLabel: 'Cadastrar' });
         const feedback = helpers.notify;
         const processoInput = global.document.getElementById('filter-processo');
 
@@ -83,11 +83,12 @@
                         feedback('Guia cadastrada com sucesso.', 'success');
                     }
 
+                    gate.setInitial();
                     global.location.href = settings.successRedirect || '/frame.php?page=guias';
                 })
                 .catch(function (error) {
                     feedback(error && error.message ? error.message : 'Erro de conexão.', 'error');
-                    gate.setReady();
+                    gate.setInitial();
                 });
         }
 
@@ -182,14 +183,14 @@
                 .then(function (response) { return response.json(); })
                 .then(function (data) {
                     if (data.exists && !global.confirm('Já existe uma Guia cadastrada com o mesmo tipo e mesmo réu. Deseja cadastrar assim mesmo?')) {
-                        gate.setReady();
+                        gate.setInitial();
                         return;
                     }
                     doCreate(payload);
                 })
                 .catch(function () {
                     feedback('Erro ao verificar duplicidade. Tente novamente.', 'error');
-                    gate.setReady();
+                    gate.setInitial();
                 });
         });
     }

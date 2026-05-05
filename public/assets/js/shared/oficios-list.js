@@ -268,7 +268,7 @@
         const createButton = global.document.getElementById(config.createButtonId);
         const processInput = global.document.getElementById(config.processInputId || 'filter-processo');
         const gate = (App.CartorioCreateHelpers && typeof App.CartorioCreateHelpers.initCreateButtonGate === 'function')
-            ? App.CartorioCreateHelpers.initCreateButtonGate({ button: createButton, defaultLabel: 'Cadastrar' })
+            ? App.CartorioCreateHelpers.initCreateButtonGate({ button: createButton, initialLabel: 'Novo cadastro', readyLabel: 'Cadastrar' })
             : null;
         const hasDataJudFlow = !!global.document.querySelector('[data-datajud-related="true"]');
 
@@ -343,6 +343,9 @@
                         if (typeof config.buildSuccessPayload === 'function') {
                             const payload = config.buildSuccessPayload(result.data, ctx);
                             queuePostReloadToast(ctx.storageKey, payload);
+                            if (gate) {
+                                gate.setInitial();
+                            }
                             global.location.reload();
                             return;
                         }
@@ -354,6 +357,9 @@
                             title: 'Sucesso',
                             message: 'Ofício registrado com sucesso.'
                         }).then(function () {
+                            if (gate) {
+                                gate.setInitial();
+                            }
                             global.location.reload();
                         });
                         return;
@@ -361,13 +367,13 @@
 
                     notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Falha ao registrar.');
                     if (gate) {
-                        gate.setReady();
+                        gate.setInitial();
                     }
                 })
                 .catch(function () {
                     notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
                     if (gate) {
-                        gate.setReady();
+                        gate.setInitial();
                     }
                 });
         });

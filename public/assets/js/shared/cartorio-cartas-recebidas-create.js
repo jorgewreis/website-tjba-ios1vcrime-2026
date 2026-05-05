@@ -11,7 +11,7 @@
 
         const settings = config || {};
         const button = global.document.getElementById('cadastrar-btn');
-        const gate = helpers.initCreateButtonGate({ button: button, defaultLabel: 'Cadastrar' });
+        const gate = helpers.initCreateButtonGate({ button: button, initialLabel: 'Novo cadastro', readyLabel: 'Cadastrar' });
         const feedback = helpers.notify;
         const processoInput = global.document.getElementById('filter-processo');
 
@@ -107,10 +107,11 @@
                 if (!response.ok) {
                     throw new Error(data.error || 'Falha ao cadastrar a carta recebida.');
                 }
+                gate.setInitial();
                 global.location.href = settings.successRedirect || '/frame.php?page=cartasrecebidas';
             } catch (error) {
                 feedback(error.message || 'Não foi possível cadastrar.', 'error');
-                gate.setReady();
+                gate.setInitial();
             }
         });
     }

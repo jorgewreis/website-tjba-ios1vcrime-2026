@@ -103,8 +103,9 @@
             registerButton.textContent = label;
             registerButton.disabled = disabled === true;
         };
-        setButtonState('Aguarde...', true);
+        setButtonState('Novo cadastro', false);
         processoInput?.addEventListener('input', function () { setButtonState('Aguarde...', true); });
+        reuNome?.addEventListener('input', function () { setButtonState('Aguarde...', true); });
         global.addEventListener('cnjInvalid', function (event) {
             const id = event && event.detail ? event.detail.inputId : '';
             if (!id || id === 'filter-processo' || id === 'gab-mon-processo') {
@@ -392,16 +393,17 @@
                             title: 'Sucesso',
                             message: 'Monitoramento registrado.'
                         }).then(function () {
+                            setButtonState('Novo cadastro', false);
                             global.location.href = settings.listHref;
                         });
                         return;
                     }
                     notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Falha ao registrar.');
-                    setButtonState('Cadastrar', false);
+                    setButtonState('Novo cadastro', false);
                 })
                 .catch(function () {
                     notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
-                    setButtonState('Cadastrar', false);
+                    setButtonState('Novo cadastro', false);
                 });
         });
     }

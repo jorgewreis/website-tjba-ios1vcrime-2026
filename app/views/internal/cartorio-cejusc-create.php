@@ -341,9 +341,12 @@ try {
             }
 
             if (!btn) return;
-            setBtnState('Aguarde...', true);
+            setBtnState('Novo cadastro', false);
             if (processoInput) {
                 processoInput.addEventListener('input', function () { setBtnState('Aguarde...', true); });
+            }
+            if (reuInput) {
+                reuInput.addEventListener('input', function () { setBtnState('Aguarde...', true); });
             }
             window.addEventListener('cnjInvalid', function (event) {
                 var id = event && event.detail ? event.detail.inputId : '';
@@ -432,15 +435,16 @@ try {
                 .then(function (data) {
                     if (data.id) {
                         if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Tarefa Cejusc cadastrada com sucesso.' });
+                        setBtnState('Novo cadastro', false);
                         window.location.href = '/frame.php?page=cejusc';
                     } else {
                         showFeedback(data.error || 'Não foi possível cadastrar.', 'error');
-                        setBtnState('Cadastrar', false);
+                        setBtnState('Novo cadastro', false);
                     }
                 })
                 .catch(function () {
                     showFeedback('Erro de conexão.', 'error');
-                    setBtnState('Cadastrar', false);
+                    setBtnState('Novo cadastro', false);
                 });
             });
         })();

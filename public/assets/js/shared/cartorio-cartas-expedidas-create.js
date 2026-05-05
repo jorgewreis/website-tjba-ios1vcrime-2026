@@ -25,7 +25,7 @@
 
         const settings = config || {};
         const button = global.document.getElementById('cadastrar-btn');
-        const gate = helpers.initCreateButtonGate({ button: button, defaultLabel: 'Cadastrar' });
+        const gate = helpers.initCreateButtonGate({ button: button, initialLabel: 'Novo cadastro', readyLabel: 'Cadastrar' });
         const feedback = helpers.notify;
         const processoInput = global.document.getElementById('filter-processo');
 
@@ -148,10 +148,11 @@
                 if (!response.ok) {
                     throw new Error(data.error || 'Falha ao salvar a carta expedida.');
                 }
+                gate.setInitial();
                 global.location.href = settings.successRedirect || '/frame.php?page=cartasexpedidas';
             } catch (error) {
                 feedback(error.message || 'Não foi possível cadastrar a carta expedida.', 'error');
-                gate.setReady();
+                gate.setInitial();
             }
         });
     }
