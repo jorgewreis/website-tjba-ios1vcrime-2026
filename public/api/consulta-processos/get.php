@@ -5,6 +5,8 @@ header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
+require_once $basePath . '/app/helpers/BootstrapHelper.php';
+require_once $basePath . '/app/helpers/InternoProdutividadeAutoHelper.php';
 require_once $basePath . '/app/services/ConsultaProcessosService.php';
 
 $connection = Conection::getInstance()->getConnection();
@@ -24,6 +26,19 @@ try {
         echo json_encode(['error' => 'Processo não encontrado.'], JSON_UNESCAPED_UNICODE);
         exit;
     }
+
+    $uid = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
+    if ($uid !== '') {
+        $ref = 'cg:' . strtoupper(substr(hash('sha256', $id), 0, 20));
+        InternoProdutividadeAutoHelper::tryRegistrar(
+            $connection,
+            $uid,
+            'consulta_processos_get',
+            $ref,
+            'Consulta de processo (detalhe).'
+        );
+    }
+
     echo json_encode($processo, JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
     http_response_code(500);

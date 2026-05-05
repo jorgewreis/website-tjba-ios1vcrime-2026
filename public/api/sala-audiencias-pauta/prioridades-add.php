@@ -9,6 +9,7 @@ header('Content-Type: application/json; charset=UTF-8');
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
+require_once $basePath . '/app/helpers/InternoProdutividadeAutoHelper.php';
 require_once $basePath . '/app/services/SalaAudienciasPautaService.php';
 
 $payload = json_decode(file_get_contents('php://input') ?: '[]', true);
@@ -30,8 +31,24 @@ try {
         echo json_encode(['error' => 'Sessão expirada. Faça login novamente.'], JSON_UNESCAPED_UNICODE);
         exit;
     }
-    $service = new SalaAudienciasPautaService(Conection::getInstance()->getConnection());
-    $service->addPrioridadeCatalogoAudiencia($idPauta, $prioridade, $usuarioId);
+    $connection = Conection::getInstance()->getConnection();
+    $service = new SalaAudienciasPautaService($connection);
+    $incluiuNovaLinha = $service->addPrioridadeCatalogoAudiencia($idPauta, $prioridade, $usuarioId);
+    if ($incluiuNovaLinha) {
+        $pautaRow = $service->find($idPauta);
+        $processoIdRef = is_array($pautaRow) ? trim((string) ($pautaRow['processo'] ?? '')) : '';
+        $codNorm = trim($prioridade);
+        if ($processoIdRef !== '' && $codNorm !== '') {
+            $refPrior = 'pr:' . strtoupper(substr(hash('sha256', $processoIdRef . '|' . $codNorm), 0, 20));
+            InternoProdutividadeAutoHelper::tryRegistrar(
+                $connection,
+                $usuarioId,
+                'processo_prioridade_add',
+                $refPrior,
+                'Prioridade processual incluída.'
+            );
+        }
+    }
     $state = $service->listPrioridadesEdicaoAudiencia($idPauta);
     echo json_encode(['success' => true, 'state' => $state], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {

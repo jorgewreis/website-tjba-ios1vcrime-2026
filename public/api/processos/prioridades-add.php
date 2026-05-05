@@ -6,6 +6,7 @@ header('Content-Type: application/json; charset=UTF-8');
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
+require_once $basePath . '/app/helpers/InternoProdutividadeAutoHelper.php';
 require_once $basePath . '/app/repositories/SalaAudienciasPautaParteRepository.php';
 require_once $basePath . '/app/services/ProcessoPrioridadesService.php';
 
@@ -31,7 +32,17 @@ try {
 
     $pdo = Conection::getInstance()->getConnection();
     $svc = new ProcessoPrioridadesService($pdo);
-    $svc->adicionarManualPorCodigoOuRotulo($processoId, $codigo);
+    $incluiuNovaLinha = $svc->adicionarManualPorCodigoOuRotulo($processoId, $codigo);
+    if ($incluiuNovaLinha) {
+        $refPrior = 'pr:' . strtoupper(substr(hash('sha256', $processoId . '|' . $codigo), 0, 20));
+        InternoProdutividadeAutoHelper::tryRegistrar(
+            $pdo,
+            $usuarioId,
+            'processo_prioridade_add',
+            $refPrior,
+            'Prioridade processual incluída.'
+        );
+    }
 
     $nPauta = (new SalaAudienciasPautaParteRepository($pdo))->countPartesMenoresAtivasPorProcesso($processoId);
     $state = $svc->getEstadoEdicaoPorProcessoId($processoId, $nPauta);

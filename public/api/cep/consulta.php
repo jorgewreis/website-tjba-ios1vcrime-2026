@@ -3,6 +3,56 @@ declare(strict_types=1);
 
 header('Content-Type: application/json; charset=UTF-8');
 
+$basePathCepApi = dirname(__DIR__, 3);
+require_once $basePathCepApi . '/app/helpers/Conection.php';
+require_once $basePathCepApi . '/app/helpers/BootstrapHelper.php';
+require_once $basePathCepApi . '/app/services/ProdutividadeService.php';
+
+/**
+ * Regista 1 ponto de produtividade por consulta de CEP bem-sucedida (8 dígitos).
+ * Silencioso em falta de sessão, regra inexistente ou erro de BD (não afeta a resposta JSON).
+ */
+function consultaCepRegistrarProdutividade(string $cep8Digitos): void
+{
+    $usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
+    if ($usuarioId === '') {
+        return;
+    }
+
+    $cfgPath = dirname(__DIR__, 3) . '/app/config/consulta-cep-produtividade.php';
+    if (!is_file($cfgPath)) {
+        return;
+    }
+
+    /** @var array{regra_id?:string,tipo_ato?:string,tipo_documento?:string,sistema_modulo?:string,referencia_sistema?:string} $cfg */
+    $cfg = require $cfgPath;
+    $regraId = trim((string) ($cfg['regra_id'] ?? ''));
+    if ($regraId === '') {
+        return;
+    }
+
+    $cepFmt = strlen($cep8Digitos) === 8
+        ? substr($cep8Digitos, 0, 5) . '-' . substr($cep8Digitos, 5, 3)
+        : $cep8Digitos;
+
+    try {
+        $connection = Conection::getInstance()->getConnection();
+        $service = new ProdutividadeService($connection);
+        $service->registrarAuto($usuarioId, [
+            'regra_id' => $regraId,
+            'tipo_ato' => trim((string) ($cfg['tipo_ato'] ?? 'Consulta')),
+            'tipo_documento' => trim((string) ($cfg['tipo_documento'] ?? 'CEP')),
+            'sistema_modulo' => trim((string) ($cfg['sistema_modulo'] ?? 'consultas-cep')),
+            'quantidade' => 1,
+            'referencia_item_id' => 'cep:' . $cep8Digitos,
+            'referencia_sistema' => trim((string) ($cfg['referencia_sistema'] ?? 'consultas-cep')),
+            'observacoes' => 'Consulta de CEP (' . $cepFmt . ').',
+        ]);
+    } catch (Throwable $ignored) {
+        // Não interromper a consulta CEP por falha de produtividade.
+    }
+}
+
 function respond(array $payload, int $statusCode = 200): void
 {
     http_response_code($statusCode);
@@ -420,6 +470,8 @@ try {
         if (($data['erro'] ?? false) === true) {
             respond(['error' => 'CEP não encontrado.'], 404);
         }
+
+        consultaCepRegistrarProdutividade($cep);
 
         respond([
             'mode' => 'cep',

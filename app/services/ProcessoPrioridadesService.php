@@ -149,7 +149,10 @@ final class ProcessoPrioridadesService
         return true;
     }
 
-    public function adicionarManualPorCodigoOuRotulo(string $processoId, string $entrada): void
+    /**
+     * @return bool true se a prioridade ainda não existia para o processo (linha nova); false se já existia (apenas reconciliação/atualização)
+     */
+    public function adicionarManualPorCodigoOuRotulo(string $processoId, string $entrada): bool
     {
         $processoId = trim($processoId);
         $codigo = PrioridadesProcessuaisCatalog::normalizeToCodigo(trim($entrada));
@@ -157,8 +160,13 @@ final class ProcessoPrioridadesService
             throw new InvalidArgumentException('Selecione uma prioridade válida do catálogo.');
         }
 
+        $existente = $this->repository->findOneByProcessoAndCodigo($processoId, $codigo);
+        $foiInclusaoNova = $existente === null;
+
         $this->repository->upsert($processoId, $codigo, ProcessoPrioridadeOrigem::MANUAL, null);
         $this->reconciliarAutomaticas($processoId, $this->numeroDoProcesso($processoId), 0);
+
+        return $foiInclusaoNova;
     }
 
     public function removerPorCodigoOuRotulo(string $processoId, string $entrada, int $partesMenoresNaPauta = 0): void

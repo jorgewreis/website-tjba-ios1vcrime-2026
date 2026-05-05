@@ -7,6 +7,7 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 require_once __DIR__ . '/../../helpers/Conection.php';
+require_once __DIR__ . '/../../helpers/InternoProdutividadeAutoHelper.php';
 require_once __DIR__ . '/../../services/ConsultaProcessosService.php';
 
 $connection = Conection::getInstance()->getConnection();
@@ -38,6 +39,18 @@ if ($filtrou) {
         $listResult = $service->list($filters, $itemsPerPage, $offset);
         $rows = $listResult['rows'] ?? [];
         $totalDocuments = (int) ($listResult['total'] ?? 0);
+
+        $uidProc = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
+        if ($uidProc !== '') {
+            $refProc = 'cl:' . strtoupper(substr(hash('sha256', $numeroFilter . '|' . $parteNomeFilter . '|' . $currentPage . '|' . $itemsPerPage), 0, 20));
+            InternoProdutividadeAutoHelper::tryRegistrar(
+                $connection,
+                $uidProc,
+                'consulta_processos_list',
+                $refProc,
+                'Consulta de processos (listagem).'
+            );
+        }
     } catch (Throwable $e) {
         die('Erro ao carregar os dados: ' . $e->getMessage());
     }

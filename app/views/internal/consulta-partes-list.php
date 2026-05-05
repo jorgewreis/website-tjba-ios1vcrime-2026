@@ -7,6 +7,7 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 require_once __DIR__ . '/../../helpers/Conection.php';
+require_once __DIR__ . '/../../helpers/InternoProdutividadeAutoHelper.php';
 require_once __DIR__ . '/../../services/PessoasService.php';
 require_once __DIR__ . '/../../repositories/PartesTelefonesRepository.php';
 require_once __DIR__ . '/../../repositories/PartesInstituicoesRepository.php';
@@ -61,6 +62,18 @@ if ($filtrou) {
                 $rows[$i]['telefones'] = [];
                 $rows[$i]['instituicoes'] = [];
             }
+        }
+
+        $uidPartes = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
+        if ($uidPartes !== '') {
+            $refPartes = 'pl:' . strtoupper(substr(hash('sha256', $nomeFilter . '|' . $cpfFilter . '|' . $instituicaoIdFilter . '|' . $currentPage . '|' . $itemsPerPage), 0, 20));
+            InternoProdutividadeAutoHelper::tryRegistrar(
+                $connection,
+                $uidPartes,
+                'consulta_partes_list',
+                $refPartes,
+                'Consulta de partes (listagem).'
+            );
         }
     } catch (Throwable $e) {
         die('Erro ao carregar os dados: ' . $e->getMessage());

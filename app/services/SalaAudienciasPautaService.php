@@ -480,7 +480,10 @@ final class SalaAudienciasPautaService
         }
     }
 
-    public function updateParte(string $idParte, array $payload, ?string $usuarioId): bool
+    /**
+     * @return array{ok: bool, altered: bool}
+     */
+    public function updateParte(string $idParte, array $payload, ?string $usuarioId): array
     {
         $parteAtual = $this->parteRepository->findById($idParte);
         if ($parteAtual === null) {
@@ -545,7 +548,7 @@ final class SalaAudienciasPautaService
                 $this->ensureDefensorVinculadoAoProcesso($processoId, $tipoDef, $defId);
             }
 
-            $ok = $this->parteRepository->update($idParte, [
+            $updateRow = [
                 'parte_id_global' => $parteGlobalId,
                 'processo_parte_id' => $processoParteId !== '' ? $processoParteId : null,
                 'nome_parte' => $nome,
@@ -561,7 +564,11 @@ final class SalaAudienciasPautaService
                 'id_documento_expedido' => trim((string) ($payload['id_documento_expedido'] ?? '')) ?: null,
                 'id_documento_cumprido' => trim((string) ($payload['id_documento_cumprido'] ?? '')) ?: null,
                 'atualizado_por' => $usuarioId,
-            ]);
+            ];
+
+            $houveAlteracaoRelevante = $this->partePautaCamposAlterados($parteAtual, $updateRow);
+
+            $ok = $this->parteRepository->update($idParte, $updateRow);
 
             $this->connection->commit();
             $idPautaSync = trim((string) ($parteAtual['pauta'] ?? ''));
@@ -572,11 +579,54 @@ final class SalaAudienciasPautaService
             $numeroProcAtual = trim((string) ($parteAtual['numero_processo'] ?? ''));
             $this->sincronizarPrioridadesProcessoAposPartes($processoIdAtual, $numeroProcAtual);
 
-            return $ok;
+            return [
+                'ok' => $ok,
+                'altered' => $ok && $houveAlteracaoRelevante,
+            ];
         } catch (Throwable $e) {
             $this->connection->rollBack();
             throw $e;
         }
+    }
+
+    private static function normPartePautaValor($v): string
+    {
+        if ($v === null) {
+            return '';
+        }
+
+        return trim((string) $v);
+    }
+
+    /**
+     * @param array<string, mixed> $atual
+     * @param array<string, mixed> $novo
+     */
+    private function partePautaCamposAlterados(array $atual, array $novo): bool
+    {
+        $keys = [
+            'nome_parte',
+            'tipo_parte',
+            'parte_id_global',
+            'processo_parte_id',
+            'tipo_defensor',
+            'defensor_publico_id',
+            'defensor_publico_outro',
+            'defensor_privado_id',
+            'defensor_privado_outro',
+            'maioridade',
+            'expedicao',
+            'cumprimento',
+            'id_documento_expedido',
+            'id_documento_cumprido',
+        ];
+        foreach ($keys as $k) {
+            if (self::normPartePautaValor($atual[$k] ?? null) !== self::normPartePautaValor($novo[$k] ?? null)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /** Zera todos os campos de defensor no payload (persistência). */
@@ -933,7 +983,10 @@ final class SalaAudienciasPautaService
         ]);
     }
 
-    public function addPrioridadeCatalogoAudiencia(string $idPauta, string $prioridade, ?string $usuarioId): void
+    /**
+     * @return bool true se a prioridade foi incluída como linha nova no processo
+     */
+    public function addPrioridadeCatalogoAudiencia(string $idPauta, string $prioridade, ?string $usuarioId): bool
     {
         unset($usuarioId);
         $prioridade = trim($prioridade);
@@ -948,7 +1001,8 @@ final class SalaAudienciasPautaService
         if ($processoId === '') {
             throw new InvalidArgumentException('Processo vinculado à audiência é inválido.');
         }
-        $this->processoPrioridadesService()->adicionarManualPorCodigoOuRotulo($processoId, $prioridade);
+
+        return $this->processoPrioridadesService()->adicionarManualPorCodigoOuRotulo($processoId, $prioridade);
     }
 
     public function removePrioridadeCatalogoAudiencia(string $idPauta, string $prioridade, ?string $usuarioId): void

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0064
+
+**Data:** 2026-05-04 21:44:23 | **Commit:** `bc2672f4` | **Tipo:** `patch`
+
+- feat(produtividade): implement auto productivity registration for various processes
+
 ## V. 1.97.0063
 
 **Data:** 2026-05-04 21:24:09 | **Commit:** `405cb580` | **Tipo:** `patch`
@@ -5166,6 +5172,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
