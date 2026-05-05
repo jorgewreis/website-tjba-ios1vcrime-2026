@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0062
+
+**Data:** 2026-05-04 21:16:49 | **Commit:** `89676d90` | **Tipo:** `patch`
+
+- feat(sala-audiencias-ata): implement filtering for ata listings based on download availability
+
 ## V. 1.97.0061
 
 **Data:** 2026-05-04 21:10:57 | **Commit:** `7912f1e0` | **Tipo:** `patch`
@@ -5154,6 +5160,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

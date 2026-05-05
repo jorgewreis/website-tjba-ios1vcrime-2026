@@ -12,6 +12,12 @@ final class SalaAudienciasAtaService
     /** Limite definido pela magistratura: no máximo este número de estudantes inscritos por audiência. */
     public const MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA = 5;
 
+    /**
+     * Audiências com data anterior a (hoje − N dias) e sem PDF ainda dentro do prazo de download
+     * não entram na lista de atas (interno e página estudaata); inscrições seguem visíveis no painel com “Documento expirado”.
+     */
+    public const LISTAGEM_ATAS_OCULTAR_APOS_DIAS_SEM_DOWNLOAD = 40;
+
     private const DIAS_VALIDADE_ATA = 30;
     private const MAX_UPLOAD_BYTES = 2 * 1024 * 1024;
 
@@ -38,9 +44,11 @@ final class SalaAudienciasAtaService
 
         $this->purgeAtasExpiradas();
 
+        $dias = self::LISTAGEM_ATAS_OCULTAR_APOS_DIAS_SEM_DOWNLOAD;
+
         return [
-            'rows' => $this->ataRepository->listRealizadasComAta($limit, $offset),
-            'total' => $this->ataRepository->countRealizadas(),
+            'rows' => $this->ataRepository->listRealizadasComAta($limit, $offset, $dias),
+            'total' => $this->ataRepository->countRealizadas($dias),
         ];
     }
 
@@ -391,5 +399,55 @@ final class SalaAudienciasAtaService
         }
 
         return $n;
+    }
+
+    /**
+     * PDF da ata ainda baixável (referência no disco + prazo `expires_at`).
+     *
+     * @param array<string, mixed> $row Linha com `arquivo_relativo` e `expires_at` (ex.: join sala_audiencias_ata).
+     */
+    public static function ataPdfDownloadDisponivelNaRow(array $row): bool
+    {
+        $arquivo = trim((string) ($row['arquivo_relativo'] ?? ''));
+        $exp = trim((string) ($row['expires_at'] ?? ''));
+        if ($arquivo === '' || $exp === '') {
+            return false;
+        }
+        $expTs = strtotime($exp);
+
+        return $expTs !== false && $expTs > time();
+    }
+
+    /**
+     * Data da audiência (campo `data_audiencia`) é estritamente anterior a (hoje − N dias), em calendário civil.
+     *
+     * @param array<string, mixed> $row
+     */
+    public static function audienciaDataAnteriorAHojeMenosDias(int $dias, array $row): bool
+    {
+        $dataAud = trim((string) ($row['data_audiencia'] ?? ''));
+        if ($dataAud === '') {
+            return false;
+        }
+        try {
+            $d = new \DateTimeImmutable($dataAud . ' 00:00:00');
+        } catch (\Throwable $e) {
+            return false;
+        }
+        $limite = (new \DateTimeImmutable('today'))->modify('-' . max(0, $dias) . ' days');
+
+        return $d < $limite;
+    }
+
+    /**
+     * Ocultar da lista dedicada de atas (interno / estudaata): ocorrida há mais de N dias e sem download ativo.
+     *
+     * @param array<string, mixed> $row
+     */
+    public static function ocultarDaListagemAtasPorPrazoSemDownload(array $row, ?int $dias = null): bool
+    {
+        $dias = $dias ?? self::LISTAGEM_ATAS_OCULTAR_APOS_DIAS_SEM_DOWNLOAD;
+
+        return self::audienciaDataAnteriorAHojeMenosDias($dias, $row) && !self::ataPdfDownloadDisponivelNaRow($row);
     }
 }

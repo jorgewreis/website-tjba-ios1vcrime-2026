@@ -143,8 +143,9 @@ final class SalaAudienciasAtaRepository
      *
      * @return list<array<string, mixed>>
      */
-    public function listRealizadasComAta(int $limit, int $offset): array
+    public function listRealizadasComAta(int $limit, int $offset, int $diasOcultarListagemSemAtaDisponivel = 40): array
     {
+        $diasOcultarListagemSemAtaDisponivel = max(0, $diasOcultarListagemSemAtaDisponivel);
         $sql = sprintf(
             'SELECT a.`id_pauta`, a.`tipo_audiencia`, a.`data_audiencia`, a.`hora_audiencia`, a.`data_hora_inicio_efetivo`, a.`localizacao`, a.`status`,
                     p.`numero_processo`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `classe_nome`,
@@ -154,6 +155,13 @@ final class SalaAudienciasAtaRepository
              LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id`
              LEFT JOIN `%s` ata ON ata.`pauta` = a.`id_pauta`
              WHERE a.`ativo` = 1 AND a.`status` IN (\'realizada\', \'finalizada\')
+             AND NOT (
+                a.`data_audiencia` < DATE_SUB(CURDATE(), INTERVAL %d DAY)
+                AND NOT (
+                    TRIM(COALESCE(ata.`arquivo_relativo`, \'\')) <> \'\'
+                    AND ata.`expires_at` > NOW()
+                )
+             )
              ORDER BY
                 CASE
                     WHEN ata.`id_ata` IS NULL THEN 0
@@ -163,7 +171,8 @@ final class SalaAudienciasAtaRepository
                 a.`data_audiencia` DESC,
                 a.`hora_audiencia` DESC
              LIMIT :limit OFFSET :offset',
-            $this->table
+            $this->table,
+            $diasOcultarListagemSemAtaDisponivel
         );
         $st = $this->connection->prepare($sql);
         $st->bindValue(':limit', $limit, PDO::PARAM_INT);
@@ -173,9 +182,23 @@ final class SalaAudienciasAtaRepository
         return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
-    public function countRealizadas(): int
+    public function countRealizadas(int $diasOcultarListagemSemAtaDisponivel = 40): int
     {
-        $sql = 'SELECT COUNT(*) FROM `sala_audiencias_pauta` a WHERE a.`ativo` = 1 AND a.`status` IN (\'realizada\', \'finalizada\')';
+        $diasOcultarListagemSemAtaDisponivel = max(0, $diasOcultarListagemSemAtaDisponivel);
+        $sql = sprintf(
+            'SELECT COUNT(*) FROM `sala_audiencias_pauta` a
+             LEFT JOIN `%s` ata ON ata.`pauta` = a.`id_pauta`
+             WHERE a.`ativo` = 1 AND a.`status` IN (\'realizada\', \'finalizada\')
+             AND NOT (
+                a.`data_audiencia` < DATE_SUB(CURDATE(), INTERVAL %d DAY)
+                AND NOT (
+                    TRIM(COALESCE(ata.`arquivo_relativo`, \'\')) <> \'\'
+                    AND ata.`expires_at` > NOW()
+                )
+             )',
+            $this->table,
+            $diasOcultarListagemSemAtaDisponivel
+        );
         $st = $this->connection->query($sql);
         if ($st === false) {
             return 0;

@@ -23,6 +23,9 @@ $podeInscricaoComoEstudante = UserAccessHelper::isUsuarioExterno($perfilsUsuario
 
 $service = new SalaAudienciasAtaService(Conection::getInstance()->getConnection());
 $minhasRows = $userId !== '' ? $service->listMinhasInscricoesEstudante($userId) : [];
+$minhasRows = array_values(array_filter($minhasRows, static function (array $row): bool {
+    return !SalaAudienciasAtaService::ocultarDaListagemAtasPorPrazoSemDownload($row);
+}));
 $itemsPerPage = (int) ($_GET['items_per_page'] ?? 25);
 if (!in_array($itemsPerPage, [10, 25, 50, 100], true)) {
     $itemsPerPage = 25;
