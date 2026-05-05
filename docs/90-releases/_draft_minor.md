@@ -38,4 +38,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(cnj-validation): integrate CNJ validation across services and views** `[079b3534]`
 - **refactor(button-state): unify button state initialization across create forms** `[331170ec]`
 - **feat(button-state): enhance button state management in audiencia forms** `[d6b3fcb3]`
+- **refactor(pauta-edit): simplify status messages for linked parties** `[aea3741d]`
 
