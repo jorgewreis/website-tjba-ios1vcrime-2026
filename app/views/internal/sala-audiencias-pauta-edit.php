@@ -525,6 +525,27 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
             $repoTelPautaEdit = new PartesTelefonesRepository($pdoPautaEditPartes);
             $repoProcPartesPautaEdit = new ProcessosPartesRepository($pdoPautaEditPartes);
             $processoIdAudiencia = trim((string) ($row['processo'] ?? ''));
+            /** Cadastro global de partes com dados além do nome (evita destaque em registros criados só pela audiência via ensureParteByNomeOuCpf). */
+            $parteGlobalTemCadastroGeralParaDestaqueNome = static function (?array $g): bool {
+                if ($g === null) {
+                    return false;
+                }
+                if (trim((string) ($g['cpf'] ?? '')) !== '') {
+                    return true;
+                }
+                if (trim((string) ($g['profissao'] ?? '')) !== '') {
+                    return true;
+                }
+                if (trim((string) ($g['sexo'] ?? '')) !== '') {
+                    return true;
+                }
+                $dn = trim((string) ($g['data_nascimento'] ?? ''));
+                if ($dn !== '' && $dn !== '0000-00-00' && strncmp($dn, '0000', 4) !== 0) {
+                    return true;
+                }
+
+                return false;
+            };
         ?>
         <?php foreach ($partesOrdenadas as $parte): ?>
         <?php
@@ -533,6 +554,7 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
             $mostrarDefensor = in_array($tipoParteAtual, ['reu', 'vitima'], true);
             $minorInfoParte = (string) ucfirst(str_replace('_', ' ', $tipoParteAtual));
             $parteIdGlobalRaw = trim((string) ($parte['parte_id_global'] ?? ''));
+            $parteGlobalCadastro = null;
             $parteGlobalLinkId = '';
             if ($parteIdGlobalRaw !== '') {
                 $parteGlobalCadastro = $partesRepoLista->findById($parteIdGlobalRaw);
@@ -551,13 +573,13 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                     }
                 }
             }
-            $destacarNomeVinculoDb = ($parteGlobalLinkId !== '' || $parteLigadaAoProcessoDaAudiencia);
 
             $cargoPrefixoTestemunhaDenuncia = '';
             $linhaCompanhiaTelefoneTestemunha = '';
+            $vinculosInstituicaoTestemunhaDenuncia = [];
             if ($tipoParteAtual === 'testemunha_denuncia' && $parteGlobalLinkId !== '') {
-                $vinculosAtivos = $repoPiPautaEdit->findByParteId($parteIdGlobalRaw, true);
-                $vin = $vinculosAtivos[0] ?? null;
+                $vinculosInstituicaoTestemunhaDenuncia = $repoPiPautaEdit->findByParteId($parteIdGlobalRaw, true);
+                $vin = $vinculosInstituicaoTestemunhaDenuncia[0] ?? null;
                 if ($vin !== null) {
                     $cargoPrefixoTestemunhaDenuncia = trim((string) ($vin['cargo_funcao'] ?? ''));
                     $rotuloInst = trim((string) ($vin['instituicao_nome'] ?? ''));
@@ -581,6 +603,25 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                         }
                     }
                 }
+            }
+            $temVinculoInstituicaoOuContatoTestemunhaDenuncia = $tipoParteAtual === 'testemunha_denuncia'
+                && $parteGlobalLinkId !== ''
+                && (
+                    $vinculosInstituicaoTestemunhaDenuncia !== []
+                    || $cargoPrefixoTestemunhaDenuncia !== ''
+                    || $linhaCompanhiaTelefoneTestemunha !== ''
+                );
+
+            $cadastroGlobalRico = $parteGlobalTemCadastroGeralParaDestaqueNome($parteGlobalCadastro);
+            if ($tipoParteAtual === 'reu') {
+                $destacarNomeVinculoDb = ($parteGlobalLinkId !== '' || $parteLigadaAoProcessoDaAudiencia);
+            } elseif ($tipoParteAtual === 'testemunha_denuncia') {
+                $destacarNomeVinculoDb = $temVinculoInstituicaoOuContatoTestemunhaDenuncia
+                    || ($parteGlobalLinkId !== '' && $cadastroGlobalRico);
+            } elseif ($tipoParteAtual === 'vitima' || $tipoParteAtual === 'testemunha_defesa') {
+                $destacarNomeVinculoDb = $parteGlobalLinkId !== '' && $cadastroGlobalRico;
+            } else {
+                $destacarNomeVinculoDb = ($parteGlobalLinkId !== '' || $parteLigadaAoProcessoDaAudiencia);
             }
 
             // Só "Réu PRESO" depende do nome da parte.

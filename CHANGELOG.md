@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0063
+
+**Data:** 2026-05-04 21:24:09 | **Commit:** `405cb580` | **Tipo:** `patch`
+
+- feat(sala-audiencias-pauta): enhance parte handling with global registration checks
+
 ## V. 1.97.0062
 
 **Data:** 2026-05-04 21:16:49 | **Commit:** `89676d90` | **Tipo:** `patch`
@@ -5160,6 +5166,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
