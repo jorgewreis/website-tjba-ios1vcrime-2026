@@ -34,4 +34,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(gabinete-oficios-list): improve layout and search interface** `[bebf1f9f]`
 - **feat(access-profiles): enhance user profile management with operational mode support** `[67507b8f]`
 - **feat(sala-audiencias-ata): enhance ata management and download handling** `[7912f1e0]`
+- **feat(sala-audiencias-ata): implement filtering for ata listings based on download availability** `[89676d90]`
 
