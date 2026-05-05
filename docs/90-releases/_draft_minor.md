@@ -37,4 +37,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(sala-audiencias-ata): implement filtering for ata listings based on download availability** `[89676d90]`
 - **feat(sala-audiencias-pauta): enhance parte handling with global registration checks** `[405cb580]`
 - **feat(produtividade): implement auto productivity registration for various processes** `[bc2672f4]`
+- **fix(produtividade): improve productivity registration error handling for CEP consultations** `[c7b04e68]`
 
