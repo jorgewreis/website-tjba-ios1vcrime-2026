@@ -30,15 +30,19 @@ try {
     $connection = Conection::getInstance()->getConnection();
     $service = new SalaAudienciasPautaService($connection);
     $id = $service->addParte($idPauta, $payload, $usuarioId);
-    InternoProdutividadeAutoHelper::tryRegistrar(
+    $prodRes = InternoProdutividadeAutoHelper::tryRegistrar(
         $connection,
         $usuarioId,
         'audiencia_parte_cadastro',
         'pc:' . $id,
         'Parte cadastrada na audiência.'
     );
+    $outCreate = ['id' => $id];
+    if (!empty($prodRes['toast_key'])) {
+        $outCreate['produtividade_toast_key'] = $prodRes['toast_key'];
+    }
     http_response_code(201);
-    echo json_encode(['id' => $id], JSON_UNESCAPED_UNICODE);
+    echo json_encode($outCreate, JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
     http_response_code(400);
     echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);

@@ -28,6 +28,7 @@ $currentPage = isset($_GET['page_number']) ? max(1, (int) $_GET['page_number']) 
 
 $filtrou = ($nomeFilter !== '' || $cpfFilter !== '' || $instituicaoIdFilter !== '');
 
+$internoProdutividadeToastKey = null;
 $rows = [];
 $totalDocuments = 0;
 $totalPages = 0;
@@ -67,13 +68,16 @@ if ($filtrou) {
         $uidPartes = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
         if ($uidPartes !== '') {
             $refPartes = 'pl:' . strtoupper(substr(hash('sha256', $nomeFilter . '|' . $cpfFilter . '|' . $instituicaoIdFilter . '|' . $currentPage . '|' . $itemsPerPage), 0, 20));
-            InternoProdutividadeAutoHelper::tryRegistrar(
+            $prodPartes = InternoProdutividadeAutoHelper::tryRegistrar(
                 $connection,
                 $uidPartes,
                 'consulta_partes_list',
                 $refPartes,
                 'Consulta de partes (listagem).'
             );
+            if (!empty($prodPartes['toast_key'])) {
+                $internoProdutividadeToastKey = $prodPartes['toast_key'];
+            }
         }
     } catch (Throwable $e) {
         die('Erro ao carregar os dados: ' . $e->getMessage());
@@ -299,6 +303,12 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                 if (id) window.location.href = '/frame.php?page=consultapartesedit&id=' + encodeURIComponent(id);
             });
         });
+        <?php if (!empty($internoProdutividadeToastKey)): ?>
+        var __ptk = <?php echo json_encode((string) $internoProdutividadeToastKey, JSON_UNESCAPED_UNICODE); ?>;
+        if (__ptk && typeof showProdutividadeToastByCatalogKey === 'function') {
+            showProdutividadeToastByCatalogKey(__ptk);
+        }
+        <?php endif; ?>
     })();
     </script>
 </body>

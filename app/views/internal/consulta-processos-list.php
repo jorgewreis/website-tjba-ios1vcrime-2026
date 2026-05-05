@@ -24,6 +24,7 @@ $currentPage = isset($_GET['page_number']) ? max(1, (int) $_GET['page_number']) 
 
 $filtrou = ($numeroFilter !== '' || $parteNomeFilter !== '');
 
+$internoProdutividadeToastKey = null;
 $rows = [];
 $totalDocuments = 0;
 $totalPages = 0;
@@ -43,13 +44,16 @@ if ($filtrou) {
         $uidProc = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
         if ($uidProc !== '') {
             $refProc = 'cl:' . strtoupper(substr(hash('sha256', $numeroFilter . '|' . $parteNomeFilter . '|' . $currentPage . '|' . $itemsPerPage), 0, 20));
-            InternoProdutividadeAutoHelper::tryRegistrar(
+            $prodProc = InternoProdutividadeAutoHelper::tryRegistrar(
                 $connection,
                 $uidProc,
                 'consulta_processos_list',
                 $refProc,
                 'Consulta de processos (listagem).'
             );
+            if (!empty($prodProc['toast_key'])) {
+                $internoProdutividadeToastKey = $prodProc['toast_key'];
+            }
         }
     } catch (Throwable $e) {
         die('Erro ao carregar os dados: ' . $e->getMessage());
@@ -224,6 +228,12 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                 if (id) window.location.href = '/frame.php?page=consultaprocessosedit&id=' + encodeURIComponent(id);
             });
         });
+        <?php if (!empty($internoProdutividadeToastKey)): ?>
+        var __ptkProc = <?php echo json_encode((string) $internoProdutividadeToastKey, JSON_UNESCAPED_UNICODE); ?>;
+        if (__ptkProc && typeof showProdutividadeToastByCatalogKey === 'function') {
+            showProdutividadeToastByCatalogKey(__ptkProc);
+        }
+        <?php endif; ?>
     })();
     </script>
 </body>

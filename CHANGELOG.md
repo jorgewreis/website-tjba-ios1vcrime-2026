@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0065
+
+**Data:** 2026-05-04 21:55:16 | **Commit:** `c7b04e68` | **Tipo:** `patch`
+
+- fix(produtividade): improve productivity registration error handling for CEP consultations
+
 ## V. 1.97.0064
 
 **Data:** 2026-05-04 21:44:23 | **Commit:** `bc2672f4` | **Tipo:** `patch`
@@ -5172,6 +5178,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

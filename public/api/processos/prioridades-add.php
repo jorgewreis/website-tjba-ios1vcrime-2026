@@ -33,21 +33,29 @@ try {
     $pdo = Conection::getInstance()->getConnection();
     $svc = new ProcessoPrioridadesService($pdo);
     $incluiuNovaLinha = $svc->adicionarManualPorCodigoOuRotulo($processoId, $codigo);
+    $toastKeyPrior = null;
     if ($incluiuNovaLinha) {
         $refPrior = 'pr:' . strtoupper(substr(hash('sha256', $processoId . '|' . $codigo), 0, 20));
-        InternoProdutividadeAutoHelper::tryRegistrar(
+        $prodRes = InternoProdutividadeAutoHelper::tryRegistrar(
             $pdo,
             $usuarioId,
             'processo_prioridade_add',
             $refPrior,
             'Prioridade processual incluída.'
         );
+        if (!empty($prodRes['toast_key'])) {
+            $toastKeyPrior = $prodRes['toast_key'];
+        }
     }
 
     $nPauta = (new SalaAudienciasPautaParteRepository($pdo))->countPartesMenoresAtivasPorProcesso($processoId);
     $state = $svc->getEstadoEdicaoPorProcessoId($processoId, $nPauta);
 
-    echo json_encode(['success' => true, 'state' => $state], JSON_UNESCAPED_UNICODE);
+    $outPrior = ['success' => true, 'state' => $state];
+    if ($toastKeyPrior !== null) {
+        $outPrior['produtividade_toast_key'] = $toastKeyPrior;
+    }
+    echo json_encode($outPrior, JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
     http_response_code(400);
     echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);

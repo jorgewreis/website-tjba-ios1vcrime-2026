@@ -396,7 +396,14 @@
                             'Parte adicionada.',
                             'salapauta.postReloadToast'
                         );
-                        window.location.reload();
+                        if (res.j.produtividade_toast_key && window.App && window.App.ToastCatalog && typeof window.App.ToastCatalog.notifyByKey === 'function') {
+                            window.App.ToastCatalog.notifyByKey(res.j.produtividade_toast_key, {}).catch(function () {});
+                        } else if (res.j.produtividade_toast_key && typeof showProdutividadeToastByCatalogKey === 'function') {
+                            showProdutividadeToastByCatalogKey(res.j.produtividade_toast_key);
+                        }
+                        window.setTimeout(function () {
+                            window.location.reload();
+                        }, 450);
                     } else {
                         notifyByKey('audiencias.part.add.error', {}, 'error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao adicionar parte.');
                     }

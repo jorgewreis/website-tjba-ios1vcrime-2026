@@ -31,16 +31,24 @@ try {
     $service = new SalaAudienciasPautaService($connection);
     $result = $service->updateParte($idParte, $payload, $usuarioId);
     $ok = (bool) ($result['ok'] ?? false);
+    $toastKeyParte = null;
     if ($ok && !empty($result['altered'])) {
-        InternoProdutividadeAutoHelper::tryRegistrar(
+        $prodRes = InternoProdutividadeAutoHelper::tryRegistrar(
             $connection,
             $usuarioId,
             'audiencia_parte_edicao',
             'pe:' . $idParte,
             'Parte da audiência atualizada.'
         );
+        if (!empty($prodRes['toast_key'])) {
+            $toastKeyParte = $prodRes['toast_key'];
+        }
     }
-    echo json_encode(['success' => $ok], JSON_UNESCAPED_UNICODE);
+    $outUpdate = ['success' => $ok];
+    if ($toastKeyParte !== null) {
+        $outUpdate['produtividade_toast_key'] = $toastKeyParte;
+    }
+    echo json_encode($outUpdate, JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
     http_response_code(400);
     echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);

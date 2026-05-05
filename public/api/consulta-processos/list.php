@@ -47,13 +47,16 @@ try {
         $uid = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
         if ($uid !== '') {
             $ref = 'cl:' . strtoupper(substr(hash('sha256', $numero . '|' . $parteNome . '|' . $pageNumber . '|' . $itemsPerPage), 0, 20));
-            InternoProdutividadeAutoHelper::tryRegistrar(
+            $prodRes = InternoProdutividadeAutoHelper::tryRegistrar(
                 $connection,
                 $uid,
                 'consulta_processos_list',
                 $ref,
                 'Consulta de processos (listagem).'
             );
+            if (!empty($prodRes['toast_key'])) {
+                $response['produtividade_toast_key'] = $prodRes['toast_key'];
+            }
         }
     }
 

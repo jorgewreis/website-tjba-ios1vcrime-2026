@@ -3,32 +3,38 @@ declare(strict_types=1);
 
 header('Content-Type: application/json; charset=UTF-8');
 
-$basePathCepApi = dirname(__DIR__, 3);
-require_once $basePathCepApi . '/app/helpers/Conection.php';
-require_once $basePathCepApi . '/app/helpers/BootstrapHelper.php';
-require_once $basePathCepApi . '/app/services/ProdutividadeService.php';
-
 /**
  * Regista 1 ponto de produtividade por consulta de CEP bem-sucedida (8 dígitos).
  * Silencioso em falta de sessão, regra inexistente ou erro de BD (não afeta a resposta JSON).
+ *
+ * Requer linha em `produtividade_regras` (ex.: docs/database/seed-interno-produtividade-regras.sql
+ * ou docs/database/seed-consulta-cep-produtividade-regra.sql). Sem regra, não há lançamento.
+ *
+ * @return string|null chave do catálogo toast quando o lançamento é criado
  */
-function consultaCepRegistrarProdutividade(string $cep8Digitos): void
+function consultaCepRegistrarProdutividade(string $cep8Digitos): ?string
 {
+    $basePathCepApi = dirname(__DIR__, 3);
+    require_once $basePathCepApi . '/app/helpers/Conection.php';
+    require_once $basePathCepApi . '/app/helpers/BootstrapHelper.php';
+
     $usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
     if ($usuarioId === '') {
-        return;
+        return null;
     }
 
-    $cfgPath = dirname(__DIR__, 3) . '/app/config/consulta-cep-produtividade.php';
+    require_once $basePathCepApi . '/app/services/ProdutividadeService.php';
+
+    $cfgPath = $basePathCepApi . '/app/config/consulta-cep-produtividade.php';
     if (!is_file($cfgPath)) {
-        return;
+        return null;
     }
 
     /** @var array{regra_id?:string,tipo_ato?:string,tipo_documento?:string,sistema_modulo?:string,referencia_sistema?:string} $cfg */
     $cfg = require $cfgPath;
     $regraId = trim((string) ($cfg['regra_id'] ?? ''));
     if ($regraId === '') {
-        return;
+        return null;
     }
 
     $cepFmt = strlen($cep8Digitos) === 8
@@ -38,7 +44,7 @@ function consultaCepRegistrarProdutividade(string $cep8Digitos): void
     try {
         $connection = Conection::getInstance()->getConnection();
         $service = new ProdutividadeService($connection);
-        $service->registrarAuto($usuarioId, [
+        $result = $service->registrarAuto($usuarioId, [
             'regra_id' => $regraId,
             'tipo_ato' => trim((string) ($cfg['tipo_ato'] ?? 'Consulta')),
             'tipo_documento' => trim((string) ($cfg['tipo_documento'] ?? 'CEP')),
@@ -48,9 +54,20 @@ function consultaCepRegistrarProdutividade(string $cep8Digitos): void
             'referencia_sistema' => trim((string) ($cfg['referencia_sistema'] ?? 'consultas-cep')),
             'observacoes' => 'Consulta de CEP (' . $cepFmt . ').',
         ]);
+        if (!empty($result['created'])) {
+            return 'interno.produtividade.cep.ponto';
+        }
+        if (($result['reason'] ?? '') === 'regra_inexistente_ou_inativa') {
+            error_log(
+                'CEP produtividade: regra inativa ou ausente no BD. Rode docs/database/seed-interno-produtividade-regras.sql '
+                . '(ou seed-consulta-cep-produtividade-regra.sql). regra_id=' . $regraId
+            );
+        }
     } catch (Throwable $ignored) {
         // Não interromper a consulta CEP por falha de produtividade.
     }
+
+    return null;
 }
 
 function respond(array $payload, int $statusCode = 200): void
@@ -471,13 +488,16 @@ try {
             respond(['error' => 'CEP não encontrado.'], 404);
         }
 
-        consultaCepRegistrarProdutividade($cep);
-
-        respond([
+        $toastKeyCep = consultaCepRegistrarProdutividade($cep);
+        $payloadCep = [
             'mode' => 'cep',
             'query' => $query,
             'data' => normalizeAddressRow($data),
-        ]);
+        ];
+        if ($toastKeyCep !== null) {
+            $payloadCep['produtividade_toast_key'] = $toastKeyCep;
+        }
+        respond($payloadCep);
     }
 
     $parsed = parseAddressQuery($query);

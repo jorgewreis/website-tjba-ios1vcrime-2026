@@ -10,18 +10,37 @@ require_once __DIR__ . '/../services/ProdutividadeService.php';
 final class InternoProdutividadeAutoHelper
 {
     /**
+     * Chave em config/toast_messages.php (interno.produtividade.*) para toast informativo após lançamento.
+     */
+    private static function toastCatalogKeyForRule(string $ruleKey): ?string
+    {
+        $map = [
+            'consulta_partes_list' => 'interno.produtividade.consulta_partes.ponto',
+            'consulta_processos_list' => 'interno.produtividade.consulta_processos_lista.ponto',
+            'consulta_processos_get' => 'interno.produtividade.consulta_processos_detalhe.ponto',
+            'audiencia_parte_cadastro' => 'interno.produtividade.audiencia_parte_cadastro.ponto',
+            'audiencia_parte_edicao' => 'interno.produtividade.audiencia_parte_edicao.ponto',
+            'processo_prioridade_add' => 'interno.produtividade.prioridade_add.ponto',
+        ];
+
+        return $map[$ruleKey] ?? null;
+    }
+
+    /**
      * @param PDO    $connection
      * @param string $usuarioId      id_usuario da sessão
      * @param string $ruleKey        chave em app/config/interno-produtividade-regras.php
      * @param string $referenciaItemId identificador curto para dedupe (hash inclui minuto no serviço)
      * @param string $observacoes      texto para listagem (opcional)
+     *
+     * @return array{created: bool, toast_key: string|null}
      */
-    public static function tryRegistrar(PDO $connection, string $usuarioId, string $ruleKey, string $referenciaItemId, string $observacoes = ''): void
+    public static function tryRegistrar(PDO $connection, string $usuarioId, string $ruleKey, string $referenciaItemId, string $observacoes = ''): array
     {
         $usuarioId = trim($usuarioId);
         $referenciaItemId = trim($referenciaItemId);
         if ($usuarioId === '' || $referenciaItemId === '') {
-            return;
+            return ['created' => false, 'toast_key' => null];
         }
 
         static $configs = null;
@@ -31,20 +50,21 @@ final class InternoProdutividadeAutoHelper
         }
 
         if (!is_array($configs)) {
-            return;
+            return ['created' => false, 'toast_key' => null];
         }
 
         $def = $configs[$ruleKey] ?? null;
         if (!is_array($def)) {
-            return;
+            return ['created' => false, 'toast_key' => null];
         }
 
         $regraId = trim((string) ($def['regra_id'] ?? ''));
         if ($regraId === '') {
-            return;
+            return ['created' => false, 'toast_key' => null];
         }
 
         $obs = trim($observacoes);
+        $toastKey = self::toastCatalogKeyForRule($ruleKey);
 
         try {
             $service = new ProdutividadeService($connection);
@@ -60,9 +80,14 @@ final class InternoProdutividadeAutoHelper
             if ($obs !== '') {
                 $payload['observacoes'] = $obs;
             }
-            $service->registrarAuto($usuarioId, $payload);
+            $result = $service->registrarAuto($usuarioId, $payload);
+            if (!empty($result['created'])) {
+                return ['created' => true, 'toast_key' => $toastKey];
+            }
         } catch (Throwable $ignored) {
             // Não interromper o fluxo principal.
         }
+
+        return ['created' => false, 'toast_key' => null];
     }
 }

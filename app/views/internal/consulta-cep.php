@@ -332,6 +332,9 @@ declare(strict_types=1);
 
                         if (result.body.mode === 'cep' && result.body.data) {
                             renderSingleResult(result.body.data);
+                            if (result.body.produtividade_toast_key && typeof showProdutividadeToastByCatalogKey === 'function') {
+                                showProdutividadeToastByCatalogKey(result.body.produtividade_toast_key);
+                            }
                             return;
                         }
 

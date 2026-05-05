@@ -28,18 +28,26 @@ try {
     }
 
     $uid = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
+    $toastKeyProc = null;
     if ($uid !== '') {
         $ref = 'cg:' . strtoupper(substr(hash('sha256', $id), 0, 20));
-        InternoProdutividadeAutoHelper::tryRegistrar(
+        $prodRes = InternoProdutividadeAutoHelper::tryRegistrar(
             $connection,
             $uid,
             'consulta_processos_get',
             $ref,
             'Consulta de processo (detalhe).'
         );
+        if (!empty($prodRes['toast_key'])) {
+            $toastKeyProc = $prodRes['toast_key'];
+        }
     }
 
-    echo json_encode($processo, JSON_UNESCAPED_UNICODE);
+    $payloadGet = $processo;
+    if ($toastKeyProc !== null) {
+        $payloadGet['produtividade_toast_key'] = $toastKeyProc;
+    }
+    echo json_encode($payloadGet, JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao buscar processo: ' . $exception->getMessage()], JSON_UNESCAPED_UNICODE);

@@ -207,6 +207,16 @@
             .then(function (res) {
                 if (res.ok && res.j && res.j.success) {
                     notifyByKey('audiencias.pauta.update.success', {}, 'success', 'Sucesso', 'Parte atualizada.');
+                    if (res.j.produtividade_toast_key) {
+                        window.setTimeout(function () {
+                            if (window.App && window.App.ToastCatalog && typeof window.App.ToastCatalog.notifyByKey === 'function') {
+                                window.App.ToastCatalog.notifyByKey(res.j.produtividade_toast_key, {}).catch(function () {});
+                            } else if (typeof showProdutividadeToastByCatalogKey === 'function') {
+                                showProdutividadeToastByCatalogKey(res.j.produtividade_toast_key);
+                            }
+                        }, 350);
+                    }
+                    var navDelayMs = res.j.produtividade_toast_key ? 950 : 250;
                     setTimeout(function () {
                         var idPauta = String(document.getElementById('parte-edit-pauta-id')?.value || '').trim();
                         if (idPauta) {
@@ -214,7 +224,7 @@
                         } else {
                             history.back();
                         }
-                    }, 250);
+                    }, navDelayMs);
                 } else {
                     notifyByKey('audiencias.part.update.error', {}, 'error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao atualizar parte.');
                 }
