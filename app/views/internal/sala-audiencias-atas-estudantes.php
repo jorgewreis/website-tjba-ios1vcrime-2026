@@ -171,9 +171,12 @@ if ($totalPages > 0) {
 
         <?php foreach ($rowsPage as $m):
             $idPauta = htmlspecialchars((string) ($m['pauta'] ?? ''), ENT_QUOTES, 'UTF-8');
-            $temAta = !empty($m['id_ata']);
-            $classeAudiencia = !empty($m['classe_nome']) ? (string) $m['classe_nome'] : 'Classe não informada';
+            $arquivoRelEst = trim((string) ($m['arquivo_relativo'] ?? ''));
             $expira = trim((string) ($m['expires_at'] ?? ''));
+            $expiraTs = $expira !== '' ? strtotime($expira) : false;
+            $downloadAtaOk = $arquivoRelEst !== '' && !empty($m['id_ata']) && $expiraTs !== false && $expiraTs > time();
+            $ataPrazoEncerrado = !empty($m['id_ata']) && $arquivoRelEst === '';
+            $classeAudiencia = !empty($m['classe_nome']) ? (string) $m['classe_nome'] : 'Classe não informada';
             $expiraFmt = $expira !== '' ? date('d/m', strtotime($expira)) : '';
             $inicioEfetivoRaw = trim((string) ($m['data_hora_inicio_efetivo'] ?? ''));
             $inicioEfetivoTs = $inicioEfetivoRaw !== '' ? strtotime($inicioEfetivoRaw) : false;
@@ -193,14 +196,22 @@ if ($totalPages > 0) {
                     <div class="col width-400">
                         <span class="minor-info">Ata para download</span>
                         <span class="major-info">
-                            <?php echo $temAta ? 'Disponível até ' . htmlspecialchars($expiraFmt, ENT_QUOTES, 'UTF-8') : 'Ainda não disponível'; ?>
+                            <?php
+                            if ($downloadAtaOk) {
+                                echo 'Disponível até ' . htmlspecialchars($expiraFmt, ENT_QUOTES, 'UTF-8');
+                            } elseif ($ataPrazoEncerrado) {
+                                echo 'Prazo de download encerrado.';
+                            } else {
+                                echo 'Ainda não disponível';
+                            }
+                            ?>
                         </span>
                     </div>
                 </div>
                 <div class="display-flex row row-fit justify-end padding-x-md">
-                    <?php if ($temAta && $podeInscricaoComoEstudante): ?>
+                    <?php if ($downloadAtaOk && $podeInscricaoComoEstudante): ?>
                     <button type="button" class="btn btn-primary width-300" data-nav-href="/api/sala-audiencias-ata/download.php?pauta=<?php echo urlencode((string) $m['pauta']); ?>" data-nav-target="_blank">Baixar Ata (PDF)</button>
-                    <?php elseif ($temAta): ?>
+                    <?php elseif ($downloadAtaOk): ?>
                     <span class="minor-info">Download exclusivo para estudantes.</span>
                     <?php endif; ?>
                 </div>

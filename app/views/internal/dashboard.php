@@ -136,6 +136,7 @@ if ($vpaAbs <= 10.0) {
         }
         .badge.dashboard-vpa-badge > i.fi {
             font-size: 0.95em;
+            margin-bottom: -3px;
             line-height: 1;
         }
         .dashboard-interno-card-head {
@@ -295,7 +296,6 @@ if ($vpaAbs <= 10.0) {
                             <span class="minor-info">Pontuação no período atual</span>
                             <div class="major-info"><?php echo number_format($monthPts, 2, ',', '.'); ?> pts</div>
                             <p class="minor-info margin-top-sm display-flex row row-fit align-center gap-sm flex-wrap">
-                                <span>VPA:</span>
                                 <span class="<?php echo htmlspecialchars($vpaBadgeClass, ENT_QUOTES, 'UTF-8'); ?>" title="Variação em relação ao período anterior"><i class="<?php echo htmlspecialchars($vpaIconClass, ENT_QUOTES, 'UTF-8'); ?>" aria-hidden="true"></i><?php echo htmlspecialchars($monthVpaFmt, ENT_QUOTES, 'UTF-8'); ?></span>
                             </p>
                         </div>

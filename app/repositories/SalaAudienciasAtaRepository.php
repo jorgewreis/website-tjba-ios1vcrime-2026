@@ -45,13 +45,37 @@ final class SalaAudienciasAtaRepository
      */
     public function fetchExpiredBeforeNow(): array
     {
-        $sql = sprintf('SELECT * FROM `%s` WHERE `expires_at` <= NOW()', $this->table);
+        $sql = sprintf(
+            'SELECT * FROM `%s` WHERE `expires_at` <= NOW() AND TRIM(COALESCE(`arquivo_relativo`, \'\')) <> \'\'',
+            $this->table
+        );
         $st = $this->connection->query($sql);
         if ($st === false) {
             return [];
         }
 
         return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    /**
+     * Após o prazo de download: remove referência ao arquivo no disco (já tratada no serviço) e zera campos do PDF,
+     * mantendo o registro para não reabrir a tarefa de upload na listagem.
+     */
+    public function clearArquivoAposExpiracaoRetencao(string $idAta): bool
+    {
+        $idAta = trim($idAta);
+        if ($idAta === '') {
+            return false;
+        }
+        $sql = sprintf(
+            'UPDATE `%s` SET `arquivo_relativo` = \'\', `tamanho_bytes` = 0 WHERE `id_ata` = :id LIMIT 1',
+            $this->table
+        );
+        $st = $this->connection->prepare($sql);
+        $st->bindValue(':id', $idAta);
+        $st->execute();
+
+        return $st->rowCount() > 0;
     }
 
     public function deleteByIdAta(string $idAta): bool
@@ -128,11 +152,12 @@ final class SalaAudienciasAtaRepository
              FROM `sala_audiencias_pauta` a
              LEFT JOIN `processos` p ON p.`id` = a.`processo`
              LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id`
-             LEFT JOIN `%s` ata ON ata.`pauta` = a.`id_pauta` AND ata.`expires_at` > NOW()
+             LEFT JOIN `%s` ata ON ata.`pauta` = a.`id_pauta`
              WHERE a.`ativo` = 1 AND a.`status` IN (\'realizada\', \'finalizada\')
              ORDER BY
                 CASE
-                    WHEN ata.`id_ata` IS NULL OR ata.`arquivo_relativo` IS NULL OR TRIM(ata.`arquivo_relativo`) = \'\' THEN 0
+                    WHEN ata.`id_ata` IS NULL THEN 0
+                    WHEN TRIM(COALESCE(ata.`arquivo_relativo`, \'\')) = \'\' THEN 2
                     ELSE 1
                 END ASC,
                 a.`data_audiencia` DESC,

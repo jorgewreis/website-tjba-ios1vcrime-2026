@@ -198,7 +198,9 @@ function sala_audiencias_ata_label_prazo_download(string $expiresAt): string
 
         <?php foreach ($rows as $row):
             $idPauta = htmlspecialchars((string) ($row['id_pauta'] ?? ''), ENT_QUOTES, 'UTF-8');
-            $temAta = !empty($row['id_ata']) && !empty($row['arquivo_relativo']);
+            $arquivoRelRow = trim((string) ($row['arquivo_relativo'] ?? ''));
+            $temAta = !empty($row['id_ata']) && $arquivoRelRow !== '';
+            $ataRetencaoEncerrada = !empty($row['id_ata']) && $arquivoRelRow === '';
             $labelAtaDownload = $temAta
                 ? sala_audiencias_ata_label_prazo_download((string) ($row['expires_at'] ?? ''))
                 : '';
@@ -229,14 +231,18 @@ function sala_audiencias_ata_label_prazo_download(string $expiresAt): string
                         <span class="minor-info">Ata para download</span>
                         <?php if ($temAta): ?>
                         <span class="major-info text-ellipsis ata-status-text"><?php echo htmlspecialchars($labelAtaDownload, ENT_QUOTES, 'UTF-8'); ?></span>
+                        <?php elseif ($ataRetencaoEncerrada): ?>
+                        <span class="major-info text-ellipsis ata-status-text">Prazo de download encerrado. O PDF foi removido após 30 dias; novo envio não é permitido.</span>
                         <?php else: ?>
                         <span class="major-info text-ellipsis ata-status-text">Nenhum arquivo enviado</span>
                         <?php endif; ?>
                     </div>
                 </div>
                 <div class="display-flex row row-fit justify-end gap-y-sm align-center">
+                    <?php if (!$ataRetencaoEncerrada): ?>
                     <input type="file" class="ata-file-input visually-hidden" accept="application/pdf,.pdf" aria-label="Selecionar PDF da ata">
                     <button type="button" class="btn btn-primary btn-upload-ata" data-pauta="<?php echo $idPauta; ?>"><?php echo $temAta ? 'Substituir PDF' : 'Enviar PDF'; ?></button>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

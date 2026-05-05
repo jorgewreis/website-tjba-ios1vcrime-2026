@@ -162,7 +162,7 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
 
         <div class="card-title">
             <div class="display-flex col col-fit justify-start">
-                <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;">Ofícios (Gabinete)</h1>
+                <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;">Ofícios</h1>
                 <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Registro de ofícios do gabinete por processo e tipo.</p>
             </div>
             <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md">
@@ -234,7 +234,7 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
                 <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Pesquisa na lista</span>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-center">
-                <input type="text" class="height-md" id="search-input" placeholder="Nº do ofício (ex.: 42, 42/2026) ou processo CNJ" style="width: min(100%, 420px); max-width: 420px;" aria-label="Pesquisar por número do ofício (com ou sem ano) ou por número do processo CNJ" value="<?php echo htmlspecialchars($oficioFilter, ENT_QUOTES); ?>">
+                <input type="text" class="height-md" id="search-input" placeholder="Nº do ofício (ex.: 42, 42/2026) ou processo CNJ" style="width: 320px;" aria-label="Pesquisar por número do ofício (com ou sem ano) ou por número do processo CNJ" value="<?php echo htmlspecialchars($oficioFilter, ENT_QUOTES); ?>">
                 <?php
                 $listExportPage = $routePage;
                 $listExportQuery = $baseQueryParams;

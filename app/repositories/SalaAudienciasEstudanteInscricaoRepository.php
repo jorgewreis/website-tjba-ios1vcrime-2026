@@ -184,7 +184,7 @@ final class SalaAudienciasEstudanteInscricaoRepository
                     a.`tipo_audiencia`, a.`data_audiencia`, a.`hora_audiencia`, a.`status`,
                     a.`data_hora_inicio_efetivo`, a.`data_hora_fim_efetivo`, a.`duracao_estimada_minutos`,
                     p.`numero_processo`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `classe_nome`,
-                    ata.`id_ata`, ata.`expires_at`, ata.`nome_original`, ata.`uploaded_at`,
+                    ata.`id_ata`, ata.`expires_at`, ata.`nome_original`, ata.`uploaded_at`, ata.`arquivo_relativo`,
                     mt.`status` AS `midia_status`
              FROM `%s` i
              INNER JOIN `sala_audiencias_pauta` a ON a.`id_pauta` = i.`pauta` AND a.`ativo` = 1
@@ -193,7 +193,11 @@ final class SalaAudienciasEstudanteInscricaoRepository
              LEFT JOIN `sala_audiencias_ata` ata ON ata.`pauta` = i.`pauta`
              LEFT JOIN `sala_midias_tarefa` mt ON mt.`pauta_id` = i.`pauta` AND mt.`ativo` = 1
              WHERE i.`usuario` = :u
-               AND (ata.`id_ata` IS NULL OR ata.`expires_at` > NOW())
+               AND (
+                    ata.`id_ata` IS NULL
+                    OR ata.`expires_at` > NOW()
+                    OR TRIM(COALESCE(ata.`arquivo_relativo`, \'\')) = \'\'
+               )
              ORDER BY a.`data_audiencia` DESC, a.`hora_audiencia` DESC',
             $this->table
         );

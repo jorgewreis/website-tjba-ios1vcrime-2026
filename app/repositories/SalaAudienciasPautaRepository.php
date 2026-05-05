@@ -440,6 +440,8 @@ final class SalaAudienciasPautaRepository
         } elseif ($includeStatus && $status === '' && empty($filters['incluir_todos_status'])) {
             // "Mostrar todos": não listar finalizadas; para vê-las, usar o filtro Status = Finalizada.
             $conds[] = 'a.`status` <> \'finalizada\'';
+            // Não listar canceladas cuja data da audiência já passou; para vê-las, filtrar Status = Cancelada.
+            $conds[] = '(a.`status` <> \'cancelada\' OR a.`data_audiencia` >= CURDATE())';
         }
         $tipo = trim((string) ($filters['tipo'] ?? ''));
         if ($tipo !== '') {

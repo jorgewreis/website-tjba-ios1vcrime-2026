@@ -494,8 +494,9 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
 
             $idAtaMinhas = trim((string) ($m['id_ata'] ?? ''));
             $expiresAtMinhasRaw = trim((string) ($m['expires_at'] ?? ''));
+            $arquivoAtaMinhas = trim((string) ($m['arquivo_relativo'] ?? ''));
             $atasDisponivel = false;
-            if ($idAtaMinhas !== '' && $expiresAtMinhasRaw !== '') {
+            if ($idAtaMinhas !== '' && $arquivoAtaMinhas !== '' && $expiresAtMinhasRaw !== '') {
                 $expiresTs = strtotime($expiresAtMinhasRaw);
                 $atasDisponivel = $expiresTs !== false && $expiresTs > time();
             }

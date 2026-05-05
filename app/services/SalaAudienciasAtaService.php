@@ -108,6 +108,11 @@ final class SalaAudienciasAtaService
 
         $this->purgeAtasExpiradas();
 
+        $existingAtaRow = $this->ataRepository->findByPauta($idPauta);
+        if ($existingAtaRow !== null && trim((string) ($existingAtaRow['arquivo_relativo'] ?? '')) === '') {
+            throw new InvalidArgumentException('O prazo de disponibilidade do PDF desta ata encerrou. Novo envio não é permitido.');
+        }
+
         if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
             throw new InvalidArgumentException('Falha no envio do arquivo.');
         }
@@ -136,9 +141,8 @@ final class SalaAudienciasAtaService
             throw new RuntimeException('Diretório de armazenamento de atas sem permissão de escrita. Contate o administrador.');
         }
 
-        $existing = $this->ataRepository->findByPauta($idPauta);
-        if ($existing !== null && !empty($existing['arquivo_relativo'])) {
-            $oldFull = $basePath . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, (string) $existing['arquivo_relativo']);
+        if ($existingAtaRow !== null && !empty($existingAtaRow['arquivo_relativo'])) {
+            $oldFull = $basePath . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, (string) $existingAtaRow['arquivo_relativo']);
             if (is_file($oldFull)) {
                 @unlink($oldFull);
             }
@@ -338,6 +342,11 @@ final class SalaAudienciasAtaService
             throw new InvalidArgumentException('Ata ainda não disponível.');
         }
 
+        $expiresInterno = trim((string) ($ata['expires_at'] ?? ''));
+        if ($expiresInterno !== '' && strtotime($expiresInterno) <= time()) {
+            throw new InvalidArgumentException('O prazo para download desta ata expirou.');
+        }
+
         $rel = trim((string) ($ata['arquivo_relativo'] ?? ''));
         if ($rel === '') {
             throw new RuntimeException('Arquivo não localizado.');
@@ -357,9 +366,10 @@ final class SalaAudienciasAtaService
     }
 
     /**
-     * Remove atas expiradas do banco e arquivos no disco.
+     * Remove o PDF do disco após o prazo de download e zera a referência no banco, mantendo a linha da ata
+     * para a audiência não voltar à fila de “pendente de envio”.
      *
-     * @return int número de registros removidos
+     * @return int número de atas processadas (arquivo removido + registro atualizado)
      */
     public function purgeAtasExpiradas(): int
     {
@@ -375,7 +385,7 @@ final class SalaAudienciasAtaService
                 }
             }
             $idAta = trim((string) ($row['id_ata'] ?? ''));
-            if ($idAta !== '' && $this->ataRepository->deleteByIdAta($idAta)) {
+            if ($idAta !== '' && $this->ataRepository->clearArquivoAposExpiracaoRetencao($idAta)) {
                 $n++;
             }
         }
