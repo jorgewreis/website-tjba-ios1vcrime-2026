@@ -227,7 +227,6 @@
             select.value = processoNames[0];
             input.value = normalizeSelectedName(processoNames[0]);
             input.style.display = 'none';
-            setParteNomeStatus('*Nomes do cadastro do processo', 'var(--color-success-active)');
         } else {
             fillParteNomeManualUi(select, input, hiddenId, '');
         }
@@ -276,7 +275,6 @@
         if (hiddenId) {
             hiddenId.value = '';
         }
-        setParteNomeStatus('*Selecione uma pessoa cadastrada para vincular ou mantenha "Outra pessoa"', 'var(--primary-color-active)');
     }
 
     function currentAudienciaSnapshot() {
@@ -587,13 +585,8 @@
                     hiddenId.value = parteIdGlobal;
                 }
                 if (parteIdGlobal !== '') {
-                    setParteNomeStatus('*Pessoa vinculada ao cadastro existente', 'var(--color-success-active)');
-                } else {
-                    setParteNomeStatus('*Outra pessoa selecionada: a audiência será salva sem vínculo', 'var(--primary-color-active)');
+                    setParteNomeStatus('Parte vinculada', 'var(--color-success-active)');
                 }
-            } else {
-                if (hiddenId) hiddenId.value = '';
-                setParteNomeStatus('*Nomes do cadastro do processo', 'var(--color-success-active)');
             }
         });
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0070
+
+**Data:** 2026-05-05 12:41:33 | **Commit:** `aea3741d` | **Tipo:** `patch`
+
+- refactor(pauta-edit): simplify status messages for linked parties
+
 ## V. 1.97.0069
 
 **Data:** 2026-05-05 12:29:45 | **Commit:** `d6b3fcb3` | **Tipo:** `patch`
@@ -5202,6 +5208,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
