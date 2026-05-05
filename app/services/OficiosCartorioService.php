@@ -9,6 +9,7 @@ require_once __DIR__ . '/../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
+require_once __DIR__ . '/../helpers/CnjValidator.php';
 require_once __DIR__ . '/../helpers/CartorioProdutividade.php';
 require_once __DIR__ . '/../helpers/AlocacaoTarefasPerfisHelper.php';
 
@@ -143,6 +144,9 @@ final class OficiosCartorioService
             $digits = preg_replace('/\D+/', '', $numeroProcesso);
             if (strlen($digits) !== 20) {
                 throw new InvalidArgumentException('Número do processo deve ter 20 dígitos (formato CNJ).');
+            }
+            if (!CnjValidator::isValid($digits)) {
+                throw new InvalidArgumentException('Número do processo inválido. Verifique o dígito verificador.');
             }
             $numeroFormatado = $this->formatarCNJ($digits);
 

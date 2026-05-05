@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0067
+
+**Data:** 2026-05-05 11:29:27 | **Commit:** `079b3534` | **Tipo:** `patch`
+
+- feat(cnj-validation): integrate CNJ validation across services and views
+
 ## V. 1.97.0066
 
 **Data:** 2026-05-04 21:56:58 | **Commit:** `c45babf9` | **Tipo:** `patch`
@@ -5184,6 +5190,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -291,6 +291,11 @@ try {
                 ? App.CartorioAlocacaoDirecionadaCreate.init('cejusc')
                 : null;
             var btn = document.getElementById('cadastrar-btn');
+            var setBtnState = function (label, disabled) {
+                if (!btn) return;
+                btn.textContent = label;
+                btn.disabled = disabled === true;
+            };
             var showFeedback = function (message, type) {
                 if (window.App && App.Page && typeof App.Page.notify === 'function') {
                     App.Page.notify(type === 'error' ? 'error' : 'success', type === 'error' ? 'Erro' : 'Sucesso', message);
@@ -336,6 +341,18 @@ try {
             }
 
             if (!btn) return;
+            setBtnState('Aguarde...', true);
+            if (processoInput) {
+                processoInput.addEventListener('input', function () { setBtnState('Aguarde...', true); });
+            }
+            window.addEventListener('cnjInvalid', function (event) {
+                var id = event && event.detail ? event.detail.inputId : '';
+                if (!id || id === 'filter-processo') setBtnState('Erro', true);
+            });
+            window.addEventListener('datajudClasseResolved', function (event) {
+                var detail = event && event.detail ? event.detail : {};
+                if (!detail.processoInputId || detail.processoInputId === 'filter-processo') setBtnState('Cadastrar', false);
+            });
 
             btn.addEventListener('click', function (e) {
                 e.preventDefault();
@@ -351,11 +368,13 @@ try {
                 var classeDescricaoField = document.getElementById('hidden-classe-descricao');
 
                 if (numeroProcesso === '') {
+                    setBtnState('Erro', true);
                     return showFeedback('Informe o número do processo.', 'error');
                 }
                 if (processoInput && typeof window.normalizeAndValidateCNJValue === 'function') {
                     var normalized = window.normalizeAndValidateCNJValue(numeroProcesso, { toastOnInvalid: true });
                     if (!normalized.ok) {
+                        setBtnState('Erro', true);
                         processoInput.value = '';
                         processoInput.focus();
                         return;
@@ -364,13 +383,15 @@ try {
                     numeroProcesso = normalized.formatted;
                 }
                 if (classeVal === 'Aguarde...') {
+                    setBtnState('Aguarde...', true);
                     return showFeedback('Aguarde a consulta ao DataJud terminar antes de cadastrar.', 'error');
                 }
                 if (!nomeReu || nomeReu === '') {
+                    setBtnState('Erro', true);
                     return showFeedback('Informe o réu (selecione na lista ou digite em "Outro").', 'error');
                 }
 
-                btn.disabled = true;
+                setBtnState('Aguarde...', true);
                 if (typeof showToast === 'function') showToast({ type: 'info', variant: 'full', title: 'Informação', message: 'Cadastrando...' });
                 else showFeedback('Cadastrando...', 'success');
 
@@ -414,12 +435,12 @@ try {
                         window.location.href = '/frame.php?page=cejusc';
                     } else {
                         showFeedback(data.error || 'Não foi possível cadastrar.', 'error');
-                        btn.disabled = false;
+                        setBtnState('Cadastrar', false);
                     }
                 })
                 .catch(function () {
                     showFeedback('Erro de conexão.', 'error');
-                    btn.disabled = false;
+                    setBtnState('Cadastrar', false);
                 });
             });
         })();

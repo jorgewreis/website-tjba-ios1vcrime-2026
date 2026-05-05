@@ -19,6 +19,13 @@
 4. Exceção: `window.DATAJUD_SKIP_CLASSE_SYNC = true` (ex.: CEAPA edição com classe travada) — não chamar o sync automático.
 5. Não permitir cadastro final enquanto classe estiver em estado de carregamento (`Aguarde...`).
 6. Ao invalidar processo (menos de 20 dígitos), limpar classe e metadados associados.
+7. Contrato obrigatório do botão de cadastro em telas com processo:
+   - iniciar em `Aguarde...` com `disabled=true` antes da validação;
+   - CNJ inválido -> label `Erro` e `disabled=true`;
+   - CNJ válido -> consulta DataJud;
+   - DataJud finalizado (sucesso ou falha) -> label `Cadastrar` e `disabled=false`;
+   - durante submit -> `Aguarde...` e `disabled=true` até retorno da API.
+8. Em endpoints de criação com `numero_processo`, validar dígito verificador CNJ no backend (não apenas regex/formato).
 
 ## Réu/denunciado (obrigatório quando existe campo de parte passiva)
 

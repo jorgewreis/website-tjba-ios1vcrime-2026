@@ -11,11 +11,22 @@
 
         const settings = config || {};
         const button = global.document.getElementById('cadastrar-btn');
+        const gate = helpers.initCreateButtonGate({ button: button, defaultLabel: 'Cadastrar' });
         const feedback = helpers.notify;
+        const processoInput = global.document.getElementById('filter-processo');
 
         if (!button) {
             return;
         }
+        processoInput?.addEventListener('input', function () { gate.setWaiting(); });
+        global.addEventListener('cnjInvalid', function (event) {
+            const id = event && event.detail ? event.detail.inputId : '';
+            if (!id || id === 'filter-processo') gate.setError();
+        });
+        global.addEventListener('datajudClasseResolved', function (event) {
+            const detail = event && event.detail ? event.detail : {};
+            if (!detail.processoInputId || detail.processoInputId === 'filter-processo') gate.setReady();
+        });
 
         let alocState = null;
         if (settings.alocacaoPrefix && App.CartorioAlocacaoDirecionadaCreate && typeof App.CartorioAlocacaoDirecionadaCreate.init === 'function') {
@@ -33,6 +44,7 @@
 
             const processo = helpers.normalizeProcessValue(helpers.getValue('filter-processo'), {
                 inputId: 'filter-processo',
+                buttonGate: gate,
                 feedback: feedback,
                 requiredMessage: 'Informe o número do processo antes de cadastrar.'
             });
@@ -62,6 +74,7 @@
             const classeVal = helpers.getValue('filter-classe');
             if (classeVal === 'Aguarde...') {
                 feedback('Aguarde a consulta ao DataJud terminar antes de cadastrar.', 'error');
+                gate.setWaiting();
                 return;
             }
 
@@ -81,7 +94,7 @@
                 }
             }
 
-            button.disabled = true;
+            gate.setSubmitting();
             feedback('Enviando dados...', 'info', 'Informação');
 
             try {
@@ -97,7 +110,7 @@
                 global.location.href = settings.successRedirect || '/frame.php?page=cartasrecebidas';
             } catch (error) {
                 feedback(error.message || 'Não foi possível cadastrar.', 'error');
-                button.disabled = false;
+                gate.setReady();
             }
         });
     }

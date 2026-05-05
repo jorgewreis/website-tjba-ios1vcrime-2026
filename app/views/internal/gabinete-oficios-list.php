@@ -563,6 +563,13 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
                         ctx.notify('error', 'Validação', 'Preencha o número do processo.');
                         return null;
                     }
+                    if (!admin) {
+                        const classeVal = document.getElementById('filter-classe')?.value?.trim() || '';
+                        if (classeVal === 'Aguarde...' || classeVal === 'Consultando DataJud…') {
+                            ctx.notify('error', 'Validação', 'Aguarde a consulta ao DataJud terminar antes de cadastrar.');
+                            return null;
+                        }
+                    }
 
                     return {
                         numero_processo: proc,

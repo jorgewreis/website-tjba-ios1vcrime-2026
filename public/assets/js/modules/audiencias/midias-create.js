@@ -1,4 +1,5 @@
 (function () {
+    var pageTools = window.App && window.App.Page ? window.App.Page : null;
     function notify(type, title, message) {
         if (typeof window.showToast === 'function') {
             window.showToast({ type: type, title: title, message: message });
@@ -32,6 +33,23 @@
     var pautaSelect = byId('midias-pauta-id');
     var qtdInput = byId('midias-qtd');
     var btnCadastrar = byId('btn-midias-cadastrar');
+    function setCadastrarState(label, disabled) {
+        if (!btnCadastrar) return;
+        btnCadastrar.textContent = label;
+        btnCadastrar.disabled = disabled === true;
+    }
+    setCadastrarState('Aguarde...', true);
+    processoInput && processoInput.addEventListener('input', function () { setCadastrarState('Aguarde...', true); });
+    window.addEventListener('cnjInvalid', function (event) {
+        var id = event && event.detail ? event.detail.inputId : '';
+        if (!id || id === 'audiencia-processo') setCadastrarState('Erro', true);
+    });
+    window.addEventListener('datajudClasseResolved', function (event) {
+        var detail = event && event.detail ? event.detail : {};
+        if (!detail.processoInputId || detail.processoInputId === 'audiencia-processo') {
+            setCadastrarState('Cadastrar', false);
+        }
+    });
     var btnVoltar = byId('midias-create-voltar');
 
     var alocCreate = (window.App && window.App.CartorioAlocacaoDirecionadaCreate)
@@ -173,6 +191,7 @@
     });
 
     btnCadastrar && btnCadastrar.addEventListener('click', function () {
+        setCadastrarState('Aguarde...', true);
         var processo = normalizeProcesso(processoInput ? processoInput.value : '');
         var classe = String((classeDescricao && classeDescricao.value) || (classeInput && classeInput.value) || '').trim();
         var dataAud = String(dataInput && dataInput.value ? dataInput.value : '').trim();
@@ -190,6 +209,7 @@
                 'Validação',
                 'Preencha processo, classe, data e audiência finalizada.'
             );
+            setCadastrarState('Erro', true);
             return;
         }
         if (maxDate && dataAud > maxDate) {
@@ -200,6 +220,7 @@
                 'Validação',
                 'A data da audiência não pode ser futura.'
             );
+            setCadastrarState('Erro', true);
             return;
         }
         if (!qtdMidias || qtdMidias < 1) {
@@ -225,6 +246,7 @@
             .then(function (res) {
                 if (!res.ok || !res.j || !res.j.id) {
                     notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao cadastrar tarefa.');
+                    setCadastrarState('Cadastrar', false);
                     return;
                 }
                 notifyByKey(
@@ -240,6 +262,7 @@
             })
             .catch(function () {
                 notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão ao cadastrar tarefa.');
+                setCadastrarState('Cadastrar', false);
             });
     });
 })();

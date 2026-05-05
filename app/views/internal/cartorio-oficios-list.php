@@ -814,6 +814,13 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                         sharedCtx.notify('error', 'Validação', 'Preencha o número do processo.');
                         return null;
                     }
+                    if (!admin) {
+                        const classeVal = document.getElementById('filter-classe')?.value?.trim() || '';
+                        if (classeVal === 'Aguarde...' || classeVal === 'Consultando DataJud…') {
+                            sharedCtx.notify('error', 'Validação', 'Aguarde a consulta ao DataJud terminar antes de cadastrar.');
+                            return null;
+                        }
+                    }
                     if (forma === 'cartorio' && !meio) {
                         sharedCtx.notify('error', 'Validação', 'Selecione o meio de envio.');
                         return null;

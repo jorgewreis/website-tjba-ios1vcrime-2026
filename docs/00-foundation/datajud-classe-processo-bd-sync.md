@@ -41,6 +41,7 @@ Em telas internas com o trio `cnj.js` → `datajud-cycle-helper.js` → `datajud
 | **CEAPA edit travado** | `DATAJUD_SKIP_CLASSE_SYNC` — não grava via sync; DataJud ainda preenche visualmente. |
 | **Retries** | `postSyncClasse` em `datajud-api.js`: até **3** tentativas com atraso em **rede** ou **HTTP 5xx**. O corpo da resposta é lido como **texto** e parseado com `JSON.parse` seguro; corpo inválido ou vazio **não** dispara retry (evita confundir HTML/erro de proxy com falha de rede). |
 | **Reconsulta** | Sem botão dedicado; novo ciclo ao **revalidar o CNJ** (`cnjValidated`). |
+| **Botão de cadastro** | Contrato único: inicia `Aguarde...` (disabled), vira `Erro` em CNJ inválido, consulta DataJud quando válido e volta para `Cadastrar` habilitado quando o DataJud finaliza (sucesso ou falha). |
 
 ---
 

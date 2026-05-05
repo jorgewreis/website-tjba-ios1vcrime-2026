@@ -265,10 +265,66 @@
             return;
         }
 
-        global.document.getElementById(config.createButtonId)?.addEventListener('click', function () {
+        const createButton = global.document.getElementById(config.createButtonId);
+        const processInput = global.document.getElementById(config.processInputId || 'filter-processo');
+        const gate = (App.CartorioCreateHelpers && typeof App.CartorioCreateHelpers.initCreateButtonGate === 'function')
+            ? App.CartorioCreateHelpers.initCreateButtonGate({ button: createButton, defaultLabel: 'Cadastrar' })
+            : null;
+        const hasDataJudFlow = !!global.document.querySelector('[data-datajud-related="true"]');
+
+        if (gate && processInput) {
+            processInput.addEventListener('input', function () {
+                const digits = String(processInput.value || '').replace(/\D/g, '');
+                if (digits.length < 20) {
+                    gate.setWaiting();
+                }
+            });
+            const typeSelect = global.document.getElementById(config.typeSelectId || '');
+            typeSelect?.addEventListener('change', function () {
+                if (ctx.isAdministrative()) {
+                    gate.setReady();
+                    return;
+                }
+                gate.setWaiting();
+            });
+            global.addEventListener('datajudClasseResolved', function (event) {
+                const detail = event && event.detail ? event.detail : {};
+                if (detail.processoInputId && processInput.id && detail.processoInputId !== processInput.id) {
+                    return;
+                }
+                gate.setReady();
+            });
+        }
+
+        if (gate && !hasDataJudFlow) {
+            gate.setReady();
+        }
+
+        createButton?.addEventListener('click', function () {
+            if (gate) {
+                gate.setWaiting();
+            }
+            if (processInput && typeof global.normalizeAndValidateCNJValue === 'function' && !ctx.isAdministrative()) {
+                const normalized = global.normalizeAndValidateCNJValue(processInput.value || '', { toastOnInvalid: true });
+                if (!normalized.ok) {
+                    processInput.value = '';
+                    processInput.focus();
+                    if (gate) {
+                        gate.setError();
+                    }
+                    return;
+                }
+                processInput.value = normalized.formatted;
+            }
             const request = config.buildRequest(ctx);
             if (!request) {
+                if (gate) {
+                    gate.setError();
+                }
                 return;
+            }
+            if (gate) {
+                gate.setSubmitting();
             }
 
             fetch(config.createEndpoint, {
@@ -304,9 +360,15 @@
                     }
 
                     notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Falha ao registrar.');
+                    if (gate) {
+                        gate.setReady();
+                    }
                 })
                 .catch(function () {
                     notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
+                    if (gate) {
+                        gate.setReady();
+                    }
                 });
         });
     }

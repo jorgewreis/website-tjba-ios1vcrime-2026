@@ -11,11 +11,30 @@
 
         const settings = config || {};
         const button = global.document.getElementById('cadastrar-btn');
+        const gate = helpers.initCreateButtonGate({ button: button, defaultLabel: 'Cadastrar' });
         const feedback = helpers.notify;
+        const processoInput = global.document.getElementById('filter-processo');
 
         if (!button) {
             return;
         }
+
+        processoInput?.addEventListener('input', function () {
+            gate.setWaiting();
+        });
+        global.addEventListener('cnjInvalid', function (event) {
+            const id = event && event.detail ? event.detail.inputId : '';
+            if (!id || id === 'filter-processo') {
+                gate.setError();
+            }
+        });
+        global.addEventListener('datajudClasseResolved', function (event) {
+            const detail = event && event.detail ? event.detail : {};
+            if (detail.processoInputId && detail.processoInputId !== 'filter-processo') {
+                return;
+            }
+            gate.setReady();
+        });
 
         let alocState = null;
         if (settings.alocacaoPrefix && App.CartorioAlocacaoDirecionadaCreate && typeof App.CartorioAlocacaoDirecionadaCreate.init === 'function') {
@@ -25,6 +44,7 @@
         button.addEventListener('click', function () {
             const processo = helpers.normalizeProcessValue(helpers.getValue('filter-processo'), {
                 inputId: 'filter-processo',
+                buttonGate: gate,
                 feedback: feedback,
                 requiredMessage: 'O número do processo é obrigatório.'
             });
@@ -34,6 +54,7 @@
 
             const classeVal = helpers.getValue('filter-classe');
             if (classeVal === 'Aguarde...') {
+                gate.setWaiting();
                 feedback('Aguarde a consulta ao DataJud terminar antes de cadastrar.', 'error');
                 return;
             }
@@ -41,16 +62,18 @@
             const tipoEdital = helpers.getValue('filter-tipo-edital');
             if (!tipoEdital) {
                 feedback('O tipo de edital é obrigatório.', 'error');
+                gate.setError();
                 return;
             }
 
             const prazoDias = parseInt(global.document.getElementById('filter-prazo-dias')?.value || '0', 10);
             if (isNaN(prazoDias) || prazoDias < 1) {
                 feedback('O prazo do edital é obrigatório e deve ser de pelo menos 1 dia.', 'error');
+                gate.setError();
                 return;
             }
 
-            button.disabled = true;
+            gate.setSubmitting();
 
             const payload = Object.assign({
                 processo: processo.value,
@@ -104,7 +127,7 @@
                     global.location.href = settings.successRedirect || '/frame.php?page=editais';
                 })
                 .catch(function (error) {
-                    button.disabled = false;
+                    gate.setReady();
                     feedback(error && error.message ? error.message : 'Erro ao cadastrar.', 'error');
                 });
         });

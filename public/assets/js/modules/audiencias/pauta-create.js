@@ -98,6 +98,28 @@
     }
 
     setupDataMinimaAudiencia();
+    var btnCadastrar = document.getElementById('btn-audiencia-cadastrar');
+    function setCadastrarState(label, disabled) {
+        if (!btnCadastrar) return;
+        btnCadastrar.textContent = label;
+        btnCadastrar.disabled = disabled === true;
+    }
+    setCadastrarState('Aguarde...', true);
+    document.getElementById('audiencia-processo')?.addEventListener('input', function () {
+        setCadastrarState('Aguarde...', true);
+    });
+    window.addEventListener('cnjInvalid', function (event) {
+        var id = event && event.detail ? event.detail.inputId : '';
+        if (!id || id === 'audiencia-processo') {
+            setCadastrarState('Erro', true);
+        }
+    });
+    window.addEventListener('datajudClasseResolved', function (event) {
+        var detail = event && event.detail ? event.detail : {};
+        if (!detail.processoInputId || detail.processoInputId === 'audiencia-processo') {
+            setCadastrarState('Cadastrar', false);
+        }
+    });
 
     function readGradeFromWindow() {
         var g = window.AUDIENCIA_HORARIOS_GRADE;
@@ -164,36 +186,39 @@
     });
 
     document.getElementById('btn-audiencia-cadastrar')?.addEventListener('click', function () {
+        setCadastrarState('Aguarde...', true);
         var processo = requiredValue('audiencia-processo', 'Numero do processo');
-        if (!processo) return;
+        if (!processo) { setCadastrarState('Erro', true); return; }
         var cnjResult = typeof window.normalizeAndValidateCNJValue === 'function'
             ? window.normalizeAndValidateCNJValue(processo, { toastOnInvalid: true })
             : { ok: onlyDigits(processo).length === 20, formatted: processo };
         if (!cnjResult.ok) {
             notifyByKey('audiencias.validation.process.invalid', {}, 'error', 'Validacao', 'Número do processo inválido. Informe no padrão CNJ.');
+            setCadastrarState('Erro', true);
             return;
         }
         processo = String(cnjResult.formatted || processo).trim();
         var processoInput = document.getElementById('audiencia-processo');
         if (processoInput) processoInput.value = processo;
         var tipoRaw = requiredValue('audiencia-tipo', 'Tipo de audiencia');
-        if (!tipoRaw) return;
+        if (!tipoRaw) { setCadastrarState('Erro', true); return; }
         var tipoSelect = document.getElementById('audiencia-tipo');
         var tipo = tipoSelect && tipoSelect.options && tipoSelect.selectedIndex >= 0
             ? String(tipoSelect.options[tipoSelect.selectedIndex].text || '').trim()
             : tipoRaw;
-        if (!tipo) return;
+        if (!tipo) { setCadastrarState('Erro', true); return; }
         var data = requiredValue('audiencia-data', 'Data');
-        if (!data) return;
+        if (!data) { setCadastrarState('Erro', true); return; }
         var minData = String(document.getElementById('audiencia-data')?.getAttribute('min') || '').trim();
         if (minData && data < minData) {
             notifyByKey('audiencias.validation.date.before.today', {}, 'error', 'Validacao', 'A data da audiência não pode ser anterior a hoje.');
+            setCadastrarState('Erro', true);
             return;
         }
         var hora = requiredValue('audiencia-hora', 'Hora');
-        if (!hora) return;
+        if (!hora) { setCadastrarState('Erro', true); return; }
         var sala = requiredValue('audiencia-sala', 'Localizacao');
-        if (!sala) return;
+        if (!sala) { setCadastrarState('Erro', true); return; }
         var status = String(document.getElementById('audiencia-status')?.value || 'designada').trim();
         var classeCodigo = String(document.getElementById('hidden-classe-codigo')?.value || '').trim();
         var classeDescricaoHidden = String(document.getElementById('hidden-classe-descricao')?.value || '').trim();
@@ -201,6 +226,7 @@
         var classeDescricao = classeDescricaoHidden || classeDescricaoCampo;
         if (!classeDescricao) {
             notifyByKey('audiencias.validation.class.required', {}, 'error', 'Validacao', 'Informe: Classe (aguarde o DataJud finalizar o preenchimento automático).');
+            setCadastrarState('Erro', true);
             return;
         }
 
@@ -233,10 +259,12 @@
                     window.location.href = '/frame.php?page=salapauta';
                 } else {
                     notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao cadastrar audiência.');
+                    setCadastrarState('Cadastrar', false);
                 }
             })
             .catch(function () {
                 notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
+                setCadastrarState('Cadastrar', false);
             });
     });
 })();

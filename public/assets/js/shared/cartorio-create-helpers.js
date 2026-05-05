@@ -70,11 +70,15 @@
         const settings = options || {};
         const input = settings.inputId ? global.document.getElementById(settings.inputId) : null;
         const feedback = typeof settings.feedback === 'function' ? settings.feedback : function () {};
+        const gate = settings.buttonGate || null;
         const requiredMessage = settings.requiredMessage || 'Informe o número do processo.';
         const invalidMessage = settings.invalidMessage || 'O número do processo está incompleto ou inválido (20 dígitos).';
         const raw = String(rawValue || '').trim();
 
         if (!raw) {
+            if (gate && typeof gate.setError === 'function') {
+                gate.setError();
+            }
             feedback(requiredMessage, 'error');
             return { ok: false, value: '' };
         }
@@ -82,16 +86,25 @@
         if (input && typeof global.normalizeAndValidateCNJValue === 'function') {
             const normalized = global.normalizeAndValidateCNJValue(raw, { toastOnInvalid: true });
             if (!normalized.ok) {
+                if (gate && typeof gate.setError === 'function') {
+                    gate.setError();
+                }
                 input.value = '';
                 input.focus();
                 return { ok: false, value: '' };
             }
             input.value = normalized.formatted;
+            if (gate && typeof gate.setWaiting === 'function') {
+                gate.setWaiting();
+            }
             return { ok: true, value: normalized.formatted };
         }
 
         const digits = onlyDigits(raw);
         if (digits.length !== 20) {
+            if (gate && typeof gate.setError === 'function') {
+                gate.setError();
+            }
             feedback(invalidMessage, 'error');
             if (input) {
                 input.focus();
@@ -99,7 +112,51 @@
             return { ok: false, value: '' };
         }
 
+        if (gate && typeof gate.setWaiting === 'function') {
+            gate.setWaiting();
+        }
         return { ok: true, value: raw };
+    }
+
+    function initCreateButtonGate(options) {
+        const settings = options || {};
+        const button = settings.button || null;
+        const defaultLabel = String(settings.defaultLabel || 'Cadastrar');
+        if (!button) {
+            return {
+                setWaiting: function () {},
+                setError: function () {},
+                setReady: function () {},
+                setSubmitting: function () {},
+                setBlocked: function () {}
+            };
+        }
+
+        const apply = function (label, disabled) {
+            button.disabled = disabled === true;
+            button.textContent = label;
+        };
+
+        const api = {
+            setWaiting: function () {
+                apply('Aguarde...', true);
+            },
+            setError: function () {
+                apply('Erro', true);
+            },
+            setReady: function () {
+                apply(defaultLabel, false);
+            },
+            setSubmitting: function () {
+                apply('Aguarde...', true);
+            },
+            setBlocked: function () {
+                apply('Aguarde...', true);
+            }
+        };
+
+        api.setWaiting();
+        return api;
     }
 
     App.CartorioCreateHelpers = {
@@ -108,6 +165,7 @@
         formatProperName: formatProperName,
         buildClassePayload: buildClassePayload,
         onlyDigits: onlyDigits,
-        normalizeProcessValue: normalizeProcessValue
+        normalizeProcessValue: normalizeProcessValue,
+        initCreateButtonGate: initCreateButtonGate
     };
 })(window);

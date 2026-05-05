@@ -11,13 +11,24 @@
 
         const settings = config || {};
         const button = global.document.getElementById('cadastrar-btn');
+        const gate = helpers.initCreateButtonGate({ button: button, defaultLabel: 'Cadastrar' });
         const feedback = helpers.notify;
+        const processoInput = global.document.getElementById('filter-processo');
         const reuSelect = global.document.getElementById('reu-select');
         const reuNome = global.document.getElementById('reu-nome');
 
         if (!button) {
             return;
         }
+        processoInput?.addEventListener('input', function () { gate.setWaiting(); });
+        global.addEventListener('cnjInvalid', function (event) {
+            const id = event && event.detail ? event.detail.inputId : '';
+            if (!id || id === 'filter-processo') gate.setError();
+        });
+        global.addEventListener('datajudClasseResolved', function (event) {
+            const detail = event && event.detail ? event.detail : {};
+            if (!detail.processoInputId || detail.processoInputId === 'filter-processo') gate.setReady();
+        });
 
         let alocState = null;
         if (settings.alocacaoPrefix && App.CartorioAlocacaoDirecionadaCreate && typeof App.CartorioAlocacaoDirecionadaCreate.init === 'function') {
@@ -58,6 +69,7 @@
         button.addEventListener('click', function () {
             const processo = helpers.normalizeProcessValue(helpers.getValue('filter-processo'), {
                 inputId: 'filter-processo',
+                buttonGate: gate,
                 feedback: feedback,
                 requiredMessage: 'O número do processo é obrigatório.'
             });
@@ -81,6 +93,7 @@
             }
             if (classeEmCarregamento) {
                 feedback('Aguarde a consulta ao DataJud terminar antes de cadastrar.', 'error');
+                gate.setWaiting();
                 return;
             }
 
@@ -93,11 +106,13 @@
                     global.document.getElementById('reu-cpf')?.focus();
                 }
                 feedback(reuError, 'error');
+                gate.setError();
                 return;
             }
 
             if (!reu.parte_id && reu.cpf && reu.cpf.length === 11 && App.CPF && !App.CPF.validar(reu.cpf)) {
                 feedback('CPF do réu inválido. Verifique os dígitos.', 'error');
+                gate.setError();
                 global.document.getElementById('reu-cpf')?.focus();
                 return;
             }
@@ -114,7 +129,7 @@
                 }
             }
 
-            button.disabled = true;
+            gate.setSubmitting();
 
             fetch(settings.createEndpoint || '/api/cartorio-medidas-protetivas/create.php', {
                 method: 'POST',
@@ -159,7 +174,7 @@
                     global.location.href = settings.successRedirect || '/frame.php?page=medidasprotetivas';
                 })
                 .catch(function (error) {
-                    button.disabled = false;
+                    gate.setReady();
                     feedback(error && error.message ? error.message : 'Erro ao cadastrar medida protetiva.', 'error');
                 });
         });

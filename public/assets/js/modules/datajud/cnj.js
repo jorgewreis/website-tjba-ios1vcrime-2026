@@ -106,6 +106,13 @@ function dispatchCnjValidated(valor) {
     }));
 }
 
+function dispatchCnjInvalid(inputId) {
+    if (typeof window === 'undefined') return;
+    window.dispatchEvent(new CustomEvent('cnjInvalid', {
+        detail: { inputId: inputId || '' },
+    }));
+}
+
 function bindProcessoInput(input) {
     if (!input || input.readOnly || input.disabled) return;
     if (input.dataset.cnjBound === '1') return;
@@ -115,6 +122,9 @@ function bindProcessoInput(input) {
         this.value = formatarCNJParcial(this.value);
         const result = normalizeAndValidateCNJValue(this.value, { toastOnInvalid: false });
         if (!result.ok || result.empty) {
+            if (!result.empty && onlyDigits(this.value).length === CNJ_MAX_DIGITS) {
+                dispatchCnjInvalid(this.id || '');
+            }
             if (onlyDigits(this.value).length < 20) {
                 delete this.dataset.lastCnjDispatchedDigits;
             }
@@ -137,6 +147,7 @@ function bindProcessoInput(input) {
             return;
         }
         if (!result.ok) {
+            dispatchCnjInvalid(this.id || '');
             this.value = '';
             delete this.dataset.lastCnjDispatchedDigits;
             return;

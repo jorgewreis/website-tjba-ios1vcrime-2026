@@ -93,10 +93,30 @@
     function initialize(config) {
         const settings = config || {};
         const storageKey = settings.storageKey || 'gme.postReloadToast';
+        const registerButton = global.document.getElementById(settings.registerButtonId || 'btn-gab-mon-registrar');
         const reuSelect = global.document.getElementById(settings.reuSelectId || 'gab-mon-reu-select');
         const reuNome = global.document.getElementById(settings.reuInputId || 'gab-mon-reu-nome');
         const processoInput = global.document.getElementById(settings.processInputId || 'filter-processo');
         let lastSuggestionNome = '';
+        const setButtonState = function (label, disabled) {
+            if (!registerButton) return;
+            registerButton.textContent = label;
+            registerButton.disabled = disabled === true;
+        };
+        setButtonState('Aguarde...', true);
+        processoInput?.addEventListener('input', function () { setButtonState('Aguarde...', true); });
+        global.addEventListener('cnjInvalid', function (event) {
+            const id = event && event.detail ? event.detail.inputId : '';
+            if (!id || id === 'filter-processo' || id === 'gab-mon-processo') {
+                setButtonState('Erro', true);
+            }
+        });
+        global.addEventListener('datajudClasseResolved', function (event) {
+            const detail = event && event.detail ? event.detail : {};
+            if (!detail.processoInputId || detail.processoInputId === 'filter-processo' || detail.processoInputId === 'gab-mon-processo') {
+                setButtonState('Cadastrar', false);
+            }
+        });
 
         function showReuInput() {
             if (reuSelect) {
@@ -304,17 +324,19 @@
             }
         });
 
-        global.document.getElementById(settings.registerButtonId || 'btn-gab-mon-registrar')?.addEventListener('click', function () {
+        registerButton?.addEventListener('click', function () {
             const processoEl = global.document.getElementById(settings.processInputId || 'filter-processo');
             const processo = processoEl?.value?.trim() || '';
             if (processoEl && processoEl.disabled) {
                 notifyByKey('gme.monitoring.datajud.wait.info', {}, 'info', 'Aguarde', 'Aguarde a consulta ao DataJud terminar antes de registrar.');
+                setButtonState('Aguarde...', true);
                 return;
             }
 
             const classText = global.document.getElementById(settings.classInputId || 'filter-classe')?.value?.trim() || '';
             if (classText === 'Aguarde...') {
                 notifyByKey('gme.monitoring.datajud.wait.info', {}, 'info', 'Aguarde', 'Aguarde a consulta ao DataJud terminar antes de registrar.');
+                setButtonState('Aguarde...', true);
                 return;
             }
 
@@ -327,6 +349,7 @@
 
             if (!processo) {
                 notifyByKey('gme.monitoring.validation.process.required', {}, 'error', 'Validação', 'Informe o número do processo.');
+                setButtonState('Erro', true);
                 return;
             }
 
@@ -344,10 +367,12 @@
             } else {
                 if (!nomeLivre) {
                     notifyByKey('gme.monitoring.validation.reu.required', {}, 'error', 'Validação', 'Informe o nome completo do réu.');
+                    setButtonState('Erro', true);
                     return;
                 }
                 body.reu_complemento = nomeLivre;
             }
+            setButtonState('Aguarde...', true);
 
             fetch(settings.createEndpoint, {
                 method: 'POST',
@@ -372,9 +397,11 @@
                         return;
                     }
                     notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Falha ao registrar.');
+                    setButtonState('Cadastrar', false);
                 })
                 .catch(function () {
                     notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
+                    setButtonState('Cadastrar', false);
                 });
         });
     }

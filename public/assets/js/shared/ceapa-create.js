@@ -125,6 +125,10 @@
         }
 
         const processoInput = global.document.getElementById('filter-processo');
+        const cadastrarBtn = global.document.getElementById('cadastrar-btn');
+        const gate = App.CartorioCreateHelpers && typeof App.CartorioCreateHelpers.initCreateButtonGate === 'function'
+            ? App.CartorioCreateHelpers.initCreateButtonGate({ button: cadastrarBtn, defaultLabel: 'Cadastrar' })
+            : null;
         const reuSelect = global.document.getElementById('filter-reu-select');
         const reuInput = global.document.getElementById('filter-reu');
         const classeInput = global.document.getElementById('filter-classe');
@@ -132,6 +136,17 @@
         const classeDescricao = global.document.getElementById('hidden-classe-descricao');
 
         bindDataJudReuLookup(processoInput, reuSelect, reuInput);
+        processoInput?.addEventListener('input', function () {
+            if (gate) gate.setWaiting();
+        });
+        global.addEventListener('cnjInvalid', function (event) {
+            const id = event && event.detail ? event.detail.inputId : '';
+            if (gate && (!id || id === 'filter-processo')) gate.setError();
+        });
+        global.addEventListener('datajudClasseResolved', function (event) {
+            const detail = event && event.detail ? event.detail : {};
+            if (gate && (!detail.processoInputId || detail.processoInputId === 'filter-processo')) gate.setReady();
+        });
 
         reuSelect?.addEventListener('change', function () {
             if (this.value === 'outro') {
@@ -194,6 +209,7 @@
             if (processoInput && typeof global.normalizeAndValidateCNJValue === 'function') {
                 const normalized = global.normalizeAndValidateCNJValue(numeroProcesso, { toastOnInvalid: true });
                 if (!normalized.ok) {
+                    if (gate) gate.setError();
                     processoInput.value = '';
                     processoInput.focus();
                     return;
@@ -219,7 +235,7 @@
             if (!decisaoCumprir) return notifyByKey('cartorio.ceapa.validation.decisao.required', {}, 'error', 'Erro', 'Informe a decisão a cumprir.');
             if (!dataDecisao) return notifyByKey('cartorio.ceapa.validation.data_decisao.required', {}, 'error', 'Erro', 'Informe a data da decisão.');
 
-            button.disabled = true;
+            if (gate) gate.setSubmitting();
             notifyByKey('cartorio.ceapa.create.progress.info', {}, 'info', 'Informação', 'Cadastrando...');
 
             const payload = {
@@ -265,14 +281,14 @@
                     return;
                 }
                 common.notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Não foi possível cadastrar.');
-                button.disabled = false;
+                if (gate) gate.setReady();
             }).catch(function () {
                 if (typeof common.notifyByKey === 'function') {
                     common.notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
                 } else {
                     common.notify('error', 'Erro', 'Erro de conexão.');
                 }
-                button.disabled = false;
+                if (gate) gate.setReady();
             });
         });
 

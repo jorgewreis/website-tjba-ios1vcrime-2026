@@ -14,6 +14,15 @@ Padronizar o comportamento das telas `app/views/internal/*-create.php` para gara
 
 - Regra dedicada criada em: `.cursor/rules/processo-classe-reu-automation.mdc`.
 
+## Contrato único do botão de cadastro
+
+- Estado inicial obrigatório: `disabled=true` com label `Aguarde...` antes da validação do CNJ.
+- CNJ inválido: manter `disabled=true` e trocar label para `Erro`.
+- CNJ válido: executar consulta DataJud.
+- DataJud finalizado (com sucesso ou falha): habilitar botão com label `Cadastrar`.
+- Ao enviar cadastro: voltar para `Aguarde...` com `disabled=true` até a resposta da API.
+- Backend deve revalidar CNJ com dígito verificador mesmo após validação frontend.
+
 ## Inventário: trio DataJud completo (`cnj.js` + `datajud-cycle-helper.js` + `datajud-api.js`)
 
 ### Create e fluxos equivalentes

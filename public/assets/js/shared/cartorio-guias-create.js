@@ -11,11 +11,23 @@
 
         const settings = config || {};
         const button = global.document.getElementById('cadastrar-btn');
+        const gate = helpers.initCreateButtonGate({ button: button, defaultLabel: 'Cadastrar' });
         const feedback = helpers.notify;
+        const processoInput = global.document.getElementById('filter-processo');
 
         if (!button) {
             return;
         }
+
+        processoInput?.addEventListener('input', function () { gate.setWaiting(); });
+        global.addEventListener('cnjInvalid', function (event) {
+            const id = event && event.detail ? event.detail.inputId : '';
+            if (!id || id === 'filter-processo') gate.setError();
+        });
+        global.addEventListener('datajudClasseResolved', function (event) {
+            const detail = event && event.detail ? event.detail : {};
+            if (!detail.processoInputId || detail.processoInputId === 'filter-processo') gate.setReady();
+        });
 
         let alocState = null;
         if (settings.alocacaoPrefix && App.CartorioAlocacaoDirecionadaCreate && typeof App.CartorioAlocacaoDirecionadaCreate.init === 'function') {
@@ -75,7 +87,7 @@
                 })
                 .catch(function (error) {
                     feedback(error && error.message ? error.message : 'Erro de conexão.', 'error');
-                    button.disabled = false;
+                    gate.setReady();
                 });
         }
 
@@ -90,6 +102,7 @@
 
             const processo = helpers.normalizeProcessValue(helpers.getValue('filter-processo'), {
                 inputId: 'filter-processo',
+                buttonGate: gate,
                 feedback: feedback,
                 requiredMessage: 'Informe o número do processo.'
             });
@@ -99,6 +112,7 @@
 
             const classeVal = helpers.getValue('filter-classe');
             if (classeVal === 'Aguarde...') {
+                gate.setWaiting();
                 feedback('Aguarde a consulta ao DataJud terminar antes de cadastrar.', 'error');
                 return;
             }
@@ -106,6 +120,7 @@
             const denunciadoPayload = getDenunciadoPayload();
             if (!denunciadoPayload.denunciado) {
                 feedback('Informe o denunciado/réu (selecione na lista ou digite em "Outro").', 'error');
+                gate.setError();
                 return;
             }
 
@@ -122,12 +137,14 @@
                 const dtFato = new Date(dataFato);
                 if (dtFato >= hoje) {
                     feedback('A data do fato deve ser anterior à data de hoje.', 'error');
+                    gate.setError();
                     return;
                 }
             }
 
             if (regime && ['Aberto', 'Semiaberto', 'Fechado'].indexOf(regime) === -1) {
                 feedback('Regime inválido. Selecione Aberto, Semiaberto ou Fechado.', 'error');
+                gate.setError();
                 return;
             }
 
@@ -150,7 +167,7 @@
                 payload.dias_multa = diasMulta;
             }
 
-            button.disabled = true;
+            gate.setSubmitting();
             feedback('Verificando duplicidade...', 'info', 'Informação');
 
             fetch(settings.duplicateEndpoint || '/api/cartorio-guias/check-duplicate.php', {
@@ -165,14 +182,14 @@
                 .then(function (response) { return response.json(); })
                 .then(function (data) {
                     if (data.exists && !global.confirm('Já existe uma Guia cadastrada com o mesmo tipo e mesmo réu. Deseja cadastrar assim mesmo?')) {
-                        button.disabled = false;
+                        gate.setReady();
                         return;
                     }
                     doCreate(payload);
                 })
                 .catch(function () {
                     feedback('Erro ao verificar duplicidade. Tente novamente.', 'error');
-                    button.disabled = false;
+                    gate.setReady();
                 });
         });
     }
