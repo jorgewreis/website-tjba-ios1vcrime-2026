@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0066
+
+**Data:** 2026-05-04 21:56:58 | **Commit:** `c45babf9` | **Tipo:** `patch`
+
+- fix(produtividade): correct spelling in productivity registration messages
+
 ## V. 1.97.0065
 
 **Data:** 2026-05-04 21:55:16 | **Commit:** `c7b04e68` | **Tipo:** `patch`
@@ -5178,6 +5184,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

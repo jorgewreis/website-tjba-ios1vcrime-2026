@@ -17,7 +17,7 @@
                         type: 'info',
                         variant: 'full',
                         title: 'Produtividade',
-                        message: '+1 ponto de produtividade registado.'
+                        message: '+1 ponto de produtividade registrado.'
                     });
                 }
             });
@@ -28,7 +28,7 @@
                 type: 'info',
                 variant: 'full',
                 title: 'Produtividade',
-                message: '+1 ponto de produtividade registado.'
+                message: '+1 ponto de produtividade registrado.'
             });
         }
     }
