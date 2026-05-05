@@ -35,4 +35,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(access-profiles): enhance user profile management with operational mode support** `[67507b8f]`
 - **feat(sala-audiencias-ata): enhance ata management and download handling** `[7912f1e0]`
 - **feat(sala-audiencias-ata): implement filtering for ata listings based on download availability** `[89676d90]`
+- **feat(sala-audiencias-pauta): enhance parte handling with global registration checks** `[405cb580]`
 
