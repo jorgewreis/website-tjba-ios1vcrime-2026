@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0069
+
+**Data:** 2026-05-05 12:29:45 | **Commit:** `d6b3fcb3` | **Tipo:** `patch`
+
+- feat(button-state): enhance button state management in audiencia forms
+
 ## V. 1.97.0068
 
 **Data:** 2026-05-05 11:42:31 | **Commit:** `331170ec` | **Tipo:** `patch`
@@ -5196,6 +5202,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -21,6 +21,10 @@
     var pageTools = window.App && App.Page ? App.Page : null;
     var state = normalizeInitial(window.PAUTA_PRIORIDADES_INITIAL || window.PROCESSO_PRIORIDADES_INITIAL);
 
+    function updatePrioridadeAddButtonState() {
+        btnAdd.disabled = String(selectEl.value || '').trim() === '';
+    }
+
     function normalizeInitial(s) {
         if (!s || typeof s !== 'object') {
             return s;
@@ -313,6 +317,7 @@
                         }, 450);
                     }
                     selectEl.selectedIndex = 0;
+                    updatePrioridadeAddButtonState();
                     return;
                 }
                 notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Não foi possível adicionar.');
@@ -321,6 +326,8 @@
                 notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
             });
     });
+
+    selectEl.addEventListener('change', updatePrioridadeAddButtonState);
 
     listEl.addEventListener('click', function (ev) {
         var btn = ev.target && ev.target.closest ? ev.target.closest('[data-prioridade-codigo-rem]') : null;
@@ -353,4 +360,5 @@
     } else {
         fetchState();
     }
+    updatePrioridadeAddButtonState();
 })();

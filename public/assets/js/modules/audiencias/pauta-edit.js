@@ -124,6 +124,20 @@
         nomeInput.value = nome;
     }
 
+    function updateParteAddButtonState() {
+        var btnParte = document.getElementById('btn-parte-adicionar');
+        var tipoParte = document.getElementById('parte-tipo');
+        if (!btnParte || !tipoParte) return;
+        btnParte.disabled = String(tipoParte.value || '').trim() === '';
+    }
+
+    function updateAlocarButtonState() {
+        var btnAlocar = document.getElementById('btn-pauta-alocar');
+        var selectServidor = document.getElementById('pauta-alocar-usuario');
+        if (!btnAlocar || !selectServidor) return;
+        btnAlocar.disabled = String(selectServidor.value || '').trim() === '';
+    }
+
     function normalizeSelectedName(val) {
         var s = String(val || '').trim();
         if (App && App.ProperNameHelper && typeof App.ProperNameHelper.formatProper === 'function') {
@@ -362,6 +376,8 @@
     });
 
     document.getElementById('btn-parte-limpar')?.addEventListener('click', clearPartForm);
+    document.getElementById('parte-tipo')?.addEventListener('change', updateParteAddButtonState);
+    document.getElementById('pauta-alocar-usuario')?.addEventListener('change', updateAlocarButtonState);
 
     document.getElementById('btn-parte-adicionar')?.addEventListener('click', function () {
         var continueFlow = Promise.resolve(true);
@@ -760,6 +776,8 @@
     });
 
     initParteNomeSelectFromProcesso();
+    updateParteAddButtonState();
+    updateAlocarButtonState();
 
     refreshHoraEditDisponiveis(function () {
         initialAudienciaSnapshot = currentAudienciaSnapshot();
