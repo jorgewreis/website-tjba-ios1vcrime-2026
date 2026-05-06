@@ -40,4 +40,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(button-state): enhance button state management in audiencia forms** `[d6b3fcb3]`
 - **refactor(pauta-edit): simplify status messages for linked parties** `[aea3741d]`
 - **feat(dashboard): enhance dashboard statistics display** `[3ca856c0]`
+- **refactor(oficios-list): simplify gate readiness logic** `[23f00ce8]`
 
