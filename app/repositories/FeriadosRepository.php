@@ -60,6 +60,56 @@ final class FeriadosRepository
     }
 
     /**
+     * Datas cobertas por feriados/dias não úteis ativos no intervalo [start, end] (inclusive).
+     * Chave do array: Y-m-d; valor: true.
+     *
+     * @return array<string, true>
+     */
+    public function datasNaoUteisNoIntervalo(\DateTimeInterface $start, \DateTimeInterface $end): array
+    {
+        $sql = sprintf(
+            'SELECT `data_inicio`, `data_fim` FROM `%s`
+             WHERE `ativo` = 1
+               AND `data_inicio` <= :end AND `data_fim` >= :start',
+            $this->table
+        );
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bindValue(':start', $start->format('Y-m-d'));
+        $stmt->bindValue(':end', $end->format('Y-m-d'));
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        if (!is_array($rows) || $rows === []) {
+            return [];
+        }
+
+        $startDt = new DateTimeImmutable($start->format('Y-m-d'));
+        $endDt = new DateTimeImmutable($end->format('Y-m-d'));
+        $out = [];
+
+        foreach ($rows as $row) {
+            $ini = DateTimeImmutable::createFromFormat('Y-m-d', trim((string) ($row['data_inicio'] ?? '')));
+            $fim = DateTimeImmutable::createFromFormat('Y-m-d', trim((string) ($row['data_fim'] ?? '')));
+            if (!$ini instanceof DateTimeImmutable || !$fim instanceof DateTimeImmutable) {
+                continue;
+            }
+            if ($ini < $startDt) {
+                $ini = $startDt;
+            }
+            if ($fim > $endDt) {
+                $fim = $endDt;
+            }
+            if ($ini > $fim) {
+                continue;
+            }
+            for ($d = $ini; $d <= $fim; $d = $d->modify('+1 day')) {
+                $out[$d->format('Y-m-d')] = true;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
      * @param array{tipo_feriado?: string, ativo?: int|null, q?: string} $filters
      * @return array{rows: list<array<string, mixed>>, total: int}
      */

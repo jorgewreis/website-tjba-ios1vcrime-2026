@@ -14,8 +14,30 @@ $userId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']
 
 $prodError = '';
 $resumo = [
-    'month' => ['current' => 0.0, 'current_to_date' => 0.0, 'previous' => 0.0, 'variation_percent' => 0.0, 'variation_percent_proportional' => 0.0],
-    'projection' => ['projected_points' => 0.0, 'current_points' => 0.0, 'business_days_total' => 0, 'business_days_with_launch' => 0],
+    'month' => [
+        'current' => 0.0,
+        'current_to_date' => 0.0,
+        'previous' => 0.0,
+        'variation_percent' => 0.0,
+        'variation_percent_proportional' => 0.0,
+        'expected_to_date' => 0.0,
+        'delta_points' => 0.0,
+        'prev_business_days' => 0,
+        'current_business_days_total' => 0,
+        'current_business_days_full_elapsed' => 0,
+        'current_business_days_effective_elapsed' => 0.0,
+        'current_business_days_remaining' => 0,
+        'today_fraction' => 0.0,
+        'today_is_business_day' => false,
+    ],
+    'projection' => [
+        'projected_points' => 0.0,
+        'current_points' => 0.0,
+        'business_days_total' => 0,
+        'business_days_with_launch' => 0,
+        'business_days_effective_elapsed' => 0.0,
+        'business_days_remaining' => 0,
+    ],
 ];
 $rankingTop5 = [];
 $allRankingRows = [];
@@ -76,16 +98,27 @@ if ($userId !== '') {
 $monthPts = (float) (($resumo['month']['current_to_date'] ?? $resumo['month']['current'] ?? 0));
 $monthPrev = (float) ($resumo['month']['previous'] ?? 0);
 $monthVpa = (float) (($resumo['month']['variation_percent_proportional'] ?? 0));
+$deltaPts = (float) ($resumo['month']['delta_points'] ?? 0);
+$expectedPts = (float) ($resumo['month']['expected_to_date'] ?? 0);
+$bizPrev = (int) ($resumo['month']['prev_business_days'] ?? 0);
+$bizTotal = (int) ($resumo['month']['current_business_days_total'] ?? 0);
+$bizFullElap = (int) ($resumo['month']['current_business_days_full_elapsed'] ?? 0);
+$bizRemaining = (int) ($resumo['month']['current_business_days_remaining'] ?? 0);
+$dayFrac = (float) ($resumo['month']['today_fraction'] ?? 0);
+$bizEff = (float) ($resumo['month']['current_business_days_effective_elapsed'] ?? ($resumo['projection']['business_days_effective_elapsed'] ?? 0));
 $projPts = (float) ($resumo['projection']['projected_points'] ?? 0);
-$bizTotal = (int) ($resumo['projection']['business_days_total'] ?? 0);
 $bizComLanc = (int) ($resumo['projection']['business_days_with_launch'] ?? 0);
 
-$refDay = new DateTimeImmutable('now');
-$diaAtual = max(1, (int) $refDay->format('j'));
-$diasMesAnt = max(1, (int) $refDay->modify('first day of this month')->modify('-1 day')->format('t'));
-$baseline = ($monthPrev / $diasMesAnt) * $diaAtual;
-$deltaPts = $monthPts - $baseline;
 $deltaPtsFmt = ($deltaPts >= 0 ? '+' : '−') . number_format(abs($deltaPts), 2, ',', '.');
+
+$elapsedLabel = number_format($bizFullElap + $dayFrac, 1, ',', '.');
+$cardSubtitle = sprintf(
+    '%s · %s/%d dia(s) útil(eis) · %d restante(s)',
+    $mesRef,
+    $elapsedLabel,
+    $bizTotal,
+    $bizRemaining
+);
 
 $monthVpaFmt = $monthVpa > 0
     ? '+' . number_format($monthVpa, 1, ',', '.') . '%'
@@ -102,14 +135,22 @@ if ($vpaAbs <= 10.0) {
     $vpaIconClass = 'fi fi-bs-arrow-trend-down';
 }
 
-$titleVpaBadge = 'Variação proporcional ao dia do mês em relação ao total do mês anterior (mesma referência da diferença em pontos abaixo).';
+$titleVpaBadge = sprintf(
+    'Variação em relação ao esperado até o momento: referência %s pts (ritmo do mês anterior aplicado a %s dia(s) útil(is) efetivo(s), turno 8h–18h no dia corrente).',
+    number_format($expectedPts, 2, ',', '.'),
+    number_format($bizEff, 1, ',', '.')
+);
+$titleAnteriorStat = sprintf(
+    'Total do mês anterior em %d dia(s) útil(eis) (segunda a sexta, excluindo feriados cadastrados).',
+    $bizPrev
+);
 $titleDeltaStat = sprintf(
-    'Diferença em relação ao mês anterior proporcional aos %d dia(s) decorrido(s) — referência: %s pts',
-    $diaAtual,
-    number_format($baseline, 2, ',', '.')
+    'Diferença entre o realizado (%s pts) e o esperado (%s pts) no mesmo critério.',
+    number_format($monthPts, 2, ',', '.'),
+    number_format($expectedPts, 2, ',', '.')
 );
 $titleProjStat = sprintf(
-    'Projeção considerando %d dias úteis no mês (%d com lançamento).',
+    'Estimativa para o fim do mês: ritmo de pontos por dia útil efetivo decorrido aplicado aos %d dia(s) úteis do mês (inclui %d dia(s) com lançamento até hoje).',
     $bizTotal,
     $bizComLanc
 );
@@ -351,7 +392,7 @@ $titleProjStat = sprintf(
                         <div class="dashboard-interno-card-head">
                             <div>
                                 <h2>Pontos no mês</h2>
-                                <span class="minor-info"><?php echo htmlspecialchars($mesRef, ENT_QUOTES, 'UTF-8'); ?></span>
+                                <span class="minor-info"><?php echo htmlspecialchars($cardSubtitle, ENT_QUOTES, 'UTF-8'); ?></span>
                             </div>
                             <button type="button" class="btn btn-secondary-outline height-md" data-nav-href="/frame.php?page=produtividade">Abrir módulo</button>
                         </div>
@@ -362,7 +403,7 @@ $titleProjStat = sprintf(
                                 <span class="<?php echo htmlspecialchars($vpaBadgeClass, ENT_QUOTES, 'UTF-8'); ?>" title="<?php echo htmlspecialchars($titleVpaBadge, ENT_QUOTES, 'UTF-8'); ?>"><i class="<?php echo htmlspecialchars($vpaIconClass, ENT_QUOTES, 'UTF-8'); ?>" aria-hidden="true"></i><?php echo htmlspecialchars($monthVpaFmt, ENT_QUOTES, 'UTF-8'); ?></span>
                             </div>
                             <div class="dashboard-points-grid">
-                                <div class="dashboard-points-stat" title="Total de pontos no mês civil anterior (período fechado).">
+                                <div class="dashboard-points-stat" title="<?php echo htmlspecialchars($titleAnteriorStat, ENT_QUOTES, 'UTF-8'); ?>">
                                     <span class="minor-info">Anterior</span>
                                     <span class="dashboard-points-value"><?php echo number_format($monthPrev, 2, ',', '.'); ?> pts</span>
                                 </div>

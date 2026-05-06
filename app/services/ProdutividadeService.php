@@ -6,6 +6,7 @@ require_once __DIR__ . '/../repositories/ProdutividadeLancamentosRepository.php'
 require_once __DIR__ . '/../repositories/ProdutividadeLogRepository.php';
 require_once __DIR__ . '/../repositories/ProdutividadeMetasRepository.php';
 require_once __DIR__ . '/../repositories/ProdutividadeBadgesRepository.php';
+require_once __DIR__ . '/../repositories/FeriadosRepository.php';
 require_once __DIR__ . '/../access/AccessAreas.php';
 require_once __DIR__ . '/../helpers/UsuarioPerfisAutorizacao.php';
 
@@ -17,6 +18,9 @@ final class ProdutividadeService
     private ProdutividadeLogRepository $logRepository;
     private ProdutividadeMetasRepository $metasRepository;
     private ProdutividadeBadgesRepository $badgesRepository;
+    /** @var array<string, array<string, true>> */
+    private array $feriadosSetCache = [];
+    private ?FeriadosRepository $feriadosRepository = null;
 
     public function __construct(PDO $connection)
     {
@@ -666,7 +670,24 @@ final class ProdutividadeService
         $prevQuarterEnd = $prevQuarterStart->modify('+2 months')->modify('last day of this month');
         $quarterPrevious = $this->sumForRange($base, $prevQuarterStart, $prevQuarterEnd);
 
-        $projection = $this->projetarPeriodoMensalUsuarioLogado($actorUserId);
+        $metricas = $this->calcMetricasProporcionais($monthCurrentToDate, $monthPrevious, $now, $monthStart, $monthEnd);
+        $bizEff = $metricas['business_days_effective_elapsed'];
+        $bizCurTotal = $metricas['current_business_days_total'];
+        $projected = ($bizEff > 0.0 && $bizCurTotal > 0)
+            ? ($monthCurrentToDate / $bizEff) * $bizCurTotal
+            : 0.0;
+
+        $lancEnd = $now > $monthEnd ? $monthEnd : new DateTimeImmutable($now->format('Y-m-d'));
+        $businessDaysWithLaunch = $this->countBusinessDaysWithLancamento($base, $monthStart, $lancEnd);
+
+        $projection = [
+            'projected_points' => $projected,
+            'current_points' => $monthCurrentToDate,
+            'business_days_total' => $bizCurTotal,
+            'business_days_effective_elapsed' => $bizEff,
+            'business_days_remaining' => $metricas['current_business_days_remaining'],
+            'business_days_with_launch' => $businessDaysWithLaunch,
+        ];
 
         return [
             'week' => [
@@ -679,7 +700,16 @@ final class ProdutividadeService
                 'current_to_date' => $monthCurrentToDate,
                 'previous' => $monthPrevious,
                 'variation_percent' => $this->calcVariationPercent($monthCurrent, $monthPrevious),
-                'variation_percent_proportional' => $this->calcMonthVariationProportionalPercent($monthCurrentToDate, $monthPrevious, $now),
+                'variation_percent_proportional' => $metricas['variation_percent_proportional'],
+                'expected_to_date' => $metricas['expected_to_date'],
+                'delta_points' => $metricas['delta_points'],
+                'prev_business_days' => $metricas['prev_business_days'],
+                'current_business_days_total' => $metricas['current_business_days_total'],
+                'current_business_days_full_elapsed' => $metricas['current_business_days_full_elapsed'],
+                'current_business_days_effective_elapsed' => $metricas['business_days_effective_elapsed'],
+                'current_business_days_remaining' => $metricas['current_business_days_remaining'],
+                'today_fraction' => $metricas['today_fraction'],
+                'today_is_business_day' => $metricas['today_is_business_day'],
             ],
             'quarter' => [
                 'current' => $quarterCurrent,
@@ -693,7 +723,7 @@ final class ProdutividadeService
     /**
      * Projeção do mês civil corrente apenas para o usuário logado (ignora filtro de lista e escopo de gestão).
      *
-     * @return array{projected_points:float,current_points:float,business_days_total:int,business_days_with_launch:int}
+     * @return array{projected_points:float,current_points:float,business_days_total:int,business_days_with_launch:int,business_days_effective_elapsed:float,business_days_remaining:int}
      */
     public function projetarPeriodoMensalUsuarioLogado(string $actorUserId): array
     {
@@ -725,45 +755,96 @@ final class ProdutividadeService
     /**
      * @param array<string, mixed> $base Filtros já resolvidos (incl. data_inicio / data_fim)
      *
-     * @return array{projected_points:float,current_points:float,business_days_total:int,business_days_with_launch:int}
+     * @return array{projected_points:float,current_points:float,business_days_total:int,business_days_with_launch:int,business_days_effective_elapsed:float,business_days_remaining:int}
      */
     private function projetarPeriodoComFiltrosBase(array $base): array
     {
+        $empty = static fn (): array => [
+            'projected_points' => 0.0,
+            'current_points' => 0.0,
+            'business_days_total' => 0,
+            'business_days_with_launch' => 0,
+            'business_days_effective_elapsed' => 0.0,
+            'business_days_remaining' => 0,
+        ];
+
         $start = trim((string) ($base['data_inicio'] ?? ''));
         $end = trim((string) ($base['data_fim'] ?? ''));
         if (!$this->isValidDate($start) || !$this->isValidDate($end)) {
-            return ['projected_points' => 0.0, 'current_points' => 0.0, 'business_days_total' => 0, 'business_days_with_launch' => 0];
+            return $empty();
         }
 
         $dtStart = new DateTimeImmutable($start);
         $dtEnd = new DateTimeImmutable($end);
         if ($dtStart > $dtEnd) {
-            return ['projected_points' => 0.0, 'current_points' => 0.0, 'business_days_total' => 0, 'business_days_with_launch' => 0];
+            return $empty();
         }
 
-        $currentPoints = $this->sumForRange($base, $dtStart, $dtEnd);
-        $businessDaysTotal = $this->countBusinessDays($dtStart, $dtEnd);
-        if ($businessDaysTotal <= 0) {
-            return ['projected_points' => $currentPoints, 'current_points' => $currentPoints, 'business_days_total' => 0, 'business_days_with_launch' => 0];
+        $now = new DateTimeImmutable('now');
+        $nowDate = new DateTimeImmutable($now->format('Y-m-d'));
+        $dtStartDate = new DateTimeImmutable($dtStart->format('Y-m-d'));
+        $dtEndDate = new DateTimeImmutable($dtEnd->format('Y-m-d'));
+
+        if ($nowDate < $dtStartDate) {
+            return $empty();
         }
 
-        $businessDaysWithLaunch = $this->countBusinessDaysWithLancamento($base, $dtStart, $dtEnd);
-        if ($businessDaysWithLaunch <= 0 || $currentPoints <= 0) {
+        $feriadosSet = $this->getFeriadosSet($dtStart, $dtEnd);
+        $businessDaysTotal = $this->countBusinessDays($dtStart, $dtEnd, $feriadosSet);
+
+        if ($nowDate > $dtEndDate) {
+            $fullPoints = $this->sumForRange($base, $dtStart, $dtEnd);
+
             return [
-                'projected_points' => 0.0,
-                'current_points' => $currentPoints,
+                'projected_points' => $fullPoints,
+                'current_points' => $fullPoints,
                 'business_days_total' => $businessDaysTotal,
-                'business_days_with_launch' => $businessDaysWithLaunch,
+                'business_days_with_launch' => $this->countBusinessDaysWithLancamento($base, $dtStart, $dtEnd),
+                'business_days_effective_elapsed' => (float) $businessDaysTotal,
+                'business_days_remaining' => 0,
             ];
         }
 
-        $avgPerActiveBusinessDay = $currentPoints / $businessDaysWithLaunch;
-        $projected = $avgPerActiveBusinessDay * $businessDaysTotal;
+        $effectiveEndDate = $nowDate <= $dtEndDate ? $nowDate : $dtEndDate;
+        $currentPoints = $this->sumForRange($base, $dtStart, $effectiveEndDate);
+
+        if ($businessDaysTotal <= 0) {
+            return [
+                'projected_points' => $currentPoints,
+                'current_points' => $currentPoints,
+                'business_days_total' => 0,
+                'business_days_with_launch' => 0,
+                'business_days_effective_elapsed' => 0.0,
+                'business_days_remaining' => 0,
+            ];
+        }
+
+        $todayIsBiz = $this->isDiaUtil($nowDate, $feriadosSet);
+        $dayFrac = ($todayIsBiz && $nowDate >= $dtStartDate && $nowDate <= $dtEndDate) ? $this->calcDayFraction($now) : 0.0;
+
+        $bizFullElapsed = 0;
+        if ($nowDate > $dtStartDate) {
+            $until = $nowDate->modify('-1 day');
+            if ($until >= $dtStartDate) {
+                $bizFullElapsed = $this->countBusinessDays($dtStartDate, $until, $feriadosSet);
+            }
+        }
+        $bizEffElapsed = $bizFullElapsed + (($todayIsBiz && $nowDate >= $dtStartDate && $nowDate <= $dtEndDate) ? $dayFrac : 0.0);
+        $bizRemaining = max(0, $businessDaysTotal - $bizFullElapsed - ($todayIsBiz && $nowDate <= $dtEndDate ? 1 : 0));
+
+        $businessDaysWithLaunch = $this->countBusinessDaysWithLancamento($base, $dtStart, $effectiveEndDate);
+
+        $projected = ($bizEffElapsed > 0.0 && $businessDaysTotal > 0)
+            ? ($currentPoints / $bizEffElapsed) * $businessDaysTotal
+            : 0.0;
+
         return [
             'projected_points' => $projected,
             'current_points' => $currentPoints,
             'business_days_total' => $businessDaysTotal,
             'business_days_with_launch' => $businessDaysWithLaunch,
+            'business_days_effective_elapsed' => $bizEffElapsed,
+            'business_days_remaining' => $bizRemaining,
         ];
     }
 
@@ -1136,6 +1217,120 @@ final class ProdutividadeService
         return strtoupper(trim((string) $value));
     }
 
+    private function getFeriadosRepository(): FeriadosRepository
+    {
+        return $this->feriadosRepository ??= new FeriadosRepository($this->connection);
+    }
+
+    /**
+     * @return array<string, true>
+     */
+    private function getFeriadosSet(DateTimeImmutable $start, DateTimeImmutable $end): array
+    {
+        $key = $start->format('Y-m-d') . '|' . $end->format('Y-m-d');
+        if (!isset($this->feriadosSetCache[$key])) {
+            $this->feriadosSetCache[$key] = $this->getFeriadosRepository()->datasNaoUteisNoIntervalo($start, $end);
+        }
+
+        return $this->feriadosSetCache[$key];
+    }
+
+    private function calcDayFraction(DateTimeImmutable $now): float
+    {
+        $minutes = ((int) $now->format('G')) * 60 + (int) $now->format('i');
+        $startMin = 8 * 60;
+        $endMin = 18 * 60;
+        if ($minutes <= $startMin) {
+            return 0.0;
+        }
+        if ($minutes >= $endMin) {
+            return 1.0;
+        }
+
+        return ($minutes - $startMin) / ($endMin - $startMin);
+    }
+
+    /**
+     * @param array<string, true> $feriadosSet
+     */
+    private function isDiaUtil(DateTimeImmutable $d, array $feriadosSet): bool
+    {
+        if ((int) $d->format('N') > 5) {
+            return false;
+        }
+
+        return !isset($feriadosSet[$d->format('Y-m-d')]);
+    }
+
+    /**
+     * @return array{
+     *   prev_business_days:int,
+     *   current_business_days_total:int,
+     *   current_business_days_full_elapsed:int,
+     *   current_business_days_remaining:int,
+     *   today_fraction:float,
+     *   today_is_business_day:bool,
+     *   business_days_effective_elapsed:float,
+     *   expected_to_date:float,
+     *   delta_points:float,
+     *   variation_percent_proportional:float,
+     *   prev_rate_per_biz_day:float
+     * }
+     */
+    private function calcMetricasProporcionais(
+        float $monthCurrentToDate,
+        float $monthPrevious,
+        DateTimeImmutable $now,
+        DateTimeImmutable $monthStart,
+        DateTimeImmutable $monthEnd
+    ): array {
+        $prevStart = $monthStart->modify('-1 month')->modify('first day of this month');
+        $prevEnd = $monthStart->modify('-1 day');
+        $feriadosCur = $this->getFeriadosSet($monthStart, $monthEnd);
+        $feriadosPrev = $this->getFeriadosSet($prevStart, $prevEnd);
+
+        $bizCurTotal = $this->countBusinessDays($monthStart, $monthEnd, $feriadosCur);
+        $bizPrevTotal = $this->countBusinessDays($prevStart, $prevEnd, $feriadosPrev);
+
+        $nowDate = new DateTimeImmutable($now->format('Y-m-d'));
+        $todayIsBiz = $this->isDiaUtil($nowDate, $feriadosCur);
+        $dayFrac = $todayIsBiz ? $this->calcDayFraction($now) : 0.0;
+
+        $bizFullElapsed = 0;
+        if ($nowDate > $monthStart) {
+            $until = $nowDate->modify('-1 day');
+            if ($until >= $monthStart) {
+                $bizFullElapsed = $this->countBusinessDays($monthStart, $until, $feriadosCur);
+            }
+        }
+
+        $bizEffElapsed = $bizFullElapsed + $dayFrac;
+        $bizRemaining = max(0, $bizCurTotal - $bizFullElapsed - ($todayIsBiz ? 1 : 0));
+
+        $prevRate = $bizPrevTotal > 0 ? ($monthPrevious / $bizPrevTotal) : 0.0;
+        $expected = $prevRate * $bizEffElapsed;
+        $delta = $monthCurrentToDate - $expected;
+        if ($expected > 0.0) {
+            $vpa = ($delta / $expected) * 100.0;
+        } else {
+            $vpa = $monthCurrentToDate > 0.0 ? 100.0 : 0.0;
+        }
+
+        return [
+            'prev_business_days' => $bizPrevTotal,
+            'current_business_days_total' => $bizCurTotal,
+            'current_business_days_full_elapsed' => $bizFullElapsed,
+            'current_business_days_remaining' => $bizRemaining,
+            'today_fraction' => $dayFrac,
+            'today_is_business_day' => $todayIsBiz,
+            'business_days_effective_elapsed' => $bizEffElapsed,
+            'expected_to_date' => $expected,
+            'delta_points' => $delta,
+            'variation_percent_proportional' => $vpa,
+            'prev_rate_per_biz_day' => $prevRate,
+        ];
+    }
+
     private function sumForRange(array $filters, DateTimeImmutable $start, DateTimeImmutable $end): float
     {
         $rangeFilters = $filters;
@@ -1144,14 +1339,20 @@ final class ProdutividadeService
         return $this->lancamentosRepository->sumPontos($rangeFilters);
     }
 
-    private function countBusinessDays(DateTimeImmutable $start, DateTimeImmutable $end): int
+    /**
+     * @param array<string, true>|null $excludeSet Datas Y-m-d não úteis (feriados) a excluir da contagem.
+     */
+    private function countBusinessDays(DateTimeImmutable $start, DateTimeImmutable $end, ?array $excludeSet = null): int
     {
         $count = 0;
         $current = $start;
         while ($current <= $end) {
             $dow = (int) $current->format('N');
             if ($dow <= 5) {
-                $count++;
+                $key = $current->format('Y-m-d');
+                if ($excludeSet === null || !isset($excludeSet[$key])) {
+                    $count++;
+                }
             }
             $current = $current->modify('+1 day');
         }
@@ -1326,26 +1527,6 @@ final class ProdutividadeService
             return $current > 0.0 ? 100.0 : 0.0;
         }
         return (($current - $previous) / $previous) * 100.0;
-    }
-
-    /**
-     * Variação proporcional ao avanço do mês civil atual: compara pontos do mês corrente (até hoje)
-     * com o que seria esperado se o ritmo do mês anterior fosse uniforme nos dias já decorridos.
-     *
-     * baseline = (pontos_mês_anterior / dias_no_mês_anterior) * dias_decorridos_mês_atual
-     */
-    private function calcMonthVariationProportionalPercent(float $currentMonthToDate, float $previousMonthFull, DateTimeImmutable $now): float
-    {
-        $elapsed = max(1, (int) $now->format('j'));
-        $firstDayThisMonth = $now->modify('first day of this month');
-        $lastDayPrevMonth = $firstDayThisMonth->modify('-1 day');
-        $daysPrev = max(1, (int) $lastDayPrevMonth->format('t'));
-        $baseline = ($previousMonthFull / $daysPrev) * $elapsed;
-        if ($baseline <= 0.0) {
-            return $currentMonthToDate > 0.0 ? 100.0 : 0.0;
-        }
-
-        return (($currentMonthToDate - $baseline) / $baseline) * 100.0;
     }
 }
 

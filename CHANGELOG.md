@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0073
+
+**Data:** 2026-05-06 09:25:35 | **Commit:** `25d2b12c` | **Tipo:** `patch`
+
+- feat(feriados): add method to retrieve non-working days within a date range
+
 ## V. 1.97.0072
 
 **Data:** 2026-05-06 09:16:58 | **Commit:** `23f00ce8` | **Tipo:** `patch`
@@ -5220,6 +5226,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
