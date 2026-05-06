@@ -41,4 +41,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(pauta-edit): simplify status messages for linked parties** `[aea3741d]`
 - **feat(dashboard): enhance dashboard statistics display** `[3ca856c0]`
 - **refactor(oficios-list): simplify gate readiness logic** `[23f00ce8]`
+- **feat(feriados): add method to retrieve non-working days within a date range** `[25d2b12c]`
 
