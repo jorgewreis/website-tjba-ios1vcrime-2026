@@ -12,4 +12,7 @@ return [
     'tipo_documento' => 'CEP',
     'sistema_modulo' => 'consultas-cep',
     'referencia_sistema' => 'consultas-cep',
+    // Janela de deduplicacao da mesma consulta para o mesmo usuario.
+    // Ex.: 10 = permite nova pontuacao apos 10 minutos.
+    'dedupe_window_minutes' => 10,
 ];

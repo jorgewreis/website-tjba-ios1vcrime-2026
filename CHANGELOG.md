@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0076
+
+**Data:** 2026-05-06 10:07:45 | **Commit:** `7e895d12` | **Tipo:** `patch`
+
+- feat(consulta-cep): add deduplication window and enhance productivity tracking
+
 ## V. 1.97.0075
 
 **Data:** 2026-05-06 09:41:01 | **Commit:** `1003bc1a` | **Tipo:** `patch`
@@ -5238,6 +5244,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

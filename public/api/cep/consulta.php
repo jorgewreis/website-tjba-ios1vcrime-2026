@@ -4,15 +4,16 @@ declare(strict_types=1);
 header('Content-Type: application/json; charset=UTF-8');
 
 /**
- * Regista 1 ponto de produtividade por consulta de CEP bem-sucedida (8 dígitos).
+ * Regista 1 ponto de produtividade por consulta de CEP/endereço bem-sucedida.
  * Silencioso em falta de sessão, regra inexistente ou erro de BD (não afeta a resposta JSON).
  *
  * Requer linha em `produtividade_regras` (ex.: docs/database/seed-interno-produtividade-regras.sql
  * ou docs/database/seed-consulta-cep-produtividade-regra.sql). Sem regra, não há lançamento.
  *
+ * @param string|null $referenciaItemId Identificador de contexto para deduplicação.
  * @return string|null chave do catálogo toast quando o lançamento é criado
  */
-function consultaCepRegistrarProdutividade(string $cep8Digitos): ?string
+function consultaCepRegistrarProdutividade(string $cep8Digitos, ?string $referenciaItemId = null): ?string
 {
     $basePathCepApi = dirname(__DIR__, 3);
     require_once $basePathCepApi . '/app/helpers/Conection.php';
@@ -37,22 +38,46 @@ function consultaCepRegistrarProdutividade(string $cep8Digitos): ?string
         return null;
     }
 
+    $tipoAto = trim((string) ($cfg['tipo_ato'] ?? 'Consulta'));
+    $tipoDocumento = trim((string) ($cfg['tipo_documento'] ?? 'CEP'));
+    $sistemaModulo = trim((string) ($cfg['sistema_modulo'] ?? 'consultas-cep'));
+    $referenciaSistema = trim((string) ($cfg['referencia_sistema'] ?? 'consultas-cep'));
+    $windowMinutes = (int) ($cfg['dedupe_window_minutes'] ?? 10);
+    if ($windowMinutes < 1) {
+        $windowMinutes = 1;
+    }
+
     $cepFmt = strlen($cep8Digitos) === 8
         ? substr($cep8Digitos, 0, 5) . '-' . substr($cep8Digitos, 5, 3)
         : $cep8Digitos;
+    $refItem = trim((string) $referenciaItemId);
+    if ($refItem === '') {
+        $refItem = 'cep:' . $cep8Digitos;
+    }
+    $bucket = (int) floor(time() / ($windowMinutes * 60));
+    $contextoHashForced = hash('sha256', implode('|', [
+        'cep-consulta',
+        $usuarioId,
+        $tipoAto,
+        $tipoDocumento,
+        $sistemaModulo,
+        $refItem,
+        (string) $bucket,
+    ]));
 
     try {
         $connection = Conection::getInstance()->getConnection();
         $service = new ProdutividadeService($connection);
         $result = $service->registrarAuto($usuarioId, [
             'regra_id' => $regraId,
-            'tipo_ato' => trim((string) ($cfg['tipo_ato'] ?? 'Consulta')),
-            'tipo_documento' => trim((string) ($cfg['tipo_documento'] ?? 'CEP')),
-            'sistema_modulo' => trim((string) ($cfg['sistema_modulo'] ?? 'consultas-cep')),
+            'tipo_ato' => $tipoAto,
+            'tipo_documento' => $tipoDocumento,
+            'sistema_modulo' => $sistemaModulo,
             'quantidade' => 1,
-            'referencia_item_id' => 'cep:' . $cep8Digitos,
-            'referencia_sistema' => trim((string) ($cfg['referencia_sistema'] ?? 'consultas-cep')),
-            'observacoes' => 'Consulta de CEP (' . $cepFmt . ').',
+            'referencia_item_id' => $refItem,
+            'referencia_sistema' => $referenciaSistema,
+            'contexto_hash_forced' => $contextoHashForced,
+            'observacoes' => 'Consulta CEP/endereço (' . $cepFmt . ').',
         ]);
         if (!empty($result['created'])) {
             return 'interno.produtividade.cep.ponto';
@@ -557,11 +582,25 @@ try {
         return normalizeComparable((string) ($left['cep'] ?? '')) <=> normalizeComparable((string) ($right['cep'] ?? ''));
     });
 
-    respond([
+    $queryNorm = trim($query);
+    if (function_exists('mb_strtolower')) {
+        $queryNorm = mb_strtolower($queryNorm, 'UTF-8');
+    } else {
+        $queryNorm = strtolower($queryNorm);
+    }
+    $referenciaBuscaEndereco = 'cep-endereco:' . substr(hash('sha256', $queryNorm), 0, 24);
+    $toastKeyEndereco = consultaCepRegistrarProdutividade((string) ($results[0]['cep'] ?? ''), $referenciaBuscaEndereco);
+
+    $payloadEndereco = [
         'mode' => 'endereco',
         'query' => $query,
         'results' => $results,
-    ]);
+    ];
+    if ($toastKeyEndereco !== null) {
+        $payloadEndereco['produtividade_toast_key'] = $toastKeyEndereco;
+    }
+
+    respond($payloadEndereco);
 } catch (Throwable $exception) {
     respond(['error' => 'Erro ao consultar CEP: ' . $exception->getMessage()], 500);
 }
