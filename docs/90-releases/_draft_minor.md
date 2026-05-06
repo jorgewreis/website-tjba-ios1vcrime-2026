@@ -43,4 +43,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(oficios-list): simplify gate readiness logic** `[23f00ce8]`
 - **feat(feriados): add method to retrieve non-working days within a date range** `[25d2b12c]`
 - **refactor(produtividade): improve date handling and business day calculations** `[54e04747]`
+- **refactor(dashboard): update productivity card layout and labels** `[1003bc1a]`
 
