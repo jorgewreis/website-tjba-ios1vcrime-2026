@@ -1284,12 +1284,14 @@ final class ProdutividadeService
         DateTimeImmutable $monthStart,
         DateTimeImmutable $monthEnd
     ): array {
-        $prevStart = $monthStart->modify('-1 month')->modify('first day of this month');
-        $prevEnd = $monthStart->modify('-1 day');
-        $feriadosCur = $this->getFeriadosSet($monthStart, $monthEnd);
+        $monthStartDate = new DateTimeImmutable($monthStart->format('Y-m-d'));
+        $monthEndDate = new DateTimeImmutable($monthEnd->format('Y-m-d'));
+        $prevStart = $monthStartDate->modify('-1 month')->modify('first day of this month');
+        $prevEnd = $monthStartDate->modify('-1 day');
+        $feriadosCur = $this->getFeriadosSet($monthStartDate, $monthEndDate);
         $feriadosPrev = $this->getFeriadosSet($prevStart, $prevEnd);
 
-        $bizCurTotal = $this->countBusinessDays($monthStart, $monthEnd, $feriadosCur);
+        $bizCurTotal = $this->countBusinessDays($monthStartDate, $monthEndDate, $feriadosCur);
         $bizPrevTotal = $this->countBusinessDays($prevStart, $prevEnd, $feriadosPrev);
 
         $nowDate = new DateTimeImmutable($now->format('Y-m-d'));
@@ -1297,10 +1299,10 @@ final class ProdutividadeService
         $dayFrac = $todayIsBiz ? $this->calcDayFraction($now) : 0.0;
 
         $bizFullElapsed = 0;
-        if ($nowDate > $monthStart) {
+        if ($nowDate > $monthStartDate) {
             $until = $nowDate->modify('-1 day');
-            if ($until >= $monthStart) {
-                $bizFullElapsed = $this->countBusinessDays($monthStart, $until, $feriadosCur);
+            if ($until >= $monthStartDate) {
+                $bizFullElapsed = $this->countBusinessDays($monthStartDate, $until, $feriadosCur);
             }
         }
 
@@ -1344,9 +1346,11 @@ final class ProdutividadeService
      */
     private function countBusinessDays(DateTimeImmutable $start, DateTimeImmutable $end, ?array $excludeSet = null): int
     {
+        $startDate = new DateTimeImmutable($start->format('Y-m-d'));
+        $endDate = new DateTimeImmutable($end->format('Y-m-d'));
         $count = 0;
-        $current = $start;
-        while ($current <= $end) {
+        $current = $startDate;
+        while ($current <= $endDate) {
             $dow = (int) $current->format('N');
             if ($dow <= 5) {
                 $key = $current->format('Y-m-d');

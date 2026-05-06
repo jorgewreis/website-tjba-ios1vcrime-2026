@@ -111,13 +111,18 @@ $bizComLanc = (int) ($resumo['projection']['business_days_with_launch'] ?? 0);
 
 $deltaPtsFmt = ($deltaPts >= 0 ? '+' : '−') . number_format(abs($deltaPts), 2, ',', '.');
 
-$elapsedLabel = number_format($bizFullElap + $dayFrac, 1, ',', '.');
+$bizElapsedDisplay = $bizFullElap + (($dayFrac > 0.0) ? 1 : 0);
+$bizElapsedDisplay = max(0, min($bizTotal, $bizElapsedDisplay));
+$diasUteisLabel = $bizElapsedDisplay === 1 ? 'dia útil' : 'dias úteis';
+$diasRestantesLabel = $bizRemaining === 1 ? 'restante' : 'restantes';
 $cardSubtitle = sprintf(
-    '%s · %s/%d dia(s) útil(eis) · %d restante(s)',
+    '%s · %d/%d %s · %d %s',
     $mesRef,
-    $elapsedLabel,
+    $bizElapsedDisplay,
     $bizTotal,
-    $bizRemaining
+    $diasUteisLabel,
+    $bizRemaining,
+    $diasRestantesLabel
 );
 
 $monthVpaFmt = $monthVpa > 0
