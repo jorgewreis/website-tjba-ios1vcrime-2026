@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0075
+
+**Data:** 2026-05-06 09:41:01 | **Commit:** `1003bc1a` | **Tipo:** `patch`
+
+- refactor(dashboard): update productivity card layout and labels
+
 ## V. 1.97.0074
 
 **Data:** 2026-05-06 09:30:54 | **Commit:** `54e04747` | **Tipo:** `patch`
@@ -5232,6 +5238,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -396,29 +396,28 @@ $titleProjStat = sprintf(
                     <div class="dashboard-interno-card" id="produtividade-dashboard-widget">
                         <div class="dashboard-interno-card-head">
                             <div>
-                                <h2>Pontos no mês</h2>
+                                <h2>Produtividade geral</h2>
                                 <span class="minor-info"><?php echo htmlspecialchars($cardSubtitle, ENT_QUOTES, 'UTF-8'); ?></span>
                             </div>
-                            <button type="button" class="btn btn-secondary-outline height-md" data-nav-href="/frame.php?page=produtividade">Abrir módulo</button>
                         </div>
                         <div class="dashboard-interno-card-body">
-                            <span class="minor-info">Pontuação no período atual</span>
+                            <span style="font-size: 11px;">Pontuação no período atual</span>
                             <div class="dashboard-points-head margin-top-sm">
-                                <div class="major-info"><?php echo number_format($monthPts, 2, ',', '.'); ?> pts</div>
+                                <div class="major-info" style="font-size: 14px; font-weight: 600;"><?php echo number_format($monthPts, 2, ',', '.'); ?> pts</div>
                                 <span class="<?php echo htmlspecialchars($vpaBadgeClass, ENT_QUOTES, 'UTF-8'); ?>" title="<?php echo htmlspecialchars($titleVpaBadge, ENT_QUOTES, 'UTF-8'); ?>"><i class="<?php echo htmlspecialchars($vpaIconClass, ENT_QUOTES, 'UTF-8'); ?>" aria-hidden="true"></i><?php echo htmlspecialchars($monthVpaFmt, ENT_QUOTES, 'UTF-8'); ?></span>
                             </div>
-                            <div class="dashboard-points-grid">
-                                <div class="dashboard-points-stat" title="<?php echo htmlspecialchars($titleAnteriorStat, ENT_QUOTES, 'UTF-8'); ?>">
-                                    <span class="minor-info">Anterior</span>
-                                    <span class="dashboard-points-value"><?php echo number_format($monthPrev, 2, ',', '.'); ?> pts</span>
+                            <div class="dashboard-points-grid display-flex row row-full align-center justify-between">
+                                <div class="dashboard-points-stat display-flex col col-fit align-left justify-center" title="<?php echo htmlspecialchars($titleAnteriorStat, ENT_QUOTES, 'UTF-8'); ?>">
+                                    <span style="font-size: 11px;">Período anterior</span>
+                                    <span class="dashboard-points-value" style="font-size: 12px;"><?php echo number_format($monthPrev, 2, ',', '.'); ?></span>
                                 </div>
-                                <div class="dashboard-points-stat" title="<?php echo htmlspecialchars($titleDeltaStat, ENT_QUOTES, 'UTF-8'); ?>">
-                                    <span class="minor-info">Δ proporcional</span>
-                                    <span class="dashboard-points-value<?php echo $deltaPts >= 0 ? ' is-positive' : ' is-negative'; ?>"><?php echo htmlspecialchars($deltaPtsFmt, ENT_QUOTES, 'UTF-8'); ?> pts</span>
+                                <div class="dashboard-points-stat display-flex col col-fit align-center justify-center" title="<?php echo htmlspecialchars($titleDeltaStat, ENT_QUOTES, 'UTF-8'); ?>">
+                                    <span style="font-size: 11px;">Diferença</span>
+                                    <span class="dashboard-points-value<?php echo $deltaPts >= 0 ? ' is-positive' : ' is-negative'; ?>" style="font-size: 12px;"><?php echo htmlspecialchars($deltaPtsFmt, ENT_QUOTES, 'UTF-8'); ?></span>
                                 </div>
-                                <div class="dashboard-points-stat" title="<?php echo htmlspecialchars($titleProjStat, ENT_QUOTES, 'UTF-8'); ?>">
-                                    <span class="minor-info">Projeção</span>
-                                    <span class="dashboard-points-value"><?php echo number_format($projPts, 2, ',', '.'); ?> pts</span>
+                                <div class="dashboard-points-stat display-flex col col-fit align-end justify-center" title="<?php echo htmlspecialchars($titleProjStat, ENT_QUOTES, 'UTF-8'); ?>">
+                                    <span style="font-size: 11px;">Projeção esperada</span>
+                                    <span class="dashboard-points-value" style="font-size: 12px;"><?php echo number_format($projPts, 2, ',', '.'); ?></span>
                                 </div>
                             </div>
                         </div>
