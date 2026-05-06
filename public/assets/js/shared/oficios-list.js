@@ -273,7 +273,6 @@
         const hasDataJudFlow = !!global.document.querySelector('[data-datajud-related="true"]');
 
         if (gate && processInput) {
-            const classCodeInput = global.document.getElementById(config.classCodeInputId || 'hidden-classe-codigo');
             const refreshGateState = function () {
                 if (ctx.isAdministrative()) {
                     gate.setReady();
@@ -287,10 +286,10 @@
                     return;
                 }
 
-                const hasClassResolved = !!String(classCodeInput?.value || '').trim();
                 const classInput = global.document.getElementById(config.classInputId || 'filter-classe');
                 const isClassLoading = !!(classInput && (classInput.value === 'Aguarde...' || classInput.value === 'Consultando DataJud…'));
-                if (hasClassResolved && !isClassLoading) {
+                // Libera cadastro com processo valido, mesmo sem classe retornada pelo DataJud.
+                if (!isClassLoading) {
                     gate.setReady();
                     return;
                 }

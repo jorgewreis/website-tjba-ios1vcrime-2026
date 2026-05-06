@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0072
+
+**Data:** 2026-05-06 09:16:58 | **Commit:** `23f00ce8` | **Tipo:** `patch`
+
+- refactor(oficios-list): simplify gate readiness logic
+
 ## V. 1.97.0071
 
 **Data:** 2026-05-06 08:50:30 | **Commit:** `3ca856c0` | **Tipo:** `patch`
@@ -5214,6 +5220,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
