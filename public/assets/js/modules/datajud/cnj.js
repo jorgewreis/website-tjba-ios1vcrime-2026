@@ -130,6 +130,10 @@ function bindProcessoInput(input) {
             }
             return;
         }
+        const shouldDispatchOnInput = (this.id || '') !== 'filter-processo';
+        if (!shouldDispatchOnInput) {
+            return;
+        }
         const prev = this.dataset.lastCnjDispatchedDigits || '';
         if (prev === result.digits) {
             return;

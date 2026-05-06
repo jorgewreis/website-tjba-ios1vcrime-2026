@@ -15,6 +15,7 @@ $userId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']
 $prodError = '';
 $resumo = [
     'month' => ['current' => 0.0, 'current_to_date' => 0.0, 'previous' => 0.0, 'variation_percent' => 0.0, 'variation_percent_proportional' => 0.0],
+    'projection' => ['projected_points' => 0.0, 'current_points' => 0.0, 'business_days_total' => 0, 'business_days_with_launch' => 0],
 ];
 $rankingTop5 = [];
 $allRankingRows = [];
@@ -73,7 +74,19 @@ if ($userId !== '') {
 }
 
 $monthPts = (float) (($resumo['month']['current_to_date'] ?? $resumo['month']['current'] ?? 0));
+$monthPrev = (float) ($resumo['month']['previous'] ?? 0);
 $monthVpa = (float) (($resumo['month']['variation_percent_proportional'] ?? 0));
+$projPts = (float) ($resumo['projection']['projected_points'] ?? 0);
+$bizTotal = (int) ($resumo['projection']['business_days_total'] ?? 0);
+$bizComLanc = (int) ($resumo['projection']['business_days_with_launch'] ?? 0);
+
+$refDay = new DateTimeImmutable('now');
+$diaAtual = max(1, (int) $refDay->format('j'));
+$diasMesAnt = max(1, (int) $refDay->modify('first day of this month')->modify('-1 day')->format('t'));
+$baseline = ($monthPrev / $diasMesAnt) * $diaAtual;
+$deltaPts = $monthPts - $baseline;
+$deltaPtsFmt = ($deltaPts >= 0 ? '+' : '−') . number_format(abs($deltaPts), 2, ',', '.');
+
 $monthVpaFmt = $monthVpa > 0
     ? '+' . number_format($monthVpa, 1, ',', '.') . '%'
     : number_format($monthVpa, 1, ',', '.') . '%';
@@ -88,6 +101,18 @@ if ($vpaAbs <= 10.0) {
     $vpaBadgeClass = 'badge badge-danger dashboard-vpa-badge';
     $vpaIconClass = 'fi fi-bs-arrow-trend-down';
 }
+
+$titleVpaBadge = 'Variação proporcional ao dia do mês em relação ao total do mês anterior (mesma referência da diferença em pontos abaixo).';
+$titleDeltaStat = sprintf(
+    'Diferença em relação ao mês anterior proporcional aos %d dia(s) decorrido(s) — referência: %s pts',
+    $diaAtual,
+    number_format($baseline, 2, ',', '.')
+);
+$titleProjStat = sprintf(
+    'Projeção considerando %d dias úteis no mês (%d com lançamento).',
+    $bizTotal,
+    $bizComLanc
+);
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -213,6 +238,44 @@ if ($vpaAbs <= 10.0) {
             font-weight: 600;
             font-size: 1rem;
         }
+        .dashboard-points-head {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .dashboard-points-head .major-info {
+            margin: 0;
+        }
+        .dashboard-points-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+            border-top: 1px solid var(--border-color, #e2e8f0);
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+        .dashboard-points-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+        .dashboard-points-value {
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            font-size: 0.95rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .dashboard-points-value.is-positive { color: var(--color-success, #16a34a); }
+        .dashboard-points-value.is-negative { color: var(--color-danger, #dc2626); }
+        @media (max-width: 480px) {
+            .dashboard-points-grid { gap: 6px; }
+            .dashboard-points-value { font-size: 0.9rem; }
+        }
     </style>
 </head>
 <body class="page-internal">
@@ -294,10 +357,24 @@ if ($vpaAbs <= 10.0) {
                         </div>
                         <div class="dashboard-interno-card-body">
                             <span class="minor-info">Pontuação no período atual</span>
-                            <div class="major-info"><?php echo number_format($monthPts, 2, ',', '.'); ?> pts</div>
-                            <p class="minor-info margin-top-sm display-flex row row-fit align-center gap-sm flex-wrap">
-                                <span class="<?php echo htmlspecialchars($vpaBadgeClass, ENT_QUOTES, 'UTF-8'); ?>" title="Variação em relação ao período anterior"><i class="<?php echo htmlspecialchars($vpaIconClass, ENT_QUOTES, 'UTF-8'); ?>" aria-hidden="true"></i><?php echo htmlspecialchars($monthVpaFmt, ENT_QUOTES, 'UTF-8'); ?></span>
-                            </p>
+                            <div class="dashboard-points-head margin-top-sm">
+                                <div class="major-info"><?php echo number_format($monthPts, 2, ',', '.'); ?> pts</div>
+                                <span class="<?php echo htmlspecialchars($vpaBadgeClass, ENT_QUOTES, 'UTF-8'); ?>" title="<?php echo htmlspecialchars($titleVpaBadge, ENT_QUOTES, 'UTF-8'); ?>"><i class="<?php echo htmlspecialchars($vpaIconClass, ENT_QUOTES, 'UTF-8'); ?>" aria-hidden="true"></i><?php echo htmlspecialchars($monthVpaFmt, ENT_QUOTES, 'UTF-8'); ?></span>
+                            </div>
+                            <div class="dashboard-points-grid">
+                                <div class="dashboard-points-stat" title="Total de pontos no mês civil anterior (período fechado).">
+                                    <span class="minor-info">Anterior</span>
+                                    <span class="dashboard-points-value"><?php echo number_format($monthPrev, 2, ',', '.'); ?> pts</span>
+                                </div>
+                                <div class="dashboard-points-stat" title="<?php echo htmlspecialchars($titleDeltaStat, ENT_QUOTES, 'UTF-8'); ?>">
+                                    <span class="minor-info">Δ proporcional</span>
+                                    <span class="dashboard-points-value<?php echo $deltaPts >= 0 ? ' is-positive' : ' is-negative'; ?>"><?php echo htmlspecialchars($deltaPtsFmt, ENT_QUOTES, 'UTF-8'); ?> pts</span>
+                                </div>
+                                <div class="dashboard-points-stat" title="<?php echo htmlspecialchars($titleProjStat, ENT_QUOTES, 'UTF-8'); ?>">
+                                    <span class="minor-info">Projeção</span>
+                                    <span class="dashboard-points-value"><?php echo number_format($projPts, 2, ',', '.'); ?> pts</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

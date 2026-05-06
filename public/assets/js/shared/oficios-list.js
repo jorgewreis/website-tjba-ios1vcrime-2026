@@ -273,27 +273,58 @@
         const hasDataJudFlow = !!global.document.querySelector('[data-datajud-related="true"]');
 
         if (gate && processInput) {
-            processInput.addEventListener('input', function () {
-                const digits = String(processInput.value || '').replace(/\D/g, '');
-                if (digits.length < 20) {
-                    gate.setWaiting();
-                }
-            });
-            const typeSelect = global.document.getElementById(config.typeSelectId || '');
-            typeSelect?.addEventListener('change', function () {
+            const classCodeInput = global.document.getElementById(config.classCodeInputId || 'hidden-classe-codigo');
+            const refreshGateState = function () {
                 if (ctx.isAdministrative()) {
                     gate.setReady();
                     return;
                 }
+
+                const rawProcess = String(processInput.value || '').trim();
+                const processDigits = rawProcess.replace(/\D/g, '');
+                if (processDigits.length !== 20) {
+                    gate.setWaiting();
+                    return;
+                }
+
+                const hasClassResolved = !!String(classCodeInput?.value || '').trim();
+                const classInput = global.document.getElementById(config.classInputId || 'filter-classe');
+                const isClassLoading = !!(classInput && (classInput.value === 'Aguarde...' || classInput.value === 'Consultando DataJud…'));
+                if (hasClassResolved && !isClassLoading) {
+                    gate.setReady();
+                    return;
+                }
+
                 gate.setWaiting();
+            };
+
+            processInput.addEventListener('input', function () {
+                const digits = String(processInput.value || '').replace(/\D/g, '');
+                if (digits.length < 20) {
+                    gate.setWaiting();
+                    return;
+                }
+                refreshGateState();
+            });
+            const typeSelect = global.document.getElementById(config.typeSelectId || '');
+            typeSelect?.addEventListener('change', function () {
+                refreshGateState();
             });
             global.addEventListener('datajudClasseResolved', function (event) {
                 const detail = event && event.detail ? event.detail : {};
                 if (detail.processoInputId && processInput.id && detail.processoInputId !== processInput.id) {
                     return;
                 }
-                gate.setReady();
+                refreshGateState();
             });
+            global.addEventListener('cnjInvalid', function (event) {
+                const detail = event && event.detail ? event.detail : {};
+                if (detail.inputId && processInput.id && detail.inputId !== processInput.id) {
+                    return;
+                }
+                refreshGateState();
+            });
+            refreshGateState();
         }
 
         if (gate && !hasDataJudFlow) {

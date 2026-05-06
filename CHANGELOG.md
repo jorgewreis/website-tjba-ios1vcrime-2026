@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0071
+
+**Data:** 2026-05-06 08:50:30 | **Commit:** `3ca856c0` | **Tipo:** `patch`
+
+- feat(dashboard): enhance dashboard statistics display
+
 ## V. 1.97.0070
 
 **Data:** 2026-05-05 12:41:33 | **Commit:** `aea3741d` | **Tipo:** `patch`
@@ -5208,6 +5214,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
