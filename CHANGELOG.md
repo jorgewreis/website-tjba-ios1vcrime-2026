@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0077
+
+**Data:** 2026-05-06 10:16:01 | **Commit:** `2273e2b2` | **Tipo:** `patch`
+
+- refactor(dashboard): adjust alignment styles for dashboard statistics
+
 ## V. 1.97.0076
 
 **Data:** 2026-05-06 10:07:45 | **Commit:** `7e895d12` | **Tipo:** `patch`
@@ -5244,6 +5250,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
