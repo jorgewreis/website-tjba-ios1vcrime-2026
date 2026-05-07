@@ -48,4 +48,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(dashboard): adjust alignment styles for dashboard statistics** `[2273e2b2]`
 - **refactor(dashboard): update ranking display and styles** `[3da9dc2a]`
 - **refactor(dashboard): improve user ranking identification logic** `[80137ce2]`
+- **refactor(dashboard): update styles for user ranking and badges** `[0ac27fbc]`
 
