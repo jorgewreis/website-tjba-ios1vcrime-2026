@@ -46,4 +46,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(dashboard): update productivity card layout and labels** `[1003bc1a]`
 - **feat(consulta-cep): add deduplication window and enhance productivity tracking** `[7e895d12]`
 - **refactor(dashboard): adjust alignment styles for dashboard statistics** `[2273e2b2]`
+- **refactor(dashboard): update ranking display and styles** `[3da9dc2a]`
 
