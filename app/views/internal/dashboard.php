@@ -243,8 +243,8 @@ $titleProjStat = sprintf(
             font-size: 0.95rem;
         }
         .dashboard-ranking-row.is-me {
-            background: rgba(59, 130, 246, 0.12);
-            outline: 1px solid rgba(59, 130, 246, 0.35);
+            background: var(--color-success);
+            outline: 1px solid var(--color-success-active);
         }
         .dashboard-ranking-pos {
             font-weight: 600;
@@ -319,6 +319,13 @@ $titleProjStat = sprintf(
         }
         .dashboard-points-value.is-positive { color: var(--color-success, #16a34a); }
         .dashboard-points-value.is-negative { color: var(--color-danger, #dc2626); }
+
+        .badge-success {
+            color: var(--color-gray-800);
+        }
+        .badge-danger {
+            color: var(--color-gray-100);
+        }
         @media (max-width: 480px) {
             .dashboard-points-grid { gap: 6px; }
             .dashboard-points-value { font-size: 0.9rem; }
@@ -373,7 +380,7 @@ $titleProjStat = sprintf(
                                             $pos = (int) ($row['posicao'] ?? 0);
                                             ?>
                                             <li class="dashboard-ranking-row<?php echo $isMe ? ' is-me' : ''; ?>">
-                                                <span style="font-size: 12px;" style="<?php echo $isMe ? 'font-weight: 600;' : ''; ?>"><span class="dashboard-ranking-pos" style="font-family: monospace;"><?php echo $pos; ?>.</span> <?php echo htmlspecialchars($nome !== '' ? $nome : 'Usuário', ENT_QUOTES, 'UTF-8'); ?></span>
+                                                <span style="font-size: 12px;" style="<?php echo $isMe ? 'font-weight: 700;' : ''; ?>"><span class="dashboard-ranking-pos" style="font-family: monospace;"><?php echo $pos; ?>.</span> <?php echo htmlspecialchars($nome !== '' ? $nome : 'Usuário', ENT_QUOTES, 'UTF-8'); ?></span>
                                                 <span style="font-family: monospace; font-size: 12px;"><?php echo number_format($pts, 2, ',', '.'); ?> pts</span>
                                             </li>
                                         <?php endforeach; ?>
@@ -384,7 +391,7 @@ $titleProjStat = sprintf(
                                         <strong>Sua posição:</strong> <?php echo (int) ($userRankingRow['posicao'] ?? 0); ?>.
                                         · <?php echo number_format((float) ($userRankingRow['pontos_total'] ?? 0), 2, ',', '.'); ?> pts
                                     </div>
-                                <?php elseif ($rankingTop10 !== []): ?>
+                                <?php elseif ($userRankingRow === null && $rankingTop10 !== []): ?>
                                     <p class="minor-info margin-top-md">Você ainda não possui pontos no ranking deste mês; sua posição aparecerá quando houver lançamentos válidos.</p>
                                 <?php endif; ?>
                             <?php endif; ?>

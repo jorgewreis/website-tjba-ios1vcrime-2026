@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0080
+
+**Data:** 2026-05-07 12:14:49 | **Commit:** `0ac27fbc` | **Tipo:** `patch`
+
+- refactor(dashboard): update styles for user ranking and badges
+
 ## V. 1.97.0079
 
 **Data:** 2026-05-07 12:04:31 | **Commit:** `80137ce2` | **Tipo:** `patch`
@@ -5262,6 +5268,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
