@@ -39,7 +39,7 @@ $resumo = [
         'business_days_remaining' => 0,
     ],
 ];
-$rankingTop5 = [];
+$rankingTop10 = [];
 $allRankingRows = [];
 $userRankingRow = null;
 $rankingOculto = false;
@@ -61,7 +61,7 @@ if ($userId !== '') {
             $rankingOculto = !empty($rankingPayload['ranking_oculto']);
             $allRankingRows = $rankingPayload['rows'] ?? [];
             if ($allRankingRows !== [] && !$rankingOculto) {
-                $rankingTop5 = array_slice($allRankingRows, 0, 5);
+                $rankingTop10 = array_slice($allRankingRows, 0, 10);
                 foreach ($allRankingRows as $row) {
                     if ((string) ($row['usuario_id'] ?? '') === $userId) {
                         $userRankingRow = $row;
@@ -236,8 +236,8 @@ $titleProjStat = sprintf(
             align-items: center;
             justify-content: space-between;
             gap: 8px;
-            padding: 8px 10px;
-            border-radius: 6px;
+            padding: 4px 10px;
+            border-radius: 3px;
             margin-bottom: 4px;
             font-size: 0.95rem;
         }
@@ -352,9 +352,8 @@ $titleProjStat = sprintf(
                         <div class="dashboard-interno-card-head">
                             <div>
                                 <h2>Ranking mensal</h2>
-                                <span class="minor-info"><?php echo htmlspecialchars($mesRef, ENT_QUOTES, 'UTF-8'); ?> · top 5 (Cartório e Gabinete)</span>
+                                <span class="minor-info"><?php echo htmlspecialchars($mesRef, ENT_QUOTES, 'UTF-8'); ?></span>
                             </div>
-                            <button type="button" class="btn btn-secondary-outline height-md" data-nav-href="/frame.php?page=produtividade">Abrir módulo</button>
                         </div>
                         <div class="dashboard-interno-card-body">
                             <?php if (!$podeVerRanking): ?>
@@ -365,7 +364,7 @@ $titleProjStat = sprintf(
                                 <p class="minor-info">Ainda não há pontos registrados no ranking neste mês.</p>
                             <?php else: ?>
                                     <ul class="dashboard-ranking-list">
-                                        <?php foreach ($rankingTop5 as $row): ?>
+                                        <?php foreach ($rankingTop10 as $row): ?>
                                             <?php
                                             $isMe = (string) ($row['usuario_id'] ?? '') === $userId;
                                             $nome = ProdutividadeRankingDisplayHelper::doisPrimeirosNomes((string) ($row['usuario_nome'] ?? ''));
@@ -373,18 +372,18 @@ $titleProjStat = sprintf(
                                             $pos = (int) ($row['posicao'] ?? 0);
                                             ?>
                                             <li class="dashboard-ranking-row<?php echo $isMe ? ' is-me' : ''; ?>">
-                                                <span><span class="dashboard-ranking-pos"><?php echo $pos; ?>.</span> <?php echo htmlspecialchars($nome !== '' ? $nome : 'Usuário', ENT_QUOTES, 'UTF-8'); ?><?php echo $isMe ? ' <span class="minor-info">(você)</span>' : ''; ?></span>
-                                                <span><?php echo number_format($pts, 2, ',', '.'); ?> pts</span>
+                                                <span style="font-size: 12px;" style="<?php echo $isMe ? 'font-weight: 600;' : ''; ?>"><span class="dashboard-ranking-pos" style="font-family: monospace;"><?php echo $pos; ?>.</span> <?php echo htmlspecialchars($nome !== '' ? $nome : 'Usuário', ENT_QUOTES, 'UTF-8'); ?></span>
+                                                <span style="font-family: monospace; font-size: 12px;"><?php echo number_format($pts, 2, ',', '.'); ?> pts</span>
                                             </li>
                                         <?php endforeach; ?>
                                     </ul>
 
-                                <?php if ($userRankingRow !== null): ?>
+                                <?php if ($userRankingRow !== null && (int) ($userRankingRow['posicao'] ?? 0) > 10): ?>
                                     <div class="dashboard-ranking-me">
                                         <strong>Sua posição:</strong> <?php echo (int) ($userRankingRow['posicao'] ?? 0); ?>.
                                         · <?php echo number_format((float) ($userRankingRow['pontos_total'] ?? 0), 2, ',', '.'); ?> pts
                                     </div>
-                                <?php elseif ($rankingTop5 !== []): ?>
+                                <?php elseif ($rankingTop10 !== []): ?>
                                     <p class="minor-info margin-top-md">Você ainda não possui pontos no ranking deste mês; sua posição aparecerá quando houver lançamentos válidos.</p>
                                 <?php endif; ?>
                             <?php endif; ?>
