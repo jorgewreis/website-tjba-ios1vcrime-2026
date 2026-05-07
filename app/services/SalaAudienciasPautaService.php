@@ -11,6 +11,7 @@ require_once __DIR__ . '/../repositories/PartesRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosPartesRepository.php';
 require_once __DIR__ . '/../helpers/SalaAudienciasDuracaoEstimadaHelper.php';
 require_once __DIR__ . '/../helpers/PrioridadesProcessuaisCatalog.php';
+require_once __DIR__ . '/../helpers/CnjValidator.php';
 require_once __DIR__ . '/ProcessoPrioridadesService.php';
 require_once __DIR__ . '/../helpers/AlocacaoTarefasPerfisHelper.php';
 require_once __DIR__ . '/SalaMidiasService.php';
@@ -166,6 +167,10 @@ final class SalaAudienciasPautaService
         $numeroProcesso = trim((string) ($payload['numero_processo'] ?? ''));
         if ($numeroProcesso === '') {
             throw new InvalidArgumentException('Número do processo é obrigatório.');
+        }
+        $numeroProcessoDigits = CnjValidator::onlyDigits($numeroProcesso);
+        if (strlen($numeroProcessoDigits) !== 20 || !CnjValidator::isValid($numeroProcessoDigits)) {
+            throw new InvalidArgumentException('Número do processo inválido. Verifique o dígito verificador.');
         }
         $tipo = trim((string) ($payload['tipo_audiencia'] ?? ''));
         $data = trim((string) ($payload['data_audiencia'] ?? ''));
