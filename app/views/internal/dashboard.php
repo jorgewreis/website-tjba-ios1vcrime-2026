@@ -63,7 +63,8 @@ if ($userId !== '') {
             if ($allRankingRows !== [] && !$rankingOculto) {
                 $rankingTop10 = array_slice($allRankingRows, 0, 10);
                 foreach ($allRankingRows as $row) {
-                    if ((string) ($row['usuario_id'] ?? '') === $userId) {
+                    $rankingUserId = trim((string) ($row['usuario_id'] ?? $row['id_usuario'] ?? ''));
+                    if ($rankingUserId !== '' && $rankingUserId === $userId) {
                         $userRankingRow = $row;
                         break;
                     }
