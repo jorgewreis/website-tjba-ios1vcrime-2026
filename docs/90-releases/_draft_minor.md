@@ -58,4 +58,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(mni-config): add new configuration options for consulta_location and tribunal_code** `[791e9dd4]`
 - **feat(mni-processo): enhance logging and add second-degree target derivation** `[8c1616d2]`
 - **feat(mni-processo): enhance debugging and error tracking in MniProcessoService** `[2dc7a1c6]`
+- **feat(mni-processo): implement multiple process number variants for SOAP operations** `[51c4423b]`
 
