@@ -8,8 +8,30 @@ from playwright.async_api import Page, TimeoutError as PlaywrightTimeoutError, a
 
 from schemas import Documento, MetaConsulta, ProcessoResponse
 
+# Limites para diagnostico em modo raw (evitar respostas gigantes).
+_DIAG_TEXT_SNIPPET_MAX = 2800
+_DIAG_INPUTS_MAX = 35
+_DIAG_LINKS_MAX = 45
+_DIAG_FORMS_MAX = 12
+_DIAG_BODY_HTML_MAX = 4500
+_DIAG_ONCLICK_MAX = 400
+
+_INSTITUTIONAL_DOC_URL_RES = [
+    re.compile(r"cnj\.jus\.br", re.I),
+    re.compile(r"/atos-normativos", re.I),
+    re.compile(r"atos-normativos\?", re.I),
+    re.compile(r"conselho\s+nacional\s+de\s+just", re.I),
+]
+_INSTITUTIONAL_DOC_TITLE_RES = [
+    re.compile(r"resolu[cç][aã]o\s+n[ºo°]\s*121", re.I),
+    re.compile(r"conselho\s+nacional\s+de\s+just", re.I),
+    re.compile(r"\bcnj\b", re.I),
+]
+
 
 DEFAULT_TJBA_URLS = [
+    # Host dedicado costuma ser o destino apos redirect e o detalhe do processo.
+    "https://consultapublicapje.tjba.jus.br/pje/ConsultaPublica/listView.seam",
     "https://pje.tjba.jus.br/pje/ConsultaPublica/listView.seam",
     "https://pje2g.tjba.jus.br/pje/ConsultaPublica/listView.seam",
 ]
@@ -57,6 +79,113 @@ def get_timeout_ms() -> int:
     except ValueError:
         seconds = 20
     return seconds * 1000
+
+
+def _is_institutional_documento(item: Dict[str, Any]) -> bool:
+    url = (item.get("url") or "").strip()
+    title = (item.get("title") or "").strip()
+    blob = f"{url} {title}"
+    if any(rx.search(blob) for rx in _INSTITUTIONAL_DOC_URL_RES):
+        return True
+    if any(rx.search(title) for rx in _INSTITUTIONAL_DOC_TITLE_RES):
+        return True
+    return False
+
+
+def _filter_institutional_documentos(documentos: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    return [d for d in documentos if not _is_institutional_documento(d)]
+
+
+def _resumo_tem_dados_processuais(resumo: Dict[str, Any]) -> bool:
+    for key, value in (resumo or {}).items():
+        if key == "numero_consultado" or key == "resultado":
+            continue
+        if str(value or "").strip():
+            return True
+    return False
+
+
+def _resultado_reconhecido(resumo: Dict[str, Any], partes: List[Any], andamentos: List[Any], documentos: List[Any]) -> bool:
+    if partes or andamentos or documentos:
+        return True
+    return _resumo_tem_dados_processuais(resumo)
+
+
+def _avisos_indicam_pagina_nao_reconhecida(avisos: List[str]) -> bool:
+    needle = "nenhum bloco processual reconhecido"
+    return any(needle in (a or "").lower() for a in (avisos or []))
+
+
+async def _collect_diagnostico_pagina(page: Page) -> Dict[str, Any]:
+    """Estrutura enxuta para depurar listView/redirect/captcha sem vazar HTML inteiro."""
+    return await page.evaluate(
+        """(limits) => {
+            const clean = (value) => (value || '').replace(/\\s+/g, ' ').trim();
+            const clip = (value, max) => {
+                const text = clean(value);
+                if (!max || text.length <= max) return text;
+                return text.slice(0, max) + '…';
+            };
+
+            const visibleish = (el) => {
+                if (!el) return false;
+                const style = window.getComputedStyle(el);
+                if (style && (style.visibility === 'hidden' || style.display === 'none')) return false;
+                const rect = el.getBoundingClientRect();
+                return rect.width > 0 && rect.height > 0;
+            };
+
+            const inputs = Array.from(document.querySelectorAll('input'))
+                .filter(visibleish)
+                .slice(0, limits.inputsMax)
+                .map((input) => ({
+                    id: input.id || null,
+                    name: input.name || null,
+                    type: (input.getAttribute('type') || 'text').toLowerCase(),
+                    placeholder: clip(input.getAttribute('placeholder') || '', 120),
+                    value: clip(input.value || '', 160),
+                }));
+
+            const linkLike = Array.from(document.querySelectorAll('a, button, input[type="submit"], input[type="button"]'))
+                .filter(visibleish)
+                .slice(0, limits.linksMax)
+                .map((node) => {
+                    const tag = node.tagName.toLowerCase();
+                    const text = clip(node.textContent || '', 140);
+                    const href = node.getAttribute('href') || null;
+                    const onclick = clip(node.getAttribute('onclick') || '', limits.onclickMax);
+                    const value = tag === 'input' ? clip(node.getAttribute('value') || '', 120) : null;
+                    const label = text || value || clip(href || onclick || '', 140);
+                    return { tag, text: text || value, href, onclick: onclick || null };
+                })
+                .filter((row) => row.text || row.href || row.onclick);
+
+            const forms = Array.from(document.querySelectorAll('form')).slice(0, limits.formsMax).map((form) => ({
+                id: form.id || null,
+                name: form.name || null,
+                action: form.getAttribute('action') || null,
+                method: (form.getAttribute('method') || 'get').toLowerCase(),
+            }));
+
+            return {
+                final_url: window.location.href,
+                title: document.title || '',
+                text_snippet: clip(document.body ? document.body.innerText : '', limits.textMax),
+                inputs,
+                links_botoes: linkLike,
+                forms,
+                body_html_snippet: clip(document.body ? document.body.innerHTML : '', limits.htmlMax),
+            };
+        }""",
+        {
+            "textMax": _DIAG_TEXT_SNIPPET_MAX,
+            "inputsMax": _DIAG_INPUTS_MAX,
+            "linksMax": _DIAG_LINKS_MAX,
+            "formsMax": _DIAG_FORMS_MAX,
+            "htmlMax": _DIAG_BODY_HTML_MAX,
+            "onclickMax": _DIAG_ONCLICK_MAX,
+        },
+    )
 
 
 async def check_browser() -> Dict[str, Any]:
@@ -131,29 +260,53 @@ async def _consultar_em_url(
     await page.goto(target_url, wait_until="domcontentloaded")
     await _fill_process_number(page, formatted, digits)
     await _submit_search(page)
-    await _open_first_result_if_available(page, target_url)
+    await _open_first_result_if_available(page, page.url)
 
     await page.wait_for_load_state("domcontentloaded")
     await _settle(page)
 
-    parsed = await _parse_process_page(page, target_url)
-    avisos = parsed.pop("avisos", [])
-    resumo = parsed.get("resumo", {})
+    page_url = page.url
+    parsed = await _parse_process_page(page, page_url)
+    avisos = list(parsed.pop("avisos", []) or [])
+    resumo = dict(parsed.get("resumo", {}) or {})
     resumo.setdefault("numero_consultado", formatted)
+
+    documentos_raw = list(parsed.get("documentos", []) or [])
+    documentos_filtrados = _filter_institutional_documentos(documentos_raw)
+    parsed["documentos"] = documentos_filtrados
+
+    reconhecido = _resultado_reconhecido(resumo, parsed.get("partes", []), parsed.get("andamentos", []), documentos_filtrados)
+    if not reconhecido:
+        resumo["resultado"] = "Nao encontrado ou pagina de resultado nao reconhecida"
+        if not _avisos_indicam_pagina_nao_reconhecida(avisos):
+            avisos.append("Nenhum bloco processual reconhecido na pagina publica.")
+        avisos.append(
+            "Possiveis causas: numero inexistente, captcha/bloqueio, mudanca de layout do PJe ou permanencia na tela de listagem."
+        )
+
+    raw_payload: Dict[str, Any] = dict(parsed) if include_raw else {}
+    if include_raw:
+        raw_payload["resumo"] = dict(resumo)
+        if len(documentos_raw) != len(documentos_filtrados):
+            raw_payload["documentos_detectados_brutos"] = documentos_raw
+    if include_raw and not reconhecido:
+        try:
+            raw_payload["diagnostico_pagina"] = await _collect_diagnostico_pagina(page)
+        except Exception as exc:
+            raw_payload["diagnostico_pagina"] = {"erro": f"Falha ao coletar diagnostico: {exc}"}
 
     meta = MetaConsulta(
         url_consultada=target_url,
-        url_resultado=page.url,
+        url_resultado=page_url,
         duracao_ms=int((time.perf_counter() - started_at) * 1000),
         avisos=avisos,
     )
 
-    raw_payload = parsed if include_raw else {}
     return ProcessoResponse(
         resumo=resumo,
         partes=parsed.get("partes", []),
         andamentos=parsed.get("andamentos", []),
-        documentos=[Documento(**item) for item in parsed.get("documentos", [])],
+        documentos=[Documento(**item) for item in documentos_filtrados],
         meta_consulta=meta,
         dados_brutos=raw_payload,
     )
@@ -226,6 +379,11 @@ async def _submit_search(page: Page) -> None:
 
 async def _open_first_result_if_available(page: Page, base_url: str) -> None:
     candidates = [
+        "a[href*='DetalheProcessoConsultaPublica']",
+        "a[href*='detalheProcessoConsultaPublica']",
+        "a[href*='ConsultaPublica'][href*='Detalhe']",
+        "a[onclick*='DetalheProcessoConsultaPublica']",
+        "a[onclick*='detalheProcessoConsultaPublica']",
         ".rich-panel.col-sm-9 .btn",
         ".rich-panel .btn",
         "a[onclick*='ConsultaPublica']",
@@ -281,23 +439,36 @@ async def _parse_process_page(page: Page, base_url: str) -> Dict[str, Any]:
                 'table tbody tr td span'
             ).filter((text) => /\\d{2}\\/\\d{2}\\/\\d{4}/.test(text));
 
+            const institutional = (href, text) => {
+                const blob = `${href} ${text}`.toLowerCase();
+                return blob.includes('cnj.jus.br')
+                    || blob.includes('atos-normativos')
+                    || /resolu[cç][aã]o\\s+n[ºo°]?\\s*121/.test(text)
+                    || blob.includes('conselho nacional de just');
+            };
+
             const documentos = [];
             document.querySelectorAll('a').forEach((link) => {
                 const text = clean(link.textContent).replace('Visualizar documentos', '').trim();
                 const onclick = link.getAttribute('onclick') || '';
                 const href = link.getAttribute('href') || '';
-                const looksLikeDoc = /documento|visualizar|download|anexo/i.test(`${text} ${onclick} ${href}`);
-                if (!text || !looksLikeDoc) return;
+                if (!text || institutional(href, text)) return;
+
+                const haystack = `${text} ${onclick} ${href}`.toLowerCase();
+                const pjeLike = /consultapublica|pje\\/|seam|documento|popup|richfaces|download|anexo|pdf|visualizar/i.test(haystack);
+                const looksLikeDoc = /documento|visualizar|download|anexo|pdf|popup|seam/i.test(haystack);
+                if (!looksLikeDoc || (!pjeLike && !/\\.seam|idDocumento|id_documento/i.test(haystack))) return;
 
                 const match = onclick.match(/['\"]([^'\"]*(?:Documento|documento|download|Download|about:blank)[^'\"]*)['\"]/);
                 let url = match ? match[1] : href;
                 if (url && url !== 'about:blank') {
                     url = new URL(url, baseUrl).toString();
                 }
+                if (institutional(url || '', text)) return;
                 documentos.push({ title: text, url: url || null });
             });
 
-            if (!Object.keys(resumo).length && !partes.length && !andamentos.length) {
+            if (!Object.keys(resumo).length && !partes.length && !andamentos.length && !documentos.length) {
                 avisos.push('Nenhum bloco processual reconhecido na pagina publica.');
             }
 

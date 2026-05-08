@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0108
+
+**Data:** 2026-05-08 17:32:50 | **Commit:** `4f94baf0` | **Tipo:** `patch`
+
+- feat(scraper): add diagnostic limits and institutional document regex patterns
+
 ## V. 1.97.0107
 
 **Data:** 2026-05-08 17:19:16 | **Commit:** `33635471` | **Tipo:** `patch`
@@ -5280,6 +5286,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
