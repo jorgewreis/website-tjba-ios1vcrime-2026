@@ -46,6 +46,7 @@ final class MniProcessoService
             'consultar_alteracao' => [],
         ];
         $numeroVariants = [$cnjDigits];
+        $enableConsultarProcesso = $this->isConsultarProcessoEnabled();
 
         foreach ($endpoints as $target) {
             foreach ($numeroVariants as $numeroVariant) {
@@ -66,15 +67,20 @@ final class MniProcessoService
                     'numero_processo_enviado' => $numeroVariant,
                 ]);
                 // #endregion
-                $consultarProcessoPayload = $this->runCurlOnlyOperation(
-                    $target,
-                    'consultarProcesso',
-                    $this->buildConsultarProcessoParamVariants($numeroVariant)
-                );
-                $attempt['consultar_processo'] = is_array($consultarProcessoPayload) && $consultarProcessoPayload === [] ? 'empty_array' : 'ok';
+                $consultarProcessoPayload = [];
+                if ($enableConsultarProcesso) {
+                    $consultarProcessoPayload = $this->runCurlOnlyOperation(
+                        $target,
+                        'consultarProcesso',
+                        $this->buildConsultarProcessoParamVariants($numeroVariant)
+                    );
+                    $attempt['consultar_processo'] = is_array($consultarProcessoPayload) && $consultarProcessoPayload === [] ? 'empty_array' : 'ok';
+                } else {
+                    $attempt['consultar_processo'] = 'disabled_by_config';
+                }
 
                 $alteracaoPayload = null;
-                $consultarProcessoEstaVazio = is_array($consultarProcessoPayload) && $consultarProcessoPayload === [];
+                $consultarProcessoEstaVazio = !is_array($consultarProcessoPayload) || $consultarProcessoPayload === [];
                 if ($consultarProcessoEstaVazio) {
                     try {
                         $alteracaoPayload = $this->runCurlOnlyOperation(
@@ -160,6 +166,7 @@ final class MniProcessoService
             'fonte_location' => (string) ($selected['location'] ?? ''),
             'fallback_multibase_ativo' => count($endpoints) > 1,
             'trace_tentativas' => $debugTrace,
+            'consultar_processo_habilitada' => $enableConsultarProcesso,
             'credenciais_presentes' => [
                 'id_len' => strlen(trim((string) ($this->config['consultante_id'] ?? ''))),
                 'senha_len' => strlen(trim((string) ($this->config['consultante_senha'] ?? ''))),
@@ -866,6 +873,12 @@ final class MniProcessoService
             return false;
         }
         return $detected !== $configured;
+    }
+
+    private function isConsultarProcessoEnabled(): bool
+    {
+        $raw = strtolower(trim((string) ($this->config['enable_consultar_processo'] ?? '0')));
+        return in_array($raw, ['1', 'true', 'yes', 'on'], true);
     }
 
     /**
