@@ -55,4 +55,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(mni-config): update timeout settings and add ping response to search-processo** `[e2766a3a]`
 - **feat(mni-processo): refactor process handling and add probe number resolution** `[19549781]`
 - **feat(mni-processo): add fallback mechanism for SOAP operations and implement CURL handling** `[06970c3a]`
+- **feat(mni-config): add new configuration options for consulta_location and tribunal_code** `[791e9dd4]`
 
