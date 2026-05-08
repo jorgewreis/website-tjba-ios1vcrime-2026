@@ -66,4 +66,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(mni-processo): disable SOAP trace and clean up response handling** `[73cd81f9]`
 - **fix(mni-processo): update process alteration handling and configuration for movements** `[107c5739]`
 - **fix(mni-processo): enhance operation handling with cURL fallback** `[d946cf3f]`
+- **refactor(mni-processo): streamline operation handling and enhance logging** `[4286d1ee]`
 
