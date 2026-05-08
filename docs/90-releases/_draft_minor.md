@@ -65,4 +65,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(mni-processo): add fallback for XML parsing when DOM extension is unavailable** `[e8057bf8]`
 - **fix(mni-processo): disable SOAP trace and clean up response handling** `[73cd81f9]`
 - **fix(mni-processo): update process alteration handling and configuration for movements** `[107c5739]`
+- **fix(mni-processo): enhance operation handling with cURL fallback** `[d946cf3f]`
 
