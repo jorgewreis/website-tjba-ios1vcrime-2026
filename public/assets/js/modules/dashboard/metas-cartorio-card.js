@@ -140,12 +140,10 @@
         }
         const entries = Object.keys(META_LABELS).map(function (key) {
             const raw = metas && Object.prototype.hasOwnProperty.call(metas, key) ? metas[key] : null;
-            if (raw == null || String(raw).trim() === '') {
-                return '';
-            }
-            const display = String(raw);
+            const hasValue = !(raw == null || String(raw).trim() === '');
+            const display = hasValue ? String(raw) : '-';
             const metaRule = META_RULES[key] || null;
-            const actualValue = parsePercent(display);
+            const actualValue = hasValue ? parsePercent(display) : NaN;
             const isFarFromTarget = !!(
                 metaRule
                 && typeof metaRule.targetValue === 'number'
@@ -165,7 +163,7 @@
                 '<span class="meta-line-2" title="' + escapeHtml(fullTitle) + '">' + escapeHtml(line2) + '</span>' +
                 '</div>'
             );
-        }).filter(Boolean);
+        });
 
         if (entries.length === 0) {
             elTable.innerHTML = (

@@ -322,6 +322,82 @@ final class MniProcessoService
         throw new RuntimeException('Falha ao executar consultarAlteracao no modo diagnóstico.');
     }
 
+    /**
+     * Diagnóstico isolado: executa apenas consultarProcesso.
+     *
+     * @return array<string,mixed>
+     */
+    public function consultarProcessoSomente(string $numero): array
+    {
+        $cnjDigits = preg_replace('/\D+/', '', $numero) ?? '';
+        if ($cnjDigits === '' || strlen($cnjDigits) !== 20) {
+            throw new InvalidArgumentException('Número CNJ inválido. Informe os 20 dígitos.');
+        }
+
+        $this->assertIntercomCredentials();
+        $this->operationTrace = [];
+        $targets = $this->resolveEndpointTargets();
+        $numeroVariants = [$cnjDigits];
+        $formattedCnj = $this->formatCnjDigits($cnjDigits);
+        if ($formattedCnj !== null && !in_array($formattedCnj, $numeroVariants, true)) {
+            $numeroVariants[] = $formattedCnj;
+        }
+
+        $attempts = [];
+        $lastError = null;
+        foreach ($targets as $target) {
+            foreach ($numeroVariants as $numeroVariant) {
+                try {
+                    $payload = $this->runCurlOnlyOperation(
+                        $target,
+                        'consultarProcesso',
+                        $this->buildConsultarProcessoParamVariants($numeroVariant)
+                    );
+
+                    $attempts[] = [
+                        'wsdl' => (string) ($target['wsdl'] ?? ''),
+                        'location' => (string) ($target['location'] ?? ''),
+                        'numero_processo_enviado' => $numeroVariant,
+                        'resultado' => (is_array($payload) && $payload === []) ? 'empty_array' : 'ok',
+                    ];
+
+                    if (!(is_array($payload) && $payload === [])) {
+                        return [
+                            'numero_consultado' => $cnjDigits,
+                            'fonte_wsdl' => (string) ($target['wsdl'] ?? ''),
+                            'fonte_location' => (string) ($target['location'] ?? ''),
+                            'dados' => $payload,
+                            'trace_tentativas' => $attempts,
+                            'trace_operacoes' => $this->operationTrace,
+                        ];
+                    }
+                } catch (RuntimeException $e) {
+                    $lastError = $e;
+                    $attempts[] = [
+                        'wsdl' => (string) ($target['wsdl'] ?? ''),
+                        'location' => (string) ($target['location'] ?? ''),
+                        'numero_processo_enviado' => $numeroVariant,
+                        'resultado' => 'runtime_error',
+                        'erro' => $e->getMessage(),
+                    ];
+                }
+            }
+        }
+
+        if ($lastError instanceof RuntimeException) {
+            throw $lastError;
+        }
+
+        return [
+            'numero_consultado' => $cnjDigits,
+            'fonte_wsdl' => (string) ($targets[0]['wsdl'] ?? ''),
+            'fonte_location' => (string) ($targets[0]['location'] ?? ''),
+            'dados' => [],
+            'trace_tentativas' => $attempts,
+            'trace_operacoes' => $this->operationTrace,
+        ];
+    }
+
     private function buildClient(): SoapClient
     {
         return $this->buildClientForTarget([

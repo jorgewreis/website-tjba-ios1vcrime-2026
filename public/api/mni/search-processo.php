@@ -125,6 +125,22 @@ if ($mode === 'alteracao_only') {
     }
 }
 
+if ($mode === 'processo_only') {
+    error_log('[MNI_DIAG][' . $__mniDiagId . '] processo_only_start');
+    try {
+        $service = new MniProcessoService($config);
+        $diag = $service->consultarProcessoSomente($numero);
+        error_log('[MNI_DIAG][' . $__mniDiagId . '] processo_only_ok');
+        respond(['data' => $diag], 200);
+    } catch (RuntimeException $e) {
+        error_log('[MNI_DIAG][' . $__mniDiagId . '] processo_only_runtime=' . $e->getMessage());
+        respond(['error' => $e->getMessage()], 502);
+    } catch (Throwable $e) {
+        error_log('[MNI_DIAG][' . $__mniDiagId . '] processo_only_throwable=' . $e->getMessage());
+        respond(['error' => 'Falha inesperada no modo processo_only.'], 500);
+    }
+}
+
 try {
     error_log('[MNI_DIAG][' . $__mniDiagId . '] consulta_start numero=' . $numero);
     $service = new MniProcessoService($config);

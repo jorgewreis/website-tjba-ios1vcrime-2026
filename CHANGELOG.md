@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0104
+
+**Data:** 2026-05-08 12:58:39 | **Commit:** `83cca398` | **Tipo:** `patch`
+
+- feat(mni-processo): add consultarProcessoSomente method for isolated process queries
+
 ## V. 1.97.0103
 
 **Data:** 2026-05-08 12:28:21 | **Commit:** `fdaa872d` | **Tipo:** `patch`
@@ -5406,6 +5412,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
