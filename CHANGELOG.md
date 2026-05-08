@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0091
+
+**Data:** 2026-05-08 11:15:34 | **Commit:** `8d55fa6b` | **Tipo:** `patch`
+
+- feat(mni-processo): enhance operation tracing and debugging in MniProcessoService
+
 ## V. 1.97.0090
 
 **Data:** 2026-05-08 11:13:20 | **Commit:** `51c4423b` | **Tipo:** `patch`
@@ -5328,6 +5334,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

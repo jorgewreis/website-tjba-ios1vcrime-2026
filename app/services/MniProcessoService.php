@@ -7,6 +7,8 @@ final class MniProcessoService
 {
     /** @var array<string,mixed> */
     private array $config;
+    /** @var list<array<string,mixed>> */
+    private array $operationTrace = [];
 
     /** @param array<string,mixed> $config */
     public function __construct(array $config)
@@ -34,6 +36,7 @@ final class MniProcessoService
         // #endregion
 
         $this->assertIntercomCredentials();
+        $this->operationTrace = [];
         $endpoints = $this->resolveEndpointTargets();
         $lastRuntimeError = null;
         $selected = null;
@@ -142,6 +145,11 @@ final class MniProcessoService
             'fonte_location' => (string) ($selected['location'] ?? ''),
             'fallback_multibase_ativo' => count($endpoints) > 1,
             'trace_tentativas' => $debugTrace,
+            'credenciais_presentes' => [
+                'id_len' => strlen(trim((string) ($this->config['consultante_id'] ?? ''))),
+                'senha_len' => strlen(trim((string) ($this->config['consultante_senha'] ?? ''))),
+            ],
+            'trace_operacoes' => $this->operationTrace,
         ];
         // #region agent log
         $this->debugLog('diag-run-1', 'H5', 'MniProcessoService::consultarPorNumeroCnj:108', 'Resultado final da consulta MNI', [
@@ -220,7 +228,7 @@ final class MniProcessoService
         }
 
         $options = [
-            'trace' => 0,
+            'trace' => 1,
             'exceptions' => true,
             'cache_wsdl' => WSDL_CACHE_BOTH,
             'connection_timeout' => (int) ($this->config['connect_timeout'] ?? 10),
@@ -287,7 +295,28 @@ final class MniProcessoService
                         'param_keys' => array_keys($params),
                     ]);
                     // #endregion
-                    return $this->normalizeSoapResponse($response);
+                    $normalized = $this->normalizeSoapResponse($response);
+                    $rawResponse = '';
+                    try {
+                        $rawResponse = (string) $client->__getLastResponse();
+                    } catch (Throwable $e) {
+                        $rawResponse = '';
+                    }
+                    $rawHeaders = '';
+                    try {
+                        $rawHeaders = (string) $client->__getLastResponseHeaders();
+                    } catch (Throwable $e) {
+                        $rawHeaders = '';
+                    }
+                    $this->operationTrace[] = [
+                        'operation' => $operationName,
+                        'param_keys' => array_keys($params),
+                        'normalized_empty' => is_array($normalized) && $normalized === [],
+                        'raw_has_xsi_nil' => stripos($rawResponse, 'xsi:nil="true"') !== false,
+                        'raw_headers_snippet' => substr($rawHeaders, 0, 300),
+                        'raw_response_snippet' => substr($rawResponse, 0, 600),
+                    ];
+                    return $normalized;
                 } catch (SoapFault $e) {
                     if (stripos((string) $e->getMessage(), 'no XML document') !== false) {
                         $fallback = $this->callOperationViaCurl($operationName, $params);
@@ -298,6 +327,14 @@ final class MniProcessoService
                                 'fallback_keys' => array_keys($fallback),
                             ]);
                             // #endregion
+                            $this->operationTrace[] = [
+                                'operation' => $operationName,
+                                'param_keys' => array_keys($params),
+                                'normalized_empty' => is_array($fallback) && $fallback === [],
+                                'raw_has_xsi_nil' => null,
+                                'raw_headers_snippet' => 'fallback_curl',
+                                'raw_response_snippet' => isset($fallback['raw_xml']) ? substr((string) $fallback['raw_xml'], 0, 600) : '',
+                            ];
                             return $fallback;
                         }
                     }
