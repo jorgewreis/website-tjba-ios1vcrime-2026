@@ -70,4 +70,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(dashboard): enhance meta display and improve layout** `[8419ea66]`
 - **feat(mni-processo): add diagnostic mode for process alteration queries** `[5a5e39ac]`
 - **feat(mni-processo): add noop_consulta mode for diagnostic queries** `[d16dab41]`
+- **feat(mni-processo): enable/disable consultar processo based on configuration** `[b30f0c09]`
 
