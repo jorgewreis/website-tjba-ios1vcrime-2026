@@ -239,7 +239,7 @@ final class MniProcessoService
         }
 
         $options = [
-            'trace' => 1,
+            'trace' => 0,
             'exceptions' => true,
             'cache_wsdl' => WSDL_CACHE_BOTH,
             'connection_timeout' => (int) ($this->config['connect_timeout'] ?? 10),
@@ -307,25 +307,13 @@ final class MniProcessoService
                     ]);
                     // #endregion
                     $normalized = $this->normalizeSoapResponse($response);
-                    $rawResponse = '';
-                    try {
-                        $rawResponse = (string) $client->__getLastResponse();
-                    } catch (Throwable $e) {
-                        $rawResponse = '';
-                    }
-                    $rawHeaders = '';
-                    try {
-                        $rawHeaders = (string) $client->__getLastResponseHeaders();
-                    } catch (Throwable $e) {
-                        $rawHeaders = '';
-                    }
                     $this->operationTrace[] = [
                         'operation' => $operationName,
                         'param_keys' => array_keys($params),
                         'normalized_empty' => is_array($normalized) && $normalized === [],
-                        'raw_has_xsi_nil' => stripos($rawResponse, 'xsi:nil="true"') !== false,
-                        'raw_headers_snippet' => substr($rawHeaders, 0, 300),
-                        'raw_response_snippet' => substr($rawResponse, 0, 600),
+                        'raw_has_xsi_nil' => null,
+                        'raw_headers_snippet' => 'soap_trace_disabled',
+                        'raw_response_snippet' => '',
                     ];
                     return $normalized;
                 } catch (SoapFault $e) {
