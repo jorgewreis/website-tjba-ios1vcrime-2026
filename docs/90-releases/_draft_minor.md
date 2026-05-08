@@ -49,4 +49,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(dashboard): update ranking display and styles** `[3da9dc2a]`
 - **refactor(dashboard): improve user ranking identification logic** `[80137ce2]`
 - **refactor(dashboard): update styles for user ranking and badges** `[0ac27fbc]`
+- **feat(page-access): add 'consultamniteste' page with public access control** `[d2d6ba28]`
 
