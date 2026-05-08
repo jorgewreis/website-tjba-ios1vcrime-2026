@@ -64,4 +64,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(mni-processo): add business error extraction and logging in MniProcessoService** `[c43529a9]`
 - **fix(mni-processo): add fallback for XML parsing when DOM extension is unavailable** `[e8057bf8]`
 - **fix(mni-processo): disable SOAP trace and clean up response handling** `[73cd81f9]`
+- **fix(mni-processo): update process alteration handling and configuration for movements** `[107c5739]`
 
