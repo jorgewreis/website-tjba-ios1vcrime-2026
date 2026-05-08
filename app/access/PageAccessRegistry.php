@@ -125,6 +125,7 @@ final class PageAccessRegistry
             'partesinstituicoeslist' => ['kind' => 'consultas_partes'],
             'consultaprocessos' => ['kind' => 'consultas_processos'],
             'consultaprocessosedit' => ['kind' => 'consultas_processos'],
+            'consultamniteste' => ['kind' => 'consultas_processos'],
 
             'consultapartescreate' => $areaCartorio,
             'consultapartesedit' => $areaCartorio,

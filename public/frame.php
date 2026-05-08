@@ -10,10 +10,31 @@ require_once __DIR__ . '/../app/access/AccessEvaluator.php';
 require_once __DIR__ . '/../app/access/AccessPolicyVersion.php';
 require_once __DIR__ . '/../app/helpers/UsuarioPerfisAutorizacao.php';
 
-Security::requireAuthentication();
-
 // Página solicitada (padrão: dashboard).
 $page = $_GET['page'] ?? 'dashboard';
+$page = is_string($page) ? trim($page) : 'dashboard';
+
+$allowPublicMniTest = envValue('MNI_TEST_PAGE_PUBLIC_ENABLED', '0');
+$allowPublicMniTest = strtolower((string) $allowPublicMniTest);
+$allowPublicMniTest = in_array($allowPublicMniTest, ['1', 'true', 'yes', 'on'], true);
+
+if ($page === 'consultamniteste') {
+    if (!$allowPublicMniTest) {
+        http_response_code(404);
+        exit('Página não encontrada');
+    }
+
+    $publicMniTestPage = realpath(__DIR__ . '/../app/views/internal/consulta-mni-teste.php');
+    if ($publicMniTestPage === false || !is_file($publicMniTestPage)) {
+        http_response_code(503);
+        exit('Serviço temporariamente indisponível.');
+    }
+
+    require $publicMniTestPage;
+    exit;
+}
+
+Security::requireAuthentication();
 
 // Extrai o ID do usuário do retorno do validarToken.
 $userId = null;
@@ -105,6 +126,7 @@ $allowed_pages = [
     'consultapartesedit'    => $PAGES . '/consulta-partes-edit.php',
     'consultaprocessos'     => $PAGES . '/consulta-processos-list.php',
     'consultaprocessosedit' => $PAGES . '/consulta-processos-edit.php',
+    'consultamniteste'      => $PAGES . '/consulta-mni-teste.php',
     'instituicoespublicas'  => $PAGES . '/instituicoes-publicas-list.php',
     'instituicoespublicascreate' => $PAGES . '/instituicoes-publicas-create.php',
     'instituicoespublicasedit'   => $PAGES . '/instituicoes-publicas-edit.php',

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0081
+
+**Data:** 2026-05-08 09:38:22 | **Commit:** `d2d6ba28` | **Tipo:** `patch`
+
+- feat(page-access): add 'consultamniteste' page with public access control
+
 ## V. 1.97.0080
 
 **Data:** 2026-05-07 12:14:49 | **Commit:** `0ac27fbc` | **Tipo:** `patch`
@@ -5268,6 +5274,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
