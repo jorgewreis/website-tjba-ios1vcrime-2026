@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0085
+
+**Data:** 2026-05-08 10:16:01 | **Commit:** `19549781` | **Tipo:** `patch`
+
+- feat(mni-processo): refactor process handling and add probe number resolution
+
 ## V. 1.97.0084
 
 **Data:** 2026-05-08 10:03:03 | **Commit:** `e2766a3a` | **Tipo:** `patch`
@@ -5292,6 +5298,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

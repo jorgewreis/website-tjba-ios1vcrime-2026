@@ -70,20 +70,21 @@ final class MniProcessoService
             $functions = [];
         }
 
-        $avisosPayload = null;
+        $probePayload = null;
         if (!$quick) {
+            $probeNumero = $this->resolveProbeNumeroProcesso();
             $base = [
                 'idConsultante' => (string) ($this->config['consultante_id'] ?? ''),
                 'senhaConsultante' => (string) ($this->config['consultante_senha'] ?? ''),
-                'dataReferencia' => date('Y-m-d\TH:i:s'),
+                'numeroProcesso' => $probeNumero,
             ];
 
-            $avisosPayload = $this->runSoapOperation(
+            $probePayload = $this->runSoapOperation(
                 $soapClient,
-                ['consultarAvisosPendentes', 'ConsultarAvisosPendentes'],
+                ['consultarAlteracao', 'ConsultarAlteracao'],
                 [
                     $base,
-                    ['consultarAvisosPendentes' => $base],
+                    ['consultarAlteracao' => $base],
                 ]
             );
         }
@@ -95,8 +96,8 @@ final class MniProcessoService
             'functions_count' => count($functions),
             'functions_preview' => array_slice($functions, 0, 8),
             'auth_check_mode' => $quick ? 'quick' : 'full',
-            'auth_check_operation' => $quick ? 'wsdl_only' : 'consultarAvisosPendentes',
-            'auth_check_response' => $quick ? ['info' => 'Modo rápido: apenas carga WSDL e introspecção de funções.'] : $avisosPayload,
+            'auth_check_operation' => $quick ? 'wsdl_only' : 'consultarAlteracao',
+            'auth_check_response' => $quick ? ['info' => 'Modo rápido: apenas carga WSDL e introspecção de funções.'] : $probePayload,
             'timestamp' => date(DATE_ATOM),
         ];
     }
@@ -251,5 +252,17 @@ final class MniProcessoService
                 'Credenciais MNI ausentes. Configure MNI_CONSULTANTE_ID e MNI_CONSULTANTE_SENHA no ambiente.'
             );
         }
+    }
+
+    private function resolveProbeNumeroProcesso(): string
+    {
+        $probe = trim((string) ($this->config['probe_numero_processo'] ?? ''));
+        $digits = preg_replace('/\D+/', '', $probe) ?? '';
+        if (strlen($digits) === 20) {
+            return $digits;
+        }
+
+        // Número sintético para validar credencial/operação com baixo custo.
+        return '00000000000000000000';
     }
 }

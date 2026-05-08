@@ -39,6 +39,7 @@ return [
     'password' => trim((string) ($_ENV['MNI_PASSWORD'] ?? getenv('MNI_PASSWORD') ?: '')),
     'consultante_id' => trim((string) ($_ENV['MNI_CONSULTANTE_ID'] ?? getenv('MNI_CONSULTANTE_ID') ?: '')),
     'consultante_senha' => trim((string) ($_ENV['MNI_CONSULTANTE_SENHA'] ?? getenv('MNI_CONSULTANTE_SENHA') ?: '')),
+    'probe_numero_processo' => trim((string) ($_ENV['MNI_PROBE_PROCESS_NUMBER'] ?? getenv('MNI_PROBE_PROCESS_NUMBER') ?: '')),
     'cert_path' => $certPath,
     'cert_passphrase' => trim((string) ($_ENV['MNI_CERT_PASSPHRASE'] ?? getenv('MNI_CERT_PASSPHRASE') ?: '')),
     'timeout' => (int) (trim((string) ($_ENV['MNI_TIMEOUT_SECONDS'] ?? getenv('MNI_TIMEOUT_SECONDS') ?: '8')) ?: 8),
