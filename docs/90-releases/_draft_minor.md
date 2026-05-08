@@ -51,4 +51,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(dashboard): update styles for user ranking and badges** `[0ac27fbc]`
 - **feat(page-access): add 'consultamniteste' page with public access control** `[d2d6ba28]`
 - **feat(mni-healthcheck): add connectivity diagnostic endpoint to MniProcessoService** `[cf0ae442]`
+- **feat(mni-healthcheck): add healthcheck button and functionality to MNI test page** `[bd0e6cd7]`
 
