@@ -75,17 +75,22 @@ final class MniProcessoService
                 $attempt['consultar_processo'] = is_array($consultarProcessoPayload) && $consultarProcessoPayload === [] ? 'empty_array' : 'ok';
 
                 $alteracaoPayload = null;
-                try {
-                    $alteracaoPayload = $this->runSoapOperation(
-                        $soapClient,
-                        ['consultarAlteracao', 'ConsultarAlteracao'],
-                        $this->buildConsultarAlteracaoParamVariants($numeroVariant)
-                    );
-                    $attempt['consultar_alteracao'] = is_array($alteracaoPayload) && $alteracaoPayload === [] ? 'empty_array' : 'ok';
-                } catch (RuntimeException $e) {
-                    $alteracaoPayload = ['aviso' => $e->getMessage()];
-                    $attempt['consultar_alteracao'] = 'runtime_error';
-                    $attempt['erro'] = $e->getMessage();
+                $consultarProcessoEstaVazio = is_array($consultarProcessoPayload) && $consultarProcessoPayload === [];
+                if ($consultarProcessoEstaVazio) {
+                    try {
+                        $alteracaoPayload = $this->runSoapOperation(
+                            $soapClient,
+                            ['consultarAlteracao', 'ConsultarAlteracao'],
+                            $this->buildConsultarAlteracaoParamVariants($numeroVariant)
+                        );
+                        $attempt['consultar_alteracao'] = is_array($alteracaoPayload) && $alteracaoPayload === [] ? 'empty_array' : 'ok';
+                    } catch (RuntimeException $e) {
+                        $alteracaoPayload = ['aviso' => $e->getMessage()];
+                        $attempt['consultar_alteracao'] = 'runtime_error';
+                        $attempt['erro'] = $e->getMessage();
+                    }
+                } else {
+                    $attempt['consultar_alteracao'] = 'skipped_not_needed';
                 }
 
                 $merged = [
@@ -576,11 +581,13 @@ final class MniProcessoService
      */
     private function buildIntercomBasePayload(string $numeroProcesso): array
     {
+        $includeMovimentos = strtolower((string) ($this->config['include_movimentos'] ?? '0'));
+        $includeMovimentosBool = in_array($includeMovimentos, ['1', 'true', 'yes', 'on'], true);
         return [
             'idConsultante' => (string) ($this->config['consultante_id'] ?? ''),
             'senhaConsultante' => (string) ($this->config['consultante_senha'] ?? ''),
             'numeroProcesso' => $numeroProcesso,
-            'movimentos' => true,
+            'movimentos' => $includeMovimentosBool,
             'incluirCabecalho' => true,
             'incluirDocumentos' => false,
         ];

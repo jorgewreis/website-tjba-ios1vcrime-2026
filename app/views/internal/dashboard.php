@@ -319,6 +319,49 @@ $titleProjStat = sprintf(
         }
         .dashboard-points-value.is-positive { color: var(--color-success, #16a34a); }
         .dashboard-points-value.is-negative { color: var(--color-danger, #dc2626); }
+        .dashboard-metas-card-header {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 6px;
+        }
+        .dashboard-metas-card-ident {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            font-size: 12px;
+            border-bottom: 1px dashed var(--border-color, #e2e8f0);
+            padding-bottom: 6px;
+        }
+        .dashboard-metas-card-ident strong {
+            font-weight: 600;
+            color: var(--color-gray-700, #374151);
+        }
+        .dashboard-metas-card-table {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .dashboard-metas-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            font-size: 12px;
+            border-bottom: 1px solid var(--border-color, #e2e8f0);
+            padding-bottom: 5px;
+        }
+        .dashboard-metas-row:last-child {
+            border-bottom: 0;
+            padding-bottom: 0;
+        }
+        .dashboard-metas-row .meta-name {
+            color: var(--color-gray-700, #374151);
+        }
+        .dashboard-metas-row .meta-value {
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            color: var(--color-gray-800, #1f2937);
+        }
 
         .badge-success {
             color: var(--color-gray-800);
@@ -429,6 +472,41 @@ $titleProjStat = sprintf(
                             </div>
                         </div>
                     </div>
+
+                    <div class="dashboard-interno-card" id="dashboard-metas-cartorio-card">
+                        <div class="dashboard-interno-card-head">
+                            <div>
+                                <h2>Evolução das metas do cartório</h2>
+                                <span class="minor-info" id="dashboard-metas-ano">Carregando referência...</span>
+                            </div>
+                        </div>
+                        <div class="dashboard-interno-card-body">
+                            <div class="dashboard-metas-card-header">
+                                <div class="dashboard-metas-card-ident">
+                                    <strong>Comarca</strong>
+                                    <span id="dashboard-metas-comarca">Carregando...</span>
+                                </div>
+                                <div class="dashboard-metas-card-ident">
+                                    <strong>Vara</strong>
+                                    <span id="dashboard-metas-vara">Carregando...</span>
+                                </div>
+                                <div class="dashboard-metas-card-ident">
+                                    <strong>Cód. Comarca</strong>
+                                    <span id="dashboard-metas-cod-comarca">-</span>
+                                </div>
+                                <div class="dashboard-metas-card-ident">
+                                    <strong>Cód. Unidade</strong>
+                                    <span id="dashboard-metas-cod-unidade">-</span>
+                                </div>
+                            </div>
+                            <div class="dashboard-metas-card-table" id="dashboard-metas-table">
+                                <div class="dashboard-metas-row">
+                                    <span class="meta-name">Aguardando dados da API</span>
+                                    <span class="meta-value">...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="dashboard-interno-col">
@@ -495,5 +573,6 @@ $titleProjStat = sprintf(
     </div>
     <?php include __DIR__ . '/_profile_saved_reload_parent.php'; ?>
     <script src="/assets/js/modules/produtividade/badge-popup.js"></script>
+    <script src="/assets/js/modules/dashboard/metas-cartorio-card.js"></script>
 </body>
 </html>

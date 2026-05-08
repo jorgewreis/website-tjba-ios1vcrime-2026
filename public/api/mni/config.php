@@ -37,6 +37,7 @@ return [
     'location' => trim((string) ($_ENV['MNI_SOAP_LOCATION'] ?? getenv('MNI_SOAP_LOCATION') ?: '')),
     'consulta_location' => trim((string) ($_ENV['MNI_CONSULTA_SOAP_LOCATION'] ?? getenv('MNI_CONSULTA_SOAP_LOCATION') ?: '')),
     'tribunal_code' => trim((string) ($_ENV['MNI_TRIBUNAL_CODE'] ?? getenv('MNI_TRIBUNAL_CODE') ?: '')),
+    'include_movimentos' => trim((string) ($_ENV['MNI_INCLUDE_MOVIMENTOS'] ?? getenv('MNI_INCLUDE_MOVIMENTOS') ?: '0')),
     'login' => trim((string) ($_ENV['MNI_LOGIN'] ?? getenv('MNI_LOGIN') ?: '')),
     'password' => trim((string) ($_ENV['MNI_PASSWORD'] ?? getenv('MNI_PASSWORD') ?: '')),
     'consultante_id' => trim((string) ($_ENV['MNI_CONSULTANTE_ID'] ?? getenv('MNI_CONSULTANTE_ID') ?: '')),
