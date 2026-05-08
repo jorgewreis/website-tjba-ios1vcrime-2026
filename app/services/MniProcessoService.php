@@ -512,6 +512,13 @@ final class MniProcessoService
      */
     private function parseSoapEnvelopeBody(string $xmlPayload): array
     {
+        if (!class_exists('DOMDocument') || !class_exists('DOMXPath')) {
+            return [
+                'payload' => $this->xmlToArray($xmlPayload),
+                'debug' => ['parse_mode' => 'dom_extension_unavailable_simplexml_fallback'],
+            ];
+        }
+
         $doc = new DOMDocument();
         $ok = @$doc->loadXML($xmlPayload);
         if (!$ok) {

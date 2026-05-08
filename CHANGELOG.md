@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0094
+
+**Data:** 2026-05-08 11:38:55 | **Commit:** `e8057bf8` | **Tipo:** `patch`
+
+- fix(mni-processo): add fallback for XML parsing when DOM extension is unavailable
+
 ## V. 1.97.0093
 
 **Data:** 2026-05-08 11:25:51 | **Commit:** `c43529a9` | **Tipo:** `patch`
@@ -5346,6 +5352,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
