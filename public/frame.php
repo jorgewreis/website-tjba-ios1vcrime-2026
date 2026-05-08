@@ -14,26 +14,6 @@ require_once __DIR__ . '/../app/helpers/UsuarioPerfisAutorizacao.php';
 $page = $_GET['page'] ?? 'dashboard';
 $page = is_string($page) ? trim($page) : 'dashboard';
 
-$allowPublicMniTest = envValue('MNI_TEST_PAGE_PUBLIC_ENABLED', '0');
-$allowPublicMniTest = strtolower((string) $allowPublicMniTest);
-$allowPublicMniTest = in_array($allowPublicMniTest, ['1', 'true', 'yes', 'on'], true);
-
-if ($page === 'consultamniteste') {
-    if (!$allowPublicMniTest) {
-        http_response_code(404);
-        exit('Página não encontrada');
-    }
-
-    $publicMniTestPage = realpath(__DIR__ . '/../app/views/internal/consulta-mni-teste.php');
-    if ($publicMniTestPage === false || !is_file($publicMniTestPage)) {
-        http_response_code(503);
-        exit('Serviço temporariamente indisponível.');
-    }
-
-    require $publicMniTestPage;
-    exit;
-}
-
 Security::requireAuthentication();
 
 // Extrai o ID do usuário do retorno do validarToken.
@@ -126,7 +106,7 @@ $allowed_pages = [
     'consultapartesedit'    => $PAGES . '/consulta-partes-edit.php',
     'consultaprocessos'     => $PAGES . '/consulta-processos-list.php',
     'consultaprocessosedit' => $PAGES . '/consulta-processos-edit.php',
-    'consultamniteste'      => $PAGES . '/consulta-mni-teste.php',
+    'consultapjepublicoteste' => $PAGES . '/consulta-pje-publico-teste.php',
     'instituicoespublicas'  => $PAGES . '/instituicoes-publicas-list.php',
     'instituicoespublicascreate' => $PAGES . '/instituicoes-publicas-create.php',
     'instituicoespublicasedit'   => $PAGES . '/instituicoes-publicas-edit.php',
@@ -218,6 +198,15 @@ do {
         $validationStatus = 404;
         $validationMessage = 'Página não encontrada';
         break;
+    }
+
+    if ($page === 'consultapjepublicoteste') {
+        $allowPjePublicTest = strtolower((string) envValue('PJE_PUBLIC_TEST_PAGE_ENABLED', '0'));
+        if (!in_array($allowPjePublicTest, ['1', 'true', 'yes', 'on'], true)) {
+            $validationStatus = 404;
+            $validationMessage = 'Página não encontrada';
+            break;
+        }
     }
 
     $userPerfils = UsuarioPerfisAutorizacao::perfisDoUsuario($userId);

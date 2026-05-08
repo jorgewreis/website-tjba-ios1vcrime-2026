@@ -1,160 +1,16 @@
 # Changelog
 
-## V. 1.97.0106
+## V. 1.97.0107
 
-**Data:** 2026-05-08 13:44:41 | **Commit:** `dc671934` | **Tipo:** `patch`
+**Data:** 2026-05-08 17:19:16 | **Commit:** `33635471` | **Tipo:** `patch`
 
-- feat(mni-processo): implement endpoint filtering based on CNJ digits
-
-## V. 1.97.0105
-
-**Data:** 2026-05-08 13:05:12 | **Commit:** `53549192` | **Tipo:** `patch`
-
-- feat(mni-processo): implement endpoint prioritization for target resolution
-
-## V. 1.97.0104
-
-**Data:** 2026-05-08 12:58:39 | **Commit:** `83cca398` | **Tipo:** `patch`
-
-- feat(mni-processo): add consultarProcessoSomente method for isolated process queries
-
-## V. 1.97.0103
-
-**Data:** 2026-05-08 12:28:21 | **Commit:** `fdaa872d` | **Tipo:** `patch`
-
-- feat(mni-processo): enhance CNJ digit formatting and logging
-
-## V. 1.97.0102
-
-**Data:** 2026-05-08 12:25:15 | **Commit:** `b30f0c09` | **Tipo:** `patch`
-
-- feat(mni-processo): enable/disable consultar processo based on configuration
-
-## V. 1.97.0101
-
-**Data:** 2026-05-08 12:21:02 | **Commit:** `d16dab41` | **Tipo:** `patch`
-
-- feat(mni-processo): add noop_consulta mode for diagnostic queries
-
-## V. 1.97.0100
-
-**Data:** 2026-05-08 12:17:29 | **Commit:** `5a5e39ac` | **Tipo:** `patch`
-
-- feat(mni-processo): add diagnostic mode for process alteration queries
+- refactor(page-access): rename 'consultamniteste' to 'consultapjepublicoteste' and remove deprecated MniProcessoResponseMapper and MniProcessoService files
 
 ## V. 1.97.0099
 
 **Data:** 2026-05-08 12:02:44 | **Commit:** `8419ea66` | **Tipo:** `patch`
 
 - refactor(dashboard): enhance meta display and improve layout
-
-## V. 1.97.0098
-
-**Data:** 2026-05-08 11:57:28 | **Commit:** `4286d1ee` | **Tipo:** `patch`
-
-- refactor(mni-processo): streamline operation handling and enhance logging
-
-## V. 1.97.0097
-
-**Data:** 2026-05-08 11:54:54 | **Commit:** `d946cf3f` | **Tipo:** `patch`
-
-- fix(mni-processo): enhance operation handling with cURL fallback
-
-## V. 1.97.0096
-
-**Data:** 2026-05-08 11:49:44 | **Commit:** `107c5739` | **Tipo:** `patch`
-
-- fix(mni-processo): update process alteration handling and configuration for movements
-
-## V. 1.97.0095
-
-**Data:** 2026-05-08 11:43:51 | **Commit:** `73cd81f9` | **Tipo:** `patch`
-
-- fix(mni-processo): disable SOAP trace and clean up response handling
-
-## V. 1.97.0094
-
-**Data:** 2026-05-08 11:38:55 | **Commit:** `e8057bf8` | **Tipo:** `patch`
-
-- fix(mni-processo): add fallback for XML parsing when DOM extension is unavailable
-
-## V. 1.97.0093
-
-**Data:** 2026-05-08 11:25:51 | **Commit:** `c43529a9` | **Tipo:** `patch`
-
-- feat(mni-processo): add business error extraction and logging in MniProcessoService
-
-## V. 1.97.0092
-
-**Data:** 2026-05-08 11:21:07 | **Commit:** `d6f2264a` | **Tipo:** `patch`
-
-- refactor(mni-processo): simplify process number variant handling in MniProcessoService
-
-## V. 1.97.0091
-
-**Data:** 2026-05-08 11:15:34 | **Commit:** `8d55fa6b` | **Tipo:** `patch`
-
-- feat(mni-processo): enhance operation tracing and debugging in MniProcessoService
-
-## V. 1.97.0090
-
-**Data:** 2026-05-08 11:13:20 | **Commit:** `51c4423b` | **Tipo:** `patch`
-
-- feat(mni-processo): implement multiple process number variants for SOAP operations
-
-## V. 1.97.0089
-
-**Data:** 2026-05-08 11:10:34 | **Commit:** `2dc7a1c6` | **Tipo:** `patch`
-
-- feat(mni-processo): enhance debugging and error tracking in MniProcessoService
-
-## V. 1.97.0088
-
-**Data:** 2026-05-08 11:03:06 | **Commit:** `8c1616d2` | **Tipo:** `patch`
-
-- feat(mni-processo): enhance logging and add second-degree target derivation
-
-## V. 1.97.0087
-
-**Data:** 2026-05-08 10:50:05 | **Commit:** `791e9dd4` | **Tipo:** `patch`
-
-- feat(mni-config): add new configuration options for consulta_location and tribunal_code
-
-## V. 1.97.0086
-
-**Data:** 2026-05-08 10:21:05 | **Commit:** `06970c3a` | **Tipo:** `patch`
-
-- feat(mni-processo): add fallback mechanism for SOAP operations and implement CURL handling
-
-## V. 1.97.0085
-
-**Data:** 2026-05-08 10:16:01 | **Commit:** `19549781` | **Tipo:** `patch`
-
-- feat(mni-processo): refactor process handling and add probe number resolution
-
-## V. 1.97.0084
-
-**Data:** 2026-05-08 10:03:03 | **Commit:** `e2766a3a` | **Tipo:** `patch`
-
-- feat(mni-config): update timeout settings and add ping response to search-processo
-
-## V. 1.97.0083
-
-**Data:** 2026-05-08 09:43:45 | **Commit:** `bd0e6cd7` | **Tipo:** `patch`
-
-- feat(mni-healthcheck): add healthcheck button and functionality to MNI test page
-
-## V. 1.97.0082
-
-**Data:** 2026-05-08 09:42:55 | **Commit:** `cf0ae442` | **Tipo:** `patch`
-
-- feat(mni-healthcheck): add connectivity diagnostic endpoint to MniProcessoService
-
-## V. 1.97.0081
-
-**Data:** 2026-05-08 09:38:22 | **Commit:** `d2d6ba28` | **Tipo:** `patch`
-
-- feat(page-access): add 'consultamniteste' page with public access control
 
 ## V. 1.97.0080
 
@@ -5424,6 +5280,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

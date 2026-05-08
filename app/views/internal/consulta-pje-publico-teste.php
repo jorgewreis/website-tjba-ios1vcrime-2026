@@ -7,21 +7,26 @@ declare(strict_types=1);
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Teste MNI - Consulta Processual</title>
+    <title>Teste PJe Público - Consulta Processual</title>
     <?php include __DIR__ . '/_internal_head_styles.php'; ?>
     <?php include __DIR__ . '/_toast_script.php'; ?>
     <style>
-        .mni-test-table td:first-child {
+        .pje-publico-test-table td:first-child {
             width: 260px;
             font-weight: 600;
         }
-        .mni-test-pre {
+
+        .pje-publico-test-pre {
             margin: 0;
             white-space: pre-wrap;
             word-break: break-word;
             font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
             font-size: 12px;
             line-height: 1.5;
+        }
+
+        .pje-publico-test-options {
+            min-height: 40px;
         }
     </style>
 </head>
@@ -30,10 +35,10 @@ declare(strict_types=1);
     <div class="header-page">
         <div class="location">
             <span class="all">Interno -</span>
-            <span class="specific">Teste MNI</span>
+            <span class="specific">Teste PJe Público</span>
         </div>
-        <h1 class="title-page">Consulta Processual (MNI)</h1>
-        <p class="description-page">Página de teste sem menu para consulta por número CNJ.</p>
+        <h1 class="title-page">Consulta Processual Pública (PJe)</h1>
+        <p class="description-page">Página de teste isolada para consulta pública via FastAPI e Playwright.</p>
     </div>
 
     <div class="container-full card-page">
@@ -41,11 +46,11 @@ declare(strict_types=1);
             <h2>Consulta por Número CNJ</h2>
         </div>
         <div class="padding-x-md padding-y-md">
-            <form id="mni-test-form" class="display-flex row row-full align-end gap-sm">
+            <form id="pje-publico-test-form" class="display-flex row row-full align-end gap-sm">
                 <div class="display-flex col col-full">
-                    <label for="mni-cnj-input">Número do processo (CNJ)</label>
+                    <label for="pje-publico-cnj-input">Número do processo (CNJ)</label>
                     <input
-                        id="mni-cnj-input"
+                        id="pje-publico-cnj-input"
                         name="numero"
                         type="text"
                         class="input"
@@ -54,20 +59,24 @@ declare(strict_types=1);
                         placeholder="0000000-00.0000.0.00.0000"
                     >
                 </div>
-                <button id="mni-submit-btn" type="submit" class="btn btn-primary height-md">Consultar dados</button>
-                <button id="mni-healthcheck-btn" type="button" class="btn btn-primary-outline height-md">Testar conectividade</button>
+                <label class="display-flex row align-center gap-xs pje-publico-test-options">
+                    <input id="pje-publico-raw-input" type="checkbox" value="1">
+                    <span>Incluir diagnóstico raw</span>
+                </label>
+                <button id="pje-publico-submit-btn" type="submit" class="btn btn-primary height-md">Consultar dados</button>
+                <button id="pje-publico-healthcheck-btn" type="button" class="btn btn-primary-outline height-md">Testar conectividade</button>
             </form>
 
-            <div id="mni-result-wrapper" class="margin-top-md" hidden>
-                <table class="table mni-test-table">
-                    <tbody id="mni-result-body"></tbody>
+            <div id="pje-publico-result-wrapper" class="margin-top-md" hidden>
+                <table class="table pje-publico-test-table">
+                    <tbody id="pje-publico-result-body"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
     <script src="/assets/js/shared/toast.js"></script>
-    <script src="/assets/js/modules/mni/cnj.js"></script>
-    <script src="/assets/js/modules/mni/mni-api.js"></script>
+    <script src="/assets/js/modules/pje-publico/cnj.js"></script>
+    <script src="/assets/js/modules/pje-publico/pje-publico-api.js"></script>
 </body>
 </html>
