@@ -11,6 +11,34 @@
         }
     }
 
+    async function parseApiResponse(response, fallbackMessage) {
+        var rawText = await response.text();
+        var payload = {};
+        try {
+            payload = rawText ? JSON.parse(rawText) : {};
+        } catch (e) {
+            payload = {};
+        }
+
+        if (!response.ok) {
+            var serverMessage = payload && payload.error ? payload.error : '';
+            var rawSnippet = '';
+            if (!serverMessage && rawText) {
+                rawSnippet = rawText.replace(/\s+/g, ' ').trim().slice(0, 220);
+            }
+            var fullMessage = serverMessage
+                || (fallbackMessage + ' (HTTP ' + response.status + ')' + (rawSnippet ? ' - ' + rawSnippet : ''));
+            throw new Error(fullMessage);
+        }
+
+        if (!payload || !payload.data) {
+            var snippet = rawText ? rawText.replace(/\s+/g, ' ').trim().slice(0, 220) : '';
+            throw new Error('Resposta inválida da API MNI' + (snippet ? ': ' + snippet : '.'));
+        }
+
+        return payload.data;
+    }
+
     function setLoading(isLoading, submitBtn) {
         if (!submitBtn) return;
         submitBtn.disabled = !!isLoading;
@@ -82,16 +110,7 @@
             body: JSON.stringify({ numero: cnjDigits })
         });
 
-        var payload = await response.json().catch(function () { return {}; });
-        if (!response.ok) {
-            throw new Error(payload && payload.error ? payload.error : 'Erro ao consultar processo.');
-        }
-
-        if (!payload || !payload.data) {
-            throw new Error('Resposta MNI inválida.');
-        }
-
-        return payload.data;
+        return parseApiResponse(response, 'Erro ao consultar processo');
     }
 
     async function healthcheck() {
@@ -102,16 +121,7 @@
             }
         });
 
-        var payload = await response.json().catch(function () { return {}; });
-        if (!response.ok) {
-            throw new Error(payload && payload.error ? payload.error : 'Erro ao executar teste de conectividade.');
-        }
-
-        if (!payload || !payload.data) {
-            throw new Error('Resposta inválida no teste de conectividade.');
-        }
-
-        return payload.data;
+        return parseApiResponse(response, 'Erro ao executar teste de conectividade');
     }
 
     function bindForm() {

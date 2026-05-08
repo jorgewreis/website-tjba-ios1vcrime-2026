@@ -58,7 +58,7 @@ final class MniProcessoService
      *
      * @return array<string,mixed>
      */
-    public function diagnosticarConectividade(): array
+    public function diagnosticarConectividade(bool $quick = true): array
     {
         $this->assertIntercomCredentials();
         $soapClient = $this->buildClient();
@@ -70,21 +70,23 @@ final class MniProcessoService
             $functions = [];
         }
 
-        $base = [
-            'idConsultante' => (string) ($this->config['consultante_id'] ?? ''),
-            'senhaConsultante' => (string) ($this->config['consultante_senha'] ?? ''),
-            'dataReferencia' => date('Y-m-d\TH:i:s'),
-        ];
+        $avisosPayload = null;
+        if (!$quick) {
+            $base = [
+                'idConsultante' => (string) ($this->config['consultante_id'] ?? ''),
+                'senhaConsultante' => (string) ($this->config['consultante_senha'] ?? ''),
+                'dataReferencia' => date('Y-m-d\TH:i:s'),
+            ];
 
-        $avisosPayload = $this->runSoapOperation(
-            $soapClient,
-            ['consultarAvisosPendentes', 'ConsultarAvisosPendentes'],
-            [
-                $base,
-                ['consultarAvisosPendentes' => $base],
-                ['arg0' => $base],
-            ]
-        );
+            $avisosPayload = $this->runSoapOperation(
+                $soapClient,
+                ['consultarAvisosPendentes', 'ConsultarAvisosPendentes'],
+                [
+                    $base,
+                    ['consultarAvisosPendentes' => $base],
+                ]
+            );
+        }
 
         return [
             'ok' => true,
@@ -92,8 +94,9 @@ final class MniProcessoService
             'location' => (string) ($this->config['location'] ?? ''),
             'functions_count' => count($functions),
             'functions_preview' => array_slice($functions, 0, 8),
-            'auth_check_operation' => 'consultarAvisosPendentes',
-            'auth_check_response' => $avisosPayload,
+            'auth_check_mode' => $quick ? 'quick' : 'full',
+            'auth_check_operation' => $quick ? 'wsdl_only' : 'consultarAvisosPendentes',
+            'auth_check_response' => $quick ? ['info' => 'Modo rápido: apenas carga WSDL e introspecção de funções.'] : $avisosPayload,
             'timestamp' => date(DATE_ATOM),
         ];
     }
@@ -219,7 +222,6 @@ final class MniProcessoService
         return [
             $base,
             ['consultarProcesso' => $base],
-            ['arg0' => $base],
         ];
     }
 
@@ -237,7 +239,6 @@ final class MniProcessoService
         return [
             $base,
             ['consultarAlteracao' => $base],
-            ['arg0' => $base],
         ];
     }
 

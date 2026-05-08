@@ -2,6 +2,8 @@
 declare(strict_types=1);
 
 header('Content-Type: application/json; charset=UTF-8');
+@ini_set('default_socket_timeout', '8');
+@set_time_limit(20);
 
 require_once dirname(__DIR__, 3) . '/config/config.php';
 
@@ -21,14 +23,28 @@ if (!is_array($payload)) {
     $payload = $_POST;
 }
 
+$ping = !empty($payload['ping']) || (isset($_GET['ping']) && $_GET['ping'] === '1');
+$ifWsdlConfigured = (($config['wsdl'] ?? '') !== '');
+if ($ping) {
+    respond([
+        'data' => [
+            'ok' => true,
+            'endpoint' => 'mni/search-processo.php',
+            'wsdl_configurado' => $ifWsdlConfigured,
+            'timestamp' => date(DATE_ATOM),
+        ],
+    ], 200);
+}
+
 $healthcheck = !empty($payload['healthcheck']) || (isset($_GET['healthcheck']) && $_GET['healthcheck'] === '1');
 
 require_once dirname(__DIR__, 3) . '/app/services/MniProcessoService.php';
 
 if ($healthcheck) {
+    $quick = !isset($_GET['mode']) || $_GET['mode'] !== 'full';
     try {
         $service = new MniProcessoService($config);
-        $diag = $service->diagnosticarConectividade();
+        $diag = $service->diagnosticarConectividade($quick);
         respond(['data' => $diag], 200);
     } catch (RuntimeException $e) {
         respond(['error' => 'Falha no healthcheck MNI: ' . $e->getMessage()], 502);

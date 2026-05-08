@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0084
+
+**Data:** 2026-05-08 10:03:03 | **Commit:** `e2766a3a` | **Tipo:** `patch`
+
+- feat(mni-config): update timeout settings and add ping response to search-processo
+
 ## V. 1.97.0083
 
 **Data:** 2026-05-08 09:43:45 | **Commit:** `bd0e6cd7` | **Tipo:** `patch`
@@ -5286,6 +5292,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
