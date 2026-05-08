@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0088
+
+**Data:** 2026-05-08 11:03:06 | **Commit:** `8c1616d2` | **Tipo:** `patch`
+
+- feat(mni-processo): enhance logging and add second-degree target derivation
+
 ## V. 1.97.0087
 
 **Data:** 2026-05-08 10:50:05 | **Commit:** `791e9dd4` | **Tipo:** `patch`
@@ -5310,6 +5316,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -24,6 +24,15 @@ final class MniProcessoService
             throw new InvalidArgumentException('Número CNJ inválido. Informe os 20 dígitos.');
         }
 
+        // #region agent log
+        $this->debugLog('diag-run-1', 'H1', 'MniProcessoService::consultarPorNumeroCnj:25', 'Entrada da consulta MNI', [
+            'cnj' => $cnjDigits,
+            'tribunal_detectado' => $this->detectTribunalCodeFromCnj($cnjDigits),
+            'tribunal_configurado' => $this->normalizeTribunalCode((string) ($this->config['tribunal_code'] ?? '')),
+            'divergencia_tribunal' => $this->hasTribunalMismatch($cnjDigits),
+        ]);
+        // #endregion
+
         $this->assertIntercomCredentials();
         $endpoints = $this->resolveEndpointTargets();
         $lastRuntimeError = null;
@@ -35,6 +44,12 @@ final class MniProcessoService
 
         foreach ($endpoints as $target) {
             try {
+                // #region agent log
+                $this->debugLog('diag-run-1', 'H1', 'MniProcessoService::consultarPorNumeroCnj:48', 'Tentando endpoint', [
+                    'wsdl' => (string) ($target['wsdl'] ?? ''),
+                    'location' => (string) ($target['location'] ?? ''),
+                ]);
+                // #endregion
                 $soapClient = $this->buildClientForTarget($target);
                 $consultarProcessoPayload = $this->runSoapOperation(
                     $soapClient,
@@ -59,10 +74,26 @@ final class MniProcessoService
                 ];
                 $selected = $target;
 
+                // #region agent log
+                $this->debugLog('diag-run-1', 'H2', 'MniProcessoService::consultarPorNumeroCnj:74', 'Retorno bruto por endpoint', [
+                    'wsdl' => (string) ($target['wsdl'] ?? ''),
+                    'consultar_processo_tipo' => gettype($consultarProcessoPayload),
+                    'consultar_processo_vazio' => (is_array($consultarProcessoPayload) && $consultarProcessoPayload === []),
+                    'consultar_alteracao_tipo' => gettype($alteracaoPayload),
+                    'consultar_alteracao_vazio' => (is_array($alteracaoPayload) && $alteracaoPayload === []),
+                ]);
+                // #endregion
+
                 if (!$this->isResultEffectivelyEmpty($merged)) {
                     break;
                 }
             } catch (RuntimeException $e) {
+                // #region agent log
+                $this->debugLog('diag-run-1', 'H4', 'MniProcessoService::consultarPorNumeroCnj:87', 'Erro no endpoint durante consulta', [
+                    'wsdl' => (string) ($target['wsdl'] ?? ''),
+                    'error' => $e->getMessage(),
+                ]);
+                // #endregion
                 $lastRuntimeError = $e;
             }
         }
@@ -80,6 +111,12 @@ final class MniProcessoService
             'fonte_location' => (string) ($selected['location'] ?? ''),
             'fallback_multibase_ativo' => count($endpoints) > 1,
         ];
+        // #region agent log
+        $this->debugLog('diag-run-1', 'H5', 'MniProcessoService::consultarPorNumeroCnj:108', 'Resultado final da consulta MNI', [
+            'meta_consulta' => $output['meta_consulta'],
+            'resultado_efetivamente_vazio' => $this->isResultEffectivelyEmpty($merged),
+        ]);
+        // #endregion
         return $output;
     }
 
@@ -211,14 +248,33 @@ final class MniProcessoService
             foreach ($paramVariants as $params) {
                 try {
                     $response = $client->__soapCall($operationName, [$params]);
+                    // #region agent log
+                    $this->debugLog('diag-run-1', 'H2', 'MniProcessoService::runSoapOperation:228', 'SoapCall retornou sem exception', [
+                        'operation' => $operationName,
+                        'response_type' => gettype($response),
+                        'param_keys' => array_keys($params),
+                    ]);
+                    // #endregion
                     return $this->normalizeSoapResponse($response);
                 } catch (SoapFault $e) {
                     if (stripos((string) $e->getMessage(), 'no XML document') !== false) {
                         $fallback = $this->callOperationViaCurl($operationName, $params);
                         if ($fallback !== null) {
+                            // #region agent log
+                            $this->debugLog('diag-run-1', 'H3', 'MniProcessoService::runSoapOperation:239', 'Fallback MTOM via cURL ativado', [
+                                'operation' => $operationName,
+                                'fallback_keys' => array_keys($fallback),
+                            ]);
+                            // #endregion
                             return $fallback;
                         }
                     }
+                    // #region agent log
+                    $this->debugLog('diag-run-1', 'H4', 'MniProcessoService::runSoapOperation:247', 'SoapFault em operação', [
+                        'operation' => $operationName,
+                        'error' => $e->getMessage(),
+                    ]);
+                    // #endregion
                     $lastError = $e;
                 }
             }
@@ -439,6 +495,24 @@ final class MniProcessoService
     }
 
     /**
+     * @param array<string,mixed> $data
+     */
+    private function debugLog(string $runId, string $hypothesisId, string $location, string $message, array $data = []): void
+    {
+        $path = dirname(__DIR__, 2) . '/debug-f5d219.log';
+        $payload = [
+            'sessionId' => 'f5d219',
+            'runId' => $runId,
+            'hypothesisId' => $hypothesisId,
+            'location' => $location,
+            'message' => $message,
+            'data' => $data,
+            'timestamp' => (int) round(microtime(true) * 1000),
+        ];
+        @file_put_contents($path, json_encode($payload, JSON_UNESCAPED_UNICODE) . PHP_EOL, FILE_APPEND);
+    }
+
+    /**
      * @return list<array{wsdl:string,location:string}>
      */
     private function resolveEndpointTargets(): array
@@ -465,7 +539,46 @@ final class MniProcessoService
             }
         }
 
+        // Regra solicitada: se consultar no 1º grau e vier vazio, tentar 2º grau.
+        // Para isso, quando só houver endpoint de 1º grau, derivamos automaticamente o equivalente de 2º grau.
+        if (count($targets) === 1) {
+            $autoSecondDegree = $this->deriveSecondDegreeTarget($targets[0]);
+            if ($autoSecondDegree !== null) {
+                $targets[] = $autoSecondDegree;
+            }
+        }
+
         return $targets;
+    }
+
+    /**
+     * @param array{wsdl:string,location:string} $target
+     * @return array{wsdl:string,location:string}|null
+     */
+    private function deriveSecondDegreeTarget(array $target): ?array
+    {
+        $wsdl = trim((string) ($target['wsdl'] ?? ''));
+        $location = trim((string) ($target['location'] ?? ''));
+        if ($wsdl === '') {
+            return null;
+        }
+
+        // Só deriva quando o endpoint atual aparenta ser 1º grau (/pje/) e ainda não é /pje2/.
+        if (strpos($wsdl, '/pje2/') !== false || strpos($wsdl, '/pje/') === false) {
+            return null;
+        }
+
+        $derivedWsdl = str_replace('/pje/', '/pje2/', $wsdl);
+        $derivedLocation = $location !== '' ? str_replace('/pje/', '/pje2/', $location) : '';
+
+        if ($derivedWsdl === $wsdl) {
+            return null;
+        }
+
+        return [
+            'wsdl' => $derivedWsdl,
+            'location' => $derivedLocation,
+        ];
     }
 
     /**
