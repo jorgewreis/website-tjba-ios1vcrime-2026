@@ -25,32 +25,62 @@ final class MniProcessoService
         }
 
         $this->assertIntercomCredentials();
-
-        $soapClient = $this->buildClient();
-        $consultarProcessoPayload = $this->runSoapOperation(
-            $soapClient,
-            ['consultarProcesso', 'ConsultarProcesso'],
-            $this->buildConsultarProcessoParamVariants($cnjDigits)
-        );
-
-        $alteracaoPayload = null;
-        try {
-            $alteracaoPayload = $this->runSoapOperation(
-                $soapClient,
-                ['consultarAlteracao', 'ConsultarAlteracao'],
-                $this->buildConsultarAlteracaoParamVariants($cnjDigits)
-            );
-        } catch (RuntimeException $e) {
-            // Nem todo provedor habilita operação de alteração para o mesmo perfil.
-            $alteracaoPayload = ['aviso' => $e->getMessage()];
-        }
-
+        $endpoints = $this->resolveEndpointTargets();
+        $lastRuntimeError = null;
+        $selected = null;
         $merged = [
-            'consultar_processo' => $consultarProcessoPayload,
-            'consultar_alteracao' => $alteracaoPayload,
+            'consultar_processo' => [],
+            'consultar_alteracao' => [],
         ];
 
-        return MniProcessoResponseMapper::mapToOutput($cnjDigits, $merged);
+        foreach ($endpoints as $target) {
+            try {
+                $soapClient = $this->buildClientForTarget($target);
+                $consultarProcessoPayload = $this->runSoapOperation(
+                    $soapClient,
+                    ['consultarProcesso', 'ConsultarProcesso'],
+                    $this->buildConsultarProcessoParamVariants($cnjDigits)
+                );
+
+                $alteracaoPayload = null;
+                try {
+                    $alteracaoPayload = $this->runSoapOperation(
+                        $soapClient,
+                        ['consultarAlteracao', 'ConsultarAlteracao'],
+                        $this->buildConsultarAlteracaoParamVariants($cnjDigits)
+                    );
+                } catch (RuntimeException $e) {
+                    $alteracaoPayload = ['aviso' => $e->getMessage()];
+                }
+
+                $merged = [
+                    'consultar_processo' => $consultarProcessoPayload,
+                    'consultar_alteracao' => $alteracaoPayload,
+                ];
+                $selected = $target;
+
+                if (!$this->isResultEffectivelyEmpty($merged)) {
+                    break;
+                }
+            } catch (RuntimeException $e) {
+                $lastRuntimeError = $e;
+            }
+        }
+
+        if ($selected === null && $lastRuntimeError instanceof RuntimeException) {
+            throw $lastRuntimeError;
+        }
+
+        $output = MniProcessoResponseMapper::mapToOutput($cnjDigits, $merged);
+        $output['meta_consulta'] = [
+            'tribunal_detectado_cnj' => $this->detectTribunalCodeFromCnj($cnjDigits),
+            'tribunal_configurado' => $this->normalizeTribunalCode((string) ($this->config['tribunal_code'] ?? '')),
+            'divergencia_tribunal' => $this->hasTribunalMismatch($cnjDigits),
+            'fonte_wsdl' => (string) ($selected['wsdl'] ?? ''),
+            'fonte_location' => (string) ($selected['location'] ?? ''),
+            'fallback_multibase_ativo' => count($endpoints) > 1,
+        ];
+        return $output;
     }
 
     /**
@@ -104,7 +134,18 @@ final class MniProcessoService
 
     private function buildClient(): SoapClient
     {
-        $wsdl = trim((string) ($this->config['wsdl'] ?? ''));
+        return $this->buildClientForTarget([
+            'wsdl' => (string) ($this->config['wsdl'] ?? ''),
+            'location' => (string) ($this->config['location'] ?? ''),
+        ]);
+    }
+
+    /**
+     * @param array{wsdl:string,location:string} $target
+     */
+    private function buildClientForTarget(array $target): SoapClient
+    {
+        $wsdl = trim((string) ($target['wsdl'] ?? ''));
         if ($wsdl === '') {
             throw new RuntimeException('WSDL do MNI não configurado.');
         }
@@ -118,7 +159,7 @@ final class MniProcessoService
             'encoding' => 'UTF-8',
         ];
 
-        $location = trim((string) ($this->config['location'] ?? ''));
+        $location = trim((string) ($target['location'] ?? ''));
         if ($location !== '') {
             $options['location'] = $location;
         }
@@ -395,5 +436,79 @@ final class MniProcessoService
 
         // Número sintético para validar credencial/operação com baixo custo.
         return '00000000000000000000';
+    }
+
+    /**
+     * @return list<array{wsdl:string,location:string}>
+     */
+    private function resolveEndpointTargets(): array
+    {
+        $targets = [];
+        $wsdl = trim((string) ($this->config['wsdl'] ?? ''));
+        $location = trim((string) ($this->config['location'] ?? ''));
+        if ($wsdl !== '') {
+            $targets[] = ['wsdl' => $wsdl, 'location' => $location];
+        }
+
+        $consultaWsdl = trim((string) ($this->config['consulta_wsdl'] ?? ''));
+        $consultaLocation = trim((string) ($this->config['consulta_location'] ?? ''));
+        if ($consultaWsdl !== '') {
+            $alreadyIncluded = false;
+            foreach ($targets as $target) {
+                if ($target['wsdl'] === $consultaWsdl && $target['location'] === $consultaLocation) {
+                    $alreadyIncluded = true;
+                    break;
+                }
+            }
+            if (!$alreadyIncluded) {
+                $targets[] = ['wsdl' => $consultaWsdl, 'location' => $consultaLocation];
+            }
+        }
+
+        return $targets;
+    }
+
+    /**
+     * @param array<string,mixed> $merged
+     */
+    private function isResultEffectivelyEmpty(array $merged): bool
+    {
+        foreach (['consultar_processo', 'consultar_alteracao'] as $key) {
+            $part = $merged[$key] ?? null;
+            if (is_array($part) && $part !== []) {
+                return false;
+            }
+            if (!is_array($part) && $part !== null && $part !== '') {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private function detectTribunalCodeFromCnj(string $cnjDigits): ?string
+    {
+        if (strlen($cnjDigits) !== 20) {
+            return null;
+        }
+        return substr($cnjDigits, 14, 2);
+    }
+
+    private function normalizeTribunalCode(string $value): ?string
+    {
+        $digits = preg_replace('/\D+/', '', $value) ?? '';
+        if ($digits === '') {
+            return null;
+        }
+        return str_pad(substr($digits, -2), 2, '0', STR_PAD_LEFT);
+    }
+
+    private function hasTribunalMismatch(string $cnjDigits): bool
+    {
+        $detected = $this->detectTribunalCodeFromCnj($cnjDigits);
+        $configured = $this->normalizeTribunalCode((string) ($this->config['tribunal_code'] ?? ''));
+        if ($detected === null || $configured === null) {
+            return false;
+        }
+        return $detected !== $configured;
     }
 }

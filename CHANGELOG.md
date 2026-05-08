@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0087
+
+**Data:** 2026-05-08 10:50:05 | **Commit:** `791e9dd4` | **Tipo:** `patch`
+
+- feat(mni-config): add new configuration options for consulta_location and tribunal_code
+
 ## V. 1.97.0086
 
 **Data:** 2026-05-08 10:21:05 | **Commit:** `06970c3a` | **Tipo:** `patch`
@@ -5304,6 +5310,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

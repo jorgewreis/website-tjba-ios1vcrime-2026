@@ -35,6 +35,8 @@ return [
     'wsdl' => trim((string) ($_ENV['MNI_WSDL_URL'] ?? getenv('MNI_WSDL_URL') ?: '')),
     'consulta_wsdl' => trim((string) ($_ENV['MNI_CONSULTA_WSDL_URL'] ?? getenv('MNI_CONSULTA_WSDL_URL') ?: '')),
     'location' => trim((string) ($_ENV['MNI_SOAP_LOCATION'] ?? getenv('MNI_SOAP_LOCATION') ?: '')),
+    'consulta_location' => trim((string) ($_ENV['MNI_CONSULTA_SOAP_LOCATION'] ?? getenv('MNI_CONSULTA_SOAP_LOCATION') ?: '')),
+    'tribunal_code' => trim((string) ($_ENV['MNI_TRIBUNAL_CODE'] ?? getenv('MNI_TRIBUNAL_CODE') ?: '')),
     'login' => trim((string) ($_ENV['MNI_LOGIN'] ?? getenv('MNI_LOGIN') ?: '')),
     'password' => trim((string) ($_ENV['MNI_PASSWORD'] ?? getenv('MNI_PASSWORD') ?: '')),
     'consultante_id' => trim((string) ($_ENV['MNI_CONSULTANTE_ID'] ?? getenv('MNI_CONSULTANTE_ID') ?: '')),
