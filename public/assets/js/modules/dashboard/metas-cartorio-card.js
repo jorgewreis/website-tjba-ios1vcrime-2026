@@ -26,6 +26,74 @@
         meta10_1Grau: 'Meta 10 - 1º Grau',
         meta10_2Grau: 'Meta 10 - 2º Grau'
     };
+    const META_RULES = {
+        meta1: {
+            target: '>= 100%',
+            criterio: 'julgar mais que os distribuídos (20/12/2025 a 19/12/2026)',
+            formula: '(julgados / (casos novos + dessobrestados - suspensos)) x 100'
+        },
+        meta2_1Grau: {
+            target: '80%',
+            criterio: 'processos distribuídos até 31/12/2022 (1º grau)',
+            formula: '(julgados / (distribuídos - suspensos)) x (1000/8)'
+        },
+        meta2_2Grau: {
+            target: '90%',
+            criterio: 'processos distribuídos até 31/12/2023 (2º grau)',
+            formula: '(julgados / (distribuídos - suspensos)) x (1000/9)'
+        },
+        meta2Jeetr: {
+            target: '95%',
+            criterio: 'JE/TR distribuídos até 31/12/2023',
+            formula: '(julgados / (distribuídos - suspensos)) x (1000/9,5)'
+        },
+        meta2Antigos: {
+            target: '100%',
+            criterio: 'processos com 15 anos ou mais',
+            formula: '(julgados / (distribuídos - suspensos - dessobrestados)) x 100'
+        },
+        meta4: {
+            target: '65% (penal) / 100% (improbidade)',
+            criterio: 'ações distribuídas até 31/12/2022',
+            formula: '(julgados / (distribuídos - suspensos)) x fator-meta'
+        },
+        meta6: {
+            target: '50%',
+            criterio: 'ações ambientais distribuídas até 31/12/2025',
+            formula: '(julgados / (distribuídos - suspensos)) x (1000/5)'
+        },
+        meta7Indigenas: {
+            target: '50%',
+            criterio: 'direitos indígenas distribuídos até 31/12/2025',
+            formula: '(julgados / (distribuídos - suspensos)) x (1000/5)'
+        },
+        meta7Quilombolas: {
+            target: '50%',
+            criterio: 'direitos quilombolas distribuídos até 31/12/2025',
+            formula: '(julgados / (distribuídos - suspensos)) x (1000/5)'
+        },
+        meta8Vd: {
+            target: '90%',
+            criterio: 'violência doméstica distribuída até 31/12/2024',
+            formula: '(julgados / (distribuídos - suspensos)) x (1000/9)'
+        },
+        meta8Feminicidio: {
+            target: '75%',
+            criterio: 'feminicídio distribuído até 31/12/2024',
+            formula: '(julgados / (distribuídos - suspensos)) x (1000/7,5)'
+        },
+        meta10_1Grau: {
+            target: '90%',
+            criterio: 'infância e juventude (1º grau) até 31/12/2024',
+            formula: '(julgados / (distribuídos - suspensos)) x (1000/9)'
+        },
+        meta10_2Grau: {
+            target: '99%',
+            criterio: 'infância e juventude (2º grau) até 31/12/2024',
+            formula: '(julgados / (distribuídos - suspensos)) x (1000/9,9)'
+        }
+    };
+    const CNJ_GLOSSARIO_2026_JE_URL = 'https://www.cnj.jus.br/wp-content/uploads/2026/03/glossario-metas-nacionais-do-poder-judiciario-2026-justica-estadual-versao-3.pdf';
 
     function escapeHtml(value) {
         const App = global.App || {};
@@ -59,10 +127,18 @@
                 return '';
             }
             const display = String(raw);
+            const metaRule = META_RULES[key] || null;
+            const detail = metaRule
+                ? (
+                    'Cumpr.: ' + display + '%'
+                    + ' | Alvo: ' + metaRule.target
+                    + ' | Critério: ' + metaRule.criterio
+                    + ' | Fórmula: ' + metaRule.formula
+                )
+                : ('Cumpr.: ' + display + '%');
             return (
                 '<div class="dashboard-metas-row">' +
-                '<span class="meta-name">' + escapeHtml(META_LABELS[key]) + '</span>' +
-                '<span class="meta-value">' + escapeHtml(display) + '</span>' +
+                '<span class="meta-name" title="' + escapeHtml('Base CNJ 2026 (Glossário Justiça Estadual): ' + CNJ_GLOSSARIO_2026_JE_URL) + '">' + escapeHtml(META_LABELS[key] + ' | ' + detail) + '</span>' +
                 '</div>'
             );
         }).filter(Boolean);

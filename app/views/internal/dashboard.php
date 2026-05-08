@@ -356,6 +356,8 @@ $titleProjStat = sprintf(
         }
         .dashboard-metas-row .meta-name {
             color: var(--color-gray-700, #374151);
+            font-size: 11px;
+            line-height: 1.35;
         }
         .dashboard-metas-row .meta-value {
             font-weight: 600;

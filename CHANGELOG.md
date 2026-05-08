@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0098
+
+**Data:** 2026-05-08 11:57:28 | **Commit:** `4286d1ee` | **Tipo:** `patch`
+
+- refactor(mni-processo): streamline operation handling and enhance logging
+
 ## V. 1.97.0097
 
 **Data:** 2026-05-08 11:54:54 | **Commit:** `d946cf3f` | **Tipo:** `patch`
@@ -5370,6 +5376,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
