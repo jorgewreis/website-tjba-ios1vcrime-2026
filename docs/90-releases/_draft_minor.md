@@ -68,4 +68,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(mni-processo): enhance operation handling with cURL fallback** `[d946cf3f]`
 - **refactor(mni-processo): streamline operation handling and enhance logging** `[4286d1ee]`
 - **refactor(dashboard): enhance meta display and improve layout** `[8419ea66]`
+- **feat(mni-processo): add diagnostic mode for process alteration queries** `[5a5e39ac]`
 
