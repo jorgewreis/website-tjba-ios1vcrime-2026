@@ -53,6 +53,51 @@ final class MniProcessoService
         return MniProcessoResponseMapper::mapToOutput($cnjDigits, $merged);
     }
 
+    /**
+     * Diagnóstico rápido de conectividade e autenticação no endpoint MNI.
+     *
+     * @return array<string,mixed>
+     */
+    public function diagnosticarConectividade(): array
+    {
+        $this->assertIntercomCredentials();
+        $soapClient = $this->buildClient();
+
+        $functions = [];
+        try {
+            $functions = $soapClient->__getFunctions();
+        } catch (Throwable $e) {
+            $functions = [];
+        }
+
+        $base = [
+            'idConsultante' => (string) ($this->config['consultante_id'] ?? ''),
+            'senhaConsultante' => (string) ($this->config['consultante_senha'] ?? ''),
+            'dataReferencia' => date('Y-m-d\TH:i:s'),
+        ];
+
+        $avisosPayload = $this->runSoapOperation(
+            $soapClient,
+            ['consultarAvisosPendentes', 'ConsultarAvisosPendentes'],
+            [
+                $base,
+                ['consultarAvisosPendentes' => $base],
+                ['arg0' => $base],
+            ]
+        );
+
+        return [
+            'ok' => true,
+            'wsdl' => (string) ($this->config['wsdl'] ?? ''),
+            'location' => (string) ($this->config['location'] ?? ''),
+            'functions_count' => count($functions),
+            'functions_preview' => array_slice($functions, 0, 8),
+            'auth_check_operation' => 'consultarAvisosPendentes',
+            'auth_check_response' => $avisosPayload,
+            'timestamp' => date(DATE_ATOM),
+        ];
+    }
+
     private function buildClient(): SoapClient
     {
         $wsdl = trim((string) ($this->config['wsdl'] ?? ''));

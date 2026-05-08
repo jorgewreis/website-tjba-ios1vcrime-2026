@@ -21,13 +21,27 @@ if (!is_array($payload)) {
     $payload = $_POST;
 }
 
+$healthcheck = !empty($payload['healthcheck']) || (isset($_GET['healthcheck']) && $_GET['healthcheck'] === '1');
+
+require_once dirname(__DIR__, 3) . '/app/services/MniProcessoService.php';
+
+if ($healthcheck) {
+    try {
+        $service = new MniProcessoService($config);
+        $diag = $service->diagnosticarConectividade();
+        respond(['data' => $diag], 200);
+    } catch (RuntimeException $e) {
+        respond(['error' => 'Falha no healthcheck MNI: ' . $e->getMessage()], 502);
+    } catch (Throwable $e) {
+        respond(['error' => 'Falha inesperada no healthcheck MNI.'], 500);
+    }
+}
+
 $numero = isset($payload['numero']) ? (string) $payload['numero'] : '';
 $numero = trim(preg_replace('/\D+/', '', $numero));
 if ($numero === '' || strlen($numero) !== 20) {
     respond(['error' => 'Número do processo inválido. Forneça 20 dígitos sem pontuação.'], 400);
 }
-
-require_once dirname(__DIR__, 3) . '/app/services/MniProcessoService.php';
 
 try {
     $service = new MniProcessoService($config);
