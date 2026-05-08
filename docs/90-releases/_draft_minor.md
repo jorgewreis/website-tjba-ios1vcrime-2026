@@ -60,4 +60,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(mni-processo): enhance debugging and error tracking in MniProcessoService** `[2dc7a1c6]`
 - **feat(mni-processo): implement multiple process number variants for SOAP operations** `[51c4423b]`
 - **feat(mni-processo): enhance operation tracing and debugging in MniProcessoService** `[8d55fa6b]`
+- **refactor(mni-processo): simplify process number variant handling in MniProcessoService** `[d6f2264a]`
 
