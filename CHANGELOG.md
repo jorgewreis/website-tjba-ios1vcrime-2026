@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0105
+
+**Data:** 2026-05-08 13:05:12 | **Commit:** `53549192` | **Tipo:** `patch`
+
+- feat(mni-processo): implement endpoint prioritization for target resolution
+
 ## V. 1.97.0104
 
 **Data:** 2026-05-08 12:58:39 | **Commit:** `83cca398` | **Tipo:** `patch`
@@ -5412,6 +5418,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

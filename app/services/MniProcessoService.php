@@ -887,6 +887,10 @@ final class MniProcessoService
             }
         }
 
+        usort($targets, function (array $a, array $b): int {
+            return $this->endpointPriority($a) <=> $this->endpointPriority($b);
+        });
+
         // #region agent log
         $this->debugLog('diag-run-2', 'H13', 'MniProcessoService::resolveEndpointTargets:801', 'Lista final de endpoints resolvidos', [
             'targets' => $targets,
@@ -896,6 +900,24 @@ final class MniProcessoService
         // #endregion
 
         return $targets;
+    }
+
+    /**
+     * @param array{wsdl:string,location:string} $target
+     */
+    private function endpointPriority(array $target): int
+    {
+        $wsdl = strtolower((string) ($target['wsdl'] ?? ''));
+        $location = strtolower((string) ($target['location'] ?? ''));
+        $haystack = $wsdl . ' ' . $location;
+
+        if (strpos($haystack, '/pje2/') !== false) {
+            return 20;
+        }
+        if (strpos($haystack, '/pje/') !== false) {
+            return 10;
+        }
+        return 30;
     }
 
     /**
