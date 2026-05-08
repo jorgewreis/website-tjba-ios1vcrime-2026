@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0099
+
+**Data:** 2026-05-08 12:02:44 | **Commit:** `8419ea66` | **Tipo:** `patch`
+
+- refactor(dashboard): enhance meta display and improve layout
+
 ## V. 1.97.0098
 
 **Data:** 2026-05-08 11:57:28 | **Commit:** `4286d1ee` | **Tipo:** `patch`
@@ -5376,6 +5382,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

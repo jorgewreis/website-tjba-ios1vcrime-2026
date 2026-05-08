@@ -66,10 +66,9 @@ final class MniProcessoService
                     'numero_processo_enviado' => $numeroVariant,
                 ]);
                 // #endregion
-                $soapClient = $this->buildClientForTarget($target);
-                $consultarProcessoPayload = $this->runSoapOperation(
-                    $soapClient,
-                    ['consultarProcesso', 'ConsultarProcesso'],
+                $consultarProcessoPayload = $this->runCurlOnlyOperation(
+                    $target,
+                    'consultarProcesso',
                     $this->buildConsultarProcessoParamVariants($numeroVariant)
                 );
                 $attempt['consultar_processo'] = is_array($consultarProcessoPayload) && $consultarProcessoPayload === [] ? 'empty_array' : 'ok';
@@ -78,9 +77,9 @@ final class MniProcessoService
                 $consultarProcessoEstaVazio = is_array($consultarProcessoPayload) && $consultarProcessoPayload === [];
                 if ($consultarProcessoEstaVazio) {
                     try {
-                        $alteracaoPayload = $this->runSoapOperation(
-                            $soapClient,
-                            ['consultarAlteracao', 'ConsultarAlteracao'],
+                        $alteracaoPayload = $this->runCurlOnlyOperation(
+                            $target,
+                            'consultarAlteracao',
                             $this->buildConsultarAlteracaoParamVariants($numeroVariant)
                         );
                         $attempt['consultar_alteracao'] = is_array($alteracaoPayload) && $alteracaoPayload === [] ? 'empty_array' : 'ok';
@@ -174,6 +173,40 @@ final class MniProcessoService
         ]);
         // #endregion
         return $output;
+    }
+
+    /**
+     * Executa operação de consulta em modo cURL-only para evitar falhas de host no SoapClient.
+     *
+     * @param array{wsdl:string,location:string} $target
+     * @param list<array<string,mixed>> $paramVariants
+     * @return array<string,mixed>
+     */
+    private function runCurlOnlyOperation(array $target, string $operationName, array $paramVariants): array
+    {
+        $lastError = null;
+        foreach ($paramVariants as $params) {
+            $result = $this->callOperationViaCurlWithTarget($target, $operationName, $params);
+            if ($result !== null) {
+                $payload = is_array($result['payload'] ?? null) ? $result['payload'] : [];
+                $debug = is_array($result['debug'] ?? null) ? $result['debug'] : [];
+                $this->operationTrace[] = [
+                    'operation' => $operationName,
+                    'param_keys' => array_keys($params),
+                    'normalized_empty' => $payload === [],
+                    'raw_has_xsi_nil' => (bool) (($debug['soap_debug']['xsi_nil'] ?? false)),
+                    'raw_headers_snippet' => 'curl_only',
+                    'raw_response_snippet' => (string) ($debug['fallback_body_snippet'] ?? ''),
+                    'soap_body_child' => (string) (($debug['soap_debug']['body_child'] ?? '')),
+                    'soap_body_is_nil' => (bool) (($debug['soap_debug']['xsi_nil'] ?? false)),
+                    'soap_body_text' => (string) (($debug['soap_debug']['body_text'] ?? '')),
+                ];
+                return $payload;
+            }
+            $lastError = 'sem resposta válida via cURL';
+        }
+
+        throw new RuntimeException('Falha na operação SOAP MNI via cURL (' . $operationName . '): ' . ($lastError ?? 'erro desconhecido'));
     }
 
     /**
@@ -372,7 +405,21 @@ final class MniProcessoService
      */
     private function callOperationViaCurl(string $operationName, array $params): ?array
     {
-        $location = trim((string) ($this->config['location'] ?? ''));
+        $target = [
+            'wsdl' => (string) ($this->config['wsdl'] ?? ''),
+            'location' => (string) ($this->config['location'] ?? ''),
+        ];
+        return $this->callOperationViaCurlWithTarget($target, $operationName, $params);
+    }
+
+    /**
+     * @param array{wsdl:string,location:string} $target
+     * @param array<string,mixed> $params
+     * @return array<string,mixed>|null
+     */
+    private function callOperationViaCurlWithTarget(array $target, string $operationName, array $params): ?array
+    {
+        $location = trim((string) ($target['location'] ?? ''));
         if ($location === '') {
             return null;
         }

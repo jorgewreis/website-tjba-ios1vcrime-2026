@@ -343,9 +343,7 @@ $titleProjStat = sprintf(
             gap: 6px;
         }
         .dashboard-metas-row {
-            display: flex;
-            justify-content: space-between;
-            gap: 10px;
+            display: block;
             font-size: 12px;
             border-bottom: 1px solid var(--border-color, #e2e8f0);
             padding-bottom: 5px;
@@ -354,15 +352,25 @@ $titleProjStat = sprintf(
             border-bottom: 0;
             padding-bottom: 0;
         }
-        .dashboard-metas-row .meta-name {
+        .dashboard-metas-row .meta-line-1 {
             color: var(--color-gray-700, #374151);
             font-size: 11px;
-            line-height: 1.35;
-        }
-        .dashboard-metas-row .meta-value {
+            line-height: 1.3;
+            display: block;
             font-weight: 600;
-            font-variant-numeric: tabular-nums;
-            color: var(--color-gray-800, #1f2937);
+        }
+        .dashboard-metas-row .meta-line-2 {
+            margin-top: 2px;
+            display: block;
+            font-size: 10.5px;
+            color: var(--color-gray-600, #4b5563);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .dashboard-metas-row.is-far-from-target .meta-line-1,
+        .dashboard-metas-row.is-far-from-target .meta-line-2 {
+            color: var(--color-danger);
         }
 
         .badge-success {

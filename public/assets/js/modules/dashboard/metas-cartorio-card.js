@@ -29,26 +29,31 @@
     const META_RULES = {
         meta1: {
             target: '>= 100%',
+            targetValue: 100,
             criterio: 'julgar mais que os distribuídos (20/12/2025 a 19/12/2026)',
             formula: '(julgados / (casos novos + dessobrestados - suspensos)) x 100'
         },
         meta2_1Grau: {
             target: '80%',
+            targetValue: 80,
             criterio: 'processos distribuídos até 31/12/2022 (1º grau)',
             formula: '(julgados / (distribuídos - suspensos)) x (1000/8)'
         },
         meta2_2Grau: {
             target: '90%',
+            targetValue: 90,
             criterio: 'processos distribuídos até 31/12/2023 (2º grau)',
             formula: '(julgados / (distribuídos - suspensos)) x (1000/9)'
         },
         meta2Jeetr: {
             target: '95%',
+            targetValue: 95,
             criterio: 'JE/TR distribuídos até 31/12/2023',
             formula: '(julgados / (distribuídos - suspensos)) x (1000/9,5)'
         },
         meta2Antigos: {
             target: '100%',
+            targetValue: 100,
             criterio: 'processos com 15 anos ou mais',
             formula: '(julgados / (distribuídos - suspensos - dessobrestados)) x 100'
         },
@@ -59,36 +64,43 @@
         },
         meta6: {
             target: '50%',
+            targetValue: 50,
             criterio: 'ações ambientais distribuídas até 31/12/2025',
             formula: '(julgados / (distribuídos - suspensos)) x (1000/5)'
         },
         meta7Indigenas: {
             target: '50%',
+            targetValue: 50,
             criterio: 'direitos indígenas distribuídos até 31/12/2025',
             formula: '(julgados / (distribuídos - suspensos)) x (1000/5)'
         },
         meta7Quilombolas: {
             target: '50%',
+            targetValue: 50,
             criterio: 'direitos quilombolas distribuídos até 31/12/2025',
             formula: '(julgados / (distribuídos - suspensos)) x (1000/5)'
         },
         meta8Vd: {
             target: '90%',
+            targetValue: 90,
             criterio: 'violência doméstica distribuída até 31/12/2024',
             formula: '(julgados / (distribuídos - suspensos)) x (1000/9)'
         },
         meta8Feminicidio: {
             target: '75%',
+            targetValue: 75,
             criterio: 'feminicídio distribuído até 31/12/2024',
             formula: '(julgados / (distribuídos - suspensos)) x (1000/7,5)'
         },
         meta10_1Grau: {
             target: '90%',
+            targetValue: 90,
             criterio: 'infância e juventude (1º grau) até 31/12/2024',
             formula: '(julgados / (distribuídos - suspensos)) x (1000/9)'
         },
         meta10_2Grau: {
             target: '99%',
+            targetValue: 99,
             criterio: 'infância e juventude (2º grau) até 31/12/2024',
             formula: '(julgados / (distribuídos - suspensos)) x (1000/9,9)'
         }
@@ -117,6 +129,12 @@
         }
     }
 
+    function parsePercent(value) {
+        const normalized = String(value == null ? '' : value).trim().replace(/\./g, '').replace(',', '.');
+        const parsed = Number(normalized);
+        return Number.isFinite(parsed) ? parsed : NaN;
+    }
+
     function renderRows(metas) {
         if (!elTable) {
             return;
@@ -128,17 +146,24 @@
             }
             const display = String(raw);
             const metaRule = META_RULES[key] || null;
-            const detail = metaRule
-                ? (
-                    'Cumpr.: ' + display + '%'
-                    + ' | Alvo: ' + metaRule.target
-                    + ' | Critério: ' + metaRule.criterio
-                    + ' | Fórmula: ' + metaRule.formula
-                )
-                : ('Cumpr.: ' + display + '%');
+            const actualValue = parsePercent(display);
+            const isFarFromTarget = !!(
+                metaRule
+                && typeof metaRule.targetValue === 'number'
+                && Number.isFinite(actualValue)
+                && (metaRule.targetValue - actualValue) > 30
+            );
+            const line1 = metaRule
+                ? (META_LABELS[key] + ' | Cumpr.: ' + display + '% | Alvo: ' + metaRule.target)
+                : (META_LABELS[key] + ' | Cumpr.: ' + display + '%');
+            const line2 = metaRule
+                ? ('Critério: ' + metaRule.criterio + ' | Fórmula: ' + metaRule.formula)
+                : '';
+            const fullTitle = line2 !== '' ? (line1 + ' | ' + line2) : line1;
             return (
-                '<div class="dashboard-metas-row">' +
-                '<span class="meta-name" title="' + escapeHtml('Base CNJ 2026 (Glossário Justiça Estadual): ' + CNJ_GLOSSARIO_2026_JE_URL) + '">' + escapeHtml(META_LABELS[key] + ' | ' + detail) + '</span>' +
+                '<div class="dashboard-metas-row' + (isFarFromTarget ? ' is-far-from-target' : '') + '">' +
+                '<span class="meta-line-1">' + escapeHtml(line1) + '</span>' +
+                '<span class="meta-line-2" title="' + escapeHtml(fullTitle + ' | Base: ' + CNJ_GLOSSARIO_2026_JE_URL) + '">' + escapeHtml(line2) + '</span>' +
                 '</div>'
             );
         }).filter(Boolean);
