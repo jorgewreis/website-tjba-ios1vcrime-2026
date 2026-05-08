@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0103
+
+**Data:** 2026-05-08 12:28:21 | **Commit:** `fdaa872d` | **Tipo:** `patch`
+
+- feat(mni-processo): enhance CNJ digit formatting and logging
+
 ## V. 1.97.0102
 
 **Data:** 2026-05-08 12:25:15 | **Commit:** `b30f0c09` | **Tipo:** `patch`
@@ -5400,6 +5406,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

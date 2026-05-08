@@ -46,6 +46,10 @@ final class MniProcessoService
             'consultar_alteracao' => [],
         ];
         $numeroVariants = [$cnjDigits];
+        $formattedCnj = $this->formatCnjDigits($cnjDigits);
+        if ($formattedCnj !== null && !in_array($formattedCnj, $numeroVariants, true)) {
+            $numeroVariants[] = $formattedCnj;
+        }
         $enableConsultarProcesso = $this->isConsultarProcessoEnabled();
 
         foreach ($endpoints as $target) {
@@ -192,7 +196,16 @@ final class MniProcessoService
     private function runCurlOnlyOperation(array $target, string $operationName, array $paramVariants): array
     {
         $lastError = null;
-        foreach ($paramVariants as $params) {
+        foreach ($paramVariants as $index => $params) {
+            $numeroParam = $this->extractNumeroProcessoFromParams($params);
+            // #region agent log
+            $this->debugLog('diag-run-2', 'H14', 'MniProcessoService::runCurlOnlyOperation:190', 'Executando variante de payload MNI', [
+                'operation' => $operationName,
+                'variant_index' => $index,
+                'numero_digits_len' => $numeroParam !== null ? strlen(preg_replace('/\D+/', '', $numeroParam) ?? '') : null,
+                'numero_has_punctuation' => $numeroParam !== null ? ((preg_replace('/\d+/', '', $numeroParam) ?? '') !== '') : null,
+            ]);
+            // #endregion
             $result = $this->callOperationViaCurlWithTarget($target, $operationName, $params);
             if ($result !== null) {
                 $payload = is_array($result['payload'] ?? null) ? $result['payload'] : [];
@@ -798,7 +811,47 @@ final class MniProcessoService
             }
         }
 
+        // #region agent log
+        $this->debugLog('diag-run-2', 'H13', 'MniProcessoService::resolveEndpointTargets:801', 'Lista final de endpoints resolvidos', [
+            'targets' => $targets,
+            'wsdl_config' => (string) ($this->config['wsdl'] ?? ''),
+            'consulta_wsdl_config' => (string) ($this->config['consulta_wsdl'] ?? ''),
+        ]);
+        // #endregion
+
         return $targets;
+    }
+
+    /**
+     * @param array<string,mixed> $params
+     */
+    private function extractNumeroProcessoFromParams(array $params): ?string
+    {
+        if (isset($params['numeroProcesso']) && is_scalar($params['numeroProcesso'])) {
+            return (string) $params['numeroProcesso'];
+        }
+        foreach ($params as $value) {
+            if (is_array($value) && isset($value['numeroProcesso']) && is_scalar($value['numeroProcesso'])) {
+                return (string) $value['numeroProcesso'];
+            }
+        }
+        return null;
+    }
+
+    private function formatCnjDigits(string $digits): ?string
+    {
+        if (strlen($digits) !== 20) {
+            return null;
+        }
+        return sprintf(
+            '%s-%s.%s.%s.%s.%s',
+            substr($digits, 0, 7),
+            substr($digits, 7, 2),
+            substr($digits, 9, 4),
+            substr($digits, 13, 1),
+            substr($digits, 14, 2),
+            substr($digits, 16, 4)
+        );
     }
 
     /**
