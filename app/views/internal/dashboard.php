@@ -490,14 +490,6 @@ $titleProjStat = sprintf(
                                     <strong>Vara</strong>
                                     <span id="dashboard-metas-vara">Carregando...</span>
                                 </div>
-                                <div class="dashboard-metas-card-ident">
-                                    <strong>Cód. Comarca</strong>
-                                    <span id="dashboard-metas-cod-comarca">-</span>
-                                </div>
-                                <div class="dashboard-metas-card-ident">
-                                    <strong>Cód. Unidade</strong>
-                                    <span id="dashboard-metas-cod-unidade">-</span>
-                                </div>
                             </div>
                             <div class="dashboard-metas-card-table" id="dashboard-metas-table">
                                 <div class="dashboard-metas-row">

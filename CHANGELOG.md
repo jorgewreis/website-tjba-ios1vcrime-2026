@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0097
+
+**Data:** 2026-05-08 11:54:54 | **Commit:** `d946cf3f` | **Tipo:** `patch`
+
+- fix(mni-processo): enhance operation handling with cURL fallback
+
 ## V. 1.97.0096
 
 **Data:** 2026-05-08 11:49:44 | **Commit:** `107c5739` | **Tipo:** `patch`
@@ -5364,6 +5370,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

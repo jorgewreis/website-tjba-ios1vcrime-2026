@@ -302,6 +302,33 @@ final class MniProcessoService
         $lastError = null;
         foreach ($candidates as $operationName) {
             foreach ($paramVariants as $params) {
+                $preferCurl = in_array($operationName, ['consultarProcesso', 'ConsultarProcesso', 'consultarAlteracao', 'ConsultarAlteracao'], true);
+                if ($preferCurl) {
+                    $curlFirst = $this->callOperationViaCurl($operationName, $params);
+                    if ($curlFirst !== null) {
+                        // #region agent log
+                        $this->debugLog('post-fix-run-2', 'H20', 'MniProcessoService::runSoapOperation:290', 'Operação executada via cURL-first', [
+                            'operation' => $operationName,
+                            'param_keys' => array_keys($params),
+                        ]);
+                        // #endregion
+                        $fallbackPayload = is_array($curlFirst['payload'] ?? null) ? $curlFirst['payload'] : [];
+                        $fallbackDebug = is_array($curlFirst['debug'] ?? null) ? $curlFirst['debug'] : [];
+                        $this->operationTrace[] = [
+                            'operation' => $operationName,
+                            'param_keys' => array_keys($params),
+                            'normalized_empty' => $fallbackPayload === [],
+                            'raw_has_xsi_nil' => (bool) (($fallbackDebug['soap_debug']['xsi_nil'] ?? false)),
+                            'raw_headers_snippet' => 'curl_first',
+                            'raw_response_snippet' => (string) ($fallbackDebug['fallback_body_snippet'] ?? ''),
+                            'soap_body_child' => (string) (($fallbackDebug['soap_debug']['body_child'] ?? '')),
+                            'soap_body_is_nil' => (bool) (($fallbackDebug['soap_debug']['xsi_nil'] ?? false)),
+                            'soap_body_text' => (string) (($fallbackDebug['soap_debug']['body_text'] ?? '')),
+                        ];
+                        return $fallbackPayload;
+                    }
+                }
+
                 try {
                     $response = $client->__soapCall($operationName, [$params]);
                     // #region agent log

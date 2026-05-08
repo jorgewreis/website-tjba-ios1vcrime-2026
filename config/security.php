@@ -25,7 +25,15 @@ final class Security
             return false;
         }
 
-        return !self::isSessionExpiredByInactivity();
+        if (self::isSessionExpiredByInactivity()) {
+            return false;
+        }
+
+        // Mantém a janela de inatividade alinhada também para endpoints
+        // que validam sessão via isAuthenticated() (ex.: APIs JSON).
+        $_SESSION[self::SESSION_LAST_ACTIVITY] = time();
+
+        return true;
     }
 
     public static function requireAuthentication(): void

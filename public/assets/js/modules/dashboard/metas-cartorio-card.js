@@ -9,8 +9,6 @@
     const elAno = document.getElementById('dashboard-metas-ano');
     const elComarca = document.getElementById('dashboard-metas-comarca');
     const elVara = document.getElementById('dashboard-metas-vara');
-    const elCodComarca = document.getElementById('dashboard-metas-cod-comarca');
-    const elCodUnidade = document.getElementById('dashboard-metas-cod-unidade');
     const elTable = document.getElementById('dashboard-metas-table');
 
     const META_LABELS = {
@@ -57,14 +55,28 @@
         }
         const entries = Object.keys(META_LABELS).map(function (key) {
             const raw = metas && Object.prototype.hasOwnProperty.call(metas, key) ? metas[key] : null;
-            const display = raw == null || String(raw).trim() === '' ? '-' : String(raw);
+            if (raw == null || String(raw).trim() === '') {
+                return '';
+            }
+            const display = String(raw);
             return (
                 '<div class="dashboard-metas-row">' +
                 '<span class="meta-name">' + escapeHtml(META_LABELS[key]) + '</span>' +
                 '<span class="meta-value">' + escapeHtml(display) + '</span>' +
                 '</div>'
             );
-        });
+        }).filter(Boolean);
+
+        if (entries.length === 0) {
+            elTable.innerHTML = (
+                '<div class="dashboard-metas-row">' +
+                '<span class="meta-name">Sem metas com valor disponível</span>' +
+                '<span class="meta-value">-</span>' +
+                '</div>'
+            );
+            return;
+        }
+
         elTable.innerHTML = entries.join('');
     }
 
@@ -73,28 +85,24 @@
             elAno.textContent = data.ano ? ('Referência ' + data.ano) : 'Referência não informada';
         }
         if (elComarca) {
-            elComarca.textContent = data.comarca || '-';
+            const comarcaNome = data.comarca || '-';
+            const codComarca = data.codCnjComarca || '-';
+            elComarca.textContent = codComarca + ' - ' + comarcaNome;
         }
         if (elVara) {
-            elVara.textContent = data.vara || '-';
-        }
-        if (elCodComarca) {
-            elCodComarca.textContent = data.codCnjComarca || '-';
-        }
-        if (elCodUnidade) {
-            elCodUnidade.textContent = data.codCnjUnidade || '-';
+            const varaNome = data.vara || '-';
+            const codUnidade = data.codCnjUnidade || '-';
+            elVara.textContent = codUnidade + ' - ' + varaNome;
         }
     }
 
     function renderErrorState() {
-        if (!elAno || !elComarca || !elVara || !elCodComarca || !elCodUnidade || !elTable) {
+        if (!elAno || !elComarca || !elVara || !elTable) {
             return;
         }
         elAno.textContent = 'Referência indisponível';
         elComarca.textContent = '-';
         elVara.textContent = '-';
-        elCodComarca.textContent = '-';
-        elCodUnidade.textContent = '-';
         elTable.innerHTML = (
             '<div class="dashboard-metas-row">' +
             '<span class="meta-name">Não foi possível carregar as metas</span>' +
