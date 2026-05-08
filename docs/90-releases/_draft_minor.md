@@ -74,4 +74,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(mni-processo): enhance CNJ digit formatting and logging** `[fdaa872d]`
 - **feat(mni-processo): add consultarProcessoSomente method for isolated process queries** `[83cca398]`
 - **feat(mni-processo): implement endpoint prioritization for target resolution** `[53549192]`
+- **feat(mni-processo): implement endpoint filtering based on CNJ digits** `[dc671934]`
 
