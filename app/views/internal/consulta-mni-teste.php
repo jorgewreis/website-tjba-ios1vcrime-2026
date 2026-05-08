@@ -55,6 +55,7 @@ declare(strict_types=1);
                     >
                 </div>
                 <button id="mni-submit-btn" type="submit" class="btn btn-primary height-md">Consultar dados</button>
+                <button id="mni-healthcheck-btn" type="button" class="btn btn-primary-outline height-md">Testar conectividade</button>
             </form>
 
             <div id="mni-result-wrapper" class="margin-top-md" hidden>

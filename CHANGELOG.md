@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0083
+
+**Data:** 2026-05-08 09:43:45 | **Commit:** `bd0e6cd7` | **Tipo:** `patch`
+
+- feat(mni-healthcheck): add healthcheck button and functionality to MNI test page
+
 ## V. 1.97.0082
 
 **Data:** 2026-05-08 09:42:55 | **Commit:** `cf0ae442` | **Tipo:** `patch`
@@ -5280,6 +5286,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

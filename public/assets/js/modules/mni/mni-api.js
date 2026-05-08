@@ -17,6 +17,12 @@
         submitBtn.textContent = isLoading ? 'Consultando...' : 'Consultar dados';
     }
 
+    function setHealthcheckLoading(isLoading, button) {
+        if (!button) return;
+        button.disabled = !!isLoading;
+        button.textContent = isLoading ? 'Testando...' : 'Testar conectividade';
+    }
+
     function renderRows(resultBody, label, value) {
         var row = document.createElement('tr');
         var labelCell = document.createElement('td');
@@ -50,6 +56,23 @@
         resultWrapper.hidden = false;
     }
 
+    function renderHealthcheck(payload) {
+        var resultWrapper = document.getElementById('mni-result-wrapper');
+        var resultBody = document.getElementById('mni-result-body');
+        if (!resultWrapper || !resultBody) return;
+
+        resultBody.innerHTML = '';
+        renderRows(resultBody, 'status', payload && payload.ok ? 'Conectividade OK' : 'Falha');
+        renderRows(resultBody, 'wsdl', payload ? payload.wsdl : 'Não informado');
+        renderRows(resultBody, 'location', payload ? payload.location : 'Não informado');
+        renderRows(resultBody, 'operação de validação', payload ? payload.auth_check_operation : 'Não informado');
+        renderRows(resultBody, 'resposta da validação', JSON.stringify((payload && payload.auth_check_response) || {}, null, 2));
+        renderRows(resultBody, 'funções detectadas (amostra)', JSON.stringify((payload && payload.functions_preview) || [], null, 2));
+        renderRows(resultBody, 'timestamp', payload ? payload.timestamp : '');
+
+        resultWrapper.hidden = false;
+    }
+
     async function consultar(cnjDigits) {
         var response = await fetch('/api/mni/search-processo.php', {
             method: 'POST',
@@ -71,11 +94,32 @@
         return payload.data;
     }
 
+    async function healthcheck() {
+        var response = await fetch('/api/mni/search-processo.php?healthcheck=1', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        var payload = await response.json().catch(function () { return {}; });
+        if (!response.ok) {
+            throw new Error(payload && payload.error ? payload.error : 'Erro ao executar teste de conectividade.');
+        }
+
+        if (!payload || !payload.data) {
+            throw new Error('Resposta inválida no teste de conectividade.');
+        }
+
+        return payload.data;
+    }
+
     function bindForm() {
         var form = document.getElementById('mni-test-form');
         var input = document.getElementById('mni-cnj-input');
         var submitBtn = document.getElementById('mni-submit-btn');
-        if (!form || !input || !submitBtn || !global.MniCNJ) return;
+        var healthcheckBtn = document.getElementById('mni-healthcheck-btn');
+        if (!form || !input || !submitBtn || !healthcheckBtn || !global.MniCNJ) return;
 
         global.MniCNJ.bindInput(input);
 
@@ -111,6 +155,26 @@
                 });
             } finally {
                 setLoading(false, submitBtn);
+            }
+        });
+
+        healthcheckBtn.addEventListener('click', async function () {
+            setHealthcheckLoading(true, healthcheckBtn);
+            try {
+                var diag = await healthcheck();
+                renderHealthcheck(diag);
+                showToastSafe({
+                    type: 'success',
+                    message: 'Conectividade MNI validada com sucesso.'
+                });
+            } catch (error) {
+                showToastSafe({
+                    type: 'error',
+                    title: 'Erro',
+                    message: error && error.message ? error.message : 'Falha no teste de conectividade.'
+                });
+            } finally {
+                setHealthcheckLoading(false, healthcheckBtn);
             }
         });
     }
