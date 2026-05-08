@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0101
+
+**Data:** 2026-05-08 12:21:02 | **Commit:** `d16dab41` | **Tipo:** `patch`
+
+- feat(mni-processo): add noop_consulta mode for diagnostic queries
+
 ## V. 1.97.0100
 
 **Data:** 2026-05-08 12:17:29 | **Commit:** `5a5e39ac` | **Tipo:** `patch`
@@ -5388,6 +5394,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

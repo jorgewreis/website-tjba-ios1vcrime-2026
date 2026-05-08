@@ -53,6 +53,18 @@ if ($ping) {
 }
 
 $healthcheck = !empty($payload['healthcheck']) || (isset($_GET['healthcheck']) && $_GET['healthcheck'] === '1');
+if (isset($_GET['mode']) && $_GET['mode'] === 'noop_consulta') {
+    error_log('[MNI_DIAG][' . $__mniDiagId . '] noop_consulta_ok_no_numero_required');
+    respond([
+        'data' => [
+            'ok' => true,
+            'diag_id' => $__mniDiagId,
+            'mode' => 'noop_consulta',
+            'numero_recebido_query' => (string) ($_GET['numero'] ?? ''),
+            'timestamp' => date(DATE_ATOM),
+        ],
+    ], 200);
+}
 
 require_once dirname(__DIR__, 3) . '/app/services/MniProcessoService.php';
 
@@ -84,14 +96,14 @@ if ($numero === '' || strlen($numero) !== 20) {
 }
 
 $mode = isset($_GET['mode']) ? trim((string) $_GET['mode']) : '';
-if ($mode === 'noop_consulta') {
-    error_log('[MNI_DIAG][' . $__mniDiagId . '] noop_consulta_ok');
+if ($mode === 'safe_stub') {
+    error_log('[MNI_DIAG][' . $__mniDiagId . '] safe_stub_ok');
     respond([
         'data' => [
             'ok' => true,
             'diag_id' => $__mniDiagId,
             'numero' => $numero,
-            'mode' => 'noop_consulta',
+            'mode' => 'safe_stub',
             'timestamp' => date(DATE_ATOM),
         ],
     ], 200);
