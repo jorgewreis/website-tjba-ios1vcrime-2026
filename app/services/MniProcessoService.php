@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/MniProcessoResponseMapper.php';
+require_once __DIR__ . '/../DataJud/DataJudTribunalResolver.php';
 
 final class MniProcessoService
 {
@@ -9,6 +10,13 @@ final class MniProcessoService
     private array $config;
     /** @var list<array<string,mixed>> */
     private array $operationTrace = [];
+    /** @var array<string,mixed> */
+    private array $endpointFilterMeta = [
+        'aplicado' => false,
+        'slug_resolvido_cn' => null,
+        'urls_removidas_filtragem' => [],
+        'mantidos_todos_motivo' => null,
+    ];
 
     /** @param array<string,mixed> $config */
     public function __construct(array $config)
@@ -37,7 +45,7 @@ final class MniProcessoService
 
         $this->assertIntercomCredentials();
         $this->operationTrace = [];
-        $endpoints = $this->resolveEndpointTargets();
+        $endpoints = $this->resolveEndpointTargets($cnjDigits);
         $lastRuntimeError = null;
         $selected = null;
         $debugTrace = [];
@@ -164,8 +172,10 @@ final class MniProcessoService
         $output = MniProcessoResponseMapper::mapToOutput($cnjDigits, $merged);
         $output['meta_consulta'] = [
             'tribunal_detectado_cnj' => $this->detectTribunalCodeFromCnj($cnjDigits),
+            'slug_tribunal_resolvido_pelo_cn' => DataJudTribunalResolver::resolveAliasFromDigits($cnjDigits),
             'tribunal_configurado' => $this->normalizeTribunalCode((string) ($this->config['tribunal_code'] ?? '')),
             'divergencia_tribunal' => $this->hasTribunalMismatch($cnjDigits),
+            'filtro_endpoints_por_cn' => $this->endpointFilterMeta,
             'fonte_wsdl' => (string) ($selected['wsdl'] ?? ''),
             'fonte_location' => (string) ($selected['location'] ?? ''),
             'fallback_multibase_ativo' => count($endpoints) > 1,
@@ -292,7 +302,7 @@ final class MniProcessoService
 
         $this->assertIntercomCredentials();
         $this->operationTrace = [];
-        $targets = $this->resolveEndpointTargets();
+        $targets = $this->resolveEndpointTargets($cnjDigits);
 
         $lastError = null;
         foreach ($targets as $target) {
@@ -308,6 +318,7 @@ final class MniProcessoService
                     'fonte_wsdl' => (string) ($target['wsdl'] ?? ''),
                     'fonte_location' => (string) ($target['location'] ?? ''),
                     'dados' => $payload,
+                    'filtro_endpoints_por_cn' => $this->endpointFilterMeta,
                     'trace_operacoes' => $this->operationTrace,
                 ];
             } catch (RuntimeException $e) {
@@ -336,7 +347,7 @@ final class MniProcessoService
 
         $this->assertIntercomCredentials();
         $this->operationTrace = [];
-        $targets = $this->resolveEndpointTargets();
+        $targets = $this->resolveEndpointTargets($cnjDigits);
         $numeroVariants = [$cnjDigits];
         $formattedCnj = $this->formatCnjDigits($cnjDigits);
         if ($formattedCnj !== null && !in_array($formattedCnj, $numeroVariants, true)) {
@@ -367,6 +378,7 @@ final class MniProcessoService
                             'fonte_wsdl' => (string) ($target['wsdl'] ?? ''),
                             'fonte_location' => (string) ($target['location'] ?? ''),
                             'dados' => $payload,
+                            'filtro_endpoints_por_cn' => $this->endpointFilterMeta,
                             'trace_tentativas' => $attempts,
                             'trace_operacoes' => $this->operationTrace,
                         ];
@@ -393,6 +405,7 @@ final class MniProcessoService
             'fonte_wsdl' => (string) ($targets[0]['wsdl'] ?? ''),
             'fonte_location' => (string) ($targets[0]['location'] ?? ''),
             'dados' => [],
+            'filtro_endpoints_por_cn' => $this->endpointFilterMeta,
             'trace_tentativas' => $attempts,
             'trace_operacoes' => $this->operationTrace,
         ];
@@ -854,8 +867,15 @@ final class MniProcessoService
     /**
      * @return list<array{wsdl:string,location:string}>
      */
-    private function resolveEndpointTargets(): array
+    private function resolveEndpointTargets(?string $cnjDigitsForFilter = null): array
     {
+        $this->endpointFilterMeta = [
+            'aplicado' => false,
+            'slug_resolvido_cn' => null,
+            'urls_removidas_filtragem' => [],
+            'mantidos_todos_motivo' => null,
+        ];
+
         $targets = [];
         $wsdl = trim((string) ($this->config['wsdl'] ?? ''));
         $location = trim((string) ($this->config['location'] ?? ''));
@@ -878,6 +898,8 @@ final class MniProcessoService
             }
         }
 
+        $targets = $this->filterTargetsMatchingCnjCourt($targets, $cnjDigitsForFilter);
+
         // Regra solicitada: se consultar no 1º grau e vier vazio, tentar 2º grau.
         // Para isso, quando só houver endpoint de 1º grau, derivamos automaticamente o equivalente de 2º grau.
         if (count($targets) === 1) {
@@ -896,10 +918,81 @@ final class MniProcessoService
             'targets' => $targets,
             'wsdl_config' => (string) ($this->config['wsdl'] ?? ''),
             'consulta_wsdl_config' => (string) ($this->config['consulta_wsdl'] ?? ''),
+            'endpoint_filter' => $this->endpointFilterMeta,
         ]);
         // #endregion
 
         return $targets;
+    }
+
+    /**
+     * Remove URLs de outros tribunais quando o número CNJ permite inferir o slug (evita misturar ex.: TJBA + TJMT no .env).
+     *
+     * @param list<array{wsdl:string,location:string}> $targets
+     * @return list<array{wsdl:string,location:string}>
+     */
+    private function filterTargetsMatchingCnjCourt(array $targets, ?string $cnjDigits): array
+    {
+        if ($targets === []) {
+            return $targets;
+        }
+
+        $allowCross = $this->isAllowCrossTribunalEndpointsEnabled();
+        if ($allowCross) {
+            $this->endpointFilterMeta['mantidos_todos_motivo'] = 'MNI_ALLOW_CROSS_TRIBUNAL_ENDPOINTS_ativo';
+
+            return $targets;
+        }
+
+        if ($cnjDigits === null || strlen($cnjDigits) !== 20 || !ctype_digit($cnjDigits)) {
+            $this->endpointFilterMeta['mantidos_todos_motivo'] = 'cnj_digits_invalido_para_filtro';
+
+            return $targets;
+        }
+
+        $slug = DataJudTribunalResolver::resolveAliasFromDigits($cnjDigits);
+        $this->endpointFilterMeta['slug_resolvido_cn'] = $slug;
+        if ($slug === null) {
+            $this->endpointFilterMeta['mantidos_todos_motivo'] = 'resolver_cn_sem_slug_para_este_segmento_judicial';
+
+            return $targets;
+        }
+
+        $needle = strtolower($slug);
+        $filtered = [];
+        $removedUrls = [];
+
+        foreach ($targets as $target) {
+            $haystack = strtolower((string) ($target['wsdl'] ?? '') . ' ' . (string) ($target['location'] ?? ''));
+            if (strpos($haystack, $needle) !== false) {
+                $filtered[] = $target;
+            } else {
+                $w = trim((string) ($target['wsdl'] ?? ''));
+                if ($w !== '') {
+                    $removedUrls[] = $w;
+                }
+            }
+        }
+
+        $this->endpointFilterMeta['urls_removidas_filtragem'] = array_values(array_unique($removedUrls));
+
+        if ($filtered !== []) {
+            $this->endpointFilterMeta['aplicado'] = true;
+
+            return $filtered;
+        }
+
+        $this->endpointFilterMeta['mantidos_todos_motivo'] =
+            'nenhum_endpoint_configurado_coincide_com_slug_do_cn_preservados_todos_para_nao_esvaziar';
+
+        return $targets;
+    }
+
+    private function isAllowCrossTribunalEndpointsEnabled(): bool
+    {
+        $raw = strtolower(trim((string) ($this->config['allow_cross_tribunal_endpoints'] ?? '0')));
+
+        return in_array($raw, ['1', 'true', 'yes', 'on'], true);
     }
 
     /**

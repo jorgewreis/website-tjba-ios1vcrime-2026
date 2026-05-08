@@ -16,7 +16,6 @@
         meta2_1Grau: 'Meta 2 - 1º Grau',
         meta2_2Grau: 'Meta 2 - 2º Grau',
         meta2Jeetr: 'Meta 2 - Jeetr',
-        meta2Antigos: 'Meta 2 - Antigos',
         meta4: 'Meta 4',
         meta6: 'Meta 6',
         meta7Indigenas: 'Meta 7 - Indígenas',
@@ -51,16 +50,11 @@
             criterio: 'JE/TR distribuídos até 31/12/2023',
             formula: '(julgados / (distribuídos - suspensos)) x (1000/9,5)'
         },
-        meta2Antigos: {
-            target: '100%',
-            targetValue: 100,
-            criterio: 'processos com 15 anos ou mais',
-            formula: '(julgados / (distribuídos - suspensos - dessobrestados)) x 100'
-        },
         meta4: {
-            target: '65% (penal) / 100% (improbidade)',
-            criterio: 'ações distribuídas até 31/12/2022',
-            formula: '(julgados / (distribuídos - suspensos)) x fator-meta'
+            target: '65%',
+            targetValue: 65,
+            criterio: 'ações penais contra a Administração Pública distribuídas até 31/12/2022',
+            formula: '(julgados / (distribuídos - suspensos)) x (1000/6,5)'
         },
         meta6: {
             target: '50%',
@@ -134,36 +128,98 @@
         return Number.isFinite(parsed) ? parsed : NaN;
     }
 
+    function cumprimentoBadgeTone(hasNumericTarget, actualValue, targetValue, isFarFromTarget) {
+        if (!Number.isFinite(actualValue)) {
+            return 'badge-warning';
+        }
+        if (!hasNumericTarget || targetValue === undefined) {
+            return 'badge-warning';
+        }
+        if (actualValue >= targetValue) {
+            return 'badge-success';
+        }
+        if (isFarFromTarget) {
+            return 'badge-danger';
+        }
+        return 'badge-warning';
+    }
+
     function renderRows(metas) {
         if (!elTable) {
             return;
         }
         const entries = Object.keys(META_LABELS).map(function (key) {
             const raw = metas && Object.prototype.hasOwnProperty.call(metas, key) ? metas[key] : null;
-            const hasValue = !(raw == null || String(raw).trim() === '');
-            const display = hasValue ? String(raw) : '-';
+            if (raw == null || String(raw).trim() === '') {
+                return '';
+            }
+            const display = String(raw);
+            const actualValue = parsePercent(display);
+            if (Number.isFinite(actualValue) && actualValue === 0) {
+                return '';
+            }
             const metaRule = META_RULES[key] || null;
-            const actualValue = hasValue ? parsePercent(display) : NaN;
+            const hasNumericTarget = !!(metaRule && typeof metaRule.targetValue === 'number');
+            const meetsOrExceedsTarget = !!(
+                hasNumericTarget
+                && Number.isFinite(actualValue)
+                && actualValue >= (metaRule.targetValue)
+            );
+            const alvoExibicao = metaRule
+                ? (meetsOrExceedsTarget ? 'ok' : metaRule.target)
+                : '';
             const isFarFromTarget = !!(
                 metaRule
                 && typeof metaRule.targetValue === 'number'
                 && Number.isFinite(actualValue)
                 && (metaRule.targetValue - actualValue) > 30
             );
-            const line1 = metaRule
-                ? (META_LABELS[key] + ' | Cumpr.: ' + display + '% | Alvo: ' + metaRule.target)
+            const fullTitle = metaRule
+                ? (
+                    META_LABELS[key]
+                    + ' | Alvo: '
+                    + alvoExibicao
+                    + ' | Cumpr.: '
+                    + display
+                    + '% | Critério: '
+                    + metaRule.criterio
+                    + ' | Fórmula: '
+                    + metaRule.formula
+                )
                 : (META_LABELS[key] + ' | Cumpr.: ' + display + '%');
-            const line2 = metaRule
-                ? ('Critério: ' + metaRule.criterio + ' | Fórmula: ' + metaRule.formula)
-                : '';
-            const fullTitle = line2 !== '' ? (line1 + ' | ' + line2) : line1;
+            const badgeTone = cumprimentoBadgeTone(
+                hasNumericTarget,
+                actualValue,
+                metaRule ? metaRule.targetValue : undefined,
+                isFarFromTarget
+            );
+            let line1Html = '';
+            if (metaRule) {
+                line1Html = (
+                    '<div class="meta-line-1-row">' +
+                    '<div class="meta-line-1-left">' +
+                    '<span class="meta-line-1-meta" title="' + escapeHtml(fullTitle) + '">' + escapeHtml(META_LABELS[key]) + '</span>' +
+                    '<span class="meta-line-1-alvo">' + escapeHtml('Alvo: ' + alvoExibicao) + '</span>' +
+                    '</div>' +
+                    '<span class="badge ' + badgeTone + ' dashboard-metas-cumpr-badge">' + escapeHtml(display + '%') + '</span>' +
+                    '</div>'
+                );
+            } else {
+                line1Html = (
+                    '<div class="meta-line-1-row">' +
+                    '<div class="meta-line-1-left">' +
+                    '<span class="meta-line-1-meta" title="' + escapeHtml(fullTitle) + '">' + escapeHtml(META_LABELS[key]) + '</span>' +
+                    '</div>' +
+                    '<span class="badge ' + badgeTone + ' dashboard-metas-cumpr-badge">' + escapeHtml(display + '%') + '</span>' +
+                    '</div>'
+                );
+            }
             return (
-                '<div class="dashboard-metas-row' + (isFarFromTarget ? ' is-far-from-target' : '') + '">' +
-                '<span class="meta-line-1">' + escapeHtml(line1) + '</span>' +
-                '<span class="meta-line-2" title="' + escapeHtml(fullTitle) + '">' + escapeHtml(line2) + '</span>' +
+                '<div class="dashboard-metas-row">' +
+                line1Html +
                 '</div>'
             );
-        });
+        }).filter(Boolean);
 
         if (entries.length === 0) {
             elTable.innerHTML = (

@@ -352,27 +352,45 @@ $titleProjStat = sprintf(
             border-bottom: 0;
             padding-bottom: 0;
         }
-        .dashboard-metas-row .meta-line-1 {
-            color: var(--color-gray-700, #374151);
-            font-size: 11px;
-            line-height: 1.3;
-            display: block;
-            font-weight: 600;
+        .dashboard-metas-row .meta-line-1-row {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            min-width: 0;
         }
-        .dashboard-metas-row .meta-line-2 {
-            margin-top: 2px;
-            display: block;
+        .dashboard-metas-row .meta-line-1-left {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2px;
+            min-width: 0;
+            flex: 1;
+        }
+        .dashboard-metas-row .meta-line-1-meta {
+            font-weight: 600;
+            font-size: 11px;
+            line-height: 1.25;
+            color: var(--color-gray-700, #374151);
+            cursor: help;
+        }
+        .dashboard-metas-row .meta-line-1-alvo {
             font-size: 10.5px;
+            line-height: 1.25;
             color: var(--color-gray-600, #4b5563);
-            white-space: nowrap;
+        }
+        .dashboard-metas-row .dashboard-metas-cumpr-badge {
+            flex-shrink: 0;
+            margin: 0;
+            align-self: center;
+            text-transform: none;
+            font-variant-numeric: tabular-nums;
+            max-width: 42%;
             overflow: hidden;
             text-overflow: ellipsis;
+            white-space: nowrap;
         }
-        .dashboard-metas-row.is-far-from-target .meta-line-1,
-        .dashboard-metas-row.is-far-from-target .meta-line-2 {
-            color: var(--color-danger);
-        }
-
         .badge-success {
             color: var(--color-gray-800);
         }

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0106
+
+**Data:** 2026-05-08 13:44:41 | **Commit:** `dc671934` | **Tipo:** `patch`
+
+- feat(mni-processo): implement endpoint filtering based on CNJ digits
+
 ## V. 1.97.0105
 
 **Data:** 2026-05-08 13:05:12 | **Commit:** `53549192` | **Tipo:** `patch`
@@ -5418,6 +5424,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

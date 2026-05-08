@@ -48,4 +48,5 @@ return [
     'cert_passphrase' => trim((string) ($_ENV['MNI_CERT_PASSPHRASE'] ?? getenv('MNI_CERT_PASSPHRASE') ?: '')),
     'timeout' => (int) (trim((string) ($_ENV['MNI_TIMEOUT_SECONDS'] ?? getenv('MNI_TIMEOUT_SECONDS') ?: '8')) ?: 8),
     'connect_timeout' => (int) (trim((string) ($_ENV['MNI_CONNECT_TIMEOUT_SECONDS'] ?? getenv('MNI_CONNECT_TIMEOUT_SECONDS') ?: '4')) ?: 4),
+    'allow_cross_tribunal_endpoints' => trim((string) ($_ENV['MNI_ALLOW_CROSS_TRIBUNAL_ENDPOINTS'] ?? getenv('MNI_ALLOW_CROSS_TRIBUNAL_ENDPOINTS') ?: '0')),
 ];
