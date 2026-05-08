@@ -42,28 +42,32 @@ final class MniProcessoService
             'consultar_processo' => [],
             'consultar_alteracao' => [],
         ];
+        $numeroVariants = $this->buildNumeroProcessoVariants($cnjDigits);
 
         foreach ($endpoints as $target) {
-            try {
-                $attempt = [
-                    'wsdl' => (string) ($target['wsdl'] ?? ''),
-                    'location' => (string) ($target['location'] ?? ''),
-                    'consultar_processo' => 'not_run',
-                    'consultar_alteracao' => 'not_run',
-                    'resultado_vazio' => null,
-                    'erro' => null,
-                ];
+            foreach ($numeroVariants as $numeroVariant) {
+                try {
+                    $attempt = [
+                        'wsdl' => (string) ($target['wsdl'] ?? ''),
+                        'location' => (string) ($target['location'] ?? ''),
+                        'numero_processo_enviado' => $numeroVariant,
+                        'consultar_processo' => 'not_run',
+                        'consultar_alteracao' => 'not_run',
+                        'resultado_vazio' => null,
+                        'erro' => null,
+                    ];
                 // #region agent log
-                $this->debugLog('diag-run-1', 'H1', 'MniProcessoService::consultarPorNumeroCnj:48', 'Tentando endpoint', [
+                $this->debugLog('diag-run-1', 'H10', 'MniProcessoService::consultarPorNumeroCnj:50', 'Tentando endpoint + formato de número', [
                     'wsdl' => (string) ($target['wsdl'] ?? ''),
                     'location' => (string) ($target['location'] ?? ''),
+                    'numero_processo_enviado' => $numeroVariant,
                 ]);
                 // #endregion
                 $soapClient = $this->buildClientForTarget($target);
                 $consultarProcessoPayload = $this->runSoapOperation(
                     $soapClient,
                     ['consultarProcesso', 'ConsultarProcesso'],
-                    $this->buildConsultarProcessoParamVariants($cnjDigits)
+                    $this->buildConsultarProcessoParamVariants($numeroVariant)
                 );
                 $attempt['consultar_processo'] = is_array($consultarProcessoPayload) && $consultarProcessoPayload === [] ? 'empty_array' : 'ok';
 
@@ -72,7 +76,7 @@ final class MniProcessoService
                     $alteracaoPayload = $this->runSoapOperation(
                         $soapClient,
                         ['consultarAlteracao', 'ConsultarAlteracao'],
-                        $this->buildConsultarAlteracaoParamVariants($cnjDigits)
+                        $this->buildConsultarAlteracaoParamVariants($numeroVariant)
                     );
                     $attempt['consultar_alteracao'] = is_array($alteracaoPayload) && $alteracaoPayload === [] ? 'empty_array' : 'ok';
                 } catch (RuntimeException $e) {
@@ -101,24 +105,27 @@ final class MniProcessoService
                 $debugTrace[] = $attempt;
 
                 if (!$attempt['resultado_vazio']) {
-                    break;
+                    break 2;
                 }
-            } catch (RuntimeException $e) {
-                $debugTrace[] = [
-                    'wsdl' => (string) ($target['wsdl'] ?? ''),
-                    'location' => (string) ($target['location'] ?? ''),
-                    'consultar_processo' => 'runtime_error',
-                    'consultar_alteracao' => 'not_run',
-                    'resultado_vazio' => null,
-                    'erro' => $e->getMessage(),
-                ];
+                } catch (RuntimeException $e) {
+                    $debugTrace[] = [
+                        'wsdl' => (string) ($target['wsdl'] ?? ''),
+                        'location' => (string) ($target['location'] ?? ''),
+                        'numero_processo_enviado' => $numeroVariant,
+                        'consultar_processo' => 'runtime_error',
+                        'consultar_alteracao' => 'not_run',
+                        'resultado_vazio' => null,
+                        'erro' => $e->getMessage(),
+                    ];
                 // #region agent log
                 $this->debugLog('diag-run-1', 'H4', 'MniProcessoService::consultarPorNumeroCnj:87', 'Erro no endpoint durante consulta', [
                     'wsdl' => (string) ($target['wsdl'] ?? ''),
+                    'numero_processo_enviado' => $numeroVariant,
                     'error' => $e->getMessage(),
                 ]);
                 // #endregion
                 $lastRuntimeError = $e;
+                }
             }
         }
 
@@ -454,12 +461,12 @@ final class MniProcessoService
     /**
      * @return array<string,mixed>
      */
-    private function buildIntercomBasePayload(string $cnjDigits): array
+    private function buildIntercomBasePayload(string $numeroProcesso): array
     {
         return [
             'idConsultante' => (string) ($this->config['consultante_id'] ?? ''),
             'senhaConsultante' => (string) ($this->config['consultante_senha'] ?? ''),
-            'numeroProcesso' => $cnjDigits,
+            'numeroProcesso' => $numeroProcesso,
             'movimentos' => true,
             'incluirCabecalho' => true,
             'incluirDocumentos' => false,
@@ -469,9 +476,9 @@ final class MniProcessoService
     /**
      * @return list<array<string,mixed>>
      */
-    private function buildConsultarProcessoParamVariants(string $cnjDigits): array
+    private function buildConsultarProcessoParamVariants(string $numeroProcesso): array
     {
-        $base = $this->buildIntercomBasePayload($cnjDigits);
+        $base = $this->buildIntercomBasePayload($numeroProcesso);
 
         return [
             $base,
@@ -482,12 +489,12 @@ final class MniProcessoService
     /**
      * @return list<array<string,mixed>>
      */
-    private function buildConsultarAlteracaoParamVariants(string $cnjDigits): array
+    private function buildConsultarAlteracaoParamVariants(string $numeroProcesso): array
     {
         $base = [
             'idConsultante' => (string) ($this->config['consultante_id'] ?? ''),
             'senhaConsultante' => (string) ($this->config['consultante_senha'] ?? ''),
-            'numeroProcesso' => $cnjDigits,
+            'numeroProcesso' => $numeroProcesso,
         ];
 
         return [
@@ -648,5 +655,24 @@ final class MniProcessoService
             return false;
         }
         return $detected !== $configured;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function buildNumeroProcessoVariants(string $cnjDigits): array
+    {
+        $variants = [];
+        $digits = preg_replace('/\D+/', '', $cnjDigits) ?? '';
+        if (strlen($digits) === 20) {
+            $variants[] = $digits;
+            $variants[] = substr($digits, 0, 7) . '-' . substr($digits, 7, 2) . '.'
+                . substr($digits, 9, 4) . '.' . substr($digits, 13, 1) . '.'
+                . substr($digits, 14, 2) . '.' . substr($digits, 16, 4);
+        }
+
+        return array_values(array_unique(array_filter($variants, static function (string $v): bool {
+            return trim($v) !== '';
+        })));
     }
 }

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0090
+
+**Data:** 2026-05-08 11:13:20 | **Commit:** `51c4423b` | **Tipo:** `patch`
+
+- feat(mni-processo): implement multiple process number variants for SOAP operations
+
 ## V. 1.97.0089
 
 **Data:** 2026-05-08 11:10:34 | **Commit:** `2dc7a1c6` | **Tipo:** `patch`
@@ -5322,6 +5328,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
