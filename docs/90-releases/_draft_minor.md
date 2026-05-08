@@ -40,4 +40,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(produtividade): improve productivity registration error handling for CEP consultations** `[c7b04e68]`
 - **fix(produtividade): correct spelling in productivity registration messages** `[c45babf9]`
 - **refactor(page-access): rename 'consultamniteste' to 'consultapjepublicoteste' and remove deprecated MniProcessoResponseMapper and MniProcessoService files** `[33635471]`
+- **feat(scraper): add diagnostic limits and institutional document regex patterns** `[4f94baf0]`
 
