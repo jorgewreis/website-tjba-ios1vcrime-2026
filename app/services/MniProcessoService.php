@@ -136,6 +136,17 @@ final class MniProcessoService
             throw $lastRuntimeError;
         }
 
+        $businessError = $this->extractBusinessErrorMessage($merged);
+        if ($businessError !== null) {
+            // #region agent log
+            $this->debugLog('post-fix-run-1', 'H12', 'MniProcessoService::consultarPorNumeroCnj:140', 'Erro de negócio retornado pelo MNI', [
+                'message' => $businessError,
+                'selected_wsdl' => (string) ($selected['wsdl'] ?? ''),
+            ]);
+            // #endregion
+            throw new RuntimeException($businessError);
+        }
+
         $output = MniProcessoResponseMapper::mapToOutput($cnjDigits, $merged);
         $output['meta_consulta'] = [
             'tribunal_detectado_cnj' => $this->detectTribunalCodeFromCnj($cnjDigits),
@@ -762,6 +773,38 @@ final class MniProcessoService
             return false;
         }
         return $detected !== $configured;
+    }
+
+    /**
+     * @param array<string,mixed> $merged
+     */
+    private function extractBusinessErrorMessage(array $merged): ?string
+    {
+        foreach (['consultar_processo', 'consultar_alteracao'] as $key) {
+            $part = $merged[$key] ?? null;
+            if (!is_array($part) || $part === []) {
+                continue;
+            }
+
+            $sucesso = $part['sucesso'] ?? null;
+            $mensagem = isset($part['mensagem']) ? trim((string) $part['mensagem']) : '';
+            if ($mensagem === '') {
+                continue;
+            }
+
+            if (is_string($sucesso)) {
+                $s = strtolower(trim($sucesso));
+                if (in_array($s, ['false', '0', 'nao', 'não'], true)) {
+                    return $mensagem;
+                }
+            } elseif (is_bool($sucesso) && $sucesso === false) {
+                return $mensagem;
+            } elseif ($sucesso === null && stripos($mensagem, 'erro') !== false) {
+                return $mensagem;
+            }
+        }
+
+        return null;
     }
 
 }

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0093
+
+**Data:** 2026-05-08 11:25:51 | **Commit:** `c43529a9` | **Tipo:** `patch`
+
+- feat(mni-processo): add business error extraction and logging in MniProcessoService
+
 ## V. 1.97.0092
 
 **Data:** 2026-05-08 11:21:07 | **Commit:** `d6f2264a` | **Tipo:** `patch`
@@ -5340,6 +5346,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
