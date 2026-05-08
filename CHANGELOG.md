@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0089
+
+**Data:** 2026-05-08 11:10:34 | **Commit:** `2dc7a1c6` | **Tipo:** `patch`
+
+- feat(mni-processo): enhance debugging and error tracking in MniProcessoService
+
 ## V. 1.97.0088
 
 **Data:** 2026-05-08 11:03:06 | **Commit:** `8c1616d2` | **Tipo:** `patch`
@@ -5316,6 +5322,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

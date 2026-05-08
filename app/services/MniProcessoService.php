@@ -37,6 +37,7 @@ final class MniProcessoService
         $endpoints = $this->resolveEndpointTargets();
         $lastRuntimeError = null;
         $selected = null;
+        $debugTrace = [];
         $merged = [
             'consultar_processo' => [],
             'consultar_alteracao' => [],
@@ -44,6 +45,14 @@ final class MniProcessoService
 
         foreach ($endpoints as $target) {
             try {
+                $attempt = [
+                    'wsdl' => (string) ($target['wsdl'] ?? ''),
+                    'location' => (string) ($target['location'] ?? ''),
+                    'consultar_processo' => 'not_run',
+                    'consultar_alteracao' => 'not_run',
+                    'resultado_vazio' => null,
+                    'erro' => null,
+                ];
                 // #region agent log
                 $this->debugLog('diag-run-1', 'H1', 'MniProcessoService::consultarPorNumeroCnj:48', 'Tentando endpoint', [
                     'wsdl' => (string) ($target['wsdl'] ?? ''),
@@ -56,6 +65,7 @@ final class MniProcessoService
                     ['consultarProcesso', 'ConsultarProcesso'],
                     $this->buildConsultarProcessoParamVariants($cnjDigits)
                 );
+                $attempt['consultar_processo'] = is_array($consultarProcessoPayload) && $consultarProcessoPayload === [] ? 'empty_array' : 'ok';
 
                 $alteracaoPayload = null;
                 try {
@@ -64,8 +74,11 @@ final class MniProcessoService
                         ['consultarAlteracao', 'ConsultarAlteracao'],
                         $this->buildConsultarAlteracaoParamVariants($cnjDigits)
                     );
+                    $attempt['consultar_alteracao'] = is_array($alteracaoPayload) && $alteracaoPayload === [] ? 'empty_array' : 'ok';
                 } catch (RuntimeException $e) {
                     $alteracaoPayload = ['aviso' => $e->getMessage()];
+                    $attempt['consultar_alteracao'] = 'runtime_error';
+                    $attempt['erro'] = $e->getMessage();
                 }
 
                 $merged = [
@@ -84,10 +97,21 @@ final class MniProcessoService
                 ]);
                 // #endregion
 
-                if (!$this->isResultEffectivelyEmpty($merged)) {
+                $attempt['resultado_vazio'] = $this->isResultEffectivelyEmpty($merged);
+                $debugTrace[] = $attempt;
+
+                if (!$attempt['resultado_vazio']) {
                     break;
                 }
             } catch (RuntimeException $e) {
+                $debugTrace[] = [
+                    'wsdl' => (string) ($target['wsdl'] ?? ''),
+                    'location' => (string) ($target['location'] ?? ''),
+                    'consultar_processo' => 'runtime_error',
+                    'consultar_alteracao' => 'not_run',
+                    'resultado_vazio' => null,
+                    'erro' => $e->getMessage(),
+                ];
                 // #region agent log
                 $this->debugLog('diag-run-1', 'H4', 'MniProcessoService::consultarPorNumeroCnj:87', 'Erro no endpoint durante consulta', [
                     'wsdl' => (string) ($target['wsdl'] ?? ''),
@@ -110,6 +134,7 @@ final class MniProcessoService
             'fonte_wsdl' => (string) ($selected['wsdl'] ?? ''),
             'fonte_location' => (string) ($selected['location'] ?? ''),
             'fallback_multibase_ativo' => count($endpoints) > 1,
+            'trace_tentativas' => $debugTrace,
         ];
         // #region agent log
         $this->debugLog('diag-run-1', 'H5', 'MniProcessoService::consultarPorNumeroCnj:108', 'Resultado final da consulta MNI', [
