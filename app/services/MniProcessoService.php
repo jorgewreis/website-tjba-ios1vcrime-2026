@@ -45,7 +45,7 @@ final class MniProcessoService
             'consultar_processo' => [],
             'consultar_alteracao' => [],
         ];
-        $numeroVariants = $this->buildNumeroProcessoVariants($cnjDigits);
+        $numeroVariants = [$cnjDigits];
 
         foreach ($endpoints as $target) {
             foreach ($numeroVariants as $numeroVariant) {
@@ -327,15 +327,20 @@ final class MniProcessoService
                                 'fallback_keys' => array_keys($fallback),
                             ]);
                             // #endregion
+                            $fallbackPayload = is_array($fallback['payload'] ?? null) ? $fallback['payload'] : [];
+                            $fallbackDebug = is_array($fallback['debug'] ?? null) ? $fallback['debug'] : [];
                             $this->operationTrace[] = [
                                 'operation' => $operationName,
                                 'param_keys' => array_keys($params),
-                                'normalized_empty' => is_array($fallback) && $fallback === [],
-                                'raw_has_xsi_nil' => null,
+                                'normalized_empty' => $fallbackPayload === [],
+                                'raw_has_xsi_nil' => (bool) (($fallbackDebug['soap_debug']['xsi_nil'] ?? false)),
                                 'raw_headers_snippet' => 'fallback_curl',
-                                'raw_response_snippet' => isset($fallback['raw_xml']) ? substr((string) $fallback['raw_xml'], 0, 600) : '',
+                                'raw_response_snippet' => (string) ($fallbackDebug['fallback_body_snippet'] ?? ''),
+                                'soap_body_child' => (string) (($fallbackDebug['soap_debug']['body_child'] ?? '')),
+                                'soap_body_is_nil' => (bool) (($fallbackDebug['soap_debug']['xsi_nil'] ?? false)),
+                                'soap_body_text' => (string) (($fallbackDebug['soap_debug']['body_text'] ?? '')),
                             ];
-                            return $fallback;
+                            return $fallbackPayload;
                         }
                     }
                     // #region agent log
@@ -422,7 +427,18 @@ final class MniProcessoService
             return null;
         }
 
-        return $this->xmlToArray($xmlPayload);
+        $parsed = $this->parseSoapEnvelopeBody($xmlPayload);
+        $payload = is_array($parsed['payload'] ?? null) ? $parsed['payload'] : [];
+        $debug = is_array($parsed['debug'] ?? null) ? $parsed['debug'] : [];
+
+        return [
+            'payload' => $payload,
+            'debug' => [
+                'fallback_headers_snippet' => substr($raw, 0, $headerSize),
+                'fallback_body_snippet' => substr($body, 0, 600),
+                'soap_debug' => $debug,
+            ],
+        ];
     }
 
     /**
@@ -478,6 +494,60 @@ final class MniProcessoService
         $json = json_encode($xml, JSON_UNESCAPED_UNICODE);
         $arr = json_decode((string) $json, true);
         return is_array($arr) ? $arr : ['raw_xml' => $xmlPayload];
+    }
+
+    /**
+     * @return array{payload: array<string,mixed>, debug: array<string,mixed>}
+     */
+    private function parseSoapEnvelopeBody(string $xmlPayload): array
+    {
+        $doc = new DOMDocument();
+        $ok = @$doc->loadXML($xmlPayload);
+        if (!$ok) {
+            return [
+                'payload' => $this->xmlToArray($xmlPayload),
+                'debug' => ['parse_mode' => 'simplexml_fallback'],
+            ];
+        }
+
+        $xpath = new DOMXPath($doc);
+        $bodyList = $xpath->query('//*[local-name()="Body"]');
+        if (!$bodyList || $bodyList->length === 0) {
+            return [
+                'payload' => $this->xmlToArray($xmlPayload),
+                'debug' => ['parse_mode' => 'no_body_fallback'],
+            ];
+        }
+
+        $body = $bodyList->item(0);
+        $firstElement = null;
+        foreach ($body->childNodes as $child) {
+            if ($child instanceof DOMElement) {
+                $firstElement = $child;
+                break;
+            }
+        }
+
+        if (!$firstElement instanceof DOMElement) {
+            return [
+                'payload' => [],
+                'debug' => ['parse_mode' => 'empty_body'],
+            ];
+        }
+
+        $xsiNil = strtolower((string) $firstElement->getAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'nil')) === 'true';
+        $payloadXml = $doc->saveXML($firstElement) ?: '';
+        $payload = $payloadXml !== '' ? $this->xmlToArray($payloadXml) : [];
+
+        return [
+            'payload' => $payload,
+            'debug' => [
+                'parse_mode' => 'dom_body_first_child',
+                'body_child' => $firstElement->localName,
+                'xsi_nil' => $xsiNil,
+                'body_text' => trim($firstElement->textContent ?? ''),
+            ],
+        ];
     }
 
     /**
@@ -694,22 +764,4 @@ final class MniProcessoService
         return $detected !== $configured;
     }
 
-    /**
-     * @return list<string>
-     */
-    private function buildNumeroProcessoVariants(string $cnjDigits): array
-    {
-        $variants = [];
-        $digits = preg_replace('/\D+/', '', $cnjDigits) ?? '';
-        if (strlen($digits) === 20) {
-            $variants[] = $digits;
-            $variants[] = substr($digits, 0, 7) . '-' . substr($digits, 7, 2) . '.'
-                . substr($digits, 9, 4) . '.' . substr($digits, 13, 1) . '.'
-                . substr($digits, 14, 2) . '.' . substr($digits, 16, 4);
-        }
-
-        return array_values(array_unique(array_filter($variants, static function (string $v): bool {
-            return trim($v) !== '';
-        })));
-    }
 }

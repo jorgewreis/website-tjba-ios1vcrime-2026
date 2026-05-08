@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0092
+
+**Data:** 2026-05-08 11:21:07 | **Commit:** `d6f2264a` | **Tipo:** `patch`
+
+- refactor(mni-processo): simplify process number variant handling in MniProcessoService
+
 ## V. 1.97.0091
 
 **Data:** 2026-05-08 11:15:34 | **Commit:** `8d55fa6b` | **Tipo:** `patch`
@@ -5334,6 +5340,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
