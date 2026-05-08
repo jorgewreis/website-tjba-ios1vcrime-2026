@@ -72,4 +72,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(mni-processo): add noop_consulta mode for diagnostic queries** `[d16dab41]`
 - **feat(mni-processo): enable/disable consultar processo based on configuration** `[b30f0c09]`
 - **feat(mni-processo): enhance CNJ digit formatting and logging** `[fdaa872d]`
+- **feat(mni-processo): add consultarProcessoSomente method for isolated process queries** `[83cca398]`
 
