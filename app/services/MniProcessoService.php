@@ -258,6 +258,50 @@ final class MniProcessoService
         ];
     }
 
+    /**
+     * Diagnóstico leve: executa apenas consultarAlteracao.
+     *
+     * @return array<string,mixed>
+     */
+    public function consultarAlteracaoSomente(string $numero): array
+    {
+        $cnjDigits = preg_replace('/\D+/', '', $numero) ?? '';
+        if ($cnjDigits === '' || strlen($cnjDigits) !== 20) {
+            throw new InvalidArgumentException('Número CNJ inválido. Informe os 20 dígitos.');
+        }
+
+        $this->assertIntercomCredentials();
+        $this->operationTrace = [];
+        $targets = $this->resolveEndpointTargets();
+
+        $lastError = null;
+        foreach ($targets as $target) {
+            try {
+                $payload = $this->runCurlOnlyOperation(
+                    $target,
+                    'consultarAlteracao',
+                    $this->buildConsultarAlteracaoParamVariants($cnjDigits)
+                );
+
+                return [
+                    'numero_consultado' => $cnjDigits,
+                    'fonte_wsdl' => (string) ($target['wsdl'] ?? ''),
+                    'fonte_location' => (string) ($target['location'] ?? ''),
+                    'dados' => $payload,
+                    'trace_operacoes' => $this->operationTrace,
+                ];
+            } catch (RuntimeException $e) {
+                $lastError = $e;
+            }
+        }
+
+        if ($lastError instanceof RuntimeException) {
+            throw $lastError;
+        }
+
+        throw new RuntimeException('Falha ao executar consultarAlteracao no modo diagnóstico.');
+    }
+
     private function buildClient(): SoapClient
     {
         return $this->buildClientForTarget([

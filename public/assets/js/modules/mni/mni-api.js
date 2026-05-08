@@ -102,12 +102,12 @@
     }
 
     async function consultar(cnjDigits) {
-        var response = await fetch('/api/mni/search-processo.php', {
-            method: 'POST',
+        var url = '/api/mni/search-processo.php?numero=' + encodeURIComponent(cnjDigits);
+        var response = await fetch(url, {
+            method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ numero: cnjDigits })
+            }
         });
 
         return parseApiResponse(response, 'Erro ao consultar processo');

@@ -105,7 +105,6 @@
             formula: '(julgados / (distribuídos - suspensos)) x (1000/9,9)'
         }
     };
-    const CNJ_GLOSSARIO_2026_JE_URL = 'https://www.cnj.jus.br/wp-content/uploads/2026/03/glossario-metas-nacionais-do-poder-judiciario-2026-justica-estadual-versao-3.pdf';
 
     function escapeHtml(value) {
         const App = global.App || {};
@@ -163,7 +162,7 @@
             return (
                 '<div class="dashboard-metas-row' + (isFarFromTarget ? ' is-far-from-target' : '') + '">' +
                 '<span class="meta-line-1">' + escapeHtml(line1) + '</span>' +
-                '<span class="meta-line-2" title="' + escapeHtml(fullTitle + ' | Base: ' + CNJ_GLOSSARIO_2026_JE_URL) + '">' + escapeHtml(line2) + '</span>' +
+                '<span class="meta-line-2" title="' + escapeHtml(fullTitle) + '">' + escapeHtml(line2) + '</span>' +
                 '</div>'
             );
         }).filter(Boolean);

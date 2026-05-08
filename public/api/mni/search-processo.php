@@ -74,10 +74,43 @@ if ($healthcheck) {
 }
 
 $numero = isset($payload['numero']) ? (string) $payload['numero'] : '';
+if ($numero === '' && isset($_GET['numero'])) {
+    $numero = (string) $_GET['numero'];
+}
 $numero = trim(preg_replace('/\D+/', '', $numero));
 if ($numero === '' || strlen($numero) !== 20) {
     error_log('[MNI_DIAG][' . $__mniDiagId . '] invalid_numero len=' . strlen($numero));
     respond(['error' => 'Número do processo inválido. Forneça 20 dígitos sem pontuação.'], 400);
+}
+
+$mode = isset($_GET['mode']) ? trim((string) $_GET['mode']) : '';
+if ($mode === 'noop_consulta') {
+    error_log('[MNI_DIAG][' . $__mniDiagId . '] noop_consulta_ok');
+    respond([
+        'data' => [
+            'ok' => true,
+            'diag_id' => $__mniDiagId,
+            'numero' => $numero,
+            'mode' => 'noop_consulta',
+            'timestamp' => date(DATE_ATOM),
+        ],
+    ], 200);
+}
+
+if ($mode === 'alteracao_only') {
+    error_log('[MNI_DIAG][' . $__mniDiagId . '] alteracao_only_start');
+    try {
+        $service = new MniProcessoService($config);
+        $diag = $service->consultarAlteracaoSomente($numero);
+        error_log('[MNI_DIAG][' . $__mniDiagId . '] alteracao_only_ok');
+        respond(['data' => $diag], 200);
+    } catch (RuntimeException $e) {
+        error_log('[MNI_DIAG][' . $__mniDiagId . '] alteracao_only_runtime=' . $e->getMessage());
+        respond(['error' => $e->getMessage()], 502);
+    } catch (Throwable $e) {
+        error_log('[MNI_DIAG][' . $__mniDiagId . '] alteracao_only_throwable=' . $e->getMessage());
+        respond(['error' => 'Falha inesperada no modo alteracao_only.'], 500);
+    }
 }
 
 try {
