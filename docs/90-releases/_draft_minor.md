@@ -62,4 +62,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(mni-processo): enhance operation tracing and debugging in MniProcessoService** `[8d55fa6b]`
 - **refactor(mni-processo): simplify process number variant handling in MniProcessoService** `[d6f2264a]`
 - **feat(mni-processo): add business error extraction and logging in MniProcessoService** `[c43529a9]`
+- **fix(mni-processo): add fallback for XML parsing when DOM extension is unavailable** `[e8057bf8]`
 
