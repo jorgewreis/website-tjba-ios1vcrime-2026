@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0086
+
+**Data:** 2026-05-08 10:21:05 | **Commit:** `06970c3a` | **Tipo:** `patch`
+
+- feat(mni-processo): add fallback mechanism for SOAP operations and implement CURL handling
+
 ## V. 1.97.0085
 
 **Data:** 2026-05-08 10:16:01 | **Commit:** `19549781` | **Tipo:** `patch`
@@ -5298,6 +5304,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

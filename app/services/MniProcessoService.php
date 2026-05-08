@@ -172,6 +172,12 @@ final class MniProcessoService
                     $response = $client->__soapCall($operationName, [$params]);
                     return $this->normalizeSoapResponse($response);
                 } catch (SoapFault $e) {
+                    if (stripos((string) $e->getMessage(), 'no XML document') !== false) {
+                        $fallback = $this->callOperationViaCurl($operationName, $params);
+                        if ($fallback !== null) {
+                            return $fallback;
+                        }
+                    }
                     $lastError = $e;
                 }
             }
@@ -181,6 +187,131 @@ final class MniProcessoService
             'Falha na operação SOAP MNI (' . implode(', ', $candidates) . '): '
             . ($lastError ? $lastError->getMessage() : 'erro desconhecido')
         );
+    }
+
+    /**
+     * Fallback para provedores que retornam MTOM multipart/related.
+     *
+     * @param array<string,mixed> $params
+     * @return array<string,mixed>|null
+     */
+    private function callOperationViaCurl(string $operationName, array $params): ?array
+    {
+        $location = trim((string) ($this->config['location'] ?? ''));
+        if ($location === '') {
+            return null;
+        }
+
+        $namespace = 'http://www.cnj.jus.br/servico-intercomunicacao-2.2.2/';
+        $typeNamespace = 'http://www.cnj.jus.br/tipos-servico-intercomunicacao-2.2.2';
+        $soapAction = $namespace . $operationName;
+        $bodyXml = $this->buildSoapBodyXml($operationName, $params, $typeNamespace);
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>'
+            . '<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"'
+            . ' xmlns:ns1="' . $typeNamespace . '"'
+            . ' xmlns:ns2="' . $namespace . '"><SOAP-ENV:Body>'
+            . $bodyXml
+            . '</SOAP-ENV:Body></SOAP-ENV:Envelope>';
+
+        $ch = curl_init($location);
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HEADER => true,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: text/xml; charset=utf-8',
+                'SOAPAction: "' . $soapAction . '"',
+            ],
+            CURLOPT_POSTFIELDS => $xml,
+            CURLOPT_TIMEOUT => (int) ($this->config['timeout'] ?? 8),
+            CURLOPT_CONNECTTIMEOUT => (int) ($this->config['connect_timeout'] ?? 4),
+        ]);
+
+        $certPath = trim((string) ($this->config['cert_path'] ?? ''));
+        $certPassphrase = trim((string) ($this->config['cert_passphrase'] ?? ''));
+        if ($certPath !== '' && is_file($certPath)) {
+            curl_setopt($ch, CURLOPT_SSLCERT, $certPath);
+            if ($certPassphrase !== '') {
+                curl_setopt($ch, CURLOPT_KEYPASSWD, $certPassphrase);
+            }
+        }
+
+        $raw = curl_exec($ch);
+        $curlErr = curl_error($ch);
+        $headerSize = (int) curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+        $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($curlErr !== '' || !is_string($raw) || $raw === '' || $status < 200 || $status >= 500) {
+            return null;
+        }
+
+        $body = substr($raw, $headerSize);
+        if (!is_string($body) || $body === '') {
+            return null;
+        }
+
+        $xmlPayload = $this->extractSoapEnvelope($body);
+        if ($xmlPayload === null) {
+            return null;
+        }
+
+        return $this->xmlToArray($xmlPayload);
+    }
+
+    /**
+     * @param array<string,mixed> $params
+     */
+    private function buildSoapBodyXml(string $operationName, array $params, string $typeNamespace): string
+    {
+        $payload = $params;
+        if (isset($params[$operationName]) && is_array($params[$operationName])) {
+            $payload = $params[$operationName];
+        } elseif (isset($params['arg0']) && is_array($params['arg0'])) {
+            $payload = $params['arg0'];
+        }
+
+        $parts = [];
+        foreach ($payload as $key => $value) {
+            if ($value === null) {
+                continue;
+            }
+            $parts[] = '<ns1:' . htmlspecialchars((string) $key, ENT_QUOTES, 'UTF-8') . '>'
+                . htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8')
+                . '</ns1:' . htmlspecialchars((string) $key, ENT_QUOTES, 'UTF-8') . '>';
+        }
+
+        return '<ns2:' . htmlspecialchars($operationName, ENT_QUOTES, 'UTF-8')
+            . ' xmlns:ns1="' . $typeNamespace . '">'
+            . implode('', $parts)
+            . '</ns2:' . htmlspecialchars($operationName, ENT_QUOTES, 'UTF-8') . '>';
+    }
+
+    private function extractSoapEnvelope(string $payload): ?string
+    {
+        if (preg_match('/(<soap:Envelope[\s\S]*<\/soap:Envelope>)/i', $payload, $m)) {
+            return $m[1];
+        }
+        if (preg_match('/(<SOAP-ENV:Envelope[\s\S]*<\/SOAP-ENV:Envelope>)/i', $payload, $m)) {
+            return $m[1];
+        }
+        return null;
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
+    private function xmlToArray(string $xmlPayload): array
+    {
+        $prev = libxml_use_internal_errors(true);
+        $xml = simplexml_load_string($xmlPayload, 'SimpleXMLElement', LIBXML_NOCDATA);
+        libxml_use_internal_errors($prev);
+        if ($xml === false) {
+            return ['raw_xml' => $xmlPayload];
+        }
+        $json = json_encode($xml, JSON_UNESCAPED_UNICODE);
+        $arr = json_decode((string) $json, true);
+        return is_array($arr) ? $arr : ['raw_xml' => $xmlPayload];
     }
 
     /**
