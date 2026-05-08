@@ -4,75 +4,40 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix(cadastro_estudantes): enhance user registration logic and error handling** `[218485d]`
-- **fix(cadastro-form): prevent multiple form submissions and update timeout handling** `[74c515e]`
-- **fix(config): update session idle timeout and enhance session activity management** `[5be85b3]`
-- **feat(dashboard): add allocation rules and user-specific allocation discovery** `[e07d3a7]`
-- **fix(dashboard): simplify dashboard card metrics and improve status filtering** `[53e4abe]`
-- **fix(dashboard): enhance allocation card filtering and add type constraint** `[5adb19c]`
-- **fix(audiencias): update status handling and visibility logic in audience panels** `[685bd6f]`
-- **fix(security): improve logout handling and iframe navigation** `[0199893]`
-- **fix(api): enhance logging in status-bulk endpoint for better debugging** `[889922d]`
-- **refactor(status-bulk): update log file path and enhance CSS for cartas expedidas** `[10f3b6f]`
-- **refactor(cartas-expedidas): enhance layout and improve filtering options** `[eb40e86]`
-- **refactor(cartas-expedidas): improve filter layout and structure** `[681adf0]`
-- **refactor(cartas-expedidas): enhance filter display and total items message** `[df3bef2]`
-- **refactor(cartas-expedidas): update items per page default and enhance status filter display** `[0a2ac41]`
-- **refactor(cartas-expedidas): streamline HTML structure and improve readability** `[7db183a]`
-- **refactor(cartas-expedidas): adjust default items per page for improved pagination** `[39d463e]`
-- **refactor(cartas-recebidas): update default items per page and enhance HTML structure** `[4af9f7b]`
-- **refactor(cartorio-cejusc-list): enhance HTML structure and improve filter functionality** `[3ab9709]`
-- **refactor(cartorio-ceapa-list): update default items per page and enhance HTML structure** `[0f980b1]`
-- **refactor(cartorio-views): standardize "no records found" message and enhance HTML structure** `[ae62d47]`
-- **refactor(cartorio-views): enhance filter display and HTML structure** `[ff767af]`
-- **refactor(cartorio-views): standardize search input width and improve HTML structure** `[aff8e9d]`
-- **refactor(list-views): enhance layout and functionality across multiple internal views** `[18803ca]`
-- **refactor(reus-presos-list): enhance search functionality and improve filter handling** `[88345bc]`
-- **refactor(partes-instituicoes): normalize cargo/função handling and improve input formatting** `[92c697f]`
-- **refactor(pagination): enhance pagination layout and logic across multiple views** `[cc0712a]`
-- **refactor(sala-audiencias-pauta-edit): enhance partes handling and improve display logic** `[8827835]`
-- **refactor(sala-audiencias-pauta-edit): remove unused repository and streamline display logic** `[3faf01b]`
-- **feat(sala-midias-list): include copy process script for enhanced functionality** `[af16927]`
-- **fix(SalaAudienciasAtaRepository, SalaAudienciasAtaService): update expiration logic for ata records** `[6558770]`
-- **feat(sala-audiencias-atas-list): add download deadline label for ata files** `[a27bd79]`
-- **feat(cnj-validation): integrate CNJ validation across services and views** `[079b3534]`
-- **refactor(button-state): unify button state initialization across create forms** `[331170ec]`
-- **feat(button-state): enhance button state management in audiencia forms** `[d6b3fcb3]`
-- **refactor(pauta-edit): simplify status messages for linked parties** `[aea3741d]`
-- **feat(dashboard): enhance dashboard statistics display** `[3ca856c0]`
-- **refactor(oficios-list): simplify gate readiness logic** `[23f00ce8]`
-- **feat(feriados): add method to retrieve non-working days within a date range** `[25d2b12c]`
-- **refactor(produtividade): improve date handling and business day calculations** `[54e04747]`
-- **refactor(dashboard): update productivity card layout and labels** `[1003bc1a]`
-- **feat(consulta-cep): add deduplication window and enhance productivity tracking** `[7e895d12]`
-- **refactor(dashboard): adjust alignment styles for dashboard statistics** `[2273e2b2]`
-- **refactor(dashboard): update ranking display and styles** `[3da9dc2a]`
-- **refactor(dashboard): improve user ranking identification logic** `[80137ce2]`
-- **refactor(dashboard): update styles for user ranking and badges** `[0ac27fbc]`
-- **feat(page-access): add 'consultamniteste' page with public access control** `[d2d6ba28]`
-- **feat(mni-healthcheck): add connectivity diagnostic endpoint to MniProcessoService** `[cf0ae442]`
-- **feat(mni-healthcheck): add healthcheck button and functionality to MNI test page** `[bd0e6cd7]`
-- **feat(mni-config): update timeout settings and add ping response to search-processo** `[e2766a3a]`
-- **feat(mni-processo): refactor process handling and add probe number resolution** `[19549781]`
-- **feat(mni-processo): add fallback mechanism for SOAP operations and implement CURL handling** `[06970c3a]`
-- **feat(mni-config): add new configuration options for consulta_location and tribunal_code** `[791e9dd4]`
-- **feat(mni-processo): enhance logging and add second-degree target derivation** `[8c1616d2]`
-- **feat(mni-processo): enhance debugging and error tracking in MniProcessoService** `[2dc7a1c6]`
-- **feat(mni-processo): implement multiple process number variants for SOAP operations** `[51c4423b]`
-- **feat(mni-processo): enhance operation tracing and debugging in MniProcessoService** `[8d55fa6b]`
-- **refactor(mni-processo): simplify process number variant handling in MniProcessoService** `[d6f2264a]`
-- **feat(mni-processo): add business error extraction and logging in MniProcessoService** `[c43529a9]`
-- **fix(mni-processo): add fallback for XML parsing when DOM extension is unavailable** `[e8057bf8]`
-- **fix(mni-processo): disable SOAP trace and clean up response handling** `[73cd81f9]`
-- **fix(mni-processo): update process alteration handling and configuration for movements** `[107c5739]`
-- **fix(mni-processo): enhance operation handling with cURL fallback** `[d946cf3f]`
-- **refactor(mni-processo): streamline operation handling and enhance logging** `[4286d1ee]`
-- **refactor(dashboard): enhance meta display and improve layout** `[8419ea66]`
-- **feat(mni-processo): add diagnostic mode for process alteration queries** `[5a5e39ac]`
-- **feat(mni-processo): add noop_consulta mode for diagnostic queries** `[d16dab41]`
-- **feat(mni-processo): enable/disable consultar processo based on configuration** `[b30f0c09]`
-- **feat(mni-processo): enhance CNJ digit formatting and logging** `[fdaa872d]`
-- **feat(mni-processo): add consultarProcessoSomente method for isolated process queries** `[83cca398]`
-- **feat(mni-processo): implement endpoint prioritization for target resolution** `[53549192]`
-- **feat(mni-processo): implement endpoint filtering based on CNJ digits** `[dc671934]`
+- **fix(api): refine status-bulk endpoint logging and enhance error handling** `[d6456ad]`
+- **feat(toast): integrate toast catalog for improved notification handling** `[976da34]`
+- **feat(toast): enhance notification system with new success messages and centralized handling** `[313e8b5]`
+- **feat(toast): expand notification messages and improve handling across various modules** `[b3c2100]`
+- **feat(toast): add new success messages for audience management and improve notification handling** `[cfeead2]`
+- **feat(toast): add new error and confirmation messages for various actions** `[5644a5c]`
+- **refactor(confirmations): streamline confirmation actions for task deletions and removals** `[593b574]`
+- **refactor(buttons): standardize button layouts and improve accessibility** `[e27d0fd]`
+- **refactor(toast): update toast notification guidelines and improve button accessibility** `[a2bfca9]`
+- **refactor(notifications): enhance notifyByKey function across multiple modules** `[585e3f4]`
+- **refactor(produtividade): remove legacy Produtividade class and update documentation** `[445e31d]`
+- **refactor(authorization): enhance deletion authorization logic and streamline endpoint integration** `[1d3c606]`
+- **refactor(toast): implement dedicated storage key for Sala de Midias and enhance API response handling** `[f130ac5]`
+- **refactor(home): remove internal route change backup for iframe synchronization** `[27a2d943]`
+- **refactor(cartorio-cartas-expedidas-list): improve filter display and HTML structure** `[0b4692e8]`
+- **refactor(cartorio-views): enhance button styles and filter display** `[f532eea4]`
+- **refactor(cartorio-cartas-views): update title and adjust layout for clarity** `[0f599132]`
+- **refactor(cartorio-cartas-views): enhance layout and title clarity** `[6dad944d]`
+- **refactor(cartorio-cartas-expedidas-list): update layout and icon styles** `[90f2b117]`
+- **refactor(cartorio-cartas-expedidas-list): improve HTML structure and spacing** `[ef651e62]`
+- **refactor(cartorio-cartas-expedidas-list): hide sections by default and update icons** `[702ece5e]`
+- **refactor(cartorio-cartas-expedidas-list): update search section display and comment out title card** `[1d3b408f]`
+- **refactor(cartorio-cartas-expedidas-list): adjust button placement and search section visibility** `[909f7c86]`
+- **refactor(cartorio-list-views): enhance layout and functionality across multiple lists** `[c5b9ec6b]`
+- **refactor(cartorio-list-views): streamline active filters display across multiple lists** `[71d58bb0]`
+- **refactor(cartorio-oficios-list): enhance layout and search functionality** `[6c82fb77]`
+- **refactor(cartorio-oficios-list): streamline HTML structure and enhance search section** `[c903260a]`
+- **refactor(gabinete-oficios-list): improve layout and search interface** `[bebf1f9f]`
+- **feat(access-profiles): enhance user profile management with operational mode support** `[67507b8f]`
+- **feat(sala-audiencias-ata): enhance ata management and download handling** `[7912f1e0]`
+- **feat(sala-audiencias-ata): implement filtering for ata listings based on download availability** `[89676d90]`
+- **feat(sala-audiencias-pauta): enhance parte handling with global registration checks** `[405cb580]`
+- **feat(produtividade): implement auto productivity registration for various processes** `[bc2672f4]`
+- **fix(produtividade): improve productivity registration error handling for CEP consultations** `[c7b04e68]`
+- **fix(produtividade): correct spelling in productivity registration messages** `[c45babf9]`
+- **refactor(page-access): rename 'consultamniteste' to 'consultapjepublicoteste' and remove deprecated MniProcessoResponseMapper and MniProcessoService files** `[33635471]`
 
