@@ -6,11 +6,17 @@ header('Content-Type: application/json; charset=UTF-8');
 @set_time_limit(30);
 
 require_once dirname(__DIR__, 3) . '/config/config.php';
+require_once dirname(__DIR__, 3) . '/config/security.php';
+require_once dirname(__DIR__, 3) . '/app/models/Usuario.php';
+require_once dirname(__DIR__, 3) . '/app/helpers/UsuarioPerfisAutorizacao.php';
+require_once dirname(__DIR__, 3) . '/app/access/AccessEvaluator.php';
 
 $enabled = strtolower((string) envValue('PJE_PUBLIC_TEST_PAGE_ENABLED', '0'));
 if (!in_array($enabled, ['1', 'true', 'yes', 'on'], true)) {
     respond(['error' => 'Consulta pública PJe de teste desabilitada neste ambiente.'], 404);
 }
+
+requireAuthorizedPjePublicUser();
 
 $apiBaseUrl = rtrim(trim((string) envValue('PJE_PUBLIC_API_BASE_URL', 'http://127.0.0.1:8000')), '/');
 if ($apiBaseUrl === '') {
@@ -81,6 +87,41 @@ function proxyRequest(string $url): void
     }
 
     respond(['data' => $decoded], 200);
+}
+
+function requireAuthorizedPjePublicUser(): void
+{
+    if (!Security::isAuthenticated()) {
+        respond(['error' => 'Sessão expirada. Faça login novamente.'], 401);
+    }
+
+    $token = isset($_SESSION['token']) ? trim((string) $_SESSION['token']) : '';
+    $usuario = new Usuario();
+    $user = $usuario->validarToken($token);
+    if (!$user) {
+        Security::clearAuthenticatedSession();
+        respond(['error' => 'Sessão expirada. Faça login novamente.'], 401);
+    }
+
+    $userId = null;
+    if (is_array($user)) {
+        $userId = $user['id_usuario'] ?? ($user['id'] ?? null);
+    } elseif (is_object($user)) {
+        $userId = $user->id_usuario ?? ($user->id ?? null);
+    }
+    if ($userId === null) {
+        $userId = $_SESSION['id_usuario'] ?? null;
+    }
+
+    $userId = is_scalar($userId) ? trim((string) $userId) : '';
+    if ($userId === '' || !preg_match('/^[A-Za-z0-9_-]{1,80}$/', $userId)) {
+        respond(['error' => 'Sessão inválida. Faça login novamente.'], 401);
+    }
+
+    $userPerfils = UsuarioPerfisAutorizacao::perfisDoUsuario($userId);
+    if (!AccessEvaluator::canAccessPage('consultapjepublicoteste', $userPerfils)) {
+        respond(['error' => 'Acesso negado.'], 403);
+    }
 }
 
 function respond(array $payload, int $status = 200): void

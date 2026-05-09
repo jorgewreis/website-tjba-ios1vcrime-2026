@@ -25,7 +25,6 @@ _INSTITUTIONAL_DOC_URL_RES = [
 _INSTITUTIONAL_DOC_TITLE_RES = [
     re.compile(r"resolu[cç][aã]o\s+n[ºo°]\s*121", re.I),
     re.compile(r"conselho\s+nacional\s+de\s+just", re.I),
-    re.compile(r"\bcnj\b", re.I),
 ]
 
 
