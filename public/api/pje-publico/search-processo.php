@@ -6,11 +6,17 @@ header('Content-Type: application/json; charset=UTF-8');
 @set_time_limit(30);
 
 require_once dirname(__DIR__, 3) . '/config/config.php';
+require_once dirname(__DIR__, 3) . '/config/security.php';
+require_once dirname(__DIR__, 3) . '/app/models/Usuario.php';
+require_once dirname(__DIR__, 3) . '/app/helpers/UsuarioPerfisAutorizacao.php';
+require_once dirname(__DIR__, 3) . '/app/access/AccessEvaluator.php';
 
 $enabled = strtolower((string) envValue('PJE_PUBLIC_TEST_PAGE_ENABLED', '0'));
 if (!in_array($enabled, ['1', 'true', 'yes', 'on'], true)) {
     respond(['error' => 'Consulta pública PJe de teste desabilitada neste ambiente.'], 404);
 }
+
+requireAuthorizedPjePublicTestAccess();
 
 $apiBaseUrl = rtrim(trim((string) envValue('PJE_PUBLIC_API_BASE_URL', 'http://127.0.0.1:8000')), '/');
 if ($apiBaseUrl === '') {
@@ -41,6 +47,37 @@ if ($digits === '' || strlen($digits) !== 20) {
 $raw = !empty($payload['raw']) || (isset($_GET['raw']) && $_GET['raw'] === '1');
 $path = '/pje/' . rawurlencode($digits) . ($raw ? '/raw' : '');
 proxyRequest($apiBaseUrl . $path);
+
+function requireAuthorizedPjePublicTestAccess(): void
+{
+    if (!Security::isAuthenticated()) {
+        respond(['error' => 'Sessão expirada. Faça login novamente.'], 401);
+    }
+
+    $token = Security::getToken();
+    if (!is_string($token) || trim($token) === '') {
+        respond(['error' => 'Sessão expirada. Faça login novamente.'], 401);
+    }
+
+    $usuario = new Usuario();
+    $user = $usuario->validarToken($token);
+    if (!$user) {
+        Security::clearAuthenticatedSession();
+        respond(['error' => 'Sessão expirada. Faça login novamente.'], 401);
+    }
+
+    $sessionUserId = trim((string) ($_SESSION['id_usuario'] ?? ''));
+    $tokenUserId = trim((string) ($user['id_usuario'] ?? ($user['id'] ?? '')));
+    if ($sessionUserId === '' || $tokenUserId === '' || !hash_equals($sessionUserId, $tokenUserId)) {
+        Security::clearAuthenticatedSession();
+        respond(['error' => 'Sessão inválida. Faça login novamente.'], 401);
+    }
+
+    $perfis = UsuarioPerfisAutorizacao::perfisDoUsuario($sessionUserId);
+    if (!AccessEvaluator::canAccessPage('consultapjepublicoteste', $perfis)) {
+        respond(['error' => 'Acesso negado.'], 403);
+    }
+}
 
 function proxyRequest(string $url): void
 {
