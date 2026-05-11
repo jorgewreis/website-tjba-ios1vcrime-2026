@@ -6,11 +6,17 @@ header('Content-Type: application/json; charset=UTF-8');
 @set_time_limit(30);
 
 require_once dirname(__DIR__, 3) . '/config/config.php';
+require_once dirname(__DIR__, 3) . '/config/security.php';
+require_once dirname(__DIR__, 3) . '/app/models/Usuario.php';
+require_once dirname(__DIR__, 3) . '/app/helpers/UsuarioPerfisAutorizacao.php';
+require_once dirname(__DIR__, 3) . '/app/access/AccessEvaluator.php';
 
 $enabled = strtolower((string) envValue('PJE_PUBLIC_TEST_PAGE_ENABLED', '0'));
 if (!in_array($enabled, ['1', 'true', 'yes', 'on'], true)) {
     respond(['error' => 'Consulta pública PJe de teste desabilitada neste ambiente.'], 404);
 }
+
+requireAuthorizedPjePublicTestAccess();
 
 $apiBaseUrl = rtrim(trim((string) envValue('PJE_PUBLIC_API_BASE_URL', 'http://127.0.0.1:8000')), '/');
 if ($apiBaseUrl === '') {
@@ -81,6 +87,36 @@ function proxyRequest(string $url): void
     }
 
     respond(['data' => $decoded], 200);
+}
+
+function requireAuthorizedPjePublicTestAccess(): void
+{
+    if (!Security::isAuthenticated()) {
+        respond(['error' => 'Sessão expirada. Faça login novamente.'], 401);
+    }
+
+    $token = isset($_SESSION['token']) && is_string($_SESSION['token']) ? trim($_SESSION['token']) : '';
+    if ($token === '') {
+        respond(['error' => 'Sessão expirada. Faça login novamente.'], 401);
+    }
+
+    $usuario = new Usuario();
+    $user = $usuario->validarToken($token);
+    if (!$user) {
+        Security::clearAuthenticatedSession();
+        respond(['error' => 'Sessão expirada. Faça login novamente.'], 401);
+    }
+
+    $userId = $user['id_usuario'] ?? ($user['id'] ?? ($_SESSION['id_usuario'] ?? null));
+    $userId = is_scalar($userId) ? trim((string) $userId) : '';
+    if ($userId === '') {
+        respond(['error' => 'Sessão inválida. Faça login novamente.'], 401);
+    }
+
+    $perfis = UsuarioPerfisAutorizacao::perfisDoUsuario($userId);
+    if (!AccessEvaluator::canAccessPage('consultapjepublicoteste', $perfis)) {
+        respond(['error' => 'Acesso negado.'], 403);
+    }
 }
 
 function respond(array $payload, int $status = 200): void
