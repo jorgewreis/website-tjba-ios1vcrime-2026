@@ -265,7 +265,7 @@
             }
             if (dom && dom.classeInput) {
                 clearClasseLoadingVisual(dom.classeInput);
-                dom.classeInput.readOnly = false;
+                dom.classeInput.readOnly = true;
                 dom.classeInput.placeholder = '';
                 dom.classeInput.removeAttribute('data-preserve-banco');
             }
@@ -382,7 +382,7 @@
             }
             clearClasseLoadingVisual(classeInput);
             classeInput.classList.remove('status-finished');
-            classeInput.readOnly = false;
+            classeInput.readOnly = true;
             classeInput.placeholder = '';
 
             var fallbackText = FALLBACK_CLASSE;

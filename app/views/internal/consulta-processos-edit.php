@@ -38,8 +38,15 @@ $prioridadesFichaEstado = $processoIdFicha !== ''
     <div class="spacing-top-page"></div>
     <div class="header-page">
         <div class="location"><span class="all">Interno - Consultas -</span> <span class="specific">Processo</span></div>
-        <h1 class="title-page"><?php echo htmlspecialchars($processo['numero_processo'] ?? 'Processo'); ?></h1>
-        <p class="description-page">Classe: <?php echo htmlspecialchars($processo['classe_nome'] ?? '—'); ?></p>
+        <div class="display-flex row row-full justify-between align-center flex-wrap gap-y-md" style="gap: 12px;">
+            <div class="display-flex col" style="width: auto; flex: 1 1 auto;">
+                <h1 class="title-page"><?php echo htmlspecialchars($processo['numero_processo'] ?? 'Processo'); ?></h1>
+                <p class="description-page" style="margin-top: 0;">Classe: <?php echo htmlspecialchars($processo['classe_nome'] ?? '—'); ?></p>
+            </div>
+            <div class="display-flex row row-fit align-center justify-end gap-y-md">
+                <button type="button" class="btn btn-primary-outline" data-nav-href="/frame.php?page=processosedit&id=<?php echo urlencode($processo['id'] ?? ''); ?>">Editar processo</button>
+            </div>
+        </div>
     </div>
     <div class="container-full card-page">
         <input type="hidden" id="processo-id" value="<?php echo htmlspecialchars($processo['id'] ?? ''); ?>">

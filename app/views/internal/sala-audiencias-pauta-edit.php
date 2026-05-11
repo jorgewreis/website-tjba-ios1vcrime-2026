@@ -330,7 +330,7 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                 <div class="col filter">
                     <?php $classeValor = trim((string) ($row['classe_nome'] ?? '')); ?>
                     <label for="audiencia-edit-classe">Classe processual<?php echo $classeValor !== '' ? ' <span class="label-hint-automatizado">*automatizado</span>' : ''; ?></label>
-                    <input type="text" class="width-600 height-md<?php echo $classeValor !== '' ? ' readonly' : ''; ?>" id="audiencia-edit-classe" value="<?php echo htmlspecialchars($classeValor, ENT_QUOTES); ?>" placeholder="Preencha se ainda não houver classe vinculada ao processo"<?php echo $classeValor !== '' ? ' readonly' : ''; ?> autocomplete="off">
+                    <input type="text" class="width-600 height-md readonly" id="audiencia-edit-classe" value="<?php echo htmlspecialchars($classeValor, ENT_QUOTES); ?>" placeholder="Sem classe vinculada — cadastre em Consultar processo &gt; Editar processo" readonly autocomplete="off">
                 </div>
             </div>
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">

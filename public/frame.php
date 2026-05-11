@@ -106,6 +106,7 @@ $allowed_pages = [
     'consultapartesedit'    => $PAGES . '/consulta-partes-edit.php',
     'consultaprocessos'     => $PAGES . '/consulta-processos-list.php',
     'consultaprocessosedit' => $PAGES . '/consulta-processos-edit.php',
+    'processosedit'         => $PAGES . '/processos-edit.php',
     'consultapjepublicoteste' => $PAGES . '/consulta-pje-publico-teste.php',
     'instituicoespublicas'  => $PAGES . '/instituicoes-publicas-list.php',
     'instituicoespublicascreate' => $PAGES . '/instituicoes-publicas-create.php',

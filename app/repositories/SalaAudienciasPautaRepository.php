@@ -353,6 +353,31 @@ final class SalaAudienciasPautaRepository
     }
 
     /**
+     * Indica se já existe audiência ativa para o processo que impede um novo cadastro.
+     * Liberam novo cadastro: cancelada, finalizada e realizada.
+     */
+    public function existsBlockingPautaForProcesso(string $processoId): bool
+    {
+        $processoId = trim($processoId);
+        if ($processoId === '') {
+            return false;
+        }
+        $sql = sprintf(
+            'SELECT 1 FROM `%s`
+             WHERE `ativo` = 1
+               AND `processo` = :processo
+               AND `status` NOT IN (\'cancelada\', \'finalizada\', \'realizada\')
+             LIMIT 1',
+            $this->table
+        );
+        $st = $this->connection->prepare($sql);
+        $st->bindValue(':processo', $processoId);
+        $st->execute();
+
+        return $st->fetchColumn() !== false;
+    }
+
+    /**
      * @return list<array<string, mixed>>
      */
     public function listByProcessoId(string $processoId): array

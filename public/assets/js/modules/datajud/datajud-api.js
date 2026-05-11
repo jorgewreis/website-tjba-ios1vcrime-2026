@@ -78,7 +78,7 @@
 
             }
 
-            d.classeInput.readOnly = false;
+            d.classeInput.readOnly = true;
 
             d.classeInput.removeAttribute('data-preserve-banco');
 

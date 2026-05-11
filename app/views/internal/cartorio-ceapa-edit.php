@@ -154,7 +154,7 @@ if ($tarefa !== null) {
                 </div>
                 <div class="col filter">
                     <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe processual</label>
-                    <input type="text" class="width-600 height-md<?php echo $lockClasse ? ' readonly' : ''; ?>" id="filter-classe" data-datajud-related="true" value="<?php echo htmlspecialchars($lockClasse ? $classeNome : '', ENT_QUOTES); ?>" placeholder="Preenchido automaticamente pelo DataJud" <?php echo $lockClasse ? 'readonly' : ''; ?><?php echo ($lockClasse && $classeNome !== '' && $classeNome !== 'Classe não informada') ? ' data-datajud-initial="1"' : ''; ?>>
+                    <input type="text" class="width-600 height-md readonly" id="filter-classe" data-datajud-related="true" value="<?php echo htmlspecialchars($lockClasse ? $classeNome : '', ENT_QUOTES); ?>" placeholder="Sem classe vinculada — cadastre em Consultar processo &gt; Editar processo" readonly<?php echo ($lockClasse && $classeNome !== '' && $classeNome !== 'Classe não informada') ? ' data-datajud-initial="1"' : ''; ?>>
                 </div>
             </div>
             <input type="hidden" id="hidden-classe-codigo" name="classe_codigo" value="<?php echo htmlspecialchars($classeCodigo, ENT_QUOTES); ?>">

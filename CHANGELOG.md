@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0110
+
+**Data:** 2026-05-11 11:45:24 | **Commit:** `aa74d645` | **Tipo:** `patch`
+
+- feat(processos): add 'processosedit' page and enhance 'consulta-processos-edit' layout
+
 ## V. 1.97.0109
 
 **Data:** 2026-05-11 09:04:34 | **Commit:** `726377c2` | **Tipo:** `patch`
@@ -5292,6 +5298,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
