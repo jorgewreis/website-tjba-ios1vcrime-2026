@@ -294,15 +294,17 @@ if ($totalPages > 0) {
                     $statusClass = 'status-finished';
                 }
                 $classeNome = trim((string) ($row['ClasseNome'] ?? ''));
-                if ($classeNome === '') {
+                $classeNomeTemValor = $classeNome !== '' && $classeNome !== 'Classe não informada';
+                if (!$classeNomeTemValor) {
                     $classeNome = 'Classe não informada';
                 }
+                $classeNomeClass = 'minor-info text-ellipsis' . ($classeNomeTemValor ? ' classe-info' : '');
                 ?>
                 <div class="display-flex col col-full register border-bottom" data-ceapa-id="<?php echo htmlspecialchars($idCeapa, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idCeapa, ENT_QUOTES); ?>">
                     <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                         <div class="display-flex row row-fit justify-start gap-y-sm align-center">
                             <div class="col width-500 col-process process-info" title="clique para copiar">
-                                <span class="minor-info text-ellipsis" title="<?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?>"><?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?></span>
+                                <span class="<?php echo $classeNomeClass; ?>" title="<?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?>"><?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?></span>
                                 <span class="major-info"><?php echo htmlspecialchars((string) ($row['Processo'] ?? ''), ENT_QUOTES); ?></span>
                             </div>
                             <div class="col width-600 col-reu" title="clique para copiar">

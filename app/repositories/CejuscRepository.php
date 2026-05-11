@@ -44,7 +44,7 @@ final class CejuscRepository
         $fromClause = $this->buildFromClause();
 
         $sql = sprintf(
-            'SELECT ct.`id` AS `IdCarta`, ct.`numero_processo_origem` AS `Processo`, ct.`status` AS `Status`, ct.`created_at` AS `Data`, COALESCE(p.`nome_completo`, \'\') AS `ReuNome` FROM %s %s ORDER BY %s, ct.`created_at` DESC LIMIT :limit OFFSET :offset',
+            'SELECT ct.`id` AS `IdCarta`, ct.`numero_processo_origem` AS `Processo`, ct.`status` AS `Status`, ct.`created_at` AS `Data`, COALESCE(p.`nome_completo`, \'\') AS `ReuNome`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), NULLIF(TRIM(cl_alt.`nome`), \'\'), \'Classe não informada\') AS `ClasseNome` FROM %s %s ORDER BY %s, ct.`created_at` DESC LIMIT :limit OFFSET :offset',
             $fromClause,
             $whereClause ? 'WHERE ' . $whereClause : '',
             $orderField
@@ -223,9 +223,21 @@ final class CejuscRepository
 
     private function buildFromClause(): string
     {
+        $coll = self::COLLATION;
+
         return sprintf(
-            '`%s` ct LEFT JOIN `partes` p ON p.`id` = ct.`parte_id`',
-            $this->table
+            '`%s` ct'
+            . ' LEFT JOIN `partes` p ON p.`id` COLLATE %s = ct.`parte_id` COLLATE %s'
+            . ' LEFT JOIN `processos` proc ON proc.`id` COLLATE %s = ct.`processo_origem_id` COLLATE %s'
+            . ' LEFT JOIN `classes` cl ON cl.`id` COLLATE %s = proc.`classe_id` COLLATE %s'
+            . ' LEFT JOIN `processos` proc_alt ON proc.`id` IS NULL AND proc_alt.`numero_processo` COLLATE %s = ct.`numero_processo_origem` COLLATE %s'
+            . ' LEFT JOIN `classes` cl_alt ON cl_alt.`id` COLLATE %s = proc_alt.`classe_id` COLLATE %s',
+            $this->table,
+            $coll, $coll,
+            $coll, $coll,
+            $coll, $coll,
+            $coll, $coll,
+            $coll, $coll
         );
     }
 

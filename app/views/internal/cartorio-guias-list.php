@@ -363,10 +363,14 @@ if ($totalPages > 0) {
                         </div>
                         <div class="col width-500 col-process process-info" title="clique para copiar">
                             <?php
-                                $classeGuia = !empty($row['Classe']) ? $row['Classe'] : 'Processo';
-                                $classeStyleGuia = $classeGuia !== 'Processo' ? 'style="color: var(--color-primary-active); font-weight: 600;"' : '';
+                                $classeGuia = trim((string) ($row['Classe'] ?? ''));
+                                $classeGuiaTemValor = $classeGuia !== '' && $classeGuia !== 'Classe não informada';
+                                if (!$classeGuiaTemValor) {
+                                    $classeGuia = 'Classe não informada';
+                                }
+                                $classeGuiaClass = 'minor-info text-ellipsis' . ($classeGuiaTemValor ? ' classe-info' : '');
                             ?>
-                            <span class="minor-info text-ellipsis" title="<?php echo htmlspecialchars($classeGuia, ENT_QUOTES); ?>" <?php echo $classeStyleGuia; ?>><?php echo htmlspecialchars($classeGuia); ?></span>
+                            <span class="<?php echo $classeGuiaClass; ?>" title="<?php echo htmlspecialchars($classeGuia, ENT_QUOTES); ?>"><?php echo htmlspecialchars($classeGuia); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars($row['Processo'] ?? ''); ?></span>
                         </div>
                         <div class="col width-500 col-tipo-guia" title="clique para copiar">

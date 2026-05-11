@@ -269,8 +269,12 @@ $statusLabelUi = static function (string $s): string {
                 $tarefaCancelada = ($statusTarefa === 'cancelada');
                 $tarefaFinalizada = ($statusTarefa === 'finalizada');
                 $duracaoLabel = (string) ($row['DuracaoLabel'] ?? '—');
-                $classeNome = (string) ($row['ClasseNome'] ?? 'Classe não informada');
-                $classeStyle = $classeNome !== 'Classe não informada' ? 'style="color: var(--primary-color-active); font-weight: 600;"' : '';
+                $classeNome = trim((string) ($row['ClasseNome'] ?? ''));
+                $classeNomeTemValor = $classeNome !== '' && $classeNome !== 'Classe não informada';
+                if (!$classeNomeTemValor) {
+                    $classeNome = 'Classe não informada';
+                }
+                $classeNomeClass = 'minor-info text-ellipsis' . ($classeNomeTemValor ? ' classe-info' : '');
 
                 $progressStatuses = ['pendente', 'pendente'];
                 foreach ($allSt as $s) {
@@ -336,7 +340,7 @@ $statusLabelUi = static function (string $s): string {
                         </div>
                         <?php endif; ?>                        
                         <div class="col width-600 col-process process-info" title="clique para copiar">
-                            <span class="minor-info text-ellipsis" <?php echo $classeStyle; ?>><?php echo htmlspecialchars($classeNome); ?></span>
+                            <span class="<?php echo $classeNomeClass; ?>" title="<?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?>"><?php echo htmlspecialchars($classeNome); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars((string) ($row['Processo'] ?? '')); ?></span>
                         </div>
                         <div class="col width-600 col-reu" title="clique para copiar">

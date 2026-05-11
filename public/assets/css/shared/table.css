@@ -408,6 +408,14 @@
     font-weight: 600;
 }
 
+/* Classe processual em destaque nas listagens (padrão único do sistema).
+   Aplicar SOMENTE quando houver classe vinculada. Quando não houver,
+   manter o `.minor-info` padrão e mostrar o texto "Classe não informada". */
+.classe-info {
+    color: var(--color-primary-active);
+    font-weight: 600;
+}
+
 .status-task {
     display: flex;
     align-items: flex-end;

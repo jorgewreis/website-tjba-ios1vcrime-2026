@@ -249,10 +249,14 @@ $periodoChipLabels = [
                     </div>
                     <div class="col width-400 col-process process-info" title="clique para copiar">
                         <?php
-                            $classeAudiencia = !empty($row['classe_nome']) ? $row['classe_nome'] : 'Classe não informada';
-                            $classeStyleAudiencia = $classeAudiencia !== 'Classe não informada' ? 'style="color: var(--primary-color-active); font-weight: 600;"' : '';
+                            $classeAudiencia = trim((string) ($row['classe_nome'] ?? ''));
+                            $classeAudienciaTemValor = $classeAudiencia !== '' && $classeAudiencia !== 'Classe não informada';
+                            if (!$classeAudienciaTemValor) {
+                                $classeAudiencia = 'Classe não informada';
+                            }
+                            $classeAudienciaClass = 'minor-info text-ellipsis' . ($classeAudienciaTemValor ? ' classe-info' : '');
                         ?>
-                        <span class="minor-info text-ellipsis" <?php echo $classeStyleAudiencia; ?>><?php echo htmlspecialchars($classeAudiencia, ENT_QUOTES); ?></span>
+                        <span class="<?php echo $classeAudienciaClass; ?>" title="<?php echo htmlspecialchars($classeAudiencia, ENT_QUOTES); ?>"><?php echo htmlspecialchars($classeAudiencia, ENT_QUOTES); ?></span>
                         <span class="major-info"><?php echo htmlspecialchars((string) ($row['numero_processo'] ?? '—'), ENT_QUOTES); ?></span>
                     </div>
                     <div class="col width-400">

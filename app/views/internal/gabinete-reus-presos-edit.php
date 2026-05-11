@@ -117,7 +117,7 @@ if ($ultimaMov !== null) {
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md flex-wrap" style="gap:24px;">
             <div class="col">
                 <span class="minor-info">Próxima reavaliação</span>
-                <span class="major-info" style="color:var(--primary-color-active);font-weight:600;"><?php echo htmlspecialchars($proxLabel, ENT_QUOTES); ?></span>
+                <span class="major-info" style="color:var(--color-primary-active);font-weight:600;"><?php echo htmlspecialchars($proxLabel, ENT_QUOTES); ?></span>
             </div>
             <div class="col">
                 <span class="minor-info">Última movimentação</span>

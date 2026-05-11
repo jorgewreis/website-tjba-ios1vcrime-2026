@@ -352,13 +352,14 @@ if ($totalPages > 0) {
                         </div>
                         <div class="col width-500 col-process process-info" title="clique para copiar">
                             <?php
-                                $classeEdital = $row['Classe'] ?? 'Classe não informada';
-                                if ($classeEdital === '') {
+                                $classeEdital = trim((string) ($row['Classe'] ?? ''));
+                                $classeEditalTemValor = $classeEdital !== '' && $classeEdital !== 'Classe não informada';
+                                if (!$classeEditalTemValor) {
                                     $classeEdital = 'Classe não informada';
                                 }
-                                $classeStyleEdital = $classeEdital !== 'Classe não informada' ? 'style="color: var(--primary-color-active); font-weight: 600;"' : '';
+                                $classeEditalClass = 'minor-info text-ellipsis' . ($classeEditalTemValor ? ' classe-info' : '');
                             ?>
-                            <span class="minor-info text-ellipsis" title="<?php echo htmlspecialchars($classeEdital, ENT_QUOTES); ?>" <?php echo $classeStyleEdital; ?>><?php echo htmlspecialchars($classeEdital); ?></span>
+                            <span class="<?php echo $classeEditalClass; ?>" title="<?php echo htmlspecialchars($classeEdital, ENT_QUOTES); ?>"><?php echo htmlspecialchars($classeEdital); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars($row['Processo'] ?? '—'); ?></span>
                         </div>
                         <div class="col width-600 col-tipo-edital" title="clique para copiar">

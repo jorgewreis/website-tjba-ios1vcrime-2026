@@ -165,9 +165,11 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
             <?php
                 $rowId = (string) ($row['id'] ?? '');
                 $rowClasseNome = trim((string) ($row['classe_nome'] ?? ''));
-                if ($rowClasseNome === '') {
-                    $rowClasseNome = '—';
+                $rowClasseNomeTemValor = $rowClasseNome !== '' && $rowClasseNome !== 'Classe não informada';
+                if (!$rowClasseNomeTemValor) {
+                    $rowClasseNome = 'Classe não informada';
                 }
+                $rowClasseNomeClass = 'minor-info' . ($rowClasseNomeTemValor ? ' classe-info' : '');
                 $rowNumero = (string) ($row['numero_processo'] ?? '—');
                 $rowTotalPartes = isset($row['total_partes']) ? (string) $row['total_partes'] : '—';
             ?>
@@ -175,7 +177,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                 <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                     <div class="display-flex row row-fit justify-start gap-y-sm">
                         <div class="col width-500 process-info">
-                            <span class="minor-info"><?php echo htmlspecialchars($rowClasseNome, ENT_QUOTES); ?></span>
+                            <span class="<?php echo $rowClasseNomeClass; ?>" title="<?php echo htmlspecialchars($rowClasseNome, ENT_QUOTES); ?>"><?php echo htmlspecialchars($rowClasseNome, ENT_QUOTES); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars($rowNumero, ENT_QUOTES); ?></span>
                         </div>
                         <div class="col width-200">

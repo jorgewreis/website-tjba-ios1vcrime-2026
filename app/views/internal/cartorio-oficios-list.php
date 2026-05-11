@@ -497,8 +497,12 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                             $segmentosBarra[] = ['class' => $segClass, 'title' => $titleSeg];
                         }
                     }
-                    $classeNome = (string) ($row['ClasseNome'] ?? 'Classe não informada');
-                    $classeStyle = $classeNome !== 'Classe não informada' ? 'style="color: var(--primary-color-active); font-weight: 600;"' : '';
+                    $classeNome = trim((string) ($row['ClasseNome'] ?? ''));
+                    $classeNomeTemValor = $classeNome !== '' && $classeNome !== 'Classe não informada';
+                    if (!$classeNomeTemValor) {
+                        $classeNome = 'Classe não informada';
+                    }
+                    $classeNomeClass = 'minor-info text-ellipsis' . ($classeNomeTemValor ? ' classe-info' : '');
                     $expandir = !$tarefaConcluida && !$tarefaCancelada && $formaC === 'cartorio';
                 ?>
                     <div class="display-flex col col-full register border-bottom" data-oficio-id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>">
@@ -524,7 +528,7 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                                     <span class="major-info"><?php echo oficios_list_formatar_data_hora($row['Data'] ?? null); ?></span>
                                 </div>
                                 <div class="col width-500 col-process process-info" title="clique para copiar">
-                                    <span class="minor-info text-ellipsis" title="<?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?>" <?php echo $classeStyle; ?>><?php echo htmlspecialchars($classeNome); ?></span>
+                                    <span class="<?php echo $classeNomeClass; ?>" title="<?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?>"><?php echo htmlspecialchars($classeNome); ?></span>
                                     <span class="major-info"><?php echo htmlspecialchars((string) ($row['Processo'] ?? '')); ?></span>
                                 </div>
                                 <div class="col width-700">

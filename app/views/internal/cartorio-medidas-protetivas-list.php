@@ -301,13 +301,14 @@ if ($totalPages > 0) {
                         </div>
                         <div class="col width-500 col-process process-info" title="clique para copiar">
                             <?php
-                                $classeMedida = (string) ($row['Classe'] ?? '');
-                                if ($classeMedida === '') {
+                                $classeMedida = trim((string) ($row['Classe'] ?? ''));
+                                $classeMedidaTemValor = $classeMedida !== '' && $classeMedida !== 'Classe não informada';
+                                if (!$classeMedidaTemValor) {
                                     $classeMedida = 'Classe não informada';
                                 }
-                                $classeStyleMedida = $classeMedida !== 'Classe não informada' ? 'style="color: var(--primary-color-active); font-weight: 600;"' : '';
+                                $classeMedidaClass = 'minor-info text-ellipsis' . ($classeMedidaTemValor ? ' classe-info' : '');
                             ?>
-                            <span class="minor-info text-ellipsis" title="<?php echo htmlspecialchars($classeMedida, ENT_QUOTES); ?>" <?php echo $classeStyleMedida; ?>><?php echo htmlspecialchars($classeMedida); ?></span>
+                            <span class="<?php echo $classeMedidaClass; ?>" title="<?php echo htmlspecialchars($classeMedida, ENT_QUOTES); ?>"><?php echo htmlspecialchars($classeMedida); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars((string) ($row['Processo'] ?? '—')); ?></span>
                         </div>
                         <div class="col width-600 col-reu" title="clique para copiar">
