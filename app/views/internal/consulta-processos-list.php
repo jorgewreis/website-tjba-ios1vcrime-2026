@@ -95,6 +95,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
         <meta name="viewport" content="width=device-width, initial-scale=1">
                 <?php include __DIR__ . '/_internal_head_styles.php'; ?>
 
+        <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
         <?php include __DIR__ . '/_toast_script.php'; ?>
         <?php include __DIR__ . '/_copy_process_script.php'; ?>
         <?php /* Apenas formatação CNJ no filtro; não inclui consulta de classe ao DataJud (lista local). */ ?>
