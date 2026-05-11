@@ -270,9 +270,7 @@ final class GabineteReusPresosService
                 }
             }
         }
-        $movs = $principalProcessoId !== ''
-            ? $this->movRepo->findByProcessoIdOrderDesc($principalProcessoId, 200)
-            : [];
+        $movs = $this->movRepo->findByReuPresoIdOrderDesc($id, 200);
         foreach ($movs as $k => $m) {
             $movs[$k]['tipo_label'] = $this->labelTipoMovimentacao((string) ($m['tipo_codigo'] ?? ''));
             $movs[$k]['is_virtual'] = false;
@@ -578,7 +576,7 @@ final class GabineteReusPresosService
             if ($linkFk === '') {
                 continue;
             }
-            if ($processoId !== '' && $this->movRepo->existsByProcessoTipoData($processoId, $tipo, $dataMov)) {
+            if ($processoId !== '' && $this->movRepo->existsByReuProcessoTipoData($reuId, $processoId, $tipo, $dataMov)) {
                 continue;
             }
             $mid = IdGenerator::generateUniquePrefixedId($this->connection, 'gabinete_reu_preso_movimentacao', 'id', 'GPM', 30);
@@ -595,7 +593,7 @@ final class GabineteReusPresosService
             $inserted++;
         }
 
-        if ($inserted > 0 && $this->tipoAfetaRevisao($tipo)) {
+        if ($this->tipoAfetaRevisao($tipo)) {
             $this->recalcProximaRevisao($reuId);
         }
 
@@ -622,23 +620,10 @@ final class GabineteReusPresosService
         }
         $tipo = trim((string) ($mov['tipo_codigo'] ?? ''));
         $data = trim((string) ($mov['data_movimentacao'] ?? ''));
-        $processoId = trim((string) ($mov['processo_id'] ?? ''));
-        if ($processoId === '') {
-            $linkFk = trim((string) ($mov['reu_preso_processo_id'] ?? ''));
-            if ($linkFk !== '') {
-                $lk = $this->procRepo->findById($linkFk);
-                if ($lk !== null) {
-                    $processoId = trim((string) ($lk['processo_id'] ?? ''));
-                }
-            }
-        }
         if ($tipo === '' || $data === '') {
             throw new InvalidArgumentException('Movimentação inválida.');
         }
-        if ($processoId === '') {
-            throw new InvalidArgumentException('Movimentação sem processo vinculado.');
-        }
-        $deleted = $this->movRepo->deleteByProcessoTipoData($processoId, $tipo, $data);
+        $deleted = $this->movRepo->deleteById($movId);
         if ($deleted > 0 && $this->tipoAfetaRevisao($tipo)) {
             $this->recalcProximaRevisao($reuId);
         }
@@ -692,7 +677,7 @@ final class GabineteReusPresosService
                 $processoIds[] = $pid;
             }
         }
-        $max = $this->movRepo->maxDataMovimentacaoForTipoPrefixesByProcessos($processoIds, self::PREFIXOS_MOVIMENTACAO_REVISAO_90_DIAS);
+        $max = $this->movRepo->maxDataMovimentacaoForTipoPrefixesByReuAndProcessos($reuId, $processoIds, self::PREFIXOS_MOVIMENTACAO_REVISAO_90_DIAS);
         if ($max === null) {
             $basePrisao = null;
             $linksWithNumero = $this->procRepo->findByReuPresoIdWithNumero($reuId);
@@ -812,14 +797,15 @@ final class GabineteReusPresosService
         }
 
         $procRows = $this->procRepo->fetchProcessosSubtarefaPorReuIds(array_keys($byReu));
-        $processoIds = [];
+        $pares = [];
         foreach ($procRows as $pr) {
+            $rid = trim((string) ($pr['reu_preso_id'] ?? ''));
             $pid = trim((string) ($pr['processo_id'] ?? ''));
-            if ($pid !== '') {
-                $processoIds[] = $pid;
+            if ($rid !== '' && $pid !== '') {
+                $pares[] = [$rid, $pid];
             }
         }
-        $ultMap = $this->movRepo->fetchUltimaPorProcessoIds($processoIds);
+        $ultMap = $this->movRepo->fetchUltimaPorReuPresoEProcessoIds($pares);
 
         foreach ($procRows as $pr) {
             $rid = trim((string) ($pr['reu_preso_id'] ?? ''));
@@ -833,7 +819,8 @@ final class GabineteReusPresosService
             $classe = trim((string) ($pr['classe_nome'] ?? ''));
             $numeroLabel = $numero !== '' ? $numero : '—';
             $classeLabel = $classe !== '' ? $classe : 'Classe não informada';
-            $mov = $pid !== '' ? ($ultMap[$pid] ?? null) : null;
+            $movKey = $rid !== '' && $pid !== '' ? $rid . '|' . $pid : '';
+            $mov = $movKey !== '' ? ($ultMap[$movKey] ?? null) : null;
             $tipoLabel = $mov !== null ? $this->labelTipoMovimentacao((string) ($mov['tipo_codigo'] ?? '')) : '—';
             $dataBr = $mov !== null ? $this->formatDataMovimentoBr((string) ($mov['data_movimentacao'] ?? '')) : '—';
             $obsMov = $mov !== null ? trim((string) ($mov['observacoes'] ?? '')) : '';

@@ -59,19 +59,20 @@ final class GabineteReuPresoMovimentacaoRepository
         return $row === false ? null : $row;
     }
 
-    public function existsByProcessoTipoData(string $processoId, string $tipoCodigo, string $dataMovimentacao): bool
+    public function existsByReuProcessoTipoData(string $reuPresoId, string $processoId, string $tipoCodigo, string $dataMovimentacao): bool
     {
+        $reuPresoId = trim($reuPresoId);
         $processoId = trim($processoId);
         $tipoCodigo = trim($tipoCodigo);
         $dataMovimentacao = trim($dataMovimentacao);
-        if ($processoId === '' || $tipoCodigo === '' || $dataMovimentacao === '') {
+        if ($reuPresoId === '' || $processoId === '' || $tipoCodigo === '' || $dataMovimentacao === '') {
             return false;
         }
         $sql = $this->hasProcessoIdColumn()
             ? sprintf(
                 'SELECT 1
                  FROM `%s` m
-                 WHERE m.`processo_id` = :pid AND m.`tipo_codigo` = :tipo AND m.`data_movimentacao` = :dt
+                 WHERE m.`reu_preso_id` = :reu AND m.`processo_id` = :pid AND m.`tipo_codigo` = :tipo AND m.`data_movimentacao` = :dt
                  LIMIT 1',
                 $this->table
             )
@@ -79,11 +80,12 @@ final class GabineteReuPresoMovimentacaoRepository
                 'SELECT 1
                  FROM `%s` m
                  INNER JOIN `gabinete_reu_preso_processo` gpp ON gpp.`id` = m.`reu_preso_processo_id`
-                 WHERE gpp.`processo_id` = :pid AND m.`tipo_codigo` = :tipo AND m.`data_movimentacao` = :dt
+                 WHERE m.`reu_preso_id` = :reu AND gpp.`processo_id` = :pid AND m.`tipo_codigo` = :tipo AND m.`data_movimentacao` = :dt
                  LIMIT 1',
                 $this->table
             );
         $st = $this->connection->prepare($sql);
+        $st->bindValue(':reu', $reuPresoId);
         $st->bindValue(':pid', $processoId);
         $st->bindValue(':tipo', $tipoCodigo);
         $st->bindValue(':dt', $dataMovimentacao);
@@ -96,8 +98,12 @@ final class GabineteReuPresoMovimentacaoRepository
      * @param list<string> $processoIds
      * @param list<string> $prefixes
      */
-    public function maxDataMovimentacaoForTipoPrefixesByProcessos(array $processoIds, array $prefixes): ?string
+    public function maxDataMovimentacaoForTipoPrefixesByReuAndProcessos(string $reuPresoId, array $processoIds, array $prefixes): ?string
     {
+        $reuPresoId = trim($reuPresoId);
+        if ($reuPresoId === '') {
+            return null;
+        }
         $processoIds = array_values(array_filter(array_map(static function ($id) {
             return trim((string) $id);
         }, $processoIds), static function ($id) {
@@ -112,7 +118,7 @@ final class GabineteReuPresoMovimentacaoRepository
             return null;
         }
         $pidPlaceholders = [];
-        $params = [];
+        $params = [':reu' => $reuPresoId];
         foreach ($processoIds as $i => $pid) {
             $k = ':pid' . $i;
             $pidPlaceholders[] = $k;
@@ -128,7 +134,7 @@ final class GabineteReuPresoMovimentacaoRepository
             ? sprintf(
                 'SELECT MAX(m.`data_movimentacao`)
                  FROM `%s` m
-                 WHERE m.`processo_id` IN (%s) AND (%s)',
+                 WHERE m.`reu_preso_id` = :reu AND m.`processo_id` IN (%s) AND (%s)',
                 $this->table,
                 implode(',', $pidPlaceholders),
                 implode(' OR ', $whereLike)
@@ -137,7 +143,7 @@ final class GabineteReuPresoMovimentacaoRepository
                 'SELECT MAX(m.`data_movimentacao`)
                  FROM `%s` m
                  INNER JOIN `gabinete_reu_preso_processo` gpp ON gpp.`id` = m.`reu_preso_processo_id`
-                 WHERE gpp.`processo_id` IN (%s) AND (%s)',
+                 WHERE m.`reu_preso_id` = :reu AND gpp.`processo_id` IN (%s) AND (%s)',
                 $this->table,
                 implode(',', $pidPlaceholders),
                 implode(' OR ', $whereLike)
@@ -155,78 +161,87 @@ final class GabineteReuPresoMovimentacaoRepository
         return (string) $v;
     }
 
-    public function deleteByProcessoTipoData(string $processoId, string $tipoCodigo, string $dataMovimentacao): int
+    public function deleteById(string $id): int
     {
-        $processoId = trim($processoId);
-        $tipoCodigo = trim($tipoCodigo);
-        $dataMovimentacao = trim($dataMovimentacao);
-        if ($processoId === '' || $tipoCodigo === '' || $dataMovimentacao === '') {
+        $id = trim($id);
+        if ($id === '') {
             return 0;
         }
-        $sql = $this->hasProcessoIdColumn()
-            ? sprintf(
-                'DELETE m
-                 FROM `%s` m
-                 WHERE m.`processo_id` = :pid AND m.`tipo_codigo` = :tipo AND m.`data_movimentacao` = :dt',
-                $this->table
-            )
-            : sprintf(
-                'DELETE m
-                 FROM `%s` m
-                 INNER JOIN `gabinete_reu_preso_processo` gpp ON gpp.`id` = m.`reu_preso_processo_id`
-                 WHERE gpp.`processo_id` = :pid AND m.`tipo_codigo` = :tipo AND m.`data_movimentacao` = :dt',
-                $this->table
-            );
-        $st = $this->connection->prepare($sql);
-        $st->bindValue(':pid', $processoId);
-        $st->bindValue(':tipo', $tipoCodigo);
-        $st->bindValue(':dt', $dataMovimentacao);
+        $st = $this->connection->prepare(
+            sprintf('DELETE FROM `%s` WHERE `id` = :id LIMIT 1', $this->table)
+        );
+        $st->bindValue(':id', $id);
         $st->execute();
 
         return (int) $st->rowCount();
     }
 
     /**
-     * @param list<string> $processoIds
-     * @return array<string, array<string, mixed>> processo_id => linha da movimentação
+     * @param list<array{0: string, 1: string}> $pairs lista de pares (reu_preso_id, processo_id)
+     * @return array<string, array<string, mixed>> mapa "reuId|processoId" => linha da última movimentação
      */
-    public function fetchUltimaPorProcessoIds(array $processoIds): array
+    public function fetchUltimaPorReuPresoEProcessoIds(array $pairs): array
     {
-        $processoIds = array_values(array_filter(array_map(static function ($id) {
-            return trim((string) $id);
-        }, $processoIds), static function ($id) {
-            return $id !== '';
-        }));
-        if ($processoIds === []) {
+        $wanted = [];
+        $reuIds = [];
+        $processoIds = [];
+        foreach ($pairs as $p) {
+            if (!is_array($p) || !isset($p[0], $p[1])) {
+                continue;
+            }
+            $r = trim((string) $p[0]);
+            $pid = trim((string) $p[1]);
+            if ($r === '' || $pid === '') {
+                continue;
+            }
+            $key = $r . '|' . $pid;
+            if (isset($wanted[$key])) {
+                continue;
+            }
+            $wanted[$key] = true;
+            $reuIds[$r] = true;
+            $processoIds[$pid] = true;
+        }
+        if ($wanted === []) {
             return [];
         }
 
-        $placeholders = [];
+        $reuArr = array_keys($reuIds);
+        $pidArr = array_keys($processoIds);
+        $reuPh = [];
+        $pidPh = [];
         $params = [];
-        foreach ($processoIds as $i => $id) {
-            $k = ':p' . $i;
-            $placeholders[] = $k;
-            $params[$k] = $id;
+        foreach ($reuArr as $i => $r) {
+            $k = ':r' . $i;
+            $reuPh[] = $k;
+            $params[$k] = $r;
         }
-        $in = implode(',', $placeholders);
+        foreach ($pidArr as $i => $pid) {
+            $k = ':p' . $i;
+            $pidPh[] = $k;
+            $params[$k] = $pid;
+        }
+
         $hasProcessoId = $this->hasProcessoIdColumn();
         $sql = $hasProcessoId
             ? sprintf(
-                'SELECT `id`, `processo_id`, `tipo_codigo`, `data_movimentacao`, `observacoes`
-                 FROM `%s`
-                 WHERE `processo_id` IN (%s)
-                 ORDER BY `processo_id` ASC, `data_movimentacao` DESC, `created_at` DESC',
+                'SELECT m.`id`, m.`reu_preso_id`, m.`processo_id`, m.`tipo_codigo`, m.`data_movimentacao`, m.`observacoes`
+                 FROM `%s` m
+                 WHERE m.`reu_preso_id` IN (%s) AND m.`processo_id` IN (%s)
+                 ORDER BY m.`reu_preso_id` ASC, m.`processo_id` ASC, m.`data_movimentacao` DESC, m.`created_at` DESC',
                 $this->table,
-                $in
+                implode(',', $reuPh),
+                implode(',', $pidPh)
             )
             : sprintf(
-                'SELECT m.`id`, gpp.`processo_id`, m.`tipo_codigo`, m.`data_movimentacao`, m.`observacoes`
+                'SELECT m.`id`, m.`reu_preso_id`, gpp.`processo_id`, m.`tipo_codigo`, m.`data_movimentacao`, m.`observacoes`
                  FROM `%s` m
                  INNER JOIN `gabinete_reu_preso_processo` gpp ON gpp.`id` = m.`reu_preso_processo_id`
-                 WHERE gpp.`processo_id` IN (%s)
-                 ORDER BY gpp.`processo_id` ASC, m.`data_movimentacao` DESC, m.`created_at` DESC',
+                 WHERE m.`reu_preso_id` IN (%s) AND gpp.`processo_id` IN (%s)
+                 ORDER BY m.`reu_preso_id` ASC, gpp.`processo_id` ASC, m.`data_movimentacao` DESC, m.`created_at` DESC',
                 $this->table,
-                $in
+                implode(',', $reuPh),
+                implode(',', $pidPh)
             );
         $st = $this->connection->prepare($sql);
         foreach ($params as $k => $v) {
@@ -240,9 +255,17 @@ final class GabineteReuPresoMovimentacaoRepository
 
         $out = [];
         foreach ($rows as $row) {
+            $r = trim((string) ($row['reu_preso_id'] ?? ''));
             $pid = trim((string) ($row['processo_id'] ?? ''));
-            if ($pid !== '' && !isset($out[$pid])) {
-                $out[$pid] = $row;
+            if ($r === '' || $pid === '') {
+                continue;
+            }
+            $key = $r . '|' . $pid;
+            if (!isset($wanted[$key])) {
+                continue;
+            }
+            if (!isset($out[$key])) {
+                $out[$key] = $row;
             }
         }
 
@@ -252,30 +275,19 @@ final class GabineteReuPresoMovimentacaoRepository
     /**
      * @return list<array<string, mixed>>
      */
-    public function findByProcessoIdOrderDesc(string $processoId, int $limit = 200): array
+    public function findByReuPresoIdOrderDesc(string $reuPresoId, int $limit = 200): array
     {
-        $processoId = trim($processoId);
-        if ($processoId === '') {
+        $reuPresoId = trim($reuPresoId);
+        if ($reuPresoId === '') {
             return [];
         }
-        $sql = $this->hasProcessoIdColumn()
-            ? sprintf(
-                'SELECT * FROM `%s` WHERE `processo_id` = :pid ORDER BY `data_movimentacao` DESC, `created_at` DESC LIMIT %d',
-                $this->table,
-                $limit
-            )
-            : sprintf(
-                'SELECT m.*
-                 FROM `%s` m
-                 INNER JOIN `gabinete_reu_preso_processo` gpp ON gpp.`id` = m.`reu_preso_processo_id`
-                 WHERE gpp.`processo_id` = :pid
-                 ORDER BY m.`data_movimentacao` DESC, m.`created_at` DESC
-                 LIMIT %d',
-                $this->table,
-                $limit
-            );
+        $sql = sprintf(
+            'SELECT * FROM `%s` WHERE `reu_preso_id` = :reu ORDER BY `data_movimentacao` DESC, `created_at` DESC LIMIT %d',
+            $this->table,
+            $limit
+        );
         $st = $this->connection->prepare($sql);
-        $st->bindValue(':pid', $processoId);
+        $st->bindValue(':reu', $reuPresoId);
         $st->execute();
         $rows = $st->fetchAll(PDO::FETCH_ASSOC);
 

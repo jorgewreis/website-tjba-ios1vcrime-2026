@@ -310,10 +310,10 @@ if ($ultimaMov !== null) {
             <?php endif; ?>
         </div>
 
-        <div class="display-flex row row-full justify-end padding-x-md padding-y-md gap-y-md flex-wrap">
+        <div class="display-flex row row-full justify-between padding-x-md padding-y-md gap-y-md flex-wrap">
             <?php if (!$arquivado): ?>
-            <button type="button" class="btn btn-secondary" id="btn-grp-voltar" data-allow-during-loading="true">Voltar</button>
             <button type="button" class="btn btn-danger-outline" id="btn-grp-arquivar">Excluir</button>
+            <button type="button" class="btn btn-secondary" id="btn-grp-voltar" data-allow-during-loading="true">Voltar</button>
             <?php endif; ?>
         </div>
     </div>

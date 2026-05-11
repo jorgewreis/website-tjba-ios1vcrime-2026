@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0109
+
+**Data:** 2026-05-11 09:04:34 | **Commit:** `726377c2` | **Tipo:** `patch`
+
+- refactor(gabinete-reu-preso): update repository methods to include 'reuPresoId' parameter
+
 ## V. 1.97.0108
 
 **Data:** 2026-05-08 17:32:50 | **Commit:** `4f94baf0` | **Tipo:** `patch`
@@ -5286,6 +5292,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

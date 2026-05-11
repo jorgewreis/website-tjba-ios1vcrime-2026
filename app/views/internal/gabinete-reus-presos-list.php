@@ -268,6 +268,9 @@ if ($totalPages > 0) {
                 $revTitle = trim((string) ($row['RevisaoDiasHint'] ?? ''));
                 $subLinhas = $row['SubtarefaProcessos'] ?? [];
                 $subLinhas = is_array($subLinhas) ? $subLinhas : [];
+                $subLinhas = array_values(array_filter($subLinhas, static function ($sl) {
+                    return is_array($sl) && !empty($sl['principal']);
+                }));
                 ?>
             <div class="display-flex col col-full register border-bottom" data-reu-preso-id="<?php echo htmlspecialchars($rid, ENT_QUOTES); ?>">
 
