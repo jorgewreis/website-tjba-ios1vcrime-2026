@@ -78,4 +78,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(gabinete-reu-preso): update repository methods to include 'reuPresoId' parameter** `[726377c2]`
 - **feat(processos): add 'processosedit' page and enhance 'consulta-processos-edit' layout** `[aa74d645]`
 - **feat(consulta-processos-list): add external stylesheet for improved UI** `[29987cea]`
+- **refactor(consulta-processos-list): improve variable handling and HTML output** `[0f894993]`
 
