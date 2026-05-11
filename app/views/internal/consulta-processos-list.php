@@ -162,21 +162,30 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
             </div>
         <?php elseif (!empty($rows)): ?>
             <?php foreach ($rows as $row): ?>
+            <?php
+                $rowId = (string) ($row['id'] ?? '');
+                $rowClasseNome = trim((string) ($row['classe_nome'] ?? ''));
+                if ($rowClasseNome === '') {
+                    $rowClasseNome = '—';
+                }
+                $rowNumero = (string) ($row['numero_processo'] ?? '—');
+                $rowTotalPartes = isset($row['total_partes']) ? (string) $row['total_partes'] : '—';
+            ?>
             <div class="display-flex col col-full register border-bottom">
                 <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                     <div class="display-flex row row-fit justify-start gap-y-sm">
                         <div class="col width-500 process-info">
-                            <span class="minor-info"><?php echo htmlspecialchars($row['classe_nome'] ?? '—'); ?></span>
-                            <span class="major-info"><?php echo htmlspecialchars($row['numero_processo'] ?? '—'); ?></span>
+                            <span class="minor-info"><?php echo htmlspecialchars($rowClasseNome, ENT_QUOTES); ?></span>
+                            <span class="major-info"><?php echo htmlspecialchars($rowNumero, ENT_QUOTES); ?></span>
                         </div>
                         <div class="col width-200">
                             <span class="minor-info">Partes</span>
-                            <span class="major-info"><?php echo htmlspecialchars($row['total_partes'] ?? '—'); ?></span>
+                            <span class="major-info"><?php echo htmlspecialchars($rowTotalPartes, ENT_QUOTES); ?></span>
                         </div>
                     </div>
                     <div class="display-flex row row-fit justify-end">
                         <div class="col process-edit">
-                            <button type="button" class="btn btn-editar" title="Abrir processo" data-edit-id="<?php echo htmlspecialchars($row['id'] ?? ''); ?>"><i class="fi fi-rr-pen-square"></i></button>
+                            <button type="button" class="btn btn-editar" title="Abrir processo" data-edit-id="<?php echo htmlspecialchars($rowId, ENT_QUOTES); ?>"><i class="fi fi-rr-pen-square"></i></button>
                         </div>
                     </div>
                 </div>

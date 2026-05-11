@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.97.0112
+
+**Data:** 2026-05-11 12:53:04 | **Commit:** `0f894993` | **Tipo:** `patch`
+
+- refactor(consulta-processos-list): improve variable handling and HTML output
+
 ## V. 1.97.0111
 
 **Data:** 2026-05-11 12:41:29 | **Commit:** `29987cea` | **Tipo:** `patch`
@@ -5304,6 +5310,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
