@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-_Nenhuma entrada pendente._
+- **feat(cartorio): add 'Certidão de Cumprimento' functionality** `[6f6dc81f]`
 
