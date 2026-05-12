@@ -70,11 +70,19 @@ $subtarefaLabels = [
     'cadastro_partes_pje' => 'Cadastro de partes no PJe',
     'expedicao_mandados_intimacao' => 'Expedição de mandados de intimação',
     'cadastro_bnmp' => 'Cadastro no BNMP',
+    'certidao_cumprimento' => 'Certidão de Cumprimento',
 ];
 $ordemLabels = [
     1 => $subtarefaLabels['cadastro_partes_pje'],
     2 => $subtarefaLabels['expedicao_mandados_intimacao'],
     3 => $subtarefaLabels['cadastro_bnmp'],
+    4 => $subtarefaLabels['certidao_cumprimento'],
+];
+$buttonTitleByTipo = [
+    'cadastro_partes_pje' => 'Informar cadastro de partes no PJe',
+    'expedicao_mandados_intimacao' => 'Informar expedição de mandados',
+    'cadastro_bnmp' => 'Informar cadastro no BNMP',
+    'certidao_cumprimento' => 'Expedir certidão',
 ];
 
 $baseQueryParams = ['page' => $routePage, 'items_per_page' => $itemsPerPage];
@@ -265,10 +273,10 @@ if ($totalPages > 0) {
                 $statusTarefa = (string) ($row['Status'] ?? '');
                 $tarefaConcluida = in_array($statusTarefa, ['concluída', 'concluida', 'finalizada'], true);
                 $allSt = $row['SubtarefasAll'] ?? [];
-                $progressStatuses = ['pendente', 'pendente', 'pendente'];
+                $progressStatuses = ['pendente', 'pendente', 'pendente', 'pendente'];
                 foreach ($allSt as $subtarefa) {
                     $ordem = (int) ($subtarefa['ordem'] ?? 0);
-                    if ($ordem >= 1 && $ordem <= 3) {
+                    if ($ordem >= 1 && $ordem <= 4) {
                         $progressStatuses[$ordem - 1] = (string) ($subtarefa['status'] ?? 'pendente');
                     }
                 }
@@ -365,7 +373,7 @@ if ($totalPages > 0) {
                             <?php elseif ($mostrarBarraStatus): ?>
                                 <div class="width-300 status <?php echo $st === 'em_andamento' ? 'status-current' : 'status-pending'; ?> status-with-progress">
                                     <span class="status-task-label width-300"><?php echo $st === 'em_andamento' ? 'Em andamento' : 'Pendente'; ?></span>
-                                    <div class="status-task-progress" role="progressbar" aria-valuenow="<?php echo count(array_filter($progressStatuses, static fn ($value) => $value === 'concluida')); ?>" aria-valuemin="0" aria-valuemax="3">
+                                    <div class="status-task-progress" role="progressbar" aria-valuenow="<?php echo count(array_filter($progressStatuses, static fn ($value) => $value === 'concluida')); ?>" aria-valuemin="0" aria-valuemax="4">
                                         <?php foreach ($progressStatuses as $index => $statusSeg): ?>
                                             <div class="status-task-progress-segment <?php echo htmlspecialchars($statusSeg === 'concluida' ? 'concluida' : ($statusSeg === 'em_andamento' ? 'em_andamento' : 'pendente')); ?>" title="<?php echo htmlspecialchars($ordemLabels[$index + 1]); ?>"></div>
                                         <?php endforeach; ?>
@@ -422,7 +430,7 @@ if ($totalPages > 0) {
                                 </div>
                             </div>
                             <div class="display-flex row row-fit justify-end align-center">
-                                <button type="button" class="btn btn-primary height-sm btn-concluir-subtarefa" title="<?php echo htmlspecialchars($stLabel, ENT_QUOTES); ?>">
+                                <button type="button" class="btn btn-primary height-sm btn-concluir-subtarefa" title="<?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?>">
                                     <span class="value-button"><?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?></span>
                                 </button>
                             </div>

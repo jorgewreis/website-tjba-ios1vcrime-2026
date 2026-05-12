@@ -95,6 +95,10 @@ return array (
   array (
     'observacao' => 'Cadastro no BNMP realizado',
   ),
+  'cartorio-medidas-protetivas.subtarefa.certidao_cumprimento' =>
+  array (
+    'observacao' => 'Certidão de cumprimento expedida',
+  ),
   'cartorio-editais.create' => 
   array (
     'observacao' => '{tipo_edital} cadastrado — prazo {prazo_dias} dia(s).',

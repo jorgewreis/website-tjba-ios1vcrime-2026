@@ -210,10 +210,14 @@ final class ListExportPrincipalStatusTitle
         $subtarefaLabels = [
             'cadastro_partes_pje' => 'Cadastro de partes no PJe',
             'expedicao_mandados_intimacao' => 'Expedição de mandados de intimação',
+            'cadastro_bnmp' => 'Cadastro no BNMP',
+            'certidao_cumprimento' => 'Certidão de Cumprimento',
         ];
         $ordemLabels = [
             1 => $subtarefaLabels['cadastro_partes_pje'],
             2 => $subtarefaLabels['expedicao_mandados_intimacao'],
+            3 => $subtarefaLabels['cadastro_bnmp'],
+            4 => $subtarefaLabels['certidao_cumprimento'],
         ];
 
         $allSt = self::subtarefasAll($row);

@@ -25,6 +25,9 @@ final class MedidasProtetivasService
     public const QTD_PARTES_PJE_MIN = 0;
     public const QTD_QUANTIDADE_MAX = 10;
 
+    /** Pontos de produtividade (campo quantidade) ao concluir «Certidão de cumprimento». */
+    public const PRODUTIVIDADE_PONTOS_CERTIDAO_CUMPRIMENTO = 3;
+
     private PDO $connection;
     private MedidasProtetivasRepository $repository;
     private MedidasProtetivasSubtarefasRepository $subtarefasRepository;
@@ -303,6 +306,7 @@ final class MedidasProtetivasService
         $this->subtarefasRepository->create($medidaId, MedidasProtetivasSubtarefasRepository::TIPO_ORDEM_1, 1, 'em_andamento', null);
         $this->subtarefasRepository->create($medidaId, MedidasProtetivasSubtarefasRepository::TIPO_ORDEM_2, 2, 'pendente', null);
         $this->subtarefasRepository->create($medidaId, MedidasProtetivasSubtarefasRepository::TIPO_ORDEM_3, 3, 'pendente', null);
+        $this->subtarefasRepository->create($medidaId, MedidasProtetivasSubtarefasRepository::TIPO_ORDEM_4, 4, 'pendente', null);
         $this->repository->update($medidaId, ['status' => 'pendente']);
 
         if ($usuarioId !== null && trim($usuarioId) !== ''
@@ -346,6 +350,8 @@ final class MedidasProtetivasService
                 if ($qtd > self::QTD_QUANTIDADE_MAX) {
                     throw new InvalidArgumentException('A quantidade não pode ser maior que ' . self::QTD_QUANTIDADE_MAX . '.');
                 }
+            } elseif ($tipoSub === MedidasProtetivasSubtarefasRepository::TIPO_ORDEM_4) {
+                $qtd = self::PRODUTIVIDADE_PONTOS_CERTIDAO_CUMPRIMENTO;
             } else {
                 // Subtarefas sem complemento numérico (ex.: cadastro no BNMP) usam quantidade fixa 1 na produtividade.
                 $qtd = 1;

@@ -187,6 +187,14 @@ return array (
     'quantidade_default' => 1,
     'referencia_sistema' => 'cartorio-medidas-protetivas',
   ),
+  'cartorio-medidas-protetivas.subtarefa.certidao_cumprimento' =>
+  array (
+    'tipo_ato' => 'Cartório',
+    'tipo_documento' => 'cartorio-medidas-protetivas.subtarefa.certidao_cumprimento',
+    'sistema_modulo' => 'cartorio-medidas-protetivas',
+    'quantidade_default' => 3,
+    'referencia_sistema' => 'cartorio-medidas-protetivas',
+  ),
   'cartorio-editais.create' => 
   array (
     'tipo_ato' => 'Cartório',

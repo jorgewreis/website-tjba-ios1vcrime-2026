@@ -11,11 +11,13 @@ final class MedidasProtetivasSubtarefasRepository
     public const TIPO_ORDEM_1 = 'cadastro_partes_pje';
     public const TIPO_ORDEM_2 = 'expedicao_mandados_intimacao';
     public const TIPO_ORDEM_3 = 'cadastro_bnmp';
+    public const TIPO_ORDEM_4 = 'certidao_cumprimento';
 
     private const ORDEM_POR_TIPO = [
         self::TIPO_ORDEM_1 => 1,
         self::TIPO_ORDEM_2 => 2,
         self::TIPO_ORDEM_3 => 3,
+        self::TIPO_ORDEM_4 => 4,
     ];
 
     private const STATUS_EM_ANDAMENTO = 'em_andamento';
@@ -32,8 +34,8 @@ final class MedidasProtetivasSubtarefasRepository
     {
         $medidaId = trim($medidaId);
         $tipo = trim($tipo);
-        if ($medidaId === '' || $tipo === '' || $ordem < 1 || $ordem > 3) {
-            throw new InvalidArgumentException('medida_id, tipo e ordem (1-3) são obrigatórios.');
+        if ($medidaId === '' || $tipo === '' || $ordem < 1 || $ordem > 4) {
+            throw new InvalidArgumentException('medida_id, tipo e ordem (1-4) são obrigatórios.');
         }
         if (!isset(self::ORDEM_POR_TIPO[$tipo]) || self::ORDEM_POR_TIPO[$tipo] !== $ordem) {
             throw new InvalidArgumentException('Tipo e ordem inválidos.');
@@ -149,12 +151,14 @@ final class MedidasProtetivasSubtarefasRepository
             $this->create($medidaId, self::TIPO_ORDEM_1, 1, self::STATUS_EM_ANDAMENTO, null);
             $this->create($medidaId, self::TIPO_ORDEM_2, 2, self::STATUS_PENDENTE, null);
             $this->create($medidaId, self::TIPO_ORDEM_3, 3, self::STATUS_PENDENTE, null);
+            $this->create($medidaId, self::TIPO_ORDEM_4, 4, self::STATUS_PENDENTE, null);
             return;
         }
 
         $tiposExistentes = [];
         $statusOrdem1 = self::STATUS_PENDENTE;
         $statusOrdem2 = self::STATUS_PENDENTE;
+        $statusOrdem3 = self::STATUS_PENDENTE;
         foreach ($existentes as $row) {
             $tipoExistente = trim((string) ($row['tipo'] ?? ''));
             if ($tipoExistente !== '') {
@@ -166,6 +170,9 @@ final class MedidasProtetivasSubtarefasRepository
             if ($tipoExistente === self::TIPO_ORDEM_2) {
                 $statusOrdem2 = trim((string) ($row['status'] ?? self::STATUS_PENDENTE));
             }
+            if ($tipoExistente === self::TIPO_ORDEM_3) {
+                $statusOrdem3 = trim((string) ($row['status'] ?? self::STATUS_PENDENTE));
+            }
         }
 
         if (!isset($tiposExistentes[self::TIPO_ORDEM_3])) {
@@ -174,6 +181,16 @@ final class MedidasProtetivasSubtarefasRepository
                 $statusNova = self::STATUS_CONCLUIDA;
             }
             $this->create($medidaId, self::TIPO_ORDEM_3, 3, $statusNova, null);
+            $statusOrdem3 = $statusNova;
+            $tiposExistentes[self::TIPO_ORDEM_3] = true;
+        }
+
+        if (!isset($tiposExistentes[self::TIPO_ORDEM_4])) {
+            $statusNova4 = self::STATUS_PENDENTE;
+            if ($statusOrdem1 === self::STATUS_CONCLUIDA && $statusOrdem2 === self::STATUS_CONCLUIDA && $statusOrdem3 === self::STATUS_CONCLUIDA) {
+                $statusNova4 = self::STATUS_CONCLUIDA;
+            }
+            $this->create($medidaId, self::TIPO_ORDEM_4, 4, $statusNova4, null);
         }
     }
 

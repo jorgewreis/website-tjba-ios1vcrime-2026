@@ -30,6 +30,7 @@ return [
     'cartorio-medidas-protetivas.subtarefa.cadastro_partes_pje' => 'PRG-0F2D775643AD5FFD89D3D91D99',
     'cartorio-medidas-protetivas.subtarefa.expedicao_mandados_intimacao' => 'PRG-79CE811EE5D41053DDD5C381CD',
     'cartorio-medidas-protetivas.subtarefa.cadastro_bnmp' => 'PRG-DD7ACDBF1D06C25D61B25BEAA0',
+    'cartorio-medidas-protetivas.subtarefa.certidao_cumprimento' => 'PRG-8F3A91C2E4B0567D89ACEF01',
     'cartorio-editais.create' => 'PRG-06B9DA113BC2DCF2F26056A991',
     'cartorio-editais.subtarefa.expedicao_edital' => 'PRG-C2CF47AC5C69FE199EE74F1C6C',
     'cartorio-editais.subtarefa.envio_djen' => 'PRG-D4AC13962913F3F1E5F5F31747',

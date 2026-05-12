@@ -65,6 +65,7 @@ $add($registry, $texts, 'cartorio-medidas-protetivas.create', $def($m, 'cartorio
 $add($registry, $texts, 'cartorio-medidas-protetivas.subtarefa.cadastro_partes_pje', $def($m, 'cartorio-medidas-protetivas.subtarefa.cadastro_partes_pje'), 'Medida protetiva: cadastro de partes no PJe. Processo {numero_processo}.');
 $add($registry, $texts, 'cartorio-medidas-protetivas.subtarefa.expedicao_mandados_intimacao', $def($m, 'cartorio-medidas-protetivas.subtarefa.expedicao_mandados_intimacao'), 'Medida protetiva: expedição de mandados/intimação. Processo {numero_processo}.');
 $add($registry, $texts, 'cartorio-medidas-protetivas.subtarefa.cadastro_bnmp', $def($m, 'cartorio-medidas-protetivas.subtarefa.cadastro_bnmp'), 'Medida protetiva: cadastro no BNMP. Processo {numero_processo}.');
+$add($registry, $texts, 'cartorio-medidas-protetivas.subtarefa.certidao_cumprimento', $def($m, 'cartorio-medidas-protetivas.subtarefa.certidao_cumprimento'), 'Medida protetiva: certidão de cumprimento. Processo {numero_processo}.');
 
 // --- Editais ---
 $m = 'cartorio-editais';

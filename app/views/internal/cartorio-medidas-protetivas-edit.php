@@ -84,14 +84,20 @@ $timelineData = $medida !== null
 $subtarefaLabels = [
     MedidasProtetivasSubtarefasRepository::TIPO_ORDEM_1 => 'Cadastro de partes no PJe',
     MedidasProtetivasSubtarefasRepository::TIPO_ORDEM_2 => 'Expedição de mandados de intimação',
+    MedidasProtetivasSubtarefasRepository::TIPO_ORDEM_3 => 'Cadastro no BNMP',
+    MedidasProtetivasSubtarefasRepository::TIPO_ORDEM_4 => 'Certidão de Cumprimento',
 ];
 $timelineMinorPendente = [
     1 => 'Aguardando cadastro das partes no PJe',
     2 => 'Aguardando expedição de mandados de intimação',
+    3 => 'Aguardando cadastro no BNMP',
+    4 => 'Aguardando expedição da certidão de cumprimento',
 ];
 $ordemParaTipo = [
     1 => MedidasProtetivasSubtarefasRepository::TIPO_ORDEM_1,
     2 => MedidasProtetivasSubtarefasRepository::TIPO_ORDEM_2,
+    3 => MedidasProtetivasSubtarefasRepository::TIPO_ORDEM_3,
+    4 => MedidasProtetivasSubtarefasRepository::TIPO_ORDEM_4,
 ];
 ?>
 <!DOCTYPE html>

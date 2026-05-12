@@ -220,6 +220,20 @@ if (!function_exists('cartorioTimelineGetConfig')) {
                             'button_title' => 'Informar expedicao de mandados',
                             'pending_text' => 'Aguardando expedicao de mandados de intimacao',
                         ],
+                        3 => [
+                            'type' => 'cadastro_bnmp',
+                            'label' => 'Cadastro no BNMP',
+                            'task_title' => 'Aguardando cadastro no BNMP',
+                            'button_title' => 'Informar cadastro no BNMP',
+                            'pending_text' => 'Aguardando cadastro no BNMP',
+                        ],
+                        4 => [
+                            'type' => 'certidao_cumprimento',
+                            'label' => 'Certidão de Cumprimento',
+                            'task_title' => 'Aguardando expedição da certidão de cumprimento',
+                            'button_title' => 'Expedir certidão',
+                            'pending_text' => 'Aguardando expedição da certidão de cumprimento',
+                        ],
                     ],
                 ],
                 'cejusc' => [
@@ -590,7 +604,16 @@ if (!function_exists('cartorioTimelineGetConfig')) {
             if ($ordem === 1) {
                 return cartorioTimelineContent($qtd . ' partes cadastradas no PJe', 'Cadastro realizado por ' . $user . ' em ' . $movementDate);
             }
-            return cartorioTimelineContent(($qtd > 0 ? $qtd : '—') . ' mandados de intimacao expedidos', 'Expedicao realizada por ' . $user . ' em ' . $movementDate);
+            if ($ordem === 2) {
+                return cartorioTimelineContent(($qtd > 0 ? $qtd : '—') . ' mandados de intimacao expedidos', 'Expedicao realizada por ' . $user . ' em ' . $movementDate);
+            }
+            if ($ordem === 3) {
+                return cartorioTimelineContent('Cadastro no BNMP realizado', 'Informacao registrada por ' . $user . ' em ' . $movementDate);
+            }
+            if ($ordem === 4) {
+                return cartorioTimelineContent('Certidao de cumprimento expedida', 'Expedicao registrada por ' . $user . ' em ' . $movementDate);
+            }
+            return cartorioTimelineContent('Etapa concluida', 'Registrado por ' . $user . ' em ' . $movementDate);
         }
 
         if ($ordem === 1) {
