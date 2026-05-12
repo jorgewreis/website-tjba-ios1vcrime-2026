@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.98.0002
+
+**Data:** 2026-05-12 08:18:17 | **Commit:** `1ed087ef` | **Tipo:** `patch`
+
+- feat(cartorio): add repository method to find user ID for productivity task creation
+
 ## V. 1.98.0001
 
 **Data:** 2026-05-12 07:59:18 | **Commit:** `6f6dc81f` | **Tipo:** `patch`
@@ -5322,6 +5328,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

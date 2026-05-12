@@ -183,6 +183,45 @@ final class ProdutividadeLancamentosRepository
         return (float) $statement->fetchColumn();
     }
 
+    /**
+     * Usuário que recebeu o lançamento de produtividade do cadastro da tarefa (evento `{referencia_sistema}.create`),
+     * usado para estorno em cancelamento/exclusão sem penalizar quem executou o encerramento.
+     */
+    public function findUsuarioIdAutorCadastroCreate(string $referenciaItemId, string $referenciaSistema): ?string
+    {
+        $referenciaItemId = trim($referenciaItemId);
+        $referenciaSistema = trim($referenciaSistema);
+        if ($referenciaItemId === '' || $referenciaSistema === '') {
+            return null;
+        }
+        $tipoCreate = $referenciaSistema . '.create';
+        $sql = sprintf(
+            'SELECT l.`usuario_id`
+             FROM `%s` l
+             INNER JOIN `produtividade_regras` r ON r.`id` = l.`regra_id`
+             WHERE l.`referencia_item_id` = :ref_id
+               AND l.`referencia_sistema` = :ref_sys
+               AND l.`tipo_lancamento` = \'automatico\'
+               AND l.`status` = \'ativo\'
+               AND r.`tipo_documento` = :tipo_create
+             ORDER BY l.`data_hora_ato` ASC, l.`id` ASC
+             LIMIT 1',
+            $this->table
+        );
+        $statement = $this->connection->prepare($sql);
+        $statement->bindValue(':ref_id', $referenciaItemId);
+        $statement->bindValue(':ref_sys', $referenciaSistema);
+        $statement->bindValue(':tipo_create', $tipoCreate);
+        $statement->execute();
+        $uid = $statement->fetchColumn();
+        if ($uid === false || $uid === null) {
+            return null;
+        }
+        $uid = trim((string) $uid);
+
+        return $uid !== '' ? $uid : null;
+    }
+
     public function anular(string $id, string $anuladoPor, string $motivo): bool
     {
         $sql = sprintf(

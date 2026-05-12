@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../services/ProdutividadeService.php';
+require_once __DIR__ . '/../repositories/ProdutividadeLancamentosRepository.php';
 
 final class CartorioProdutividade
 {
@@ -159,11 +160,22 @@ final class CartorioProdutividade
 
     public static function mirrorEstornoSaldoSession(PDO $connection, string $referenciaItemId, string $referenciaSistema, string $motivoObs = ''): void
     {
-        if (session_status() !== PHP_SESSION_ACTIVE) {
+        $sessionUid = '';
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            $sessionUid = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
+        }
+        $repo = new ProdutividadeLancamentosRepository($connection);
+        $autorCadastro = $repo->findUsuarioIdAutorCadastroCreate($referenciaItemId, $referenciaSistema);
+        $targetUid = $autorCadastro !== null && $autorCadastro !== '' ? $autorCadastro : $sessionUid;
+        if ($targetUid === '') {
+            error_log(sprintf(
+                'CartorioProdutividade::mirrorEstornoSaldoSession sem usuario alvo (ref=%s sistema=%s)',
+                $referenciaItemId,
+                $referenciaSistema
+            ));
             return;
         }
-        $uid = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
-        self::mirrorEstornoSaldo($connection, $uid, $referenciaItemId, $referenciaSistema, $motivoObs);
+        self::mirrorEstornoSaldo($connection, $targetUid, $referenciaItemId, $referenciaSistema, $motivoObs);
     }
 
     public static function loadRegistry(): array
