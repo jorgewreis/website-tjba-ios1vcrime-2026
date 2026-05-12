@@ -5,4 +5,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 ## Entradas Pendentes
 
 - **feat(cartorio): add 'Certidão de Cumprimento' functionality** `[6f6dc81f]`
+- **feat(cartorio): add repository method to find user ID for productivity task creation** `[1ed087ef]`
 
