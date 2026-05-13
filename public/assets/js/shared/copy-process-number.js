@@ -1,7 +1,6 @@
 /**
  * Copia o número do processo para a área de transferência:
- * - clique em .process-info .major-info (listagens legadas);
- * - clique em [data-copy-numero-processo] (ex.: bloco processo em sala de mídias).
+ * - clique em .process-info .major-info.
  * Toast de sucesso via showToast (iframe) ou App.Toast quando disponível.
  */
 (function () {
@@ -67,25 +66,9 @@
     }
 
     document.addEventListener('click', function (e) {
-        var copyBtn = e.target && e.target.closest ? e.target.closest('[data-copy-numero-processo]') : null;
-        if (copyBtn) {
-            if (copyBtn.disabled || copyBtn.getAttribute('aria-disabled') === 'true') {
-                return;
-            }
-            var raw = String(copyBtn.getAttribute('data-copy-numero-processo') || '').trim();
-            if (!raw) {
-                return;
-            }
-            e.preventDefault();
-            e.stopPropagation();
-            copyToClipboard(raw, function () {
-                showSuccessToast(raw);
-            });
-            return;
-        }
-
         var container = e.target && e.target.closest ? e.target.closest('.process-info') : null;
         if (!container) return;
+        if (container.disabled || container.getAttribute('aria-disabled') === 'true') return;
         var major = container.querySelector('.major-info');
         if (!major || !major.contains(e.target)) return;
         var text = (major.textContent || '').trim();

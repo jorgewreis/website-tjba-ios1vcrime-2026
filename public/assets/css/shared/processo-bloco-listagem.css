@@ -224,6 +224,26 @@
     opacity: 1;
 }
 
+.container-processo .footer-processo .right .buttons .btn-mini .processo-bloco-copy-hitarea {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.container-processo .footer-processo .right .buttons .btn-mini .processo-bloco-copy-value {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 .container-processo .footer-processo .left .processo-classe.processo-bloco-tooltip,
 .container-processo .footer-processo .left .processo-assunto.processo-bloco-tooltip {
     cursor: help;

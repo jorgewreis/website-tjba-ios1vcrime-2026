@@ -22,9 +22,9 @@ $iconAbrir = '/assets/icons/Resize-Expand-Corner--Streamline-Ultimate.png';
 $iconCopiar = '/assets/icons/Task-Checklist--Streamline-Ultimate.png';
 ?>
 <div class="container-processo" data-processo-bloco="1">
-    <div class="main-processo">
+    <div class="main-processo process-info" title="Clique para copiar">
         <div class="left">
-            <div class="numero"><?php echo htmlspecialchars($numero, ENT_QUOTES, 'UTF-8'); ?></div>
+            <div class="numero major-info"><?php echo htmlspecialchars($numero, ENT_QUOTES, 'UTF-8'); ?></div>
         </div>
         <div class="right">
             <div class="prioridades">
@@ -73,13 +73,15 @@ $iconCopiar = '/assets/icons/Task-Checklist--Streamline-Ultimate.png';
                 <?php endif; ?>
                 <?php if ($numero !== ''): ?>
                     <div
-                        class="btn-mini tooltip processo-bloco-tooltip processo-bloco-tooltip--btn"
+                        class="btn-mini tooltip processo-bloco-tooltip processo-bloco-tooltip--btn process-info"
                         role="button"
                         tabindex="0"
-                        data-copy-numero-processo="<?php echo htmlspecialchars($numero, ENT_QUOTES, 'UTF-8'); ?>"
                         data-title="Copiar número do processo"
                         aria-label="Copiar número do processo">
-                        <img class="btn-mini-icon" src="<?php echo htmlspecialchars($iconCopiar, ENT_QUOTES, 'UTF-8'); ?>" alt="" width="20" height="20">
+                        <span class="major-info processo-bloco-copy-hitarea">
+                            <span class="processo-bloco-copy-value"><?php echo htmlspecialchars($numero, ENT_QUOTES, 'UTF-8'); ?></span>
+                            <img class="btn-mini-icon" src="<?php echo htmlspecialchars($iconCopiar, ENT_QUOTES, 'UTF-8'); ?>" alt="" width="20" height="20">
+                        </span>
                     </div>
                 <?php else: ?>
                     <div
