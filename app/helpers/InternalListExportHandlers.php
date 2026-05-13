@@ -737,7 +737,7 @@ final class InternalListExportHandlers
         $out = [];
         foreach ($rows as $r) {
             $numero = (string) ($r['numero_processo'] ?? '');
-            if ($numero !== '' && !empty($r['processo_sigiloso'])) {
+            if ($numero !== '' && ProcessoBlocoListagemHelper::deveMascararNumeroNaVarianteEstudantes($r)) {
                 $numero = ProcessoBlocoListagemHelper::mascararNumeroProcessoSigiloso($numero);
             }
             $out[] = [

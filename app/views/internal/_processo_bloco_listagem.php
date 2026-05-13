@@ -24,9 +24,11 @@ $processoBlocoIsEstudantes = ($processoBlocoVariant === 'estudantes');
 $processoBlocoHideActions = $processoBlocoIsEstudantes;
 
 $numero = trim((string) ($row['numero_processo'] ?? ''));
-if ($processoBlocoIsEstudantes && $numero !== '' && !empty($row['processo_sigiloso'])) {
+if ($processoBlocoIsEstudantes && $numero !== '') {
     require_once __DIR__ . '/../../helpers/ProcessoBlocoListagemHelper.php';
-    $numero = ProcessoBlocoListagemHelper::mascararNumeroProcessoSigiloso($numero);
+    if (ProcessoBlocoListagemHelper::deveMascararNumeroNaVarianteEstudantes($row)) {
+        $numero = ProcessoBlocoListagemHelper::mascararNumeroProcessoSigiloso($numero);
+    }
 }
 $classeTexto = trim((string) ($row['bloco_processo_classe_texto'] ?? ''));
 $classeNot = !empty($row['bloco_processo_classe_not']);

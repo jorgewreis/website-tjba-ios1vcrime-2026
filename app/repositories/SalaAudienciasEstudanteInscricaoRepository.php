@@ -185,6 +185,7 @@ final class SalaAudienciasEstudanteInscricaoRepository
                     a.`tipo_audiencia`, a.`data_audiencia`, a.`hora_audiencia`, a.`status`,
                     a.`data_hora_inicio_efetivo`, a.`data_hora_fim_efetivo`, a.`duracao_estimada_minutos`,
                     p.`numero_processo`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `classe_nome`,
+                    COALESCE(p.`sigiloso`, 0) AS `processo_sigiloso`,
                     ata.`id_ata`, ata.`expires_at`, ata.`nome_original`, ata.`uploaded_at`, ata.`arquivo_relativo`,
                     mt.`status` AS `midia_status`
              FROM `%s` i

@@ -197,6 +197,8 @@ final class ProcessoBlocoListagemHelper
             $podeAbrir = $rid !== '';
             $hrefAbrir = $podeAbrir ? ('/frame.php?page=consultaprocessosedit&id=' . rawurlencode($rid)) : '';
 
+            $sigilosoMesclado = self::rawProcessoSigilosoFlag($row) || isset($codigos['sigiloso']);
+
             $out[$idx] = [
                 'bloco_processo_id_resolvido' => $rid,
                 'bloco_processo_classe_texto' => $classeTexto,
@@ -206,6 +208,7 @@ final class ProcessoBlocoListagemHelper
                 'bloco_processo_prioridades' => $prioridadesUi,
                 'bloco_processo_abrir_href' => $hrefAbrir,
                 'bloco_processo_abrir_disabled' => !$podeAbrir,
+                'processo_sigiloso' => $sigilosoMesclado,
             ];
         }
 
@@ -215,6 +218,56 @@ final class ProcessoBlocoListagemHelper
         }
 
         return $merged;
+    }
+
+    /**
+     * Indica sigilo a partir da coluna `processos.sigiloso` / `processo_sigiloso` na linha
+     * (antes ou depois do merge), sem considerar prioridades.
+     */
+    public static function rawProcessoSigilosoFlag(array $row): bool
+    {
+        if (!array_key_exists('processo_sigiloso', $row)) {
+            return false;
+        }
+        $v = $row['processo_sigiloso'];
+        if ($v === true) {
+            return true;
+        }
+        if ($v === false || $v === null) {
+            return false;
+        }
+        if (is_int($v) || is_float($v)) {
+            return (int) $v !== 0;
+        }
+        if (is_string($v)) {
+            $t = trim($v);
+
+            return $t !== '' && $t !== '0';
+        }
+
+        return (bool) $v;
+    }
+
+    /**
+     * Listagens de estudantes: mascarar número quando o processo for sigiloso na base
+     * ou houver prioridade codificada como `sigiloso`.
+     */
+    public static function deveMascararNumeroNaVarianteEstudantes(array $row): bool
+    {
+        if (self::rawProcessoSigilosoFlag($row)) {
+            return true;
+        }
+        $pps = is_array($row['bloco_processo_prioridades'] ?? null) ? $row['bloco_processo_prioridades'] : [];
+        foreach ($pps as $p) {
+            if (!is_array($p)) {
+                continue;
+            }
+            if (trim((string) ($p['codigo'] ?? '')) === 'sigiloso') {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /** @param list<string> $codigos mutável */

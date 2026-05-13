@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 01 de abril de 2026
+**Data de Lançamento:** 13 de maio de 2026
 
 # V. 1.14
 
-> refactor: remove deploy-host-prepare script and update workflow to streamline SSH target preparation
+> refactor: update tooltip attributes for improved accessibility in processo bloco listing
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **refactor: remove deploy-host-prepare script and update workflow to streamline SSH target preparation** `[1cab479]`
+- **refactor: update tooltip attributes for improved accessibility in processo bloco listing** `[504e4173]`
 
 ---
 
