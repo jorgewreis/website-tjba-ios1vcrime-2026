@@ -70,7 +70,7 @@
         if (!container) return;
         if (container.disabled || container.getAttribute('aria-disabled') === 'true') return;
         var major = container.querySelector('.major-info');
-        if (!major || !major.contains(e.target)) return;
+        if (!major) return;
         var text = (major.textContent || '').trim();
         if (!text) return;
         copyToClipboard(text, function () {
