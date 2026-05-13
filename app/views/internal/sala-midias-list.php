@@ -118,7 +118,6 @@ $buttonTitleByTipo = [
     <?php include __DIR__ . '/_internal_head_styles.php'; ?>
     <link rel="stylesheet" href="/assets/css/shared/processo-bloco-listagem.css?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/css/shared/processo-bloco-listagem.css') ?: time(); ?>">
     <?php include __DIR__ . '/_toast_script.php'; ?>
-    <?php include __DIR__ . '/_copy_process_script.php'; ?>
 </head>
 <body class="page-internal">
 
@@ -504,6 +503,7 @@ window.SALA_MIDIAS_LIST = {
 };
 </script>
 <script src="/assets/js/modules/audiencias/midias-list.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/midias-list.js') ?: time(); ?>"></script>
+<?php include __DIR__ . '/_copy_process_script.php'; ?>
 <?php include __DIR__ . '/_list_section_toggle_script.php'; ?>
 </body>
 </html>

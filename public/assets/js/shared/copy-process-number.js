@@ -8,20 +8,26 @@
     'use strict';
 
     function showSuccessToast(text) {
+        var payload = {
+            type: 'success',
+            variant: 'full',
+            title: 'Sucesso',
+            message: 'O número ' + text + ' foi copiado com sucesso.'
+        };
         if (typeof window.showToast === 'function') {
-            window.showToast({
-                type: 'success',
-                variant: 'full',
-                title: 'Sucesso',
-                message: 'O número ' + text + ' foi copiado com sucesso.'
-            });
+            window.showToast(payload);
+            return;
+        }
+        if (window.parent && window.parent !== window) {
+            try {
+                window.parent.postMessage({ type: 'APP_TOAST', payload: payload }, '*');
+            } catch (err) {
+                /* ignore */
+            }
             return;
         }
         if (window.App && window.App.Toast && typeof window.App.Toast.show === 'function') {
-            window.App.Toast.show({
-                type: 'success',
-                message: 'O número ' + text + ' foi copiado com sucesso.'
-            });
+            window.App.Toast.show(payload);
         }
     }
 
@@ -63,6 +69,7 @@
                 return;
             }
             e.preventDefault();
+            e.stopPropagation();
             copyToClipboard(raw, function () {
                 showSuccessToast(raw);
             });

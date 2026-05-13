@@ -48,7 +48,7 @@
     align-items: center;
     justify-content: flex-start;
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 600;
     color: #202020;
 }
 
@@ -168,6 +168,17 @@
     align-items: center;
     justify-content: center;
     gap: 2px;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.18s ease, visibility 0.18s ease;
+}
+
+.register:hover .container-processo .footer-processo .right .buttons,
+.register:focus-within .container-processo .footer-processo .right .buttons {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
 }
 
 .container-processo .footer-processo .right .buttons .btn-mini {
@@ -198,6 +209,11 @@
 .container-processo .footer-processo .right .buttons .btn-mini.processo-bloco-tooltip--btn:hover .btn-mini-icon {
     filter: grayscale(0%);
     opacity: 1;
+}
+
+.container-processo .footer-processo .left .processo-classe.processo-bloco-tooltip,
+.container-processo .footer-processo .left .processo-assunto.processo-bloco-tooltip {
+    cursor: help;
 }
 
 .container-processo .processo-bloco-tooltip {

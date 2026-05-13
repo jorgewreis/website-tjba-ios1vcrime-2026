@@ -45,8 +45,8 @@ $iconCopiar = '/assets/icons/Task-Checklist--Streamline-Ultimate.png';
     </div>
     <div class="footer-processo">
         <div class="left">
-            <div class="processo-classe<?php echo $classeNot ? ' not' : ''; ?>"><?php echo htmlspecialchars($classeTexto, ENT_QUOTES, 'UTF-8'); ?></div>
-            <div class="processo-assunto<?php echo $assuntoNot ? ' not' : ''; ?>"><?php echo htmlspecialchars($assuntoTexto, ENT_QUOTES, 'UTF-8'); ?></div>
+            <div class="processo-classe<?php echo $classeNot ? ' not' : ' processo-bloco-tooltip'; ?>"<?php if (!$classeNot && $classeTexto !== ''): ?> data-title="<?php echo htmlspecialchars($classeTexto, ENT_QUOTES, 'UTF-8'); ?>"<?php endif; ?>><?php echo htmlspecialchars($classeTexto, ENT_QUOTES, 'UTF-8'); ?></div>
+            <div class="processo-assunto<?php echo $assuntoNot ? ' not' : ' processo-bloco-tooltip'; ?>"<?php if (!$assuntoNot && $assuntoTexto !== ''): ?> data-title="<?php echo htmlspecialchars($assuntoTexto, ENT_QUOTES, 'UTF-8'); ?>"<?php endif; ?>><?php echo htmlspecialchars($assuntoTexto, ENT_QUOTES, 'UTF-8'); ?></div>
         </div>
         <div class="right">
             <div class="buttons">
@@ -57,8 +57,7 @@ $iconCopiar = '/assets/icons/Task-Checklist--Streamline-Ultimate.png';
                         tabindex="0"
                         data-nav-href="<?php echo htmlspecialchars($abrirHref, ENT_QUOTES, 'UTF-8'); ?>"
                         data-title="Abrir processo"
-                        aria-label="Abrir processo"
-                        title="Abrir processo">
+                        aria-label="Abrir processo">
                         <img class="btn-mini-icon" src="<?php echo htmlspecialchars($iconAbrir, ENT_QUOTES, 'UTF-8'); ?>" alt="" width="20" height="20">
                     </div>
                 <?php else: ?>
@@ -68,8 +67,7 @@ $iconCopiar = '/assets/icons/Task-Checklist--Streamline-Ultimate.png';
                         tabindex="-1"
                         aria-disabled="true"
                         data-title="Processo não cadastrado no sistema"
-                        aria-label="Processo não cadastrado no sistema"
-                        title="Processo não cadastrado no sistema">
+                        aria-label="Processo não cadastrado no sistema">
                         <img class="btn-mini-icon" src="<?php echo htmlspecialchars($iconAbrir, ENT_QUOTES, 'UTF-8'); ?>" alt="" width="20" height="20">
                     </div>
                 <?php endif; ?>
@@ -80,8 +78,7 @@ $iconCopiar = '/assets/icons/Task-Checklist--Streamline-Ultimate.png';
                         tabindex="0"
                         data-copy-numero-processo="<?php echo htmlspecialchars($numero, ENT_QUOTES, 'UTF-8'); ?>"
                         data-title="Copiar número do processo"
-                        aria-label="Copiar número do processo"
-                        title="Copiar número do processo">
+                        aria-label="Copiar número do processo">
                         <img class="btn-mini-icon" src="<?php echo htmlspecialchars($iconCopiar, ENT_QUOTES, 'UTF-8'); ?>" alt="" width="20" height="20">
                     </div>
                 <?php else: ?>
@@ -91,8 +88,7 @@ $iconCopiar = '/assets/icons/Task-Checklist--Streamline-Ultimate.png';
                         tabindex="-1"
                         aria-disabled="true"
                         data-title="Copiar número do processo"
-                        aria-label="Copiar número do processo"
-                        title="Copiar número do processo">
+                        aria-label="Copiar número do processo">
                         <img class="btn-mini-icon" src="<?php echo htmlspecialchars($iconCopiar, ENT_QUOTES, 'UTF-8'); ?>" alt="" width="20" height="20">
                     </div>
                 <?php endif; ?>
