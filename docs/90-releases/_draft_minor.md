@@ -11,4 +11,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(cartorio): enhance process number handling and UI validation** `[3aebd7e7]`
 - **feat(repository): add methods to fetch recent movements and active prisoners with review dates** `[8980a9bd]`
 - **feat(GabineteReusPresosRevisaoEmailService): update email content and add generation timestamp** `[e71d0ba4]`
+- **feat(GabineteReusPresosRevisaoEmailService): enhance email styling and add urgency check for review dates** `[3560cf4a]`
 
