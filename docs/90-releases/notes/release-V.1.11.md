@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 01 de abril de 2026
+**Data de Lançamento:** 13 de maio de 2026
 
 # V. 1.11
 
-> feat: add deployment host preparation step and refactor environment variable usage in workflows
+> refactor: integrate ProcessoBlocoListagemHelper for enhanced data handling
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **feat: add deployment host preparation step and refactor environment variable usage in workflows** `[4513bf4]`
+- **refactor: integrate ProcessoBlocoListagemHelper for enhanced data handling** `[88cd8f48]`
 
 ---
 

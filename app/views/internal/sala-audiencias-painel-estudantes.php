@@ -315,7 +315,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                         <span class="major-info"><?php echo htmlspecialchars($horaExibicao, ENT_QUOTES, 'UTF-8'); ?></span>
                         </div>
                     </div>
-                    <div class="col width-400 col-process">
+                    <div class="col width-500 col-process">
                         <?php include __DIR__ . '/_processo_bloco_listagem.php'; ?>
                     </div>
                     <div class="col width-400">

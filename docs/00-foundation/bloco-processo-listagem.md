@@ -60,6 +60,13 @@ Subáreas:
 
 ---
 
+## Largura da coluna (padrão único)
+
+- Envolva o partial sempre com **`class="col width-500 col-process"`** (tokens de `public/assets/css/shared/form.css`). Não usar `width-400` ou outras larguras para esta coluna: o bloco fica com largura visual diferente das demais listagens.
+- Em `processo-bloco-listagem.css`, a regra **`.col.width-500.col-process { flex-shrink: 0; }`** evita que a coluna encolha quando a linha usa `flex-wrap` (ex.: painel em tempo real).
+
+---
+
 ## Tooltips (contrato único)
 
 **Mecanismo:** CSS em `processo-bloco-listagem.css` — classe `.processo-bloco-tooltip` + atributo **`data-title`**; conteúdo exibido via `::after` no hover.
@@ -118,8 +125,9 @@ O CSS assume que cada **linha** da lista tem um ancestral com **`.register[data-
    - `include` de `_internal_head_styles.php` (já padrão nas internas);
    - link para `processo-bloco-listagem.css` com `?v=filemtime(...)`;
    - `include` de `_toast_script.php` se a página usar toast a partir de JS compartilhado.
-3. **View (linha da tabela):**  
-   `<?php include __DIR__ . '/_processo_bloco_listagem.php'; ?>`  
+3. **View (linha da tabela):** envolver o partial em  
+   `<div class="col width-500 col-process">` … `</div>`  
+   e depois `<?php include __DIR__ . '/_processo_bloco_listagem.php'; ?>`  
    com `$row` definido no escopo do `foreach`.
 4. **View (final do `body`):**  
    - `include` de `_copy_process_script.php`;  

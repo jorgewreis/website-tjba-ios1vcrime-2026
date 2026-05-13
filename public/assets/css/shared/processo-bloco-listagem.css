@@ -19,6 +19,12 @@
     font-family: inherit;
 }
 
+/* Coluna padrão do bloco: `.col.width-500.col-process` (form.css). Evita encolher em linhas com flex-wrap (painéis em tempo real). */
+.col.width-500.col-process {
+    flex-shrink: 0;
+    box-sizing: border-box;
+}
+
 .container-processo .main-processo {
     position: relative;
     width: 100%;
