@@ -73,7 +73,7 @@
     margin-right: 5px;
 }
 
-.container-processo .main-processo .right .prioridades .prioridade-chip {
+.container-processo .main-processo .right .prioridades .btn-micro {
     width: 20px;
     height: 20px;
     display: flex;
@@ -81,9 +81,10 @@
     flex-wrap: nowrap;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
 }
 
-.container-processo .main-processo .right .prioridades .prioridade-chip .prioridade-chip-icon {
+.container-processo .main-processo .right .prioridades .btn-micro .btn-micro-icon {
     width: 14px;
     height: 14px;
 }
@@ -204,6 +205,10 @@
 }
 
 .container-processo .processo-bloco-tooltip.processo-bloco-tooltip--btn {
+    cursor: pointer;
+}
+
+.container-processo .main-processo .right .prioridades .btn-micro.processo-bloco-tooltip {
     cursor: pointer;
 }
 

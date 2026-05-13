@@ -36,9 +36,9 @@ $iconCopiar = '/assets/icons/Task-Checklist--Streamline-Ultimate.png';
                         continue;
                     }
                     ?>
-                    <span class="prioridade-chip processo-bloco-tooltip" data-title="<?php echo htmlspecialchars($plabel, ENT_QUOTES, 'UTF-8'); ?>" role="img" aria-label="<?php echo htmlspecialchars($plabel, ENT_QUOTES, 'UTF-8'); ?>">
-                        <img class="prioridade-chip-icon" src="<?php echo htmlspecialchars($picon, ENT_QUOTES, 'UTF-8'); ?>" alt="" width="14" height="14">
-                    </span>
+                    <div class="btn-micro tooltip processo-bloco-tooltip" data-title="<?php echo htmlspecialchars($plabel, ENT_QUOTES, 'UTF-8'); ?>" role="img" aria-label="<?php echo htmlspecialchars($plabel, ENT_QUOTES, 'UTF-8'); ?>">
+                        <img class="btn-micro-icon" src="<?php echo htmlspecialchars($picon, ENT_QUOTES, 'UTF-8'); ?>" alt="" width="14" height="14">
+                    </div>
                 <?php endforeach; ?>
             </div>
         </div>

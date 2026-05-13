@@ -113,14 +113,16 @@ final class ProcessoBlocoListagemHelper
                     $cl = $classePorId[$cid];
                     $cod = trim((string) ($cl['codigo'] ?? ''));
                     $nom = trim((string) ($cl['nome'] ?? ''));
-                    if ($cod !== '' && $nom !== '') {
-                        $classeTexto = $cod . ' - ' . $nom;
-                    } elseif ($nom !== '') {
-                        $classeTexto = $nom;
+                    if ($nom === '' || !ClasseProcessualListagemHelper::temDestaqueListagem($nom)) {
+                        $classeTexto = 'Classe não cadastrada';
+                        $classeNot = true;
                     } elseif ($cod !== '') {
-                        $classeTexto = $cod;
+                        $classeTexto = $cod . ' - ' . $nom;
+                        $classeNot = false;
+                    } else {
+                        $classeTexto = $nom;
+                        $classeNot = false;
                     }
-                    $classeNot = $classeTexto === '';
                 } elseif ($cid !== '') {
                     $classeTexto = 'Classe não cadastrada';
                     $classeNot = true;
@@ -130,8 +132,13 @@ final class ProcessoBlocoListagemHelper
                 }
             } else {
                 $rawClasse = (string) ($row['classe_processo'] ?? '');
-                $classeTexto = ClasseProcessualListagemHelper::textoListagem($rawClasse);
-                $classeNot = !ClasseProcessualListagemHelper::temDestaqueListagem($rawClasse);
+                if (ClasseProcessualListagemHelper::temDestaqueListagem($rawClasse)) {
+                    $classeTexto = trim($rawClasse);
+                    $classeNot = false;
+                } else {
+                    $classeTexto = 'Classe não cadastrada';
+                    $classeNot = true;
+                }
             }
 
             $priorRows = $rid !== '' ? ($prioridadesPorProcesso[$rid] ?? []) : [];
