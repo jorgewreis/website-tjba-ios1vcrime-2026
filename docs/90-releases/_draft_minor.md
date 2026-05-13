@@ -6,4 +6,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 - **feat(cartorio): add 'Certidão de Cumprimento' functionality** `[6f6dc81f]`
 - **feat(cartorio): add repository method to find user ID for productivity task creation** `[1ed087ef]`
+- **feat(ProcessoClasseSyncService): implement priority handling for Medida Protetiva class** `[687d9390]`
 
