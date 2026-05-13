@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.98.0008
+
+**Data:** 2026-05-13 10:31:33 | **Commit:** `3560cf4a` | **Tipo:** `patch`
+
+- feat(GabineteReusPresosRevisaoEmailService): enhance email styling and add urgency check for review dates
+
 ## V. 1.98.0007
 
 **Data:** 2026-05-13 10:23:42 | **Commit:** `e71d0ba4` | **Tipo:** `patch`
@@ -5358,6 +5364,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

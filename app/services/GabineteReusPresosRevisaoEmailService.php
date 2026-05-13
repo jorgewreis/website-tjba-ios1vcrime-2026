@@ -149,16 +149,24 @@ final class GabineteReusPresosRevisaoEmailService
                 $dataPrisaoRaw = trim((string) ($row['principal_data_prisao'] ?? ''));
                 $dataPrisao = $this->formatDateBr($dataPrisaoRaw);
                 $tempoPrisao = $this->helperService->formatDuracaoCustodia($dataPrisaoRaw !== '' ? $dataPrisaoRaw : null);
-                $proxima = $this->formatDateBr((string) ($row['proxima_revisao'] ?? ''));
+                $proximaRaw = trim((string) ($row['proxima_revisao'] ?? ''));
+                $proxima = $this->formatDateBr($proximaRaw);
+                $proximaTdStyle = 'border:1px solid #dcdcdc;padding:8px;vertical-align:top;font-weight:600;';
+                if ($this->isProximaRevisaoUrgenteParaEmail($proximaRaw)) {
+                    $proximaTdStyle .= 'color:crimson;';
+                }
                 $decisoes = $this->buildDecisoesHtml($decisoesPorReu[$rid] ?? []);
                 $ultimaMov = $this->formatUltimaMovHtml((string) ($row['ultima_mov_raw'] ?? ''));
 
+                $tdNome = 'border:1px solid #dcdcdc;padding:8px;vertical-align:top;font-weight:600;';
+                $tdProcesso = 'border:1px solid #dcdcdc;padding:8px;vertical-align:top;font-weight:600;';
+
                 $linhas .= '<tr>'
-                    . '<td style="border:1px solid #dcdcdc;padding:8px;vertical-align:top;">' . $nome . '</td>'
-                    . '<td style="border:1px solid #dcdcdc;padding:8px;vertical-align:top;">' . $this->escape($processo) . '</td>'
+                    . '<td style="' . $tdNome . '">' . $nome . '</td>'
+                    . '<td style="' . $tdProcesso . '">' . $this->escape($processo) . '</td>'
                     . '<td style="border:1px solid #dcdcdc;padding:8px;vertical-align:top;">' . $this->escape($dataPrisao) . '</td>'
                     . '<td style="border:1px solid #dcdcdc;padding:8px;vertical-align:top;">' . $this->escape($tempoPrisao) . '</td>'
-                    . '<td style="border:1px solid #dcdcdc;padding:8px;vertical-align:top;">' . $this->escape($proxima) . '</td>'
+                    . '<td style="' . $proximaTdStyle . '">' . $this->escape($proxima) . '</td>'
                     . '</tr>'
                     . '<tr>'
                     . '<td colspan="3" style="border:1px solid #dcdcdc;padding:8px;vertical-align:top;background:#fafafa;">' . $decisoes . '</td>'
@@ -196,10 +204,6 @@ final class GabineteReusPresosRevisaoEmailService
                             <th style="border:1px solid #dcdcdc;padding:8px;text-align:left;">Data da prisão</th>
                             <th style="border:1px solid #dcdcdc;padding:8px;text-align:left;">Tempo de prisão</th>
                             <th style="border:1px solid #dcdcdc;padding:8px;text-align:left;">Próxima reavaliação</th>
-                        </tr>
-                        <tr style="background:#eaeaea;">
-                            <th colspan="3" style="border:1px solid #dcdcdc;padding:8px;text-align:left;font-size:11px;">Datas das últimas decisões</th>
-                            <th colspan="2" style="border:1px solid #dcdcdc;padding:8px;text-align:left;font-size:11px;">Última movimentação</th>
                         </tr>
                     </thead>
                     <tbody>' . $linhas . '</tbody>
@@ -338,6 +342,31 @@ final class GabineteReusPresosRevisaoEmailService
         }
 
         return nl2br($this->escape($linha), false);
+    }
+
+    /**
+     * Data de reavaliação em destaque (crimson) no e-mail: vencida ou nos próximos 5 dias (inclusive hoje).
+     */
+    private function isProximaRevisaoUrgenteParaEmail(string $proximaYmd): bool
+    {
+        $proximaYmd = trim($proximaYmd);
+        if ($proximaYmd === '') {
+            return false;
+        }
+        $t = strtotime($proximaYmd);
+        if ($t === false) {
+            return false;
+        }
+        $hoje = strtotime('today');
+        if ($hoje === false) {
+            return false;
+        }
+        $diffDays = (int) floor(($t - $hoje) / 86400);
+        if ($diffDays < 0) {
+            return true;
+        }
+
+        return $diffDays <= 5;
     }
 
     private function formatDateBr(string $date): string
