@@ -8,4 +8,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(cartorio): add repository method to find user ID for productivity task creation** `[1ed087ef]`
 - **feat(ProcessoClasseSyncService): implement priority handling for Medida Protetiva class** `[687d9390]`
 - **feat(InternoProdutividadeAutoHelper): add optional 'numeroProcesso' parameter and update related views** `[31fa97ef]`
+- **feat(cartorio): enhance process number handling and UI validation** `[3aebd7e7]`
 
