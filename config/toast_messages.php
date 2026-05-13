@@ -434,13 +434,13 @@ return [
         'interno.produtividade.consulta_processos_lista.ponto' => [
             'type' => 'info',
             'title' => 'Produtividade',
-            'message' => 'Esta consulta de processos (listagem) registrou +1 ponto de produtividade.',
+            'message' => 'Esta consulta de processo registrou +1 ponto de produtividade.',
             'vars' => [],
         ],
         'interno.produtividade.consulta_processos_detalhe.ponto' => [
             'type' => 'info',
             'title' => 'Produtividade',
-            'message' => 'Esta consulta de processo (detalhe) registrou +1 ponto de produtividade.',
+            'message' => 'Esta consulta de processo registrou +1 ponto de produtividade.',
             'vars' => [],
         ],
         'interno.produtividade.audiencia_parte_cadastro.ponto' => [

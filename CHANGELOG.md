@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.98.0004
+
+**Data:** 2026-05-13 09:11:34 | **Commit:** `31fa97ef` | **Tipo:** `patch`
+
+- feat(InternoProdutividadeAutoHelper): add optional 'numeroProcesso' parameter and update related views
+
 ## V. 1.98.0003
 
 **Data:** 2026-05-13 08:34:58 | **Commit:** `687d9390` | **Tipo:** `patch`
@@ -5334,6 +5340,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -32,10 +32,11 @@ final class InternoProdutividadeAutoHelper
      * @param string $ruleKey        chave em app/config/interno-produtividade-regras.php
      * @param string $referenciaItemId identificador curto para dedupe (hash inclui minuto no serviço)
      * @param string $observacoes      texto para listagem (opcional)
+     * @param string $numeroProcesso   número CNJ ou equivalente gravado em `produtividade_lancamentos.numero_processo` (opcional)
      *
      * @return array{created: bool, toast_key: string|null}
      */
-    public static function tryRegistrar(PDO $connection, string $usuarioId, string $ruleKey, string $referenciaItemId, string $observacoes = ''): array
+    public static function tryRegistrar(PDO $connection, string $usuarioId, string $ruleKey, string $referenciaItemId, string $observacoes = '', string $numeroProcesso = ''): array
     {
         $usuarioId = trim($usuarioId);
         $referenciaItemId = trim($referenciaItemId);
@@ -79,6 +80,10 @@ final class InternoProdutividadeAutoHelper
             ];
             if ($obs !== '') {
                 $payload['observacoes'] = $obs;
+            }
+            $np = trim($numeroProcesso);
+            if ($np !== '') {
+                $payload['numero_processo'] = $np;
             }
             $result = $service->registrarAuto($usuarioId, $payload);
             if (!empty($result['created'])) {

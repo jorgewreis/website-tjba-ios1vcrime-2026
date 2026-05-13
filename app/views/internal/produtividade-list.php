@@ -493,11 +493,23 @@ $exportPdfHref = '/api/produtividade/export-pdf.php?' . http_build_query($export
                 $pontosFmtLinha = number_format($pontosLinha, 2, ',', '.');
                 $pontosUnidadeLinha = abs($pontosLinha - 1.0) < 0.000001 ? 'pt' : 'pts';
                 $dataFmtLinha = date('d/m/Y H:i', strtotime((string) ($row['data_hora_ato'] ?? 'now')));
-                $tarefaPontosLinha = (string) ($descricaoTarefa ?? '') . $qtdSufixoLinha . ' - ' . $pontosFmtLinha . ' ' . $pontosUnidadeLinha;
+                $omitPontosUm = (abs($pontosLinha - 1.0) < 0.000001 && $qtdLinha === 1);
+                $pontosSufixoLinha = $omitPontosUm ? '' : (' - ' . $pontosFmtLinha . ' ' . $pontosUnidadeLinha);
+                $baseDescTarefa = (string) ($descricaoTarefa ?? '') . $qtdSufixoLinha;
+                $tarefaPontosLinha = $baseDescTarefa . $pontosSufixoLinha;
                 $usuarioLinha = (string) ($row['usuario_nome'] ?? $row['usuario_id'] ?? '');
-                $linhaLancamento = $temProcessoLinha
-                    ? ($dataFmtLinha . ' | ' . $npLinha . ' | ' . $tarefaPontosLinha . ' | ' . $usuarioLinha)
-                    : ($dataFmtLinha . ' | ' . $tarefaPontosLinha . ' | ' . $usuarioLinha);
+                $isConsultaProcessoCompact = $tipoLan === 'automatico'
+                    && ($sistemaModulo === 'consultas-processos-lista' || $sistemaModulo === 'consultas-processos-detalhe');
+                if ($isConsultaProcessoCompact) {
+                    $labConsulta = $obsRow !== '' ? $obsRow : 'Consulta processo';
+                    $npSegConsulta = $npLinha !== '' ? $npLinha : '—';
+                    $meioLinha = $labConsulta . $pontosSufixoLinha;
+                    $linhaLancamento = $dataFmtLinha . ' | ' . $npSegConsulta . ' | ' . $meioLinha . ' | ' . $usuarioLinha;
+                } else {
+                    $linhaLancamento = $temProcessoLinha
+                        ? ($dataFmtLinha . ' | ' . $npLinha . ' | ' . $tarefaPontosLinha . ' | ' . $usuarioLinha)
+                        : ($dataFmtLinha . ' | ' . $tarefaPontosLinha . ' | ' . $usuarioLinha);
+                }
                 ?>
                 <div class="display-flex col col-full register border-bottom">
                     <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">

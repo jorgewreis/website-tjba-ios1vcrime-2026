@@ -49,7 +49,8 @@ if ($filtrou) {
                 $uidProc,
                 'consulta_processos_list',
                 $refProc,
-                'Consulta de processos (listagem).'
+                'Consulta processo',
+                $numeroFilter
             );
             if (!empty($prodProc['toast_key'])) {
                 $internoProdutividadeToastKey = $prodProc['toast_key'];

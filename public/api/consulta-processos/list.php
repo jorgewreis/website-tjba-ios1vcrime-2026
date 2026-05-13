@@ -52,7 +52,8 @@ try {
                 $uid,
                 'consulta_processos_list',
                 $ref,
-                'Consulta de processos (listagem).'
+                'Consulta processo',
+                $numero
             );
             if (!empty($prodRes['toast_key'])) {
                 $response['produtividade_toast_key'] = $prodRes['toast_key'];

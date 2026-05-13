@@ -31,12 +31,14 @@ try {
     $toastKeyProc = null;
     if ($uid !== '') {
         $ref = 'cg:' . strtoupper(substr(hash('sha256', $id), 0, 20));
+        $numeroProc = trim((string) ($processo['numero_processo'] ?? ''));
         $prodRes = InternoProdutividadeAutoHelper::tryRegistrar(
             $connection,
             $uid,
             'consulta_processos_get',
             $ref,
-            'Consulta de processo (detalhe).'
+            'Consulta processo',
+            $numeroProc
         );
         if (!empty($prodRes['toast_key'])) {
             $toastKeyProc = $prodRes['toast_key'];
