@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.98.0010
+
+**Data:** 2026-05-13 10:56:49 | **Commit:** `1f102a5b` | **Tipo:** `patch`
+
+- feat(gabinete-reus-presos): update scheduling instructions for email notifications
+
 ## V. 1.98.0009
 
 **Data:** 2026-05-13 10:45:49 | **Commit:** `308a1f13` | **Tipo:** `patch`
@@ -5370,6 +5376,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

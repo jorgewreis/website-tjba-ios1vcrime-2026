@@ -2,11 +2,17 @@
 declare(strict_types=1);
 
 /**
- * Exemplo de agendamento (sexta às 17:00):
- * - Linux cron: 0 17 * * 5 php /caminho/absoluto/scripts/send-gabinete-reus-presos-revisao-email.php
- * - Windows Task Scheduler: weekly Friday 17:00, action:
- *   Program/script: php
- *   Add arguments: C:\caminho\absoluto\scripts\send-gabinete-reus-presos-revisao-email.php
+ * Agendamento padrão desejado: toda quinta-feira às 18:00.
+ *
+ * Instalação automática do agendamento no SO:
+ * - Windows (PowerShell como administrador, uma vez):
+ *   scripts\register-gabinete-reus-presos-revisao-email-schedule.ps1
+ * - Linux (uma vez, ajuste o usuário do cron se precisar):
+ *   bash scripts/install-cron-gabinete-reus-presos-revisao-email.sh
+ *
+ * Manual (referência):
+ * - Linux cron: 0 18 * * 4 cd /caminho/absoluto/do/repo && /usr/bin/php scripts/send-gabinete-reus-presos-revisao-email.php
+ * - Windows: Agendador de Tarefas — semanal, quinta, 18:00 — php com argumento = caminho absoluto deste arquivo.
  */
 
 require_once __DIR__ . '/../app/helpers/Conection.php';
