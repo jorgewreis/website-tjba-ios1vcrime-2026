@@ -3,11 +3,13 @@ declare(strict_types=1);
 
 /**
  * Instala no crontab do usuario atual: quinta-feira 18:00 (Linux).
- * Preferir este script em vez do .sh quando o Bash acusar "No such file or directory"
- * (geralmente CRLF no shebang) ou quando o .sh nao existir no deploy.
+ * Nao use `php install-....sh` — isso nao executa Bash; use este arquivo .php.
  *
- * Na raiz do repositorio:
- *   php scripts/install-cron-gabinete-reus-presos-revisao-email.php
+ * Layout canonico (raiz = pasta com config/ e scripts/):
+ *   cd /path/apps && php scripts/install-cron-gabinete-reus-presos-revisao-email.php
+ *
+ * Deploy legado (scripts dentro de public/scripts):
+ *   cd /path/apps/public/scripts && php install-cron-gabinete-reus-presos-revisao-email.php
  */
 
 if (PHP_SAPI !== 'cli') {
@@ -15,19 +17,33 @@ if (PHP_SAPI !== 'cli') {
     exit(1);
 }
 
-$root = dirname(__DIR__);
+$installDir = __DIR__;
+$parentDir = dirname($installDir);
+$isPublicScripts = basename($installDir) === 'scripts' && basename($parentDir) === 'public';
+$root = $isPublicScripts ? dirname($parentDir) : $parentDir;
+
 $config = $root . '/config/config.php';
-$sendScript = $root . '/scripts/send-gabinete-reus-presos-revisao-email.php';
+$sendScript = $installDir . '/send-gabinete-reus-presos-revisao-email.php';
+if (!is_file($sendScript)) {
+    $sendScript = $root . '/scripts/send-gabinete-reus-presos-revisao-email.php';
+}
+if (!is_file($sendScript)) {
+    $sendScript = $root . '/public/scripts/send-gabinete-reus-presos-revisao-email.php';
+}
+
 $logFile = $root . '/storage/logs/reus-presos-revisao-cron.log';
 $marker = '#tjba-reus-presos-revisao-email';
 
+if ($isPublicScripts) {
+    fwrite(STDERR, "Aviso: instalador em public/scripts. Recomendado mover scripts/ para fora de public/ (seguranca).\n");
+}
+
 if (!is_file($config)) {
     fwrite(STDERR, "Erro: raiz invalida (nao achei config/config.php em {$root}).\n");
-    fwrite(STDERR, "Execute a partir da pasta do app (ex.: cd /home/.../htdocs/apps).\n");
     exit(1);
 }
 if (!is_file($sendScript)) {
-    fwrite(STDERR, "Erro: nao encontrado: {$sendScript}\n");
+    fwrite(STDERR, "Erro: nao encontrei send-gabinete-reus-presos-revisao-email.php (instalador em {$installDir}).\n");
     exit(1);
 }
 
