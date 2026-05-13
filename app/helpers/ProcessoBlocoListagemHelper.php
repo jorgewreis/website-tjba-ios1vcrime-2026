@@ -19,12 +19,43 @@ final class ProcessoBlocoListagemHelper
     private const ICON_VD_ALERTA = '/assets/icons/Police-Rotating-Light-1--Streamline-Ultimate.png';
     private const ICON_DEFAULT = '/assets/icons/Road-Sign-Warning-Alternate--Streamline-Ultimate.png';
 
+    /**
+     * Garante `numero_processo` e `classe_processo` esperados por {@see appendBlocoData()}
+     * quando a listagem usa aliases (`Processo`, `ClasseNome`, `Classe`).
+     *
+     * @param array<string, mixed> $row
+     * @return array<string, mixed>
+     */
+    private static function normalizeRowKeysForBloco(array $row): array
+    {
+        $numero = trim((string) ($row['numero_processo'] ?? ''));
+        if ($numero === '') {
+            $disp = trim((string) ($row['Processo'] ?? ''));
+            if ($disp !== '' && $disp !== '—' && $disp !== '–') {
+                $row['numero_processo'] = $disp;
+            }
+        }
+        if (trim((string) ($row['classe_processo'] ?? '')) === '') {
+            foreach (['ClasseNome', 'Classe'] as $k) {
+                $c = trim((string) ($row[$k] ?? ''));
+                if ($c !== '') {
+                    $row['classe_processo'] = $c;
+                    break;
+                }
+            }
+        }
+
+        return $row;
+    }
+
     /** @param list<array<string, mixed>> $rows */
     public static function appendBlocoData(PDO $connection, array $rows): array
     {
         if ($rows === []) {
             return $rows;
         }
+
+        $rows = array_map([self::class, 'normalizeRowKeysForBloco'], $rows);
 
         $processosRepo = new ProcessosRepository($connection);
         $classesRepo = new ClassesRepository($connection);
@@ -218,5 +249,24 @@ final class ProcessoBlocoListagemHelper
             'violencia_domestica', 'crianca_adolescente' => self::ICON_VD_ALERTA,
             default => self::ICON_DEFAULT,
         };
+    }
+
+    /**
+     * Mascara o número CNJ preservando ano, segmento, tribunal e unidade
+     * (`*******-**.AAAA.J.TR.OOOO`); usado em listagens de estudantes para
+     * processos sigilosos. O segredo é o identificador sequencial.
+     */
+    public static function mascararNumeroProcessoSigiloso(string $numero): string
+    {
+        $digits = preg_replace('/\D+/', '', $numero) ?? '';
+        if (strlen($digits) !== 20) {
+            return '*******-**.****.*.**.****';
+        }
+
+        return '*******-**.'
+            . substr($digits, 9, 4) . '.'
+            . substr($digits, 13, 1) . '.'
+            . substr($digits, 14, 2) . '.'
+            . substr($digits, 16, 4);
     }
 }

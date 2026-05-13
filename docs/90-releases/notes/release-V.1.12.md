@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 01 de abril de 2026
+**Data de Lançamento:** 13 de maio de 2026
 
 # V. 1.12
 
-> refactor: remove debug options from deployment workflows for cleaner execution
+> refactor: update column width for processo bloco listing to ensure consistent layout
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **refactor: remove debug options from deployment workflows for cleaner execution** `[6ddccac]`
+- **refactor: update column width for processo bloco listing to ensure consistent layout** `[fa31dc32]`
 
 ---
 

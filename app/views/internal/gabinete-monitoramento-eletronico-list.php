@@ -8,7 +8,7 @@ if (function_exists('mb_internal_encoding')) {
 
 require_once __DIR__ . '/../../services/GabineteMonitoramentoEletronicoService.php';
 require_once __DIR__ . '/../../repositories/GabineteMonitoramentoEletronicoSubtarefasRepository.php';
-require_once __DIR__ . '/../../helpers/ClasseProcessualListagemHelper.php';
+require_once __DIR__ . '/../../helpers/ProcessoBlocoListagemHelper.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -42,6 +42,7 @@ try {
 }
 
 $rows = $listResult['rows'] ?? [];
+$rows = ProcessoBlocoListagemHelper::appendBlocoData($connection, $rows);
 $totalDocuments = (int) ($listResult['total'] ?? 0);
 
 if ($totalDocuments === 0) {
@@ -130,6 +131,7 @@ $statusLabelUi = static function (string $s): string {
         <title>Monitoramento Eletrônico - Gabinete</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <?php include __DIR__ . '/_internal_head_styles.php'; ?>
+        <link rel="stylesheet" href="/assets/css/shared/processo-bloco-listagem.css?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/css/shared/processo-bloco-listagem.css') ?: time(); ?>">
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
         <?php include __DIR__ . '/_toast_script.php'; ?>
         <?php include __DIR__ . '/_copy_process_script.php'; ?>
@@ -261,18 +263,12 @@ $statusLabelUi = static function (string $s): string {
         <?php if (!empty($rows)): ?>
             <?php foreach ($rows as $row):
                 $idMon = (string) ($row['IdMon'] ?? '');
-                $numSeq = (int) ($row['NumeroSeq'] ?? 0);
-                $ano = (int) ($row['Ano'] ?? 0);
-                $nAno = $numSeq . '/' . $ano;
                 $subtarefas = $row['Subtarefas'] ?? [];
                 $allSt = $row['SubtarefasAll'] ?? [];
                 $statusTarefa = (string) ($row['Status'] ?? '');
                 $tarefaCancelada = ($statusTarefa === 'cancelada');
                 $tarefaFinalizada = ($statusTarefa === 'finalizada');
                 $duracaoLabel = (string) ($row['DuracaoLabel'] ?? '—');
-                $classeRawGme = (string) ($row['ClasseNome'] ?? '');
-                $classeNome = ClasseProcessualListagemHelper::textoListagem($classeRawGme);
-                $classeNomeClass = ClasseProcessualListagemHelper::classesSpanMinor($classeRawGme);
 
                 $progressStatuses = ['pendente', 'pendente'];
                 foreach ($allSt as $s) {
@@ -337,9 +333,8 @@ $statusLabelUi = static function (string $s): string {
                             </label>
                         </div>
                         <?php endif; ?>                        
-                        <div class="col width-600 col-process process-info" title="Clique para copiar">
-                            <span class="<?php echo $classeNomeClass; ?>" title="<?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?>"><?php echo htmlspecialchars($classeNome); ?></span>
-                            <span class="major-info"><?php echo htmlspecialchars((string) ($row['Processo'] ?? '')); ?></span>
+                        <div class="col width-500 col-process">
+                            <?php include __DIR__ . '/_processo_bloco_listagem.php'; ?>
                         </div>
                         <div class="col width-600 col-reu" title="Clique para copiar">
                             <span class="minor-info">Réu</span>

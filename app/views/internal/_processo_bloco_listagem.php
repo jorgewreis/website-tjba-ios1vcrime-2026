@@ -6,12 +6,28 @@ declare(strict_types=1);
  *
  * Espera linha enriquecida por ProcessoBlocoListagemHelper::appendBlocoData().
  *
+ * Variantes opcionais (definidas no escopo do include):
+ * - $processo_bloco_variant = 'estudantes': listagens de estudantes.
+ *     - Oculta o rodapé direito (botões abrir/copiar);
+ *     - Mascara o número do processo quando $row['processo_sigiloso'] for verdadeiro.
+ *   Após definida, a variável é "sticky" (persiste para os próximos includes do
+ *   mesmo escopo); cada view de estudantes a define uma única vez antes do
+ *   foreach que usa este partial. Demais views nunca devem defini-la.
+ *
  * Documentação (foundation): docs/00-foundation/bloco-processo-listagem.md
  *
  * @var array<string, mixed> $row
  */
 
+$processoBlocoVariant = isset($processo_bloco_variant) ? (string) $processo_bloco_variant : '';
+$processoBlocoIsEstudantes = ($processoBlocoVariant === 'estudantes');
+$processoBlocoHideActions = $processoBlocoIsEstudantes;
+
 $numero = trim((string) ($row['numero_processo'] ?? ''));
+if ($processoBlocoIsEstudantes && $numero !== '' && !empty($row['processo_sigiloso'])) {
+    require_once __DIR__ . '/../../helpers/ProcessoBlocoListagemHelper.php';
+    $numero = ProcessoBlocoListagemHelper::mascararNumeroProcessoSigiloso($numero);
+}
 $classeTexto = trim((string) ($row['bloco_processo_classe_texto'] ?? ''));
 $classeNot = !empty($row['bloco_processo_classe_not']);
 $assuntoTexto = trim((string) ($row['bloco_processo_assunto_texto'] ?? 'Assunto não cadastrado'));
@@ -50,6 +66,7 @@ $iconCopiar = '/assets/icons/Task-Checklist--Streamline-Ultimate.png';
             <div class="processo-classe<?php echo $classeNot ? ' not' : ' processo-bloco-tooltip'; ?>"<?php if (!$classeNot && $classeTexto !== ''): ?> data-title="<?php echo htmlspecialchars($classeTexto, ENT_QUOTES, 'UTF-8'); ?>"<?php endif; ?>><span class="processo-bloco-text-ellipsis"><?php echo htmlspecialchars($classeTexto, ENT_QUOTES, 'UTF-8'); ?></span></div>
             <div class="processo-assunto<?php echo $assuntoNot ? ' not' : ' processo-bloco-tooltip'; ?>"<?php if (!$assuntoNot && $assuntoTexto !== ''): ?> data-title="<?php echo htmlspecialchars($assuntoTexto, ENT_QUOTES, 'UTF-8'); ?>"<?php endif; ?>><span class="processo-bloco-text-ellipsis"><?php echo htmlspecialchars($assuntoTexto, ENT_QUOTES, 'UTF-8'); ?></span></div>
         </div>
+        <?php if (!$processoBlocoHideActions): ?>
         <div class="right">
             <div class="buttons">
                 <?php if (!$abrirDisabled && $abrirHref !== ''): ?>
@@ -96,5 +113,6 @@ $iconCopiar = '/assets/icons/Task-Checklist--Streamline-Ultimate.png';
                 <?php endif; ?>
             </div>
         </div>
+        <?php endif; ?>
     </div>
 </div>

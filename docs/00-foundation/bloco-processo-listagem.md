@@ -104,6 +104,23 @@ Subáreas:
 
 ---
 
+## Variantes do partial (uso opcional)
+
+O partial `_processo_bloco_listagem.php` aceita uma variável **opcional** no escopo do `include`:
+
+| Variável | Valor | Efeito |
+|----------|-------|--------|
+| `$processo_bloco_variant` | `'estudantes'` | (1) Oculta o rodapé direito do bloco — sem botão "Abrir processo" e sem botão "Copiar número". (2) Quando `$row['processo_sigiloso']` for verdadeiro, mascara o número do processo via `ProcessoBlocoListagemHelper::mascararNumeroProcessoSigiloso()`, preservando ano/segmento/tribunal/unidade (`*******-**.AAAA.J.TR.OOOO`). |
+
+**Regras:**
+
+- Apenas telas voltadas a estudantes (`sala-audiencias-pauta-list-estudantes.php`, `sala-audiencias-painel-estudantes.php`, `sala-audiencias-atas-estudantes.php`) definem `$processo_bloco_variant = 'estudantes';` **uma única vez antes do `foreach`** que inclui o partial.
+- A variável é "sticky": após definida, vale para todos os `include` no mesmo escopo. Demais views **não** devem definir essa variável.
+- A máscara é aplicada também na exportação de `estudapauta` em `InternalListExportHandlers::salaPautaEstudantes()`, mantendo coerência entre tela e download.
+- O fluxo de cópia/abrir continua disponível para as demais listagens (cartório, gabinete, sala-mídias, pauta cartorial), pois elas não definem a variante.
+
+---
+
 ## Rodapé: visibilidade dos mini botões (hover da linha)
 
 O CSS assume que cada **linha** da lista tem um ancestral com **`.register[data-midia-id]`** (ex.: sala de mídias). Enquanto o ponteiro ou foco estiver na linha:

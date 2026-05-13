@@ -65,6 +65,7 @@ final class InternalListExportHandlers
             'cartasrecebidas' => [self::class, 'cartasRecebidas'],
             'salapauta' => [self::class, 'salaPauta'],
             'salapainel' => [self::class, 'salaPauta'],
+            'estudapauta' => [self::class, 'salaPautaEstudantes'],
             'salaata' => [self::class, 'salaAtas'],
             'consultapartes' => [self::class, 'consultaPartes'],
             'consultaprocessos' => [self::class, 'consultaProcessos'],
@@ -702,6 +703,61 @@ final class InternalListExportHandlers
                 ['key' => 'tipo_audiencia', 'label' => 'Tipo'],
                 ['key' => 'localizacao', 'label' => 'Local'],
                 ['key' => 'partes_cumprimento', 'label' => 'Partes'],
+            ],
+            'rows' => $out,
+        ];
+    }
+
+    /**
+     * Exportação restrita da pauta para estudantes: mesmas colunas visíveis no
+     * read-only de `sala-audiencias-pauta-list-estudantes.php`, com mascaramento
+     * do número CNJ em processos sigilosos e sem o detalhamento de partes.
+     *
+     * @param array<string, mixed> $get
+     */
+    private static function salaPautaEstudantes(PDO $pdo, string $userId, array $get): array
+    {
+        require_once __DIR__ . '/ProcessoBlocoListagemHelper.php';
+
+        $statusFilter = trim((string) ($get['status'] ?? ''));
+        if ($statusFilter === 'agendada') {
+            $statusFilter = 'designada';
+        }
+        if ($statusFilter === 'adiada') {
+            $statusFilter = 'redesignada';
+        }
+        $filters = [
+            'status' => $statusFilter,
+            'periodo' => trim((string) ($get['periodo'] ?? '')),
+            'tipo' => trim((string) ($get['tipo'] ?? '')),
+            'search' => trim((string) ($get['search'] ?? '')),
+        ];
+        $service = new SalaAudienciasPautaService($pdo);
+        $rows = $service->list($filters, self::MAX_ROWS, 0)['rows'] ?? [];
+        $out = [];
+        foreach ($rows as $r) {
+            $numero = (string) ($r['numero_processo'] ?? '');
+            if ($numero !== '' && !empty($r['processo_sigiloso'])) {
+                $numero = ProcessoBlocoListagemHelper::mascararNumeroProcessoSigiloso($numero);
+            }
+            $out[] = [
+                'data_audiencia' => $r['data_audiencia'] ?? '',
+                'hora_audiencia' => $r['hora_audiencia'] ?? '',
+                'numero_processo' => $numero,
+                'tipo_audiencia' => $r['tipo_audiencia'] ?? '',
+                'localizacao' => $r['localizacao'] ?? '',
+            ];
+        }
+
+        return [
+            'title' => 'Pauta de audiências (estudantes)',
+            'slug' => 'pauta-audiencias-estudantes',
+            'columns' => [
+                ['key' => 'data_audiencia', 'label' => 'Data'],
+                ['key' => 'hora_audiencia', 'label' => 'Hora'],
+                ['key' => 'numero_processo', 'label' => 'Processo'],
+                ['key' => 'tipo_audiencia', 'label' => 'Tipo'],
+                ['key' => 'localizacao', 'label' => 'Local'],
             ],
             'rows' => $out,
         ];

@@ -252,6 +252,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             <p class="description-page">Não há audiências cadastradas para hoje.</p>
         </div>
         <?php endif; ?>
+        <?php $processo_bloco_variant = 'estudantes'; ?>
         <?php foreach ($hojePageRows as $row):
             $idPautaRaw = trim((string) ($row['id_pauta'] ?? ''));
             $idPauta = htmlspecialchars($idPautaRaw, ENT_QUOTES, 'UTF-8');
@@ -408,6 +409,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             <p class="description-page">Nenhuma inscrição encontrada.</p>
         </div>
         <?php endif; ?>
+        <?php $processo_bloco_variant = 'estudantes'; ?>
         <?php foreach ($minhasPageRows as $m):
             $idPautaMinhasRaw = trim((string) ($m['pauta'] ?? ''));
             $stRow = (string) ($m['status'] ?? '');

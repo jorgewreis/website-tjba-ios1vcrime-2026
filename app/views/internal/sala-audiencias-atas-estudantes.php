@@ -172,6 +172,7 @@ if ($totalPages > 0) {
         </div>
         <?php endif; ?>
 
+        <?php $processo_bloco_variant = 'estudantes'; ?>
         <?php foreach ($rowsPage as $m):
             $arquivoRelEst = trim((string) ($m['arquivo_relativo'] ?? ''));
             $expira = trim((string) ($m['expires_at'] ?? ''));

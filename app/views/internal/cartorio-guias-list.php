@@ -9,7 +9,7 @@ if (function_exists('mb_internal_encoding')) {
 require_once __DIR__ . '/../../services/GuiasService.php';
 require_once __DIR__ . '/../../repositories/GuiasSubtarefasRepository.php';
 require_once __DIR__ . '/../../helpers/CartorioAlocacaoChipHelper.php';
-require_once __DIR__ . '/../../helpers/ClasseProcessualListagemHelper.php';
+require_once __DIR__ . '/../../helpers/ProcessoBlocoListagemHelper.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -55,6 +55,7 @@ try {
 }
 
 $rows = $listResult['rows'] ?? [];
+$rows = ProcessoBlocoListagemHelper::appendBlocoData($connection, $rows);
 $totalDocuments = (int) ($listResult['total'] ?? 0);
 
 if ($totalDocuments === 0) {
@@ -189,6 +190,7 @@ if ($totalPages > 0) {
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
                 <?php include __DIR__ . '/_internal_head_styles.php'; ?>
+        <link rel="stylesheet" href="/assets/css/shared/processo-bloco-listagem.css?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/css/shared/processo-bloco-listagem.css') ?: time(); ?>">
 
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
         <?php include __DIR__ . '/_toast_script.php'; ?>
@@ -362,14 +364,8 @@ if ($totalPages > 0) {
                                 </label>
                             <?php endif; ?>
                         </div>
-                        <div class="col width-500 col-process process-info" title="Clique para copiar">
-                            <?php
-                                $classeRawGuia = (string) ($row['Classe'] ?? '');
-                                $classeGuia = ClasseProcessualListagemHelper::textoListagem($classeRawGuia);
-                                $classeGuiaClass = ClasseProcessualListagemHelper::classesSpanMinor($classeRawGuia);
-                            ?>
-                            <span class="<?php echo $classeGuiaClass; ?>" title="<?php echo htmlspecialchars($classeGuia, ENT_QUOTES); ?>"><?php echo htmlspecialchars($classeGuia); ?></span>
-                            <span class="major-info"><?php echo htmlspecialchars($row['Processo'] ?? ''); ?></span>
+                        <div class="col width-500 col-process">
+                            <?php include __DIR__ . '/_processo_bloco_listagem.php'; ?>
                         </div>
                         <div class="col width-500 col-tipo-guia" title="Clique para copiar">
                             <span class="minor-info text-ellipsis" style="font-weight: 600; color: var(--color-gray-900);"><?php echo htmlspecialchars($row['Tipo'] ?? '—'); ?></span>

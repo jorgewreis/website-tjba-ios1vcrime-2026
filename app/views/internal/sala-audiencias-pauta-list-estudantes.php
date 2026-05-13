@@ -162,6 +162,16 @@ $periodoChipLabels = [
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-center flex-wrap">
                 <input type="text" class="height-md" id="search-input" placeholder="Processo, parte ou sala..." autocomplete="off" style="width: 290px;" value="<?php echo htmlspecialchars($search, ENT_QUOTES); ?>">
+                <?php
+                $listExportPage = 'estudapauta';
+                $listExportQuery = array_filter([
+                    'status' => $statusFilter,
+                    'periodo' => $periodoFilter,
+                    'tipo' => $tipoFilter,
+                    'search' => $search,
+                ], static fn ($v) => $v !== null && $v !== '');
+                include __DIR__ . '/_list_export_buttons.php';
+                ?>
                 <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="search">
                     <i class="fi fi-rr-angle-small-up"></i>
                 </div>
@@ -239,6 +249,7 @@ $periodoChipLabels = [
             </div>
         </div>
 
+        <?php $processo_bloco_variant = 'estudantes'; ?>
         <?php foreach ($rows as $row): ?>
         <div class="display-flex col col-full register border-bottom" data-audiencia-id="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>">
             <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
