@@ -470,8 +470,13 @@ $exportPdfHref = '/api/produtividade/export-pdf.php?' . http_build_query($export
                 $tipoDoc = trim((string) ($row['tipo_documento'] ?? ''));
                 $tipoAto = trim((string) ($row['tipo_ato'] ?? ''));
                 $sistemaModulo = trim((string) ($row['sistema_modulo'] ?? ''));
+                $refSistemaLinha = trim((string) ($row['referencia_sistema'] ?? ''));
                 $obsRow = trim((string) ($row['observacoes'] ?? ''));
                 $tipoLan = trim((string) ($row['tipo_lancamento'] ?? ''));
+                $legacyObsConsultaProcLista = $tipoLan === 'automatico'
+                    && preg_match('/consulta\s+de\s+processos?\s*\(\s*listagem\s*\)/iu', $obsRow);
+                $legacyObsConsultaProcDetalhe = $tipoLan === 'automatico'
+                    && preg_match('/consulta\s+de\s+processo\s*\(\s*detalhe\s*\)/iu', $obsRow);
                 if ($obsRow !== '' && $tipoLan === 'automatico') {
                     $descricaoTarefa = $obsRow;
                 } else {
@@ -493,15 +498,21 @@ $exportPdfHref = '/api/produtividade/export-pdf.php?' . http_build_query($export
                 $pontosFmtLinha = number_format($pontosLinha, 2, ',', '.');
                 $pontosUnidadeLinha = abs($pontosLinha - 1.0) < 0.000001 ? 'pt' : 'pts';
                 $dataFmtLinha = date('d/m/Y H:i', strtotime((string) ($row['data_hora_ato'] ?? 'now')));
-                $omitPontosUm = (abs($pontosLinha - 1.0) < 0.000001 && $qtdLinha === 1);
+                $omitPontosUm = abs($pontosLinha - 1.0) < 0.000001 && max(0, $qtdLinha) <= 1;
                 $pontosSufixoLinha = $omitPontosUm ? '' : (' - ' . $pontosFmtLinha . ' ' . $pontosUnidadeLinha);
                 $baseDescTarefa = (string) ($descricaoTarefa ?? '') . $qtdSufixoLinha;
                 $tarefaPontosLinha = $baseDescTarefa . $pontosSufixoLinha;
                 $usuarioLinha = (string) ($row['usuario_nome'] ?? $row['usuario_id'] ?? '');
                 $isConsultaProcessoCompact = $tipoLan === 'automatico'
-                    && ($sistemaModulo === 'consultas-processos-lista' || $sistemaModulo === 'consultas-processos-detalhe');
+                    && (
+                        $sistemaModulo === 'consultas-processos-lista'
+                        || $sistemaModulo === 'consultas-processos-detalhe'
+                        || $refSistemaLinha === 'consultas-processos'
+                        || $legacyObsConsultaProcLista
+                        || $legacyObsConsultaProcDetalhe
+                    );
                 if ($isConsultaProcessoCompact) {
-                    $labConsulta = $obsRow !== '' ? $obsRow : 'Consulta processo';
+                    $labConsulta = 'Consulta processo';
                     $npSegConsulta = $npLinha !== '' ? $npLinha : '—';
                     $meioLinha = $labConsulta . $pontosSufixoLinha;
                     $linhaLancamento = $dataFmtLinha . ' | ' . $npSegConsulta . ' | ' . $meioLinha . ' | ' . $usuarioLinha;

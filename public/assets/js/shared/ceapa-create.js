@@ -43,6 +43,29 @@
         reuInput.value = '';
     }
 
+    function isClasseProcessualEmConsultaDatajud(classeInputEl) {
+        if (!classeInputEl) {
+            return false;
+        }
+        if (classeInputEl.getAttribute('aria-busy') === 'true') {
+            return true;
+        }
+        if (classeInputEl.classList && classeInputEl.classList.contains('status-warning')) {
+            return true;
+        }
+        const v = String(classeInputEl.value || '').trim();
+        if (v === 'Aguarde...') {
+            return true;
+        }
+        if (v === 'Consultando DataJud…' || v === 'Consultando DataJud...') {
+            return true;
+        }
+        if (/^Tentativa\s+\d+/i.test(v) && v.indexOf('DataJud') !== -1) {
+            return true;
+        }
+        return false;
+    }
+
     function showReuSelectSugestoes(pessoas, nomeDigitado, reuSelect, reuInput) {
         if (!reuSelect || !reuInput) return;
         reuSelect.innerHTML = '';
@@ -232,7 +255,9 @@
                 : { reu_id: '', nome_reu: String(reuInput?.value || '').trim() };
 
             if (!numeroProcesso) return notifyByKey('cartorio.ceapa.validation.process.required', {}, 'error', 'Erro', 'Informe o número do processo.');
-            if (classeVal === 'Aguarde...') return notifyByKey('cartorio.ceapa.validation.datajud.wait', {}, 'error', 'Erro', 'Aguarde a consulta ao DataJud terminar antes de cadastrar.');
+            if (isClasseProcessualEmConsultaDatajud(classeInput)) {
+                return notifyByKey('cartorio.ceapa.validation.datajud.wait', {}, 'error', 'Erro', 'Aguarde a consulta ao DataJud terminar antes de cadastrar.');
+            }
             if (!reuPayload.nome_reu) return notifyByKey('cartorio.ceapa.validation.reu.required', {}, 'error', 'Erro', 'Informe o réu.');
             if (!tipoSuspensao) return notifyByKey('cartorio.ceapa.validation.tipo_suspensao.required', {}, 'error', 'Erro', 'Informe o tipo de suspensão.');
             if (!decisaoCumprir) return notifyByKey('cartorio.ceapa.validation.decisao.required', {}, 'error', 'Erro', 'Informe a decisão a cumprir.');
@@ -253,7 +278,9 @@
             if (classeCodigo && classeCodigo.value.trim()) payload.classe_codigo = classeCodigo.value.trim();
             if (classeDescricao && classeDescricao.value.trim()) {
                 payload.classe_descricao = classeDescricao.value.trim();
-            } else if (classeVal && classeVal !== 'Classe não informada' && classeVal !== 'Aguarde...') {
+            } else if (classeVal && classeVal !== 'Classe não informada' && classeVal !== 'Aguarde...'
+                && classeVal !== 'Consultando DataJud…' && classeVal !== 'Consultando DataJud...'
+                && !/^Tentativa\s+\d+/i.test(classeVal)) {
                 payload.classe_descricao = classeVal;
                 if (!payload.classe_codigo && classeVal) {
                     payload.classe_codigo = classeVal.replace(/\s+/g, '').substring(0, 20);

@@ -29,6 +29,29 @@
         return el && el.value ? el.value.trim() : '';
     }
 
+    function isClasseProcessualEmConsultaDatajud(classeInputEl) {
+        if (!classeInputEl) {
+            return false;
+        }
+        if (classeInputEl.getAttribute('aria-busy') === 'true') {
+            return true;
+        }
+        if (classeInputEl.classList && classeInputEl.classList.contains('status-warning')) {
+            return true;
+        }
+        const v = String(classeInputEl.value || '').trim();
+        if (v === 'Aguarde...') {
+            return true;
+        }
+        if (v === 'Consultando DataJud…' || v === 'Consultando DataJud...') {
+            return true;
+        }
+        if (/^Tentativa\s+\d+/i.test(v) && v.indexOf('DataJud') !== -1) {
+            return true;
+        }
+        return false;
+    }
+
     function showReuInput(reuSelect, reuInput) {
         if (reuSelect) {
             reuSelect.style.display = 'none';
@@ -196,6 +219,7 @@
             }
 
             const numeroProcesso = getVal('filter-processo');
+            const classeInputEl = global.document.getElementById('filter-classe');
             const classeVal = getVal('filter-classe');
             const classeCodigo = getVal('hidden-classe-codigo');
             const classeDescricao = getVal('hidden-classe-descricao');
@@ -211,7 +235,9 @@
                 : { reu_id: '', nome_reu: getVal('filter-reu') };
 
             if (!numeroProcesso) return notifyByKey('cartorio.ceapa.validation.process.required', {}, 'error', 'Erro', 'Informe o número do processo.');
-            if (classeVal === 'Aguarde...') return notifyByKey('cartorio.ceapa.validation.datajud.wait.edit', {}, 'error', 'Erro', 'Aguarde a consulta ao DataJud terminar.');
+            if (!lockProcesso && isClasseProcessualEmConsultaDatajud(classeInputEl)) {
+                return notifyByKey('cartorio.ceapa.validation.datajud.wait.edit', {}, 'error', 'Erro', 'Aguarde a consulta ao DataJud terminar.');
+            }
             if (!reuPayload.nome_reu) return notifyByKey('cartorio.ceapa.validation.reu.required', {}, 'error', 'Erro', 'Informe o réu.');
             if (!tipoSuspensao) return notifyByKey('cartorio.ceapa.validation.tipo_suspensao.required', {}, 'error', 'Erro', 'Informe o tipo de suspensão.');
             if (!decisaoCumprir) return notifyByKey('cartorio.ceapa.validation.decisao.required', {}, 'error', 'Erro', 'Informe a decisão a cumprir.');

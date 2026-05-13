@@ -24,6 +24,37 @@ if ($id === '') {
 }
 unset($parsed['id']);
 
+function ceapaNormalizeNumeroProcessoOrigemInPayloadUpdate(array &$parsed): void
+{
+    $raw = trim((string) ($parsed['numero_processo_origem'] ?? ''));
+    if ($raw === '') {
+        $raw = trim((string) ($parsed['processo'] ?? ''));
+        if ($raw !== '') {
+            $parsed['numero_processo_origem'] = $raw;
+        }
+    }
+    if (!array_key_exists('numero_processo_origem', $parsed)) {
+        return;
+    }
+    $value = trim((string) $parsed['numero_processo_origem']);
+    if ($value === '') {
+        return;
+    }
+    $digits = preg_replace('/\D+/', '', $value);
+    if (strlen($digits) !== 20) {
+        return;
+    }
+    $parsed['numero_processo_origem'] = sprintf(
+        '%s-%s.%s.%s.%s.%s',
+        substr($digits, 0, 7),
+        substr($digits, 7, 2),
+        substr($digits, 9, 4),
+        substr($digits, 13, 1),
+        substr($digits, 14, 2),
+        substr($digits, 16, 4)
+    );
+}
+
 function assertCnjFormattedValueCeapaUpdate(array $input, string $key, string $fieldLabel): void
 {
     if (!array_key_exists($key, $input)) {
@@ -39,6 +70,7 @@ function assertCnjFormattedValueCeapaUpdate(array $input, string $key, string $f
 }
 
 try {
+    ceapaNormalizeNumeroProcessoOrigemInPayloadUpdate($parsed);
     assertCnjFormattedValueCeapaUpdate($parsed, 'numero_processo_origem', 'Número do processo');
 
     $service = new CeapaService($connection);

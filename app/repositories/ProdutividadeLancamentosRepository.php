@@ -92,6 +92,7 @@ final class ProdutividadeLancamentosRepository
         [$where, $params] = $this->buildFilter($filters);
         $sql = sprintf(
             'SELECT l.`id`, l.`usuario_id`, l.`regra_id`, l.`tipo_lancamento`, l.`status`, l.`quantidade`, l.`pontos_calculados`,
+                    l.`referencia_item_id`, l.`referencia_sistema`,
                     l.`numero_processo`, l.`classe_processo`, l.`observacoes`, l.`data_hora_ato`, l.`criado_em`, l.`anulado_por`, l.`anulado_em`, l.`motivo_anulacao`,
                     r.`tipo_ato`, r.`tipo_documento`, r.`sistema_modulo`,
                     CONCAT(COALESCE(u.`nome`, \'\'), CASE WHEN COALESCE(u.`sobrenome`, \'\') = \'\' THEN \'\' ELSE CONCAT(\' \', u.`sobrenome`) END) AS usuario_nome,
@@ -252,6 +253,7 @@ final class ProdutividadeLancamentosRepository
         [$where, $params] = $this->buildFilter($filters);
         $sql = sprintf(
             'SELECT l.`id`, l.`usuario_id`, l.`regra_id`, l.`tipo_lancamento`, l.`status`, l.`quantidade`, l.`pontos_calculados`,
+                    l.`referencia_item_id`, l.`referencia_sistema`,
                     l.`numero_processo`, l.`classe_processo`, l.`observacoes`, l.`data_hora_ato`, l.`criado_em`, l.`anulado_por`, l.`anulado_em`, l.`motivo_anulacao`,
                     r.`tipo_ato`, r.`tipo_documento`, r.`sistema_modulo`,
                     CONCAT(COALESCE(u.`nome`, \'\'), CASE WHEN COALESCE(u.`sobrenome`, \'\') = \'\' THEN \'\' ELSE CONCAT(\' \', u.`sobrenome`) END) AS usuario_nome,
