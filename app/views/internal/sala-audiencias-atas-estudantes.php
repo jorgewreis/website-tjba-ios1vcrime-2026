@@ -179,7 +179,12 @@ if ($totalPages > 0) {
             $expiraTs = $expira !== '' ? strtotime($expira) : false;
             $downloadAtaOk = $arquivoRelEst !== '' && !empty($m['id_ata']) && $expiraTs !== false && $expiraTs > time();
             $ataPrazoEncerrado = !empty($m['id_ata']) && $arquivoRelEst === '';
-            $classeAudiencia = !empty($m['classe_nome']) ? (string) $m['classe_nome'] : 'Classe não informada';
+            $classeAudiencia = trim((string) ($m['classe_nome'] ?? ''));
+            $classeAudienciaTemValor = $classeAudiencia !== '' && $classeAudiencia !== 'Classe não informada';
+            if (!$classeAudienciaTemValor) {
+                $classeAudiencia = 'Classe não informada';
+            }
+            $classeAudienciaClass = 'minor-info text-ellipsis' . ($classeAudienciaTemValor ? ' classe-info' : '');
             $expiraFmt = $expira !== '' ? date('d/m', strtotime($expira)) : '';
             $inicioEfetivoRaw = trim((string) ($m['data_hora_inicio_efetivo'] ?? ''));
             $inicioEfetivoTs = $inicioEfetivoRaw !== '' ? strtotime($inicioEfetivoRaw) : false;
@@ -192,8 +197,8 @@ if ($totalPages > 0) {
                         <span class="minor-info">Data</span>
                         <span class="major-info"><?php echo htmlspecialchars(date('d/m/Y', strtotime((string) $m['data_audiencia'])) . ' · ' . $horaExibicao, ENT_QUOTES, 'UTF-8'); ?></span>
                     </div>
-                    <div class="col width-500">
-                        <span class="minor-info text-ellipsis"><?php echo htmlspecialchars($classeAudiencia, ENT_QUOTES, 'UTF-8'); ?></span>
+                    <div class="col width-500 col-process process-info" title="Clique para copiar">
+                        <span class="<?php echo htmlspecialchars($classeAudienciaClass, ENT_QUOTES, 'UTF-8'); ?>" title="<?php echo htmlspecialchars($classeAudiencia, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($classeAudiencia, ENT_QUOTES, 'UTF-8'); ?></span>
                         <span class="major-info"><?php echo htmlspecialchars((string) ($m['numero_processo'] ?? '—'), ENT_QUOTES, 'UTF-8'); ?></span>
                     </div>
                     <div class="col width-400">

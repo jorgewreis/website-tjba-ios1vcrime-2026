@@ -82,6 +82,11 @@ $cartorioAlocacaoIsGestao = false;
 $perfisPermitidosExcluir = ['ADMIN', 'CHEFIA'];
 $podeExcluirTarefa = false;
 $userPerfisEdit = [];
+$classeProcessoMidiasEdit = trim((string) ($row['classe_processo'] ?? ''));
+$classeProcessoMidiasEditClass = 'width-600 height-md';
+if ($classeProcessoMidiasEdit !== '' && $classeProcessoMidiasEdit !== 'Classe não informada') {
+    $classeProcessoMidiasEditClass .= ' status-finished';
+}
 if ($cartorioAlocacaoUserId !== '') {
     $userPerfisEdit = UsuarioPerfisAutorizacao::perfisDoUsuario($cartorioAlocacaoUserId);
     $cartorioAlocacaoIsGestao = count(array_intersect($userPerfisEdit, ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'])) > 0;
@@ -120,8 +125,8 @@ if ($cartorioAlocacaoUserId !== '') {
                 <input type="text" id="midias-edit-processo" class="width-400 height-md readonly" readonly value="<?php echo htmlspecialchars((string) ($row['numero_processo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>">
             </div>
             <div class="col filter">
-                <label for="midias-edit-classe">Classe processual</label>
-                <input type="text" id="midias-edit-classe" class="width-600 height-md readonly" readonly value="<?php echo htmlspecialchars((string) ($row['classe_processo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>">
+                <label for="midias-edit-classe" id="processo-ap-info" aria-live="polite">Classe processual</label>
+                <input type="text" id="midias-edit-classe" class="<?php echo htmlspecialchars($classeProcessoMidiasEditClass, ENT_QUOTES, 'UTF-8'); ?>" data-datajud-related="true"<?php echo ($classeProcessoMidiasEdit !== '' && $classeProcessoMidiasEdit !== 'Classe não informada') ? ' data-datajud-initial="1"' : ''; ?> readonly value="<?php echo htmlspecialchars($classeProcessoMidiasEdit, ENT_QUOTES, 'UTF-8'); ?>">
             </div>
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">

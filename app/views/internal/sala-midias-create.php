@@ -70,7 +70,7 @@ try {
             </div>
             <div class="col filter">
                 <label for="audiencia-classe" id="processo-ap-info" aria-live="polite">Classe processual <span class="label-hint-automatizado">*automatizado</span></label>
-                <input type="text" class="width-600 height-md readonly" id="audiencia-classe" data-datajud-related="true" placeholder="Preenchido automaticamente pelo DataJud" readonly autocomplete="off">
+                <input type="text" class="width-600 height-md" id="audiencia-classe" data-datajud-related="true" placeholder="Preenchido automaticamente pelo DataJud" readonly autocomplete="off">
             </div>
         </div>
         <input type="hidden" id="hidden-classe-codigo" value="">

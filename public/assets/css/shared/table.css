@@ -416,6 +416,12 @@
     font-weight: 600;
 }
 
+/* Vence `.width-* .minor-info` (form.css) e demais regras de coluna: classe processual em listagens. */
+.minor-info.text-ellipsis.classe-info {
+    color: var(--color-primary-active);
+    font-weight: 600;
+}
+
 .status-task {
     display: flex;
     align-items: flex-end;

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.99
+
+**Data:** 2026-05-13 12:10:39 | **Commit:** `e5761a9b` | **Tipo:** `minor`
+
+- refactor: enhance class handling for processual classes across multiple views
+
 ## V. 1.98.0015
 
 **Data:** 2026-05-13 11:51:56 | **Commit:** `c2621f70` | **Tipo:** `patch`
@@ -5406,6 +5412,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

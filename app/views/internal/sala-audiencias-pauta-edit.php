@@ -337,9 +337,16 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                     <input type="text" class="width-400 height-md readonly" id="audiencia-edit-processo" value="<?php echo htmlspecialchars((string) ($row['numero_processo'] ?? ''), ENT_QUOTES); ?>" autocomplete="off" readonly>
                 </div>
                 <div class="col filter">
-                    <?php $classeValor = trim((string) ($row['classe_nome'] ?? '')); ?>
-                    <label for="audiencia-edit-classe">Classe processual<?php echo $classeValor !== '' ? ' <span class="label-hint-automatizado">*automatizado</span>' : ''; ?></label>
-                    <input type="text" class="width-600 height-md readonly" id="audiencia-edit-classe" value="<?php echo htmlspecialchars($classeValor, ENT_QUOTES); ?>" placeholder="Sem classe vinculada — cadastre em Consultar processo &gt; Editar processo" readonly autocomplete="off">
+                    <?php
+                    $classeValor = trim((string) ($row['classe_nome'] ?? ''));
+                    $classeValorTemInfo = $classeValor !== '' && $classeValor !== 'Classe não informada';
+                    $classeInputClassPautaEdit = 'width-600 height-md';
+                    if ($classeValorTemInfo) {
+                        $classeInputClassPautaEdit .= ' status-finished';
+                    }
+                    ?>
+                    <label for="audiencia-edit-classe" id="processo-ap-info" aria-live="polite">Classe processual<?php echo $classeValor !== '' ? ' <span class="label-hint-automatizado">*automatizado</span>' : ''; ?></label>
+                    <input type="text" class="<?php echo htmlspecialchars($classeInputClassPautaEdit, ENT_QUOTES, 'UTF-8'); ?>" id="audiencia-edit-classe" data-datajud-related="true"<?php echo $classeValorTemInfo ? ' data-datajud-initial="1"' : ''; ?> value="<?php echo htmlspecialchars($classeValor, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Sem classe vinculada — cadastre em Consultar processo &gt; Editar processo" readonly autocomplete="off">
                 </div>
             </div>
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
