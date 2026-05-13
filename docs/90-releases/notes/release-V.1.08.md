@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 01 de abril de 2026
+**Data de Lançamento:** 13 de maio de 2026
 
 # V. 1.08
 
-> feat: criar script de migração para a tabela de Produtividade e implementar página de relatórios de produtividade com filtros
+> refactor: simplify process number display in processo bloco listing
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **feat: criar script de migração para a tabela de Produtividade e implementar página de relatórios de produtividade com filtros** `[08148eb]`
+- **refactor: simplify process number display in processo bloco listing** `[12cf4913]`
 
 ---
 
