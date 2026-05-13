@@ -73,7 +73,6 @@ jobs:
             --exclude "old/" \
             --exclude ".venv/" \
             --exclude ".vscode/" \
-            --exclude "scripts/" \
             --exclude ".config/" \
             --exclude ".githooks/" \
             --exclude "vendor/" \
