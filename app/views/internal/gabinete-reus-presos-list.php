@@ -7,9 +7,17 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 require_once __DIR__ . '/../../helpers/Conection.php';
+require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
 require_once __DIR__ . '/../../services/GabineteReusPresosService.php';
 
 $connection = Conection::getInstance()->getConnection();
+
+$currentUserId = trim((string) ($_SESSION['id_usuario'] ?? ''));
+$podeVerEmailResumoReusPresos = false;
+if ($currentUserId !== '') {
+    $perfisUsuario = UsuarioPerfisAutorizacao::perfisDoUsuario($currentUserId);
+    $podeVerEmailResumoReusPresos = count(array_intersect($perfisUsuario, ['ADMIN', 'MAGISTRADA'])) > 0;
+}
 
 $routePage = 'reuspresos';
 $qFilter = trim((string) ($_GET['q'] ?? ''));
@@ -198,7 +206,9 @@ if ($totalPages > 0) {
                 <div class="title-icon" title="Listar" role="button" tabindex="0" aria-label="Listar" data-list-section-trigger="items">
                     <i class="fi fi-rr-list"></i>
                 </div>
+                <?php if ($podeVerEmailResumoReusPresos): ?>
                 <button type="button" class="btn btn-secondary width-300" id="email-resumo-btn">Email resumo</button>
+                <?php endif; ?>
                 <button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
             </div>
         </div>

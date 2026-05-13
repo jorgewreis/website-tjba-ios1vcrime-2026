@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.98.0009
+
+**Data:** 2026-05-13 10:45:49 | **Commit:** `308a1f13` | **Tipo:** `patch`
+
+- feat(gabinete-reus-presos): implement user authorization for email summary feature
+
 ## V. 1.98.0008
 
 **Data:** 2026-05-13 10:31:33 | **Commit:** `3560cf4a` | **Tipo:** `patch`
@@ -5364,6 +5370,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -6,11 +6,23 @@ header('Content-Type: application/json; charset=UTF-8');
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
+require_once $basePath . '/app/helpers/UsuarioPerfisAutorizacao.php';
 require_once $basePath . '/app/services/GabineteReusPresosRevisaoEmailService.php';
 
 if (strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'POST') {
     http_response_code(405);
     echo json_encode(['success' => false, 'message' => 'Método não permitido.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+$userId = trim((string) ($_SESSION['id_usuario'] ?? ''));
+$perfisUsuario = $userId !== '' ? UsuarioPerfisAutorizacao::perfisDoUsuario($userId) : [];
+if (count(array_intersect($perfisUsuario, ['ADMIN', 'MAGISTRADA'])) === 0) {
+    http_response_code(403);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Sem permissão para enviar o resumo por e-mail. Apenas admin ou magistrada.',
+    ], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
