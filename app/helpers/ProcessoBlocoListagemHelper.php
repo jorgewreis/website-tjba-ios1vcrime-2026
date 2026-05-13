@@ -1,0 +1,213 @@
+<?php
+declare(strict_types=1);
+
+require_once __DIR__ . '/ClasseProcessualListagemHelper.php';
+require_once __DIR__ . '/PrioridadesProcessuaisCatalog.php';
+require_once __DIR__ . '/../repositories/ProcessosRepository.php';
+require_once __DIR__ . '/../repositories/ClassesRepository.php';
+require_once __DIR__ . '/../repositories/ProcessoPrioridadesRepository.php';
+
+/**
+ * Dados agregados para o partial `_processo_bloco_listagem.php` em listagens (ex.: sala de mídias).
+ */
+final class ProcessoBlocoListagemHelper
+{
+    private const ICON_SIGILOSO = '/assets/icons/Lock-6--Streamline-Ultimate.png';
+    private const ICON_REU_PRESO = '/assets/icons/Crime-Man-Inmate--Streamline-Ultimate.png';
+    private const ICON_VD_ALERTA = '/assets/icons/Police-Rotating-Light-1--Streamline-Ultimate.png';
+    private const ICON_DEFAULT = '/assets/icons/Road-Sign-Warning-Alternate--Streamline-Ultimate.png';
+
+    /** @param list<array<string, mixed>> $rows */
+    public static function appendBlocoData(PDO $connection, array $rows): array
+    {
+        if ($rows === []) {
+            return $rows;
+        }
+
+        $processosRepo = new ProcessosRepository($connection);
+        $classesRepo = new ClassesRepository($connection);
+        $prioridadesRepo = new ProcessoPrioridadesRepository($connection);
+
+        $idsFromColumn = [];
+        $digitosPorLinha = [];
+        foreach ($rows as $idx => $row) {
+            $pid = trim((string) ($row['processo_id'] ?? ''));
+            if ($pid !== '') {
+                $idsFromColumn[$pid] = true;
+            }
+            $digits = preg_replace('/\D+/', '', (string) ($row['numero_processo'] ?? ''));
+            $digitosPorLinha[$idx] = strlen($digits) === 20 ? $digits : '';
+        }
+
+        $processoById = [];
+        foreach (array_keys($idsFromColumn) as $pid) {
+            $p = $processosRepo->findById($pid);
+            if ($p !== null) {
+                $processoById[$pid] = $p;
+            }
+        }
+
+        $digitosUnicos = [];
+        foreach ($digitosPorLinha as $d) {
+            if ($d !== '') {
+                $digitosUnicos[$d] = true;
+            }
+        }
+        foreach (array_keys($digitosUnicos) as $d) {
+            $p = $processosRepo->findByNumero($d);
+            if ($p !== null) {
+                $id = trim((string) ($p['id'] ?? ''));
+                if ($id !== '') {
+                    $processoById[$id] = $p;
+                }
+            }
+        }
+
+        $classeIds = [];
+        foreach ($processoById as $p) {
+            $cid = trim((string) ($p['classe_id'] ?? ''));
+            if ($cid !== '') {
+                $classeIds[$cid] = true;
+            }
+        }
+        $classePorId = [];
+        foreach (array_keys($classeIds) as $cid) {
+            $c = $classesRepo->findById($cid);
+            if ($c !== null) {
+                $classePorId[$cid] = $c;
+            }
+        }
+
+        $resolvedIds = [];
+        foreach ($rows as $idx => $row) {
+            $pid = trim((string) ($row['processo_id'] ?? ''));
+            if ($pid !== '' && isset($processoById[$pid])) {
+                $resolvedIds[$idx] = $pid;
+                continue;
+            }
+            $d = $digitosPorLinha[$idx] ?? '';
+            if ($d !== '') {
+                $found = $processosRepo->findByNumero($d);
+                $rid = $found !== null ? trim((string) ($found['id'] ?? '')) : '';
+                $resolvedIds[$idx] = $rid;
+                continue;
+            }
+            $resolvedIds[$idx] = '';
+        }
+
+        $idsParaPrioridade = array_values(array_unique(array_filter($resolvedIds, static function (string $id): bool {
+            return $id !== '';
+        })));
+        $prioridadesPorProcesso = $prioridadesRepo->findByProcessoIds($idsParaPrioridade);
+
+        $out = [];
+        foreach ($rows as $idx => $row) {
+            $rid = $resolvedIds[$idx] ?? '';
+            $proc = $rid !== '' && isset($processoById[$rid]) ? $processoById[$rid] : null;
+
+            $classeTexto = '';
+            $classeNot = true;
+            if ($proc !== null) {
+                $cid = trim((string) ($proc['classe_id'] ?? ''));
+                if ($cid !== '' && isset($classePorId[$cid])) {
+                    $cl = $classePorId[$cid];
+                    $cod = trim((string) ($cl['codigo'] ?? ''));
+                    $nom = trim((string) ($cl['nome'] ?? ''));
+                    if ($cod !== '' && $nom !== '') {
+                        $classeTexto = $cod . ' - ' . $nom;
+                    } elseif ($nom !== '') {
+                        $classeTexto = $nom;
+                    } elseif ($cod !== '') {
+                        $classeTexto = $cod;
+                    }
+                    $classeNot = $classeTexto === '';
+                } elseif ($cid !== '') {
+                    $classeTexto = 'Classe não cadastrada';
+                    $classeNot = true;
+                } else {
+                    $classeTexto = 'Classe não cadastrada';
+                    $classeNot = true;
+                }
+            } else {
+                $rawClasse = (string) ($row['classe_processo'] ?? '');
+                $classeTexto = ClasseProcessualListagemHelper::textoListagem($rawClasse);
+                $classeNot = !ClasseProcessualListagemHelper::temDestaqueListagem($rawClasse);
+            }
+
+            $priorRows = $rid !== '' ? ($prioridadesPorProcesso[$rid] ?? []) : [];
+            $codigos = [];
+            foreach ($priorRows as $pr) {
+                $c = trim((string) ($pr['codigo'] ?? ''));
+                if ($c !== '') {
+                    $codigos[$c] = true;
+                }
+            }
+            $codigosLista = array_keys($codigos);
+            self::ordenarCodigosPrioridade($codigosLista);
+
+            $prioridadesUi = [];
+            foreach ($codigosLista as $codigo) {
+                $prioridadesUi[] = [
+                    'codigo' => $codigo,
+                    'label' => PrioridadesProcessuaisCatalog::labelForCodigo($codigo),
+                    'icon' => self::iconForCodigoPrioridade($codigo),
+                ];
+            }
+
+            $podeAbrir = $rid !== '';
+            $hrefAbrir = $podeAbrir ? ('/frame.php?page=consultaprocessosedit&id=' . rawurlencode($rid)) : '';
+
+            $out[$idx] = [
+                'bloco_processo_id_resolvido' => $rid,
+                'bloco_processo_classe_texto' => $classeTexto,
+                'bloco_processo_classe_not' => $classeNot,
+                'bloco_processo_assunto_texto' => 'Assunto não cadastrado',
+                'bloco_processo_assunto_not' => true,
+                'bloco_processo_prioridades' => $prioridadesUi,
+                'bloco_processo_abrir_href' => $hrefAbrir,
+                'bloco_processo_abrir_disabled' => !$podeAbrir,
+            ];
+        }
+
+        $merged = [];
+        foreach ($rows as $idx => $row) {
+            $merged[] = array_merge($row, $out[$idx] ?? []);
+        }
+
+        return $merged;
+    }
+
+    /** @param list<string> $codigos mutável */
+    private static function ordenarCodigosPrioridade(array &$codigos): void
+    {
+        $weight = [
+            'sigiloso' => 10,
+            'reu_preso' => 20,
+            'violencia_domestica' => 30,
+            'crianca_adolescente' => 40,
+            'idoso' => 50,
+            'idoso_80_anos_ou_mais' => 51,
+            'pessoa_deficiencia' => 60,
+            'pessoa_doenca_grave' => 70,
+        ];
+        usort($codigos, static function (string $a, string $b) use ($weight): int {
+            $wa = $weight[$a] ?? 500;
+            $wb = $weight[$b] ?? 500;
+            if ($wa !== $wb) {
+                return $wa <=> $wb;
+            }
+
+            return strcmp($a, $b);
+        });
+    }
+
+    private static function iconForCodigoPrioridade(string $codigo): string
+    {
+        return match ($codigo) {
+            'sigiloso' => self::ICON_SIGILOSO,
+            'reu_preso' => self::ICON_REU_PRESO,
+            'violencia_domestica', 'crianca_adolescente' => self::ICON_VD_ALERTA,
+            default => self::ICON_DEFAULT,
+        };
+    }
+}

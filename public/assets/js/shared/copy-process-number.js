@@ -1,6 +1,8 @@
 /**
- * Copia o número do processo para a área de transferência ao clicar em .process-info .major-info
- * e exibe toast de sucesso. Usado nas páginas de listagem (Guias, Cartas Expedidas, Cartas Recebidas, Cejusc).
+ * Copia o número do processo para a área de transferência:
+ * - clique em .process-info .major-info (listagens legadas);
+ * - clique em [data-copy-numero-processo] (ex.: bloco processo em sala de mídias).
+ * Toast de sucesso via showToast (iframe) ou App.Toast quando disponível.
  */
 (function () {
     'use strict';
@@ -11,6 +13,13 @@
                 type: 'success',
                 variant: 'full',
                 title: 'Sucesso',
+                message: 'O número ' + text + ' foi copiado com sucesso.'
+            });
+            return;
+        }
+        if (window.App && window.App.Toast && typeof window.App.Toast.show === 'function') {
+            window.App.Toast.show({
+                type: 'success',
                 message: 'O número ' + text + ' foi copiado com sucesso.'
             });
         }
@@ -44,6 +53,22 @@
     }
 
     document.addEventListener('click', function (e) {
+        var copyBtn = e.target && e.target.closest ? e.target.closest('[data-copy-numero-processo]') : null;
+        if (copyBtn) {
+            if (copyBtn.disabled || copyBtn.getAttribute('aria-disabled') === 'true') {
+                return;
+            }
+            var raw = String(copyBtn.getAttribute('data-copy-numero-processo') || '').trim();
+            if (!raw) {
+                return;
+            }
+            e.preventDefault();
+            copyToClipboard(raw, function () {
+                showSuccessToast(raw);
+            });
+            return;
+        }
+
         var container = e.target && e.target.closest ? e.target.closest('.process-info') : null;
         if (!container) return;
         var major = container.querySelector('.major-info');

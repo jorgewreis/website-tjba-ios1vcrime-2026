@@ -1,0 +1,235 @@
+/**
+ * Bloco processo (listagens) — escopado em .container-processo.
+ * Base visual: docs/mockups/reus-presos/block-processo.html
+ */
+
+.container-processo {
+    width: 100%;
+    max-width: 500px;
+    height: fit-content;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    justify-content: flex-start;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.container-processo .main-processo {
+    position: relative;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.container-processo .main-processo .left {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 3px 10px;
+    box-sizing: border-box;
+}
+
+.container-processo .main-processo .left .numero {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-start;
+    font-size: 13px;
+    font-weight: 700;
+    color: #202020;
+}
+
+.container-processo .main-processo .right {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: fit-content;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.container-processo .main-processo .right .prioridades {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-end;
+    margin-right: 5px;
+}
+
+.container-processo .main-processo .right .prioridades .prioridade-chip {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+}
+
+.container-processo .main-processo .right .prioridades .prioridade-chip .prioridade-chip-icon {
+    width: 14px;
+    height: 14px;
+}
+
+.container-processo .footer-processo {
+    width: 100%;
+    min-height: 30px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid #eee;
+}
+
+.container-processo .footer-processo .left {
+    max-width: calc(100% - 70px);
+    width: fit-content;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 3px 10px;
+    box-sizing: border-box;
+}
+
+.container-processo .footer-processo .left .processo-classe {
+    max-width: 100%;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-start;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 10px;
+    font-weight: 500;
+    color: #696cff;
+}
+
+.container-processo .footer-processo .left .processo-classe.not {
+    color: #909090;
+}
+
+.container-processo .footer-processo .left .processo-assunto {
+    max-width: 100%;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-start;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 9px;
+    font-weight: 400;
+    color: #34368d;
+}
+
+.container-processo .footer-processo .left .processo-assunto.not {
+    color: #909090;
+}
+
+.container-processo .footer-processo .right {
+    width: 60px;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.container-processo .footer-processo .right .buttons {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+}
+
+.container-processo .processo-bloco-act-btn {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    min-height: 30px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.container-processo .processo-bloco-act-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.container-processo .processo-bloco-act-btn-icon {
+    width: 20px;
+    height: 20px;
+    filter: grayscale(100%);
+    opacity: 0.3;
+    transition: filter 0.3s ease, opacity 0.3s ease;
+}
+
+.container-processo .processo-bloco-act-btn:not(:disabled):hover .processo-bloco-act-btn-icon {
+    filter: grayscale(0%);
+    opacity: 1;
+}
+
+.container-processo .processo-bloco-tooltip {
+    position: relative;
+    cursor: default;
+}
+
+.container-processo .processo-bloco-tooltip.processo-bloco-tooltip--btn {
+    cursor: pointer;
+}
+
+.container-processo .processo-bloco-tooltip::after {
+    content: attr(data-title);
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 8px);
+    transform: translateX(-50%);
+    background-color: #111827;
+    color: #ffffff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1.3;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 999;
+}
+
+.container-processo .processo-bloco-tooltip:hover::after {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(-2px);
+}

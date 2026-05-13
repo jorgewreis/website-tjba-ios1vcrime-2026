@@ -8,360 +8,395 @@
     <!-- STYLES -->
     <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/4.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Reddit+Mono:wght@200..900&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
     </style>
-    <style>
-        .block-processo {
-            /* position */
-            position: relative;
 
-            /* flex custom */
+    <!-- STYLES -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "JetBrains Mono", monospace;
+            padding: 10px;
+        }
+
+        .tooltip {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .tooltip::after {
+            content: attr(data-title);
+            position: absolute;
+
+            left: 50%;
+            bottom: calc(100% + 8px);
+            transform: translateX(-50%);
+
+            background-color: #111827;
+            color: #ffffff;
+
+            padding: 6px 10px;
+            border-radius: 6px;
+
+            font-size: 10px;
+            font-weight: 500;
+            line-height: 1.3;
+
+            white-space: nowrap;
+
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            z-index: 999;
+        }
+
+        .tooltip:hover::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-2px);
+        }
+
+        .container-processo {
+            width: 300px;
+            height: fit-content;
+
+            margin: 0;
+            padding: 0;
+
+            display: flex;
+            flex-direction: column;
+            flex-wrap: nowrap;
+            align-items: flex-start;
+            justify-content: flex-start;
+
+            border-radius: 6px;
+        }
+
+        .main-processo {
+            position: relative;
+            width: 100%;
+
             display: flex;
             flex-direction: row;
             flex-wrap: nowrap;
             align-items: center;
             justify-content: space-between;
-
-            /* sizing */
-            width: 300px;
-            min-height: 40px;
-
-            /* spacing */
-            padding: 5px;
-
-            /* border */
-            border: 1px solid #dcdcdc;
-            border-radius: 5px;
         }
 
-        .bl-processo-dados {
-            /* sizing */
-            width: fit-content;
-            height: fit-content;
-
-            /* flex custom */
-            display: flex;
-            flex-direction: column;
-            flex-wrap: nowrap;
-            align-items: flex-start;
-            justify-content: center;
-        }
-
-        .bl-processo-buttons {
-            /* position */
-            position: absolute;
-            right: 2px;
-            bottom: 2px;
-
-            /* sizing */
-            width: fit-content;
-            height: fit-content;
-
-            /* spacing */
-            gap: 5px;
-
-            /* flex custom */
-            display: flex;
-            flex-direction: row;
-            flex-wrap: nowrap;
-            align-items: center;
-            justify-content: flex-end;
-        }
-
-        .bl-processo-button-separator {
-            /* sizing */
-            width: 1px;
-            height: 20px;
-            background-color: #dcdcdc;
-        }
-
-        .bl-processo-button {
-            /* sizing */
-            width: 24px;
-            height: 24px;
-
-            /* spacing */
-            margin-bottom: -2px;
-
-            /* flex custom */
-            display: flex;
-            flex-direction: row;
-            flex-wrap: nowrap;
-            align-items: center;
-            justify-content: center;
-
-            filter: grayscale(100%);
-            opacity: 0.3;
-            cursor: pointer;
-        }
-
-        .bl-processo-button:hover {
-            filter: grayscale(0%);
-            opacity: 1;
-        }
-
-        .bl-processo-button i {
-            font-size: 14px;
-            margin-top: 2px;
-        }
-    
-        .bl-processo-dados-prioridades {
-            /* sizing */
-            width: 100%;
-
-            /* flex custom */
-            display: flex;
-            flex-direction: row;
-            flex-wrap: nowrap;
-            align-items: center;
-            justify-content: flex-start;
-
-            /* spacing */
-            gap: 4px;
-        }
-
-            .badge-prioridade {
-                /* flex custom */
-                display: flex;
-                flex-direction: row;
-                flex-wrap: nowrap;
-                align-items: center;
-                justify-content: center;
-
-                /* spacing */
-                padding: 2px 5px 2px 5px;
-                border-radius: 4px;
-
-                /* font style */
-                font-family: 'Reddit Mono', monospace;
-                font-size: 10px;
-                font-weight: 400;
-                text-transform: uppercase;
-                text-overflow: ellipsis;
-                overflow: hidden;
-                white-space: nowrap;
-            }
-
-            .badge-prioridade.black {
-                background-color: #000000;
-                color: #ffffff;
-            }
-
-            .badge-prioridade.red {
-                background-color: #ff0000;
-                color: #ffffff;
-            }
-            .badge-prioridade.yellow {
-                background-color: #ffd900;
-                color: #000000;
-            }
-            .badge-prioridade.nprioridades {
-                opacity: 0.5;
-                color: #000000;
-            }
-        
-        .bl-processo-dados-numero {
-            /* flex custom */
-            display: flex;
-            flex-direction: row;
-            flex-wrap: nowrap;
-            align-items: center;
-            justify-content: flex-start;
-        }
-            .bl-processo-dados-numero span {
-                /* sizing */
+            .main-processo .left {
                 width: 100%;
 
-                /* spacing */
-                margin: 4px 0 2px 4px;
-
-                /* font style */
-                font-family: 'Google Sans', sans-serif;
-                font-size: 16px;
-                font-weight: 600;
-                text-transform: uppercase;
-                text-overflow: ellipsis;
-                overflow: hidden;
-                white-space: nowrap;
-            }
-
-            .bl-processo-dados-classe {
-                /* sizing */
-                width: 100%;
-
-                /* spacing */
-                margin: 0 2px;
-
-                /* flex custom */
                 display: flex;
-                flex-direction: row;
+                flex-direction: column;
                 flex-wrap: nowrap;
                 align-items: center;
                 justify-content: flex-start;
 
-                /* color */
-                color: #046edf;
+                padding: 3px 10px;
+                box-sizing: border-box;
             }
-            .bl-processo-dados-classe span {
-                /* font style */
-                font-family: 'Google Sans', sans-serif;
-                font-size: 11px;
-                font-weight: 600;
-                text-overflow: ellipsis;
-                overflow: hidden;
-                white-space: nowrap;
-            }
-            .bl-processo-dados-classe.noclasse {
-                opacity: 0.5;
-                font-weight: 400;                
-                color: #000000;
-            }
-
-            .bl-processo-dados-assuntos {
-                /* sizing */
+        
+            .main-processo .left .numero{
                 width: 100%;
 
-                /* spacing */
-                margin: 0 2px;
-
-                /* flex custom */
                 display: flex;
                 flex-direction: row;
+                flex-wrap: nowrap;
+                align-items: center;    
+                justify-content: flex-start;
+                font-size: 13px;
+                font-weight: 700;
+                color: #202020;
+            }
+
+            .main-processo .right .prioridades {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                align-items: center;
+                justify-content: flex-end;
+
+                margin-right: 5px;
+            }
+                .main-processo .right .prioridades .btn-micro {
+                    width: 20px;
+                    height: 20px;
+
+                    display: flex;
+                    flex-direction: row;
+                    flex-wrap: nowrap;
+                    align-items: center;
+                    justify-content: center;
+
+                    cursor: pointer;
+                }
+
+                    .main-processo .right .prioridades .btn-micro .btn-micro-icon {
+                        width: 14px;
+                        height: 14px;
+                    }
+
+        .footer-processo {
+            width: 100%;
+            height: 30px;
+
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            align-items: center;
+            justify-content: space-between;
+            
+            border-top: 1px solid #eee;
+        }
+
+            .footer-processo .left {
+                max-width: 220px;
+                width: fit-content;
+                height: 100%;
+
+                display: flex;
+                flex-direction: column;
                 flex-wrap: nowrap;
                 align-items: flex-start;
                 justify-content: flex-start;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
+
+                padding: 3px 10px;
+                box-sizing: border-box;
             }
-            .bl-processo-dados-assuntos span {
-                /* font style */
-                font-family: 'Google Sans', sans-serif;
-                font-size: 11px;
-                font-weight: 400;
-                text-overflow: ellipsis;
-                overflow: hidden;
-                white-space: nowrap;
+
+                .footer-processo .left .processo-classe {
+                    max-width: 220px;
+
+                    display: flex;
+                    flex-direction: row;
+                    flex-wrap: nowrap;
+                    align-items: center;
+                    justify-content: flex-start;
+
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+
+                    font-size: 10px;
+                    font-weight: 500;
+                    color: #696cff;
+                }
+                    .footer-processo .left .processo-classe.not {
+                        color: #909090;
+                    }
+
+                .footer-processo .left .processo-assunto {
+                    max-width: 220px;
+
+                    display: flex;
+                    flex-direction: row;
+                    flex-wrap: nowrap;
+                    align-items: center;
+                    justify-content: flex-start;
+
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+
+                    font-size: 9px;
+                    font-weight: 400;
+                    color: #34368D;
+                }
+                    .footer-processo .left .processo-assunto.not {
+                        color: #909090;
+                    }
+
+            .footer-processo .right {
+                width: 60px;
+                height: 100%;
+
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                align-items: center;
+                justify-content: flex-end;
             }
-            .bl-processo-dados-assuntos.nassuntos {
-                opacity: 0.5;
-            }
+                
+                .main-processo .right {
+                    position: absolute;
+                    top: 0;
+                    right: 0;
+                    width: fit-content;
+
+                    display: flex;
+                    flex-direction: row;
+                    flex-wrap: nowrap;
+                    align-items: center;
+                    justify-content: flex-end;
+                }
+
+                .footer-processo .right .buttons {
+                    display: flex;
+                    flex-direction: row;
+                    flex-wrap: nowrap;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                    .footer-processo .right .buttons .btn-mini {
+                        width: 30px;
+                        height: 30px;
+
+                        display: flex;
+                        flex-direction: row;
+                        flex-wrap: nowrap;
+                        align-items: center;
+                        justify-content: center;
+
+                        cursor: pointer;
+                    }
+
+                        .btn-mini .btn-mini-icon {
+                            width: 20px;
+                            height: 20px;
+
+                            filter: grayscale(100%);
+                            opacity: 0.3;
+                            transition: filter 0.3s ease, opacity 0.3s ease;
+                        }
+                            .btn-mini:hover .btn-mini-icon{
+                                filter: grayscale(0%);
+                                opacity: 1;
+                                transition: filter 0.3s ease, opacity 0.3s ease;
+                            }
     </style>
 </head>
 <body>
 
-    <!-- Exemplo de bloco de processo completo -->
-    <div class="block-processo">
-        <div class="bl-processo-dados">
-            <div class="bl-processo-dados-prioridades">
-                <div class="badge-prioridade black">Sigiloso</div>
-                <div class="badge-prioridade red">Réu Preso</div>
-                <div class="badge-prioridade yellow">Criança ou adolescente</div>
+    <!-- CONTAINER PROCESSO COMPLETO -->
+    <div class="container-processo">
+        <!-- CONTENT -->
+        <div class="main-processo">
+            <!-- LEFT - NUMERO -->
+            <div class="left">
+                <div class="numero">0000000-00.0000.0.00.0000</div>
             </div>
-            <div class="bl-processo-dados-numero">
-                <span class="bl-processo-dados-numero">8008454-23.2025.8.05.0103</span>
-            </div>
-            <div class="bl-processo-dados-classe">
-                <span class="bl-processo-dados-classe">280 | Ação Penal - Procedimento Ordinário</span>
-            </div>
-            <div class="bl-processo-dados-assuntos">
-                <span class="bl-processo-dados-assuntos">3402 - Ameaça | 12345 - Vias de Fato</span>
-            </div>
-        </div>
-        <div class="bl-processo-buttons">            
-            <div class="bl-processo-button" title="Abrir processo">
-                <i class="fi fi-rr-up-right-from-square"></i>
-            </div>
-            <div class="bl-processo-button-separator"></div>
-            <div class="bl-processo-button" title="Copiar número do processo">
-                <i class="fi fi-rr-copy-alt"></i>
-            </div>
-        </div>
-    </div>
 
-    <br>
-
-    <!-- Exemplo de bloco de processo sem prioridades -->
-    <div class="block-processo">
-        <div class="bl-processo-dados">
-            <div class="bl-processo-dados-prioridades">
-                <div class="badge-prioridade nprioridades">Nenhuma prioridade</div>
-            </div>
-            <div class="bl-processo-dados-numero">
-                <span class="bl-processo-dados-numero">8008454-23.2025.8.05.0103</span>
-            </div>
-            <div class="bl-processo-dados-classe">
-                <span class="bl-processo-dados-classe">280 | Ação Penal - Procedimento Ordinário</span>
-            </div>
-            <div class="bl-processo-dados-assuntos">
-                <span class="bl-processo-dados-assuntos">3402 - Ameaça | 12345 - Vias de Fato</span>
+            <!-- RIGHT - PRIORIDADES -->
+            <div class="right">
+                <div class="prioridades">
+                    <div class="btn-micro tooltip" data-title="Processo Sigiloso">
+                        <img class="btn-micro-icon" src="./../../../public/assets/icons/Lock-6--Streamline-Ultimate.png">
+                    </div>
+                    <div class="btn-micro tooltip" data-title="Réu Preso">
+                        <img class="btn-micro-icon" src="./../../../public/assets/icons/Crime-Man-Inmate--Streamline-Ultimate.png">
+                    </div>
+                    <div class="btn-micro tooltip" data-title="Violência Doméstica, Criança ou Adolescente">
+                        <img class="btn-micro-icon" src="./../../../public/assets/icons/Police-Rotating-Light-1--Streamline-Ultimate.png">
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="bl-processo-buttons">            
-            <div class="bl-processo-button" title="Abrir processo">
-                <i class="fi fi-rr-up-right-from-square"></i>
+
+        <!-- FOOTER -->
+        <div class="footer-processo">
+            <!-- LEFT - CLASSE + ASSUNTOS -->
+            <div class="left">
+                <div class="processo-classe">283 - Ação Penal - Procedimento Ordinário</div>
+                <div class="processo-assunto">Ameaça | Vias de Fato | Grave</div>
             </div>
-            <div class="bl-processo-button-separator"></div>
-            <div class="bl-processo-button" title="Copiar número do processo">
-                <i class="fi fi-rr-copy-alt"></i>
+
+            <!-- RIGHT - BUTTONS -->
+            <div class="right">
+                <div class="buttons">
+                    <div class="btn-mini tooltip" data-title="Abrir processo">
+                        <img class="btn-mini-icon" src="./../../../public/assets/icons/Resize-Expand-Corner--Streamline-Ultimate.png">
+                    </div>
+                    <div class="btn-mini tooltip" data-title="Copiar número do processo">
+                        <img class="btn-mini-icon" src="./../../../public/assets/icons/Task-Checklist--Streamline-Ultimate.png">
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
+    </div><br>   
 
-    <br>
+        <!-- CONTAINER PROCESSO MISTO -->
+    <div class="container-processo">
+        <!-- CONTENT -->
+        <div class="main-processo">
+            <!-- LEFT - NUMERO -->
+            <div class="left">
+                <div class="numero">0000000-00.0000.0.00.0000</div>
+            </div>
 
-    <!-- Exemplo de bloco de processo sem assuntos -->
-    <div class="block-processo">
-        <div class="bl-processo-dados">
-            <div class="bl-processo-dados-prioridades">
-                <div class="badge-prioridade red">Réu Preso</div>
-            </div>
-            <div class="bl-processo-dados-numero">
-                <span class="bl-processo-dados-numero">8008454-23.2025.8.05.0103</span>
-            </div>
-            <div class="bl-processo-dados-classe">
-                <span class="bl-processo-dados-classe">280 | Ação Penal - Procedimento Ordinário</span>
-            </div>
-            <div class="bl-processo-dados-assuntos">
+            <!-- RIGHT - PRIORIDADES -->
+            <div class="right">
+                <div class="prioridades">                    
+                    <div class="btn-micro tooltip" data-title="Réu Preso">
+                        <img class="btn-micro-icon" src="./../../../public/assets/icons/Crime-Man-Inmate--Streamline-Ultimate.png">
+                    </div>                    
+                </div>
             </div>
         </div>
-        <div class="bl-processo-buttons">            
-            <div class="bl-processo-button" title="Abrir processo">
-                <i class="fi fi-rr-up-right-from-square"></i>
+
+        <!-- FOOTER -->
+        <div class="footer-processo">
+            <!-- LEFT - CLASSE + ASSUNTOS -->
+            <div class="left">
+                <div class="processo-classe">280 - Auto de Prisão em Flagrante</div>
+                <div class="processo-assunto not">Assunto não cadastrado</div>
             </div>
-            <div class="bl-processo-button-separator"></div>
-            <div class="bl-processo-button" title="Copiar número do processo">
-                <i class="fi fi-rr-copy-alt"></i>
+
+            <!-- RIGHT - BUTTONS -->
+            <div class="right">
+                <div class="buttons">
+                    <div class="btn-mini tooltip" data-title="Abrir processo">
+                        <img class="btn-mini-icon" src="./../../../public/assets/icons/Resize-Expand-Corner--Streamline-Ultimate.png">
+                    </div>
+                    <div class="btn-mini tooltip" data-title="Copiar número do processo">
+                        <img class="btn-mini-icon" src="./../../../public/assets/icons/Task-Checklist--Streamline-Ultimate.png">
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
+    </div><br> 
 
-    <br>
+    <!-- CONTAINER PROCESSO SEM CADASTROS -->
+     <div class="container-processo">
+        <!-- CONTENT -->
+        <div class="main-processo">
+            <!-- LEFT - NUMERO -->
+            <div class="left">
+                <div class="numero">0000000-00.0000.0.00.0000</div>
+            </div>
 
-    <!-- Exemplo de bloco de processo sem classe -->
-    <div class="block-processo">
-        <div class="bl-processo-dados">
-            <div class="bl-processo-dados-prioridades">
-                <div class="badge-prioridade black">Sigiloso</div>
-            </div>
-            <div class="bl-processo-dados-numero">
-                <span class="bl-processo-dados-numero">8008454-23.2025.8.05.0103</span>
-            </div>
-            <div class="bl-processo-dados-classe">
-                <span class="bl-processo-dados-classe noclasse">Classe não informada</span>
-            </div>
-            <div class="bl-processo-dados-assuntos">
-                <span class="bl-processo-dados-assuntos nassuntos">Nenhum assunto vinculado</span>
+            <!-- RIGHT - PRIORIDADES -->
+            <div class="right">
+                <div class="prioridades">                    
+                </div>                
             </div>
         </div>
-        <div class="bl-processo-buttons">            
-            <div class="bl-processo-button" title="Abrir processo">
-                <i class="fi fi-rr-up-right-from-square"></i>
+
+        <!-- FOOTER -->
+        <div class="footer-processo">
+            <!-- LEFT - CLASSE + ASSUNTOS -->
+            <div class="left">
+                <div class="processo-classe not">Classe não cadastrada</div>
+                <div class="processo-assunto not">Assunto não cadastrado</div>
             </div>
-            <div class="bl-processo-button-separator"></div>
-            <div class="bl-processo-button" title="Copiar número do processo">
-                <i class="fi fi-rr-copy-alt"></i>
+
+            <!-- RIGHT - BUTTONS -->
+            <div class="right">
+                <div class="buttons">
+                    <div class="btn-mini tooltip" data-title="Abrir processo">
+                        <img class="btn-mini-icon" src="./../../../public/assets/icons/Resize-Expand-Corner--Streamline-Ultimate.png">
+                    </div>
+                    <div class="btn-mini tooltip" data-title="Copiar número do processo">
+                        <img class="btn-mini-icon" src="./../../../public/assets/icons/Task-Checklist--Streamline-Ultimate.png">
+                    </div>
+                </div>
             </div>
         </div>
     </div>

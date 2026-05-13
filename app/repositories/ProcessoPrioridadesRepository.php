@@ -37,6 +37,52 @@ final class ProcessoPrioridadesRepository
         return $rows === false ? [] : $rows;
     }
 
+    /**
+     * @param list<string> $processoIds
+     * @return array<string, list<array{id: string, processo_id: string, codigo: string, origem: string, regra_detalhe: mixed, created_at: string}>>
+     */
+    public function findByProcessoIds(array $processoIds): array
+    {
+        $ids = array_values(array_unique(array_filter(array_map(static function ($id): string {
+            return trim((string) $id);
+        }, $processoIds), static function (string $id): bool {
+            return $id !== '';
+        })));
+        if ($ids === []) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $sql = sprintf(
+            'SELECT `id`, `processo_id`, `codigo`, `origem`, `regra_detalhe`, `created_at` FROM `%s` WHERE `processo_id` IN (%s) ORDER BY `processo_id` ASC, `codigo` ASC',
+            $this->table,
+            $placeholders
+        );
+        $statement = $this->connection->prepare($sql);
+        foreach ($ids as $i => $id) {
+            $statement->bindValue($i + 1, $id);
+        }
+        $statement->execute();
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+        if ($rows === false) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($rows as $row) {
+            $pid = trim((string) ($row['processo_id'] ?? ''));
+            if ($pid === '') {
+                continue;
+            }
+            if (!isset($out[$pid])) {
+                $out[$pid] = [];
+            }
+            $out[$pid][] = $row;
+        }
+
+        return $out;
+    }
+
     public function findOneByProcessoAndCodigo(string $processoId, string $codigo): ?array
     {
         $processoId = trim($processoId);

@@ -8,6 +8,7 @@ require_once __DIR__ . '/../repositories/SalaAudienciasPautaRepository.php';
 require_once __DIR__ . '/../repositories/AlocacoesRegrasRepository.php';
 require_once __DIR__ . '/../helpers/AlocacaoTarefasPerfisHelper.php';
 require_once __DIR__ . '/../helpers/CartorioProdutividade.php';
+require_once __DIR__ . '/../helpers/ProcessoBlocoListagemHelper.php';
 
 final class SalaMidiasService
 {
@@ -34,6 +35,7 @@ final class SalaMidiasService
     {
         $filters = $this->normalizeListFilters($filters);
         $rows = $this->tarefasRepository->fetchList($filters, $limit, $offset);
+        $rows = ProcessoBlocoListagemHelper::appendBlocoData($this->connection, $rows);
         $ids = array_values(array_filter(array_map(static function (array $row): string {
             return trim((string) ($row['id'] ?? ''));
         }, $rows)));
