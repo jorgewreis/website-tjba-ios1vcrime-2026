@@ -17,4 +17,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **chore(scripts): update line endings and improve installation script documentation** `[0b2e9b87]`
 - **chore(scripts): refine installation instructions and update .env.example for email scheduling** `[a811b49e]`
 - **chore(scripts): improve installation scripts and documentation for email scheduling** `[fe791a45]`
+- **chore(scripts): enhance installation scripts and documentation for email scheduling** `[37289630]`
 
