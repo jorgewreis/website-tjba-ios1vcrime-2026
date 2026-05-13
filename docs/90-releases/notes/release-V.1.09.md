@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 01 de abril de 2026
+**Data de Lançamento:** 13 de maio de 2026
 
 # V. 1.09
 
-> feat: atualizar configuração de deploy para incluir ambiente de produção e ajustar documentação
+> refactor: enhance layout and text handling in processo bloco listing
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **feat: atualizar configuração de deploy para incluir ambiente de produção e ajustar documentação** `[142c202]`
+- **refactor: enhance layout and text handling in processo bloco listing** `[70bbb0a9]`
 
 ---
 

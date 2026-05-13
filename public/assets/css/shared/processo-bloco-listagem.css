@@ -115,7 +115,7 @@
 }
 
 .container-processo .footer-processo .left .processo-classe {
-    max-width: 100%;
+    width: 100%;
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
@@ -131,7 +131,7 @@
 }
 
 .container-processo .footer-processo .left .processo-assunto {
-    max-width: 100%;
+    width: 100%;
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
@@ -155,6 +155,7 @@
 
 .container-processo .footer-processo .right {
     position: absolute;
+    right: 0px;
 
     display: flex;
     flex-direction: row;
