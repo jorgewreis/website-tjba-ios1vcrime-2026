@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.98.0012
+
+**Data:** 2026-05-13 11:10:01 | **Commit:** `a811b49e` | **Tipo:** `patch`
+
+- chore(scripts): refine installation instructions and update .env.example for email scheduling
+
 ## V. 1.98.0011
 
 **Data:** 2026-05-13 11:06:14 | **Commit:** `0b2e9b87` | **Tipo:** `patch`
@@ -5382,6 +5388,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

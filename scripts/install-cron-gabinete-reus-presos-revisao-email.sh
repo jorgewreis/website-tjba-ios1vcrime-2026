@@ -1,12 +1,15 @@
 #!/bin/bash
 # Instala no crontab do usuario atual: quinta-feira 18:00.
 #
-# Execute na RAIZ do repositorio (onde existem as pastas config/ e scripts/), NAO dentro de public/:
+# Execute na RAIZ do repositorio (onde existem config/ e scripts/), NAO dentro de public/:
 #   cd /home/ios1vcrime/htdocs/apps
-#   bash scripts/install-cron-gabinete-reus-presos-revisao-email.sh
 #
-# Se o arquivo .sh tiver sido editado no Windows, converta para LF antes de subir ao servidor:
-#   dos2unix scripts/install-cron-gabinete-reus-presos-revisao-email.sh
+# Preferir em servidores Linux (sem problema de CRLF):
+#   php scripts/install-cron-gabinete-reus-presos-revisao-email.php
+#
+# Este shell script (alternativa):
+#   bash scripts/install-cron-gabinete-reus-presos-revisao-email.sh
+# Se aparecer "No such file or directory" com o arquivo existindo: CRLF no shebang — use o .php ou dos2unix neste .sh
 
 set -eu
 

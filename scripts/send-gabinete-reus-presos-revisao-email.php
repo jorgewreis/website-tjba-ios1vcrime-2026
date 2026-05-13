@@ -7,9 +7,10 @@ declare(strict_types=1);
  * Instalação automática do agendamento no SO:
  * - Windows (PowerShell como administrador, uma vez):
  *   scripts\register-gabinete-reus-presos-revisao-email-schedule.ps1
- * - Linux (na raiz do repo, NAO em public/):
- *   bash scripts/install-cron-gabinete-reus-presos-revisao-email.sh
- *   Se o .sh veio do Windows com CRLF: dos2unix scripts/install-cron-gabinete-reus-presos-revisao-email.sh
+ * - Linux (na raiz do repo, NAO em public/) — recomendado (evita problema de CRLF no .sh):
+ *   php scripts/install-cron-gabinete-reus-presos-revisao-email.php
+ *   Alternativa: bash scripts/install-cron-gabinete-reus-presos-revisao-email.sh
+ *   (se o Bash disser "No such file": dos2unix no .sh ou use o instalador .php acima)
  *
  * Manual (referência):
  * - Linux cron: 0 18 * * 4 cd /caminho/absoluto/do/repo && /usr/bin/php scripts/send-gabinete-reus-presos-revisao-email.php

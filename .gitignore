@@ -123,3 +123,4 @@ config.local.json
 # =========================
 !/scripts/
 !/scripts/*.php
+!/scripts/*.sh
