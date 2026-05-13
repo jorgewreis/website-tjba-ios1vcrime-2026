@@ -6,10 +6,8 @@ if (function_exists('mb_internal_encoding')) {
     mb_internal_encoding('UTF-8');
 }
 
+require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../services/SalaAudienciasAtaService.php';
-require_once __DIR__ . '/../../helpers/ClasseProcessualListagemHelper.php';
-require_once __DIR__ . '/../../helpers/PrioridadesProcessuaisCatalog.php';
-require_once __DIR__ . '/../../services/ProcessoManager.php';
 require_once __DIR__ . '/../../models/Usuario.php';
 require_once __DIR__ . '/../../helpers/UserAccessHelper.php';
 require_once __DIR__ . '/../../access/ProfileNormalizer.php';
@@ -25,7 +23,6 @@ $podeInscricaoComoEstudante = UserAccessHelper::isUsuarioExterno($perfilsUsuario
 
 $pdo = Conection::getInstance()->getConnection();
 $service = new SalaAudienciasAtaService($pdo);
-$processoManager = new ProcessoManager($pdo);
 $hojeRows = $userId !== '' ? $service->listHojeParaInscricaoEstudante($userId) : [];
 $minhasRows = $userId !== '' ? $service->listMinhasInscricoesEstudante($userId) : [];
 $toTimeTs = static function (array $row): int {
@@ -214,8 +211,8 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <?php include __DIR__ . '/_internal_head_styles.php'; ?>
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+        <link rel="stylesheet" href="/assets/css/shared/processo-bloco-listagem.css?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/css/shared/processo-bloco-listagem.css') ?: time(); ?>">
         <?php include __DIR__ . '/_toast_script.php'; ?>
-        <?php include __DIR__ . '/_copy_process_script.php'; ?>
         <link rel="stylesheet" href="/assets/css/shared/timeline-day-ruler.css?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/css/shared/timeline-day-ruler.css') ?: time(); ?>">
     </head>
 <body class="page-internal">
@@ -290,7 +287,6 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             }
             $exibirStatusAoInvesDeInscricao = ($statusRow !== 'designada');
             $ocultarInfoInscritos = $exibirStatusAoInvesDeInscricao || $sigiloso || $menor || $prioridadeBloqueio;
-            $ocultarPrioridadesCompacto = in_array($statusRow, ['finalizada', 'cancelada'], true);
             $inicioEfetivoRaw = trim((string) ($row['data_hora_inicio_efetivo'] ?? ''));
             $fimEfetivoRaw = trim((string) ($row['data_hora_fim_efetivo'] ?? ''));
             $horaExibicao = painelEstudanteHoraPorStatus(
@@ -319,14 +315,8 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                         <span class="major-info"><?php echo htmlspecialchars($horaExibicao, ENT_QUOTES, 'UTF-8'); ?></span>
                         </div>
                     </div>
-                    <div class="col width-400 col-process process-info" title="Clique para copiar">
-                        <?php
-                            $classeRawPainelEstHoje = (string) ($row['classe_nome'] ?? '');
-                            $classeAudiencia = ClasseProcessualListagemHelper::textoListagem($classeRawPainelEstHoje);
-                            $classeAudienciaClass = ClasseProcessualListagemHelper::classesSpanMinor($classeRawPainelEstHoje);
-                        ?>
-                        <span class="<?php echo $classeAudienciaClass; ?>" title="<?php echo htmlspecialchars($classeAudiencia, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($classeAudiencia, ENT_QUOTES, 'UTF-8'); ?></span>
-                        <span class="major-info"><?php echo htmlspecialchars((string) ($row['numero_processo'] ?? '—'), ENT_QUOTES, 'UTF-8'); ?></span>
+                    <div class="col width-400 col-process">
+                        <?php include __DIR__ . '/_processo_bloco_listagem.php'; ?>
                     </div>
                     <div class="col width-400">
                         <span class="minor-info">Tipo</span>
@@ -361,46 +351,6 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                     <?php endif; ?>
                 </div>
             </div>
-            <?php
-                $prioridadesRow = [];
-                if (!empty($row['numero_processo'])) {
-                    try {
-                        $prioridadesRow = $processoManager->listarPrioridades((string) $row['numero_processo']);
-                    } catch (Throwable $e) {
-                        error_log('sala-audiencias-painel-estudantes: listarPrioridades falhou: ' . $e->getMessage());
-                        $prioridadesRow = [];
-                    }
-                }
-            ?>
-            <?php if (!$ocultarPrioridadesCompacto && ($prioridadesRow !== [] || $sigiloso)): ?>
-            <div class="display-flex col col-full grp-subtask-panel">
-                <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top align-start flex-wrap grp-sub-line grp-sub-line-primary" style="font-family: monospace; font-size: 11px;">
-                    <div class="display-flex row row-fit justify-start gap-y-md flex-wrap grp-sub-left">
-                        <div class="col">
-                            <div class="display-flex flex-wrap align-items-center">
-                                <?php if ($sigiloso): ?>
-                                <span class="badge badge-black" title="Processo sigiloso">S</span>
-                                <?php endif; ?>
-                                <?php foreach ($prioridadesRow as $prioridade): ?>
-                                    <?php
-                                        $rotulo = trim((string) $prioridade);
-                                        $codigo = PrioridadesProcessuaisCatalog::codigoForLabel($rotulo)
-                                            ?? PrioridadesProcessuaisCatalog::normalizeToCodigo($rotulo);
-                                        $badgeClass = 'badge-warning';
-                                        if ($codigo !== null && in_array($codigo, ['reu_preso', 'violencia_domestica', 'crianca_adolescente'], true)) {
-                                            $badgeClass = 'badge-danger';
-                                        } elseif ($codigo === 'sigiloso') {
-                                            $badgeClass = 'badge-black';
-                                        }
-                                    ?>
-                                <span class="badge <?php echo htmlspecialchars($badgeClass, ENT_QUOTES); ?>"><?php echo htmlspecialchars($rotulo, ENT_QUOTES); ?></span>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <?php endif; ?>
         </div>
         <?php endforeach; ?>
         <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
@@ -460,9 +410,6 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
         <?php endif; ?>
         <?php foreach ($minhasPageRows as $m):
             $idPautaMinhasRaw = trim((string) ($m['pauta'] ?? ''));
-            $classeRawPainelEstMinhas = (string) ($m['classe_nome'] ?? '');
-            $classeAudienciaMinhas = ClasseProcessualListagemHelper::textoListagem($classeRawPainelEstMinhas);
-            $classeAudienciaMinhasClass = ClasseProcessualListagemHelper::classesSpanMinor($classeRawPainelEstMinhas);
             $stRow = (string) ($m['status'] ?? '');
             if ($stRow === 'agendada') {
                 $stRow = 'designada';
@@ -518,7 +465,9 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             }
 
             $audienciaRealizada = in_array($stRow, ['realizada', 'finalizada'], true);
+            $row = $m;
             ?>
+        <div class="display-flex col col-full register border-bottom" data-pauta="<?php echo htmlspecialchars($idPautaMinhasRaw, ENT_QUOTES, 'UTF-8'); ?>">
         <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm border-bottom align-center flex-wrap gap-y-sm">
             <div class="display-flex row row-fit justify-start gap-y-sm align-center flex-wrap">
                 <div
@@ -537,9 +486,8 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                     <span class="major-info"><?php echo htmlspecialchars($dataHoraMinhas, ENT_QUOTES, 'UTF-8'); ?></span>
                     </div>
                 </div>
-                <div class="col width-500 col-process process-info" title="Clique para copiar">
-                    <span class="<?php echo htmlspecialchars($classeAudienciaMinhasClass, ENT_QUOTES, 'UTF-8'); ?>" title="<?php echo htmlspecialchars($classeAudienciaMinhas, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($classeAudienciaMinhas, ENT_QUOTES, 'UTF-8'); ?></span>
-                    <span class="major-info"><?php echo htmlspecialchars((string) ($m['numero_processo'] ?? '—'), ENT_QUOTES, 'UTF-8'); ?></span>
+                <div class="col width-500 col-process">
+                    <?php include __DIR__ . '/_processo_bloco_listagem.php'; ?>
                 </div>
                 <?php if ($midiaLabel !== ''): ?>
                 <div class="col width-400">
@@ -562,6 +510,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                     <?php endif; ?>
                 </div>
             </div>
+        </div>
         </div>
         <?php endforeach; ?>
         <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
@@ -936,5 +885,6 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
         pollTimer = window.setInterval(tick, 60000);
     })();
     </script>
+    <?php include __DIR__ . '/_copy_process_script.php'; ?>
 </body>
 </html>

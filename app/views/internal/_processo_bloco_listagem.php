@@ -6,6 +6,8 @@ declare(strict_types=1);
  *
  * Espera linha enriquecida por ProcessoBlocoListagemHelper::appendBlocoData().
  *
+ * Documentação (foundation): docs/00-foundation/bloco-processo-listagem.md
+ *
  * @var array<string, mixed> $row
  */
 

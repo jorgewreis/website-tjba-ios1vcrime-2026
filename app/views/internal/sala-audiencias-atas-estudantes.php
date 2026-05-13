@@ -10,7 +10,6 @@ require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../services/SalaAudienciasAtaService.php';
 require_once __DIR__ . '/../../models/Usuario.php';
 require_once __DIR__ . '/../../helpers/UserAccessHelper.php';
-require_once __DIR__ . '/../../helpers/ClasseProcessualListagemHelper.php';
 require_once __DIR__ . '/../../access/ProfileNormalizer.php';
 
 $userId = trim((string) ($_SESSION['id_usuario'] ?? ''));
@@ -85,8 +84,8 @@ if ($totalPages > 0) {
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <?php include __DIR__ . '/_internal_head_styles.php'; ?>
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+        <link rel="stylesheet" href="/assets/css/shared/processo-bloco-listagem.css?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/css/shared/processo-bloco-listagem.css') ?: time(); ?>">
         <?php include __DIR__ . '/_toast_script.php'; ?>
-        <?php include __DIR__ . '/_copy_process_script.php'; ?>
     </head>
 <body class="page-internal">
     <div class="spacing-top-page"></div>
@@ -174,30 +173,26 @@ if ($totalPages > 0) {
         <?php endif; ?>
 
         <?php foreach ($rowsPage as $m):
-            $idPauta = htmlspecialchars((string) ($m['pauta'] ?? ''), ENT_QUOTES, 'UTF-8');
             $arquivoRelEst = trim((string) ($m['arquivo_relativo'] ?? ''));
             $expira = trim((string) ($m['expires_at'] ?? ''));
             $expiraTs = $expira !== '' ? strtotime($expira) : false;
             $downloadAtaOk = $arquivoRelEst !== '' && !empty($m['id_ata']) && $expiraTs !== false && $expiraTs > time();
             $ataPrazoEncerrado = !empty($m['id_ata']) && $arquivoRelEst === '';
-            $classeRawAtasEst = (string) ($m['classe_nome'] ?? '');
-            $classeAudiencia = ClasseProcessualListagemHelper::textoListagem($classeRawAtasEst);
-            $classeAudienciaClass = ClasseProcessualListagemHelper::classesSpanMinor($classeRawAtasEst);
+            $row = $m;
             $expiraFmt = $expira !== '' ? date('d/m', strtotime($expira)) : '';
             $inicioEfetivoRaw = trim((string) ($m['data_hora_inicio_efetivo'] ?? ''));
             $inicioEfetivoTs = $inicioEfetivoRaw !== '' ? strtotime($inicioEfetivoRaw) : false;
             $horaExibicao = $inicioEfetivoTs !== false ? date('H:i', $inicioEfetivoTs) : substr((string) ($m['hora_audiencia'] ?? ''), 0, 5);
             ?>
-        <div class="display-flex col col-full register border-bottom">
+        <div class="display-flex col col-full register border-bottom" data-pauta="<?php echo htmlspecialchars((string) ($m['pauta'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>">
             <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center flex-wrap gap-y-sm">
                 <div class="display-flex row row-fit justify-start gap-y-sm align-center flex-wrap">
                     <div class="col width-300">
                         <span class="minor-info">Data</span>
                         <span class="major-info"><?php echo htmlspecialchars(date('d/m/Y', strtotime((string) $m['data_audiencia'])) . ' · ' . $horaExibicao, ENT_QUOTES, 'UTF-8'); ?></span>
                     </div>
-                    <div class="col width-500 col-process process-info" title="Clique para copiar">
-                        <span class="<?php echo htmlspecialchars($classeAudienciaClass, ENT_QUOTES, 'UTF-8'); ?>" title="<?php echo htmlspecialchars($classeAudiencia, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($classeAudiencia, ENT_QUOTES, 'UTF-8'); ?></span>
-                        <span class="major-info"><?php echo htmlspecialchars((string) ($m['numero_processo'] ?? '—'), ENT_QUOTES, 'UTF-8'); ?></span>
+                    <div class="col width-500 col-process">
+                        <?php include __DIR__ . '/_processo_bloco_listagem.php'; ?>
                     </div>
                     <div class="col width-400">
                         <span class="minor-info">Ata para download</span>
@@ -290,6 +285,7 @@ if ($totalPages > 0) {
         });
     })();
     </script>
+    <?php include __DIR__ . '/_copy_process_script.php'; ?>
     <?php include __DIR__ . '/_list_section_toggle_script.php'; ?>
 
 </body>

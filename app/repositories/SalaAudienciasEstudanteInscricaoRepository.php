@@ -181,6 +181,7 @@ final class SalaAudienciasEstudanteInscricaoRepository
     {
         $sql = sprintf(
             'SELECT i.`pauta`, i.`created_at` AS inscrito_em,
+                    a.`processo` AS `processo_id`,
                     a.`tipo_audiencia`, a.`data_audiencia`, a.`hora_audiencia`, a.`status`,
                     a.`data_hora_inicio_efetivo`, a.`data_hora_fim_efetivo`, a.`duracao_estimada_minutos`,
                     p.`numero_processo`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `classe_nome`,
@@ -220,7 +221,7 @@ final class SalaAudienciasEstudanteInscricaoRepository
          * PrioridadesProcessuaisCatalog::codigosBloqueantesInscricaoEstudante().
          */
         $sql = '
-            SELECT a.`id_pauta`, a.`tipo_audiencia`, a.`data_audiencia`, a.`hora_audiencia`, a.`localizacao`, a.`status`,
+            SELECT a.`id_pauta`, a.`processo` AS `processo_id`, a.`tipo_audiencia`, a.`data_audiencia`, a.`hora_audiencia`, a.`localizacao`, a.`status`,
                    a.`data_hora_inicio_efetivo`, a.`data_hora_fim_efetivo`, a.`duracao_estimada_minutos`,
                    p.`numero_processo`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `classe_nome`,
                    COALESCE(p.`sigiloso`, 0) AS `processo_sigiloso`,

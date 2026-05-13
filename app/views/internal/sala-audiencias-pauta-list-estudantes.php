@@ -8,7 +8,6 @@ if (function_exists('mb_internal_encoding')) {
 
 require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../services/SalaAudienciasPautaService.php';
-require_once __DIR__ . '/../../helpers/ClasseProcessualListagemHelper.php';
 
 $service = new SalaAudienciasPautaService(Conection::getInstance()->getConnection());
 $statusFilter = trim((string) ($_GET['status'] ?? ''));
@@ -124,8 +123,8 @@ $periodoChipLabels = [
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <?php include __DIR__ . '/_internal_head_styles.php'; ?>
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+        <link rel="stylesheet" href="/assets/css/shared/processo-bloco-listagem.css?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/css/shared/processo-bloco-listagem.css') ?: time(); ?>">
         <?php include __DIR__ . '/_toast_script.php'; ?>
-        <?php include __DIR__ . '/_copy_process_script.php'; ?>
     </head>
 <body class="page-internal">
     <div class="spacing-top-page"></div>
@@ -248,14 +247,8 @@ $periodoChipLabels = [
                         <span class="minor-info">Data e hora</span>
                         <span class="major-info"><?php echo htmlspecialchars(date('d/m/Y', strtotime((string) $row['data_audiencia'])) . ' - ' . substr((string) $row['hora_audiencia'], 0, 5), ENT_QUOTES); ?></span>
                     </div>
-                    <div class="col width-400 col-process process-info" title="Clique para copiar">
-                        <?php
-                            $classeRawPautaEst = (string) ($row['classe_nome'] ?? '');
-                            $classeAudiencia = ClasseProcessualListagemHelper::textoListagem($classeRawPautaEst);
-                            $classeAudienciaClass = ClasseProcessualListagemHelper::classesSpanMinor($classeRawPautaEst);
-                        ?>
-                        <span class="<?php echo $classeAudienciaClass; ?>" title="<?php echo htmlspecialchars($classeAudiencia, ENT_QUOTES); ?>"><?php echo htmlspecialchars($classeAudiencia, ENT_QUOTES); ?></span>
-                        <span class="major-info"><?php echo htmlspecialchars((string) ($row['numero_processo'] ?? '—'), ENT_QUOTES); ?></span>
+                    <div class="col width-500 col-process">
+                        <?php include __DIR__ . '/_processo_bloco_listagem.php'; ?>
                     </div>
                     <div class="col width-400">
                         <span class="minor-info">Tipo de audiência</span>
@@ -330,6 +323,7 @@ $periodoChipLabels = [
     </div>
 
     <script src="/assets/js/modules/audiencias/pauta-list-estudantes.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-list-estudantes.js') ?: time(); ?>"></script>
+    <?php include __DIR__ . '/_copy_process_script.php'; ?>
     <?php include __DIR__ . '/_list_section_toggle_script.php'; ?>
 </body>
 </html>

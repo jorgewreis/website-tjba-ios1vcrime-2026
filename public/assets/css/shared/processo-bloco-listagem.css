@@ -181,7 +181,9 @@
 
 /* Touch / ponteiro grosso: sem :hover estável, os botões ficavam com pointer-events: none. */
 @media (hover: none) and (pointer: coarse) {
-    .register[data-midia-id] .container-processo .footer-processo .right .buttons {
+    .register[data-midia-id] .container-processo .footer-processo .right .buttons,
+    .register[data-audiencia-id] .container-processo .footer-processo .right .buttons,
+    .register[data-pauta] .container-processo .footer-processo .right .buttons {
         opacity: 1;
         visibility: visible;
         pointer-events: auto;
@@ -191,7 +193,11 @@
 
 /* Só linhas de registro (ex.: sala-mídias): o wrapper da lista também usa .register, sem data-midia-id. */
 .register[data-midia-id]:hover .container-processo .footer-processo .right .buttons,
-.register[data-midia-id]:focus-within .container-processo .footer-processo .right .buttons {
+.register[data-midia-id]:focus-within .container-processo .footer-processo .right .buttons,
+.register[data-audiencia-id]:hover .container-processo .footer-processo .right .buttons,
+.register[data-audiencia-id]:focus-within .container-processo .footer-processo .right .buttons,
+.register[data-pauta]:hover .container-processo .footer-processo .right .buttons,
+.register[data-pauta]:focus-within .container-processo .footer-processo .right .buttons {
     opacity: 1;
     visibility: visible;
     pointer-events: auto;

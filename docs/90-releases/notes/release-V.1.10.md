@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 01 de abril de 2026
+**Data de Lançamento:** 13 de maio de 2026
 
 # V. 1.10
 
-> feat: enhance deployment workflows with debug options and refactor SSH setup steps
+> refactor: improve tooltip handling and layout in processo bloco listing
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **feat: enhance deployment workflows with debug options and refactor SSH setup steps** `[0279ca1]`
+- **refactor: improve tooltip handling and layout in processo bloco listing** `[aaa1b5b3]`
 
 ---
 

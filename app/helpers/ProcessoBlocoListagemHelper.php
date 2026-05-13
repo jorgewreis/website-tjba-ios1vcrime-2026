@@ -9,6 +9,8 @@ require_once __DIR__ . '/../repositories/ProcessoPrioridadesRepository.php';
 
 /**
  * Dados agregados para o partial `_processo_bloco_listagem.php` em listagens (ex.: sala de mídias).
+ *
+ * Contrato visual e de integração: docs/00-foundation/bloco-processo-listagem.md
  */
 final class ProcessoBlocoListagemHelper
 {

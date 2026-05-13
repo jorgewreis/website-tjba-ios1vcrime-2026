@@ -6,8 +6,8 @@ if (function_exists('mb_internal_encoding')) {
     mb_internal_encoding('UTF-8');
 }
 
+require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../services/SalaAudienciasAtaService.php';
-require_once __DIR__ . '/../../helpers/ClasseProcessualListagemHelper.php';
 
 $service = new SalaAudienciasAtaService(Conection::getInstance()->getConnection());
 $routePage = trim((string) ($_GET['page'] ?? 'salaata'));
@@ -115,8 +115,8 @@ function sala_audiencias_ata_label_prazo_download(string $expiresAt): string
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <?php include __DIR__ . '/_internal_head_styles.php'; ?>
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+        <link rel="stylesheet" href="/assets/css/shared/processo-bloco-listagem.css?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/css/shared/processo-bloco-listagem.css') ?: time(); ?>">
         <?php include __DIR__ . '/_toast_script.php'; ?>
-        <?php include __DIR__ . '/_copy_process_script.php'; ?>
     </head>
 <body class="page-internal">
 
@@ -216,14 +216,8 @@ function sala_audiencias_ata_label_prazo_download(string $expiresAt): string
                         <span class="minor-info">Data e hora</span>
                         <span class="major-info"><?php echo htmlspecialchars(date('d/m/Y', strtotime((string) $row['data_audiencia'])) . ' - ' . $horaExibicao, ENT_QUOTES, 'UTF-8'); ?></span>
                     </div>
-                    <div class="col width-400 col-process process-info" title="Clique para copiar">
-                        <?php
-                            $classeRawAtasList = (string) ($row['classe_nome'] ?? '');
-                            $classeAudiencia = ClasseProcessualListagemHelper::textoListagem($classeRawAtasList);
-                            $classeAudienciaClass = ClasseProcessualListagemHelper::classesSpanMinor($classeRawAtasList);
-                        ?>
-                        <span class="<?php echo $classeAudienciaClass; ?>" title="<?php echo htmlspecialchars($classeAudiencia, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($classeAudiencia, ENT_QUOTES, 'UTF-8'); ?></span>
-                        <span class="major-info"><?php echo htmlspecialchars((string) ($row['numero_processo'] ?? '—'), ENT_QUOTES, 'UTF-8'); ?></span>
+                    <div class="col width-500 col-process">
+                        <?php include __DIR__ . '/_processo_bloco_listagem.php'; ?>
                     </div>
                     <div class="col width-500">
                         <span class="minor-info">Tipo de audiência</span>
@@ -301,6 +295,7 @@ function sala_audiencias_ata_label_prazo_download(string $expiresAt): string
 
     <style>.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}</style>
     <script src="/assets/js/modules/audiencias/atas-list.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/atas-list.js') ?: time(); ?>"></script>
+    <?php include __DIR__ . '/_copy_process_script.php'; ?>
     <?php include __DIR__ . '/_list_section_toggle_script.php'; ?>
 </body>
 </html>

@@ -14,6 +14,7 @@ require_once __DIR__ . '/../helpers/PrioridadesProcessuaisCatalog.php';
 require_once __DIR__ . '/ProcessoPrioridadesService.php';
 require_once __DIR__ . '/../helpers/AlocacaoTarefasPerfisHelper.php';
 require_once __DIR__ . '/SalaMidiasService.php';
+require_once __DIR__ . '/../helpers/ProcessoBlocoListagemHelper.php';
 
 final class SalaAudienciasPautaService
 {
@@ -62,6 +63,13 @@ final class SalaAudienciasPautaService
             $rawAl = $idPauta !== '' ? ($alocadosByPauta[$idPauta] ?? []) : [];
             $rows[$idx]['Alocados'] = $this->formatAlocadosPresentation($rawAl);
         }
+
+        foreach ($rows as $idx => $row) {
+            if (!isset($rows[$idx]['classe_processo']) || trim((string) $rows[$idx]['classe_processo']) === '') {
+                $rows[$idx]['classe_processo'] = (string) ($row['classe_nome'] ?? '');
+            }
+        }
+        $rows = ProcessoBlocoListagemHelper::appendBlocoData($this->connection, $rows);
 
         return [
             'rows' => $rows,

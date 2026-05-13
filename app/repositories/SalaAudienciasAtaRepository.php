@@ -147,7 +147,7 @@ final class SalaAudienciasAtaRepository
     {
         $diasOcultarListagemSemAtaDisponivel = max(0, $diasOcultarListagemSemAtaDisponivel);
         $sql = sprintf(
-            'SELECT a.`id_pauta`, a.`tipo_audiencia`, a.`data_audiencia`, a.`hora_audiencia`, a.`data_hora_inicio_efetivo`, a.`localizacao`, a.`status`,
+            'SELECT a.`id_pauta`, a.`processo` AS `processo_id`, a.`tipo_audiencia`, a.`data_audiencia`, a.`hora_audiencia`, a.`data_hora_inicio_efetivo`, a.`localizacao`, a.`status`,
                     p.`numero_processo`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `classe_nome`,
                     ata.`id_ata`, ata.`expires_at`, ata.`nome_original`, ata.`uploaded_at`, ata.`arquivo_relativo`
              FROM `sala_audiencias_pauta` a

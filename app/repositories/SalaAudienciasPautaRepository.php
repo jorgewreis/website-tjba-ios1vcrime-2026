@@ -332,7 +332,7 @@ final class SalaAudienciasPautaRepository
     {
         [$where, $params] = $this->buildWhere($filters);
         $sql = sprintf(
-            'SELECT a.`id_pauta`, a.`tipo_audiencia`, a.`data_audiencia`, a.`hora_audiencia`, a.`data_hora_designacao`, a.`hora_inicio`, a.`hora_fim`, a.`data_hora_inicio_efetivo`, a.`data_hora_fim_efetivo`, a.`duracao_estimada_minutos`, a.`localizacao`, a.`status`, p.`numero_processo`, COALESCE(p.`sigiloso`, 0) AS `processo_sigiloso`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `classe_nome`
+            'SELECT a.`id_pauta`, a.`processo` AS `processo_id`, a.`tipo_audiencia`, a.`data_audiencia`, a.`hora_audiencia`, a.`data_hora_designacao`, a.`hora_inicio`, a.`hora_fim`, a.`data_hora_inicio_efetivo`, a.`data_hora_fim_efetivo`, a.`duracao_estimada_minutos`, a.`localizacao`, a.`status`, p.`numero_processo`, COALESCE(p.`sigiloso`, 0) AS `processo_sigiloso`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `classe_nome`
              FROM `%s` a
              LEFT JOIN `processos` p ON p.`id` = a.`processo`
              LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id`

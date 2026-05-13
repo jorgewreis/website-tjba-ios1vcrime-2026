@@ -6,6 +6,7 @@ require_once __DIR__ . '/../repositories/SalaAudienciasAtaRepository.php';
 require_once __DIR__ . '/../repositories/SalaAudienciasEstudanteInscricaoRepository.php';
 require_once __DIR__ . '/../repositories/ProcessoPrioridadesRepository.php';
 require_once __DIR__ . '/../helpers/PrioridadesProcessuaisCatalog.php';
+require_once __DIR__ . '/../helpers/ProcessoBlocoListagemHelper.php';
 
 final class SalaAudienciasAtaService
 {
@@ -35,6 +36,21 @@ final class SalaAudienciasAtaService
     }
 
     /**
+     * @param list<array<string, mixed>> $rows
+     * @return list<array<string, mixed>>
+     */
+    private function enrichRowsBlocoProcesso(array $rows): array
+    {
+        foreach ($rows as $idx => $row) {
+            if (!isset($rows[$idx]['classe_processo']) || trim((string) $rows[$idx]['classe_processo']) === '') {
+                $rows[$idx]['classe_processo'] = (string) ($row['classe_nome'] ?? '');
+            }
+        }
+
+        return ProcessoBlocoListagemHelper::appendBlocoData($this->connection, $rows);
+    }
+
+    /**
      * @return array{rows: list<array<string, mixed>>, total: int}
      */
     public function listRealizadasParaUpload(int $limit, int $offset): array
@@ -46,8 +62,10 @@ final class SalaAudienciasAtaService
 
         $dias = self::LISTAGEM_ATAS_OCULTAR_APOS_DIAS_SEM_DOWNLOAD;
 
+        $rows = $this->ataRepository->listRealizadasComAta($limit, $offset, $dias);
+
         return [
-            'rows' => $this->ataRepository->listRealizadasComAta($limit, $offset, $dias),
+            'rows' => $this->enrichRowsBlocoProcesso($rows),
             'total' => $this->ataRepository->countRealizadas($dias),
         ];
     }
@@ -78,7 +96,7 @@ final class SalaAudienciasAtaService
             $out[] = $row;
         }
 
-        return $out;
+        return $this->enrichRowsBlocoProcesso($out);
     }
 
     /**
@@ -88,7 +106,7 @@ final class SalaAudienciasAtaService
     {
         $this->purgeAtasExpiradas();
 
-        return $this->inscricaoRepository->listInscricoesVisiveisParaUsuario($usuarioId);
+        return $this->enrichRowsBlocoProcesso($this->inscricaoRepository->listInscricoesVisiveisParaUsuario($usuarioId));
     }
 
     /**
