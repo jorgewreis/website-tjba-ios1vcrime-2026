@@ -55,7 +55,6 @@ $prioridadesFichaEstado = $processoIdFicha !== ''
             <h2>Prioridades processuais</h2>
         </div>
         <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md" id="prioridades-processuais-wrap">
-            <p class="description-page" style="margin:0;">Prioridades do processo (valem para todas as audiências). Inclusões e exclusões são salvas ao confirmar cada ação.</p>
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
                     <label for="prioridade-catalog-select">Incluir prioridade</label>

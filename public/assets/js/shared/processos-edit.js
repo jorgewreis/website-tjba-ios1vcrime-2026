@@ -83,6 +83,29 @@
         }
     }
 
+    var BUSCA_CLASSE_DEBOUNCE_MS = 1000;
+    var buscaClasseTimer = null;
+
+    function clearBuscaClasseTimer() {
+        if (buscaClasseTimer !== null) {
+            global.clearTimeout(buscaClasseTimer);
+            buscaClasseTimer = null;
+        }
+    }
+
+    function scheduleBuscarClasse() {
+        clearBuscaClasseTimer();
+        const inputCodigo = global.document.getElementById('proc-classe-codigo');
+        const codigo = inputCodigo ? String(inputCodigo.value || '').trim() : '';
+        if (codigo === '') {
+            return;
+        }
+        buscaClasseTimer = global.setTimeout(function () {
+            buscaClasseTimer = null;
+            buscarClasse();
+        }, BUSCA_CLASSE_DEBOUNCE_MS);
+    }
+
     function buscarClasse() {
         const inputCodigo = global.document.getElementById('proc-classe-codigo');
         const btnBuscar = global.document.getElementById('btn-proc-classe-buscar');
@@ -238,11 +261,13 @@
             inputCodigo.addEventListener('keydown', function (event) {
                 if (event.key === 'Enter') {
                     event.preventDefault();
+                    clearBuscaClasseTimer();
                     buscarClasse();
                 }
             });
             inputCodigo.addEventListener('input', function () {
                 resetEstado();
+                scheduleBuscarClasse();
             });
         }
 

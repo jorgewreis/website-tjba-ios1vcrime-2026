@@ -498,6 +498,27 @@
         }).catch(function () { notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.'); });
     });
 
+    function syncDateMinForStatusPauta() {
+        var st = document.getElementById('audiencia-edit-status');
+        var dt = document.getElementById('audiencia-edit-data');
+        if (!st || !dt) {
+            return;
+        }
+        var today = String(dt.getAttribute('data-min-designada') || '').trim();
+        if (String(st.value || '') === 'designada' && today !== '') {
+            var cur = String(dt.value || '').trim();
+            if (cur !== '' && cur < today) {
+                dt.setAttribute('min', cur);
+            } else {
+                dt.setAttribute('min', today);
+            }
+        } else {
+            dt.removeAttribute('min');
+        }
+    }
+
+    document.getElementById('audiencia-edit-status')?.addEventListener('change', syncDateMinForStatusPauta);
+
     document.getElementById('btn-audiencia-edit-salvar')?.addEventListener('click', function () {
         normalizePartNameInput();
         saveAudiencia(false);
@@ -773,6 +794,7 @@
     updateAlocarButtonState();
 
     refreshHoraEditDisponiveis(function () {
+        syncDateMinForStatusPauta();
         initialAudienciaSnapshot = currentAudienciaSnapshot();
     });
 })();

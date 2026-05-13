@@ -223,6 +223,66 @@ final class ProdutividadeBadgesRepository
         return $statement->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Badges já concedidos (definição ativa) para os usuários indicados — ex.: ranking.
+     *
+     * @param list<string> $usuarioIds
+     * @return array<string, list<array{nome: string, icone: string}>>
+     */
+    public function listConcedidosGroupedByUsuarioId(array $usuarioIds): array
+    {
+        $unique = [];
+        foreach ($usuarioIds as $uid) {
+            $t = trim((string) $uid);
+            if ($t !== '') {
+                $unique[$t] = true;
+            }
+        }
+        $list = array_keys($unique);
+        $out = [];
+        foreach ($list as $uid) {
+            $out[$uid] = [];
+        }
+        if ($list === []) {
+            return [];
+        }
+        $placeholders = [];
+        $params = [];
+        foreach (array_values($list) as $i => $uid) {
+            $key = ':uid' . $i;
+            $placeholders[] = $key;
+            $params[$key] = $uid;
+        }
+        $inClause = implode(', ', $placeholders);
+        $sql = sprintf(
+            'SELECT bc.`usuario_id`, b.`nome`, b.`icone`
+             FROM `%s` bc
+             INNER JOIN `%s` b ON b.`id` = bc.`badge_id` AND b.`ativo` = 1
+             WHERE bc.`usuario_id` IN (%s)
+             ORDER BY bc.`usuario_id` ASC, b.`nome` ASC',
+            $this->tableGranted,
+            $this->table,
+            $inClause
+        );
+        $statement = $this->connection->prepare($sql);
+        foreach ($params as $name => $value) {
+            $statement->bindValue($name, $value);
+        }
+        $statement->execute();
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $uid = (string) ($row['usuario_id'] ?? '');
+            if ($uid === '' || !array_key_exists($uid, $out)) {
+                continue;
+            }
+            $out[$uid][] = [
+                'nome' => (string) ($row['nome'] ?? ''),
+                'icone' => trim((string) ($row['icone'] ?? '')),
+            ];
+        }
+
+        return $out;
+    }
+
     public function marcarNotificado(string $concedidoId, string $usuarioId): bool
     {
         $sql = sprintf(
@@ -251,8 +311,10 @@ final class ProdutividadeBadgesRepository
 
         $q = trim((string) ($filters['q'] ?? ''));
         if ($q !== '') {
-            $where[] = '(b.`nome` LIKE :q OR b.`descricao` LIKE :q)';
-            $params[':q'] = '%' . $q . '%';
+            $like = '%' . $q . '%';
+            $where[] = '(b.`nome` LIKE :q_nome OR b.`descricao` LIKE :q_desc)';
+            $params[':q_nome'] = $like;
+            $params[':q_desc'] = $like;
         }
 
         $ativo = $filters['ativo'] ?? null;

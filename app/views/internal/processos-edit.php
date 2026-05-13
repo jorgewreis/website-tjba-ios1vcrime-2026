@@ -133,9 +133,8 @@ $numeroProcesso = (string) ($processo['numero_processo'] ?? '');
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap: 12px;">
                 <div class="col">
                     <label for="proc-classe-codigo">Código da classe processual</label>
-                    <input type="text" class="width-300 height-md" id="proc-classe-codigo" placeholder="Ex.: 283" maxlength="20" autocomplete="off">
+                    <input type="text" class="width-300 height-md" id="proc-classe-codigo" placeholder="Ex.: 283" maxlength="20" autocomplete="off" title="Consulta automática após 1 s sem digitar; Enter consulta na hora.">
                 </div>
-                <button type="button" class="btn btn-primary-outline height-md" id="btn-proc-classe-buscar">Buscar</button>
             </div>
 
             <div class="display-flex col col-full gap-y-md" id="proc-classe-resultado" style="display: none;">

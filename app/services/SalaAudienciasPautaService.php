@@ -756,9 +756,9 @@ final class SalaAudienciasPautaService
      */
     private function finalizeStatusPauta(string $statusIn, string $whenEmpty): string
     {
-        $s = trim($statusIn);
+        $s = strtolower(trim($statusIn));
         if ($s === '') {
-            $s = trim($whenEmpty);
+            $s = strtolower(trim($whenEmpty));
         }
         $s = $this->normalizeLegacyStatus($s);
         if (!in_array($s, ['designada', 'realizada', 'redesignada', 'cancelada', 'em_andamento', 'finalizada'], true)) {
@@ -771,6 +771,7 @@ final class SalaAudienciasPautaService
     /** Compatível com valores antigos armazenados ou enviados pelo cliente (agendada / adiada). */
     private function normalizeLegacyStatus(string $s): string
     {
+        $s = strtolower(trim($s));
         if ($s === 'agendada') {
             return 'designada';
         }

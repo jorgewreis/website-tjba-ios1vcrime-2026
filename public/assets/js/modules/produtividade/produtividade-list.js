@@ -52,10 +52,37 @@
             select.style.display = 'none';
         }
 
-        var timer = null;
+        var searchDebounceTimer = null;
+        var autoSelectTimer = null;
+        var autoSelectArmToken = 0;
+
+        function clearAutoSelectTimer() {
+            if (autoSelectTimer) {
+                clearTimeout(autoSelectTimer);
+                autoSelectTimer = null;
+            }
+        }
+
+        function applyRuleSelectionFromOption(option) {
+            if (!option) {
+                return;
+            }
+            var selectedId = option.value || '';
+            hidden.value = selectedId;
+            if (selectedId === '') {
+                syncCreateButtonState();
+                return;
+            }
+            input.value = option.textContent || input.value;
+            list.innerHTML = '';
+            clearSelect();
+            syncCreateButtonState();
+        }
+
         function render(rows) {
             list.innerHTML = '';
             clearSelect();
+            clearAutoSelectTimer();
             if (!rows || rows.length === 0) {
                 var empty = document.createElement('span');
                 empty.className = 'minor-info';
@@ -70,34 +97,51 @@
                 select.appendChild(option);
             });
             select.style.display = '';
+
+            if (rows.length === 1 && String(rows[0].id || '').trim() !== '') {
+                var token = ++autoSelectArmToken;
+                autoSelectTimer = setTimeout(function () {
+                    autoSelectTimer = null;
+                    if (token !== autoSelectArmToken) {
+                        return;
+                    }
+                    if ((hidden.value || '').trim() !== '') {
+                        return;
+                    }
+                    if (!select || select.options.length !== 2) {
+                        return;
+                    }
+                    var opt = select.options[1];
+                    if (!opt || !(opt.value || '').trim()) {
+                        return;
+                    }
+                    select.selectedIndex = 1;
+                    applyRuleSelectionFromOption(opt);
+                }, 1000);
+            }
         }
 
         select.addEventListener('change', function () {
+            clearAutoSelectTimer();
             var selectedOption = select.options[select.selectedIndex];
-            var selectedId = selectedOption ? (selectedOption.value || '') : '';
-            hidden.value = selectedId;
-            if (selectedId === '') {
-                syncCreateButtonState();
-                return;
-            }
-            input.value = selectedOption.textContent || input.value;
-            list.innerHTML = '';
-            syncCreateButtonState();
+            applyRuleSelectionFromOption(selectedOption);
         });
 
         input.addEventListener('input', function () {
             hidden.value = '';
             syncCreateButtonState();
             var q = input.value.trim();
-            if (timer) {
-                clearTimeout(timer);
+            clearAutoSelectTimer();
+            if (searchDebounceTimer) {
+                clearTimeout(searchDebounceTimer);
             }
             if (q.length < 2) {
                 list.innerHTML = '';
                 clearSelect();
                 return;
             }
-            timer = setTimeout(function () {
+            searchDebounceTimer = setTimeout(function () {
+                searchDebounceTimer = null;
                 fetch('/api/produtividade/regras/search.php?q=' + encodeURIComponent(q) + '&limit=10', {
                     credentials: 'same-origin'
                 })

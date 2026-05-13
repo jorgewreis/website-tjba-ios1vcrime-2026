@@ -109,8 +109,12 @@ final class ProdutividadeRegrasRepository
 
         $q = trim((string) ($filters['q'] ?? ''));
         if ($q !== '') {
-            $where[] = '(`tipo_ato` LIKE :q OR `tipo_documento` LIKE :q OR `sistema_modulo` LIKE :q)';
-            $params[':q'] = '%' . $q . '%';
+            // PDO/MySQL (prepared statements nativos): um placeholder nomeado não pode ser repetido na mesma query.
+            $like = '%' . $q . '%';
+            $where[] = '(`tipo_ato` LIKE :q_ato OR `tipo_documento` LIKE :q_doc OR `sistema_modulo` LIKE :q_mod)';
+            $params[':q_ato'] = $like;
+            $params[':q_doc'] = $like;
+            $params[':q_mod'] = $like;
         }
 
         $ativo = $filters['ativo'] ?? null;
@@ -147,8 +151,12 @@ final class ProdutividadeRegrasRepository
 
         $q = trim((string) ($filters['q'] ?? ''));
         if ($q !== '') {
-            $where[] = '(`tipo_ato` LIKE :q OR `tipo_documento` LIKE :q OR `sistema_modulo` LIKE :q)';
-            $params[':q'] = '%' . $q . '%';
+            // PDO/MySQL (prepared statements nativos): um placeholder nomeado não pode ser repetido na mesma query.
+            $like = '%' . $q . '%';
+            $where[] = '(`tipo_ato` LIKE :q_ato OR `tipo_documento` LIKE :q_doc OR `sistema_modulo` LIKE :q_mod)';
+            $params[':q_ato'] = $like;
+            $params[':q_doc'] = $like;
+            $params[':q_mod'] = $like;
         }
 
         $ativo = $filters['ativo'] ?? null;

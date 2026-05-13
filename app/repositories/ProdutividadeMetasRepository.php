@@ -156,8 +156,11 @@ final class ProdutividadeMetasRepository
 
         $q = trim((string) ($filters['q'] ?? ''));
         if ($q !== '') {
-            $where[] = '(m.`tipo_alvo` LIKE :q OR m.`alvo_valor` LIKE :q OR m.`periodo_tipo` LIKE :q)';
-            $params[':q'] = '%' . $q . '%';
+            $like = '%' . $q . '%';
+            $where[] = '(m.`tipo_alvo` LIKE :q_tipo OR m.`alvo_valor` LIKE :q_alvo OR m.`periodo_tipo` LIKE :q_periodo)';
+            $params[':q_tipo'] = $like;
+            $params[':q_alvo'] = $like;
+            $params[':q_periodo'] = $like;
         }
 
         $ativo = $filters['ativo'] ?? null;

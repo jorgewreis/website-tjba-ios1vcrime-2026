@@ -4,19 +4,35 @@ declare(strict_types=1);
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
+require_once __DIR__ . '/ProcessoPrioridadesService.php';
 
 /**
  * Leitura de processo/classe por CNJ e sincronização da classe a partir do DataJud.
  */
 final class ProcessoClasseSyncService
 {
+    private PDO $connection;
     private ProcessosRepository $processosRepository;
     private ClassesRepository $classesRepository;
 
     public function __construct(PDO $connection)
     {
+        $this->connection = $connection;
         $this->processosRepository = new ProcessosRepository($connection);
         $this->classesRepository = new ClassesRepository($connection);
+    }
+
+    /** Classe CNJ 1268 — Medida Protetiva: prioridades de violência doméstica e sigiloso (derivado). */
+    private const CODIGO_CLASSE_MEDIDA_PROTETIVA = '1268';
+
+    private function aplicarPrioridadesMedidaProtetivaSeClasse1268(string $processoId, string $codigoClasseNormalizado, string $numeroProcesso): void
+    {
+        if ($codigoClasseNormalizado !== self::CODIGO_CLASSE_MEDIDA_PROTETIVA) {
+            return;
+        }
+        $prioridades = new ProcessoPrioridadesService($this->connection);
+        $prioridades->registrarViolenciaDomesticaMedidaProtetiva($processoId);
+        $prioridades->reconciliarAutomaticas($processoId, trim($numeroProcesso), 0);
     }
 
     /**
@@ -81,6 +97,7 @@ final class ProcessoClasseSyncService
 
         if ($processo === null) {
             $pid = $this->processosRepository->ensureProcess($numeroFormatado, $classeIdResolved, null, false);
+            $this->aplicarPrioridadesMedidaProtetivaSeClasse1268($pid, $codigo, $numeroFormatado);
 
             return [
                 'action' => 'created',
@@ -94,6 +111,7 @@ final class ProcessoClasseSyncService
 
         if ($existingClasseId === '') {
             $this->processosRepository->updateClasseForProcesso($pid, $classeIdResolved);
+            $this->aplicarPrioridadesMedidaProtetivaSeClasse1268($pid, $codigo, $numeroFormatado);
 
             return [
                 'action' => 'updated',
@@ -105,6 +123,7 @@ final class ProcessoClasseSyncService
         $existingClasse = $this->classesRepository->findById($existingClasseId);
         if ($existingClasse === null) {
             $this->processosRepository->updateClasseForProcesso($pid, $classeIdResolved);
+            $this->aplicarPrioridadesMedidaProtetivaSeClasse1268($pid, $codigo, $numeroFormatado);
 
             return [
                 'action' => 'updated',
@@ -123,6 +142,7 @@ final class ProcessoClasseSyncService
         }
 
         $this->processosRepository->updateClasseForProcesso($pid, $classeIdResolved);
+        $this->aplicarPrioridadesMedidaProtetivaSeClasse1268($pid, $codigo, $numeroFormatado);
 
         return [
             'action' => 'updated',
@@ -152,6 +172,7 @@ final class ProcessoClasseSyncService
         if ($processo === null) {
             throw new InvalidArgumentException('Processo não encontrado.');
         }
+        $numeroProcesso = trim((string) ($processo['numero_processo'] ?? ''));
 
         $codigo = ClassesRepository::normalizeCodigo($codigoRaw);
         if ($codigo === '') {
@@ -162,6 +183,7 @@ final class ProcessoClasseSyncService
         if ($existente !== null) {
             $classeId = (string) $existente['id'];
             $this->processosRepository->updateClasseForProcesso($processoId, $classeId);
+            $this->aplicarPrioridadesMedidaProtetivaSeClasse1268($processoId, $codigo, $numeroProcesso);
 
             return [
                 'action' => 'linked',
@@ -181,6 +203,7 @@ final class ProcessoClasseSyncService
 
         $classeId = $this->classesRepository->ensureClass($codigo, $nome);
         $this->processosRepository->updateClasseForProcesso($processoId, $classeId);
+        $this->aplicarPrioridadesMedidaProtetivaSeClasse1268($processoId, $codigo, $numeroProcesso);
         $criada = $this->classesRepository->findById($classeId);
 
         return [

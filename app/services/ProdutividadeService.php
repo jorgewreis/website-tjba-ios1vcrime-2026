@@ -560,6 +560,17 @@ final class ProdutividadeService
         return $this->badgesRepository->listPendentesByUsuario($actorUserId, $limit);
     }
 
+    /**
+     * @param list<string> $usuarioIds
+     * @return array<string, list<array{nome: string, icone: string}>>
+     */
+    public function listBadgesConcedidosPorUsuarioIds(string $actorUserId, array $usuarioIds): array
+    {
+        $this->assertAuthenticated($actorUserId);
+
+        return $this->badgesRepository->listConcedidosGroupedByUsuarioId($usuarioIds);
+    }
+
     public function marcarBadgeNotificado(string $actorUserId, string $concedidoId): bool
     {
         $this->assertAuthenticated($actorUserId);

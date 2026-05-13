@@ -286,7 +286,7 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
             $dataMinimaCadastro = date('Y-m-d');
             $horariosGrade = SalaAudienciasPautaService::horariosGradeCadastroAudiencia();
             $horaAtualEdit = substr((string) ($row['hora_audiencia'] ?? '00:00:00'), 0, 5);
-            $statusAtualEdit = (string) ($row['status'] ?? 'designada');
+            $statusAtualEdit = strtolower(trim((string) ($row['status'] ?? 'designada')));
             if ($statusAtualEdit === 'agendada') {
                 $statusAtualEdit = 'designada';
             }
@@ -315,6 +315,15 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                 $hfFmt = substr((string) $row['hora_fim'], 0, 5);
             }
             $durMin = (int) ($row['duracao_estimada_minutos'] ?? 0);
+            $dataAudRow = trim((string) ($row['data_audiencia'] ?? ''));
+            $dataMinAttr = '';
+            if ($statusAtualEdit === 'designada') {
+                if ($dataAudRow !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $dataAudRow) && $dataAudRow < $dataMinimaCadastro) {
+                    $dataMinAttr = ' min="' . htmlspecialchars($dataAudRow, ENT_QUOTES) . '"';
+                } else {
+                    $dataMinAttr = ' min="' . htmlspecialchars($dataMinimaCadastro, ENT_QUOTES) . '"';
+                }
+            }
         ?>
         <input type="hidden" id="audiencia-edit-id" value="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>">
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
@@ -348,7 +357,7 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                 </div>
                 <div class="col filter">
                     <label for="audiencia-edit-data">Data <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="date" class="width-300 height-md" id="audiencia-edit-data" min="<?php echo htmlspecialchars($dataMinimaCadastro, ENT_QUOTES); ?>" value="<?php echo htmlspecialchars((string) ($row['data_audiencia'] ?? ''), ENT_QUOTES); ?>" required>
+                    <input type="date" class="width-300 height-md" id="audiencia-edit-data" data-min-designada="<?php echo htmlspecialchars($dataMinimaCadastro, ENT_QUOTES); ?>"<?php echo $dataMinAttr; ?> value="<?php echo htmlspecialchars((string) ($row['data_audiencia'] ?? ''), ENT_QUOTES); ?>" required>
                 </div>
                 <div class="col filter">
                     <label for="audiencia-edit-hora">Hora <span class="label-hint-obrigatorio">*obrigatório</span></label>

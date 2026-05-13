@@ -40,7 +40,6 @@ $offset = ($currentPage - 1) * $itemsPerPage;
 
 $rows = [];
 $totalDocuments = 0;
-$sumPontos = 0.0;
 $isGestao = false;
 $canSeeRegrasButton = false;
 $canSeeMetasButton = false;
@@ -74,12 +73,19 @@ if ($filters['data_inicio'] !== '' && $filters['data_fim'] !== '') {
     }
 }
 
+if ($userId !== '' && $canLoadLancamentos && $errors === []) {
+    try {
+        $service->verificarBadges($userId);
+    } catch (Throwable $e) {
+        // Badges não devem impedir carregamento da página.
+    }
+}
+
 if ($canLoadLancamentos) {
     try {
         $result = $service->listLancamentos($userId, $filters, $itemsPerPage, $offset);
         $rows = $result['rows'] ?? [];
         $totalDocuments = (int) ($result['total'] ?? 0);
-        $sumPontos = (float) ($result['sum_pontos'] ?? 0);
         $isGestao = (bool) ($result['is_gestao'] ?? false);
     } catch (Throwable $e) {
         $errors[] = 'Erro ao carregar lançamentos: ' . $e->getMessage();
@@ -97,7 +103,6 @@ if ($totalDocuments === 0) {
         try {
             $result = $service->listLancamentos($userId, $filters, $itemsPerPage, $offset);
             $rows = $result['rows'] ?? [];
-            $sumPontos = (float) ($result['sum_pontos'] ?? 0);
             $isGestao = (bool) ($result['is_gestao'] ?? false);
         } catch (Throwable $e) {
             $errors[] = 'Erro ao carregar lançamentos: ' . $e->getMessage();
@@ -134,6 +139,33 @@ if ($showRankingBlock && $userId !== '') {
     } catch (Throwable $e) {
         $rankingBlockRows = [];
         $rankingBlockOculto = false;
+    }
+}
+
+$rankingBadgesPorUsuario = [];
+if ($showRankingBlock && $userId !== '' && $rankingBlockRows !== []) {
+    foreach ($rankingBlockRows as $rr) {
+        $uidR = trim((string) ($rr['usuario_id'] ?? ''));
+        if ($uidR === '' || $uidR === $userId) {
+            continue;
+        }
+        try {
+            $service->verificarBadges($uidR);
+        } catch (Throwable $e) {
+            // noop
+        }
+    }
+    $idsRank = [];
+    foreach ($rankingBlockRows as $rr) {
+        $t = trim((string) ($rr['usuario_id'] ?? ''));
+        if ($t !== '') {
+            $idsRank[] = $t;
+        }
+    }
+    try {
+        $rankingBadgesPorUsuario = $service->listBadgesConcedidosPorUsuarioIds($userId, $idsRank);
+    } catch (Throwable $e) {
+        $rankingBadgesPorUsuario = [];
     }
 }
 
@@ -194,21 +226,6 @@ $exportQuery = [
 ];
 $exportCsvHref = '/api/produtividade/export-csv.php?' . http_build_query($exportQuery);
 $exportPdfHref = '/api/produtividade/export-pdf.php?' . http_build_query($exportQuery);
-$resumoCards = [
-    'week' => ['current' => 0.0, 'previous' => 0.0, 'variation_percent' => 0.0],
-    'month' => ['current' => 0.0, 'previous' => 0.0, 'variation_percent' => 0.0],
-    'quarter' => ['current' => 0.0, 'previous' => 0.0, 'variation_percent' => 0.0],
-    'projection' => ['projected_points' => 0.0, 'current_points' => 0.0, 'business_days_total' => 0, 'business_days_with_launch' => 0],
-];
-$metaResumo = ['has_meta' => false];
-if ($canLoadLancamentos && $errors === []) {
-    try {
-        $resumoCards = $service->getResumoCards($userId, $filters);
-        $metaResumo = $service->getMetaResumoUsuario($userId, $filters);
-    } catch (Throwable $e) {
-        $errors[] = 'Erro ao carregar resumo de período: ' . $e->getMessage();
-    }
-}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -225,6 +242,25 @@ if ($canLoadLancamentos && $errors === []) {
                 flex-direction: column;
                 gap: 6px;
                 margin-top: 8px;
+            }
+            .badge-produtividade-ranking {
+                display: inline-flex;
+                align-items: center;
+                max-width: 220px;
+                margin: 0 4px 0 0;
+                padding: 3px 8px;
+                font-size: 10px;
+                font-weight: 600;
+                line-height: 1.25;
+                border-radius: 4px;
+                text-transform: none;
+                letter-spacing: 0.01em;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                background-color: var(--color-primary-bg-light);
+                color: var(--color-primary-active);
+                border: 1px solid var(--color-primary);
             }
         </style>
     </head>
@@ -316,10 +352,28 @@ if ($canLoadLancamentos && $errors === []) {
                             }
                             $posRank = (int) ($row['posicao'] ?? 0);
                             $ptsRank = (float) ($row['pontos_total'] ?? 0);
+                            $uidRank = trim((string) ($row['usuario_id'] ?? ''));
+                            $badgesRank = ($uidRank !== '' && isset($rankingBadgesPorUsuario[$uidRank]))
+                                ? $rankingBadgesPorUsuario[$uidRank]
+                                : [];
                             ?>
-                        <div class="display-flex row row-full justify-between padding-y-sm border-bottom">
-                            <span class="major-info" style="font-family: monospace; font-size: 12px; font-weight: 600;"><?php echo $posRank; ?>. <?php echo htmlspecialchars($nomeRank, ENT_QUOTES, 'UTF-8'); ?></span>
-                            <span class="major-info" style="font-family: monospace; font-size: 12px;"><?php echo number_format($ptsRank, 2, ',', '.'); ?> pts</span>
+                        <div class="display-flex row row-full justify-between align-center flex-wrap gap-y-sm padding-y-sm border-bottom">
+                            <div class="display-flex row row-fit align-center flex-wrap gap-y-sm" style="min-width: 0; flex: 1 1 auto;">
+                                <span class="major-info" style="font-family: monospace; font-size: 12px; font-weight: 600;"><?php echo $posRank; ?>. <?php echo htmlspecialchars($nomeRank, ENT_QUOTES, 'UTF-8'); ?></span>
+                                <?php if ($badgesRank !== []): ?>
+                                <span class="display-flex row row-fit flex-wrap align-center" style="gap:4px; min-width:0;">
+                                    <?php foreach ($badgesRank as $bItem):
+                                        $bn = trim((string) ($bItem['nome'] ?? ''));
+                                        if ($bn === '') {
+                                            continue;
+                                        }
+                                        ?>
+                                    <span class="badge-produtividade-ranking" title="<?php echo htmlspecialchars($bn, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($bn, ENT_QUOTES, 'UTF-8'); ?></span>
+                                    <?php endforeach; ?>
+                                </span>
+                                <?php endif; ?>
+                            </div>
+                            <span class="major-info" style="font-family: monospace; font-size: 12px; flex-shrink:0;"><?php echo number_format($ptsRank, 2, ',', '.'); ?> pts</span>
                         </div>
                         <?php endforeach; ?>
                     </div>
@@ -398,35 +452,6 @@ if ($canLoadLancamentos && $errors === []) {
             </div>
         </form>
 
-        <div class="display-flex row row-full padding-x-md padding-y-sm border-bottom gap-y-md">
-            <span class="status status-pending padding-x-lg">Total de lançamentos: <?php echo $totalDocuments; ?></span>
-            <span class="status status-success padding-x-lg">Pontos no filtro: <?php echo number_format($sumPontos, 2, ',', '.'); ?></span>
-            <span class="status status-pending padding-x-lg">
-                Semana: <?php echo number_format((float) ($resumoCards['week']['current'] ?? 0), 2, ',', '.'); ?>
-                (<?php echo number_format((float) ($resumoCards['week']['variation_percent'] ?? 0), 1, ',', '.'); ?>%)
-            </span>
-            <span class="status status-pending padding-x-lg">
-                Mês: <?php echo number_format((float) ($resumoCards['month']['current'] ?? 0), 2, ',', '.'); ?>
-                (<?php echo number_format((float) ($resumoCards['month']['variation_percent'] ?? 0), 1, ',', '.'); ?>%)
-            </span>
-            <span class="status status-pending padding-x-lg">
-                Trimestre: <?php echo number_format((float) ($resumoCards['quarter']['current'] ?? 0), 2, ',', '.'); ?>
-                (<?php echo number_format((float) ($resumoCards['quarter']['variation_percent'] ?? 0), 1, ',', '.'); ?>%)
-            </span>
-            <span class="status status-pending padding-x-lg">
-                Projeção (mês, seu usuário): <?php echo number_format((float) ($resumoCards['projection']['projected_points'] ?? 0), 2, ',', '.'); ?> pts
-            </span>
-            <?php if ((bool) ($metaResumo['has_meta'] ?? false)): ?>
-            <span class="status status-success padding-x-lg">
-                Meta <?php echo htmlspecialchars((string) ($metaResumo['periodo_tipo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>:
-                <?php echo number_format((float) ($metaResumo['pontos_atuais'] ?? 0), 2, ',', '.'); ?> /
-                <?php echo number_format((float) ($metaResumo['meta_pontos'] ?? 0), 2, ',', '.'); ?>
-                (<?php echo number_format((float) ($metaResumo['percentual'] ?? 0), 1, ',', '.'); ?>%)
-            </span>
-            <?php endif; ?>
-        </div>
-        <!-- FIM LANÇAMENTOS -->
-
         <!-- ERROS -->
         <?php foreach ($errors as $error): ?>
         <div class="display-flex row row-full padding-x-md padding-y-sm border-bottom">
@@ -459,12 +484,26 @@ if ($canLoadLancamentos && $errors === []) {
                 // Classe judicial vinda de processos + classes (CNJ), não de produtividade_lancamentos.classe_processo (contexto do módulo).
                 $classeJudicialRotulo = trim((string) ($row['classe_judicial_nome'] ?? ''));
                 $labelColunaProcesso = $classeJudicialRotulo !== '' ? $classeJudicialRotulo : 'Processo';
+
+                $npLinha = trim((string) ($row['numero_processo'] ?? ''));
+                $temProcessoLinha = $npLinha !== '';
+                $qtdLinha = (int) ($row['quantidade'] ?? 0);
+                $qtdSufixoLinha = $qtdLinha > 1 ? (' x' . $qtdLinha) : '';
+                $pontosLinha = (float) ($row['pontos_calculados'] ?? 0);
+                $pontosFmtLinha = number_format($pontosLinha, 2, ',', '.');
+                $pontosUnidadeLinha = abs($pontosLinha - 1.0) < 0.000001 ? 'pt' : 'pts';
+                $dataFmtLinha = date('d/m/Y H:i', strtotime((string) ($row['data_hora_ato'] ?? 'now')));
+                $tarefaPontosLinha = (string) ($descricaoTarefa ?? '') . $qtdSufixoLinha . ' - ' . $pontosFmtLinha . ' ' . $pontosUnidadeLinha;
+                $usuarioLinha = (string) ($row['usuario_nome'] ?? $row['usuario_id'] ?? '');
+                $linhaLancamento = $temProcessoLinha
+                    ? ($dataFmtLinha . ' | ' . $npLinha . ' | ' . $tarefaPontosLinha . ' | ' . $usuarioLinha)
+                    : ($dataFmtLinha . ' | ' . $tarefaPontosLinha . ' | ' . $usuarioLinha);
                 ?>
                 <div class="display-flex col col-full register border-bottom">
                     <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                         <div class="display-flex row row-fit justify-start gap-y-md flex-wrap" style="width: calc(100% - 50px);">
                             <div class="row width-full gap-x-sm padding-x-md padding-y-sm" style="font-family: monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                <?php echo htmlspecialchars(date('d/m/Y H:i', strtotime((string) ($row['data_hora_ato'] ?? 'now'))) . ' | ' . (string) ($row['numero_processo'] ?? '—') . ' | ' . (string) ($descricaoTarefa ?? '') . ' x' . (int) ($row['quantidade'] ?? 0) . ' - ' . number_format((float) ($row['pontos_calculados'] ?? 0), 2, ',', '.') . ' pts | ' . (string) ($row['usuario_nome'] ?? $row['usuario_id'] ?? '') , ENT_QUOTES); ?>
+                                <?php echo htmlspecialchars($linhaLancamento, ENT_QUOTES, 'UTF-8'); ?>
                             </div>
                         </div>
                         <div class="display-flex row row-fit justify-end gap-y-sm align-center">
@@ -515,6 +554,7 @@ if ($canLoadLancamentos && $errors === []) {
             <?php endif; ?>
         </div>
         <?php endif; ?>
+        <!-- FIM LANÇAMENTOS -->
     </div>
 
     <?php include __DIR__ . '/_datajud_scripts.php'; ?>

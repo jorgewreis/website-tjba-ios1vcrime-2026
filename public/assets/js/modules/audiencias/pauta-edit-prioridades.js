@@ -79,26 +79,6 @@
         return codigosBloqueados().indexOf(String(codigo || '')) >= 0;
     }
 
-    function hintForCodigo(codigo) {
-        var c = String(codigo || '');
-        if (state.has_parte_menor && c === state.codigo_bloqueado_menor) {
-            return '*automática (parte menor)';
-        }
-        if (state.has_reu_preso && c === state.codigo_bloqueado_reu_preso) {
-            return '*automática (réu preso)';
-        }
-        var sigCod = String(state.codigo_bloqueado_sigiloso || '');
-        if (sigCod !== '' && c === sigCod) {
-            if (state.processo_sigiloso) {
-                return '*automática (processo sigiloso)';
-            }
-            if (state.sigiloso_obrigatorio_menor_ou_vd) {
-                return '*obrigatória (menor ou violência doméstica)';
-            }
-        }
-        return '';
-    }
-
     /** Mesma regra de `sala-audiencias-pauta-list.php`: danger para réu preso, violência doméstica, criança/adolescente. */
     function dangerCodes() {
         return Array.isArray(window.PRIORIDADES_BADGE_DANGER_CODES)
@@ -180,22 +160,21 @@
 
     function renderList() {
         listEl.innerHTML = '';
-        if (!state || !Array.isArray(state.prioridades) || state.prioridades.length === 0) {
-            var wrapEmpty = document.createElement('div');
-            wrapEmpty.className = 'display-flex flex-wrap align-items-center gap-y-sm';
-            if (window.PAUTA_PROCESSO_SIGILOSO) {
-                var sigOnly = document.createElement('span');
-                sigOnly.className = 'badge badge-black';
-                sigOnly.title = 'Processo sigiloso';
-                sigOnly.textContent = 'S';
-                wrapEmpty.appendChild(sigOnly);
-            }
-            var empty = document.createElement('span');
-            empty.className = 'minor-info';
-            empty.style.marginLeft = window.PAUTA_PROCESSO_SIGILOSO ? '8px' : '';
-            empty.textContent = 'Nenhuma prioridade registrada para este processo.';
-            wrapEmpty.appendChild(empty);
-            listEl.appendChild(wrapEmpty);
+        var wrap = document.createElement('div');
+        wrap.className = 'display-flex row row-full flex-wrap align-items-center';
+        wrap.style.gap = '6px 8px';
+
+        if (window.PAUTA_PROCESSO_SIGILOSO) {
+            var sigMark = document.createElement('span');
+            sigMark.className = 'badge badge-black';
+            sigMark.title = 'Processo sigiloso';
+            sigMark.textContent = 'S';
+            wrap.appendChild(sigMark);
+        }
+
+        var hasLista = state && Array.isArray(state.prioridades) && state.prioridades.length > 0;
+        if (!hasLista) {
+            listEl.appendChild(wrap);
             return;
         }
 
@@ -203,35 +182,18 @@
             return String(a.label || a.codigo).localeCompare(String(b.label || b.codigo), 'pt-BR');
         });
 
-        sorted.forEach(function (p, idx) {
+        sorted.forEach(function (p) {
             var codigo = String(p.codigo || '');
             var label = String(p.label || codigo);
-            var row = document.createElement('div');
-            row.className = 'display-flex row row-full align-center justify-between padding-y-xs';
-            row.style.borderBottom = '1px solid rgba(0,0,0,.06)';
+            var slot = document.createElement('span');
+            slot.className = 'display-inline-flex align-items-center';
+            slot.style.gap = '4px';
 
-            var left = document.createElement('div');
-            left.className = 'display-flex row row-fit align-center gap-y-sm flex-wrap';
-            if (idx === 0 && window.PAUTA_PROCESSO_SIGILOSO) {
-                var sigBadge = document.createElement('span');
-                sigBadge.className = 'badge badge-black';
-                sigBadge.title = 'Processo sigiloso';
-                sigBadge.textContent = 'S';
-                left.appendChild(sigBadge);
-            }
             var badge = document.createElement('span');
             badge.className = badgeClassForPrioridade(p);
             badge.textContent = label;
-            left.appendChild(badge);
-            var hintText = hintForCodigo(codigo);
-            if (hintText) {
-                var hint = document.createElement('span');
-                hint.className = 'label-hint-automatizado';
-                hint.textContent = hintText;
-                left.appendChild(hint);
-            }
-
-            row.appendChild(left);
+            badge.title = label;
+            slot.appendChild(badge);
 
             if (!isLockedCodigo(codigo)) {
                 var btn = document.createElement('button');
@@ -239,12 +201,15 @@
                 btn.className = 'btn btn-danger-outline height-sm';
                 btn.setAttribute('data-prioridade-codigo-rem', codigo);
                 btn.setAttribute('title', 'Remover prioridade');
-                btn.textContent = 'Remover';
-                row.appendChild(btn);
+                btn.setAttribute('aria-label', 'Remover prioridade');
+                btn.textContent = '×';
+                slot.appendChild(btn);
             }
 
-            listEl.appendChild(row);
+            wrap.appendChild(slot);
         });
+
+        listEl.appendChild(wrap);
     }
 
     function applyState(next) {
