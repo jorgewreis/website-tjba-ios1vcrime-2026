@@ -170,23 +170,24 @@
     gap: 2px;
 }
 
-.container-processo .processo-bloco-act-btn {
+.container-processo .footer-processo .right .buttons .btn-mini {
     width: 30px;
     height: 30px;
-    min-width: 30px;
-    min-height: 30px;
-    padding: 0;
-    display: inline-flex;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
     align-items: center;
     justify-content: center;
+    box-sizing: border-box;
 }
 
-.container-processo .processo-bloco-act-btn:disabled {
+.container-processo .footer-processo .right .buttons .btn-mini.processo-bloco-mini-disabled {
     opacity: 0.45;
     cursor: not-allowed;
+    pointer-events: none;
 }
 
-.container-processo .processo-bloco-act-btn-icon {
+.container-processo .footer-processo .right .buttons .btn-mini .btn-mini-icon {
     width: 20px;
     height: 20px;
     filter: grayscale(100%);
@@ -194,7 +195,7 @@
     transition: filter 0.3s ease, opacity 0.3s ease;
 }
 
-.container-processo .processo-bloco-act-btn:not(:disabled):hover .processo-bloco-act-btn-icon {
+.container-processo .footer-processo .right .buttons .btn-mini.processo-bloco-tooltip--btn:hover .btn-mini-icon {
     filter: grayscale(0%);
     opacity: 1;
 }

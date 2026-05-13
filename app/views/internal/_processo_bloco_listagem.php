@@ -50,24 +50,52 @@ $iconCopiar = '/assets/icons/Task-Checklist--Streamline-Ultimate.png';
         </div>
         <div class="right">
             <div class="buttons">
-                <button type="button"
-                    class="btn btn-secondary-outline processo-bloco-act-btn processo-bloco-tooltip processo-bloco-tooltip--btn"
-                    <?php if (!$abrirDisabled && $abrirHref !== ''): ?>data-nav-href="<?php echo htmlspecialchars($abrirHref, ENT_QUOTES, 'UTF-8'); ?>"<?php endif; ?>
-                    <?php if ($abrirDisabled): ?>disabled aria-disabled="true"<?php endif; ?>
-                    data-title="<?php echo $abrirDisabled ? 'Processo não cadastrado no sistema' : 'Abrir processo'; ?>"
-                    aria-label="<?php echo $abrirDisabled ? 'Processo não cadastrado no sistema' : 'Abrir processo'; ?>"
-                    title="<?php echo $abrirDisabled ? 'Processo não cadastrado no sistema' : 'Abrir processo'; ?>">
-                    <img class="processo-bloco-act-btn-icon" src="<?php echo htmlspecialchars($iconAbrir, ENT_QUOTES, 'UTF-8'); ?>" alt="" width="20" height="20">
-                </button>
-                <button type="button"
-                    class="btn btn-secondary-outline processo-bloco-act-btn processo-bloco-tooltip processo-bloco-tooltip--btn js-copy-numero-processo-btn"
-                    data-copy-numero-processo="<?php echo htmlspecialchars($numero, ENT_QUOTES, 'UTF-8'); ?>"
-                    data-title="Copiar número do processo"
-                    aria-label="Copiar número do processo"
-                    title="Copiar número do processo"
-                    <?php if ($numero === ''): ?>disabled aria-disabled="true"<?php endif; ?>>
-                    <img class="processo-bloco-act-btn-icon" src="<?php echo htmlspecialchars($iconCopiar, ENT_QUOTES, 'UTF-8'); ?>" alt="" width="20" height="20">
-                </button>
+                <?php if (!$abrirDisabled && $abrirHref !== ''): ?>
+                    <div
+                        class="btn-mini tooltip processo-bloco-tooltip processo-bloco-tooltip--btn"
+                        role="button"
+                        tabindex="0"
+                        data-nav-href="<?php echo htmlspecialchars($abrirHref, ENT_QUOTES, 'UTF-8'); ?>"
+                        data-title="Abrir processo"
+                        aria-label="Abrir processo"
+                        title="Abrir processo">
+                        <img class="btn-mini-icon" src="<?php echo htmlspecialchars($iconAbrir, ENT_QUOTES, 'UTF-8'); ?>" alt="" width="20" height="20">
+                    </div>
+                <?php else: ?>
+                    <div
+                        class="btn-mini tooltip processo-bloco-tooltip processo-bloco-mini-disabled"
+                        role="button"
+                        tabindex="-1"
+                        aria-disabled="true"
+                        data-title="Processo não cadastrado no sistema"
+                        aria-label="Processo não cadastrado no sistema"
+                        title="Processo não cadastrado no sistema">
+                        <img class="btn-mini-icon" src="<?php echo htmlspecialchars($iconAbrir, ENT_QUOTES, 'UTF-8'); ?>" alt="" width="20" height="20">
+                    </div>
+                <?php endif; ?>
+                <?php if ($numero !== ''): ?>
+                    <div
+                        class="btn-mini tooltip processo-bloco-tooltip processo-bloco-tooltip--btn"
+                        role="button"
+                        tabindex="0"
+                        data-copy-numero-processo="<?php echo htmlspecialchars($numero, ENT_QUOTES, 'UTF-8'); ?>"
+                        data-title="Copiar número do processo"
+                        aria-label="Copiar número do processo"
+                        title="Copiar número do processo">
+                        <img class="btn-mini-icon" src="<?php echo htmlspecialchars($iconCopiar, ENT_QUOTES, 'UTF-8'); ?>" alt="" width="20" height="20">
+                    </div>
+                <?php else: ?>
+                    <div
+                        class="btn-mini tooltip processo-bloco-tooltip processo-bloco-mini-disabled"
+                        role="button"
+                        tabindex="-1"
+                        aria-disabled="true"
+                        data-title="Copiar número do processo"
+                        aria-label="Copiar número do processo"
+                        title="Copiar número do processo">
+                        <img class="btn-mini-icon" src="<?php echo htmlspecialchars($iconCopiar, ENT_QUOTES, 'UTF-8'); ?>" alt="" width="20" height="20">
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
