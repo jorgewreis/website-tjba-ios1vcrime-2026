@@ -154,7 +154,7 @@ final class GabineteReuPresoRepository
         $params = $built['params'];
         $whereSql = implode(' AND ', $where);
 
-        $lastMovSql = '(SELECT CONCAT(m.`tipo_codigo`, \'|\', m.`data_movimentacao`) FROM `gabinete_reu_preso_movimentacao` m WHERE m.`reu_preso_id` = g.`id` ORDER BY m.`data_movimentacao` DESC, m.`created_at` DESC LIMIT 1)';
+        $lastMovSql = '(SELECT CONCAT(m.`tipo_codigo`, \'|\', m.`data_movimentacao`, \'|\', COALESCE(m.`observacoes`, \'\')) FROM `gabinete_reu_preso_movimentacao` m WHERE m.`reu_preso_id` = g.`id` ORDER BY m.`data_movimentacao` DESC, m.`created_at` DESC LIMIT 1)';
 
         $sql = sprintf(
             'SELECT g.`id`, g.`nome`, g.`proxima_revisao`, g.`status`,
@@ -207,7 +207,7 @@ final class GabineteReuPresoRepository
      */
     public function fetchAtivosPresosComRevisaoEntre(string $hojeYmd, string $limiteYmd): array
     {
-        $lastMovSql = '(SELECT CONCAT(m.`tipo_codigo`, \'|\', m.`data_movimentacao`) FROM `gabinete_reu_preso_movimentacao` m WHERE m.`reu_preso_id` = g.`id` ORDER BY m.`data_movimentacao` DESC, m.`created_at` DESC LIMIT 1)';
+        $lastMovSql = '(SELECT CONCAT(m.`tipo_codigo`, \'|\', m.`data_movimentacao`, \'|\', COALESCE(m.`observacoes`, \'\')) FROM `gabinete_reu_preso_movimentacao` m WHERE m.`reu_preso_id` = g.`id` ORDER BY m.`data_movimentacao` DESC, m.`created_at` DESC LIMIT 1)';
         $sql = sprintf(
             'SELECT g.`id`, g.`nome`, g.`proxima_revisao`,
                     pr.`numero_processo` AS `processo_principal_numero`,

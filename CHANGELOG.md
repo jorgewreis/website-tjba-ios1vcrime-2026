@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.98.0007
+
+**Data:** 2026-05-13 10:23:42 | **Commit:** `e71d0ba4` | **Tipo:** `patch`
+
+- feat(GabineteReusPresosRevisaoEmailService): update email content and add generation timestamp
+
 ## V. 1.98.0006
 
 **Data:** 2026-05-13 10:00:17 | **Commit:** `8980a9bd` | **Tipo:** `patch`
@@ -5352,6 +5358,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

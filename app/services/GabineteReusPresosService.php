@@ -764,9 +764,9 @@ final class GabineteReusPresosService
         if ($raw === null || $raw === '') {
             return '—';
         }
-        $parts = explode('|', $raw, 2);
-        $tipo = $parts[0] ?? '';
-        $data = $parts[1] ?? '';
+        $parts = explode('|', $raw, 3);
+        $tipo = trim((string) ($parts[0] ?? ''));
+        $data = trim((string) ($parts[1] ?? ''));
         $label = $this->labelTipoMovimentacao($tipo);
         $dataBr = '';
         if ($data !== '') {

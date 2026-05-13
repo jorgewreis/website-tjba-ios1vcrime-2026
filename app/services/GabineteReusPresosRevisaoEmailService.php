@@ -139,15 +139,7 @@ final class GabineteReusPresosRevisaoEmailService
     {
         $linhas = '';
         if ($rows === []) {
-            $linhas = '<tr>'
-                . '<td style="border:1px solid #dcdcdc;padding:8px;">Nenhum registro</td>'
-                . '<td style="border:1px solid #dcdcdc;padding:8px;">—</td>'
-                . '<td style="border:1px solid #dcdcdc;padding:8px;">—</td>'
-                . '<td style="border:1px solid #dcdcdc;padding:8px;">—</td>'
-                . '<td style="border:1px solid #dcdcdc;padding:8px;">—</td>'
-                . '<td style="border:1px solid #dcdcdc;padding:8px;">—</td>'
-                . '<td style="border:1px solid #dcdcdc;padding:8px;">—</td>'
-                . '</tr>';
+            $linhas = '<tr><td colspan="5" style="border:1px solid #dcdcdc;padding:8px;">Nenhum registro no período.</td></tr>';
         } else {
             foreach ($rows as $row) {
                 $rid = trim((string) ($row['id'] ?? ''));
@@ -159,7 +151,7 @@ final class GabineteReusPresosRevisaoEmailService
                 $tempoPrisao = $this->helperService->formatDuracaoCustodia($dataPrisaoRaw !== '' ? $dataPrisaoRaw : null);
                 $proxima = $this->formatDateBr((string) ($row['proxima_revisao'] ?? ''));
                 $decisoes = $this->buildDecisoesHtml($decisoesPorReu[$rid] ?? []);
-                $ultimaMov = $this->formatUltimaMovRaw((string) ($row['ultima_mov_raw'] ?? ''));
+                $ultimaMov = $this->formatUltimaMovHtml((string) ($row['ultima_mov_raw'] ?? ''));
 
                 $linhas .= '<tr>'
                     . '<td style="border:1px solid #dcdcdc;padding:8px;vertical-align:top;">' . $nome . '</td>'
@@ -167,11 +159,15 @@ final class GabineteReusPresosRevisaoEmailService
                     . '<td style="border:1px solid #dcdcdc;padding:8px;vertical-align:top;">' . $this->escape($dataPrisao) . '</td>'
                     . '<td style="border:1px solid #dcdcdc;padding:8px;vertical-align:top;">' . $this->escape($tempoPrisao) . '</td>'
                     . '<td style="border:1px solid #dcdcdc;padding:8px;vertical-align:top;">' . $this->escape($proxima) . '</td>'
-                    . '<td style="border:1px solid #dcdcdc;padding:8px;vertical-align:top;">' . $decisoes . '</td>'
-                    . '<td style="border:1px solid #dcdcdc;padding:8px;vertical-align:top;">' . $this->escape($ultimaMov) . '</td>'
+                    . '</tr>'
+                    . '<tr>'
+                    . '<td colspan="3" style="border:1px solid #dcdcdc;padding:8px;vertical-align:top;background:#fafafa;">' . $decisoes . '</td>'
+                    . '<td colspan="2" style="border:1px solid #dcdcdc;padding:8px;vertical-align:top;background:#fafafa;">' . $ultimaMov . '</td>'
                     . '</tr>';
             }
         }
+
+        $geradoEm = $this->formatGeradoEmLegivel();
 
         return '<!DOCTYPE html>
 <html lang="pt-BR">
@@ -183,8 +179,11 @@ final class GabineteReusPresosRevisaoEmailService
     <table width="100%" cellpadding="0" cellspacing="0" style="max-width:1150px;margin:0 auto;background:#ffffff;border-collapse:collapse;">
         <tr>
             <td style="padding:16px;border-bottom:1px solid #eaeaea;">
-                <h2 style="margin:0 0 6px 0;font-size:18px;color:#222;">Resumo semanal - Réus presos</h2>
-                <p style="margin:0;color:#555;font-size:13px;">Critério: próximos ' . $horizonteDias . ' dias e reavaliações em atraso.</p>
+                <p style="margin:0 0 4px 0;font-size:14px;color:#333;line-height:1.4;">Primeira Vara Crime da Comarca de Ilhéus</p>
+                <p style="margin:0 0 14px 0;font-size:14px;color:#333;line-height:1.4;">Sistema de Gestão do Cartório</p>
+                <p style="margin:0 0 10px 0;font-size:15px;color:#111;line-height:1.4;"><strong>Resumo semanal para Reavaliação de Prisões</strong></p>
+                <p style="margin:0 0 8px 0;font-size:10px;color:#666;line-height:1.4;">Documento gerado automaticamente em ' . $this->escape($geradoEm) . '</p>
+                <p style="margin:0;font-size:10px;color:#555;line-height:1.45;">Obs.: Essa lista mostra somente os processos com data próxima dos ' . (string) $horizonteDias . ' dias de vencimento e os já vencidos.</p>
             </td>
         </tr>
         <tr>
@@ -197,8 +196,10 @@ final class GabineteReusPresosRevisaoEmailService
                             <th style="border:1px solid #dcdcdc;padding:8px;text-align:left;">Data da prisão</th>
                             <th style="border:1px solid #dcdcdc;padding:8px;text-align:left;">Tempo de prisão</th>
                             <th style="border:1px solid #dcdcdc;padding:8px;text-align:left;">Próxima reavaliação</th>
-                            <th style="border:1px solid #dcdcdc;padding:8px;text-align:left;">Datas das últimas decisões</th>
-                            <th style="border:1px solid #dcdcdc;padding:8px;text-align:left;">Última movimentação</th>
+                        </tr>
+                        <tr style="background:#eaeaea;">
+                            <th colspan="3" style="border:1px solid #dcdcdc;padding:8px;text-align:left;font-size:11px;">Datas das últimas decisões</th>
+                            <th colspan="2" style="border:1px solid #dcdcdc;padding:8px;text-align:left;font-size:11px;">Última movimentação</th>
                         </tr>
                     </thead>
                     <tbody>' . $linhas . '</tbody>
@@ -217,8 +218,13 @@ final class GabineteReusPresosRevisaoEmailService
     private function buildAltBody(array $rows, array $decisoesPorReu, int $horizonteDias): string
     {
         $lines = [];
-        $lines[] = 'Resumo semanal - Réus presos';
-        $lines[] = 'Critério: próximos ' . $horizonteDias . ' dias e reavaliações em atraso.';
+        $lines[] = 'Primeira Vara Crime da Comarca de Ilhéus';
+        $lines[] = 'Sistema de Gestão do Cartório';
+        $lines[] = '';
+        $lines[] = 'Resumo semanal para Reavaliação de Prisões';
+        $lines[] = '';
+        $lines[] = 'Documento gerado automaticamente em ' . $this->formatGeradoEmLegivel();
+        $lines[] = 'Obs.: Essa lista mostra somente os processos com data próxima dos ' . (string) $horizonteDias . ' dias de vencimento e os já vencidos.';
         $lines[] = '';
         if ($rows === []) {
             $lines[] = 'Nenhum registro no período.';
@@ -234,7 +240,7 @@ final class GabineteReusPresosRevisaoEmailService
             $lines[] = 'Tempo prisão: ' . $this->helperService->formatDuracaoCustodia($dataPrisaoRaw !== '' ? $dataPrisaoRaw : null);
             $lines[] = 'Próxima reavaliação: ' . $this->formatDateBr((string) ($row['proxima_revisao'] ?? ''));
             $lines[] = 'Últimas decisões: ' . $this->buildDecisoesText($decisoesPorReu[$rid] ?? []);
-            $lines[] = 'Última movimentação: ' . $this->formatUltimaMovRaw((string) ($row['ultima_mov_raw'] ?? ''));
+            $lines[] = 'Última movimentação: ' . $this->formatUltimaMovPlain((string) ($row['ultima_mov_raw'] ?? ''));
             $lines[] = '';
         }
 
@@ -253,7 +259,12 @@ final class GabineteReusPresosRevisaoEmailService
         foreach ($items as $item) {
             $data = $this->formatDateBr((string) ($item['data_movimentacao'] ?? ''));
             $label = $this->helperService->labelTipoMovimentacao((string) ($item['tipo_codigo'] ?? ''));
-            $parts[] = $this->escape($data . ' — ' . $label);
+            $linha = $data . ' — ' . $label;
+            $obs = trim((string) ($item['observacoes'] ?? ''));
+            if ($obs !== '') {
+                $linha .= ' — Obs.: ' . $obs;
+            }
+            $parts[] = $this->escape($linha);
         }
         return implode('<br>', $parts);
     }
@@ -270,23 +281,63 @@ final class GabineteReusPresosRevisaoEmailService
         foreach ($items as $item) {
             $data = $this->formatDateBr((string) ($item['data_movimentacao'] ?? ''));
             $label = $this->helperService->labelTipoMovimentacao((string) ($item['tipo_codigo'] ?? ''));
-            $parts[] = $data . ' - ' . $label;
+            $linha = $data . ' — ' . $label;
+            $obs = trim((string) ($item['observacoes'] ?? ''));
+            if ($obs !== '') {
+                $linha .= ' — Obs.: ' . $obs;
+            }
+            $parts[] = $linha;
         }
         return implode('; ', $parts);
     }
 
-    private function formatUltimaMovRaw(string $raw): string
+    /**
+     * Formato: `tipo_codigo|data_movimentacao` (legado) ou `tipo_codigo|data_movimentacao|observacoes`.
+     *
+     * @return array{label:string,data_br:string,obs:string}
+     */
+    private function parseUltimaMovRaw(string $raw): ?array
     {
         $raw = trim($raw);
         if ($raw === '') {
-            return '—';
+            return null;
         }
-        $parts = explode('|', $raw, 2);
+        $parts = explode('|', $raw, 3);
         $tipo = trim((string) ($parts[0] ?? ''));
         $data = trim((string) ($parts[1] ?? ''));
+        $obs = trim((string) ($parts[2] ?? ''));
         $label = $tipo !== '' ? $this->helperService->labelTipoMovimentacao($tipo) : '—';
         $dataBr = $data !== '' ? $this->formatDateBr($data) : '—';
-        return $label . ' — ' . $dataBr;
+
+        return ['label' => $label, 'data_br' => $dataBr, 'obs' => $obs];
+    }
+
+    private function formatUltimaMovPlain(string $raw): string
+    {
+        $p = $this->parseUltimaMovRaw($raw);
+        if ($p === null) {
+            return '—';
+        }
+        $out = $p['label'] . ' — ' . $p['data_br'];
+        if ($p['obs'] !== '') {
+            $out .= ' — Obs.: ' . $p['obs'];
+        }
+
+        return $out;
+    }
+
+    private function formatUltimaMovHtml(string $raw): string
+    {
+        $p = $this->parseUltimaMovRaw($raw);
+        if ($p === null) {
+            return '—';
+        }
+        $linha = $p['label'] . ' — ' . $p['data_br'];
+        if ($p['obs'] !== '') {
+            $linha .= "\nObs.: " . $p['obs'];
+        }
+
+        return nl2br($this->escape($linha), false);
     }
 
     private function formatDateBr(string $date): string
@@ -300,6 +351,14 @@ final class GabineteReusPresosRevisaoEmailService
             return '—';
         }
         return date('d/m/Y', $ts);
+    }
+
+    /** Data e hora da geração do documento (fuso já definido em `config/config.php`, ex. APP_TIMEZONE). */
+    private function formatGeradoEmLegivel(): string
+    {
+        $agora = new DateTimeImmutable('now');
+
+        return $agora->format('d/m/Y') . ' às ' . $agora->format('H:i:s');
     }
 
     private function escape(string $value): string
