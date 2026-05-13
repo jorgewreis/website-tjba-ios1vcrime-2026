@@ -18,13 +18,21 @@
             window.showToast(payload);
             return;
         }
+        if (window.top && window.top !== window) {
+            try {
+                window.top.postMessage({ type: 'APP_TOAST', payload: payload }, '*');
+                return;
+            } catch (err) {
+                /* continua */
+            }
+        }
         if (window.parent && window.parent !== window) {
             try {
                 window.parent.postMessage({ type: 'APP_TOAST', payload: payload }, '*');
+                return;
             } catch (err) {
-                /* ignore */
+                /* continua */
             }
-            return;
         }
         if (window.App && window.App.Toast && typeof window.App.Toast.show === 'function') {
             window.App.Toast.show(payload);

@@ -75,7 +75,6 @@ declare(strict_types=1);
         </div>
     </div>
 
-    <script src="/assets/js/shared/toast.js"></script>
     <script src="/assets/js/modules/pje-publico/cnj.js"></script>
     <script src="/assets/js/modules/pje-publico/pje-publico-api.js"></script>
 </body>
