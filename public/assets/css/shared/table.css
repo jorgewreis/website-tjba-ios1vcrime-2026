@@ -422,6 +422,12 @@
     font-weight: 600;
 }
 
+/* Sem classe vinculada: manter cor/peso de rótulo secundário (não herdar “destaque” acidental). */
+.process-info .minor-info.text-ellipsis:not(.classe-info) {
+    color: var(--color-text-secondary);
+    font-weight: 400;
+}
+
 .status-task {
     display: flex;
     align-items: flex-end;

@@ -10,6 +10,7 @@ require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../services/SalaAudienciasAtaService.php';
 require_once __DIR__ . '/../../models/Usuario.php';
 require_once __DIR__ . '/../../helpers/UserAccessHelper.php';
+require_once __DIR__ . '/../../helpers/ClasseProcessualListagemHelper.php';
 require_once __DIR__ . '/../../access/ProfileNormalizer.php';
 
 $userId = trim((string) ($_SESSION['id_usuario'] ?? ''));
@@ -179,12 +180,9 @@ if ($totalPages > 0) {
             $expiraTs = $expira !== '' ? strtotime($expira) : false;
             $downloadAtaOk = $arquivoRelEst !== '' && !empty($m['id_ata']) && $expiraTs !== false && $expiraTs > time();
             $ataPrazoEncerrado = !empty($m['id_ata']) && $arquivoRelEst === '';
-            $classeAudiencia = trim((string) ($m['classe_nome'] ?? ''));
-            $classeAudienciaTemValor = $classeAudiencia !== '' && $classeAudiencia !== 'Classe não informada';
-            if (!$classeAudienciaTemValor) {
-                $classeAudiencia = 'Classe não informada';
-            }
-            $classeAudienciaClass = 'minor-info text-ellipsis' . ($classeAudienciaTemValor ? ' classe-info' : '');
+            $classeRawAtasEst = (string) ($m['classe_nome'] ?? '');
+            $classeAudiencia = ClasseProcessualListagemHelper::textoListagem($classeRawAtasEst);
+            $classeAudienciaClass = ClasseProcessualListagemHelper::classesSpanMinor($classeRawAtasEst);
             $expiraFmt = $expira !== '' ? date('d/m', strtotime($expira)) : '';
             $inicioEfetivoRaw = trim((string) ($m['data_hora_inicio_efetivo'] ?? ''));
             $inicioEfetivoTs = $inicioEfetivoRaw !== '' ? strtotime($inicioEfetivoRaw) : false;

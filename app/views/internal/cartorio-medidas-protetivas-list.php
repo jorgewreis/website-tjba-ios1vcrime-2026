@@ -8,6 +8,7 @@ if (function_exists('mb_internal_encoding')) {
 
 require_once __DIR__ . '/../../services/MedidasProtetivasService.php';
 require_once __DIR__ . '/../../helpers/CartorioAlocacaoChipHelper.php';
+require_once __DIR__ . '/../../helpers/ClasseProcessualListagemHelper.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -307,19 +308,16 @@ if ($totalPages > 0) {
                                 </label>
                             <?php endif; ?>
                         </div>
-                        <div class="col width-500 col-process process-info" title="clique para copiar">
+                        <div class="col width-500 col-process process-info" title="Clique para copiar">
                             <?php
-                                $classeMedida = trim((string) ($row['Classe'] ?? ''));
-                                $classeMedidaTemValor = $classeMedida !== '' && $classeMedida !== 'Classe não informada';
-                                if (!$classeMedidaTemValor) {
-                                    $classeMedida = 'Classe não informada';
-                                }
-                                $classeMedidaClass = 'minor-info text-ellipsis' . ($classeMedidaTemValor ? ' classe-info' : '');
+                                $classeRawMedida = (string) ($row['Classe'] ?? '');
+                                $classeMedida = ClasseProcessualListagemHelper::textoListagem($classeRawMedida);
+                                $classeMedidaClass = ClasseProcessualListagemHelper::classesSpanMinor($classeRawMedida);
                             ?>
                             <span class="<?php echo $classeMedidaClass; ?>" title="<?php echo htmlspecialchars($classeMedida, ENT_QUOTES); ?>"><?php echo htmlspecialchars($classeMedida); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars((string) ($row['Processo'] ?? '—')); ?></span>
                         </div>
-                        <div class="col width-600 col-reu" title="clique para copiar">
+                        <div class="col width-600 col-reu" title="Clique para copiar">
                             <span class="minor-info">Réu</span>
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['ReuNome'] ?? '—')); ?></span>
                         </div>

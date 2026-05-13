@@ -9,6 +9,7 @@ if (function_exists('mb_internal_encoding')) {
 require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../helpers/InternoProdutividadeAutoHelper.php';
 require_once __DIR__ . '/../../services/ConsultaProcessosService.php';
+require_once __DIR__ . '/../../helpers/ClasseProcessualListagemHelper.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -165,19 +166,16 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
             <?php foreach ($rows as $row): ?>
             <?php
                 $rowId = (string) ($row['id'] ?? '');
-                $rowClasseNome = trim((string) ($row['classe_nome'] ?? ''));
-                $rowClasseNomeTemValor = $rowClasseNome !== '' && $rowClasseNome !== 'Classe não informada';
-                if (!$rowClasseNomeTemValor) {
-                    $rowClasseNome = 'Classe não informada';
-                }
-                $rowClasseNomeClass = 'minor-info' . ($rowClasseNomeTemValor ? ' classe-info' : '');
+                $classeRawConsulta = (string) ($row['classe_nome'] ?? '');
+                $rowClasseNome = ClasseProcessualListagemHelper::textoListagem($classeRawConsulta);
+                $rowClasseNomeClass = ClasseProcessualListagemHelper::classesSpanMinor($classeRawConsulta);
                 $rowNumero = (string) ($row['numero_processo'] ?? '—');
                 $rowTotalPartes = isset($row['total_partes']) ? (string) $row['total_partes'] : '—';
             ?>
             <div class="display-flex col col-full register border-bottom">
                 <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                     <div class="display-flex row row-fit justify-start gap-y-sm">
-                        <div class="col width-500 process-info">
+                        <div class="col width-500 col-process process-info" title="Clique para copiar">
                             <span class="<?php echo $rowClasseNomeClass; ?>" title="<?php echo htmlspecialchars($rowClasseNome, ENT_QUOTES); ?>"><?php echo htmlspecialchars($rowClasseNome, ENT_QUOTES); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars($rowNumero, ENT_QUOTES); ?></span>
                         </div>

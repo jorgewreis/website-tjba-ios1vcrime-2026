@@ -8,6 +8,7 @@ if (function_exists('mb_internal_encoding')) {
 
 require_once __DIR__ . '/../../services/SalaMidiasService.php';
 require_once __DIR__ . '/../../helpers/CartorioAlocacaoChipHelper.php';
+require_once __DIR__ . '/../../helpers/ClasseProcessualListagemHelper.php';
 
 $connection = Conection::getInstance()->getConnection();
 $service = new SalaMidiasService($connection);
@@ -320,9 +321,9 @@ $buttonTitleByTipo = [
                         }
                     }
                 }
-                $classeMidiasList = trim((string) ($row['classe_processo'] ?? ''));
-                $classeMidiasListTemValor = $classeMidiasList !== '' && $classeMidiasList !== 'Classe não informada';
-                $classeMidiasListClass = 'minor-info text-ellipsis' . ($classeMidiasListTemValor ? ' classe-info' : '');
+                $classeMidiasRawList = (string) ($row['classe_processo'] ?? '');
+                $classeMidiasExibicao = ClasseProcessualListagemHelper::textoListagem($classeMidiasRawList);
+                $classeMidiasListClass = ClasseProcessualListagemHelper::classesSpanMinor($classeMidiasRawList);
                 ?>
                 <div class="display-flex col col-full register border-bottom" data-midia-id="<?php echo htmlspecialchars($id, ENT_QUOTES, 'UTF-8'); ?>" id="<?php echo htmlspecialchars($id, ENT_QUOTES, 'UTF-8'); ?>">
                     <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
@@ -336,7 +337,7 @@ $buttonTitleByTipo = [
                                 <?php endif; ?>
                             </div>
                             <div class="col width-500 col-process process-info" title="Clique para copiar">
-                                <span class="<?php echo htmlspecialchars($classeMidiasListClass, ENT_QUOTES, 'UTF-8'); ?>" title="<?php echo htmlspecialchars($classeMidiasList !== '' ? $classeMidiasList : 'Classe não informada', ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($classeMidiasList !== '' ? $classeMidiasList : 'Classe não informada', ENT_QUOTES, 'UTF-8'); ?></span>
+                                <span class="<?php echo htmlspecialchars($classeMidiasListClass, ENT_QUOTES, 'UTF-8'); ?>" title="<?php echo htmlspecialchars($classeMidiasExibicao, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($classeMidiasExibicao, ENT_QUOTES, 'UTF-8'); ?></span>
                                 <span class="major-info"><?php echo htmlspecialchars((string) ($row['numero_processo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
                             </div>
                             <div class="col width-600" title="Clique para copiar">

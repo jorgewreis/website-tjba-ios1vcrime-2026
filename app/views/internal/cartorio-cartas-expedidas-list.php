@@ -9,6 +9,7 @@ if (function_exists('mb_internal_encoding')) {
 
 require_once __DIR__ . '/../../services/CartasExpedidasService.php';
 require_once __DIR__ . '/../../helpers/CartorioAlocacaoChipHelper.php';
+require_once __DIR__ . '/../../helpers/ClasseProcessualListagemHelper.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -416,14 +417,11 @@ if ($totalPages > 0) {
                                     </label>
                                 <?php endif; ?>
                             </div>
-                            <div class="col width-500 col-process process-info" title="clique para copiar">
+                            <div class="col width-500 col-process process-info" title="Clique para copiar">
                                 <?php
-                                $classeNome = trim((string) ($row['ClasseNome'] ?? ''));
-                                $classeNomeTemValor = $classeNome !== '' && $classeNome !== 'Classe não informada';
-                                if (!$classeNomeTemValor) {
-                                    $classeNome = 'Classe não informada';
-                                }
-                                $classeNomeClass = 'minor-info text-ellipsis' . ($classeNomeTemValor ? ' classe-info' : '');
+                                $classeRawCartaExp = (string) ($row['ClasseNome'] ?? '');
+                                $classeNome = ClasseProcessualListagemHelper::textoListagem($classeRawCartaExp);
+                                $classeNomeClass = ClasseProcessualListagemHelper::classesSpanMinor($classeRawCartaExp);
                                 ?>
                                 <span class="<?php echo $classeNomeClass; ?>" title="<?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?>"><?php echo htmlspecialchars($classeNome); ?></span>
                                 <span class="major-info"><?php echo htmlspecialchars($row['Processo']); ?></span>

@@ -7,6 +7,7 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 require_once __DIR__ . '/../../services/SalaMidiasService.php';
+require_once __DIR__ . '/../../helpers/ClasseProcessualListagemHelper.php';
 
 $connection = Conection::getInstance()->getConnection();
 $service = new SalaMidiasService($connection);
@@ -84,7 +85,7 @@ $podeExcluirTarefa = false;
 $userPerfisEdit = [];
 $classeProcessoMidiasEdit = trim((string) ($row['classe_processo'] ?? ''));
 $classeProcessoMidiasEditClass = 'width-600 height-md';
-if ($classeProcessoMidiasEdit !== '' && $classeProcessoMidiasEdit !== 'Classe não informada') {
+if (ClasseProcessualListagemHelper::temDestaqueListagem($classeProcessoMidiasEdit)) {
     $classeProcessoMidiasEditClass .= ' status-finished';
 }
 if ($cartorioAlocacaoUserId !== '') {
@@ -126,7 +127,7 @@ if ($cartorioAlocacaoUserId !== '') {
             </div>
             <div class="col filter">
                 <label for="midias-edit-classe" id="processo-ap-info" aria-live="polite">Classe processual</label>
-                <input type="text" id="midias-edit-classe" class="<?php echo htmlspecialchars($classeProcessoMidiasEditClass, ENT_QUOTES, 'UTF-8'); ?>" data-datajud-related="true"<?php echo ($classeProcessoMidiasEdit !== '' && $classeProcessoMidiasEdit !== 'Classe não informada') ? ' data-datajud-initial="1"' : ''; ?> readonly value="<?php echo htmlspecialchars($classeProcessoMidiasEdit, ENT_QUOTES, 'UTF-8'); ?>">
+                <input type="text" id="midias-edit-classe" class="<?php echo htmlspecialchars($classeProcessoMidiasEditClass, ENT_QUOTES, 'UTF-8'); ?>" data-datajud-related="true"<?php echo ClasseProcessualListagemHelper::temDestaqueListagem($classeProcessoMidiasEdit) ? ' data-datajud-initial="1"' : ''; ?> readonly value="<?php echo htmlspecialchars($classeProcessoMidiasEdit, ENT_QUOTES, 'UTF-8'); ?>">
             </div>
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">

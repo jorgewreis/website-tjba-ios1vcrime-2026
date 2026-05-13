@@ -7,6 +7,7 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 require_once __DIR__ . '/../../helpers/Conection.php';
+require_once __DIR__ . '/../../helpers/ClasseProcessualListagemHelper.php';
 require_once __DIR__ . '/../../helpers/PrioridadesProcessuaisCatalog.php';
 require_once __DIR__ . '/../../repositories/SalaAudienciasEstudanteInscricaoRepository.php';
 require_once __DIR__ . '/../../services/SalaAudienciasPautaService.php';
@@ -195,14 +196,11 @@ function painelResumoInscrito(array $inscrito): string
                         <span class="minor-info">Horário</span>
                         <span class="major-info"><?php echo htmlspecialchars(painelHoraPorStatus($row), ENT_QUOTES); ?></span>
                     </div>
-                    <div class="col width-400 col-process process-info" title="clique para copiar">
+                    <div class="col width-400 col-process process-info" title="Clique para copiar">
                         <?php
-                            $classeAudiencia = trim((string) ($row['classe_nome'] ?? ''));
-                            $classeAudienciaTemValor = $classeAudiencia !== '' && $classeAudiencia !== 'Classe não informada';
-                            if (!$classeAudienciaTemValor) {
-                                $classeAudiencia = 'Classe não informada';
-                            }
-                            $classeAudienciaClass = 'minor-info text-ellipsis' . ($classeAudienciaTemValor ? ' classe-info' : '');
+                            $classeRawPainelDia = (string) ($row['classe_nome'] ?? '');
+                            $classeAudiencia = ClasseProcessualListagemHelper::textoListagem($classeRawPainelDia);
+                            $classeAudienciaClass = ClasseProcessualListagemHelper::classesSpanMinor($classeRawPainelDia);
                         ?>
                         <span class="<?php echo $classeAudienciaClass; ?>" title="<?php echo htmlspecialchars($classeAudiencia, ENT_QUOTES); ?>"><?php echo htmlspecialchars($classeAudiencia, ENT_QUOTES); ?></span>
                         <span class="major-info"><?php echo htmlspecialchars((string) ($row['numero_processo'] ?? '—'), ENT_QUOTES); ?></span>

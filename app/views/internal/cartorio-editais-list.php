@@ -8,6 +8,7 @@ if (function_exists('mb_internal_encoding')) {
 
 require_once __DIR__ . '/../../services/EditaisService.php';
 require_once __DIR__ . '/../../helpers/CartorioAlocacaoChipHelper.php';
+require_once __DIR__ . '/../../helpers/ClasseProcessualListagemHelper.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -350,19 +351,16 @@ if ($totalPages > 0) {
                                 </label>
                             <?php endif; ?>
                         </div>
-                        <div class="col width-500 col-process process-info" title="clique para copiar">
+                        <div class="col width-500 col-process process-info" title="Clique para copiar">
                             <?php
-                                $classeEdital = trim((string) ($row['Classe'] ?? ''));
-                                $classeEditalTemValor = $classeEdital !== '' && $classeEdital !== 'Classe não informada';
-                                if (!$classeEditalTemValor) {
-                                    $classeEdital = 'Classe não informada';
-                                }
-                                $classeEditalClass = 'minor-info text-ellipsis' . ($classeEditalTemValor ? ' classe-info' : '');
+                                $classeRawEdital = (string) ($row['Classe'] ?? '');
+                                $classeEdital = ClasseProcessualListagemHelper::textoListagem($classeRawEdital);
+                                $classeEditalClass = ClasseProcessualListagemHelper::classesSpanMinor($classeRawEdital);
                             ?>
                             <span class="<?php echo $classeEditalClass; ?>" title="<?php echo htmlspecialchars($classeEdital, ENT_QUOTES); ?>"><?php echo htmlspecialchars($classeEdital); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars($row['Processo'] ?? '—'); ?></span>
                         </div>
-                        <div class="col width-600 col-tipo-edital" title="clique para copiar">
+                        <div class="col width-600 col-tipo-edital" title="Clique para copiar">
                             <span class="minor-info">Tipo de edital</span>
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['tipo_edital'] ?? $row['TipoEdital'] ?? '—')); ?></span>
                         </div>

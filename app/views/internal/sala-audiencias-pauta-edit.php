@@ -9,6 +9,7 @@ if (function_exists('mb_internal_encoding')) {
 require_once __DIR__ . '/../../helpers/PrioridadesProcessuaisCatalog.php';
 require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
+require_once __DIR__ . '/../../helpers/ClasseProcessualListagemHelper.php';
 require_once __DIR__ . '/../../services/SalaAudienciasPautaService.php';
 require_once __DIR__ . '/../../repositories/GabineteReuPresoProcessoRepository.php';
 require_once __DIR__ . '/../../repositories/GabineteReuPresoRepository.php';
@@ -339,13 +340,13 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                 <div class="col filter">
                     <?php
                     $classeValor = trim((string) ($row['classe_nome'] ?? ''));
-                    $classeValorTemInfo = $classeValor !== '' && $classeValor !== 'Classe não informada';
+                    $classeValorTemInfo = ClasseProcessualListagemHelper::temDestaqueListagem($classeValor);
                     $classeInputClassPautaEdit = 'width-600 height-md';
                     if ($classeValorTemInfo) {
                         $classeInputClassPautaEdit .= ' status-finished';
                     }
                     ?>
-                    <label for="audiencia-edit-classe" id="processo-ap-info" aria-live="polite">Classe processual<?php echo $classeValor !== '' ? ' <span class="label-hint-automatizado">*automatizado</span>' : ''; ?></label>
+                    <label for="audiencia-edit-classe" id="processo-ap-info" aria-live="polite">Classe processual<?php echo $classeValorTemInfo ? ' <span class="label-hint-automatizado">*automatizado</span>' : ''; ?></label>
                     <input type="text" class="<?php echo htmlspecialchars($classeInputClassPautaEdit, ENT_QUOTES, 'UTF-8'); ?>" id="audiencia-edit-classe" data-datajud-related="true"<?php echo $classeValorTemInfo ? ' data-datajud-initial="1"' : ''; ?> value="<?php echo htmlspecialchars($classeValor, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Sem classe vinculada — cadastre em Consultar processo &gt; Editar processo" readonly autocomplete="off">
                 </div>
             </div>

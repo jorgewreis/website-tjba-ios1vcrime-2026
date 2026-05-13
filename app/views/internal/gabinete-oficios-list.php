@@ -7,6 +7,7 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 require_once __DIR__ . '/../../services/OficiosGabineteService.php';
+require_once __DIR__ . '/../../helpers/ClasseProcessualListagemHelper.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -355,12 +356,9 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
                 $ano = (int) ($row['Ano'] ?? 0);
                 $nAno = $numSeq . '/' . $ano;
                 $st = (string) ($row['Status'] ?? '');
-                $classeNome = trim((string) ($row['ClasseNome'] ?? ''));
-                $classeNomeTemValor = $classeNome !== '' && $classeNome !== 'Classe não informada';
-                if (!$classeNomeTemValor) {
-                    $classeNome = 'Classe não informada';
-                }
-                $classeNomeClass = 'minor-info text-ellipsis' . ($classeNomeTemValor ? ' classe-info' : '');
+                $classeRawGabOf = (string) ($row['ClasseNome'] ?? '');
+                $classeNome = ClasseProcessualListagemHelper::textoListagem($classeRawGabOf);
+                $classeNomeClass = ClasseProcessualListagemHelper::classesSpanMinor($classeRawGabOf);
             ?>
             <div class="display-flex col col-full register border-bottom" data-oficio-id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>">
                 <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
@@ -373,7 +371,7 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
                             <span class="minor-info">Gerado em</span>
                             <span class="major-info"><?php echo gabinete_oficios_list_formatar_data_hora($row['Data'] ?? null); ?></span>
                         </div>
-                        <div class="col width-500 col-process process-info" title="clique para copiar">
+                        <div class="col width-500 col-process process-info" title="Clique para copiar">
                             <span class="<?php echo $classeNomeClass; ?>" title="<?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?>"><?php echo htmlspecialchars($classeNome); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars((string) ($row['Processo'] ?? '')); ?></span>
                         </div>

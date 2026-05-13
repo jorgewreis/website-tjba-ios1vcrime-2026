@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.100
+
+**Data:** 2026-05-13 12:24:34 | **Commit:** `ec16b751` | **Tipo:** `minor`
+
+- refactor: integrate ClasseProcessualListagemHelper for consistent class handling across views
+
 ## V. 1.99
 
 **Data:** 2026-05-13 12:10:39 | **Commit:** `e5761a9b` | **Tipo:** `minor`
@@ -5412,6 +5418,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

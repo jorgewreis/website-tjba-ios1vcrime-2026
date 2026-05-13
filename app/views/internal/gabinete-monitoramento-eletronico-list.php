@@ -8,6 +8,7 @@ if (function_exists('mb_internal_encoding')) {
 
 require_once __DIR__ . '/../../services/GabineteMonitoramentoEletronicoService.php';
 require_once __DIR__ . '/../../repositories/GabineteMonitoramentoEletronicoSubtarefasRepository.php';
+require_once __DIR__ . '/../../helpers/ClasseProcessualListagemHelper.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -269,12 +270,9 @@ $statusLabelUi = static function (string $s): string {
                 $tarefaCancelada = ($statusTarefa === 'cancelada');
                 $tarefaFinalizada = ($statusTarefa === 'finalizada');
                 $duracaoLabel = (string) ($row['DuracaoLabel'] ?? '—');
-                $classeNome = trim((string) ($row['ClasseNome'] ?? ''));
-                $classeNomeTemValor = $classeNome !== '' && $classeNome !== 'Classe não informada';
-                if (!$classeNomeTemValor) {
-                    $classeNome = 'Classe não informada';
-                }
-                $classeNomeClass = 'minor-info text-ellipsis' . ($classeNomeTemValor ? ' classe-info' : '');
+                $classeRawGme = (string) ($row['ClasseNome'] ?? '');
+                $classeNome = ClasseProcessualListagemHelper::textoListagem($classeRawGme);
+                $classeNomeClass = ClasseProcessualListagemHelper::classesSpanMinor($classeRawGme);
 
                 $progressStatuses = ['pendente', 'pendente'];
                 foreach ($allSt as $s) {
@@ -339,11 +337,11 @@ $statusLabelUi = static function (string $s): string {
                             </label>
                         </div>
                         <?php endif; ?>                        
-                        <div class="col width-600 col-process process-info" title="clique para copiar">
+                        <div class="col width-600 col-process process-info" title="Clique para copiar">
                             <span class="<?php echo $classeNomeClass; ?>" title="<?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?>"><?php echo htmlspecialchars($classeNome); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars((string) ($row['Processo'] ?? '')); ?></span>
                         </div>
-                        <div class="col width-600 col-reu" title="clique para copiar">
+                        <div class="col width-600 col-reu" title="Clique para copiar">
                             <span class="minor-info">Réu</span>
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['ReuNome'] ?? '')); ?></span>
                         </div>

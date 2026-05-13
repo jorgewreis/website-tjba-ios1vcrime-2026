@@ -7,6 +7,7 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 require_once __DIR__ . '/../../services/SalaAudienciasAtaService.php';
+require_once __DIR__ . '/../../helpers/ClasseProcessualListagemHelper.php';
 
 $service = new SalaAudienciasAtaService(Conection::getInstance()->getConnection());
 $routePage = trim((string) ($_GET['page'] ?? 'salaata'));
@@ -215,14 +216,11 @@ function sala_audiencias_ata_label_prazo_download(string $expiresAt): string
                         <span class="minor-info">Data e hora</span>
                         <span class="major-info"><?php echo htmlspecialchars(date('d/m/Y', strtotime((string) $row['data_audiencia'])) . ' - ' . $horaExibicao, ENT_QUOTES, 'UTF-8'); ?></span>
                     </div>
-                    <div class="col width-400 col-process process-info" title="clique para copiar">
+                    <div class="col width-400 col-process process-info" title="Clique para copiar">
                         <?php
-                            $classeAudiencia = trim((string) ($row['classe_nome'] ?? ''));
-                            $classeAudienciaTemValor = $classeAudiencia !== '' && $classeAudiencia !== 'Classe não informada';
-                            if (!$classeAudienciaTemValor) {
-                                $classeAudiencia = 'Classe não informada';
-                            }
-                            $classeAudienciaClass = 'minor-info text-ellipsis' . ($classeAudienciaTemValor ? ' classe-info' : '');
+                            $classeRawAtasList = (string) ($row['classe_nome'] ?? '');
+                            $classeAudiencia = ClasseProcessualListagemHelper::textoListagem($classeRawAtasList);
+                            $classeAudienciaClass = ClasseProcessualListagemHelper::classesSpanMinor($classeRawAtasList);
                         ?>
                         <span class="<?php echo $classeAudienciaClass; ?>" title="<?php echo htmlspecialchars($classeAudiencia, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($classeAudiencia, ENT_QUOTES, 'UTF-8'); ?></span>
                         <span class="major-info"><?php echo htmlspecialchars((string) ($row['numero_processo'] ?? '—'), ENT_QUOTES, 'UTF-8'); ?></span>

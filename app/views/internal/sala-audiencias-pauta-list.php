@@ -11,6 +11,7 @@ require_once __DIR__ . '/../../helpers/PrioridadesProcessuaisCatalog.php';
 require_once __DIR__ . '/../../services/SalaAudienciasPautaService.php';
 require_once __DIR__ . '/../../services/ProcessoManager.php';
 require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
+require_once __DIR__ . '/../../helpers/ClasseProcessualListagemHelper.php';
 
 $currentUserId = trim((string) ($_SESSION['id_usuario'] ?? ''));
 $isGestao = false;
@@ -315,14 +316,11 @@ $statusFilterLabelsPauta = [
                         <span class="minor-info">Data e hora</span>
                         <span class="major-info"><?php echo htmlspecialchars(date('d/m/Y', strtotime((string) $row['data_audiencia'])) . ' - ' . substr((string) $row['hora_audiencia'], 0, 5), ENT_QUOTES); ?></span>
                     </div>
-                    <div class="col width-400 col-process process-info" title="clique para copiar">
+                    <div class="col width-400 col-process process-info" title="Clique para copiar">
                         <?php
-                            $classeAudiencia = trim((string) ($row['classe_nome'] ?? ''));
-                            $classeAudienciaTemValor = $classeAudiencia !== '' && $classeAudiencia !== 'Classe não informada';
-                            if (!$classeAudienciaTemValor) {
-                                $classeAudiencia = 'Classe não informada';
-                            }
-                            $classeAudienciaClass = 'minor-info text-ellipsis' . ($classeAudienciaTemValor ? ' classe-info' : '');
+                            $classeRawPautaList = (string) ($row['classe_nome'] ?? '');
+                            $classeAudiencia = ClasseProcessualListagemHelper::textoListagem($classeRawPautaList);
+                            $classeAudienciaClass = ClasseProcessualListagemHelper::classesSpanMinor($classeRawPautaList);
                         ?>
                         <span class="<?php echo $classeAudienciaClass; ?>" title="<?php echo htmlspecialchars($classeAudiencia, ENT_QUOTES); ?>"><?php echo htmlspecialchars($classeAudiencia, ENT_QUOTES); ?></span>
                         <span class="major-info"><?php echo htmlspecialchars((string) ($row['numero_processo'] ?? '—'), ENT_QUOTES); ?></span>

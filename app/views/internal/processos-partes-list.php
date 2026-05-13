@@ -6,6 +6,7 @@ if (function_exists('mb_internal_encoding')) mb_internal_encoding('UTF-8');
 
 require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../services/ConsultaProcessosService.php';
+require_once __DIR__ . '/../../helpers/ClasseProcessualListagemHelper.php';
 
 $processoId = trim((string) ($_GET['processo_id'] ?? ''));
 $connection = Conection::getInstance()->getConnection();
@@ -71,10 +72,16 @@ if ($processoId !== '') {
                 </div>
             </div>
         <?php elseif (!empty($partes)): ?>
+            <?php
+            $classeRawPp = (string) ($processo['classe_nome'] ?? '');
+            $classePpTxt = ClasseProcessualListagemHelper::textoListagem($classeRawPp);
+            $classePpClass = ClasseProcessualListagemHelper::classesSpanMinor($classeRawPp);
+            $numeroPp = (string) ($processo['numero_processo'] ?? $processoId);
+            ?>
             <div class="display-flex row row-full padding-x-sm padding-y-sm border-bottom">
-                <div class="col process-info">
-                    <span class="minor-info">Processo</span>
-                    <span class="major-info"><?php echo htmlspecialchars($processo['numero_processo'] ?? $processoId); ?></span>
+                <div class="col width-500 col-process process-info" title="Clique para copiar">
+                    <span class="<?php echo htmlspecialchars($classePpClass, ENT_QUOTES, 'UTF-8'); ?>" title="<?php echo htmlspecialchars($classePpTxt, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($classePpTxt, ENT_QUOTES, 'UTF-8'); ?></span>
+                    <span class="major-info"><?php echo htmlspecialchars($numeroPp, ENT_QUOTES, 'UTF-8'); ?></span>
                 </div>
             </div>
             <?php foreach ($partes as $p): ?>

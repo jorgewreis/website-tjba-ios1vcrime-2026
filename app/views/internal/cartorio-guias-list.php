@@ -9,6 +9,7 @@ if (function_exists('mb_internal_encoding')) {
 require_once __DIR__ . '/../../services/GuiasService.php';
 require_once __DIR__ . '/../../repositories/GuiasSubtarefasRepository.php';
 require_once __DIR__ . '/../../helpers/CartorioAlocacaoChipHelper.php';
+require_once __DIR__ . '/../../helpers/ClasseProcessualListagemHelper.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -361,19 +362,16 @@ if ($totalPages > 0) {
                                 </label>
                             <?php endif; ?>
                         </div>
-                        <div class="col width-500 col-process process-info" title="clique para copiar">
+                        <div class="col width-500 col-process process-info" title="Clique para copiar">
                             <?php
-                                $classeGuia = trim((string) ($row['Classe'] ?? ''));
-                                $classeGuiaTemValor = $classeGuia !== '' && $classeGuia !== 'Classe não informada';
-                                if (!$classeGuiaTemValor) {
-                                    $classeGuia = 'Classe não informada';
-                                }
-                                $classeGuiaClass = 'minor-info text-ellipsis' . ($classeGuiaTemValor ? ' classe-info' : '');
+                                $classeRawGuia = (string) ($row['Classe'] ?? '');
+                                $classeGuia = ClasseProcessualListagemHelper::textoListagem($classeRawGuia);
+                                $classeGuiaClass = ClasseProcessualListagemHelper::classesSpanMinor($classeRawGuia);
                             ?>
                             <span class="<?php echo $classeGuiaClass; ?>" title="<?php echo htmlspecialchars($classeGuia, ENT_QUOTES); ?>"><?php echo htmlspecialchars($classeGuia); ?></span>
                             <span class="major-info"><?php echo htmlspecialchars($row['Processo'] ?? ''); ?></span>
                         </div>
-                        <div class="col width-500 col-tipo-guia" title="clique para copiar">
+                        <div class="col width-500 col-tipo-guia" title="Clique para copiar">
                             <span class="minor-info text-ellipsis" style="font-weight: 600; color: var(--color-gray-900);"><?php echo htmlspecialchars($row['Tipo'] ?? '—'); ?></span>
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars($row['Denunciado'] ?? '—'); ?></span>
                         </div>                        

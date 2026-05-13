@@ -9,6 +9,7 @@ if (function_exists('mb_internal_encoding')) {
 require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
 require_once __DIR__ . '/../../services/GabineteReusPresosService.php';
+require_once __DIR__ . '/../../helpers/ClasseProcessualListagemHelper.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -318,8 +319,14 @@ if ($totalPages > 0) {
                             if ($isPrincipal): ?>
                     <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top align-start flex-wrap grp-sub-line grp-sub-line-primary" style="font-family: monospace; font-size: 11px;">
                         <div class="display-flex row row-fit justify-start gap-y-md flex-wrap grp-sub-left">
-                            <div class="col">
-                                <span class="width-700 minor-info text-ellipsis"><?php echo htmlspecialchars((string) ($sl['numero_processo'] ?? '—') . ' (' . ($sl['classe_nome'] ?? '—') . ')', ENT_QUOTES); ?></span>
+                            <div class="col width-500 col-process process-info" title="Clique para copiar">
+                                <?php
+                                    $classeRawReuSub = (string) ($sl['classe_nome'] ?? '');
+                                    $classeReuSubTxt = ClasseProcessualListagemHelper::textoListagem($classeRawReuSub);
+                                    $classeReuSubClass = ClasseProcessualListagemHelper::classesSpanMinor($classeRawReuSub);
+                                ?>
+                                <span class="<?php echo htmlspecialchars($classeReuSubClass, ENT_QUOTES, 'UTF-8'); ?>" title="<?php echo htmlspecialchars($classeReuSubTxt, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($classeReuSubTxt, ENT_QUOTES, 'UTF-8'); ?></span>
+                                <span class="major-info"><?php echo htmlspecialchars((string) ($sl['numero_processo'] ?? '—'), ENT_QUOTES, 'UTF-8'); ?></span>
                             </div>
                         </div>
                         <div class="display-flex row row-fit justify-end gap-y-md grp-sub-right">
