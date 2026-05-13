@@ -24,9 +24,7 @@ $iconCopiar = '/assets/icons/Task-Checklist--Streamline-Ultimate.png';
 <div class="container-processo" data-processo-bloco="1">
     <div class="main-processo">
         <div class="left">
-            <div class="numero process-info" title="Clique para copiar">
-                <span class="major-info"><?php echo htmlspecialchars($numero, ENT_QUOTES, 'UTF-8'); ?></span>
-            </div>
+            <div class="numero"><?php echo htmlspecialchars($numero, ENT_QUOTES, 'UTF-8'); ?></div>
         </div>
         <div class="right">
             <div class="prioridades">
