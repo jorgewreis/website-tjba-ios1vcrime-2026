@@ -5,11 +5,16 @@ declare(strict_types=1);
  * Instala no crontab do usuario atual: quinta-feira 18:00 (Linux).
  * Nao use `php install-....sh` — isso nao executa Bash; use este arquivo .php.
  *
- * Layout canonico (raiz = pasta com config/ e scripts/):
+ * Layout canonico (config e scripts na mesma raiz, ex. .../apps):
  *   cd /path/apps && php scripts/install-cron-gabinete-reus-presos-revisao-email.php
  *
- * Deploy legado (scripts dentro de public/scripts):
- *   cd /path/apps/public/scripts && php install-cron-gabinete-reus-presos-revisao-email.php
+ * Deploy com um ou dois niveis de pasta public (docroot HTTP em .../public/public/):
+ *   .../public/scripts ou .../public/public/scripts (config em .../public/config).
+ *   cd .../public/scripts && php install-cron-gabinete-reus-presos-revisao-email.php
+ *
+ * Se public/scripts e public/config forem copias e git pull nao atualizar: na raiz do repo rode
+ *   bash scripts/link-public-overlays-to-repo.sh
+ * (cria symlinks public/scripts -> ../scripts e public/config -> ../config).
  */
 
 if (PHP_SAPI !== 'cli') {
@@ -17,10 +22,12 @@ if (PHP_SAPI !== 'cli') {
     exit(1);
 }
 
+require_once __DIR__ . '/resolve_project_root_cli.php';
+
 $installDir = __DIR__;
 $parentDir = dirname($installDir);
+$root = resolveProjectRootFromCliScriptsDir($installDir);
 $isPublicScripts = basename($installDir) === 'scripts' && basename($parentDir) === 'public';
-$root = $isPublicScripts ? dirname($parentDir) : $parentDir;
 
 $config = $root . '/config/config.php';
 $sendScript = $installDir . '/send-gabinete-reus-presos-revisao-email.php';
@@ -35,11 +42,11 @@ $logFile = $root . '/storage/logs/reus-presos-revisao-cron.log';
 $marker = '#tjba-reus-presos-revisao-email';
 
 if ($isPublicScripts) {
-    fwrite(STDERR, "Aviso: instalador em public/scripts. Recomendado mover scripts/ para fora de public/ (seguranca).\n");
+    fwrite(STDERR, "Aviso: scripts sob pasta public (um ou dois niveis). Prefira nao expor scripts ao docroot.\n");
 }
 
 if (!is_file($config)) {
-    fwrite(STDERR, "Erro: raiz invalida (nao achei config/config.php em {$root}).\n");
+    fwrite(STDERR, "Erro: nao achei config/config.php em {$root} (raiz = pasta pai de scripts/; confira permissoes de leitura).\n");
     exit(1);
 }
 if (!is_file($sendScript)) {

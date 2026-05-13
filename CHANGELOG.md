@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.98.0014
+
+**Data:** 2026-05-13 11:43:30 | **Commit:** `37289630` | **Tipo:** `patch`
+
+- chore(scripts): enhance installation scripts and documentation for email scheduling
+
 ## V. 1.98.0013
 
 **Data:** 2026-05-13 11:30:15 | **Commit:** `fe791a45` | **Tipo:** `patch`
@@ -5394,6 +5400,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

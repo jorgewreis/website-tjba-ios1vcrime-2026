@@ -1,19 +1,25 @@
 #!/bin/bash
 # Instala no crontab: quinta-feira 18:00. Nao use: php este_arquivo.sh (use o .php ou bash).
 #
+# Dois niveis de pasta public (docroot em .../public/public/): pode rodar a partir de
+# .../public/scripts ou .../public/public/scripts.
+#
 # Canonico:
 #   cd /path/apps && bash scripts/install-cron-gabinete-reus-presos-revisao-email.sh
-# Legado (scripts em public/scripts):
+# Servidor:
 #   cd /path/apps/public/scripts && bash install-cron-gabinete-reus-presos-revisao-email.sh
-#
-# Preferivel: php install-cron-gabinete-reus-presos-revisao-email.php (mesmo diretorio)
 
 set -eu
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PARENT="$(cd "$HERE/.." && pwd)"
 if [[ "$(basename "$HERE")" == "scripts" && "$(basename "$PARENT")" == "public" ]]; then
-  ROOT="$(cd "$HERE/../.." && pwd)"
+  GP="$(cd "$PARENT/.." && pwd)"
+  if [[ "$(basename "$PARENT")" == "public" && "$(basename "$GP")" == "public" ]]; then
+    ROOT="$GP"
+  else
+    ROOT="$PARENT"
+  fi
 else
   ROOT="$PARENT"
 fi
@@ -26,12 +32,12 @@ if [[ ! -f "$SCRIPT" ]]; then
   SCRIPT="$ROOT/public/scripts/send-gabinete-reus-presos-revisao-email.php"
 fi
 
-if [[ "$(basename "$HERE")" == "scripts" && "$(basename "$PARENT")" == "public" ]]; then
-  echo "Aviso: scripts em public/scripts. Recomendado mover para fora de public/." >&2
+if [[ "$(basename "$HERE")" == "scripts" && "$(basename "$ROOT")" == "public" ]]; then
+  echo "Aviso: scripts sob pasta public (um ou dois niveis)." >&2
 fi
 
 if [[ ! -f "$ROOT/config/config.php" ]]; then
-  echo "Erro: raiz invalida (nao achei config/config.php em $ROOT)." >&2
+  echo "Erro: nao achei config/config.php em $ROOT." >&2
   exit 1
 fi
 if [[ ! -f "$SCRIPT" ]]; then

@@ -9,8 +9,7 @@ declare(strict_types=1);
  *   scripts\register-gabinete-reus-presos-revisao-email-schedule.ps1
  * - Linux: use o instalador .php (nao rode `php` em cima do arquivo .sh — isso nao executa o shell):
  *   php scripts/install-cron-gabinete-reus-presos-revisao-email.php
- *   Se o deploy colocou os scripts em public/scripts:
- *   cd .../apps/public/scripts && php install-cron-gabinete-reus-presos-revisao-email.php
+ *   Exemplos: .../public/scripts ou .../public/public/scripts (dois public: docroot = .../public/public).
  *   Alternativa: bash install-cron-gabinete-reus-presos-revisao-email.sh (apos dos2unix se precisar)
  *
  * Manual (referência):
@@ -18,12 +17,8 @@ declare(strict_types=1);
  * - Windows: Agendador de Tarefas — semanal, quinta, 18:00 — php com argumento = caminho absoluto deste arquivo.
  */
 
-$repoRoot = __DIR__;
-if (basename($repoRoot) === 'scripts' && basename(dirname($repoRoot)) === 'public') {
-    $repoRoot = dirname(dirname($repoRoot));
-} elseif (basename($repoRoot) === 'scripts') {
-    $repoRoot = dirname($repoRoot);
-}
+require_once __DIR__ . '/resolve_project_root_cli.php';
+$repoRoot = resolveProjectRootFromCliScriptsDir(__DIR__);
 
 require_once $repoRoot . '/app/helpers/Conection.php';
 require_once $repoRoot . '/app/services/GabineteReusPresosRevisaoEmailService.php';
