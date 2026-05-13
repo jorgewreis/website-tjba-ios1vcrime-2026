@@ -63,8 +63,8 @@ $iconCopiar = '/assets/icons/Task-Checklist--Streamline-Ultimate.png';
     </div>
     <div class="footer-processo">
         <div class="left">
-            <div class="processo-classe<?php echo $classeNot ? ' not' : ' processo-bloco-tooltip'; ?>"<?php if (!$classeNot && $classeTexto !== ''): ?> data-title="<?php echo htmlspecialchars($classeTexto, ENT_QUOTES, 'UTF-8'); ?>"<?php endif; ?>><span class="processo-bloco-text-ellipsis"><?php echo htmlspecialchars($classeTexto, ENT_QUOTES, 'UTF-8'); ?></span></div>
-            <div class="processo-assunto<?php echo $assuntoNot ? ' not' : ' processo-bloco-tooltip'; ?>"<?php if (!$assuntoNot && $assuntoTexto !== ''): ?> data-title="<?php echo htmlspecialchars($assuntoTexto, ENT_QUOTES, 'UTF-8'); ?>"<?php endif; ?>><span class="processo-bloco-text-ellipsis"><?php echo htmlspecialchars($assuntoTexto, ENT_QUOTES, 'UTF-8'); ?></span></div>
+            <div class="processo-classe<?php echo $classeNot ? ' not' : ' processo-bloco-tooltip'; ?>"<?php if (!$classeNot && $classeTexto !== ''): ?> title="<?php echo htmlspecialchars($classeTexto, ENT_QUOTES, 'UTF-8'); ?>"<?php endif; ?>><span class="processo-bloco-text-ellipsis"><?php echo htmlspecialchars($classeTexto, ENT_QUOTES, 'UTF-8'); ?></span></div>
+            <div class="processo-assunto<?php echo $assuntoNot ? ' not' : ' processo-bloco-tooltip'; ?>"<?php if (!$assuntoNot && $assuntoTexto !== ''): ?> title="<?php echo htmlspecialchars($assuntoTexto, ENT_QUOTES, 'UTF-8'); ?>"<?php endif; ?>><span class="processo-bloco-text-ellipsis"><?php echo htmlspecialchars($assuntoTexto, ENT_QUOTES, 'UTF-8'); ?></span></div>
         </div>
         <?php if (!$processoBlocoHideActions): ?>
         <div class="right">

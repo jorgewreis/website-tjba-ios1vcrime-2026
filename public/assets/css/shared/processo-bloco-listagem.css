@@ -185,11 +185,23 @@
     transition: opacity 0.18s ease, visibility 0.18s ease;
 }
 
-/* Touch / ponteiro grosso: sem :hover estável, os botões ficavam com pointer-events: none. */
+/*
+ * Botões do rodapé (abrir / copiar): visíveis no hover da linha, como em Pauta e Mídias.
+ * Inclui wrappers `.register[data-*]` do Cartório e Gabinete e `.register-line[data-carta-id]`
+ * (cartas expedidas), que não usam data-midia-id / data-audiencia-id / data-pauta.
+ */
 @media (hover: none) and (pointer: coarse) {
     .register[data-midia-id] .container-processo .footer-processo .right .buttons,
     .register[data-audiencia-id] .container-processo .footer-processo .right .buttons,
-    .register[data-pauta] .container-processo .footer-processo .right .buttons {
+    .register[data-pauta] .container-processo .footer-processo .right .buttons,
+    .register[data-oficio-id] .container-processo .footer-processo .right .buttons,
+    .register[data-ceapa-id] .container-processo .footer-processo .right .buttons,
+    .register[data-carta-id] .container-processo .footer-processo .right .buttons,
+    .register[data-edital-id] .container-processo .footer-processo .right .buttons,
+    .register[data-medida-id] .container-processo .footer-processo .right .buttons,
+    .register[data-guia-id] .container-processo .footer-processo .right .buttons,
+    .register[data-monitoramento-id] .container-processo .footer-processo .right .buttons,
+    .register-line[data-carta-id] .container-processo .footer-processo .right .buttons {
         opacity: 1;
         visibility: visible;
         pointer-events: auto;
@@ -197,13 +209,28 @@
     }
 }
 
-/* Só linhas de registro (ex.: sala-mídias): o wrapper da lista também usa .register, sem data-midia-id. */
 .register[data-midia-id]:hover .container-processo .footer-processo .right .buttons,
 .register[data-midia-id]:focus-within .container-processo .footer-processo .right .buttons,
 .register[data-audiencia-id]:hover .container-processo .footer-processo .right .buttons,
 .register[data-audiencia-id]:focus-within .container-processo .footer-processo .right .buttons,
 .register[data-pauta]:hover .container-processo .footer-processo .right .buttons,
-.register[data-pauta]:focus-within .container-processo .footer-processo .right .buttons {
+.register[data-pauta]:focus-within .container-processo .footer-processo .right .buttons,
+.register[data-oficio-id]:hover .container-processo .footer-processo .right .buttons,
+.register[data-oficio-id]:focus-within .container-processo .footer-processo .right .buttons,
+.register[data-ceapa-id]:hover .container-processo .footer-processo .right .buttons,
+.register[data-ceapa-id]:focus-within .container-processo .footer-processo .right .buttons,
+.register[data-carta-id]:hover .container-processo .footer-processo .right .buttons,
+.register[data-carta-id]:focus-within .container-processo .footer-processo .right .buttons,
+.register[data-edital-id]:hover .container-processo .footer-processo .right .buttons,
+.register[data-edital-id]:focus-within .container-processo .footer-processo .right .buttons,
+.register[data-medida-id]:hover .container-processo .footer-processo .right .buttons,
+.register[data-medida-id]:focus-within .container-processo .footer-processo .right .buttons,
+.register[data-guia-id]:hover .container-processo .footer-processo .right .buttons,
+.register[data-guia-id]:focus-within .container-processo .footer-processo .right .buttons,
+.register[data-monitoramento-id]:hover .container-processo .footer-processo .right .buttons,
+.register[data-monitoramento-id]:focus-within .container-processo .footer-processo .right .buttons,
+.register-line[data-carta-id]:hover .container-processo .footer-processo .right .buttons,
+.register-line[data-carta-id]:focus-within .container-processo .footer-processo .right .buttons {
     opacity: 1;
     visibility: visible;
     pointer-events: auto;

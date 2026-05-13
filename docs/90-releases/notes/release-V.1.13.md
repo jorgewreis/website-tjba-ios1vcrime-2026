@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 01 de abril de 2026
+**Data de Lançamento:** 13 de maio de 2026
 
 # V. 1.13
 
-> feat: enhance SSH setup script with public key display and streamline deployment workflows
+> refactor: integrate normalizeRowKeysForBloco method for improved data consistency
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **feat: enhance SSH setup script with public key display and streamline deployment workflows** `[c4c875c]`
+- **refactor: integrate normalizeRowKeysForBloco method for improved data consistency** `[78ac8882]`
 
 ---
 
