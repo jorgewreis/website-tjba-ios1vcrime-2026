@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/Conection.php';
 require_once __DIR__ . '/../../config/security.php';
+require_once __DIR__ . '/SmtpTransactionalMailer.php';
 
 final class PasswordResetService
 {
@@ -336,141 +337,69 @@ final class PasswordResetService
      */
     private function sendEmail(string $to, string $nome, string $resetUrl): array
     {
-        $driver = strtolower(trim((string) envValue('MAIL_DRIVER', '')));
-        if ($driver === '' && envValue('MAIL_HOST') !== null) {
-            $driver = 'smtp';
-        }
-        if ($driver === '') {
-            $driver = 'log';
-        }
+        $subject = 'Redefinição de senha – Primeira Vara Crime de Ilhéus';
+        $htmlBody = '
+            <!DOCTYPE html>
+            <html lang="pt-BR">
+            <head>
+                <meta charset="UTF-8">
+                <title>Redefinição de senha</title>
+            </head>
+            <body style="margin:0;padding:0;background:#f4f6f8;font-family:Arial,Helvetica,sans-serif;">
+                <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f8;padding:20px 0;">
+                    <tr>
+                        <td align="center">
+                            <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;box-shadow:0 2px 6px rgba(0,0,0,0.15);">
+                                <tr>
+                                    <td style="background:#686BFB;padding:20px;text-align:center;color:#ffffff;font-size:18px;font-weight:bold;">
+                                        SGC - Primeira Vara Crime de Ilhéus
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:30px;color:#333333;font-size:14px;line-height:1.6;">
+                                        <p>Olá, <strong>' . htmlspecialchars($nome, ENT_QUOTES, 'UTF-8') . '</strong>.</p>
+                                        <p>Recebemos uma solicitação para redefinição de senha do seu acesso ao sistema.</p>
+                                        <p>Para continuar, clique no botão abaixo. O link expira em 1 hora e pode ser usado uma única vez.</p>
+                                        <p style="margin:30px 0;text-align:center;">
+                                            <a href="' . htmlspecialchars($resetUrl, ENT_QUOTES, 'UTF-8') . '" style="display:inline-block;background:#ff0040;color:#ffffff;padding:12px 20px;border-radius:6px;text-decoration:none;font-weight:600;">
+                                                Redefinir senha
+                                            </a>
+                                        </p>
+                                        <p>Se o botão não funcionar, copie e cole este endereço no navegador:</p>
+                                        <p style="word-break:break-all;color:#555555;">' . htmlspecialchars($resetUrl, ENT_QUOTES, 'UTF-8') . '</p>
+                                        <p style="margin-top:30px;font-size:12px;color:#777777;">
+                                            Caso você não tenha solicitado esta recuperação, ignore esta mensagem.
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="background:#f0f0f0;padding:15px;text-align:center;font-size:11px;color:#666666;">
+                                        © ' . date('Y') . ' Primeira Vara Crime de Ilhéus<br>
+                                        Este é um e-mail automático. Não responda.
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </body>
+            </html>';
+        $altBody =
+            "Olá, {$nome}.\n\n" .
+            "Use o link abaixo para redefinir sua senha (válido por 1 hora):\n{$resetUrl}\n\n" .
+            "Caso você não tenha solicitado esta recuperação, ignore esta mensagem.\n";
 
-        if ($driver !== 'smtp') {
-            error_log('[RESET SENHA] ' . $to . ' | link: ' . $resetUrl);
-            return ['ok' => true, 'sent' => false];
-        }
-
-        $host = (string) envValue('MAIL_HOST', '');
-        $user = (string) (envValue('MAIL_USERNAME') ?? envValue('MAIL_USER') ?? '');
-        if ($host === '' || $user === '') {
-            error_log('[RESET SENHA] SMTP não configurado: MAIL_HOST ou MAIL_USER vazio.');
-            return ['ok' => true, 'sent' => false];
-        }
-
-        $autoloads = [
-            __DIR__ . '/../../vendor/autoload.php',
-            __DIR__ . '/../vendor/autoload.php',
-        ];
-        $autoload = null;
-        foreach ($autoloads as $path) {
-            if (is_file($path)) {
-                $autoload = $path;
-                break;
-            }
-        }
-        if ($autoload === null) {
-            error_log('[RESET SENHA] PHPMailer não encontrado. Execute: composer require phpmailer/phpmailer');
-            return ['ok' => true, 'sent' => false];
-        }
-        require_once $autoload;
-
-        if (!class_exists(\PHPMailer\PHPMailer\PHPMailer::class)) {
-            error_log('[RESET SENHA] Pacote phpmailer/phpmailer ausente no vendor. Execute: composer install (ou composer require phpmailer/phpmailer).');
-            return ['ok' => true, 'sent' => false];
-        }
-
-        $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
-
-        try {
-            $mail->isSMTP();
-            $mail->Host = $host;
-            $mail->Port = (int) envValue('MAIL_PORT', '587');
-            $mail->SMTPAuth = true;
-            $mail->Username = $user;
-            $mail->Password = (string) (envValue('MAIL_PASSWORD') ?? envValue('MAIL_PASS') ?? '');
-
-            $encryption = strtolower(trim((string) envValue('MAIL_ENCRYPTION', '')));
-            if ($encryption === '' && $mail->Port === 465) {
-                $encryption = 'ssl';
-            }
-
-            $mail->SMTPSecure = $encryption === 'ssl'
-                ? \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS
-                : \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
-
-            $mail->CharSet = 'UTF-8';
-            $mail->SMTPOptions = [
-                'ssl' => [
-                    'verify_peer' => false,
-                    'verify_peer_name' => false,
-                    'allow_self_signed' => true,
-                ],
-            ];
-
-            $fromAddress = (string) (envValue('MAIL_FROM_ADDRESS') ?? $user);
-            $fromName = (string) (envValue('MAIL_FROM_NAME') ?: 'Sistema');
-
-            $mail->setFrom($fromAddress, $fromName);
-            $mail->addAddress($to, $nome);
-            $mail->isHTML(true);
-            $mail->Subject = 'Redefinição de senha – Primeira Vara Crime de Ilhéus';
-            $mail->Body = '
-                <!DOCTYPE html>
-                <html lang="pt-BR">
-                <head>
-                    <meta charset="UTF-8">
-                    <title>Redefinição de senha</title>
-                </head>
-                <body style="margin:0;padding:0;background:#f4f6f8;font-family:Arial,Helvetica,sans-serif;">
-                    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f8;padding:20px 0;">
-                        <tr>
-                            <td align="center">
-                                <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;box-shadow:0 2px 6px rgba(0,0,0,0.15);">
-                                    <tr>
-                                        <td style="background:#686BFB;padding:20px;text-align:center;color:#ffffff;font-size:18px;font-weight:bold;">
-                                            SGC - Primeira Vara Crime de Ilhéus
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding:30px;color:#333333;font-size:14px;line-height:1.6;">
-                                            <p>Olá, <strong>' . htmlspecialchars($nome, ENT_QUOTES, 'UTF-8') . '</strong>.</p>
-                                            <p>Recebemos uma solicitação para redefinição de senha do seu acesso ao sistema.</p>
-                                            <p>Para continuar, clique no botão abaixo. O link expira em 1 hora e pode ser usado uma única vez.</p>
-                                            <p style="margin:30px 0;text-align:center;">
-                                                <a href="' . htmlspecialchars($resetUrl, ENT_QUOTES, 'UTF-8') . '" style="display:inline-block;background:#ff0040;color:#ffffff;padding:12px 20px;border-radius:6px;text-decoration:none;font-weight:600;">
-                                                    Redefinir senha
-                                                </a>
-                                            </p>
-                                            <p>Se o botão não funcionar, copie e cole este endereço no navegador:</p>
-                                            <p style="word-break:break-all;color:#555555;">' . htmlspecialchars($resetUrl, ENT_QUOTES, 'UTF-8') . '</p>
-                                            <p style="margin-top:30px;font-size:12px;color:#777777;">
-                                                Caso você não tenha solicitado esta recuperação, ignore esta mensagem.
-                                            </p>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td style="background:#f0f0f0;padding:15px;text-align:center;font-size:11px;color:#666666;">
-                                            © ' . date('Y') . ' Primeira Vara Crime de Ilhéus<br>
-                                            Este é um e-mail automático. Não responda.
-                                        </td>
-                                    </tr>
-                                </table>
-                            </td>
-                        </tr>
-                    </table>
-                </body>
-                </html>';
-
-            $mail->AltBody =
-                "Olá, {$nome}.\n\n" .
-                "Use o link abaixo para redefinir sua senha (válido por 1 hora):\n{$resetUrl}\n\n" .
-                "Caso você não tenha solicitado esta recuperação, ignore esta mensagem.\n";
-
-            $mail->send();
-            return ['ok' => true, 'sent' => true];
-        } catch (Throwable $e) {
-            error_log('Erro SMTP reset de senha: ' . $e->getMessage());
-            return ['ok' => false, 'sent' => false];
-        }
+        $mailer = new SmtpTransactionalMailer();
+        return $mailer->sendHtml(
+            [['email' => $to, 'name' => $nome]],
+            $subject,
+            $htmlBody,
+            $altBody,
+            [
+                'log_context' => 'RESET SENHA',
+                'log_message' => $to . ' | link: ' . $resetUrl,
+            ]
+        );
     }
 
     private function hasRecentPasswordReuse(string $userId, string $novaSenha): bool

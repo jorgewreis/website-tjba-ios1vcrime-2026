@@ -198,6 +198,7 @@ if ($totalPages > 0) {
                 <div class="title-icon" title="Listar" role="button" tabindex="0" aria-label="Listar" data-list-section-trigger="items">
                     <i class="fi fi-rr-list"></i>
                 </div>
+                <button type="button" class="btn btn-secondary width-300" id="email-resumo-btn">Email resumo</button>
                 <button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
             </div>
         </div>
@@ -387,6 +388,16 @@ if ($totalPages > 0) {
 
     <script>
     (function() {
+        var notify = function (type, title, message) {
+            if (window.App && App.Page && typeof App.Page.notify === 'function') {
+                App.Page.notify(type, title, message);
+                return;
+            }
+            if (typeof showToast === 'function') {
+                showToast({ type: type, variant: 'full', title: title, message: message });
+            }
+        };
+
         var applyFilters = function () {
             var q = document.getElementById('filter-q')?.value?.trim() ?? '';
             var perPage = document.getElementById('items-per-page')?.value ?? '25';
@@ -407,6 +418,37 @@ if ($totalPages > 0) {
 
         document.getElementById('novo-cadastro-btn')?.addEventListener('click', function() {
             window.location.href = '/frame.php?page=reuspresoscreate';
+        });
+        document.getElementById('email-resumo-btn')?.addEventListener('click', function () {
+            var btn = this;
+            var defaultLabel = btn.textContent || 'Email resumo';
+            btn.disabled = true;
+            btn.textContent = 'Enviando...';
+
+            fetch('/api/gabinete-reus-presos/send-revisao-resumo-email.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin'
+            })
+            .then(function (r) {
+                return r.json().catch(function () { return {}; }).then(function (j) {
+                    return { ok: r.ok, body: j };
+                });
+            })
+            .then(function (res) {
+                if (res.ok && res.body && res.body.success) {
+                    notify('success', 'Sucesso', res.body.message || 'Resumo enviado com sucesso.');
+                    return;
+                }
+                notify('error', 'Erro', (res.body && res.body.message) ? res.body.message : 'Falha ao enviar resumo por e-mail.');
+            })
+            .catch(function () {
+                notify('error', 'Erro', 'Erro de conexão ao enviar o resumo.');
+            })
+            .finally(function () {
+                btn.disabled = false;
+                btn.textContent = defaultLabel;
+            });
         });
         document.querySelectorAll('.btn-editar').forEach(function(btn) {
             btn.addEventListener('click', function() {

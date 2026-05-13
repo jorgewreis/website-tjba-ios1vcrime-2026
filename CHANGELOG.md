@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.98.0006
+
+**Data:** 2026-05-13 10:00:17 | **Commit:** `8980a9bd` | **Tipo:** `patch`
+
+- feat(repository): add methods to fetch recent movements and active prisoners with review dates
+
 ## V. 1.98.0005
 
 **Data:** 2026-05-13 09:34:45 | **Commit:** `3aebd7e7` | **Tipo:** `patch`
@@ -5346,6 +5352,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -203,6 +203,41 @@ final class GabineteReuPresoRepository
     }
 
     /**
+     * @return list<array<string,mixed>>
+     */
+    public function fetchAtivosPresosComRevisaoEntre(string $hojeYmd, string $limiteYmd): array
+    {
+        $lastMovSql = '(SELECT CONCAT(m.`tipo_codigo`, \'|\', m.`data_movimentacao`) FROM `gabinete_reu_preso_movimentacao` m WHERE m.`reu_preso_id` = g.`id` ORDER BY m.`data_movimentacao` DESC, m.`created_at` DESC LIMIT 1)';
+        $sql = sprintf(
+            'SELECT g.`id`, g.`nome`, g.`proxima_revisao`,
+                    pr.`numero_processo` AS `processo_principal_numero`,
+                    pp.`data_prisao` AS `principal_data_prisao`,
+                    %s AS `ultima_mov_raw`
+             FROM `%s` g
+             INNER JOIN `gabinete_reu_preso_processo` pp
+                     ON pp.`reu_preso_id` = g.`id`
+                    AND pp.`principal` = 1
+                    AND pp.`situacao` = :situacao_preso
+             LEFT JOIN `processos` pr ON pr.`id` = pp.`processo_id`
+             WHERE g.`status` = :status_ativo
+               AND g.`proxima_revisao` IS NOT NULL
+               AND (g.`proxima_revisao` <= :limite OR g.`proxima_revisao` < :hoje)
+             ORDER BY g.`proxima_revisao` ASC, g.`nome` ASC',
+            $lastMovSql,
+            $this->table
+        );
+        $st = $this->connection->prepare($sql);
+        $st->bindValue(':status_ativo', 'ativo');
+        $st->bindValue(':situacao_preso', 'preso');
+        $st->bindValue(':hoje', $hojeYmd);
+        $st->bindValue(':limite', $limiteYmd);
+        $st->execute();
+        $rows = $st->fetchAll(PDO::FETCH_ASSOC);
+
+        return $rows === false ? [] : $rows;
+    }
+
+    /**
      * @return list<string> nomes distintos e normalizados apenas com trim.
      */
     public function listAtivosNomes(): array

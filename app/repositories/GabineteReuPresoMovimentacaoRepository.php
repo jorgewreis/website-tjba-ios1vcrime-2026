@@ -294,6 +294,83 @@ final class GabineteReuPresoMovimentacaoRepository
         return $rows === false ? [] : $rows;
     }
 
+    /**
+     * @param list<string> $reuIds
+     * @param list<string> $prefixes
+     * @return array<string, list<array<string,mixed>>>
+     */
+    public function fetchUltimasPorReuIdsComPrefixos(array $reuIds, array $prefixes, int $maxPorReu = 3): array
+    {
+        $ids = array_values(array_filter(array_map(static function ($v): string {
+            return trim((string) $v);
+        }, $reuIds), static function (string $v): bool {
+            return $v !== '';
+        }));
+        $prefixes = array_values(array_filter(array_map(static function ($v): string {
+            return trim((string) $v);
+        }, $prefixes), static function (string $v): bool {
+            return $v !== '';
+        }));
+        $maxPorReu = max(1, (int) $maxPorReu);
+
+        if ($ids === [] || $prefixes === []) {
+            return [];
+        }
+
+        $reuPh = [];
+        $params = [];
+        foreach ($ids as $i => $id) {
+            $k = ':reu' . $i;
+            $reuPh[] = $k;
+            $params[$k] = $id;
+        }
+
+        $whereLike = [];
+        foreach ($prefixes as $i => $prefix) {
+            $k = ':pf' . $i;
+            $whereLike[] = 'm.`tipo_codigo` LIKE ' . $k;
+            $params[$k] = $prefix . '%';
+        }
+
+        $sql = sprintf(
+            'SELECT m.`id`, m.`reu_preso_id`, m.`tipo_codigo`, m.`data_movimentacao`, m.`observacoes`, m.`created_at`
+             FROM `%s` m
+             WHERE m.`reu_preso_id` IN (%s)
+               AND (%s)
+             ORDER BY m.`reu_preso_id` ASC, m.`data_movimentacao` DESC, m.`created_at` DESC',
+            $this->table,
+            implode(',', $reuPh),
+            implode(' OR ', $whereLike)
+        );
+
+        $st = $this->connection->prepare($sql);
+        foreach ($params as $k => $v) {
+            $st->bindValue($k, $v);
+        }
+        $st->execute();
+        $rows = $st->fetchAll(PDO::FETCH_ASSOC);
+        if ($rows === false) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($rows as $row) {
+            $rid = trim((string) ($row['reu_preso_id'] ?? ''));
+            if ($rid === '') {
+                continue;
+            }
+            if (!isset($out[$rid])) {
+                $out[$rid] = [];
+            }
+            if (count($out[$rid]) >= $maxPorReu) {
+                continue;
+            }
+            $out[$rid][] = $row;
+        }
+
+        return $out;
+    }
+
     private function hasProcessoIdColumn(): bool
     {
         if ($this->hasProcessoIdColumnCache !== null) {
