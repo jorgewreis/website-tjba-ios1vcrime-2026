@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    
+    <!-- STYLES -->
+    <link rel="stylesheet" href="../../../public/assets/css/shared/processo-bloco-listagem.css">
+    <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/4.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+    </style>
+
+    <!-- STYLES -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "JetBrains Mono", monospace;
+            padding: 10px;
+        }
+
+        .register {
+            width: 100%;
+            height: fit-content;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 10px;
+        }
+
+        .container-data-create {
+            width: 300px;
+            height: 55px;
+
+            margin: 0;
+            padding: 0 10px;
+
+            display: flex;
+            flex-direction: column;
+            flex-wrap: nowrap;
+            align-items: flex-start;
+            justify-content: center;
+
+            border-left: 1px solid #e5e7eb;
+            border-right: 1px solid #e5e7eb;
+        }
+
+        .data-create-user {
+            width: 100%;
+            height: fit-content;
+            font-size: 10px;
+            font-weight: 500;
+            color: #202020;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .data-create-date {
+            width: 100%;
+            height: fit-content;
+            font-size: 10px;
+            font-weight: 500;
+            color: #202020;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .data-create-buttons {
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 4px;
+        }
+
+        .data-create-buttons .left {
+            width: 100%;
+            height: fit-content;
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            align-items: center;
+            justify-content: flex-start;
+        }
+            .data-create-buttons .left .data-id {
+                width: 200px;
+                font-size: 10px;
+                font-weight: 400;
+                color: #909090;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+        .data-create-buttons .right {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 5px;
+        }
+            .data-create-buttons .right .btn-mini {
+                width: 20px;
+                height: 20px;
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+            }
+                .data-create-buttons .right .btn-mini .btn-mini-icon {
+                    width: 15px;
+                    height: 15px;
+                    filter: grayscale(100%);
+                    opacity: 0.3;
+                    transition: filter 0.3s ease, opacity 0.3s ease;
+                }
+                    .data-create-buttons .right .btn-mini:hover .btn-mini-icon {
+                        filter: grayscale(0%);
+                        opacity: 1;
+                        transition: filter 0.3s ease, opacity 0.3s ease;
+                    }
+    </style>
+</head>
+<body>
+    
+    <div class="register">
+        <!-- CONTAINER PROCESSO COMPLETO -->
+        <div class="container-processo">
+            <!-- CONTENT -->
+            <div class="main-processo">
+                <!-- LEFT - NUMERO -->
+                <div class="left">
+                    <div class="numero">0000000-00.0000.0.00.0000</div>
+                </div>
+
+                <!-- RIGHT - PRIORIDADES -->
+                <div class="right">
+                    <div class="prioridades">
+                        <div class="btn-micro tooltip" data-title="Processo Sigiloso">
+                            <img class="btn-micro-icon" src="./../../../public/assets/icons/Lock-6--Streamline-Ultimate.png">
+                        </div>
+                        <div class="btn-micro tooltip" data-title="Réu Preso">
+                            <img class="btn-micro-icon" src="./../../../public/assets/icons/Crime-Man-Inmate--Streamline-Ultimate.png">
+                        </div>
+                        <div class="btn-micro tooltip" data-title="Violência Doméstica, Criança ou Adolescente">
+                            <img class="btn-micro-icon" src="./../../../public/assets/icons/Police-Rotating-Light-1--Streamline-Ultimate.png">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FOOTER -->
+            <div class="footer-processo">
+                <!-- LEFT - CLASSE + ASSUNTOS -->
+                <div class="left">
+                    <div class="processo-classe">283 - Ação Penal - Procedimento Ordinário</div>
+                    <div class="processo-assunto">Ameaça | Vias de Fato | Grave</div>
+                </div>
+
+                <!-- RIGHT - BUTTONS -->
+                <div class="right">
+                    <div class="buttons">
+                        <div class="btn-mini tooltip" data-title="Abrir processo">
+                            <img class="btn-mini-icon" src="./../../../public/assets/icons/Resize-Expand-Corner--Streamline-Ultimate.png">
+                        </div>
+                        <div class="btn-mini tooltip" data-title="Copiar número do processo">
+                            <img class="btn-mini-icon" src="./../../../public/assets/icons/Task-Checklist--Streamline-Ultimate.png">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTAINER DATA CREATE -->
+        <div class="container-data-create">
+            <div class="data-create-user">Tarefa cadastrada por Jorge Wanderley</div>
+            <div class="data-create-date">Em 14/05/2026 às 10:00:22</div>
+            <div class="data-create-buttons">
+                <div class="left">
+                    <div class="data-id">Registrado sob ID: 1234567890</div>
+                </div>
+                <div class="right">
+                    <div class="btn-mini tooltip" data-title="Editar tarefa">
+                        <img class="btn-mini-icon" src="./../../../public/assets/icons/Notes-Edit--Streamline-Ultimate.png">
+                    </div>
+                    <div class="btn-mini tooltip" data-title="Excluir tarefa">
+                        <img class="btn-mini-icon" src="./../../../public/assets/icons/Notes-Remove--Streamline-Ultimate.png">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

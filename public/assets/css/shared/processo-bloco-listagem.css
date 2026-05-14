@@ -4,7 +4,7 @@
  */
 
 .container-processo {
-    width: 100%;
+    width: 300px;
     max-width: 500px;
     height: fit-content;
     margin: 0;
@@ -16,7 +16,7 @@
     justify-content: flex-start;
     border-radius: 6px;
     box-sizing: border-box;
-    font-family: inherit;
+    font-family: "JetBrains Mono", monospace;
 }
 
 /* Coluna padrão do bloco: `.col.width-500.col-process` (form.css). Evita encolher em linhas com flex-wrap (painéis em tempo real). */
@@ -99,7 +99,6 @@
 .container-processo .footer-processo {
     position: relative;
     width: 100%;
-    min-height: 30px;
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
@@ -116,7 +115,7 @@
     flex-wrap: nowrap;
     align-items: flex-start;
     justify-content: flex-start;
-    padding: 3px 10px;
+    padding: 2px 0 0 10px;
     box-sizing: border-box;
 }
 
@@ -176,12 +175,14 @@
     flex-wrap: nowrap;
     align-items: center;
     justify-content: center;
+    padding: 3px 5px 0 5px;
     gap: 2px;
     position: relative;
     z-index: 2;
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
+    background-color: #ffffff;
     transition: opacity 0.18s ease, visibility 0.18s ease;
 }
 
@@ -237,8 +238,8 @@
 }
 
 .container-processo .footer-processo .right .buttons .btn-mini {
-    width: 30px;
-    height: 30px;
+    width: 20px;
+    height: 20px;
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
@@ -254,8 +255,8 @@
 }
 
 .container-processo .footer-processo .right .buttons .btn-mini .btn-mini-icon {
-    width: 20px;
-    height: 20px;
+    width: 15px;
+    height: 15px;
     filter: grayscale(100%);
     opacity: 0.3;
     transition: filter 0.3s ease, opacity 0.3s ease;
