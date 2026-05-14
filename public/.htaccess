@@ -1,0 +1,8 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Pastas internas podem existir como symlink no docroot em alguns deploys.
+    RewriteRule ^(scripts|config)(/|$) - [F,L]
+</IfModule>
+
+Options -Indexes

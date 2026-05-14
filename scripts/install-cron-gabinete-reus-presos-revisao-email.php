@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/_cli_only.php';
+
 /**
  * Instala no crontab do usuario atual: quinta-feira 18:00 (Linux).
  * Nao use `php install-....sh` — isso nao executa Bash; use este arquivo .php.
@@ -16,11 +18,6 @@ declare(strict_types=1);
  *   bash scripts/link-public-overlays-to-repo.sh
  * (cria symlinks public/scripts -> ../scripts e public/config -> ../config).
  */
-
-if (PHP_SAPI !== 'cli') {
-    fwrite(STDERR, "Execute apenas em linha de comando (php CLI).\n");
-    exit(1);
-}
 
 require_once __DIR__ . '/resolve_project_root_cli.php';
 

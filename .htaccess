@@ -12,7 +12,12 @@
         Deny from all
     </FilesMatch>
 
-    # --- 3. Proteção da Pasta de Banco de Dados (/bd) ---
+    # --- 3. Proteção de diretórios internos ---
+    # Impede acesso direto a scripts administrativos e código fora do docroot.
+    RewriteRule ^scripts/ - [F,L]
+    RewriteRule ^config/ - [F,L]
+
+    # Proteção da Pasta de Banco de Dados (/bd)
     # Impede que alguém acesse domain.com/bd/conexao.php diretamente
     RewriteRule ^bd/ - [F,L]
 

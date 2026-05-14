@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/_cli_only.php';
+
 /**
  * Agendamento padrão desejado: toda quinta-feira às 18:00.
  *
