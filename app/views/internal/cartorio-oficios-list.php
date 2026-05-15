@@ -494,6 +494,7 @@ function cartorio_oficios_label_cumprimento(array $row): string
                         }
                     }
                     $expandir = !$tarefaConcluida && !$tarefaCancelada && $formaC === 'cartorio';
+                    $mostrarBadgePendente = !$tarefaCancelada && !$tarefaConcluida;
                     $oficioMetadata = OficioRegistroMetadataHelper::fromListRow($row, 'cartorio', $oficioListViewerContext);
                 ?>
                     <div class="display-flex col col-full register register-oficio-list border-bottom" data-oficio-id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>">
@@ -558,6 +559,24 @@ function cartorio_oficios_label_cumprimento(array $row): string
                                     }
                                     ?>
                                 </div>
+                                <?php if ($mostrarBadgePendente): ?>
+                                    <div class="col oficio-list-status-col<?php echo $mostrarBarraStatus ? ' status-task' : ''; ?>" title="<?php echo htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES); ?>">
+                                        <?php if ($mostrarBarraStatus): ?>
+                                            <div class="width-300 status status-pending status-with-progress">
+                                                <span class="status-task-label width-300">Pendente</span>
+                                                <div class="status-task-progress" role="progressbar" aria-valuenow="<?php echo (int) count(array_filter($progressStatuses, static function ($x) {
+                                                    return $x === 'concluida';
+                                                })); ?>" aria-valuemin="0" aria-valuemax="2">
+                                                    <?php foreach ($segmentosBarra as $seg): ?>
+                                                        <div class="status-task-progress-segment <?php echo htmlspecialchars($seg['class'], ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($seg['title'], ENT_QUOTES); ?>"></div>
+                                                    <?php endforeach; ?>
+                                                </div>
+                                            </div>
+                                        <?php else: ?>
+                                            <div class="width-300 padding-x-lg status status-pending">Pendente</div>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endif; ?>
                             <?php include __DIR__ . '/_oficio_registro_metadata.php'; ?>
                         </div>
 

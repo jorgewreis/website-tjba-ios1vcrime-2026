@@ -340,12 +340,20 @@ final class OficiosCartorioService
         if ($row === null) {
             throw new InvalidArgumentException('Ofício não encontrado.');
         }
-        if (($row['status'] ?? '') === 'finalizada') {
-            throw new InvalidArgumentException('Não é possível cancelar um ofício já finalizado.');
-        }
         if (($row['status'] ?? '') === 'cancelada') {
             return true;
         }
+
+        require_once __DIR__ . '/../helpers/OficioRegistroMetadataHelper.php';
+        $podeCancelar = OficioRegistroMetadataHelper::podeCancelarCartorio([
+            'Status' => (string) ($row['status'] ?? ''),
+        ]);
+        if (!$podeCancelar) {
+            throw new InvalidArgumentException(
+                'Não é possível cancelar este ofício. Ofícios finalizados ou já cancelados não podem ser cancelados.'
+            );
+        }
+
         $this->subtarefasRepository->deleteByOficioId($id);
         return $this->repository->updateStatus($id, 'cancelada', $atualizadoPor);
     }

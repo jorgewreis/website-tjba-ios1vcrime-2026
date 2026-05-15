@@ -30,15 +30,9 @@ final class OficioRegistroMetadataHelper
     }
 
     /**
-     * Cancelar no Gabinete: ofício ativo, criado há menos de 3 dias e (autor logado ou ADMIN/CHEFIA).
-     *
-     * @param array<string, mixed> $row Status, Data (created_at), CriadoPor
-     * @param array{usuario_id?: string, perfis?: list<string>} $viewerContext
-     */
-    /**
      * Cartório: pendente (não cancelado nem finalizado).
      *
-     * @param array<string, mixed> $row
+     * @param array<string, mixed> $row Status ou status
      */
     public static function podeCancelarCartorio(array $row): bool
     {
@@ -48,7 +42,9 @@ final class OficioRegistroMetadataHelper
     }
 
     /**
-     * @param array<string, mixed> $row
+     * Cancelar no Gabinete: ofício ativo, criado há menos de 3 dias e (autor logado ou ADMIN/CHEFIA).
+     *
+     * @param array<string, mixed> $row Status, Data (created_at), CriadoPor
      * @param array{usuario_id?: string, perfis?: list<string>} $viewerContext
      */
     public static function podeCancelarGabinete(array $row, array $viewerContext): bool

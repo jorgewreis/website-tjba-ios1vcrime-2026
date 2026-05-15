@@ -464,9 +464,13 @@
     gap: 10px;
 }
 
-.register.register-oficio-list .register-oficio-list-row > .display-flex.row-fit {
+.register.register-oficio-list .register-oficio-list-row > .display-flex.row-fit.flex-1 {
     flex: 1 1 auto;
     min-width: 0;
+}
+
+.register.register-oficio-list .register-oficio-list-row > .col.oficio-list-status-col {
+    flex: 0 0 auto;
 }
 
 .register.register-oficio-list .container-data-create {

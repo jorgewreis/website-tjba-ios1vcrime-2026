@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 02 de abril de 2026
+**Data de Lançamento:** 15 de maio de 2026
 
 # V. 1.23
 
-> feat: enhance DataJud integration with new configuration options and improved error handling
+> refactor: add cancellation logic for cartório ofícios and improve metadata handling
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **feat: enhance DataJud integration with new configuration options and improved error handling** `[6a93841]`
+- **refactor: add cancellation logic for cartório ofícios and improve metadata handling** `[8e20f33d]`
 
 ---
 
