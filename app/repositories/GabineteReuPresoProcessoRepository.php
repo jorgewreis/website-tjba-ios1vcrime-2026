@@ -209,6 +209,89 @@ final class GabineteReuPresoProcessoRepository
     }
 
     /**
+     * Indica vínculo ativo Gabinete ↔ processo (réu preso cadastrado).
+     * Usado por `syncReuPreso` como fonte de verdade além do match por nome em partes.
+     */
+    public function existsVinculoReuPresoAtivo(string $processoId, ?string $situacao = 'preso'): bool
+    {
+        $processoId = trim($processoId);
+        if ($processoId === '') {
+            return false;
+        }
+
+        $sql = sprintf(
+            'SELECT 1 FROM `%s` gpp
+             INNER JOIN `gabinete_reu_preso` grp ON grp.`id` = gpp.`reu_preso_id`
+             WHERE gpp.`processo_id` = :processo_id
+               AND grp.`status` = :status_ativo',
+            $this->table
+        );
+        if ($situacao !== null && trim($situacao) !== '') {
+            $sql .= ' AND gpp.`situacao` = :situacao';
+        }
+        $sql .= ' LIMIT 1';
+
+        $st = $this->connection->prepare($sql);
+        $st->bindValue(':processo_id', $processoId);
+        $st->bindValue(':status_ativo', 'ativo');
+        if ($situacao !== null && trim($situacao) !== '') {
+            $st->bindValue(':situacao', trim($situacao));
+        }
+        $st->execute();
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+
+        return $row !== false;
+    }
+
+    /**
+     * Mesma regra de {@see existsVinculoReuPresoAtivo}, resolvendo o processo pelo CNJ.
+     */
+    public function existsVinculoReuPresoAtivoPorNumeroProcesso(string $numeroProcesso, ?string $situacao = 'preso'): bool
+    {
+        $numeroProcesso = trim($numeroProcesso);
+        if ($numeroProcesso === '') {
+            return false;
+        }
+
+        require_once __DIR__ . '/ProcessosRepository.php';
+        $procRepo = new ProcessosRepository($this->connection);
+        $proc = $procRepo->findByNumero($numeroProcesso);
+        if ($proc !== null && isset($proc['id']) && trim((string) $proc['id']) !== '') {
+            return $this->existsVinculoReuPresoAtivo((string) $proc['id'], $situacao);
+        }
+
+        $digits = preg_replace('/\D+/', '', $numeroProcesso);
+        if ($digits === '') {
+            return false;
+        }
+
+        $sql = sprintf(
+            'SELECT 1 FROM `%s` gpp
+             INNER JOIN `gabinete_reu_preso` grp ON grp.`id` = gpp.`reu_preso_id`
+             INNER JOIN `processos` pr ON pr.`id` = gpp.`processo_id`
+             WHERE pr.`numero_processo` IS NOT NULL
+               AND REPLACE(REPLACE(REPLACE(REPLACE(TRIM(pr.`numero_processo`), \'-\', \'\'), \'.\', \'\'), \'/\', \'\'), \' \', \'\') LIKE :proc_digits
+               AND grp.`status` = :status_ativo',
+            $this->table
+        );
+        if ($situacao !== null && trim($situacao) !== '') {
+            $sql .= ' AND gpp.`situacao` = :situacao';
+        }
+        $sql .= ' LIMIT 1';
+
+        $st = $this->connection->prepare($sql);
+        $st->bindValue(':proc_digits', '%' . $digits . '%');
+        $st->bindValue(':status_ativo', 'ativo');
+        if ($situacao !== null && trim($situacao) !== '') {
+            $st->bindValue(':situacao', trim($situacao));
+        }
+        $st->execute();
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+
+        return $row !== false;
+    }
+
+    /**
      * Fallback: lista nomes de réus presos ativos vinculados ao mesmo CNJ
      * (útil quando o `processo_id` diverge entre módulos, mas o CNJ é o mesmo).
      *

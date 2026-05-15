@@ -650,11 +650,9 @@ final class GabineteReusPresosService
         $links = $this->procRepo->findByReuPresoId($id);
         $processosParaReconciliar = [];
         foreach ($links as $ln) {
-            if (($ln['situacao'] ?? '') === 'preso') {
-                $pid = trim((string) ($ln['processo_id'] ?? ''));
-                if ($pid !== '') {
-                    $processosParaReconciliar[$pid] = true;
-                }
+            $pid = trim((string) ($ln['processo_id'] ?? ''));
+            if ($pid !== '') {
+                $processosParaReconciliar[$pid] = true;
             }
         }
 
@@ -842,6 +840,17 @@ final class GabineteReusPresosService
                 'ultima_movimentacao_data' => $dataBr,
                 'ultima_movimentacao_observacao' => $obsMov,
             ];
+        }
+
+        $processoIdsReconciliar = [];
+        foreach ($procRows as $pr) {
+            $pid = trim((string) ($pr['processo_id'] ?? ''));
+            if ($pid !== '') {
+                $processoIdsReconciliar[$pid] = true;
+            }
+        }
+        foreach (array_keys($processoIdsReconciliar) as $pid) {
+            $this->reconciliarPrioridadesProcesso($pid);
         }
 
         $flat = [];

@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../repositories/GabineteReuPresoProcessoRepository.php';
 require_once __DIR__ . '/../repositories/GabineteReuPresoRepository.php';
-require_once __DIR__ . '/../repositories/ProcessosPartesRepository.php';
 
 /**
  * Detecção de "réu preso" alinhada a `sala-audiencias-pauta-edit.php` (mapas + fallbacks de nome).
@@ -85,7 +84,11 @@ final class SalaAudienciasReuPresoDetector
         return false;
     }
 
-    /** Réu preso no âmbito do processo (vínculos em `processos_partes` + cadastro gabinete). */
+    /**
+     * Réu preso no processo para prioridades automáticas: somente vínculo ativo no Gabinete
+     * (`gabinete_reu_preso` ativo + `gabinete_reu_preso_processo` com situação preso).
+     * Ao arquivar o réu ou remover o vínculo, a prioridade é retirada na reconciliação.
+     */
     public static function processoTemReuPreso(PDO $pdo, string $processoId, string $numeroProcesso): bool
     {
         $processoId = trim($processoId);
@@ -93,25 +96,17 @@ final class SalaAudienciasReuPresoDetector
             return false;
         }
 
-        $repo = new ProcessosPartesRepository($pdo);
-        $acusados = $repo->findAcusadosByProcessoId($processoId);
-        if ($acusados === []) {
-            return false;
-        }
-
-        [$map, $sigMap] = self::buildReusPresosMaps($pdo, $processoId, trim($numeroProcesso));
-        if ($map === [] && $sigMap === []) {
-            return false;
-        }
-
-        foreach ($acusados as $row) {
-            $nomeParteRaw = trim((string) ($row['nome_completo'] ?? ''));
-            if ($nomeParteRaw === '') {
-                continue;
-            }
-            if (self::nomeReuCorrespondeReuPreso($nomeParteRaw, $map, $sigMap)) {
+        try {
+            $repoGpp = new GabineteReuPresoProcessoRepository($pdo);
+            if ($repoGpp->existsVinculoReuPresoAtivo($processoId, 'preso')) {
                 return true;
             }
+            $numeroProcesso = trim($numeroProcesso);
+            if ($numeroProcesso !== '') {
+                return $repoGpp->existsVinculoReuPresoAtivoPorNumeroProcesso($numeroProcesso, 'preso');
+            }
+        } catch (Throwable $e) {
+            // ignora
         }
 
         return false;

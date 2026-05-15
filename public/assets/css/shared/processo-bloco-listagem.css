@@ -24,6 +24,12 @@
     box-sizing: border-box;
 }
 
+/* Gabinete — réus presos: evita recorte dos mini botões (rodapé absoluto). */
+.register[data-reu-preso-id] .col.width-500.col-process,
+.grp-proc-link .col.width-500.col-process {
+    overflow: visible;
+}
+
 .container-processo .main-processo {
     position: relative;
     width: 100%;
@@ -201,6 +207,8 @@
     .register[data-medida-id] .container-processo .footer-processo .right .buttons,
     .register[data-guia-id] .container-processo .footer-processo .right .buttons,
     .register[data-monitoramento-id] .container-processo .footer-processo .right .buttons,
+    .register[data-reu-preso-id] .container-processo .footer-processo .right .buttons,
+    .grp-proc-link .container-processo .footer-processo .right .buttons,
     .register-line[data-carta-id] .container-processo .footer-processo .right .buttons {
         opacity: 1;
         visibility: visible;
@@ -229,6 +237,10 @@
 .register[data-guia-id]:focus-within .container-processo .footer-processo .right .buttons,
 .register[data-monitoramento-id]:hover .container-processo .footer-processo .right .buttons,
 .register[data-monitoramento-id]:focus-within .container-processo .footer-processo .right .buttons,
+.register[data-reu-preso-id]:hover .container-processo .footer-processo .right .buttons,
+.register[data-reu-preso-id]:focus-within .container-processo .footer-processo .right .buttons,
+.grp-proc-link:hover .container-processo .footer-processo .right .buttons,
+.grp-proc-link:focus-within .container-processo .footer-processo .right .buttons,
 .register-line[data-carta-id]:hover .container-processo .footer-processo .right .buttons,
 .register-line[data-carta-id]:focus-within .container-processo .footer-processo .right .buttons {
     opacity: 1;
