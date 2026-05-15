@@ -18,6 +18,12 @@
 
         : '/api/processos/classe-sync.php';
 
+    var ASSUNTO_SYNC_URL = (typeof window.PROCESSO_ASSUNTO_SYNC_ENDPOINT !== 'undefined' && window.PROCESSO_ASSUNTO_SYNC_ENDPOINT)
+
+        ? window.PROCESSO_ASSUNTO_SYNC_ENDPOINT
+
+        : '/api/processos/assunto-sync.php';
+
     var classeInputListenerBound = false;
 
 
@@ -329,6 +335,167 @@
                     }
 
                     showSyncResult(res);
+
+                })
+
+                .catch(function () {
+
+                    if (tryNum < SYNC_MAX_ATTEMPTS) {
+
+                        return delay(SYNC_RETRY_DELAY_MS * tryNum).then(function () { return attempt(tryNum + 1); });
+
+                    }
+
+                });
+
+        }
+
+        attempt(1);
+
+    }
+
+    function normalizeAssuntosForSync(assuntos) {
+
+        if (!Array.isArray(assuntos) || assuntos.length === 0) {
+
+            return [];
+
+        }
+
+        var normalizedMap = {};
+        assuntos.forEach(function (item) {
+
+            if (!item) {
+
+                return;
+
+            }
+
+            var codigo = '';
+            var descricao = '';
+            if (typeof item === 'string') {
+
+                descricao = String(item).trim();
+
+            } else if (typeof item === 'object') {
+
+                codigo = item.codigo != null ? String(item.codigo).trim() : '';
+                if (codigo === '') {
+                    codigo = item.codigoAssunto != null ? String(item.codigoAssunto).trim() : '';
+                }
+                if (codigo === '') {
+                    codigo = item.numAssunto != null ? String(item.numAssunto).trim() : '';
+                }
+                descricao = item.descricao != null ? String(item.descricao).trim() : '';
+                if (descricao === '') {
+                    descricao = item.descricaoAssunto != null ? String(item.descricaoAssunto).trim() : '';
+                }
+                if (descricao === '') {
+                    descricao = item.nome != null ? String(item.nome).trim() : '';
+                }
+
+            }
+
+            if (codigo === '') {
+
+                return;
+
+            }
+
+            if (descricao === '') {
+
+                descricao = codigo;
+
+            }
+
+            normalizedMap[codigo] = { codigo: codigo, descricao: descricao };
+
+        });
+
+        return Object.keys(normalizedMap).map(function (k) { return normalizedMap[k]; });
+
+    }
+
+    function postSyncAssuntos(digits, assuntos) {
+
+        var normalized = normalizeAssuntosForSync(assuntos);
+        if (normalized.length === 0) {
+
+            return;
+
+        }
+
+        var payloadJson = JSON.stringify({ numero: digits, assuntos: normalized });
+
+        function delay(ms) {
+
+            return new Promise(function (resolve) { setTimeout(resolve, ms); });
+
+        }
+
+        function parseJsonBody(text) {
+
+            var t = (text != null ? String(text) : '').trim();
+            if (t === '') {
+
+                return null;
+
+            }
+            try {
+
+                return JSON.parse(t);
+
+            } catch (e) {
+
+                return null;
+
+            }
+
+        }
+
+        function attempt(tryNum) {
+
+            return fetch(ASSUNTO_SYNC_URL, {
+
+                method: 'POST',
+
+                credentials: 'same-origin',
+
+                headers: { 'Content-Type': 'application/json' },
+
+                body: payloadJson,
+
+            })
+
+                .then(function (response) {
+
+                    return response.text().then(function (text) {
+
+                        return { ok: response.ok, status: response.status, body: parseJsonBody(text) };
+
+                    });
+
+                })
+
+                .then(function (res) {
+
+                    if (res.ok) {
+
+                        return;
+
+                    }
+
+                    var serverRetry = res.status >= 500 && res.status < 600 && tryNum < SYNC_MAX_ATTEMPTS;
+                    if (serverRetry) {
+
+                        return delay(SYNC_RETRY_DELAY_MS * tryNum).then(function () { return attempt(tryNum + 1); });
+
+                    }
+
+                    console.warn('[DataJud][Sync] Falha ao sincronizar assuntos no sistema local.', {
+                        status: res.status,
+                        body: res.body || null
+                    });
 
                 })
 
@@ -691,6 +858,7 @@
                                 || (body && body.indisponivel_na_base_publica === true);
 
                             var classe = processo.classe;
+                            var assuntos = processo.assuntos || [];
 
                             if (indisp) {
 
@@ -699,6 +867,8 @@
                                 return;
 
                             }
+
+                            postSyncAssuntos(rawDigits, assuntos);
 
                             if (hasClasseUtil(classe)) {
 

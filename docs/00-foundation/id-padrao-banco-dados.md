@@ -31,6 +31,8 @@
 | COM     | comarcas                 |
 | VAR     | varas                    |
 | PRC     | processos                |
+| ASU     | assuntos                 |
+| PAS     | processo_assuntos        |
 | CPR     | cartas_recebidas         |
 | CPE     | cartas_expedidas         |
 | CRS     | cartas_recebidas_subtarefas |

@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosPartesRepository.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
+require_once __DIR__ . '/../repositories/ProcessoAssuntosRepository.php';
 
 final class ConsultaProcessosService
 {
@@ -11,6 +12,7 @@ final class ConsultaProcessosService
     private ProcessosRepository $processosRepository;
     private ProcessosPartesRepository $processosPartesRepository;
     private ClassesRepository $classesRepository;
+    private ProcessoAssuntosRepository $processoAssuntosRepository;
 
     public function __construct(PDO $connection)
     {
@@ -18,6 +20,7 @@ final class ConsultaProcessosService
         $this->processosRepository = new ProcessosRepository($connection);
         $this->processosPartesRepository = new ProcessosPartesRepository($connection);
         $this->classesRepository = new ClassesRepository($connection);
+        $this->processoAssuntosRepository = new ProcessoAssuntosRepository($connection);
     }
 
     public function list(array $filters, int $limit, int $offset): array
@@ -58,6 +61,7 @@ final class ConsultaProcessosService
             $classe = $this->classesRepository->findById((string) $processo['classe_id']);
             $processo['classe_nome'] = $classe['nome'] ?? '';
         }
+        $processo['assuntos'] = $this->processoAssuntosRepository->findByProcessoId($id);
         return $processo;
     }
 }

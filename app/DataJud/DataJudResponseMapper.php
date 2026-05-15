@@ -112,41 +112,64 @@ final class DataJudResponseMapper
 
     /**
      * @param mixed $assuntos
-     * @return list<string>
+     * @return list<array{codigo: ?string, descricao: string}>
      */
     public static function formatarAssuntos($assuntos): array
     {
         if (empty($assuntos) || !is_array($assuntos)) {
             return [];
         }
+
         $lista = [];
         foreach ($assuntos as $item) {
             if (is_string($item)) {
-                $lista[] = $item;
+                $desc = trim($item);
+                if ($desc !== '') {
+                    $lista[] = ['codigo' => null, 'descricao' => $desc];
+                }
                 continue;
             }
-            if (is_array($item)) {
-                $desc = $item['descricaoAssunto'] ?? $item['descricao'] ?? $item['nome'] ?? null;
-                if ($desc) {
-                    $lista[] = $desc;
+
+            if (!is_array($item)) {
+                continue;
+            }
+
+            $codigo = trim((string) ($item['codigo'] ?? $item['codigoAssunto'] ?? $item['numAssunto'] ?? ''));
+            $desc = trim((string) ($item['descricaoAssunto'] ?? $item['descricao'] ?? $item['nome'] ?? ''));
+            if ($desc !== '') {
+                $lista[] = ['codigo' => $codigo !== '' ? $codigo : null, 'descricao' => $desc];
+                continue;
+            }
+
+            foreach ($item as $sub) {
+                if (is_string($sub)) {
+                    $nestedDesc = trim($sub);
+                    if ($nestedDesc !== '') {
+                        $lista[] = ['codigo' => $codigo !== '' ? $codigo : null, 'descricao' => $nestedDesc];
+                    }
                     continue;
                 }
-                foreach ($item as $sub) {
-                    if (is_string($sub)) {
-                        $lista[] = $sub;
-                        continue;
-                    }
-                    if (is_array($sub)) {
-                        $nested = $sub['descricaoAssunto'] ?? $sub['descricao'] ?? $sub['nome'] ?? null;
-                        if ($nested) {
-                            $lista[] = $nested;
-                        }
-                    }
+                if (!is_array($sub)) {
+                    continue;
+                }
+                $nestedCodigo = trim((string) ($sub['codigo'] ?? $sub['codigoAssunto'] ?? $sub['numAssunto'] ?? $codigo));
+                $nestedDesc = trim((string) ($sub['descricaoAssunto'] ?? $sub['descricao'] ?? $sub['nome'] ?? ''));
+                if ($nestedDesc !== '') {
+                    $lista[] = ['codigo' => $nestedCodigo !== '' ? $nestedCodigo : null, 'descricao' => $nestedDesc];
                 }
             }
         }
 
-        return array_values(array_unique($lista));
+        $unicos = [];
+        foreach ($lista as $entry) {
+            $chave = trim((string) ($entry['codigo'] ?? '')) . '|' . trim((string) ($entry['descricao'] ?? ''));
+            if ($chave === '|') {
+                continue;
+            }
+            $unicos[$chave] = $entry;
+        }
+
+        return array_values($unicos);
     }
 
     /**

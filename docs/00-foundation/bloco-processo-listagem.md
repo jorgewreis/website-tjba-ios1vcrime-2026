@@ -14,7 +14,7 @@
 |--------|---------|--------|
 | Markup | `app/views/internal/_processo_bloco_listagem.php` | Partial PHP: renderiza o bloco a partir de `$row` enriquecida. |
 | Estilo | `public/assets/css/shared/processo-bloco-listagem.css` | Layout e estados visuais **escopados** em `.container-processo`. |
-| Dados | `app/helpers/ProcessoBlocoListagemHelper.php` | Enriquece cada linha com chaves `bloco_processo_*` (classe, prioridades, link abrir, placeholders). |
+| Dados | `app/helpers/ProcessoBlocoListagemHelper.php` | Enriquece cada linha com chaves `bloco_processo_*` (classe, assuntos, prioridades, link abrir, placeholders). |
 | Cópia CNJ | `public/assets/js/shared/copy-process-number.js` | **Único** listener global de cópia por clique (contrato abaixo). |
 | Carga do script | `app/views/internal/_copy_process_script.php` | Inclui `copy-process-number.js` com `?v=filemtime` (evita cache obsoleto). |
 | Toast (iframe) | `app/views/internal/_toast_script.php` | `toast.js` + `toast-helper.js` (`showToast`). Ver `docs/00-foundation/sistema-toast.md`. |
@@ -33,13 +33,13 @@ O partial assume que a linha já foi passada por `ProcessoBlocoListagemHelper::a
 | `numero_processo` | string | Exibição no topo e valor copiado (CNJ). |
 | `bloco_processo_classe_texto` | string | Texto da classe na primeira linha do rodapé. |
 | `bloco_processo_classe_not` | bool | Se verdadeiro: estilo placeholder (`.not`), **sem** tooltip de texto completo. |
-| `bloco_processo_assunto_texto` | string | Texto do assunto (ou placeholder controlado pelo helper). |
+| `bloco_processo_assunto_texto` | string | Texto dos assuntos (`codigo - descricao` concatenados por `; `) ou placeholder controlado pelo helper. |
 | `bloco_processo_assunto_not` | bool | Idem classe: placeholder sem tooltip dinâmico. |
 | `bloco_processo_prioridades` | lista | Cada item: `codigo`, `label`, `icon` (URL do ícone). |
 | `bloco_processo_abrir_href` | string | URL para `data-nav-href` quando abrir habilitado. |
 | `bloco_processo_abrir_disabled` | bool | Desabilita ação abrir e mostra estado inerte. |
 
-**Resolução de processo no helper:** usa `processo_id` na linha e/ou número CNJ normalizado (20 dígitos) para localizar o registro e derivar classe, prioridades e link de edição.
+**Resolução de processo no helper:** usa `processo_id` na linha e/ou número CNJ normalizado (20 dígitos) para localizar o registro e derivar classe, assuntos (`processo_assuntos` + `assuntos`), prioridades e link de edição.
 
 ---
 

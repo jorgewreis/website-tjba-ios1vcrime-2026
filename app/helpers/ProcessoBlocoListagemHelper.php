@@ -6,6 +6,7 @@ require_once __DIR__ . '/PrioridadesProcessuaisCatalog.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../repositories/ProcessoPrioridadesRepository.php';
+require_once __DIR__ . '/../repositories/ProcessoAssuntosRepository.php';
 
 /**
  * Dados agregados para o partial `_processo_bloco_listagem.php` em listagens (ex.: sala de mídias).
@@ -60,6 +61,7 @@ final class ProcessoBlocoListagemHelper
         $processosRepo = new ProcessosRepository($connection);
         $classesRepo = new ClassesRepository($connection);
         $prioridadesRepo = new ProcessoPrioridadesRepository($connection);
+        $assuntosRepo = new ProcessoAssuntosRepository($connection);
 
         $idsFromColumn = [];
         $digitosPorLinha = [];
@@ -132,6 +134,7 @@ final class ProcessoBlocoListagemHelper
             return $id !== '';
         })));
         $prioridadesPorProcesso = $prioridadesRepo->findByProcessoIds($idsParaPrioridade);
+        $assuntosPorProcesso = $assuntosRepo->findByProcessoIds($idsParaPrioridade);
 
         $out = [];
         foreach ($rows as $idx => $row) {
@@ -198,13 +201,32 @@ final class ProcessoBlocoListagemHelper
             $hrefAbrir = $podeAbrir ? ('/frame.php?page=consultaprocessosedit&id=' . rawurlencode($rid)) : '';
 
             $sigilosoMesclado = self::rawProcessoSigilosoFlag($row) || isset($codigos['sigiloso']);
+            $assuntoRows = $rid !== '' ? ($assuntosPorProcesso[$rid] ?? []) : [];
+            $assuntoItens = [];
+            foreach ($assuntoRows as $assuntoRow) {
+                $assuntoCodigo = trim((string) ($assuntoRow['assunto_codigo'] ?? ''));
+                $assuntoDescricao = trim((string) ($assuntoRow['assunto_descricao'] ?? ''));
+                if ($assuntoCodigo === '' && $assuntoDescricao === '') {
+                    continue;
+                }
+                $texto = $assuntoCodigo !== '' ? $assuntoCodigo : $assuntoDescricao;
+                if ($assuntoDescricao !== '' && $assuntoDescricao !== $assuntoCodigo) {
+                    $texto = $assuntoCodigo !== '' ? ($assuntoCodigo . ' - ' . $assuntoDescricao) : $assuntoDescricao;
+                }
+                $assuntoItens[$texto] = true;
+            }
+            $assuntoTexto = implode('; ', array_keys($assuntoItens));
+            $assuntoNot = $assuntoTexto === '';
+            if ($assuntoNot) {
+                $assuntoTexto = 'Assunto não cadastrado';
+            }
 
             $out[$idx] = [
                 'bloco_processo_id_resolvido' => $rid,
                 'bloco_processo_classe_texto' => $classeTexto,
                 'bloco_processo_classe_not' => $classeNot,
-                'bloco_processo_assunto_texto' => 'Assunto não cadastrado',
-                'bloco_processo_assunto_not' => true,
+                'bloco_processo_assunto_texto' => $assuntoTexto,
+                'bloco_processo_assunto_not' => $assuntoNot,
                 'bloco_processo_prioridades' => $prioridadesUi,
                 'bloco_processo_abrir_href' => $hrefAbrir,
                 'bloco_processo_abrir_disabled' => !$podeAbrir,

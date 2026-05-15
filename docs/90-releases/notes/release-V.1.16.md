@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 01 de abril de 2026
+**Data de Lançamento:** 14 de maio de 2026
 
 # V. 1.16
 
-> feat: enhance SSH error diagnostics with detailed instructions for key authorization
+> refactor: remove obsolete block-processo.html and adjust CSS for processo bloco listing
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **feat: enhance SSH error diagnostics with detailed instructions for key authorization** `[73cfbfe]`
+- **refactor: remove obsolete block-processo.html and adjust CSS for processo bloco listing** `[c2d19532]`
 
 ---
 
