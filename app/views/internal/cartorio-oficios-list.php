@@ -12,6 +12,7 @@ require_once __DIR__ . '/../../repositories/OficiosCartorioSubtarefasRepository.
 require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
 require_once __DIR__ . '/../../helpers/CartorioAlocacaoChipHelper.php';
 require_once __DIR__ . '/../../helpers/ProcessoBlocoListagemHelper.php';
+require_once __DIR__ . '/../../helpers/OficioRegistroMetadataHelper.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -96,6 +97,7 @@ try {
 
 $rows = $listResult['rows'] ?? [];
 $rows = ProcessoBlocoListagemHelper::appendBlocoData($connection, $rows);
+$oficioListViewerContext = OficioRegistroMetadataHelper::viewerContextFromSession();
 $totalDocuments = (int) ($listResult['total'] ?? 0);
 
 if ($totalDocuments === 0) {
@@ -189,15 +191,6 @@ function cartorio_oficios_label_cumprimento(array $row): string
     return 'Cartório — ' . ($map[$meio] ?? $meio);
 }
 
-function oficios_list_formatar_data_hora(?string $mysqlDt): string
-{
-    if ($mysqlDt === null || $mysqlDt === '') {
-        return '—';
-    }
-    $t = strtotime($mysqlDt);
-
-    return $t !== false ? date('d/m/Y H:i', $t) : htmlspecialchars($mysqlDt, ENT_QUOTES, 'UTF-8');
-}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -501,11 +494,12 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                         }
                     }
                     $expandir = !$tarefaConcluida && !$tarefaCancelada && $formaC === 'cartorio';
+                    $oficioMetadata = OficioRegistroMetadataHelper::fromListRow($row, 'cartorio', $oficioListViewerContext);
                 ?>
-                    <div class="display-flex col col-full register border-bottom" data-oficio-id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>">
+                    <div class="display-flex col col-full register register-oficio-list border-bottom" data-oficio-id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>">
 
-                        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
-                            <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center register-oficio-list-row">
+                            <div class="display-flex row row-fit justify-start gap-y-sm align-center flex-1">
                                 <div class="col">
                                     <?php if ($expandir): ?>
                                         <label class="button-table" title="Expandir detalhes">
@@ -520,10 +514,6 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                                     <span class="minor-info">Ofício</span>
                                     <span class="major-info"><?php echo htmlspecialchars($nAno, ENT_QUOTES); ?></span>
                                 </div>
-                                <div class="col width-400">
-                                    <span class="minor-info">Cadastrado em</span>
-                                    <span class="major-info"><?php echo oficios_list_formatar_data_hora($row['Data'] ?? null); ?></span>
-                                </div>
                                 <div class="col width-500 col-process">
                                     <?php include __DIR__ . '/_processo_bloco_listagem.php'; ?>
                                 </div>
@@ -532,8 +522,7 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                                     <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['TipoOficio'] ?? '')); ?></span>
                                 </div>
                             </div>
-                            <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                                <div class="display-flex row row-fit justify-end gap-y-sm allocate-chips-row allocate-users">
+                            <div class="display-flex row row-fit justify-end gap-y-sm align-center allocate-chips-row allocate-users">
                                     <?php
                                     $alocados = CartorioAlocacaoChipHelper::ordenarAlocadosPorTipo($row['Alocados'] ?? []);
                                     foreach ($alocados as $alocado) {
@@ -569,29 +558,7 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                                     }
                                     ?>
                                 </div>
-                                <button type="button" class="btn btn-editar" data-oficio-id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" title="Editar" aria-label="Editar">
-                                    <i class="fi fi-rr-pen-square"></i>
-                                </button>
-                                <?php if ($tarefaCancelada): ?>
-                                    <div class="col">
-                                        <div class="width-300 padding-x-lg status status-cancelled">Cancelada</div>
-                                    </div>
-                                <?php elseif ($tarefaConcluida): ?>
-                                <?php elseif ($mostrarBarraStatus): ?>
-                                    <div class="col status-task" title="<?php echo htmlspecialchars($currentSubtarefaTitle); ?>">
-                                        <div class="width-300 status status-pending status-with-progress">
-                                            <span class="status-task-label width-300">Pendente</span>
-                                            <div class="status-task-progress" role="progressbar" aria-valuenow="<?php echo (int) count(array_filter($progressStatuses, function ($x) {
-                                                                                                                    return $x === 'concluida';
-                                                                                                                })); ?>" aria-valuemin="0" aria-valuemax="2">
-                                                <?php foreach ($segmentosBarra as $seg): ?>
-                                                    <div class="status-task-progress-segment <?php echo htmlspecialchars($seg['class']); ?>" title="<?php echo htmlspecialchars($seg['title']); ?>"></div>
-                                                <?php endforeach; ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
+                            <?php include __DIR__ . '/_oficio_registro_metadata.php'; ?>
                         </div>
 
                         <?php if ($expandir): ?>
@@ -778,11 +745,8 @@ function oficios_list_formatar_data_hora(?string $mysqlDt): string
                 clearButtonId: 'btn-oficio-limpar',
                 createButtonId: 'btn-oficio-registrar',
                 createEndpoint: '/api/cartorio-oficios/create.php',
-                editButtonSelector: '.btn-editar[data-oficio-id]',
-                editHrefBuilder: function(id) {
-                    return '/frame.php?page=oficioscartorioedit&id=' + encodeURIComponent(id);
-                },
                 enableDesalocar: true,
+                cancelEndpoint: '/api/cartorio-oficios/cancel.php',
                 onClear: function() {
                     const meio = document.getElementById('oficio-meio-envio');
                     const forma = document.getElementById('oficio-forma-cumprimento');

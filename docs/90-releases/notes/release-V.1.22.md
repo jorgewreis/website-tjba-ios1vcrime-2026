@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 02 de abril de 2026
+**Data de Lançamento:** 15 de maio de 2026
 
 # V. 1.22
 
-> feat: adicionar função para resetar campos do DataJud e integrar com a limpeza de formulário
+> refactor: implement cancellation logic for gabinete ofícios with user profile validation
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **feat: adicionar função para resetar campos do DataJud e integrar com a limpeza de formulário** `[ab781e2]`
+- **refactor: implement cancellation logic for gabinete ofícios with user profile validation** `[ab216644]`
 
 ---
 

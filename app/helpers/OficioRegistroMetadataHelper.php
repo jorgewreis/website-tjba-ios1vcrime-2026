@@ -35,6 +35,22 @@ final class OficioRegistroMetadataHelper
      * @param array<string, mixed> $row Status, Data (created_at), CriadoPor
      * @param array{usuario_id?: string, perfis?: list<string>} $viewerContext
      */
+    /**
+     * Cartório: pendente (não cancelado nem finalizado).
+     *
+     * @param array<string, mixed> $row
+     */
+    public static function podeCancelarCartorio(array $row): bool
+    {
+        $status = strtolower(trim((string) ($row['Status'] ?? $row['status'] ?? '')));
+
+        return $status !== 'cancelada' && $status !== 'finalizada';
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     * @param array{usuario_id?: string, perfis?: list<string>} $viewerContext
+     */
     public static function podeCancelarGabinete(array $row, array $viewerContext): bool
     {
         $status = strtolower(trim((string) ($row['Status'] ?? $row['status'] ?? '')));
@@ -92,17 +108,15 @@ final class OficioRegistroMetadataHelper
             $dataEventoTexto = 'Atualizado em ' . self::formatarDataHora($updatedRaw);
         }
 
-        $showEdit = $modulo === 'cartorio';
-        $editHref = $showEdit && $id !== ''
-            ? '/frame.php?page=oficioscartorioedit&id=' . rawurlencode($id)
-            : '';
-
+        $editHref = '';
         if ($modulo === 'gabinete') {
             $showCancel = self::podeCancelarGabinete($row, $viewerContext ?? []);
+            $showEdit = false;
         } else {
-            $showCancel = $status !== 'cancelada';
-            if ($status === 'finalizada') {
-                $showCancel = false;
+            $showCancel = self::podeCancelarCartorio($row);
+            $showEdit = $status !== 'cancelada';
+            if ($showEdit && $id !== '') {
+                $editHref = '/frame.php?page=oficioscartorioedit&id=' . rawurlencode($id);
             }
         }
 
