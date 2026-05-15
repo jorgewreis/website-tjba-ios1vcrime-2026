@@ -84,8 +84,14 @@ if ($ultimaMov !== null) {
     <title>Réus Presos (Gabinete) — Edição</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include __DIR__ . '/_internal_head_styles.php'; ?>
+    <link rel="stylesheet" href="/assets/css/shared/processo-bloco-listagem.css?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/css/shared/processo-bloco-listagem.css') ?: time(); ?>">
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
     <?php include __DIR__ . '/_toast_script.php'; ?>
+    <?php include __DIR__ . '/_copy_process_script.php'; ?>
+    <style>
+        .grp-proc-link .grp-proc-bloco-wrap { flex: 0 0 auto; min-width: 0; }
+        .grp-proc-link .grp-proc-fields { flex: 1 1 auto; min-width: 0; }
+    </style>
 </head>
 <body class="page-internal">
 
@@ -147,30 +153,22 @@ if ($ultimaMov !== null) {
                     $lid = htmlspecialchars($lidRaw, ENT_QUOTES);
                     $vid = htmlspecialchars(preg_replace('/[^a-zA-Z0-9_-]/', '_', $lidRaw), ENT_QUOTES);
                     $num = htmlspecialchars((string) ($p['numero_processo'] ?? ''), ENT_QUOTES);
-                    $sit = (string) ($p['situacao'] ?? 'preso');
                     $isPrin = !empty($p['principal']);
                     ?>
-                <div class="display-flex col col-full register border-bottom grp-proc-link" data-link-id="<?php echo $lid; ?>" data-is-principal="<?php echo $isPrin ? '1' : '0'; ?>">
+                <div class="display-flex col col-full register border-bottom grp-proc-link" data-link-id="<?php echo $lid; ?>" data-is-principal="<?php echo $isPrin ? '1' : '0'; ?>" data-numero-processo="<?php echo $num; ?>">
                     <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-start flex-wrap gap-y-md">
-                        <div class="display-flex row row-fit flex-wrap gap-y-md align-end" style="flex:1 1 auto;min-width:0;">
+                        <div class="display-flex row row-fit flex-wrap gap-y-md align-end grp-proc-fields" style="flex:1 1 auto;min-width:0;">
+                            <div class="col width-500 col-process grp-proc-bloco-wrap">
+                                <?php $row = $p; include __DIR__ . '/_processo_bloco_listagem.php'; ?>
+                            </div>
                             <div class="col" style="min-width:140px;">
+                                <label for="grp-vinc-<?php echo $vid; ?>" class="minor-info">Vinculação</label>
                                 <select class="width-full height-md grp-principal-select" id="grp-vinc-<?php echo $vid; ?>" data-link-id="<?php echo $lid; ?>" <?php echo $arquivado ? 'disabled' : ''; ?>>
                                     <option value="principal"<?php echo $isPrin ? ' selected' : ''; ?>>Principal</option>
                                     <option value="secundario"<?php echo !$isPrin ? ' selected' : ''; ?><?php echo $grpProcCount === 1 ? ' disabled' : ''; ?>>Secundário</option>
                                 </select>
                             </div>
-                            <div class="col" style="min-width:200px;max-width:100%;">
-                                <span class="minor-info">Processo</span>
-                                <span class="major-info text-ellipsis grp-numero-processo" title="<?php echo $num; ?>"><?php echo $num; ?></span>
-                            </div>
                             <?php if ($isPrin): ?>
-                            <div class="col" style="min-width:140px;">
-                                <span class="minor-info">Situação</span>
-                                <select class="width-full height-md grp-situacao" data-link-id="<?php echo $lid; ?>" <?php echo $arquivado ? 'disabled' : ''; ?>>
-                                    <option value="preso"<?php echo $sit === 'preso' ? ' selected' : ''; ?>>Preso</option>
-                                    <option value="solto"<?php echo $sit === 'solto' ? ' selected' : ''; ?>>Solto</option>
-                                </select>
-                            </div>
                             <div class="col" style="min-width:150px;">
                                 <span class="minor-info">Data da prisão</span>
                                 <input type="date" class="width-full height-md grp-dp" data-link-id="<?php echo $lid; ?>" value="<?php echo htmlspecialchars(grpFmtYmd($p['data_prisao'] ?? null), ENT_QUOTES); ?>" <?php echo $arquivado ? 'disabled' : ''; ?>>
@@ -215,15 +213,9 @@ if ($ultimaMov !== null) {
                 </div>
                 <input type="hidden" id="hidden-classe-codigo">
                 <input type="hidden" id="hidden-classe-descricao">
+                <input type="hidden" id="grp-new-sit" value="preso">
                 <?php if (empty($processos)): ?>
                 <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
-                    <div class="col">
-                        <label for="grp-new-sit">Situação neste processo</label>
-                        <select class="width-300 height-md" id="grp-new-sit">
-                            <option value="preso">Preso</option>
-                            <option value="solto">Solto</option>
-                        </select>
-                    </div>
                     <div class="col">
                         <label for="grp-new-dp">Data da prisão</label>
                         <input type="date" class="height-md" id="grp-new-dp">
@@ -240,7 +232,6 @@ if ($ultimaMov !== null) {
                         </select>
                     </div>
                     <?php else: ?>
-                    <input type="hidden" id="grp-new-sit" value="preso">
                     <input type="hidden" id="grp-new-dp" value="">
                     <input type="hidden" id="grp-new-df" value="">
                     <input type="hidden" id="grp-new-vinc" value="secundario">

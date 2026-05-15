@@ -1,7 +1,7 @@
 // cnj.js
 // Padronização de número do processo CNJ
 // Regra: se receber 13 dígitos (ou 15 chars mascarados equivalentes), completa com ".8.05.0103",
-// valida e, se inválido, limpa o campo e exibe toast de erro.
+// valida e, se inválido, limpa o campo (sem toast no fluxo DataJud).
 
 const CNJ_SUFFIX = '.8.05.0103';
 const CNJ_SUFFIX_DIGITS = '8050103';
@@ -70,14 +70,7 @@ function completarComSufixoSeElegivel(rawValue) {
 }
 
 function showInvalidToast() {
-    if (typeof showToast === 'function') {
-        showToast({
-            type: 'error',
-            variant: 'full',
-            title: 'Erro',
-            message: 'Número do processo incorreto. Verifique e tente novamente.',
-        });
-    }
+    // Fluxo DataJud silencioso por decisão de produto.
 }
 
 function normalizeAndValidateCNJValue(rawValue, options) {
@@ -144,7 +137,7 @@ function bindProcessoInput(input) {
     });
 
     input.addEventListener('blur', function () {
-        const result = normalizeAndValidateCNJValue(this.value, { toastOnInvalid: true });
+        const result = normalizeAndValidateCNJValue(this.value, { toastOnInvalid: false });
         if (result.empty) {
             this.value = '';
             delete this.dataset.lastCnjDispatchedDigits;
@@ -176,7 +169,7 @@ function bindFormSubmitValidation(input) {
         for (let i = 0; i < cnjInputs.length; i += 1) {
             const input = cnjInputs[i];
             if (input.readOnly || input.disabled) continue;
-            const result = normalizeAndValidateCNJValue(input.value, { toastOnInvalid: true });
+            const result = normalizeAndValidateCNJValue(input.value, { toastOnInvalid: false });
             if (result.empty) continue;
             if (!result.ok) {
                 input.value = '';

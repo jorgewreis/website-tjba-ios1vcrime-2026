@@ -12,6 +12,7 @@ require_once __DIR__ . '/../repositories/PartesRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosPartesRepository.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
+require_once __DIR__ . '/../helpers/ProcessoBlocoListagemHelper.php';
 
 final class GabineteReusPresosService
 {
@@ -251,6 +252,7 @@ final class GabineteReusPresosService
         foreach ($processos as $j => $p) {
             $processos[$j]['situacao_label'] = (($p['situacao'] ?? '') === 'solto') ? 'Solto' : 'Preso';
         }
+        $processos = $this->appendBlocoProcessoEmLinhas($processos);
         $principalLinkId = '';
         foreach ($processos as $p) {
             if (!empty($p['principal'])) {
@@ -830,9 +832,11 @@ final class GabineteReusPresosService
 
             $byReu[$rid][] = [
                 'link_id' => $lid,
+                'processo_id' => $pid,
                 'principal' => $principal,
-                'numero_processo' => $numeroLabel,
+                'numero_processo' => $numero !== '' ? $numero : $numeroLabel,
                 'classe_nome' => $classeLabel,
+                'classe_processo' => $classeLabel,
                 'texto_compacto' => $compacto,
                 'ultima_movimentacao' => $tipoLabel,
                 'ultima_movimentacao_data' => $dataBr,
@@ -840,7 +844,51 @@ final class GabineteReusPresosService
             ];
         }
 
+        $flat = [];
+        $flatKeys = [];
+        foreach ($byReu as $rid => $lista) {
+            foreach ($lista as $j => $linha) {
+                $flat[] = $linha;
+                $flatKeys[] = [$rid, $j];
+            }
+        }
+        if ($flat !== []) {
+            $flat = $this->appendBlocoProcessoEmLinhas($flat);
+            foreach ($flat as $i => $enriched) {
+                [$rid, $j] = $flatKeys[$i];
+                $byReu[$rid][$j] = $enriched;
+            }
+        }
+
         return $byReu;
+    }
+
+    /**
+     * Enriquece linhas com chaves `bloco_processo_*` para `_processo_bloco_listagem.php`.
+     *
+     * @param list<array<string, mixed>> $rows
+     * @return list<array<string, mixed>>
+     */
+    private function appendBlocoProcessoEmLinhas(array $rows): array
+    {
+        if ($rows === []) {
+            return $rows;
+        }
+
+        $input = [];
+        foreach ($rows as $row) {
+            $numero = trim((string) ($row['numero_processo'] ?? ''));
+            if ($numero === '—' || $numero === '–') {
+                $numero = '';
+            }
+            $input[] = array_merge($row, [
+                'processo_id' => trim((string) ($row['processo_id'] ?? '')),
+                'numero_processo' => $numero,
+                'classe_processo' => trim((string) ($row['classe_processo'] ?? $row['classe_nome'] ?? '')),
+            ]);
+        }
+
+        return ProcessoBlocoListagemHelper::appendBlocoData($this->connection, $input);
     }
 
     private function formatDataMovimentoBr(string $ymd): string

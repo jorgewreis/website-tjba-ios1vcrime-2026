@@ -75,13 +75,12 @@ $prioridadesFichaEstado = $processoIdFicha !== ''
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
                     <label for="processo-assunto-codigo">Código do assunto</label>
-                    <input type="text" id="processo-assunto-codigo" class="height-md" placeholder="Ex.: 10247">
+                    <input type="text" id="processo-assunto-codigo" class="height-md" placeholder="Ex.: 10247" maxlength="20" autocomplete="off" title="Consulta automática após 1 s sem digitar; Enter consulta na hora.">
                 </div>
                 <div class="col width-500">
                     <label for="processo-assunto-descricao">Descrição do assunto</label>
-                    <input type="text" id="processo-assunto-descricao" class="height-md" placeholder="Descrição oficial do assunto">
+                    <input type="text" id="processo-assunto-descricao" class="height-md" placeholder="Preenchida automaticamente se o código existir no catálogo" readonly>
                 </div>
-                <button type="button" class="btn btn-secondary-outline height-md" id="btn-processo-assunto-buscar">Buscar código</button>
                 <button type="button" class="btn btn-primary height-md" id="btn-processo-assunto-vincular">Vincular assunto</button>
             </div>
             <div id="processo-assuntos-list" class="display-flex col col-full gap-y-sm" aria-live="polite"></div>

@@ -111,9 +111,6 @@ final class ProcessoPrioridadesService
                 break;
             }
         }
-        if ($hasSigiloProcesso || $sigilosoObrigatorioMenorOuVd) {
-            $bloqueados[] = PrioridadesProcessuaisCatalog::codigoSigiloso();
-        }
 
         return [
             'processo_id' => $processoId,
@@ -187,26 +184,6 @@ final class ProcessoPrioridadesService
         }
         if ($hasReu && $codigo === PrioridadesProcessuaisCatalog::codigoAutomaticaReuPreso()) {
             throw new InvalidArgumentException('Esta prioridade é mantida automaticamente enquanto houver réu preso no cadastro do processo.');
-        }
-        $codMenorRem = PrioridadesProcessuaisCatalog::codigoAutomaticaParteMenor();
-        $codVdRem = PrioridadesProcessuaisCatalog::codigoViolenciaDomestica();
-        $codSigRem = PrioridadesProcessuaisCatalog::codigoSigiloso();
-        $rowsRem = $this->repository->findByProcessoId($processoId);
-        $temMenorOuVdNaLista = false;
-        foreach ($rowsRem as $rw) {
-            $cr = trim((string) ($rw['codigo'] ?? ''));
-            if ($cr === $codMenorRem || $cr === $codVdRem) {
-                $temMenorOuVdNaLista = true;
-                break;
-            }
-        }
-        if ($codigo === $codSigRem && $temMenorOuVdNaLista) {
-            throw new InvalidArgumentException('A prioridade Sigiloso é obrigatória enquanto existir prioridade de menor ou de violência doméstica.');
-        }
-        $procRem = $this->processosRepository->findById($processoId);
-        $sigProc = $procRem !== null && !empty($procRem['sigiloso']);
-        if ($sigProc && $codigo === $codSigRem) {
-            throw new InvalidArgumentException('Esta prioridade é mantida automaticamente enquanto o processo estiver marcado como sigiloso.');
         }
 
         if ($this->repository->findOneByProcessoAndCodigo($processoId, $codigo) === null) {
@@ -344,6 +321,10 @@ final class ProcessoPrioridadesService
         }
     }
 
+    /**
+     * Remove vínculos automáticos obsoletos de Sigiloso.
+     * Inclusão e remoção na ficha do processo são manuais (origem `manual`).
+     */
     public function syncSigiloso(string $processoId): void
     {
         $processoId = trim($processoId);
@@ -367,16 +348,10 @@ final class ProcessoPrioridadesService
         }
         $temMenorOuVD = isset($codigos[$codMenor]) || isset($codigos[$codVd]);
 
-        if ($procSigFlag) {
-            $this->repository->upsert($processoId, $codigoSig, ProcessoPrioridadeOrigem::REGRA_SIGILOSO, null);
-
+        if ($procSigFlag || $temMenorOuVD) {
             return;
         }
-        if ($temMenorOuVD) {
-            $this->repository->upsert($processoId, $codigoSig, ProcessoPrioridadeOrigem::REGRA_DERIVADA_MENOR_OU_VD, null);
 
-            return;
-        }
         $this->repository->deleteByProcessoIdCodigoAndOrigens(
             $processoId,
             $codigoSig,

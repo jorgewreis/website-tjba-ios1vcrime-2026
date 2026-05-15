@@ -41,17 +41,13 @@
     var buttonSnapshot = null;
     var pendingAbortReason = null;
 
-    function showDataToast(message, type) {
-        type = type || 'info';
-        if (typeof global.showToast === 'function') {
-            global.showToast({ type: type, message: message });
-        } else if (global.App && global.App.Toast && typeof global.App.Toast.show === 'function') {
-            global.App.Toast.show({ type: type, message: message });
-        }
+    function showDataToast(message, type) { // eslint-disable-line no-unused-vars
+        // Fluxo DataJud silencioso por decisão de produto:
+        // não exibir toasts de consulta para o usuário.
     }
 
-    function showDataToastError(message) {
-        showDataToast(message, 'error');
+    function showDataToastError(message) { // eslint-disable-line no-unused-vars
+        // Fluxo DataJud silencioso por decisão de produto.
     }
 
     function snapshotPageButtons() {

@@ -152,42 +152,8 @@
 
 
 
-    function showToastSync(opts) {
-
-        var catalog = window.App && window.App.ToastCatalog ? window.App.ToastCatalog : null;
-        if (catalog && typeof catalog.notifyByKey === 'function') {
-            if (opts && opts.message === 'Classe do processo atualizada no sistema.') {
-                catalog.notifyByKey(
-                    'datajud.process.class.updated.info',
-                    {},
-                    opts.type || 'info',
-                    opts.title || 'Informação',
-                    opts.message
-                ).catch(function () {});
-                return;
-            }
-            if (opts && opts.message === 'Processo e classe registrados no sistema.') {
-                catalog.notifyByKey(
-                    'datajud.process.class.created.info',
-                    {},
-                    opts.type || 'info',
-                    opts.title || 'Informação',
-                    opts.message
-                ).catch(function () {});
-                return;
-            }
-        }
-
-        if (typeof window.showToast === 'function') {
-
-            window.showToast(opts);
-
-        } else if (window.App && window.App.Toast && typeof window.App.Toast.show === 'function') {
-
-            window.App.Toast.show(opts);
-
-        }
-
+    function showToastSync(opts) { // eslint-disable-line no-unused-vars
+        // Fluxo DataJud silencioso por decisão de produto.
     }
 
 
@@ -259,13 +225,8 @@
             if (action === 'updated') {
                 console.info('[DataJud][Sync] Classe do processo atualizada no sistema local.');
 
-                showToastSync({ type: 'info', variant: 'simple', message: 'Classe do processo atualizada no sistema.' });
-
             } else if (action === 'created') {
                 console.info('[DataJud][Sync] Processo e classe registrados no sistema local.');
-
-                showToastSync({ type: 'info', variant: 'simple', message: 'Processo e classe registrados no sistema.' });
-
             }
 
         }
@@ -875,12 +836,6 @@
                                 DC.finishSuccess(session, domLatest, classe);
 
                                 postSyncClasse(rawDigits, classe);
-
-                                if (body && body.sigilo_restrito) {
-
-                                    showToastSync({ type: 'info', message: DC.MSG_TOAST_SIGILO_PUBLICO });
-
-                                }
 
                             } else if (body && body.sigilo_restrito) {
 

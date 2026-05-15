@@ -9,7 +9,6 @@ if (function_exists('mb_internal_encoding')) {
 require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
 require_once __DIR__ . '/../../services/GabineteReusPresosService.php';
-require_once __DIR__ . '/../../helpers/ClasseProcessualListagemHelper.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -136,8 +135,10 @@ if ($totalPages > 0) {
     <title>Réus Presos - Gabinete</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include __DIR__ . '/_internal_head_styles.php'; ?>
+    <link rel="stylesheet" href="/assets/css/shared/processo-bloco-listagem.css?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/css/shared/processo-bloco-listagem.css') ?: time(); ?>">
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
     <?php include __DIR__ . '/_toast_script.php'; ?>
+    <?php include __DIR__ . '/_copy_process_script.php'; ?>
     <style>
         /* Destaque da próxima reavaliação (lista Gabinete — réus presos) */
         .grp-revisao-wrap { display: inline-block; max-width: 100%; }
@@ -180,6 +181,7 @@ if ($totalPages > 0) {
         }
         .grp-sub-line-primary .grp-sub-left { flex: 1 1 auto; min-width: 0; max-width: 55%; }
         .grp-sub-line-primary .grp-sub-right { flex: 1 1 auto; min-width: 0; max-width: 45%; justify-content: flex-end; text-align: right; }
+        .grp-sub-line-primary .grp-sub-left .col-process { margin-right: 8px; }
     </style>
 </head>
 <body class="page-internal">
@@ -317,16 +319,10 @@ if ($totalPages > 0) {
                         <?php foreach ($subLinhas as $sl):
                             $isPrincipal = !empty($sl['principal']);
                             if ($isPrincipal): ?>
-                    <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top align-start flex-wrap grp-sub-line grp-sub-line-primary" style="font-family: monospace; font-size: 11px;">
-                        <div class="display-flex row row-fit justify-start gap-y-md flex-wrap grp-sub-left">
-                            <div class="col width-500 col-process process-info" title="Clique para copiar">
-                                <?php
-                                    $classeRawReuSub = (string) ($sl['classe_nome'] ?? '');
-                                    $classeReuSubTxt = ClasseProcessualListagemHelper::textoListagem($classeRawReuSub);
-                                    $classeReuSubClass = ClasseProcessualListagemHelper::classesSpanMinor($classeRawReuSub);
-                                ?>
-                                <span class="<?php echo htmlspecialchars($classeReuSubClass, ENT_QUOTES, 'UTF-8'); ?>" title="<?php echo htmlspecialchars($classeReuSubTxt, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($classeReuSubTxt, ENT_QUOTES, 'UTF-8'); ?></span>
-                                <span class="major-info"><?php echo htmlspecialchars((string) ($sl['numero_processo'] ?? '—'), ENT_QUOTES, 'UTF-8'); ?></span>
+                    <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top align-start flex-wrap grp-sub-line grp-sub-line-primary">
+                        <div class="display-flex row row-fit justify-start gap-y-md flex-wrap grp-sub-left align-start">
+                            <div class="col width-500 col-process">
+                                <?php $row = $sl; include __DIR__ . '/_processo_bloco_listagem.php'; ?>
                             </div>
                         </div>
                         <div class="display-flex row row-fit justify-end gap-y-md grp-sub-right">

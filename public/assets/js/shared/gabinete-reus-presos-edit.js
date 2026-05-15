@@ -28,6 +28,30 @@
             });
         }
 
+        function numeroProcessoFromRow(row) {
+            if (!row) {
+                return '';
+            }
+            const fromAttr = String(row.getAttribute('data-numero-processo') || '').trim();
+            if (fromAttr) {
+                return fromAttr;
+            }
+            const copyVal = row.querySelector('.processo-bloco-copy-value');
+            if (copyVal) {
+                return String(copyVal.textContent || '').trim();
+            }
+            const legacy = row.querySelector('.grp-numero-processo');
+            if (legacy) {
+                return String(legacy.textContent || '').trim();
+            }
+            const numeroEl = row.querySelector('.container-processo .main-processo .numero');
+            if (numeroEl) {
+                return String(numeroEl.textContent || '').trim();
+            }
+
+            return '';
+        }
+
         global.document.getElementById('btn-grp-salvar-nome')?.addEventListener('click', function () {
             let nome = String(global.document.getElementById('grp-edit-nome')?.value || '').trim();
             if (App.ProperNameHelper && typeof App.ProperNameHelper.formatProper === 'function') {
@@ -151,7 +175,6 @@
         });
 
         function collectLinkPayload(linkId, numeroProcesso, classeCodigo, classeDescricao) {
-            const situacao = global.document.querySelector('.grp-situacao[data-link-id="' + linkId + '"]');
             const dataPrisao = global.document.querySelector('.grp-dp[data-link-id="' + linkId + '"]');
             const dataFato = global.document.querySelector('.grp-df[data-link-id="' + linkId + '"]');
             const vinculacao = global.document.querySelector('select.grp-principal-select[data-link-id="' + linkId + '"]');
@@ -161,7 +184,7 @@
                 numero_processo: numeroProcesso,
                 classe_codigo: classeCodigo || '',
                 classe_descricao: classeDescricao || '',
-                situacao: situacao ? situacao.value : 'preso',
+                situacao: 'preso',
                 data_prisao: dataPrisao && dataPrisao.value ? dataPrisao.value : null,
                 data_fato: dataFato && dataFato.value ? dataFato.value : null,
                 principal: !!(vinculacao && vinculacao.value === 'principal')
@@ -172,7 +195,7 @@
             button.addEventListener('click', function () {
                 const linkId = button.getAttribute('data-link-id');
                 const row = global.document.querySelector('.grp-proc-link[data-link-id="' + linkId + '"]');
-                const numeroProcesso = row ? String(row.querySelector('.grp-numero-processo')?.textContent || '').trim() : '';
+                const numeroProcesso = numeroProcessoFromRow(row);
                 postJson('/api/gabinete-reus-presos/save-processo.php', collectLinkPayload(linkId, numeroProcesso, '', '')).then(function (res) {
                     if (res.ok && res.j && res.j.link_id) {
                         if (typeof common.notifyByKey === 'function') {
@@ -236,13 +259,9 @@
                 return;
             }
 
-            const situacao = global.document.getElementById('grp-new-sit');
             const dataPrisao = global.document.getElementById('grp-new-dp');
             const dataFato = global.document.getElementById('grp-new-df');
             const vinculacao = global.document.getElementById('grp-new-vinc');
-            if (situacao && meta.situacao) {
-                situacao.value = meta.situacao;
-            }
             if (dataPrisao && meta.data_prisao) {
                 dataPrisao.value = meta.data_prisao;
             }
@@ -302,33 +321,28 @@
         function getInheritedLinkData() {
             const row = getLinkSourceRowForInheritance();
             if (!row) {
-                return { situacao: 'preso', dataPrisao: '', dataFato: '' };
+                return { dataPrisao: '', dataFato: '' };
             }
             return {
-                situacao: row.querySelector('.grp-situacao')?.value || 'preso',
                 dataPrisao: row.querySelector('.grp-dp')?.value || '',
                 dataFato: row.querySelector('.grp-df')?.value || ''
             };
         }
 
         function syncNewProcessInheritedFields() {
-            const situacao = global.document.getElementById('grp-new-sit');
             const dataPrisao = global.document.getElementById('grp-new-dp');
             const dataFato = global.document.getElementById('grp-new-df');
-            if (!situacao || !dataPrisao || !dataFato) {
+            if (!dataPrisao || !dataFato) {
                 return;
             }
             if (global.document.querySelectorAll('.grp-proc-link').length === 0) {
-                situacao.disabled = false;
                 dataPrisao.disabled = false;
                 dataFato.disabled = false;
                 return;
             }
             const inherited = getInheritedLinkData();
-            situacao.value = inherited.situacao || 'preso';
             dataPrisao.value = inherited.dataPrisao || '';
             dataFato.value = inherited.dataFato || '';
-            situacao.disabled = true;
             dataPrisao.disabled = true;
             dataFato.disabled = true;
         }
@@ -340,14 +354,12 @@
             const classeCodigo = String(global.document.getElementById('hidden-classe-codigo')?.value || '');
             const classeDescricao = String(global.document.getElementById('hidden-classe-descricao')?.value || '');
             const hasLinkedProcess = global.document.querySelectorAll('.grp-proc-link').length > 0;
-            let situacao = String(global.document.getElementById('grp-new-sit')?.value || 'preso');
             let dataPrisao = String(global.document.getElementById('grp-new-dp')?.value || '');
             let dataFato = String(global.document.getElementById('grp-new-df')?.value || '');
             const principal = String(global.document.getElementById('grp-new-vinc')?.value || 'secundario') === 'principal';
 
             if (hasLinkedProcess) {
                 const inherited = getInheritedLinkData();
-                situacao = inherited.situacao || situacao;
                 dataPrisao = inherited.dataPrisao || dataPrisao;
                 dataFato = inherited.dataFato || dataFato;
             }
@@ -367,7 +379,7 @@
                     numero_processo: processo,
                     classe_codigo: classeCodigo,
                     classe_descricao: classeDescricao,
-                    situacao: situacao,
+                    situacao: 'preso',
                     data_prisao: dataPrisao || null,
                     data_fato: dataFato || null,
                     principal: principal

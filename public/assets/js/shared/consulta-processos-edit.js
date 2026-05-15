@@ -119,10 +119,111 @@
 
         const codigoInput = global.document.getElementById('processo-assunto-codigo');
         const descricaoInput = global.document.getElementById('processo-assunto-descricao');
-        const btnBuscarAssunto = global.document.getElementById('btn-processo-assunto-buscar');
         const btnVincularAssunto = global.document.getElementById('btn-processo-assunto-vincular');
         const assuntosList = global.document.getElementById('processo-assuntos-list');
         let assuntosState = normalizeAssuntos(global.PROCESSO_ASSUNTOS_INITIAL || []);
+
+        const BUSCA_ASSUNTO_DEBOUNCE_MS = 1000;
+        let buscaAssuntoTimer = null;
+        let ultimoCodigoConsultado = '';
+
+        function clearBuscaAssuntoTimer() {
+            if (buscaAssuntoTimer !== null) {
+                global.clearTimeout(buscaAssuntoTimer);
+                buscaAssuntoTimer = null;
+            }
+        }
+
+        function resetAssuntoLookup() {
+            ultimoCodigoConsultado = '';
+            if (descricaoInput) {
+                descricaoInput.value = '';
+                descricaoInput.readOnly = false;
+                descricaoInput.placeholder = 'Informe a descrição se o código não estiver no catálogo';
+            }
+        }
+
+        function aplicarAssuntoEncontrado(assunto) {
+            if (!descricaoInput) {
+                return;
+            }
+            descricaoInput.value = String(assunto.descricao || '').trim();
+            descricaoInput.readOnly = true;
+            descricaoInput.placeholder = 'Descrição carregada do catálogo';
+        }
+
+        function aplicarAssuntoNaoEncontrado() {
+            if (!descricaoInput) {
+                return;
+            }
+            descricaoInput.value = '';
+            descricaoInput.readOnly = false;
+            descricaoInput.placeholder = 'Código não cadastrado — informe a descrição para vincular';
+        }
+
+        function buscarAssuntoPorCodigo(options) {
+            const opts = options || {};
+            const exibirToast = opts.exibirToast !== false;
+            const codigo = codigoInput ? String(codigoInput.value || '').trim() : '';
+            if (codigo === '') {
+                resetAssuntoLookup();
+                return Promise.resolve();
+            }
+            if (codigo === ultimoCodigoConsultado && descricaoInput && descricaoInput.readOnly) {
+                return Promise.resolve();
+            }
+
+            return fetch(findAssuntoEndpoint + '?codigo=' + encodeURIComponent(codigo), {
+                credentials: 'same-origin',
+                headers: { Accept: 'application/json' }
+            }).then(function (response) {
+                return response.json().then(function (body) {
+                    return { ok: response.ok, body: body };
+                });
+            }).then(function (result) {
+                if (!result.ok || (result.body && result.body.error)) {
+                    if (exibirToast) {
+                        notify('error', 'Erro', (result.body && result.body.error) ? result.body.error : 'Erro ao consultar assunto.');
+                    }
+                    return;
+                }
+                ultimoCodigoConsultado = codigo;
+                const assunto = result.body ? result.body.assunto : null;
+                if (assunto) {
+                    aplicarAssuntoEncontrado(assunto);
+                    if (exibirToast) {
+                        notify('info', 'Assunto encontrado', 'Descrição carregada para vinculação.');
+                    }
+                    return;
+                }
+                aplicarAssuntoNaoEncontrado();
+                if (exibirToast) {
+                    notify('info', 'Assunto não encontrado', 'Informe a descrição para vincular manualmente.');
+                }
+            }).catch(function () {
+                if (exibirToast) {
+                    notify('error', 'Erro', 'Erro de conexão ao consultar assunto.');
+                }
+            });
+        }
+
+        function scheduleBuscarAssunto() {
+            clearBuscaAssuntoTimer();
+            const codigo = codigoInput ? String(codigoInput.value || '').trim() : '';
+            if (codigo === '') {
+                resetAssuntoLookup();
+                return;
+            }
+            if (codigo !== ultimoCodigoConsultado) {
+                if (descricaoInput) {
+                    descricaoInput.readOnly = false;
+                }
+            }
+            buscaAssuntoTimer = global.setTimeout(function () {
+                buscaAssuntoTimer = null;
+                buscarAssuntoPorCodigo({ exibirToast: false });
+            }, BUSCA_ASSUNTO_DEBOUNCE_MS);
+        }
 
         flushPostReloadToast(storageKey);
         renderAssuntos(assuntosList, assuntosState);
@@ -150,40 +251,21 @@
             });
         });
 
-        if (btnBuscarAssunto && codigoInput) {
-            btnBuscarAssunto.addEventListener('click', function () {
+        if (codigoInput) {
+            codigoInput.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    clearBuscaAssuntoTimer();
+                    buscarAssuntoPorCodigo({ exibirToast: true });
+                }
+            });
+            codigoInput.addEventListener('input', function () {
                 const codigo = String(codigoInput.value || '').trim();
-                if (!codigo) {
-                    notify('error', 'Código obrigatório', 'Informe o código do assunto para consulta.');
-                    codigoInput.focus();
+                if (codigo === '') {
+                    resetAssuntoLookup();
                     return;
                 }
-                btnBuscarAssunto.disabled = true;
-                fetch(findAssuntoEndpoint + '?codigo=' + encodeURIComponent(codigo), {
-                    credentials: 'same-origin'
-                }).then(function (response) {
-                    return response.json().then(function (body) {
-                        return { ok: response.ok, body: body };
-                    });
-                }).then(function (result) {
-                    if (!result.ok || (result.body && result.body.error)) {
-                        notify('error', 'Erro', (result.body && result.body.error) ? result.body.error : 'Erro ao consultar assunto.');
-                        return;
-                    }
-                    const assunto = result.body ? result.body.assunto : null;
-                    if (!assunto) {
-                        notify('info', 'Assunto não encontrado', 'Código não localizado no catálogo. Informe a descrição para criar no vínculo manual.');
-                        return;
-                    }
-                    if (descricaoInput) {
-                        descricaoInput.value = String(assunto.descricao || '').trim();
-                    }
-                    notify('success', 'Assunto encontrado', 'Descrição carregada para vinculação.');
-                }).catch(function () {
-                    notify('error', 'Erro', 'Erro de conexão ao consultar assunto.');
-                }).finally(function () {
-                    btnBuscarAssunto.disabled = false;
-                });
+                scheduleBuscarAssunto();
             });
         }
 
@@ -219,10 +301,12 @@
                         assuntosState = normalizeAssuntos(assuntosState);
                         renderAssuntos(assuntosList, assuntosState);
                     }
-                    if (descricaoInput) {
-                        descricaoInput.value = '';
-                    }
                     codigoInput.value = '';
+                    resetAssuntoLookup();
+                    if (descricaoInput) {
+                        descricaoInput.readOnly = true;
+                        descricaoInput.placeholder = 'Preenchida automaticamente se o código existir no catálogo';
+                    }
                     notify('success', 'Sucesso', 'Assunto vinculado ao processo.');
                 }).catch(function () {
                     notify('error', 'Erro', 'Erro de conexão ao vincular assunto.');
