@@ -133,7 +133,10 @@ final class OficiosGabineteService
         }
     }
 
-    public function cancel(string $id, ?string $atualizadoPor = null): bool
+    /**
+     * @param list<string> $perfisUsuario perfis do usuário logado (validação de cancelamento)
+     */
+    public function cancel(string $id, ?string $atualizadoPor = null, array $perfisUsuario = []): bool
     {
         $id = trim($id);
         if ($id === '') {
@@ -146,6 +149,25 @@ final class OficiosGabineteService
         if (($row['status'] ?? '') === 'cancelada') {
             return true;
         }
+
+        require_once __DIR__ . '/../helpers/OficioRegistroMetadataHelper.php';
+        $podeCancelar = OficioRegistroMetadataHelper::podeCancelarGabinete(
+            [
+                'Status' => (string) ($row['status'] ?? ''),
+                'Data' => (string) ($row['created_at'] ?? ''),
+                'CriadoPor' => (string) ($row['criado_por'] ?? ''),
+            ],
+            [
+                'usuario_id' => trim((string) ($atualizadoPor ?? '')),
+                'perfis' => $perfisUsuario,
+            ]
+        );
+        if (!$podeCancelar) {
+            throw new InvalidArgumentException(
+                'Não é possível cancelar este ofício. Verifique o prazo de 3 dias e se você é o autor ou possui perfil ADMIN/CHEFIA.'
+            );
+        }
+
         return $this->repository->updateStatus($id, 'cancelada', $atualizadoPor);
     }
 

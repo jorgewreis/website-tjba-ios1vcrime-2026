@@ -62,6 +62,7 @@ try {
 
 $rows = $listResult['rows'] ?? [];
 $rows = ProcessoBlocoListagemHelper::appendBlocoData($connection, $rows);
+$oficioListViewerContext = OficioRegistroMetadataHelper::viewerContextFromSession();
 $totalDocuments = (int) ($listResult['total'] ?? 0);
 
 if ($totalDocuments === 0) {
@@ -349,7 +350,7 @@ if ($totalPages > 0) {
                 $numSeq = (int) ($row['NumeroSeq'] ?? 0);
                 $ano = (int) ($row['Ano'] ?? 0);
                 $nAno = $numSeq . '/' . $ano;
-                $oficioMetadata = OficioRegistroMetadataHelper::fromListRow($row, 'gabinete');
+                $oficioMetadata = OficioRegistroMetadataHelper::fromListRow($row, 'gabinete', $oficioListViewerContext);
             ?>
             <div class="display-flex col col-full register register-oficio-list border-bottom" data-oficio-id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>">
                 <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center register-oficio-list-row">

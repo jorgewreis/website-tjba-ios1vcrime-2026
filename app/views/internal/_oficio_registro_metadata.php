@@ -22,7 +22,7 @@ $classesEvento = $mostrarEvento ? 'data-update-date ' . $dataEventoClasse : '';
 $mostrarAcoes = ($showEdit && $editHref !== '') || ($showCancel && $cancelEndpoint !== '' && $idOficio !== '');
 ?>
 <div class="container-data-create">
-    <div class="data-create-user">Ofício cadastrado por <?php echo htmlspecialchars($criadorNome, ENT_QUOTES, 'UTF-8'); ?></div>
+    <div class="data-create-user">Cadastrado por <?php echo htmlspecialchars($criadorNome, ENT_QUOTES, 'UTF-8'); ?></div>
     <?php if ($dataCadastro !== ''): ?>
     <div class="data-create-date"><?php echo htmlspecialchars($dataCadastro, ENT_QUOTES, 'UTF-8'); ?></div>
     <?php endif; ?>
@@ -32,7 +32,7 @@ $mostrarAcoes = ($showEdit && $editHref !== '') || ($showCancel && $cancelEndpoi
             <div class="<?php echo htmlspecialchars($classesEvento, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($dataEventoTexto, ENT_QUOTES, 'UTF-8'); ?></div>
             <?php endif; ?>
             <?php if ($idOficio !== ''): ?>
-            <div class="data-id">Registrado sob ID: <?php echo htmlspecialchars($idOficio, ENT_QUOTES, 'UTF-8'); ?></div>
+            <div class="data-id">ID  <?php echo htmlspecialchars($idOficio, ENT_QUOTES, 'UTF-8'); ?></div>
             <?php endif; ?>
         </div>
         <?php if ($mostrarAcoes): ?>

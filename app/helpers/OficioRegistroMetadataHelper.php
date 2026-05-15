@@ -6,8 +6,60 @@ declare(strict_types=1);
  */
 final class OficioRegistroMetadataHelper
 {
+    private const CANCEL_GABINETE_MAX_DIAS_DESDE_CRIACAO = 3;
+
+    /** @var list<string> */
+    private const PERFIS_CANCEL_GABINETE_PRIVILEGIADOS = ['ADMIN', 'CHEFIA'];
+
     /**
-     * @param array<string, mixed> $row Linha de fetchList (IdOficio, Data, DataAtualizacao, Status, CriadoPorNome, …)
+     * @return array{usuario_id: string, perfis: list<string>}
+     */
+    public static function viewerContextFromSession(): array
+    {
+        $usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
+        $perfis = [];
+        if ($usuarioId !== '') {
+            require_once __DIR__ . '/UsuarioPerfisAutorizacao.php';
+            $perfis = UsuarioPerfisAutorizacao::perfisDoUsuario($usuarioId);
+        }
+
+        return [
+            'usuario_id' => $usuarioId,
+            'perfis' => $perfis,
+        ];
+    }
+
+    /**
+     * Cancelar no Gabinete: ofício ativo, criado há menos de 3 dias e (autor logado ou ADMIN/CHEFIA).
+     *
+     * @param array<string, mixed> $row Status, Data (created_at), CriadoPor
+     * @param array{usuario_id?: string, perfis?: list<string>} $viewerContext
+     */
+    public static function podeCancelarGabinete(array $row, array $viewerContext): bool
+    {
+        $status = strtolower(trim((string) ($row['Status'] ?? $row['status'] ?? '')));
+        if ($status === 'cancelada') {
+            return false;
+        }
+
+        $createdRaw = trim((string) ($row['Data'] ?? $row['created_at'] ?? ''));
+        if (!self::criadoHaMenosDeDias($createdRaw, self::CANCEL_GABINETE_MAX_DIAS_DESDE_CRIACAO)) {
+            return false;
+        }
+
+        if (self::viewerTemPerfilPrivilegiadoCancelGabinete($viewerContext)) {
+            return true;
+        }
+
+        $viewerId = trim((string) ($viewerContext['usuario_id'] ?? ''));
+        $criadoPor = trim((string) ($row['CriadoPor'] ?? $row['criado_por'] ?? ''));
+
+        return $viewerId !== '' && $criadoPor !== '' && $viewerId === $criadoPor;
+    }
+
+    /**
+     * @param array<string, mixed> $row Linha de fetchList
+     * @param array{usuario_id?: string, perfis?: list<string>}|null $viewerContext
      * @return array{
      *   criador_nome: string,
      *   data_cadastro_texto: string,
@@ -20,7 +72,7 @@ final class OficioRegistroMetadataHelper
      *   cancel_endpoint: string
      * }
      */
-    public static function fromListRow(array $row, string $modulo = 'gabinete'): array
+    public static function fromListRow(array $row, string $modulo = 'gabinete', ?array $viewerContext = null): array
     {
         $modulo = strtolower(trim($modulo));
         $status = strtolower(trim((string) ($row['Status'] ?? '')));
@@ -45,9 +97,13 @@ final class OficioRegistroMetadataHelper
             ? '/frame.php?page=oficioscartorioedit&id=' . rawurlencode($id)
             : '';
 
-        $showCancel = $status !== 'cancelada';
-        if ($modulo === 'cartorio' && $status === 'finalizada') {
-            $showCancel = false;
+        if ($modulo === 'gabinete') {
+            $showCancel = self::podeCancelarGabinete($row, $viewerContext ?? []);
+        } else {
+            $showCancel = $status !== 'cancelada';
+            if ($status === 'finalizada') {
+                $showCancel = false;
+            }
         }
 
         $cancelEndpoint = $modulo === 'cartorio'
@@ -75,6 +131,40 @@ final class OficioRegistroMetadataHelper
         $t = strtotime($mysqlDt);
 
         return $t !== false ? date('d/m/Y \à\s H:i:s', $t) : trim($mysqlDt);
+    }
+
+    /**
+     * @param array{usuario_id?: string, perfis?: list<string>} $viewerContext
+     */
+    private static function viewerTemPerfilPrivilegiadoCancelGabinete(array $viewerContext): bool
+    {
+        $perfis = $viewerContext['perfis'] ?? [];
+        if (!is_array($perfis) || $perfis === []) {
+            return false;
+        }
+        $normalizados = [];
+        foreach ($perfis as $perfil) {
+            $p = strtoupper(trim((string) $perfil));
+            if ($p !== '') {
+                $normalizados[] = $p;
+            }
+        }
+
+        return count(array_intersect($normalizados, self::PERFIS_CANCEL_GABINETE_PRIVILEGIADOS)) > 0;
+    }
+
+    private static function criadoHaMenosDeDias(string $createdRaw, int $dias): bool
+    {
+        if ($dias < 1) {
+            return false;
+        }
+        $created = strtotime($createdRaw);
+        if ($created === false) {
+            return false;
+        }
+        $limite = strtotime('-' . $dias . ' days');
+
+        return $limite !== false && $created >= $limite;
     }
 
     private static function isUpdatedAfterCreated(string $createdRaw, string $updatedRaw): bool

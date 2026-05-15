@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 02 de abril de 2026
+**Data de Lançamento:** 15 de maio de 2026
 
 # V. 1.21
 
-> feat: update frases.php with new phrases and remove outdated ones
+> refactor: enhance OficiosGabineteRepository and update gabinete-oficios-list view
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **feat: update frases.php with new phrases and remove outdated ones** `[6f4fd0d]`
+- **refactor: enhance OficiosGabineteRepository and update gabinete-oficios-list view** `[def94608]`
 
 ---
 

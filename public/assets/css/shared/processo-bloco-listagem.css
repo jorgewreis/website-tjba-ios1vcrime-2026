@@ -352,8 +352,6 @@
     align-items: flex-start;
     justify-content: flex-start;
     gap: 2px;
-
-    border-left: 1px solid #e5e7eb;
 }
 
 .data-create-user {
@@ -478,4 +476,30 @@
     min-height: 55px;
     margin-left: auto;
     align-self: center;
+    overflow: visible;
+}
+
+/* Ofícios — cancelar (e editar no cartório): visível no hover da linha, como abrir/copiar no bloco processo */
+.register.register-oficio-list .container-data-create .data-create-buttons .right {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.18s ease, visibility 0.18s ease;
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .register.register-oficio-list .container-data-create .data-create-buttons .right {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+}
+
+.register.register-oficio-list:hover .container-data-create .data-create-buttons .right,
+.register.register-oficio-list:focus-within .container-data-create .data-create-buttons .right,
+.register[data-oficio-id]:hover .container-data-create .data-create-buttons .right,
+.register[data-oficio-id]:focus-within .container-data-create .data-create-buttons .right {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
 }

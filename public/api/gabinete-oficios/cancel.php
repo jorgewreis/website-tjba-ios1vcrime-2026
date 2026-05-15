@@ -16,20 +16,15 @@ if (!bootstrapRequireTrustedPostRequest()) {
 
 $connection = Conection::getInstance()->getConnection();
 
-$perfisPermitidosCancelar = ['ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA'];
 require_once $basePath . '/app/helpers/UsuarioPerfisAutorizacao.php';
 $userPerfis = [];
-$userId = $_SESSION['id_usuario'] ?? null;
-if ($userId !== null && trim((string) $userId) !== '') {
-    $userPerfis = UsuarioPerfisAutorizacao::perfisDoUsuario(trim((string) $userId));
-}
-$podeCancelar = count(array_intersect($userPerfis, $perfisPermitidosCancelar)) > 0;
-
-if (!$podeCancelar) {
+$userId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
+if ($userId === '') {
     http_response_code(403);
-    echo json_encode(['error' => 'Seu perfil não tem permissão para cancelar.'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Usuário não autenticado.'], JSON_UNESCAPED_UNICODE);
     exit;
 }
+$userPerfis = UsuarioPerfisAutorizacao::perfisDoUsuario($userId);
 
 $rawPayload = file_get_contents('php://input') ?: '';
 $parsed = json_decode($rawPayload, true);
@@ -44,11 +39,9 @@ if ($id === '') {
     exit;
 }
 
-$uid = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
-
 try {
     $service = new OficiosGabineteService($connection);
-    $updated = $service->cancel($id, $uid !== '' ? $uid : null);
+    $updated = $service->cancel($id, $userId, $userPerfis);
     echo json_encode(['success' => $updated], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $exception) {
     http_response_code(400);
