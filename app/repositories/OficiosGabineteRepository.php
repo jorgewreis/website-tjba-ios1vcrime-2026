@@ -121,7 +121,7 @@ final class OficiosGabineteRepository
         );
         $join = ' LEFT JOIN `processos` p ON p.`id` = g.`processo_id` LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id` LEFT JOIN `usuarios` ucr ON ucr.`id_usuario` = g.`criado_por` LEFT JOIN `usuarios` ued ON ued.`id_usuario` = g.`atualizado_por` ';
         $sql = sprintf(
-            'SELECT g.`id` AS `IdOficio`, g.`numero_processo` AS `Processo`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `ClasseNome`, g.`ano` AS `Ano`, g.`numero_sequencial` AS `NumeroSeq`, g.`tipo_oficio` AS `TipoOficio`, g.`status` AS `Status`, g.`created_at` AS `Data`, TRIM(CONCAT(COALESCE(ucr.`nome`, \'\'), \' \', COALESCE(ucr.`sobrenome`, \'\'))) AS `CriadoPorNome`, TRIM(CONCAT(COALESCE(ued.`nome`, \'\'), \' \', COALESCE(ued.`sobrenome`, \'\'))) AS `UltimoEditorNome` FROM `%s` g %s %s ORDER BY %s, g.`created_at` DESC LIMIT :limit OFFSET :offset',
+            'SELECT g.`id` AS `IdOficio`, g.`numero_processo` AS `Processo`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `ClasseNome`, g.`ano` AS `Ano`, g.`numero_sequencial` AS `NumeroSeq`, g.`tipo_oficio` AS `TipoOficio`, g.`status` AS `Status`, g.`created_at` AS `Data`, g.`updated_at` AS `DataAtualizacao`, TRIM(CONCAT(COALESCE(ucr.`nome`, \'\'), \' \', COALESCE(ucr.`sobrenome`, \'\'))) AS `CriadoPorNome`, TRIM(CONCAT(COALESCE(ued.`nome`, \'\'), \' \', COALESCE(ued.`sobrenome`, \'\'))) AS `UltimoEditorNome` FROM `%s` g %s %s ORDER BY %s, g.`created_at` DESC LIMIT :limit OFFSET :offset',
             $this->table,
             $join,
             $whereClause ? 'WHERE ' . $whereClause : '',

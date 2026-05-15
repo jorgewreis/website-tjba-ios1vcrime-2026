@@ -3,6 +3,7 @@
  * Base visual: docs/mockups/reus-presos/block-processo.html
  */
 
+ /* DATA - PROCESSO */
 .container-processo {
     width: 300px;
     height: fit-content;
@@ -333,4 +334,148 @@
     opacity: 1;
     visibility: visible;
     transform: translateX(-50%) translateY(-2px);
+}
+
+
+
+/* DATA CREATE */
+.container-data-create {
+    width: 300px;
+    height: 55px;
+
+    margin: 0;
+    padding: 0 10px;
+
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 2px;
+
+    border-left: 1px solid #e5e7eb;
+}
+
+.data-create-user {
+    width: 100%;
+    font-size: 10px;
+    font-weight: 500;
+    color: #202020;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.data-create-date {
+    width: 100%;
+    font-size: 10px;
+    font-weight: 500;
+    color: #202020;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.data-create-buttons {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2px;
+    margin-top: 2px;
+}
+
+.data-create-buttons .left {
+    width: 100%;
+    height: fit-content;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 2px;
+}
+    .data-create-buttons .left .data-update-date {
+        width: 100%;
+        font-size: 9px;
+        font-weight: 400;
+        color: #909090;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+        .data-create-buttons .left .data-update-date.updated{
+            /* primary color */
+            color: #696cff;
+        }
+        .data-create-buttons .left .data-update-date.canceled{
+            /* danger color */
+            color: #ff3e1d;
+        }
+        .data-create-buttons .left .data-update-date::before {
+            content: "•";
+            margin-right: 2px;
+        }
+
+    .data-create-buttons .left .data-id {
+        width: 200px;
+        font-size: 9px;
+        font-weight: 400;
+        color: #909090;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+.data-create-buttons .right {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 5px;
+}
+    .data-create-buttons .right .btn-mini {
+        width: 20px;
+        height: 20px;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+        .data-create-buttons .right .btn-mini .btn-mini-icon {
+            width: 15px;
+            height: 15px;
+            filter: grayscale(100%);
+            opacity: 0.3;
+            transition: filter 0.3s ease, opacity 0.3s ease;
+        }
+            .data-create-buttons .right .btn-mini:hover .btn-mini-icon {
+                filter: grayscale(0%);
+                opacity: 1;
+                transition: filter 0.3s ease, opacity 0.3s ease;
+            }
+
+/* Listagem de ofícios: bloco de metadados como última coluna */
+.register.register-oficio-list .register-oficio-list-row {
+    flex-wrap: nowrap;
+    gap: 10px;
+}
+
+.register.register-oficio-list .register-oficio-list-row > .display-flex.row-fit {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.register.register-oficio-list .container-data-create {
+    flex: 0 0 300px;
+    width: 300px;
+    height: auto;
+    min-height: 55px;
+    margin-left: auto;
+    align-self: center;
 }

@@ -191,6 +191,71 @@
         });
     }
 
+    function bindRegistroMetadataActions(config, ctx) {
+        const cancelEndpointDefault = String(config.cancelEndpoint || '').trim();
+        if (cancelEndpointDefault === '' && !config.editButtonSelector) {
+            return;
+        }
+
+        global.document.addEventListener('click', function (event) {
+            const editBtn = event.target.closest('[data-action="editar-oficio"]');
+            if (editBtn) {
+                const href = editBtn.getAttribute('data-edit-href') || '';
+                if (href) {
+                    global.location.href = href;
+                }
+                return;
+            }
+
+            const cancelBtn = event.target.closest('[data-action="cancelar-oficio"]');
+            if (!cancelBtn) {
+                return;
+            }
+
+            const id = String(cancelBtn.getAttribute('data-oficio-id') || '').trim();
+            const endpoint = String(cancelBtn.getAttribute('data-cancel-endpoint') || cancelEndpointDefault).trim();
+            if (!id || !endpoint) {
+                return;
+            }
+            if (cancelBtn.disabled) {
+                return;
+            }
+
+            cancelBtn.disabled = true;
+            fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: id }),
+                credentials: 'same-origin'
+            })
+                .then(function (response) {
+                    return response.json().then(function (json) {
+                        return { ok: response.ok, data: json };
+                    });
+                })
+                .then(function (result) {
+                    if (result.ok && result.data && result.data.success) {
+                        queueByKey(
+                            ctx.storageKey,
+                            'oficios.cancel.success',
+                            {},
+                            { type: 'success', title: 'Sucesso', message: 'Ofício cancelado.' }
+                        ).then(function () {
+                            global.location.reload();
+                        });
+                        return;
+                    }
+
+                    notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Falha ao cancelar.');
+                    cancelBtn.disabled = false;
+                })
+                .catch(function () {
+                    notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
+                    cancelBtn.disabled = false;
+                });
+        });
+    }
+
     function bindProcessRule(config) {
         const typeSelect = global.document.getElementById(config.typeSelectId);
         const processHint = config.processHintId ? global.document.getElementById(config.processHintId) : null;
@@ -472,6 +537,7 @@
         flushPostReloadToast(ctx.storageKey, settings.highlightField || '');
         bindFilters(settings);
         bindEditButtons(settings);
+        bindRegistroMetadataActions(settings, ctx);
 
         const processRule = bindProcessRule(settings);
         ctx.isAdministrative = processRule.isAdministrative;

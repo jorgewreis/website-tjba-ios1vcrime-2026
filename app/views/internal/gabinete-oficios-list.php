@@ -8,6 +8,7 @@ if (function_exists('mb_internal_encoding')) {
 
 require_once __DIR__ . '/../../services/OficiosGabineteService.php';
 require_once __DIR__ . '/../../helpers/ProcessoBlocoListagemHelper.php';
+require_once __DIR__ . '/../../helpers/OficioRegistroMetadataHelper.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -127,15 +128,6 @@ if ($totalPages > 0) {
     }
 }
 
-function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
-{
-    if ($mysqlDt === null || $mysqlDt === '') {
-        return '—';
-    }
-    $t = strtotime($mysqlDt);
-
-    return $t !== false ? date('d/m/Y H:i', $t) : htmlspecialchars($mysqlDt, ENT_QUOTES, 'UTF-8');
-}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -357,18 +349,14 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
                 $numSeq = (int) ($row['NumeroSeq'] ?? 0);
                 $ano = (int) ($row['Ano'] ?? 0);
                 $nAno = $numSeq . '/' . $ano;
-                $st = (string) ($row['Status'] ?? '');
+                $oficioMetadata = OficioRegistroMetadataHelper::fromListRow($row, 'gabinete');
             ?>
-            <div class="display-flex col col-full register border-bottom" data-oficio-id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>">
-                <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
-                    <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+            <div class="display-flex col col-full register register-oficio-list border-bottom" data-oficio-id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>">
+                <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center register-oficio-list-row">
+                    <div class="display-flex row row-fit justify-start gap-y-sm align-center flex-1">
                         <div class="col width-200">
                             <span class="minor-info">Ofício</span>
                             <span class="major-info"><?php echo htmlspecialchars($nAno, ENT_QUOTES); ?></span>
-                        </div>
-                        <div class="col width-200">
-                            <span class="minor-info">Gerado em</span>
-                            <span class="major-info"><?php echo gabinete_oficios_list_formatar_data_hora($row['Data'] ?? null); ?></span>
                         </div>
                         <div class="col width-500 col-process">
                             <?php include __DIR__ . '/_processo_bloco_listagem.php'; ?>
@@ -377,25 +365,8 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
                             <span class="minor-info">Tipo</span>
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['TipoOficio'] ?? '')); ?></span>
                         </div>
-                        <div class="col width-500">
-                            <?php
-                            $nomeCriadorGab = trim((string) ($row['CriadoPorNome'] ?? ''));
-                            $nomeCriadorGab = $nomeCriadorGab !== '' ? $nomeCriadorGab : '—';
-                            ?>
-                            <span class="minor-info">Registrado por</span>
-                            <span class="major-info text-ellipsis" title="<?php echo $nomeCriadorGab !== '—' ? htmlspecialchars($nomeCriadorGab, ENT_QUOTES) : ''; ?>"><?php echo htmlspecialchars($nomeCriadorGab); ?></span>
-                        </div>
                     </div>
-                    <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                        <button type="button" class="btn btn-editar" data-oficio-id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" title="Editar" aria-label="Editar">
-                            <i class="fi fi-rr-pen-square"></i>
-                        </button>
-                        <?php if ($st === 'cancelada'): ?>
-                        <div class="col">
-                            <div class="width-300 padding-x-lg status status-cancelled">Cancelada</div>
-                        </div>
-                        <?php endif; ?>
-                    </div>
+                    <?php include __DIR__ . '/_oficio_registro_metadata.php'; ?>
                 </div>
             </div>
             <?php endforeach; ?>
@@ -544,10 +515,7 @@ function gabinete_oficios_list_formatar_data_hora(?string $mysqlDt): string
                 createButtonId: 'btn-gab-oficio-registrar',
                 createEndpoint: '/api/gabinete-oficios/create.php',
                 enableDesalocar: false,
-                editButtonSelector: '.btn-editar[data-oficio-id]',
-                editHrefBuilder: function (id) {
-                    return '/frame.php?page=oficiosgabineteedit&id=' + encodeURIComponent(id);
-                },
+                cancelEndpoint: '/api/gabinete-oficios/cancel.php',
                 buildRequest: function (ctx) {
                     const proc = document.getElementById('filter-processo')?.value?.trim() || '';
                     const tipo = document.getElementById('gab-oficio-tipo')?.value || '';
