@@ -9,6 +9,37 @@ final class CartorioAlocacaoChipHelper
      * @param list<array<string,mixed>> $alocados
      * @return list<array<string,mixed>>
      */
+    /**
+     * Listagem de ofícios: só chip de alocação por regra quando há envio pendente (forma cartório).
+     * Cadastrante não exibe chip — metadados da linha já mostram "Cadastrado por".
+     *
+     * @param list<array<string, mixed>> $alocados
+     * @param array<string, mixed> $row Status, FormaCumprimento
+     * @return list<array<string, mixed>>
+     */
+    public static function filterForOficiosList(array $alocados, array $row): array
+    {
+        $status = strtolower(trim((string) ($row['Status'] ?? $row['status'] ?? '')));
+        if ($status === 'cancelada' || $status === 'finalizada') {
+            return [];
+        }
+
+        $forma = strtolower(trim((string) ($row['FormaCumprimento'] ?? $row['forma_cumprimento'] ?? '')));
+        if ($status !== 'pendente' || $forma !== 'cartorio') {
+            return [];
+        }
+
+        $filtrados = [];
+        foreach ($alocados as $alocado) {
+            $tipo = strtolower(trim((string) ($alocado['tipo'] ?? '')));
+            if ($tipo === CartorioAlocacaoTipo::RULE) {
+                $filtrados[] = $alocado;
+            }
+        }
+
+        return $filtrados;
+    }
+
     public static function ordenarAlocadosPorTipo(array $alocados): array
     {
         usort($alocados, static function (array $a, array $b): int {

@@ -523,10 +523,14 @@ function cartorio_oficios_label_cumprimento(array $row): string
                                     <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['TipoOficio'] ?? '')); ?></span>
                                 </div>
                             </div>
+                            <?php
+                            $alocadosLista = CartorioAlocacaoChipHelper::filterForOficiosList($row['Alocados'] ?? [], $row);
+                            $alocadosLista = CartorioAlocacaoChipHelper::ordenarAlocadosPorTipo($alocadosLista);
+                            if ($alocadosLista !== []):
+                            ?>
                             <div class="display-flex row row-fit justify-end gap-y-sm align-center allocate-chips-row allocate-users">
                                     <?php
-                                    $alocados = CartorioAlocacaoChipHelper::ordenarAlocadosPorTipo($row['Alocados'] ?? []);
-                                    foreach ($alocados as $alocado) {
+                                    foreach ($alocadosLista as $alocado) {
                                         $chip = CartorioAlocacaoChipHelper::buildChipData($alocado, [
                                             'entity_id' => (string) ($idOficio ?? ''),
                                             'origem' => 'oficios.list',
@@ -558,7 +562,8 @@ function cartorio_oficios_label_cumprimento(array $row): string
                                     <?php
                                     }
                                     ?>
-                                </div>
+                            </div>
+                            <?php endif; ?>
                                 <?php if ($mostrarBadgePendente): ?>
                                     <div class="col oficio-list-status-col<?php echo $mostrarBarraStatus ? ' status-task' : ''; ?>" title="<?php echo htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES); ?>">
                                         <?php if ($mostrarBarraStatus): ?>

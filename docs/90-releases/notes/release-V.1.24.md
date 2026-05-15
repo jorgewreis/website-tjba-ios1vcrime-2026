@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 02 de abril de 2026
+**Data de Lançamento:** 15 de maio de 2026
 
 # V. 1.24
 
-> feat: implement handling for empty public search results in DataJud
+> refactor: improve cancellation logic for cartório ofícios and update metadata documentation
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **feat: implement handling for empty public search results in DataJud** `[f2883ec]`
+- **refactor: improve cancellation logic for cartório ofícios and update metadata documentation** `[102efe56]`
 
 ---
 
