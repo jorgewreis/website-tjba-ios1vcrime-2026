@@ -130,6 +130,30 @@ $buttonTitleByTipo = [
     'devolucao_origem' => 'Devolver carta',
     'devolução_origem' => 'Devolver carta',
 ];
+$resolverTituloSubtarefaAtiva = static function (array $subtarefaRow) use ($taskTitleByTipo, $subtarefaLabels, $ordemLabels): string {
+    $tipo = trim((string) ($subtarefaRow['tipo'] ?? ''));
+    if ($tipo !== '') {
+        if (isset($taskTitleByTipo[$tipo])) {
+            return $taskTitleByTipo[$tipo];
+        }
+        $tipoNorm = strtolower($tipo);
+        if (isset($taskTitleByTipo[$tipoNorm])) {
+            return $taskTitleByTipo[$tipoNorm];
+        }
+        if (isset($subtarefaLabels[$tipo])) {
+            return $subtarefaLabels[$tipo];
+        }
+        if (isset($subtarefaLabels[$tipoNorm])) {
+            return $subtarefaLabels[$tipoNorm];
+        }
+    }
+    $ordem = (int) ($subtarefaRow['ordem'] ?? 0);
+    if ($ordem >= 1 && $ordem <= 7 && isset($ordemLabels[$ordem])) {
+        return $ordemLabels[$ordem];
+    }
+
+    return '';
+};
 $resultadoCumprimentoOptions = [
     'cumprido_integralmente' => 'Cumprido integralmente',
     'cumprido_parcialmente' => 'Cumprido parcialmente',
@@ -396,18 +420,25 @@ if ($totalPages > 0) {
                 $idCarta = $row['IdCarta'];
                 $subtarefas = $row['Subtarefas'] ?? [];
                 $statusTarefa = (string) ($row['Status'] ?? '');
-                $tarefaConcluida = in_array($statusTarefa, ['concluída', 'concluida', 'finalizada'], true);
+                $statusTarefaNorm = strtolower(trim($statusTarefa));
+                if ($statusTarefaNorm === 'concluída') {
+                    $statusTarefaNorm = 'concluida';
+                }
+                $tarefaConcluida = in_array($statusTarefaNorm, ['concluida', 'finalizada'], true);
+                $podeExpandirSubtarefas = !$tarefaConcluida && $subtarefas !== [];
             ?>
             <div class="display-flex col col-full register border-bottom" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idCarta); ?>">
 
                 <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                     <div class="display-flex row row-fit justify-start gap-y-sm align-center">
                         <div class="col">
-                            <?php if (!$tarefaConcluida): ?>
+                            <?php if ($podeExpandirSubtarefas): ?>
                                 <label class="button-table" title="Expandir detalhes">
-                                    <input type="radio" name="open-subtask" value="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" aria-controls="subtask-<?php echo htmlspecialchars($idCarta); ?>" aria-expanded="false" />
+                                    <input type="radio" name="open-subtask" value="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" aria-controls="subtask-<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" aria-expanded="false" />
                                     <i class="fi fi-rr-angle-small-down"></i>
                                 </label>
+                            <?php else: ?>
+                                <span class="button-table" style="visibility:hidden;" aria-hidden="true"><i class="fi fi-rr-angle-small-down"></i></span>
                             <?php endif; ?>
                         </div>
                         <div class="col width-500 col-process">
@@ -465,25 +496,45 @@ if ($totalPages > 0) {
                         foreach ($allSt as $s) {
                             $o = (int) ($s['ordem'] ?? 0);
                             if ($o >= 1 && $o <= 7) {
-                                $progressStatuses[$o - 1] = (string) ($s['status'] ?? 'pendente');
+                                $statusProg = strtolower(trim((string) ($s['status'] ?? 'pendente')));
+                                if ($statusProg === 'concluída') {
+                                    $statusProg = 'concluida';
+                                }
+                                $progressStatuses[$o - 1] = $statusProg;
                             }
                         }
-                        $currentSubtarefaTitle = '';
+                        $subtarefaAtivaRow = null;
                         foreach ($allSt as $s) {
-                            if (trim((string) ($s['status'] ?? '')) === 'em_andamento') {
-                                $currentSubtarefaTitle = $taskTitleByTipo[$s['tipo'] ?? ''] ?? $subtarefaLabels[$s['tipo'] ?? ''] ?? $s['tipo'] ?? '';
+                            $statusSub = strtolower(trim((string) ($s['status'] ?? '')));
+                            if ($statusSub === 'em_andamento') {
+                                $subtarefaAtivaRow = $s;
                                 break;
                             }
                         }
-                        if ($currentSubtarefaTitle === '' && $st === 'pendente') {
-                            $currentSubtarefaTitle = $taskTitleByTipo[CartasRecebidasSubtarefasRepository::TIPO_ORDEM_1] ?? $ordemLabels[1];
-                        } elseif ($currentSubtarefaTitle === '' && ($st === 'concluída' || $st === 'finalizada')) {
-                            $currentSubtarefaTitle = 'Todas as etapas concluídas';
-                        } elseif ($currentSubtarefaTitle === '') {
-                            $currentSubtarefaTitle = $row['Status'] ?? 'Em andamento';
+                        if ($subtarefaAtivaRow === null && $subtarefas !== []) {
+                            $subtarefaAtivaRow = $subtarefas[0];
                         }
-                        $isEmAndamento = ($st === 'em_andamento');
-                        $mostrarBarraStatus = ($st !== 'concluída' && $st !== 'cancelada');
+                        if ($subtarefaAtivaRow === null) {
+                            foreach ($allSt as $s) {
+                                $statusSub = strtolower(trim((string) ($s['status'] ?? '')));
+                                if ($statusSub === 'pendente') {
+                                    $subtarefaAtivaRow = $s;
+                                    break;
+                                }
+                            }
+                        }
+                        $currentSubtarefaTitle = $subtarefaAtivaRow !== null
+                            ? $resolverTituloSubtarefaAtiva($subtarefaAtivaRow)
+                            : '';
+                        if ($currentSubtarefaTitle === '' && $statusTarefaNorm === 'pendente') {
+                            $currentSubtarefaTitle = $taskTitleByTipo[CartasRecebidasSubtarefasRepository::TIPO_ORDEM_1] ?? $ordemLabels[1];
+                        } elseif ($currentSubtarefaTitle === '' && in_array($statusTarefaNorm, ['concluida', 'finalizada'], true)) {
+                            $currentSubtarefaTitle = 'Todas as etapas concluídas';
+                        } elseif ($currentSubtarefaTitle === '' && $statusTarefaNorm === 'cancelada') {
+                            $currentSubtarefaTitle = 'Cancelada';
+                        }
+                        $isEmAndamento = ($statusTarefaNorm === 'em_andamento');
+                        $mostrarBarraStatus = !in_array($statusTarefaNorm, ['concluida', 'cancelada'], true);
                         $segmentosBarra = [];
                         if ($mostrarBarraStatus) {
                             $segmentosBarra[] = ['class' => 'concluida', 'title' => 'Carta recebida e cadastrada'];
@@ -494,11 +545,11 @@ if ($totalPages > 0) {
                             }
                         }
                         ?>
-                        <div class="col<?php echo $mostrarBarraStatus && $st !== 'concluída' && $st !== 'cancelada' ? ' status-task' : ''; ?>" title="<?php echo htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES); ?>">
+                        <div class="col<?php echo $mostrarBarraStatus ? ' status-task' : ''; ?>" title="<?php echo htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES); ?>">
                             <?php
-                            if ($st === 'concluída') {
+                            if ($statusTarefaNorm === 'concluida') {
                                 echo '<div class="width-300 padding-x-lg status status-finished">Finalizada</div>';
-                            } elseif ($st === 'cancelada') {
+                            } elseif ($statusTarefaNorm === 'cancelada') {
                                 echo '<div class="width-300 padding-x-lg status status-cancelled">Cancelada</div>';
                             } elseif ($mostrarBarraStatus) {
                                 $labelStatus = $isEmAndamento ? 'Em andamento' : 'Pendente';
@@ -520,8 +571,8 @@ if ($totalPages > 0) {
                     </div>
                 </div>
 
-                <?php if (!$tarefaConcluida): ?>
-                <div class="display-flex col col-full subtask subtask-collapsed" id="subtask-<?php echo htmlspecialchars($idCarta); ?>" aria-hidden="true">
+                <?php if ($podeExpandirSubtarefas): ?>
+                <div class="display-flex col col-full subtask subtask-collapsed" id="subtask-<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" aria-hidden="true">
                     <?php foreach ($subtarefas as $st):
                         $stId = $st['id'] ?? '';
                         $stTipo = $st['tipo'] ?? '';

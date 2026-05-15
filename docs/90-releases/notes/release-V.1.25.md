@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 02 de abril de 2026
+**Data de Lançamento:** 15 de maio de 2026
 
 # V. 1.25
 
-> refactor: simplify status message handling in datajud-cycle-helper.js
+> refactor: add filtering logic for cartório ofícios list
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **refactor: simplify status message handling in datajud-cycle-helper.js** `[dd251a5]`
+- **refactor: add filtering logic for cartório ofícios list** `[af90d0b5]`
 
 ---
 

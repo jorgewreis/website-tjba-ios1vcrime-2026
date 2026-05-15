@@ -315,7 +315,10 @@ final class CartasRecebidasService
         if ($ordem < 7) {
             $proxima = $this->subtarefasRepository->findByCartaIdEOrdem($cartaId, $ordem + 1);
             if ($proxima !== null && trim((string) ($proxima['status'] ?? '')) !== CartasRecebidasSubtarefasRepository::STATUS_CANCELADA) {
-                $statusProxima = trim((string) ($proxima['status'] ?? ''));
+                $statusProxima = strtolower(trim((string) ($proxima['status'] ?? '')));
+                if ($statusProxima === 'concluída') {
+                    $statusProxima = 'concluida';
+                }
                 if ($statusProxima !== 'concluida') {
                     $this->subtarefasRepository->atualizarStatus((string) $proxima['id'], 'em_andamento');
                 }

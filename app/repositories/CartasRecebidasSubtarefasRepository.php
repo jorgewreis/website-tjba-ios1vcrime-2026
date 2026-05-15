@@ -134,19 +134,46 @@ final class CartasRecebidasSubtarefasRepository
     }
 
     /**
-     * Retorna as subtarefas a exibir na lista: apenas 1 por vez, a que estiver em andamento ou pendente (primeira na ordem).
-     * Ignora subtarefas com status cancelada.
+     * Retorna a subtarefa ativa para a listagem (uma por vez).
+     * Prioriza a que está em andamento; senão, a primeira pendente na ordem.
+     * Ignora concluídas e canceladas.
+     *
+     * @return list<array<string, mixed>>
      */
     public function findPendenteOuEmAndamentoByCartaId(string $cartaId): array
     {
         $all = $this->findByCartaId($cartaId);
+        $primeiraPendente = null;
+
         foreach ($all as $row) {
-            $status = (string) ($row['status'] ?? '');
-            if ($status === self::STATUS_EM_ANDAMENTO || $status === self::STATUS_PENDENTE) {
+            $status = self::normalizarStatus((string) ($row['status'] ?? ''));
+            if (self::isStatusTerminal($status)) {
+                continue;
+            }
+            if ($status === self::STATUS_EM_ANDAMENTO) {
                 return [$row];
             }
+            if ($status === self::STATUS_PENDENTE && $primeiraPendente === null) {
+                $primeiraPendente = $row;
+            }
         }
-        return [];
+
+        return $primeiraPendente !== null ? [$primeiraPendente] : [];
+    }
+
+    private static function normalizarStatus(string $status): string
+    {
+        $status = strtolower(trim($status));
+        if ($status === 'concluída') {
+            return self::STATUS_CONCLUIDA;
+        }
+
+        return $status;
+    }
+
+    private static function isStatusTerminal(string $status): bool
+    {
+        return $status === self::STATUS_CONCLUIDA || $status === self::STATUS_CANCELADA;
     }
 
     public function marcarConcluida(string $id): void
