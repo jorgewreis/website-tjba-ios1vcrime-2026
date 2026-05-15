@@ -39,7 +39,7 @@ final class ListExportHelper
             $line = [];
             foreach ($columns as $col) {
                 $key = $col['key'];
-                $line[] = ListExportPresentation::formatCell($key, $row[$key] ?? null);
+                $line[] = ListExportPresentation::formatCsvCell($key, $row[$key] ?? null);
             }
             fputcsv($output, $line, ';');
         }

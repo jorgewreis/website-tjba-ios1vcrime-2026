@@ -204,4 +204,18 @@ final class ListExportPresentation
 
         return trim((string) $value);
     }
+
+    public static function formatCsvCell(string $columnKey, mixed $value): string
+    {
+        return self::neutralizeCsvFormula(self::formatCell($columnKey, $value));
+    }
+
+    private static function neutralizeCsvFormula(string $cell): string
+    {
+        if ($cell === '') {
+            return '';
+        }
+
+        return preg_match('/^[=+\-@]/', $cell) === 1 ? "'" . $cell : $cell;
+    }
 }
