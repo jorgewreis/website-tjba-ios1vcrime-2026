@@ -81,7 +81,7 @@ $prioridadesFichaEstado = $processoIdFicha !== ''
                     <label for="processo-assunto-descricao">Descrição do assunto</label>
                     <input type="text" id="processo-assunto-descricao" class="height-md" placeholder="Preenchida automaticamente se o código existir no catálogo" readonly>
                 </div>
-                <button type="button" class="btn btn-primary height-md" id="btn-processo-assunto-vincular">Vincular assunto</button>
+                <button type="button" class="btn btn-primary height-md" id="btn-processo-assunto-vincular" disabled>Vincular assunto</button>
             </div>
             <div id="processo-assuntos-list" class="display-flex col col-full gap-y-sm" aria-live="polite"></div>
         </div>

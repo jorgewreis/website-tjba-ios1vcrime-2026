@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 01 de abril de 2026
+**Data de Lançamento:** 15 de maio de 2026
 
 # V. 1.19
 
-> feat: simplificar validação de login SSH e melhorar mensagens de erro
+> refactor: update release date and enhance CSS for process listing
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **feat: simplificar validação de login SSH e melhorar mensagens de erro** `[d34228c]`
+- **refactor: update release date and enhance CSS for process listing** `[fdb70f4c]`
 
 ---
 
