@@ -21,7 +21,7 @@ final class AssuntosRepository
     }
 
     /** Retorna o id do assunto (existente ou recém-criado). */
-    public function ensureAssunto(string $codigo, string $descricao): string
+    public function ensureAssunto(string $codigo, string $descricao, bool $updateExistingDescricao = true): string
     {
         $codigo = self::normalizeCodigo($codigo);
         if ($codigo === '') {
@@ -37,7 +37,7 @@ final class AssuntosRepository
         if ($existing !== null) {
             $id = (string) ($existing['id'] ?? '');
             $descricaoAtual = trim((string) ($existing['descricao'] ?? ''));
-            if ($id !== '' && $descricaoNormalizada !== '' && $descricaoAtual !== $descricaoNormalizada) {
+            if ($updateExistingDescricao && $id !== '' && $descricaoNormalizada !== '' && $descricaoAtual !== $descricaoNormalizada) {
                 $this->updateDescricao($id, $descricaoNormalizada);
             }
 

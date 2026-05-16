@@ -11,6 +11,7 @@ require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/repositories/SalaAudienciasPautaParteRepository.php';
 require_once $basePath . '/app/services/ProcessoPrioridadesService.php';
+require_once __DIR__ . '/_common.php';
 
 $processoId = trim((string) ($_GET['processo_id'] ?? ''));
 if ($processoId === '') {
@@ -20,12 +21,7 @@ if ($processoId === '') {
 }
 
 try {
-    $usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
-    if ($usuarioId === '') {
-        http_response_code(401);
-        echo json_encode(['error' => 'Sessão expirada. Faça login novamente.'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
+    processos_api_require_access();
 
     $pdo = Conection::getInstance()->getConnection();
     $nPauta = (new SalaAudienciasPautaParteRepository($pdo))->countPartesMenoresAtivasPorProcesso($processoId);

@@ -7,6 +7,9 @@ $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/ProcessoClasseSyncService.php';
+require_once __DIR__ . '/_common.php';
+
+processos_api_require_trusted_post();
 
 $payload = json_decode(file_get_contents('php://input') ?: '[]', true);
 if (!is_array($payload)) {
@@ -19,12 +22,7 @@ $codigo = trim((string) ($payload['codigo'] ?? ''));
 $descricao = trim((string) ($payload['descricao'] ?? ''));
 
 try {
-    $usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
-    if ($usuarioId === '') {
-        http_response_code(401);
-        echo json_encode(['error' => 'Sessão expirada. Faça login novamente.'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
+    processos_api_require_access();
 
     if (strlen($digits) !== 20) {
         http_response_code(400);

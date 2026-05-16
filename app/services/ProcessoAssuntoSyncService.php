@@ -123,7 +123,7 @@ final class ProcessoAssuntoSyncService
             throw new InvalidArgumentException('Processo não encontrado para vincular assunto.');
         }
 
-        $assuntoId = $this->assuntosRepository->ensureAssunto($codigo, $descricao);
+        $assuntoId = $this->assuntosRepository->ensureAssunto($codigo, $descricao, false);
         return $this->processoAssuntosRepository->upsert($processoId, $assuntoId, ProcessoAssuntoOrigem::MANUAL);
     }
 
