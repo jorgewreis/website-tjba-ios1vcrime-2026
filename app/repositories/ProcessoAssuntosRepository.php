@@ -245,24 +245,23 @@ final class ProcessoAssuntosRepository
             $existingRows = [];
         }
 
+        $existingLinked = [];
         $existingDataJud = [];
         foreach ($existingRows as $row) {
+            $aid = trim((string) ($row['assunto_id'] ?? ''));
+            if ($aid === '') {
+                continue;
+            }
+            $existingLinked[$aid] = true;
+
             $origem = trim((string) ($row['origem'] ?? ''));
             if ($origem !== ProcessoAssuntoOrigem::DATAJUD) {
                 continue;
             }
-            $aid = trim((string) ($row['assunto_id'] ?? ''));
-            if ($aid !== '') {
-                $existingDataJud[$aid] = true;
-            }
+            $existingDataJud[$aid] = true;
         }
 
-        $novosMap = [];
-        foreach ($novosIds as $id) {
-            $novosMap[$id] = true;
-        }
-
-        $toInsert = array_values(array_diff($novosIds, array_keys($existingDataJud)));
+        $toInsert = array_values(array_diff($novosIds, array_keys($existingLinked)));
         $toRemove = array_values(array_diff(array_keys($existingDataJud), $novosIds));
 
         $inserted = 0;
