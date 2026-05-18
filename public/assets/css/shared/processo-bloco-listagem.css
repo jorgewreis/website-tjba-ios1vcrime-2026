@@ -345,13 +345,21 @@
 
 /* Metadados (canto direito da lista): ancora à direita do ícone, texto expande à esquerda */
 .container-data-create .processo-bloco-tooltip::after {
+    display: inline-block;
     left: auto;
     right: 0;
     transform: translateY(0);
-    max-width: min(280px, calc(100vw - 24px));
+    width: max-content;
+    max-width: min(320px, calc(100vw - 24px));
     text-align: right;
+    white-space: nowrap;
+    overflow-wrap: normal;
+    word-break: normal;
+}
+
+.container-data-create .btn-mini-id.processo-bloco-tooltip::after {
     white-space: normal;
-    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .container-data-create .processo-bloco-tooltip:hover::after {
