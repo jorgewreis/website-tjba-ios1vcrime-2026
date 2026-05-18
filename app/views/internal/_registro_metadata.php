@@ -13,8 +13,10 @@ if ($meta === null) {
     return;
 }
 
-$criadorNome = trim((string) ($meta['criador_nome'] ?? '—'));
 $userPrefix = trim((string) ($meta['user_prefix'] ?? 'Cadastrado por'));
+$criadorNome = trim((string) ($meta['criador_nome'] ?? ''));
+require_once __DIR__ . '/../../helpers/RegistroMetadataHelper.php';
+$linhaAutor = RegistroMetadataHelper::formatarLinhaAutor($userPrefix, $criadorNome);
 $dataCadastro = trim((string) ($meta['data_cadastro_texto'] ?? ''));
 $dataEventoClasse = trim((string) ($meta['data_evento_classe'] ?? ''));
 $dataEventoTexto = trim((string) ($meta['data_evento_texto'] ?? ''));
@@ -25,14 +27,18 @@ $editHref = trim((string) ($meta['edit_href'] ?? ''));
 $cancelEndpoint = trim((string) ($meta['cancel_endpoint'] ?? ''));
 $editLabel = trim((string) ($meta['edit_label'] ?? 'Editar registro'));
 $cancelLabel = trim((string) ($meta['cancel_label'] ?? 'Cancelar registro'));
+$idTitle = $idRegistro !== '' ? 'ID ' . $idRegistro : '';
 
 $mostrarEvento = ($dataEventoClasse === 'updated' || $dataEventoClasse === 'canceled') && $dataEventoTexto !== '';
 $classesEvento = $mostrarEvento ? 'data-update-date ' . $dataEventoClasse : '';
 
-$mostrarAcoes = ($showEdit && $editHref !== '') || ($showCancel && $cancelEndpoint !== '' && $idRegistro !== '');
+$mostrarEdit = $showEdit && $editHref !== '';
+$mostrarId = $idRegistro !== '';
+$mostrarCancel = $showCancel && $cancelEndpoint !== '' && $idRegistro !== '';
+$mostrarAcoes = $mostrarEdit || $mostrarId || $mostrarCancel;
 ?>
 <div class="container-data-create">
-    <div class="data-create-user"><?php echo htmlspecialchars($userPrefix, ENT_QUOTES, 'UTF-8'); ?> <?php echo htmlspecialchars($criadorNome, ENT_QUOTES, 'UTF-8'); ?></div>
+    <div class="data-create-user"><?php echo htmlspecialchars($linhaAutor, ENT_QUOTES, 'UTF-8'); ?></div>
     <?php if ($dataCadastro !== ''): ?>
     <div class="data-create-date"><?php echo htmlspecialchars($dataCadastro, ENT_QUOTES, 'UTF-8'); ?></div>
     <?php endif; ?>
@@ -41,13 +47,10 @@ $mostrarAcoes = ($showEdit && $editHref !== '') || ($showCancel && $cancelEndpoi
             <?php if ($mostrarEvento): ?>
             <div class="<?php echo htmlspecialchars($classesEvento, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($dataEventoTexto, ENT_QUOTES, 'UTF-8'); ?></div>
             <?php endif; ?>
-            <?php if ($idRegistro !== ''): ?>
-            <div class="data-id">ID  <?php echo htmlspecialchars($idRegistro, ENT_QUOTES, 'UTF-8'); ?></div>
-            <?php endif; ?>
         </div>
         <?php if ($mostrarAcoes): ?>
         <div class="right">
-            <?php if ($showEdit && $editHref !== ''): ?>
+            <?php if ($mostrarEdit): ?>
             <button type="button"
                 class="btn-mini tooltip"
                 data-action="editar-registro editar-oficio"
@@ -57,7 +60,15 @@ $mostrarAcoes = ($showEdit && $editHref !== '') || ($showCancel && $cancelEndpoi
                 <img class="btn-mini-icon" src="/assets/icons/Notes-Edit--Streamline-Ultimate.png" alt="">
             </button>
             <?php endif; ?>
-            <?php if ($showCancel && $cancelEndpoint !== '' && $idRegistro !== ''): ?>
+            <?php if ($mostrarId): ?>
+            <button type="button"
+                class="btn-mini tooltip btn-mini-id"
+                data-title="<?php echo htmlspecialchars($idTitle, ENT_QUOTES, 'UTF-8'); ?>"
+                aria-label="<?php echo htmlspecialchars($idTitle, ENT_QUOTES, 'UTF-8'); ?>">
+                <img class="btn-mini-icon" src="/assets/icons/Notes-Question--Streamline-Ultimate.png" alt="">
+            </button>
+            <?php endif; ?>
+            <?php if ($mostrarCancel): ?>
             <button type="button"
                 class="btn-mini tooltip"
                 data-action="cancelar-registro cancelar-oficio"

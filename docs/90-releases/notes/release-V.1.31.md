@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 02 de abril de 2026
+**Data de Lançamento:** 18 de maio de 2026
 
 # V. 1.31
 
-> feat: implement database accessibility check in login form
+> refactor: enhance repository SQL queries and add user tracking fields
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **feat: implement database accessibility check in login form** `[4e46167]`
+- **refactor: enhance repository SQL queries and add user tracking fields** `[ddd446d2]`
 
 ---
 

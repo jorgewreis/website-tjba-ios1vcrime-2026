@@ -6,6 +6,8 @@ declare(strict_types=1);
  */
 final class RegistroMetadataHelper
 {
+    private const COLLATION = 'utf8mb4_unicode_ci';
+
     /** @var list<string> */
     private const TERMINAL_STATUSES = [
         'cancelada',
@@ -182,6 +184,7 @@ final class RegistroMetadataHelper
         $status = strtolower(trim(self::pick($row, $config['status_keys'] ?? ['Status', 'status'])));
         $id = trim(self::pick($row, $config['id_keys'] ?? ['id']));
         $criador = trim(self::pick($row, $config['criador_keys'] ?? ['CriadoPorNome']));
+        $editor = trim(self::pick($row, $config['editor_keys'] ?? ['UltimoEditorNome', 'AtualizadoPorNome']));
         $createdRaw = trim(self::pick($row, $config['data_keys'] ?? ['Data', 'created_at']));
         $updatedRaw = trim(self::pick($row, $config['updated_keys'] ?? ['DataAtualizacao', 'updated_at']));
 
@@ -196,10 +199,10 @@ final class RegistroMetadataHelper
         if (in_array($status, $cancelStatuses, true)) {
             $dataEventoClasse = 'canceled';
             $ref = $updatedRaw !== '' ? $updatedRaw : $createdRaw;
-            $dataEventoTexto = 'Cancelado em ' . self::formatarDataHora($ref);
+            $dataEventoTexto = self::formatarEventoComAutor('Cancelado em', $ref, $editor);
         } elseif ($updatedRaw !== '' && $createdRaw !== '' && self::isUpdatedAfterCreated($createdRaw, $updatedRaw)) {
             $dataEventoClasse = 'updated';
-            $dataEventoTexto = 'Atualizado em ' . self::formatarDataHora($updatedRaw);
+            $dataEventoTexto = self::formatarEventoComAutor('Atualizado em', $updatedRaw, $editor);
         }
 
         $showEdit = !array_key_exists('show_edit', $config)
@@ -217,7 +220,7 @@ final class RegistroMetadataHelper
         $userPrefix = trim((string) ($config['user_prefix'] ?? 'Cadastrado por'));
 
         return [
-            'criador_nome' => $criador !== '' ? $criador : '—',
+            'criador_nome' => $criador,
             'user_prefix' => $userPrefix,
             'data_cadastro_texto' => $createdRaw !== '' ? 'Em ' . self::formatarDataHora($createdRaw) : '',
             'data_evento_classe' => $dataEventoClasse,
@@ -243,15 +246,74 @@ final class RegistroMetadataHelper
     public static function sqlUsuarioAuditoria(string $alias, string $criadoPorCol = 'criado_por', string $atualizadoPorCol = 'atualizado_por'): string
     {
         $a = preg_replace('/[^a-zA-Z0-9_]/', '', $alias) ?: 't';
+        $coll = self::COLLATION;
 
         return sprintf(
-            ' LEFT JOIN `usuarios` ucr_%1$s ON ucr_%1$s.`id_usuario` = %2$s.`%3$s`'
-            . ' LEFT JOIN `usuarios` ued_%1$s ON ued_%1$s.`id_usuario` = %2$s.`%4$s`',
+            ' LEFT JOIN `usuarios` ucr_%1$s ON ucr_%1$s.`id_usuario` COLLATE %5$s = %2$s.`%3$s` COLLATE %5$s'
+            . ' LEFT JOIN `usuarios` ued_%1$s ON ued_%1$s.`id_usuario` COLLATE %5$s = %2$s.`%4$s` COLLATE %5$s',
             $a,
             $a,
             $criadoPorCol,
-            $atualizadoPorCol
+            $atualizadoPorCol,
+            $coll
         );
+    }
+
+    /**
+     * Exibe apenas as primeiras partes do nome (ex.: nome + sobrenome).
+     */
+    public static function compactarNome(string $nomeCompleto, int $maxPartes = 2): string
+    {
+        $nome = preg_replace('/\s+/u', ' ', trim($nomeCompleto));
+        if ($nome === '' || $nome === '—' || $nome === '--' || $nome === '-') {
+            return '';
+        }
+        $partes = preg_split('/\s+/u', $nome, -1, PREG_SPLIT_NO_EMPTY);
+        if ($partes === false || $partes === []) {
+            return '';
+        }
+        if (count($partes) <= $maxPartes) {
+            return implode(' ', $partes);
+        }
+
+        return implode(' ', array_slice($partes, 0, $maxPartes));
+    }
+
+    /**
+     * Texto da primeira linha do bloco de metadados (com ou sem nome do autor).
+     */
+    public static function formatarLinhaAutor(string $userPrefix, string $criadorNome): string
+    {
+        $prefix = trim($userPrefix);
+        if ($prefix === '') {
+            $prefix = 'Cadastrado por';
+        }
+        $nome = self::compactarNome($criadorNome);
+        if ($nome === '') {
+            $rotulo = preg_replace('/\s+por\s*$/iu', '', $prefix);
+
+            return $rotulo !== '' ? $rotulo : 'Cadastrado';
+        }
+
+        return $prefix . ' ' . $nome;
+    }
+
+    /**
+     * Linha de evento (atualização/cancelamento) com data/hora e autor compacto.
+     */
+    public static function formatarEventoComAutor(string $rotuloEvento, string $dataRaw, string $editorNome): string
+    {
+        $rotulo = trim($rotuloEvento);
+        if ($rotulo === '' || trim($dataRaw) === '') {
+            return '';
+        }
+        $texto = $rotulo . ' ' . self::formatarDataHora($dataRaw);
+        $editor = self::compactarNome($editorNome);
+        if ($editor !== '') {
+            $texto .= ' por ' . $editor;
+        }
+
+        return $texto;
     }
 
     public static function sqlSelectAuditoria(string $alias, string $criadoPorCol = 'criado_por'): string
@@ -260,7 +322,8 @@ final class RegistroMetadataHelper
 
         return sprintf(
             ', %1$s.`created_at` AS `Data`, %1$s.`updated_at` AS `DataAtualizacao`, %1$s.`%2$s` AS `CriadoPor`,'
-            . ' TRIM(CONCAT(COALESCE(ucr_%3$s.`nome`, \'\'), \' \', COALESCE(ucr_%3$s.`sobrenome`, \'\'))) AS `CriadoPorNome`',
+            . ' TRIM(CONCAT(COALESCE(ucr_%3$s.`nome`, \'\'), \' \', COALESCE(ucr_%3$s.`sobrenome`, \'\'))) AS `CriadoPorNome`,'
+            . ' TRIM(CONCAT(COALESCE(ued_%3$s.`nome`, \'\'), \' \', COALESCE(ued_%3$s.`sobrenome`, \'\'))) AS `UltimoEditorNome`',
             $a,
             $criadoPorCol,
             $a
@@ -274,7 +337,8 @@ final class RegistroMetadataHelper
 
         return sprintf(
             ', %1$s.`updated_at` AS `DataAtualizacao`,'
-            . ' TRIM(CONCAT(COALESCE(ucr_%2$s.`nome`, \'\'), \' \', COALESCE(ucr_%2$s.`sobrenome`, \'\'))) AS `CriadoPorNome`',
+            . ' TRIM(CONCAT(COALESCE(ucr_%2$s.`nome`, \'\'), \' \', COALESCE(ucr_%2$s.`sobrenome`, \'\'))) AS `CriadoPorNome`,'
+            . ' TRIM(CONCAT(COALESCE(ued_%2$s.`nome`, \'\'), \' \', COALESCE(ued_%2$s.`sobrenome`, \'\'))) AS `UltimoEditorNome`',
             $a,
             $a
         );
@@ -287,7 +351,8 @@ final class RegistroMetadataHelper
 
         return sprintf(
             ', %1$s.`criado_em` AS `Data`, %1$s.`atualizado_em` AS `DataAtualizacao`,'
-            . ' TRIM(CONCAT(COALESCE(ucr_%2$s.`nome`, \'\'), \' \', COALESCE(ucr_%2$s.`sobrenome`, \'\'))) AS `CriadoPorNome`',
+            . ' TRIM(CONCAT(COALESCE(ucr_%2$s.`nome`, \'\'), \' \', COALESCE(ucr_%2$s.`sobrenome`, \'\'))) AS `CriadoPorNome`,'
+            . ' TRIM(CONCAT(COALESCE(ued_%2$s.`nome`, \'\'), \' \', COALESCE(ued_%2$s.`sobrenome`, \'\'))) AS `UltimoEditorNome`',
             $a,
             $a
         );
@@ -333,7 +398,7 @@ final class RegistroMetadataHelper
     private static function emptyPayload(): array
     {
         return [
-            'criador_nome' => '—',
+            'criador_nome' => '',
             'user_prefix' => 'Cadastrado por',
             'data_cadastro_texto' => '',
             'data_evento_classe' => '',

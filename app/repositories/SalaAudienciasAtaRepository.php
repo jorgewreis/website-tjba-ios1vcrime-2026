@@ -156,7 +156,7 @@ final class SalaAudienciasAtaRepository
              LEFT JOIN `processos` p ON p.`id` = a.`processo`
              LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id`
              LEFT JOIN `%s` ata ON ata.`pauta` = a.`id_pauta`
-             LEFT JOIN `usuarios` ucr_up ON ucr_up.`id_usuario` = ata.`uploaded_by`
+             LEFT JOIN `usuarios` ucr_up ON ucr_up.`id_usuario` COLLATE utf8mb4_unicode_ci = ata.`uploaded_by` COLLATE utf8mb4_unicode_ci
              WHERE a.`ativo` = 1 AND a.`status` IN (\'realizada\', \'finalizada\')
              AND NOT (
                 a.`data_audiencia` < DATE_SUB(CURDATE(), INTERVAL %d DAY)
