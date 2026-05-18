@@ -52,7 +52,7 @@ $mostrarAcoes = $mostrarEdit || $mostrarId || $mostrarCancel;
         <div class="right">
             <?php if ($mostrarEdit): ?>
             <button type="button"
-                class="btn-mini tooltip"
+                class="btn-mini processo-bloco-tooltip processo-bloco-tooltip--btn"
                 data-action="editar-registro editar-oficio"
                 data-edit-href="<?php echo htmlspecialchars($editHref, ENT_QUOTES, 'UTF-8'); ?>"
                 data-title="<?php echo htmlspecialchars($editLabel, ENT_QUOTES, 'UTF-8'); ?>"
@@ -62,7 +62,7 @@ $mostrarAcoes = $mostrarEdit || $mostrarId || $mostrarCancel;
             <?php endif; ?>
             <?php if ($mostrarId): ?>
             <button type="button"
-                class="btn-mini tooltip btn-mini-id"
+                class="btn-mini processo-bloco-tooltip processo-bloco-tooltip--btn btn-mini-id"
                 data-title="<?php echo htmlspecialchars($idTitle, ENT_QUOTES, 'UTF-8'); ?>"
                 aria-label="<?php echo htmlspecialchars($idTitle, ENT_QUOTES, 'UTF-8'); ?>">
                 <img class="btn-mini-icon" src="/assets/icons/Notes-Question--Streamline-Ultimate.png" alt="">
@@ -70,7 +70,7 @@ $mostrarAcoes = $mostrarEdit || $mostrarId || $mostrarCancel;
             <?php endif; ?>
             <?php if ($mostrarCancel): ?>
             <button type="button"
-                class="btn-mini tooltip"
+                class="btn-mini processo-bloco-tooltip processo-bloco-tooltip--btn"
                 data-action="cancelar-registro cancelar-oficio"
                 data-registro-id="<?php echo htmlspecialchars($idRegistro, ENT_QUOTES, 'UTF-8'); ?>"
                 data-oficio-id="<?php echo htmlspecialchars($idRegistro, ENT_QUOTES, 'UTF-8'); ?>"

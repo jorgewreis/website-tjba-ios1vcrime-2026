@@ -259,8 +259,14 @@ final class RegistroMetadataHelper
         );
     }
 
+    /** @var list<string> */
+    private const PARTICULAS_NOME = [
+        'de', 'da', 'do', 'dos', 'das', 'e', 'y', 'del', 'la', 'las', 'los',
+    ];
+
     /**
-     * Exibe apenas as primeiras partes do nome (ex.: nome + sobrenome).
+     * Exibe até duas partes substantivas do nome (ex.: nome + sobrenome), incluindo
+     * partículas entre elas (ex.: "Silvia de Jesus", "Maria da Silva").
      */
     public static function compactarNome(string $nomeCompleto, int $maxPartes = 2): string
     {
@@ -272,11 +278,35 @@ final class RegistroMetadataHelper
         if ($partes === false || $partes === []) {
             return '';
         }
-        if (count($partes) <= $maxPartes) {
-            return implode(' ', $partes);
+
+        $resultado = [];
+        $substantivas = 0;
+        $total = count($partes);
+
+        for ($i = 0; $i < $total && $substantivas < $maxPartes; $i++) {
+            $palavra = $partes[$i];
+            if (self::isParticulaNome($palavra)) {
+                if ($resultado !== []) {
+                    $resultado[] = $palavra;
+                }
+                continue;
+            }
+            $resultado[] = $palavra;
+            $substantivas++;
         }
 
-        return implode(' ', array_slice($partes, 0, $maxPartes));
+        while ($resultado !== [] && self::isParticulaNome($resultado[count($resultado) - 1])) {
+            array_pop($resultado);
+        }
+
+        return implode(' ', $resultado);
+    }
+
+    private static function isParticulaNome(string $palavra): bool
+    {
+        $normalizada = mb_strtolower(trim($palavra), 'UTF-8');
+
+        return in_array($normalizada, self::PARTICULAS_NOME, true);
     }
 
     /**

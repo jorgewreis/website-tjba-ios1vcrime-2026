@@ -296,12 +296,14 @@
     cursor: help;
 }
 
-.container-processo .processo-bloco-tooltip {
+.container-processo .processo-bloco-tooltip,
+.container-data-create .processo-bloco-tooltip {
     position: relative;
     cursor: default;
 }
 
-.container-processo .processo-bloco-tooltip.processo-bloco-tooltip--btn {
+.container-processo .processo-bloco-tooltip.processo-bloco-tooltip--btn,
+.container-data-create .processo-bloco-tooltip.processo-bloco-tooltip--btn {
     cursor: pointer;
 }
 
@@ -309,7 +311,8 @@
     cursor: pointer;
 }
 
-.container-processo .processo-bloco-tooltip::after {
+.container-processo .processo-bloco-tooltip::after,
+.container-data-create .processo-bloco-tooltip::after {
     content: attr(data-title);
     position: absolute;
     left: 50%;
@@ -330,7 +333,8 @@
     z-index: 999;
 }
 
-.container-processo .processo-bloco-tooltip:hover::after {
+.container-processo .processo-bloco-tooltip:hover::after,
+.container-data-create .processo-bloco-tooltip:hover::after {
     opacity: 1;
     visibility: visible;
     transform: translateX(-50%) translateY(-2px);
