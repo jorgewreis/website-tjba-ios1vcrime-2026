@@ -132,6 +132,11 @@ final class ProcessoAssuntosRepository
 
         $existing = $this->findOneByProcessoAndAssunto($processoId, $assuntoId);
         if ($existing !== null) {
+            $existingOrigem = trim((string) ($existing['origem'] ?? ''));
+            if ($existingOrigem === ProcessoAssuntoOrigem::MANUAL && $origem === ProcessoAssuntoOrigem::DATAJUD) {
+                return false;
+            }
+
             $statement = $this->connection->prepare(
                 sprintf(
                     'UPDATE `%s` SET `origem` = :origem, `updated_at` = NOW() WHERE `id` = :id LIMIT 1',
@@ -246,13 +251,16 @@ final class ProcessoAssuntosRepository
         }
 
         $existingDataJud = [];
+        $existingAny = [];
         foreach ($existingRows as $row) {
-            $origem = trim((string) ($row['origem'] ?? ''));
-            if ($origem !== ProcessoAssuntoOrigem::DATAJUD) {
+            $aid = trim((string) ($row['assunto_id'] ?? ''));
+            if ($aid === '') {
                 continue;
             }
-            $aid = trim((string) ($row['assunto_id'] ?? ''));
-            if ($aid !== '') {
+            $existingAny[$aid] = true;
+
+            $origem = trim((string) ($row['origem'] ?? ''));
+            if ($origem === ProcessoAssuntoOrigem::DATAJUD) {
                 $existingDataJud[$aid] = true;
             }
         }
@@ -262,7 +270,7 @@ final class ProcessoAssuntosRepository
             $novosMap[$id] = true;
         }
 
-        $toInsert = array_values(array_diff($novosIds, array_keys($existingDataJud)));
+        $toInsert = array_values(array_diff($novosIds, array_keys($existingAny)));
         $toRemove = array_values(array_diff(array_keys($existingDataJud), $novosIds));
 
         $inserted = 0;
