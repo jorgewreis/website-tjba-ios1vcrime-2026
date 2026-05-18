@@ -10,6 +10,7 @@ require_once __DIR__ . '/../../services/GuiasService.php';
 require_once __DIR__ . '/../../repositories/GuiasSubtarefasRepository.php';
 require_once __DIR__ . '/../../helpers/CartorioAlocacaoChipHelper.php';
 require_once __DIR__ . '/../../helpers/ProcessoBlocoListagemHelper.php';
+require_once __DIR__ . '/../../helpers/RegistroMetadataHelper.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -56,6 +57,7 @@ try {
 
 $rows = $listResult['rows'] ?? [];
 $rows = ProcessoBlocoListagemHelper::appendBlocoData($connection, $rows);
+$registroListViewerContext = RegistroMetadataHelper::viewerContextFromSession();
 $totalDocuments = (int) ($listResult['total'] ?? 0);
 
 if ($totalDocuments === 0) {
@@ -352,7 +354,8 @@ if ($totalPages > 0) {
                 $statusTarefa = (string) ($row['Status'] ?? '');
                 $tarefaConcluida = in_array($statusTarefa, ['concluída', 'concluida', 'finalizada'], true);
             ?>
-            <div class="display-flex col col-full register border-bottom" data-guia-id="<?php echo htmlspecialchars($idGuia, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idGuia); ?>">
+            <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'guias', $registroListViewerContext); ?>
+            <div class="display-flex col col-full register register-with-metadata border-bottom" data-guia-id="<?php echo htmlspecialchars($idGuia, ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars($idGuia, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idGuia); ?>">
 
                 <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                     <div class="display-flex row row-fit justify-start gap-y-sm align-center">
@@ -373,9 +376,6 @@ if ($totalPages > 0) {
                         </div>                        
                     </div>
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                        <button type="button" class="btn btn-editar" data-edit-id="<?php echo htmlspecialchars($idGuia, ENT_QUOTES); ?>" title="Editar">
-                            <i class="fi fi-rr-pen-square"></i>
-                        </button>
                         <div class="display-flex row row-fit justify-end gap-y-sm allocate-chips-row allocate-users">
                             <?php
                             $alocados = CartorioAlocacaoChipHelper::ordenarAlocadosPorTipo($row['Alocados'] ?? []);
@@ -466,6 +466,7 @@ if ($totalPages > 0) {
                             }
                             ?>
                         </div>
+                        <?php include __DIR__ . '/_registro_metadata.php'; ?>
                     </div>
                 </div>
 
@@ -663,6 +664,15 @@ if ($totalPages > 0) {
             }
 
             initializeListSectionToggles();
+
+            if (window.App && App.RegistroMetadataList && typeof App.RegistroMetadataList.bind === 'function') {
+                App.RegistroMetadataList.bind({
+                    storageKey: 'cartorio.postReloadToast',
+                    cancelEndpoint: '/api/cartorio-guias/cancel.php',
+                    cancelToastKey: 'cartorio.guias.cancel.success',
+                    cancelFallback: { type: 'success', title: 'Sucesso', message: 'Guia cancelada.' }
+                });
+            }
 
             if (!window.App || !App.CartorioGuiasList || typeof App.CartorioGuiasList.initialize !== 'function') {
                 return;

@@ -73,7 +73,7 @@ final class GabineteMonitoramentoEletronicoRepository
     public function insert(array $row): void
     {
         $sql = sprintf(
-            'INSERT INTO `%s` (`id`, `processo_id`, `numero_processo`, `ano`, `numero_sequencial`, `processo_parte_id`, `reu_nome_exibicao`, `reu_complemento`, `status`, `data_inicio`, `data_encerramento`, `created_at`, `updated_at`) VALUES (:id, :processo_id, :numero_processo, :ano, :numero_sequencial, :processo_parte_id, :reu_nome_exibicao, :reu_complemento, :status, :data_inicio, :data_encerramento, NOW(), NOW())',
+            'INSERT INTO `%s` (`id`, `processo_id`, `numero_processo`, `ano`, `numero_sequencial`, `processo_parte_id`, `reu_nome_exibicao`, `reu_complemento`, `status`, `data_inicio`, `data_encerramento`, `criado_por`, `atualizado_por`, `created_at`, `updated_at`) VALUES (:id, :processo_id, :numero_processo, :ano, :numero_sequencial, :processo_parte_id, :reu_nome_exibicao, :reu_complemento, :status, :data_inicio, :data_encerramento, :criado_por, :atualizado_por, NOW(), NOW())',
             $this->table
         );
         $st = $this->connection->prepare($sql);
@@ -88,6 +88,9 @@ final class GabineteMonitoramentoEletronicoRepository
         $st->bindValue(':status', $row['status']);
         $st->bindValue(':data_inicio', $row['data_inicio'] ?? null);
         $st->bindValue(':data_encerramento', $row['data_encerramento'] ?? null);
+        $cp = $row['criado_por'] ?? null;
+        $st->bindValue(':criado_por', $cp !== null && $cp !== '' ? $cp : null);
+        $st->bindValue(':atualizado_por', $cp !== null && $cp !== '' ? $cp : null);
         $st->execute();
     }
 
@@ -137,11 +140,13 @@ final class GabineteMonitoramentoEletronicoRepository
             $coll,
             implode(', ', array_map(fn (string $s) => $this->connection->quote($s), self::STATUS_ORDER))
         );
-        $join = ' LEFT JOIN `processos` p ON p.`id` = g.`processo_id` LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id` ';
+        require_once __DIR__ . '/../helpers/RegistroMetadataHelper.php';
+        $fromClause = $this->buildFromClause();
+        $auditSelect = RegistroMetadataHelper::sqlSelectAuditoriaExtra('g');
         $sql = sprintf(
-            'SELECT g.`id` AS `IdMon`, g.`numero_processo` AS `Processo`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `ClasseNome`, g.`ano` AS `Ano`, g.`numero_sequencial` AS `NumeroSeq`, g.`reu_nome_exibicao` AS `ReuNome`, g.`status` AS `Status`, g.`data_inicio` AS `DataInicio`, g.`data_encerramento` AS `DataEncerramento`, g.`created_at` AS `Data` FROM `%s` g %s %s ORDER BY %s, g.`created_at` DESC LIMIT :limit OFFSET :offset',
-            $this->table,
-            $join,
+            'SELECT g.`id` AS `IdMon`, g.`numero_processo` AS `Processo`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `ClasseNome`, g.`ano` AS `Ano`, g.`numero_sequencial` AS `NumeroSeq`, g.`reu_nome_exibicao` AS `ReuNome`, g.`status` AS `Status`, g.`data_inicio` AS `DataInicio`, g.`data_encerramento` AS `DataEncerramento`, g.`created_at` AS `Data`%s FROM %s %s ORDER BY %s, g.`created_at` DESC LIMIT :limit OFFSET :offset',
+            $auditSelect,
+            $fromClause,
             $whereClause ? 'WHERE ' . $whereClause : '',
             $orderField
         );
@@ -194,6 +199,17 @@ final class GabineteMonitoramentoEletronicoRepository
         }
 
         return $summary;
+    }
+
+    private function buildFromClause(): string
+    {
+        require_once __DIR__ . '/../helpers/RegistroMetadataHelper.php';
+
+        return sprintf(
+            '`%s` g LEFT JOIN `processos` p ON p.`id` = g.`processo_id` LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id`%s',
+            $this->table,
+            RegistroMetadataHelper::sqlUsuarioAuditoria('g')
+        );
     }
 
     private function buildFilterClause(array $filters, string $alias, bool $includeStatusFilter): array

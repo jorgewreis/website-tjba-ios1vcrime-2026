@@ -148,14 +148,19 @@ final class SalaMidiasTarefasRepository
 
     public function fetchList(array $filters, int $limit, int $offset): array
     {
+        require_once __DIR__ . '/../helpers/RegistroMetadataHelper.php';
         [$where, $params] = $this->buildWhere($filters);
+        $auditJoin = RegistroMetadataHelper::sqlUsuarioAuditoria('t');
+        $auditSelect = RegistroMetadataHelper::sqlSelectAuditoriaEm('t');
         $sql = sprintf(
-            'SELECT t.*
-             FROM `%s` t
+            'SELECT t.*%s
+             FROM `%s` t%s
              %s
              ORDER BY t.`data_audiencia` DESC, t.`criado_em` DESC
              LIMIT :limit OFFSET :offset',
+            $auditSelect,
             $this->table,
+            $auditJoin,
             $where !== '' ? 'WHERE ' . $where : ''
         );
         $statement = $this->connection->prepare($sql);

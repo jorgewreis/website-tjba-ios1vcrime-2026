@@ -30,16 +30,17 @@ final class MedidasProtetivasRepository
             implode(', ', array_map(fn (string $status): string => $this->connection->quote($status), self::STATUS_ORDER))
         );
 
+        require_once __DIR__ . '/../helpers/RegistroMetadataHelper.php';
+        $fromClause = $this->buildFromClause();
+        $auditSelect = RegistroMetadataHelper::sqlSelectAuditoriaExtra('mp');
         $sql = sprintf(
-            'SELECT mp.`id` AS `IdMedida`, COALESCE(p.`numero_processo`, \'\') AS `Processo`, COALESCE(cl.`nome`, \'\') AS `Classe`, COALESCE(pr.`nome_completo`, \'\') AS `ReuNome`, mp.`status` AS `Status`, mp.`cejusc_tarefa_id` AS `CejuscTarefaId`, mp.`created_at` AS `Data`, mp.`observacoes`
-             FROM `%s` mp
-             LEFT JOIN `processos` p ON p.`id` = mp.`processo_id`
-             LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id`
-             LEFT JOIN `partes` pr ON pr.`id` = mp.`parte_reu_id`
+            'SELECT mp.`id` AS `IdMedida`, COALESCE(p.`numero_processo`, \'\') AS `Processo`, COALESCE(cl.`nome`, \'\') AS `Classe`, COALESCE(pr.`nome_completo`, \'\') AS `ReuNome`, mp.`status` AS `Status`, mp.`cejusc_tarefa_id` AS `CejuscTarefaId`, mp.`created_at` AS `Data`, mp.`observacoes`%s
+             FROM %s
              %s
              ORDER BY %s, mp.`created_at` DESC
              LIMIT :limit OFFSET :offset',
-            $this->table,
+            $auditSelect,
+            $fromClause,
             $whereClause ? 'WHERE ' . $whereClause : '',
             $orderField
         );
@@ -58,12 +59,10 @@ final class MedidasProtetivasRepository
     public function count(array $filters): int
     {
         [$whereClause, $params] = $this->buildFilterClause($filters, 'mp', true);
+        $fromClause = $this->buildFromClause();
         $sql = sprintf(
-            'SELECT COUNT(*) AS total
-             FROM `%s` mp
-             LEFT JOIN `processos` p ON p.`id` = mp.`processo_id`
-             %s',
-            $this->table,
+            'SELECT COUNT(*) AS total FROM %s %s',
+            $fromClause,
             $whereClause ? 'WHERE ' . $whereClause : ''
         );
         $statement = $this->connection->prepare($sql);
@@ -78,13 +77,10 @@ final class MedidasProtetivasRepository
     public function countByStatus(array $filters): array
     {
         [$whereClause, $params] = $this->buildFilterClause($filters, 'mp', false);
+        $fromClause = $this->buildFromClause();
         $sql = sprintf(
-            'SELECT mp.`status` AS `Status`, COUNT(*) AS total
-             FROM `%s` mp
-             LEFT JOIN `processos` p ON p.`id` = mp.`processo_id`
-             %s
-             GROUP BY mp.`status`',
-            $this->table,
+            'SELECT mp.`status` AS `Status`, COUNT(*) AS total FROM %s %s GROUP BY mp.`status`',
+            $fromClause,
             $whereClause ? 'WHERE ' . $whereClause : ''
         );
         $statement = $this->connection->prepare($sql);
@@ -139,7 +135,7 @@ final class MedidasProtetivasRepository
 
         $statement = $this->connection->prepare(
             sprintf(
-                'INSERT INTO `%s` (`id`, `processo_id`, `parte_reu_id`, `cejusc_tarefa_id`, `status`, `observacoes`, `created_at`, `updated_at`) VALUES (:id, :processo_id, :parte_reu_id, :cejusc_tarefa_id, :status, :observacoes, NOW(), NOW())',
+                'INSERT INTO `%s` (`id`, `processo_id`, `parte_reu_id`, `cejusc_tarefa_id`, `status`, `observacoes`, `criado_por`, `atualizado_por`, `created_at`, `updated_at`) VALUES (:id, :processo_id, :parte_reu_id, :cejusc_tarefa_id, :status, :observacoes, :criado_por, :atualizado_por, NOW(), NOW())',
                 $this->table
             )
         );
@@ -149,6 +145,9 @@ final class MedidasProtetivasRepository
         $statement->bindValue(':cejusc_tarefa_id', $row['cejusc_tarefa_id'] ?? null);
         $statement->bindValue(':status', $row['status']);
         $statement->bindValue(':observacoes', $row['observacoes'] ?? null);
+        $cp = $row['criado_por'] ?? null;
+        $statement->bindValue(':criado_por', $cp !== null && $cp !== '' ? $cp : null);
+        $statement->bindValue(':atualizado_por', $cp !== null && $cp !== '' ? $cp : null);
         $statement->execute();
 
         return (string) $row['id'];
@@ -196,6 +195,20 @@ final class MedidasProtetivasRepository
     public function getTableName(): string
     {
         return $this->table;
+    }
+
+    private function buildFromClause(): string
+    {
+        require_once __DIR__ . '/../helpers/RegistroMetadataHelper.php';
+
+        return sprintf(
+            '`%s` mp'
+            . ' LEFT JOIN `processos` p ON p.`id` = mp.`processo_id`'
+            . ' LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id`'
+            . ' LEFT JOIN `partes` pr ON pr.`id` = mp.`parte_reu_id`%s',
+            $this->table,
+            RegistroMetadataHelper::sqlUsuarioAuditoria('mp')
+        );
     }
 
     private function buildFilterClause(array $filters, string $alias, bool $excludeConcluidaCanceladaQuandoStatusVazio): array

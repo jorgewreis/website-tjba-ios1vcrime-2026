@@ -42,11 +42,13 @@ final class EditaisRepository
             )
         );
 
-        $joinClause = ' LEFT JOIN `processos` p ON p.`id` = e.`processo_id` LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id` ';
+        require_once __DIR__ . '/../helpers/RegistroMetadataHelper.php';
+        $fromClause = $this->buildFromClause();
+        $auditSelect = RegistroMetadataHelper::sqlSelectAuditoriaExtra('e');
         $sql = sprintf(
-            'SELECT e.`id` AS `IdEdital`, COALESCE(p.`numero_processo`, \'\') AS `Processo`, COALESCE(cl.`nome`, \'\') AS `Classe`, e.`tipo_edital` AS `TipoEdital`, e.`prazo_dias` AS `PrazoDias`, e.`data_publicacao` AS `DataPublicacao`, e.`data_inicio_contagem` AS `DataInicioContagem`, e.`data_decurso_prazo` AS `DataDecursoPrazo`, e.`status` AS `Status`, e.`created_at` AS `Data`, e.`observacoes` FROM `%s` e %s %s ORDER BY %s, e.`created_at` DESC LIMIT :limit OFFSET :offset',
-            $this->table,
-            $joinClause,
+            'SELECT e.`id` AS `IdEdital`, COALESCE(p.`numero_processo`, \'\') AS `Processo`, COALESCE(cl.`nome`, \'\') AS `Classe`, e.`tipo_edital` AS `TipoEdital`, e.`prazo_dias` AS `PrazoDias`, e.`data_publicacao` AS `DataPublicacao`, e.`data_inicio_contagem` AS `DataInicioContagem`, e.`data_decurso_prazo` AS `DataDecursoPrazo`, e.`status` AS `Status`, e.`created_at` AS `Data`, e.`observacoes`%s FROM %s %s ORDER BY %s, e.`created_at` DESC LIMIT :limit OFFSET :offset',
+            $auditSelect,
+            $fromClause,
             $whereClause ? 'WHERE ' . $whereClause : '',
             $orderField
         );
@@ -65,8 +67,8 @@ final class EditaisRepository
     public function count(array $filters): int
     {
         [$whereClause, $params] = $this->buildFilterClause($filters, 'e', true);
-        $joinClause = ' LEFT JOIN `processos` p ON p.`id` = e.`processo_id` ';
-        $sql = sprintf('SELECT COUNT(*) AS total FROM `%s` e %s %s', $this->table, $joinClause, $whereClause ? 'WHERE ' . $whereClause : '');
+        $fromClause = $this->buildFromClause();
+        $sql = sprintf('SELECT COUNT(*) AS total FROM %s %s', $fromClause, $whereClause ? 'WHERE ' . $whereClause : '');
         $statement = $this->connection->prepare($sql);
         foreach ($params as $name => $value) {
             $statement->bindValue($name, $value);
@@ -79,11 +81,10 @@ final class EditaisRepository
     public function countByStatus(array $filters): array
     {
         [$whereClause, $params] = $this->buildFilterClause($filters, 'e', false);
-        $joinClause = ' LEFT JOIN `processos` p ON p.`id` = e.`processo_id` ';
+        $fromClause = $this->buildFromClause();
         $sql = sprintf(
-            'SELECT e.`status` AS `Status`, COUNT(*) AS total FROM `%s` e %s %s GROUP BY e.`status`',
-            $this->table,
-            $joinClause,
+            'SELECT e.`status` AS `Status`, COUNT(*) AS total FROM %s %s GROUP BY e.`status`',
+            $fromClause,
             $whereClause ? 'WHERE ' . $whereClause : ''
         );
         $statement = $this->connection->prepare($sql);
@@ -115,7 +116,7 @@ final class EditaisRepository
 
         $statement = $this->connection->prepare(
             sprintf(
-                'INSERT INTO `%s` (`id`, `processo_id`, `status`, `tipo_edital`, `prazo_dias`, `data_publicacao`, `data_inicio_contagem`, `data_decurso_prazo`, `observacoes`, `created_at`, `updated_at`) VALUES (:id, :processo_id, :status, :tipo_edital, :prazo_dias, :data_publicacao, :data_inicio_contagem, :data_decurso_prazo, :observacoes, NOW(), NOW())',
+                'INSERT INTO `%s` (`id`, `processo_id`, `status`, `tipo_edital`, `prazo_dias`, `data_publicacao`, `data_inicio_contagem`, `data_decurso_prazo`, `observacoes`, `criado_por`, `atualizado_por`, `created_at`, `updated_at`) VALUES (:id, :processo_id, :status, :tipo_edital, :prazo_dias, :data_publicacao, :data_inicio_contagem, :data_decurso_prazo, :observacoes, :criado_por, :atualizado_por, NOW(), NOW())',
                 $this->table
             )
         );
@@ -128,6 +129,9 @@ final class EditaisRepository
         $statement->bindValue(':data_inicio_contagem', $row['data_inicio_contagem'] ?? null);
         $statement->bindValue(':data_decurso_prazo', $row['data_decurso_prazo'] ?? null);
         $statement->bindValue(':observacoes', $row['observacoes'] ?? null);
+        $cp = $row['criado_por'] ?? null;
+        $statement->bindValue(':criado_por', $cp !== null && $cp !== '' ? $cp : null);
+        $statement->bindValue(':atualizado_por', $cp !== null && $cp !== '' ? $cp : null);
         $statement->execute();
 
         return (string) $row['id'];
@@ -190,6 +194,17 @@ final class EditaisRepository
         $result = $statement->fetch(PDO::FETCH_ASSOC);
 
         return $result === false ? null : $result;
+    }
+
+    private function buildFromClause(): string
+    {
+        require_once __DIR__ . '/../helpers/RegistroMetadataHelper.php';
+
+        return sprintf(
+            '`%s` e LEFT JOIN `processos` p ON p.`id` = e.`processo_id` LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id`%s',
+            $this->table,
+            RegistroMetadataHelper::sqlUsuarioAuditoria('e')
+        );
     }
 
     /**

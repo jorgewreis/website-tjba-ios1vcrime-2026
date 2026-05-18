@@ -148,13 +148,15 @@ final class SalaAudienciasAtaRepository
     {
         $diasOcultarListagemSemAtaDisponivel = max(0, $diasOcultarListagemSemAtaDisponivel);
         $sql = sprintf(
-            'SELECT a.`id_pauta`, a.`processo` AS `processo_id`, a.`tipo_audiencia`, a.`data_audiencia`, a.`hora_audiencia`, a.`data_hora_inicio_efetivo`, a.`localizacao`, a.`status`,
+            'SELECT a.`id_pauta`, a.`id_pauta` AS `IdPauta`, a.`processo` AS `processo_id`, a.`tipo_audiencia`, a.`data_audiencia`, a.`hora_audiencia`, a.`data_hora_inicio_efetivo`, a.`localizacao`, a.`status`,
                     p.`numero_processo`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `classe_nome`,
-                    ata.`id_ata`, ata.`expires_at`, ata.`nome_original`, ata.`uploaded_at`, ata.`arquivo_relativo`
+                    ata.`id_ata`, ata.`expires_at`, ata.`nome_original`, ata.`uploaded_at` AS `Data`, ata.`arquivo_relativo`,
+                    TRIM(CONCAT(COALESCE(ucr_up.`nome`, \'\'), \' \', COALESCE(ucr_up.`sobrenome`, \'\'))) AS `CriadoPorNome`
              FROM `sala_audiencias_pauta` a
              LEFT JOIN `processos` p ON p.`id` = a.`processo`
              LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id`
              LEFT JOIN `%s` ata ON ata.`pauta` = a.`id_pauta`
+             LEFT JOIN `usuarios` ucr_up ON ucr_up.`id_usuario` = ata.`uploaded_by`
              WHERE a.`ativo` = 1 AND a.`status` IN (\'realizada\', \'finalizada\')
              AND NOT (
                 a.`data_audiencia` < DATE_SUB(CURDATE(), INTERVAL %d DAY)

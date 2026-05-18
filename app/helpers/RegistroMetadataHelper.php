@@ -1,0 +1,362 @@
+<?php
+declare(strict_types=1);
+
+/**
+ * Monta dados do bloco `container-data-create` nas listagens internas.
+ */
+final class RegistroMetadataHelper
+{
+    /** @var list<string> */
+    private const TERMINAL_STATUSES = [
+        'cancelada',
+        'cancelado',
+        'concluída',
+        'concluida',
+        'finalizada',
+    ];
+
+    /** @var array<string, array<string, mixed>> */
+    private const MODULES = [
+        'cartas_expedidas' => [
+            'id_keys' => ['IdCarta', 'id'],
+            'status_keys' => ['Status', 'status'],
+            'data_keys' => ['Data', 'created_at'],
+            'updated_keys' => ['DataAtualizacao', 'updated_at'],
+            'criador_keys' => ['CriadoPorNome'],
+            'edit_page' => 'cartasexpedidasedit',
+            'cancel_endpoint' => '/api/cartorio-cartas-expedidas/cancel.php',
+            'cancel_toast_key' => 'cartorio.cartas_expedidas.cancel.success',
+            'cancel_label' => 'Cancelar carta expedida',
+        ],
+        'cartas_recebidas' => [
+            'id_keys' => ['IdCarta', 'id'],
+            'status_keys' => ['Status', 'status'],
+            'data_keys' => ['Data', 'created_at'],
+            'updated_keys' => ['DataAtualizacao', 'updated_at'],
+            'criador_keys' => ['CriadoPorNome'],
+            'edit_page' => 'cartasrecebidasedit',
+            'cancel_endpoint' => '/api/cartorio-cartas-recebidas/cancel.php',
+            'cancel_toast_key' => 'cartorio.cartas_recebidas.cancel.success',
+            'cancel_label' => 'Cancelar carta recebida',
+        ],
+        'cejusc' => [
+            'id_keys' => ['IdCarta', 'IdCejusc', 'id'],
+            'status_keys' => ['Status', 'status'],
+            'data_keys' => ['Data', 'created_at'],
+            'updated_keys' => ['DataAtualizacao', 'updated_at'],
+            'criador_keys' => ['CriadoPorNome'],
+            'edit_page' => 'cejuscedit',
+            'cancel_endpoint' => '/api/cartorio-cejusc/cancel.php',
+            'cancel_toast_key' => 'cartorio.cejusc.cancel.success',
+            'cancel_label' => 'Cancelar tarefa CEJUSC',
+        ],
+        'ceapa' => [
+            'id_keys' => ['IdCeapa', 'id'],
+            'status_keys' => ['StatusCumprimento', 'Status', 'status'],
+            'data_keys' => ['DataCadastro', 'Data', 'created_at'],
+            'updated_keys' => ['DataAtualizacao', 'updated_at'],
+            'criador_keys' => ['CriadoPorNome'],
+            'edit_page' => 'ceapaedit',
+            'cancel_endpoint' => '/api/cartorio-ceapa/cancel.php',
+            'cancel_toast_key' => 'cartorio.ceapa.cancel.success',
+            'cancel_label' => 'Cancelar tarefa CEAPA',
+            'cancel_statuses' => ['cancelado'],
+            'terminal_extra' => ['finalizada'],
+        ],
+        'editais' => [
+            'id_keys' => ['IdEdital', 'id'],
+            'status_keys' => ['Status', 'status'],
+            'data_keys' => ['Data', 'created_at'],
+            'updated_keys' => ['DataAtualizacao', 'updated_at'],
+            'criador_keys' => ['CriadoPorNome'],
+            'edit_page' => 'editaisedit',
+            'cancel_endpoint' => '/api/cartorio-editais/cancel.php',
+            'cancel_toast_key' => 'cartorio.editais.cancel.success',
+            'cancel_label' => 'Cancelar edital',
+        ],
+        'guias' => [
+            'id_keys' => ['IdGuia', 'id'],
+            'status_keys' => ['Status', 'status'],
+            'data_keys' => ['Data', 'created_at'],
+            'updated_keys' => ['DataAtualizacao', 'updated_at'],
+            'criador_keys' => ['CriadoPorNome'],
+            'edit_page' => 'guiasedit',
+            'cancel_endpoint' => '/api/cartorio-guias/cancel.php',
+            'cancel_toast_key' => 'cartorio.guias.cancel.success',
+            'cancel_label' => 'Cancelar guia',
+        ],
+        'medidas_protetivas' => [
+            'id_keys' => ['IdMedida', 'id'],
+            'status_keys' => ['Status', 'status'],
+            'data_keys' => ['Data', 'created_at'],
+            'updated_keys' => ['DataAtualizacao', 'updated_at'],
+            'criador_keys' => ['CriadoPorNome'],
+            'edit_page' => 'medidasprotetivasedit',
+            'cancel_endpoint' => '/api/cartorio-medidas-protetivas/cancel.php',
+            'cancel_toast_key' => 'cartorio.medidas_protetivas.cancel.success',
+            'cancel_label' => 'Cancelar medida protetiva',
+        ],
+        'gabinete_monitoramento' => [
+            'id_keys' => ['IdMon', 'id'],
+            'status_keys' => ['Status', 'status'],
+            'data_keys' => ['Data', 'created_at'],
+            'updated_keys' => ['DataAtualizacao', 'updated_at'],
+            'criador_keys' => ['CriadoPorNome'],
+            'edit_page' => 'monitoramentogabineteedit',
+            'cancel_endpoint' => '/api/gabinete-monitoramento-eletronico/cancel.php',
+            'cancel_toast_key' => 'gabinete.monitoramento.cancel.success',
+            'cancel_label' => 'Cancelar monitoramento',
+            'terminal_extra' => ['finalizada'],
+        ],
+        'sala_pauta' => [
+            'id_keys' => ['id_pauta', 'IdPauta'],
+            'status_keys' => ['status', 'Status'],
+            'data_keys' => ['Data', 'data_hora_designacao', 'created_at'],
+            'updated_keys' => ['DataAtualizacao', 'updated_at'],
+            'criador_keys' => ['CriadoPorNome'],
+            'edit_page' => 'salapautaedit',
+            'cancel_endpoint' => '/api/sala-audiencias-pauta/cancel.php',
+            'cancel_toast_key' => 'sala.pauta.cancel.success',
+            'cancel_label' => 'Cancelar audiência',
+        ],
+        'sala_midias' => [
+            'id_keys' => ['id', 'IdMidia'],
+            'status_keys' => ['status', 'Status'],
+            'data_keys' => ['Data', 'criado_em', 'created_at'],
+            'updated_keys' => ['DataAtualizacao', 'atualizado_em', 'updated_at'],
+            'criador_keys' => ['CriadoPorNome'],
+            'edit_page' => 'salamidiasedit',
+            'cancel_endpoint' => '',
+            'cancel_toast_key' => '',
+            'cancel_label' => '',
+            'show_cancel' => false,
+        ],
+        'sala_atas' => [
+            'id_keys' => ['id_pauta', 'id_ata'],
+            'status_keys' => ['status', 'Status'],
+            'data_keys' => ['uploaded_at', 'Data'],
+            'updated_keys' => [],
+            'criador_keys' => ['CriadoPorNome', 'uploaded_by_nome'],
+            'edit_page' => '',
+            'cancel_endpoint' => '',
+            'user_prefix' => 'Enviado por',
+            'show_edit' => false,
+            'show_cancel' => false,
+        ],
+    ];
+
+    /**
+     * @return array{usuario_id: string, perfis: list<string>}
+     */
+    public static function viewerContextFromSession(): array
+    {
+        require_once __DIR__ . '/OficioRegistroMetadataHelper.php';
+
+        return OficioRegistroMetadataHelper::viewerContextFromSession();
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     * @param array{usuario_id?: string, perfis?: list<string>}|null $viewerContext
+     * @return array<string, mixed>
+     */
+    public static function fromListRow(array $row, string $modulo, ?array $viewerContext = null): array
+    {
+        $modulo = strtolower(trim($modulo));
+        if ($modulo === 'cartorio_oficios') {
+            require_once __DIR__ . '/OficioRegistroMetadataHelper.php';
+
+            return OficioRegistroMetadataHelper::fromListRow($row, 'cartorio', $viewerContext);
+        }
+        if ($modulo === 'gabinete_oficios') {
+            require_once __DIR__ . '/OficioRegistroMetadataHelper.php';
+
+            return OficioRegistroMetadataHelper::fromListRow($row, 'gabinete', $viewerContext);
+        }
+
+        $config = self::MODULES[$modulo] ?? null;
+        if ($config === null) {
+            return self::emptyPayload();
+        }
+
+        $status = strtolower(trim(self::pick($row, $config['status_keys'] ?? ['Status', 'status'])));
+        $id = trim(self::pick($row, $config['id_keys'] ?? ['id']));
+        $criador = trim(self::pick($row, $config['criador_keys'] ?? ['CriadoPorNome']));
+        $createdRaw = trim(self::pick($row, $config['data_keys'] ?? ['Data', 'created_at']));
+        $updatedRaw = trim(self::pick($row, $config['updated_keys'] ?? ['DataAtualizacao', 'updated_at']));
+
+        $cancelStatuses = $config['cancel_statuses'] ?? ['cancelada', 'cancelado'];
+        $terminalStatuses = array_unique(array_merge(
+            self::TERMINAL_STATUSES,
+            is_array($config['terminal_extra'] ?? null) ? $config['terminal_extra'] : []
+        ));
+
+        $dataEventoClasse = '';
+        $dataEventoTexto = '';
+        if (in_array($status, $cancelStatuses, true)) {
+            $dataEventoClasse = 'canceled';
+            $ref = $updatedRaw !== '' ? $updatedRaw : $createdRaw;
+            $dataEventoTexto = 'Cancelado em ' . self::formatarDataHora($ref);
+        } elseif ($updatedRaw !== '' && $createdRaw !== '' && self::isUpdatedAfterCreated($createdRaw, $updatedRaw)) {
+            $dataEventoClasse = 'updated';
+            $dataEventoTexto = 'Atualizado em ' . self::formatarDataHora($updatedRaw);
+        }
+
+        $showEdit = !array_key_exists('show_edit', $config)
+            ? ($id !== '' && ($config['edit_page'] ?? '') !== '' && !in_array($status, $terminalStatuses, true))
+            : (bool) $config['show_edit'];
+        $showCancel = !array_key_exists('show_cancel', $config)
+            ? self::podeCancelarPadrao($status, $terminalStatuses, $cancelStatuses, trim((string) ($config['cancel_endpoint'] ?? '')))
+            : (bool) $config['show_cancel'];
+
+        $editHref = '';
+        if ($showEdit && $id !== '' && ($config['edit_page'] ?? '') !== '') {
+            $editHref = '/frame.php?page=' . rawurlencode((string) $config['edit_page']) . '&id=' . rawurlencode($id);
+        }
+
+        $userPrefix = trim((string) ($config['user_prefix'] ?? 'Cadastrado por'));
+
+        return [
+            'criador_nome' => $criador !== '' ? $criador : '—',
+            'user_prefix' => $userPrefix,
+            'data_cadastro_texto' => $createdRaw !== '' ? 'Em ' . self::formatarDataHora($createdRaw) : '',
+            'data_evento_classe' => $dataEventoClasse,
+            'data_evento_texto' => $dataEventoTexto,
+            'id' => $id,
+            'show_edit' => $showEdit,
+            'edit_href' => $editHref,
+            'show_cancel' => $showCancel,
+            'cancel_endpoint' => trim((string) ($config['cancel_endpoint'] ?? '')),
+            'cancel_toast_key' => trim((string) ($config['cancel_toast_key'] ?? '')),
+            'cancel_label' => trim((string) ($config['cancel_label'] ?? 'Cancelar registro')),
+            'edit_label' => trim((string) ($config['edit_label'] ?? 'Editar registro')),
+        ];
+    }
+
+    public static function formatarDataHora(?string $mysqlDt): string
+    {
+        require_once __DIR__ . '/OficioRegistroMetadataHelper.php';
+
+        return OficioRegistroMetadataHelper::formatarDataHora($mysqlDt);
+    }
+
+    public static function sqlUsuarioAuditoria(string $alias, string $criadoPorCol = 'criado_por', string $atualizadoPorCol = 'atualizado_por'): string
+    {
+        $a = preg_replace('/[^a-zA-Z0-9_]/', '', $alias) ?: 't';
+
+        return sprintf(
+            ' LEFT JOIN `usuarios` ucr_%1$s ON ucr_%1$s.`id_usuario` = %2$s.`%3$s`'
+            . ' LEFT JOIN `usuarios` ued_%1$s ON ued_%1$s.`id_usuario` = %2$s.`%4$s`',
+            $a,
+            $a,
+            $criadoPorCol,
+            $atualizadoPorCol
+        );
+    }
+
+    public static function sqlSelectAuditoria(string $alias, string $criadoPorCol = 'criado_por'): string
+    {
+        $a = preg_replace('/[^a-zA-Z0-9_]/', '', $alias) ?: 't';
+
+        return sprintf(
+            ', %1$s.`created_at` AS `Data`, %1$s.`updated_at` AS `DataAtualizacao`, %1$s.`%2$s` AS `CriadoPor`,'
+            . ' TRIM(CONCAT(COALESCE(ucr_%3$s.`nome`, \'\'), \' \', COALESCE(ucr_%3$s.`sobrenome`, \'\'))) AS `CriadoPorNome`',
+            $a,
+            $criadoPorCol,
+            $a
+        );
+    }
+
+    /** Campos extras quando `Data` já está no SELECT. */
+    public static function sqlSelectAuditoriaExtra(string $alias, string $criadoPorCol = 'criado_por'): string
+    {
+        $a = preg_replace('/[^a-zA-Z0-9_]/', '', $alias) ?: 't';
+
+        return sprintf(
+            ', %1$s.`updated_at` AS `DataAtualizacao`,'
+            . ' TRIM(CONCAT(COALESCE(ucr_%2$s.`nome`, \'\'), \' \', COALESCE(ucr_%2$s.`sobrenome`, \'\'))) AS `CriadoPorNome`',
+            $a,
+            $a
+        );
+    }
+
+    /** Auditoria com `criado_em` / `atualizado_em` (sala mídias). */
+    public static function sqlSelectAuditoriaEm(string $alias, string $criadoPorCol = 'criado_por'): string
+    {
+        $a = preg_replace('/[^a-zA-Z0-9_]/', '', $alias) ?: 't';
+
+        return sprintf(
+            ', %1$s.`criado_em` AS `Data`, %1$s.`atualizado_em` AS `DataAtualizacao`,'
+            . ' TRIM(CONCAT(COALESCE(ucr_%2$s.`nome`, \'\'), \' \', COALESCE(ucr_%2$s.`sobrenome`, \'\'))) AS `CriadoPorNome`',
+            $a,
+            $a
+        );
+    }
+
+    /**
+     * @param list<string> $keys
+     */
+    private static function pick(array $row, array $keys): string
+    {
+        foreach ($keys as $key) {
+            if (!array_key_exists($key, $row)) {
+                continue;
+            }
+            $value = trim((string) $row[$key]);
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * @param list<string> $terminalStatuses
+     * @param list<string> $cancelStatuses
+     */
+    private static function podeCancelarPadrao(string $status, array $terminalStatuses, array $cancelStatuses, string $cancelEndpoint): bool
+    {
+        if ($cancelEndpoint === '') {
+            return false;
+        }
+        if ($status === '' || in_array($status, $cancelStatuses, true)) {
+            return false;
+        }
+
+        return !in_array($status, $terminalStatuses, true);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private static function emptyPayload(): array
+    {
+        return [
+            'criador_nome' => '—',
+            'user_prefix' => 'Cadastrado por',
+            'data_cadastro_texto' => '',
+            'data_evento_classe' => '',
+            'data_evento_texto' => '',
+            'id' => '',
+            'show_edit' => false,
+            'edit_href' => '',
+            'show_cancel' => false,
+            'cancel_endpoint' => '',
+            'cancel_toast_key' => '',
+            'cancel_label' => 'Cancelar registro',
+            'edit_label' => 'Editar registro',
+        ];
+    }
+
+    private static function isUpdatedAfterCreated(string $createdRaw, string $updatedRaw): bool
+    {
+        $created = strtotime($createdRaw);
+        $updated = strtotime($updatedRaw);
+        if ($created === false || $updated === false) {
+            return $updatedRaw !== '' && $updatedRaw !== $createdRaw;
+        }
+
+        return $updated > $created + 1;
+    }
+}

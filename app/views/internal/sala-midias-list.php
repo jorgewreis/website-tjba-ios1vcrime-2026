@@ -8,6 +8,7 @@ if (function_exists('mb_internal_encoding')) {
 
 require_once __DIR__ . '/../../services/SalaMidiasService.php';
 require_once __DIR__ . '/../../helpers/CartorioAlocacaoChipHelper.php';
+require_once __DIR__ . '/../../helpers/RegistroMetadataHelper.php';
 
 $connection = Conection::getInstance()->getConnection();
 $service = new SalaMidiasService($connection);
@@ -37,6 +38,7 @@ $list = $service->list([
     'data_audiencia' => $dataAudiencia,
 ], $itemsPerPage, $offset);
 $rows = $list['rows'] ?? [];
+$registroListViewerContext = RegistroMetadataHelper::viewerContextFromSession();
 $total = (int) ($list['total'] ?? 0);
 $statusCounts = array_merge(
     array_fill_keys(['pendente', 'em_andamento', 'concluida', 'cancelada'], 0),
@@ -329,7 +331,8 @@ $buttonTitleByTipo = [
                     }
                 }
                 ?>
-                <div class="display-flex col col-full register border-bottom" data-midia-id="<?php echo htmlspecialchars($id, ENT_QUOTES, 'UTF-8'); ?>" data-qtd-midias="<?php echo (int) $qtdMidiasInput; ?>" id="<?php echo htmlspecialchars($id, ENT_QUOTES, 'UTF-8'); ?>">
+                <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'sala_midias', $registroListViewerContext); ?>
+                <div class="display-flex col col-full register register-with-metadata border-bottom" data-midia-id="<?php echo htmlspecialchars($id, ENT_QUOTES, 'UTF-8'); ?>" data-registro-id="<?php echo htmlspecialchars($id, ENT_QUOTES, 'UTF-8'); ?>" data-qtd-midias="<?php echo (int) $qtdMidiasInput; ?>" id="<?php echo htmlspecialchars($id, ENT_QUOTES, 'UTF-8'); ?>">
                     <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                         <div class="display-flex row row-fit justify-start gap-y-sm align-center">
                             <div class="col">
@@ -349,9 +352,6 @@ $buttonTitleByTipo = [
                             </div>
                         </div>
                         <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                            <button type="button" class="btn btn-editar" title="Editar tarefa de mídia" aria-label="Editar tarefa de mídia" data-nav-href="/frame.php?page=salamidiasedit&id=<?php echo urlencode($id); ?>">
-                                <i class="fi fi-rr-pen-square"></i>
-                            </button>
                             <div class="display-flex row row-fit justify-end gap-y-sm allocate-chips-row allocate-users">
                                 <?php foreach ($alocados as $alocado): ?>
                                     <?php
@@ -409,6 +409,7 @@ $buttonTitleByTipo = [
                                     </div>
                                 <?php endif; ?>
                             </div>
+                            <?php include __DIR__ . '/_registro_metadata.php'; ?>
                         </div>
                     </div>
                     <?php if (!$tarefaConcluida): ?>
@@ -518,6 +519,13 @@ window.SALA_MIDIAS_LIST = {
         items_per_page: <?php echo (int) $itemsPerPage; ?>
     }
 };
+</script>
+<script>
+(function () {
+    if (window.App && App.RegistroMetadataList && typeof App.RegistroMetadataList.bind === 'function') {
+        App.RegistroMetadataList.bind({ storageKey: 'salamidias.postReloadToast' });
+    }
+})();
 </script>
 <script src="/assets/js/modules/audiencias/midias-list.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/midias-list.js') ?: time(); ?>"></script>
 <?php include __DIR__ . '/_copy_process_script.php'; ?>

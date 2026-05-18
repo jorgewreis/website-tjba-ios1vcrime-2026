@@ -255,9 +255,12 @@ final class CartasExpedidasService
             'observacoes' => trim((string) ($payload['observacoes'] ?? '')),
         ];
 
-        $this->repository->insert($row);
-
         $usuarioCadastroId = trim((string) ($payload['usuario_cadastro_id'] ?? ''));
+        if ($usuarioCadastroId !== '') {
+            $row['criado_por'] = $usuarioCadastroId;
+        }
+
+        $this->repository->insert($row);
 
         // 1) Quem cadastrou a carta é alocado com tipo 'all' (usuário principal da tarefa). CHEFIA não é autoalocado.
         if ($usuarioCadastroId !== ''

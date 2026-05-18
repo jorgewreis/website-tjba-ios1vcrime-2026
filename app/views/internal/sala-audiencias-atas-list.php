@@ -8,8 +8,10 @@ if (function_exists('mb_internal_encoding')) {
 
 require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../services/SalaAudienciasAtaService.php';
+require_once __DIR__ . '/../../helpers/RegistroMetadataHelper.php';
 
 $service = new SalaAudienciasAtaService(Conection::getInstance()->getConnection());
+$registroListViewerContext = RegistroMetadataHelper::viewerContextFromSession();
 $routePage = trim((string) ($_GET['page'] ?? 'salaata'));
 $allowedPerPage = [10, 25, 50, 100];
 $itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 10;
@@ -209,7 +211,8 @@ function sala_audiencias_ata_label_prazo_download(string $expiresAt): string
             $inicioEfetivoTs = $inicioEfetivoRaw !== '' ? strtotime($inicioEfetivoRaw) : false;
             $horaExibicao = $inicioEfetivoTs !== false ? date('H:i', $inicioEfetivoTs) : substr((string) ($row['hora_audiencia'] ?? ''), 0, 5);
             ?>
-        <div class="display-flex col col-full register border-bottom" data-pauta="<?php echo $idPauta; ?>">
+        <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'sala_atas', $registroListViewerContext); ?>
+        <div class="display-flex col col-full register register-with-metadata border-bottom" data-pauta="<?php echo $idPauta; ?>" data-registro-id="<?php echo $idPauta; ?>">
             <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center flex-wrap gap-y-sm">
                 <div class="display-flex row row-fit justify-start gap-y-sm align-center flex-wrap">
                     <div class="col width-300">
@@ -235,6 +238,7 @@ function sala_audiencias_ata_label_prazo_download(string $expiresAt): string
                     </div>
                 </div>
                 <div class="display-flex row row-fit justify-end gap-y-sm align-center">
+                    <?php include __DIR__ . '/_registro_metadata.php'; ?>
                     <?php if (!$ataRetencaoEncerrada): ?>
                     <input type="file" class="ata-file-input visually-hidden" accept="application/pdf,.pdf" aria-label="Selecionar PDF da ata">
                     <button type="button" class="btn btn-primary btn-upload-ata" data-pauta="<?php echo $idPauta; ?>"><?php echo $temAta ? 'Substituir PDF' : 'Enviar PDF'; ?></button>

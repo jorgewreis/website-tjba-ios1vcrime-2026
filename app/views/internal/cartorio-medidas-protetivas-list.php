@@ -9,6 +9,7 @@ if (function_exists('mb_internal_encoding')) {
 require_once __DIR__ . '/../../services/MedidasProtetivasService.php';
 require_once __DIR__ . '/../../helpers/CartorioAlocacaoChipHelper.php';
 require_once __DIR__ . '/../../helpers/ProcessoBlocoListagemHelper.php';
+require_once __DIR__ . '/../../helpers/RegistroMetadataHelper.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -54,6 +55,7 @@ try {
 
 $rows = $listResult['rows'] ?? [];
 $rows = ProcessoBlocoListagemHelper::appendBlocoData($connection, $rows);
+$registroListViewerContext = RegistroMetadataHelper::viewerContextFromSession();
 $totalDocuments = (int) ($listResult['total'] ?? 0);
 $totalPages = $totalDocuments > 0 ? (int) ceil($totalDocuments / $itemsPerPage) : 0;
 if ($totalDocuments === 0) {
@@ -298,7 +300,8 @@ if ($totalPages > 0) {
                 }
                 $mostrarBarraStatus = !in_array($st, ['concluída', 'cancelada'], true);
             ?>
-            <div class="display-flex col col-full register border-bottom" data-medida-id="<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>">
+            <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'medidas_protetivas', $registroListViewerContext); ?>
+            <div class="display-flex col col-full register register-with-metadata border-bottom" data-medida-id="<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>">
 
                 <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm align-center">
                     <div class="display-flex row row-fit justify-start gap-y-sm align-center">
@@ -320,9 +323,6 @@ if ($totalPages > 0) {
                     </div>
                 
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                        <button type="button" class="btn btn-editar" data-medida-id="<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>" title="Editar">
-                            <i class="fi fi-rr-pen-square"></i>
-                        </button>
                         <div class="display-flex row row-fit justify-end gap-y-sm allocate-chips-row allocate-users">
                             <?php
                             $alocados = CartorioAlocacaoChipHelper::ordenarAlocadosPorTipo($row['Alocados'] ?? []);
@@ -377,6 +377,7 @@ if ($totalPages > 0) {
                                 <div class="width-300 padding-x-lg status status-pending">Pendente</div>
                             <?php endif; ?>
                         </div>
+                        <?php include __DIR__ . '/_registro_metadata.php'; ?>
                     </div>
                 </div>
 
@@ -535,6 +536,15 @@ if ($totalPages > 0) {
             }
 
             initializeListSectionToggles();
+
+            if (window.App && App.RegistroMetadataList && typeof App.RegistroMetadataList.bind === 'function') {
+                App.RegistroMetadataList.bind({
+                    storageKey: 'cartorio.postReloadToast',
+                    cancelEndpoint: '/api/cartorio-medidas-protetivas/cancel.php',
+                    cancelToastKey: 'cartorio.medidas_protetivas.cancel.success',
+                    cancelFallback: { type: 'success', title: 'Sucesso', message: 'Medida cancelada.' }
+                });
+            }
 
             if (!window.App || !App.CartorioMedidasProtetivasList || typeof App.CartorioMedidasProtetivasList.initialize !== 'function') {
                 return;

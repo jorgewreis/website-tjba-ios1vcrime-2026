@@ -507,3 +507,66 @@
     visibility: visible;
     pointer-events: auto;
 }
+
+/* Listagens com coluna de metadados (ofícios + demais módulos) */
+.register.register-with-metadata,
+.register.register-oficio-list {
+    position: relative;
+}
+
+.register.register-with-metadata .register-oficio-list-row,
+.register.register-with-metadata > .display-flex.row-full,
+.register.register-with-metadata.register-line {
+    flex-wrap: nowrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.register.register-with-metadata .container-data-create {
+    flex: 0 0 300px;
+    width: 300px;
+    height: auto;
+    min-height: 55px;
+    margin-left: auto;
+    align-self: center;
+    overflow: visible;
+}
+
+.register.register-with-metadata.register-line {
+    flex-wrap: wrap;
+}
+
+.register.register-with-metadata.register-line > .display-flex.row-fit.justify-end {
+    flex: 0 0 auto;
+    align-items: center;
+}
+
+.register.register-with-metadata .container-data-create .data-create-buttons .right {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.18s ease, visibility 0.18s ease;
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .register.register-with-metadata .container-data-create .data-create-buttons .right {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+}
+
+.register.register-with-metadata:hover .container-data-create .data-create-buttons .right,
+.register.register-with-metadata:focus-within .container-data-create .data-create-buttons .right,
+.register.register-with-metadata[data-registro-id]:hover .container-data-create .data-create-buttons .right,
+.register.register-with-metadata[data-registro-id]:focus-within .container-data-create .data-create-buttons .right,
+.register.register-with-metadata[data-carta-id]:hover .container-data-create .data-create-buttons .right,
+.register.register-with-metadata[data-carta-id]:focus-within .container-data-create .data-create-buttons .right {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.register.register-with-metadata .btn-editar.list-edit-legacy-hidden {
+    display: none;
+}

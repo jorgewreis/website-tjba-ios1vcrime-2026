@@ -32,11 +32,14 @@ final class CartasExpedidasRepository
     {
         [$whereClause, $params] = $this->buildFilterClause($filters, 'ce', true);
 
+        require_once __DIR__ . '/../helpers/RegistroMetadataHelper.php';
         $fromClause = $this->buildFromClause();
+        $auditSelect = RegistroMetadataHelper::sqlSelectAuditoriaExtra('ce');
 
         // Ordem oficial da listagem: data de cadastro (mais recente primeiro).
         $sql = sprintf(
-            'SELECT ce.`id` AS `IdCarta`, ce.`numero_processo_origem` AS `Processo`, ce.`finalidade` AS `Finalidade`, ce.`prazo_dias` AS `Prazo`, ce.`cidade_destino` AS `Comarca`, ce.`uf_destino` AS `Estado`, ce.`status` AS `Status`, ce.`created_at` AS `Data`, COALESCE(cl.`nome`, \'Classe não informada\') AS `ClasseNome` FROM %s %s ORDER BY ce.`created_at` DESC LIMIT :limit OFFSET :offset',
+            'SELECT ce.`id` AS `IdCarta`, ce.`numero_processo_origem` AS `Processo`, ce.`finalidade` AS `Finalidade`, ce.`prazo_dias` AS `Prazo`, ce.`cidade_destino` AS `Comarca`, ce.`uf_destino` AS `Estado`, ce.`status` AS `Status`, ce.`created_at` AS `Data`, COALESCE(cl.`nome`, \'Classe não informada\') AS `ClasseNome`%s FROM %s %s ORDER BY ce.`created_at` DESC LIMIT :limit OFFSET :offset',
+            $auditSelect,
             $fromClause,
             $whereClause ? 'WHERE ' . $whereClause : ''
         );
@@ -157,7 +160,7 @@ final class CartasExpedidasRepository
 
         $statement = $this->connection->prepare(
             sprintf(
-                'INSERT INTO `%s` (`id`, `processo_origem_id`, `numero_processo_origem`, `finalidade`, `prazo_dias`, `comarca_destino_id`, `cidade_destino`, `uf_destino`, `numero_processo_destino`, `vara_destino_id`, `vara_destino_nome`, `status`, `observacoes`, `created_at`, `updated_at`) VALUES (:id, :processo_origem_id, :numero_processo_origem, :finalidade, :prazo_dias, :comarca_destino_id, :cidade_destino, :uf_destino, :numero_processo_destino, :vara_destino_id, :vara_destino_nome, :status, :observacoes, NOW(), NOW())',
+                'INSERT INTO `%s` (`id`, `processo_origem_id`, `numero_processo_origem`, `finalidade`, `prazo_dias`, `comarca_destino_id`, `cidade_destino`, `uf_destino`, `numero_processo_destino`, `vara_destino_id`, `vara_destino_nome`, `status`, `observacoes`, `criado_por`, `atualizado_por`, `created_at`, `updated_at`) VALUES (:id, :processo_origem_id, :numero_processo_origem, :finalidade, :prazo_dias, :comarca_destino_id, :cidade_destino, :uf_destino, :numero_processo_destino, :vara_destino_id, :vara_destino_nome, :status, :observacoes, :criado_por, :atualizado_por, NOW(), NOW())',
                 $this->table
             )
         );
@@ -174,6 +177,9 @@ final class CartasExpedidasRepository
         $statement->bindValue(':vara_destino_nome', $row['vara_destino_nome'] ?? null);
         $statement->bindValue(':status', $row['status']);
         $statement->bindValue(':observacoes', $row['observacoes'] ?? null);
+        $cp = $row['criado_por'] ?? null;
+        $statement->bindValue(':criado_por', $cp !== null && $cp !== '' ? $cp : null);
+        $statement->bindValue(':atualizado_por', $cp !== null && $cp !== '' ? $cp : null);
         $statement->execute();
 
         return (string) $row['id'];
@@ -260,14 +266,16 @@ final class CartasExpedidasRepository
 
     private function buildFromClause(): string
     {
+        require_once __DIR__ . '/../helpers/RegistroMetadataHelper.php';
         $coll = self::COLLATION;
         return sprintf(
-            '`%s` ce LEFT JOIN `processos` p ON p.`id` COLLATE %s = ce.`processo_origem_id` COLLATE %s LEFT JOIN `classes` cl ON cl.`id` COLLATE %s = p.`classe_id` COLLATE %s',
+            '`%s` ce LEFT JOIN `processos` p ON p.`id` COLLATE %s = ce.`processo_origem_id` COLLATE %s LEFT JOIN `classes` cl ON cl.`id` COLLATE %s = p.`classe_id` COLLATE %s%s',
             $this->table,
             $coll,
             $coll,
             $coll,
-            $coll
+            $coll,
+            RegistroMetadataHelper::sqlUsuarioAuditoria('ce')
         );
     }
 

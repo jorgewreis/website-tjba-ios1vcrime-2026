@@ -9,6 +9,7 @@ if (function_exists('mb_internal_encoding')) {
 require_once __DIR__ . '/../../services/GabineteMonitoramentoEletronicoService.php';
 require_once __DIR__ . '/../../repositories/GabineteMonitoramentoEletronicoSubtarefasRepository.php';
 require_once __DIR__ . '/../../helpers/ProcessoBlocoListagemHelper.php';
+require_once __DIR__ . '/../../helpers/RegistroMetadataHelper.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -43,6 +44,7 @@ try {
 
 $rows = $listResult['rows'] ?? [];
 $rows = ProcessoBlocoListagemHelper::appendBlocoData($connection, $rows);
+$registroListViewerContext = RegistroMetadataHelper::viewerContextFromSession();
 $totalDocuments = (int) ($listResult['total'] ?? 0);
 
 if ($totalDocuments === 0) {
@@ -321,7 +323,8 @@ $statusLabelUi = static function (string $s): string {
                     ? 'Iniciar e encerrar monitoramento'
                     : $currentSubtarefaTitle;
             ?>
-            <div class="display-flex col col-full register border-bottom" data-monitoramento-id="<?php echo htmlspecialchars($idMon, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idMon, ENT_QUOTES); ?>">
+            <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'gabinete_monitoramento', $registroListViewerContext); ?>
+            <div class="display-flex col col-full register register-with-metadata border-bottom" data-monitoramento-id="<?php echo htmlspecialchars($idMon, ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars($idMon, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idMon, ENT_QUOTES); ?>">
 
                 <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                     <div class="display-flex row row-fit justify-start gap-y-sm align-center">
@@ -346,9 +349,6 @@ $statusLabelUi = static function (string $s): string {
                         </div>
                     </div>
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                        <button type="button" class="btn btn-editar" data-monitoramento-id="<?php echo htmlspecialchars($idMon, ENT_QUOTES); ?>" title="Editar">
-                            <i class="fi fi-rr-pen-square"></i>
-                        </button>
                         <?php if ($tarefaCancelada): ?>
                         <div class="col">
                             <div class="width-300 padding-x-lg status status-cancelled"><?php echo htmlspecialchars($statusLabelUi('cancelada')); ?></div>
@@ -366,6 +366,7 @@ $statusLabelUi = static function (string $s): string {
                             </div>
                         </div>
                         <?php endif; ?>
+                        <?php include __DIR__ . '/_registro_metadata.php'; ?>
                     </div>
                 </div>
 
@@ -471,6 +472,15 @@ $statusLabelUi = static function (string $s): string {
 
     <script>
         (function () {
+            if (window.App && App.RegistroMetadataList && typeof App.RegistroMetadataList.bind === 'function') {
+                App.RegistroMetadataList.bind({
+                    storageKey: 'gme.postReloadToast',
+                    cancelEndpoint: '/api/gabinete-monitoramento-eletronico/cancel.php',
+                    cancelToastKey: 'gabinete.monitoramento.cancel.success',
+                    cancelFallback: { type: 'success', title: 'Sucesso', message: 'Monitoramento cancelado.' }
+                });
+            }
+
             if (!window.App || !App.GmeList || typeof App.GmeList.initialize !== 'function') {
                 return;
             }

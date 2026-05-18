@@ -330,16 +330,21 @@ final class SalaAudienciasPautaRepository
 
     public function fetchList(array $filters, int $limit, int $offset): array
     {
+        require_once __DIR__ . '/../helpers/RegistroMetadataHelper.php';
         [$where, $params] = $this->buildWhere($filters);
+        $auditJoin = RegistroMetadataHelper::sqlUsuarioAuditoria('a');
+        $auditSelect = RegistroMetadataHelper::sqlSelectAuditoriaExtra('a');
         $sql = sprintf(
-            'SELECT a.`id_pauta`, a.`processo` AS `processo_id`, a.`tipo_audiencia`, a.`data_audiencia`, a.`hora_audiencia`, a.`data_hora_designacao`, a.`hora_inicio`, a.`hora_fim`, a.`data_hora_inicio_efetivo`, a.`data_hora_fim_efetivo`, a.`duracao_estimada_minutos`, a.`localizacao`, a.`status`, p.`numero_processo`, COALESCE(p.`sigiloso`, 0) AS `processo_sigiloso`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `classe_nome`
+            'SELECT a.`id_pauta`, a.`id_pauta` AS `IdPauta`, a.`processo` AS `processo_id`, a.`tipo_audiencia`, a.`data_audiencia`, a.`hora_audiencia`, a.`data_hora_designacao`, a.`hora_inicio`, a.`hora_fim`, a.`data_hora_inicio_efetivo`, a.`data_hora_fim_efetivo`, a.`duracao_estimada_minutos`, a.`localizacao`, a.`status`, COALESCE(a.`created_at`, a.`data_hora_designacao`) AS `Data`, p.`numero_processo`, COALESCE(p.`sigiloso`, 0) AS `processo_sigiloso`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `classe_nome`%s
              FROM `%s` a
              LEFT JOIN `processos` p ON p.`id` = a.`processo`
-             LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id`
+             LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id`%s
              %s
              ORDER BY a.`data_audiencia` ASC, a.`hora_audiencia` ASC
              LIMIT :limit OFFSET :offset',
+            $auditSelect,
             $this->table,
+            $auditJoin,
             $where !== '' ? 'WHERE ' . $where : ''
         );
         $st = $this->connection->prepare($sql);
