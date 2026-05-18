@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 02 de abril de 2026
+**Data de Lançamento:** 15 de maio de 2026
 
 # V. 1.26
 
-> refactor: centralize sigilo message handling in DataJudResponseMapper and JavaScript
+> refactor: enhance status handling and filtering in CartasRecebidas components
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **refactor: centralize sigilo message handling in DataJudResponseMapper and JavaScript** `[31db859]`
+- **refactor: enhance status handling and filtering in CartasRecebidas components** `[a320132b]`
 
 ---
 

@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/IdGenerator.php';
+require_once __DIR__ . '/../helpers/SalaAudienciasAtaSigiloHelper.php';
 
 final class SalaAudienciasAtaRepository
 {
@@ -161,7 +162,7 @@ final class SalaAudienciasAtaRepository
                     TRIM(COALESCE(ata.`arquivo_relativo`, \'\')) <> \'\'
                     AND ata.`expires_at` > NOW()
                 )
-             )
+             )%s
              ORDER BY
                 CASE
                     WHEN ata.`id_ata` IS NULL THEN 0
@@ -172,7 +173,8 @@ final class SalaAudienciasAtaRepository
                 a.`hora_audiencia` DESC
              LIMIT :limit OFFSET :offset',
             $this->table,
-            $diasOcultarListagemSemAtaDisponivel
+            $diasOcultarListagemSemAtaDisponivel,
+            SalaAudienciasAtaSigiloHelper::sqlExcluirProcessoSigiloso()
         );
         $st = $this->connection->prepare($sql);
         $st->bindValue(':limit', $limit, PDO::PARAM_INT);
@@ -187,6 +189,7 @@ final class SalaAudienciasAtaRepository
         $diasOcultarListagemSemAtaDisponivel = max(0, $diasOcultarListagemSemAtaDisponivel);
         $sql = sprintf(
             'SELECT COUNT(*) FROM `sala_audiencias_pauta` a
+             LEFT JOIN `processos` p ON p.`id` = a.`processo`
              LEFT JOIN `%s` ata ON ata.`pauta` = a.`id_pauta`
              WHERE a.`ativo` = 1 AND a.`status` IN (\'realizada\', \'finalizada\')
              AND NOT (
@@ -195,9 +198,10 @@ final class SalaAudienciasAtaRepository
                     TRIM(COALESCE(ata.`arquivo_relativo`, \'\')) <> \'\'
                     AND ata.`expires_at` > NOW()
                 )
-             )',
+             )%s',
             $this->table,
-            $diasOcultarListagemSemAtaDisponivel
+            $diasOcultarListagemSemAtaDisponivel,
+            SalaAudienciasAtaSigiloHelper::sqlExcluirProcessoSigiloso()
         );
         $st = $this->connection->query($sql);
         if ($st === false) {

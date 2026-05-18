@@ -7,6 +7,7 @@ require_once __DIR__ . '/../repositories/SalaAudienciasEstudanteInscricaoReposit
 require_once __DIR__ . '/../repositories/ProcessoPrioridadesRepository.php';
 require_once __DIR__ . '/../helpers/PrioridadesProcessuaisCatalog.php';
 require_once __DIR__ . '/../helpers/ProcessoBlocoListagemHelper.php';
+require_once __DIR__ . '/../helpers/SalaAudienciasAtaSigiloHelper.php';
 
 final class SalaAudienciasAtaService
 {
@@ -78,6 +79,9 @@ final class SalaAudienciasAtaService
         $rows = $this->inscricaoRepository->listHojeDesignadasElegiveis($usuarioId);
         $out = [];
         foreach ($rows as $row) {
+            if (SalaAudienciasAtaSigiloHelper::linhaIndicaProcessoSigiloso($row)) {
+                continue;
+            }
             $processoSigiloso = (int) ($row['processo_sigiloso'] ?? 0) !== 0;
             $envolveMenor = (int) ($row['qtd_menor'] ?? 0) > 0;
             $temPrioridadeBloqueio = (int) ($row['tem_prioridade_bloqueio'] ?? 0) !== 0;
@@ -124,6 +128,7 @@ final class SalaAudienciasAtaService
         if ($pauta === null) {
             throw new InvalidArgumentException('Audiência não encontrada.');
         }
+        SalaAudienciasAtaSigiloHelper::assertPautaPermiteAtas($this->connection, $pauta);
         $st = trim((string) ($pauta['status'] ?? ''));
         if ($st === 'agendada') {
             $st = 'designada';
@@ -271,10 +276,7 @@ final class SalaAudienciasAtaService
             throw new InvalidArgumentException('Inscrição só é permitida no dia da audiência.');
         }
 
-        $sigiloso = (int) ($pauta['processo_sigiloso'] ?? 0);
-        if ($sigiloso !== 0) {
-            throw new InvalidArgumentException('Esta audiência não está disponível para inscrição de estudantes.');
-        }
+        SalaAudienciasAtaSigiloHelper::assertPautaPermiteAtas($this->connection, $pauta);
 
         $sqlMenor = 'SELECT COUNT(*) FROM `sala_audiencias_pauta_parte` WHERE `pauta` = :p AND `ativo` = 1 AND `maioridade` = \'menor\'';
         $stc = $this->connection->prepare($sqlMenor);
@@ -323,6 +325,12 @@ final class SalaAudienciasAtaService
             throw new InvalidArgumentException('Acesso negado: inscrição não encontrada.');
         }
 
+        $pauta = $this->pautaRepository->findById($idPauta);
+        if ($pauta === null) {
+            throw new InvalidArgumentException('Audiência não encontrada.');
+        }
+        SalaAudienciasAtaSigiloHelper::assertPautaPermiteAtas($this->connection, $pauta);
+
         $ata = $this->ataRepository->findByPauta($idPauta);
         if ($ata === null) {
             throw new InvalidArgumentException('Ata ainda não disponível.');
@@ -362,6 +370,12 @@ final class SalaAudienciasAtaService
         }
 
         $this->purgeAtasExpiradas();
+
+        $pauta = $this->pautaRepository->findById($idPauta);
+        if ($pauta === null) {
+            throw new InvalidArgumentException('Audiência não encontrada.');
+        }
+        SalaAudienciasAtaSigiloHelper::assertPautaPermiteAtas($this->connection, $pauta);
 
         $ata = $this->ataRepository->findByPauta($idPauta);
         if ($ata === null) {

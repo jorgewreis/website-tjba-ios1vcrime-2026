@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/IdGenerator.php';
+require_once __DIR__ . '/../helpers/SalaAudienciasAtaSigiloHelper.php';
 
 final class SalaAudienciasEstudanteInscricaoRepository
 {
@@ -199,9 +200,10 @@ final class SalaAudienciasEstudanteInscricaoRepository
                     ata.`id_ata` IS NULL
                     OR ata.`expires_at` > NOW()
                     OR TRIM(COALESCE(ata.`arquivo_relativo`, \'\')) = \'\'
-               )
+               )%s
              ORDER BY a.`data_audiencia` DESC, a.`hora_audiencia` DESC',
-            $this->table
+            $this->table,
+            SalaAudienciasAtaSigiloHelper::sqlExcluirProcessoSigiloso()
         );
         $st = $this->connection->prepare($sql);
         $st->bindValue(':u', $idUsuario);
@@ -241,6 +243,7 @@ final class SalaAudienciasEstudanteInscricaoRepository
             LEFT JOIN `' . $this->table . '` i ON i.`pauta` = a.`id_pauta` AND i.`usuario` = :u
             WHERE a.`ativo` = 1
               AND a.`data_audiencia` = CURDATE()
+              ' . SalaAudienciasAtaSigiloHelper::sqlExcluirProcessoSigiloso() . '
         ';
         $st = $this->connection->prepare($sql);
         $st->bindValue(':u', $idUsuario);
