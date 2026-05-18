@@ -280,20 +280,13 @@ final class SalaMidiasService
         }
 
         $codigo = trim((string) ($subtarefa['codigo'] ?? ''));
-        $qtd = max(1, (int) ($tarefa['qtd_midias'] ?? 1));
-        if ($codigo === 'download_midia' && isset($dados['qtd_midias'])) {
-            $qtdInformada = (int) $dados['qtd_midias'];
-            if ($qtdInformada < 1) {
-                throw new InvalidArgumentException('Quantidade de mídias inválida para concluir download.');
-            }
-            $qtd = $qtdInformada;
-            $this->tarefasRepository->update($midiaId, [
-                'qtd_midias' => $qtd,
-                'status' => trim((string) ($tarefa['status'] ?? 'em_andamento')),
-                'observacoes' => $tarefa['observacoes'] ?? null,
-                'atualizado_por' => $usuarioId,
-            ]);
-            $tarefa['qtd_midias'] = $qtd;
+        $qtd = $this->resolverQtdMidiasParaConclusao($midiaId, $tarefa, $dados);
+        if ($codigo === 'download_midia' && isset($dados['qtd_midias']) && (int) $dados['qtd_midias'] < 1) {
+            throw new InvalidArgumentException('Quantidade de mídias inválida para concluir download.');
+        }
+        if (in_array($codigo, ['download_midia', 'sincronizacao_midia', 'upload_midia'], true)) {
+            $tarefa = $this->persistirQtdMidiasNaTarefa($midiaId, $tarefa, $qtd, $usuarioId);
+            $dados['qtd_midias'] = $qtd;
         }
         $pontos = $this->calcularPontosSubtarefa($codigo, $qtd);
 
@@ -610,6 +603,67 @@ final class SalaMidiasService
         if ($usuarioIdRegra !== '' && !$chefiaRegra && $usuarioIdRegra !== $usuarioCadastroId) {
             $this->alocadosRepository->addAlocado($midiaId, $usuarioIdRegra, SalaMidiasAlocadosRepository::TIPO_RULE);
         }
+    }
+
+    private function resolverQtdMidiasParaConclusao(string $midiaId, array $tarefa, array $dados): int
+    {
+        if (isset($dados['qtd_midias'])) {
+            $informada = (int) $dados['qtd_midias'];
+            if ($informada >= 1) {
+                return $informada;
+            }
+        }
+
+        $naTarefa = (int) ($tarefa['qtd_midias'] ?? 0);
+        if ($naTarefa >= 1) {
+            return $naTarefa;
+        }
+
+        foreach ($this->subtarefasRepository->findByMidiaId($midiaId) as $sub) {
+            if (trim((string) ($sub['codigo'] ?? '')) !== 'download_midia') {
+                continue;
+            }
+            if (trim((string) ($sub['status'] ?? '')) !== SalaMidiasSubtarefasRepository::STATUS_CONCLUIDA) {
+                continue;
+            }
+            $rawJson = trim((string) ($sub['dados_json'] ?? ''));
+            if ($rawJson === '') {
+                continue;
+            }
+            $parsed = json_decode($rawJson, true);
+            if (!is_array($parsed)) {
+                continue;
+            }
+            $doDownload = (int) ($parsed['qtd_midias'] ?? 0);
+            if ($doDownload >= 1) {
+                return $doDownload;
+            }
+        }
+
+        return 1;
+    }
+
+    /**
+     * @param array<string, mixed> $tarefa
+     * @return array<string, mixed>
+     */
+    private function persistirQtdMidiasNaTarefa(string $midiaId, array $tarefa, int $qtd, string $usuarioId): array
+    {
+        $qtd = max(1, $qtd);
+        $atual = max(1, (int) ($tarefa['qtd_midias'] ?? 1));
+        if ($qtd === $atual) {
+            return $tarefa;
+        }
+
+        $this->tarefasRepository->update($midiaId, [
+            'qtd_midias' => $qtd,
+            'status' => trim((string) ($tarefa['status'] ?? 'em_andamento')),
+            'observacoes' => $tarefa['observacoes'] ?? null,
+            'atualizado_por' => $usuarioId,
+        ]);
+        $tarefa['qtd_midias'] = $qtd;
+
+        return $tarefa;
     }
 
     private function calcularPontosSubtarefa(string $codigo, int $qtdMidias): float

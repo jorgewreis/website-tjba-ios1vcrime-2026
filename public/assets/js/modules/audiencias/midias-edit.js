@@ -181,8 +181,9 @@
         var row = button.closest('[data-subtarefa-id]');
         var subtarefaCodigo = String((row && row.getAttribute('data-subtarefa-codigo')) || '').trim();
         var dados = {};
-        if (subtarefaCodigo === 'download_midia') {
-            var qtd = parseInt(String(document.getElementById('midias-edit-qtd') && document.getElementById('midias-edit-qtd').value || '0'), 10);
+        var qtdEl = document.getElementById('midias-edit-qtd');
+        var qtd = parseInt(String(qtdEl && qtdEl.value ? qtdEl.value : '0'), 10);
+        if (subtarefaCodigo === 'download_midia' || subtarefaCodigo === 'sincronizacao_midia' || subtarefaCodigo === 'upload_midia') {
             if (!qtd || qtd < 1) {
                 notifyByKey(
                     'audiencias.midias.subtask.quantity.invalid',

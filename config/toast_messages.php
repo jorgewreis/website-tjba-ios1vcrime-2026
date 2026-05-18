@@ -375,12 +375,6 @@ return [
             'message' => 'Produtividade cancelada com sucesso.',
             'vars' => [],
         ],
-        'produtividade.badge.unlock.success' => [
-            'type' => 'success',
-            'title' => 'Sucesso',
-            'message' => 'Badge desbloqueado: {badge_nome}',
-            'vars' => ['badge_nome'],
-        ],
         'produtividade.rule.required.error' => [
             'type' => 'error',
             'title' => 'Erro',

@@ -159,9 +159,16 @@
             var row = button.closest('[data-subtarefa-id]');
             var subtarefaCodigo = String((row && row.getAttribute('data-subtarefa-codigo')) || '').trim();
             var qtdInput = row ? row.querySelector('.js-midias-qtd-midias') : null;
+            var card = row ? row.closest('[data-midia-id]') : null;
             var dados = {};
-            if (subtarefaCodigo === 'download_midia') {
-                var qtd = parseInt(String(qtdInput && qtdInput.value ? qtdInput.value : '0'), 10);
+            var qtd = 0;
+            if (qtdInput) {
+                qtd = parseInt(String(qtdInput.value || '0'), 10);
+            }
+            if ((!qtd || qtd < 1) && card) {
+                qtd = parseInt(String(card.getAttribute('data-qtd-midias') || '0'), 10);
+            }
+            if (subtarefaCodigo === 'download_midia' || subtarefaCodigo === 'sincronizacao_midia' || subtarefaCodigo === 'upload_midia') {
                 if (!qtd || qtd < 1) {
                     notifyByKey(
                         'audiencias.midias.subtask.quantity.invalid',
@@ -173,11 +180,6 @@
                     return;
                 }
                 dados.qtd_midias = qtd;
-            } else if ((subtarefaCodigo === 'sincronizacao_midia' || subtarefaCodigo === 'upload_midia') && qtdInput) {
-                var qtdReadonly = parseInt(String(qtdInput.value || '0'), 10);
-                if (qtdReadonly > 0) {
-                    dados.qtd_midias = qtdReadonly;
-                }
             }
             button.disabled = true;
             fetch('/api/sala-midias/subtarefa-status.php', {

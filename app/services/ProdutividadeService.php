@@ -5,7 +5,6 @@ require_once __DIR__ . '/../repositories/ProdutividadeRegrasRepository.php';
 require_once __DIR__ . '/../repositories/ProdutividadeLancamentosRepository.php';
 require_once __DIR__ . '/../repositories/ProdutividadeLogRepository.php';
 require_once __DIR__ . '/../repositories/ProdutividadeMetasRepository.php';
-require_once __DIR__ . '/../repositories/ProdutividadeBadgesRepository.php';
 require_once __DIR__ . '/../repositories/FeriadosRepository.php';
 require_once __DIR__ . '/../access/AccessAreas.php';
 require_once __DIR__ . '/../helpers/UsuarioPerfisAutorizacao.php';
@@ -17,7 +16,6 @@ final class ProdutividadeService
     private ProdutividadeLancamentosRepository $lancamentosRepository;
     private ProdutividadeLogRepository $logRepository;
     private ProdutividadeMetasRepository $metasRepository;
-    private ProdutividadeBadgesRepository $badgesRepository;
     /** @var array<string, array<string, true>> */
     private array $feriadosSetCache = [];
     private ?FeriadosRepository $feriadosRepository = null;
@@ -29,7 +27,6 @@ final class ProdutividadeService
         $this->lancamentosRepository = new ProdutividadeLancamentosRepository($connection);
         $this->logRepository = new ProdutividadeLogRepository($connection);
         $this->metasRepository = new ProdutividadeMetasRepository($connection);
-        $this->badgesRepository = new ProdutividadeBadgesRepository($connection);
     }
 
     public function listRules(string $actorUserId, array $filters, int $limit, int $offset): array
@@ -183,11 +180,6 @@ final class ProdutividadeService
                 'numero_processo' => $numeroProcesso,
             ]);
             $this->connection->commit();
-            try {
-                $this->verificarBadges($actorUserId);
-            } catch (Throwable $ignored) {
-                // Badge não pode quebrar o fluxo principal do lançamento.
-            }
             return $lancamentoId;
         } catch (PDOException $e) {
             $this->connection->rollBack();
@@ -380,12 +372,6 @@ final class ProdutividadeService
             throw $e;
         }
 
-        try {
-            $this->verificarBadges($actorUserId);
-        } catch (Throwable $ignored) {
-            // Badge não pode quebrar o fluxo principal do lançamento.
-        }
-
         return ['created' => true, 'id' => $lancamentoId, 'reason' => 'ok'];
     }
 
@@ -473,112 +459,6 @@ final class ProdutividadeService
     {
         $this->assertGestao($actorUserId);
         return $this->metasRepository->setAtivo($id, $ativo);
-    }
-
-    public function listBadges(string $actorUserId, array $filters, int $limit, int $offset): array
-    {
-        $this->assertGestao($actorUserId);
-        return [
-            'rows' => $this->badgesRepository->fetchList($filters, $limit, $offset),
-            'total' => $this->badgesRepository->count($filters),
-        ];
-    }
-
-    public function findBadge(string $actorUserId, string $id): ?array
-    {
-        $this->assertGestao($actorUserId);
-        return $this->badgesRepository->findById($id);
-    }
-
-    public function createBadge(string $actorUserId, array $payload): string
-    {
-        $this->assertGestao($actorUserId);
-        $row = $this->normalizeBadgePayload($payload);
-        return $this->badgesRepository->insert($row);
-    }
-
-    public function updateBadge(string $actorUserId, string $id, array $payload): bool
-    {
-        $this->assertGestao($actorUserId);
-        $current = $this->badgesRepository->findById($id);
-        if ($current === null) {
-            throw new InvalidArgumentException('Badge não encontrado.');
-        }
-        $row = $this->normalizeBadgePayload($payload, $current);
-        return $this->badgesRepository->update($id, $row);
-    }
-
-    public function setBadgeAtivo(string $actorUserId, string $id, bool $ativo): bool
-    {
-        $this->assertGestao($actorUserId);
-        return $this->badgesRepository->setAtivo($id, $ativo);
-    }
-
-    /**
-     * @return list<array<string,mixed>>
-     */
-    public function verificarBadges(string $usuarioId): array
-    {
-        $this->assertAuthenticated($usuarioId);
-        $concedidos = [];
-        $badges = $this->badgesRepository->listAtivos();
-        foreach ($badges as $badge) {
-            $tipo = trim((string) ($badge['tipo'] ?? ''));
-            $threshold = (float) ($badge['valor_threshold'] ?? 0);
-            if ($threshold <= 0) {
-                continue;
-            }
-            [$start, $end] = $this->resolveBadgePeriodRange((string) ($badge['periodo'] ?? 'total'));
-
-            $atingiu = false;
-            if ($tipo === 'pontuacao_cumulativa') {
-                $atingiu = $this->sumPontosUsuarioPeriodo($usuarioId, $start, $end) >= $threshold;
-            } elseif ($tipo === 'ato_especifico') {
-                $regraId = trim((string) ($badge['regra_id'] ?? ''));
-                if ($regraId !== '') {
-                    $atingiu = $this->sumQuantidadeRegraUsuarioPeriodo($usuarioId, $regraId, $start, $end) >= $threshold;
-                }
-            }
-
-            if (!$atingiu) {
-                continue;
-            }
-            if ($this->badgesRepository->concederSeNaoExiste((string) ($badge['id'] ?? ''), $usuarioId)) {
-                $concedidos[] = $badge;
-            }
-        }
-
-        return $concedidos;
-    }
-
-    /**
-     * @return list<array<string,mixed>>
-     */
-    public function listBadgesPendentes(string $actorUserId, int $limit = 10): array
-    {
-        $this->assertAuthenticated($actorUserId);
-        return $this->badgesRepository->listPendentesByUsuario($actorUserId, $limit);
-    }
-
-    /**
-     * @param list<string> $usuarioIds
-     * @return array<string, list<array{nome: string, icone: string}>>
-     */
-    public function listBadgesConcedidosPorUsuarioIds(string $actorUserId, array $usuarioIds): array
-    {
-        $this->assertAuthenticated($actorUserId);
-
-        return $this->badgesRepository->listConcedidosGroupedByUsuarioId($usuarioIds);
-    }
-
-    public function marcarBadgeNotificado(string $actorUserId, string $concedidoId): bool
-    {
-        $this->assertAuthenticated($actorUserId);
-        $concedidoId = trim($concedidoId);
-        if ($concedidoId === '') {
-            throw new InvalidArgumentException('ID da concessão é obrigatório.');
-        }
-        return $this->badgesRepository->marcarNotificado($concedidoId, $actorUserId);
     }
 
     public function listRanking(string $actorUserId, array $filters, int $limit = 200): array
@@ -1124,50 +1004,6 @@ final class ProdutividadeService
         ];
     }
 
-    private function normalizeBadgePayload(array $payload, ?array $current = null): array
-    {
-        $nome = trim((string) ($payload['nome'] ?? ($current['nome'] ?? '')));
-        if ($nome === '') {
-            throw new InvalidArgumentException('Nome do badge é obrigatório.');
-        }
-        $tipo = trim((string) ($payload['tipo'] ?? ($current['tipo'] ?? '')));
-        if (!in_array($tipo, ['pontuacao_cumulativa', 'ato_especifico'], true)) {
-            throw new InvalidArgumentException('Tipo de badge inválido.');
-        }
-        $periodo = trim((string) ($payload['periodo'] ?? ($current['periodo'] ?? 'total')));
-        if (!in_array($periodo, ['total', 'mensal', 'semanal', 'diario'], true)) {
-            throw new InvalidArgumentException('Período do badge inválido.');
-        }
-        $thresholdRaw = trim((string) ($payload['valor_threshold'] ?? ($current['valor_threshold'] ?? '0')));
-        $thresholdDigits = preg_replace('/[^0-9]/', '', str_replace(["\xc2\xa0", ' '], '', $thresholdRaw));
-        $threshold = $thresholdDigits === '' ? 0.0 : (float) $thresholdDigits;
-        if ($threshold <= 0) {
-            throw new InvalidArgumentException('Valor de threshold deve ser maior que zero.');
-        }
-        $regraId = trim((string) ($payload['regra_id'] ?? ($current['regra_id'] ?? '')));
-        if ($tipo === 'ato_especifico' && $regraId === '') {
-            throw new InvalidArgumentException('Badge por ato específico exige uma regra vinculada.');
-        }
-        if ($regraId !== '' && $this->regrasRepository->findById($regraId) === null) {
-            throw new InvalidArgumentException('Regra vinculada do badge não encontrada.');
-        }
-        $ativoIn = $payload['ativo'] ?? ($current['ativo'] ?? 1);
-        $ativo = ((int) $ativoIn) === 1 ? 1 : 0;
-        $descricao = trim((string) ($payload['descricao'] ?? ($current['descricao'] ?? '')));
-        $icone = trim((string) ($payload['icone'] ?? ($current['icone'] ?? '')));
-
-        return [
-            'nome' => $nome,
-            'descricao' => $descricao !== '' ? $descricao : null,
-            'icone' => $icone !== '' ? $icone : null,
-            'tipo' => $tipo,
-            'regra_id' => $regraId !== '' ? $regraId : null,
-            'valor_threshold' => number_format($threshold, 2, '.', ''),
-            'periodo' => $periodo,
-            'ativo' => $ativo,
-        ];
-    }
-
     private function isValidDate(string $value): bool
     {
         if ($value === '') {
@@ -1426,71 +1262,6 @@ final class ProdutividadeService
         }
 
         return $count;
-    }
-
-    /**
-     * @return array{0:?DateTimeImmutable,1:?DateTimeImmutable}
-     */
-    private function resolveBadgePeriodRange(string $periodo): array
-    {
-        $now = new DateTimeImmutable('now');
-        if ($periodo === 'diario') {
-            $start = $now->setTime(0, 0, 0);
-            $end = $now->setTime(23, 59, 59);
-            return [$start, $end];
-        }
-        if ($periodo === 'semanal') {
-            $start = $now->modify('monday this week')->setTime(0, 0, 0);
-            $end = $start->modify('+6 days')->setTime(23, 59, 59);
-            return [$start, $end];
-        }
-        if ($periodo === 'mensal') {
-            $start = $now->modify('first day of this month')->setTime(0, 0, 0);
-            $end = $now->modify('last day of this month')->setTime(23, 59, 59);
-            return [$start, $end];
-        }
-
-        return [null, null];
-    }
-
-    private function sumPontosUsuarioPeriodo(string $usuarioId, ?DateTimeImmutable $start, ?DateTimeImmutable $end): float
-    {
-        $sql = 'SELECT COALESCE(SUM(`pontos_calculados`), 0)
-                FROM `produtividade_lancamentos`
-                WHERE `usuario_id` = :usuario_id
-                  AND `status` = \'ativo\'';
-        if ($start !== null && $end !== null) {
-            $sql .= ' AND `data_hora_ato` >= :data_inicio AND `data_hora_ato` <= :data_fim';
-        }
-        $statement = $this->connection->prepare($sql);
-        $statement->bindValue(':usuario_id', $usuarioId);
-        if ($start !== null && $end !== null) {
-            $statement->bindValue(':data_inicio', $start->format('Y-m-d H:i:s'));
-            $statement->bindValue(':data_fim', $end->format('Y-m-d H:i:s'));
-        }
-        $statement->execute();
-        return (float) $statement->fetchColumn();
-    }
-
-    private function sumQuantidadeRegraUsuarioPeriodo(string $usuarioId, string $regraId, ?DateTimeImmutable $start, ?DateTimeImmutable $end): float
-    {
-        $sql = 'SELECT COALESCE(SUM(`quantidade`), 0)
-                FROM `produtividade_lancamentos`
-                WHERE `usuario_id` = :usuario_id
-                  AND `regra_id` = :regra_id
-                  AND `status` = \'ativo\'';
-        if ($start !== null && $end !== null) {
-            $sql .= ' AND `data_hora_ato` >= :data_inicio AND `data_hora_ato` <= :data_fim';
-        }
-        $statement = $this->connection->prepare($sql);
-        $statement->bindValue(':usuario_id', $usuarioId);
-        $statement->bindValue(':regra_id', $regraId);
-        if ($start !== null && $end !== null) {
-            $statement->bindValue(':data_inicio', $start->format('Y-m-d H:i:s'));
-            $statement->bindValue(':data_fim', $end->format('Y-m-d H:i:s'));
-        }
-        $statement->execute();
-        return (float) $statement->fetchColumn();
     }
 
     private function findMetaAtivaParaUsuario(string $usuarioId, string $periodoTipo): ?array

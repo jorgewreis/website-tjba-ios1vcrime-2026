@@ -592,7 +592,6 @@ $titleProjStat = sprintf(
         </div>
     </div>
     <?php include __DIR__ . '/_profile_saved_reload_parent.php'; ?>
-    <script src="/assets/js/modules/produtividade/badge-popup.js"></script>
     <script src="/assets/js/modules/dashboard/metas-cartorio-card.js"></script>
 </body>
 </html>

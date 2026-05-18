@@ -74,7 +74,6 @@ final class InternalListExportHandlers
             'partesinstituicoeslist' => [self::class, 'partesInstituicoes'],
             'produtividaderegras' => [self::class, 'produtividadeRegras'],
             'produtividademetas' => [self::class, 'produtividadeMetas'],
-            'produtividadebadges' => [self::class, 'produtividadeBadges'],
         ];
     }
 
@@ -1161,54 +1160,4 @@ final class InternalListExportHandlers
         ];
     }
 
-    /**
-     * @param array<string, mixed> $get
-     */
-    private static function produtividadeBadges(PDO $pdo, string $userId, array $get): array
-    {
-        $filters = [
-            'q' => trim((string) ($get['q'] ?? '')),
-            'ativo' => $get['ativo'] ?? null,
-            'tipo' => trim((string) ($get['tipo'] ?? '')),
-        ];
-        if ($filters['ativo'] === '' || $filters['ativo'] === null) {
-            unset($filters['ativo']);
-        }
-        if ($filters['tipo'] === '') {
-            unset($filters['tipo']);
-        }
-        $service = new ProdutividadeService($pdo);
-        $rows = [];
-        $offset = 0;
-        while (count($rows) < self::MAX_ROWS) {
-            $batch = $service->listBadges($userId, $filters, self::CHUNK_200, $offset)['rows'] ?? [];
-            if ($batch === []) {
-                break;
-            }
-            foreach ($batch as $r) {
-                $rows[] = $r;
-            }
-            if (count($batch) < self::CHUNK_200) {
-                break;
-            }
-            $offset += self::CHUNK_200;
-        }
-        $rows = array_slice($rows, 0, self::MAX_ROWS);
-
-        return [
-            'title' => 'Lista de badges de produtividade',
-            'slug' => 'produtividade-badges',
-            'columns' => [
-                ['key' => 'nome', 'label' => 'Nome'],
-                ['key' => 'tipo', 'label' => 'Tipo'],
-                ['key' => 'regra_id', 'label' => 'Regra'],
-                ['key' => 'valor_threshold', 'label' => 'Threshold'],
-                ['key' => 'periodo', 'label' => 'Período'],
-                ['key' => 'ativo', 'label' => 'Ativo'],
-                ['key' => 'descricao', 'label' => 'Descrição'],
-                ['key' => 'criado_em', 'label' => 'Criado em'],
-            ],
-            'rows' => $rows,
-        ];
-    }
 }

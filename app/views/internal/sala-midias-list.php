@@ -281,6 +281,14 @@ $buttonTitleByTipo = [
                     break;
                 }
                 $qtdMidiasInput = $qtdDownloadInformada ?? $qtdMidiasRow;
+                $downloadConcluido = false;
+                foreach ($subtarefas as $subScanDl) {
+                    if (trim((string) ($subScanDl['codigo'] ?? '')) === 'download_midia'
+                        && trim((string) ($subScanDl['status'] ?? '')) === 'concluida') {
+                        $downloadConcluido = true;
+                        break;
+                    }
+                }
                 $progressStatuses = ['pendente', 'pendente', 'pendente', 'pendente'];
                 $orderMap = ['download_midia' => 1, 'sincronizacao_midia' => 2, 'upload_midia' => 3, 'certidao_upload_midia' => 4];
                 foreach ($subtarefas as $st) {
@@ -321,7 +329,7 @@ $buttonTitleByTipo = [
                     }
                 }
                 ?>
-                <div class="display-flex col col-full register border-bottom" data-midia-id="<?php echo htmlspecialchars($id, ENT_QUOTES, 'UTF-8'); ?>" id="<?php echo htmlspecialchars($id, ENT_QUOTES, 'UTF-8'); ?>">
+                <div class="display-flex col col-full register border-bottom" data-midia-id="<?php echo htmlspecialchars($id, ENT_QUOTES, 'UTF-8'); ?>" data-qtd-midias="<?php echo (int) $qtdMidiasInput; ?>" id="<?php echo htmlspecialchars($id, ENT_QUOTES, 'UTF-8'); ?>">
                     <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                         <div class="display-flex row row-fit justify-start gap-y-sm align-center">
                             <div class="col">
@@ -430,7 +438,7 @@ $buttonTitleByTipo = [
                                                 placeholder="Qtd. de mídias para download"
                                                 title="Informe a quantidade de mídias para download">
                                         </div>
-                                    <?php elseif ($qtdMidiasInput > 1 || $qtdDownloadInformada !== null): ?>
+                                    <?php elseif ($downloadConcluido || $qtdMidiasInput > 1 || $qtdDownloadInformada !== null): ?>
                                         <div class="col">
                                             <input
                                                 type="number"

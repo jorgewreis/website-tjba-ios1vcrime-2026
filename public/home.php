@@ -677,8 +677,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                     { icon: 'fi fi-rs-id-badge', label: 'Usuários', target: 'usuarioslist', allowedPerfis: ['ADMIN'] },
                     { icon: 'fi fi-rs-calendar', label: 'Feriados', target: 'feriadoslist', allowedPerfis: ['ADMIN', 'CHEFIA', 'DIRETORA'] },
                     { icon: 'fi fi-rs-clock-up-arrow', label: 'Regras de Produtividade', target: 'produtividaderegras', allowedPerfis: ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'] },
-                    { icon: 'fi fi-rs-target', label: 'Metas de Produtividade', target: 'produtividademetas', allowedPerfis: ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'] },
-                    { icon: 'fi fi-rs-trophy-star', label: 'Badges de Produtividade', target: 'produtividadebadges', allowedPerfis: ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'] }
+                    { icon: 'fi fi-rs-target', label: 'Metas de Produtividade', target: 'produtividademetas', allowedPerfis: ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'] }
                 ]
             }
         ];

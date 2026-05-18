@@ -123,12 +123,6 @@ final class ListExportFilterSummary
                 self::pair($parts, 'Período (tipo)', (string) ($get['periodo_tipo'] ?? ''));
                 break;
 
-            case 'produtividadebadges':
-                self::pair($parts, 'Busca', (string) ($get['q'] ?? ''));
-                self::pairAtivo($parts, $get['ativo'] ?? null);
-                self::pair($parts, 'Tipo', (string) ($get['tipo'] ?? ''));
-                break;
-
             default:
                 $parts[] = 'Filtros: conforme parâmetros informados na exportação.';
         }

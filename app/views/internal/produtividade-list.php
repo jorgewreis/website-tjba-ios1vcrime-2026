@@ -43,7 +43,6 @@ $totalDocuments = 0;
 $isGestao = false;
 $canSeeRegrasButton = false;
 $canSeeMetasButton = false;
-$canSeeBadgesButton = false;
 $errors = [];
 $usuariosFiltro = [];
 $userPerfis = [];
@@ -70,14 +69,6 @@ if ($filters['data_inicio'] !== '' && $filters['data_fim'] !== '') {
                 $canLoadLancamentos = false;
             }
         }
-    }
-}
-
-if ($userId !== '' && $canLoadLancamentos && $errors === []) {
-    try {
-        $service->verificarBadges($userId);
-    } catch (Throwable $e) {
-        // Badges não devem impedir carregamento da página.
     }
 }
 
@@ -114,7 +105,6 @@ if ($userId !== '') {
     $userPerfis = UsuarioPerfisAutorizacao::perfisDoUsuario($userId);
     $canSeeRegrasButton = in_array('ADMIN', $userPerfis, true) || in_array('CHEFIA', $userPerfis, true) || in_array('DIRETORA', $userPerfis, true) || in_array('MAGISTRADA', $userPerfis, true);
     $canSeeMetasButton = $canSeeRegrasButton;
-    $canSeeBadgesButton = $canSeeRegrasButton;
 }
 
 $showRankingBlock = false;
@@ -139,33 +129,6 @@ if ($showRankingBlock && $userId !== '') {
     } catch (Throwable $e) {
         $rankingBlockRows = [];
         $rankingBlockOculto = false;
-    }
-}
-
-$rankingBadgesPorUsuario = [];
-if ($showRankingBlock && $userId !== '' && $rankingBlockRows !== []) {
-    foreach ($rankingBlockRows as $rr) {
-        $uidR = trim((string) ($rr['usuario_id'] ?? ''));
-        if ($uidR === '' || $uidR === $userId) {
-            continue;
-        }
-        try {
-            $service->verificarBadges($uidR);
-        } catch (Throwable $e) {
-            // noop
-        }
-    }
-    $idsRank = [];
-    foreach ($rankingBlockRows as $rr) {
-        $t = trim((string) ($rr['usuario_id'] ?? ''));
-        if ($t !== '') {
-            $idsRank[] = $t;
-        }
-    }
-    try {
-        $rankingBadgesPorUsuario = $service->listBadgesConcedidosPorUsuarioIds($userId, $idsRank);
-    } catch (Throwable $e) {
-        $rankingBadgesPorUsuario = [];
     }
 }
 
@@ -243,25 +206,6 @@ $exportPdfHref = '/api/produtividade/export-pdf.php?' . http_build_query($export
                 gap: 6px;
                 margin-top: 8px;
             }
-            .badge-produtividade-ranking {
-                display: inline-flex;
-                align-items: center;
-                max-width: 220px;
-                margin: 0 4px 0 0;
-                padding: 3px 8px;
-                font-size: 10px;
-                font-weight: 600;
-                line-height: 1.25;
-                border-radius: 4px;
-                text-transform: none;
-                letter-spacing: 0.01em;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                background-color: var(--color-primary-bg-light);
-                color: var(--color-primary-active);
-                border: 1px solid var(--color-primary);
-            }
         </style>
     </head>
 <body class="page-internal">
@@ -285,9 +229,6 @@ $exportPdfHref = '/api/produtividade/export-pdf.php?' . http_build_query($export
                 <?php endif; ?>
                 <?php if ($canSeeMetasButton): ?>
                 <button type="button" class="btn btn-secondary-outline height-md" data-nav-href="/frame.php?page=produtividademetas">Metas</button>
-                <?php endif; ?>
-                <?php if ($canSeeBadgesButton): ?>
-                <button type="button" class="btn btn-secondary-outline height-md" data-nav-href="/frame.php?page=produtividadebadges">Badges</button>
                 <?php endif; ?>
             </div>
         </div>
@@ -352,26 +293,10 @@ $exportPdfHref = '/api/produtividade/export-pdf.php?' . http_build_query($export
                             }
                             $posRank = (int) ($row['posicao'] ?? 0);
                             $ptsRank = (float) ($row['pontos_total'] ?? 0);
-                            $uidRank = trim((string) ($row['usuario_id'] ?? ''));
-                            $badgesRank = ($uidRank !== '' && isset($rankingBadgesPorUsuario[$uidRank]))
-                                ? $rankingBadgesPorUsuario[$uidRank]
-                                : [];
                             ?>
                         <div class="display-flex row row-full justify-between align-center flex-wrap gap-y-sm padding-y-sm border-bottom">
                             <div class="display-flex row row-fit align-center flex-wrap gap-y-sm" style="min-width: 0; flex: 1 1 auto;">
                                 <span class="major-info" style="font-family: monospace; font-size: 12px; font-weight: 600;"><?php echo $posRank; ?>. <?php echo htmlspecialchars($nomeRank, ENT_QUOTES, 'UTF-8'); ?></span>
-                                <?php if ($badgesRank !== []): ?>
-                                <span class="display-flex row row-fit flex-wrap align-center" style="gap:4px; min-width:0;">
-                                    <?php foreach ($badgesRank as $bItem):
-                                        $bn = trim((string) ($bItem['nome'] ?? ''));
-                                        if ($bn === '') {
-                                            continue;
-                                        }
-                                        ?>
-                                    <span class="badge-produtividade-ranking" title="<?php echo htmlspecialchars($bn, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($bn, ENT_QUOTES, 'UTF-8'); ?></span>
-                                    <?php endforeach; ?>
-                                </span>
-                                <?php endif; ?>
                             </div>
                             <span class="major-info" style="font-family: monospace; font-size: 12px; flex-shrink:0;"><?php echo number_format($ptsRank, 2, ',', '.'); ?> pts</span>
                         </div>
@@ -582,7 +507,6 @@ $exportPdfHref = '/api/produtividade/export-pdf.php?' . http_build_query($export
 
     <?php include __DIR__ . '/_datajud_scripts.php'; ?>
     <script src="/assets/js/modules/produtividade/produtividade-list.js"></script>
-    <script src="/assets/js/modules/produtividade/badge-popup.js"></script>
 </body>
 </html>
 
