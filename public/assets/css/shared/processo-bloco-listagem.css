@@ -315,9 +315,7 @@
 .container-data-create .processo-bloco-tooltip::after {
     content: attr(data-title);
     position: absolute;
-    left: 50%;
     bottom: calc(100% + 8px);
-    transform: translateX(-50%);
     background-color: #111827;
     color: #ffffff;
     padding: 6px 10px;
@@ -333,11 +331,33 @@
     z-index: 999;
 }
 
-.container-processo .processo-bloco-tooltip:hover::after,
-.container-data-create .processo-bloco-tooltip:hover::after {
+/* Bloco processo: centralizado no gatilho */
+.container-processo .processo-bloco-tooltip::after {
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.container-processo .processo-bloco-tooltip:hover::after {
     opacity: 1;
     visibility: visible;
     transform: translateX(-50%) translateY(-2px);
+}
+
+/* Metadados (canto direito da lista): ancora à direita do ícone, texto expande à esquerda */
+.container-data-create .processo-bloco-tooltip::after {
+    left: auto;
+    right: 0;
+    transform: translateY(0);
+    max-width: min(280px, calc(100vw - 24px));
+    text-align: right;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.container-data-create .processo-bloco-tooltip:hover::after {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(-2px);
 }
 
 
@@ -354,7 +374,7 @@
     flex-direction: column;
     flex-wrap: nowrap;
     align-items: flex-start;
-    justify-content: flex-start;
+    justify-content: center;
     gap: 2px;
 }
 
@@ -380,6 +400,7 @@
 
 .data-create-buttons {
     width: 100%;
+    height: fit-content;
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;

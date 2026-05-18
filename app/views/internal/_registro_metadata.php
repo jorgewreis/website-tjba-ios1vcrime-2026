@@ -16,7 +16,10 @@ if ($meta === null) {
 $userPrefix = trim((string) ($meta['user_prefix'] ?? 'Cadastrado por'));
 $criadorNome = trim((string) ($meta['criador_nome'] ?? ''));
 require_once __DIR__ . '/../../helpers/RegistroMetadataHelper.php';
-$linhaAutor = RegistroMetadataHelper::formatarLinhaAutor($userPrefix, $criadorNome);
+$linhaAutorFixa = trim((string) ($meta['linha_autor'] ?? ''));
+$linhaAutor = $linhaAutorFixa !== ''
+    ? $linhaAutorFixa
+    : RegistroMetadataHelper::formatarLinhaAutor($userPrefix, $criadorNome);
 $dataCadastro = trim((string) ($meta['data_cadastro_texto'] ?? ''));
 $dataEventoClasse = trim((string) ($meta['data_evento_classe'] ?? ''));
 $dataEventoTexto = trim((string) ($meta['data_evento_texto'] ?? ''));

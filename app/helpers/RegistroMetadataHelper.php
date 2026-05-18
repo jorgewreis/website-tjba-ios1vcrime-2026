@@ -134,14 +134,10 @@ final class RegistroMetadataHelper
             'show_cancel' => false,
         ],
         'sala_atas' => [
-            'id_keys' => ['id_pauta', 'id_ata'],
+            'id_keys' => ['id_ata', 'id_pauta'],
             'status_keys' => ['status', 'Status'],
-            'data_keys' => ['uploaded_at', 'Data'],
-            'updated_keys' => [],
-            'criador_keys' => ['CriadoPorNome', 'uploaded_by_nome'],
             'edit_page' => '',
             'cancel_endpoint' => '',
-            'user_prefix' => 'Enviado por',
             'show_edit' => false,
             'show_cancel' => false,
         ],
@@ -174,6 +170,9 @@ final class RegistroMetadataHelper
             require_once __DIR__ . '/OficioRegistroMetadataHelper.php';
 
             return OficioRegistroMetadataHelper::fromListRow($row, 'gabinete', $viewerContext);
+        }
+        if ($modulo === 'sala_atas') {
+            return self::fromListRowSalaAtas($row);
         }
 
         $config = self::MODULES[$modulo] ?? null;
@@ -236,11 +235,143 @@ final class RegistroMetadataHelper
         ];
     }
 
+    /**
+     * Metadados da listagem de atas: cadastro automático pelo sistema; atualização por upload de PDF ou subtarefa de mídias.
+     *
+     * @param array<string, mixed> $row
+     * @return array<string, mixed>
+     */
+    private static function fromListRowSalaAtas(array $row): array
+    {
+        $id = trim(self::pick($row, ['id_ata', 'id_pauta']));
+        $cadastroRaw = trim(self::pick($row, ['DataCadastroSistema', 'data_hora_fim_efetivo', 'Data']));
+
+        $candidatosAtualizacao = [
+            [
+                'data' => trim(self::pick($row, ['DataUploadAta', 'uploaded_at'])),
+                'editor' => trim(self::pick($row, ['UploadPorNome', 'CriadoPorNome'])),
+            ],
+            [
+                'data' => trim(self::pick($row, ['DataUltimaSubtarefa'])),
+                'editor' => trim(self::pick($row, ['UltimaSubtarefaPorNome'])),
+            ],
+            [
+                'data' => trim(self::pick($row, ['DataAtualizacaoMidias', 'atualizado_em'])),
+                'editor' => trim(self::pick($row, ['UltimoEditorMidiasNome', 'UltimoEditorNome'])),
+            ],
+            [
+                'data' => trim(self::pick($row, ['DataAtualizacaoPauta', 'DataAtualizacao', 'updated_at'])),
+                'editor' => trim(self::pick($row, ['UltimoEditorPautaNome', 'UltimoEditorNome'])),
+            ],
+        ];
+
+        $ultimaAtualizacao = self::escolherUltimaAtualizacaoUsuario($cadastroRaw, $candidatosAtualizacao);
+
+        $dataEventoClasse = '';
+        $dataEventoTexto = '';
+        if ($ultimaAtualizacao !== null) {
+            $dataEventoClasse = 'updated';
+            $dataEventoTexto = self::formatarEventoComAutor(
+                'Atualizado em',
+                $ultimaAtualizacao['data'],
+                $ultimaAtualizacao['editor']
+            );
+        }
+
+        return [
+            'criador_nome' => 'sistema',
+            'user_prefix' => 'Cadastrado por',
+            'linha_autor' => 'Cadastrado pelo sistema',
+            'data_cadastro_texto' => $cadastroRaw !== '' ? 'Em ' . self::formatarDataHora($cadastroRaw) : '',
+            'data_evento_classe' => $dataEventoClasse,
+            'data_evento_texto' => $dataEventoTexto,
+            'id' => $id,
+            'show_edit' => false,
+            'edit_href' => '',
+            'show_cancel' => false,
+            'cancel_endpoint' => '',
+            'cancel_toast_key' => '',
+            'cancel_label' => 'Cancelar registro',
+            'edit_label' => 'Editar registro',
+        ];
+    }
+
+    /**
+     * @param list<array{data: string, editor: string}> $candidatos
+     * @return array{data: string, editor: string}|null
+     */
+    private static function escolherUltimaAtualizacaoUsuario(string $cadastroRaw, array $candidatos): ?array
+    {
+        $melhor = null;
+        $melhorTs = 0;
+
+        foreach ($candidatos as $candidato) {
+            $data = trim($candidato['data']);
+            $editor = self::compactarNome(trim($candidato['editor']));
+            if ($data === '' || $editor === '') {
+                continue;
+            }
+            if ($cadastroRaw !== '' && !self::isUpdatedAfterCreated($cadastroRaw, $data)) {
+                continue;
+            }
+            $ts = strtotime($data);
+            if ($ts === false) {
+                continue;
+            }
+            if ($melhor === null || $ts > $melhorTs) {
+                $melhor = ['data' => $data, 'editor' => $editor];
+                $melhorTs = $ts;
+            }
+        }
+
+        return $melhor;
+    }
+
     public static function formatarDataHora(?string $mysqlDt): string
     {
         require_once __DIR__ . '/OficioRegistroMetadataHelper.php';
 
         return OficioRegistroMetadataHelper::formatarDataHora($mysqlDt);
+    }
+
+    /** Campos extras para listagem de atas (pauta + upload + subtarefa de mídias). */
+    public static function sqlSelectSalaAtasListagemExtra(): string
+    {
+        $coll = self::COLLATION;
+
+        return sprintf(
+            ', COALESCE(a.`data_hora_fim_efetivo`, a.`data_hora_inicio_efetivo`, a.`updated_at`, a.`created_at`, a.`data_hora_designacao`) AS `DataCadastroSistema`,'
+            . ' ata.`uploaded_at` AS `DataUploadAta`,'
+            . ' TRIM(CONCAT(COALESCE(ucr_up.`nome`, \'\'), \' \', COALESCE(ucr_up.`sobrenome`, \'\'))) AS `UploadPorNome`,'
+            . ' a.`updated_at` AS `DataAtualizacaoPauta`,'
+            . ' TRIM(CONCAT(COALESCE(ued_a.`nome`, \'\'), \' \', COALESCE(ued_a.`sobrenome`, \'\'))) AS `UltimoEditorPautaNome`,'
+            . ' mt.`atualizado_em` AS `DataAtualizacaoMidias`,'
+            . ' TRIM(CONCAT(COALESCE(ued_mt.`nome`, \'\'), \' \', COALESCE(ued_mt.`sobrenome`, \'\'))) AS `UltimoEditorMidiasNome`,'
+            . ' (SELECT st.`updated_at` FROM `sala_midias_subtarefa` st'
+            . ' INNER JOIN `sala_midias_tarefa` mt_sub ON mt_sub.`id` = st.`midia_id` AND mt_sub.`pauta_id` = a.`id_pauta` AND mt_sub.`ativo` = 1'
+            . ' WHERE TRIM(COALESCE(st.`finalizado_por`, \'\')) <> \'\''
+            . ' ORDER BY st.`updated_at` DESC LIMIT 1) AS `DataUltimaSubtarefa`,'
+            . ' (SELECT TRIM(CONCAT(COALESCE(u_st.`nome`, \'\'), \' \', COALESCE(u_st.`sobrenome`, \'\')))'
+            . ' FROM `sala_midias_subtarefa` st'
+            . ' INNER JOIN `sala_midias_tarefa` mt_sub ON mt_sub.`id` = st.`midia_id` AND mt_sub.`pauta_id` = a.`id_pauta` AND mt_sub.`ativo` = 1'
+            . ' LEFT JOIN `usuarios` u_st ON u_st.`id_usuario` COLLATE %1$s = st.`finalizado_por` COLLATE %1$s'
+            . ' WHERE TRIM(COALESCE(st.`finalizado_por`, \'\')) <> \'\''
+            . ' ORDER BY st.`updated_at` DESC LIMIT 1) AS `UltimaSubtarefaPorNome`',
+            $coll
+        );
+    }
+
+    /** JOINs de auditoria da pauta e da tarefa de mídias vinculada (listagem de atas). */
+    public static function sqlJoinSalaAtasListagem(): string
+    {
+        $coll = self::COLLATION;
+
+        return self::sqlUsuarioAuditoria('a')
+            . sprintf(
+                ' LEFT JOIN `sala_midias_tarefa` mt ON mt.`pauta_id` = a.`id_pauta` AND mt.`ativo` = 1'
+                . ' LEFT JOIN `usuarios` ued_mt ON ued_mt.`id_usuario` COLLATE %1$s = mt.`atualizado_por` COLLATE %1$s',
+                $coll
+            );
     }
 
     public static function sqlUsuarioAuditoria(string $alias, string $criadoPorCol = 'criado_por', string $atualizadoPorCol = 'atualizado_por'): string

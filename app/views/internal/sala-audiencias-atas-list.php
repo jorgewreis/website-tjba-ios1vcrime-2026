@@ -213,8 +213,8 @@ function sala_audiencias_ata_label_prazo_download(string $expiresAt): string
             ?>
         <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'sala_atas', $registroListViewerContext); ?>
         <div class="display-flex col col-full register register-with-metadata border-bottom" data-pauta="<?php echo $idPauta; ?>" data-registro-id="<?php echo $idPauta; ?>">
-            <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center flex-wrap gap-y-sm">
-                <div class="display-flex row row-fit justify-start gap-y-sm align-center flex-wrap">
+            <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
+                <div class="display-flex row row-fit justify-start gap-y-sm align-center flex-1">
                     <div class="col width-300">
                         <span class="minor-info">Data e hora</span>
                         <span class="major-info"><?php echo htmlspecialchars(date('d/m/Y', strtotime((string) $row['data_audiencia'])) . ' - ' . $horaExibicao, ENT_QUOTES, 'UTF-8'); ?></span>
@@ -226,6 +226,8 @@ function sala_audiencias_ata_label_prazo_download(string $expiresAt): string
                         <span class="minor-info">Tipo de audiência</span>
                         <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) $row['tipo_audiencia'], ENT_QUOTES, 'UTF-8'); ?></span>
                     </div>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-sm align-center">
                     <div class="col width-500">
                         <span class="minor-info">Ata para download</span>
                         <?php if ($temAta): ?>
@@ -236,13 +238,11 @@ function sala_audiencias_ata_label_prazo_download(string $expiresAt): string
                         <span class="major-info text-ellipsis ata-status-text">Nenhum arquivo enviado</span>
                         <?php endif; ?>
                     </div>
-                </div>
-                <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                    <?php include __DIR__ . '/_registro_metadata.php'; ?>
                     <?php if (!$ataRetencaoEncerrada): ?>
                     <input type="file" class="ata-file-input visually-hidden" accept="application/pdf,.pdf" aria-label="Selecionar PDF da ata">
                     <button type="button" class="btn btn-primary btn-upload-ata" data-pauta="<?php echo $idPauta; ?>"><?php echo $temAta ? 'Substituir PDF' : 'Enviar PDF'; ?></button>
                     <?php endif; ?>
+                    <?php include __DIR__ . '/_registro_metadata.php'; ?>
                 </div>
             </div>
         </div>
