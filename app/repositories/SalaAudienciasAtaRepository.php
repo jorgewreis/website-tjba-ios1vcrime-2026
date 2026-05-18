@@ -164,13 +164,13 @@ final class SalaAudienciasAtaRepository
                 )
              )%s
              ORDER BY
+                COALESCE(DATE(a.`data_hora_inicio_efetivo`), a.`data_audiencia`) DESC,
+                COALESCE(TIME(a.`data_hora_inicio_efetivo`), TIME(a.`hora_audiencia`)) DESC,
                 CASE
                     WHEN ata.`id_ata` IS NULL THEN 0
                     WHEN TRIM(COALESCE(ata.`arquivo_relativo`, \'\')) = \'\' THEN 2
                     ELSE 1
-                END ASC,
-                a.`data_audiencia` DESC,
-                a.`hora_audiencia` DESC
+                END ASC
              LIMIT :limit OFFSET :offset',
             $this->table,
             $diasOcultarListagemSemAtaDisponivel,

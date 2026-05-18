@@ -34,7 +34,7 @@ $profissaoAtual = '';
             <span class="specific">Cadastro</span>
         </div>
         <h1 class="title-page">Cadastrar pessoa</h1>
-        <p class="description-page">Dados básicos da parte (pessoa). Apenas o nome completo é obrigatório; CPF, sexo e data de nascimento podem ser informados quando disponíveis.</p>
+        <p class="description-page">Dados básicos da parte (pessoa). Apenas o nome completo é obrigatório; documentos, sexo e data de nascimento podem ser informados quando disponíveis.</p>
     </div>
 
     <div class="container-full card-page">
@@ -52,10 +52,6 @@ $profissaoAtual = '';
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
-                <label for="cpf">CPF</label>
-                <input type="text" class="width-200 height-md white" id="cpf" name="cpf" placeholder="000.000.000-00">
-            </div>
-            <div class="col">
                 <label for="sexo">Sexo</label>
                 <select class="width-200 height-md white" id="sexo" name="sexo">
                     <option value="">Selecione</option>
@@ -71,6 +67,29 @@ $profissaoAtual = '';
         </div>
 
         <?php include __DIR__ . '/_partes_profissao_fields.php'; ?>
+
+        <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-start">
+                <h2>Documentos (opcional)</h2>
+            </div>
+        </div>
+        <div id="documentos-cadastro">
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md documento-row">
+                <div class="col">
+                    <label>Tipo</label>
+                    <select class="width-200 height-md white doc-tipo">
+                        <?php $documentoTipoSelecionado = ''; include __DIR__ . '/_partes_documento_tipo_options.php'; ?>
+                    </select>
+                </div>
+                <div class="col">
+                    <label>Número</label>
+                    <input type="text" class="width-300 height-md white doc-numero" placeholder="Número do documento" maxlength="60">
+                </div>
+            </div>
+        </div>
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
+            <button type="button" class="btn btn-secondary-outline" id="add-documento-btn">Adicionar outro documento</button>
+        </div>
 
         <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom">
             <div class="display-flex row row-fit justify-start">
@@ -138,15 +157,43 @@ $profissaoAtual = '';
     <script>
     (function() {
         var nomeEl = document.getElementById('nome_completo');
-        var cpfEl = document.getElementById('cpf');
         if (nomeEl && typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) {
             nomeEl.addEventListener('blur', function() {
                 this.value = TextFormatter.formatProperName(this.value, 255);
             });
         }
-        if (typeof App !== 'undefined' && App.CPF && App.CPF.init) {
-            App.CPF.init('#cpf');
+
+        function aplicarMascaraDocumentoRow(row) {
+            if (!row || typeof App === 'undefined' || !App.CPF) return;
+            var tipoEl = row.querySelector('.doc-tipo');
+            var numeroEl = row.querySelector('.doc-numero');
+            if (!tipoEl || !numeroEl) return;
+            if (tipoEl.value === 'CPF') {
+                App.CPF.init(numeroEl);
+            }
         }
+
+        function bindDocumentoRow(row) {
+            if (!row) return;
+            var tipoEl = row.querySelector('.doc-tipo');
+            if (tipoEl) {
+                tipoEl.addEventListener('change', function() { aplicarMascaraDocumentoRow(row); });
+            }
+            aplicarMascaraDocumentoRow(row);
+        }
+
+        document.querySelectorAll('#documentos-cadastro .documento-row').forEach(bindDocumentoRow);
+
+        document.getElementById('add-documento-btn').addEventListener('click', function() {
+            var container = document.getElementById('documentos-cadastro');
+            var tpl = document.querySelector('#documentos-cadastro .documento-row').cloneNode(true);
+            var sel = tpl.querySelector('.doc-tipo');
+            if (sel) sel.selectedIndex = 0;
+            var num = tpl.querySelector('.doc-numero');
+            if (num) num.value = '';
+            container.appendChild(tpl);
+            bindDocumentoRow(tpl);
+        });
 
         function syncProfissaoOutra() {
             var sel = document.getElementById('profissao_selecao');
@@ -203,12 +250,33 @@ $profissaoAtual = '';
                 if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Nome completo é obrigatório.' });
                 return;
             }
-            var cpfRaw = (document.getElementById('cpf').value || '').replace(/\D/g, '');
-            if (cpfRaw && cpfRaw.length === 11 && typeof App !== 'undefined' && App.CPF && !App.CPF.validar(cpfRaw)) {
-                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'CPF inválido. Verifique os dígitos.' });
-                return;
+            var documentos = [];
+            var tiposUsados = {};
+            var docRows = document.querySelectorAll('#documentos-cadastro .documento-row');
+            for (var di = 0; di < docRows.length; di++) {
+                var drow = docRows[di];
+                var tipoDoc = (drow.querySelector('.doc-tipo') && drow.querySelector('.doc-tipo').value ? drow.querySelector('.doc-tipo').value : '').trim().toUpperCase();
+                var numeroDoc = (drow.querySelector('.doc-numero') && drow.querySelector('.doc-numero').value ? drow.querySelector('.doc-numero').value : '').trim();
+                if (tipoDoc === '' && numeroDoc === '') continue;
+                if (tipoDoc === '' || numeroDoc === '') {
+                    if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Informe tipo e número para cada documento preenchido.' });
+                    return;
+                }
+                if (tiposUsados[tipoDoc]) {
+                    if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Informe apenas um documento por tipo (' + tipoDoc + ').' });
+                    return;
+                }
+                tiposUsados[tipoDoc] = true;
+                if (tipoDoc === 'CPF') {
+                    numeroDoc = numeroDoc.replace(/\D/g, '');
+                    if (numeroDoc.length === 11 && typeof App !== 'undefined' && App.CPF && !App.CPF.validar(numeroDoc)) {
+                        if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'CPF inválido. Verifique os dígitos.' });
+                        return;
+                    }
+                }
+                documentos.push({ tipo: tipoDoc, numero: numeroDoc });
             }
-            var cpf = cpfRaw || null;
+
             var sexo = (document.getElementById('sexo').value || '').trim();
             var data = (document.getElementById('data_nascimento').value || '').trim();
 
@@ -264,12 +332,12 @@ $profissaoAtual = '';
             }
             var payload = {
                 nome_completo: (typeof TextFormatter !== 'undefined' && TextFormatter.formatProperName) ? TextFormatter.formatProperName(nome, 255) : nome,
-                cpf: cpf,
                 sexo: sexo || null,
                 data_nascimento: data || null,
                 profissao_selecao: ps ? (ps.value || '').trim() : '',
                 profissao_outra: profissaoOutraFmt
             };
+            if (documentos.length > 0) payload.documentos = documentos;
             if (telefones.length > 0) payload.telefones = telefones;
             if (enderecos.length > 0) payload.enderecos = enderecos;
 

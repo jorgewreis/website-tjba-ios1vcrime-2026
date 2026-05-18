@@ -7,6 +7,7 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 require_once __DIR__ . '/../../helpers/Conection.php';
+require_once __DIR__ . '/../../helpers/ParteDocumentoHelper.php';
 require_once __DIR__ . '/../../helpers/InternoProdutividadeAutoHelper.php';
 require_once __DIR__ . '/../../services/PessoasService.php';
 require_once __DIR__ . '/../../repositories/PartesTelefonesRepository.php';
@@ -157,7 +158,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                         <input type="text" class="width-600 height-md" id="filter-nome" name="nome" placeholder="Digite o nome completo" value="<?php echo htmlspecialchars($nomeFilter); ?>">
                     </div>
                     <div class="col">
-                        <label for="filter-cpf">CPF</label>
+                        <label for="filter-cpf">CPF (documento)</label>
                         <input type="text" class="width-400 height-md" id="filter-cpf" name="cpf" placeholder="000.000.000-00" value="<?php echo htmlspecialchars($cpfFilter); ?>">
                     </div>
                 </div>
@@ -194,7 +195,24 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                     <div class="display-flex row row-fit justify-start gap-y-sm">
                         <div class="col width-500 parte-info">
                             <span class="minor-info">Nome</span>
-                            <span class="major-info"><?php $cpfCell = $row['cpf'] ?? ''; echo htmlspecialchars(($row['nome_completo'] ?? '') . ' (' . ($cpfCell !== '' && strlen($cpfCell) === 11 ? Security::formatCPF($cpfCell) : ($cpfCell !== '' ? $cpfCell : '—')) . ')'); ?></span>
+                            <span class="major-info"><?php
+                                $docsExib = [];
+                                foreach ($row['documentos'] ?? [] as $docRow) {
+                                    $tDoc = ParteDocumentoHelper::normalizarTipo((string) ($docRow['tipo'] ?? ''));
+                                    $nDoc = ParteDocumentoHelper::formatarExibicao($tDoc, (string) ($docRow['numero'] ?? ''));
+                                    if ($tDoc !== '' && $nDoc !== '') {
+                                        $docsExib[] = $tDoc . ': ' . $nDoc;
+                                    }
+                                }
+                                if ($docsExib === []) {
+                                    $cpfCell = $row['cpf'] ?? '';
+                                    if ($cpfCell !== '') {
+                                        $docsExib[] = 'CPF: ' . (strlen($cpfCell) === 11 ? Security::formatCPF($cpfCell) : $cpfCell);
+                                    }
+                                }
+                                $docsStr = $docsExib !== [] ? implode(' · ', $docsExib) : '—';
+                                echo htmlspecialchars(($row['nome_completo'] ?? '') . ' (' . $docsStr . ')');
+                            ?></span>
                         </div>
                         <div class="col parte-tel">
                             <span class="minor-info">Telefones</span>

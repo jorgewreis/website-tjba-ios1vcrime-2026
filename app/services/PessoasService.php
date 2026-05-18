@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/ProfissaoValidator.php';
+require_once __DIR__ . '/../helpers/ParteDocumentoHelper.php';
 require_once __DIR__ . '/../repositories/PartesRepository.php';
+require_once __DIR__ . '/../repositories/PartesDocumentosRepository.php';
 require_once __DIR__ . '/../repositories/PartesTelefonesRepository.php';
 require_once __DIR__ . '/../repositories/PartesEnderecosRepository.php';
 require_once __DIR__ . '/../repositories/PartesInstituicoesRepository.php';
@@ -13,6 +15,7 @@ final class PessoasService
 {
     private PDO $connection;
     private PartesRepository $partesRepository;
+    private PartesDocumentosRepository $documentosRepository;
     private PartesTelefonesRepository $telefonesRepository;
     private PartesEnderecosRepository $enderecosRepository;
     private PartesInstituicoesRepository $partesInstituicoesRepository;
@@ -22,6 +25,7 @@ final class PessoasService
     {
         $this->connection = $connection;
         $this->partesRepository = new PartesRepository($connection);
+        $this->documentosRepository = new PartesDocumentosRepository($connection);
         $this->telefonesRepository = new PartesTelefonesRepository($connection);
         $this->enderecosRepository = new PartesEnderecosRepository($connection);
         $this->partesInstituicoesRepository = new PartesInstituicoesRepository($connection);
@@ -36,6 +40,7 @@ final class PessoasService
             $rows[$i]['total_processos'] = $parteId !== '' ? count($this->processosPartesRepository->findByParteId($parteId)) : 0;
             $vinculosInst = $parteId !== '' ? $this->partesInstituicoesRepository->findByParteId($parteId, true) : [];
             $rows[$i]['total_instituicoes'] = count($vinculosInst);
+            $rows[$i]['documentos'] = $parteId !== '' ? $this->documentosRepository->findByParteId($parteId) : [];
             $rows[$i]['telefones'] = $parteId !== '' ? $this->telefonesRepository->findByParteId($parteId) : [];
             $rows[$i]['instituicoes'] = array_map(function (array $v): array {
                 return [
@@ -58,6 +63,7 @@ final class PessoasService
         if ($parte === null) {
             return null;
         }
+        $parte['documentos'] = $this->documentosRepository->findByParteId($id);
         $parte['telefones'] = $this->telefonesRepository->findByParteId($id);
         $parte['enderecos'] = $this->enderecosRepository->findByParteId($id);
         $parte['vinculos_instituicoes'] = $this->partesInstituicoesRepository->findByParteId($id, null);
@@ -69,13 +75,24 @@ final class PessoasService
     {
         $this->connection->beginTransaction();
         try {
+            $documentosPayload = $this->normalizarDocumentosPayload($payload);
+            if ($documentosPayload === [] && !empty($payload['cpf'])) {
+                $cpfUnico = ParteDocumentoHelper::normalizarNumero('CPF', (string) $payload['cpf']);
+                if ($cpfUnico !== '') {
+                    ParteDocumentoHelper::validarNumero('CPF', $cpfUnico);
+                    $documentosPayload = [['tipo' => 'CPF', 'numero' => $cpfUnico]];
+                }
+            }
+
             $id = $this->partesRepository->insert([
-                'cpf' => $payload['cpf'] ?? '',
+                'cpf' => '',
                 'nome_completo' => $payload['nome_completo'] ?? '',
                 'sexo' => $payload['sexo'] ?? '',
                 'data_nascimento' => $payload['data_nascimento'] ?? '',
                 'profissao' => $this->resolverProfissaoParaPayload($payload, null),
             ]);
+
+            $this->persistirDocumentos($id, $documentosPayload);
 
             $telefones = $payload['telefones'] ?? [];
             if (is_array($telefones)) {
@@ -131,7 +148,7 @@ final class PessoasService
         if ($existente === null) {
             return false;
         }
-        $allowed = ['cpf', 'nome_completo', 'sexo', 'data_nascimento'];
+        $allowed = ['nome_completo', 'sexo', 'data_nascimento'];
         $data = array_intersect_key($payload, array_flip($allowed));
         $anterior = trim((string) ($existente['profissao'] ?? ''));
         if (array_key_exists('profissao_selecao', $payload) || array_key_exists('profissao_outra', $payload) || array_key_exists('profissao', $payload)) {
@@ -143,6 +160,47 @@ final class PessoasService
         $ok = $this->partesRepository->update($id, $data);
         if ($ok) {
             $this->reconciliarProfissaoParteComVinculosInstituicao($id);
+        }
+
+        return $ok;
+    }
+
+    public function addDocumento(string $parteId, array $row): string
+    {
+        $tipo = ParteDocumentoHelper::normalizarTipo((string) ($row['tipo'] ?? ''));
+        $numero = ParteDocumentoHelper::normalizarNumero($tipo, (string) ($row['numero'] ?? ''));
+        if ($tipo === '' || !ParteDocumentoHelper::isTipoValido($tipo)) {
+            throw new InvalidArgumentException('Tipo de documento é obrigatório.');
+        }
+        ParteDocumentoHelper::validarNumero($tipo, $numero);
+
+        $existentes = $this->documentosRepository->findByParteId($parteId);
+        foreach ($existentes as $doc) {
+            if (ParteDocumentoHelper::normalizarTipo((string) ($doc['tipo'] ?? '')) === $tipo) {
+                throw new InvalidArgumentException('Esta pessoa já possui documento do tipo ' . $tipo . '.');
+            }
+        }
+
+        $newId = $this->documentosRepository->insert([
+            'parte_id' => $parteId,
+            'tipo' => $tipo,
+            'numero' => $numero,
+        ]);
+        $this->sincronizarCpfLegado($parteId);
+
+        return $newId;
+    }
+
+    public function deleteDocumento(string $id): bool
+    {
+        $row = $this->documentosRepository->findById($id);
+        if ($row === null) {
+            return false;
+        }
+        $parteId = trim((string) ($row['parte_id'] ?? ''));
+        $ok = $this->documentosRepository->delete($id);
+        if ($ok && $parteId !== '') {
+            $this->sincronizarCpfLegado($parteId);
         }
 
         return $ok;
@@ -327,6 +385,62 @@ final class PessoasService
             $this->connection->rollBack();
             throw $e;
         }
+    }
+
+    /**
+     * @return list<array{tipo: string, numero: string}>
+     */
+    private function normalizarDocumentosPayload(array $payload): array
+    {
+        $out = [];
+        $vistosTipo = [];
+        $lista = $payload['documentos'] ?? [];
+        if (!is_array($lista)) {
+            return $out;
+        }
+        foreach ($lista as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            $tipo = ParteDocumentoHelper::normalizarTipo((string) ($item['tipo'] ?? ''));
+            $numero = ParteDocumentoHelper::normalizarNumero($tipo, (string) ($item['numero'] ?? ''));
+            if ($tipo === '' || $numero === '') {
+                continue;
+            }
+            if (!ParteDocumentoHelper::isTipoValido($tipo)) {
+                throw new InvalidArgumentException('Tipo de documento inválido: ' . $tipo);
+            }
+            if (isset($vistosTipo[$tipo])) {
+                throw new InvalidArgumentException('Informe apenas um documento por tipo (' . $tipo . ').');
+            }
+            ParteDocumentoHelper::validarNumero($tipo, $numero);
+            $vistosTipo[$tipo] = true;
+            $out[] = ['tipo' => $tipo, 'numero' => $numero];
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param list<array{tipo: string, numero: string}> $documentos
+     */
+    private function persistirDocumentos(string $parteId, array $documentos): void
+    {
+        foreach ($documentos as $doc) {
+            $this->documentosRepository->insert([
+                'parte_id' => $parteId,
+                'tipo' => $doc['tipo'],
+                'numero' => $doc['numero'],
+            ]);
+        }
+        $this->sincronizarCpfLegado($parteId);
+    }
+
+    private function sincronizarCpfLegado(string $parteId): void
+    {
+        $documentos = $this->documentosRepository->findByParteId($parteId);
+        $cpf = ParteDocumentoHelper::resolverCpfParaColunaLegada($documentos);
+        $this->partesRepository->setCpfLegado($parteId, $cpf);
     }
 
     private function canonProfissaoParaComparacao(?string $valor): string

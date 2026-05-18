@@ -7,6 +7,7 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 require_once __DIR__ . '/../../helpers/Conection.php';
+require_once __DIR__ . '/../../helpers/ParteDocumentoHelper.php';
 require_once __DIR__ . '/../../repositories/PartesRepository.php';
 require_once __DIR__ . '/../../services/PessoasService.php';
 require_once __DIR__ . '/../../../config/security.php';
@@ -45,19 +46,12 @@ $profissaoAtual = trim((string) ($pessoa['profissao'] ?? ''));
     <div class="header-page">
         <div class="location"><span class="all">Interno - Consultas -</span> <span class="specific">Editar pessoa</span></div>
         <h1 class="title-page"><?php echo htmlspecialchars($pessoa['nome_completo'] ?? 'Pessoa'); ?></h1>
-        <p class="description-page">Dados básicos, telefones, endereços e vínculos com instituições.</p>
+        <p class="description-page">Dados básicos, documentos, telefones, endereços e vínculos com instituições.</p>
     </div>
     <div class="container-full card-page">
         <input type="hidden" id="parte-id" value="<?php echo htmlspecialchars(trim((string) ($pessoa['id'] ?? $pessoa['ID'] ?? ''))); ?>">
         <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Dados básicos</h2></div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
-            <div class="col">
-                <label for="cpf">CPF</label>
-                <input type="text" class="width-300 height-md white readyonl" id="cpf" value="<?php
-                    $cpfVal = $pessoa['cpf'] ?? '';
-                    echo htmlspecialchars(strlen($cpfVal) === 11 ? Security::formatCPF($cpfVal) : $cpfVal);
-                ?>" readonly>
-            </div>
             <div class="col">
                 <label for="nome_completo">Nome completo</label>
                 <input type="text" class="width-600 height-md white" id="nome_completo" placeholder="Digite o nome completo" value="<?php echo htmlspecialchars($pessoa['nome_completo'] ?? ''); ?>">
@@ -78,6 +72,37 @@ $profissaoAtual = trim((string) ($pessoa['profissao'] ?? ''));
         </div>
 
         <?php include __DIR__ . '/_partes_profissao_fields.php'; ?>
+
+        <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Documentos</h2></div>
+        <div id="documentos-list">
+            <?php foreach ($pessoa['documentos'] ?? [] as $doc): ?>
+            <?php
+                $tipoDoc = ParteDocumentoHelper::normalizarTipo((string) ($doc['tipo'] ?? ''));
+                $numeroDoc = ParteDocumentoHelper::formatarExibicao($tipoDoc, (string) ($doc['numero'] ?? ''));
+            ?>
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md" data-id="<?php echo htmlspecialchars($doc['id'] ?? ''); ?>">
+                <div class="col"><?php echo htmlspecialchars($tipoDoc); ?></div>
+                <div class="col"><?php echo htmlspecialchars($numeroDoc); ?></div>
+                <div class="col"><button type="button" class="btn btn-secondary-outline btn-del-doc" data-id="<?php echo htmlspecialchars($doc['id'] ?? ''); ?>">Excluir</button></div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
+            <div class="col">
+                <label for="new-doc-tipo">Tipo</label>
+                <select class="width-200 height-md white" id="new-doc-tipo">
+                    <?php $documentoTipoSelecionado = ''; include __DIR__ . '/_partes_documento_tipo_options.php'; ?>
+                </select>
+            </div>
+            <div class="col">
+                <label for="new-doc-numero">Número</label>
+                <input type="text" class="width-300 height-md white" id="new-doc-numero" placeholder="Número do documento" maxlength="60">
+            </div>
+            <div class="col">
+                <label for="add-doc-btn" style="color: transparent;">-</label>
+                <button type="button" class="btn btn-secondary-outline" id="add-doc-btn">Adicionar documento</button>
+            </div>
+        </div>
 
         <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Telefones</h2></div>
         <div id="telefones-list">
@@ -107,6 +132,8 @@ $profissaoAtual = trim((string) ($pessoa['profissao'] ?? ''));
                 <button type="button" class="btn btn-secondary-outline" id="add-tel-btn">Adicionar telefone</button>
             </div>
         </div>
+
+        <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Endereços</h2></div>
 
         <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Endereços</h2></div>
         <div id="enderecos-list">

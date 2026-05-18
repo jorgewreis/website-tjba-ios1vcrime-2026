@@ -24,8 +24,17 @@
                 nomeEl.value = global.TextFormatter.formatProperName(nomeEl.value, 255);
             });
         }
-        if (App.CPF && typeof App.CPF.init === 'function') {
-            App.CPF.init('#cpf');
+        const newDocTipo = global.document.getElementById('new-doc-tipo');
+        const newDocNumero = global.document.getElementById('new-doc-numero');
+        if (newDocTipo && newDocNumero) {
+            newDocTipo.addEventListener('change', function () {
+                if (newDocTipo.value === 'CPF' && App.CPF && typeof App.CPF.init === 'function') {
+                    App.CPF.init(newDocNumero);
+                }
+            });
+            if (newDocTipo.value === 'CPF' && App.CPF && typeof App.CPF.init === 'function') {
+                App.CPF.init(newDocNumero);
+            }
         }
 
         function syncProfissaoOutra() {
@@ -68,15 +77,6 @@
 
         global.document.getElementById('salvar-btn')?.addEventListener('click', function () {
             const saveButton = this;
-            const cpfRaw = String(global.document.getElementById('cpf')?.value || '').replace(/\D/g, '');
-            if (cpfRaw && cpfRaw.length === 11 && App.CPF && !App.CPF.validar(cpfRaw)) {
-                if (typeof common.notifyByKey === 'function') {
-                    common.notifyByKey('generic.validation.cpf.invalid', {}, 'error', 'Erro', 'CPF inválido. Verifique os dígitos.');
-                } else {
-                    common.notify('error', 'Erro', 'CPF inválido. Verifique os dígitos.');
-                }
-                return;
-            }
             const nomeVal = String(global.document.getElementById('nome_completo')?.value || '').trim();
             const outraToken = global.PROFISSAO_SELECT_OUTRA || '__OUTRA__';
             const profissaoSelect = global.document.getElementById('profissao_selecao');
@@ -92,7 +92,6 @@
         }
             const payload = {
                 id: getParteId(),
-                cpf: cpfRaw || '',
                 nome_completo: (App.ProperNameHelper && typeof App.ProperNameHelper.formatProper === 'function')
                     ? App.ProperNameHelper.formatProper(nomeVal, 255)
                     : (typeof global.TextFormatter !== 'undefined' && global.TextFormatter.formatProperName
@@ -122,6 +121,60 @@
                     common.notify('error', 'Erro', 'Erro de conexão.');
                 }
                 saveButton.disabled = false;
+            });
+        });
+
+        global.document.getElementById('add-doc-btn')?.addEventListener('click', function () {
+            const addButton = this;
+            const parteId = getParteId();
+            if (!parteId) {
+                common.notify('error', 'Erro', 'ID da pessoa não encontrado. Recarregue a página.');
+                return;
+            }
+            const tipo = String(global.document.getElementById('new-doc-tipo')?.value || '').trim().toUpperCase();
+            let numero = String(global.document.getElementById('new-doc-numero')?.value || '').trim();
+            if (!tipo || !numero) {
+                common.notify('error', 'Erro', 'Informe o tipo e o número do documento.');
+                return;
+            }
+            if (tipo === 'CPF') {
+                numero = numero.replace(/\D/g, '');
+                if (numero.length === 11 && App.CPF && !App.CPF.validar(numero)) {
+                    common.notify('error', 'Erro', 'CPF inválido. Verifique os dígitos.');
+                    return;
+                }
+            }
+            addButton.disabled = true;
+            common.postJson('/api/pessoas/documentos/create.php', {
+                parte_id: parteId,
+                tipo: tipo,
+                numero: numero
+            }).then(function (result) {
+                if (result.ok && result.data && result.data.id) {
+                    common.queuePostReloadToast('success', 'Sucesso', 'Documento adicionado com sucesso.', storageKey);
+                    global.location.reload();
+                    return;
+                }
+                common.notify('error', 'Erro', (result.data && result.data.error) || 'Erro ao adicionar documento.');
+                addButton.disabled = false;
+            }).catch(function () {
+                common.notify('error', 'Erro', 'Erro de conexão.');
+                addButton.disabled = false;
+            });
+        });
+
+        global.document.querySelectorAll('.btn-del-doc').forEach(function (button) {
+            button.addEventListener('click', function () {
+                const id = button.getAttribute('data-id');
+                if (!id) {
+                    return;
+                }
+                common.postJson('/api/pessoas/documentos/delete.php', { id: id }).then(function (result) {
+                    if (result.data && result.data.deleted) {
+                        common.queuePostReloadToast('success', 'Sucesso', 'Documento removido com sucesso.', storageKey);
+                        global.location.reload();
+                    }
+                });
             });
         });
 

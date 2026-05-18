@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
+require_once __DIR__ . '/../helpers/ParteDocumentoHelper.php';
+require_once __DIR__ . '/PartesDocumentosRepository.php';
 require_once __DIR__ . '/../../config/security.php';
 
 final class PartesRepository
@@ -49,12 +51,32 @@ final class PartesRepository
         }
 
         $statement = $this->connection->prepare(
-            sprintf('SELECT `id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `profissao`, `created_at`, `updated_at` FROM `%s` WHERE `cpf` = :cpf LIMIT 1', $this->table)
+            sprintf(
+                'SELECT p.`id`, p.`cpf`, p.`nome_completo`, p.`sexo`, p.`data_nascimento`, p.`profissao`, p.`created_at`, p.`updated_at`
+                 FROM `%s` p
+                 INNER JOIN `partes_documentos` pd ON pd.`parte_id` = p.`id` AND pd.`tipo` = \'CPF\' AND pd.`numero` = :cpf
+                 LIMIT 1',
+                $this->table
+            )
+        );
+        $statement->bindValue(':cpf', $cpf);
+        $statement->execute();
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+        if ($result !== false) {
+            return $result;
+        }
+
+        $statement = $this->connection->prepare(
+            sprintf(
+                'SELECT `id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `profissao`, `created_at`, `updated_at` FROM `%s` WHERE `cpf` = :cpf LIMIT 1',
+                $this->table
+            )
         );
         $statement->bindValue(':cpf', $cpf);
         $statement->execute();
 
         $result = $statement->fetch(PDO::FETCH_ASSOC);
+
         return $result === false ? null : $result;
     }
 
@@ -286,8 +308,11 @@ final class PartesRepository
 
         $cpf = $this->normalizeCpf((string) ($filters['cpf'] ?? ''));
         if ($cpf !== '') {
-            $conditions[] = 'p.`cpf` = :cpf';
-            $params[':cpf'] = $cpf;
+            $conditions[] = '(p.`cpf` = :cpf_filtro OR EXISTS (
+                SELECT 1 FROM `partes_documentos` pd
+                WHERE pd.`parte_id` = p.`id` AND pd.`tipo` = \'CPF\' AND pd.`numero` = :cpf_filtro
+            ))';
+            $params[':cpf_filtro'] = $cpf;
         }
 
         $instituicaoId = trim((string) ($filters['instituicao_id'] ?? ''));
@@ -347,7 +372,31 @@ final class PartesRepository
         $statement->bindValue(':profissao', $profissao);
         $statement->execute();
 
+        if ($cpf !== '') {
+            $this->garantirDocumentoCpf($id, $cpf);
+        }
+
         return $id;
+    }
+
+    /** Atualiza coluna legada `partes.cpf` a partir dos documentos (sem validação de duplicidade). */
+    public function setCpfLegado(string $parteId, ?string $cpf): void
+    {
+        $parteId = trim($parteId);
+        if ($parteId === '') {
+            return;
+        }
+        $cpfNorm = $cpf !== null && trim($cpf) !== '' ? $this->normalizeCpf($cpf) : null;
+        $statement = $this->connection->prepare(
+            sprintf('UPDATE `%s` SET `cpf` = :cpf, `updated_at` = NOW() WHERE `id` = :id LIMIT 1', $this->table)
+        );
+        $statement->bindValue(':id', $parteId);
+        if ($cpfNorm === null) {
+            $statement->bindValue(':cpf', null, PDO::PARAM_NULL);
+        } else {
+            $statement->bindValue(':cpf', $cpfNorm);
+        }
+        $statement->execute();
     }
 
     public function update(string $id, array $payload): bool
@@ -492,8 +541,32 @@ final class PartesRepository
         ]);
     }
 
+    private function garantirDocumentoCpf(string $parteId, string $cpf): void
+    {
+        $cpf = $this->normalizeCpf($cpf);
+        if ($cpf === '') {
+            return;
+        }
+        $documentosRepo = new PartesDocumentosRepository($this->connection);
+        $existentes = $documentosRepo->findByParteId($parteId);
+        foreach ($existentes as $doc) {
+            if (ParteDocumentoHelper::normalizarTipo((string) ($doc['tipo'] ?? '')) === 'CPF') {
+                return;
+            }
+        }
+        try {
+            $documentosRepo->insert([
+                'parte_id' => $parteId,
+                'tipo' => 'CPF',
+                'numero' => $cpf,
+            ]);
+        } catch (Throwable) {
+            // Mantém coluna legada; documento pode já existir em migração concorrente.
+        }
+    }
+
     private function normalizeCpf(string $cpf): string
     {
-        return preg_replace('/\D+/', '', trim($cpf));
+        return preg_replace('/\D+/', '', trim($cpf)) ?? '';
     }
 }

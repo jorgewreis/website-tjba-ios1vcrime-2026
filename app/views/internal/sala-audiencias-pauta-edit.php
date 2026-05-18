@@ -13,7 +13,9 @@ require_once __DIR__ . '/../../helpers/ClasseProcessualListagemHelper.php';
 require_once __DIR__ . '/../../services/SalaAudienciasPautaService.php';
 require_once __DIR__ . '/../../repositories/GabineteReuPresoProcessoRepository.php';
 require_once __DIR__ . '/../../repositories/GabineteReuPresoRepository.php';
+require_once __DIR__ . '/../../helpers/ParteDocumentoHelper.php';
 require_once __DIR__ . '/../../repositories/PartesRepository.php';
+require_once __DIR__ . '/../../repositories/PartesDocumentosRepository.php';
 require_once __DIR__ . '/../../repositories/ProcessosPartesRepository.php';
 require_once __DIR__ . '/../../repositories/PartesInstituicoesRepository.php';
 require_once __DIR__ . '/../../repositories/PartesTelefonesRepository.php';
@@ -214,13 +216,24 @@ if ($row !== null) {
         }
     }
 }
+$partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection());
+$partesDocumentosRepoLista = new PartesDocumentosRepository(Conection::getInstance()->getConnection());
 $advogadosCadastrados = [];
 foreach ($partes as $parteItem) {
     if ((string) ($parteItem['tipo_parte'] ?? '') === 'advogado') {
         $nomeAdv = trim((string) ($parteItem['nome_parte'] ?? ''));
-        if ($nomeAdv !== '') {
-            $advogadosCadastrados[] = $nomeAdv;
+        if ($nomeAdv === '') {
+            continue;
         }
+        $parteAdvCadastro = null;
+        $parteAdvId = trim((string) ($parteItem['parte_id_global'] ?? ''));
+        if ($parteAdvId !== '' && preg_match('/^[A-Z]{3}-[a-f0-9]{26}$/i', $parteAdvId)) {
+            $parteAdvCadastro = $partesRepoLista->findById($parteAdvId);
+        }
+        $docsAdv = $parteAdvCadastro !== null
+            ? $partesDocumentosRepoLista->findByParteId((string) ($parteAdvCadastro['id'] ?? ''))
+            : [];
+        $advogadosCadastrados[] = ParteDocumentoHelper::montarRotuloDefensorPrivado($nomeAdv, $parteAdvCadastro, $docsAdv);
     }
 }
 
@@ -252,7 +265,6 @@ foreach ($tipos as $tpItem) {
         break;
     }
 }
-$partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection());
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -717,16 +729,20 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
 
                 if ($tipoDefensor === 'privado') {
                     if ($defensorPrivado === 'outro' && $defensorPrivadoOutro !== '') {
-                        $defensorTexto = 'Advogado: ' . $defensorPrivadoOutro;
+                        $defensorTexto = ParteDocumentoHelper::montarRotuloDefensorPrivado($defensorPrivadoOutro);
                     } elseif ($defensorPrivado !== '') {
-                        $rotuloAdv = $defensorPrivado;
+                        $pAdv = null;
+                        $nomeAdv = $defensorPrivado;
                         if (preg_match('/^[A-Z]{3}-[a-f0-9]{26}$/i', $defensorPrivado)) {
                             $pAdv = $partesRepoLista->findById($defensorPrivado);
                             if ($pAdv !== null) {
-                                $rotuloAdv = trim((string) ($pAdv['nome_completo'] ?? $defensorPrivado));
+                                $nomeAdv = trim((string) ($pAdv['nome_completo'] ?? $defensorPrivado));
                             }
                         }
-                        $defensorTexto = 'Advogado: ' . $rotuloAdv;
+                        $docsAdv = $pAdv !== null
+                            ? $partesDocumentosRepoLista->findByParteId((string) ($pAdv['id'] ?? ''))
+                            : [];
+                        $defensorTexto = ParteDocumentoHelper::montarRotuloDefensorPrivado($nomeAdv, $pAdv, $docsAdv);
                     }
                 } elseif ($tipoDefensor === 'publico' && $defensorPublico !== '') {
                     if ($defensorPublico === 'outro' && $defensorPublicoOutroLista !== '') {
@@ -742,7 +758,7 @@ $partesRepoLista = new PartesRepository(Conection::getInstance()->getConnection(
                         $defensorTexto = 'Defensor público: ' . $rotuloDp;
                     }
                 } elseif ($advogadosCadastrados !== []) {
-                    $defensorTexto = 'Advogado: ' . implode(' / ', $advogadosCadastrados);
+                    $defensorTexto = implode(' / ', $advogadosCadastrados);
                 }
             }
 
