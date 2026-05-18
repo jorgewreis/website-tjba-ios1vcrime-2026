@@ -178,6 +178,23 @@
         if (!subtarefaId) {
             return;
         }
+        var row = button.closest('[data-subtarefa-id]');
+        var subtarefaCodigo = String((row && row.getAttribute('data-subtarefa-codigo')) || '').trim();
+        var dados = {};
+        if (subtarefaCodigo === 'download_midia') {
+            var qtd = parseInt(String(document.getElementById('midias-edit-qtd') && document.getElementById('midias-edit-qtd').value || '0'), 10);
+            if (!qtd || qtd < 1) {
+                notifyByKey(
+                    'audiencias.midias.subtask.quantity.invalid',
+                    {},
+                    'error',
+                    'Validação',
+                    'Informe uma quantidade de mídias válida (campo Qtd de mídias).'
+                );
+                return;
+            }
+            dados.qtd_midias = qtd;
+        }
         button.disabled = true;
         fetch('/api/sala-midias/subtarefa-status.php', {
             method: 'POST',
@@ -185,7 +202,8 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 subtarefa_id: subtarefaId,
-                status: 'concluida'
+                status: 'concluida',
+                dados: dados
             })
         })
             .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })

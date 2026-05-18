@@ -196,7 +196,7 @@ if ($cartorioAlocacaoUserId !== '') {
                 $subStatus = trim((string) ($sub['status'] ?? 'pendente'));
                 $concluivel = in_array($subStatus, ['pendente', 'em_andamento'], true) && !$bloqueada;
                 ?>
-                <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-bottom" data-subtarefa-id="<?php echo htmlspecialchars($subId, ENT_QUOTES, 'UTF-8'); ?>">
+                <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-bottom" data-subtarefa-id="<?php echo htmlspecialchars($subId, ENT_QUOTES, 'UTF-8'); ?>" data-subtarefa-codigo="<?php echo htmlspecialchars($subCode, ENT_QUOTES, 'UTF-8'); ?>">
                     <div class="display-flex row row-fit justify-start gap-y-sm align-center">
                         <div class="col task-status">
                             <div class="padding-x-lg height-sm status status-pending"><?php echo htmlspecialchars($subLabel, ENT_QUOTES, 'UTF-8'); ?></div>

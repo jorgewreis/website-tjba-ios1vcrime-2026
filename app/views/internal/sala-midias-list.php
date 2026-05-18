@@ -430,6 +430,15 @@ $buttonTitleByTipo = [
                                                 placeholder="Qtd. de mídias para download"
                                                 title="Informe a quantidade de mídias para download">
                                         </div>
+                                    <?php elseif ($qtdMidiasInput > 1 || $qtdDownloadInformada !== null): ?>
+                                        <div class="col">
+                                            <input
+                                                type="number"
+                                                class="width-300 height-sm js-midias-qtd-midias"
+                                                value="<?php echo (int) $qtdMidiasInput; ?>"
+                                                readonly
+                                                title="Quantidade definida no download (usada nas próximas etapas)">
+                                        </div>
                                     <?php endif; ?>
                                 </div>
                                 <div class="display-flex row row-fit justify-end align-center">

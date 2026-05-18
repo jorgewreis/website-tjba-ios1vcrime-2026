@@ -614,6 +614,8 @@ final class SalaMidiasService
 
     private function calcularPontosSubtarefa(string $codigo, int $qtdMidias): float
     {
+        $qtdMidias = max(1, $qtdMidias);
+
         return match ($codigo) {
             'download_midia' => 2.0,
             'sincronizacao_midia' => 3.0 * $qtdMidias,
@@ -640,8 +642,9 @@ final class SalaMidiasService
         if (!isset($eventByCodigo[$codigo])) {
             return;
         }
+        $usaQtdMidiasNaQuantidade = in_array($codigo, ['sincronizacao_midia', 'upload_midia'], true);
         CartorioProdutividade::record($this->connection, $usuarioId, $eventByCodigo[$codigo], [
-            'quantidade' => ($codigo === 'sincronizacao_midia' || $codigo === 'upload_midia') ? $qtdMidias : 1,
+            'quantidade' => $usaQtdMidiasNaQuantidade ? $qtdMidias : 1,
             'pontos_calculados_override' => $pontos,
             'referencia_item_id' => $subtarefaId,
             'referencia_sistema' => 'sala-midias',

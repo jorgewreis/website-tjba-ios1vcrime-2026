@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 02 de abril de 2026
+**Data de Lançamento:** 18 de maio de 2026
 
 # V. 1.28
 
-> refactor: update iframe handling and script integration in forms
+> refactor: enhance document handling in PartesRepository and PessoasService
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **refactor: update iframe handling and script integration in forms** `[eb617f8]`
+- **refactor: enhance document handling in PartesRepository and PessoasService** `[91b39183]`
 
 ---
 
