@@ -300,7 +300,7 @@ if ($totalPages > 0) {
                 }
                 $mostrarBarraStatus = !in_array($st, ['concluída', 'cancelada'], true);
             ?>
-            <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'medidas_protetivas', $registroListViewerContext); ?>
+            <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'medidas_protetivas', $registroListViewerContext, $connection); ?>
             <div class="display-flex col col-full register register-with-metadata border-bottom" data-medida-id="<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idMedida, ENT_QUOTES); ?>">
 
                 <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm align-center">

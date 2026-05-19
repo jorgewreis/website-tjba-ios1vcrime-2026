@@ -299,7 +299,7 @@ if ($totalPages > 0) {
                     $statusClass = 'status-finished';
                 }
                 ?>
-                <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'ceapa', $registroListViewerContext); ?>
+                <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'ceapa', $registroListViewerContext, $connection); ?>
                 <div class="display-flex col col-full register register-with-metadata border-bottom" data-ceapa-id="<?php echo htmlspecialchars($idCeapa, ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars($idCeapa, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idCeapa, ENT_QUOTES); ?>">
                     <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                         <div class="display-flex row row-fit justify-start gap-y-sm align-center">

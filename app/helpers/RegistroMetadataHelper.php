@@ -25,6 +25,7 @@ final class RegistroMetadataHelper
             'data_keys' => ['Data', 'created_at'],
             'updated_keys' => ['DataAtualizacao', 'updated_at'],
             'criador_keys' => ['CriadoPorNome'],
+            'movement_from_subtarefa' => true,
             'edit_page' => 'cartasexpedidasedit',
             'cancel_endpoint' => '/api/cartorio-cartas-expedidas/cancel.php',
             'cancel_toast_key' => 'cartorio.cartas_expedidas.cancel.success',
@@ -36,6 +37,7 @@ final class RegistroMetadataHelper
             'data_keys' => ['Data', 'created_at'],
             'updated_keys' => ['DataAtualizacao', 'updated_at'],
             'criador_keys' => ['CriadoPorNome'],
+            'movement_from_subtarefa' => true,
             'edit_page' => 'cartasrecebidasedit',
             'cancel_endpoint' => '/api/cartorio-cartas-recebidas/cancel.php',
             'cancel_toast_key' => 'cartorio.cartas_recebidas.cancel.success',
@@ -47,6 +49,7 @@ final class RegistroMetadataHelper
             'data_keys' => ['Data', 'created_at'],
             'updated_keys' => ['DataAtualizacao', 'updated_at'],
             'criador_keys' => ['CriadoPorNome'],
+            'movement_from_subtarefa' => true,
             'edit_page' => 'cejuscedit',
             'cancel_endpoint' => '/api/cartorio-cejusc/cancel.php',
             'cancel_toast_key' => 'cartorio.cejusc.cancel.success',
@@ -71,6 +74,7 @@ final class RegistroMetadataHelper
             'data_keys' => ['Data', 'created_at'],
             'updated_keys' => ['DataAtualizacao', 'updated_at'],
             'criador_keys' => ['CriadoPorNome'],
+            'movement_from_subtarefa' => true,
             'edit_page' => 'editaisedit',
             'cancel_endpoint' => '/api/cartorio-editais/cancel.php',
             'cancel_toast_key' => 'cartorio.editais.cancel.success',
@@ -82,6 +86,7 @@ final class RegistroMetadataHelper
             'data_keys' => ['Data', 'created_at'],
             'updated_keys' => ['DataAtualizacao', 'updated_at'],
             'criador_keys' => ['CriadoPorNome'],
+            'movement_from_subtarefa' => true,
             'edit_page' => 'guiasedit',
             'cancel_endpoint' => '/api/cartorio-guias/cancel.php',
             'cancel_toast_key' => 'cartorio.guias.cancel.success',
@@ -93,6 +98,7 @@ final class RegistroMetadataHelper
             'data_keys' => ['Data', 'created_at'],
             'updated_keys' => ['DataAtualizacao', 'updated_at'],
             'criador_keys' => ['CriadoPorNome'],
+            'movement_from_subtarefa' => true,
             'edit_page' => 'medidasprotetivasedit',
             'cancel_endpoint' => '/api/cartorio-medidas-protetivas/cancel.php',
             'cancel_toast_key' => 'cartorio.medidas_protetivas.cancel.success',
@@ -158,7 +164,7 @@ final class RegistroMetadataHelper
      * @param array{usuario_id?: string, perfis?: list<string>}|null $viewerContext
      * @return array<string, mixed>
      */
-    public static function fromListRow(array $row, string $modulo, ?array $viewerContext = null): array
+    public static function fromListRow(array $row, string $modulo, ?array $viewerContext = null, ?PDO $connection = null): array
     {
         $modulo = strtolower(trim($modulo));
         if ($modulo === 'cartorio_oficios') {
@@ -195,10 +201,26 @@ final class RegistroMetadataHelper
 
         $dataEventoClasse = '';
         $dataEventoTexto = '';
+        $movementFromSubtarefa = !empty($config['movement_from_subtarefa']);
         if (in_array($status, $cancelStatuses, true)) {
             $dataEventoClasse = 'canceled';
             $ref = $updatedRaw !== '' ? $updatedRaw : $createdRaw;
             $dataEventoTexto = self::formatarEventoComAutor('Cancelado em', $ref, $editor);
+        } elseif ($movementFromSubtarefa) {
+            $subtarefasAll = $row['SubtarefasAll'] ?? [];
+            if (!is_array($subtarefasAll)) {
+                $subtarefasAll = [];
+            }
+            $ultimaSubtarefa = self::resolveUltimaSubtarefaConcluida($subtarefasAll, $connection);
+            if ($ultimaSubtarefa !== null
+                && ($createdRaw === '' || self::isUpdatedAfterCreated($createdRaw, $ultimaSubtarefa['data']))) {
+                $dataEventoClasse = 'updated';
+                $dataEventoTexto = self::formatarEventoComAutor(
+                    'Atualizado em',
+                    $ultimaSubtarefa['data'],
+                    $ultimaSubtarefa['editor']
+                );
+            }
         } elseif ($updatedRaw !== '' && $createdRaw !== '' && self::isUpdatedAfterCreated($createdRaw, $updatedRaw)) {
             $dataEventoClasse = 'updated';
             $dataEventoTexto = self::formatarEventoComAutor('Atualizado em', $updatedRaw, $editor);
@@ -293,6 +315,66 @@ final class RegistroMetadataHelper
             'cancel_toast_key' => '',
             'cancel_label' => 'Cancelar registro',
             'edit_label' => 'Editar registro',
+        ];
+    }
+
+    /**
+     * Última subtarefa concluída (data + autor) para a coluna de metadados na listagem.
+     *
+     * @param list<array<string, mixed>> $subtarefasAll
+     * @return array{data: string, editor: string}|null
+     */
+    public static function resolveUltimaSubtarefaConcluida(array $subtarefasAll, ?PDO $connection = null): ?array
+    {
+        if ($subtarefasAll === []) {
+            return null;
+        }
+
+        require_once __DIR__ . '/CartorioTimelineHelper.php';
+
+        $melhor = null;
+        $melhorTs = 0;
+        foreach ($subtarefasAll as $subtarefa) {
+            if (!is_array($subtarefa)) {
+                continue;
+            }
+            $status = strtolower(trim((string) ($subtarefa['status'] ?? '')));
+            if ($status !== 'concluida') {
+                continue;
+            }
+            $data = trim((string) ($subtarefa['updated_at'] ?? ''));
+            if ($data === '') {
+                continue;
+            }
+            $ts = strtotime($data);
+            if ($ts === false) {
+                continue;
+            }
+            if ($melhor === null || $ts > $melhorTs) {
+                $melhor = $subtarefa;
+                $melhorTs = $ts;
+            }
+        }
+
+        if ($melhor === null) {
+            return null;
+        }
+
+        $usuarioNomesPorId = [];
+        if ($connection instanceof PDO) {
+            $usuarioNomesPorId = cartorioTimelineCollectUsuarioNomesPorId($connection, $subtarefasAll);
+        }
+
+        $dados = cartorioTimelineDecodeData($melhor);
+        $editor = cartorioTimelineResolveUser($dados, $usuarioNomesPorId);
+        if ($editor === '—') {
+            $editor = '';
+        }
+        $editor = self::compactarNome($editor);
+
+        return [
+            'data' => trim((string) ($melhor['updated_at'] ?? '')),
+            'editor' => $editor,
         ];
     }
 

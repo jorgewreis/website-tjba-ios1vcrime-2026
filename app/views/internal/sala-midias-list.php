@@ -331,7 +331,7 @@ $buttonTitleByTipo = [
                     }
                 }
                 ?>
-                <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'sala_midias', $registroListViewerContext); ?>
+                <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'sala_midias', $registroListViewerContext, $connection); ?>
                 <div class="display-flex col col-full register register-with-metadata border-bottom" data-midia-id="<?php echo htmlspecialchars($id, ENT_QUOTES, 'UTF-8'); ?>" data-registro-id="<?php echo htmlspecialchars($id, ENT_QUOTES, 'UTF-8'); ?>" data-qtd-midias="<?php echo (int) $qtdMidiasInput; ?>" id="<?php echo htmlspecialchars($id, ENT_QUOTES, 'UTF-8'); ?>">
                     <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                         <div class="display-flex row row-fit justify-start gap-y-sm align-center">

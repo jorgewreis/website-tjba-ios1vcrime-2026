@@ -320,6 +320,9 @@ final class MedidasProtetivasService
 
     public function concluirSubtarefa(string $subtarefaId, ?string $dadosJson = null): array
     {
+        require_once __DIR__ . '/../helpers/CartorioSubtarefaUsuarioSessao.php';
+        $dadosJson = CartorioSubtarefaUsuarioSessao::mergeDadosEspecificosComSessao($this->connection, $dadosJson);
+
         $subtarefa = $this->subtarefasRepository->findById($subtarefaId);
         if ($subtarefa === null) {
             throw new InvalidArgumentException('Subtarefa não encontrada.');

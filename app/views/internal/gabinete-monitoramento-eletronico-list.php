@@ -323,7 +323,7 @@ $statusLabelUi = static function (string $s): string {
                     ? 'Iniciar e encerrar monitoramento'
                     : $currentSubtarefaTitle;
             ?>
-            <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'gabinete_monitoramento', $registroListViewerContext); ?>
+            <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'gabinete_monitoramento', $registroListViewerContext, $connection); ?>
             <div class="display-flex col col-full register register-with-metadata border-bottom" data-monitoramento-id="<?php echo htmlspecialchars($idMon, ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars($idMon, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idMon, ENT_QUOTES); ?>">
 
                 <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">

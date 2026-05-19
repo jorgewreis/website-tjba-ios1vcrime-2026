@@ -343,7 +343,7 @@ if ($totalPages > 0) {
                     }
                 }
             ?>
-            <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'editais', $registroListViewerContext); ?>
+            <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'editais', $registroListViewerContext, $connection); ?>
             <div class="display-flex col col-full register register-with-metadata border-bottom" data-edital-id="<?php echo htmlspecialchars($idEdital, ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars($idEdital, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idEdital); ?>">
 
                 <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">

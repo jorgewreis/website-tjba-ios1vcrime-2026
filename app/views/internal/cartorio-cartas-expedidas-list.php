@@ -408,7 +408,7 @@ if ($totalPages > 0) {
                 ?>
 
                     <!-- LINHA COMPLETA DO REGISTRO -->
-                    <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'cartas_expedidas', $registroListViewerContext); ?>
+                    <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'cartas_expedidas', $registroListViewerContext, $connection); ?>
                     <div class="register-line register-with-metadata" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idCarta); ?>">
 
                         <!-- Lado esquerdo da linha -->
@@ -558,7 +558,7 @@ if ($totalPages > 0) {
                                         <?php elseif ($isEnvio): ?>
                                             <div class="col">
                                                 <select class="width-400 height-sm subtask-metodo-envio" title="Método de envio">
-                                                    <option value="">Método de envio</option>
+                                                    <option value="" selected disabled>Selecione aqui</option>
                                                     <option value="Email">E-mail</option>
                                                     <option value="Malote Digital">Malote Digital</option>
                                                     <option value="PJe">PJe</option>
@@ -576,7 +576,7 @@ if ($totalPages > 0) {
                                         <?php elseif ($isDevolucao): ?>
                                             <div class="col">
                                                 <select class="width-500 height-sm subtask-resultado-devolucao" title="Resultado da devolução">
-                                                    <option value="">Resultado</option>
+                                                    <option value="" selected disabled>Selecione aqui</option>
                                                     <option value="devolvida_sem_cumprimento">Não cumprida</option>
                                                     <option value="cumprida_negativamente">Cumprida negativamente</option>
                                                     <option value="cumprida_parcialmente">Cumprida parcialmente</option>

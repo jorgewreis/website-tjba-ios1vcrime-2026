@@ -10,7 +10,8 @@ require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../services/SalaAudienciasAtaService.php';
 require_once __DIR__ . '/../../helpers/RegistroMetadataHelper.php';
 
-$service = new SalaAudienciasAtaService(Conection::getInstance()->getConnection());
+$connection = Conection::getInstance()->getConnection();
+$service = new SalaAudienciasAtaService($connection);
 $registroListViewerContext = RegistroMetadataHelper::viewerContextFromSession();
 $routePage = trim((string) ($_GET['page'] ?? 'salaata'));
 $allowedPerPage = [10, 25, 50, 100];
@@ -211,7 +212,7 @@ function sala_audiencias_ata_label_prazo_download(string $expiresAt): string
             $inicioEfetivoTs = $inicioEfetivoRaw !== '' ? strtotime($inicioEfetivoRaw) : false;
             $horaExibicao = $inicioEfetivoTs !== false ? date('H:i', $inicioEfetivoTs) : substr((string) ($row['hora_audiencia'] ?? ''), 0, 5);
             ?>
-        <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'sala_atas', $registroListViewerContext); ?>
+        <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'sala_atas', $registroListViewerContext, $connection); ?>
         <div class="display-flex col col-full register register-with-metadata border-bottom" data-pauta="<?php echo $idPauta; ?>" data-registro-id="<?php echo $idPauta; ?>">
             <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                 <div class="display-flex row row-fit justify-start gap-y-sm align-center flex-1">

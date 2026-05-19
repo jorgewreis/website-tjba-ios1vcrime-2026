@@ -429,7 +429,7 @@ if ($totalPages > 0) {
                 $tarefaConcluida = in_array($statusTarefaNorm, ['concluida', 'finalizada'], true);
                 $podeExpandirSubtarefas = !$tarefaConcluida && $subtarefas !== [];
             ?>
-            <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'cartas_recebidas', $registroListViewerContext); ?>
+            <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'cartas_recebidas', $registroListViewerContext, $connection); ?>
             <div class="display-flex col col-full register register-with-metadata border-bottom" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idCarta); ?>">
 
                 <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">

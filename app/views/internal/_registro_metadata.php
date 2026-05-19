@@ -63,14 +63,7 @@ $mostrarAcoes = $mostrarEdit || $mostrarId || $mostrarCancel;
                 <img class="btn-mini-icon" src="/assets/icons/Notes-Edit--Streamline-Ultimate.png" alt="">
             </button>
             <?php endif; ?>
-            <?php if ($mostrarId): ?>
-            <button type="button"
-                class="btn-mini processo-bloco-tooltip processo-bloco-tooltip--btn btn-mini-id"
-                data-title="<?php echo htmlspecialchars($idTitle, ENT_QUOTES, 'UTF-8'); ?>"
-                aria-label="<?php echo htmlspecialchars($idTitle, ENT_QUOTES, 'UTF-8'); ?>">
-                <img class="btn-mini-icon" src="/assets/icons/Notes-Question--Streamline-Ultimate.png" alt="">
-            </button>
-            <?php endif; ?>
+           
             <?php if ($mostrarCancel): ?>
             <button type="button"
                 class="btn-mini processo-bloco-tooltip processo-bloco-tooltip--btn"
@@ -81,6 +74,15 @@ $mostrarAcoes = $mostrarEdit || $mostrarId || $mostrarCancel;
                 data-title="<?php echo htmlspecialchars($cancelLabel, ENT_QUOTES, 'UTF-8'); ?>"
                 aria-label="<?php echo htmlspecialchars($cancelLabel, ENT_QUOTES, 'UTF-8'); ?>">
                 <img class="btn-mini-icon" src="/assets/icons/Notes-Remove--Streamline-Ultimate.png" alt="">
+            </button>
+            <?php endif; ?>
+
+            <?php if ($mostrarId): ?>
+            <button type="button"
+                class="btn-mini processo-bloco-tooltip processo-bloco-tooltip--btn btn-mini-id"
+                data-title="<?php echo htmlspecialchars($idTitle, ENT_QUOTES, 'UTF-8'); ?>"
+                aria-label="<?php echo htmlspecialchars($idTitle, ENT_QUOTES, 'UTF-8'); ?>">
+                <img class="btn-mini-icon" src="/assets/icons/Notes-Question--Streamline-Ultimate.png" alt="">
             </button>
             <?php endif; ?>
         </div>

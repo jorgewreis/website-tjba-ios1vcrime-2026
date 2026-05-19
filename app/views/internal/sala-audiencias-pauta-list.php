@@ -307,7 +307,7 @@ $statusFilterLabelsPauta = [
 
         <?php if (!empty($rows)): ?>
         <?php foreach ($rows as $row): ?>
-        <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'sala_pauta', $registroListViewerContext); ?>
+        <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'sala_pauta', $registroListViewerContext, $pdo); ?>
         <div class="display-flex col col-full register register-with-metadata border-bottom" data-audiencia-id="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>">
             <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                 <div class="display-flex row row-fit justify-start gap-y-sm align-center">

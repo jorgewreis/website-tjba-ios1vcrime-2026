@@ -354,7 +354,7 @@ if ($totalPages > 0) {
                 $statusTarefa = (string) ($row['Status'] ?? '');
                 $tarefaConcluida = in_array($statusTarefa, ['concluída', 'concluida', 'finalizada'], true);
             ?>
-            <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'guias', $registroListViewerContext); ?>
+            <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'guias', $registroListViewerContext, $connection); ?>
             <div class="display-flex col col-full register register-with-metadata border-bottom" data-guia-id="<?php echo htmlspecialchars($idGuia, ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars($idGuia, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idGuia); ?>">
 
                 <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
