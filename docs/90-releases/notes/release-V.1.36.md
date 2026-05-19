@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 02 de abril de 2026
+**Data de Lançamento:** 19 de maio de 2026
 
 # V. 1.36
 
-> feat: update Produtividade UI to enhance user experience with new input fields and role-based visibility for rules button
+> refactor: update labels and options in cartório cartas expedidas list
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **feat: update Produtividade UI to enhance user experience with new input fields and role-based visibility for rules button** `[e683d0b]`
+- **refactor: update labels and options in cartório cartas expedidas list** `[7aa70af8]`
 
 ---
 

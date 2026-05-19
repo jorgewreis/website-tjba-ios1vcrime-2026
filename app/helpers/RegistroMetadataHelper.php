@@ -416,6 +416,13 @@ final class RegistroMetadataHelper
         return OficioRegistroMetadataHelper::formatarDataHora($mysqlDt);
     }
 
+    public static function formatarData(?string $mysqlDt): string
+    {
+        require_once __DIR__ . '/OficioRegistroMetadataHelper.php';
+
+        return OficioRegistroMetadataHelper::formatarData($mysqlDt);
+    }
+
     /** Campos extras para listagem de atas (pauta + upload + subtarefa de mídias). */
     public static function sqlSelectSalaAtasListagemExtra(): string
     {
@@ -542,7 +549,7 @@ final class RegistroMetadataHelper
     }
 
     /**
-     * Linha de evento (atualização/cancelamento) com data/hora e autor compacto.
+     * Linha de evento (atualização/cancelamento) com data (sem hora) e autor compacto.
      */
     public static function formatarEventoComAutor(string $rotuloEvento, string $dataRaw, string $editorNome): string
     {
@@ -550,7 +557,7 @@ final class RegistroMetadataHelper
         if ($rotulo === '' || trim($dataRaw) === '') {
             return '';
         }
-        $texto = $rotulo . ' ' . self::formatarDataHora($dataRaw);
+        $texto = $rotulo . ' ' . self::formatarData($dataRaw);
         $editor = self::compactarNome($editorNome);
         if ($editor !== '') {
             $texto .= ' por ' . $editor;

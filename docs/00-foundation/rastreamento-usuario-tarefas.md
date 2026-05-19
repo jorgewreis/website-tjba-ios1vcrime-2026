@@ -8,7 +8,7 @@ Contrato da **última coluna** das páginas `*-list.php` que usam `_registro_met
 |-------------|-------|--------|
 | `.data-create-user` | `Cadastrado por {Nome}` | `CriadoPorNome` (SQL `sqlSelectAuditoriaExtra`) |
 | `.data-create-date` | `Em DD/MM/AAAA às HH:MM:SS` | `created_at` da tarefa |
-| `.data-update-date` | `Atualizado em … por {Nome}` ou `Cancelado em … por {Nome}` | Ver regras abaixo |
+| `.data-update-date` | `Atualizado em DD/MM/AAAA por {Nome}` ou `Cancelado em DD/MM/AAAA por {Nome}` (sem hora) | Ver regras abaixo |
 
 Formatação centralizada em `RegistroMetadataHelper::formatarLinhaAutor` e `formatarEventoComAutor` (nome compactado com `compactarNome`).
 

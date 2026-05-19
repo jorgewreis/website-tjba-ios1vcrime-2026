@@ -150,6 +150,17 @@ final class OficioRegistroMetadataHelper
         return $t !== false ? date('d/m/Y \à\s H:i:s', $t) : trim($mysqlDt);
     }
 
+    /** Data sem hora (linha de atualização/cancelamento na listagem). */
+    public static function formatarData(?string $mysqlDt): string
+    {
+        if ($mysqlDt === null || trim($mysqlDt) === '') {
+            return '—';
+        }
+        $t = strtotime($mysqlDt);
+
+        return $t !== false ? date('d/m/Y', $t) : trim($mysqlDt);
+    }
+
     /**
      * @param array{usuario_id?: string, perfis?: list<string>} $viewerContext
      */
