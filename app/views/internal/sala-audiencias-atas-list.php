@@ -8,8 +8,10 @@ if (function_exists('mb_internal_encoding')) {
 
 require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../services/SalaAudienciasAtaService.php';
+require_once __DIR__ . '/../../helpers/RegistroMetadataHelper.php';
 
 $service = new SalaAudienciasAtaService(Conection::getInstance()->getConnection());
+$registroListViewerContext = RegistroMetadataHelper::viewerContextFromSession();
 $routePage = trim((string) ($_GET['page'] ?? 'salaata'));
 $allowedPerPage = [10, 25, 50, 100];
 $itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 10;
@@ -209,9 +211,10 @@ function sala_audiencias_ata_label_prazo_download(string $expiresAt): string
             $inicioEfetivoTs = $inicioEfetivoRaw !== '' ? strtotime($inicioEfetivoRaw) : false;
             $horaExibicao = $inicioEfetivoTs !== false ? date('H:i', $inicioEfetivoTs) : substr((string) ($row['hora_audiencia'] ?? ''), 0, 5);
             ?>
-        <div class="display-flex col col-full register border-bottom" data-pauta="<?php echo $idPauta; ?>">
-            <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center flex-wrap gap-y-sm">
-                <div class="display-flex row row-fit justify-start gap-y-sm align-center flex-wrap">
+        <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'sala_atas', $registroListViewerContext); ?>
+        <div class="display-flex col col-full register register-with-metadata border-bottom" data-pauta="<?php echo $idPauta; ?>" data-registro-id="<?php echo $idPauta; ?>">
+            <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
+                <div class="display-flex row row-fit justify-start gap-y-sm align-center flex-1">
                     <div class="col width-300">
                         <span class="minor-info">Data e hora</span>
                         <span class="major-info"><?php echo htmlspecialchars(date('d/m/Y', strtotime((string) $row['data_audiencia'])) . ' - ' . $horaExibicao, ENT_QUOTES, 'UTF-8'); ?></span>
@@ -223,6 +226,8 @@ function sala_audiencias_ata_label_prazo_download(string $expiresAt): string
                         <span class="minor-info">Tipo de audiência</span>
                         <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) $row['tipo_audiencia'], ENT_QUOTES, 'UTF-8'); ?></span>
                     </div>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-sm align-center">
                     <div class="col width-500">
                         <span class="minor-info">Ata para download</span>
                         <?php if ($temAta): ?>
@@ -233,12 +238,11 @@ function sala_audiencias_ata_label_prazo_download(string $expiresAt): string
                         <span class="major-info text-ellipsis ata-status-text">Nenhum arquivo enviado</span>
                         <?php endif; ?>
                     </div>
-                </div>
-                <div class="display-flex row row-fit justify-end gap-y-sm align-center">
                     <?php if (!$ataRetencaoEncerrada): ?>
                     <input type="file" class="ata-file-input visually-hidden" accept="application/pdf,.pdf" aria-label="Selecionar PDF da ata">
                     <button type="button" class="btn btn-primary btn-upload-ata" data-pauta="<?php echo $idPauta; ?>"><?php echo $temAta ? 'Substituir PDF' : 'Enviar PDF'; ?></button>
                     <?php endif; ?>
+                    <?php include __DIR__ . '/_registro_metadata.php'; ?>
                 </div>
             </div>
         </div>

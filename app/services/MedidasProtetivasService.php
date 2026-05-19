@@ -207,15 +207,18 @@ final class MedidasProtetivasService
                 30
             );
 
-            $this->repository->insert([
+            $usuarioCadastroId = trim((string) ($payload['usuario_cadastro_id'] ?? ''));
+            $insertRow = [
                 'id' => $medidaId,
                 'processo_id' => $processoId,
                 'parte_reu_id' => $parteReuId,
                 'status' => 'pendente',
                 'observacoes' => trim((string) ($payload['observacoes'] ?? '')),
-            ]);
-
-            $usuarioCadastroId = trim((string) ($payload['usuario_cadastro_id'] ?? ''));
+            ];
+            if ($usuarioCadastroId !== '') {
+                $insertRow['criado_por'] = $usuarioCadastroId;
+            }
+            $this->repository->insert($insertRow);
             if ($usuarioCadastroId !== ''
                 && !AlocacaoTarefasPerfisHelper::usuarioComPerfilChefiaSemAutoalocacao($usuarioCadastroId)) {
                 $this->alocadosRepository->addAlocado($medidaId, $usuarioCadastroId, MedidasProtetivasAlocadosRepository::TIPO_ALL);

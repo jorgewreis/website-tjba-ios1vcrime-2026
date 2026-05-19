@@ -29,9 +29,12 @@ final class CeapaRepository
             implode(', ', array_map(fn (string $status): string => $this->connection->quote($status), self::STATUS_ORDER))
         );
 
+        require_once __DIR__ . '/../helpers/RegistroMetadataHelper.php';
         $fromClause = $this->buildFromClause();
+        $auditSelect = RegistroMetadataHelper::sqlSelectAuditoriaExtra('ct');
         $sql = sprintf(
-            'SELECT ct.`id` AS `IdCeapa`, ct.`numero_processo_origem` AS `Processo`, ct.`tipo_suspensao` AS `TipoSuspensao`, ct.`decisao_cumprir` AS `DecisaoCumprir`, ct.`data_decisao` AS `DataDecisao`, ct.`status_cumprimento` AS `StatusCumprimento`, ct.`created_at` AS `DataCadastro`, COALESCE(p.`nome_completo`, \'\') AS `ReuNome`, COALESCE(cl.`nome`, \'\') AS `ClasseNome` FROM %s %s ORDER BY %s, ct.`created_at` DESC LIMIT :limit OFFSET :offset',
+            'SELECT ct.`id` AS `IdCeapa`, ct.`numero_processo_origem` AS `Processo`, ct.`tipo_suspensao` AS `TipoSuspensao`, ct.`decisao_cumprir` AS `DecisaoCumprir`, ct.`data_decisao` AS `DataDecisao`, ct.`status_cumprimento` AS `StatusCumprimento`, ct.`created_at` AS `DataCadastro`, COALESCE(p.`nome_completo`, \'\') AS `ReuNome`, COALESCE(cl.`nome`, \'\') AS `ClasseNome`%s FROM %s %s ORDER BY %s, ct.`created_at` DESC LIMIT :limit OFFSET :offset',
+            $auditSelect,
             $fromClause,
             $whereClause !== '' ? 'WHERE ' . $whereClause : '',
             $orderField
@@ -141,7 +144,7 @@ final class CeapaRepository
         }
 
         $sql = sprintf(
-            'INSERT INTO `%s` (`id`, `processo_origem_id`, `numero_processo_origem`, `parte_id`, `tipo_suspensao`, `decisao_cumprir`, `data_decisao`, `observacoes_cumprimento`, `status_cumprimento`, `usuario_cadastro_id`, `created_at`, `updated_at`) VALUES (:id, :processo_origem_id, :numero_processo_origem, :parte_id, :tipo_suspensao, :decisao_cumprir, :data_decisao, :observacoes_cumprimento, :status_cumprimento, :usuario_cadastro_id, NOW(), NOW())',
+            'INSERT INTO `%s` (`id`, `processo_origem_id`, `numero_processo_origem`, `parte_id`, `tipo_suspensao`, `decisao_cumprir`, `data_decisao`, `observacoes_cumprimento`, `status_cumprimento`, `usuario_cadastro_id`, `criado_por`, `atualizado_por`, `created_at`, `updated_at`) VALUES (:id, :processo_origem_id, :numero_processo_origem, :parte_id, :tipo_suspensao, :decisao_cumprir, :data_decisao, :observacoes_cumprimento, :status_cumprimento, :usuario_cadastro_id, :criado_por, :atualizado_por, NOW(), NOW())',
             $this->table
         );
         $statement = $this->connection->prepare($sql);
@@ -155,6 +158,9 @@ final class CeapaRepository
         $statement->bindValue(':observacoes_cumprimento', $row['observacoes_cumprimento'] ?? null);
         $statement->bindValue(':status_cumprimento', $row['status_cumprimento']);
         $statement->bindValue(':usuario_cadastro_id', $row['usuario_cadastro_id'] ?? null);
+        $cp = $row['criado_por'] ?? null;
+        $statement->bindValue(':criado_por', $cp !== null && $cp !== '' ? $cp : null);
+        $statement->bindValue(':atualizado_por', $cp !== null && $cp !== '' ? $cp : null);
         $statement->execute();
 
         return (string) $row['id'];
@@ -235,9 +241,12 @@ final class CeapaRepository
 
     private function buildFromClause(): string
     {
+        require_once __DIR__ . '/../helpers/RegistroMetadataHelper.php';
+
         return sprintf(
-            '`%s` ct LEFT JOIN `partes` p ON p.`id` = ct.`parte_id` LEFT JOIN `processos` pr ON pr.`id` = ct.`processo_origem_id` LEFT JOIN `classes` cl ON cl.`id` = pr.`classe_id`',
-            $this->table
+            '`%s` ct LEFT JOIN `partes` p ON p.`id` = ct.`parte_id` LEFT JOIN `processos` pr ON pr.`id` = ct.`processo_origem_id` LEFT JOIN `classes` cl ON cl.`id` = pr.`classe_id`%s',
+            $this->table,
+            RegistroMetadataHelper::sqlUsuarioAuditoria('ct')
         );
     }
 

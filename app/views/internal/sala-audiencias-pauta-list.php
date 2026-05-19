@@ -9,6 +9,7 @@ if (function_exists('mb_internal_encoding')) {
 require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../services/SalaAudienciasPautaService.php';
 require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
+require_once __DIR__ . '/../../helpers/RegistroMetadataHelper.php';
 
 $currentUserId = trim((string) ($_SESSION['id_usuario'] ?? ''));
 $isGestao = false;
@@ -72,6 +73,7 @@ if ($total === 0) {
         $statusCounts = $result['statusCounts'] ?? $statusCounts;
     }
 }
+$registroListViewerContext = RegistroMetadataHelper::viewerContextFromSession();
 
 $displayedCount = count($rows);
 $startItem = $displayedCount > 0 ? $offset + 1 : 0;
@@ -305,7 +307,8 @@ $statusFilterLabelsPauta = [
 
         <?php if (!empty($rows)): ?>
         <?php foreach ($rows as $row): ?>
-        <div class="display-flex col col-full register border-bottom" data-audiencia-id="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>">
+        <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'sala_pauta', $registroListViewerContext); ?>
+        <div class="display-flex col col-full register register-with-metadata border-bottom" data-audiencia-id="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>">
             <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                 <div class="display-flex row row-fit justify-start gap-y-sm align-center">
                     <div class="col width-300">
@@ -462,9 +465,6 @@ $statusFilterLabelsPauta = [
                         </button>
                         <?php endif; ?>
                         <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                        <button type="button" class="btn btn-editar" data-audiencia-edit="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="Editar audiência">
-                            <i class="fi fi-rr-pen-square"></i>
-                        </button>
                         <div class="display-flex row row-fit justify-end gap-y-sm allocate-chips-row allocate-users">
                         <?php
                             $alocados = $row['Alocados'] ?? [];
@@ -507,6 +507,7 @@ $statusFilterLabelsPauta = [
                             <?php echo htmlspecialchars($textoStatus, ENT_QUOTES); ?>
                         </div>
                     </div>
+                    <?php include __DIR__ . '/_registro_metadata.php'; ?>
                 </div>
             </div>
         </div>
@@ -624,6 +625,14 @@ $statusFilterLabelsPauta = [
     <script src="/assets/js/modules/audiencias/pauta-list.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-list.js') ?: time(); ?>"></script>
     <script>
         (function () {
+            if (window.App && App.RegistroMetadataList && typeof App.RegistroMetadataList.bind === 'function') {
+                App.RegistroMetadataList.bind({
+                    storageKey: 'salapauta.postReloadToast',
+                    cancelEndpoint: '/api/sala-audiencias-pauta/cancel.php',
+                    cancelToastKey: 'sala.pauta.cancel.success',
+                    cancelFallback: { type: 'success', title: 'Sucesso', message: 'Audiência cancelada.' }
+                });
+            }
             if (!window.App || !App.CartorioTaskList || typeof App.CartorioTaskList.initialize !== 'function') {
                 return;
             }

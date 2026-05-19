@@ -497,7 +497,7 @@ function cartorio_oficios_label_cumprimento(array $row): string
                     $mostrarBadgePendente = !$tarefaCancelada && !$tarefaConcluida;
                     $oficioMetadata = OficioRegistroMetadataHelper::fromListRow($row, 'cartorio', $oficioListViewerContext);
                 ?>
-                    <div class="display-flex col col-full register register-oficio-list border-bottom" data-oficio-id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>">
+                    <div class="display-flex col col-full register register-oficio-list register-with-metadata border-bottom" data-oficio-id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>">
 
                         <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center register-oficio-list-row">
                             <div class="display-flex row row-fit justify-start gap-y-sm align-center flex-1">

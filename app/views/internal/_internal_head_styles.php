@@ -33,6 +33,8 @@ $__cartorioTaskListPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartor
 $__cartorioTaskListV = @filemtime($__cartorioTaskListPath) ?: time();
 $__oficiosEditPath = dirname(__DIR__, 3) . '/public/assets/js/shared/oficios-edit.js';
 $__oficiosEditV = @filemtime($__oficiosEditPath) ?: time();
+$__registroMetadataListPath = dirname(__DIR__, 3) . '/public/assets/js/shared/registro-metadata-list.js';
+$__registroMetadataListV = @filemtime($__registroMetadataListPath) ?: time();
 $__oficiosListPath = dirname(__DIR__, 3) . '/public/assets/js/shared/oficios-list.js';
 $__oficiosListV = @filemtime($__oficiosListPath) ?: time();
 $__gmeListPath = dirname(__DIR__, 3) . '/public/assets/js/shared/gme-list.js';
@@ -159,6 +161,7 @@ window.__APP_CONTEXT = Object.assign({}, window.__APP_CONTEXT || {}, {
 <script src="/assets/js/shared/auto-submit-filters.js?v=<?php echo (int) $__autoSubmitFiltersV; ?>" defer></script>
 <script src="/assets/js/shared/cartorio-task-list.js?v=<?php echo (int) $__cartorioTaskListV; ?>"></script>
 <script src="/assets/js/shared/oficios-edit.js?v=<?php echo (int) $__oficiosEditV; ?>"></script>
+<script src="/assets/js/shared/registro-metadata-list.js?v=<?php echo (int) $__registroMetadataListV; ?>"></script>
 <script src="/assets/js/shared/oficios-list.js?v=<?php echo (int) $__oficiosListV; ?>"></script>
 <script src="/assets/js/shared/gme-list.js?v=<?php echo (int) $__gmeListV; ?>"></script>
 <script src="/assets/js/shared/gme-edit.js?v=<?php echo (int) $__gmeEditV; ?>"></script>

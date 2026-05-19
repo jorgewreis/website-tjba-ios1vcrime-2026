@@ -296,12 +296,14 @@
     cursor: help;
 }
 
-.container-processo .processo-bloco-tooltip {
+.container-processo .processo-bloco-tooltip,
+.container-data-create .processo-bloco-tooltip {
     position: relative;
     cursor: default;
 }
 
-.container-processo .processo-bloco-tooltip.processo-bloco-tooltip--btn {
+.container-processo .processo-bloco-tooltip.processo-bloco-tooltip--btn,
+.container-data-create .processo-bloco-tooltip.processo-bloco-tooltip--btn {
     cursor: pointer;
 }
 
@@ -309,12 +311,11 @@
     cursor: pointer;
 }
 
-.container-processo .processo-bloco-tooltip::after {
+.container-processo .processo-bloco-tooltip::after,
+.container-data-create .processo-bloco-tooltip::after {
     content: attr(data-title);
     position: absolute;
-    left: 50%;
     bottom: calc(100% + 8px);
-    transform: translateX(-50%);
     background-color: #111827;
     color: #ffffff;
     padding: 6px 10px;
@@ -330,10 +331,41 @@
     z-index: 999;
 }
 
+/* Bloco processo: centralizado no gatilho */
+.container-processo .processo-bloco-tooltip::after {
+    left: 50%;
+    transform: translateX(-50%);
+}
+
 .container-processo .processo-bloco-tooltip:hover::after {
     opacity: 1;
     visibility: visible;
     transform: translateX(-50%) translateY(-2px);
+}
+
+/* Metadados (canto direito da lista): ancora à direita do ícone, texto expande à esquerda */
+.container-data-create .processo-bloco-tooltip::after {
+    display: inline-block;
+    left: auto;
+    right: 0;
+    transform: translateY(0);
+    width: max-content;
+    max-width: min(320px, calc(100vw - 24px));
+    text-align: right;
+    white-space: nowrap;
+    overflow-wrap: normal;
+    word-break: normal;
+}
+
+.container-data-create .btn-mini-id.processo-bloco-tooltip::after {
+    white-space: normal;
+    word-break: break-word;
+}
+
+.container-data-create .processo-bloco-tooltip:hover::after {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(-2px);
 }
 
 
@@ -350,7 +382,7 @@
     flex-direction: column;
     flex-wrap: nowrap;
     align-items: flex-start;
-    justify-content: flex-start;
+    justify-content: center;
     gap: 2px;
 }
 
@@ -376,6 +408,7 @@
 
 .data-create-buttons {
     width: 100%;
+    height: fit-content;
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
@@ -506,4 +539,67 @@
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
+}
+
+/* Listagens com coluna de metadados (ofícios + demais módulos) */
+.register.register-with-metadata,
+.register.register-oficio-list {
+    position: relative;
+}
+
+.register.register-with-metadata .register-oficio-list-row,
+.register.register-with-metadata > .display-flex.row-full,
+.register.register-with-metadata.register-line {
+    flex-wrap: nowrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.register.register-with-metadata .container-data-create {
+    flex: 0 0 300px;
+    width: 300px;
+    height: auto;
+    min-height: 55px;
+    margin-left: auto;
+    align-self: center;
+    overflow: visible;
+}
+
+.register.register-with-metadata.register-line {
+    flex-wrap: wrap;
+}
+
+.register.register-with-metadata.register-line > .display-flex.row-fit.justify-end {
+    flex: 0 0 auto;
+    align-items: center;
+}
+
+.register.register-with-metadata .container-data-create .data-create-buttons .right {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.18s ease, visibility 0.18s ease;
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .register.register-with-metadata .container-data-create .data-create-buttons .right {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+}
+
+.register.register-with-metadata:hover .container-data-create .data-create-buttons .right,
+.register.register-with-metadata:focus-within .container-data-create .data-create-buttons .right,
+.register.register-with-metadata[data-registro-id]:hover .container-data-create .data-create-buttons .right,
+.register.register-with-metadata[data-registro-id]:focus-within .container-data-create .data-create-buttons .right,
+.register.register-with-metadata[data-carta-id]:hover .container-data-create .data-create-buttons .right,
+.register.register-with-metadata[data-carta-id]:focus-within .container-data-create .data-create-buttons .right {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.register.register-with-metadata .btn-editar.list-edit-legacy-hidden {
+    display: none;
 }

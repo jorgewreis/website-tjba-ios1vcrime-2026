@@ -171,9 +171,12 @@ final class CartasRecebidasService
             'observacoes' => trim((string) ($payload['observacoes'] ?? '')),
         ];
 
-        $this->repository->insert($row);
-
         $usuarioCadastroId = trim((string) ($payload['usuario_cadastro_id'] ?? ''));
+        if ($usuarioCadastroId !== '') {
+            $row['criado_por'] = $usuarioCadastroId;
+        }
+
+        $this->repository->insert($row);
 
         if ($usuarioCadastroId !== ''
             && !AlocacaoTarefasPerfisHelper::usuarioComPerfilChefiaSemAutoalocacao($usuarioCadastroId)) {

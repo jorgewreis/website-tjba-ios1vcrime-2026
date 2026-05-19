@@ -40,11 +40,13 @@ final class GuiasRepository
             )
         );
 
-        $joinClause = ' LEFT JOIN `processos` p ON p.`id` = g.`processo_id` LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id` ';
+        require_once __DIR__ . '/../helpers/RegistroMetadataHelper.php';
+        $fromClause = $this->buildFromClause();
+        $auditSelect = RegistroMetadataHelper::sqlSelectAuditoriaExtra('g');
         $sql = sprintf(
-            'SELECT g.`id` AS `IdGuia`, g.`numero_processo` AS `Processo`, COALESCE(cl.`nome`, \'\') AS `Classe`, g.`denunciado` AS `Denunciado`, g.`tipo` AS `Tipo`, g.`etapa` AS `Etapa`, g.`status` AS `Status`, g.`created_at` AS `Data`, g.`data_fato` AS `data_fato`, g.`dias_multa` AS `dias_multa`, g.`valor_multa` AS `valor_multa` FROM `%s` g %s %s ORDER BY %s, g.`created_at` DESC LIMIT :limit OFFSET :offset',
-            $this->table,
-            $joinClause,
+            'SELECT g.`id` AS `IdGuia`, g.`numero_processo` AS `Processo`, COALESCE(cl.`nome`, \'\') AS `Classe`, g.`denunciado` AS `Denunciado`, g.`tipo` AS `Tipo`, g.`etapa` AS `Etapa`, g.`status` AS `Status`, g.`created_at` AS `Data`, g.`data_fato` AS `data_fato`, g.`dias_multa` AS `dias_multa`, g.`valor_multa` AS `valor_multa`%s FROM %s %s ORDER BY %s, g.`created_at` DESC LIMIT :limit OFFSET :offset',
+            $auditSelect,
+            $fromClause,
             $whereClause ? 'WHERE ' . $whereClause : '',
             $orderField
         );
@@ -136,7 +138,7 @@ final class GuiasRepository
 
         $statement = $this->connection->prepare(
             sprintf(
-                'INSERT INTO `%s` (`id`, `numero_processo`, `processo_id`, `denunciado`, `parte_id`, `tipo`, `etapa`, `status`, `regime`, `data_fato`, `dias_multa`, `valor_multa`, `observacoes`, `created_at`, `updated_at`, `user_cadastro`) VALUES (:id, :numero_processo, :processo_id, :denunciado, :parte_id, :tipo, :etapa, :status, :regime, :data_fato, :dias_multa, :valor_multa, :observacoes, NOW(), NOW(), :user_cadastro)',
+                'INSERT INTO `%s` (`id`, `numero_processo`, `processo_id`, `denunciado`, `parte_id`, `tipo`, `etapa`, `status`, `regime`, `data_fato`, `dias_multa`, `valor_multa`, `observacoes`, `criado_por`, `atualizado_por`, `created_at`, `updated_at`, `user_cadastro`) VALUES (:id, :numero_processo, :processo_id, :denunciado, :parte_id, :tipo, :etapa, :status, :regime, :data_fato, :dias_multa, :valor_multa, :observacoes, :criado_por, :atualizado_por, NOW(), NOW(), :user_cadastro)',
                 $this->table
             )
         );
@@ -153,6 +155,9 @@ final class GuiasRepository
         $statement->bindValue(':dias_multa', isset($row['dias_multa']) ? (int) $row['dias_multa'] : null, PDO::PARAM_INT);
         $statement->bindValue(':valor_multa', isset($row['valor_multa']) ? $row['valor_multa'] : null, PDO::PARAM_STR);
         $statement->bindValue(':observacoes', $row['observacoes'] ?? null);
+        $cp = $row['criado_por'] ?? $row['user_cadastro'] ?? null;
+        $statement->bindValue(':criado_por', $cp !== null && $cp !== '' ? $cp : null);
+        $statement->bindValue(':atualizado_por', $cp !== null && $cp !== '' ? $cp : null);
         $statement->bindValue(':user_cadastro', $row['user_cadastro'] ?? null);
         $statement->execute();
 
@@ -251,6 +256,17 @@ final class GuiasRepository
         $statement->bindValue(':tipo', $tipo);
         $statement->execute();
         return $statement->fetchColumn() !== false;
+    }
+
+    private function buildFromClause(): string
+    {
+        require_once __DIR__ . '/../helpers/RegistroMetadataHelper.php';
+
+        return sprintf(
+            '`%s` g LEFT JOIN `processos` p ON p.`id` = g.`processo_id` LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id`%s',
+            $this->table,
+            RegistroMetadataHelper::sqlUsuarioAuditoria('g')
+        );
     }
 
     /**

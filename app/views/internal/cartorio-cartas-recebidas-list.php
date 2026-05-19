@@ -10,6 +10,7 @@ require_once __DIR__ . '/../../services/CartasRecebidasService.php';
 require_once __DIR__ . '/../../repositories/CartasRecebidasSubtarefasRepository.php';
 require_once __DIR__ . '/../../helpers/CartorioAlocacaoChipHelper.php';
 require_once __DIR__ . '/../../helpers/ProcessoBlocoListagemHelper.php';
+require_once __DIR__ . '/../../helpers/RegistroMetadataHelper.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -56,6 +57,7 @@ try {
 
 $rows = $listResult['rows'] ?? [];
 $rows = ProcessoBlocoListagemHelper::appendBlocoData($connection, $rows);
+$registroListViewerContext = RegistroMetadataHelper::viewerContextFromSession();
 $totalDocuments = (int) ($listResult['total'] ?? 0);
 
 if ($totalDocuments === 0) {
@@ -427,7 +429,8 @@ if ($totalPages > 0) {
                 $tarefaConcluida = in_array($statusTarefaNorm, ['concluida', 'finalizada'], true);
                 $podeExpandirSubtarefas = !$tarefaConcluida && $subtarefas !== [];
             ?>
-            <div class="display-flex col col-full register border-bottom" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idCarta); ?>">
+            <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'cartas_recebidas', $registroListViewerContext); ?>
+            <div class="display-flex col col-full register register-with-metadata border-bottom" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idCarta); ?>">
 
                 <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                     <div class="display-flex row row-fit justify-start gap-y-sm align-center">
@@ -450,9 +453,6 @@ if ($totalPages > 0) {
                         </div>
                     </div>
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                        <button type="button" class="btn btn-editar" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" title="Editar">
-                            <i class="fi fi-rr-pen-square"></i>
-                        </button>
                         <div class="display-flex row row-fit justify-end gap-y-sm allocate-chips-row allocate-users">
                             <?php
                             $alocados = CartorioAlocacaoChipHelper::ordenarAlocadosPorTipo($row['Alocados'] ?? []);
@@ -568,6 +568,7 @@ if ($totalPages > 0) {
                             }
                             ?>
                         </div>
+                        <?php include __DIR__ . '/_registro_metadata.php'; ?>
                     </div>
                 </div>
 
@@ -785,15 +786,19 @@ if ($totalPages > 0) {
                 return;
             }
 
+            if (window.App && App.RegistroMetadataList && typeof App.RegistroMetadataList.bind === 'function') {
+                App.RegistroMetadataList.bind({
+                    storageKey: 'cartorio.postReloadToast',
+                    cancelEndpoint: '/api/cartorio-cartas-recebidas/cancel.php',
+                    cancelToastKey: 'cartorio.cartas_recebidas.cancel.success',
+                    cancelFallback: { type: 'success', title: 'Sucesso', message: 'Carta cancelada.' }
+                });
+            }
+
             App.CartorioTaskList.initialize({
                 storageKey: 'cartorio.postReloadToast',
                 newButtonId: 'novo-cadastro-btn',
                 newHref: '/frame.php?page=cartasrecebidascreate',
-                editButtonSelector: '.btn-editar[data-carta-id]',
-                editIdAttribute: 'cartaId',
-                editHrefBuilder: function (cartaId) {
-                    return '/frame.php?page=cartasrecebidasedit&id=' + encodeURIComponent(cartaId);
-                },
                 onReady: function (ctx) {
                     const notify = ctx.notify;
                     const queuePostReloadToast = ctx.queuePostReloadToast;

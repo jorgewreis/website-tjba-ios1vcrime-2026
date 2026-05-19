@@ -252,6 +252,10 @@ final class GuiasService
         if ($row['user_cadastro'] === '') {
             $row['user_cadastro'] = null;
         }
+        $usuarioCadastroId = trim((string) ($payload['usuario_cadastro_id'] ?? ''));
+        if ($usuarioCadastroId !== '') {
+            $row['criado_por'] = $usuarioCadastroId;
+        }
 
         if ($row['data_fato'] !== null && isset($row['dias_multa']) && (int) $row['dias_multa'] > 0) {
             $valorMulta = $this->calcularValorPenaMulta((string) $row['data_fato'], (int) $row['dias_multa']);
@@ -266,8 +270,6 @@ final class GuiasService
         // #endregion
 
         $this->repository->insert($row);
-
-        $usuarioCadastroId = trim((string) ($payload['usuario_cadastro_id'] ?? ''));
 
         $regraRow = $this->alocacoesRegrasRepository->findByRegra(self::REGRA_ALOCAR_GUIAS);
         $usuarioIdRegra = ($regraRow !== null) ? trim((string) ($regraRow['usuario_id'] ?? '')) : '';

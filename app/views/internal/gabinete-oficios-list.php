@@ -352,7 +352,7 @@ if ($totalPages > 0) {
                 $nAno = $numSeq . '/' . $ano;
                 $oficioMetadata = OficioRegistroMetadataHelper::fromListRow($row, 'gabinete', $oficioListViewerContext);
             ?>
-            <div class="display-flex col col-full register register-oficio-list border-bottom" data-oficio-id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>">
+            <div class="display-flex col col-full register register-oficio-list register-with-metadata border-bottom" data-oficio-id="<?php echo htmlspecialchars($idOficio, ENT_QUOTES); ?>">
                 <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center register-oficio-list-row">
                     <div class="display-flex row row-fit justify-start gap-y-sm align-center flex-1">
                         <div class="col width-200">

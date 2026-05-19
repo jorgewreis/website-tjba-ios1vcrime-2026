@@ -165,7 +165,7 @@ final class CeapaService
             30
         );
 
-        $this->repository->insert([
+        $insertRow = [
             'id' => $id,
             'processo_origem_id' => $processoOrigemId,
             'numero_processo_origem' => $numeroFormatado,
@@ -176,7 +176,11 @@ final class CeapaService
             'observacoes_cumprimento' => $observacoes !== '' ? $observacoes : null,
             'status_cumprimento' => $statusCumprimento,
             'usuario_cadastro_id' => $usuarioCadastroId !== '' ? $usuarioCadastroId : null,
-        ]);
+        ];
+        if ($usuarioCadastroId !== '') {
+            $insertRow['criado_por'] = $usuarioCadastroId;
+        }
+        $this->repository->insert($insertRow);
 
         $regra = $this->alocacoesRegrasRepository->findByRegra(self::REGRA_ALOCAR_CEAPA);
         if ($regra !== null) {

@@ -197,63 +197,14 @@
             return;
         }
 
-        global.document.addEventListener('click', function (event) {
-            const editBtn = event.target.closest('[data-action="editar-oficio"]');
-            if (editBtn) {
-                const href = editBtn.getAttribute('data-edit-href') || '';
-                if (href) {
-                    global.location.href = href;
-                }
-                return;
-            }
-
-            const cancelBtn = event.target.closest('[data-action="cancelar-oficio"]');
-            if (!cancelBtn) {
-                return;
-            }
-
-            const id = String(cancelBtn.getAttribute('data-oficio-id') || '').trim();
-            const endpoint = String(cancelBtn.getAttribute('data-cancel-endpoint') || cancelEndpointDefault).trim();
-            if (!id || !endpoint) {
-                return;
-            }
-            if (cancelBtn.disabled) {
-                return;
-            }
-
-            cancelBtn.disabled = true;
-            fetch(endpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: id }),
-                credentials: 'same-origin'
-            })
-                .then(function (response) {
-                    return response.json().then(function (json) {
-                        return { ok: response.ok, data: json };
-                    });
-                })
-                .then(function (result) {
-                    if (result.ok && result.data && result.data.success) {
-                        queueByKey(
-                            ctx.storageKey,
-                            'oficios.cancel.success',
-                            {},
-                            { type: 'success', title: 'Sucesso', message: 'Ofício cancelado.' }
-                        ).then(function () {
-                            global.location.reload();
-                        });
-                        return;
-                    }
-
-                    notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Falha ao cancelar.');
-                    cancelBtn.disabled = false;
-                })
-                .catch(function () {
-                    notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
-                    cancelBtn.disabled = false;
-                });
-        });
+        if (App.RegistroMetadataList && typeof App.RegistroMetadataList.bind === 'function') {
+            App.RegistroMetadataList.bind({
+                storageKey: ctx.storageKey,
+                cancelEndpoint: cancelEndpointDefault,
+                cancelToastKey: 'oficios.cancel.success',
+                cancelFallback: { type: 'success', title: 'Sucesso', message: 'Ofício cancelado.' }
+            });
+        }
     }
 
     function bindProcessRule(config) {

@@ -257,7 +257,7 @@ final class GabineteMonitoramentoEletronicoService
                 'GME',
                 30
             );
-            $this->repository->insert([
+            $insertRow = [
                 'id' => $id,
                 'processo_id' => $processoOrigemId,
                 'numero_processo' => $numeroFormatado,
@@ -269,7 +269,12 @@ final class GabineteMonitoramentoEletronicoService
                 'status' => 'pendente',
                 'data_inicio' => null,
                 'data_encerramento' => null,
-            ]);
+            ];
+            $usuarioCadastroId = trim((string) ($payload['usuario_cadastro_id'] ?? ''));
+            if ($usuarioCadastroId !== '') {
+                $insertRow['criado_por'] = $usuarioCadastroId;
+            }
+            $this->repository->insert($insertRow);
             $this->subtarefasRepository->create($id, GabineteMonitoramentoEletronicoSubtarefasRepository::TIPO_INICIAR, 1, 'em_andamento');
             $this->subtarefasRepository->create($id, GabineteMonitoramentoEletronicoSubtarefasRepository::TIPO_ENCERRAR, 2, 'pendente');
             $this->connection->commit();

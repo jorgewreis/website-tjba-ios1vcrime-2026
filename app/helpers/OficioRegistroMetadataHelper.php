@@ -90,18 +90,21 @@ final class OficioRegistroMetadataHelper
         $status = strtolower(trim((string) ($row['Status'] ?? '')));
         $id = trim((string) ($row['IdOficio'] ?? ''));
         $criador = trim((string) ($row['CriadoPorNome'] ?? ''));
+        $editor = trim((string) ($row['UltimoEditorNome'] ?? ''));
         $createdRaw = trim((string) ($row['Data'] ?? ''));
         $updatedRaw = trim((string) ($row['DataAtualizacao'] ?? ''));
+
+        require_once __DIR__ . '/RegistroMetadataHelper.php';
 
         $dataEventoClasse = '';
         $dataEventoTexto = '';
         if ($status === 'cancelada') {
             $dataEventoClasse = 'canceled';
             $ref = $updatedRaw !== '' ? $updatedRaw : $createdRaw;
-            $dataEventoTexto = 'Cancelado em ' . self::formatarDataHora($ref);
+            $dataEventoTexto = RegistroMetadataHelper::formatarEventoComAutor('Cancelado em', $ref, $editor);
         } elseif ($updatedRaw !== '' && $createdRaw !== '' && self::isUpdatedAfterCreated($createdRaw, $updatedRaw)) {
             $dataEventoClasse = 'updated';
-            $dataEventoTexto = 'Atualizado em ' . self::formatarDataHora($updatedRaw);
+            $dataEventoTexto = RegistroMetadataHelper::formatarEventoComAutor('Atualizado em', $updatedRaw, $editor);
         }
 
         $editHref = '';
@@ -121,7 +124,8 @@ final class OficioRegistroMetadataHelper
             : '/api/gabinete-oficios/cancel.php';
 
         return [
-            'criador_nome' => $criador !== '' ? $criador : '—',
+            'criador_nome' => $criador,
+            'user_prefix' => 'Cadastrado por',
             'data_cadastro_texto' => 'Em ' . self::formatarDataHora($createdRaw),
             'data_evento_classe' => $dataEventoClasse,
             'data_evento_texto' => $dataEventoTexto,

@@ -9,6 +9,7 @@ if (function_exists('mb_internal_encoding')) {
 require_once __DIR__ . '/../../services/CejuscService.php';
 require_once __DIR__ . '/../../helpers/CartorioAlocacaoChipHelper.php';
 require_once __DIR__ . '/../../helpers/ProcessoBlocoListagemHelper.php';
+require_once __DIR__ . '/../../helpers/RegistroMetadataHelper.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -53,6 +54,7 @@ try {
 
 $rows = $listResult['rows'] ?? [];
 $rows = ProcessoBlocoListagemHelper::appendBlocoData($connection, $rows);
+$registroListViewerContext = RegistroMetadataHelper::viewerContextFromSession();
 $totalDocuments = (int) ($listResult['total'] ?? 0);
 
 if ($totalDocuments === 0) {
@@ -322,7 +324,8 @@ if ($totalPages > 0) {
                     }
                 }
             ?>
-            <div class="display-flex col col-full register border-bottom" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idCarta); ?>">
+            <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'cejusc', $registroListViewerContext); ?>
+            <div class="display-flex col col-full register register-with-metadata border-bottom" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idCarta); ?>">
 
                 <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                     <div class="display-flex row row-fit justify-start gap-y-sm align-center">
@@ -343,9 +346,6 @@ if ($totalPages > 0) {
                         </div>
                     </div>
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                        <button type="button" class="btn btn-editar" data-carta-id="<?php echo htmlspecialchars($idCarta); ?>" title="Editar">
-                            <i class="fi fi-rr-pen-square"></i>
-                        </button>
                         <div class="display-flex row row-fit justify-end gap-y-sm allocate-chips-row allocate-users">
                         <?php
                             $alocados = CartorioAlocacaoChipHelper::ordenarAlocadosPorTipo($row['Alocados'] ?? []);
@@ -404,6 +404,7 @@ if ($totalPages > 0) {
                             }
                             ?>
                         </div>
+                        <?php include __DIR__ . '/_registro_metadata.php'; ?>
                     </div>
                 </div>
 
@@ -537,6 +538,15 @@ if ($totalPages > 0) {
             }
 
             initializeListSectionToggles();
+
+            if (window.App && App.RegistroMetadataList && typeof App.RegistroMetadataList.bind === 'function') {
+                App.RegistroMetadataList.bind({
+                    storageKey: 'cartorio.postReloadToast',
+                    cancelEndpoint: '/api/cartorio-cejusc/cancel.php',
+                    cancelToastKey: 'cartorio.cejusc.cancel.success',
+                    cancelFallback: { type: 'success', title: 'Sucesso', message: 'Tarefa cancelada.' }
+                });
+            }
 
             if (!window.App || !App.CartorioCejuscList || typeof App.CartorioCejuscList.initialize !== 'function') {
                 return;

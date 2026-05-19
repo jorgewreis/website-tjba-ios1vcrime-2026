@@ -28,11 +28,14 @@ final class CartasRecebidasRepository
     {
         [$whereClause, $params] = $this->buildFilterClause($filters, 'cr', true);
 
+        require_once __DIR__ . '/../helpers/RegistroMetadataHelper.php';
         $fromClause = $this->buildFromClause();
+        $auditSelect = RegistroMetadataHelper::sqlSelectAuditoriaExtra('cr');
 
         // Ordem oficial da listagem: data de cadastro (mais recente primeiro).
         $sql = sprintf(
-            'SELECT cr.`id` AS `IdCarta`, cr.`numero_processo_origem` AS `Processo`, cr.`finalidade` AS `Finalidade`, cr.`prazo_dias` AS `Prazo`, cr.`cidade_origem` AS `Comarca`, cr.`uf_origem` AS `Estado`, cr.`data_recebimento` AS `DataRecebimento`, cr.`status` AS `Status`, cr.`created_at` AS `Data`, COALESCE(cl.`nome`, \'Classe não informada\') AS `ClasseNome` FROM %s %s ORDER BY cr.`created_at` DESC LIMIT :limit OFFSET :offset',
+            'SELECT cr.`id` AS `IdCarta`, cr.`numero_processo_origem` AS `Processo`, cr.`finalidade` AS `Finalidade`, cr.`prazo_dias` AS `Prazo`, cr.`cidade_origem` AS `Comarca`, cr.`uf_origem` AS `Estado`, cr.`data_recebimento` AS `DataRecebimento`, cr.`status` AS `Status`, cr.`created_at` AS `Data`, COALESCE(cl.`nome`, \'Classe não informada\') AS `ClasseNome`%s FROM %s %s ORDER BY cr.`created_at` DESC LIMIT :limit OFFSET :offset',
+            $auditSelect,
             $fromClause,
             $whereClause ? 'WHERE ' . $whereClause : ''
         );
@@ -153,7 +156,7 @@ final class CartasRecebidasRepository
 
         $statement = $this->connection->prepare(
             sprintf(
-                'INSERT INTO `%s` (`id`, `processo_origem_id`, `numero_processo_origem`, `comarca_origem_id`, `cidade_origem`, `uf_origem`, `data_recebimento`, `finalidade`, `prazo_dias`, `status`, `observacoes`, `numero_processo_destino`, `vara_destino_id`, `vara_destino_nome`, `created_at`, `updated_at`) VALUES (:id, :processo_origem_id, :numero_processo_origem, :comarca_origem_id, :cidade_origem, :uf_origem, :data_recebimento, :finalidade, :prazo_dias, :status, :observacoes, :numero_processo_destino, :vara_destino_id, :vara_destino_nome, NOW(), NOW())',
+                'INSERT INTO `%s` (`id`, `processo_origem_id`, `numero_processo_origem`, `comarca_origem_id`, `cidade_origem`, `uf_origem`, `data_recebimento`, `finalidade`, `prazo_dias`, `status`, `observacoes`, `numero_processo_destino`, `vara_destino_id`, `vara_destino_nome`, `criado_por`, `atualizado_por`, `created_at`, `updated_at`) VALUES (:id, :processo_origem_id, :numero_processo_origem, :comarca_origem_id, :cidade_origem, :uf_origem, :data_recebimento, :finalidade, :prazo_dias, :status, :observacoes, :numero_processo_destino, :vara_destino_id, :vara_destino_nome, :criado_por, :atualizado_por, NOW(), NOW())',
                 $this->table
             )
         );
@@ -171,6 +174,9 @@ final class CartasRecebidasRepository
         $statement->bindValue(':numero_processo_destino', $row['numero_processo_destino'] ?? null);
         $statement->bindValue(':vara_destino_id', $row['vara_destino_id'] ?? null);
         $statement->bindValue(':vara_destino_nome', $row['vara_destino_nome'] ?? null);
+        $cp = $row['criado_por'] ?? null;
+        $statement->bindValue(':criado_por', $cp !== null && $cp !== '' ? $cp : null);
+        $statement->bindValue(':atualizado_por', $cp !== null && $cp !== '' ? $cp : null);
         $statement->execute();
 
         return (string) $row['id'];
@@ -257,14 +263,16 @@ final class CartasRecebidasRepository
 
     private function buildFromClause(): string
     {
+        require_once __DIR__ . '/../helpers/RegistroMetadataHelper.php';
         $coll = self::COLLATION;
         return sprintf(
-            '`%s` cr LEFT JOIN `processos` p ON p.`id` COLLATE %s = cr.`processo_origem_id` COLLATE %s LEFT JOIN `classes` cl ON cl.`id` COLLATE %s = p.`classe_id` COLLATE %s',
+            '`%s` cr LEFT JOIN `processos` p ON p.`id` COLLATE %s = cr.`processo_origem_id` COLLATE %s LEFT JOIN `classes` cl ON cl.`id` COLLATE %s = p.`classe_id` COLLATE %s%s',
             $this->table,
             $coll,
             $coll,
             $coll,
-            $coll
+            $coll,
+            RegistroMetadataHelper::sqlUsuarioAuditoria('cr')
         );
     }
 

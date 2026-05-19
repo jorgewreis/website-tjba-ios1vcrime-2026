@@ -41,10 +41,13 @@ final class CejuscRepository
             )
         );
 
+        require_once __DIR__ . '/../helpers/RegistroMetadataHelper.php';
         $fromClause = $this->buildFromClause();
+        $auditSelect = RegistroMetadataHelper::sqlSelectAuditoriaExtra('ct');
 
         $sql = sprintf(
-            'SELECT ct.`id` AS `IdCarta`, ct.`numero_processo_origem` AS `Processo`, ct.`status` AS `Status`, ct.`created_at` AS `Data`, COALESCE(p.`nome_completo`, \'\') AS `ReuNome`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), NULLIF(TRIM(cl_alt.`nome`), \'\'), \'Classe não informada\') AS `ClasseNome` FROM %s %s ORDER BY %s, ct.`created_at` DESC LIMIT :limit OFFSET :offset',
+            'SELECT ct.`id` AS `IdCarta`, ct.`numero_processo_origem` AS `Processo`, ct.`status` AS `Status`, ct.`created_at` AS `Data`, COALESCE(p.`nome_completo`, \'\') AS `ReuNome`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), NULLIF(TRIM(cl_alt.`nome`), \'\'), \'Classe não informada\') AS `ClasseNome`%s FROM %s %s ORDER BY %s, ct.`created_at` DESC LIMIT :limit OFFSET :offset',
+            $auditSelect,
             $fromClause,
             $whereClause ? 'WHERE ' . $whereClause : '',
             $orderField
@@ -115,8 +118,8 @@ final class CejuscRepository
             sprintf(
                 'INSERT INTO `%s` (%s, `created_at`, `updated_at`) VALUES (%s, NOW(), NOW())',
                 $this->table,
-                '`id`, `processo_origem_id`, `numero_processo_origem`, `parte_id`, `status`',
-                ':id, :processo_origem_id, :numero_processo_origem, :parte_id, :status'
+                '`id`, `processo_origem_id`, `numero_processo_origem`, `parte_id`, `status`, `criado_por`, `atualizado_por`',
+                ':id, :processo_origem_id, :numero_processo_origem, :parte_id, :status, :criado_por, :atualizado_por'
             )
         );
         $statement->bindValue(':id', $row['id']);
@@ -124,6 +127,9 @@ final class CejuscRepository
         $statement->bindValue(':numero_processo_origem', $row['numero_processo_origem']);
         $statement->bindValue(':parte_id', $row['parte_id']);
         $statement->bindValue(':status', $row['status']);
+        $cp = $row['criado_por'] ?? null;
+        $statement->bindValue(':criado_por', $cp !== null && $cp !== '' ? $cp : null);
+        $statement->bindValue(':atualizado_por', $cp !== null && $cp !== '' ? $cp : null);
         $statement->execute();
 
         return (string) $row['id'];
@@ -223,6 +229,7 @@ final class CejuscRepository
 
     private function buildFromClause(): string
     {
+        require_once __DIR__ . '/../helpers/RegistroMetadataHelper.php';
         $coll = self::COLLATION;
 
         return sprintf(
@@ -231,13 +238,14 @@ final class CejuscRepository
             . ' LEFT JOIN `processos` proc ON proc.`id` COLLATE %s = ct.`processo_origem_id` COLLATE %s'
             . ' LEFT JOIN `classes` cl ON cl.`id` COLLATE %s = proc.`classe_id` COLLATE %s'
             . ' LEFT JOIN `processos` proc_alt ON proc.`id` IS NULL AND proc_alt.`numero_processo` COLLATE %s = ct.`numero_processo_origem` COLLATE %s'
-            . ' LEFT JOIN `classes` cl_alt ON cl_alt.`id` COLLATE %s = proc_alt.`classe_id` COLLATE %s',
+            . ' LEFT JOIN `classes` cl_alt ON cl_alt.`id` COLLATE %s = proc_alt.`classe_id` COLLATE %s%s',
             $this->table,
             $coll, $coll,
             $coll, $coll,
             $coll, $coll,
             $coll, $coll,
-            $coll, $coll
+            $coll, $coll,
+            RegistroMetadataHelper::sqlUsuarioAuditoria('ct')
         );
     }
 
