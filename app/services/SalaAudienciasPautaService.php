@@ -359,6 +359,15 @@ final class SalaAudienciasPautaService
 
     public function cancel(string $id, ?string $usuarioId): bool
     {
+        $pauta = $this->pautaRepository->findById($id);
+        if ($pauta === null) {
+            throw new InvalidArgumentException('Audiência não encontrada.');
+        }
+        $status = strtolower(trim((string) ($pauta['status'] ?? '')));
+        if (in_array($status, ['cancelada', 'cancelado', 'concluída', 'concluida', 'finalizada', 'realizada'], true)) {
+            throw new InvalidArgumentException('Audiência já encerrada não pode ser cancelada.');
+        }
+
         return $this->pautaRepository->setStatus($id, 'cancelada', $usuarioId);
     }
 

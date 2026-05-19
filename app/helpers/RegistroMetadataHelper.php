@@ -120,6 +120,7 @@ final class RegistroMetadataHelper
             'cancel_endpoint' => '/api/sala-audiencias-pauta/cancel.php',
             'cancel_toast_key' => 'sala.pauta.cancel.success',
             'cancel_label' => 'Cancelar audiência',
+            'terminal_extra' => ['realizada'],
         ],
         'sala_midias' => [
             'id_keys' => ['id', 'IdMidia'],

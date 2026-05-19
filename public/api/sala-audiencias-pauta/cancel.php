@@ -29,6 +29,9 @@ try {
     $service = new SalaAudienciasPautaService(Conection::getInstance()->getConnection());
     $ok = $service->cancel($id, $usuarioId);
     echo json_encode(['success' => $ok], JSON_UNESCAPED_UNICODE);
+} catch (InvalidArgumentException $e) {
+    http_response_code(400);
+    echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao cancelar audiência: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);
