@@ -9,7 +9,29 @@ if (!is_file($basePath . '/app/helpers/Conection.php')) {
 }
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
+require_once $basePath . '/config/security.php';
+require_once $basePath . '/app/helpers/UsuarioPerfisAutorizacao.php';
+require_once $basePath . '/app/access/AccessEvaluator.php';
 require_once $basePath . '/app/services/PessoasService.php';
+
+if (!bootstrapRequireTrustedPostRequest()) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Requisição inválida.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+if (!Security::isAuthenticated()) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Sessão expirada. Faça login novamente.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+$usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
+if (!AccessEvaluator::canAccessPage('consultapartesedit', UsuarioPerfisAutorizacao::perfisDoUsuario($usuarioId))) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Acesso negado.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 $connection = Conection::getInstance()->getConnection();
 

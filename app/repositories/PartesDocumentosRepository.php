@@ -104,6 +104,9 @@ final class PartesDocumentosRepository
         if ($existenteOutraParte !== null && $existenteOutraParte !== $parteId) {
             throw new InvalidArgumentException('Já existe outra pessoa cadastrada com este documento.');
         }
+        if ($tipo === 'CPF' && $this->cpfExisteEmOutraParteLegada($numero, $parteId)) {
+            throw new InvalidArgumentException('Já existe outra pessoa cadastrada com este documento.');
+        }
 
         $id = trim((string) ($row['id'] ?? ''));
         if ($id === '') {
@@ -123,6 +126,24 @@ final class PartesDocumentosRepository
         $statement->execute();
 
         return $id;
+    }
+
+    private function cpfExisteEmOutraParteLegada(string $cpf, string $parteId): bool
+    {
+        $cpf = preg_replace('/\D+/', '', trim($cpf)) ?? '';
+        $parteId = trim($parteId);
+        if ($cpf === '' || $parteId === '') {
+            return false;
+        }
+
+        $statement = $this->connection->prepare(
+            'SELECT 1 FROM `partes` WHERE `cpf` = :cpf AND `id` <> :parte_id LIMIT 1'
+        );
+        $statement->bindValue(':cpf', $cpf);
+        $statement->bindValue(':parte_id', $parteId);
+        $statement->execute();
+
+        return $statement->fetchColumn() !== false;
     }
 
     public function delete(string $id): bool
