@@ -212,13 +212,19 @@ final class RegistroMetadataHelper
                 $subtarefasAll = [];
             }
             $ultimaSubtarefa = self::resolveUltimaSubtarefaConcluida($subtarefasAll, $connection);
-            if ($ultimaSubtarefa !== null
-                && ($createdRaw === '' || self::isUpdatedAfterCreated($createdRaw, $ultimaSubtarefa['data']))) {
+            if ($ultimaSubtarefa !== null && trim($ultimaSubtarefa['data']) !== '') {
+                $editorMovimentacao = trim($ultimaSubtarefa['editor']);
+                if ($editorMovimentacao === '') {
+                    $editorMovimentacao = self::compactarNome($editor);
+                }
+                if ($editorMovimentacao === '') {
+                    $editorMovimentacao = self::compactarNome($criador);
+                }
                 $dataEventoClasse = 'updated';
                 $dataEventoTexto = self::formatarEventoComAutor(
                     'Atualizado em',
                     $ultimaSubtarefa['data'],
-                    $ultimaSubtarefa['editor']
+                    $editorMovimentacao
                 );
             }
         } elseif ($updatedRaw !== '' && $createdRaw !== '' && self::isUpdatedAfterCreated($createdRaw, $updatedRaw)) {
@@ -338,8 +344,7 @@ final class RegistroMetadataHelper
             if (!is_array($subtarefa)) {
                 continue;
             }
-            $status = strtolower(trim((string) ($subtarefa['status'] ?? '')));
-            if ($status !== 'concluida') {
+            if (!self::isSubtarefaStatusConcluida((string) ($subtarefa['status'] ?? ''))) {
                 continue;
             }
             $data = trim((string) ($subtarefa['updated_at'] ?? ''));
@@ -673,5 +678,12 @@ final class RegistroMetadataHelper
         }
 
         return $updated > $created + 1;
+    }
+
+    private static function isSubtarefaStatusConcluida(string $status): bool
+    {
+        $normalizado = strtolower(trim($status));
+
+        return $normalizado === 'concluida' || $normalizado === 'concluída';
     }
 }

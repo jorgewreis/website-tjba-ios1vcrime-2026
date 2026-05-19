@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 02 de abril de 2026
+**Data de Lançamento:** 19 de maio de 2026
 
 # V. 1.37
 
-> feat: enhance Produtividade search functionality with improved token-based query handling and UI updates for process and class inputs
+> refactor: add date formatting methods in OficioRegistroMetadataHelper and RegistroMetadataHelper
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **feat: enhance Produtividade search functionality with improved token-based query handling and UI updates for process and class inputs** `[59dbd7f]`
+- **refactor: add date formatting methods in OficioRegistroMetadataHelper and RegistroMetadataHelper** `[a83dc3a3]`
 
 ---
 
