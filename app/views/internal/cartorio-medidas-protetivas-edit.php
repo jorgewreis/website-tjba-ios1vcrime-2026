@@ -79,6 +79,7 @@ $timelineData = $medida !== null
         'task' => $medida,
         'task_status' => $statusAtual,
         'subtarefas' => $subtarefas,
+        'connection' => $connection,
     ])
     : [];
 $subtarefaLabels = [

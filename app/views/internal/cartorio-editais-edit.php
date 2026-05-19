@@ -135,6 +135,7 @@ $timelineData = $edital !== null
         'task' => $edital,
         'task_status' => $statusAtual,
         'subtarefas' => $subtarefas,
+        'connection' => $connection,
     ])
     : [];
 ?>

@@ -219,6 +219,7 @@ $timelineData = $carta !== null
         'subtarefas' => $subtarefas ?? [],
         'ruleServidor' => $ruleServidor,
         'tribunaisRepo' => $tribunaisRepo ?? null,
+        'connection' => $connection,
     ])
     : [];
 

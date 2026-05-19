@@ -277,6 +277,12 @@ if (!function_exists('cartorioTimelineGetConfig')) {
         $config = cartorioTimelineGetConfig($module);
         $task = $options['task'] ?? [];
         $subtarefas = $options['subtarefas'] ?? [];
+        $connection = $options['connection'] ?? null;
+        if ($connection instanceof PDO) {
+            $options['usuarioNomesPorId'] = cartorioTimelineCollectUsuarioNomesPorId($connection, $subtarefas);
+        } elseif (!isset($options['usuarioNomesPorId'])) {
+            $options['usuarioNomesPorId'] = [];
+        }
         $subtarefasPorOrdem = [];
         foreach ($subtarefas as $subtarefa) {
             $ordem = (int) ($subtarefa['ordem'] ?? 0);
@@ -465,7 +471,7 @@ if (!function_exists('cartorioTimelineGetConfig')) {
 
     function cartorioTimelineCompletedContent(string $module, int $ordem, array $task, array $subtarefasPorOrdem, ?array $subtarefa, array $dados, string $movementDate, array $options): array
     {
-        $user = cartorioTimelineResolveUser($dados);
+        $user = cartorioTimelineResolveUser($dados, (array) ($options['usuarioNomesPorId'] ?? []));
 
         if ($module === 'cartas_expedidas') {
             if ($ordem === 1) {
@@ -666,10 +672,91 @@ if (!function_exists('cartorioTimelineGetConfig')) {
         return is_array($decoded) ? $decoded : [];
     }
 
-    function cartorioTimelineResolveUser(array $dados): string
+    /**
+     * @param list<array<string, mixed>> $subtarefas
+     * @return array<string, string>
+     */
+    function cartorioTimelineCollectUsuarioNomesPorId(PDO $connection, array $subtarefas): array
+    {
+        $ids = [];
+        foreach ($subtarefas as $subtarefa) {
+            if (!is_array($subtarefa)) {
+                continue;
+            }
+            $dados = cartorioTimelineDecodeData($subtarefa);
+            $uid = trim((string) ($dados['usuario_id'] ?? ''));
+            if ($uid !== '') {
+                $ids[$uid] = true;
+            }
+        }
+        if ($ids === []) {
+            return [];
+        }
+
+        $placeholders = [];
+        $params = [];
+        $index = 0;
+        foreach (array_keys($ids) as $uid) {
+            $key = ':uid' . $index;
+            $placeholders[] = $key;
+            $params[$key] = $uid;
+            $index++;
+        }
+
+        $sql = 'SELECT `id_usuario`, `nome`, `sobrenome`, `email`
+                FROM `usuarios`
+                WHERE `id_usuario` IN (' . implode(', ', $placeholders) . ')';
+        $statement = $connection->prepare($sql);
+        foreach ($params as $key => $value) {
+            $statement->bindValue($key, $value);
+        }
+        $statement->execute();
+
+        $map = [];
+        while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+            $id = trim((string) ($row['id_usuario'] ?? ''));
+            if ($id === '') {
+                continue;
+            }
+            $map[$id] = cartorioTimelineFormatUsuarioNome($row);
+        }
+
+        return $map;
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    function cartorioTimelineFormatUsuarioNome(array $row): string
+    {
+        $nome = trim((string) ($row['nome'] ?? ''));
+        $sobrenome = trim((string) ($row['sobrenome'] ?? ''));
+        $completo = $sobrenome !== '' ? trim($nome . ' ' . $sobrenome) : $nome;
+        if ($completo !== '') {
+            return $completo;
+        }
+        return trim((string) ($row['email'] ?? ''));
+    }
+
+    /**
+     * @param array<string, mixed> $dados
+     * @param array<string, string> $usuarioNomesPorId
+     */
+    function cartorioTimelineResolveUser(array $dados, array $usuarioNomesPorId = []): string
     {
         $nome = trim((string) ($dados['nome'] ?? $dados['responsavel'] ?? ''));
-        return $nome !== '' ? $nome : '—';
+        if ($nome !== '') {
+            return $nome;
+        }
+        $uid = trim((string) ($dados['usuario_id'] ?? ''));
+        if ($uid !== '' && isset($usuarioNomesPorId[$uid])) {
+            $resolved = trim((string) $usuarioNomesPorId[$uid]);
+            if ($resolved !== '') {
+                return $resolved;
+            }
+        }
+
+        return '—';
     }
 
     function cartorioTimelineFormatDateTime(string $raw): string

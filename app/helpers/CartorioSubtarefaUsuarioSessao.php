@@ -16,14 +16,17 @@ final class CartorioSubtarefaUsuarioSessao
         $usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
         $nomeUsuario = '';
         if ($usuarioId !== '') {
-            $stmt = $connection->prepare('SELECT `nome`, `sobrenome` FROM `usuarios` WHERE `id_usuario` = :id LIMIT 1');
+            $stmt = $connection->prepare('SELECT `nome`, `sobrenome`, `email` FROM `usuarios` WHERE `id_usuario` = :id LIMIT 1');
             $stmt->bindValue(':id', $usuarioId);
             $stmt->execute();
             $u = $stmt->fetch(PDO::FETCH_ASSOC);
             if ($u !== false) {
                 $nome = trim((string) ($u['nome'] ?? ''));
                 $sobrenome = trim((string) ($u['sobrenome'] ?? ''));
-                $nomeUsuario = $sobrenome !== '' ? $nome . ' ' . $sobrenome : $nome;
+                $nomeUsuario = $sobrenome !== '' ? trim($nome . ' ' . $sobrenome) : $nome;
+                if ($nomeUsuario === '') {
+                    $nomeUsuario = trim((string) ($u['email'] ?? ''));
+                }
             }
         }
 

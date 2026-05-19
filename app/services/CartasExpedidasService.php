@@ -16,6 +16,7 @@ require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
 require_once __DIR__ . '/../helpers/CartorioProdutividade.php';
 require_once __DIR__ . '/../helpers/AlocacaoTarefasPerfisHelper.php';
+require_once __DIR__ . '/../helpers/CartorioSubtarefaUsuarioSessao.php';
 
 final class CartasExpedidasService
 {
@@ -123,7 +124,21 @@ final class CartasExpedidasService
 
         if ($temNumero && $temVara) {
             if ($statusOrdem5 !== 'concluida') {
-                $this->subtarefasRepository->marcarConcluida((string) $ordem5['id']);
+                $dadosOrdem5 = [];
+                $rawDados = trim((string) ($ordem5['dados_especificos'] ?? ''));
+                if ($rawDados !== '') {
+                    $decoded = json_decode($rawDados, true);
+                    if (is_array($decoded)) {
+                        $dadosOrdem5 = $decoded;
+                    }
+                }
+                $dadosOrdem5['numero_processo_destino'] = $numeroDestino;
+                $dadosOrdem5['vara_destino'] = $varaDestino;
+                $dadosJson = CartorioSubtarefaUsuarioSessao::mergeDadosEspecificosComSessao(
+                    $this->connection,
+                    json_encode($dadosOrdem5, JSON_UNESCAPED_UNICODE)
+                );
+                $this->subtarefasRepository->marcarConcluidaComDados((string) $ordem5['id'], $dadosJson);
             }
             return;
         }
@@ -403,7 +418,8 @@ final class CartasExpedidasService
             $todas = $this->subtarefasRepository->findByCartaId($cartaId);
             foreach ($todas as $st) {
                 if ((int) ($st['ordem'] ?? 0) === 5 && trim((string) ($st['status'] ?? '')) !== 'concluida') {
-                    $this->subtarefasRepository->marcarConcluida((string) $st['id']);
+                    $dadosJsonOrdem5 = CartorioSubtarefaUsuarioSessao::mergeDadosEspecificosComSessao($this->connection, null);
+                    $this->subtarefasRepository->marcarConcluidaComDados((string) $st['id'], $dadosJsonOrdem5);
                 }
             }
         }

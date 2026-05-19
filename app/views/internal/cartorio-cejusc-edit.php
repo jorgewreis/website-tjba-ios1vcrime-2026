@@ -151,6 +151,7 @@ $timelineData = $tarefa !== null
         'task' => $tarefa,
         'task_status' => $statusAtual,
         'subtarefas' => $subtarefas,
+        'connection' => $connection,
     ])
     : [];
 ?>

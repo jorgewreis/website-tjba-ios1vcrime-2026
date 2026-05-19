@@ -189,6 +189,7 @@ $timelineData = $guia !== null
         'task' => $guia,
         'task_status' => $statusAtual,
         'subtarefas' => $subtarefas,
+        'connection' => $connection,
     ])
     : [];
 
