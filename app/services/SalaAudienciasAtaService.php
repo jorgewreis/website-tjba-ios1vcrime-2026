@@ -172,11 +172,9 @@ final class SalaAudienciasAtaService
             throw new RuntimeException('Diretório de armazenamento de atas sem permissão de escrita. Contate o administrador.');
         }
 
+        $oldFull = null;
         if ($existingAtaRow !== null && !empty($existingAtaRow['arquivo_relativo'])) {
             $oldFull = $basePath . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, (string) $existingAtaRow['arquivo_relativo']);
-            if (is_file($oldFull)) {
-                @unlink($oldFull);
-            }
         }
 
         $pautaIdSafe = preg_replace('/[^A-Za-z0-9_-]/', '', $idPauta) ?: 'pauta';
@@ -202,17 +200,28 @@ final class SalaAudienciasAtaService
         $now = date('Y-m-d H:i:s');
         $expires = date('Y-m-d H:i:s', strtotime('+' . self::DIAS_VALIDADE_ATA . ' days'));
 
-        $this->ataRepository->upsertForPauta([
-            'pauta' => $idPauta,
-            'arquivo_relativo' => $relative,
-            'nome_original' => $nomeOriginal,
-            'mime' => 'application/pdf',
-            'tamanho_bytes' => $size,
-            'uploaded_by' => $usuarioId,
-            'uploaded_at' => $now,
-            'expires_at' => $expires,
-            'identificador_arquivo' => $identificadorArquivo,
-        ]);
+        try {
+            $this->ataRepository->upsertForPauta([
+                'pauta' => $idPauta,
+                'arquivo_relativo' => $relative,
+                'nome_original' => $nomeOriginal,
+                'mime' => 'application/pdf',
+                'tamanho_bytes' => $size,
+                'uploaded_by' => $usuarioId,
+                'uploaded_at' => $now,
+                'expires_at' => $expires,
+                'identificador_arquivo' => $identificadorArquivo,
+            ]);
+        } catch (Throwable $e) {
+            if (is_file($dest)) {
+                @unlink($dest);
+            }
+            throw $e;
+        }
+
+        if ($oldFull !== null && $oldFull !== $dest && is_file($oldFull)) {
+            @unlink($oldFull);
+        }
     }
 
     /**
