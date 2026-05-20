@@ -14,7 +14,7 @@ require_once __DIR__ . '/../../helpers/RegistroMetadataHelper.php';
 $connection = Conection::getInstance()->getConnection();
 
 $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinete'));
-$statusFilter = trim($_GET['status'] ?? '');
+$statusFilter = trim((string) ($_GET['status'] ?? ''));
 $processoFilter = trim($_GET['processo'] ?? '');
 $allowedPerPage = [10, 25, 50, 100];
 $itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 10;
@@ -130,7 +130,7 @@ $statusLabelUi = static function (string $s): string {
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title>Monitoramento Eletrônico - Gabinete</title>
+        <title>Monitoramento Eletrônico — Lista</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <?php include __DIR__ . '/_internal_head_styles.php'; ?>
         <link rel="stylesheet" href="/assets/css/shared/processo-bloco-listagem.css?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/css/shared/processo-bloco-listagem.css') ?: time(); ?>">
@@ -144,7 +144,7 @@ $statusLabelUi = static function (string $s): string {
 
     <div class="header-page">
         <div class="location">
-            <span class="all">Interno - Gabinete - Monitoramento Eletrônico -</span>
+            <span class="all">Interno - Monitoramento Eletrônico -</span>
             <span class="specific">Lista</span>
         </div>
     </div>
@@ -193,7 +193,8 @@ $statusLabelUi = static function (string $s): string {
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-center">
                 <select class="width-500 height-md" id="filter-status">
-                    <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Todos os status</option>
+                    <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Em aberto (padrão)</option>
+                    <option value="todos"<?php echo $statusFilter === 'todos' ? ' selected' : ''; ?>>Todos os status</option>
                     <option value="pendente"<?php echo $statusFilter === 'pendente' ? ' selected' : ''; ?>>Pendente (<?php echo (int) ($statusCounts['pendente'] ?? 0); ?>)</option>
                     <option value="em_andamento"<?php echo $statusFilter === 'em_andamento' ? ' selected' : ''; ?>>Em andamento (<?php echo (int) ($statusCounts['em_andamento'] ?? 0); ?>)</option>
                     <option value="finalizada"<?php echo $statusFilter === 'finalizada' ? ' selected' : ''; ?>>Finalizada (<?php echo (int) ($statusCounts['finalizada'] ?? 0); ?>)</option>
@@ -476,7 +477,7 @@ $statusLabelUi = static function (string $s): string {
                 App.RegistroMetadataList.bind({
                     storageKey: 'gme.postReloadToast',
                     cancelEndpoint: '/api/gabinete-monitoramento-eletronico/cancel.php',
-                    cancelToastKey: 'gabinete.monitoramento.cancel.success',
+                    cancelToastKey: 'gme.monitoring.cancel.success',
                     cancelFallback: { type: 'success', title: 'Sucesso', message: 'Monitoramento cancelado.' }
                 });
             }

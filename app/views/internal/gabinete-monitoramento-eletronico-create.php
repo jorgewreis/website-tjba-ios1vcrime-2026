@@ -13,7 +13,7 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title>Monitoramento Eletrônico (Gabinete) — Cadastro</title>
+        <title>Monitoramento Eletrônico — Cadastro</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <?php include __DIR__ . '/_internal_head_styles.php'; ?>
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
@@ -25,7 +25,7 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
 
     <div class="header-page">
         <div class="location">
-            <span class="all">Interno - Gabinete - Monitoramento Eletrônico -</span>
+            <span class="all">Interno - Monitoramento Eletrônico -</span>
             <span class="specific">Cadastro</span>
         </div>
         <h1 class="title-page">Novo monitoramento eletrônico</h1>
@@ -68,7 +68,7 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
 
             <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
                 <button type="button" class="btn btn-secondary" id="btn-gab-mon-voltar" data-allow-during-loading="true">Voltar</button>
-                <button type="button" class="btn btn-primary" id="btn-gab-mon-registrar">Registrar</button>
+                <button type="button" class="btn btn-primary" id="btn-gab-mon-registrar" disabled>Novo cadastro</button>
             </div>
         </div>
     </div>

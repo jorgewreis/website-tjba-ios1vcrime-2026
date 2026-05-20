@@ -641,7 +641,6 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                 section: 'Gabinete',
                 items: [
                     { icon: 'fi fi-rs-license', label: 'Ofícios', target: 'oficiosgabinete' },
-                    { icon: 'fi fi-rs-sensor-on', label: 'Monitoramento Eletrônico', target: 'monitoramentogabinete' },
                     { icon: 'fi fi-rs-lock', label: 'Réus Presos', target: 'reuspresos' }
                 ]
             },
@@ -667,6 +666,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                 items: [
                     { icon: 'fi fi-rs-users-alt', label: 'Consulta Partes', target: 'consultapartes' },
                     { icon: 'fi fi-rs-folder-open', label: 'Consulta Processos', target: 'consultaprocessos' },
+                    { icon: 'fi fi-rs-sensor-on', label: 'Monitoramento Eletrônico', target: 'monitoramentogabinete' },
                     { icon: 'fi fi-rs-building', label: 'Instituições Públicas', target: 'instituicoespublicas' },
                     { icon: 'fi fi-rs-marker', label: 'CEP', target: 'consultacep' }
                 ]

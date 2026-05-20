@@ -36,6 +36,8 @@ final class PageAccessRegistry
         static $areaCartorio = ['kind' => 'area_a', 'area' => AccessAreas::CARTORIO];
         static $areaGabinete = ['kind' => 'area_a', 'area' => AccessAreas::GABINETE];
         static $areaAudiencias = ['kind' => 'area_a', 'area' => AccessAreas::AUDIENCIAS];
+        /** Monitoramento eletrônico: qualquer usuário interno com perfil composto (cartório, gabinete ou audiências). */
+        static $allInternal = ['kind' => 'all_internal'];
 
         $map = [
             'dashboard' => ['kind' => 'all_internal'],
@@ -83,9 +85,9 @@ final class PageAccessRegistry
 
             'oficiosgabinete' => $areaGabinete,
             'oficiosgabineteedit' => $areaGabinete,
-            'monitoramentogabinete' => $areaGabinete,
-            'monitoramentogabinetecreate' => $areaGabinete,
-            'monitoramentogabineteedit' => $areaGabinete,
+            'monitoramentogabinete' => $allInternal,
+            'monitoramentogabinetecreate' => $allInternal,
+            'monitoramentogabineteedit' => $allInternal,
             'salapauta' => $areaAudiencias,
             'salamidias' => ['kind' => 'exact', 'profiles' => ['SERVIDOR-AUDIENCIAS', 'CHEFIA', 'ADMIN']],
             'salamidiascreate' => ['kind' => 'exact', 'profiles' => ['SERVIDOR-AUDIENCIAS', 'CHEFIA', 'ADMIN']],

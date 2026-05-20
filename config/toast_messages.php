@@ -293,6 +293,12 @@ return [
             'message' => 'Monitoramento Eletronico cancelado.',
             'vars' => [],
         ],
+        'gme.monitoring.delete.confirm' => [
+            'type' => 'info',
+            'title' => 'Confirmação',
+            'message' => 'Clique novamente para confirmar a exclusão definitiva do monitoramento.',
+            'vars' => [],
+        ],
         'gme.monitoring.create.success' => [
             'type' => 'success',
             'title' => 'Sucesso',

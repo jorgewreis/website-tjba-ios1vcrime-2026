@@ -359,11 +359,6 @@
             }
             setStatusMessage(statusElement, '', null);
             dispatchDatajudClasseResolved(processoInput, true);
-            if (processoInput.id === 'gab-mon-processo' || processoInput.id === 'filter-processo' || processoInput.id === 'audiencia-processo') {
-                global.dispatchEvent(new CustomEvent('gabineteMonDatajudClassePronta', {
-                    detail: { numeroProcesso: processoInput.value },
-                }));
-            }
         },
 
         finishFailure: function (session, dom, kind, detail) {

@@ -112,7 +112,7 @@ final class RegistroMetadataHelper
             'criador_keys' => ['CriadoPorNome'],
             'edit_page' => 'monitoramentogabineteedit',
             'cancel_endpoint' => '/api/gabinete-monitoramento-eletronico/cancel.php',
-            'cancel_toast_key' => 'gabinete.monitoramento.cancel.success',
+            'cancel_toast_key' => 'gme.monitoring.cancel.success',
             'cancel_label' => 'Cancelar monitoramento',
             'terminal_extra' => ['finalizada'],
         ],

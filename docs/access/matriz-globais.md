@@ -7,6 +7,15 @@
 | alterardados | `all_internal` | Idem dashboard |
 | notificacoes, configuracoes, documentos | `all_internal` | Idem |
 | feriadoslist | `all_internal` | Idem |
+| monitoramentogabinete, monitoramentogabinetecreate, monitoramentogabineteedit | `all_internal` | Qualquer interno com `ESTAGIARIO-*` ou `SERVIDOR-*` (cartório, gabinete ou audiências); menu **somente** em **Consultas**; cadastro/conclusão/cancelamento permitidos a todos os internos com acesso (decisão produto 2026-05) |
+
+**Monitoramento — decisões de produto (implementado 2026-05):**
+
+- Menu: um único atalho na seção **Consultas** (não duplicar em Gabinete).
+- Operação: todos os internos com perfil composto (`ESTAGIARIO` / `SERVIDOR` + elevados) podem usar lista, cadastro, edição e subtarefas.
+- Rótulos: breadcrumb/título **neutros** (“Interno - Monitoramento Eletrônico”); rotas/API mantêm prefixo `gabinete-` no código.
+- Cancelar/excluir: internos com perfil composto; exclusão na edição ainda exige ser o **último número sequencial** do ano.
+- Lista: padrão **Em aberto** (oculta `finalizada` e `cancelada`); opção **Todos os status** no filtro.
 | usuarios*, feriadoscreate, feriadosedit | `gestao` | Só `ADMIN` / `CHEFIA` (elevado) |
 | consultacep | `consultas_cep` | Externo (estudante/consultor conforme regra) + interno com composto + elevado |
 | consultapartes, instituicoespublicas, partesinstituicoeslist | `consultas_partes` | Consultor externo + interno com composto + elevado |

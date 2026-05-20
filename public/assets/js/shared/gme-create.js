@@ -2,6 +2,7 @@
     'use strict';
 
     const App = global.App || (global.App = {});
+    const helpers = App.CartorioCreateHelpers || null;
 
     function notify(type, title, message) {
         if (App.Page && typeof App.Page.notify === 'function') {
@@ -90,6 +91,13 @@
             });
     }
 
+    function onlyDigits(value) {
+        if (helpers && typeof helpers.onlyDigits === 'function') {
+            return helpers.onlyDigits(value);
+        }
+        return String(value || '').replace(/\D/g, '');
+    }
+
     function initialize(config) {
         const settings = config || {};
         const storageKey = settings.storageKey || 'gme.postReloadToast';
@@ -97,27 +105,52 @@
         const reuSelect = global.document.getElementById(settings.reuSelectId || 'gab-mon-reu-select');
         const reuNome = global.document.getElementById(settings.reuInputId || 'gab-mon-reu-nome');
         const processoInput = global.document.getElementById(settings.processInputId || 'filter-processo');
+        const classeInput = global.document.getElementById(settings.classInputId || 'filter-classe');
         let lastSuggestionNome = '';
-        const setButtonState = function (label, disabled) {
-            if (!registerButton) return;
+        let isSubmitting = false;
+
+        const applyButtonState = function (label, disabled) {
+            if (!registerButton) {
+                return;
+            }
             registerButton.textContent = label;
             registerButton.disabled = disabled === true;
         };
-        setButtonState('Novo cadastro', false);
-        processoInput?.addEventListener('input', function () { setButtonState('Aguarde...', true); });
-        reuNome?.addEventListener('input', function () { setButtonState('Aguarde...', true); });
-        global.addEventListener('cnjInvalid', function (event) {
-            const id = event && event.detail ? event.detail.inputId : '';
-            if (!id || id === 'filter-processo' || id === 'gab-mon-processo') {
-                setButtonState('Erro', true);
+
+        function hasValidProcess() {
+            return onlyDigits(processoInput?.value || '').length === 20;
+        }
+
+        function hasReuFilled() {
+            if (reuSelect && reuSelect.style.display !== 'none') {
+                const selected = (reuSelect.value || '').trim();
+                if (!selected) {
+                    return false;
+                }
+                if (selected === 'outro' || selected === '__novo__') {
+                    return (reuNome?.value || '').trim().length >= 2;
+                }
+                return true;
             }
-        });
-        global.addEventListener('datajudClasseResolved', function (event) {
-            const detail = event && event.detail ? event.detail : {};
-            if (!detail.processoInputId || detail.processoInputId === 'filter-processo' || detail.processoInputId === 'gab-mon-processo') {
-                setButtonState('Cadastrar', false);
+            return (reuNome?.value || '').trim().length >= 2;
+        }
+
+        function syncRegisterButtonState() {
+            if (!registerButton || isSubmitting) {
+                return;
             }
-        });
+            if (!hasValidProcess()) {
+                applyButtonState('Novo cadastro', true);
+                return;
+            }
+            if (!hasReuFilled()) {
+                applyButtonState('Novo cadastro', true);
+                return;
+            }
+            applyButtonState('Novo cadastro', false);
+        }
+
+        applyButtonState('Novo cadastro', true);
 
         function showReuInput() {
             if (reuSelect) {
@@ -129,6 +162,7 @@
                 reuNome.style.display = '';
                 reuNome.required = true;
             }
+            syncRegisterButtonState();
         }
 
         function showReuSelect(reus) {
@@ -150,6 +184,7 @@
             reuNome.style.display = 'none';
             reuNome.required = false;
             reuNome.value = '';
+            syncRegisterButtonState();
         }
 
         function showReuSelectSugestoes(pessoas, nomeDigitado) {
@@ -175,10 +210,10 @@
             reuSelect.style.display = '';
             reuNome.style.display = 'none';
             reuNome.required = false;
+            syncRegisterButtonState();
         }
 
         function resetClasseSeProcessoIncompleto() {
-            const classeInput = global.document.getElementById(settings.classInputId || 'filter-classe');
             if (classeInput) {
                 classeInput.value = '';
                 classeInput.readOnly = true;
@@ -192,6 +227,7 @@
                 reuNome.placeholder = 'Digite o nome completo';
                 reuNome.disabled = false;
             }
+            syncRegisterButtonState();
         }
 
         function carregarReus(numeroFormatado) {
@@ -204,6 +240,7 @@
                 reuNome.disabled = true;
                 reuNome.value = '';
             }
+            syncRegisterButtonState();
 
             const classCode = global.document.getElementById(settings.classCodeInputId || 'hidden-classe-codigo')?.value || '';
             const classDescription = global.document.getElementById(settings.classDescriptionInputId || 'hidden-classe-descricao')?.value || '';
@@ -246,6 +283,19 @@
                 });
         }
 
+        function onDatajudClasseResolved(event) {
+            const detail = event && event.detail ? event.detail : {};
+            const processoInputId = detail.processoInputId || '';
+            if (processoInputId && processoInputId !== 'filter-processo' && processoInputId !== 'gab-mon-processo') {
+                return;
+            }
+            const processo = processoInput?.value?.trim() || '';
+            if (processo) {
+                carregarReus(processo);
+            }
+            syncRegisterButtonState();
+        }
+
         global.document.getElementById(settings.backButtonId || 'btn-gab-mon-voltar')?.addEventListener('click', function () {
             global.location.href = settings.listHref;
         });
@@ -266,10 +316,12 @@
                     reuNome.style.display = 'none';
                     reuNome.required = false;
                 }
+                syncRegisterButtonState();
             });
         }
 
         if (reuNome) {
+            reuNome.addEventListener('input', syncRegisterButtonState);
             reuNome.addEventListener('blur', function () {
                 let nome = (reuNome.value || '').trim();
                 if (App.ProperNameHelper && typeof App.ProperNameHelper.formatProper === 'function') {
@@ -279,6 +331,7 @@
                     nome = global.TextFormatter.formatProperName(nome, 255);
                     reuNome.value = nome;
                 }
+                syncRegisterButtonState();
                 if (nome.length < 2) {
                     return;
                 }
@@ -302,12 +355,21 @@
 
         if (processoInput) {
             processoInput.addEventListener('input', function () {
-                const digits = String(processoInput.value || '').replace(/\D/g, '');
+                const digits = onlyDigits(processoInput.value || '');
                 if (digits.length !== 20) {
                     resetClasseSeProcessoIncompleto();
+                    return;
                 }
+                syncRegisterButtonState();
             });
         }
+
+        global.addEventListener('cnjInvalid', function (event) {
+            const id = event && event.detail ? event.detail.inputId : '';
+            if (!id || id === 'filter-processo' || id === 'gab-mon-processo') {
+                syncRegisterButtonState();
+            }
+        });
 
         global.addEventListener('cnjValidated', function (event) {
             const digits = (event.detail && event.detail.digits) ? String(event.detail.digits).replace(/\D/g, '') : '';
@@ -316,64 +378,71 @@
                 return;
             }
             carregarReus(formatCnjFromDigits(digits));
+            syncRegisterButtonState();
         });
 
-        global.addEventListener('gabineteMonDatajudClassePronta', function () {
-            const processo = global.document.getElementById(settings.processInputId || 'filter-processo')?.value?.trim() || '';
-            if (processo) {
-                carregarReus(processo);
-            }
-        });
+        global.addEventListener('datajudClasseResolved', onDatajudClasseResolved);
 
         registerButton?.addEventListener('click', function () {
-            const processoEl = global.document.getElementById(settings.processInputId || 'filter-processo');
-            const processo = processoEl?.value?.trim() || '';
-            if (processoEl && processoEl.disabled) {
-                notifyByKey('gme.monitoring.datajud.wait.info', {}, 'info', 'Aguarde', 'Aguarde a consulta ao DataJud terminar antes de registrar.');
-                setButtonState('Aguarde...', true);
+            if (registerButton.disabled || isSubmitting) {
                 return;
             }
 
-            const classText = global.document.getElementById(settings.classInputId || 'filter-classe')?.value?.trim() || '';
-            if (classText === 'Aguarde...') {
-                notifyByKey('gme.monitoring.datajud.wait.info', {}, 'info', 'Aguarde', 'Aguarde a consulta ao DataJud terminar antes de registrar.');
-                setButtonState('Aguarde...', true);
+            const processoEl = processoInput;
+            let processo = processoEl?.value?.trim() || '';
+            if (helpers && processoEl) {
+                const normalized = helpers.normalizeProcessValue(processo, {
+                    inputId: settings.processInputId || 'filter-processo',
+                    feedback: function (message) {
+                        notify('error', 'Validação', message);
+                    },
+                    requiredMessage: 'Informe o número do processo.',
+                    invalidMessage: 'O número do processo está incompleto ou inválido (20 dígitos).'
+                });
+                if (!normalized.ok) {
+                    syncRegisterButtonState();
+                    return;
+                }
+                processo = normalized.value;
+            } else if (onlyDigits(processo).length !== 20) {
+                notifyByKey('gme.monitoring.validation.process.required', {}, 'error', 'Validação', 'Informe o número do processo.');
+                syncRegisterButtonState();
                 return;
             }
 
-            const classCode = global.document.getElementById(settings.classCodeInputId || 'hidden-classe-codigo')?.value || '';
-            const classDescription = global.document.getElementById(settings.classDescriptionInputId || 'hidden-classe-descricao')?.value || '';
-            const reuSelectEl = global.document.getElementById(settings.reuSelectId || 'gab-mon-reu-select');
-            const reuInputEl = global.document.getElementById(settings.reuInputId || 'gab-mon-reu-nome');
+            const classText = classeInput?.value?.trim() || '';
+
+            const reuSelectEl = reuSelect;
+            const reuInputEl = reuNome;
             const reuSelecionado = reuSelectEl && reuSelectEl.style.display !== 'none' ? ((reuSelectEl.value || '').trim()) : '';
             const nomeLivre = reuInputEl?.value?.trim() || '';
 
-            if (!processo) {
-                notifyByKey('gme.monitoring.validation.process.required', {}, 'error', 'Validação', 'Informe o número do processo.');
-                setButtonState('Erro', true);
+            if (!hasReuFilled()) {
+                notifyByKey('gme.monitoring.validation.reu.required', {}, 'error', 'Validação', 'Informe o nome completo do réu.');
+                syncRegisterButtonState();
                 return;
             }
 
-            const body = {
+            const body = Object.assign({
                 numero_processo: processo,
-                classe_codigo: classCode,
-                classe_descricao: classDescription,
                 reu_complemento: ''
-            };
+            }, helpers && typeof helpers.buildClassePayload === 'function'
+                ? helpers.buildClassePayload({ classeValue: classText })
+                : {
+                    classe_codigo: global.document.getElementById(settings.classCodeInputId || 'hidden-classe-codigo')?.value || '',
+                    classe_descricao: global.document.getElementById(settings.classDescriptionInputId || 'hidden-classe-descricao')?.value || ''
+                });
 
             if (reuSelecionado && reuSelecionado.indexOf('processo_parte:') === 0) {
                 body.processo_parte_id = reuSelecionado.substring('processo_parte:'.length);
             } else if (reuSelecionado && reuSelecionado.indexOf('parte:') === 0) {
                 body.reu_id = reuSelecionado.substring('parte:'.length);
             } else {
-                if (!nomeLivre) {
-                    notifyByKey('gme.monitoring.validation.reu.required', {}, 'error', 'Validação', 'Informe o nome completo do réu.');
-                    setButtonState('Erro', true);
-                    return;
-                }
                 body.reu_complemento = nomeLivre;
             }
-            setButtonState('Aguarde...', true);
+
+            isSubmitting = true;
+            applyButtonState('Aguarde...', true);
 
             fetch(settings.createEndpoint, {
                 method: 'POST',
@@ -393,17 +462,18 @@
                             title: 'Sucesso',
                             message: 'Monitoramento registrado.'
                         }).then(function () {
-                            setButtonState('Novo cadastro', false);
                             global.location.href = settings.listHref;
                         });
                         return;
                     }
                     notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Falha ao registrar.');
-                    setButtonState('Novo cadastro', false);
+                    isSubmitting = false;
+                    syncRegisterButtonState();
                 })
                 .catch(function () {
                     notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
-                    setButtonState('Novo cadastro', false);
+                    isSubmitting = false;
+                    syncRegisterButtonState();
                 });
         });
     }

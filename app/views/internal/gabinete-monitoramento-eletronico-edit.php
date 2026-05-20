@@ -75,12 +75,11 @@ if ($userIdEdit !== null && trim((string) $userIdEdit) !== '') {
     require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
     $userPerfisEdit = UsuarioPerfisAutorizacao::perfisDoUsuario(trim((string) $userIdEdit));
 }
-/** Botão Excluir: visível apenas para admin/chefia e somente quando for o último número sequencial do ano. */
-$perfisPermitidosExcluir = ['ADMIN', 'CHEFIA'];
-$perfisPermitidosCancelar = ['ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA'];
-$isAdminOuChefia = count(array_intersect($userPerfisEdit, $perfisPermitidosExcluir)) > 0;
-$podeExcluirTarefa = $isAdminOuChefia && $podeExcluirNumero;
-$podeCancelarTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosCancelar)) > 0;
+/** Botão Excluir: internos com perfil composto; somente último número sequencial do ano. */
+$perfisPermitidosOperacao = ['ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA'];
+$podeOperarInterno = count(array_intersect($userPerfisEdit, $perfisPermitidosOperacao)) > 0;
+$podeExcluirTarefa = $podeOperarInterno && $podeExcluirNumero;
+$podeCancelarTarefa = $podeOperarInterno;
 $tarefaCancelada = ($statusAtual === 'cancelada');
 $tarefaFinalizada = ($statusAtual === 'finalizada');
 $podeCancelarTarefa = $podeCancelarTarefa && !$tarefaCancelada && !$tarefaFinalizada;
@@ -102,7 +101,7 @@ $podeCancelarTarefa = $podeCancelarTarefa && !$tarefaCancelada && !$tarefaFinali
 
     <div class="header-page">
         <div class="location">
-            <span class="all">Interno - Gabinete - Monitoramento Eletrônico -</span>
+            <span class="all">Interno - Monitoramento Eletrônico -</span>
             <span class="specific">Edição</span>
         </div>
         <h1 class="title-page">Monitoramento eletrônico</h1>
@@ -158,7 +157,7 @@ $podeCancelarTarefa = $podeCancelarTarefa && !$tarefaCancelada && !$tarefaFinali
                     <button type="button" class="btn btn-danger-outline" id="gab-mon-cancelar-btn" title="Alterar status para Cancelada">Cancelar monitoramento</button>
                 <?php endif; ?>
                 <?php if ($podeExcluirTarefa): ?>
-                    <button type="button" class="btn btn-danger" id="gab-mon-excluir-btn" title="Exclusão permitida apenas para admin ou chefia e somente se for o último número sequencial do ano">Excluir registro</button>
+                    <button type="button" class="btn btn-danger" id="gab-mon-excluir-btn" title="Exclusão permitida somente se for o último número sequencial do ano">Excluir registro</button>
                 <?php endif; ?>
                 <button type="button" class="btn btn-primary" id="salvar-btn" disabled>Salvar alterações</button>
             <?php endif; ?>
@@ -192,7 +191,7 @@ $podeCancelarTarefa = $podeCancelarTarefa && !$tarefaCancelada && !$tarefaFinali
                 listHref: '/frame.php?page=monitoramentogabinete',
                 storageKey: 'gme.postReloadToast',
                 cancelSuccessMessage: 'Monitoramento cancelado.',
-                deleteConfirmKey: 'gabinete.monitoramento.delete.confirm',
+                deleteConfirmKey: 'gme.monitoring.delete.confirm',
                 deleteConfirmMessage: 'Clique novamente para confirmar a exclusão definitiva do monitoramento.',
                 deleteSuccessMessage: 'Monitoramento excluído.'
             });

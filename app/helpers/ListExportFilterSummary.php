@@ -50,7 +50,11 @@ final class ListExportFilterSummary
                 break;
 
             case 'monitoramentogabinete':
-                self::pair($parts, 'Status', (string) ($get['status'] ?? ''));
+                self::pair(
+                    $parts,
+                    'Status',
+                    self::mapMonitoramentoStatusDisplay((string) ($get['status'] ?? ''))
+                );
                 self::pair($parts, 'Processo', (string) ($get['processo'] ?? ''));
                 break;
 
@@ -197,6 +201,23 @@ final class ListExportFilterSummary
         } else {
             $parts[] = 'Ativo: ' . $s;
         }
+    }
+
+    private static function mapMonitoramentoStatusDisplay(string $value): string
+    {
+        $status = trim($value);
+        if ($status === '') {
+            return 'Em aberto (padrão)';
+        }
+
+        return match ($status) {
+            'todos' => 'Todos os status',
+            'pendente' => 'Pendente',
+            'em_andamento' => 'Em andamento',
+            'finalizada' => 'Finalizada',
+            'cancelada' => 'Cancelada',
+            default => $status,
+        };
     }
 
     private static function mapCartasStatusDisplay(string $value): string

@@ -212,17 +212,21 @@ final class GabineteMonitoramentoEletronicoRepository
         );
     }
 
-    private function buildFilterClause(array $filters, string $alias, bool $includeStatusFilter): array
+    private function buildFilterClause(array $filters, string $alias, bool $excludeFinalizadaCanceladaQuandoStatusVazio): array
     {
         $conditions = [];
         $params = [];
 
         $status = trim((string) ($filters['status'] ?? ''));
-        if ($includeStatusFilter && $status !== '') {
-            if (in_array($status, self::STATUS_ORDER, true)) {
-                $conditions[] = sprintf('%s.`status` = :f_status', $alias);
-                $params[':f_status'] = $status;
-            }
+        if ($status === 'todos') {
+            // Listagem explícita de todos os status (inclui finalizada e cancelada).
+        } elseif ($status !== '' && in_array($status, self::STATUS_ORDER, true)) {
+            $conditions[] = sprintf('%s.`status` = :f_status', $alias);
+            $params[':f_status'] = $status;
+        } elseif ($excludeFinalizadaCanceladaQuandoStatusVazio) {
+            $conditions[] = sprintf('%s.`status` NOT IN (:f_status_excl_1, :f_status_excl_2)', $alias);
+            $params[':f_status_excl_1'] = 'finalizada';
+            $params[':f_status_excl_2'] = 'cancelada';
         }
 
         $ano = trim((string) ($filters['ano'] ?? ''));

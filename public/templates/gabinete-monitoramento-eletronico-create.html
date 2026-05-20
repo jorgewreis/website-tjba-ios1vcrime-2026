@@ -3,11 +3,11 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Monitoramento Eletrônico (Gabinete) — Cadastro — Primeira Vara Crime de Ilhéus</title>
+    <title>Monitoramento Eletrônico — Cadastro — Primeira Vara Crime de Ilhéus</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!--
-      MODELO — Cadastro (Gabinete — Monitoramento Eletrônico):
+      MODELO — Cadastro (Monitoramento Eletrônico):
       - Servidor preenche: número do processo (CNJ), classe (automático via DataJud).
       - Réu: select (partes do processo) + input (complemento / "Outro").
       - Após criar: subtarefas na lista — "Iniciar monitoramento" (data) → Em andamento; "Encerrar monitoramento" → Finalizada.
@@ -29,7 +29,7 @@
 
     <div class="header-page">
         <div class="location">
-            <span class="all">Interno - Gabinete - Monitoramento Eletrônico -</span>
+            <span class="all">Interno - Monitoramento Eletrônico -</span>
             <span class="specific">Cadastro</span>
         </div>
         <h1 class="title-page">Novo monitoramento eletrônico</h1>
@@ -71,7 +71,7 @@
             <p class="minor-info" id="gab-mon-reu-hint" style="margin:0;">Implementação: popular o select via API com as partes réus do processo; o input cobre casos não listados ou detalhes.</p>
             <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
                 <button type="button" class="btn btn-secondary" id="btn-gab-mon-voltar">Voltar</button>
-                <button type="button" class="btn btn-primary" id="btn-gab-mon-registrar">Registrar</button>                
+                <button type="button" class="btn btn-primary" id="btn-gab-mon-registrar" disabled>Novo cadastro</button>                
             </div>
         </div>
     </div>
