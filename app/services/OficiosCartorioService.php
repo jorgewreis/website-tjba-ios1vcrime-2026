@@ -354,7 +354,6 @@ final class OficiosCartorioService
             );
         }
 
-        $this->subtarefasRepository->deleteByOficioId($id);
         return $this->repository->updateStatus($id, 'cancelada', $atualizadoPor);
     }
 

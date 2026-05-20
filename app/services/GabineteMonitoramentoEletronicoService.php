@@ -366,8 +366,6 @@ final class GabineteMonitoramentoEletronicoService
         if (($row['status'] ?? '') === 'cancelada') {
             return true;
         }
-        $this->subtarefasRepository->deleteByMonitoramentoId($id);
-
         return $this->repository->updateStatus($id, 'cancelada');
     }
 
