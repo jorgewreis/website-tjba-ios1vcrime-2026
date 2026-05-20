@@ -6,7 +6,7 @@ declare(strict_types=1);
  * Ordem no array é irrelevante; a UI ordena por rótulo.
  *
  * Códigos automáticos usados em regras:
- * - crianca_adolescente, reu_preso, violencia_domestica (MP), sigiloso (processo sigiloso)
+ * - crianca_adolescente, reu_preso, violencia_domestica (MP), medida_protetiva (ficha manual), sigiloso (derivado ou processo sigiloso)
  */
 return [
     'crianca_adolescente' => 'Criança ou adolescente',
@@ -17,4 +17,5 @@ return [
     'pessoa_deficiencia' => 'Pessoa com deficiência',
     'pessoa_doenca_grave' => 'Pessoa com doença grave',
     'violencia_domestica' => 'Violência doméstica',
+    'medida_protetiva' => 'Medida protetiva',
 ];

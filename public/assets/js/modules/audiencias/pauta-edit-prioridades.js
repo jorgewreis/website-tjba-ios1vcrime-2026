@@ -83,7 +83,7 @@
     function dangerCodes() {
         return Array.isArray(window.PRIORIDADES_BADGE_DANGER_CODES)
             ? window.PRIORIDADES_BADGE_DANGER_CODES
-            : ['reu_preso', 'violencia_domestica', 'crianca_adolescente'];
+            : ['reu_preso', 'violencia_domestica', 'medida_protetiva', 'crianca_adolescente'];
     }
 
     function resolveCanonicalCodigo(p) {

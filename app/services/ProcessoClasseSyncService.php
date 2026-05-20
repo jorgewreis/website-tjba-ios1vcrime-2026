@@ -31,7 +31,7 @@ final class ProcessoClasseSyncService
             return;
         }
         $prioridades = new ProcessoPrioridadesService($this->connection);
-        $prioridades->registrarViolenciaDomesticaMedidaProtetiva($processoId);
+        $prioridades->registrarPrioridadesCadastroMedidaProtetiva($processoId);
         $prioridades->reconciliarAutomaticas($processoId, trim($numeroProcesso), 0);
     }
 

@@ -52,6 +52,20 @@ final class PrioridadesProcessuaisCatalog
         return 'violencia_domestica';
     }
 
+    public static function codigoMedidaProtetiva(): string
+    {
+        return 'medida_protetiva';
+    }
+
+    /** Prioridades cuja inclusão manual exige também Sigiloso (derivado). */
+    public static function codigosQueDerivamSigiloso(): array
+    {
+        return [
+            self::codigoViolenciaDomestica(),
+            self::codigoMedidaProtetiva(),
+        ];
+    }
+
     public static function codigoSigiloso(): string
     {
         return 'sigiloso';
@@ -65,7 +79,7 @@ final class PrioridadesProcessuaisCatalog
      */
     public static function codigosBloqueantesInscricaoEstudante(): array
     {
-        return ['sigiloso', 'crianca_adolescente', 'violencia_domestica'];
+        return ['sigiloso', 'crianca_adolescente', 'violencia_domestica', 'medida_protetiva'];
     }
 
     /** @deprecated use codigoAutomaticaParteMenor + labelForCodigo */
@@ -140,6 +154,8 @@ final class PrioridadesProcessuaisCatalog
             'doenca-grave' => 'pessoa_doenca_grave',
             'doença-grave' => 'pessoa_doenca_grave',
             'sigiloso' => 'sigiloso',
+            'medida-protetiva' => 'medida_protetiva',
+            'medida_protetiva' => 'medida_protetiva',
         ];
 
         return $aliases[$t] ?? null;

@@ -256,7 +256,7 @@ final class MedidasProtetivasService
             $cejuscId = trim((string) ($cejuscResult['id'] ?? ''));
             $this->repository->update($medidaId, ['cejusc_tarefa_id' => $cejuscId]);
 
-            $this->processoPrioridadesService->registrarViolenciaDomesticaMedidaProtetiva($processoId);
+            $this->processoPrioridadesService->registrarPrioridadesCadastroMedidaProtetiva($processoId);
 
             if ($usuarioCadastroId !== '' && $usuarioCadastroId !== 'sistema') {
                 $classeObs = CartorioProdutividade::nonEmpty(

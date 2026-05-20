@@ -102,11 +102,14 @@ final class ProcessoPrioridadesService
             $bloqueados[] = PrioridadesProcessuaisCatalog::codigoAutomaticaReuPreso();
         }
         $codMenor = PrioridadesProcessuaisCatalog::codigoAutomaticaParteMenor();
-        $codVd = PrioridadesProcessuaisCatalog::codigoViolenciaDomestica();
+        $codigosObrigamSigiloso = array_merge(
+            [PrioridadesProcessuaisCatalog::codigoAutomaticaParteMenor()],
+            PrioridadesProcessuaisCatalog::codigosQueDerivamSigiloso()
+        );
         $sigilosoObrigatorioMenorOuVd = false;
         foreach ($prioridades as $p) {
             $cc = (string) ($p['codigo'] ?? '');
-            if ($cc === $codMenor || $cc === $codVd) {
+            if (in_array($cc, $codigosObrigamSigiloso, true)) {
                 $sigilosoObrigatorioMenorOuVd = true;
                 break;
             }
@@ -136,11 +139,17 @@ final class ProcessoPrioridadesService
             return false;
         }
         if ($this->repository->findOneByProcessoAndCodigo($processoId, $codigo) !== null) {
+            if (in_array($codigo, PrioridadesProcessuaisCatalog::codigosQueDerivamSigiloso(), true)) {
+                $this->registrarSigilosoDerivadoMenorOuViolenciaDomestica($processoId);
+            }
             $this->reconciliarAutomaticas($processoId, $this->numeroDoProcesso($processoId), 0);
 
             return true;
         }
         $this->repository->insert($processoId, $codigo, ProcessoPrioridadeOrigem::MANUAL, null);
+        if (in_array($codigo, PrioridadesProcessuaisCatalog::codigosQueDerivamSigiloso(), true)) {
+            $this->registrarSigilosoDerivadoMenorOuViolenciaDomestica($processoId);
+        }
         $this->reconciliarAutomaticas($processoId, $this->numeroDoProcesso($processoId), 0);
 
         return true;
@@ -161,6 +170,9 @@ final class ProcessoPrioridadesService
         $foiInclusaoNova = $existente === null;
 
         $this->repository->upsert($processoId, $codigo, ProcessoPrioridadeOrigem::MANUAL, null);
+        if (in_array($codigo, PrioridadesProcessuaisCatalog::codigosQueDerivamSigiloso(), true)) {
+            $this->registrarSigilosoDerivadoMenorOuViolenciaDomestica($processoId);
+        }
         $this->reconciliarAutomaticas($processoId, $this->numeroDoProcesso($processoId), 0);
 
         return $foiInclusaoNova;
@@ -242,6 +254,30 @@ final class ProcessoPrioridadesService
             ProcessoPrioridadeOrigem::REGRA_VIOLENCIA_DOMESTICA_MP,
             ['fonte' => 'medida_protetiva']
         );
+    }
+
+    /** Sigiloso obrigatório quando há violência doméstica, medida protetiva ou parte menor. */
+    public function registrarSigilosoDerivadoMenorOuViolenciaDomestica(string $processoId): void
+    {
+        $processoId = trim($processoId);
+        if ($processoId === '') {
+            return;
+        }
+        $this->repository->upsert(
+            $processoId,
+            PrioridadesProcessuaisCatalog::codigoSigiloso(),
+            ProcessoPrioridadeOrigem::REGRA_DERIVADA_MENOR_OU_VD,
+            null
+        );
+    }
+
+    /**
+     * Cadastro em Medidas Protetivas: vincula Violência doméstica e Sigiloso ao processo.
+     */
+    public function registrarPrioridadesCadastroMedidaProtetiva(string $processoId): void
+    {
+        $this->registrarViolenciaDomesticaMedidaProtetiva($processoId);
+        $this->registrarSigilosoDerivadoMenorOuViolenciaDomestica($processoId);
     }
 
     /**
@@ -346,9 +382,17 @@ final class ProcessoPrioridadesService
                 $codigos[$c] = true;
             }
         }
-        $temMenorOuVD = isset($codigos[$codMenor]) || isset($codigos[$codVd]);
+        $temMenorOuPrioridadeDerivada = isset($codigos[$codMenor]);
+        if (!$temMenorOuPrioridadeDerivada) {
+            foreach (PrioridadesProcessuaisCatalog::codigosQueDerivamSigiloso() as $codDerivado) {
+                if (isset($codigos[$codDerivado])) {
+                    $temMenorOuPrioridadeDerivada = true;
+                    break;
+                }
+            }
+        }
 
-        if ($procSigFlag || $temMenorOuVD) {
+        if ($procSigFlag || $temMenorOuPrioridadeDerivada) {
             return;
         }
 
