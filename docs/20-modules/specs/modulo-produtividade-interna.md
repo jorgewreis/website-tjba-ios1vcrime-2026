@@ -12,7 +12,7 @@ Documento vivo: consolida o que já está entregue no módulo, com foco em opera
 |------|--------------|
 | **1 — Banco** | Concluída (`produtividade_*` + triggers de IDs). |
 | **2 — Núcleo** | Concluída (regras, lançamento manual, listagem, anulação, APIs base, RBAC e menu). |
-| **3 — Gestão e análise** | Concluída (metas, ranking, exportação CSV/PDF, resumo semana/mês/trimestre). |
+| **3 — Gestão e análise** | Concluída (ranking, exportação CSV/PDF, resumo semana/mês/trimestre). Metas de produtividade removidas em 2026-05. |
 | **4 — Gamificação e automação** | Entregue no ciclo atual (`registrarAuto`, badges, popup de conquista, widget no dashboard, integração inicial em Guias). |
 
 ---
@@ -21,7 +21,7 @@ Documento vivo: consolida o que já está entregue no módulo, com foco em opera
 
 ### Banco e domínio
 
-- Tabelas ativas: `produtividade_regras`, `produtividade_lancamentos`, `produtividade_metas`, `produtividade_log`, `produtividade_badges`, `produtividade_badges_concedidos`.
+- Tabelas ativas: `produtividade_regras`, `produtividade_lancamentos`, `produtividade_log`, `produtividade_badges`, `produtividade_badges_concedidos`.
 - `contexto_hash` com `UNIQUE` em lançamentos para idempotência de contexto.
 
 ### Serviço
@@ -30,31 +30,28 @@ Documento vivo: consolida o que já está entregue no módulo, com foco em opera
   - Regras: listagem, busca, create/update e ativação.
   - Lançamento manual e anulação: perfis de gestão (**ADMIN**, **CHEFIA**, **DIRETORA**, **MAGISTRADA** — diretora e magistrada enquadradas como chefia, alinhado a `isGestaoUser`) anulam sem limite de tempo; demais usuários só anulam o próprio lançamento **ativo** dentro de **30 minutos** após `criado_em` (API e botão na listagem usam a mesma regra via `ProdutividadeService`).
   - **`registrarAuto`** com resolução de regra por (`tipo_ato`, `tipo_documento`, `sistema_modulo`), no-op silencioso sem regra ativa e tratamento idempotente de duplicidade.
-  - Metas: list/find/create/update/set-ativo.
   - Ranking por setor e exportações.
-  - Resumo de cards (semana/mês/trimestre), projeção por dias úteis e resumo de meta aplicável.
+  - Resumo de cards (semana/mês/trimestre) e projeção por dias úteis.
   - Badges: CRUD de gestão, verificação automática de elegibilidade, pendências e marcação de notificação.
 
 ### Repositórios
 
 - [app/repositories/ProdutividadeRegrasRepository.php](../../../app/repositories/ProdutividadeRegrasRepository.php)
 - [app/repositories/ProdutividadeLancamentosRepository.php](../../../app/repositories/ProdutividadeLancamentosRepository.php)
-- [app/repositories/ProdutividadeMetasRepository.php](../../../app/repositories/ProdutividadeMetasRepository.php)
 - [app/repositories/ProdutividadeLogRepository.php](../../../app/repositories/ProdutividadeLogRepository.php)
 - [app/repositories/ProdutividadeBadgesRepository.php](../../../app/repositories/ProdutividadeBadgesRepository.php)
 
 ### APIs
 
-- Núcleo: `public/api/produtividade/regras/*`, `lancamentos/*`, `metas/*`, `export-csv.php`, `export-pdf.php`. O ranking mensal é obtido em PHP via `ProdutividadeService::listRanking` (lista e dashboard), sem endpoint HTTP dedicado.
+- Núcleo: `public/api/produtividade/regras/*`, `lancamentos/*`, `export-csv.php`, `export-pdf.php`. O ranking mensal é obtido em PHP via `ProdutividadeService::listRanking` (lista e dashboard), sem endpoint HTTP dedicado.
 - Badges: `public/api/produtividade/badges/list.php`, `create.php`, `update.php`, `delete.php`, `set-ativo.php`, `pendentes.php`, `marcar-notificado.php`.
 
 ### Interface
 
 - Lista principal: [app/views/internal/produtividade-list.php](../../../app/views/internal/produtividade-list.php)
-  - filtros + ranking + export (select CSV/PDF via `_list_export_buttons.php`, URLs `export-csv.php` / `export-pdf.php`) + resumo + projeção + status de meta;
+  - filtros + ranking + export (select CSV/PDF via `_list_export_buttons.php`, URLs `export-csv.php` / `export-pdf.php`) + resumo + projeção;
   - botão **Anular** só quando `ProdutividadeService::canActorAnularLancamentoManual` for verdadeiro (alinhado à API `lancamentos/anular.php`).
 - Regras: `produtividade-regras-list/create/edit.php`.
-- Metas: `produtividade-metas-list/create/edit.php`.
 - Badges: `produtividade-badges-list/create/edit.php`.
 - Compatibilidade de rota antiga: [app/views/internal/produtividade.php](../../../app/views/internal/produtividade.php).
 
@@ -66,11 +63,11 @@ Documento vivo: consolida o que já está entregue no módulo, com foco em opera
 
 ### Portal e acesso
 
-- Rotas em [public/frame.php](../../../public/frame.php) para regras/metas/badges.
+- Rotas em [public/frame.php](../../../public/frame.php) para regras e badges.
 - RBAC em [app/access/PageAccessRegistry.php](../../../app/access/PageAccessRegistry.php):
   - `produtividade` = `all_internal`;
-  - regras/metas/badges = `gestao`.
-- Menu em [public/home.php](../../../public/home.php) com entradas de Produtividade, Regras, Metas e Badges.
+  - regras/badges = `gestao`.
+- Menu em [public/home.php](../../../public/home.php) com entradas de Produtividade, Regras e Badges.
 
 ### Dashboard
 
@@ -123,7 +120,7 @@ Até à conclusão desse trabalho, o estado “entregue” deste spec continua a
 | Schema | `docs/schema/produtividade.sql` |
 | Serviço | `app/services/ProdutividadeService.php` |
 | Integração automática inicial | `app/services/Guias.php` |
-| Repositórios | `app/repositories/Produtividade{Regras,Lancamentos,Metas,Log,Badges}Repository.php` |
+| Repositórios | `app/repositories/Produtividade{Regras,Lancamentos,Log,Badges}Repository.php` |
 | APIs | `public/api/produtividade/**` |
 | Views | `app/views/internal/produtividade-*.php` |
 | JS | `public/assets/js/modules/produtividade/*.js` |

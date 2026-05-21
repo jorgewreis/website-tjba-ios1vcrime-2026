@@ -207,25 +207,6 @@
             });
         });
 
-        global.document.getElementById('buscar-cep-btn')?.addEventListener('click', function () {
-            const button = this;
-            button.disabled = true;
-            common.lookupCep(global.document.getElementById('new-end-cep')?.value || '').then(function (result) {
-                if (result.ok && result.data) {
-                    global.document.getElementById('new-end-logradouro').value = result.data.logradouro || '';
-                    global.document.getElementById('new-end-bairro').value = result.data.bairro || '';
-                    global.document.getElementById('new-end-cidade').value = result.data.cidade || '';
-                    global.document.getElementById('new-end-uf').value = String(result.data.uf || '').toUpperCase().slice(0, 2);
-                    if (typeof common.notifyByKey === 'function') {
-                        common.notifyByKey('generic.cep.lookup.success', {}, 'success', 'Sucesso', 'CEP encontrado.');
-                    } else {
-                        common.notify('success', 'Sucesso', 'CEP encontrado.');
-                    }
-                }
-                button.disabled = false;
-            });
-        });
-
         global.document.getElementById('add-end-btn')?.addEventListener('click', function () {
             const logradouro = String(global.document.getElementById('new-end-logradouro')?.value || '').trim();
             const cidade = String(global.document.getElementById('new-end-cidade')?.value || '').trim();

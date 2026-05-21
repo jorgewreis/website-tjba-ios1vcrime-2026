@@ -419,12 +419,6 @@ return [
         ],
 
         // Produtividade automática — fluxos internos (consultas, audiência, prioridades)
-        'interno.produtividade.cep.ponto' => [
-            'type' => 'info',
-            'title' => 'Produtividade',
-            'message' => 'Esta consulta de CEP registrou +1 ponto de produtividade.',
-            'vars' => [],
-        ],
         'interno.produtividade.consulta_partes.ponto' => [
             'type' => 'info',
             'title' => 'Produtividade',
@@ -933,12 +927,6 @@ return [
             'type' => 'info',
             'title' => 'Confirmação',
             'message' => 'Clique novamente para confirmar a exclusão.',
-            'vars' => [],
-        ],
-        'generic.cep.lookup.success' => [
-            'type' => 'success',
-            'title' => 'Sucesso',
-            'message' => 'CEP encontrado.',
             'vars' => [],
         ],
         'generic.confirmation.required' => [

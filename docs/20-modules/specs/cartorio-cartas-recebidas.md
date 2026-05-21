@@ -2,7 +2,9 @@
 
 ## 1. Visão geral
 
-Submódulo do Módulo de Cartório (m4) para gestão de **cartas recebidas** (precatórias recebidas de outros tribunais). Fluxo: **Cadastro no sistema** → Ato ordinatório - Cumprimento → Expedição de documento → Juntada de certidão do oficial de justiça → Ato ordinatório - Devolução → Envio do processo (Devolução da Carta) → Juntada de termo de envio → Arquivamento definitivo.
+Submódulo do Módulo de Cartório (m4) para gestão de **cartas recebidas** (precatórias recebidas de outros tribunais). Fluxo atual: **Cadastro no sistema** → **Devolução da Carta ao Juízo Deprecante** → **Arquivamento definitivo com baixa**.
+
+Etapas intermediárias antigas (ato ordinatório de cumprimento/devolução, expedição de mandado/ofício, certidão do oficial, comprovante de envio) foram **descontinuadas** no fluxo ativo; registros históricos permanecem no banco e são auto-concluídos na listagem/edição.
 
 ## 2. Entidade principal: Carta Recebida
 
@@ -12,43 +14,30 @@ Submódulo do Módulo de Cartório (m4) para gestão de **cartas recebidas** (pr
 
 ## 3. Status da tarefa principal
 
-- `pendente`
-- `em_andamento`
+- `aguardando cumprimento` — status inicial após cadastro (primeira subtarefa ativa em andamento)
+- `em_andamento` — após conclusão da devolução (ordem 5), enquanto aguarda arquivamento
 - `concluída`
 - `cancelada`
 
 (Exclusão padrão na listagem: concluída e cancelada; usuário filtra se quiser ver.)
 
-## 4. Fluxo e subtarefas (8 etapas)
+## 4. Fluxo e subtarefas (3 etapas na UI)
 
 1. **Cadastro no sistema** — linha fixa da timeline (sem botão; “Carta recebida e cadastrada”).
-2. **Ato ordinatório - Cumprimento** — subtarefa opcional; além do botão concluir, há botão **Cancelar** (marca a subtarefa como cancelada e libera a próxima).
-3. **Expedição de documento**
-4. **Juntada de certidão do oficial de justiça** — complemento: select (resultado do cumprimento).
-5. **Ato ordinatório - Devolução**
-6. **Devolução da Carta / Envio do processo** — complemento: select (tipo de envio). Tribunal e Comarca de destino **não são informados pelo usuário**; vêm da comarca cadastrada na carta (comarca_origem_id, cidade_origem, uf_origem) e são exibidos automaticamente na timeline.
-7. **Juntada de termo de envio**
-8. **Arquivamento definitivo**
+2. **Devolução da Carta / Envio do processo** (ordem 5, tipo `envio_processo`) — complemento: select (tipo de envio). Tribunal e Comarca de destino **não são informados pelo usuário**; vêm da comarca cadastrada na carta e são exibidos automaticamente na timeline.
+3. **Arquivamento definitivo** (ordem 7, tipo `arquivamento_definitivo`)
 
-Tipos internos (ordem 1 a 7): `ato_ordinatorio_cumprimento`, `expedicao_documento`, `juntada_certidao_oficial`, `ato_ordinatorio_devolucao`, `envio_processo`, `juntada_termo_envio`, `arquivamento_definitivo`.
+### 4.1. Tabela de referência (títulos e complementos)
 
-### 4.1. Cancelar subtarefa (ordem 1)
+| Ordem | Tipo interno            | Título da tarefa (atual)                               | Título do botão                  | Complemento |
+|-------|-------------------------|--------------------------------------------------------|----------------------------------|-------------|
+| 5     | envio_processo          | Aguardando devolução da Carta ao Juízo Deprecante      | Informar devolução               | Select: E-mail, Malote Digital, PJe, eSAJ, ePROC |
+| 7     | arquivamento_definitivo | Aguardando arquivamento definitivo com baixa           | Informar arquivamento definitivo | Nenhum |
 
-- Apenas a subtarefa **Ato ordinatório - Cumprimento** (ordem 1) pode ser cancelada.
-- Ao cancelar: a subtarefa recebe status `cancelada` e a próxima (Expedição de documento) passa a `em_andamento`.
-- A tarefa principal permanece em `em_andamento`.
+### 4.2. Registros antigos
 
-### 4.2. Tabela de referência (títulos e complementos)
-
-| Ordem | Tipo interno               | Título da tarefa (atual)                          | Título do botão                     | Complemento |
-|-------|----------------------------|---------------------------------------------------|-------------------------------------|-------------|
-| 1     | ato_ordinatorio_cumprimento | Aguardando ato ordinatório de cumprimento         | Informar ato ordinatório de cumprimento | Nenhum. Botão Cancelar disponível. |
-| 2     | expedicao_documento         | Aguardando expedição de documento para cumprimento | Informar expedição de documento     | Nenhum |
-| 3     | juntada_certidao_oficial    | Aguardando cumprimento pelo oficial de justiça    | Informar juntada de certidão        | Select: Cumprido integralmente, Cumprido parcialmente, Cumprido negativamente, Não cumprido |
-| 4     | ato_ordinatorio_devolucao   | Aguardando ato ordinatório de devolução           | Informar ato ordinatório de devolução | Nenhum |
-| 5     | envio_processo              | Aguardando envio do processo ao juízo de origem  | Informar envio do processo           | Select: E-mail, Malote Digital, PJe, eSAJ, ePROC. Tribunal/comarca da carta (automático). |
-| 6     | juntada_termo_envio         | Aguardando juntada de termo de envio              | Informar juntada                     | Nenhum |
-| 7     | arquivamento_definitivo     | Aguardando arquivamento definitivo                | Informar arquivamento definitivo     | Nenhum |
+- Cartas com subtarefas das ordens 1–4 e 6 (tipos descontinuados) têm essas linhas **auto-concluídas** ao listar ou abrir a edição.
+- A timeline de movimentações antigas (ordens 1–4, 6) continua exibindo textos históricos quando já concluídas.
 
 ## 5. Alocação
 
@@ -63,11 +52,7 @@ Tipos internos (ordem 1 a 7): `ato_ordinatorio_cumprimento`, `expedicao_document
 - **Excluir tarefa:** ADMIN, DIRETORA, MAGISTRADA.
 - **Alterar regra de alocação:** ADMIN, DIRETORA, MAGISTRADA (demais só visualização).
 
-## 7. Migração
-
-- Script `scripts/migrate-cartas-recebidas-7-subtarefas.php`: substitui as antigas 4 subtarefas pelas 7 novas em todas as cartas; carta passa a ter as 7 subtarefas com ordem 1 em `em_andamento` e demais `pendente`, e status da carta `em_andamento`. Executar uma vez após o deploy.
-
-## 8. Referências
+## 7. Referências
 
 - [docs/00-foundation/escopo-produto.md](../../00-foundation/escopo-produto.md) — Submódulo Cartas Recebidas.
 - [cartorio-cartas-expedidas.md](cartorio-cartas-expedidas.md) — especificação do submódulo Cartas Expedidas (fluxo e textos).

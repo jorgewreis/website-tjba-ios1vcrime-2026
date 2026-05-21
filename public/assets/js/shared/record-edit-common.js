@@ -123,39 +123,12 @@
         });
     }
 
-    function lookupCep(cep, options) {
-        const settings = options || {};
-        const digits = String(cep || '').replace(/\D/g, '');
-        if (digits.length !== 8) {
-            notify('error', 'Erro', settings.invalidMessage || 'Informe um CEP com 8 dígitos.');
-            return Promise.resolve({ ok: false, data: null });
-        }
-
-        return fetch((settings.endpoint || '/api/cep/consulta.php?q=') + encodeURIComponent(digits), {
-            method: 'GET',
-            credentials: 'same-origin'
-        })
-            .then(function (response) { return response.json(); })
-            .then(function (data) {
-                if (data.mode === 'cep' && data.data) {
-                    return { ok: true, data: data.data };
-                }
-                notify('error', 'Erro', data.error || settings.notFoundMessage || 'CEP não encontrado.');
-                return { ok: false, data: null };
-            })
-            .catch(function () {
-                notify('error', 'Erro', settings.errorMessage || 'Erro ao consultar CEP.');
-                return { ok: false, data: null };
-            });
-    }
-
     App.RecordEditCommon = {
         notify: notify,
         notifyByKey: notifyByKey,
         queuePostReloadToast: queuePostReloadToast,
         queuePostReloadToastByKey: queuePostReloadToastByKey,
         createSecondClickGuard: createSecondClickGuard,
-        postJson: postJson,
-        lookupCep: lookupCep
+        postJson: postJson
     };
 })(window);

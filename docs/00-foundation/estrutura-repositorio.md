@@ -227,7 +227,7 @@ Arquivos de exemplo:
 - `app/services/ReuManager.php`  
   **Por quê:** gerencia réus, CPF e vínculos com processos (`processoReus`).
 - `app/services/ProdutividadeService.php`  
-  **Por quê:** regras, lançamentos, metas e badges do módulo Produtividade interno (substitui o antigo `Produtividade.php`, removido por falta de uso).
+  **Por quê:** regras, lançamentos e badges do módulo Produtividade interno (substitui o antigo `Produtividade.php`, removido por falta de uso).
 - `app/services/Guias.php`  
   **Por quê:** orquestra cadastro de guias, serviços dependentes e auditoria (AuditLogger).
 - `app/services/ProcessoClasseSyncService.php`  

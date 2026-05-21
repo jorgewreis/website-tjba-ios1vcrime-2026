@@ -4,7 +4,6 @@ declare(strict_types=1);
 require_once __DIR__ . '/../repositories/ProdutividadeRegrasRepository.php';
 require_once __DIR__ . '/../repositories/ProdutividadeLancamentosRepository.php';
 require_once __DIR__ . '/../repositories/ProdutividadeLogRepository.php';
-require_once __DIR__ . '/../repositories/ProdutividadeMetasRepository.php';
 require_once __DIR__ . '/../repositories/FeriadosRepository.php';
 require_once __DIR__ . '/../access/AccessAreas.php';
 require_once __DIR__ . '/../helpers/UsuarioPerfisAutorizacao.php';
@@ -15,7 +14,6 @@ final class ProdutividadeService
     private ProdutividadeRegrasRepository $regrasRepository;
     private ProdutividadeLancamentosRepository $lancamentosRepository;
     private ProdutividadeLogRepository $logRepository;
-    private ProdutividadeMetasRepository $metasRepository;
     /** @var array<string, array<string, true>> */
     private array $feriadosSetCache = [];
     private ?FeriadosRepository $feriadosRepository = null;
@@ -26,7 +24,6 @@ final class ProdutividadeService
         $this->regrasRepository = new ProdutividadeRegrasRepository($connection);
         $this->lancamentosRepository = new ProdutividadeLancamentosRepository($connection);
         $this->logRepository = new ProdutividadeLogRepository($connection);
-        $this->metasRepository = new ProdutividadeMetasRepository($connection);
     }
 
     public function listRules(string $actorUserId, array $filters, int $limit, int $offset): array
@@ -421,46 +418,6 @@ final class ProdutividadeService
         ];
     }
 
-    public function listMetas(string $actorUserId, array $filters, int $limit, int $offset): array
-    {
-        $this->assertGestao($actorUserId);
-        return [
-            'rows' => $this->metasRepository->fetchList($filters, $limit, $offset),
-            'total' => $this->metasRepository->count($filters),
-        ];
-    }
-
-    public function findMeta(string $actorUserId, string $id): ?array
-    {
-        $this->assertGestao($actorUserId);
-        return $this->metasRepository->findById($id);
-    }
-
-    public function createMeta(string $actorUserId, array $payload): string
-    {
-        $this->assertGestao($actorUserId);
-        $row = $this->normalizeMetaPayload($payload);
-        $row['criado_por'] = $actorUserId;
-        return $this->metasRepository->insert($row);
-    }
-
-    public function updateMeta(string $actorUserId, string $id, array $payload): bool
-    {
-        $this->assertGestao($actorUserId);
-        $current = $this->metasRepository->findById($id);
-        if ($current === null) {
-            throw new InvalidArgumentException('Meta não encontrada.');
-        }
-        $row = $this->normalizeMetaPayload($payload, $current);
-        return $this->metasRepository->update($id, $row);
-    }
-
-    public function setMetaAtivo(string $actorUserId, string $id, bool $ativo): bool
-    {
-        $this->assertGestao($actorUserId);
-        return $this->metasRepository->setAtivo($id, $ativo);
-    }
-
     public function listRanking(string $actorUserId, array $filters, int $limit = 200): array
     {
         $this->assertAuthenticated($actorUserId);
@@ -750,56 +707,6 @@ final class ProdutividadeService
         return $this->findUserSetorCodigoArea($userId) !== strtoupper(AccessAreas::AUDIENCIAS);
     }
 
-    public function getMetaResumoUsuario(string $actorUserId, array $filters): array
-    {
-        $this->assertAuthenticated($actorUserId);
-        $targetUserId = trim((string) ($filters['usuario_id'] ?? ''));
-        if ($targetUserId === '' || !$this->isGestaoUser($actorUserId)) {
-            $targetUserId = $actorUserId;
-        }
-
-        $periodoTipo = 'mes';
-        $start = trim((string) ($filters['data_inicio'] ?? ''));
-        $end = trim((string) ($filters['data_fim'] ?? ''));
-        if ($this->isValidDate($start) && $this->isValidDate($end)) {
-            $days = (int) ((new DateTimeImmutable($start))->diff(new DateTimeImmutable($end))->days);
-            if ($days <= 7) {
-                $periodoTipo = 'semana';
-            } elseif ($days > 31) {
-                $periodoTipo = 'trimestre';
-            }
-        }
-
-        $meta = $this->findMetaAtivaParaUsuario($targetUserId, $periodoTipo);
-        if ($meta === null) {
-            return ['has_meta' => false];
-        }
-
-        $vigenciaInicio = (string) ($meta['vigencia_inicio'] ?? '');
-        $vigenciaFim = trim((string) ($meta['vigencia_fim'] ?? ''));
-        if (!$this->isValidDate($vigenciaInicio)) {
-            return ['has_meta' => false];
-        }
-        $rangeStart = new DateTimeImmutable($vigenciaInicio);
-        $rangeEnd = $this->isValidDate($vigenciaFim) ? new DateTimeImmutable($vigenciaFim) : new DateTimeImmutable('today');
-        if ($rangeEnd < $rangeStart) {
-            $rangeEnd = $rangeStart;
-        }
-        $pontos = $this->sumForRange(['usuario_id' => $targetUserId, 'status' => 'ativo'], $rangeStart, $rangeEnd);
-        $metaPontos = (float) ($meta['pontos_meta'] ?? 0);
-        $percent = $metaPontos > 0 ? min(100.0, ($pontos / $metaPontos) * 100.0) : 0.0;
-
-        return [
-            'has_meta' => true,
-            'tipo_alvo' => (string) ($meta['tipo_alvo'] ?? ''),
-            'alvo_valor' => (string) ($meta['alvo_valor'] ?? ''),
-            'periodo_tipo' => (string) ($meta['periodo_tipo'] ?? ''),
-            'meta_pontos' => $metaPontos,
-            'pontos_atuais' => $pontos,
-            'percentual' => $percent,
-        ];
-    }
-
     private function assertAuthenticated(string $actorUserId): void
     {
         if (trim($actorUserId) === '') {
@@ -949,61 +856,6 @@ final class ProdutividadeService
         ];
     }
 
-    private function normalizeMetaPayload(array $payload, ?array $current = null): array
-    {
-        $tipoAlvo = trim((string) ($payload['tipo_alvo'] ?? ($current['tipo_alvo'] ?? '')));
-        if (!in_array($tipoAlvo, ['setor', 'perfil', 'usuario'], true)) {
-            throw new InvalidArgumentException('Tipo de alvo inválido. Use setor, perfil ou usuário.');
-        }
-
-        $alvoValor = trim((string) ($payload['alvo_valor'] ?? ($current['alvo_valor'] ?? '')));
-        if ($alvoValor === '') {
-            throw new InvalidArgumentException('Alvo da meta é obrigatório.');
-        }
-        if ($tipoAlvo === 'setor') {
-            $alvoValor = $this->normalizeMetaAlvoSetor($alvoValor);
-        } elseif ($tipoAlvo === 'perfil') {
-            $alvoValor = $this->normalizeMetaAlvoPerfil($alvoValor);
-        }
-
-        $periodoTipo = trim((string) ($payload['periodo_tipo'] ?? ($current['periodo_tipo'] ?? '')));
-        if (!in_array($periodoTipo, ['semana', 'mes', 'trimestre'], true)) {
-            throw new InvalidArgumentException('Período inválido. Use semana, mes ou trimestre.');
-        }
-
-        $vigenciaInicio = trim((string) ($payload['vigencia_inicio'] ?? ($current['vigencia_inicio'] ?? '')));
-        if (!$this->isValidDate($vigenciaInicio)) {
-            throw new InvalidArgumentException('Vigência inicial inválida.');
-        }
-
-        $vigenciaFim = trim((string) ($payload['vigencia_fim'] ?? ($current['vigencia_fim'] ?? '')));
-        if ($vigenciaFim !== '' && !$this->isValidDate($vigenciaFim)) {
-            throw new InvalidArgumentException('Vigência final inválida.');
-        }
-        if ($vigenciaFim !== '' && strtotime($vigenciaFim) < strtotime($vigenciaInicio)) {
-            throw new InvalidArgumentException('Vigência final não pode ser anterior à inicial.');
-        }
-
-        $pontosMetaRaw = str_replace(',', '.', trim((string) ($payload['pontos_meta'] ?? ($current['pontos_meta'] ?? '0'))));
-        $pontosMeta = (float) $pontosMetaRaw;
-        if ($pontosMeta < 0) {
-            throw new InvalidArgumentException('Pontos da meta deve ser maior ou igual a zero.');
-        }
-
-        $ativoIn = $payload['ativo'] ?? ($current['ativo'] ?? 1);
-        $ativo = ((int) $ativoIn) === 1 ? 1 : 0;
-
-        return [
-            'tipo_alvo' => $tipoAlvo,
-            'alvo_valor' => $alvoValor,
-            'periodo_tipo' => $periodoTipo,
-            'vigencia_inicio' => $vigenciaInicio,
-            'vigencia_fim' => $vigenciaFim !== '' ? $vigenciaFim : null,
-            'pontos_meta' => number_format($pontosMeta, 2, '.', ''),
-            'ativo' => $ativo,
-        ];
-    }
-
     private function isValidDate(string $value): bool
     {
         if ($value === '') {
@@ -1011,41 +863,6 @@ final class ProdutividadeService
         }
         $dt = DateTime::createFromFormat('Y-m-d', $value);
         return $dt !== false && $dt->format('Y-m-d') === $value;
-    }
-
-    private function normalizeMetaAlvoSetor(string $alvoValor): string
-    {
-        $u = strtoupper(trim($alvoValor));
-        if (!in_array($u, AccessAreas::ALL, true)) {
-            throw new InvalidArgumentException('Setor inválido. Escolha Cartório, Gabinete ou Sala de Audiências.');
-        }
-
-        return $u;
-    }
-
-    private function normalizeMetaAlvoPerfil(string $alvoValor): string
-    {
-        $statement = $this->connection->prepare(
-            'SELECT TRIM(`perfil`) AS `p` FROM `usuario_perfil` WHERE UPPER(TRIM(`perfil`)) = UPPER(?) LIMIT 1'
-        );
-        $statement->execute([$alvoValor]);
-        $row = $statement->fetch(PDO::FETCH_ASSOC);
-        if ($row !== false && trim((string) ($row['p'] ?? '')) !== '') {
-            return trim((string) $row['p']);
-        }
-
-        $upper = strtoupper(str_replace([' ', '_'], '-', trim($alvoValor)));
-        $static = [];
-        foreach (['ESTAGIARIO', 'SERVIDOR'] as $cargo) {
-            foreach (AccessAreas::ALL as $area) {
-                $static[] = $cargo . '-' . $area;
-            }
-        }
-        if (in_array($upper, $static, true)) {
-            return $upper;
-        }
-
-        throw new InvalidArgumentException('Perfil inválido. Selecione um perfil da lista.');
     }
 
     private function findUserSetorCodigoArea(string $userId): string
@@ -1262,49 +1079,6 @@ final class ProdutividadeService
         }
 
         return $count;
-    }
-
-    private function findMetaAtivaParaUsuario(string $usuarioId, string $periodoTipo): ?array
-    {
-        $today = date('Y-m-d');
-        $setor = $this->findUserSetorCodigoArea($usuarioId);
-
-        $perfis = UsuarioPerfisAutorizacao::perfisDoUsuario($usuarioId);
-
-        $sql = 'SELECT *
-                FROM `produtividade_metas`
-                WHERE `ativo` = 1
-                  AND `periodo_tipo` = :periodo_tipo
-                  AND `vigencia_inicio` <= :today_inicio
-                  AND (`vigencia_fim` IS NULL OR `vigencia_fim` >= :today_fim)
-                ORDER BY
-                    CASE `tipo_alvo`
-                        WHEN \'usuario\' THEN 1
-                        WHEN \'perfil\' THEN 2
-                        WHEN \'setor\' THEN 3
-                        ELSE 4
-                    END ASC';
-        $statement = $this->connection->prepare($sql);
-        $statement->bindValue(':periodo_tipo', $periodoTipo);
-        $statement->bindValue(':today_inicio', $today);
-        $statement->bindValue(':today_fim', $today);
-        $statement->execute();
-        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
-        foreach ($rows as $row) {
-            $tipo = trim((string) ($row['tipo_alvo'] ?? ''));
-            $alvo = trim((string) ($row['alvo_valor'] ?? ''));
-            if ($tipo === 'usuario' && $alvo === $usuarioId) {
-                return $row;
-            }
-            if ($tipo === 'perfil' && in_array($alvo, $perfis, true)) {
-                return $row;
-            }
-            if ($tipo === 'setor' && $setor !== '' && strtoupper($alvo) === strtoupper($setor)) {
-                return $row;
-            }
-        }
-
-        return null;
     }
 
     private function calcVariationPercent(float $current, float $previous): float

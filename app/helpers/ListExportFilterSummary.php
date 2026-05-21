@@ -120,13 +120,6 @@ final class ListExportFilterSummary
                 self::pairAtivo($parts, $get['ativo'] ?? null);
                 break;
 
-            case 'produtividademetas':
-                self::pair($parts, 'Busca', (string) ($get['q'] ?? ''));
-                self::pairAtivo($parts, $get['ativo'] ?? null);
-                self::pair($parts, 'Tipo de alvo', (string) ($get['tipo_alvo'] ?? ''));
-                self::pair($parts, 'Período (tipo)', (string) ($get['periodo_tipo'] ?? ''));
-                break;
-
             default:
                 $parts[] = 'Filtros: conforme parâmetros informados na exportação.';
         }

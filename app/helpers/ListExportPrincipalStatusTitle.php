@@ -376,35 +376,20 @@ final class ListExportPrincipalStatusTitle
     private static function cartasRecebidas(array $row): string
     {
         $subtarefaLabels = [
-            CartasRecebidasSubtarefasRepository::TIPO_ORDEM_1 => 'Expedir Ato Ordinatório - Cumprimento',
-            CartasRecebidasSubtarefasRepository::TIPO_ORDEM_2 => 'Expedição de mandado/ofício',
-            CartasRecebidasSubtarefasRepository::TIPO_ORDEM_3 => 'Juntar de certidão do oficial de justiça',
-            CartasRecebidasSubtarefasRepository::TIPO_ORDEM_4 => 'Expedir Ato Ordinatório - Devolução',
             CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5 => 'Devolver Carta ao Juízo Deprecante',
-            CartasRecebidasSubtarefasRepository::TIPO_ORDEM_6 => 'Juntar comprovante de envio',
             CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7 => 'Arquivar definitivamente com baixa',
-            'devolucao_origem' => 'Aguardando devolução',
-            'devolução_origem' => 'Aguardando devolução',
+            'devolucao_origem' => 'Devolver Carta ao Juízo Deprecante',
+            'devolução_origem' => 'Devolver Carta ao Juízo Deprecante',
         ];
         $ordemLabels = [
-            1 => $subtarefaLabels[CartasRecebidasSubtarefasRepository::TIPO_ORDEM_1],
-            2 => $subtarefaLabels[CartasRecebidasSubtarefasRepository::TIPO_ORDEM_2],
-            3 => $subtarefaLabels[CartasRecebidasSubtarefasRepository::TIPO_ORDEM_3],
-            4 => $subtarefaLabels[CartasRecebidasSubtarefasRepository::TIPO_ORDEM_4],
             5 => $subtarefaLabels[CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5],
-            6 => $subtarefaLabels[CartasRecebidasSubtarefasRepository::TIPO_ORDEM_6],
             7 => $subtarefaLabels[CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7],
         ];
         $taskTitleByTipo = [
-            CartasRecebidasSubtarefasRepository::TIPO_ORDEM_1 => 'Aguardando expedição do Ato Ordinatório - Cumprimento',
-            CartasRecebidasSubtarefasRepository::TIPO_ORDEM_2 => 'Aguardando expedição de mandado/ofício',
-            CartasRecebidasSubtarefasRepository::TIPO_ORDEM_3 => 'Aguardando juntada de certidão do oficial de justiça',
-            CartasRecebidasSubtarefasRepository::TIPO_ORDEM_4 => 'Aguardando expedição do Ato Ordinatório - Devolução',
             CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5 => 'Aguardando devolução da Carta ao Juízo Deprecante',
-            CartasRecebidasSubtarefasRepository::TIPO_ORDEM_6 => 'Aguardando juntada de comprovante de envio',
             CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7 => 'Aguardando arquivamento definitivo com baixa',
-            'devolucao_origem' => 'Aguardando devolução',
-            'devolução_origem' => 'Aguardando devolução',
+            'devolucao_origem' => 'Aguardando devolução da Carta ao Juízo Deprecante',
+            'devolução_origem' => 'Aguardando devolução da Carta ao Juízo Deprecante',
         ];
 
         $st = (string) ($row['Status'] ?? '');
@@ -420,8 +405,8 @@ final class ListExportPrincipalStatusTitle
                 break;
             }
         }
-        if ($current === '' && $st === 'pendente') {
-            $current = $taskTitleByTipo[CartasRecebidasSubtarefasRepository::TIPO_ORDEM_1] ?? $ordemLabels[1];
+        if ($current === '' && in_array($st, ['pendente', 'aguardando cumprimento'], true)) {
+            $current = $taskTitleByTipo[CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5] ?? $ordemLabels[5];
         } elseif ($current === '' && ($st === 'concluída' || $st === 'finalizada')) {
             $current = 'Todas as etapas concluídas';
         } elseif ($current === '') {

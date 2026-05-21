@@ -12,42 +12,33 @@
 | `dashboard` | Painel interno (servidores, estagiários lotados, chefia, etc.). |
 | `dashboardexterno` | Painel inicial para estudantes/consultores externos. |
 
-## Regras de acesso (`public/frame.php`)
+## Regras de acesso (`public/frame.php` + `AccessEvaluator`)
 
 - Usuário externo que solicita `dashboard` é **redirecionado** para `dashboardexterno`.
 - Usuário interno que solicita `dashboardexterno` é **redirecionado** para `dashboard`.
-- **Bloco de externo** (`hasAccessToSection`): lista branca por seção — **Perfil**, **Externo**, **ConsultasCep**; se o usuário **não** tiver perfil **ESTUDANTE**, inclui também **ConsultasPartesInstituicoes**. (Assim, estudante externo não enxerga rotas dessa seção no servidor.)
-- **Cadastros/edições** ligados a fluxo de cartório continuam com seção **Cartório** (`consultapartescreate`, `consultapartesedit`, cadastros de instituições, etc.), independentemente da listagem.
+- **Externo** (`AccessEvaluator::externoCanAccessPage`): `alterardados`; **estudante** → `estudapauta`, `estudapainel`; **consultor** → `consultapartes`, `instituicoespublicas`, `partesinstituicoeslist`.
+- **Cadastros/edições** ligados a fluxo de cartório continuam com regra `area_a` / Cartório (`consultapartescreate`, `consultapartesedit`, cadastros de instituições, etc.), independentemente da listagem de consulta.
 
-### Seções de consulta (modelo atual)
+### Consultas (modelo atual)
 
-| Seção | Uso típico | ESTUDANTE externo | CONSULTOR externo |
-|-------|------------|-------------------|-------------------|
-| **ConsultasCep** | `consultacep` | Sim | Sim |
-| **ConsultasPartesInstituicoes** | listagens: `consultapartes`, `instituicoespublicas`, `partesinstituicoeslist`, … | Não | Sim |
-| **ConsultasProcessos** | `consultaprocessos`, `consultaprocessosedit` | Não | Não |
+| Recurso | ESTUDANTE externo | CONSULTOR externo | Interno (composto ou elevado) |
+|---------|-------------------|-------------------|-------------------------------|
+| Partes / instituições (listagens) | Não | Sim | Sim |
+| Processos | Não | Não | Sim |
 
-Perfis em cada seção estão no array `$sectionMap` em `public/frame.php` (inclui normalização DIRETORA/MAGISTRADA → CHEFIA na verificação).
-
-### Ajuste recente (revisão)
-
-Foi consolidada a ideia de **separar** listagens de consulta em três seções nomeadas (CEP / partes e instituições / processos), em vez de uma única seção genérica, para manter **estudante só com CEP**, **consultor com partes + instituições + CEP**, e **processos apenas para operação interna**.  
-Em uma iteração intermediária havia o nome **ConsultasInternas** e `consultacep` mapeado como `All`; isso gerava inconsistência com o bloqueio de externo e com entradas ausentes no `$sectionMap`. O estado está **alinhado** com: `consultacep` → **ConsultasCep**, listagens de partes/instituições → **ConsultasPartesInstituicoes**, processos → **ConsultasProcessos**, e o `$sectionMap` preenchido para essas chaves.
-
-### Estagiário
-
-`getEstagiarioAllowedSections` inclui **ConsultasCep**, **ConsultasPartesInstituicoes** e **ConsultasProcessos** além das seções derivadas do setor, para o controle por setor continuar coerente com as novas seções.
+A **consulta de CEP** (página dedicada, API e busca ViaCEP em formulários) foi **descontinuada**; o campo CEP em endereços permanece apenas para digitação manual.
 
 ## UI (`public/home.php`)
 
 - Menu lateral e ícone da navbar usam `dashboard` ou `dashboardexterno` conforme o tipo de usuário.
 - Label do primeiro item: **Dashboard** (interno) ou **Início** (externo).
-- **Externo:** `getPermittedSections` retorna apenas a seção de menu **Consultas** (evita vazar outras áreas se a API de perfis errar).
-- **`itemVisibleForUser`:** com **HAS_PERFIL_ESTUDANTE** → só `consultacep`; sem estudante (ex.: consultor externo) → `consultapartes`, `instituicoespublicas`, `consultacep`.
+- **Consultor externo:** seção de menu **Consultas** com `consultapartes` e `instituicoespublicas`.
+- **Estudante externo:** seção **Estudantes** (`estudapauta`, `estudapainel`); sem itens em Consultas.
+- **`itemVisibleForUser`:** filtra alvos via `MENU_TARGETS_CONSULTAS_EXTERNO_CONSULTOR` e `MENU_TARGETS_CONSULTAS_EXTERNO_ESTUDANTE`.
 
 ## Tela `dashboard-externo.php`
 
-- Textos distintos para **estudante externo** (ênfase em CEP e limitações) e **consultor externo** (partes, instituições, CEP).
+- Textos distintos para **estudante externo** (pauta, painel, atas) e **consultor externo** (partes e instituições).
 
 ## Regra Cursor
 

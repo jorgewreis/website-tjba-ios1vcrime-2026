@@ -116,8 +116,8 @@ $dashTituloBoasVindas = $dashSaudacaoBase . ($dashPrimeiroNome !== '' ? ', ' . $
         </div>
         <h1 class="title-page"><?php echo htmlspecialchars($dashTituloBoasVindas, ENT_QUOTES, 'UTF-8'); ?></h1>
         <p class="description-page"><?php echo $dashIsEstudanteExterno
-            ? 'Este é o seu painel de acesso. Pelo menu lateral você pode consultar CEP, realizar inscrições e acompanhar suas participações no Painel em tempo real, acessar downloads em Atas de Audiências e, nas configurações, atualizar seus dados pessoais.'
-            : 'Este é o seu painel de acesso ao sistema. Utilize o menu para as consultas liberadas ao seu perfil (partes, instituições públicas, CEP) e seus dados pessoais nas configurações.'; ?></p>
+            ? 'Este é o seu painel de acesso. Pelo menu lateral você pode realizar inscrições e acompanhar suas participações no Painel em tempo real, acessar downloads em Atas de Audiências e, nas configurações, atualizar seus dados pessoais.'
+            : 'Este é o seu painel de acesso ao sistema. Utilize o menu para as consultas liberadas ao seu perfil (partes e instituições públicas) e seus dados pessoais nas configurações.'; ?></p>
     </div>
 
     <div class="container-full card-page">
@@ -128,12 +128,11 @@ $dashTituloBoasVindas = $dashSaudacaoBase . ($dashPrimeiroNome !== '' ? ', ' . $
             <div class="col full-line">
                 <ul class="minor-info external-dashboard-list">
                     <?php if ($dashIsEstudanteExterno): ?>
-                    <li><strong>Consulta CEP:</strong> disponível no menu lateral, seção <em>Consultas</em>.</li>
                     <li><strong>Painel em tempo real:</strong> faça inscrições e acompanhe suas participações na seção <em>Estudantes</em>.</li>
                     <li><strong>Atas de Audiências:</strong> acesse os links de download das atas vinculadas na seção <em>Estudantes</em>.</li>
                     <li><strong>Dados pessoais:</strong> no ícone de configurações (engrenagem), altere senha ou dados cadastrais quando necessário.</li>
                     <?php else: ?>
-                    <li><strong>Consultas:</strong> pelo menu lateral — <em>Consulta Partes</em>, <em>Instituições Públicas</em> e <em>CEP</em> (conforme seu perfil de consultor externo).</li>
+                    <li><strong>Consultas:</strong> pelo menu lateral — <em>Consulta Partes</em> e <em>Instituições Públicas</em> (conforme seu perfil de consultor externo).</li>
                     <li><strong>Dados pessoais:</strong> no ícone de configurações (engrenagem), altere senha ou dados cadastrais quando necessário.</li>
                     <?php endif; ?>
                 </ul>

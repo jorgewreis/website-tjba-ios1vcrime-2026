@@ -68,10 +68,6 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
                 <label for="new-end-cep">CEP</label>
                 <input type="text" class="width-400 height-md white" id="new-end-cep" placeholder="00000-000" maxlength="9">
             </div>
-            <div class="col">
-                <label for="buscar-cep-btn" style="color: transparent;">-</label>
-                <button type="button" class="btn btn-primary-outline" id="buscar-cep-btn">Buscar CEP</button>
-            </div>
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">

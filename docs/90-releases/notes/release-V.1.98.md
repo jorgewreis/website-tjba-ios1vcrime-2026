@@ -52,7 +52,7 @@
 - **feat(feriados): add method to retrieve non-working days within a date range** `[25d2b12c]`
 - **refactor(produtividade): improve date handling and business day calculations** `[54e04747]`
 - **refactor(dashboard): update productivity card layout and labels** `[1003bc1a]`
-- **feat(consulta-cep): add deduplication window and enhance productivity tracking** `[7e895d12]`
+- ~~**feat(consulta-cep): add deduplication window and enhance productivity tracking**~~ `[7e895d12]` — *descontinuado em 2026-05 (removido na V.1.45+)*
 - **refactor(dashboard): adjust alignment styles for dashboard statistics** `[2273e2b2]`
 - **refactor(dashboard): update ranking display and styles** `[3da9dc2a]`
 - **refactor(dashboard): improve user ranking identification logic** `[80137ce2]`

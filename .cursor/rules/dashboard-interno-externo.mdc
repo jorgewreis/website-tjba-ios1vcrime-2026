@@ -9,5 +9,5 @@ globs: public/frame.php,public/home.php,app/helpers/UserAccessHelper.php,app/vie
 - Rotas: `page=dashboard` (interno), `page=dashboardexterno` (externo). Redirecionamentos cruzados em `frame.php`.
 - Não expor telas internas (Cartório, Gestão, etc.) a usuários externos; novas páginas em `frame.php` devem ter `page_to_section` coerente e checar `hasAccessToSection`.
 - Home: primeiro item do menu e iframe inicial usam `$defaultHomePage` (`dashboard` vs `dashboardexterno`).
-- Menu lateral: `getPermittedSections` retorna só **Consultas** se `IS_USUARIO_EXTERNO`; `itemVisibleForUser`: estudante externo só `consultacep`; consultor externo `consultapartes`, `instituicoespublicas`, `consultacep`.
-- `frame.php`: seções **ConsultasCep**, **ConsultasPartesInstituicoes**, **ConsultasProcessos** no `$sectionMap`; externo com ESTUDANTE não recebe a segunda; processos sem CONSULTOR/ESTUDANTE externos. Cadastros/edições de consulta podem permanecer em **Cartório** quando forem fluxo cartório.
+- Menu lateral: externo consultor → seção **Consultas** (`consultapartes`, `instituicoespublicas`); estudante externo → seção **Estudantes** (`estudapauta`, `estudapainel`). `itemVisibleForUser` filtra alvos em `MENU_TARGETS_CONSULTAS_EXTERNO_*` em `home.php`.
+- Não existe consulta de CEP (página, API ou preenchimento ViaCEP); campo CEP em endereços é só digitação manual. Cadastros/edições de partes e instituições permanecem em **Cartório** quando forem fluxo cartório.

@@ -5,6 +5,7 @@
 **Data:** 2026-05-13 12:24:34 | **Commit:** `ec16b751` | **Tipo:** `minor`
 
 - refactor: integrate ClasseProcessualListagemHelper for consistent class handling across views
+- remove(consulta-cep): descontinua página, API, busca ViaCEP, menu, acesso, toasts e regra de produtividade (ver `database/migrations/20260521_remove_consulta_cep.sql`)
 
 ## V. 1.99
 
@@ -178,7 +179,7 @@
 
 **Data:** 2026-05-06 10:07:45 | **Commit:** `7e895d12` | **Tipo:** `patch`
 
-- feat(consulta-cep): add deduplication window and enhance productivity tracking
+- ~~feat(consulta-cep): add deduplication window and enhance productivity tracking~~ *(descontinuado 2026-05)*
 
 ## V. 1.97.0075
 
@@ -244,7 +245,7 @@
 
 **Data:** 2026-05-04 21:55:16 | **Commit:** `c7b04e68` | **Tipo:** `patch`
 
-- fix(produtividade): improve productivity registration error handling for CEP consultations
+- ~~fix(produtividade): improve productivity registration error handling for CEP consultations~~ *(descontinuado 2026-05)*
 
 ## V. 1.97.0064
 
@@ -2734,7 +2735,7 @@
 
 **Data:** 2026-03-10 17:19:20 | **Commit:** `7fdfa07` | **Tipo:** `patch`
 
-- Feat: nova página consulta cep
+- ~~Feat: nova página consulta cep~~ *(descontinuado 2026-05)*
 
 ## V. 1.03.0067
 

@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 04 de abril de 2026
+**Data de Lançamento:** 21 de maio de 2026
 
 # V. 1.45
 
-> feat: implement CSV/PDF export functionality using a select dropdown in Produtividade views, enhancing user experience and code organization
+> refactor: streamline subtask management and enhance active order handling
 
 ## Nível de Impacto
 
@@ -12,7 +12,8 @@
 
 ## Alterações
 
-- **feat: implement CSV/PDF export functionality using a select dropdown in Produtividade views, enhancing user experience and code organization** `[8baad9f]`
+- **refactor: streamline subtask management and enhance active order handling** `[edf6df4e]`
+- **remove(consulta-cep):** página dedicada, API `/api/cep/`, busca ViaCEP em formulários, menu, regras de acesso `consultas_cep`, toasts e regra de produtividade `PRG-E4AED8332C544E3AE27FF8535E` (migration `database/migrations/20260521_remove_consulta_cep.sql`)
 
 ---
 

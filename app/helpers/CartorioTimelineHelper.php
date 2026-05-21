@@ -37,47 +37,12 @@ if (!function_exists('cartorioTimelineGetConfig')) {
                 'cartas_recebidas' => [
                     'cadastro_label' => 'Carta recebida e cadastrada',
                     'subtasks' => [
-                        1 => [
-                            'type' => 'ato_ordinatorio_cumprimento',
-                            'label' => 'Ato ordinatorio - Cumprimento',
-                            'task_title' => 'Aguardando ato ordinatorio de cumprimento',
-                            'button_title' => 'Informar ato ordinatorio de cumprimento',
-                            'pending_text' => 'Aguardando ato ordinatorio determinando o cumprimento da carta',
-                        ],
-                        2 => [
-                            'type' => 'expedicao_documento',
-                            'label' => 'Expedicao de documento',
-                            'task_title' => 'Aguardando expedicao de documento para cumprimento',
-                            'button_title' => 'Informar expedicao de documento',
-                            'pending_text' => 'Aguardando expedicao de documento necessario ao cumprimento',
-                        ],
-                        3 => [
-                            'type' => 'juntada_certidao_oficial',
-                            'label' => 'Juntada de cumprimento pelo oficial de justica',
-                            'task_title' => 'Aguardando cumprimento pelo oficial de justica',
-                            'button_title' => 'Informar juntada de certidao',
-                            'pending_text' => 'Aguardando juntada da certidao do oficial de justica',
-                        ],
-                        4 => [
-                            'type' => 'ato_ordinatorio_devolucao',
-                            'label' => 'Ato ordinatorio - Devolucao',
-                            'task_title' => 'Aguardando ato ordinatorio de devolucao',
-                            'button_title' => 'Informar ato ordinatorio de devolucao',
-                            'pending_text' => 'Aguardando ato ordinatorio determinando a devolucao da carta ao juizo de origem',
-                        ],
                         5 => [
                             'type' => 'envio_processo',
                             'label' => 'Devolucao da Carta',
-                            'task_title' => 'Aguardando envio do processo ao juizo de origem',
-                            'button_title' => 'Informar envio do processo',
+                            'task_title' => 'Aguardando devolucao da Carta ao Juizo Deprecante',
+                            'button_title' => 'Informar devolucao',
                             'pending_text' => 'Aguardando envio do processo ao juizo de origem',
-                        ],
-                        6 => [
-                            'type' => 'juntada_termo_envio',
-                            'label' => 'Juntada de termo de envio',
-                            'task_title' => 'Aguardando juntada de termo de envio',
-                            'button_title' => 'Informar juntada',
-                            'pending_text' => 'Aguardando juntada de termo de envio do processo',
                         ],
                         7 => [
                             'type' => 'arquivamento_definitivo',

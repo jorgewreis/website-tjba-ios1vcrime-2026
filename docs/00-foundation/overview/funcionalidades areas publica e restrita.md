@@ -48,7 +48,6 @@ Regras transversais aplicáveis a todos os módulos:
 - tipos e categorias operacionais  
 - notificações  
 - regras de sigilo e mascaramento  
-- metas de produtividade  
 - gestão de documentos públicos  
 - regras por comarcas e tribunais  
 

@@ -13,7 +13,6 @@
 -- Prefixos adotados neste módulo:
 --   PRG = produtividade_regras
 --   PLC = produtividade_lancamentos
---   PMT = produtividade_metas
 --   PLG = produtividade_log
 --   PBG = produtividade_badges
 --   PBC = produtividade_badges_concedidos
@@ -80,28 +79,6 @@ CREATE TABLE IF NOT EXISTS produtividade_lancamentos (
         ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 COMMENT='Registros de produtividade manuais e automáticos, com proteção anti-duplicidade por contexto.';
-
-CREATE TABLE IF NOT EXISTS produtividade_metas (
-    id                    CHAR(30)     NOT NULL COMMENT 'Formato PMT- + 26 chars (regra padrão 30 chars)',
-    tipo_alvo             ENUM('setor', 'perfil', 'usuario') NOT NULL COMMENT 'Define o tipo de entidade-alvo da meta',
-    alvo_valor            VARCHAR(100) NOT NULL COMMENT 'Valor do alvo: id do usuário, perfil ou setor conforme o tipo',
-    periodo_tipo          ENUM('semana', 'mes', 'trimestre') NOT NULL COMMENT 'Granularidade da meta',
-    vigencia_inicio       DATE         NOT NULL COMMENT 'Data inicial de vigência da meta',
-    vigencia_fim          DATE         NULL COMMENT 'Data final de vigência; null para meta em aberto',
-    pontos_meta           DECIMAL(10,2) NOT NULL DEFAULT 0.00 COMMENT 'Pontuação esperada para o período',
-    ativo                 TINYINT(1)   NOT NULL DEFAULT 1 COMMENT '1=ativa, 0=inativa',
-    criado_por            CHAR(30)     NULL COMMENT 'FK para usuarios.id_usuario',
-    criado_em             DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id),
-    KEY ix_produtividade_metas_alvo_periodo (tipo_alvo, alvo_valor, periodo_tipo),
-    KEY ix_produtividade_metas_vigencia (vigencia_inicio, vigencia_fim),
-    KEY ix_produtividade_metas_ativo (ativo),
-    CONSTRAINT fk_produtividade_metas_criado_por
-        FOREIGN KEY (criado_por) REFERENCES usuarios (id_usuario)
-        ON UPDATE CASCADE
-        ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-COMMENT='Metas configuráveis por setor, perfil ou usuário, com vigência para comparação de desempenho.';
 
 CREATE TABLE IF NOT EXISTS produtividade_log (
     id                    CHAR(30)     NOT NULL COMMENT 'Formato PLG- + 26 chars (regra padrão 30 chars)',
@@ -172,7 +149,6 @@ COMMENT='Histórico de badges já conquistados por usuário.';
 
 DROP TRIGGER IF EXISTS tr_produtividade_regras_before_insert;
 DROP TRIGGER IF EXISTS tr_produtividade_lancamentos_before_insert;
-DROP TRIGGER IF EXISTS tr_produtividade_metas_before_insert;
 DROP TRIGGER IF EXISTS tr_produtividade_log_before_insert;
 DROP TRIGGER IF EXISTS tr_produtividade_badges_before_insert;
 DROP TRIGGER IF EXISTS tr_produtividade_badges_concedidos_before_insert;
@@ -194,15 +170,6 @@ FOR EACH ROW
 BEGIN
     IF (NEW.id IS NULL OR NEW.id = '') THEN
         SET NEW.id = CONCAT('PLC-', UPPER(SUBSTRING(REPLACE(UUID(), '-', ''), 1, 26)));
-    END IF;
-END//
-
-CREATE TRIGGER tr_produtividade_metas_before_insert
-BEFORE INSERT ON produtividade_metas
-FOR EACH ROW
-BEGIN
-    IF (NEW.id IS NULL OR NEW.id = '') THEN
-        SET NEW.id = CONCAT('PMT-', UPPER(SUBSTRING(REPLACE(UUID(), '-', ''), 1, 26)));
     END IF;
 END//
 

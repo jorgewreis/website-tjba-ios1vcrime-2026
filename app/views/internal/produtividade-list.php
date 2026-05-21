@@ -42,7 +42,6 @@ $rows = [];
 $totalDocuments = 0;
 $isGestao = false;
 $canSeeRegrasButton = false;
-$canSeeMetasButton = false;
 $errors = [];
 $usuariosFiltro = [];
 $userPerfis = [];
@@ -104,7 +103,6 @@ if ($totalDocuments === 0) {
 if ($userId !== '') {
     $userPerfis = UsuarioPerfisAutorizacao::perfisDoUsuario($userId);
     $canSeeRegrasButton = in_array('ADMIN', $userPerfis, true) || in_array('CHEFIA', $userPerfis, true) || in_array('DIRETORA', $userPerfis, true) || in_array('MAGISTRADA', $userPerfis, true);
-    $canSeeMetasButton = $canSeeRegrasButton;
 }
 
 $showRankingBlock = false;
@@ -226,9 +224,6 @@ $exportPdfHref = '/api/produtividade/export-pdf.php?' . http_build_query($export
             <div class="display-flex row row-fit justify-end gap-y-md">
                 <?php if ($canSeeRegrasButton): ?>
                 <button type="button" class="btn btn-secondary height-md" data-nav-href="/frame.php?page=produtividaderegras">Regras</button>
-                <?php endif; ?>
-                <?php if ($canSeeMetasButton): ?>
-                <button type="button" class="btn btn-secondary-outline height-md" data-nav-href="/frame.php?page=produtividademetas">Metas</button>
                 <?php endif; ?>
             </div>
         </div>

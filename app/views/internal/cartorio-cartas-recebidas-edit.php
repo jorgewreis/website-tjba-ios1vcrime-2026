@@ -79,6 +79,7 @@ if ($carta !== null) {
     $comarcaDestinoId = trim((string) ($carta['comarca_origem_id'] ?? ''));
 
     $subtarefasRepo = new CartasRecebidasSubtarefasRepository($connection);
+    $subtarefasRepo->autoConcluirSubtarefasDescontinuadas($idCarta);
     $subtarefas = $subtarefasRepo->findByCartaId($idCarta);
     $tribunaisRepo = new TribunaisRepository($connection);
     $subtarefasPorOrdem = [];
@@ -86,21 +87,11 @@ if ($carta !== null) {
         $subtarefasPorOrdem[(int) $st['ordem']] = $st;
     }
     $subtarefaLabels = [
-        CartasRecebidasSubtarefasRepository::TIPO_ORDEM_1 => 'Ato ordinatório - Cumprimento',
-        CartasRecebidasSubtarefasRepository::TIPO_ORDEM_2 => 'Expedição de documento',
-        CartasRecebidasSubtarefasRepository::TIPO_ORDEM_3 => 'Juntada de certidão do oficial de justiça',
-        CartasRecebidasSubtarefasRepository::TIPO_ORDEM_4 => 'Ato ordinatório - Devolução',
         CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5 => 'Devolução da Carta',
-        CartasRecebidasSubtarefasRepository::TIPO_ORDEM_6 => 'Juntada de termo de envio',
         CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7 => 'Arquivamento definitivo',
     ];
     $ordemParaTipo = [
-        1 => CartasRecebidasSubtarefasRepository::TIPO_ORDEM_1,
-        2 => CartasRecebidasSubtarefasRepository::TIPO_ORDEM_2,
-        3 => CartasRecebidasSubtarefasRepository::TIPO_ORDEM_3,
-        4 => CartasRecebidasSubtarefasRepository::TIPO_ORDEM_4,
         5 => CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5,
-        6 => CartasRecebidasSubtarefasRepository::TIPO_ORDEM_6,
         7 => CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7,
     ];
     $temSubtarefas = count($subtarefas) > 0;
@@ -113,19 +104,8 @@ if ($carta !== null) {
         }
     }
     $timelineMinorPendente = [
-        CartasRecebidasSubtarefasRepository::TIPO_ORDEM_1 => 'Aguardando ato ordinatório determinando o cumprimento da carta',
-        CartasRecebidasSubtarefasRepository::TIPO_ORDEM_2 => 'Aguardando expedição de documento necessário ao cumprimento',
-        CartasRecebidasSubtarefasRepository::TIPO_ORDEM_3 => 'Aguardando juntada da certidão do oficial de justiça',
-        CartasRecebidasSubtarefasRepository::TIPO_ORDEM_4 => 'Aguardando ato ordinatório determinando a devolução da carta ao juízo de origem',
         CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5 => 'Aguardando envio do processo ao juízo de origem',
-        CartasRecebidasSubtarefasRepository::TIPO_ORDEM_6 => 'Aguardando juntada de termo de envio do processo',
         CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7 => 'Aguardando arquivamento definitivo da carta',
-    ];
-    $resultadoCumprimentoLabels = [
-        'cumprido_integralmente' => 'Cumprido integralmente',
-        'cumprido_parcialmente' => 'Cumprido parcialmente',
-        'cumprido_negativamente' => 'Cumprido negativamente',
-        'nao_cumprido' => 'Não cumprido',
     ];
 }
 
@@ -165,10 +145,8 @@ $finalidadeOptions = [
 $deadlineOptions = ['5 dias', '10 dias', '15 dias', '30 dias', '60 dias', '90 dias'];
 
 $statusOptions = [
-    'aguardando assinatura' => 'Aguardando assinatura',
-    'aguardando envio' => 'Aguardando envio',
-    'aguardando juntada do termo' => 'Aguardando juntada de termo',
     'aguardando cumprimento' => 'Aguardando cumprimento',
+    'em_andamento' => 'Em andamento',
     'concluída' => 'Concluída',
     'cancelada' => 'Cancelada',
 ];

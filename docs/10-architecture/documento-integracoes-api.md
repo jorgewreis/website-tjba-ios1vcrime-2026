@@ -94,7 +94,7 @@ Os endpoints oficiais atuais estão organizados por domínio funcional, com grup
 - cartório (`cartorio-cartas-expedidas`, `cartorio-cartas-recebidas`, `cartorio-guias`, `cartorio-oficios`, `cartorio-medidas-protetivas`, `cartorio-cejusc`, `cartorio-ceapa`, `cartorio-editais`);
 - gabinete (`gabinete-reus-presos`, `gabinete-oficios`, `gabinete-monitoramento-eletronico`);
 - audiências (`sala-audiencias-pauta`, `sala-audiencias-ata`);
-- entidades auxiliares (`pessoas`, `instituicoes-publicas`, `processos`, `processos-partes`, `consulta-processos`, `cep`, `datajud`);
+- entidades auxiliares (`pessoas`, `instituicoes-publicas`, `processos`, `processos-partes`, `consulta-processos`, `datajud`);
 - administração (`public/api/admin/feriados`).
 
 Como diretriz de evolução, novas mudanças incompatíveis **podem** futuramente adotar versionamento explícito, mas isso ainda não faz parte da implementação atual. Até que exista uma decisão formal de migração, a documentação deve refletir o contrato real sem inventar uma versão em URL que o sistema ainda não expõe.

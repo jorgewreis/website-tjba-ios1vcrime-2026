@@ -73,7 +73,6 @@ final class InternalListExportHandlers
             'processosparteslist' => [self::class, 'processosPartes'],
             'partesinstituicoeslist' => [self::class, 'partesInstituicoes'],
             'produtividaderegras' => [self::class, 'produtividadeRegras'],
-            'produtividademetas' => [self::class, 'produtividadeMetas'],
         ];
     }
 
@@ -1098,62 +1097,6 @@ final class InternalListExportHandlers
                 ['key' => 'pontos_multiplicador', 'label' => 'Multiplicador'],
                 ['key' => 'ativo', 'label' => 'Ativo'],
                 ['key' => 'observacoes', 'label' => 'Observações'],
-                ['key' => 'criado_em', 'label' => 'Criado em'],
-            ],
-            'rows' => $rows,
-        ];
-    }
-
-    /**
-     * @param array<string, mixed> $get
-     */
-    private static function produtividadeMetas(PDO $pdo, string $userId, array $get): array
-    {
-        $filters = [
-            'q' => trim((string) ($get['q'] ?? '')),
-            'ativo' => $get['ativo'] ?? null,
-            'tipo_alvo' => trim((string) ($get['tipo_alvo'] ?? '')),
-            'periodo_tipo' => trim((string) ($get['periodo_tipo'] ?? '')),
-        ];
-        if ($filters['ativo'] === '' || $filters['ativo'] === null) {
-            unset($filters['ativo']);
-        }
-        if ($filters['tipo_alvo'] === '') {
-            unset($filters['tipo_alvo']);
-        }
-        if ($filters['periodo_tipo'] === '') {
-            unset($filters['periodo_tipo']);
-        }
-        $service = new ProdutividadeService($pdo);
-        $rows = [];
-        $offset = 0;
-        while (count($rows) < self::MAX_ROWS) {
-            $batch = $service->listMetas($userId, $filters, self::CHUNK_200, $offset)['rows'] ?? [];
-            if ($batch === []) {
-                break;
-            }
-            foreach ($batch as $r) {
-                $rows[] = $r;
-            }
-            if (count($batch) < self::CHUNK_200) {
-                break;
-            }
-            $offset += self::CHUNK_200;
-        }
-        $rows = array_slice($rows, 0, self::MAX_ROWS);
-
-        return [
-            'title' => 'Lista de metas de produtividade',
-            'slug' => 'produtividade-metas',
-            'columns' => [
-                ['key' => 'tipo_alvo', 'label' => 'Tipo alvo'],
-                ['key' => 'alvo_valor', 'label' => 'Alvo'],
-                ['key' => 'periodo_tipo', 'label' => 'Período'],
-                ['key' => 'vigencia_inicio', 'label' => 'Início'],
-                ['key' => 'vigencia_fim', 'label' => 'Fim'],
-                ['key' => 'pontos_meta', 'label' => 'Meta pontos'],
-                ['key' => 'ativo', 'label' => 'Ativo'],
-                ['key' => 'criado_por_nome', 'label' => 'Criado por'],
                 ['key' => 'criado_em', 'label' => 'Criado em'],
             ],
             'rows' => $rows,

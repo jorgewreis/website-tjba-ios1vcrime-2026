@@ -49,9 +49,6 @@ final class AccessEvaluator
         if ($page === 'alterardados') {
             return true;
         }
-        if ($page === 'consultacep') {
-            return true;
-        }
         if (($page === 'estudapauta' || $page === 'estudapainel') && $temEstudante) {
             return true;
         }
@@ -84,9 +81,6 @@ final class AccessEvaluator
 
             case 'gestao':
                 return false;
-
-            case 'consultas_cep':
-                return ProfileNormalizer::hasAnyCargoAreaComposite($norm);
 
             case 'consultas_partes':
                 return ProfileNormalizer::hasAnyCargoAreaComposite($norm);

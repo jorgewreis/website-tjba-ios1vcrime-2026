@@ -149,7 +149,7 @@ As edições podem ser classificadas em:
 
 - **Edições simples:** alteração de campos não críticos, como descrições, observações, datas futuras ou campos de controle interno.
 - **Edições críticas:** alteração de campos que impactam diretamente fluxos operacionais, cálculos, prazos, identificação de partes ou status de processos.
-- **Edições administrativas:** alteração de configurações globais, parâmetros de sistema, metas de produtividade, tipos de tarefa, etc.
+- **Edições administrativas:** alteração de configurações globais, parâmetros de sistema, tipos de tarefa, etc.
 
 ### 4.2 Controle de edições
 

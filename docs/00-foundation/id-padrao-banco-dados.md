@@ -50,7 +50,6 @@
 | DOC     | documentos               |
 | PRG     | produtividade_regras     |
 | PLC     | produtividade_lancamentos |
-| PMT     | produtividade_metas      |
 | PLG     | produtividade_log        |
 | PBG     | produtividade_badges     |
 | PBC     | produtividade_badges_concedidos |

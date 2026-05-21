@@ -605,12 +605,12 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
         const DEFAULT_HOME_PAGE = <?php echo json_encode($defaultHomePage, JSON_UNESCAPED_UNICODE); ?>;
         /** Mesmo critério de app/helpers/UserAccessHelper.php — menu não deve exibir rotas internas. */
         const IS_USUARIO_EXTERNO = <?php echo json_encode($isUsuarioExterno, JSON_UNESCAPED_UNICODE); ?>;
-        /** Perfil ESTUDANTE no cadastro (externo: menu só CEP; ver public/frame.php). */
+        /** Perfil ESTUDANTE no cadastro (externo: recursos em Estudantes; ver public/frame.php). */
         const HAS_PERFIL_ESTUDANTE = <?php echo json_encode($hasPerfilEstudante, JSON_UNESCAPED_UNICODE); ?>;
-        /** Consultor externo: partes, instituições e CEP (alinhado a frame.php — ConsultasPartesInstituicoes + ConsultasCep). */
-        const MENU_TARGETS_CONSULTAS_EXTERNO_CONSULTOR = new Set(['consultapartes', 'instituicoespublicas', 'consultacep']);
-        /** Estudante externo: CEP + recursos de audiências para estudantes. */
-        const MENU_TARGETS_CONSULTAS_EXTERNO_ESTUDANTE = new Set(['consultacep', 'estudapauta', 'estudapainel']);
+        /** Consultor externo: partes e instituições (alinhado a frame.php — consultas_partes). */
+        const MENU_TARGETS_CONSULTAS_EXTERNO_CONSULTOR = new Set(['consultapartes', 'instituicoespublicas']);
+        /** Estudante externo: pauta e painel na seção Estudantes. */
+        const MENU_TARGETS_CONSULTAS_EXTERNO_ESTUDANTE = new Set(['estudapauta', 'estudapainel']);
 
         /** Mesma regra de app/access/AccessEvaluator.php (recalculada no cliente após fetch de perfis). */
         const COMPOSITE_PROFILE_RE = /^(ESTAGIARIO|SERVIDOR)-(CARTORIO|GABINETE|AUDIENCIAS)$/;
@@ -666,8 +666,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                     { icon: 'fi fi-rs-users-alt', label: 'Consulta Partes', target: 'consultapartes' },
                     { icon: 'fi fi-rs-folder-open', label: 'Consulta Processos', target: 'consultaprocessos' },
                     { icon: 'fi fi-rs-sensor-on', label: 'Monitoramento Eletrônico', target: 'monitoramentogabinete' },
-                    { icon: 'fi fi-rs-building', label: 'Instituições Públicas', target: 'instituicoespublicas' },
-                    { icon: 'fi fi-rs-marker', label: 'CEP', target: 'consultacep' }
+                    { icon: 'fi fi-rs-building', label: 'Instituições Públicas', target: 'instituicoespublicas' }
                 ]
             },
             {
@@ -676,8 +675,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                     { icon: 'fi fi-rs-id-badge', label: 'Usuários', target: 'usuarioslist', allowedPerfis: ['ADMIN'] },
                     { icon: 'fi fi-rs-magic-wand', label: 'Skills', target: 'skills', allowedPerfis: ['ADMIN'] },
                     { icon: 'fi fi-rs-calendar', label: 'Feriados', target: 'feriadoslist', allowedPerfis: ['ADMIN', 'CHEFIA', 'DIRETORA'] },
-                    { icon: 'fi fi-rs-clock-up-arrow', label: 'Regras de Produtividade', target: 'produtividaderegras', allowedPerfis: ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'] },
-                    { icon: 'fi fi-rs-target', label: 'Metas de Produtividade', target: 'produtividademetas', allowedPerfis: ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'] }
+                    { icon: 'fi fi-rs-clock-up-arrow', label: 'Regras de Produtividade', target: 'produtividaderegras', allowedPerfis: ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'] }
                 ]
             }
         ];
@@ -793,7 +791,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             const norm = normalizePerfis(perfis);
             if (IS_USUARIO_EXTERNO) {
                 if (HAS_PERFIL_ESTUDANTE) {
-                    return ['Consultas', 'Estudantes'];
+                    return ['Estudantes'];
                 }
                 return ['Consultas'];
             }

@@ -11,7 +11,7 @@ require_once __DIR__ . '/AccessAreas.php';
  * - exact: modo B — pelo menos um dos perfis listados (interseção exata)
  * - all_internal: usuário interno com pelo menos um composto OU elevado
  * - gestao: só ADMIN / CHEFIA
- * - consultas_cep | consultas_partes | consultas_processos: regras globais de consulta
+ * - consultas_partes | consultas_processos: regras globais de consulta
  * - externo_only: apenas fluxo externo (dashboard externo)
  * - deny: negar (página desconhecida na política)
  */
@@ -42,8 +42,6 @@ final class PageAccessRegistry
         $map = [
             'dashboard' => ['kind' => 'all_internal'],
             'dashboardexterno' => ['kind' => 'externo_only'],
-            'consultacep' => ['kind' => 'consultas_cep'],
-
             'cejusc' => $areaCartorio,
             'cejuscedit' => $areaCartorio,
             'cejusccreate' => $areaCartorio,
@@ -79,9 +77,6 @@ final class PageAccessRegistry
             'produtividaderegras' => ['kind' => 'gestao'],
             'produtividaderegrascreate' => ['kind' => 'gestao'],
             'produtividaderegrasedit' => ['kind' => 'gestao'],
-            'produtividademetas' => ['kind' => 'gestao'],
-            'produtividademetascreate' => ['kind' => 'gestao'],
-            'produtividademetasedit' => ['kind' => 'gestao'],
 
             'oficiosgabinete' => $areaGabinete,
             'oficiosgabineteedit' => $areaGabinete,
