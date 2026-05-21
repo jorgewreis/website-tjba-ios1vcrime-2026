@@ -23,8 +23,6 @@ $__pageHelpersPath = dirname(__DIR__, 3) . '/public/assets/js/shared/page-helper
 $__pageHelpersV = @filemtime($__pageHelpersPath) ?: time();
 $__toastCatalogPath = dirname(__DIR__, 3) . '/public/assets/js/shared/toast-catalog.js';
 $__toastCatalogV = @filemtime($__toastCatalogPath) ?: time();
-$__internoProdutividadeToastPath = dirname(__DIR__, 3) . '/public/assets/js/shared/interno-produtividade-toast.js';
-$__internoProdutividadeToastV = @filemtime($__internoProdutividadeToastPath) ?: time();
 $__listSearchPath = dirname(__DIR__, 3) . '/public/assets/js/shared/list-search.js';
 $__listSearchV = @filemtime($__listSearchPath) ?: time();
 $__autoSubmitFiltersPath = dirname(__DIR__, 3) . '/public/assets/js/shared/auto-submit-filters.js';
@@ -148,7 +146,6 @@ window.__APP_CONTEXT = Object.assign({}, window.__APP_CONTEXT || {}, {
 <script src="/assets/js/shared/user-context.js?v=<?php echo (int) $__userContextV; ?>"></script>
 <script src="/assets/js/shared/page-helpers.js?v=<?php echo (int) $__pageHelpersV; ?>"></script>
 <script src="/assets/js/shared/toast-catalog.js?v=<?php echo (int) $__toastCatalogV; ?>"></script>
-<script src="/assets/js/shared/interno-produtividade-toast.js?v=<?php echo (int) $__internoProdutividadeToastV; ?>"></script>
 <script src="/assets/js/shared/list-search.js?v=<?php echo (int) $__listSearchV; ?>"></script>
 <script src="/assets/js/shared/auto-submit-filters.js?v=<?php echo (int) $__autoSubmitFiltersV; ?>" defer></script>
 <script src="/assets/js/shared/cartorio-task-list.js?v=<?php echo (int) $__cartorioTaskListV; ?>"></script>

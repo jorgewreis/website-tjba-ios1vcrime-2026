@@ -39,11 +39,6 @@ if ($id === '') {
 try {
     $service = new GuiasService($connection);
     $cancelled = $service->cancel($id);
-    $__mir = $cancelled;
-    if ($__mir) {
-        require_once $basePath . '/app/helpers/CartorioProdutividade.php';
-        CartorioProdutividade::mirrorEstornoSaldoSession($connection, $id, 'cartorio-guias', 'Guia cancelada.');
-    }
     echo json_encode(['success' => $cancelled], JSON_UNESCAPED_UNICODE);
 } catch (\InvalidArgumentException $exception) {
     http_response_code(400);

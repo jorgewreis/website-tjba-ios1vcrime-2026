@@ -6,7 +6,6 @@ header('Content-Type: application/json; charset=UTF-8');
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
-require_once $basePath . '/app/helpers/InternoProdutividadeAutoHelper.php';
 require_once $basePath . '/app/services/SalaAudienciasPautaService.php';
 
 $payload = json_decode(file_get_contents('php://input') ?: '[]', true);
@@ -30,25 +29,7 @@ try {
     $connection = Conection::getInstance()->getConnection();
     $service = new SalaAudienciasPautaService($connection);
     $result = $service->updateParte($idParte, $payload, $usuarioId);
-    $ok = (bool) ($result['ok'] ?? false);
-    $toastKeyParte = null;
-    if ($ok && !empty($result['altered'])) {
-        $prodRes = InternoProdutividadeAutoHelper::tryRegistrar(
-            $connection,
-            $usuarioId,
-            'audiencia_parte_edicao',
-            'pe:' . $idParte,
-            'Parte da audiência atualizada.'
-        );
-        if (!empty($prodRes['toast_key'])) {
-            $toastKeyParte = $prodRes['toast_key'];
-        }
-    }
-    $outUpdate = ['success' => $ok];
-    if ($toastKeyParte !== null) {
-        $outUpdate['produtividade_toast_key'] = $toastKeyParte;
-    }
-    echo json_encode($outUpdate, JSON_UNESCAPED_UNICODE);
+    echo json_encode(['success' => (bool) ($result['ok'] ?? false)], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
     http_response_code(400);
     echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);

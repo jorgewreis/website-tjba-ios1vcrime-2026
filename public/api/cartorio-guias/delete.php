@@ -36,11 +36,6 @@ if ($id === '') {
 try {
     $service = new GuiasService($connection);
     $resultado = $service->delete($id);
-    $__deleted = is_array($resultado) ? (bool) ($resultado['deleted'] ?? false) : (bool) $resultado;
-    if ($__deleted) {
-        require_once $basePath . '/app/helpers/CartorioProdutividade.php';
-        CartorioProdutividade::mirrorEstornoSaldoSession($connection, $id, 'cartorio-guias', 'Guia excluída.');
-    }
     ApiJsonResponse::send(is_array($resultado) ? $resultado : ['deleted' => (bool) $resultado], 200);
 } catch (\InvalidArgumentException $exception) {
     ApiJsonResponse::send(['error' => $exception->getMessage()], 400);

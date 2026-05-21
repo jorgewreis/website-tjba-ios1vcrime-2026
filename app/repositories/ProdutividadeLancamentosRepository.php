@@ -158,71 +158,6 @@ final class ProdutividadeLancamentosRepository
         return (float) $statement->fetchColumn();
     }
 
-
-    public function sumNetAutomaticoAtivo(string $referenciaItemId, string $referenciaSistema): float
-    {
-        $referenciaItemId = trim($referenciaItemId);
-        $referenciaSistema = trim($referenciaSistema);
-        if ($referenciaItemId === '' || $referenciaSistema === '') {
-            return 0.0;
-        }
-
-        $sql = sprintf(
-            'SELECT COALESCE(SUM(l.`pontos_calculados`), 0)
-             FROM `%s` l
-             WHERE l.`referencia_item_id` = :ref_id
-               AND l.`referencia_sistema` = :ref_sys
-               AND l.`tipo_lancamento` = \'automatico\'
-               AND l.`status` = \'ativo\'',
-            $this->table
-        );
-        $statement = $this->connection->prepare($sql);
-        $statement->bindValue(':ref_id', $referenciaItemId);
-        $statement->bindValue(':ref_sys', $referenciaSistema);
-        $statement->execute();
-
-        return (float) $statement->fetchColumn();
-    }
-
-    /**
-     * Usuário que recebeu o lançamento de produtividade do cadastro da tarefa (evento `{referencia_sistema}.create`),
-     * usado para estorno em cancelamento/exclusão sem penalizar quem executou o encerramento.
-     */
-    public function findUsuarioIdAutorCadastroCreate(string $referenciaItemId, string $referenciaSistema): ?string
-    {
-        $referenciaItemId = trim($referenciaItemId);
-        $referenciaSistema = trim($referenciaSistema);
-        if ($referenciaItemId === '' || $referenciaSistema === '') {
-            return null;
-        }
-        $tipoCreate = $referenciaSistema . '.create';
-        $sql = sprintf(
-            'SELECT l.`usuario_id`
-             FROM `%s` l
-             INNER JOIN `produtividade_regras` r ON r.`id` = l.`regra_id`
-             WHERE l.`referencia_item_id` = :ref_id
-               AND l.`referencia_sistema` = :ref_sys
-               AND l.`tipo_lancamento` = \'automatico\'
-               AND l.`status` = \'ativo\'
-               AND r.`tipo_documento` = :tipo_create
-             ORDER BY l.`data_hora_ato` ASC, l.`id` ASC
-             LIMIT 1',
-            $this->table
-        );
-        $statement = $this->connection->prepare($sql);
-        $statement->bindValue(':ref_id', $referenciaItemId);
-        $statement->bindValue(':ref_sys', $referenciaSistema);
-        $statement->bindValue(':tipo_create', $tipoCreate);
-        $statement->execute();
-        $uid = $statement->fetchColumn();
-        if ($uid === false || $uid === null) {
-            return null;
-        }
-        $uid = trim((string) $uid);
-
-        return $uid !== '' ? $uid : null;
-    }
-
     public function anular(string $id, string $anuladoPor, string $motivo): bool
     {
         $sql = sprintf(
@@ -281,43 +216,6 @@ final class ProdutividadeLancamentosRepository
     }
 
     /**
-     * @return list<array<string, mixed>>
-     */
-    public function fetchRanking(array $filters, int $limit = 200): array
-    {
-        [$where, $params] = $this->buildRankingFilter($filters);
-        // Agrega só em `l` (sem JOIN antes do GROUP BY) para não perder linhas nem depender de ONLY_FULL_GROUP_BY.
-        $whereSql = $where !== [] ? 'WHERE ' . implode(' AND ', $where) : '';
-        $sql = sprintf(
-            'SELECT agg.`usuario_id`,
-                    CONCAT(COALESCE(u.`nome`, \'\'), CASE WHEN COALESCE(u.`sobrenome`, \'\') = \'\' THEN \'\' ELSE CONCAT(\' \', u.`sobrenome`) END) AS usuario_nome,
-                    agg.`pontos_total`,
-                    agg.`total_lancamentos`
-             FROM (
-                  SELECT l.`usuario_id`,
-                         COALESCE(SUM(l.`pontos_calculados`), 0) AS pontos_total,
-                         COUNT(*) AS total_lancamentos
-                  FROM `%s` l
-                  %s
-                  GROUP BY l.`usuario_id`
-             ) agg
-             LEFT JOIN `usuarios` u ON u.`id_usuario` = agg.`usuario_id`
-             ORDER BY agg.`pontos_total` DESC, u.`nome` ASC, u.`sobrenome` ASC
-             LIMIT :limit',
-            $this->table,
-            $whereSql
-        );
-        $statement = $this->connection->prepare($sql);
-        foreach ($params as $name => $value) {
-            $statement->bindValue($name, $value);
-        }
-        $statement->bindValue(':limit', max(1, min(500, $limit)), PDO::PARAM_INT);
-        $statement->execute();
-
-        return $statement->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    /**
      * @return array{0:list<string>,1:array<string,mixed>}
      */
     private function buildFilter(array $filters): array
@@ -366,26 +264,6 @@ final class ProdutividadeLancamentosRepository
             )';
             $params[':setor_codigo_area_lanc'] = $setorCodigoArea;
         }
-
-        return [$where, $params];
-    }
-
-    /**
-     * Filtros do ranking: apenas usuários com lotação Cartório ou Gabinete (via EXISTS em buildRankingFilter).
-     * Resultado agregado por usuário (pontos no período), sem segmentar por setor.
-     *
-     * @return array{0:list<string>,1:array<string,mixed>}
-     */
-    private function buildRankingFilter(array $filters): array
-    {
-        [$where, $params] = $this->buildFilter($filters);
-        $where[] = 'EXISTS (
-            SELECT 1 FROM `usuario_setor` us_gr
-            INNER JOIN `setores` s_gr ON s_gr.`id_setor` = us_gr.`setor`
-            WHERE us_gr.`usuario` = l.`usuario_id`
-              AND s_gr.`ativo` = 1
-              AND UPPER(TRIM(COALESCE(s_gr.`codigo_area`, \'\'))) IN (\'CARTORIO\', \'GABINETE\')
-        )';
 
         return [$where, $params];
     }

@@ -14,7 +14,6 @@ require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
-require_once __DIR__ . '/../helpers/CartorioProdutividade.php';
 require_once __DIR__ . '/../helpers/AlocacaoTarefasPerfisHelper.php';
 require_once __DIR__ . '/../helpers/CartorioTarefaStatusPrincipalHelper.php';
 
@@ -23,9 +22,6 @@ final class MedidasProtetivasService
     /** Quantidade na subtarefa «Cadastro de partes no PJe» (0 = nenhuma). Limite superior para todas as subtarefas com campo numérico. */
     public const QTD_PARTES_PJE_MIN = 0;
     public const QTD_QUANTIDADE_MAX = 10;
-
-    /** Pontos de produtividade (campo quantidade) ao concluir «Certidão de cumprimento». */
-    public const PRODUTIVIDADE_PONTOS_CERTIDAO_CUMPRIMENTO = 3;
 
     private PDO $connection;
     private MedidasProtetivasRepository $repository;
@@ -245,19 +241,6 @@ final class MedidasProtetivasService
 
             $this->processoPrioridadesService->registrarPrioridadesCadastroMedidaProtetiva($processoId);
 
-            if ($usuarioCadastroId !== '' && $usuarioCadastroId !== 'sistema') {
-                $classeObs = CartorioProdutividade::nonEmpty(
-                    $classeDescricao !== '' ? $classeDescricao : $classeCodigo,
-                    'classe não informada'
-                );
-                CartorioProdutividade::record($this->connection, $usuarioCadastroId, 'cartorio-medidas-protetivas.create', [
-                    'referencia_item_id' => $medidaId,
-                    'referencia_sistema' => 'cartorio-medidas-protetivas',
-                    'numero_processo' => $numeroFormatado,
-                    'classe_processo' => $classeObs,
-                ]);
-            }
-
             $this->connection->commit();
             return [
                 'id' => $medidaId,
@@ -341,11 +324,6 @@ final class MedidasProtetivasService
                 if ($qtd > self::QTD_QUANTIDADE_MAX) {
                     throw new InvalidArgumentException('A quantidade não pode ser maior que ' . self::QTD_QUANTIDADE_MAX . '.');
                 }
-            } elseif ($tipoSub === MedidasProtetivasSubtarefasRepository::TIPO_ORDEM_4) {
-                $qtd = self::PRODUTIVIDADE_PONTOS_CERTIDAO_CUMPRIMENTO;
-            } else {
-                // Subtarefas sem complemento numérico (ex.: cadastro no BNMP) usam quantidade fixa 1 na produtividade.
-                $qtd = 1;
             }
 
             $usuarioIdMovimentacao = trim((string) ($dadosArray['usuario_id'] ?? ''));
@@ -362,22 +340,6 @@ final class MedidasProtetivasService
         }
 
         $this->subtarefasRepository->atualizarStatus($subtarefaId, 'concluida');
-        $tipoSubtarefa = trim((string) ($subtarefa['tipo'] ?? ''));
-        if ($usuarioIdMovimentacao !== '' && $usuarioIdMovimentacao !== 'sistema' && $tipoSubtarefa !== '') {
-            $medidaAtual = $this->repository->findById($medidaId) ?? [];
-            $classeMedida = CartorioProdutividade::nonEmpty(
-                trim((string) ($medidaAtual['classe_nome'] ?? $medidaAtual['classe_codigo'] ?? '')),
-                'classe não informada'
-            );
-            $numeroProcessoMedida = trim((string) ($medidaAtual['numero_processo'] ?? $medidaAtual['numero_processo_origem'] ?? ''));
-            CartorioProdutividade::record($this->connection, $usuarioIdMovimentacao, 'cartorio-medidas-protetivas.subtarefa.' . $tipoSubtarefa, [
-                'referencia_item_id' => $subtarefaId,
-                'referencia_sistema' => 'cartorio-medidas-protetivas',
-                'numero_processo' => $numeroProcessoMedida,
-                'classe_processo' => $classeMedida,
-                'quantidade' => $qtd,
-            ]);
-        }
         $subtarefas = $this->subtarefasRepository->findByMedidaId($medidaId);
         $proximaOrdem = $ordem + 1;
         $proxima = null;

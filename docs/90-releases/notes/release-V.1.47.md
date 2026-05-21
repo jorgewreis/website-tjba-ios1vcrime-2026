@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 04 de abril de 2026
+**Data de Lançamento:** 21 de maio de 2026
 
 # V. 1.47
 
-> refactor: update layout and labels in produtividade-badges-list.php for improved clarity and consistency
+> refactor: remove obsolete repository and service files for Ceapa and Cejusc
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **refactor: update layout and labels in produtividade-badges-list.php for improved clarity and consistency** `[8210d13]`
+- **refactor: remove obsolete repository and service files for Ceapa and Cejusc** `[81d06683]`
 
 ---
 

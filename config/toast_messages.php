@@ -328,44 +328,6 @@ return [
             'vars' => [],
         ],
 
-        // Produtividade automática — fluxos internos (consultas, audiência, prioridades)
-        'interno.produtividade.consulta_partes.ponto' => [
-            'type' => 'info',
-            'title' => 'Produtividade',
-            'message' => 'Esta consulta de partes registrou +1 ponto de produtividade.',
-            'vars' => [],
-        ],
-        'interno.produtividade.consulta_processos_lista.ponto' => [
-            'type' => 'info',
-            'title' => 'Produtividade',
-            'message' => 'Esta consulta de processo registrou +1 ponto de produtividade.',
-            'vars' => [],
-        ],
-        'interno.produtividade.consulta_processos_detalhe.ponto' => [
-            'type' => 'info',
-            'title' => 'Produtividade',
-            'message' => 'Esta consulta de processo registrou +1 ponto de produtividade.',
-            'vars' => [],
-        ],
-        'interno.produtividade.audiencia_parte_cadastro.ponto' => [
-            'type' => 'info',
-            'title' => 'Produtividade',
-            'message' => 'O cadastro da parte na audiência registrou +1 ponto de produtividade.',
-            'vars' => [],
-        ],
-        'interno.produtividade.audiencia_parte_edicao.ponto' => [
-            'type' => 'info',
-            'title' => 'Produtividade',
-            'message' => 'A alteração da parte na audiência registrou +1 ponto de produtividade.',
-            'vars' => [],
-        ],
-        'interno.produtividade.prioridade_add.ponto' => [
-            'type' => 'info',
-            'title' => 'Produtividade',
-            'message' => 'A inclusão da prioridade processual registrou +1 ponto de produtividade.',
-            'vars' => [],
-        ],
-
         // =========================
         // AUDIENCIAS
         // =========================

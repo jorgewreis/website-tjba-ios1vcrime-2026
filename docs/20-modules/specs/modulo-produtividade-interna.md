@@ -12,8 +12,8 @@ Documento vivo: consolida o que já está entregue no módulo, com foco em opera
 |------|--------------|
 | **1 — Banco** | Concluída (`produtividade_*` + triggers de IDs). |
 | **2 — Núcleo** | Concluída (regras, lançamento manual, listagem, anulação, APIs base, RBAC e menu). |
-| **3 — Gestão e análise** | Concluída (ranking, exportação CSV/PDF, resumo semana/mês/trimestre). Metas de produtividade removidas em 2026-05. |
-| **4 — Gamificação e automação** | Entregue no ciclo atual (`registrarAuto`, badges, popup de conquista, widget no dashboard, integração inicial em Guias). |
+| **3 — Gestão e análise** | Concluída (exportação CSV/PDF, listagem e anulação). Ranking, resumo e projeção removidos da listagem em 2026-05. Metas removidas em 2026-05. |
+| **4 — Gamificação** | Badges, popup de conquista e widget no dashboard (sem novos lançamentos automáticos desde 2026-05). |
 
 ---
 
@@ -29,9 +29,8 @@ Documento vivo: consolida o que já está entregue no módulo, com foco em opera
 - [app/services/ProdutividadeService.php](../../../app/services/ProdutividadeService.php):
   - Regras: listagem, busca, create/update e ativação.
   - Lançamento manual e anulação: perfis de gestão (**ADMIN**, **CHEFIA**, **DIRETORA**, **MAGISTRADA** — diretora e magistrada enquadradas como chefia, alinhado a `isGestaoUser`) anulam sem limite de tempo; demais usuários só anulam o próprio lançamento **ativo** dentro de **30 minutos** após `criado_em` (API e botão na listagem usam a mesma regra via `ProdutividadeService`).
-  - **`registrarAuto`** com resolução de regra por (`tipo_ato`, `tipo_documento`, `sistema_modulo`), no-op silencioso sem regra ativa e tratamento idempotente de duplicidade.
-  - Ranking por setor e exportações.
-  - Resumo de cards (semana/mês/trimestre) e projeção por dias úteis.
+  - Lançamento **manual** apenas; regras de cartório/sala-mídias/consultas reservadas (inativas no BD) — histórico `tipo_lancamento = automatico` permanece consultável.
+  - Exportações CSV/PDF.
   - Badges: CRUD de gestão, verificação automática de elegibilidade, pendências e marcação de notificação.
 
 ### Repositórios
@@ -43,13 +42,13 @@ Documento vivo: consolida o que já está entregue no módulo, com foco em opera
 
 ### APIs
 
-- Núcleo: `public/api/produtividade/regras/*`, `lancamentos/*`, `export-csv.php`, `export-pdf.php`. O ranking mensal é obtido em PHP via `ProdutividadeService::listRanking` (lista e dashboard), sem endpoint HTTP dedicado.
+- Núcleo: `public/api/produtividade/regras/*`, `lancamentos/*`, `export-csv.php`, `export-pdf.php`.
 - Badges: `public/api/produtividade/badges/list.php`, `create.php`, `update.php`, `delete.php`, `set-ativo.php`, `pendentes.php`, `marcar-notificado.php`.
 
 ### Interface
 
 - Lista principal: [app/views/internal/produtividade-list.php](../../../app/views/internal/produtividade-list.php)
-  - filtros + ranking + export (select CSV/PDF via `_list_export_buttons.php`, URLs `export-csv.php` / `export-pdf.php`) + resumo + projeção;
+  - cadastro manual + filtros + export (select CSV/PDF via `_list_export_buttons.php`, URLs `export-csv.php` / `export-pdf.php`);
   - botão **Anular** só quando `ProdutividadeService::canActorAnularLancamentoManual` for verdadeiro (alinhado à API `lancamentos/anular.php`).
 - Regras: `produtividade-regras-list/create/edit.php`.
 - Badges: `produtividade-badges-list/create/edit.php`.
@@ -71,34 +70,23 @@ Documento vivo: consolida o que já está entregue no módulo, com foco em opera
 
 ### Dashboard
 
-- Widget em [app/views/internal/dashboard.php](../../../app/views/internal/dashboard.php):
-  - pontos da semana;
-  - posição do usuário no ranking mensal (Cartório/Gabinete, unificado);
-  - atalho para o módulo.
-
-### Primeira automação integrada
-
-- [app/services/Guias.php](../../../app/services/Guias.php) migrou para `ProdutividadeService::registrarAuto(...)` no cadastro de guia.
-- O fluxo principal de guias permanece resiliente: falha de produtividade não bloqueia cadastro.
+- Widget em [app/views/internal/dashboard.php](../../../app/views/internal/dashboard.php) (pontos/resumo/ranking no widget: fora do escopo da remoção de automação na listagem; revisar em tarefa separada se necessário).
 
 ---
 
-## Cartório — eventos automáticos (planeado)
+## Registro automático (descontinuado em 2026-05)
 
-Extensão do módulo: cobrir **todo o cartório interno** com lançamentos automáticos a partir de um **catálogo de `event_code`**, helper central, regras em `produtividade_regras`, estornos espelhados onde aplicável e documentação de catálogo em `docs/20-modules/specs/cartorio-produtividade-movimentacoes.md` (a criar na Fase 1).
+Removidos helpers `CartorioProdutividade` / `InternoProdutividadeAutoHelper`, `ProdutividadeService::registrarAuto`, configs `cartorio-produtividade-*` e `interno-produtividade-regras.php`, toasts `interno.produtividade.*` e blocos analíticos (ranking, resumo, projeção) na listagem.
 
-- **Plano canónico (decisões + fases + inventário):** [`.cursor/plans/produtividade-cartorio-plano.md`](../../../.cursor/plans/produtividade-cartorio-plano.md)
-- **Textos na listagem:** após implementação, todas as movimentações com produtividade terão entrada em `app/config/cartorio-produtividade-list-texts.php`, com **frase fixa ou template** (placeholders como finalidade da carta) por `event_code`; subtarefas com redação distinta usam **códigos distintos**; revisão **caso a caso** no plano (Fases 4–5, secção 5.2).
-- **Governação:** fonte de verdade só no Git; progresso também refletido em `docs/90-releases/notes/` ao fechar cada fase.
-
-Até à conclusão desse trabalho, o estado “entregue” deste spec continua a refletir **Fase 4** (automação inicial em Guias + badges); a secção acima descreve o **roadmap** alinhado ao plano.
+- Regras automáticas: `ativo = 0` via `database/migrations/20260521_disable_produtividade_automatica_regras.sql`.
+- Lançamentos automáticos **históricos** permanecem em `produtividade_lancamentos` e no filtro “Automático”.
 
 ---
 
 ## Observação sobre legado
 
 - A classe antiga em `app/services/Produtividade.php` foi **removida** após auditoria do módulo: não havia referências no código; o fluxo atual usa exclusivamente [app/services/ProdutividadeService.php](../../../app/services/ProdutividadeService.php).
-- Próximos incrementos: seguir o plano em [`.cursor/plans/produtividade-cartorio-plano.md`](../../../.cursor/plans/produtividade-cartorio-plano.md) para o **cartório**; outros domínios (gabinete, audiências) em PRs pequenos quando priorizados.
+- Reativação de automação exigiria reimplementação de helpers, configs e integrações nos serviços (fora do escopo atual).
 
 ---
 
@@ -116,10 +104,9 @@ Até à conclusão desse trabalho, o estado “entregue” deste spec continua a
 
 | Área | Caminhos principais |
 |------|---------------------|
-| Plano cartório (automação completa) | [`.cursor/plans/produtividade-cartorio-plano.md`](../../../.cursor/plans/produtividade-cartorio-plano.md) |
 | Schema | `docs/schema/produtividade.sql` |
 | Serviço | `app/services/ProdutividadeService.php` |
-| Integração automática inicial | `app/services/Guias.php` |
+| Migration desativação automática | `database/migrations/20260521_disable_produtividade_automatica_regras.sql` |
 | Repositórios | `app/repositories/Produtividade{Regras,Lancamentos,Log,Badges}Repository.php` |
 | APIs | `public/api/produtividade/**` |
 | Views | `app/views/internal/produtividade-*.php` |

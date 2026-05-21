@@ -7,7 +7,6 @@ require_once __DIR__ . '/../repositories/SalaMidiasAlocadosRepository.php';
 require_once __DIR__ . '/../repositories/SalaAudienciasPautaRepository.php';
 require_once __DIR__ . '/../repositories/AlocacoesRegrasRepository.php';
 require_once __DIR__ . '/../helpers/AlocacaoTarefasPerfisHelper.php';
-require_once __DIR__ . '/../helpers/CartorioProdutividade.php';
 require_once __DIR__ . '/../helpers/ProcessoBlocoListagemHelper.php';
 
 final class SalaMidiasService
@@ -169,9 +168,6 @@ final class SalaMidiasService
 
             $this->connection->commit();
 
-            $origemSalva = $origem === 'automatico' ? 'automatico' : 'manual';
-            $this->registrarProdutividadeCadastroTarefa($id, $usuarioId, $numeroProcesso, $classe, $tipoAudiencia, $origemSalva);
-
             return $id;
         } catch (Throwable $e) {
             $this->connection->rollBack();
@@ -194,29 +190,13 @@ final class SalaMidiasService
             $status = 'em_andamento';
         }
         $obsNova = trim((string) ($payload['observacoes'] ?? $row['observacoes'] ?? '')) ?: null;
-        $obsVelha = trim((string) ($row['observacoes'] ?? '')) ?: null;
-        $mudou = (int) ($row['qtd_midias'] ?? 1) !== $qtdMidias
-            || trim((string) ($row['status'] ?? '')) !== $status
-            || $obsVelha !== $obsNova;
 
-        $ok = $this->tarefasRepository->update($id, [
+        return $this->tarefasRepository->update($id, [
             'qtd_midias' => $qtdMidias,
             'status' => $status,
             'observacoes' => $obsNova,
             'atualizado_por' => $usuarioId,
         ]);
-        if ($ok && $mudou) {
-            $atual = $this->tarefasRepository->findById($id) ?? $row;
-            $this->registrarProdutividadeEdicaoTarefa(
-                $id,
-                $usuarioId,
-                trim((string) ($atual['numero_processo'] ?? '')),
-                trim((string) ($atual['classe_processo'] ?? '')),
-                trim((string) ($atual['tipo_audiencia'] ?? ''))
-            );
-        }
-
-        return $ok;
     }
 
     /**
@@ -299,7 +279,6 @@ final class SalaMidiasService
             $usuarioId
         );
         $this->alocadosRepository->addAlocado($midiaId, $usuarioId, SalaMidiasAlocadosRepository::TIPO_SPECIFIC);
-        $this->registrarProdutividadeSubtarefa($codigo, $subtarefaId, $usuarioId, $tarefa, $qtd, $pontos);
 
         $ordemAtual = (int) ($subtarefa['ordem'] ?? 0);
         $proxima = $this->subtarefasRepository->findByMidiaIdAndOrdem($midiaId, $ordemAtual + 1);
@@ -521,15 +500,6 @@ final class SalaMidiasService
             $this->aplicarAutoAlocacaoRegraECadastro($novoId, $actor);
             $this->connection->commit();
 
-            $this->registrarProdutividadeCadastroTarefa(
-                $novoId,
-                $actor,
-                $numeroProcesso,
-                $classeProcesso,
-                $tipoAudiencia,
-                'automatico'
-            );
-
             error_log('[SalaMidias.ensureAutoFromPautaIfEligible] tarefa automatica criada: id=' . $novoId . ' pauta=' . $pautaId);
             return $novoId;
         } catch (PDOException $e) {
@@ -677,70 +647,6 @@ final class SalaMidiasService
             'certidao_upload_midia' => 2.0,
             default => 0.0,
         };
-    }
-
-    private function registrarProdutividadeSubtarefa(
-        string $codigo,
-        string $subtarefaId,
-        string $usuarioId,
-        array $tarefa,
-        int $qtdMidias,
-        float $pontos
-    ): void {
-        $eventByCodigo = [
-            'download_midia' => 'sala-midias.subtarefa.download_midia',
-            'sincronizacao_midia' => 'sala-midias.subtarefa.sincronizacao_midia',
-            'upload_midia' => 'sala-midias.subtarefa.upload_midia',
-            'certidao_upload_midia' => 'sala-midias.subtarefa.certidao_upload_midia',
-        ];
-        if (!isset($eventByCodigo[$codigo])) {
-            return;
-        }
-        $usaQtdMidiasNaQuantidade = in_array($codigo, ['sincronizacao_midia', 'upload_midia'], true);
-        CartorioProdutividade::record($this->connection, $usuarioId, $eventByCodigo[$codigo], [
-            'quantidade' => $usaQtdMidiasNaQuantidade ? $qtdMidias : 1,
-            'pontos_calculados_override' => $pontos,
-            'referencia_item_id' => $subtarefaId,
-            'referencia_sistema' => 'sala-midias',
-            'numero_processo' => trim((string) ($tarefa['numero_processo'] ?? '')),
-            'classe_processo' => trim((string) ($tarefa['classe_processo'] ?? '')),
-            'qtd_midias' => $qtdMidias,
-        ]);
-    }
-
-    private function registrarProdutividadeCadastroTarefa(
-        string $midiaId,
-        string $usuarioId,
-        string $numeroProcesso,
-        string $classeProcesso,
-        string $tipoAudiencia,
-        string $origem
-    ): void {
-        $origemLabel = $origem === 'automatico' ? 'automática' : 'manual';
-        CartorioProdutividade::record($this->connection, $usuarioId, 'sala-midias.create', [
-            'referencia_item_id' => $midiaId,
-            'referencia_sistema' => 'sala-midias',
-            'numero_processo' => $numeroProcesso,
-            'classe_processo' => $classeProcesso,
-            'tipo_audiencia' => $tipoAudiencia,
-            'origem' => $origemLabel,
-        ]);
-    }
-
-    private function registrarProdutividadeEdicaoTarefa(
-        string $midiaId,
-        string $usuarioId,
-        string $numeroProcesso,
-        string $classeProcesso,
-        string $tipoAudiencia
-    ): void {
-        CartorioProdutividade::record($this->connection, $usuarioId, 'sala-midias.update', [
-            'referencia_item_id' => $midiaId,
-            'referencia_sistema' => 'sala-midias',
-            'numero_processo' => $numeroProcesso,
-            'classe_processo' => $classeProcesso,
-            'tipo_audiencia' => $tipoAudiencia,
-        ]);
     }
 
     private function assertDataNaoFutura(string $dataYmd): void

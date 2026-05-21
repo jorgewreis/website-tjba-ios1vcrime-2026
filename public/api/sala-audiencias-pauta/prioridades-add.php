@@ -9,7 +9,6 @@ header('Content-Type: application/json; charset=UTF-8');
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
-require_once $basePath . '/app/helpers/InternoProdutividadeAutoHelper.php';
 require_once $basePath . '/app/services/SalaAudienciasPautaService.php';
 
 $payload = json_decode(file_get_contents('php://input') ?: '[]', true);
@@ -33,32 +32,9 @@ try {
     }
     $connection = Conection::getInstance()->getConnection();
     $service = new SalaAudienciasPautaService($connection);
-    $incluiuNovaLinha = $service->addPrioridadeCatalogoAudiencia($idPauta, $prioridade, $usuarioId);
-    $toastKeyPriorPauta = null;
-    if ($incluiuNovaLinha) {
-        $pautaRow = $service->find($idPauta);
-        $processoIdRef = is_array($pautaRow) ? trim((string) ($pautaRow['processo'] ?? '')) : '';
-        $codNorm = trim($prioridade);
-        if ($processoIdRef !== '' && $codNorm !== '') {
-            $refPrior = 'pr:' . strtoupper(substr(hash('sha256', $processoIdRef . '|' . $codNorm), 0, 20));
-            $prodRes = InternoProdutividadeAutoHelper::tryRegistrar(
-                $connection,
-                $usuarioId,
-                'processo_prioridade_add',
-                $refPrior,
-                'Prioridade processual incluída.'
-            );
-            if (!empty($prodRes['toast_key'])) {
-                $toastKeyPriorPauta = $prodRes['toast_key'];
-            }
-        }
-    }
+    $service->addPrioridadeCatalogoAudiencia($idPauta, $prioridade, $usuarioId);
     $state = $service->listPrioridadesEdicaoAudiencia($idPauta);
-    $outPriorPauta = ['success' => true, 'state' => $state];
-    if ($toastKeyPriorPauta !== null) {
-        $outPriorPauta['produtividade_toast_key'] = $toastKeyPriorPauta;
-    }
-    echo json_encode($outPriorPauta, JSON_UNESCAPED_UNICODE);
+    echo json_encode(['success' => true, 'state' => $state], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
     http_response_code(400);
     echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);

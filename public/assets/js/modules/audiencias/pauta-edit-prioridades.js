@@ -272,15 +272,6 @@
                 if (res.ok && res.j && res.j.success && res.j.state) {
                     applyState(res.j.state);
                     notifyByKey('audiencias.prioridade.add.success', {}, 'success', 'Sucesso', 'Prioridade registrada.');
-                    if (res.j.produtividade_toast_key) {
-                        window.setTimeout(function () {
-                            if (window.App && window.App.ToastCatalog && typeof window.App.ToastCatalog.notifyByKey === 'function') {
-                                window.App.ToastCatalog.notifyByKey(res.j.produtividade_toast_key, {}).catch(function () {});
-                            } else if (typeof showProdutividadeToastByCatalogKey === 'function') {
-                                showProdutividadeToastByCatalogKey(res.j.produtividade_toast_key);
-                            }
-                        }, 450);
-                    }
                     selectEl.selectedIndex = 0;
                     updatePrioridadeAddButtonState();
                     return;

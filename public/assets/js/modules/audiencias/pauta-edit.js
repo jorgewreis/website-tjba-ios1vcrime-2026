@@ -462,11 +462,6 @@
                             'Parte adicionada.',
                             'salapauta.postReloadToast'
                         );
-                        if (res.j.produtividade_toast_key && window.App && window.App.ToastCatalog && typeof window.App.ToastCatalog.notifyByKey === 'function') {
-                            window.App.ToastCatalog.notifyByKey(res.j.produtividade_toast_key, {}).catch(function () {});
-                        } else if (res.j.produtividade_toast_key && typeof showProdutividadeToastByCatalogKey === 'function') {
-                            showProdutividadeToastByCatalogKey(res.j.produtividade_toast_key);
-                        }
                         window.setTimeout(function () {
                             window.location.reload();
                         }, 450);

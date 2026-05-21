@@ -13,7 +13,6 @@ require_once __DIR__ . '/../repositories/VarasRepository.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
-require_once __DIR__ . '/../helpers/CartorioProdutividade.php';
 require_once __DIR__ . '/../helpers/AlocacaoTarefasPerfisHelper.php';
 
 final class CartasRecebidasService
@@ -212,22 +211,6 @@ final class CartasRecebidasService
 
         $this->repository->update($idCarta, ['status' => 'aguardando cumprimento']);
 
-        if ($usuarioCadastroId !== '' && $usuarioCadastroId !== 'sistema') {
-            $cartaComClasse = $this->repository->findWithClasseProcessualNome($idCarta)
-                ?? $this->repository->find($idCarta)
-                ?? [];
-            $nomeClasse = trim((string) ($cartaComClasse['classe_nome_processual'] ?? ''));
-            $tipoCarta = CartorioProdutividade::labelClasseCarta($nomeClasse);
-            CartorioProdutividade::record($this->connection, $usuarioCadastroId, 'cartorio-cartas-recebidas.create', [
-                'referencia_item_id' => $idCarta,
-                'referencia_sistema' => 'cartorio-cartas-recebidas',
-                'numero_processo' => $numeroFormatado,
-                'classe_processo' => $tipoCarta,
-                'tipo_carta' => $tipoCarta,
-                'finalidade' => CartorioProdutividade::nonEmpty($finalidade, 'finalidade não informada'),
-            ]);
-        }
-
         return $idCarta;
     }
 
@@ -291,22 +274,6 @@ final class CartasRecebidasService
         }
 
         $this->subtarefasRepository->marcarConcluidaComDados($subtarefaId, $dadosJson);
-        if ($usuarioIdMovimentacao !== '' && $usuarioIdMovimentacao !== 'sistema' && $tipo !== '') {
-            $cartaAtual = $this->repository->findWithClasseProcessualNome($cartaId)
-                ?? $this->repository->find($cartaId)
-                ?? [];
-            $nomeClasse = trim((string) ($cartaAtual['classe_nome_processual'] ?? ''));
-            $tipoCarta = CartorioProdutividade::labelClasseCarta($nomeClasse);
-            $finalidadeRow = (string) ($cartaAtual['finalidade'] ?? '');
-            CartorioProdutividade::record($this->connection, $usuarioIdMovimentacao, 'cartorio-cartas-recebidas.subtarefa.' . $tipo, [
-                'referencia_item_id' => $subtarefaId,
-                'referencia_sistema' => 'cartorio-cartas-recebidas',
-                'numero_processo' => (string) ($cartaAtual['numero_processo_origem'] ?? ''),
-                'classe_processo' => $tipoCarta,
-                'tipo_carta' => $tipoCarta,
-                'finalidade' => CartorioProdutividade::nonEmpty($finalidadeRow, 'finalidade não informada'),
-            ]);
-        }
 
         $proximaOrdem = $this->subtarefasRepository->obterProximaOrdem($ordem);
         if ($proximaOrdem !== null) {

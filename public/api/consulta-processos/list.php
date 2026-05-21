@@ -6,7 +6,6 @@ header('Content-Type: application/json; charset=UTF-8');
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
-require_once $basePath . '/app/helpers/InternoProdutividadeAutoHelper.php';
 require_once $basePath . '/app/services/ConsultaProcessosService.php';
 
 $connection = Conection::getInstance()->getConnection();
@@ -42,24 +41,6 @@ try {
         ],
         'filters' => $filters,
     ];
-
-    if ($numero !== '' || $parteNome !== '') {
-        $uid = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
-        if ($uid !== '') {
-            $ref = 'cl:' . strtoupper(substr(hash('sha256', $numero . '|' . $parteNome . '|' . $pageNumber . '|' . $itemsPerPage), 0, 20));
-            $prodRes = InternoProdutividadeAutoHelper::tryRegistrar(
-                $connection,
-                $uid,
-                'consulta_processos_list',
-                $ref,
-                'Consulta processo',
-                $numero
-            );
-            if (!empty($prodRes['toast_key'])) {
-                $response['produtividade_toast_key'] = $prodRes['toast_key'];
-            }
-        }
-    }
 
     echo json_encode($response, JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {

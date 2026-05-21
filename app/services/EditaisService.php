@@ -11,7 +11,6 @@ require_once __DIR__ . '/../repositories/FeriadosRepository.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
-require_once __DIR__ . '/../helpers/CartorioProdutividade.php';
 require_once __DIR__ . '/../helpers/AlocacaoTarefasPerfisHelper.php';
 require_once __DIR__ . '/../helpers/CartorioTarefaStatusPrincipalHelper.php';
 
@@ -189,17 +188,6 @@ final class EditaisService
             }
         );
 
-        if ($usuarioCadastroId !== '' && $usuarioCadastroId !== 'sistema') {
-            CartorioProdutividade::record($this->connection, $usuarioCadastroId, 'cartorio-editais.create', [
-                'referencia_item_id' => $idEdital,
-                'referencia_sistema' => 'cartorio-editais',
-                'numero_processo' => $numeroFormatado,
-                'classe_processo' => $tipoEdital,
-                'tipo_edital' => $tipoEdital,
-                'prazo_dias' => (string) $prazoDias,
-            ]);
-        }
-
         return $idEdital;
     }
 
@@ -309,24 +297,6 @@ final class EditaisService
         }
 
         $this->subtarefasRepository->atualizarStatus($subtarefaId, 'concluida');
-        $tipoSubtarefa = trim((string) ($subtarefa['tipo'] ?? ''));
-        if ($usuarioIdMovimentacao !== null && $usuarioIdMovimentacao !== '' && $usuarioIdMovimentacao !== 'sistema' && $tipoSubtarefa !== '') {
-            $editalAtual = $this->repository->findById($editalId) ?? [];
-            $tipoEditalRow = trim((string) ($editalAtual['tipo_edital'] ?? ''));
-            $prazoRow = (int) ($editalAtual['prazo_dias'] ?? 0);
-            $dataPub = trim((string) ($editalAtual['data_publicacao'] ?? ''));
-            $dataDecurso = trim((string) ($editalAtual['data_decurso_prazo'] ?? ''));
-            CartorioProdutividade::record($this->connection, $usuarioIdMovimentacao, 'cartorio-editais.subtarefa.' . $tipoSubtarefa, [
-                'referencia_item_id' => $subtarefaId,
-                'referencia_sistema' => 'cartorio-editais',
-                'numero_processo' => (string) ($editalAtual['numero_processo'] ?? ''),
-                'classe_processo' => CartorioProdutividade::nonEmpty($tipoEditalRow, 'tipo não informado'),
-                'tipo_edital' => CartorioProdutividade::nonEmpty($tipoEditalRow, 'tipo não informado'),
-                'prazo_dias' => (string) max(0, $prazoRow),
-                'data_publicacao' => CartorioProdutividade::nonEmpty($dataPub, 'data não informada'),
-                'data_decurso_prazo' => CartorioProdutividade::nonEmpty($dataDecurso, 'data não informada'),
-            ]);
-        }
 
         $todas = $this->subtarefasRepository->findByEditalId($editalId);
         $proximaOrdem = $ordem + 1;

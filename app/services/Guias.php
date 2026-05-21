@@ -6,7 +6,6 @@ require_once __DIR__ . '/../helpers/AuditLoggerHelper.php';
 require_once __DIR__ . '/ClasseManager.php';
 require_once __DIR__ . '/ProcessoManager.php';
 require_once __DIR__ . '/ReuManager.php';
-require_once __DIR__ . '/../helpers/CartorioProdutividade.php';
 
 class Guias
 {
@@ -341,55 +340,6 @@ class Guias
             // 8.1 Força atualização do status da guia com base nas subtarefas recém-criadas
             $this->atualizarStatusGuiaPorSubtarefas($idGuia);
 
-            // 9. Registra na produtividade (somente se houver usuário válido)
-            $usuarioProd = trim((string)($dados['user_cadastro'] ?? ''));
-            $pontosProd = null;
-            if ($usuarioProd !== '' && $usuarioProd !== 'sistema') {
-                $temDetalhamento = false;
-                $camposDetalhe = [
-                    $dados['regime'] ?? '',
-                    $dados['cpf'] ?? '',
-                    $dados['telefone'] ?? '',
-                    $dados['data_fato'] ?? '',
-                    $dados['dias_multa'] ?? '',
-                    $dados['observacoes'] ?? ''
-                ];
-                foreach ($camposDetalhe as $campo) {
-                    if (trim((string)$campo) !== '') {
-                        $temDetalhamento = true;
-                        break;
-                    }
-                }
-
-                $servidores = $dados['servidores'] ?? [];
-                if (!$temDetalhamento && is_array($servidores) && count($servidores) > 0) {
-                    $temDetalhamento = true;
-                }
-
-                $prioridades = $dados['prioridades'] ?? [];
-                if (!$temDetalhamento && is_array($prioridades) && count($prioridades) > 0) {
-                    $temDetalhamento = true;
-                }
-
-                $subtarefas = $dados['subtarefas'] ?? [];
-                if (!$temDetalhamento && is_array($subtarefas) && count($subtarefas) > 0) {
-                    $temDetalhamento = true;
-                }
-
-                $pontosProd = $temDetalhamento ? 2.0 : 1.0;
-                $tipoGuiaRaw = trim((string) ($dados['tipo'] ?? ''));
-                $tipoGuia = CartorioProdutividade::labelTipoGuia($tipoGuiaRaw);
-                CartorioProdutividade::record($this->pdo, $usuarioProd, 'cartorio-guias.create', [
-                    'quantidade' => $temDetalhamento ? 2 : 1,
-                    'referencia_item_id' => $idGuia,
-                    'referencia_sistema' => 'cartorio-guias',
-                    'numero_processo' => (string)($dados['processo'] ?? ''),
-                    'classe_processo' => $tipoGuia,
-                    'tipo_guia' => $tipoGuia,
-                    'data_hora_ato' => $agora,
-                ]);
-            }
-
             $this->pdo->commit();
             // Auditoria: registra criação da guia
             try {
@@ -403,7 +353,6 @@ class Guias
                 'ok' => true,
                 'id' => $idGuia,
                 'message' => 'Guia cadastrada com sucesso',
-                'prod_pontos' => $pontosProd,
                 'processo_auto' => $processoAuto,
                 'reu_auto' => $reuAuto
             ];
